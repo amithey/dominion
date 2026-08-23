@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dominion — Real-Time Nation Strategy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="game-container">
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Top resource bar -->
+  <div id="top-bar">
+    <div id="res-bar"></div>
+    <div id="top-right">
+      <span id="clock">00:00</span>
+      <button class="top-btn" id="btn-speed" title="Game speed">1x</button>
+      <button class="top-btn" id="btn-pause" title="Pause (Space)">⏸</button>
+      <button class="top-btn" id="btn-menu" title="Menu (Esc)">☰</button>
+    </div>
+  </div>
+
+  <!-- Side window toggles -->
+  <div id="side-btns">
+    <button class="side-btn" data-win="win-city" title="City Overview">🏙️<span>City</span></button>
+    <button class="side-btn" data-win="win-territory" title="Territory Control">MAP<span>Land</span></button>
+    <button class="side-btn" data-win="win-diplomacy" title="Diplomacy">🕊️<span>Diplomacy</span></button>
+    <button class="side-btn" data-win="win-trade" title="World Trade">📦<span>Trade</span></button>
+    <button class="side-btn" data-win="win-espionage" title="Espionage">🕵️<span>Intel</span></button>
+    <button class="side-btn" data-win="win-tech" title="Research">🔬<span>Research</span></button>
+  </div>
+
+  <!-- Bottom HUD -->
+  <div id="bottom-hud">
+    <div id="minimap-wrap"><canvas id="minimap" width="220" height="220"></canvas></div>
+    <div id="selection-panel">
+      <div id="sel-info">
+        <div class="hud-empty-title">NO UNIT SELECTED</div>
+        <div class="hud-empty-sub">Select a unit or structure to open its tactical controls.</div>
+        <div class="hud-hotkeys"><span><kbd>LMB</kbd> Select</span><span><kbd>RMB</kbd> Command</span><span><kbd>A</kbd> Attack-move</span><span><kbd>WASD</kbd> Camera</span></div>
+      </div>
+    </div>
+    <div id="build-panel">
+      <div id="build-tabs">
+        <button class="btab" data-cat="military">Military</button>
+        <button class="btab active" data-cat="economy">Economy</button>
+        <button class="btab" data-cat="civic">Civic</button>
+      </div>
+      <div id="build-grid"></div>
+    </div>
+  </div>
+
+  <!-- Notifications feed -->
+  <div id="notifications"></div>
+
+  <!-- Floating windows -->
+  <div class="window" id="win-city"><div class="win-title"><span>🏙️ City Overview</span><button class="win-close">✕</button></div><div class="win-body"></div></div>
+  <div class="window" id="win-territory"><div class="win-title"><span>Territory Control</span><button class="win-close">✕</button></div><div class="win-body"></div></div>
+  <div class="window" id="win-diplomacy"><div class="win-title"><span>🕊️ Diplomacy</span><button class="win-close">✕</button></div><div class="win-body"></div></div>
+  <div class="window" id="win-espionage"><div class="win-title"><span>🕵️ Intelligence Operations</span><button class="win-close">✕</button></div><div class="win-body"></div></div>
+  <div class="window" id="win-trade"><div class="win-title"><span>📦 World Trade</span><button class="win-close">✕</button></div><div class="win-body"></div></div>
+  <div class="window" id="win-tech"><div class="win-title"><span>🔬 Research</span><button class="win-close">✕</button></div><div class="win-body"></div></div>
+
+  <!-- Main menu -->
+  <div id="main-menu" class="overlay">
+    <div class="menu-box">
+      <h1>DOMINION</h1>
+      <p class="subtitle">Real-Time Nation Strategy — build, govern, trade, spy, conquer.</p>
+      <div class="menu-row">
+        <label>AI Difficulty</label>
+        <div id="diff-btns">
+          <button class="diff-btn active" data-diff="easy">Easy</button>
+          <button class="diff-btn" data-diff="normal">Normal</button>
+          <button class="diff-btn" data-diff="hard">Hard</button>
+        </div>
+      </div>
+      <div class="menu-row">
+        <label>Graphics</label>
+        <div id="gfx-btns">
+          <button class="gfx-btn" data-gfx="low">Fast</button>
+          <button class="gfx-btn active" data-gfx="high">Beautiful</button>
+        </div>
+      </div>
+      <div class="menu-row">
+        <label>Map</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+          <button class="map-btn active" data-map="island">🏝️ Island</button>
+          <button class="map-btn" data-map="continent">⛰️ Continent</button>
+          <button class="map-btn" data-map="archipelago">🌊 Archipelago</button>
+          <button class="map-btn" data-map="highlands">🏔️ Highlands</button>
+          <button class="map-btn" data-map="twin">🌉 Twin Continents</button>
+        </div>
+      </div>
+      <p id="map-desc" class="gov-desc">One landmass ringed by ocean. Navies rule the coast.</p>
+      <div class="menu-row">
+        <label>Map Size</label>
+        <div style="display:flex;gap:6px">
+          <button class="size-btn" data-size="medium">Medium</button>
+          <button class="size-btn active" data-size="large">Large</button>
+          <button class="size-btn" data-size="huge">Huge</button>
+          <button class="size-btn" data-size="gigantic">Gigantic</button>
+        </div>
+      </div>
+      <div class="menu-row">
+        <label>Start Position</label>
+        <div style="display:flex;gap:6px">
+          <button class="corner-btn active" data-corner="-1">🎲 Random</button>
+          <button class="corner-btn" data-corner="3">↖ NW</button>
+          <button class="corner-btn" data-corner="2">↗ NE</button>
+          <button class="corner-btn" data-corner="0">↙ SW</button>
+          <button class="corner-btn" data-corner="1">↘ SE</button>
+        </div>
+      </div>
+      <div class="menu-row" style="align-items:flex-start">
+        <label>Government</label>
+        <div id="gov-btns" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end">
+          <button class="gov-btn active" data-gov="democracy">🗳️ Democracy</button>
+          <button class="gov-btn" data-gov="dictatorship">👊 Dictatorship</button>
+          <button class="gov-btn" data-gov="monarchy">👑 Monarchy</button>
+          <button class="gov-btn" data-gov="technocracy">🧪 Technocracy</button>
+        </div>
+      </div>
+      <p id="gov-desc" class="gov-desc">+10% income, +5 happiness. Elections every 5 years — keep approval above 45% or lose your leader.</p>
+      <button id="btn-start" class="big-btn">Start Campaign</button>
+      <p class="credits">Destroy every rival Headquarters to win. Guard your own.</p>
+    </div>
+  </div>
+
+  <!-- Pause / end overlays -->
+  <div id="pause-overlay" class="overlay hidden">
+    <div class="menu-box">
+      <h2>Paused</h2>
+      <button class="big-btn" id="btn-resume">Resume</button>
+      <button class="big-btn secondary" id="btn-restart">Restart</button>
+    </div>
+  </div>
+  <div id="end-overlay" class="overlay hidden">
+    <div class="menu-box">
+      <h2 id="end-title">Victory</h2>
+      <p id="end-text"></p>
+      <button class="big-btn" id="btn-again">Play Again</button>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="js/bootstrap.js"></script>
+<!-- post-processing stack (bloom + FXAA). Load order matters: shaders → EffectComposer (defines THREE.Pass) → passes -->
+<!-- realistic reflective ocean from the official three.js examples -->
+<!-- real 3D character models: GLTF loader + skeleton cloning for animated units -->
+</body>
+</html>
