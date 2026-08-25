@@ -1,5 +1,8 @@
 import * as ThreeCore from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+// Quaternius tank/ship packs ship as FBX only (no glTF), so vehicles load
+// through this loader instead of converting formats offline.
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { Water } from 'three/addons/objects/Water.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -22,7 +25,7 @@ catch (e) { console.warn('GTAO unavailable — running without ambient occlusion
 
 // Keep the existing simulation/UI scripts intact while using modern ES modules.
 window.THREE = {
-  ...ThreeCore, GLTFLoader, SkeletonUtils, Water, EffectComposer, RenderPass,
+  ...ThreeCore, GLTFLoader, FBXLoader, SkeletonUtils, Water, EffectComposer, RenderPass,
   ShaderPass, UnrealBloomPass, FXAAShader, RoomEnvironment, RoundedBoxGeometry,
   OutputPass, SMAAPass, GTAOPass,
 };

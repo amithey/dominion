@@ -1879,8 +1879,22 @@ function rememberRollingPart(group, mesh) {
 function unitMesh(key, color, seed = 0) {
   const g = new THREE.Group();
   const tm = unitMarkMat(color);
+
+  // Tanks carry their own modelled turret + barrel (Quaternius Animated
+  // Tanks Pack), so they bypass the generic authored path below — that path
+  // always bolts on a plain decorative gun, which would double up here.
+  if (key === 'tank') {
+    const tankModel = makeTankModel(color, seed);
+    if (tankModel) {
+      g.add(tankModel);
+      Object.assign(g.userData, tankModel.userData);
+      return g;
+    }
+  }
+
   const authored = makeAssetModel(`unit:${key}`, color, seed);
   if (authored) {
+    dressHullIfUntextured(authored, seed); // fixes the Kenney watercraft hulls, no-ops otherwise
     g.add(authored);
     const deckY = key === 'destroyer' ? 2.35 : key === 'corvette' ? 1.75 : 1.35;
     const turret = new THREE.Group();

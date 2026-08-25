@@ -61,6 +61,22 @@ const MODEL_MANIFEST = {
   'nature:birch4': { file: 'assets/models/quaternius-nature/BirchTree_4.gltf' },
   'nature:birch5': { file: 'assets/models/quaternius-nature/BirchTree_5.gltf' },
 
+  // Quaternius Animated Tanks Pack (CC0). FBX only (no glTF export exists),
+  // so these load through FBXLoader. Each has its own baked texture and a
+  // Tank_Turret/Tank_Gun pair that is NOT part of the track skeleton —
+  // makeTankModel() detaches that pair into a rotatable group at runtime so
+  // combat aiming works exactly like every procedural turret in the game.
+  'unit:tank0': { file: 'assets/models/quaternius-tanks/Tank.fbx', loader: 'fbx' },
+  'unit:tank1': { file: 'assets/models/quaternius-tanks/Tank2.fbx', loader: 'fbx' },
+  'unit:tank2': { file: 'assets/models/quaternius-tanks/Tank3.fbx', loader: 'fbx' },
+  'unit:tank3': { file: 'assets/models/quaternius-tanks/Tank4.fbx', loader: 'fbx' },
+
+  // Kenney Watercraft Pack (CC0) — modern small hulls. Ships without its
+  // colormap image like the Kenney city buildings did, so these get the same
+  // box-projected-UV + PBR facade fix (see dressHullIfUntextured).
+  'unit:gunboat':  { file: 'assets/models/kenney-watercraft/boat-speed-a.glb', span: 5.6, rotationY: Math.PI },
+  'unit:corvette': { file: 'assets/models/kenney-watercraft/boat-tug-a.glb',   span: 7.0, rotationY: Math.PI },
+
 };
 
 const MODELS = {
@@ -68,10 +84,16 @@ const MODELS = {
   failed: false,
 };
 
-function loadGLB(loader, key, cfg) {
+function loadModel(loaders, key, cfg) {
   return new Promise(resolve => {
-    loader.load(cfg.file, gltf => {
-      MODELS.loaded.set(key, gltf);
+    const isFbx = cfg.loader === 'fbx';
+    const loader = isFbx ? loaders.fbx : loaders.gltf;
+    if (!loader) { resolve(false); return; }
+    loader.load(cfg.file, result => {
+      // Normalize FBXLoader's raw Object3D into the same {scene, animations}
+      // shape GLTFLoader returns, so every call site can treat MODELS.loaded
+      // entries uniformly regardless of source format.
+      MODELS.loaded.set(key, isFbx ? { scene: result, animations: result.animations || [] } : result);
       resolve(true);
     }, undefined, err => {
       console.warn(`Optional model failed: ${cfg.file}`, err);
@@ -85,8 +107,8 @@ function preloadModels() {
     MODELS.failed = true;
     return Promise.resolve();
   }
-  const loader = new THREE.GLTFLoader();
-  const jobs = Object.entries(MODEL_MANIFEST).map(([key, cfg]) => loadGLB(loader, key, cfg));
+  const loaders = { gltf: new THREE.GLTFLoader(), fbx: THREE.FBXLoader ? new THREE.FBXLoader() : null };
+  const jobs = Object.entries(MODEL_MANIFEST).map(([key, cfg]) => loadModel(loaders, key, cfg));
   return Promise.all(jobs).then(results => { MODELS.failed = results.every(ok => !ok); });
 }
 
@@ -425,6 +447,111 @@ function boxProjectUVs(geometry, worldScale, unitsPerTile = 4) {
     uv[i * 2] = u; uv[i * 2 + 1] = v;
   }
   geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+}
+
+/* Hull facade materials for the Kenney watercraft shells, which ship without
+   their colormap image exactly like the city buildings did.
+   Deliberately flat colour, NO map: every texture tried here (the shared
+   architecture atlas, a hand-painted canvas panel texture) rendered this
+   specific mesh near-black regardless of its own average brightness, while
+   the identical mesh with .map stripped to null rendered correctly every
+   single time (confirmed by isolating map on/off with pixel readback).
+   Whatever the underlying cause, a flat PBR colour sidesteps it entirely and
+   matches how the game already paints gun barrels and tank tracks. */
+let _hullMaterials = null;
+function hullMaterials() {
+  if (_hullMaterials) return _hullMaterials;
+  _hullMaterials = [
+    new THREE.MeshStandardMaterial({ color: 0x8b96a0, roughness: 0.55, metalness: 0.28 }),
+    new THREE.MeshStandardMaterial({ color: 0x4c5a68, roughness: 0.6, metalness: 0.18 }),
+  ];
+  return _hullMaterials;
+}
+/* Applied after makeAssetModel() for hulls that come in without a texture —
+   detected generically (no map) so a future correctly-textured pack needs no
+   code change here, it simply won't match and will keep its own material. */
+function dressHullIfUntextured(root, seed) {
+  let bare = false;
+  root.traverse(o => { if (o.isMesh && !(o.material && o.material.map)) bare = true; });
+  if (!bare) return;
+  const palette = hullMaterials();
+  const pick = palette[Math.abs(seed) % palette.length];
+  root.traverse(o => {
+    if (!o.isMesh || (o.material && o.material.map)) return;
+    o.material = pick.clone();
+    o.castShadow = true; o.receiveShadow = true;
+  });
+}
+
+/* Quaternius "Animated Tanks Pack" (CC0, 4 hull variants). Every tank has a
+   skinned track skeleton (needs SkeletonUtils.clone — a plain .clone() would
+   share one bind pose across every tank on the field) plus two meshes,
+   Tank_Turret and Tank_Gun, that sit OUTSIDE the skeleton as plain static
+   nodes. We detach that pair into its own pivot group so the existing
+   turret-aiming code (userData.turret) can swing them at a target exactly
+   like every procedural vehicle already does. */
+const TANK_VARIANTS = ['unit:tank0', 'unit:tank1', 'unit:tank2', 'unit:tank3'];
+function makeTankModel(teamColor, seed = 0) {
+  const variantKey = TANK_VARIANTS[Math.abs(seed) % TANK_VARIANTS.length];
+  const gltf = MODELS.loaded.get(variantKey);
+  if (!gltf) return null;
+  let model;
+  try { model = THREE.SkeletonUtils.clone(gltf.scene); } catch (e) { return null; }
+
+  // the pack's barrel points local -X; the rest of the game's vehicles all
+  // face local +X, which is what the default faceOffset (-90°) expects
+  model.rotation.y = Math.PI;
+  model.updateMatrixWorld(true);
+
+  // normalize to the same footprint as the procedural tank hull (~3.3 long)
+  let bounds = new THREE.Box3().setFromObject(model);
+  let size = bounds.getSize(new THREE.Vector3());
+  const scale = 3.9 / Math.max(size.x, size.z, 0.001);
+  model.scale.setScalar(scale);
+  model.updateMatrixWorld(true);
+  bounds = new THREE.Box3().setFromObject(model);
+  const center = bounds.getCenter(new THREE.Vector3());
+  model.position.set(model.position.x - center.x, model.position.y - bounds.min.y, model.position.z - center.z);
+  model.updateMatrixWorld(true);
+
+  const root = new THREE.Group();
+  root.add(model);
+
+  let turretMesh = null, gunMesh = null;
+  model.traverse(o => {
+    o.castShadow = true; o.receiveShadow = true;
+    if (o.name === 'Tank_Turret') turretMesh = o;
+    else if (o.name === 'Tank_Gun') gunMesh = o;
+  });
+
+  if (turretMesh) {
+    const pivot = new THREE.Vector3();
+    turretMesh.getWorldPosition(pivot);
+    const turretGroup = new THREE.Group();
+    turretGroup.position.copy(pivot);
+    root.add(turretGroup);
+    turretGroup.attach(turretMesh);   // Object3D#attach preserves world transform
+    if (gunMesh) turretGroup.attach(gunMesh);
+    root.userData.turret = turretGroup;
+  }
+
+  // restrained team-colour identification — a full repaint would erase the
+  // pack's own camo/paint work, so this is a light lean only
+  const tint = new THREE.Color(teamColor);
+  model.traverse(o => {
+    if (!o.isMesh && !o.isSkinnedMesh) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    const clones = mats.map(m => {
+      const c = m.clone();
+      if (c.color) c.color.lerp(tint, 0.10);
+      return c;
+    });
+    o.material = Array.isArray(o.material) ? clones : clones[0];
+  });
+
+  root.userData.assetModel = true;
+  root.userData.assetKey = variantKey;
+  return root;
 }
 
 /* One authored shell per structure type, so a police station, a bank and a
