@@ -732,15 +732,15 @@ function updateTopBar() {
       delta = `<span class="delta ${r >= 0 ? 'pos' : 'neg'}">${r >= 0 ? '+' : ''}${r.toFixed(1)}/s</span>`;
     }
     const cap = caps[k] ? ` / ${caps[k]}` : '';
-    return `<span class="res-item" title="${RES_META[k].name}${cap}"><span class="ico">${RES_META[k].icon}</span>${fmtNum(G.res[k])}${delta}</span>`;
+    return `<span class="res-item" title="${RES_META[k].name}${cap}"><span class="ico">${uiIcon(k)}</span><span class="res-value"><small>${RES_META[k].name}</small>${fmtNum(G.res[k])}</span>${delta}</span>`;
   });
-  parts.push(`<span class="res-item" title="Army / capacity"><span class="ico">🪖</span>${G.city.popUsed}/${G.city.popCap}</span>`);
-  parts.push(`<span class="res-item" title="Citizens / capacity"><span class="ico">👥</span>${fmtNum(G.city.civilians)}</span>`);
-  parts.push(`<span class="res-item" title="Research points"><span class="ico">🔬</span>${fmtNum(G.city.research)}</span>`);
+  parts.push(`<span class="res-item" title="Army / capacity"><span class="ico">${uiIcon("army")}</span>${G.city.popUsed}/${G.city.popCap}</span>`);
+  parts.push(`<span class="res-item" title="Citizens / capacity"><span class="ico">${uiIcon("citizens")}</span>${fmtNum(G.city.civilians)}</span>`);
+  parts.push(`<span class="res-item" title="Research points"><span class="ico">${uiIcon("research")}</span>${fmtNum(G.city.research)}</span>`);
   const stock = missileStock();
   if (stock > 0 || playerBuildingCount('missileSilo') > 0)
     parts.push(`<span class="res-item" title="Missile stockpile / capacity"><span class="ico">🚀</span>${stock}/${missileCap()}</span>`);
-  $('#res-bar').innerHTML = parts.join('');
+  stableHTML($('#res-bar'), parts.join(''));
   const m = Math.floor(G.time / 60), s = Math.floor(G.time % 60);
   $('#clock').textContent = `Year ${Math.floor(G.time / YEAR_SECONDS) + 1} · ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
@@ -771,25 +771,34 @@ const BUILD_GROUPS = {
 };
 function renderBuildPanel() {
   const grid = $('#build-grid');
+  const state = Object.entries(BUILDINGS).filter(([, d]) => d.cat === buildCat && !d.unbuildable)
+    .map(([key, d]) => `${key}:${!!(d.unique && playerBuildingCount(key))}:${!!(d.needsDiscovery && !G.discovered[d.needsDiscovery])}:${canAfford(G.res, d.cost)}`).join('|');
+  const query = ($('#build-search')?.value || '').trim().toLowerCase();
+  const signature = `${buildCat}:${query}:${state}`;
+  if (grid.dataset.signature === signature) return;
+  grid.dataset.signature = signature;
+  const scrollTop = grid.scrollTop;
   grid.innerHTML = '';
   const groups = BUILD_GROUPS[buildCat] || [];
   const grouped = new Set(groups.flatMap(([, ks]) => ks));
   const order = [];
   for (const [gname, ks] of groups) {
-    const present = ks.filter(k => BUILDINGS[k] && !BUILDINGS[k].unbuildable && BUILDINGS[k].cat === buildCat);
+    const present = ks.filter(k => BUILDINGS[k] && !BUILDINGS[k].unbuildable && BUILDINGS[k].cat === buildCat && (!query || (BUILDINGS[k].name + ' ' + BUILDINGS[k].desc).toLowerCase().includes(query)));
     if (present.length) order.push([gname, present]);
   }
   // anything not explicitly grouped still shows up at the end
   const rest = Object.keys(BUILDINGS).filter(k =>
-    !BUILDINGS[k].unbuildable && BUILDINGS[k].cat === buildCat && !grouped.has(k));
+    !BUILDINGS[k].unbuildable && BUILDINGS[k].cat === buildCat && !grouped.has(k) && (!query || BUILDINGS[k].name.toLowerCase().includes(query)));
   if (rest.length) order.push(['Other', rest]);
   for (const [gname, ks] of order) {
     const h = document.createElement('div');
     h.className = 'build-group-h';
-    h.textContent = gname;
+    h.textContent = gname.replace(/^[^A-Za-z]+/, '');
     grid.appendChild(h);
     for (const key of ks) buildPanelButton(grid, key, BUILDINGS[key]);
   }
+  if (!order.length) grid.innerHTML = '<div class=build-empty>No matching structures in this category.</div>';
+  grid.scrollTop = scrollTop;
 }
 function buildPanelButton(grid, key, def) {
   {
@@ -800,8 +809,9 @@ function buildPanelButton(grid, key, def) {
     btn.className = 'build-btn';
     btn.disabled = unique || locked || !afford;
     btn.title = def.desc + (def.onDeposit ? ' (place ON a resource deposit)' : '');
-    btn.innerHTML = `<span class="bico">${def.icon}</span><span class="bname">${def.name}</span><span class="bcost">${
+    btn.innerHTML = `<span class="bico">${uiIcon(buildIcon(key, def))}</span><span class="bname">${def.name}</span><span class="bcost">${
       unique ? 'built' : locked ? '🔒 ' + DISCOVERIES[def.needsDiscovery].name : costText(def.cost)}</span>`;
+    btn.dataset.build = key;
     btn.onclick = () => startPlacement(key);
     grid.appendChild(btn);
   }
@@ -812,9 +822,9 @@ function renderSelection() {
   const el = $('#sel-info');
   const sel = G.selection.filter(e => !e.dead);
   if (!sel.length) {
-    el.innerHTML = `<div class="hud-empty-title">NO UNIT SELECTED</div>
+    stableHTML(el, `<div class="hud-empty-title">NO UNIT SELECTED</div>
       <div class="hud-empty-sub">Select a unit or structure to open its tactical controls.</div>
-      <div class="hud-hotkeys"><span><kbd>LMB</kbd> Select</span><span><kbd>RMB</kbd> Command</span><span><kbd>A</kbd> Attack-move</span><span><kbd>WASD</kbd> Camera</span></div>`;
+      <div class="hud-hotkeys"><span><kbd>LMB</kbd> Select</span><span><kbd>RMB</kbd> Command</span><span><kbd>A</kbd> Attack-move</span><span><kbd>WASD</kbd> Camera</span></div>`);
     return;
   }
   if (sel.length === 1) {
@@ -892,13 +902,13 @@ function renderSelection() {
     if (e.type === 'unit' && e.state === 'landed' && e.owner === 0) {
       html += `<div class="sel-sub" style="margin-top:6px">🛬 Based at airfield · fuel ${Math.round((e.fuel || 0) / PLANE_FUEL * 100)}% — right-click a target or location to launch a sortie.</div>`;
     }
-    el.innerHTML = html;
+    stableHTML(el, html);
   } else {
     const byKey = {};
     for (const e of sel) byKey[e.def.name] = (byKey[e.def.name] || 0) + 1;
-    el.innerHTML = `<div class="sel-title">${sel.length} selected</div>
+    stableHTML(el, `<div class="sel-title">${sel.length} selected</div>
       <div class="sel-sub">${Object.entries(byKey).map(([k, v]) => `${v}× ${k}`).join(' · ')}</div>
-      <div class="hint">Right-click to move/attack · A+click = attack-move</div>`;
+      <div class="hint">Right-click to move/attack · A+click = attack-move</div>`);
   }
 }
 function uiTrain(bid, key) {
@@ -934,11 +944,11 @@ function uiLaunchFromSub(uid, mType) {
 let mmTerrain = null;
 function buildMinimapTerrain() {
   mmTerrain = document.createElement('canvas');
-  mmTerrain.width = mmTerrain.height = 160;
+  mmTerrain.width = mmTerrain.height = 320;
   const ctx = mmTerrain.getContext('2d');
-  const img = ctx.createImageData(160, 160);
-  for (let py = 0; py < 160; py++) for (let px = 0; px < 160; px++) {
-    const x = (px / 160 - 0.5) * MAP_SIZE, z = (py / 160 - 0.5) * MAP_SIZE;
+  const img = ctx.createImageData(320, 320);
+  for (let py = 0; py < 320; py++) for (let px = 0; px < 320; px++) {
+    const x = (px / 320 - 0.5) * MAP_SIZE, z = (py / 320 - 0.5) * MAP_SIZE;
     const h = terrainH(x, z);
     let r, g, b, v = 1;
     if (h < 0.05) { // ocean threshold matches navigation, so visible land is traversable
@@ -949,7 +959,7 @@ function buildMinimapTerrain() {
     else if (h > 8.5) { r = 150; g = 150; b = 148; v = 0.85 + vnoise(x * 0.05, z * 0.05) * 0.3; }
     else if (h > 6) { r = 90; g = 115; b = 75; v = 0.85 + vnoise(x * 0.05, z * 0.05) * 0.3; }
     else { r = 100; g = 135; b = 80; v = 0.85 + vnoise(x * 0.05, z * 0.05) * 0.3; }
-    const i = (py * 160 + px) * 4;
+    const i = (py * 320 + px) * 4;
     img.data[i] = r * v; img.data[i + 1] = g * v; img.data[i + 2] = b * v; img.data[i + 3] = 255;
   }
   ctx.putImageData(img, 0, 0);
@@ -1040,7 +1050,8 @@ function initUI() {
   $$('.gfx-btn').forEach(b => b.onclick = () => {
     $$('.gfx-btn').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
-    G.gfxHigh = b.dataset.gfx === 'high';
+    G.graphics = b.dataset.gfx;
+    G.gfxHigh = G.graphics !== 'low';
   });
   $$('.gov-btn').forEach(b => b.onclick = () => {
     $$('.gov-btn').forEach(x => x.classList.remove('active'));

@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // Quaternius tank/ship packs ship as FBX only (no glTF), so vehicles load
 // through this loader instead of converting formats offline.
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { Water } from 'three/addons/objects/Water.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -25,20 +26,20 @@ catch (e) { console.warn('GTAO unavailable — running without ambient occlusion
 
 // Keep the existing simulation/UI scripts intact while using modern ES modules.
 window.THREE = {
-  ...ThreeCore, GLTFLoader, FBXLoader, SkeletonUtils, Water, EffectComposer, RenderPass,
+  ...ThreeCore, mergeGeometries, GLTFLoader, FBXLoader, SkeletonUtils, Water, EffectComposer, RenderPass,
   ShaderPass, UnrealBloomPass, FXAAShader, RoomEnvironment, RoundedBoxGeometry,
   OutputPass, SMAAPass, GTAOPass,
 };
 
 const gameScripts = [
   'config.js', 'models.js', 'world.js', 'path.js', 'territory.js',
-  'entities.js', 'diplomacy.js', 'ai.js', 'ui.js', 'main.js',
+  'entities.js', 'diplomacy.js', 'ai.js', 'ui.js', 'performance.js', 'presentation.js', 'main.js',
 ];
 
 for (const file of gameScripts) {
   await new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = `js/${file}`;
+    script.src = `js/${file}?v=command-4`;
     script.async = false;
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${file}`));

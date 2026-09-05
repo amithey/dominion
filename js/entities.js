@@ -2507,7 +2507,7 @@ function spawnBuilding(key, owner, x, z, opts = {}) {
     queue: [], queueProg: 0, selected: false, dead: false,
     deposit: opts.deposit || null,
   };
-  ent.mesh = buildingMesh(key, nat.color, ent.id);
+  ent.mesh = batchBuildingGeometry(buildingMesh(key, nat.color, ent.id));
   const atSea = ent.deposit && ent.deposit.def.water;
   ent.mesh.position.set(x, atSea ? SEA_LEVEL : terrainH(x, z), z);
   ent.mesh.userData.entity = ent;
@@ -3498,14 +3498,20 @@ function updateUnit(u, dt) {
       : (u.attackAnimUntil || 0) > G.time && acts.shoot ? 'shoot'
         : !moving ? 'idle' : (def.speed >= 5 ? 'run' : 'walk');
     if (!acts[target]) target = moving && acts.run ? 'run' : 'idle';
-    for (const name of Object.keys(acts)) {
-      const a = acts[name];
+    for (const a of new Set(Object.values(acts))) {
       if (!a) continue;
       const w = a.getEffectiveWeight();
-      const goal = name === target ? 1 : 0;
+      const goal = a === acts[target] ? 1 : 0;
       a.setEffectiveWeight(w + (goal - w) * Math.min(1, dt * 7));
     }
-    mixer.update(dt);
+    // Accumulate animation time when distant; simulation still runs every tick.
+    u.animationDt = (u.animationDt || 0) + dt;
+    const distanceSq = camera.position.distanceToSquared(u.mesh.position);
+    const animationStep = distanceSq < 110 * 110 ? 0 : distanceSq < 240 * 240 ? 1 / 30 : 1 / 10;
+    if (u.animationDt >= animationStep) {
+      mixer.update(u.animationDt);
+      u.animationDt = 0;
+    }
   }
 
   // humanoid walk cycle — swing legs & arms while moving, settle when standing

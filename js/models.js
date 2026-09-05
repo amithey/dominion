@@ -84,6 +84,40 @@ const MODELS = {
   failed: false,
 };
 
+// Consolidate static facade pieces while retaining animated radar/flags and
+// transparent glass as separate objects. Called before entity overlays attach.
+function batchBuildingGeometry(root) {
+  if (!THREE.mergeGeometries) return root;
+  root.updateMatrixWorld(true);
+  const animated = new Set(Object.values(root.userData).filter(v => v?.isObject3D));
+  const groups = new Map();
+  root.traverse(o => {
+    if (!o.isMesh || o.isSkinnedMesh || Array.isArray(o.material) || o.material.transparent || o.children.length || !o.visible) return;
+    for (let parent = o; parent; parent = parent.parent) if (animated.has(parent) || !parent.visible) return;
+    const attributes = Object.keys(o.geometry.attributes).sort().join(',');
+    const key = `${o.material.uuid}:${o.castShadow}:${o.receiveShadow}:${attributes}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(o);
+  });
+  for (const pieces of groups.values()) {
+    if (pieces.length < 2) continue;
+    const geometries = pieces.map(o => {
+      const geometry = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+      geometry.applyMatrix4(o.matrixWorld);
+      return geometry;
+    });
+    const merged = THREE.mergeGeometries(geometries);
+    for (const geometry of geometries) geometry.dispose();
+    if (!merged) continue;
+    const mesh = new THREE.Mesh(merged, pieces[0].material);
+    mesh.castShadow = pieces[0].castShadow; mesh.receiveShadow = pieces[0].receiveShadow;
+    mesh.name = 'batched-facade';
+    for (const piece of pieces) piece.removeFromParent();
+    root.add(mesh);
+  }
+  return root;
+}
+
 function loadModel(loaders, key, cfg) {
   return new Promise(resolve => {
     const isFbx = cfg.loader === 'fbx';
@@ -107,7 +141,12 @@ function preloadModels() {
     MODELS.failed = true;
     return Promise.resolve();
   }
-  const loaders = { gltf: new THREE.GLTFLoader(), fbx: THREE.FBXLoader ? new THREE.FBXLoader() : null };
+  THREE.Cache.enabled = true;
+  const manager = new THREE.LoadingManager();
+  // Use the same HTML image path as terrain/PBR textures. Some embedded
+  // browsers expose ImageBitmap support but return empty glTF texture sources.
+  manager.addHandler(/\.(png|jpe?g)(\?.*)?$/i, new THREE.TextureLoader(manager));
+  const loaders = { gltf: new THREE.GLTFLoader(manager), fbx: THREE.FBXLoader ? new THREE.FBXLoader(manager) : null };
   const jobs = Object.entries(MODEL_MANIFEST).map(([key, cfg]) => loadModel(loaders, key, cfg));
   return Promise.all(jobs).then(results => { MODELS.failed = results.every(ok => !ok); });
 }
@@ -347,6 +386,19 @@ function makeCharacterRig(character, teamColor, opts = {}) {
   const g = new THREE.Group();
   if (character === 'soldier') selectAuthoredWeapon(model, opts.weapon);
   cloneAuthoredMaterials(model, teamColor, character === 'soldier' ? 0.055 : 0.025);
+  if (character === 'soldier') {
+    model.traverse(o => {
+      if (!o.isMesh) return;
+      for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+        const name = (m.name || '').toLowerCase();
+        if (/skin|character_main|pants/.test(name)) {
+          m.metalness = 0; m.roughness = .86;
+          if (name === 'character_main') m.color.setHex(0x667153);
+          if (name === 'pants') m.color.setHex(0x69654e);
+        } else { m.metalness = .18; m.roughness = .58; }
+      }
+    });
+  }
   normalizeModel(model, null, opts.height || cfg.height || 2.3);
   model.rotation.y = opts.rotationY || 0;
   g.add(model);
@@ -562,7 +614,7 @@ function makeTankModel(teamColor, seed = 0) {
    industrial geometry instead of being dressed as offices. */
 const URBAN_ARCHITECTURE = {
   // seats of power — tall, formal
-  hq:            { model: 'city:skyD', span: 1.20, maxH: 18 },
+  hq:            { model: 'city:medium', span: 1.40, maxH: 12 },
   cityCenter:    { model: 'city:skyD', span: 1.15, maxH: 15 },
   cityHall:      { model: 'city:l',    span: 1.35, maxH: 11 },
   courthouse:    { model: 'city:m',    span: 1.30, maxH: 10 },
@@ -651,10 +703,25 @@ function makeDowntownBuilding(buildingKey, teamColor, seed = 0) {
   const palette = architectureMaterials();
   const pick = palette[Math.abs(seed * 2654435761 + buildingKey.length * 97) % palette.length];
   const worldScale = model.scale.x || 1;
+  const materialCopies = new Map();
   model.traverse(o => {
     if (!o.isMesh) return;
     o.castShadow = true;
     o.receiveShadow = true;
+    const authored = Array.isArray(o.material) ? o.material : [o.material];
+    if (authored.every(m => m.map)) {
+      const copies = authored.map(src => {
+        if (materialCopies.has(src)) return materialCopies.get(src);
+        const m = src.clone();
+        m.roughness = Math.max(.65, m.roughness ?? .8);
+        m.metalness = Math.min(.25, m.metalness ?? 0);
+        m.envMapIntensity = .65;
+        materialCopies.set(src, m);
+        return m;
+      });
+      o.material = Array.isArray(o.material) ? copies : copies[0];
+      return;
+    }
     o.geometry = o.geometry.clone();
     boxProjectUVs(o.geometry, worldScale, 4.5);
     const m = pick.clone();

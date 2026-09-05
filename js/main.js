@@ -7,7 +7,7 @@
 const G = {
   started: false, paused: true, gameOver: false,
   time: 0, speed: 1, frame: 0,
-  difficulty: 'easy', gfxHigh: true,
+  difficulty: 'easy', gfxHigh: true, graphics: 'balanced', resolutionMode: 'native',
   mapStyle: 'island', mapSize: 'large',
   res: { money: 1200, food: 250, oil: 0, iron: 120, silicon: 0, uranium: 0 },
   nations: [], units: [], buildings: [], deposits: [], effects: [],
@@ -31,7 +31,7 @@ const G = {
 
 let scene, camera, renderer, sunLight, terrainMesh;
 const camFocus = new THREE.Vector3(START_POS[0][0], 0, START_POS[0][1]);
-let camDist = 90, camYaw = Math.PI * 0.25;
+let camDist = 78, camZoomTarget = 78, camYaw = Math.PI * 0.25;
 let camPitch = 0.95; // radians above horizon — R/F tilt toward top-down / cinematic
 const keys = {};
 let mouse = { x: 0, y: 0, down: false, sx: 0, sy: 0, dragging: false, onCanvas: false, midPan: false };
@@ -44,19 +44,20 @@ let qualitySampleTime = 0, qualityFrameTime = 0, qualityFrames = 0;
 function initEngine() {
   const canvas = document.getElementById('game-canvas');
   renderer = new THREE.WebGLRenderer({
-    canvas, antialias: G.gfxHigh, powerPreference: 'high-performance',
+    canvas, antialias: true, powerPreference: 'high-performance',
     alpha: false, stencil: false,
   });
   renderer.setSize(innerWidth, innerHeight);
   // a crisp image is most of what separates "real game" from "browser demo";
   // the dynamic-resolution governor below only trims this when frames slip
-  renderPixelRatio = Math.min(devicePixelRatio, G.gfxHigh ? 2 : 1);
+  renderPixelRatio = displayPixelRatio();
   renderer.setPixelRatio(renderPixelRatio);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = G.gfxHigh;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.autoUpdate = false;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.22;
+  renderer.toneMappingExposure = 1.10;
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, 1, 2600);
@@ -85,8 +86,11 @@ function initEngine() {
   window.addEventListener('resize', () => {
     camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
+    renderPixelRatio = displayPixelRatio();
+    renderer.setPixelRatio(renderPixelRatio);
     renderer.setSize(innerWidth, innerHeight);
     if (composer) {
+      composer.setPixelRatio(renderPixelRatio);
       composer.setSize(innerWidth, innerHeight);
       setFxaaResolution();
       if (smaaPass) smaaPass.setSize(innerWidth * renderer.getPixelRatio(), innerHeight * renderer.getPixelRatio());
@@ -98,7 +102,7 @@ function initEngine() {
    FXAA restores the anti-aliasing the composer pipeline bypasses.
    Degrades gracefully to a plain render if the CDN scripts didn't load. */
 function initComposer() {
-  if (!G.gfxHigh || !THREE.EffectComposer || !THREE.UnrealBloomPass || !THREE.ShaderPass) return;
+  if (G.graphics !== 'cinematic' || !THREE.EffectComposer || !THREE.UnrealBloomPass || !THREE.ShaderPass) return;
   try {
     composer = new THREE.EffectComposer(renderer);
     if (composer.setPixelRatio) composer.setPixelRatio(renderer.getPixelRatio());
@@ -164,7 +168,7 @@ function setFxaaResolution() {
 /* Hold close to 60 FPS on high-DPI screens by changing only internal render
    resolution. Simulation speed and UI scale stay untouched. */
 function updateDynamicResolution(dt) {
-  if (!G.gfxHigh || document.hidden) return;
+  if (G.resolutionMode !== 'auto' || document.hidden || dt > .25) return;
   qualitySampleTime += dt;
   qualityFrameTime += dt;
   qualityFrames++;
@@ -192,7 +196,7 @@ function updateDynamicResolution(dt) {
 
   // never fall below 0.9: a soft, upscaled image costs more perceived quality
   // than the handful of frames it buys back
-  if (average > 1 / 50) next = Math.max(0.9, renderPixelRatio - 0.1);
+  if (average > 1 / 50) next = Math.max(1, renderPixelRatio - 0.1);
   else if (average < 1 / 59) next = Math.min(maxRatio, renderPixelRatio + 0.05);
 
   if (Math.abs(next - renderPixelRatio) > 0.001) {
@@ -234,7 +238,7 @@ function startGame() {
   // stream the real character models first (fast; skips itself offline)
   const startBtn = document.getElementById('btn-start');
   if (startBtn) { startBtn.disabled = true; startBtn.textContent = 'Loading models…'; }
-  Promise.all([preloadModels(), preloadArchitectureMaterials()]).then(startGameNow);
+  Promise.all([preloadModels(), preloadArchitectureMaterials()]).then(startGameNow).catch(err => { console.error(err); if (startBtn) { startBtn.disabled = false; startBtn.textContent = 'Retry campaign'; } });
 }
 function startGameNow() {
   document.getElementById('main-menu').classList.add('hidden');
@@ -248,6 +252,8 @@ function startGameNow() {
   initEngine();
   setupNations();
   buildMinimapTerrain();
+  drawMinimap();
+  updateTopBar();
   renderBuildPanel();
   // government: first leader takes office
   G.gov.leader = newLeader();
@@ -269,6 +275,7 @@ function startGameNow() {
 
 /* ---------------- camera ---------------- */
 function updateCamera(dt) {
+  camDist += (camZoomTarget - camDist) * (1 - Math.exp(-dt * 12));
   const panSpeed = camDist * 0.9 * dt;
   const fwdX = -Math.sin(camYaw), fwdZ = -Math.cos(camYaw);
   const rightX = Math.cos(camYaw), rightZ = -Math.sin(camYaw);
@@ -470,6 +477,11 @@ function initInput() {
   const canvas = document.getElementById('game-canvas');
   window.addEventListener('keydown', e => {
     const k = e.key.toLowerCase();
+    if (e.target.closest('input, select, textarea') || e.target.isContentEditable) return;
+    if (!G.started) return;
+    if (k === 'home') { e.preventDefault(); focusCapital(); return; }
+    if (k === 'f3') { e.preventDefault(); toggleDisplayPanel(); return; }
+    if (e.repeat && [' ', 'escape'].includes(k)) return;
     keys[k] = true;
     if (k === ' ') { e.preventDefault(); togglePause(); }
     if (k === 'escape') {
@@ -479,10 +491,11 @@ function initInput() {
     }
   });
   window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+  window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; mouse.onCanvas = mouse.midPan = mouse.down = false; hideDragBox(); });
 
   canvas.addEventListener('wheel', e => {
     // bigger maps allow a wider command view
-    camDist = clamp(camDist + e.deltaY * 0.08, 32, Math.max(220, MAP_SIZE * 0.3));
+    camZoomTarget = clamp(camZoomTarget + e.deltaY * 0.06, 24, Math.max(220, MAP_SIZE * 0.3));
   }, { passive: true });
 
   canvas.addEventListener('contextmenu', e => e.preventDefault());
@@ -666,8 +679,12 @@ let worldVisualTimer = 0, vegetationTimer = 0;
 
 function loop() {
   requestAnimationFrame(loop);
-  const rawDt = Math.min(clock.getDelta(), 0.05);
+  const measuredDt = clock.getDelta();
+  const rawDt = Math.min(measuredDt, 0.05);
   if (!G.started) return;
+  const frameStart = performance.now();
+  renderer.info.autoReset = false;
+  renderer.info.reset();
 
   if (!G.paused) {
     const dt = rawDt * G.speed;
@@ -711,8 +728,10 @@ function loop() {
   }
 
   updateCamera(rawDt);
-  updateDynamicResolution(rawDt);
-  updateGhost();
+  updateDynamicResolution(measuredDt);
+  if (!loop._ghostTime || performance.now() - loop._ghostTime >= 33) {
+    updateGhost(); loop._ghostTime = performance.now();
+  }
   // pointer communicates intent: crosshair when targeting a strike, copy when
   // placing a building, grab while panning
   const wantCursor = G.targeting ? 'crosshair' : G.placing ? 'copy' : mouse.midPan ? 'grabbing' : 'default';
@@ -729,7 +748,7 @@ function loop() {
     renderSelection();
   }
   buildBtnTimer += rawDt;
-  if (buildBtnTimer >= 1.5) { buildBtnTimer = 0; renderBuildPanel(); if (G.frame % 3 === 0) refreshWindows(); }
+  if (buildBtnTimer >= 1.5) { buildBtnTimer = 0; renderBuildPanel(); refreshWindows(); }
   mmTimer += rawDt;
   if (mmTimer >= 0.65) { mmTimer = 0; drawMinimap(); }
 
@@ -744,8 +763,18 @@ function loop() {
     if (e.ring && !e.dead) e.ring.material.opacity = ringPulse;
   }
 
+  // Reuse the shadow atlas between lighting updates. Camera movement refreshes
+  // immediately; stationary views update moving-unit shadows at 15 Hz (30 in Cinematic).
+  const shadowNow = performance.now();
+  const shadowMoved = !loop._shadowFocus || loop._shadowFocus.distanceToSquared(camFocus) > .04 || Math.abs((loop._shadowDist || 0) - camDist) > .1;
+  if (shadowMoved || shadowNow - (loop._shadowTime || 0) >= 1000 / (G.graphics === 'cinematic' ? 30 : 15)) {
+    renderer.shadowMap.needsUpdate = true;
+    (loop._shadowFocus ||= new THREE.Vector3()).copy(camFocus);
+    loop._shadowDist = camDist; loop._shadowTime = shadowNow;
+  }
   if (composer) composer.render();
   else renderer.render(scene, camera);
+  recordFrameStats(measuredDt, performance.now() - frameStart);
 }
 
 /* ---------------- boot ---------------- */
@@ -754,6 +783,7 @@ function bootGameUI() {
   if (gameUiBooted) return;
   gameUiBooted = true;
   initUI();
+  initPresentation();
   initInput();
 }
 if (document.readyState === 'loading') window.addEventListener('DOMContentLoaded', bootGameUI, { once: true });

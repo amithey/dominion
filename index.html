@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=command-4">
 </head>
 <body>
 <div id="game-container">
@@ -15,9 +15,11 @@
 
   <!-- Top resource bar -->
   <div id="top-bar">
+    <div class="brand-mark">D<span>DOMINION</span></div>
     <div id="res-bar"></div>
     <div id="top-right">
       <span id="clock">00:00</span>
+      <button class="top-btn" id="btn-display" title="Display settings (F3)" aria-label="Display settings">Display</button>
       <button class="top-btn" id="btn-speed" title="Game speed">1x</button>
       <button class="top-btn" id="btn-pause" title="Pause (Space)">⏸</button>
       <button class="top-btn" id="btn-menu" title="Menu (Esc)">☰</button>
@@ -36,7 +38,7 @@
 
   <!-- Bottom HUD -->
   <div id="bottom-hud">
-    <div id="minimap-wrap"><canvas id="minimap" width="220" height="220"></canvas></div>
+    <div id="minimap-wrap"><canvas id="minimap" width="320" height="320"></canvas></div>
     <div id="selection-panel">
       <div id="sel-info">
         <div class="hud-empty-title">NO UNIT SELECTED</div>
@@ -45,6 +47,7 @@
       </div>
     </div>
     <div id="build-panel">
+      <div class="build-heading"><span>CONSTRUCTION</span><input id="build-search" type="search" aria-label="Find a structure" placeholder="Find a structure…" autocomplete="off"></div>
       <div id="build-tabs">
         <button class="btab" data-cat="military">Military</button>
         <button class="btab active" data-cat="economy">Economy</button>
@@ -54,6 +57,14 @@
     </div>
   </div>
 
+  <div id="command-strip"><span class="campaign-status">CAMPAIGN ACTIVE</span><button id="btn-capital" title="Return to capital (Home)">Capital <kbd>Home</kbd></button><button id="btn-idle">Idle workers</button><span id="performance-readout"></span></div>
+  <section id="display-panel" hidden aria-label="Display settings">
+    <div class="display-heading">DISPLAY & PERFORMANCE<button id="display-close" aria-label="Close display settings">×</button></div>
+    <label>Render quality<select id="display-quality"><option value="low">Fast</option><option value="balanced" selected>Balanced</option><option value="cinematic">Cinematic</option></select></label>
+    <label>Resolution<select id="display-resolution"><option value="native">Native · sharp</option><option value="auto">Adaptive · minimum 100%</option><option value="supersample">Supersampling · up to 200%</option></select></label>
+    <p>Balanced uses native anti-aliasing and shadows. Cinematic adds ambient occlusion and bloom.</p>
+    <p id="performance-detail">Measuring frame times…</p>
+  </section>
   <!-- Notifications feed -->
   <div id="notifications"></div>
 
@@ -68,8 +79,8 @@
   <!-- Main menu -->
   <div id="main-menu" class="overlay">
     <div class="menu-box">
-      <h1>DOMINION</h1>
-      <p class="subtitle">Real-Time Nation Strategy — build, govern, trade, spy, conquer.</p>
+      <div class="menu-eyebrow">THE WORLD IS YOURS TO SHAPE</div><h1>DOMINION</h1>
+      <p class="subtitle">Build a nation. Command its future.</p>
       <div class="menu-row">
         <label>AI Difficulty</label>
         <div id="diff-btns">
@@ -82,7 +93,8 @@
         <label>Graphics</label>
         <div id="gfx-btns">
           <button class="gfx-btn" data-gfx="low">Fast</button>
-          <button class="gfx-btn active" data-gfx="high">Beautiful</button>
+          <button class="gfx-btn active" data-gfx="balanced">Balanced</button>
+          <button class="gfx-btn" data-gfx="cinematic">Cinematic</button>
         </div>
       </div>
       <div class="menu-row">
@@ -155,7 +167,7 @@
   }
 }
 </script>
-<script type="module" src="js/bootstrap.js"></script>
+<script type="module" src="js/bootstrap.js?v=command-4"></script>
 <!-- post-processing stack (bloom + FXAA). Load order matters: shaders → EffectComposer (defines THREE.Pass) → passes -->
 <!-- realistic reflective ocean from the official three.js examples -->
 <!-- real 3D character models: GLTF loader + skeleton cloning for animated units -->

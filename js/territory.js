@@ -314,8 +314,7 @@ function paintTerritory() {
   const geo = terrainMesh.geometry;
   const base = geo.userData.baseColors;
   const colors = geo.attributes.color;
-  colors.array.set(base);
-  colors.needsUpdate = true;
+  // Border-only display: unchanged terrain colors need no GPU upload.
 
   if (TERRITORY.borderMesh) {
     TERRITORY.borderMesh.parent?.remove(TERRITORY.borderMesh);

@@ -417,6 +417,21 @@ function buildWater(scene) {
         alpha: 0.94,          // opaque enough to hide the terrain mesh edge at the map border
         fog: true,
       });
+      // Keep animated normals at full rate; only recapture the reflected scene
+      // when the camera changes or at 15 Hz for moving units.
+      const capture = waterMesh.onBeforeRender;
+      const lastPosition = new THREE.Vector3(Infinity, Infinity, Infinity);
+      const lastRotation = new THREE.Quaternion();
+      let lastCapture = -Infinity;
+      waterMesh.onBeforeRender = function(r, sc, cam) {
+        const now = performance.now();
+        if (lastPosition.distanceToSquared(cam.position) > .0025 ||
+            lastRotation.angleTo(cam.quaternion) > .001 || now - lastCapture > 66) {
+          capture.call(this, r, sc, cam);
+          lastPosition.copy(cam.position); lastRotation.copy(cam.quaternion);
+          lastCapture = now;
+        }
+      };
       waterMesh.rotation.x = -Math.PI / 2;
       waterMesh.position.y = SEA_LEVEL;
       waterMesh.material.transparent = true;
@@ -925,6 +940,37 @@ function createAuthoredTreeVariants(total) {
   }).filter(variant => variant.parts.length);
 }
 
+// Partition authored forest into 64-unit cells. Whole-map instance bounds
+// otherwise defeat camera AND shadow frustum culling on large maps.
+function chunkAuthoredForest(scene) {
+  const buckets = new Map();
+  for (const tree of TREES.list) {
+    if (tree.kind !== 'real') continue;
+    const key = `${tree.authoredVariant}:${Math.floor(tree.x / 64)}:${Math.floor(tree.z / 64)}`;
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(tree);
+  }
+  const matrix = new THREE.Matrix4();
+  for (const trees of buckets.values()) {
+    const source = TREES.authored[trees[0].authoredVariant];
+    const parts = source.parts.map(part => {
+      const batch = new THREE.InstancedMesh(part.geometry, part.material, trees.length);
+      batch.castShadow = batch.receiveShadow = true;
+      batch.name = 'forest-cell';
+      trees.forEach((tree, i) => {
+        part.getMatrixAt(tree.canopyIdx, matrix);
+        batch.setMatrixAt(i, matrix);
+      });
+      batch.computeBoundingSphere();
+      batch.updateMatrix(); batch.matrixAutoUpdate = false;
+      scene.add(batch);
+      return batch;
+    });
+    trees.forEach((tree, i) => { tree.renderParts = parts; tree.renderIndex = i; });
+  }
+  for (const variant of TREES.authored) for (const part of variant.parts) part.dispose();
+}
+
 /* clump of individual grass blades on a transparent background —
    alpha-tested so only the blades render, not the quad */
 let _grassBladeTex = null;
@@ -1084,7 +1130,7 @@ function decorate(scene) {
         part.count = variant.count;
         part.instanceMatrix.needsUpdate = true;
         part.computeBoundingSphere();
-        scene.add(part);
+        // Spatial batches below own rendering; these are staging buffers.
       }
     }
   } else {
@@ -1098,6 +1144,8 @@ function decorate(scene) {
     scene.add(TREES.cones); scene.add(TREES.cones2); scene.add(TREES.cones3);
     scene.add(TREES.leaves); scene.add(TREES.leaves2); scene.add(TREES.leaves3);
   }
+
+  chunkAuthoredForest(scene);
 
   // grass tufts — thousands of blade clumps, one draw call, huge close-up realism.
   // Each instance is a quad with an alpha-tested texture of individual blades,
@@ -1127,7 +1175,7 @@ function decorate(scene) {
     grass.setMatrixAt(gi, dummy.matrix);
     // the blade texture is already green — tint with a light, barely-saturated
     // multiplier so tufts vary in brightness without going black
-    gCol.setHSL(0.24 + Math.random() * 0.08, 0.18, 0.42 + Math.random() * 0.18);
+    gCol.setHSL(0.24 + Math.random() * 0.08, 0.12, 0.72 + Math.random() * 0.14);
     grass.setColorAt(gi, gCol);
     gi++;
   }
@@ -1191,10 +1239,10 @@ function removeTree(t) {
   _treeDummy.rotation.set(0, 0, 0);
   _treeDummy.updateMatrix();
   if (t.kind === 'real') {
-    const variant = TREES.authored[t.authoredVariant];
-    if (!variant) return;
-    for (const part of variant.parts) {
-      part.setMatrixAt(t.canopyIdx, _treeDummy.matrix);
+    const parts = t.renderParts;
+    if (!parts) return;
+    for (const part of parts) {
+      part.setMatrixAt(t.renderIndex, _treeDummy.matrix);
       part.instanceMatrix.needsUpdate = true;
     }
     return;
@@ -1231,12 +1279,12 @@ function buildLights(scene, highGfx) {
   // Sky IBL plus this fill carry the ambient. Keeping the fill low and the sun
   // strong is what gives a scene readable form and shadow contrast instead of
   // the evenly-lit, flat look of a default web renderer.
-  const hemi = new THREE.HemisphereLight(0xcfe0f0, 0x5c6650, 0.42);
+  const hemi = new THREE.HemisphereLight(0xcfe0f0, 0x646c57, 0.85);
   scene.add(hemi);
 
-  const sun = new THREE.DirectionalLight(0xfff0d6, 2.05);
+  const sun = new THREE.DirectionalLight(0xfff1dc, 1.75);
   sun.position.set(120, 180, 60);
-  if (highGfx) {
+  {
     sun.castShadow = true;
     // 2048 over a shadow box that tightens as you zoom in: at close range the
     // map resolves to ~30 texels per world unit, so shadow edges stay crisp
@@ -1245,6 +1293,7 @@ function buildLights(scene, highGfx) {
     sun.shadow.bias = -0.0004;
     sun.shadow.normalBias = 0.02;
     setShadowExtent(sun, 120);
+    sun.castShadow = highGfx;
   }
   scene.add(sun);
   scene.add(sun.target);
