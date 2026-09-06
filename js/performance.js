@@ -21,6 +21,14 @@ function recordFrameStats(seconds, cpuMs) {
   };
   document.documentElement.dataset.performance = JSON.stringify(report);
   if (new URLSearchParams(location.search).has('qa')) {
+    document.documentElement.dataset.sceneCheck = JSON.stringify({
+      camera: { focus: camFocus.toArray(), distance: camDist, target: camZoomTarget },
+      tanks: G.units.filter(u => u.key === 'tank').map(u => ({
+        id: u.id, position: u.mesh.position.toArray(),
+        turret: u.mesh.userData.turret?.position.toArray(),
+        turretBounds: u.mesh.userData.turret ? new THREE.Box3().setFromObject(u.mesh.userData.turret) : null,
+      })),
+    });
     const hq = G.buildings.find(b => b.owner === 0 && b.key === 'hq');
     const materials = [];
     hq?.mesh.traverse(o => {

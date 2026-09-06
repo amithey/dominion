@@ -830,7 +830,7 @@ function renderSelection() {
   if (sel.length === 1) {
     const e = sel[0];
     const frac = clamp(e.hp / e.maxHp, 0, 1);
-    let html = `<div class="sel-title">${e.def.icon || ''} ${isSettlementBuilding(e) ? settlementDisplayName(e) : e.def.name} ${e.owner !== 0 ? `<span style="color:${G.nations[e.owner].css}">(${G.nations[e.owner].name})</span>` : ''}</div>
+    let html = `<div class="sel-title">${uiIcon(e.type === 'building' ? buildIcon(e.key, e.def) : 'army')} ${isSettlementBuilding(e) ? settlementDisplayName(e) : e.def.name} ${e.owner !== 0 ? `<span style="color:${G.nations[e.owner].css}">(${G.nations[e.owner].name})</span>` : ''}</div>
       <div class="sel-sub">${e.def.desc || ''}</div>
       <div class="hp-bar"><div style="width:${frac * 100}%;background:${frac > 0.5 ? 'var(--ok)' : frac > 0.25 ? 'var(--gold)' : 'var(--danger)'}"></div></div>
       HP ${Math.ceil(e.hp)}/${Math.ceil(e.maxHp)}`;

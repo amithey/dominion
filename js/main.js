@@ -6,6 +6,7 @@
 /* ---- global game state ---- */
 const G = {
   started: false, paused: true, gameOver: false,
+  reviewMode: false,
   time: 0, speed: 1, frame: 0,
   difficulty: 'easy', gfxHigh: true, graphics: 'balanced', resolutionMode: 'native',
   mapStyle: 'island', mapSize: 'large',
@@ -61,6 +62,7 @@ function initEngine() {
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, 1, 2600);
+  updateCameraViewport();
 
   sunLight = buildLights(scene, G.gfxHigh);
   // image-based lighting captured from THIS sky, not a generic studio room:
@@ -85,7 +87,7 @@ function initEngine() {
 
   window.addEventListener('resize', () => {
     camera.aspect = innerWidth / innerHeight;
-    camera.updateProjectionMatrix();
+    updateCameraViewport();
     renderPixelRatio = displayPixelRatio();
     renderer.setPixelRatio(renderPixelRatio);
     renderer.setSize(innerWidth, innerHeight);
@@ -235,10 +237,19 @@ function setupNations() {
 }
 
 function startGame() {
+  if (G.started || G.loading) return;
+  G.loading = true;
   // stream the real character models first (fast; skips itself offline)
   const startBtn = document.getElementById('btn-start');
+  const reviewBtn = document.getElementById('btn-review');
+  if (reviewBtn) reviewBtn.disabled = true;
   if (startBtn) { startBtn.disabled = true; startBtn.textContent = 'Loading models…'; }
-  Promise.all([preloadModels(), preloadArchitectureMaterials()]).then(startGameNow).catch(err => { console.error(err); if (startBtn) { startBtn.disabled = false; startBtn.textContent = 'Retry campaign'; } });
+  Promise.all([preloadModels(), preloadArchitectureMaterials()]).then(startGameNow).catch(err => {
+    G.loading = false;
+    console.error(err);
+    if (reviewBtn) reviewBtn.disabled = false;
+    if (startBtn) { startBtn.disabled = false; startBtn.textContent = 'Retry campaign'; }
+  });
 }
 function startGameNow() {
   document.getElementById('main-menu').classList.add('hidden');
@@ -251,6 +262,7 @@ function startGameNow() {
   camFocus.set(START_POS[0][0], 0, START_POS[0][1]);
   initEngine();
   setupNations();
+  if (G.reviewMode) setupVisualReview();
   buildMinimapTerrain();
   drawMinimap();
   updateTopBar();
@@ -261,7 +273,7 @@ function startGameNow() {
   G.agentRoster.push(newAgent()); // one field agent to start with
   G.civic.nextElection = LOCAL_ELECTION_EVERY * YEAR_SECONDS;
   const firstEvent = { democracy: 5, dictatorship: 5, monarchy: 10, technocracy: 8 }[G.gov.form];
-  G.gov.nextEvent = firstEvent * YEAR_SECONDS;
+  G.gov.nextEvent = G.reviewMode ? Infinity : firstEvent * YEAR_SECONDS;
   G.started = true;
   G.paused = false;
   document.documentElement.dataset.gameReady = 'true';
@@ -481,6 +493,7 @@ function initInput() {
     if (!G.started) return;
     if (k === 'home') { e.preventDefault(); focusCapital(); return; }
     if (k === 'f3') { e.preventDefault(); toggleDisplayPanel(); return; }
+    if (k === 'f10') { e.preventDefault(); toggleGameHUD(); return; }
     if (e.repeat && [' ', 'escape'].includes(k)) return;
     keys[k] = true;
     if (k === ' ') { e.preventDefault(); togglePause(); }
@@ -694,7 +707,7 @@ function loop() {
     // simulation
     for (const u of G.units) if (!u.dead) updateUnit(u, dt);
     for (const b of G.buildings) if (!b.dead) updateBuilding(b, dt);
-    for (const nat of G.nations) if (!nat.isPlayer) aiUpdate(nat, dt);
+    if (!G.reviewMode) for (const nat of G.nations) if (!nat.isPlayer) aiUpdate(nat, dt);
     updateMissiles(dt);
     updateEffects(dt);
     // Decorative world animation is intentionally capped. Updating thousands
@@ -716,7 +729,7 @@ function loop() {
     cityTimer += dt;
     if (cityTimer >= 1) { cityTimer -= 1; updateCity(); }
     diploTimer += dt;
-    if (diploTimer >= 10) { diploTimer -= 10; diploTick(); }
+    if (diploTimer >= 10) { diploTimer -= 10; if (!G.reviewMode) diploTick(); }
     territoryTimer += dt;
     if (territoryTimer >= 2) { territoryTimer -= 2; territoryTick(); }
 
@@ -728,6 +741,7 @@ function loop() {
   }
 
   updateCamera(rawDt);
+  updateForestLOD(camera);
   updateDynamicResolution(measuredDt);
   if (!loop._ghostTime || performance.now() - loop._ghostTime >= 33) {
     updateGhost(); loop._ghostTime = performance.now();
@@ -791,5 +805,6 @@ else bootGameUI();
 
 // Automated visual QA hook. It is completely inert for normal players.
 if (new URLSearchParams(location.search).get('autostart') === '1') {
+  G.reviewMode = new URLSearchParams(location.search).get('review') === '1';
   setTimeout(() => { if (!G.started) startGame(); }, 0);
 }

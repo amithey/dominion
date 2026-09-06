@@ -5,6 +5,9 @@
    ============================================================ */
 
 const MODEL_MANIFEST = {
+  'character:infantry': {
+    file: 'assets/models/infantry/infantry.gltf', height: 2.35, faceOffset: Math.PI,
+  },
   // Quaternius animated characters (CC0). Both contain complete humanoid
   // skeletons, authored locomotion/action clips and recognisable equipment.
   'character:worker': {
@@ -402,7 +405,7 @@ function makeCharacterRig(character, teamColor, opts = {}) {
   normalizeModel(model, null, opts.height || cfg.height || 2.3);
   model.rotation.y = opts.rotationY || 0;
   g.add(model);
-  addReadableCharacterProp(g, character === 'worker' ? 'tool' : 'marker', teamColor);
+  if (character !== 'infantry') addReadableCharacterProp(g, character === 'worker' ? 'tool' : 'marker', teamColor);
 
   const mixer = new THREE.AnimationMixer(model);
   const clips = character === 'worker' ? {
@@ -432,7 +435,33 @@ function makeCharacterRig(character, teamColor, opts = {}) {
 }
 
 function makeSoldierRig(teamColor, opts = {}) {
-  return makeCharacterRig('soldier', teamColor, opts);
+  const rig = makeCharacterRig('infantry', teamColor, opts);
+  if (!rig) return makeCharacterRig('soldier', teamColor, opts);
+  // Reuse authored weapons and attach to the hand, following locomotion.
+  const weapons = MODELS.loaded.get('character:soldier');
+  const name = opts.weapon === 'launcher' ? 'RocketLauncher' : opts.weapon === 'sniper' ? 'Sniper_2' : 'AK';
+  const source = weapons?.scene.getObjectByName(name);
+  const hand = rig.getObjectByName('mixamorigRightHand') || rig.getObjectByName('mixamorig:RightHand');
+  if (source && hand) {
+    const weapon = source.clone(true);
+    weapon.visible = true;
+    weapon.position.set(0, 0, 0); weapon.rotation.set(0, 0, 0); weapon.scale.setScalar(1);
+    const size = new THREE.Box3().setFromObject(weapon).getSize(new THREE.Vector3());
+    if (size.x > size.z && size.x > size.y) weapon.rotation.y = Math.PI / 2;
+    else if (size.y > size.z) weapon.rotation.x = Math.PI / 2;
+    normalizeModel(weapon, opts.weapon === 'launcher' ? 1.35 : 1.05);
+    cloneAuthoredMaterials(weapon);
+    rig.add(weapon);
+    rig.updateMatrixWorld(true);
+    const grip = hand.getWorldPosition(new THREE.Vector3());
+    rig.worldToLocal(grip);
+    weapon.position.copy(grip);
+    weapon.rotation.y += Math.PI;
+    weapon.rotation.x += .35;
+    rig.updateMatrixWorld(true);
+    hand.attach(weapon);
+  }
+  return rig;
 }
 
 function makeWorkerRig(teamColor, opts = {}) {
@@ -584,13 +613,23 @@ function makeTankModel(teamColor, seed = 0) {
     root.add(turretGroup);
     turretGroup.attach(turretMesh);   // Object3D#attach preserves world transform
     if (gunMesh) turretGroup.attach(gunMesh);
+    // Several variants put the unanimated gun below the hull roof in their
+    // bind pose. Seat the complete turret assembly on the upper hull.
+    const hull = model.getObjectByName('Tank_body') || model.getObjectByName('Tank_body001');
+    if (hull) {
+      root.updateMatrixWorld(true);
+      if (hull.isSkinnedMesh) { hull.skeleton.update(); hull.computeBoundingBox(); }
+      const hullBox = new THREE.Box3().setFromObject(hull);
+      const turretBox = new THREE.Box3().setFromObject(turretMesh);
+      turretGroup.position.y += Math.max(0, hullBox.max.y - turretBox.min.y - .06);
+    }
     root.userData.turret = turretGroup;
   }
 
   // restrained team-colour identification — a full repaint would erase the
   // pack's own camo/paint work, so this is a light lean only
   const tint = new THREE.Color(teamColor);
-  model.traverse(o => {
+  root.traverse(o => {
     if (!o.isMesh && !o.isSkinnedMesh) return;
     const mats = Array.isArray(o.material) ? o.material : [o.material];
     const clones = mats.map(m => {
@@ -603,6 +642,7 @@ function makeTankModel(teamColor, seed = 0) {
 
   root.userData.assetModel = true;
   root.userData.assetKey = variantKey;
+  root.userData.faceOffset = -Math.PI / 2;
   return root;
 }
 
@@ -632,8 +672,7 @@ const URBAN_ARCHITECTURE = {
   policeStation: { model: 'city:d',    span: 1.25, maxH: 8 },
   // commerce & storage — low, wide
   market:        { model: 'city:f',    span: 1.30, maxH: 8 },
-  foodDepot:     { model: 'city:h',    span: 1.30, maxH: 8 },
-  warehouse:     { model: 'city:b',    span: 1.35, maxH: 8 },
+  // Depots use the dedicated industrial architecture with loading doors.
   chipFab:       { model: 'city:i',    span: 1.30, maxH: 10 },
   // housing — from walk-ups to towers
   housing:       { model: 'city:a',    span: 1.25, maxH: 9 },
@@ -682,6 +721,14 @@ function makeDowntownBuilding(buildingKey, teamColor, seed = 0) {
       silo.position.set(3.15, 0, -0.55);
       silo.rotation.y = Math.PI * 0.5;
       root.add(silo);
+
+      const soil = new THREE.Mesh(new THREE.BoxGeometry(8.8, .08, 2), new THREE.MeshStandardMaterial({ color: 0x554331, roughness: 1 }));
+      soil.position.set(0, .05, 3.9); soil.receiveShadow = true; root.add(soil);
+      const cropMaterial = new THREE.MeshStandardMaterial({ color: 0x737b3d, roughness: .95 });
+      for (let row = 0; row < 5; row++) {
+        const crops = new THREE.Mesh(new THREE.BoxGeometry(8.4, .16, .18), cropMaterial);
+        crops.position.set(0, .16, 3.15 + row * .36); crops.receiveShadow = true; root.add(crops);
+      }
 
       root.userData.assetModel = true;
       root.userData.assetKey = 'farm:complex';

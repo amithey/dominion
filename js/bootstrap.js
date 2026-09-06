@@ -32,14 +32,14 @@ window.THREE = {
 };
 
 const gameScripts = [
-  'config.js', 'models.js', 'world.js', 'path.js', 'territory.js',
-  'entities.js', 'diplomacy.js', 'ai.js', 'ui.js', 'performance.js', 'presentation.js', 'main.js',
+  'config.js', 'models.js', 'terrain-picking.js', 'forest-lod.js', 'world.js', 'path.js', 'territory.js',
+  'entities.js', 'diplomacy.js', 'ai.js', 'ui.js', 'performance.js', 'presentation.js', 'review.js', 'main.js',
 ];
 
 for (const file of gameScripts) {
   await new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = `js/${file}?v=command-4`;
+    script.src = `js/${file}?v=field-2`;
     script.async = false;
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${file}`));

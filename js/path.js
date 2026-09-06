@@ -11,7 +11,8 @@ const NAV = {
   land: null, sea: null,
   dirty: true,
   // reusable A* buffers (allocated once per map)
-  gCost: null, parent: null, stamp: null, gen: 0,
+  gCost: null, parent: null, stamp: null, closed: null, gen: 0,
+  ground: null, blockers: null, revision: 0, requestFrame: -1, requests: 0,
 };
 
 function navIndex(x, z) {
@@ -37,12 +38,17 @@ function navRebuild() {
     NAV.land[i] = h > 0.05 ? 1 : 0;
     NAV.sea[i] = h < -0.5 ? 1 : 0;
   }
+  NAV.ground = NAV.land.slice();
+  NAV.blockers = new Uint16Array(n);
+  // Building masks must be applied AFTER leaving the dirty state.
+  NAV.dirty = false;
   for (const b of G.buildings) if (!b.dead) navBlockBuilding(b, true);
   NAV.gCost = new Float32Array(n);
   NAV.parent = new Int32Array(n);
   NAV.stamp = new Int32Array(n);
+  NAV.closed = new Int32Array(n);
   NAV.gen = 0;
-  NAV.dirty = false;
+  NAV.revision++;
 }
 
 /* buildings block the land grid so units path around bases */
@@ -57,14 +63,11 @@ function navBlockBuilding(b, block) {
       const nx = cx + dx, nz = cz + dz;
       if (nx < 0 || nz < 0 || nx >= NAV.cols || nz >= NAV.cols) continue;
       const i = nz * NAV.cols + nx;
-      if (block) NAV.land[i] = 0;
-      else {
-        // restore from terrain (another building may still overlap; territoryTick era rebuild fixes rare cases)
-        const c = navCenter(i);
-        NAV.land[i] = terrainH(c.x, c.z) > 0.05 ? 1 : 0;
-      }
+      NAV.blockers[i] = Math.max(0, NAV.blockers[i] + (block ? 1 : -1));
+      NAV.land[i] = NAV.blockers[i] ? 0 : NAV.ground[i];
     }
   }
+  NAV.revision++;
 }
 
 /* straight line walkable? sampled every half-cell */
@@ -102,14 +105,16 @@ function findPath(sx, sz, gx, gz, naval) {
   if (NAV.dirty) navRebuild();
   const grid = naval ? NAV.sea : NAV.land;
   let start = navIndex(sx, sz), goal = navIndex(gx, gz);
+  const requestedGoal = goal;
   start = navNearestOpen(start, grid, 4);
   goal = navNearestOpen(goal, grid, 8);
   if (start < 0 || goal < 0) return null;
-  if (start === goal) return [{ x: gx, z: gz }];
+  const destination = goal === requestedGoal ? { x: gx, z: gz } : navCenter(goal);
+  if (start === goal) return [destination];
 
   const cols = NAV.cols;
   NAV.gen++;
-  const { gCost, parent, stamp } = NAV;
+  const { gCost, parent, stamp, closed } = NAV;
   const gxc = goal % cols, gzc = Math.floor(goal / cols);
 
   // simple binary heap of [f, index]
@@ -151,6 +156,8 @@ function findPath(sx, sz, gx, gz, naval) {
   const expansionLimit = Math.min(cols * cols, 28000);
   while (heap.length && expansions++ < expansionLimit) {
     const [, cur] = pop();
+    if (closed[cur] === NAV.gen) continue;
+    closed[cur] = NAV.gen;
     if (cur === goal) { found = true; break; }
     const cx = cur % cols, cz = Math.floor(cur / cols);
     for (let dz = -1; dz <= 1; dz++) {
@@ -159,7 +166,7 @@ function findPath(sx, sz, gx, gz, naval) {
         const nx = cx + dx, nz = cz + dz;
         if (nx < 0 || nz < 0 || nx >= cols || nz >= cols) continue;
         const ni = nz * cols + nx;
-        if (!grid[ni]) continue;
+        if (!grid[ni] || closed[ni] === NAV.gen) continue;
         // no cutting corners diagonally through blocked cells
         if (dx && dz && (!grid[cz * cols + nx] || !grid[nz * cols + cx])) continue;
         const step = dx && dz ? Math.SQRT2 : 1;
@@ -177,7 +184,7 @@ function findPath(sx, sz, gx, gz, naval) {
   for (let i = goal; i !== -1; i = parent[i]) cells.push(i);
   cells.reverse();
   const pts = cells.map(navCenter);
-  pts[pts.length - 1] = { x: gx, z: gz };
+  pts[pts.length - 1] = destination;
   const out = [];
   let a = { x: sx, z: sz };
   let k = 0;
@@ -197,21 +204,51 @@ function findPath(sx, sz, gx, gz, naval) {
 }
 
 /* per-unit waypoint steering: returns the point to head toward, or null for direct */
+function navEscapePoint(u) {
+  const grid = u.def.naval ? NAV.sea : NAV.land;
+  if (!grid) return null;
+  const index = navIndex(u.x, u.z);
+  if (grid[index]) return null;
+  if (u.escapeIndex !== index || u.escapeRevision !== NAV.revision) {
+    u.escapeIndex = index; u.escapeRevision = NAV.revision;
+    const open = navNearestOpen(index, grid, 32);
+    u.escapePoint = open === -1 ? null : navCenter(open);
+  }
+  return u.escapePoint;
+}
+
 function pathNext(u, gx, gz) {
   if (u.def.fly) return null; // aircraft fly straight
+  if (NAV.dirty) navRebuild();
+  const escape = navEscapePoint(u);
+  if (escape) return escape;
+  if (NAV.requestFrame !== G.frame) { NAV.requestFrame = G.frame; NAV.requests = 0; }
   const naval = !!u.def.naval;
   const now = G.time;
-  const goalMoved = !u.pathGoal || dist2d(u.pathGoal.x, u.pathGoal.z, gx, gz) > 6;
+  const goalMoved = !u.pathGoal || u.pathRevision !== NAV.revision || dist2d(u.pathGoal.x, u.pathGoal.z, gx, gz) > 6;
   if ((goalMoved || u.forceRepath) && now >= (u.nextPathAt || 0)) {
+    const direct = navLOS(u.x, u.z, gx, gz, naval);
+    // Spread formation path requests over frames instead of solving every A*
+    // synchronously on the command frame. Waiting units stay put safely.
+    if (!direct && NAV.requests >= 3) return { x: u.x, z: u.z };
     u.nextPathAt = now + 0.8;
     u.forceRepath = false;
     u.pathGoal = { x: gx, z: gz };
-    if (navLOS(u.x, u.z, gx, gz, naval)) u.path = null;
-    else { u.path = findPath(u.x, u.z, gx, gz, naval); u.pathI = 0; }
+    u.pathRevision = NAV.revision;
+    if (direct) u.path = null;
+    else {
+      NAV.requests++; u.path = findPath(u.x, u.z, gx, gz, naval); u.pathI = 0;
+      if (u.path && (u.state === 'move' || u.state === 'attackMove')) {
+        const end = u.path[u.path.length - 1];
+        // A move into occupied/water cells ends at the reachable shore/edge.
+        u.tx = end.x; u.tz = end.z;
+        u.pathGoal = { x: end.x, z: end.z };
+      }
+    }
   }
   if (u.path && u.pathI < u.path.length) {
     const wp = u.path[u.pathI];
-    if (dist2d(u.x, u.z, wp.x, wp.z) < 3.2) {
+    if (dist2d(u.x, u.z, wp.x, wp.z) < .9) {
       u.pathI++;
       return u.pathI < u.path.length ? u.path[u.pathI] : null;
     }

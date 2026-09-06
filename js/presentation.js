@@ -81,7 +81,22 @@ function focusCapital() {
   camFocus.set(capital.x, 0, capital.z);
   select([capital]);
 }
+function updateCameraViewport() {
+  if (!camera) return;
+  if (document.body.classList.contains('hud-hidden')) camera.clearViewOffset();
+  else {
+    const bottom = document.getElementById('bottom-hud').offsetHeight + document.getElementById('command-strip').offsetHeight;
+    const top = document.getElementById('top-bar').offsetHeight;
+    camera.setViewOffset(innerWidth, innerHeight, 0, (bottom - top) / 2, innerWidth, innerHeight);
+  }
+  camera.updateProjectionMatrix();
+}
+function toggleGameHUD() {
+  document.body.classList.toggle('hud-hidden');
+  updateCameraViewport();
+}
 function initPresentation() {
+  document.getElementById('btn-review').onclick = () => { if (!G.loading) { G.reviewMode = true; startGame(); } };
   const names = ['city', 'map', 'diplomacy', 'trade', 'intel', 'research'];
   document.querySelectorAll('.side-btn').forEach((button, i) => {
     const label = button.querySelector('span').textContent;

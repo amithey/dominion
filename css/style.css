@@ -365,3 +365,12 @@ kbd { font: 9px 'Segoe UI', sans-serif; background: #233239; color: #c6cfc9; bor
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation: none !important; transition: none !important; } }
 
 @media(max-width:1100px) { .res-value small { display: none; } .res-item { padding: 0 7px; gap: 5px; font-size: 12px; } .res-item .delta { display: none; } }
+.hud-hidden #top-bar, .hud-hidden #bottom-hud, .hud-hidden #command-strip,
+.hud-hidden #side-btns, .hud-hidden #notifications, .hud-hidden #display-panel { display: none; }
+#review-controls { position: absolute; top: 77px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; padding: 6px 9px; background: #102025ed; border: 1px solid #958456; border-radius: 3px; z-index: 30; align-items: center; white-space: nowrap; }
+#review-controls > span { font-size: 8px; color: var(--gold); letter-spacing: .1em; padding-right: 5px; }
+#review-controls button { background: #263a3c; border: 1px solid #4c5e54; color: #e0e3d3; padding: 5px 9px; border-radius: 2px; font-size: 10px; cursor: pointer; }
+.hud-hidden #review-controls { display: none; }
+#review-controls button[aria-pressed="true"] { color: var(--gold); border-color: var(--gold); background: #3b4236; }
+#btn-review { margin-top: 9px; padding: 9px; font-size: 10px; }
+@media(max-height:650px) { :root { --hud-height: 170px; } #minimap { width: 124px; height: 124px; } #minimap-wrap { width: 150px; } #side-btns { flex-direction: row; top: 75px; } .side-btn { width: 44px; height: 42px; gap: 3px; border-bottom: 0; } .side-btn span { font-size: 8px; } .side-btn .ui-icon { width: 17px; height: 17px; } #review-controls { top: 126px; left: auto; right: 15px; transform: none; } .hud-empty-title { font-size: 18px; margin-top: 7px; } .hud-empty-sub { margin-top: 6px; font-size: 11px; } .hud-hotkeys { margin-top: 9px; font-size: 9px; } }

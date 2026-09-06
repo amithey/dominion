@@ -18,6 +18,13 @@ Gameplay models live under `assets/models`. City and watercraft models are from 
 Soldier is from the Three.js examples. Existing procedural meshes remain automatic fallbacks if a model is missing.
 
 ## How to play
+- **Local review:** `npm start` serves fresh assets at `http://127.0.0.1:8771/index.html`.
+  Choose **Visual review** for a developed base with Infantry / Armor close-ups.
+  Opponent AI is paused in this separate review scenario; **New campaign** returns to normal play.
+- **Display:** `F3` opens quality and resolution settings; `F10` hides/restores the HUD.
+  `Home` returns to the capital. The construction search filters buildings without resetting the list during play.
+- **Validation:** `npm install` then `npm test` checks terrain picking, building avoidance,
+  reachable move destinations, formation path budgets, and tank assembly.
 - **Goal:** destroy every rival Headquarters. Lose yours and it's over.
 - **Controls:** left-click / drag = select · right-click = move / attack / mine / construct ·
   `A`+click = attack-move · `WASD` pan · `Q/E` rotate · wheel zoom · `Space` pause · `Esc` menu/abort.

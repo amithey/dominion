@@ -387,6 +387,7 @@ function buildTerrain(scene) {
   const mesh = new THREE.Mesh(geo, mat);
   mesh.receiveShadow = true;
   mesh.name = 'terrain';
+  installTerrainPicking(mesh, MAP_SIZE, segs);
   scene.add(mesh);
   return mesh;
 }
@@ -943,6 +944,7 @@ function createAuthoredTreeVariants(total) {
 // Partition authored forest into 64-unit cells. Whole-map instance bounds
 // otherwise defeat camera AND shadow frustum culling on large maps.
 function chunkAuthoredForest(scene) {
+  for (const variant of TREES.authored) variant.impostor = bakeTreeImpostor(variant.parts);
   const buckets = new Map();
   for (const tree of TREES.list) {
     if (tree.kind !== 'real') continue;
@@ -966,7 +968,17 @@ function chunkAuthoredForest(scene) {
       scene.add(batch);
       return batch;
     });
-    trees.forEach((tree, i) => { tree.renderParts = parts; tree.renderIndex = i; });
+    const impostor = new THREE.InstancedMesh(source.impostor.geometry, source.impostor.material, trees.length);
+    trees.forEach((tree, i) => {
+      source.parts[0].getMatrixAt(tree.canopyIdx, matrix);
+      impostor.setMatrixAt(i, matrix);
+    });
+    impostor.computeBoundingSphere();
+    impostor.visible = false;
+    impostor.name = 'distant-forest';
+    scene.add(impostor);
+    FOREST_CELLS.push({ parts, impostor, bounds: impostor.boundingSphere.clone(), detailed: true });
+    trees.forEach((tree, i) => { tree.renderParts = [...parts, impostor]; tree.renderIndex = i; });
   }
   for (const variant of TREES.authored) for (const part of variant.parts) part.dispose();
 }

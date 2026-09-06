@@ -2465,8 +2465,8 @@ function unitMesh(key, color, seed = 0) {
 /* selection ring + hp bar attached to every entity */
 function attachOverlays(ent, radius) {
   const ring = new THREE.Mesh(
-    new THREE.RingGeometry(radius * 0.9, radius * 1.08, 24),
-    new THREE.MeshBasicMaterial({ color: 0x7dff8f, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false })
+    new THREE.RingGeometry(radius * 0.98, radius * 1.04, 48),
+    new THREE.MeshBasicMaterial({ color: 0xc9d4ac, transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false })
   );
   ring.rotation.x = -Math.PI / 2;
   ring.position.y = 0.15;
@@ -2476,9 +2476,9 @@ function attachOverlays(ent, radius) {
 
   const barY = ent.type === 'building' ? radius * 1.3 + 3 : (UNITS[ent.key] && UNITS[ent.key].fly ? 3.2 : 3);
   const w = ent.type === 'building' ? radius * 1.2 : 1.6;
-  const bg = new THREE.Mesh(new THREE.BoxGeometry(w, 0.22, 0.22), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+  const bg = new THREE.Mesh(new THREE.BoxGeometry(w + .1, 0.14, 0.14), new THREE.MeshBasicMaterial({ color: 0x172127 }));
   bg.position.y = barY;
-  const fg = new THREE.Mesh(new THREE.BoxGeometry(w, 0.26, 0.26), new THREE.MeshBasicMaterial({ color: 0x4dff6a }));
+  const fg = new THREE.Mesh(new THREE.BoxGeometry(w, 0.08, 0.16), new THREE.MeshBasicMaterial({ color: 0x95bba0 }));
   fg.position.y = barY;
   bg.visible = fg.visible = false;
   ent.mesh.add(bg); ent.mesh.add(fg);
@@ -2492,7 +2492,7 @@ function updateHpBar(ent) {
   if (show) {
     ent.hpFg.scale.x = Math.max(frac, 0.001);
     ent.hpFg.position.x = -ent.hpW * (1 - frac) / 2;
-    ent.hpFg.material.color.setHex(frac > 0.55 ? 0x4dff6a : frac > 0.25 ? 0xffd24d : 0xff5d5d);
+    ent.hpFg.material.color.setHex(frac > 0.55 ? 0x95bba0 : frac > 0.25 ? 0xcbbb7f : 0xd9796d);
   }
 }
 
@@ -3182,7 +3182,13 @@ function reloadMult(owner) {
 function canStandAt(u, x, z) {
   if (u.def.fly) return true;
   const h = terrainH(x, z);
-  return u.def.naval ? h < -0.5 : h > 0.05;
+  if (u.def.naval) return h < -0.5;
+  if (h <= 0.05) return false;
+  if (NAV.dirty || !NAV.land || NAV.land[navIndex(x, z)]) return true;
+  // A newly placed structure may cover an existing unit. Let it leave the
+  // occupied area without allowing units outside to enter that footprint.
+  const escape = navEscapePoint(u);
+  return !!escape && dist2d(x, z, escape.x, escape.z) < dist2d(u.x, u.z, escape.x, escape.z);
 }
 
 function updateUnit(u, dt) {
