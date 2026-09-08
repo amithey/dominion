@@ -299,13 +299,20 @@ function normalizeModel(model, targetSpan = null, targetHeight = null) {
   return bounds.getSize(new THREE.Vector3());
 }
 
+/* The candidate list is in PRIORITY order. This used to scan the file and
+   return the first clip that appeared in the list, which means the export
+   order decided which animation won, not the preference — a soldier asked for
+   "Run_Gun, else Run" always got Run, because Run is exported first. */
 function animationByName(gltf, candidates) {
-  const wanted = candidates.map(n => n.toLowerCase());
-  return gltf.animations.find(c => {
-    const full = c.name.toLowerCase();
-    const short = full.split('|').pop();
-    return wanted.includes(full) || wanted.includes(short);
-  });
+  for (const candidate of candidates) {
+    const want = candidate.toLowerCase();
+    const found = gltf.animations.find(c => {
+      const full = c.name.toLowerCase();
+      return full === want || full.split('|').pop() === want;
+    });
+    if (found) return found;
+  }
+  return null;
 }
 
 function addReadableCharacterProp(root, kind, teamColor) {
@@ -389,15 +396,27 @@ function makeCharacterRig(character, teamColor, opts = {}) {
   const g = new THREE.Group();
   if (character === 'soldier') selectAuthoredWeapon(model, opts.weapon);
   cloneAuthoredMaterials(model, teamColor, character === 'soldier' ? 0.055 : 0.025);
-  if (character === 'soldier') {
+  // TEAM COLOUR. Ownership used to be communicated by a 13 cm armband, which at
+  // the distance an RTS camera actually sits at is one invisible pixel — so
+  // every soldier of every nation read as the same brown figure. The uniform
+  // itself now carries the nation's colour, knocked back toward field green so
+  // it still looks like a uniform rather than fancy dress. Skin, weapons and
+  // webbing are deliberately left alone: the point is a readable colour, not a
+  // repainted character.
+  if (character === 'soldier' || character === 'worker') {
+    const team = new THREE.Color(teamColor);
+    const tunic = team.clone().lerp(new THREE.Color(0x6a7358), 0.42);
+    const trousers = team.clone().lerp(new THREE.Color(0x3f4436), 0.62);
     model.traverse(o => {
       if (!o.isMesh) return;
       for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
         const name = (m.name || '').toLowerCase();
-        if (/skin|character_main|pants/.test(name)) {
+        if (/skin|character_main|pants|worker_vest|brown2?$/.test(name)) {
           m.metalness = 0; m.roughness = .86;
-          if (name === 'character_main') m.color.setHex(0x667153);
-          if (name === 'pants') m.color.setHex(0x69654e);
+          // Character_Main = soldier tunic, Worker_Vest = the worker's hi-vis,
+          // Brown/Brown2 = the worker's shirt and trousers
+          if (name === 'character_main' || name === 'worker_vest' || name === 'brown') m.color.copy(tunic);
+          if (name === 'pants' || name === 'brown2') m.color.copy(trousers);
         } else { m.metalness = .18; m.roughness = .58; }
       }
     });
@@ -412,8 +431,11 @@ function makeCharacterRig(character, teamColor, opts = {}) {
     idle: ['Idle_Neutral', 'Idle'], walk: ['Walk'], run: ['Run'],
     work: ['Interact', 'Punch'],
   } : {
-    idle: ['Idle_Shoot', 'Idle_Gun', 'Idle_Gun_Pointing', 'Idle_Neutral', 'Idle'],
-    walk: ['Run_Gun', 'Walk', 'Run'], run: ['Run_Gun', 'Run'],
+    // a weapon-ready stance when halted, and the gun-up run while advancing —
+    // soldiers should never look like they are out for a jog
+    idle: ['Idle_Gun', 'Idle_Neutral', 'Idle'],
+    walk: ['Walk', 'Run_Gun', 'Run'],
+    run: ['Run_Gun', 'Run'],
     shoot: ['Idle_Shoot', 'Idle_Gun_Shoot', 'Gun_Shoot'],
   };
   const actions = {};
@@ -434,9 +456,22 @@ function makeCharacterRig(character, teamColor, opts = {}) {
   return g;
 }
 
+/* ---------------- infantry ----------------
+   Every other thing on the map — workers, tanks, farms, trees, ships — comes
+   from Quaternius' stylised CC0 packs. Infantry was the one exception: it used
+   the Mixamo "Vanguard" from the three.js examples, a semi-realistic character
+   in muddy browns. Put a Vanguard rifleman next to a Quaternius worker in the
+   same frame and the game reads as an asset flip, because it was: two art
+   styles, two levels of stylisation, two palettes.
+   The Toon Shooter soldier was already loaded (it is where the rifles came
+   from), so this is a swap, not an import. The Vanguard survives as a fallback
+   for the case where the Quaternius pack fails to load. */
 function makeSoldierRig(teamColor, opts = {}) {
+  const stylised = makeCharacterRig('soldier', teamColor, opts);
+  if (stylised) return stylised;
+
   const rig = makeCharacterRig('infantry', teamColor, opts);
-  if (!rig) return makeCharacterRig('soldier', teamColor, opts);
+  if (!rig) return null;
   // Reuse authored weapons and attach to the hand, following locomotion.
   const weapons = MODELS.loaded.get('character:soldier');
   const name = opts.weapon === 'launcher' ? 'RocketLauncher' : opts.weapon === 'sniper' ? 'Sniper_2' : 'AK';
