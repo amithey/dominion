@@ -118,6 +118,8 @@ function toggleWindow(id) {
   const opening = !win.classList.contains('open');
   win.classList.toggle('open');
   if (opening) renderWindow(id);
+  // the frontier overlay belongs to the Territory window, not to the landscape
+  if (id === 'win-territory') setTerritoryOverlay(opening);
 }
 function refreshWindows() {
   for (const win of $$('.window.open')) {
@@ -305,9 +307,15 @@ function setPolicy(key, value, confirmed = false) {
 /* ---------------- Territory window — the occupation war room ---------------- */
 function renderTerritory(body) {
   const mine = territorySummary(0);
-  const totalLand = TERRITORY.owner ? Array.from(TERRITORY.owner).filter((o, i) => {
-    const c = cellCenter(i); return terrainH(c.x, c.z) >= 0.05;
-  }).length : 1;
+  // land cells were re-derived with a terrainH sample each; the classification
+  // is already stored and the coastline does not move
+  let totalLand = 0;
+  if (TERRITORY.terrain) {
+    for (let i = 0; i < TERRITORY.terrain.length; i++) {
+      if (TERRITORY.terrain[i] !== TERRAIN_CLASS.WATER) totalLand++;
+    }
+  }
+  totalLand = totalLand || 1;
   const rivalsLeft = G.nations.filter((n, i) => i > 0 && !n.defeated).length;
   const discDone = Object.keys(DISCOVERIES).filter(k => G.discovered[k]).length;
   const discTotal = Object.keys(DISCOVERIES).length;
@@ -324,7 +332,8 @@ function renderTerritory(body) {
     <div class="section-h">Strategic map <span style="color:var(--text-dim)">(click to move the camera)</span></div>
     <canvas id="terr-map" width="272" height="272" style="width:100%;border:1px solid rgba(255,255,255,.15);border-radius:6px;cursor:crosshair;image-rendering:pixelated"></canvas>
     <div class="fx-list" style="font-size:11px;margin:4px 0 8px">
-      <span style="color:#ffe08a">■</span> contested front · brighter tint = stronger control · dark = no man's land / water
+      <span style="color:#ffe08a">■</span> contested front · brighter tint = stronger control · dark = no man's land / water<br>
+      <span style="color:var(--text-dim)">Frontier lines are drawn on the world while this window is open, and disappear when you close it.</span>
     </div>
     <div class="stat-grid">
       <div class="stat-row"><span>Held zones</span><b>${mine.held} <span style="color:var(--text-dim)">(${Math.round(mine.held / Math.max(totalLand, 1) * 100)}% of all land)</span></b></div>
@@ -1026,7 +1035,11 @@ function drawMinimap() {
 /* ---------------- window & HUD wiring ---------------- */
 function initUI() {
   $$('.window').forEach(makeDraggable);
-  $$('.win-close').forEach(b => b.onclick = () => b.closest('.window').classList.remove('open'));
+  $$('.win-close').forEach(b => b.onclick = () => {
+    const win = b.closest('.window');
+    win.classList.remove('open');
+    if (win.id === 'win-territory') setTerritoryOverlay(false);
+  });
   $$('.side-btn').forEach(b => b.onclick = () => toggleWindow(b.dataset.win));
   $$('.btab').forEach(b => b.onclick = () => {
     $$('.btab').forEach(x => x.classList.remove('active'));

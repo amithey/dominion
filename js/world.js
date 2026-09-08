@@ -499,9 +499,13 @@ function buildWater(scene) {
         waterNormals: normals,
         sunDirection: new THREE.Vector3(120, 180, 60).normalize(),
         sunColor: 0xfff1d8,
-        waterColor: 0x0a5068, // teal-blue: lets the turquoise seabed gradient glow through
+        waterColor: 0x0d5a70, // teal-blue: lets the turquoise seabed gradient glow through
         distortionScale: 2.6,
-        alpha: 0.94,          // opaque enough to hide the terrain mesh edge at the map border
+        // Was 0.94, purely to hide the terrain mesh ending at the map border.
+        // buildAbyss covers that properly now, so the surface can go back to
+        // being water: at 0.82 the seabed gradient reads through it instead of
+        // every sea pixel being a flat mirror of a pale sky.
+        alpha: 0.82,
         fog: true,
       });
       // Keep animated normals at full rate; only recapture the reflected scene
@@ -555,6 +559,7 @@ function buildShoreline(scene) {
   // coast — depth-based masks balloon into huge foam fields on shallow flats.
   const land = new Uint8Array(N * N);
   const dist = new Float32Array(N * N);
+  const depth = new Float32Array(N * N);
   for (let j = 0; j < N; j++) {
     for (let i = 0; i < N; i++) {
       const x = (i / (N - 1) - 0.5) * MAP_SIZE;
@@ -564,9 +569,11 @@ function buildShoreline(scene) {
       // across the map, drawing foam ribbons out in open water while real
       // beaches got none. Fill in the order the shader actually reads.
       const z = (0.5 - j / (N - 1)) * MAP_SIZE;
-      const isLand = terrainH(x, z) >= 0.2;
+      const h = terrainH(x, z);
+      const isLand = h >= 0.2;
       land[j * N + i] = isLand ? 1 : 0;
       dist[j * N + i] = isLand ? 0 : 1e9;
+      depth[j * N + i] = isLand ? 0 : -h;
     }
   }
   const D = 1.4142;
@@ -593,12 +600,20 @@ function buildShoreline(scene) {
     }
   }
   const texel = MAP_SIZE / N;            // world units per texel
-  const bandW = 11;                      // surf band reaches ~11 world units offshore
+  const bandW = 13;                      // surf band reaches ~13 world units offshore
+  const SHELF_DEPTH = 15;                // metres of water the shallows tint spans
   const data = new Uint8Array(N * N * 4);
   for (let k = 0; k < N * N; k++) {
-    // 1 at the waterline → 0 at bandW offshore; land stays 0
+    // R: 1 at the waterline → 0 at bandW offshore; land stays 0
     const shore = land[k] ? 0 : clamp(1 - (dist[k] * texel) / bandW, 0, 1);
+    // G: shallowness by actual DEPTH, which is what decides sea colour. The
+    // terrain already paints a turquoise-to-abyss gradient on the seabed, but
+    // the reflective ocean surface is nearly opaque, so none of it was ever
+    // visible — every coast met the water on a flat grey line. This channel
+    // lets the shore pass lay that gradient back over the water itself.
+    const shallow = land[k] ? 0 : clamp(1 - depth[k] / SHELF_DEPTH, 0, 1);
     data[k * 4] = Math.round(shore * 255);
+    data[k * 4 + 1] = Math.round(shallow * 255);
     data[k * 4 + 3] = 255;
   }
   const shoreTex = new THREE.DataTexture(data, N, N, THREE.RGBAFormat);
@@ -639,8 +654,10 @@ function buildShoreline(scene) {
                    mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
       }
       void main() {
-        float shore = texture2D(shoreTex, vUv).r;
-        if (shore < 0.02) discard;
+        vec4 mask = texture2D(shoreTex, vUv);
+        float shore = mask.r;        // distance-to-beach band, for the surf
+        float shallow = mask.g;      // depth-based shallowness, for the water colour
+        if (shore < 0.02 && shallow < 0.015) discard;
         vec2 wp = vWorld.xz;
         // two scales of drifting noise break the foam into realistic patches
         float nz = n2(wp * 0.22 + time * 0.18) * 0.6 + n2(wp * 0.85 - time * 0.12) * 0.4;
@@ -653,11 +670,27 @@ function buildShoreline(scene) {
         float contact = smoothstep(0.80, 0.97, shore + nz * 0.10);
         // gentle sparkle further out
         float sparkle = smoothstep(0.75, 1.0, n2(wp * 1.6 + time * 0.35)) * shore * 0.12;
-        float a = clamp(contact * 0.85 + breaker * 0.6 + sparkle, 0.0, 0.92);
+        float foam = clamp(contact * 0.85 + breaker * 0.6 + sparkle, 0.0, 0.92);
+
+        // SHALLOWS. Deep water keeps the reflective surface underneath; the
+        // closer to the beach, the more the sea reads as its own bright
+        // turquoise instead of a mirror of the sky. The subtle depth banding
+        // is what makes a coast look like a coast from any altitude.
+        // a gentle curve, not a square one: the tint has to fade out over a
+        // wide shelf, or it reads as a cyan stripe painted along the coast
+        float shelf = pow(shallow, 1.35);
+        vec3 shallowCol = mix(vec3(0.07, 0.26, 0.39), vec3(0.24, 0.63, 0.63), shelf);
+        // a slow swell ripple so the tint is not a flat wash
+        shallowCol *= 0.94 + n2(wp * 0.13 + time * 0.06) * 0.14;
+        float tint = shelf * 0.60;
+
+        // composite foam over the shallow tint
+        float a = clamp(foam + tint * (1.0 - foam), 0.0, 0.95);
         float dist = distance(cameraPosition, vWorld);
         a *= 1.0 - smoothstep(fogRange.x, fogRange.y, dist);
         if (a < 0.01) discard;
-        gl_FragColor = vec4(0.93, 0.97, 1.0, a);
+        vec3 col = mix(shallowCol, vec3(0.93, 0.97, 1.0), foam / max(foam + tint * (1.0 - foam), 1e-4));
+        gl_FragColor = vec4(col, a);
       }`,
   });
   shoreMesh = new THREE.Mesh(geo, mat);
@@ -1646,9 +1679,12 @@ function buildSky(scene) {
   const mat = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, fog: false,
     uniforms: {
-      topColor: { value: new THREE.Color(0x3a6fb5) },   // zenith blue
-      midColor: { value: new THREE.Color(0x83aed3) },   // sky
-      botColor: { value: new THREE.Color(0xc2d4e2) },   // horizon haze
+      // The ocean is mostly a mirror at grazing angles, so the horizon colour
+      // IS the colour of distant water. A near-white haze band made every sea
+      // pixel past the shallows read as flat grey sheet metal.
+      topColor: { value: new THREE.Color(0x2f66b2) },   // zenith blue
+      midColor: { value: new THREE.Color(0x6f9fca) },   // sky
+      botColor: { value: new THREE.Color(0xa6c1d8) },   // horizon haze
       sunDir:   { value: new THREE.Vector3(120, 180, 60).normalize() },
     },
     vertexShader: `

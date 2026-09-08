@@ -11,7 +11,21 @@
 const TERRITORY = {
   cols: 0, rows: 0, owner: null, control: null, contested: null,
   pressure: null, fronts: 0, dirty: true, lastSummary: [], borderMesh: null,
+  // Frontier lines are an ANALYSIS view, not scenery. Drawn permanently they
+  // put a coloured grid-square lattice across the landscape you are supposed to
+  // be looking at. They are now shown only while the Territory window is open,
+  // which is exactly what that side button is for.
+  showBorders: false,
 };
+
+/* Called when the Territory window opens or closes. */
+function setTerritoryOverlay(visible) {
+  TERRITORY.showBorders = !!visible;
+  if (TERRITORY.borderMesh) TERRITORY.borderMesh.visible = TERRITORY.showBorders;
+  // the lines are only rebuilt when ownership changes, so a window opened after
+  // a quiet spell would otherwise show a stale frontier
+  if (visible) TERRITORY.dirty = true;
+}
 
 /* terrain classes for Civ-style cell yields */
 const TERRAIN_CLASS = { WATER: 0, PLAINS: 1, FOREST: 2, MOUNTAIN: 3, COAST: 4 };
@@ -387,6 +401,7 @@ function paintTerritory() {
   });
   TERRITORY.borderMesh = new THREE.LineSegments(borderGeo, borderMat);
   TERRITORY.borderMesh.renderOrder = 4;
+  TERRITORY.borderMesh.visible = TERRITORY.showBorders;
   terrainMesh.parent.add(TERRITORY.borderMesh);
 }
 
