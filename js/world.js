@@ -4,10 +4,17 @@
    archipelago), ocean, deposits, choppable forests, clouds
    ============================================================ */
 
-/* deterministic value noise */
+/* deterministic value noise.
+   The lattice hash is integer arithmetic rather than the usual
+   fract(sin(dot(p,k))*43758.5) trick: that form costs a Math.sin per lattice
+   corner, i.e. 12+ transcendentals per terrainH call. Terrain height is
+   sampled a quarter-million times just to build the map (and again for every
+   tree, path query and unit step), so this is the single hottest function in
+   the game. The integer mix is ~10x faster and better distributed. */
 function _hash2(x, y) {
-  let n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
-  return n - Math.floor(n);
+  let n = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263);
+  n = Math.imul(n ^ (n >>> 13), 1274126177);
+  return ((n ^ (n >>> 16)) >>> 0) * 2.3283064365386963e-10; // n / 2^32
 }
 function vnoise(x, y) {
   const xi = Math.floor(x), yi = Math.floor(y);
@@ -54,20 +61,60 @@ function terrainH(x, z) {
     if (f > 0.84) h -= ((f - 0.84) / 0.16) * 18; // soft outer ocean rim
   } else { // island (default)
     h -= 3.6;
-    const ex = Math.abs(x) / HALF_MAP, ez = Math.abs(z) / HALF_MAP;
-    const edge = Math.max(ex, ez) * 0.7 + Math.hypot(ex, ez) * 0.2121;
-    const coastNoise = vnoise(x * 0.02 + 200, z * 0.02 + 300) * 0.08;
-    const f = edge + coastNoise;
-    if (f > 0.78) h -= ((f - 0.78) / 0.22) * 20;
+    // ISLAND MASK. The old shape was `max(|x|,|z|)*0.7 + |p|*0.21`, which is a
+    // rounded square with the corners bitten off — from the air it read as a
+    // literal diamond, and the ±0.08 of additive coast noise only frayed the
+    // edge rather than bending it. Two changes:
+    //   · a cubic superellipse, so the outline is a smooth rounded form with
+    //     no straight sides or corner points anywhere on it;
+    //   · the sample point is DOMAIN-WARPED before the radius is measured.
+    //     Displacing the point is what carves bays, headlands, peninsulas and
+    //     the occasional offshore islet, because the whole contour bends.
+    //     Additive noise can only ever make the same outline fuzzy.
+    const wx = x + (vnoise(x * 0.0038 + 61, z * 0.0038 + 17) - 0.5) * MAP_SIZE * 0.115
+                 + (vnoise(x * 0.0125 + 811, z * 0.0125 + 97) - 0.5) * MAP_SIZE * 0.035;
+    const wz = z + (vnoise(x * 0.0038 + 133, z * 0.0038 + 205) - 0.5) * MAP_SIZE * 0.115
+                 + (vnoise(x * 0.0125 + 349, z * 0.0125 + 523) - 0.5) * MAP_SIZE * 0.035;
+    const ex = Math.abs(wx) / HALF_MAP, ez = Math.abs(wz) / HALF_MAP;
+    const edge = Math.cbrt(ex * ex * ex + ez * ez * ez);
+    // A volcanic spine. An island with no interior relief reads as a putting
+    // green from the air; damping it near the coast keeps mountains from
+    // falling straight into the sea.
+    // RIDGED noise, not plain value noise: 1-|2n-1| peaks along the noise's
+    // half-level contours, which are lines, so the result is narrow mountain
+    // CHAINS. Thresholding a plain noise field instead (what this did before)
+    // raises every local maximum into a broad dome, and those domes painted
+    // out as the flat grey plateau that covered a quarter of the island.
+    const rn = vnoise(x * 0.004 + 410, z * 0.004 + 260);
+    const crest = Math.max(0, 1 - Math.abs(rn * 2 - 1) - 0.82) / 0.18;
+    h += crest * crest * 26 * clamp(1.02 - edge, 0, 1);
+    if (edge > 0.85) { const f = (edge - 0.85) / 0.22; h -= f * f * 34; }
   }
 
-  // flatten around every base start position (keeps capitals on dry, flat ground)
+  // COASTAL SHELF. Real land flattens out as it approaches the water. Without
+  // this the height field crosses sea level at full slope, so the terrain grid
+  // slices the waterline into a staircase of triangle edges and the beach is a
+  // one-cell-wide sliver. Halving the gradient only within a few metres of sea
+  // level roughly doubles the beach and softens the whole shore; the weight is
+  // zero (with zero derivative) at the band edges, so no crease ring appears.
+  {
+    const t = clamp(h / COAST_SHELF, -1, 1);
+    const w = 1 - t * t;
+    h *= 1 - 0.5 * w * w;
+  }
+
+  // Every capital sits on guaranteed hinterland: a broad, smooth rise that
+  // keeps the coastline noise above from ever stranding a start position on a
+  // private islet, plus a flat pad at the centre to build on.
   for (const [sx, sz] of START_POS) {
     const d = dist2d(x, z, sx, sz);
+    if (d > 200) continue;
+    const t = d / 200;
+    const lift = 1 - t * t;
+    h += lift * lift * 6;
     if (d < 78) {
-      const t = clamp((d - 42) / 36, 0, 1);
-      const smooth = t * t * (3 - 2 * t);
-      h = lerp(2.2, h, smooth);
+      const s = clamp((d - 42) / 36, 0, 1);
+      h = lerp(2.2, h, s * s * (3 - 2 * s));
     }
   }
   return h;
@@ -257,7 +304,9 @@ function makeTerrainMaterial() {
           float blotch = tNoise(wp.xz * 0.055 + 41.0);
 
           float wSand = smoothstep(2.9, 0.8, h);
-          float wRock = clamp(smoothstep(0.30, 0.60, slope) + smoothstep(6.5, 9.5, h), 0.0, 1.0);
+          // rock is overwhelmingly a SLOPE cue, not an altitude one — flat high
+          // ground is alpine pasture, not scree
+          float wRock = clamp(smoothstep(0.30, 0.60, slope) + smoothstep(14.0, 22.0, h), 0.0, 1.0);
           float ground = (1.0 - wSand) * (1.0 - wRock);
           float grassy = smoothstep(0.34, 0.66, moist * 0.75 + blotch * 0.25);
           float wGrass = ground * grassy;
@@ -351,15 +400,28 @@ function buildTerrain(scene) {
                                                // never draw hard edges in the water
   const cShallow = new THREE.Color(0x3fa9b8);  // bright turquoise shallows
   const tmp = new THREE.Color();
+  // Two passes. Heights first, then colour — because the cliff shading needs a
+  // slope, and sampling terrainH at two extra offsets per vertex meant building
+  // the map cost three height evaluations for every one of ~85,000 vertices.
+  // The neighbouring vertices already hold those heights.
+  const stride = segs + 1;
+  const cell = MAP_SIZE / segs;
+  const heights = new Float32Array(pos.count);
+  for (let i = 0; i < pos.count; i++) {
+    const h = terrainH(pos.getX(i), pos.getZ(i));
+    heights[i] = h;
+    pos.setY(i, h);
+  }
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), z = pos.getZ(i);
-    const h = terrainH(x, z);
-    pos.setY(i, h);
+    const h = heights[i];
     const moist = vnoise(x * 0.015 + 91, z * 0.015 + 43);
-    // slope = how fast the ground rises around this point (for cliff painting)
-    const slope = Math.max(
-      Math.abs(terrainH(x + 3, z) - h),
-      Math.abs(terrainH(x, z + 3) - h));
+    // slope = how fast the ground rises around this point (for cliff painting),
+    // rescaled to the 3-unit baseline the thresholds below were tuned against
+    const col = i % stride, row = (i / stride) | 0;
+    const hx = heights[col < segs ? i + 1 : i - 1];
+    const hz = heights[row < segs ? i + stride : i - stride];
+    const slope = Math.max(Math.abs(hx - h), Math.abs(hz - h)) * (3 / cell);
     if (h < 0) {
       // brilliant turquoise at the waterline darkening to deep blue offshore —
       // the water is transparent so this gradient IS the sea color
@@ -368,8 +430,12 @@ function buildTerrain(scene) {
     }
     else if (h < 0.35) tmp.copy(cWetSand).lerp(cSand, clamp(h / 0.35, 0, 1) * 0.4); // narrow wet strip
     else if (h < 1.2) tmp.copy(cWetSand).lerp(cSand, clamp(0.4 + (h - 0.35) / 0.85 * 0.6, 0, 1));
-    else if (h > 8.5) tmp.copy(cRock).lerp(cSnow, clamp((h - 8.5) / 3, 0, 1));
-    else if (h > 6) tmp.copy(cDark).lerp(cRock, (h - 6) / 2.5);
+    // Rock and snow start far higher than they used to (6 and 8.5). On a map
+    // whose ordinary farmland sits at 2–6, those thresholds painted every
+    // gentle rise bare grey and capped it with snow, which is what turned the
+    // interior into pale blotches. Alpine ground now needs a real mountain.
+    else if (h > 24) tmp.copy(cRock).lerp(cSnow, clamp((h - 24) / 7, 0, 1));
+    else if (h > 15) tmp.copy(cDark).lerp(cRock, (h - 15) / 9);
     else {
       tmp.copy(cLow).lerp(moist > 0.5 ? cDark : cGrass, clamp(moist * 1.4, 0, 1));
       if (h < 2) tmp.lerp(cSand, (2 - h) / 2 * 0.5); // blend grass into beach
@@ -399,7 +465,27 @@ const TEX_CDN = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r184/examples/textu
 const _texLoader = new THREE.TextureLoader();
 
 let waterIsRealistic = false;
+
+/* Deep-ocean floor.
+   The terrain mesh is exactly MAP_SIZE across while the water sheet is 2.2x
+   that, so past the map boundary the sea had nothing behind it at all — the
+   terrain's own square edge showed straight through the water as a hard
+   geometric seam running across open ocean, one of the most obvious "this is a
+   demo" tells on the whole map. This plane carries the abyss colour out to the
+   full extent of the water, so the sea reads as continuous to the horizon. */
+function buildAbyss(scene) {
+  const geo = new THREE.PlaneGeometry(MAP_SIZE * 2.6, MAP_SIZE * 2.6, 1, 1);
+  geo.rotateX(-Math.PI / 2);
+  const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x123f5c, fog: true }));
+  mesh.position.y = -13;
+  mesh.name = 'abyss';
+  mesh.renderOrder = -50;
+  scene.add(mesh);
+  return mesh;
+}
+
 function buildWater(scene) {
+  buildAbyss(scene);
   const geo = new THREE.PlaneGeometry(MAP_SIZE * 2.2, MAP_SIZE * 2.2, 1, 1);
   // THE ocean from the three.js examples: planar reflections, animated
   // normal-mapped waves, sun glints. Falls back to phong water offline.
@@ -472,7 +558,12 @@ function buildShoreline(scene) {
   for (let j = 0; j < N; j++) {
     for (let i = 0; i < N; i++) {
       const x = (i / (N - 1) - 0.5) * MAP_SIZE;
-      const z = (j / (N - 1) - 0.5) * MAP_SIZE;
+      // Row j is sampled by the shader at uv.y = j/(N-1), and the shore plane
+      // is rotated -90° about X — which puts uv.y = 1 at z = -MAP_SIZE/2, not
+      // +MAP_SIZE/2. Filling rows in +z order mirrored the entire surf mask
+      // across the map, drawing foam ribbons out in open water while real
+      // beaches got none. Fill in the order the shader actually reads.
+      const z = (0.5 - j / (N - 1)) * MAP_SIZE;
       const isLand = terrainH(x, z) >= 0.2;
       land[j * N + i] = isLand ? 1 : 0;
       dist[j * N + i] = isLand ? 0 : 1e9;
@@ -596,27 +687,67 @@ function updateWater(t) {
 
 /* drifting clouds */
 const CLOUDS = { mesh: null, items: [] };
+
+/* Soft round puff with a ragged, noise-eaten rim — the alpha falloff is what
+   keeps a cloud from having a silhouette. */
+let _cloudTex = null;
+function makeCloudTexture() {
+  if (_cloudTex) return _cloudTex;
+  const S = 128;
+  const c = document.createElement('canvas');
+  c.width = c.height = S;
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(S, S);
+  for (let y = 0; y < S; y++) {
+    for (let x = 0; x < S; x++) {
+      const dx = (x / S - 0.5) * 2, dy = (y / S - 0.5) * 2;
+      const r = Math.sqrt(dx * dx + dy * dy);
+      // billowing edge: noise pushes the falloff radius in and out
+      const lumps = vnoise(x * 0.09 + 3, y * 0.09 + 11) * 0.34
+                  + vnoise(x * 0.22 + 41, y * 0.22 + 7) * 0.16;
+      const a = clamp(1 - (r + lumps - 0.25) / 0.75, 0, 1);
+      const i = (y * S + x) * 4;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
+      img.data[i + 3] = Math.round(a * a * 255);
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  _cloudTex = new THREE.CanvasTexture(c);
+  _cloudTex.colorSpace = THREE.SRGBColorSpace;
+  return _cloudTex;
+}
 function buildClouds(scene) {
-  const N = Math.round(14 * Math.sqrt(areaScale()));
-  const geo = new THREE.SphereGeometry(1, 10, 7);
-  const mat = new THREE.MeshLambertMaterial({
-    color: 0xffffff, emissive: 0x8b95a3,
-    transparent: true, opacity: 0.5, depthWrite: false,
+  // Clouds used to fly at 105–160 units in half-opaque clumps of four small
+  // spheres — from the normal camera altitude that is a string of solid white
+  // golf balls parked between the player and their own base. They now sit well
+  // above the play space, spread much wider and much fainter, so they read as
+  // drifting weather instead of obstacles.
+  const N = Math.round(11 * Math.sqrt(areaScale()));
+  // Flat, soft-edged puffs rather than shaded spheres. A low-poly sphere has a
+  // hard silhouette, so from above every cloud was a white polygon with visible
+  // straight edges sitting on the sea; a radial alpha falloff has no edge at
+  // all and reads as weather.
+  const geo = new THREE.PlaneGeometry(1, 1);
+  geo.rotateX(-Math.PI / 2);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0xf4f8fc, map: makeCloudTexture(),
+    transparent: true, opacity: 0.42, depthWrite: false, fog: true,
   });
   CLOUDS.mesh = new THREE.InstancedMesh(geo, mat, N * 4);
+  CLOUDS.mesh.renderOrder = 1;
   const dummy = new THREE.Object3D();
   let idx = 0;
   for (let i = 0; i < N; i++) {
-    const cx = (Math.random() - 0.5) * MAP_SIZE * 1.4;
-    const cz = (Math.random() - 0.5) * MAP_SIZE * 1.4;
-    const cy = 105 + Math.random() * 55;
-    const s = 10 + Math.random() * 16;
+    const cx = (Math.random() - 0.5) * MAP_SIZE * 1.6;
+    const cz = (Math.random() - 0.5) * MAP_SIZE * 1.6;
+    const cy = 235 + Math.random() * 90;
+    const s = 26 + Math.random() * 34;
     const speed = 1.2 + Math.random() * 1.8;
     for (let p = 0; p < 4; p++) {
       const item = {
-        idx, x: cx + (p - 1.5) * s * 0.65, y: cy + (Math.random() - 0.5) * 3,
+        idx, x: cx + (p - 1.5) * s * 0.65, y: cy + (Math.random() - 0.5) * 6,
         z: cz + (Math.random() - 0.5) * s * 0.6,
-        sx: s * (0.7 + Math.random() * 0.5), sy: s * 0.26, sz: s * (0.55 + Math.random() * 0.3),
+        sx: s * (0.7 + Math.random() * 0.5), sy: s * 0.18, sz: s * (0.55 + Math.random() * 0.3),
         speed,
       };
       CLOUDS.items.push(item);
@@ -687,9 +818,58 @@ function placeDeposits(scene) {
   return deposits;
 }
 
+/* ============================================================
+   Deposit props.
+   Each deposit is authored as a dozen little rocks, crystals and pipes. Built
+   naively that was ~1100 separate meshes with ~500 unique materials on a large
+   map — more draw calls than everything else in the game combined, and every
+   one of them redrawn again by the shadow pass and again by the water
+   reflection. Two fixes, no visual change:
+     · materials are cached and shared, so deposits of a type all use one;
+     · the props of one deposit are merged into a single geometry per material,
+       so a deposit costs one or two draw calls instead of twelve.
+   ============================================================ */
+const _depMats = new Map();
+function depMat(key, make) {
+  let m = _depMats.get(key);
+  if (!m) { m = make(); _depMats.set(key, m); }
+  return m;
+}
+
+/* Flatten a freshly authored prop group into one mesh per material. */
+function mergeProps(group) {
+  group.updateMatrixWorld(true);
+  const byMaterial = new Map();
+  group.traverse(o => {
+    if (!o.isMesh || Array.isArray(o.material)) return;
+    const geo = o.geometry.clone();
+    geo.applyMatrix4(o.matrixWorld);
+    // merging demands identical attribute sets; drop anything exotic
+    for (const name of Object.keys(geo.attributes)) {
+      if (name !== 'position' && name !== 'normal' && name !== 'uv') geo.deleteAttribute(name);
+    }
+    if (!geo.attributes.uv) {
+      geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count * 2), 2));
+    }
+    if (!byMaterial.has(o.material)) byMaterial.set(o.material, []);
+    byMaterial.get(o.material).push(geo);
+  });
+  const out = new THREE.Group();
+  for (const [material, geometries] of byMaterial) {
+    const merged = geometries.length === 1 ? geometries[0] : THREE.mergeGeometries(geometries, false);
+    if (!merged) { for (const geo of geometries) out.add(new THREE.Mesh(geo, material)); continue; }
+    if (geometries.length > 1) for (const geo of geometries) geo.dispose();
+    const mesh = new THREE.Mesh(merged, material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    out.add(mesh);
+  }
+  return out;
+}
+
 function makeDepositMesh(type, def) {
   const g = new THREE.Group();
-  const rockMat = new THREE.MeshStandardMaterial({ color: 0x76796f, roughness: 0.95 });
+  const rockMat = depMat('rock', () => new THREE.MeshStandardMaterial({ color: 0x76796f, roughness: 0.95 }));
   const addRocks = (n, rMax) => {
     for (let i = 0; i < n; i++) {
       const s = 0.5 + Math.random() * 1.1;
@@ -719,10 +899,10 @@ function makeDepositMesh(type, def) {
   switch (type) {
     case 'oil': {
       // glossy tar pool with a rusty test derrick
-      const pool = irregularPatch(3.6,
-        new THREE.MeshStandardMaterial({ color: 0x171a19, roughness: 0.28, metalness: 0.18 }));
+      const pool = irregularPatch(3.6, depMat('tar', () =>
+        new THREE.MeshStandardMaterial({ color: 0x171a19, roughness: 0.28, metalness: 0.18 })));
       pool.position.y = 0.04; g.add(pool);
-      const derrickMat = new THREE.MeshStandardMaterial({ color: 0x7a4a2c, roughness: 0.7, metalness: 0.5 });
+      const derrickMat = depMat('derrick', () => new THREE.MeshStandardMaterial({ color: 0x7a4a2c, roughness: 0.7, metalness: 0.5 }));
       for (const [lx, lz] of [[-0.7, -0.7], [0.7, -0.7], [0, 0.8]]) {
         const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 4.4, 5), derrickMat);
         leg.position.set(1.8 + lx * 0.55, 2.2, -1.4 + lz * 0.55);
@@ -732,7 +912,7 @@ function makeDepositMesh(type, def) {
       top.position.set(1.8, 4.4, -1.4); g.add(top);
       for (let i = 0; i < 3; i++) {
         const bub = new THREE.Mesh(new THREE.SphereGeometry(0.3 + Math.random() * 0.4, 7, 5),
-          new THREE.MeshStandardMaterial({ color: 0x22262c, roughness: 0.25 }));
+          depMat('tarBubble', () => new THREE.MeshStandardMaterial({ color: 0x22262c, roughness: 0.25 })));
         bub.position.set((Math.random() - 0.5) * 4, 0.45, (Math.random() - 0.5) * 4);
         g.add(bub);
       }
@@ -741,7 +921,7 @@ function makeDepositMesh(type, def) {
     case 'iron': {
       // rust-streaked ore slabs
       addRocks(3, 3.4);
-      const oreMat = new THREE.MeshStandardMaterial({ color: 0x9a6248, roughness: 0.85, metalness: 0.35 });
+      const oreMat = depMat('ore', () => new THREE.MeshStandardMaterial({ color: 0x9a6248, roughness: 0.85, metalness: 0.35 }));
       for (let i = 0; i < 4; i++) {
         const s = 0.8 + Math.random() * 1.2;
         const ore = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), oreMat);
@@ -755,8 +935,8 @@ function makeDepositMesh(type, def) {
     case 'gold': {
       // grey rock with glinting nuggets embedded
       addRocks(5, 3.2);
-      const goldMat = new THREE.MeshStandardMaterial({
-        color: 0xffc93d, roughness: 0.25, metalness: 1.0, emissive: 0x9a6b12, emissiveIntensity: 0.35 });
+      const goldMat = depMat('gold', () => new THREE.MeshStandardMaterial({
+        color: 0xffc93d, roughness: 0.25, metalness: 1.0, emissive: 0x9a6b12, emissiveIntensity: 0.35 }));
       for (let i = 0; i < 7; i++) {
         const nug = new THREE.Mesh(new THREE.OctahedronGeometry(0.28 + Math.random() * 0.3, 0), goldMat);
         nug.position.set((Math.random() - 0.5) * 4.5, 0.5 + Math.random() * 1.1, (Math.random() - 0.5) * 4.5);
@@ -767,9 +947,9 @@ function makeDepositMesh(type, def) {
     }
     case 'silicon': {
       // slender glassy blue crystal spires
-      const cryMat = new THREE.MeshPhysicalMaterial({
+      const cryMat = depMat('silicon', () => new THREE.MeshPhysicalMaterial({
         color: 0x9fd7ff, roughness: 0.12, metalness: 0.1, transparent: true, opacity: 0.85,
-        emissive: 0x2a5a80, emissiveIntensity: 0.4 });
+        emissive: 0x2a5a80, emissiveIntensity: 0.4 }));
       for (let i = 0; i < 6; i++) {
         const hgt = 1.4 + Math.random() * 2.4;
         const cry = new THREE.Mesh(new THREE.ConeGeometry(0.32 + Math.random() * 0.2, hgt, 5), cryMat);
@@ -783,8 +963,8 @@ function makeDepositMesh(type, def) {
     }
     case 'uranium': {
       // radioactive green crystals that genuinely glow (bloom picks these up)
-      const uMat = new THREE.MeshStandardMaterial({
-        color: 0x7dff5d, roughness: 0.3, emissive: 0x39e83a, emissiveIntensity: 1.1 });
+      const uMat = depMat('uranium', () => new THREE.MeshStandardMaterial({
+        color: 0x7dff5d, roughness: 0.3, emissive: 0x39e83a, emissiveIntensity: 1.1 }));
       for (let i = 0; i < 5; i++) {
         const s = 0.5 + Math.random() * 0.9;
         const cry = new THREE.Mesh(new THREE.OctahedronGeometry(s, 0), uMat);
@@ -793,16 +973,16 @@ function makeDepositMesh(type, def) {
         cry.castShadow = true; g.add(cry);
       }
       // scorched earth ring
-      const scorch = irregularPatch(3.5,
-        new THREE.MeshStandardMaterial({ color: 0x3f4836, roughness: 1 }));
+      const scorch = irregularPatch(3.5, depMat('scorch', () =>
+        new THREE.MeshStandardMaterial({ color: 0x3f4836, roughness: 1 })));
       scorch.position.y = 0.02; g.add(scorch);
       break;
     }
     case 'diamond': {
       // brilliant white-blue gems
-      const dMat = new THREE.MeshPhysicalMaterial({
+      const dMat = depMat('diamond', () => new THREE.MeshPhysicalMaterial({
         color: 0xeaf6ff, roughness: 0.05, metalness: 0.05, transparent: true, opacity: 0.9,
-        emissive: 0x7fb8dd, emissiveIntensity: 0.5 });
+        emissive: 0x7fb8dd, emissiveIntensity: 0.5 }));
       for (let i = 0; i < 6; i++) {
         const s = 0.4 + Math.random() * 0.7;
         const gem = new THREE.Mesh(new THREE.OctahedronGeometry(s, 0), dMat);
@@ -815,11 +995,11 @@ function makeDepositMesh(type, def) {
     }
     case 'seaOil': {
       // dark slick on the surface, ringed by orange marker buoys
-      const slick = irregularPatch(4.4,
+      const slick = irregularPatch(4.4, depMat('slick', () =>
         new THREE.MeshStandardMaterial({ color: 0x1d2328, roughness: 0.16, metalness: 0.32,
-          transparent: true, opacity: 0.68 }));
+          transparent: true, opacity: 0.68 })));
       slick.position.y = 0.12; g.add(slick);
-      const buoyMat = new THREE.MeshStandardMaterial({ color: 0xe86a1e, roughness: 0.5 });
+      const buoyMat = depMat('buoy', () => new THREE.MeshStandardMaterial({ color: 0xe86a1e, roughness: 0.5 }));
       for (let i = 0; i < 4; i++) {
         const a = (i / 4) * Math.PI * 2;
         const buoy = new THREE.Mesh(new THREE.SphereGeometry(0.42, 8, 6), buoyMat);
@@ -830,7 +1010,7 @@ function makeDepositMesh(type, def) {
       // gas flare bubbles
       for (let i = 0; i < 3; i++) {
         const bub = new THREE.Mesh(new THREE.SphereGeometry(0.2 + Math.random() * 0.2, 6, 5),
-          new THREE.MeshStandardMaterial({ color: 0x2c3644, roughness: 0.2 }));
+          depMat('gasBubble', () => new THREE.MeshStandardMaterial({ color: 0x2c3644, roughness: 0.2 })));
         bub.position.set((Math.random() - 0.5) * 5, 0.15, (Math.random() - 0.5) * 5);
         g.add(bub);
       }
@@ -838,7 +1018,7 @@ function makeDepositMesh(type, def) {
     }
     case 'fish': {
       // circling silver fins breaking the surface + gulls' splash rings
-      const finMat = new THREE.MeshStandardMaterial({ color: 0xb9ccd6, roughness: 0.35, metalness: 0.5 });
+      const finMat = depMat('fin', () => new THREE.MeshStandardMaterial({ color: 0xb9ccd6, roughness: 0.35, metalness: 0.5 }));
       for (let i = 0; i < 8; i++) {
         const a = Math.random() * Math.PI * 2, r = 1 + Math.random() * 3.4;
         const fin = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.66, 4), finMat);
@@ -847,7 +1027,7 @@ function makeDepositMesh(type, def) {
         fin.castShadow = true; g.add(fin);
       }
       const ring = new THREE.Mesh(new THREE.RingGeometry(3.4, 4.2, 20),
-        new THREE.MeshBasicMaterial({ color: 0xdff2f6, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }));
+        depMat('splash', () => new THREE.MeshBasicMaterial({ color: 0xdff2f6, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false })));
       ring.rotation.x = -Math.PI / 2; ring.position.y = 0.1; g.add(ring);
       break;
     }
@@ -860,7 +1040,7 @@ function makeDepositMesh(type, def) {
   if (!def.water) {
     addRocks(4, 3.8);
   }
-  return g;
+  return mergeProps(g);
 }
 
 /* ============================================================
@@ -899,14 +1079,66 @@ function updateVegetation(t) {
   }
 }
 
+/* ---------------- foliage colour ----------------
+   The Quaternius birch kit ships a single AUTUMN leaf texture — its average
+   opaque pixel is (232, 199, 0), pure gold. Instancing it five times gave an
+   island where every tree on every hillside was the same yellow, which is what
+   made the map read as unnatural from the air.
+   Multiplying through material.color cannot fix it: the texture's blue channel
+   is 0, so no multiplier can put any blue back and every result is an acid
+   yellow-green. So the texture is re-mapped once per species: the source
+   luminance (which carries all the leaf shading and edge detail) is used to
+   look up a two-point colour ramp, and alpha is preserved for the alpha test.
+   One late-season gold stand is kept on purpose, for contrast. */
+const LEAF_RAMPS = [
+  [[0x22, 0x3d, 0x18], [0x6f, 0xa0, 0x42]], // deep forest green
+  [[0x2c, 0x4a, 0x1c], [0x8a, 0xba, 0x51]], // fresh mid green
+  [[0x1d, 0x35, 0x1b], [0x5c, 0x8c, 0x45]], // dark, damp green
+  [[0x36, 0x4c, 0x1a], [0x9c, 0xc0, 0x54]], // bright open-canopy green
+  [[0x5a, 0x42, 0x14], [0xd8, 0xae, 0x3c]], // one autumn stand, for contrast
+];
+const _leafTextures = new Map();
+function rampedLeafTexture(source, rampIndex) {
+  const cached = _leafTextures.get(rampIndex);
+  if (cached) return cached;
+  const image = source && source.image;
+  if (!image || !image.width) return null;
+  const [dark, light] = LEAF_RAMPS[rampIndex % LEAF_RAMPS.length];
+  const c = document.createElement('canvas');
+  c.width = image.width; c.height = image.height;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(image, 0, 0);
+  const px = ctx.getImageData(0, 0, c.width, c.height);
+  const d = px.data;
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] < 8) continue;
+    // the source is monochromatic gold, so plain luminance IS the leaf shading
+    const l = clamp((d[i] * 0.35 + d[i + 1] * 0.55 + d[i + 2] * 0.10) / 235, 0, 1);
+    d[i]     = dark[0] + (light[0] - dark[0]) * l;
+    d[i + 1] = dark[1] + (light[1] - dark[1]) * l;
+    d[i + 2] = dark[2] + (light[2] - dark[2]) * l;
+  }
+  ctx.putImageData(px, 0, 0);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = source.wrapS;
+  tex.flipY = source.flipY;
+  tex.needsUpdate = true;
+  _leafTextures.set(rampIndex, tex);
+  return tex;
+}
+
 /* Build one instancing set per authored tree variant. This keeps hundreds of
    fully textured trees to a small, fixed number of draw calls. */
 function createAuthoredTreeVariants(total) {
   const keys = ['nature:birch1', 'nature:birch2', 'nature:birch3', 'nature:birch4', 'nature:birch5'];
   const loaded = keys.map(key => MODELS.loaded.get(key)).filter(Boolean);
   if (!loaded.length) return [];
-  const capacity = Math.ceil(total / loaded.length) + 4;
-  return loaded.map(gltf => {
+  // Species are assigned per grove, so one variant can legitimately take far
+  // more than its even share. These are staging buffers that chunkAuthoredForest
+  // copies out of and then disposes, so sizing them for the worst case is cheap.
+  const capacity = total + 4;
+  return loaded.map((gltf, variantIndex) => {
     gltf.scene.updateMatrixWorld(true);
     const parts = [];
     gltf.scene.traverse(source => {
@@ -920,6 +1152,8 @@ function createAuthoredTreeVariants(total) {
         material.metalness = 0;
         material.envMapIntensity = 0.34;
         if ((material.name || '').toLowerCase().includes('leaves')) {
+          const tinted = rampedLeafTexture(material.map, variantIndex);
+          if (tinted) material.map = tinted;
           material.transparent = false;
           material.alphaTest = 0.38;
           material.depthWrite = true;
@@ -941,14 +1175,23 @@ function createAuthoredTreeVariants(total) {
   }).filter(variant => variant.parts.length);
 }
 
-// Partition authored forest into 64-unit cells. Whole-map instance bounds
+// Partition the authored forest into batches. Whole-map instance bounds
 // otherwise defeat camera AND shadow frustum culling on large maps.
+//
+// The batch key is the GROVE, not a fixed grid cell. Under the old
+// `variant:cellX:cellZ` key an evenly-scattered forest of ~1100 trees split
+// into ~300 buckets averaging under four trees each — one draw call per four
+// trees, tripled again by the shadow and water-reflection passes. Because a
+// grove is planted as a single species (see planForest), one grove is one
+// bucket, and it is also a tight sphere for culling.
 function chunkAuthoredForest(scene) {
   for (const variant of TREES.authored) variant.impostor = bakeTreeImpostor(variant.parts);
   const buckets = new Map();
   for (const tree of TREES.list) {
     if (tree.kind !== 'real') continue;
-    const key = `${tree.authoredVariant}:${Math.floor(tree.x / 64)}:${Math.floor(tree.z / 64)}`;
+    const key = tree.grove >= 0
+      ? `g${tree.grove}`
+      : `s${tree.authoredVariant}:${Math.floor(tree.x / 160)}:${Math.floor(tree.z / 160)}`;
     if (!buckets.has(key)) buckets.set(key, []);
     buckets.get(key).push(tree);
   }
@@ -1012,12 +1255,93 @@ function makeGrassBladeTexture() {
   return _grassBladeTex;
 }
 
+/* ---------------- forest layout ----------------
+   Trees grow in GROVES, not as confetti scattered evenly over the island.
+   Three things fall out of this:
+     · it looks like real woodland — dense cores, ragged edges, open pasture
+       between stands, instead of a uniform speckle of single trees;
+     · felling a stand visibly opens a clearing, so chopping reads as progress;
+     · every grove is one species and one tight sphere, which is what lets
+       chunkAuthoredForest batch a whole grove into one draw call.
+   Deposits punch a clearing in whatever grove covers them, so ore is never
+   buried under a canopy the player has to chop before they can even see it. */
+const DEPOSIT_CLEARING = 15;   // world units of open ground kept around every deposit
+
+function planForest(deposits) {
+  const scale = areaScale();
+  const groveCount = Math.max(6, Math.round(13 * scale));
+  const groves = [];
+  const trees = [];
+  const nearStart = (x, z, r) => START_POS.some(([sx, sz]) => dist2d(x, z, sx, sz) < r);
+  const onDeposit = (x, z) => deposits.some(d => dist2d(x, z, d.x, d.z) < DEPOSIT_CLEARING);
+  const plantable = (x, z) => {
+    const h = terrainH(x, z);
+    // no trees on the beach, on bare rock, in a capital's build zone, or on ore
+    return h > 1.2 && h < 16 && !nearStart(x, z, 62) && !onDeposit(x, z);
+  };
+
+  for (let g = 0; g < groveCount; g++) {
+    // moisture drives where woodland wants to be, exactly as it drives the
+    // ground colouring, so forests sit on the green ground and not the dry
+    const size = 18 + Math.round(Math.random() * 26);
+    const radius = 13 + Math.sqrt(size) * 3.2;
+    let cx = 0, cz = 0, sited = false;
+    for (let tries = 0; tries < 220 && !sited; tries++) {
+      cx = (Math.random() - 0.5) * (MAP_SIZE - 110);
+      cz = (Math.random() - 0.5) * (MAP_SIZE - 110);
+      const h = terrainH(cx, cz);
+      if (h < 1.6 || h > 12) continue;
+      if (nearStart(cx, cz, 95)) continue;
+      const moist = vnoise(cx * 0.015 + 91, cz * 0.015 + 43);
+      if (moist < 0.42 && Math.random() > 0.2) continue;
+      if (groves.some(o => dist2d(cx, cz, o.x, o.z) < o.radius + radius + 26)) continue;
+      sited = true;
+    }
+    if (!sited) continue;
+    const grove = { x: cx, z: cz, radius, species: g };
+    groves.push(grove);
+    const id = groves.length - 1;
+    let placed = 0;
+    for (let tries = 0; tries < size * 14 && placed < size; tries++) {
+      // sqrt-biased radius keeps the middle of a stand dense and the rim thin
+      const a = Math.random() * Math.PI * 2;
+      const rr = radius * Math.sqrt(Math.random()) * (0.55 + Math.random() * 0.55);
+      const x = cx + Math.cos(a) * rr, z = cz + Math.sin(a) * rr;
+      if (Math.abs(x) > HALF_MAP - 16 || Math.abs(z) > HALF_MAP - 16) continue;
+      if (!plantable(x, z)) continue;
+      trees.push({ x, z, grove: id, s: 0.85 + Math.random() * 0.85 });
+      placed++;
+    }
+  }
+
+  // a scatter of lone trees and two-tree clumps across the open country, so the
+  // land between groves is not conspicuously bare
+  const strays = Math.round(70 * scale);
+  for (let i = 0, tries = 0; i < strays && tries < strays * 12; tries++) {
+    const x = (Math.random() - 0.5) * (MAP_SIZE - 40);
+    const z = (Math.random() - 0.5) * (MAP_SIZE - 40);
+    if (!plantable(x, z)) continue;
+    const moist = vnoise(x * 0.015 + 91, z * 0.015 + 43);
+    if (moist < 0.4 && Math.random() > 0.3) continue;
+    const clump = 1 + (Math.random() < 0.45 ? 1 : 0) + (Math.random() < 0.2 ? 1 : 0);
+    for (let c = 0; c < clump; c++) {
+      const ox = c ? (Math.random() - 0.5) * 9 : 0, oz = c ? (Math.random() - 0.5) * 9 : 0;
+      if (c && !plantable(x + ox, z + oz)) continue;
+      trees.push({ x: x + ox, z: z + oz, grove: -1, s: 0.85 + Math.random() * 0.85 });
+      i++;
+    }
+  }
+  return { groves, trees };
+}
+
 function decorate(scene) {
   const dummy = _treeDummy;
   const nearStart = (x, z) => START_POS.some(([sx, sz]) => dist2d(x, z, sx, sz) < 55);
   const scale = areaScale();
-  const N_CONIFER = Math.round(380 * scale), N_BROAD = Math.round(260 * scale);
-  TREES.authored = createAuthoredTreeVariants(N_CONIFER + N_BROAD);
+  const plan = planForest(G.deposits || []);
+  const N_TREES = plan.trees.length;
+  const N_CONIFER = N_TREES, N_BROAD = N_TREES; // procedural fallback capacities
+  TREES.authored = createAuthoredTreeVariants(N_TREES);
 
   const trunkGeo = new THREE.CylinderGeometry(0.22, 0.42, 2.4, 6);
   const trunkMat = new THREE.MeshStandardMaterial({ color: 0x6d4c33, roughness: 0.95 });
@@ -1046,19 +1370,18 @@ function decorate(scene) {
   TREES.list = [];
 
   const col = new THREE.Color();
-  let ti = 0, ci = 0, li = 0, guard = 0;
-  while (ti < N_CONIFER + N_BROAD && guard++ < (N_CONIFER + N_BROAD) * 10) {
-    const x = (Math.random() - 0.5) * (MAP_SIZE - 30);
-    const z = (Math.random() - 0.5) * (MAP_SIZE - 30);
-    if (nearStart(x, z)) continue;
+  const variantCount = Math.max(1, TREES.authored.length);
+  let ti = 0, ci = 0, li = 0;
+  for (const spot of plan.trees) {
+    const { x, z, s } = spot;
     const h = terrainH(x, z);
-    if (h > 8 || h < 1.0) continue;
+    // One species per grove: real stands are not a random mix, and it is what
+    // lets the whole grove collapse into a single instanced batch.
+    const variantIndex = spot.grove >= 0
+      ? spot.grove % variantCount
+      : Math.floor(Math.random() * variantCount);
     const moist = vnoise(x * 0.015 + 91, z * 0.015 + 43);
-    if (moist < 0.45 && Math.random() > 0.25) continue; // cluster in moist areas
-    const s = 0.8 + Math.random() * 0.9;
-    const conifer = moist > 0.55 ? Math.random() < 0.75 : Math.random() < 0.3;
-    if (conifer && ci >= N_CONIFER) continue;
-    if (!conifer && li >= N_BROAD) continue;
+    const conifer = spot.grove >= 0 ? spot.grove % 2 === 0 : moist > 0.55;
 
     dummy.position.set(x, h + 1.1 * s, z);
     dummy.scale.setScalar(s);
@@ -1069,7 +1392,6 @@ function decorate(scene) {
     TREES.trunks.setColorAt(ti, col);
 
     if (TREES.authored.length) {
-      const variantIndex = ti % TREES.authored.length;
       const variant = TREES.authored[variantIndex];
       const instanceIndex = variant.count++;
       dummy.position.set(x, h, z);
@@ -1079,7 +1401,7 @@ function decorate(scene) {
       dummy.updateMatrix();
       for (const part of variant.parts) part.setMatrixAt(instanceIndex, dummy.matrix);
       TREES.list.push({
-        x, z, s, kind: 'real', removed: false,
+        x, z, s, kind: 'real', removed: false, grove: spot.grove,
         authoredVariant: variantIndex, canopyIdx: instanceIndex, trunkIdx: -1,
       });
       ti++;
@@ -1130,7 +1452,7 @@ function decorate(scene) {
       TREES.leaves3.setColorAt(li, col.clone().multiplyScalar(0.92 + Math.random() * 0.18));
       canopyIdx = li; li++;
     }
-    TREES.list.push({ x, z, s, kind: conifer ? 'cone' : 'leaf', removed: false, trunkIdx: ti, canopyIdx });
+    TREES.list.push({ x, z, s, kind: conifer ? 'cone' : 'leaf', removed: false, grove: spot.grove, trunkIdx: ti, canopyIdx });
     ti++;
   }
   if (TREES.authored.length) {
@@ -1177,7 +1499,7 @@ function decorate(scene) {
     const x = (Math.random() - 0.5) * (MAP_SIZE - 20);
     const z = (Math.random() - 0.5) * (MAP_SIZE - 20);
     const h = terrainH(x, z);
-    if (h < 1.4 || h > 6.5) continue;
+    if (h < 1.4 || h > 12) continue;
     const moist = vnoise(x * 0.015 + 91, z * 0.015 + 43);
     if (moist < 0.35 && Math.random() > 0.35) continue;
     dummy.position.set(x, h, z);
@@ -1195,44 +1517,49 @@ function decorate(scene) {
   if (grass.instanceColor) grass.instanceColor.needsUpdate = true;
   scene.add(grass);
 
-  // rocks
-  const N_ROCKS = Math.round(160 * scale);
+  // Boulders. Previously these were sprinkled uniformly over the whole island,
+  // which put bare grey lumps in the middle of open pasture where nothing would
+  // weather them out of the ground. Real loose rock collects on steep slopes,
+  // ridge lines and the storm-scoured strip just above the beach, so that is
+  // where they go — fewer of them, and each one now reads as belonging there.
+  const N_ROCKS = Math.round(110 * scale);
   const rockGeo = new THREE.DodecahedronGeometry(1, 0);
   const rockMat = new THREE.MeshLambertMaterial({ color: 0x8f8f88 });
   const rocks = new THREE.InstancedMesh(rockGeo, rockMat, N_ROCKS);
-  let ri = 0; guard = 0;
-  while (ri < N_ROCKS && guard++ < N_ROCKS * 10) {
+  const rockCol = new THREE.Color();
+  let ri = 0, rGuard = 0;
+  while (ri < N_ROCKS && rGuard++ < N_ROCKS * 14) {
     const x = (Math.random() - 0.5) * (MAP_SIZE - 20);
     const z = (Math.random() - 0.5) * (MAP_SIZE - 20);
     if (nearStart(x, z)) continue;
     const h = terrainH(x, z);
     if (h < 0.6) continue;
+    const slope = Math.max(Math.abs(terrainH(x + 3, z) - h), Math.abs(terrainH(x, z + 3) - h));
+    const wants = slope > 1.1 || h > 7 || h < 1.6;
+    if (!wants && Math.random() > 0.12) continue;
     const s = 0.5 + Math.random() * 1.6;
     dummy.position.set(x, h + s * 0.3, z);
     dummy.scale.set(s, s * (0.6 + Math.random() * 0.5), s);
     dummy.rotation.set(Math.random(), Math.random(), Math.random());
     dummy.updateMatrix();
-    rocks.setMatrixAt(ri++, dummy.matrix);
+    rocks.setMatrixAt(ri, dummy.matrix);
+    rockCol.setScalar(0.78 + Math.random() * 0.34); // no two boulders the same grey
+    rocks.setColorAt(ri, rockCol);
+    ri++;
   }
   rocks.count = ri;
+  if (rocks.instanceColor) rocks.instanceColor.needsUpdate = true;
   scene.add(rocks);
 }
 
-/* pulsing glow on radioactive / crystalline deposits (bloom breathes with them) */
+/* Pulsing glow on radioactive / crystalline deposits (bloom breathes with
+   them). Ore materials are shared across every deposit of a type, so this is
+   two assignments per frame rather than a scene traversal per deposit. */
 function updateDeposits(t) {
-  for (const d of G.deposits) {
-    if (d.type !== 'uranium' && d.type !== 'diamond') continue;
-    if (!d.glowMats) {
-      d.glowMats = [];
-      d.mesh.traverse(o => {
-        if (o.isMesh && o.material.emissive && o.material.emissiveIntensity >= 0.4) d.glowMats.push(o.material);
-      });
-    }
-    const pulse = d.type === 'uranium'
-      ? 0.85 + Math.sin(t * 2.4 + d.x) * 0.45
-      : 0.45 + Math.sin(t * 3.1 + d.z) * 0.18;
-    for (const m of d.glowMats) m.emissiveIntensity = pulse;
-  }
+  const u = _depMats.get('uranium');
+  if (u) u.emissiveIntensity = 0.85 + Math.sin(t * 2.4) * 0.45;
+  const d = _depMats.get('diamond');
+  if (d) d.emissiveIntensity = 0.45 + Math.sin(t * 3.1) * 0.18;
 }
 
 /* trees within radius r of a point (for chopping & build-blocking) */

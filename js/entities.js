@@ -3127,12 +3127,19 @@ const DAMAGE_PROFILE = {
   nuclearSub:    { infantry: 0,    light: 0,    armor: 0,    air: 0,   naval: 2.0, building: 0 },
 };
 
+// Hoisted out of targetClass: this runs inside nearestEnemy, which every armed
+// unit calls twice a second against every unit and building in the game. The
+// inline array literals it used to build allocated two throwaway arrays on each
+// of those tens of thousands of calls per second, purely to do a linear string
+// search — a steady stream of garbage in the hottest loop in the simulation.
+const INFANTRY_KEYS = new Set(['soldier', 'rocketSoldier', 'sniper', 'commando', 'worker']);
+const ARMOR_KEYS = new Set(['tank', 'artillery']);
 function targetClass(ent) {
   if (ent.type === 'building') return 'building';
   if (ent.def.fly) return 'air';
   if (ent.def.naval) return 'naval';
-  if (['soldier', 'rocketSoldier', 'sniper', 'commando', 'worker'].includes(ent.key)) return 'infantry';
-  if (['tank', 'artillery'].includes(ent.key)) return 'armor';
+  if (INFANTRY_KEYS.has(ent.key)) return 'infantry';
+  if (ARMOR_KEYS.has(ent.key)) return 'armor';
   return 'light';
 }
 
@@ -3189,6 +3196,45 @@ function canStandAt(u, x, z) {
   // occupied area without allowing units outside to enter that footprint.
   const escape = navEscapePoint(u);
   return !!escape && dist2d(x, z, escape.x, escape.z) < dist2d(u.x, u.z, escape.x, escape.z);
+}
+
+/* ---------------- skeletal animation budget ----------------
+   Each animated character owns its own 49-bone skeleton, and one
+   mixer.update() walks all of them: about 0.19 ms of pure CPU, every time.
+   The old rule ran EVERY character within 110 units of the camera at the full
+   frame rate, so forty soldiers — an ordinary mid-game army — cost ~8 ms per
+   frame in skinning alone, before a single triangle was drawn. That is half
+   the entire 60 fps budget, and it is the main reason the game felt like it
+   was dragging once the fighting started.
+   Skinning is now rationed three ways, none of which touch the simulation:
+     · characters outside the viewport barely animate at all;
+     · on-screen characters step down to 20 Hz and 10 Hz with distance, which
+       is indistinguishable at RTS zoom;
+     · a hard per-frame cap keeps a brawl right under the camera bounded, and
+       the per-unit stagger spreads the overflow across frames rather than
+       bunching it into a periodic spike.
+   The accumulated dt is passed to the mixer, so animations play at the correct
+   speed however coarsely they are sampled. */
+const WORK_STATES = new Set(['build', 'chop', 'harvest']);
+const ANIM_FULL_RATE_BUDGET = 8;
+let _animFrame = -1, _animBudget = 0;
+function animationDue(u) {
+  if (_animFrame !== G.frame) { _animFrame = G.frame; _animBudget = ANIM_FULL_RATE_BUDGET; }
+  // camFocus is the centre of the screen, so distance from it is a good, cheap
+  // stand-in for "is this on camera" — better than distance to the camera,
+  // which also counts everything sitting behind it
+  const offScreen = dist2d(u.x, u.z, camFocus.x, camFocus.z) > camDist * 1.3;
+  let step;
+  if (offScreen) step = 20;
+  else {
+    const d2 = camera.position.distanceToSquared(u.mesh.position);
+    step = d2 < 70 * 70 ? 1 : d2 < 170 * 170 ? 3 : 6;
+  }
+  if (step === 1) {
+    if (_animBudget > 0) { _animBudget--; return true; }
+    step = 3; // over budget: fall back to the staggered rate
+  }
+  return (G.frame + u.id) % step === 0;
 }
 
 function updateUnit(u, dt) {
@@ -3499,22 +3545,22 @@ function updateUnit(u, dt) {
   const mixer = u.mesh.userData.mixer;
   if (mixer) {
     const acts = u.mesh.userData.actions;
-    const isWorking = ['build', 'chop', 'harvest'].includes(u.state);
+    const isWorking = WORK_STATES.has(u.state);
     let target = isWorking && acts.work ? 'work'
       : (u.attackAnimUntil || 0) > G.time && acts.shoot ? 'shoot'
         : !moving ? 'idle' : (def.speed >= 5 ? 'run' : 'walk');
     if (!acts[target]) target = moving && acts.run ? 'run' : 'idle';
-    for (const a of new Set(Object.values(acts))) {
-      if (!a) continue;
+    // the action set never changes — deduplicate it once, not every frame
+    let unique = u.mesh.userData.uniqueActions;
+    if (!unique) unique = u.mesh.userData.uniqueActions = [...new Set(Object.values(acts))].filter(Boolean);
+    for (const a of unique) {
       const w = a.getEffectiveWeight();
       const goal = a === acts[target] ? 1 : 0;
       a.setEffectiveWeight(w + (goal - w) * Math.min(1, dt * 7));
     }
-    // Accumulate animation time when distant; simulation still runs every tick.
+    // Simulation always runs every tick; only the SKINNING is rationed.
     u.animationDt = (u.animationDt || 0) + dt;
-    const distanceSq = camera.position.distanceToSquared(u.mesh.position);
-    const animationStep = distanceSq < 110 * 110 ? 0 : distanceSq < 240 * 240 ? 1 / 30 : 1 / 10;
-    if (u.animationDt >= animationStep) {
+    if (animationDue(u)) {
       mixer.update(u.animationDt);
       u.animationDt = 0;
     }
@@ -3720,14 +3766,33 @@ function updateDevelopment() {
 }
 function updateCity() {
   const c = G.city;
-  const has = playerBuildingCount;
+  // One pass over the building list instead of one per lookup. `has(key)` is
+  // consulted more than fifty times in this function, and every one of those
+  // used to be a full filter() over every building in the game — 50 scans and
+  // 50 throwaway arrays a second, growing with the size of your empire.
+  const owned = new Map();
+  let ownedBuilt = 0, popCapTotal = 0, fabsOnline = 0;
+  for (const b of G.buildings) {
+    if (b.owner !== 0 || b.dead || !b.built) continue;
+    owned.set(b.key, (owned.get(b.key) || 0) + 1);
+    ownedBuilt++;
+    popCapTotal += (b.def.provides && b.def.provides.pop) || 0;
+    if (b.key === 'chipFab' && b.fueled) fabsOnline++;
+  }
+  const has = key => owned.get(key) || 0;
   const gov = GOVERNMENTS[G.gov.form];
   const taxPolicy = POLICIES.tax.options[G.policies.tax];
   recalcDiscoveryFx(); // discovery bonuses feed every stat below
 
   // ---- food ----
+  // one pass over the unit list too, for the same reason
+  let armyCount = 0, playerArmyPop = 0;
+  for (const u of G.units) {
+    if (u.dead || u.owner !== 0) continue;
+    armyCount++;
+    playerArmyPop += u.def.pop;
+  }
   const farms = has('farm');
-  const armyCount = G.units.filter(u => u.owner === 0 && !u.dead).length;
   const foodCap = 300 + has('foodDepot') * 500;
   const farmMult = (G.discovered.fertilizers ? 1.5 : 1) * (1 + fxv('foodPct'));
   let foodIn = farms * 2.0 * farmMult * (1 + civicMod('foodPct'));
@@ -3742,6 +3807,13 @@ function updateCity() {
   G.res.food = clamp(G.res.food + foodIn - foodOut, 0, foodCap);
   const starving = G.res.food <= 0.5;
   c.foodRate = foodIn - foodOut;
+  // FAMINE runs on a clock, not a flag. A single lean second is a warning; a
+  // sustained famine — the kind an enemy causes by burning every farm — gets
+  // steadily worse, so losing your food supply in wartime is a real defeat
+  // condition rather than a red number in the top bar.
+  c.famine = starving ? (c.famine || 0) + 1 : Math.max(0, (c.famine || 0) - 3);
+  const famineSeverity = starving ? clamp(c.famine / 45, 0.3, 2.2) : 0;
+  c.famineSeverity = famineSeverity;
 
   // ---- material storage caps ----
   const matBonus = has('warehouse') * WAREHOUSE_CAP_BONUS;
@@ -3791,10 +3863,41 @@ function updateCity() {
     + has('apartments') * 280 + has('luxuryVillas') * 60 + has('waterTreatment') * 100)
     * (1 + fxv('civCapPct')));
   let growth = c.civilians * ((c.happiness - 45) / 50) * (c.health / 100) * 0.0025;
-  // famine: people don't just stop growing — they die or flee
-  if (starving) growth -= c.civilians * 0.004;
+  // famine: people don't just stop growing — they die or flee, and the longer
+  // the famine runs the faster they go
+  if (starving) growth -= c.civilians * 0.005 * famineSeverity;
   c.civilians = clamp(c.civilians + growth, 20, civCap);
   c.civCap = civCap;
+
+  // ---- an army marches on its stomach ----
+  // Soldiers in the field are fed from the same stores as the cities. Cut the
+  // supply and the army does not politely wait: it loses condition, and once a
+  // formation is worn down it deserts. Burning an enemy's farms is therefore a
+  // legitimate — and devastating — way to win a war.
+  if (starving && famineSeverity > 0.45) {
+    const drain = 0.010 * famineSeverity;
+    let deserted = 0;
+    for (const u of G.units) {
+      if (u.dead || u.owner !== 0) continue;
+      u.hp -= u.maxHp * drain;
+      // a starving formation that has been ground down melts away entirely
+      if (u.hp <= u.maxHp * 0.12 && Math.random() < 0.05 * famineSeverity) {
+        killEntity(u);
+        deserted++;
+      } else if (u.hp <= 0) {
+        killEntity(u);
+        deserted++;
+      } else {
+        updateHpBar(u);
+      }
+    }
+    // updateCity runs once a second, so gate the report or the famine reports
+    // itself into the very spam this pass is removing
+    if (deserted && G.time - (c.lastDesertionReport || -99) > 12) {
+      c.lastDesertionReport = G.time;
+      notify(`🥖 ${deserted} starving ${deserted === 1 ? 'unit has' : 'units have'} deserted. Feed the army or lose it.`, 'bad', 8);
+    }
+  }
 
   // ---- THE POWER GRID: generation vs. demand drives the whole economy ----
   let mwSupply = 0, mwDemand = 0;
@@ -3813,7 +3916,7 @@ function updateCity() {
   }
 
   // ---- compute: who controls the chips controls the future ----
-  c.compute = Math.min(G.buildings.filter(b => b.owner === 0 && b.built && !b.dead && b.key === 'chipFab' && b.fueled).length, 5);
+  c.compute = Math.min(fabsOnline, 5);
 
   // ---- income ----
   const eraPct = ((G.development && G.development.era) || 0) * 0.05;
@@ -3841,7 +3944,21 @@ function updateCity() {
   c.terrainYields = yields;
   G.res.food = Math.min(G.res.food + yields.food, foodCap);
   G.res.iron = Math.min(G.res.iron + yields.iron, c.caps.iron);
-  c.income = c.civilians * 0.035 * incomeMult + c.territoryIncome;
+  // ---- TAX ADMINISTRATION ----
+  // A head-count tax used to be collected at full rate from turn one, so a
+  // player with a single Headquarters and no economy at all still drew ~$8/s
+  // out of thin air — there was nothing to build up TO. A state can only tax
+  // what it can actually administer: without a city hall, markets, banks or
+  // proper settlements, most of the country is subsistence and pays nothing.
+  // Building that apparatus is now the early economy.
+  c.admin = clamp(0.28
+    + has('cityHall') * 0.22
+    + Math.min(has('market'), 2) * 0.10
+    + Math.min(has('bank'), 3) * 0.07
+    + has('cityCenter') * 0.10
+    + Math.min(has('villageCenter'), 3) * 0.05
+    + Math.min(has('residential'), 3) * 0.05, 0.28, 1);
+  c.income = c.civilians * 0.035 * c.admin * incomeMult + c.territoryIncome;
   G.res.money += c.income;
 
   // policy upkeep
@@ -3858,9 +3975,8 @@ function updateCity() {
   c.research += c.researchRate;
 
   // ---- army capacity ----
-  c.popCap = G.buildings.filter(b => b.owner === 0 && b.built && !b.dead)
-    .reduce((s, b) => s + ((b.def.provides && b.def.provides.pop) || 0), 0);
-  c.popUsed = G.units.filter(u => u.owner === 0 && !u.dead).reduce((s, u) => s + u.def.pop, 0);
+  c.popCap = popCapTotal;
+  c.popUsed = playerArmyPop;
 
   // ---- war weariness ----
   const atWarCount = G.nations.filter((n, i) => i !== 0 && isAtWar(0, i)).length;
@@ -4069,7 +4185,9 @@ function govTick() {
   const c = G.city;
   switch (gv.form) {
     case 'democracy': {
-      gv.nextEvent = G.time + GOVERNMENTS.democracy.electionEvery * YEAR_SECONDS;
+      const every = GOVERNMENTS.democracy.electionEvery;
+      if (!every) { gv.nextEvent = Infinity; break; } // elections switched off
+      gv.nextEvent = G.time + every * YEAR_SECONDS;
       startElection();
       break;
     }

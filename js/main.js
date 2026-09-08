@@ -272,7 +272,9 @@ function startGameNow() {
   G.civic.leader = newCivicLeader();
   G.agentRoster.push(newAgent()); // one field agent to start with
   G.civic.nextElection = LOCAL_ELECTION_EVERY * YEAR_SECONDS;
-  const firstEvent = { democracy: 5, dictatorship: 5, monarchy: 10, technocracy: 8 }[G.gov.form];
+  // the first political event waits out the opening build-up — nobody wants an
+  // election before they have a second farm
+  const firstEvent = { democracy: 12, dictatorship: 8, monarchy: 12, technocracy: 10 }[G.gov.form];
   G.gov.nextEvent = G.reviewMode ? Infinity : firstEvent * YEAR_SECONDS;
   G.started = true;
   G.paused = false;

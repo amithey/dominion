@@ -26,12 +26,17 @@ function setMapConfig(sizeKey, styleKey) {
   MAP_SIZE = MAP_SIZES[sizeKey].size;
   HALF_MAP = MAP_SIZE / 2;
   MAP_STYLE = styleKey;
-  const o = HALF_MAP - 85;
+  // Starts sit at a fixed *fraction* of the map rather than a fixed inset. A
+  // fixed 85-unit inset put gigantic-map capitals at 0.84 of the map radius,
+  // right on top of the coastline falloff, leaving no room for the shoreline
+  // noise that makes the island look natural.
+  const o = Math.round(HALF_MAP * 0.50);
   START_POS = [[-o, o], [o, o], [o, -o], [-o, -o]];
 }
 setMapConfig('large', 'island');
 
 const SEA_LEVEL = 0;           // terrain below this is ocean
+const COAST_SHELF = 3.5;       // height band either side of the waterline that terrainH flattens into beach
 const YEAR_SECONDS = 60;       // one in-game year
 const TERRITORY_CELL = 40;     // world units per territory cell
 const PLANE_FUEL = 34;         // seconds of flight before a plane must return to base
@@ -526,13 +531,18 @@ const NATION_DEFS = [
 /* ---------------- Government & leaders ---------------- */
 const GOVERNMENTS = {
   democracy: {
+    // electionEvery is in in-game years, and YEAR_SECONDS is 60 — so the old
+    // value of 5 put a blocking three-candidate modal in front of the player
+    // every five real minutes, for the whole game. At 12 it is a landmark you
+    // can prepare for instead of an interruption you learn to click away.
+    // Set electionEvery to 0 to remove national elections entirely.
     name: 'Democracy', icon: '🗳️',
-    incomePct: 0.10, happiness: 5, electionEvery: 5, // years
-    desc: '+10% income, +5 happiness. Elections every 5 years — back a candidate and hope the voters agree.',
+    incomePct: 0.10, happiness: 5, electionEvery: 12, // years
+    desc: '+10% income, +5 happiness. Elections every 12 years — back a candidate and hope the voters agree.',
   },
   dictatorship: {
     name: 'Dictatorship', icon: '👊',
-    dmgPct: 0.10, prodPct: 0.10, happiness: -8, coupEvery: 5,
+    dmgPct: 0.10, prodPct: 0.10, happiness: -8, coupEvery: 8,
     desc: '+10% army damage & production, -8 happiness. No elections… but low approval invites a coup.',
   },
   monarchy: {
@@ -914,7 +924,10 @@ function relationStatus(score, war, alliance) {
 /* ---------------- small helpers ---------------- */
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
-const dist2d = (ax, az, bx, bz) => Math.hypot(ax - bx, az - bz);
+// Math.hypot is overflow-safe and roughly 8x slower than the naive form. This
+// runs in targeting, pathing and territory loops thousands of times per frame,
+// and world coordinates never come close to overflowing a double.
+const dist2d = (ax, az, bx, bz) => { const dx = ax - bx, dz = az - bz; return Math.sqrt(dx * dx + dz * dz); };
 const fmtNum = n => n >= 10000 ? (n / 1000).toFixed(1) + 'k' : Math.floor(n).toString();
 function costText(cost) {
   return Object.entries(cost).map(([k, v]) => `${RES_META[k].icon}${v}`).join(' ') || 'Free';

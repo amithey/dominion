@@ -327,11 +327,14 @@ function maybeAIOffer() {
   if (!candidates.length) return;
   const nat = candidates[Math.floor(Math.random() * candidates.length)];
   const i = G.nations.indexOf(nat);
-  // they offer a resource for money, slightly favorable to the player
+  if (!canAIContact(i)) return;
+  // they offer a resource for money, slightly favorable to the player — and in
+  // a quantity worth stopping for, since these now arrive rarely
   const resPool = ['oil', 'iron', 'silicon', 'uranium', 'food'];
   const r = resPool[Math.floor(Math.random() * resPool.length)];
-  const amt = 20 + Math.floor(Math.random() * 40);
+  const amt = 60 + Math.floor(Math.random() * 90);
   const price = Math.floor(amt * RES_VALUE[r] * (0.75 + Math.random() * 0.3));
+  markAIContact(i);
   notifyAction(
     `📨 ${nat.name} offers you ${amt} ${RES_META[r].icon}${RES_META[r].name} for 💰${price}.`,
     [
@@ -765,6 +768,38 @@ function runSpyOp(opKey, targetId, person, agentId) {
   refreshStateWindows('win-espionage', 'win-diplomacy');
 }
 
+/* ---------------- the diplomatic inbox ----------------
+   Trade offers, foreign proposals and hostile operations each used to roll
+   their own die on every 10-second tick. Independently that is one interrupting
+   pop-up roughly every 25 seconds — the player spends the game dismissing
+   cards instead of playing, and because every offer looks the same none of
+   them register as an event.
+   Everything the AI initiates now competes for ONE channel:
+     · a hard cooldown between any two approaches;
+     · a much longer per-nation cooldown, so one rival cannot monopolise it;
+     · silence during the opening minutes, while the player is still building.
+   The result is a handful of approaches per game, each of which lands. */
+const AI_CONTACT_COOLDOWN = 150;   // seconds between any two AI-initiated pop-ups
+const AI_NATION_COOLDOWN = 420;    // seconds before the same nation writes again
+const AI_CONTACT_GRACE = 240;      // no foreign mail at all before this
+
+function aiInbox() {
+  if (!G.diplo.inbox) G.diplo.inbox = { last: -Infinity, byNation: {} };
+  return G.diplo.inbox;
+}
+function canAIContact(nationId) {
+  if (G.time < AI_CONTACT_GRACE) return false;
+  const inbox = aiInbox();
+  if (G.time - inbox.last < AI_CONTACT_COOLDOWN) return false;
+  if (nationId !== undefined && G.time - (inbox.byNation[nationId] ?? -Infinity) < AI_NATION_COOLDOWN) return false;
+  return true;
+}
+function markAIContact(nationId) {
+  const inbox = aiInbox();
+  inbox.last = G.time;
+  if (nationId !== undefined) inbox.byNation[nationId] = G.time;
+}
+
 /* ---------------- periodic world diplomacy tick (every ~10s) ---------------- */
 function diploTick() {
   const n = G.nations.length;
@@ -796,12 +831,16 @@ function diploTick() {
       G.res.money += 40; G.nations[a].money += 40;
     }
   }
-  // random AI trade offers
-  if (Math.random() < 0.22) maybeAIOffer();
-  // AI nations proactively open diplomatic channels with you
-  if (Math.random() < 0.14) aiDiplomaticProposal();
-  // hostile intelligence services may move against you (~every 2 min on average)
-  if (Math.random() < 0.08) enemySpyAttempt();
+  // Foreign approaches: at most one at a time, and the substantive kind (a
+  // pact, an alliance, an ultimatum) is favoured over yet another "I will sell
+  // you 30 oil" contract.
+  if (canAIContact()) {
+    const roll = Math.random();
+    if (roll < 0.11) aiDiplomaticProposal();
+    else if (roll < 0.17) maybeAIOffer();
+  }
+  // hostile intelligence services may move against you (~every 6 min on average)
+  if (G.time > AI_CONTACT_GRACE && Math.random() < 0.028) enemySpyAttempt();
   // world market: prices drift, standing trade routes flow
   marketTick();
   // intelligence decays — yesterday's picture goes stale
@@ -819,7 +858,7 @@ function changeRelAI(a, b, delta) {
    Each choice shifts relations, resources or the balance of power. */
 function aiDiplomaticProposal() {
   const cands = G.nations.map((nn, i) => i).filter(i =>
-    i > 0 && !G.nations[i].defeated);
+    i > 0 && !G.nations[i].defeated && canAIContact(i));
   if (!cands.length) return;
   const id = cands[Math.floor(Math.random() * cands.length)];
   const nat = G.nations[id];
@@ -842,6 +881,7 @@ function aiDiplomaticProposal() {
   }
   if (!options.length) return;
   const choice = options[Math.floor(Math.random() * options.length)];
+  markAIContact(id);
 
   if (choice === 'peace') {
     notifyAction(`🕊️ ${nat.name} proposes a CEASEFIRE. "Enough blood. Shall we lay down arms?"`, [

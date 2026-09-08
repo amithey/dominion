@@ -241,10 +241,15 @@ function renderCity(body) {
     <div class="fx-list">
       Citizens: <b>${Math.floor(c.civilians)}/${c.civCap || 200}</b> (build Residential Districts for more)<br>
       Tax income: <b>$${c.income.toFixed(1)}/s</b> · Research: <b>+${c.researchRate.toFixed(2)}/s</b><br>
+      🏛️ Tax administration: <b style="color:${(c.admin || 0) < 0.5 ? 'var(--warn, #e8a83a)' : 'var(--ok)'}">${Math.round((c.admin || 0) * 100)}%</b>
+      <span style="font-size:11px;color:var(--text-dim)">— the share of your citizens the state can actually tax. A City Hall, Markets, Banks and settlement centres raise it; without them most of the country is subsistence.</span><br>
       ⚡ Power grid: <b style="color:${c.power && c.power.factor < 1 ? 'var(--danger)' : 'var(--ok)'}">${c.power ? c.power.supply : 0} MW supply / ${c.power ? c.power.demand : 0} MW demand</b>
       ${c.power && c.power.factor < 1 ? `<b style="color:var(--danger)">— BLACKOUTS! output at ${Math.round(c.power.factor * 100)}% (build Power Plants / Solar Farms)</b>` : '(surplus — everything runs at full speed)'}<br>
       💻 Chip fabs online: <b>${c.compute || 0}</b> → +${((c.compute || 0) * 5)}% research, +${((c.compute || 0) * 2)}% income <span style="color:var(--text-dim)">(technological supremacy)</span><br>
-      Food flow: <b>${c.foodRate >= 0 ? '+' : ''}${c.foodRate.toFixed(2)}/s</b> (storage ${Math.floor(G.res.food)}/${caps.food || 300})<br>
+      Food flow: <b style="color:${c.foodRate < 0 ? 'var(--danger)' : 'var(--ok)'}">${c.foodRate >= 0 ? '+' : ''}${c.foodRate.toFixed(2)}/s</b> (storage ${Math.floor(G.res.food)}/${caps.food || 300})
+      ${c.famineSeverity > 0
+        ? `<b style="color:var(--danger)">— FAMINE (${Math.round(c.famine)}s): citizens are dying${c.famineSeverity > 0.45 ? ' and the army is deserting' : ''}.</b>`
+        : `<span style="font-size:11px;color:var(--text-dim)">— each citizen eats 0.008/s, each soldier 0.05/s. Run out and the population dies and the army deserts.</span>`}<br>
       Materials storage: oil <b>${Math.floor(G.res.oil)}/${caps.oil || 500}</b> · iron <b>${Math.floor(G.res.iron)}/${caps.iron || 500}</b> ·
       silicon <b>${Math.floor(G.res.silicon)}/${caps.silicon || 400}</b> · uranium <b>${Math.floor(G.res.uranium)}/${caps.uranium || 300}</b><br>
       Missile stockpile: <b>${missileStock()}/${missileCap()}</b> (Ammo Depots add +4 each)<br>

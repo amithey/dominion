@@ -44,13 +44,18 @@ Build a coastal **Commercial Port** to open shipping routes: cargo is committed 
 and can be lost if the route collapses or piracy strikes. Combat ships reduce voyage risk.
 
 ### Civilian life
-Farms feed people; Schools/Libraries/**Universities** drive research; Hospitals heal; **Police Stations** keep
+Farms feed people — and *only* farms and fishing do. Every citizen and every soldier eats from the same stores,
+so if your food runs out the population starts dying and the army starts deserting in the field; burning an
+enemy's farms is a real way to win a war. Tax income scales with your **tax administration** (City Hall, Markets,
+Banks, settlement centres): a state with nothing built collects almost nothing, so the economy has to be grown.
+Schools/Libraries/**Universities** drive research; Hospitals heal; **Police Stations** keep
 public order (crime eats income); **Parks & Stadiums** raise happiness & culture; **Markets & Banks** multiply
 income; **Residential Districts** grow your tax base; the **TV Station** props up approval.
 
 ### Government (chosen at game start)
 **Democracy · Dictatorship · Monarchy · Technocracy** — each with unique bonuses and events:
-elections every 5 years (lose them and your leader is replaced), coups against unpopular dictators,
+elections every 12 years (lose them and your leader is replaced — set `electionEvery: 0` in `js/config.js`
+to remove elections entirely), coups against unpopular dictators,
 royal successions. Every leader has a trait (Economist, Warmonger, Diplomat, Spymaster, Scholar, Builder)
 that actively buffs your nation. Manage **policies**: taxation, rationing, propaganda, free healthcare.
 

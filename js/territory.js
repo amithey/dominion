@@ -70,7 +70,11 @@ function territoryYields(nationId) {
     const status = cellStatus(i);
     out[status]++;
     const m = STATUS_YIELD_MULT[status];
-    out.money += 0.10 * m; // base tribute from every held cell
+    // Base tribute from every held cell. Halved from 0.10: an empty grassland
+    // square with nothing on it should be worth something, but four rings of
+    // untouched territory around the capital should not out-earn an actual
+    // built economy the way they did at game start.
+    out.money += 0.05 * m;
     switch (TERRITORY.terrain[i]) {
       case TERRAIN_CLASS.PLAINS:   out.food += 0.020 * m; break;
       case TERRAIN_CLASS.FOREST:   out.money += 0.030 * m; break;
@@ -227,8 +231,10 @@ function territoryTick() {
 
   let changed = false;
   for (let i = 0; i < cols * rows; i++) {
-    const c = cellCenter(i);
-    if (terrainH(c.x, c.z) < 0.05) {
+    // Water was re-derived here with a fresh terrainH sample for every cell on
+    // every tick. initTerritory already classified each cell once and the land
+    // does not move, so read the answer instead of recomputing it.
+    if (TERRITORY.terrain[i] === TERRAIN_CLASS.WATER) {
       if (TERRITORY.owner[i] !== -1 || TERRITORY.control[i] !== 0) changed = true;
       TERRITORY.owner[i] = -1; TERRITORY.control[i] = 0; TERRITORY.contested[i] = 0; TERRITORY.pressure[i] = 0;
       continue;
