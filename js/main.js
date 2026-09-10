@@ -316,7 +316,7 @@ function updateCamera(dt) {
   if (keys['r']) camPitch = Math.min(1.25, camPitch + dt * 1.1);
   if (keys['f']) camPitch = Math.max(0.38, camPitch - dt * 1.1);
 
-  const fy = terrainH(camFocus.x, camFocus.z);
+  const fy = Math.max(terrainH(camFocus.x, camFocus.z), SEA_LEVEL) + camFocus.y;
   const cx = camFocus.x + Math.sin(camYaw) * camDist * Math.cos(camPitch);
   const cz = camFocus.z + Math.cos(camYaw) * camDist * Math.cos(camPitch);
   const cy = fy + camDist * Math.sin(camPitch);
@@ -712,6 +712,8 @@ function loop() {
     if (!G.reviewMode) for (const nat of G.nations) if (!nat.isPlayer) aiUpdate(nat, dt);
     updateMissiles(dt);
     updateEffects(dt);
+    updateBattleVisuals(dt);
+    if (G.reviewMode) updateReviewStrike(dt);
     // Decorative world animation is intentionally capped. Updating thousands
     // of water/vegetation/deposit vertices every render frame caused late-game stutter.
     worldVisualTimer += dt;

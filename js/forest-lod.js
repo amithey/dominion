@@ -55,7 +55,7 @@ function bakeTreeImpostor(parts) {
 }
 
 function updateForestLOD(cam) {
-  const limit = G.graphics === 'cinematic' ? 230 : G.graphics === 'fast' ? 120 : 170;
+  const limit = G.graphics === 'cinematic' ? 230 : G.graphics === 'low' ? 120 : 170;
   for (const cell of FOREST_CELLS) {
     const distance = cam.position.distanceTo(cell.bounds.center) - cell.bounds.radius;
     const detailed = distance < limit + (cell.detailed ? 12 : -12);

@@ -1892,7 +1892,8 @@ function unitMesh(key, color, seed = 0) {
     }
   }
 
-  const authored = makeAssetModel(`unit:${key}`, color, seed);
+  // Civilian tug/speedboat placeholders hide the military silhouettes below.
+  const authored = ['destroyer', 'corvette'].includes(key) ? null : makeAssetModel(`unit:${key}`, color, seed);
   if (authored) {
     dressHullIfUntextured(authored, seed); // fixes the Kenney watercraft hulls, no-ops otherwise
     g.add(authored);
@@ -2507,7 +2508,7 @@ function spawnBuilding(key, owner, x, z, opts = {}) {
     queue: [], queueProg: 0, selected: false, dead: false,
     deposit: opts.deposit || null,
   };
-  ent.mesh = batchBuildingGeometry(buildingMesh(key, nat.color, ent.id));
+  ent.mesh = batchBuildingGeometry(detailBuildingSite(buildingMesh(key, nat.color, ent.id), key));
   const atSea = ent.deposit && ent.deposit.def.water;
   ent.mesh.position.set(x, atSea ? SEA_LEVEL : terrainH(x, z), z);
   ent.mesh.userData.entity = ent;
@@ -2566,6 +2567,7 @@ function spawnUnit(key, owner, x, z) {
     selected: false, dead: false,
   };
   ent.mesh = unitMesh(key, nat.color, ent.id);
+  detailUnitSurface(ent.mesh, def);
   ent.mesh.position.set(x, def.naval ? SEA_LEVEL + 0.15 : terrainH(x, z) + def.fly, z);
   ent.mesh.userData.entity = ent;
   attachOverlays(ent, def.naval ? 2.4 : 1.3);
@@ -2720,8 +2722,8 @@ function killEntity(ent) {
   if (ent.type === 'unit') {
     // death animation: troops & vehicles keel over, aircraft fall out of the sky, ships sink
     if (ent.ring) ent.ring.visible = false;
-    if (ent.hpBar) ent.hpBar.visible = false;
-    if (ent.bar) ent.bar.visible = false;
+    if (ent.hpBg) ent.hpBg.visible = false;
+    if (ent.hpFg) ent.hpFg.visible = false;
     G.effects.push({ obj: ent.mesh, ttl: 1.6, max: 1.6, kind: 'corpse', fly: !!ent.def.fly, naval: !!ent.def.naval });
   } else {
     scene.remove(ent.mesh);
@@ -2749,21 +2751,7 @@ function spawnTracer(ax, ay, az, bx, by, bz, color = 0xfff2aa) {
   G.effects.push({ obj: line, ttl: 0.1, kind: 'tracer' });
 }
 function spawnExplosion(x, y, z, size) {
-  const mat = new THREE.MeshBasicMaterial({ color: 0xff8a32, transparent: true, opacity: 0.78, depthWrite: false });
-  const s = new THREE.Mesh(new THREE.SphereGeometry(size * 0.5, 12, 9), mat);
-  s.position.set(x, y, z);
-  s.scale.setScalar(0.28);
-  scene.add(s);
-  G.effects.push({ obj: s, ttl: 0.52, max: 0.52, kind: 'boom', finalScale: size > 12 ? 2.15 : 1.65 });
-  // rising smoke puffs give the blast some weight
-  const puffs = size > 6 ? 3 : 2;
-  for (let i = 0; i < puffs; i++) {
-    const smoke = new THREE.Mesh(new THREE.SphereGeometry(size * 0.3, 7, 5),
-      new THREE.MeshLambertMaterial({ color: 0x39352f, transparent: true, opacity: 0.55 }));
-    smoke.position.set(x + (Math.random() - 0.5) * size * 0.5, y + size * 0.2, z + (Math.random() - 0.5) * size * 0.5);
-    scene.add(smoke);
-    G.effects.push({ obj: smoke, ttl: 1.1 + Math.random() * 0.4, max: 1.5, kind: 'smoke', rise: size * 0.8 });
-  }
+  emitBlast(x, y, z, size);
 }
 /* white wake discs behind ships / contrail puffs behind aircraft.
    Meshes and materials are POOLED — ships shed several per second, and
@@ -2785,6 +2773,7 @@ function _pooledEffect(pool, geo, color, baseOpacity) {
 function spawnWake(x, y, z, isSea, heading) {
   if (isSea) {
     const m = _pooledEffect(_wakePool, _wakeGeo, 0xdff2f6, 0.4);
+    if (!m.material.map) { m.material.map = wakeTexture(); m.material.needsUpdate = true; }
     // stretch the foam quad along the ship's course so wakes trail as a V
     m.rotation.set(-Math.PI / 2, 0, heading !== undefined ? heading : 0);
     m.position.set(x, y, z);
@@ -2810,16 +2799,12 @@ function spawnDust(x, y, z) {
 
 /* short bright flash at a shooter's muzzle */
 function spawnMuzzleFlash(x, y, z) {
-  const flash = new THREE.Mesh(new THREE.SphereGeometry(0.35, 6, 5),
-    new THREE.MeshBasicMaterial({ color: 0xfff3b0, transparent: true, opacity: 1 }));
-  flash.position.set(x, y, z);
-  scene.add(flash);
-  G.effects.push({ obj: flash, ttl: 0.07, kind: 'tracer' });
+  battleParticle(x, y, z, .8, .09, 0, 0, 0, 'spark');
 }
 function updateEffects(dt) {
   for (let i = G.effects.length - 1; i >= 0; i--) {
     const e = G.effects[i];
-    e.ttl -= dt;
+    e.ttl = Math.max(0, e.ttl - dt);
     if (e.kind === 'boom') {
       const progress = clamp(1 - e.ttl / e.max, 0, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
@@ -2887,6 +2872,8 @@ function makeMissileMesh(type, color) {
   if (!MISSILES[type].arc) {
     const body = cyl(0.25, 0.3, 2.6, teamMat(0xd8dde2), 0, 0, 0, 8);
     body.rotation.z = Math.PI / 2; g.add(body);
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(.25, .75, 16), teamMat(0xc1c7c8));
+    nose.rotation.z = -Math.PI / 2; nose.position.x = 1.65; g.add(nose);
     g.add(box(0.1, 0.1, 1.6, teamMat(color), -0.4, 0, 0)); // wings
     g.add(box(0.5, 0.5, 0.1, teamMat(color), -1.2, 0.2, 0));
   } else if (type === 'nuke') {
@@ -2910,7 +2897,7 @@ function makeMissileMesh(type, color) {
   // exhaust glow
   const glow = new THREE.Mesh(new THREE.SphereGeometry(0.5, 6, 5),
     new THREE.MeshBasicMaterial({ color: 0xffb347, transparent: true, opacity: 0.85 }));
-  glow.position.set(type === 'cruise' ? 1.5 : 0, type === 'cruise' ? 0 : -2.4, 0);
+  glow.position.set(!MISSILES[type].arc ? -1.5 : 0, !MISSILES[type].arc ? 0 : -2.4, 0);
   g.add(glow);
   return g;
 }
@@ -2923,7 +2910,7 @@ function launchMissile(type, fromX, fromZ, tx, tz) {
     type, nuclear, owner: 0,
     x: fromX, z: fromZ, tx, tz,
     sx: fromX, sz: fromZ,
-    t: 0, dur: def.arc ? clamp(dist / def.speed, 2.5, 9) : dist / def.speed,
+    t: 0, dur: def.arc ? clamp(dist / def.speed, 2.5, 9) : Math.max(.1, dist / def.speed),
     dmg: nuclear ? 4500 : def.dmg,
     radius: nuclear ? 38 : def.radius,
     special: def.special || null,
@@ -2942,18 +2929,14 @@ function updateMissiles(dt) {
     const m = G.missilesInFlight[i];
     m.t += dt;
     const f = clamp(m.t / m.dur, 0, 1);
-    const x = lerp(m.sx, m.tx, f);
-    const z = lerp(m.sz, m.tz, f);
-    let y;
-    if (MISSILES[m.type].arc) {
-      const apex = 130;
-      y = terrainH(m.sx, m.sz) + 3 + Math.sin(f * Math.PI) * apex;
-      m.mesh.rotation.z = lerp(0, -Math.PI, f); // tips over
-    } else {
-      y = Math.max(terrainH(x, z), SEA_LEVEL) + 9;
-      m.mesh.rotation.y = Math.atan2(m.tx - m.sx, m.tz - m.sz) - Math.PI / 2;
+    poseMissile(m, f);
+    m.trailTime = (m.trailTime || 0) + dt;
+    if (m.trailTime >= .045) {
+      m.trailTime %= .045;
+      const p = m.mesh.position;
+      battleParticle(p.x, p.y, p.z, .65, 1.6, .1, .25, .05, 'steam');
+      battleParticle(p.x, p.y, p.z, .4, .16, 0, 0, 0, 'spark');
     }
-    m.mesh.position.set(x, y, z);
     if (f >= 1) {
       scene.remove(m.mesh);
       G.missilesInFlight.splice(i, 1);
@@ -3239,6 +3222,7 @@ function animationDue(u) {
 
 function updateUnit(u, dt) {
   const def = u.def;
+  const previousYaw = u.mesh.rotation.y;
   if (u.disabledUntil > G.time) {
     updateHpBar(u);
     return;
@@ -3290,7 +3274,7 @@ function updateUnit(u, dt) {
     if (foe) { u.target = foe; u.prevState = u.state; u.state = 'attack'; }
   }
 
-  let mvx = 0, mvz = 0, moving = false;
+  let mvx = 0, mvz = 0, moving = false, moveDistance = 0;
 
   if (u.state === 'guard') {
     const gx = u.guardX ?? u.x, gz = u.guardZ ?? u.z;
@@ -3299,6 +3283,7 @@ function updateUnit(u, dt) {
       const wp = pathNext(u, gx, gz);
       const ax = wp ? wp.x : gx, az = wp ? wp.z : gz;
       const ad = Math.max(dist2d(u.x, u.z, ax, az), 0.001);
+      moveDistance = ad;
       mvx = (ax - u.x) / ad; mvz = (az - u.z) / ad; moving = true;
     }
   }
@@ -3320,6 +3305,7 @@ function updateUnit(u, dt) {
       const wp = pathNext(u, u.tx, u.tz);
       const ax = wp ? wp.x : u.tx, az = wp ? wp.z : u.tz;
       const ad = Math.max(dist2d(u.x, u.z, ax, az), 0.001);
+      moveDistance = ad;
       mvx = (ax - u.x) / ad; mvz = (az - u.z) / ad; moving = true;
     }
     if (u.state === 'toBuild' && (!u.buildTarget || u.buildTarget.dead)) u.state = 'idle';
@@ -3355,6 +3341,7 @@ function updateUnit(u, dt) {
         const wp = pathNext(u, t.x, t.z);
         const ax = wp ? wp.x : t.x, az = wp ? wp.z : t.z;
         const ad = Math.max(dist2d(u.x, u.z, ax, az), 0.001);
+        moveDistance = ad;
         mvx = (ax - u.x) / ad; mvz = (az - u.z) / ad; moving = true;
       }
       else if (u.cool <= 0) {
@@ -3412,7 +3399,9 @@ function updateUnit(u, dt) {
   }
 
   if (moving) {
-    const sp = def.speed * unitTechSpeedMult(u) * dt;
+    // Never step past a waypoint, even at high simulation speed. Otherwise
+    // fast units can alternate across it forever without entering arrival range.
+    const sp = Math.min(def.speed * unitTechSpeedMult(u) * dt, moveDistance);
     const px = u.x, pz = u.z;
     const nx = u.x + mvx * sp, nz = u.z + mvz * sp;
     if (canStandAt(u, nx, nz)) {
@@ -3475,7 +3464,8 @@ function updateUnit(u, dt) {
   u.z = clamp(u.z, -HALF_MAP + 3, HALF_MAP - 3);
   if (def.naval) {
     u.mesh.position.set(u.x, SEA_LEVEL + 0.15 + Math.sin(G.time * 1.5 + u.id) * 0.12, u.z);
-    u.mesh.rotation.z = Math.sin(G.time * 1.2 + u.id) * 0.03; // gentle roll
+    u.mesh.rotation.x = Math.sin(G.time * 1.2 + u.id) * 0.025;
+    u.mesh.rotation.z = Math.sin(G.time * .8 + u.id * .7) * 0.012;
   } else {
     const groundY = terrainH(u.x, u.z);
     u.mesh.position.set(u.x, groundY + def.fly + (def.fly ? Math.sin(G.time * 2 + u.id) * 0.4 : 0), u.z);
@@ -3484,12 +3474,11 @@ function updateUnit(u, dt) {
   // Aircraft bank into turns and settle smoothly instead of rotating like a
   // rigid board. Ground vehicles get subtle suspension travel over terrain.
   if (def.fly) {
-    const lateral = moving
-      ? mvx * Math.cos(u.mesh.rotation.y) - mvz * Math.sin(u.mesh.rotation.y)
-      : 0;
-    const desiredBank = clamp(-lateral * 0.34, -0.34, 0.34);
+    const yawDelta = Math.atan2(Math.sin(u.mesh.rotation.y - previousYaw), Math.cos(u.mesh.rotation.y - previousYaw));
+    const desiredBank = clamp(-yawDelta / Math.max(dt, .001) * .14, -.42, .42);
     u.visualBank = (u.visualBank || 0) + (desiredBank - (u.visualBank || 0)) * Math.min(1, dt * 4.5);
-    u.mesh.rotation.z = u.visualBank;
+    u.mesh.rotation.x = u.visualBank;
+    u.mesh.rotation.z = (u.mesh.rotation.z || 0) * Math.exp(-dt * 4);
     u.mesh.position.y += Math.sin(G.time * 1.7 + u.id * 0.7) * (u.key === 'helicopter' ? 0.13 : 0.05);
   } else if (!def.naval && !u.mesh.userData.mixer && !u.mesh.userData.limbs) {
     const slope = terrainH(u.x + 1.2, u.z) - terrainH(u.x - 1.2, u.z);
@@ -3597,6 +3586,7 @@ function updateUnit(u, dt) {
 /* ---------------- building update (production, extractors) ---------------- */
 function updateBuilding(b, dt) {
   if (b.dead) return;
+  animateBuildingSite(b, dt);
   if (b.disabledUntil > G.time) {
     updateHpBar(b);
     return;
