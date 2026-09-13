@@ -303,7 +303,7 @@ function makeTerrainMaterial() {
           float moist = tNoise(wp.xz * 0.013 + 7.0);
           float blotch = tNoise(wp.xz * 0.055 + 41.0);
 
-          float wSand = smoothstep(2.9, 0.8, h);
+          float wSand = 1.0 - smoothstep(0.8, 2.9, h);
           // rock is overwhelmingly a SLOPE cue, not an altitude one — flat high
           // ground is alpine pasture, not scree
           float wRock = clamp(smoothstep(0.30, 0.60, slope) + smoothstep(14.0, 22.0, h), 0.0, 1.0);
@@ -353,7 +353,6 @@ function makeTerrainMaterial() {
         }`)
       .replace('#include <color_fragment>', `#include <color_fragment>
         {
-          TerrSurf ts = terrainSurface();
           // keep the photographic detail pattern but let the biome / territory
           // colour drive the hue, so gameplay tinting still reads clearly
           float lum = max(dot(ts.albedo, vec3(0.299, 0.587, 0.114)), 0.06);
@@ -362,20 +361,21 @@ function makeTerrainMaterial() {
           // swizzle — .rgb is valid on both vec3 and vec4
           vec3 tinted = mix(ts.albedo, vColor.rgb * pattern, uTint);
           // underwater the seabed gradient IS the sea colour — let it dominate
-          float underwater = smoothstep(0.5, -1.2, vTerrWorld.y);
+          float underwater = 1.0 - smoothstep(-1.2, 0.5, vTerrWorld.y);
           diffuseColor.rgb = mix(tinted, vColor.rgb * mix(vec3(1.0), pattern, 0.45), underwater);
         }`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
         {
-          TerrSurf ts2 = terrainSurface();
           vec3 N = normalize(vTerrNormal);
           vec3 T = normalize(vec3(1.0, 0.0, 0.0) - N * N.x);
           vec3 B = cross(N, T);
-          vec3 worldN = normalize(mat3(T, B, N) * ts2.nrm);
+          vec3 worldN = normalize(mat3(T, B, N) * ts.nrm);
           // flatten the relief under water so the seabed stays smooth
-          worldN = normalize(mix(worldN, N, smoothstep(0.5, -1.2, vTerrWorld.y)));
+          worldN = normalize(mix(worldN, N, 1.0 - smoothstep(-1.2, 0.5, vTerrWorld.y)));
           normal = normalize((viewMatrix * vec4(worldN, 0.0)).xyz);
-        }`);
+        }`)
+      // Share the expensive biome/normal lookup across lighting and colour.
+      .replace('void main() {', 'void main() {\n TerrSurf ts = terrainSurface();');
   };
   return mat;
 }
@@ -818,7 +818,7 @@ function placeDeposits(scene) {
     while (placed < target && tries++ < 900) {
       // bias a couple of each toward bases so early game has options
       let x, z;
-      if (placed < 2) {
+      if (placed < 2 && tries <= 100) {
         const [sx, sz] = START_POS[placed % 4 === 0 ? 0 : Math.floor(Math.random() * 4)];
         const ang = Math.random() * Math.PI * 2, r = 45 + Math.random() * 40;
         x = clamp(sx + Math.cos(ang) * r, -HALF_MAP + 20, HALF_MAP - 20);
@@ -827,6 +827,11 @@ function placeDeposits(scene) {
         x = (Math.random() - 0.5) * (MAP_SIZE - 60);
         z = (Math.random() - 0.5) * (MAP_SIZE - 60);
       }
+      // Validate the snapped location, including coastal resources: the
+      // extractor, terrain tests and visible deposit must share one hex.
+      const tile = worldHex(x, z), center = hexCenter(tile);
+      x = center.x; z = center.z;
+      if (Math.abs(x) > HALF_MAP - 20 || Math.abs(z) > HALF_MAP - 20) continue;
       if (nearStart(x, z, 34)) continue;
       if (def.water) {
         // sea deposits: navigable water, not far from a coast (rigs & wharves must reach them)
@@ -839,7 +844,7 @@ function placeDeposits(scene) {
       } else if (terrainH(x, z) < 1.0) continue; // keep land deposits on dry land
       if (taken.some(([tx, tz]) => dist2d(x, z, tx, tz) < 26)) continue;
       taken.push([x, z]);
-      const dep = { type, def, x, z, hasExtractor: false, workers: [] };
+      const dep = { type, def, x, z, hex: tile, hasExtractor: false, workers: [] };
       dep.mesh = makeDepositMesh(type, def);
       dep.mesh.position.set(x, def.water ? SEA_LEVEL : terrainH(x, z), z);
       dep.mesh.userData.deposit = dep;

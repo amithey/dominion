@@ -78,20 +78,20 @@ const BUILDINGS = {
     cost: {}, buildTime: 0, trains: ['worker'], provides: { pop: 10 }, unique: true, unbuildable: true,
     settlement: 'capital', buildRadius: 72,
     mw: 12, // emergency generators keep a young nation running
-    desc: 'Your capital. If it falls, you lose. Trains workers.',
+    desc: 'Your capital district and the source of the road and railway supply network. Trains workers. If it falls, you lose.',
   },
   /* ----- economy ----- */
   villageCenter: {
     name: 'Village Center', icon: '🏡', cat: 'economy', size: 7, hp: 900,
     cost: { money: 280, food: 40 }, buildTime: 18, settlement: 'village', buildRadius: 40,
     provides: { civCap: 90, happiness: 2 },
-    desc: 'Founds a village and opens a 40-range construction district. Villages extend control and support rural growth.',
+    desc: 'Founds a village of houses on one hex, with a 40-range construction district. Connect it to the capital by road or rail to supply its production.',
   },
   cityCenter: {
     name: 'City Center', icon: '🏙️', cat: 'economy', size: 10, hp: 1800,
     cost: { money: 850, iron: 70 }, buildTime: 32, settlement: 'city', buildRadius: 62,
     needsDiscovery: 'urbanPlanning', provides: { civCap: 260, happiness: 4, incomePct: 0.06 },
-    desc: 'Founds a major city and opens a 62-range construction district. Requires Urban Planning.',
+    desc: 'Founds a city district on one hex and opens a 62-range construction area. Requires Urban Planning and a road or rail connection to the capital for supply.',
   },
   workerHouse: {
     name: 'Worker Lodge', icon: '🏠', cat: 'economy', size: 5, hp: 600,

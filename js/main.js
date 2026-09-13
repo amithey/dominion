@@ -83,6 +83,7 @@ function initEngine() {
   G.deposits = placeDeposits(scene);
   decorate(scene);
   initTerritory();
+  initBattleVisuals();
   initComposer();
 
   window.addEventListener('resize', () => {
@@ -262,7 +263,9 @@ function startGameNow() {
   camFocus.set(START_POS[0][0], 0, START_POS[0][1]);
   initEngine();
   setupNations();
+  initLogisticsUI();
   if (G.reviewMode) setupVisualReview();
+  updateLogistics();
   buildMinimapTerrain();
   drawMinimap();
   updateTopBar();
@@ -407,16 +410,23 @@ function startPlacement(key) {
   const hasWorker = G.units.some(u => u.owner === 0 && !u.dead && u.key === 'worker');
   if (!def.selfBuild && !hasWorker) { notify('You need a worker to construct buildings. Train one at the HQ.', 'warn'); return; }
   G.placing = key;
-  ghost = buildingMesh(key, G.nations[0].color);
-  ghost.traverse(o => { if (o.material) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.55; } });
+  cancelTransport(); showHexGrid(true);
+  ghost = makeBuildingVisual(key, G.nations[0].color, 0);
+  ghost.traverse(o => {
+    if (!o.material) return;
+    const clone = m => { const c = m.clone(); c.transparent = true; c.opacity = .55; return c; };
+    o.material = Array.isArray(o.material) ? o.material.map(clone) : clone(o.material);
+  });
   scene.add(ghost);
 }
 function cancelPlacement() {
   if (ghost) { scene.remove(ghost); ghost = null; }
   G.placing = null;
+  if (LOGISTICS.grid) showHexGrid(LOGISTICS.showGrid || !!LOGISTICS.mode);
 }
 function placementValid(x, z) {
   const def = BUILDINGS[G.placing];
+  if (!def.onDeposit) { const p = hexCenter(worldHex(x, z)); x = p.x; z = p.z; }
   if (def.onDeposit) {
     // extractors go on land deposits; offshore rigs only on their sea fields
     const dep = G.deposits.find(d => !d.hasExtractor && dist2d(d.x, d.z, x, z) < 8
@@ -500,7 +510,8 @@ function initInput() {
     keys[k] = true;
     if (k === ' ') { e.preventDefault(); togglePause(); }
     if (k === 'escape') {
-      if (G.targeting) { G.targeting = null; notify('Launch aborted.', 'warn'); }
+      if (LOGISTICS.mode) cancelTransport();
+      else if (G.targeting) { G.targeting = null; notify('Launch aborted.', 'warn'); }
       else if (G.placing) cancelPlacement();
       else togglePause();
     }
@@ -523,6 +534,7 @@ function initInput() {
       return;
     }
     if (e.button === 0) {
+      if (LOGISTICS.mode) { const p = groundPoint(e.clientX, e.clientY); if (p) transportClick(p.x, p.z); return; }
       if (G.targeting) {
         const p = groundPoint(e.clientX, e.clientY);
         if (p && G.munitions[G.targeting.kind] > 0) {
@@ -536,6 +548,7 @@ function initInput() {
       if (G.placing) { tryPlace(e.clientX, e.clientY); return; }
       mouse.down = true; mouse.sx = e.clientX; mouse.sy = e.clientY; mouse.dragging = false;
     } else if (e.button === 2) {
+      if (LOGISTICS.mode) { cancelTransport(); return; }
       if (G.targeting) { G.targeting = null; notify('Launch aborted.', 'warn'); return; }
       if (G.placing) { cancelPlacement(); return; }
       handleCommand(e.clientX, e.clientY);
@@ -681,16 +694,17 @@ function updateGhost() {
   const p = groundPoint(mouse.x, mouse.y);
   if (!p) return;
   const v = placementValid(p.x, p.z);
-  const gx = v.dep ? v.x : p.x, gz = v.dep ? v.z : p.z;
+  const gx = v.x ?? p.x, gz = v.z ?? p.z;
   ghost.position.set(gx, Math.max(terrainH(gx, gz), SEA_LEVEL), gz);
   const col = v.ok ? 0x66ff88 : 0xff5555;
-  ghost.traverse(o => { if (o.material && o.material.emissive) { o.material.emissive.setHex(col); o.material.emissiveIntensity = 0.35; } });
+  ghost.traverse(o => { for (const m of Array.isArray(o.material) ? o.material : [o.material])
+    if (m?.emissive) { m.emissive.setHex(col); m.emissiveIntensity = .35; } });
 }
 
 /* ---------------- main loop ---------------- */
 const clock = new THREE.Clock();
 let uiTimer = 0, cityTimer = 0, diploTimer = 0, mmTimer = 0, buildBtnTimer = 0, territoryTimer = 0;
-let worldVisualTimer = 0, vegetationTimer = 0;
+let worldVisualTimer = 0;
 
 function loop() {
   requestAnimationFrame(loop);
@@ -717,16 +731,15 @@ function loop() {
     // Decorative world animation is intentionally capped. Updating thousands
     // of water/vegetation/deposit vertices every render frame caused late-game stutter.
     worldVisualTimer += dt;
-    vegetationTimer += dt;
+    // Wind and realistic water animate on the GPU: updating their clock is
+    // cheap and avoids visible 7/20-fps stepping despite a smooth render loop.
+    updateVegetation(G.time);
+    if (waterIsRealistic) updateWater(G.time);
     if (worldVisualTimer >= 0.05) {
       updateClouds(worldVisualTimer);
-      updateWater(G.time);
+      if (!waterIsRealistic) updateWater(G.time);
       updateDeposits(G.time);
       worldVisualTimer = 0;
-    }
-    if (vegetationTimer >= 0.15) {
-      updateVegetation(G.time);
-      vegetationTimer = 0;
     }
 
     // periodic ticks

@@ -38,7 +38,9 @@ function makeProceduralTexture(color, kind = 'concrete') {
 }
 function realisticMat(color, kind = 'concrete', opts = {}) {
   return new THREE.MeshStandardMaterial({
-    color,
+    // The colour is already baked into the albedo. Multiplying it a second
+    // time made walls, decks and vehicle panels unnaturally dark.
+    color: 0xffffff,
     map: makeProceduralTexture(color, kind),
     roughness: opts.roughness ?? (kind === 'metal' ? 0.42 : 0.82),
     metalness: opts.metalness ?? (kind === 'metal' ? 0.65 : 0.04),
@@ -1877,6 +1879,8 @@ function rememberRollingPart(group, mesh) {
 }
 
 function unitMesh(key, color, seed = 0) {
+  const serviceModel = makeServiceVehicle(key, color);
+  if (serviceModel) return serviceModel;
   const g = new THREE.Group();
   const tm = unitMarkMat(color);
 
@@ -2500,6 +2504,7 @@ function updateHpBar(ent) {
 /* ---------------- spawning ---------------- */
 function spawnBuilding(key, owner, x, z, opts = {}) {
   const def = BUILDINGS[key];
+  { const p = hexCenter(worldHex(x, z)); x = p.x; z = p.z; }
   const nat = G.nations[owner];
   const ent = {
     id: ENT_ID++, type: 'building', key, def, owner,
@@ -2508,7 +2513,7 @@ function spawnBuilding(key, owner, x, z, opts = {}) {
     queue: [], queueProg: 0, selected: false, dead: false,
     deposit: opts.deposit || null,
   };
-  ent.mesh = batchBuildingGeometry(detailBuildingSite(buildingMesh(key, nat.color, ent.id), key));
+  ent.mesh = makeBuildingVisual(key, nat.color, ent.id);
   const atSea = ent.deposit && ent.deposit.def.water;
   ent.mesh.position.set(x, atSea ? SEA_LEVEL : terrainH(x, z), z);
   ent.mesh.userData.entity = ent;
@@ -2524,7 +2529,7 @@ function spawnBuilding(key, owner, x, z, opts = {}) {
     if (relief > 0.24) {
       const depth = Math.min(1.35, relief + 0.28);
     const foundation = new THREE.Mesh(
-        new THREE.CylinderGeometry(def.size * 0.52, def.size * 0.58, depth, 24),
+        new THREE.CylinderGeometry(Math.min(9, def.size * 0.52), Math.min(9.4, def.size * 0.58), depth, 24),
       MAT.concrete);
       foundation.position.y = 0.04 - depth * 0.5;
     foundation.receiveShadow = true;
@@ -2790,11 +2795,7 @@ function spawnWake(x, y, z, isSea, heading) {
 }
 
 function spawnDust(x, y, z) {
-  const m = _pooledEffect(_dustPool, _puffGeo, 0xb79b74, 0.2);
-  m.position.set(x, y, z);
-  m.scale.set(0.42, 0.24, 0.42);
-  scene.add(m);
-  G.effects.push({ obj: m, ttl: 0.9, max: 0.9, kind: 'dust', keepGeo: true, pooled: true });
+  battleParticle(x, y, z, .8, 1.1, .12, .25, .08, 'dust');
 }
 
 /* short bright flash at a shooter's muzzle */
@@ -2962,6 +2963,8 @@ function spawnMushroomCloud(x, y, z, size) {
 
 function missileImpact(m) {
   const def = MISSILES[m.type];
+  if (m.nuclear) damageTransport(m.tx, m.tz, m.radius, m.dmg);
+  else damageTransportHex(m.tx, m.tz, m.dmg);
   const iy = Math.max(terrainH(m.tx, m.tz), SEA_LEVEL);
   spawnExplosion(m.tx, iy + 2, m.tz, m.radius * 0.8);
   if (m.nuclear) {
@@ -3223,6 +3226,7 @@ function animationDue(u) {
 function updateUnit(u, dt) {
   const def = u.def;
   const previousYaw = u.mesh.rotation.y;
+  const previousX = u.x, previousZ = u.z;
   if (u.disabledUntil > G.time) {
     updateHpBar(u);
     return;
@@ -3360,6 +3364,7 @@ function updateUnit(u, dt) {
         dealDamage(t, dmg, u);
         // splash damage around the target (artillery / bombers / destroyers)
         if (def.splash) {
+          damageTransport(t.x, t.z, def.splash, dmg);
           for (const o of [...G.units, ...G.buildings]) {
             if (o.dead || o === t || o.owner === u.owner) continue;
             if (!isAtWar(u.owner, o.owner)) continue;
@@ -3462,13 +3467,23 @@ function updateUnit(u, dt) {
 
   u.x = clamp(u.x, -HALF_MAP + 3, HALF_MAP - 3);
   u.z = clamp(u.z, -HALF_MAP + 3, HALF_MAP - 3);
+  const actualSpeed = Math.hypot(u.x - previousX, u.z - previousZ) / Math.max(dt, .001);
+  const speedBlend = 1 - Math.exp(-dt * 5);
+  u.visualSpeed = (u.visualSpeed || 0) + (actualSpeed - (u.visualSpeed || 0)) * speedBlend;
+  const speedRatio = clamp(u.visualSpeed / Math.max(def.speed, .1), 0, 1.5);
+  const turnRate = Math.atan2(Math.sin(u.mesh.rotation.y - previousYaw), Math.cos(u.mesh.rotation.y - previousYaw)) / Math.max(dt, .001);
   if (def.naval) {
-    u.mesh.position.set(u.x, SEA_LEVEL + 0.15 + Math.sin(G.time * 1.5 + u.id) * 0.12, u.z);
-    u.mesh.rotation.x = Math.sin(G.time * 1.2 + u.id) * 0.025;
-    u.mesh.rotation.z = Math.sin(G.time * .8 + u.id * .7) * 0.012;
+    const swell = G.time * .95 + u.id * .73;
+    u.mesh.position.set(u.x, SEA_LEVEL + .15 + Math.sin(swell) * .09 + Math.sin(swell * 1.7) * .025, u.z);
+    const heel = Math.sin(swell * .8) * .018 + clamp(-turnRate * speedRatio * .035, -.07, .07);
+    u.mesh.rotation.x += (heel - u.mesh.rotation.x) * (1 - Math.exp(-dt * 2));
+    u.mesh.rotation.z += (Math.cos(swell) * .012 + speedRatio * .013 - u.mesh.rotation.z) * (1 - Math.exp(-dt * 2));
   } else {
     const groundY = terrainH(u.x, u.z);
-    u.mesh.position.set(u.x, groundY + def.fly + (def.fly ? Math.sin(G.time * 2 + u.id) * 0.4 : 0), u.z);
+    const targetY = groundY + def.fly;
+    // Smooth terrain-following altitude so aircraft do not bounce over hills.
+    u.visualAltitude = def.fly ? (u.visualAltitude ?? targetY) + (targetY - (u.visualAltitude ?? targetY)) * (1 - Math.exp(-dt * 2)) : targetY;
+    u.mesh.position.set(u.x, u.visualAltitude, u.z);
   }
 
   // Aircraft bank into turns and settle smoothly instead of rotating like a
@@ -3476,16 +3491,26 @@ function updateUnit(u, dt) {
   if (def.fly) {
     const yawDelta = Math.atan2(Math.sin(u.mesh.rotation.y - previousYaw), Math.cos(u.mesh.rotation.y - previousYaw));
     const desiredBank = clamp(-yawDelta / Math.max(dt, .001) * .14, -.42, .42);
-    u.visualBank = (u.visualBank || 0) + (desiredBank - (u.visualBank || 0)) * Math.min(1, dt * 4.5);
+    u.visualBank = (u.visualBank || 0) + (desiredBank - (u.visualBank || 0)) * (1 - Math.exp(-dt * 4.5));
     u.mesh.rotation.x = u.visualBank;
-    u.mesh.rotation.z = (u.mesh.rotation.z || 0) * Math.exp(-dt * 4);
-    u.mesh.position.y += Math.sin(G.time * 1.7 + u.id * 0.7) * (u.key === 'helicopter' ? 0.13 : 0.05);
+    const helicopter = !!u.mesh.userData.rotor || !!u.mesh.userData.droneRotors;
+    const pitch = helicopter ? -speedRatio * .12 : -speedRatio * .025;
+    u.mesh.rotation.z += (pitch - u.mesh.rotation.z) * (1 - Math.exp(-dt * 3));
+    u.mesh.position.y += Math.sin(G.time * 1.7 + u.id * .7) * (helicopter ? .1 : .025);
   } else if (!def.naval && !u.mesh.userData.mixer && !u.mesh.userData.limbs) {
-    const slope = terrainH(u.x + 1.2, u.z) - terrainH(u.x - 1.2, u.z);
-    const desiredRoll = clamp(-slope * 0.028, -0.08, 0.08);
-    u.visualBank = (u.visualBank || 0) + (desiredRoll - (u.visualBank || 0)) * Math.min(1, dt * 5);
+    // Resolve the ground gradient into the vehicle's local axes. A tank
+    // climbing north must pitch, not lean sideways as the old world-X sample did.
+    const dx = (terrainH(u.x + 1.2, u.z) - terrainH(u.x - 1.2, u.z)) / 2.4;
+    const dz = (terrainH(u.x, u.z + 1.2) - terrainH(u.x, u.z - 1.2)) / 2.4;
+    const yaw = u.mesh.rotation.y, settle = 1 - Math.exp(-dt * 7);
+    const desiredRoll = clamp(Math.atan(dx * Math.cos(yaw) - dz * Math.sin(yaw)), -.22, .22);
+    const desiredPitch = clamp(-Math.atan(dx * Math.sin(yaw) + dz * Math.cos(yaw)), -.22, .22);
+    u.visualBank = (u.visualBank || 0) + (desiredRoll - (u.visualBank || 0)) * settle;
+    u.visualPitch = (u.visualPitch || 0) + (desiredPitch - (u.visualPitch || 0)) * settle;
     u.mesh.rotation.z = u.visualBank;
-    if (moving) u.mesh.position.y += Math.sin(G.time * def.speed * 2.2 + u.id) * 0.035;
+    u.mesh.rotation.x = u.visualPitch;
+    u.suspensionPhase = (u.suspensionPhase || 0) + actualSpeed * dt * 2.2;
+    u.mesh.position.y += Math.sin(u.suspensionPhase + u.id) * .025 * Math.min(1, speedRatio);
   }
 
   // rotor spin (main + tail) and submarine propellers
@@ -3496,15 +3521,28 @@ function updateUnit(u, dt) {
   const tailRotor = u.mesh.userData.tailRotor;
   if (tailRotor) tailRotor.rotation.z += dt * 28;
   const prop = u.mesh.userData.prop;
-  if (prop) prop.rotation.x += dt * 9;
+  if (prop) prop.rotation.x += dt * (3 + speedRatio * 12);
   const afterburner = u.mesh.userData.afterburner;
   if (afterburner) {
     afterburner.scale.y = 0.8 + Math.sin(G.time * 23 + u.id) * 0.18;
     afterburner.material.emissiveIntensity = moving ? 1.65 : 0.65;
   }
   const rollingParts = u.mesh.userData.rollingParts;
-  if (rollingParts && moving) {
-    const turn = dt * def.speed * 2.4;
+  const vehicleMixer = u.mesh.userData.vehicleMixer;
+  if (vehicleMixer) {
+    const actions = u.mesh.userData.trackActions;
+    const turnWeight = clamp(Math.abs(turnRate) * .6, 0, 1);
+    const weights = { forward: 1 - turnWeight, left: turnRate > 0 ? turnWeight : 0, right: turnRate < 0 ? turnWeight : 0 };
+    for (const key of Object.keys(actions)) {
+      const action = actions[key];
+      action.setEffectiveWeight(action.getEffectiveWeight() + (weights[key] - action.getEffectiveWeight()) * (1 - Math.exp(-dt * 10)));
+    }
+    // Freeze immediately on obstruction; pivot turns still move the tracks.
+    const trackDt = dt * clamp(actualSpeed / Math.max(def.speed, .1) + Math.abs(turnRate) * .25, 0, 2);
+    if (trackDt > .00001) vehicleMixer.update(trackDt);
+  }
+  if (rollingParts && actualSpeed > .01) {
+    const turn = dt * actualSpeed * 2.4;
     for (const wheel of rollingParts) wheel.rotateY(turn);
   }
   const droneRotors = u.mesh.userData.droneRotors;
@@ -3534,18 +3572,26 @@ function updateUnit(u, dt) {
   const mixer = u.mesh.userData.mixer;
   if (mixer) {
     const acts = u.mesh.userData.actions;
+    const travelSpeed = Math.hypot(u.x - previousX, u.z - previousZ) / Math.max(dt, .001);
+    const visualMoving = moving && travelSpeed > .15;
     const isWorking = WORK_STATES.has(u.state);
     let target = isWorking && acts.work ? 'work'
       : (u.attackAnimUntil || 0) > G.time && acts.shoot ? 'shoot'
-        : !moving ? 'idle' : (def.speed >= 5 ? 'run' : 'walk');
-    if (!acts[target]) target = moving && acts.run ? 'run' : 'idle';
+        : !visualMoving ? 'idle' : (travelSpeed >= 4 ? 'run' : 'walk');
+    if (!acts[target]) target = visualMoving && acts.run ? 'run' : 'idle';
     // the action set never changes — deduplicate it once, not every frame
     let unique = u.mesh.userData.uniqueActions;
     if (!unique) unique = u.mesh.userData.uniqueActions = [...new Set(Object.values(acts))].filter(Boolean);
     for (const a of unique) {
       const w = a.getEffectiveWeight();
       const goal = a === acts[target] ? 1 : 0;
-      a.setEffectiveWeight(w + (goal - w) * Math.min(1, dt * 7));
+      a.setEffectiveWeight(w + (goal - w) * (1 - Math.exp(-dt * 9)));
+      // Match the cadence to actual travel, including upgrades and blocked
+      // movement. Idle soldiers no longer keep running against an obstacle.
+      if (a === acts[target] && (target === 'walk' || target === 'run')) {
+        const cadence = clamp(travelSpeed / (target === 'run' ? 5 : 2.8), .45, 1.8);
+        a.setEffectiveTimeScale(a.getEffectiveTimeScale() + (cadence - a.getEffectiveTimeScale()) * (1 - Math.exp(-dt * 8)));
+      }
     }
     // Simulation always runs every tick; only the SKINNING is rationed.
     u.animationDt = (u.animationDt || 0) + dt;
@@ -3591,11 +3637,12 @@ function updateBuilding(b, dt) {
     updateHpBar(b);
     return;
   }
+  if (b.built && b.supplied === false) { b.fueled = false; updateHpBar(b); return; }
   if (b.built && b.queue.length > 0) {
     const item = b.queue[0]; // unit key or 'missile:type'
     const isMissile = item.startsWith('missile:');
     const buildTime = isMissile ? MISSILES[item.slice(8)].buildTime : UNITS[item].trainTime;
-    b.queueProg += dt * prodSpeedMult(b.owner) / buildTime;
+    b.queueProg += dt * prodSpeedMult(b.owner) * (b.railSupplied ? 1.25 : 1) / buildTime;
     if (b.queueProg >= 1) {
       b.queue.shift(); b.queueProg = 0;
       if (isMissile) {
@@ -3628,11 +3675,12 @@ function updateBuilding(b, dt) {
     }
   }
   // rotating radar dishes / animated fixtures
-  if (b.mesh.userData.spin) b.mesh.userData.spin.rotation.y += dt * 0.9;
-  if (b.mesh.userData.turbine) b.mesh.userData.turbine.rotation.z += dt * 1.7;
-  const beacon = b.mesh.userData.beacon;
+  const fixtures = (b.mesh.userData.core || b.mesh).userData;
+  if (fixtures.spin) fixtures.spin.rotation.y += dt * 0.9;
+  if (fixtures.turbine) fixtures.turbine.rotation.z += dt * 1.7;
+  const beacon = fixtures.beacon;
   if (beacon) beacon.material.emissiveIntensity = 0.55 + Math.max(0, Math.sin(G.time * 3.2)) * 1.1;
-  const flame = b.mesh.userData.flame;
+  const flame = fixtures.flame;
   if (flame) {
     flame.material.emissiveIntensity = 1.2 + Math.sin(G.time * 11 + b.x) * 0.4;
     flame.scale.y = 1 + Math.sin(G.time * 9 + b.z) * 0.2;
@@ -3755,21 +3803,25 @@ function updateDevelopment() {
   }
 }
 function updateCity() {
+  updateLogistics();
   const c = G.city;
   // One pass over the building list instead of one per lookup. `has(key)` is
   // consulted more than fifty times in this function, and every one of those
   // used to be a full filter() over every building in the game — 50 scans and
   // 50 throwaway arrays a second, growing with the size of your empire.
-  const owned = new Map();
+  const owned = new Map(), physical = new Map();
   let ownedBuilt = 0, popCapTotal = 0, fabsOnline = 0;
   for (const b of G.buildings) {
     if (b.owner !== 0 || b.dead || !b.built) continue;
-    owned.set(b.key, (owned.get(b.key) || 0) + 1);
+    physical.set(b.key, (physical.get(b.key) || 0) + 1);
     ownedBuilt++;
     popCapTotal += (b.def.provides && b.def.provides.pop) || 0;
+    if (b.supplied === false) continue;
+    owned.set(b.key, (owned.get(b.key) || 0) + 1);
     if (b.key === 'chipFab' && b.fueled) fabsOnline++;
   }
   const has = key => owned.get(key) || 0;
+  const exists = key => physical.get(key) || 0;
   const gov = GOVERNMENTS[G.gov.form];
   const taxPolicy = POLICIES.tax.options[G.policies.tax];
   recalcDiscoveryFx(); // discovery bonuses feed every stat below
@@ -3783,12 +3835,12 @@ function updateCity() {
     playerArmyPop += u.def.pop;
   }
   const farms = has('farm');
-  const foodCap = 300 + has('foodDepot') * 500;
+  const foodCap = 300 + exists('foodDepot') * 500;
   const farmMult = (G.discovered.fertilizers ? 1.5 : 1) * (1 + fxv('foodPct'));
   let foodIn = farms * 2.0 * farmMult * (1 + civicMod('foodPct'));
   // fishing wharves: base catch plus a bonus per fish school within reach
   for (const b of G.buildings) {
-    if (b.owner !== 0 || b.dead || !b.built || b.key !== 'fishingWharf') continue;
+    if (b.owner !== 0 || b.dead || !b.built || b.supplied === false || b.key !== 'fishingWharf') continue;
     const schools = G.deposits.filter(d => d.type === 'fish' && dist2d(d.x, d.z, b.x, b.z) < 60).length;
     foodIn += 2.0 + Math.min(schools, 2) * 2.0;
   }
@@ -3806,7 +3858,7 @@ function updateCity() {
   c.famineSeverity = famineSeverity;
 
   // ---- material storage caps ----
-  const matBonus = has('warehouse') * WAREHOUSE_CAP_BONUS;
+  const matBonus = exists('warehouse') * WAREHOUSE_CAP_BONUS;
   c.caps = {};
   for (const k of ['oil', 'iron', 'silicon', 'uranium']) {
     c.caps[k] = BASE_CAP[k] + matBonus;
@@ -3848,9 +3900,9 @@ function updateCity() {
     + taxPolicy.approval - (G.warWeariness || 0) * 1.2, 0, 100);
 
   // ---- population ----
-  const civCap = Math.round((200 + has('villageCenter') * 90 + has('cityCenter') * 260
-    + has('residential') * 150 + has('cottage') * 80
-    + has('apartments') * 280 + has('luxuryVillas') * 60 + has('waterTreatment') * 100)
+  const civCap = Math.round((200 + exists('villageCenter') * 90 + exists('cityCenter') * 260
+    + exists('residential') * 150 + exists('cottage') * 80
+    + exists('apartments') * 280 + exists('luxuryVillas') * 60 + exists('waterTreatment') * 100)
     * (1 + fxv('civCapPct')));
   let growth = c.civilians * ((c.happiness - 45) / 50) * (c.health / 100) * 0.0025;
   // famine: people don't just stop growing — they die or flee, and the longer
@@ -3892,7 +3944,7 @@ function updateCity() {
   // ---- THE POWER GRID: generation vs. demand drives the whole economy ----
   let mwSupply = 0, mwDemand = 0;
   for (const b of G.buildings) {
-    if (b.owner !== 0 || b.dead || !b.built) continue;
+    if (b.owner !== 0 || b.dead || !b.built || b.supplied === false) continue;
     const mw = b.def.mw || 0;
     if (mw > 0) {
       if (b.key === 'nuclearReactor' && !b.fueled) continue; // dry reactor = no power
@@ -3948,7 +4000,11 @@ function updateCity() {
     + has('cityCenter') * 0.10
     + Math.min(has('villageCenter'), 3) * 0.05
     + Math.min(has('residential'), 3) * 0.05, 0.28, 1);
-  c.income = c.civilians * 0.035 * c.admin * incomeMult + c.territoryIncome;
+  const populationWeights = { hq: 200, villageCenter: 90, cityCenter: 260, residential: 150, cottage: 80, apartments: 280, luxuryVillas: 60 };
+  let connectedCapacity = 0, totalCapacity = 0;
+  for (const [key, weight] of Object.entries(populationWeights)) { connectedCapacity += has(key) * weight; totalCapacity += exists(key) * weight; }
+  c.supplyCoverage = totalCapacity ? connectedCapacity / totalCapacity : 0;
+  c.income = c.civilians * c.supplyCoverage * 0.035 * c.admin * incomeMult + c.territoryIncome;
   G.res.money += c.income;
 
   // policy upkeep

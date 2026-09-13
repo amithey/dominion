@@ -72,6 +72,35 @@ steal funds/research, sabotage, fund proxy cells or assassinate leaders — choo
 3 upgrade tracks + one-time **Discoveries**: Fertilizers, Stock Exchange, Advanced Medicine,
 Satellite Recon (see enemy movement), Naval Engineering, Ballistic Tech, Nuclear Program.
 
+## Hex settlements and supply
+
+Capitals, cities, villages and housing districts contain clusters of buildings.
+Normal land construction snaps to a hex grid; deposits and coastal structures
+keep their terrain-specific placement. Toggle **Hex grid** in the command bar.
+
+Choose **Roads** or **Rails**, click a starting hex and a destination, then review
+the highlighted route and cost before clicking **Build / repair**. Construction
+is immediate after payment. Roads cost $12 per segment; rails cost $22 and 3 iron.
+Routes remain on land and cannot cross steep slopes, contested or foreign territory.
+
+A settlement needs an unbroken route to its own capital. Buildings inside its
+district share that connection. Disconnection pauses local production and
+recruitment, stops local economic contributions, and reduces tax delivery.
+Existing storage and housing capacity remain intact. Mixed road/rail routes work;
+a continuous all-rail route adds 25% recruitment speed. AI nations also fund roads.
+
+Conventional missiles damage infrastructure only in the impact hex, including
+all road/rail junction branches there. Each side of a hex boundary has independent
+health, so the adjacent tile stays intact. Nuclear missiles retain radius damage.
+Other explosive splash damage can also destroy individual segments.
+Destroyed stretches appear broken and red, including on the minimap. A surviving
+bypass preserves supply. Rebuild along a damaged route to repair it at a fraction
+of its original cost; intact segments are free and rails are never downgraded.
+
+Local demonstration: `index.html?autostart=1&review=1&logistics=1`.
+Use **Demo: missile strike**, watch the supplied counter fall, then **Repair routes**.
+These demonstration buttons exist only in the review scenario.
+
 ## Files
 ```
 index.html      shell + HUD layout

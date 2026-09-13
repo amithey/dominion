@@ -405,8 +405,8 @@ function makeCharacterRig(character, teamColor, opts = {}) {
   // repainted character.
   if (character === 'soldier' || character === 'worker') {
     const team = new THREE.Color(teamColor);
-    const tunic = team.clone().lerp(new THREE.Color(0x6a7358), 0.42);
-    const trousers = team.clone().lerp(new THREE.Color(0x3f4436), 0.62);
+    const tunic = team.clone().lerp(new THREE.Color(0x6a7358), 0.78);
+    const trousers = team.clone().lerp(new THREE.Color(0x3f4436), 0.88);
     model.traverse(o => {
       if (!o.isMesh) return;
       for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
@@ -678,6 +678,30 @@ function makeTankModel(teamColor, seed = 0) {
   root.userData.assetModel = true;
   root.userData.assetKey = variantKey;
   root.userData.faceOffset = -Math.PI / 2;
+  const clips = gltf.animations || gltf.scene.animations || [];
+  const vehicleMixer = new THREE.AnimationMixer(model), trackActions = {};
+  for (const [key, suffix] of [['forward', 'Tank_Forward'], ['left', 'Tank_TurningLeft'], ['right', 'Tank_TurningRight']]) {
+    const source = clips.find(clip => clip.name.endsWith(suffix));
+    if (!source) continue;
+    // Only drive track bones. The turret remains under combat control and
+    // authored root transforms must not undo placement or model scaling.
+    const tracks = [];
+    for (const track of source.tracks) {
+      if (!track.name.startsWith('TankTrack')) continue;
+      const split = track.name.lastIndexOf('.'), boneName = track.name.slice(0, split);
+      // FBX inserts identity child bones with the same name for each skin.
+      // Animate their parent only: the children inherit its world transform.
+      model.traverse(bone => {
+        if (!bone.isBone || bone.name !== boneName || bone.parent?.name === boneName) return;
+        const bound = track.clone(); bound.name = bone.uuid + track.name.slice(split); tracks.push(bound);
+      });
+    }
+    if (!tracks.length) continue;
+    const clip = new THREE.AnimationClip(key, source.duration, tracks);
+    const action = vehicleMixer.clipAction(clip); action.setEffectiveWeight(key === 'forward' ? 1 : 0).play();
+    trackActions[key] = action;
+  }
+  if (trackActions.forward) { root.userData.vehicleMixer = vehicleMixer; root.userData.trackActions = trackActions; }
   return root;
 }
 

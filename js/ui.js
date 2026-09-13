@@ -184,8 +184,8 @@ function renderCity(body) {
       : '<div class="fx-list" style="color:var(--ok)">Maximum era reached. Pursue conquest, hegemony or technological victory.</div>'}
 
     <div class="section-h">🏘️ Settlement Network — ${settlements.length}</div>
-    <div class="stat-grid">${settlements.map(s => `<div class="stat-row"><span>${s.key === 'hq' ? '🏛️' : s.key === 'cityCenter' ? '🏙️' : '🏡'} ${settlementDisplayName(s)}</span><b>${s.def.buildRadius} build radius</b></div>`).join('')}</div>
-    <div class="fx-list" style="font-size:11px;margin-bottom:8px">Normal buildings must be placed inside a settlement district. Found villages and cities to create new construction zones and claim distant resources.</div>
+    <div class="stat-grid">${settlements.map(s => `<div class="stat-row"><span>${settlementDisplayName(s)}</span><b style="color:var(${s.supplied ? '--ok' : '--danger'})">${s.supplied ? (s.railSupplied ? 'Rail supply +25% recruitment' : 'Supplied') : 'SUPPLY CUT'}</b></div>`).join('')}</div>
+    <div class="fx-list" style="font-size:11px;margin-bottom:8px">Build districts on hexes. Connect each city and village to the capital with continuous roads or rails. Broken routes halt local production and recruitment; repair them or build a bypass. An all-rail connection speeds recruitment by 25%.</div>
 
     <div class="stat-grid">
       <div>${statBar('😊 Happiness', c.happiness, '#5dff8f')}</div>
@@ -849,6 +849,7 @@ function renderSelection() {
       <div class="hp-bar"><div style="width:${frac * 100}%;background:${frac > 0.5 ? 'var(--ok)' : frac > 0.25 ? 'var(--gold)' : 'var(--danger)'}"></div></div>
       HP ${Math.ceil(e.hp)}/${Math.ceil(e.maxHp)}`;
     if (e.type === 'building' && e.owner === 0) {
+      html += `<div class="supply-state ${e.supplied === false ? 'cut' : ''}">${e.supplied === false ? 'SUPPLY CUT · Production and recruitment paused. Connect this settlement to the capital.' : e.railSupplied ? 'RAIL SUPPLY · Recruitment +25%' : 'SUPPLIED · Connected to capital'}</div>`;
       if (!e.built) html += `<div class="sel-sub" style="margin-top:6px">🚧 Under construction — ${Math.round(e.progress * 100)}% (needs a worker)</div>`;
       else {
         if (e.def.trains) {
@@ -944,12 +945,14 @@ function uiSelectPlane(uid) {
 function uiLaunchMissile(bid, mType) {
   const b = G.buildings.find(x => x.id === bid);
   if (!b || b.dead || G.munitions[mType] <= 0) return;
+  cancelPlacement(); cancelTransport();
   G.targeting = { kind: mType, silo: b };
   notify(`🎯 Targeting mode: left-click anywhere on the map to launch the ${MISSILES[mType].name}. Right-click / Esc to abort.`, 'warn', 8);
 }
 function uiLaunchFromSub(uid, mType) {
   const u = G.units.find(x => x.id === uid);
   if (!u || u.dead || G.munitions[mType] <= 0) return;
+  cancelPlacement(); cancelTransport();
   G.targeting = { kind: mType, silo: { x: u.x, z: u.z } };
   notify(`🎯 ${MISSILES[mType].name} from ${u.def.name}: left-click the target on the map. Right-click / Esc to abort.`, 'warn', 8);
 }
@@ -985,6 +988,13 @@ function drawMinimap() {
   if (!mmTerrain) buildMinimapTerrain();
   ctx.drawImage(mmTerrain, 0, 0, W, H);
   const toPx = (x, z) => [(x / MAP_SIZE + 0.5) * W, (z / MAP_SIZE + 0.5) * H];
+  for (const e of LOGISTICS.edges.values()) for (let side = 0; side < 2; side++) {
+    if (e.owner !== 0) continue;
+    const a = hexCenter(e.a), b = hexCenter(e.b), m = { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
+    const p = side ? toPx(m.x, m.z) : toPx(a.x, a.z), t = side ? toPx(b.x, b.z) : toPx(m.x, m.z);
+    ctx.strokeStyle = (e.tileHp?.[side] ?? e.hp) <= 0 ? '#ed735b' : e.kind === 'rail' ? '#ded7be' : '#a99968';
+    ctx.lineWidth = e.kind === 'rail' ? 1.6 : 1; ctx.beginPath(); ctx.moveTo(...p); ctx.lineTo(...t); ctx.stroke();
+  }
   // deposits
   for (const d of G.deposits) {
     const [px, py] = toPx(d.x, d.z);

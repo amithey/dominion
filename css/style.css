@@ -375,4 +375,37 @@ kbd { font: 9px 'Segoe UI', sans-serif; background: #233239; color: #c6cfc9; bor
 .hud-hidden #review-controls { display: none; }
 #review-controls button[aria-pressed="true"] { color: var(--gold); border-color: var(--gold); background: #3b4236; }
 #btn-review { margin-top: 9px; padding: 9px; font-size: 10px; }
+#command-strip { overflow-x: auto; white-space: nowrap; }
+#command-strip > * { flex-shrink: 0; }
+#logistics-status { color: var(--gold); font-size: 10px; }
+#transport-panel { position: absolute; z-index: 45; top: 78px; left: 20px; max-width: min(540px, calc(100vw - 40px)); padding: 14px; background: #122329f5; border: 1px solid #b5a479; box-shadow: 0 8px 26px #0005; }
+#transport-panel[hidden] { display: none; }
+#transport-hint { display: block; line-height: 1.6; margin-bottom: 10px; }
+#transport-panel button { padding: 7px 12px; background: #34443c; color: var(--text); border: 1px solid #8b9277; cursor: pointer; }
+#transport-panel button:disabled { opacity: .4; cursor: default; }
+.supply-state { margin: 8px 0; padding: 7px; color: var(--ok); background: #8fc1a010; font-size: 10px; }
+.supply-state.cut { color: var(--danger); background: #e4877915; }
+.hud-hidden #transport-panel { display: none; }
+/* Preserve the battlefield on short displays, with usable controls and a
+   compact resource strip instead of a horizontal scrollbar. */
+#bottom-hud { background: linear-gradient(180deg, #1a282d, #101c21 34%); }
+.build-btn, .prod-btn, .side-btn { transition: border-color .12s, background-color .12s; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #e3cd94; outline-offset: 2px; }
+@media(max-height:800px) {
+  :root { --hud-height: 174px; }
+  #minimap { width: 126px; height: 126px; }
+  #minimap-wrap { width: 152px; }
+  #selection-panel { flex: .65; }
+  .hud-empty-title { margin-top: 4px; font-size: 20px; }
+  .hud-hotkeys { margin-top: 10px; }
+}
+@media(max-width:760px) {
+  #top-bar { height: 52px; }
+  #res-bar { overflow: hidden; gap: 0; }
+  .res-item { padding: 0 4px; gap: 3px; font-size: 10px; }
+  .res-item .ui-icon { width: 13px; height: 13px; }
+  #clock { display: none; }
+  #selection-panel { min-width: 118px; }
+  #side-btns { top: 58px; }
+}
 @media(max-height:650px) { :root { --hud-height: 170px; } #minimap { width: 124px; height: 124px; } #minimap-wrap { width: 150px; } #side-btns { flex-direction: row; top: 75px; } .side-btn { width: 44px; height: 42px; gap: 3px; border-bottom: 0; } .side-btn span { font-size: 8px; } .side-btn .ui-icon { width: 17px; height: 17px; } #review-controls { top: 126px; left: auto; right: 15px; transform: none; } .hud-empty-title { font-size: 18px; margin-top: 7px; } .hud-empty-sub { margin-top: 6px; font-size: 11px; } .hud-hotkeys { margin-top: 9px; font-size: 9px; } }

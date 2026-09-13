@@ -67,6 +67,7 @@ function aiUpdate(nat, dt) {
   if (nat.defeated || nat.isPlayer) return;
   const ai = nat.ai;
   const d = DIFF();
+  updateAILogistics(nat, dt);
 
   // passive income (their whole economy abstracted), hurt by player ops
   nat.money += d.income * dt * economyMult(ai.id);
