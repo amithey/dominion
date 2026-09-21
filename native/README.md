@@ -63,6 +63,15 @@ It uses the Forward+ renderer:
   are targets too (units shoot at the walls; shells hit them) and collapse into
   burning rubble; losing every headquarters decides victory or defeat. Every
   building flies its nation's flag.
+- Districts (districts.gd, district.gdshader), Civilization-style: every building
+  owns a whole 12 m hex. The hex tile is paved, planted, ploughed or gravelled by type
+  (plaza, residential, industrial, farm, military), eased onto the terrain with a
+  kerb at the edge, and dressed with props that say what the place is: houses with
+  hedges and gardens, container stacks and fuel tanks, a silo and hay bales,
+  sandbags and a watchtower, planters and street lamps. Streets inside a hex run
+  toward neighbouring districts of the same owner and toward entering roads, which
+  hand over to them at the hex edge. Placement snaps to hexes (one district each);
+  AI cities grow hex by hex next to their own districts.
 - Supply (logistics.gd), ported from logistics.js: roads ($12 per hex) and railways
   ($22 + 3 iron, tougher) join neighbouring 12 m hexes, planned by A* around sea,
   steep grades and rival districts. A settlement (capital, village, city) is supplied

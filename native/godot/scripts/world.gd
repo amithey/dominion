@@ -31,7 +31,9 @@ const BUILDING_MODELS := {
 	"workerHouse": "res://assets/House_B.glb",
 	"villageCenter": "res://assets/House_C.glb",
 }
-const BUILDING_SIZE := {"hq": 15.0, "barracks": 12.0, "tankFactory": 15.0, "warehouse": 12.0, "farm": 13.0, "cottage": 9.0}
+const BUILDING_SIZE := {"hq": 10.0, "barracks": 9.0, "tankFactory": 9.5, "warehouse": 9.5, "farm": 7.5, "cottage": 5.0, "extractor": 6.0}
+# A district fills its hex; only its central building blocks movement.
+const DISTRICT_NAV_SIZE := 6.0
 const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker"]
 const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher"]
 
@@ -117,6 +119,8 @@ var site_timer := 0.0
 var ai: Node
 var game_over := ""
 var logistics: Node3D
+var districts: RefCounted
+var district_hex := {}    # Vector2i -> building entity that owns the hex
 var transport_kind := ""
 var transport_start = null
 var transport_route := []
@@ -170,9 +174,15 @@ func _ready() -> void:
 	build_trees()
 	if quality != "low":
 		build_grass()
+	logistics = preload("res://scripts/logistics.gd").new()
+	add_child(logistics)
+	logistics.setup(self, map.logistics)
+	districts = preload("res://scripts/districts.gd").new()
+	districts.setup(self)
 	build_deposits()
 	for b in map.buildings:
 		place_building(b.key, Vector3(b.x, 0, b.z), int(b.owner), true)
+	refresh_streets()
 	await build_navigation()
 	for u in map.units:
 		if u.key in INFANTRY or u.key in VEHICLES:
@@ -187,9 +197,6 @@ func _ready() -> void:
 	economy = preload("res://scripts/economy.gd").new()
 	add_child(economy)
 	economy.setup(self, map.economy)
-	logistics = preload("res://scripts/logistics.gd").new()
-	add_child(logistics)
-	logistics.setup(self, map.logistics)
 	hud = preload("res://scripts/hud.gd").new()
 	add_child(hud)
 	hud.setup(self, economy)
@@ -601,7 +608,7 @@ func add_flag(root: Node3D, footprint: float, owner: int) -> void:
 	pole_mesh.height = 7.0
 	pole.mesh = pole_mesh
 	pole.material_override = cached_material("flagpole", func(): return matte(Color("c8c8c0"), 0.4, 0.7))
-	var corner := Vector3(footprint * 0.48, 3.5, footprint * 0.48)
+	var corner := Vector3(footprint * 0.48, 3.5, footprint * 0.48) if footprint < 8.0 else Vector3(cos(deg_to_rad(330.0)) * 8.6, 3.5, sin(deg_to_rad(330.0)) * 8.6)
 	pole.position = corner
 	root.add_child(pole)
 	var flag := MeshInstance3D.new()
@@ -637,7 +644,16 @@ func extractor_model() -> Node3D:
 	return rig
 
 ## Creates a building entity. Unbuilt buildings are construction sites.
+func snap_to_hex(at: Vector3) -> Vector3:
+	var c: Vector3 = logistics.hex_center(logistics.world_hex(at))
+	return c
+
+func is_district(key: String) -> bool:
+	return key != "extractor"
+
 func place_building(key: String, at: Vector3, owner: int, built: bool) -> Dictionary:
+	if is_district(key):
+		return place_district(key, at, owner, built)
 	var b := {"key": key, "x": at.x, "z": at.z}
 	var model := building_model(key, at.x, at.z)
 	var footprint := footprint_of(key)
@@ -669,6 +685,28 @@ func place_building(key: String, at: Vector3, owner: int, built: bool) -> Dictio
 	plinth.position.y = -box.size.y * 0.5 + 0.12
 	root.add_child(plinth)
 	add_child(root)
+	return register_building(key, owner, built, root, model, footprint, at)
+
+## Civilization-style: the building owns the whole hex, with a district tile,
+## props and streets (districts.gd).
+func place_district(key: String, at: Vector3, owner: int, built: bool) -> Dictionary:
+	var centre := snap_to_hex(at)
+	var parts: Dictionary = districts.build(key, centre, fmod(absf(centre.x * 0.37 + centre.z * 0.61), 7.0))
+	var root := Node3D.new()
+	root.position = Vector3(centre.x, parts.floor_y, centre.z)
+	add_child(root)
+	parts.pad.position.y = centre.y - parts.floor_y
+	root.add_child(parts.pad)
+	root.add_child(parts.container)
+	building_spots.append(Vector3(centre.x, DISTRICT_NAV_SIZE, centre.z))
+	var footprint: float = logistics.radius * 0.85 if districts.style_of(key) == 1 and not key in ["housing", "apartments"] else footprint_of(key)
+	var entity := register_building(key, owner, built, root, parts.container, footprint, centre)
+	entity.pad = parts.pad
+	entity.hex = logistics.world_hex(centre)
+	district_hex[entity.hex] = entity
+	return entity
+
+func register_building(key: String, owner: int, built: bool, root: Node3D, model: Node3D, footprint: float, at: Vector3) -> Dictionary:
 	var def: Dictionary = building_defs.get(key, {"name": key, "hp": 500, "buildTime": 10, "trains": [], "provides": {}, "desc": "", "cost": {}})
 	var entity := {
 		"key": key, "owner": owner, "def": def, "root": root, "model": model, "footprint": footprint,
@@ -688,6 +726,33 @@ func place_building(key: String, at: Vector3, owner: int, built: bool) -> Dictio
 		entity.full_scale_y = model.scale.y / 0.06
 	buildings.append(entity)
 	return entity
+
+## Streets in each district run toward neighbouring districts of the same
+## owner and toward every road or railway that enters its hex. Roads are not
+## drawn inside district hexes (logistics.gd), so the two join up.
+func refresh_streets() -> void:
+	var links := {}
+	for e in logistics.edges.values():
+		if e.hp > 0.0:
+			links[[e.a, e.b]] = true
+			links[[e.b, e.a]] = true
+	for hex in district_hex:
+		var b: Dictionary = district_hex[hex]
+		if b.dead:
+			continue
+		var centre: Vector3 = logistics.hex_center(hex)
+		var mask := 0
+		for d in logistics.DIRECTIONS:
+			var other: Vector2i = hex + d
+			var neighbour = district_hex.get(other)
+			var joined: bool = links.has([hex, other]) or (neighbour != null and not neighbour.dead and neighbour.owner == b.owner)
+			if not joined:
+				continue
+			var towards: Vector3 = logistics.hex_center(other) - centre
+			var k := posmod(int(roundf(rad_to_deg(atan2(towards.z, towards.x)) / 60.0)), 6)
+			mask |= 1 << k
+		districts.set_streets(b.pad, mask)
+	logistics.rebuild_mesh()
 
 # ---------------------------------------------------------------- deposits
 
@@ -1465,11 +1530,10 @@ func logistics_test(capture: bool) -> void:
 	for r in [95.0, 110.0, 125.0, 80.0]:
 		for i in range(24):
 			var a := i * TAU / 24.0
-			var at: Vector3 = home + Vector3(cos(a), 0, sin(a)) * r
-			at.y = height_at(at.x, at.z)
+			var at: Vector3 = snap_to_hex(home + Vector3(cos(a), 0, sin(a)) * r)
 			if site_problem("villageCenter", at, 0) == "":
 				village = place_building("villageCenter", at, 0, true)
-				close_navigation(at, village.footprint)
+				close_navigation(village.root.position, DISTRICT_NAV_SIZE)
 				break
 		if village != null:
 			break
@@ -1477,7 +1541,8 @@ func logistics_test(capture: bool) -> void:
 		print("LOGISTICS_TEST FAIL: no spot for a village")
 		get_tree().quit(1)
 		return
-	var shop = place_building("barracks", village.root.position + Vector3(22, 0, 0), 0, true)
+	var shop = place_building("barracks", village.root.position + Vector3(logistics.radius * 1.732, 0, 0), 0, true)
+	refresh_streets()
 	logistics.update_supply()
 	var cut_off: bool = not village.supplied and not shop.supplied
 	var route: Array = logistics.plan(logistics.world_hex(home), logistics.world_hex(village.root.position), 0, "road")
@@ -1556,16 +1621,33 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 		var h := height_at(at.x + corner.x, at.z + corner.y)
 		lowest = minf(lowest, h)
 		highest = maxf(highest, h)
-	if lowest < float(map.seaLevel) + 1.0:
+	if not is_district(key) and lowest < float(map.seaLevel) + 1.0:
 		return "Too close to the water"
-	if highest - lowest > 3.5:
+	if not is_district(key) and highest - lowest > 3.5:
 		return "Ground too steep"
+	if is_district(key):
+		# One district per hex, on land that is not too steep across the hex.
+		var hex: Vector2i = logistics.world_hex(at)
+		var taken = district_hex.get(hex)
+		if taken != null and not taken.dead:
+			return "This hex already holds %s" % taken.def.name
+		var low := INF
+		var high := -INF
+		for k in range(6):
+			var a := deg_to_rad(30.0 + 60.0 * k)
+			var h := height_at(at.x + cos(a) * logistics.radius * 0.8, at.z + sin(a) * logistics.radius * 0.8)
+			low = minf(low, h)
+			high = maxf(high, h)
+		if low < float(map.seaLevel) + 0.8:
+			return "Too close to the water"
+		if high - low > 6.0:
+			return "Hex too steep"
 	var in_district := false
 	for b in buildings:
 		if b.dead:
 			continue
 		var gap := Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length()
-		if gap < (footprint + b.footprint) * 0.55:
+		if not is_district(key) and gap < (footprint + b.footprint) * 0.55:
 			return "Too close to %s" % b.def.name
 		if b.owner == owner and b.built and gap < float(b.def.get("buildRadius", 0)):
 			in_district = true
@@ -1596,7 +1678,7 @@ func update_placement() -> void:
 	var point = ground_point(get_viewport().get_mouse_position())
 	if point == null:
 		return
-	var at := Vector3(snappedf(point.x, 2.0), 0, snappedf(point.z, 2.0))
+	var at := snap_to_hex(point) if is_district(placing) else Vector3(snappedf(point.x, 2.0), 0, snappedf(point.z, 2.0))
 	if building_defs[placing].get("onDeposit", false):
 		var dep = deposit_near(at, 10.0)
 		if dep != null:
@@ -1619,7 +1701,8 @@ func confirm_placement(keep: bool) -> void:
 		hud.notice("Not enough %s" % economy.missing(def.cost))
 		return
 	var site := place_building(placing, at, 0, false)
-	close_navigation(at, site.footprint)
+	close_navigation(site.root.position, DISTRICT_NAV_SIZE if is_district(placing) else site.footprint)
+	refresh_streets()
 	call_worker(site)
 	if not keep or not economy.can_afford(def.cost):
 		cancel_placement()
@@ -1662,8 +1745,7 @@ func economy_test(capture: bool) -> void:
 	var placed := []
 	for key in ["farm", "barracks", "housing"]:
 		for spot in spots:
-			var at: Vector3 = spot
-			at.y = height_at(at.x, at.z)
+			var at: Vector3 = snap_to_hex(spot)
 			if placement_problem(key, at) == "":
 				placing = key
 				ghost = Node3D.new()
@@ -1940,6 +2022,8 @@ func destroy_building(b: Dictionary) -> void:
 		b.model.material_override = charred
 	b.model.scale.y *= 0.28
 	b.model.rotation.z = randf_range(-0.08, 0.08)
+	if b.has("pad"):
+		refresh_streets()
 	if b.deposit != null:
 		b.deposit.extractor = null
 	if selected_building == b:

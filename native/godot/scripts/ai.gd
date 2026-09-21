@@ -85,7 +85,8 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 					n.money -= cost
 					var site: Dictionary = world.place_building(key, spot, n.id, false)
 					site.ai_build = true
-					world.close_navigation(spot, site.footprint)
+					world.close_navigation(site.root.position, world.DISTRICT_NAV_SIZE if world.is_district(key) else site.footprint)
+					world.refresh_streets()
 					if n.build_idx < build_order.size():
 						n.build_idx += 1
 				elif n.build_idx < build_order.size():
@@ -170,12 +171,25 @@ func find_spot(n: Dictionary, home: Dictionary, key: String):
 				best_d = d.pos.distance_to(centre)
 				best = d
 		return Vector3(best.pos.x, best.pos.y, best.pos.z) if best != null else null
+	# A city grows hex by hex: first try free hexes touching its own districts.
+	if def.get("settlement") == null:
+		var options := []
+		for hex in world.district_hex:
+			var owned = world.district_hex[hex]
+			if owned.dead or owned.owner != n.id:
+				continue
+			for d in world.logistics.DIRECTIONS:
+				options.append(hex + d)
+		options.shuffle()
+		for hex in options:
+			var at: Vector3 = world.logistics.hex_center(hex)
+			if world.site_problem(key, at, n.id) == "":
+				return at
 	for attempt in range(24):
 		var a := randf() * TAU
 		# New settlements stand well apart (ai.js: villages 65-110 m, cities 90-135 m).
 		var r := randf_range(75.0, 120.0) if def.get("settlement") != null else randf_range(18.0, 56.0)
-		var at := centre + Vector3(cos(a), 0, sin(a)) * r
-		at.y = world.height_at(at.x, at.z)
+		var at: Vector3 = world.snap_to_hex(centre + Vector3(cos(a), 0, sin(a)) * r)
 		if world.site_problem(key, at, n.id) == "":
 			return at
 	return null

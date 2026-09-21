@@ -189,7 +189,7 @@ func build(route: Array, kind: String, owner: int) -> bool:
 		var hp := float(transport[next_kind].hp)
 		edges[key] = {"a": route[i - 1], "b": route[i], "owner": owner, "kind": next_kind, "hp": hp, "max_hp": hp, "half": [hp, hp]}
 	dirty = true
-	rebuild_mesh()
+	world.refresh_streets()
 	update_supply()
 	return true
 
@@ -322,6 +322,11 @@ func rebuild_mesh() -> void:
 		for side in range(2):
 			var a := from if side == 0 else mid
 			var b := mid if side == 0 else to
+			# Inside a district hex the district's own street takes over.
+			var hex: Vector2i = e.a if side == 0 else e.b
+			var owner_there = world.district_hex.get(hex)
+			if owner_there != null and not owner_there.dead and e.half[side] > 0.0:
+				continue
 			if e.half[side] <= 0.0:
 				_strip(st, a.lerp(b, 0.0), a.lerp(b, 0.3), 2.4, 0.0, broken, 0.07)
 				_strip(st, a.lerp(b, 0.72), a.lerp(b, 1.0), 2.4, 0.0, broken, 0.07)
