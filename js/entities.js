@@ -2464,7 +2464,7 @@ function unitMesh(key, color, seed = 0) {
     antenna.rotation.z = (seed % 2 ? 1 : -1) * 0.08;
     g.add(antenna);
   }
-  return batchBuildingGeometry(g);
+  return batchBuildingGeometry(g, { colors: !UNITS[key]?.fly && !UNITS[key]?.naval });
 }
 
 /* selection ring + hp bar attached to every entity */

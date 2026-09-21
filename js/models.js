@@ -87,34 +87,94 @@ const MODELS = {
   failed: false,
 };
 
+// Opaque standard materials that differ only in colour share one material:
+// the colour moves into the vertices. Roughness/metalness are rounded to
+// quarter steps: at RTS distance .8 and .95 read the same, and one batch is
+// one draw call instead of one per paint colour.
+const COLOR_BATCH_MATERIALS = new Map();
+const batchRound = v => Math.round((v ?? 0) * 4) / 4;
+// Texture maps are shared between clones of the same model, so they are part
+// of the key rather than a reason to skip. Custom shaders are skipped because
+// Material.clone() does not carry onBeforeCompile.
+const BATCH_MAPS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap', 'bumpMap', 'lightMap', 'displacementMap'];
+function colorBatchKey(m) {
+  if (!m.isMeshStandardMaterial || m.isMeshPhysicalMaterial || m.transparent || m.alphaMap || m.alphaTest > 0 ||
+      m.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile) return null;
+  return ['std', ...BATCH_MAPS.map(k => m[k]?.uuid), m.normalMap ? m.normalScale.toArray().join() : '',
+    m.aoMap ? m.aoMapIntensity : '', m.bumpMap ? m.bumpScale : '', m.displacementMap ? m.displacementScale : '',
+    batchRound(m.roughness), batchRound(m.metalness), m.emissive.getHex(), m.emissiveIntensity, m.side,
+    m.flatShading, m.envMapIntensity ?? 1].join(':');
+}
+function colorBatchMaterial(key, source) {
+  if (!COLOR_BATCH_MATERIALS.has(key)) {
+    const m = source.clone();
+    m.color.setRGB(1, 1, 1); m.vertexColors = true;
+    m.roughness = batchRound(source.roughness); m.metalness = batchRound(source.metalness);
+    m.name = 'batched-colors';
+    COLOR_BATCH_MATERIALS.set(key, m);
+  }
+  return COLOR_BATCH_MATERIALS.get(key);
+}
+
 // Consolidate static facade pieces while retaining animated radar/flags and
 // transparent glass as separate objects. Called before entity overlays attach.
-function batchBuildingGeometry(root) {
+// colors:false keeps per-material batches for meshes whose materials are
+// replaced afterwards (aircraft and ships get new surfaces in detailUnitSurface).
+function batchBuildingGeometry(root, { colors = true } = {}) {
   if (!THREE.mergeGeometries) return root;
   root.updateMatrixWorld(true);
-  const animated = new Set(Object.values(root.userData).flatMap(v =>
-    v?.isObject3D ? [v] : Array.isArray(v) ? v.filter(o=>o?.isObject3D)
-      : v && typeof v === 'object' ? Object.values(v).filter(o=>o?.isObject3D) : []));
+  // Animated parts are registered in userData anywhere in the tree (a district
+  // keeps its core's radar and beacon in core.userData). `core` itself is only
+  // a container reference, not something that moves.
+  const animated = new Set();
+  root.traverse(node => {
+    for (const [name, v] of Object.entries(node.userData)) {
+      if (name === 'core' || name === 'entity') continue;
+      const found = v?.isObject3D ? [v] : Array.isArray(v) ? v.filter(o => o?.isObject3D)
+        : v && typeof v === 'object' ? Object.values(v).filter(o => o?.isObject3D) : [];
+      for (const o of found) animated.add(o);
+    }
+  });
+  const toRoot = root.matrixWorld.clone().invert();
   const groups = new Map();
   root.traverse(o => {
-    if (!o.isMesh || o.isSkinnedMesh || Array.isArray(o.material) || o.material.transparent || o.children.length || !o.visible) return;
+    if (!o.isMesh || o.isSkinnedMesh || o.isInstancedMesh || Array.isArray(o.material) || o.material.transparent || o.children.length || !o.visible) return;
     for (let parent = o; parent; parent = parent.parent) if (parent.isBone || animated.has(parent) || !parent.visible) return;
-    const attributes = Object.keys(o.geometry.attributes).sort().join(',');
-    const key = `${o.material.uuid}:${o.castShadow}:${o.receiveShadow}:${attributes}`;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(o);
+    const colorKey = colors ? colorBatchKey(o.material) : null;
+    const textured = BATCH_MAPS.some(k => o.material[k]);
+    const attributes = colorKey
+      ? ['position', 'normal', ...(textured ? ['uv', 'uv1'] : [])].filter(a => o.geometry.attributes[a]).join(',')
+      : Object.keys(o.geometry.attributes).sort().join(',');
+    const key = `${colorKey || o.material.uuid}:${o.castShadow}:${o.receiveShadow}:${attributes}`;
+    if (!groups.has(key)) groups.set(key, { colorKey, attributes: attributes.split(','), pieces: [] });
+    groups.get(key).pieces.push(o);
   });
-  for (const pieces of groups.values()) {
-    if (pieces.length < 2) continue;
+  for (const { colorKey, attributes, pieces } of groups.values()) {
+    // A lone piece still moves onto the shared colour material, so the same
+    // surface on different buildings can later draw together (building-batch.js).
+    if (pieces.length < 2 && (!colorKey || pieces[0].material.name === 'batched-colors')) continue;
     const geometries = pieces.map(o => {
-      const geometry = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
-      geometry.applyMatrix4(o.matrixWorld);
+      let geometry = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+      if (colorKey) {
+        const clean = new THREE.BufferGeometry();
+        for (const a of attributes) clean.setAttribute(a, geometry.attributes[a]);
+        const count = clean.attributes.position.count, colors = new Float32Array(count * 3);
+        const tint = o.material.color, vc = o.material.vertexColors ? geometry.attributes.color : null;
+        for (let v = 0; v < count; v++) {
+          colors[v * 3] = tint.r * (vc ? vc.getX(v) : 1);
+          colors[v * 3 + 1] = tint.g * (vc ? vc.getY(v) : 1);
+          colors[v * 3 + 2] = tint.b * (vc ? vc.getZ(v) : 1);
+        }
+        clean.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geometry.dispose(); geometry = clean;
+      }
+      geometry.applyMatrix4(toRoot.clone().multiply(o.matrixWorld));
       return geometry;
     });
     const merged = THREE.mergeGeometries(geometries);
     for (const geometry of geometries) geometry.dispose();
     if (!merged) continue;
-    const mesh = new THREE.Mesh(merged, pieces[0].material);
+    const mesh = new THREE.Mesh(merged, colorKey ? colorBatchMaterial(colorKey, pieces[0].material) : pieces[0].material);
     mesh.castShadow = pieces[0].castShadow; mesh.receiveShadow = pieces[0].receiveShadow;
     mesh.name = 'batched-facade';
     for (const piece of pieces) piece.removeFromParent();

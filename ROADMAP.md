@@ -51,9 +51,24 @@ entity. Land units and those overlays sit on layer 1, which the reflection camer
 skips (ships and aircraft are still reflected). Clicks within 18 px of a unit
 select it, which also makes small infantry easier to pick.
 
-Remaining cost is mostly buildings: each has 20–40 meshes because of distinct
-materials (palette clones, textured walls, glass, animated parts). Reducing that
-needs a shared texture atlas, not more merging.
+Building batching (2026-09-21). Two layers:
+1. `batchBuildingGeometry` puts opaque standard materials that differ only in
+   colour onto shared materials, with colour in the vertices and roughness and
+   metalness rounded to quarter steps. Texture maps are part of the key, so
+   per-building clones of the same model share one material. A district's `core`
+   no longer counts as animated (only its registered radar/beacon/etc. do).
+2. `building-batch.js` moves the static parts of every finished building into
+   one `BatchedMesh` per material and hides the originals, which stay in place
+   for picking. Destroyed buildings leave the batch in the same frame; sites
+   under construction join when finished. `?nobuildbatch` disables it for A/B.
+
+Seed 1, same camera and every pass forced: the close-up frame went from 1,396 to
+1,116 draw calls (buildings 396 → 202). With 30 extra buildings (39 in total) in
+a wide view, it went from 3,141 separately to 1,845 batched, with the same triangle
+count (7.42M). Close-ups show no visible material change. Cinematic (AO) works.
+
+Remaining: 45 material batches for the whole map, windows (InstancedMesh per
+building), glass (MeshPhysical) and the per-building hex outline lines.
 
 ## Next acceptance gates
 

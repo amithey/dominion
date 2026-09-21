@@ -805,6 +805,7 @@ function loop() {
     sunLight.target.position.set(camFocus.x, 0, camFocus.z);
   }
   // selection rings pulse gently; rings and health bars draw as three batches
+  updateBuildingBatches();
   updateOverlays(0.7 + Math.sin(performance.now() * 0.004) * 0.25);
 
   // Reuse the shadow atlas between lighting updates. Camera movement refreshes

@@ -111,7 +111,7 @@ function makeServiceVehicle(key, color) {
     slab(.25,.12,.012,.3,1.28,beam*.35,badge);
   }
   g.userData.faceOffset=-Math.PI/2;
-  batchBuildingGeometry(g);
+  batchBuildingGeometry(g, { colors: false }); // aircraft and ships: detailUnitSurface repaints them
   if(g.userData.displayScale) g.scale.setScalar(g.userData.displayScale);
   return g;
 }
