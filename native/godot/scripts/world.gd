@@ -691,7 +691,11 @@ func place_building(key: String, at: Vector3, owner: int, built: bool) -> Dictio
 ## props and streets (districts.gd).
 func place_district(key: String, at: Vector3, owner: int, built: bool) -> Dictionary:
 	var centre := snap_to_hex(at)
-	var parts: Dictionary = districts.build(key, centre, fmod(absf(centre.x * 0.37 + centre.z * 0.61), 7.0))
+	var city := 0
+	for hex in district_hex:
+		if not district_hex[hex].dead and district_hex[hex].owner == owner:
+			city += 1
+	var parts: Dictionary = districts.build(key, centre, fmod(absf(centre.x * 0.37 + centre.z * 0.61), 7.0), owner, city)
 	var root := Node3D.new()
 	root.position = Vector3(centre.x, parts.floor_y, centre.z)
 	add_child(root)

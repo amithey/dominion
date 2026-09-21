@@ -25,6 +25,11 @@ var radius := 12.0
 var ground: ShaderMaterial
 var props_material: StandardMaterial3D
 var _house_scenes := {}
+var _tinted := {}          # [source material, owner] -> toned copy
+var owner := 0             # nation of the district being built
+var city_size := 0         # districts that nation already has
+# Tallest a district's central building may stand, per style (metres).
+const MAX_HEIGHT := {0: 13.0, 1: 8.0, 2: 7.5, 3: 7.0, 4: 6.5}
 
 func setup(world_node: Node) -> void:
 	world = world_node
@@ -47,7 +52,9 @@ func style_of(key: String) -> int:
 ## Builds a district for `key` at hex centre `centre` (y = terrain height).
 ## Returns {pad, container, floor_y}: the pad stays put, the container (building
 ## and props) is what grows during construction and collapses when destroyed.
-func build(key: String, centre: Vector3, seed: float) -> Dictionary:
+func build(key: String, centre: Vector3, seed: float, owner_id := 0, size := 0) -> Dictionary:
+	owner = owner_id
+	city_size = size
 	var floor_y := floor_height(centre)
 	var pad := make_pad(centre, floor_y)
 	pad.set_instance_shader_parameter("style", style_of(key))
@@ -68,6 +75,7 @@ func build(key: String, centre: Vector3, seed: float) -> Dictionary:
 			barracks(key, container, st, rng)
 		_:
 			yard(key, container, st, rng)
+	tone(container, owner)
 	var props := MeshInstance3D.new()
 	props.mesh = st.commit()  # normals were set per primitive
 	props.material_override = props_material
@@ -210,9 +218,37 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 	var bounds: AABB = world.model_bounds(model)
 	var size := maxf(maxf(bounds.size.x * model.scale.x, bounds.size.z * model.scale.z), 0.01)
 	var k := footprint / size
+	var height := bounds.size.y * model.scale.y * k
+	var cap: float = MAX_HEIGHT.get(style_of(key), 8.0) * (1.0 + 0.04 * mini(city_size, 10))
+	if height > cap:
+		k *= cap / height  # tall Kenney towers would dwarf the district
 	model.scale *= k
 	model.position = model.position * k + at
 	container.add_child(model)
+
+# The Kenney colour atlases are near-white and toy-bright. Each model is
+# knocked back to weathered, lived-in tones, and roofs, awnings and trim take
+# a little of the owner's colour so a city's nation reads from the air.
+func tone(container: Node3D, nation: int) -> void:
+	var colour: Color = Color(world.map.nations[nation].color) if nation < world.map.nations.size() else Color.WHITE
+	for mesh_instance in container.find_children("*", "MeshInstance3D", true, false):
+		if mesh_instance.mesh == null:
+			continue
+		for i in range(mesh_instance.mesh.get_surface_count()):
+			var source := mesh_instance.get_active_material(i) as BaseMaterial3D
+			if source == null:
+				continue
+			var key := [source.get_instance_id(), nation]
+			if not _tinted.has(key):
+				var m: BaseMaterial3D = source.duplicate()
+				var name := source.resource_name.to_lower()
+				var accent := name.contains("roof") or name.contains("awning") or name.contains("red") or name.contains("door")
+				var base := m.albedo_color * Color(0.76, 0.74, 0.69)
+				m.albedo_color = base.lerp(colour * Color(0.8, 0.8, 0.8), 0.45 if accent else 0.1)
+				m.roughness = maxf(m.roughness, 0.8)
+				m.metallic = minf(m.metallic, 0.1)
+				_tinted[key] = m
+			mesh_instance.set_surface_override_material(i, _tinted[key])
 
 func house(container: Node3D, at: Vector3, face: float, size: float, rng: RandomNumberGenerator) -> void:
 	var path: String = HOUSES[rng.randi() % HOUSES.size()]
@@ -255,16 +291,22 @@ func residential(key: String, container: Node3D, st: SurfaceTool, rng: RandomNum
 		for k in [0, 2, 3, 5]:
 			tree(st, slot(k, 7.8), rng)
 		return
-	var count: int = HOUSE_COUNT.get(key, 4)
+	# A growing city fills its blocks: more and larger houses, fewer gardens.
+	var growth := clampf(city_size / 10.0, 0.0, 1.0)
+	var count: int = mini(6, HOUSE_COUNT.get(key, 4) + int(growth * 2.0))
 	var slots := [0, 1, 3, 4, 2, 5].slice(0, count)
 	for k in slots:
 		var p := slot(k, 6.2)
 		# Houses face the middle of the block; each has a hedge and a tree.
-		house(container, p, deg_to_rad(-(30.0 + 60.0 * k)) - PI * 0.5, 5.0 + rng.randf() * 0.8, rng)
+		house(container, p, deg_to_rad(-(30.0 + 60.0 * k)) - PI * 0.5, 5.0 + growth * 0.9 + rng.randf() * 0.8, rng)
 		var back := slot(k, 9.0)
 		box(st, Vector3(3.6, 0.8, 0.5), back, deg_to_rad(-(30.0 + 60.0 * k)) + PI * 0.5, Color("3f5a2c"))
 		tree(st, slot(k, 8.6) + Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)), rng, 0.8)
-	tree(st, Vector3.ZERO, rng, 1.2)
+	if growth < 0.6:
+		tree(st, Vector3.ZERO, rng, 1.2)
+	else:
+		cylinder(st, 1.3, 0.6, Vector3.ZERO, Color("8a877d"), 12)  # a small square with a fountain
+		cylinder(st, 0.3, 1.3, Vector3.ZERO, Color("a8a59b"), 8)
 
 func farmstead(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
 	main_building(key, container, 7.5, slot(0, 4.2))
