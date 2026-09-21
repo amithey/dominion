@@ -129,6 +129,12 @@ var diplomacy: Node
 var game_over := ""
 var craft: RefCounted
 var saves: Node
+var menu: CanvasLayer
+var info_layer: CanvasLayer
+var match_difficulty := "easy"
+var match_speed := 1.0
+# A normal launch (no test or benchmark flags) starts at the main menu.
+var interactive := false
 var damage_profile := {}
 var infantry_keys := []
 var armor_keys := []
@@ -144,6 +150,10 @@ const NAV_STEP := 4.0
 var fps_frames := 0
 
 func _ready() -> void:
+	interactive = true
+	for a in OS.get_cmdline_user_args():
+		if not (a.begins_with("--quality") or a.begins_with("--difficulty") or a == "--no-vsync"):
+			interactive = false
 	map = JSON.parse_string(FileAccess.get_file_as_string(MAP_PATH))
 	var grid: Dictionary = map.grid
 	grid_size = int(grid.size)
@@ -241,8 +251,12 @@ func _ready() -> void:
 	diplomacy = preload("res://scripts/diplomacy.gd").new()
 	add_child(diplomacy)
 	diplomacy.setup(self, map.nations.size(), float(map.ai.difficulty.get(difficulty, map.ai.difficulty.easy).aggression), ai_speed)
-	if bench_units == 0 and not ("--capture-views" in OS.get_cmdline_user_args() or "--capture-battle" in OS.get_cmdline_user_args() or "--economy-test" in OS.get_cmdline_user_args() or "--capture-economy" in OS.get_cmdline_user_args() or "--nav-test" in OS.get_cmdline_user_args() or "--logistics-test" in OS.get_cmdline_user_args() or "--capture-logistics" in OS.get_cmdline_user_args()):
+	match_difficulty = difficulty
+	match_speed = ai_speed
+	if not interactive and bench_units == 0 and not ("--capture-views" in OS.get_cmdline_user_args() or "--capture-menu" in OS.get_cmdline_user_args() or "--menu-test" in OS.get_cmdline_user_args() or "--capture-battle" in OS.get_cmdline_user_args() or "--economy-test" in OS.get_cmdline_user_args() or "--capture-economy" in OS.get_cmdline_user_args() or "--nav-test" in OS.get_cmdline_user_args() or "--logistics-test" in OS.get_cmdline_user_args() or "--capture-logistics" in OS.get_cmdline_user_args()):
 		ai.setup(self, map.ai, difficulty, ai_speed)
+	menu = preload("res://scripts/menu.gd").new()
+	add_child(menu)
 	selection_marker = MeshInstance3D.new()
 	var marker_mesh := TorusMesh.new()
 	marker_mesh.rings = 48
@@ -276,6 +290,20 @@ func _ready() -> void:
 		await economy_test(false)
 	elif "--ai-test" in args:
 		await ai_test(false)
+	elif interactive:
+		cam_focus = start
+		cam_dist = 230.0
+		cam_dist_target = 230.0
+		cam_pitch = 0.42
+		update_camera(0.0)
+		menu.setup(self)
+		menu.open_main()
+	elif "--menu-test" in args:
+		menu.setup(self)
+		await menu_test()
+	elif "--capture-menu" in args:
+		menu.setup(self)
+		await capture_menu()
 	elif "--save-test" in args:
 		await save_test()
 	elif "--air-sea-test" in args or "--capture-air-sea" in args:
@@ -1380,6 +1408,57 @@ func rebuild_walk_grid() -> void:
 		for c in range(nav_n - 1):
 			nav_open[r * (nav_n - 1) + c] = 1 if walkable(-half + (c + 0.5) * NAV_STEP, -half + (r + 0.5) * NAV_STEP) else 0
 	rebuild_nav_mesh()
+
+## Begins a match from the main menu: the AI nations wake up.
+func start_match(difficulty: String) -> void:
+	match_difficulty = difficulty
+	var row: Dictionary = map.ai.difficulty.get(difficulty, map.ai.difficulty.easy)
+	diplomacy.aggression = float(row.aggression)
+	if ai.nations.is_empty():
+		ai.setup(self, map.ai, difficulty, match_speed)
+	cam_focus = start + Vector3(0, 0, 1)
+	cam_dist_target = 115.0
+	cam_pitch = 0.95
+	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
+
+## Walks the menu flow: main menu (paused, no AI) -> new game on normal (AI
+## wakes, play resumes) -> pause -> save -> load from the menu.
+func menu_test() -> void:
+	menu.open_main()
+	var paused_at_menu: bool = get_tree().paused and ai.nations.is_empty()
+	menu.open_new_game()
+	menu.start("normal")
+	var started: bool = not get_tree().paused and ai.nations.size() == 3 and match_difficulty == "normal"
+	menu.open_pause()
+	var paused: bool = get_tree().paused and not hud.visible
+	saves.save("menutest")
+	var money: float = economy.res.money
+	economy.res.money = 1.0
+	menu.load_game("menutest")
+	var loaded: bool = not get_tree().paused and absf(economy.res.money - money) < 1.0 and hud.visible
+	DirAccess.remove_absolute(saves.path_of("menutest"))
+	print("paused at menu %s, new game %s, pause %s, load from menu %s" % [paused_at_menu, started, paused, loaded])
+	var ok: bool = paused_at_menu and started and paused and loaded
+	print("MENU_TEST %s" % ("PASS" if ok else "FAIL"))
+	get_tree().quit(0 if ok else 1)
+
+## Screenshots of the main, new game and settings screens.
+func capture_menu() -> void:
+	cam_focus = start
+	cam_dist = 230.0
+	cam_dist_target = 230.0
+	cam_pitch = 0.42
+	menu.open_main()
+	for page in ["main", "new", "settings"]:
+		if page == "new":
+			menu.open_new_game()
+		elif page == "settings":
+			menu.open_settings()
+		for i in range(40):
+			await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png("res://build/menu-%s.png" % page)
+	get_tree().quit()
 
 ## Removes every building, unit and road, before a saved game is restored.
 func clear_match() -> void:
@@ -2752,7 +2831,10 @@ func _input(event: InputEvent) -> void:
 		saves.save("quicksave")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F9:
 		saves.load_slot("quicksave")
-	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE:
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:
+		# Esc first cancels what is in progress; with nothing to cancel it pauses.
+		if placing == "" and transport_kind == "" and selected_building == null and menu != null and menu._root != null:
+			menu.open_pause()
 		cancel_transport()
 		cancel_placement()
 		select_building(null)
@@ -2760,6 +2842,7 @@ func _input(event: InputEvent) -> void:
 func make_hud() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
+	info_layer = layer
 	var panel := PanelContainer.new()
 	panel.position = Vector2(16, 58)  # below the resource strip
 	var style := StyleBoxFlat.new()

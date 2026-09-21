@@ -63,7 +63,7 @@ func capture() -> Dictionary:
 		var copy: Dictionary = n.duplicate()
 		nations.append(copy)
 	return {
-		"format": "dominion-save", "version": VERSION, "map": world.MAP_PATH,
+		"format": "dominion-save", "version": VERSION, "map": world.MAP_PATH, "difficulty": world.match_difficulty,
 		"date": Time.get_datetime_string_from_system(), "quality": world.quality,
 		"economy": {"res": world.economy.res, "civilians": world.economy.civilians},
 		"buildings": buildings, "units": units, "edges": edges,
@@ -97,6 +97,8 @@ func load_slot(slot: String) -> bool:
 	if data.map != world.MAP_PATH:
 		world.hud.notice("This save belongs to another map")
 		return false
+	if world.ai.nations.is_empty():
+		world.start_match(data.get("difficulty", "easy"))  # loading from the main menu
 	restore(data)
 	world.hud.notice("Game loaded")
 	return true
