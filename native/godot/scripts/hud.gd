@@ -3,7 +3,7 @@ extends CanvasLayer
 ## building's details, training buttons and queue) and short notices.
 ## Buttons call back into world.gd; the panel refreshes four times a second.
 
-const BUILD_MENU := ["farm", "cottage", "housing", "residential", "warehouse", "foodDepot", "workerHouse", "extractor", "barracks", "tankFactory"]
+const BUILD_MENU := ["villageCenter", "farm", "cottage", "housing", "residential", "warehouse", "foodDepot", "workerHouse", "extractor", "barracks", "tankFactory"]
 const RES_LABELS := {"money": "$", "food": "Food", "iron": "Iron", "oil": "Oil"}
 const GOLD := Color("a29269")
 
@@ -37,7 +37,7 @@ func setup(world_node: Node, economy_node: Node) -> void:
 	_panel.anchor_bottom = 1.0
 	_panel.offset_left = 16
 	_panel.offset_top = -236
-	_panel.offset_right = 660
+	_panel.offset_right = 900
 	_panel.offset_bottom = -16
 	var column := VBoxContainer.new()
 	_panel.add_child(column)
@@ -46,15 +46,15 @@ func setup(world_node: Node, economy_node: Node) -> void:
 	column.add_child(_title)
 	_info = Label.new()
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_info.custom_minimum_size = Vector2(610, 0)
+	_info.custom_minimum_size = Vector2(850, 0)
 	_info.add_theme_color_override("font_color", Color("b9c4c8"))
 	column.add_child(_info)
 	_queue = ProgressBar.new()
-	_queue.custom_minimum_size = Vector2(610, 10)
+	_queue.custom_minimum_size = Vector2(850, 10)
 	_queue.show_percentage = false
 	column.add_child(_queue)
 	_buttons = GridContainer.new()
-	_buttons.columns = 5
+	_buttons.columns = 7
 	column.add_child(_buttons)
 
 	_notices = VBoxContainer.new()
@@ -99,9 +99,18 @@ func _process(delta: float) -> void:
 		parts.append("%s %d%s (%s%.1f)" % [RES_LABELS[key], int(economy.res[key]), cap, "+" if rate >= 0 else "", rate])
 	parts.append("Army %d/%d" % [economy.pop_used, economy.pop_cap])
 	parts.append("Citizens %d/%d" % [int(economy.civilians), int(economy.civ_cap)])
+	var settlements: Array = world.buildings.filter(func(b): return b.owner == 0 and not b.dead and b.built and b.def.get("settlement") != null)
+	parts.append("Supplied %d/%d" % [settlements.filter(func(b): return b.get("supplied", true)).size(), settlements.size()])
 	_bar.text = "   ".join(PackedStringArray(parts))
 	if _selected != null and (_selected.dead or _selected.owner != 0):
 		show_building(null)
+	_update_panel()
+
+var transport_text := ""
+## Road or rail planning status (empty ends it).
+func show_transport(text: String) -> void:
+	transport_text = text
+	_shown_key = ""
 	_update_panel()
 
 ## null shows the build menu; a building entity shows its details and training.
@@ -112,9 +121,13 @@ func show_building(building) -> void:
 
 func _update_panel() -> void:
 	var key: String = "menu" if _selected == null else "%s:%s:%d" % [_selected.key, _selected.built, _selected.queue.size()]
-	if _selected == null:
+	if transport_text != "":
+		_title.text = "ROAD" if world.transport_kind == "road" else "RAILWAY"
+		_info.text = transport_text
+		_queue.visible = false
+	elif _selected == null:
 		_title.text = "BUILD"
-		_info.text = "Pick a structure, then click the ground inside your capital's district (right click cancels). Workers go and build it."
+		_info.text = "Pick a structure, then click the ground inside one of your districts (right click cancels). Workers go and build it. A Village Center founds a new district: link it to the capital by road or rail so it is supplied."
 		_queue.visible = false
 	else:
 		var def: Dictionary = _selected.def
@@ -125,6 +138,10 @@ func _update_panel() -> void:
 			_queue.value = _selected.progress * 100
 		else:
 			var lines := ["HP %d/%d. %s" % [int(_selected.hp), int(_selected.max_hp), def.desc]]
+			if not _selected.get("supplied", true):
+				lines.append("OUT OF SUPPLY: production stopped. Connect this district to the capital by road or rail.")
+			elif _selected.get("rail_supplied", false):
+				lines.append("Rail supplied: +25% production.")
 			if not _selected.queue.is_empty():
 				var names := PackedStringArray()
 				for q in _selected.queue:
@@ -145,6 +162,12 @@ func _update_panel() -> void:
 			if def.is_empty():
 				continue
 			_add_button("%s\n%s" % [def.name, cost_text(def.cost)], def.cost, def.desc, func(): world.begin_placement(b))
+		for kind in ["road", "rail"]:
+			var price: Dictionary = world.logistics.transport[kind]
+			var cost := {"money": price.money, "iron": price.iron} if float(price.iron) > 0 else {"money": price.money}
+			_add_button("%s\n%s per hex" % ["Road" if kind == "road" else "Railway", cost_text(cost)], cost,
+				"Click a start hex, then a destination. Links settlements to the capital so they are supplied." + ("" if kind == "road" else " Railways speed production by 25%."),
+				func(): world.begin_transport(kind))
 	elif _selected.built:
 		for u in _selected.def.trains:
 			var def: Dictionary = world.unit_defs.get(u, {})

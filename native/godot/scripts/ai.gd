@@ -172,7 +172,8 @@ func find_spot(n: Dictionary, home: Dictionary, key: String):
 		return Vector3(best.pos.x, best.pos.y, best.pos.z) if best != null else null
 	for attempt in range(24):
 		var a := randf() * TAU
-		var r := randf_range(18.0, 56.0)
+		# New settlements stand well apart (ai.js: villages 65-110 m, cities 90-135 m).
+		var r := randf_range(75.0, 120.0) if def.get("settlement") != null else randf_range(18.0, 56.0)
 		var at := centre + Vector3(cos(a), 0, sin(a)) * r
 		at.y = world.height_at(at.x, at.z)
 		if world.site_problem(key, at, n.id) == "":

@@ -63,6 +63,15 @@ It uses the Forward+ renderer:
   are targets too (units shoot at the walls; shells hit them) and collapse into
   burning rubble; losing every headquarters decides victory or defeat. Every
   building flies its nation's flag.
+- Supply (logistics.gd), ported from logistics.js: roads ($12 per hex) and railways
+  ($22 + 3 iron, tougher) join neighbouring 12 m hexes, planned by A* around sea,
+  steep grades and rival districts. A settlement (capital, village, city) is supplied
+  when an intact route links it to the capital; buildings in its district share that
+  status. Cut-off districts stop training and no longer count for the economy, and
+  taxes shrink with supply coverage; railways add 25% production. Explosions wear
+  down each half-link, and rebuilding a damaged link is a cheap repair. A Village
+  Center founds a new district (70 m from other settlements). AI nations found
+  villages and connect them to their capital by road.
 - Sound (audio.gd): positional rifle shots, cannon, explosions and bullet impacts
   from a pool of 3D players; each tank has a looping engine that rises while driving;
   wind everywhere and surf from the nearest shore. The listener stands on the ground
@@ -75,14 +84,17 @@ It uses the Forward+ renderer:
 
 Options: `-- --difficulty=easy|normal|hard` (default easy), `-- --ai-speed=N`.
 Controls: click/drag select units, click a building to open its training panel,
-build menu at the bottom left (left click places, Shift+click keeps placing, right
+build menu at the bottom left (Road / Railway: click a start hex, then the
+destination; left click places buildings, Shift+click keeps placing, right
 click or Esc cancels), right-click move or attack an enemy, Ctrl+right-click
 attack-move, B battle demo, WASD pan, Q/E rotate, R/F tilt, wheel zoom.
 Diagnostics: `--script res://tools/inspect.gd -- <model>` prints a model's nodes, materials and
 clips; `-- --capture-views` writes `build/view-*.png`; `-- --feature-probe --no-vsync`
 prints the frame cost of each expensive feature; `-- --capture-battle` saves five
 frames of the battle demo to `build/battle-*.png` and records its soundtrack to
-`build/battle-audio.wav`. `-- --ai-test` runs hard AI in fast time and requires it to build, train, go to war
+`build/battle-audio.wav`. `-- --logistics-test` checks that a new village is cut off, supplied by a road,
+cut by shelling, repaired at a discount and rail-boosted (`--capture-logistics`).
+`-- --ai-test` runs hard AI in fast time and requires it to build, train, go to war
 and reach the player's base, then checks the victory screen (`--capture-ai` saves
 screenshots). `-- --economy-test` places a farm, barracks and housing, lets workers build them and
 trains a soldier in fast time (`--capture-economy` does it in real time with
@@ -92,7 +104,7 @@ never through water. Regenerate sounds with
 
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 
-Not yet ported: supply logistics (roads, rail), diplomacy, aircraft and ships, saving and Steam integration. Units are still the stylised
+Not yet ported: diplomacy, territory, aircraft and ships, saving and Steam integration. Units are still the stylised
 Quaternius models; realistic units need new art.
 
 ## Validation

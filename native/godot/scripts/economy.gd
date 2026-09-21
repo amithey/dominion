@@ -43,14 +43,14 @@ func _process(delta: float) -> void:
 func owned(key: String) -> int:
 	var n := 0
 	for b in world.buildings:
-		if b.owner == 0 and b.built and not b.dead and b.key == key:
+		if b.owner == 0 and b.built and not b.dead and b.get("supplied", true) and b.key == key:
 			n += 1
 	return n
 
 func provided(stat: String) -> float:
 	var total := 0.0
 	for b in world.buildings:
-		if b.owner == 0 and b.built and not b.dead:
+		if b.owner == 0 and b.built and not b.dead and b.get("supplied", true):
 			total += float(b.def.provides.get(stat, 0.0))
 	return total
 
@@ -85,13 +85,14 @@ func tick() -> void:
 	if starving:
 		growth -= civilians * 0.005
 	civilians = clampf(civilians + growth, 20.0, civ_cap)
-	# Taxes.
-	rates.money = civilians * float(cfg.taxPerCivilian) * admin
+	# Taxes reach only settlements the supply network connects (config.js
+	# supplyCoverage, weighted by how many people each settlement houses).
+	rates.money = civilians * float(cfg.taxPerCivilian) * admin * supply_coverage()
 	# Extractors on deposits.
 	for key in ["oil", "iron", "silicon", "uranium"]:
 		rates[key] = 0.0
 	for b in world.buildings:
-		if b.owner != 0 or not b.built or b.dead or b.deposit == null:
+		if b.owner != 0 or not b.built or b.dead or b.deposit == null or not b.get("supplied", true):
 			continue
 		var dep: Dictionary = b.deposit.def
 		rates[dep.res] = rates.get(dep.res, 0.0) + float(dep.rate)
@@ -102,6 +103,18 @@ func tick() -> void:
 		if caps.has(key):
 			res[key] = minf(res[key], caps[key])
 	changed.emit()
+
+const POPULATION_WEIGHTS := {"hq": 200.0, "villageCenter": 90.0, "cityCenter": 260.0, "residential": 150.0, "cottage": 80.0, "apartments": 280.0, "luxuryVillas": 60.0}
+func supply_coverage() -> float:
+	var connected := 0.0
+	var total := 0.0
+	for b in world.buildings:
+		if b.owner != 0 or b.dead or not b.built or not POPULATION_WEIGHTS.has(b.key):
+			continue
+		total += POPULATION_WEIGHTS[b.key]
+		if b.get("supplied", true):
+			connected += POPULATION_WEIGHTS[b.key]
+	return connected / total if total > 0.0 else 0.0
 
 func can_afford(cost: Dictionary) -> bool:
 	for key in cost:

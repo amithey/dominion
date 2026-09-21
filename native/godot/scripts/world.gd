@@ -11,6 +11,7 @@ extends Node3D
 ##   --economy-test / --capture-economy            build, train and collect in fast time
 ##   --difficulty=easy|normal|hard  --ai-speed=N    AI opponents (browser difficulty table)
 ##   --ai-test / --capture-ai                      AI builds, trains, declares war and attacks
+##   --logistics-test / --capture-logistics        supply, damage and repair of roads and rails
 
 const MAP_PATH := "res://data/map-seed1.json"
 const SOLDIER_HEIGHT := 2.35       # the browser's readable RTS scale
@@ -28,6 +29,7 @@ const BUILDING_MODELS := {
 	"residential": "res://assets/House_D.glb",
 	"foodDepot": "res://assets/SiloHouse.glb",
 	"workerHouse": "res://assets/House_B.glb",
+	"villageCenter": "res://assets/House_C.glb",
 }
 const BUILDING_SIZE := {"hq": 15.0, "barracks": 12.0, "tankFactory": 15.0, "warehouse": 12.0, "farm": 13.0, "cottage": 9.0}
 const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker"]
@@ -114,6 +116,11 @@ var nav_n := 0
 var site_timer := 0.0
 var ai: Node
 var game_over := ""
+var logistics: Node3D
+var transport_kind := ""
+var transport_start = null
+var transport_route := []
+var transport_hover := Vector2i(1 << 20, 0)
 var nav_ready := false
 const NAV_STEP := 4.0
 var fps_frames := 0
@@ -180,6 +187,9 @@ func _ready() -> void:
 	economy = preload("res://scripts/economy.gd").new()
 	add_child(economy)
 	economy.setup(self, map.economy)
+	logistics = preload("res://scripts/logistics.gd").new()
+	add_child(logistics)
+	logistics.setup(self, map.logistics)
 	hud = preload("res://scripts/hud.gd").new()
 	add_child(hud)
 	hud.setup(self, economy)
@@ -198,7 +208,7 @@ func _ready() -> void:
 		ai_speed = 12.0
 	ai = preload("res://scripts/ai.gd").new()
 	add_child(ai)
-	if bench_units == 0 and not ("--capture-views" in OS.get_cmdline_user_args() or "--capture-battle" in OS.get_cmdline_user_args() or "--economy-test" in OS.get_cmdline_user_args() or "--capture-economy" in OS.get_cmdline_user_args() or "--nav-test" in OS.get_cmdline_user_args()):
+	if bench_units == 0 and not ("--capture-views" in OS.get_cmdline_user_args() or "--capture-battle" in OS.get_cmdline_user_args() or "--economy-test" in OS.get_cmdline_user_args() or "--capture-economy" in OS.get_cmdline_user_args() or "--nav-test" in OS.get_cmdline_user_args() or "--logistics-test" in OS.get_cmdline_user_args() or "--capture-logistics" in OS.get_cmdline_user_args()):
 		ai.setup(self, map.ai, difficulty, ai_speed)
 	selection_marker = MeshInstance3D.new()
 	var marker_mesh := TorusMesh.new()
@@ -233,6 +243,10 @@ func _ready() -> void:
 		await economy_test(false)
 	elif "--ai-test" in args:
 		await ai_test(false)
+	elif "--logistics-test" in args:
+		await logistics_test(false)
+	elif "--capture-logistics" in args:
+		await logistics_test(true)
 	elif "--capture-ai" in args:
 		await ai_test(true)
 	elif "--capture-economy" in args:
@@ -1357,8 +1371,11 @@ func update_training(delta: float) -> void:
 	for b in buildings:
 		if b.dead or not b.built or b.queue.is_empty():
 			continue
+		if not b.get("supplied", true):
+			continue  # cut off: the factory waits for supply
 		var def: Dictionary = unit_defs[b.queue[0]]
-		b.queue_prog += delta / maxf(float(def.get("trainTime", 10)), 0.5)
+		var rail: float = 1.0 + (logistics.rail_bonus if b.get("rail_supplied", false) else 0.0)
+		b.queue_prog += delta * rail / maxf(float(def.get("trainTime", 10)), 0.5)
 		if b.queue_prog < 1.0:
 			continue
 		b.queue_prog = 0.0
@@ -1375,9 +1392,128 @@ func update_training(delta: float) -> void:
 		if b.owner == 0:
 			hud.notice("%s ready" % def.name)
 
+# ---------------------------------------------------------------- roads and railways
+
+func begin_transport(kind: String) -> void:
+	cancel_placement()
+	transport_kind = kind
+	transport_start = null
+	transport_route = []
+	logistics.show_grid(true)
+	hud.show_transport("Click the starting hex (a settlement or an existing road), then the destination. Right click cancels.")
+
+func cancel_transport() -> void:
+	if transport_kind == "":
+		return
+	transport_kind = ""
+	transport_start = null
+	transport_route = []
+	logistics.show_grid(false)
+	logistics.show_preview([])
+	hud.show_transport("")
+
+func update_transport() -> void:
+	if transport_kind == "" or transport_start == null:
+		return
+	var point = ground_point(get_viewport().get_mouse_position())
+	if point == null:
+		return
+	var hex: Vector2i = logistics.world_hex(point)
+	if hex == transport_hover:
+		return
+	transport_hover = hex
+	transport_route = logistics.plan(transport_start, hex, 0, transport_kind)
+	logistics.show_preview(transport_route)
+	if transport_route.size() < 2:
+		hud.show_transport("No land route there: roads cannot cross the sea, steep cliffs or a rival's land.")
+		return
+	var cost: Dictionary = logistics.quote(transport_route, transport_kind, 0)
+	hud.show_transport("%d links · %s. Click to build; intact links are free, damaged ones are repaired at a discount." % [transport_route.size() - 1, hud.cost_text({"money": cost.money, "iron": cost.iron} if cost.iron > 0 else {"money": cost.money})])
+
+func transport_click(screen: Vector2, keep: bool) -> void:
+	var point = ground_point(screen)
+	if point == null:
+		return
+	if transport_start == null:
+		transport_start = logistics.world_hex(point)
+		transport_hover = Vector2i(1 << 20, 0)
+		hud.show_transport("Now click the destination hex.")
+		return
+	if transport_route.size() < 2:
+		hud.notice("No route to build")
+		return
+	var cost: Dictionary = logistics.quote(transport_route, transport_kind, 0)
+	if not logistics.build(transport_route, transport_kind, 0):
+		hud.notice("Not enough %s" % economy.missing(cost))
+		return
+	hud.notice("%s built: supply network updated" % ("Road" if transport_kind == "road" else "Railway"))
+	if keep:
+		transport_start = transport_route[transport_route.size() - 1]
+		transport_route = []
+		logistics.show_preview([])
+	else:
+		cancel_transport()
+
+## Checks the supply rules: a new village is cut off until a road links it,
+## breaks when the road is shelled, recovers when repaired, and a railway
+## gives it the production bonus.
+func logistics_test(capture: bool) -> void:
+	economy.res.money = 5000.0
+	economy.res.iron = 500.0
+	var home: Vector3 = buildings[0].root.position
+	var village = null
+	for r in [95.0, 110.0, 125.0, 80.0]:
+		for i in range(24):
+			var a := i * TAU / 24.0
+			var at: Vector3 = home + Vector3(cos(a), 0, sin(a)) * r
+			at.y = height_at(at.x, at.z)
+			if site_problem("villageCenter", at, 0) == "":
+				village = place_building("villageCenter", at, 0, true)
+				close_navigation(at, village.footprint)
+				break
+		if village != null:
+			break
+	if village == null:
+		print("LOGISTICS_TEST FAIL: no spot for a village")
+		get_tree().quit(1)
+		return
+	var shop = place_building("barracks", village.root.position + Vector3(22, 0, 0), 0, true)
+	logistics.update_supply()
+	var cut_off: bool = not village.supplied and not shop.supplied
+	var route: Array = logistics.plan(logistics.world_hex(home), logistics.world_hex(village.root.position), 0, "road")
+	var price: Dictionary = logistics.quote(route, "road", 0)
+	var built: bool = logistics.build(route, "road", 0)
+	var connected: bool = village.supplied and shop.supplied
+	var mid: Vector3 = logistics.hex_center(route[route.size() / 2])
+	for i in range(3):
+		logistics.damage_at(mid, 4.0, 60.0)
+	logistics.update_supply()
+	var broken: bool = not village.supplied
+	var repair: Dictionary = logistics.quote(route, "road", 0)
+	logistics.build(route, "road", 0)
+	var repaired: bool = village.supplied
+	var rail_route: Array = logistics.plan(logistics.world_hex(home), logistics.world_hex(village.root.position), 0, "rail")
+	var rail_ok: bool = rail_route.size() > 1 and logistics.build(rail_route, "rail", 0) and village.rail_supplied
+	print("Route %d links for $%d; cut off before %s, supplied after %s, broken by shelling %s, repair $%d (vs $%d), repaired %s, railway bonus %s" % [route.size() - 1, price.money, cut_off, connected, broken, repair.money, price.money, repaired, rail_ok])
+	if capture:
+		# Shell one link again so the picture shows intact road, railway and a break.
+		logistics.damage_at(logistics.hex_center(route[1]), 3.0, 400.0)
+		cam_focus = (home + village.root.position) * 0.5
+		cam_dist = 120.0
+		cam_dist_target = 120.0
+		cam_pitch = 0.95
+		for i in range(90):
+			await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png("res://build/logistics-0.png")
+	var ok: bool = cut_off and built and connected and broken and repaired and repair.money < price.money and rail_ok
+	print("LOGISTICS_TEST %s" % ("PASS" if ok else "FAIL"))
+	get_tree().quit(0 if ok else 1)
+
 # ---------------------------------------------------------------- placement
 
 func begin_placement(key: String) -> void:
+	cancel_transport()
 	cancel_placement()
 	var def: Dictionary = building_defs.get(key, {})
 	if def.is_empty():
@@ -1433,7 +1569,17 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 			return "Too close to %s" % b.def.name
 		if b.owner == owner and b.built and gap < float(b.def.get("buildRadius", 0)):
 			in_district = true
-	if not in_district:
+	if def.get("settlement") != null:
+		# A new settlement stands apart from every other one and outside rivals' land.
+		for b in buildings:
+			if b.dead or b.def.get("settlement") == null:
+				continue
+			var gap := Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length()
+			if gap < 70.0:
+				return "Too close to %s" % b.def.name
+			if b.owner != owner and gap < float(b.def.get("buildRadius", 0)) + 20.0:
+				return "Inside a rival's land"
+	elif not in_district:
 		return "Outside your district"
 	if def.get("onDeposit", false):
 		var dep = deposit_near(at, 6.0)
@@ -1601,7 +1747,9 @@ func ai_test(capture: bool) -> void:
 		if reached and most_buildings >= 5 and not capture:
 			break
 	var wars: int = ai.nations.filter(func(n): return n.at_war).size()
-	print("AI: most buildings %d, most units %d, nations at war %d, reached your base %s" % [most_buildings, most_units, wars, reached])
+	var ai_links: int = logistics.edges.values().filter(func(e): return e.owner > 0).size()
+	var ai_villages: int = buildings.filter(func(b): return b.owner > 0 and b.key == "villageCenter").size()
+	print("AI: most buildings %d, most units %d, nations at war %d, reached your base %s, villages %d, road links %d" % [most_buildings, most_units, wars, reached, ai_villages, ai_links])
 	for b in buildings:
 		if b.owner > 0 and b.key == "hq" and not b.dead:
 			destroy_building(b)
@@ -1719,6 +1867,7 @@ func fire(unit: Dictionary, enemy: Dictionary) -> void:
 # A shell explodes where it lands and hurts everything close by.
 func shell_hit(shooter: Dictionary, at: Vector3) -> void:
 	effects.explosion(at, 1.0, at.y - height_at(at.x, at.z) < 1.5)
+	logistics.damage_at(at, 3.0, shooter.dmg * 1.5)
 	for b in buildings:
 		if not b.dead and hostile(shooter.owner, b.owner) and Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length() < b.footprint * 0.62:
 			damage(b, shooter.dmg, shooter)
@@ -1782,6 +1931,7 @@ func destroy_building(b: Dictionary) -> void:
 	var at: Vector3 = b.root.position
 	effects.explosion(at + Vector3.UP * 3.0, 4.0, true)
 	effects.burn(at, 40.0)
+	logistics.damage_at(at, b.footprint * 0.7, 260.0)
 	if not charred:
 		charred = matte(Color("1b1916"), 1.0)
 	for mesh_instance in b.model.find_children("*", "MeshInstance3D", true, false):
@@ -1942,6 +2092,7 @@ func _process(delta: float) -> void:
 	if camera == null:
 		return  # still loading (_ready awaits the noise texture and navigation)
 	update_placement()
+	update_transport()
 	if bench_phase >= 0:
 		benchmark_frame(delta)
 	else:
@@ -1987,6 +2138,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			cam_dist_target = maxf(18.0, cam_dist_target - 6.0)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			cam_dist_target = minf(260.0, cam_dist_target + 6.0)
+		elif event.button_index == MOUSE_BUTTON_LEFT and transport_kind != "":
+			if event.pressed:
+				transport_click(event.position, event.shift_pressed)
+		elif event.button_index == MOUSE_BUTTON_RIGHT and transport_kind != "":
+			if event.pressed:
+				cancel_transport()
 		elif event.button_index == MOUSE_BUTTON_LEFT and placing != "":
 			if event.pressed:
 				confirm_placement(event.shift_pressed)  # Shift keeps placing
@@ -2059,6 +2216,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_B:
 		start_battle()
 	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE:
+		cancel_transport()
 		cancel_placement()
 		select_building(null)
 
