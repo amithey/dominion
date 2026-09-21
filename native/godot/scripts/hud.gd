@@ -63,10 +63,11 @@ func setup(world_node: Node, economy_node: Node) -> void:
 	_notices.anchor_right = 1.0
 	_notices.offset_left = -420
 	_notices.offset_right = -16
-	_notices.offset_top = 64
+	_notices.offset_top = 92  # below the Diplomacy button
 	_notices.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_notices)
 	show_building(null)
+	_build_diplomacy_panel()
 
 func _box(_at: Vector2) -> PanelContainer:
 	var box := PanelContainer.new()
@@ -191,6 +192,132 @@ func _update_enabled() -> void:
 			var cost: Dictionary = button.get_meta("cost")
 			button.disabled = not economy.can_afford(cost)
 
+# ---------------------------------------------------------------- diplomacy
+
+var _diplo: PanelContainer
+var _diplo_rows: VBoxContainer
+var _letters: Array = []     # pending [text, accept, decline]
+var _letter_box: PanelContainer
+
+func _build_diplomacy_panel() -> void:
+	var toggle := Button.new()
+	toggle.text = "Diplomacy (G)"
+	toggle.anchor_left = 1.0
+	toggle.anchor_right = 1.0
+	toggle.offset_left = -150
+	toggle.offset_right = -16
+	toggle.offset_top = 52
+	toggle.offset_bottom = 84
+	toggle.pressed.connect(toggle_diplomacy)
+	add_child(toggle)
+	_diplo = _box(Vector2.ZERO)
+	# Left side, below the info panel: clear of notices and letters.
+	_diplo.offset_left = 16
+	_diplo.offset_right = 640
+	_diplo.offset_top = 228
+	_diplo.visible = false
+	_diplo_rows = VBoxContainer.new()
+	_diplo.add_child(_diplo_rows)
+
+func toggle_diplomacy() -> void:
+	_diplo.visible = not _diplo.visible
+	if _diplo.visible:
+		refresh_diplomacy()
+
+func refresh_diplomacy() -> void:
+	if _diplo == null or not _diplo.visible or world.diplomacy == null:
+		return
+	for child in _diplo_rows.get_children():
+		child.queue_free()
+	var title := Label.new()
+	title.text = "DIPLOMACY"
+	title.add_theme_font_size_override("font_size", 18)
+	_diplo_rows.add_child(title)
+	var d: Node = world.diplomacy
+	for id in range(1, d.n):
+		var row := VBoxContainer.new()
+		var head := Label.new()
+		var score: float = d.rel(0, id)
+		head.text = "%s   relation %+d   %s   army %d" % [d.name_of(id), int(score), d.status_text(id), d.army_strength(id)]
+		head.add_theme_color_override("font_color", Color(world.map.nations[id].color).lerp(Color.WHITE, 0.45))
+		row.add_child(head)
+		if not d.defeated(id):
+			var buttons := HBoxContainer.new()
+			if d.at_war(0, id):
+				_diplo_button(buttons, "Offer peace", d.offer_peace.bind(id))
+			else:
+				_diplo_button(buttons, "Gift $250", d.gift.bind(id))
+				if not d.pact[0][id]:
+					_diplo_button(buttons, "Trade pact", d.propose_pact.bind(id))
+				if not d.nap[0][id]:
+					_diplo_button(buttons, "Non-aggression", d.propose_nap.bind(id))
+				if not d.allied(0, id):
+					_diplo_button(buttons, "Alliance", d.propose_alliance.bind(id))
+				_diplo_button(buttons, "Declare war", _declare.bind(id))
+			if d.allied(0, id):
+				for enemy in range(1, d.n):
+					if d.at_war(0, enemy) and not d.at_war(id, enemy):
+						_diplo_button(buttons, "Call to war vs %s" % d.name_of(enemy).split(" ")[0], d.request_joint_war.bind(id, enemy))
+			row.add_child(buttons)
+		_diplo_rows.add_child(row)
+
+func _declare(id: int) -> String:
+	world.diplomacy.declare_war(0, id)
+	return ""
+
+func _diplo_button(parent: Control, text: String, action: Callable) -> void:
+	var b := Button.new()
+	b.text = text
+	b.pressed.connect(func():
+		var message: String = action.call()
+		if message != "":
+			notice(message)
+		refresh_diplomacy())
+	parent.add_child(b)
+
+## A foreign government's proposal with Accept / Decline buttons.
+func ask(text: String, accept: Callable, decline: Callable) -> void:
+	_letters.append([text, accept, decline])
+	if _letter_box == null:
+		_show_letter()
+
+func _show_letter() -> void:
+	if _letters.is_empty():
+		return
+	var letter: Array = _letters.pop_front()
+	_letter_box = _box(Vector2.ZERO)
+	_letter_box.anchor_left = 0.5
+	_letter_box.anchor_right = 0.5
+	_letter_box.anchor_top = 0.5
+	_letter_box.anchor_bottom = 0.5
+	_letter_box.offset_left = -40  # right of centre, clear of the diplomacy panel
+	_letter_box.offset_right = 480
+	_letter_box.offset_top = -150
+	var column := VBoxContainer.new()
+	_letter_box.add_child(column)
+	var heading := Label.new()
+	heading.text = "FOREIGN OFFICE"
+	heading.add_theme_color_override("font_color", GOLD)
+	column.add_child(heading)
+	var body := Label.new()
+	body.text = letter[0]
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.custom_minimum_size = Vector2(480, 0)
+	column.add_child(body)
+	var buttons := HBoxContainer.new()
+	column.add_child(buttons)
+	for choice in [["Accept", letter[1]], ["Decline", letter[2]]]:
+		var b := Button.new()
+		b.text = choice[0]
+		var action: Callable = choice[1]
+		b.pressed.connect(func():
+			action.call()
+			_letter_box.queue_free()
+			_letter_box = null
+			refresh_diplomacy()
+			_show_letter())
+		buttons.add_child(b)
+
 ## Victory or defeat: a large banner across the middle of the screen.
 func show_end(title: String, subtitle: String) -> void:
 	var box := _box(Vector2.ZERO)
@@ -220,6 +347,8 @@ func notice(text: String) -> void:
 	var label := Label.new()
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(404, 0)
 	label.add_theme_color_override("font_color", Color("f1e3b4"))
 	label.add_theme_color_override("font_outline_color", Color("111f25"))
 	label.add_theme_constant_override("outline_size", 6)

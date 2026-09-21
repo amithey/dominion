@@ -72,6 +72,15 @@ It uses the Forward+ renderer:
   toward neighbouring districts of the same owner and toward entering roads, which
   hand over to them at the hex edge. Placement snaps to hexes (one district each);
   AI cities grow hex by hex next to their own districts.
+- Diplomacy (diplomacy.gd), core of diplomacy.js: relation scores and war, alliance,
+  trade pact and non-aggression treaties between every pair of nations. The
+  Diplomacy panel (G) offers peace, gifts ($250), trade pacts (+20 needed; $40 every
+  10 s for both), non-aggression pacts (+10), alliances (+55), declaring war and
+  calling allies into a war. AI nations feud, fight and sign ceasefires with each
+  other; an AI starts a war on the player only when relations are bad enough (and
+  never through a pact), and aggressive difficulties sour faster. Allies of an
+  attacked nation may join. Foreign governments write with proposals (ceasefire,
+  pact, alliance, tribute) to accept or decline. Attack waves target any enemy.
 - Supply (logistics.gd), ported from logistics.js: roads ($12 per hex) and railways
   ($22 + 3 iron, tougher) join neighbouring 12 m hexes, planned by A* around sea,
   steep grades and rival districts. A settlement (capital, village, city) is supplied
@@ -101,7 +110,8 @@ Diagnostics: `--script res://tools/inspect.gd -- <model>` prints a model's nodes
 clips; `-- --capture-views` writes `build/view-*.png`; `-- --feature-probe --no-vsync`
 prints the frame cost of each expensive feature; `-- --capture-battle` saves five
 frames of the battle demo to `build/battle-*.png` and records its soundtrack to
-`build/battle-audio.wav`. `-- --logistics-test` checks that a new village is cut off, supplied by a road,
+`build/battle-audio.wav`. `-- --diplomacy-test` checks gifts, pact income, pacts blocking war, allies joining
+and peace (`--capture-diplomacy`). `-- --logistics-test` checks that a new village is cut off, supplied by a road,
 cut by shelling, repaired at a discount and rail-boosted (`--capture-logistics`).
 `-- --ai-test` runs hard AI in fast time and requires it to build, train, go to war
 and reach the player's base, then checks the victory screen (`--capture-ai` saves
@@ -113,7 +123,7 @@ never through water. Regenerate sounds with
 
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 
-Not yet ported: diplomacy, territory, aircraft and ships, saving and Steam integration. Units are still the stylised
+Not yet ported: espionage, market trade routes, territory, aircraft and ships, saving and Steam integration. Units are still the stylised
 Quaternius models; realistic units need new art.
 
 ## Validation

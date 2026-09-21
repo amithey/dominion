@@ -117,6 +117,7 @@ var nav_open := PackedByteArray()
 var nav_n := 0
 var site_timer := 0.0
 var ai: Node
+var diplomacy: Node
 var game_over := ""
 var logistics: Node3D
 var districts: RefCounted
@@ -215,6 +216,9 @@ func _ready() -> void:
 		ai_speed = 12.0
 	ai = preload("res://scripts/ai.gd").new()
 	add_child(ai)
+	diplomacy = preload("res://scripts/diplomacy.gd").new()
+	add_child(diplomacy)
+	diplomacy.setup(self, map.nations.size(), float(map.ai.difficulty.get(difficulty, map.ai.difficulty.easy).aggression), ai_speed)
 	if bench_units == 0 and not ("--capture-views" in OS.get_cmdline_user_args() or "--capture-battle" in OS.get_cmdline_user_args() or "--economy-test" in OS.get_cmdline_user_args() or "--capture-economy" in OS.get_cmdline_user_args() or "--nav-test" in OS.get_cmdline_user_args() or "--logistics-test" in OS.get_cmdline_user_args() or "--capture-logistics" in OS.get_cmdline_user_args()):
 		ai.setup(self, map.ai, difficulty, ai_speed)
 	selection_marker = MeshInstance3D.new()
@@ -250,6 +254,8 @@ func _ready() -> void:
 		await economy_test(false)
 	elif "--ai-test" in args:
 		await ai_test(false)
+	elif "--diplomacy-test" in args or "--capture-diplomacy" in args:
+		await diplomacy_test("--capture-diplomacy" in args)
 	elif "--logistics-test" in args:
 		await logistics_test(false)
 	elif "--capture-logistics" in args:
@@ -1523,6 +1529,59 @@ func transport_click(screen: Vector2, keep: bool) -> void:
 	else:
 		cancel_transport()
 
+## Checks diplomacy: gifts warm relations, a trade pact pays both sides, a
+## non-aggression pact stops AI wars, an ally joins the player's war, and peace
+## can be made. Foreign letters get Accept/Decline.
+func diplomacy_test(capture: bool) -> void:
+	var d: Node = diplomacy
+	economy.res.money = 5000.0
+	for id in range(1, d.n):
+		d.set_score(0, id, 0.0)
+	var before: float = d.rel(0, 1)
+	d.gift(1)
+	var gift_ok: bool = d.rel(0, 1) > before
+	d.set_score(0, 1, 30.0)
+	d.propose_pact(1)
+	var money: float = economy.res.money
+	d.tick()
+	var pact_ok: bool = d.pact[0][1] and economy.res.money >= money + 40.0
+	d.set_score(0, 2, 60.0)
+	d.nap[0][2] = true
+	d.nap[2][0] = true
+	var nap_ok: bool = not d.ai_wants_war(2, 0)
+	d.set_score(0, 3, 90.0)
+	while not d.allied(0, 3):
+		d.propose_alliance(3)
+	d.set_score(0, 1, -50.0)
+	d.declare_war(1, 0)
+	var joined := false
+	for i in range(20):
+		d.request_joint_war(3, 1)
+		if d.at_war(3, 1):
+			joined = true
+			break
+	var hostile_ok := hostile(0, 1) and hostile(3, 1) and not hostile(0, 2)
+	d.set_score(0, 2, 60.0)
+	if capture:
+		hud.toggle_diplomacy()
+		hud.ask("Golden Dominion proposes a trade pact ($40 every 10 s for both).", func(): pass, func(): pass)
+		cam_focus = start
+		for i in range(60):
+			await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png("res://build/diplomacy-0.png")
+	var peace := false
+	for i in range(40):
+		if d.at_war(0, 1):
+			d.offer_peace(1)
+		else:
+			peace = true
+			break
+	print("gift %s, pact pays %s, NAP blocks war %s, ally joins %s, hostility %s, peace %s" % [gift_ok, pact_ok, nap_ok, joined, hostile_ok, peace])
+	var ok: bool = gift_ok and pact_ok and nap_ok and joined and hostile_ok and peace
+	print("DIPLOMACY_TEST %s" % ("PASS" if ok else "FAIL"))
+	get_tree().quit(0 if ok else 1)
+
 ## Checks the supply rules: a new village is cut off until a road links it,
 ## breaks when the road is shelled, recovers when repaired, and a railway
 ## gives it the production bonus.
@@ -1832,7 +1891,7 @@ func ai_test(capture: bool) -> void:
 				cam_focus = home + Vector3(0, 0, 20)
 		if reached and most_buildings >= 5 and not capture:
 			break
-	var wars: int = ai.nations.filter(func(n): return n.at_war).size()
+	var wars: int = ai.nations.filter(func(n): return diplomacy.at_war(0, n.id)).size()
 	var ai_links: int = logistics.edges.values().filter(func(e): return e.owner > 0).size()
 	var ai_villages: int = buildings.filter(func(b): return b.owner > 0 and b.key == "villageCenter").size()
 	print("AI: most buildings %d, most units %d, nations at war %d, reached your base %s, villages %d, road links %d" % [most_buildings, most_units, wars, reached, ai_villages, ai_links])
@@ -1853,17 +1912,13 @@ func ai_test(capture: bool) -> void:
 
 # ---------------------------------------------------------------- combat
 
-## Nations at war fight; AI nations are at peace with each other for now.
+## Nations at war fight (diplomacy.gd decides who is at war with whom).
 func hostile(a: int, b: int) -> bool:
 	if a == b:
 		return false
 	if ai == null or ai.nations.is_empty():
 		return true  # sandbox scenes without AI: every other owner is an enemy
-	if a == 0:
-		return ai.at_war(b)
-	if b == 0:
-		return ai.at_war(a)
-	return false
+	return diplomacy.at_war(a, b)
 
 # Distance to what can be hit: a building's walls, not its centre.
 func gap_to(unit: Dictionary, target: Dictionary) -> float:
@@ -2303,6 +2358,8 @@ func enemy_under(screen: Vector2) -> Variant:
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_B:
 		start_battle()
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_G:
+		hud.toggle_diplomacy()
 	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE:
 		cancel_transport()
 		cancel_placement()

@@ -5,9 +5,10 @@ extends Node
 ## adaptively, self-builds (no workers), trains from the pool its buildings
 ## allow, rushes every unit home when its capital is threatened, and launches
 ## attack waves at the nearest player asset once it is at war.
-## Diplomacy is not ported yet: an AI goes to war with the player when its
-## attack timer comes up and its aggression roll succeeds, or at once if the
-## player attacks it.
+## War and peace come from diplomacy.gd: an AI starts a war when its attack
+## timer comes up and it wants one (relations below -35, or its aggression
+## roll against a player it dislikes), and at once if the player attacks it.
+## Attack waves go at the nearest building of any nation it is at war with.
 
 var world: Node
 var cfg: Dictionary      # the difficulty row
@@ -40,18 +41,17 @@ func hq(id: int):
 	return null
 
 func at_war(id: int) -> bool:
-	for n in nations:
-		if n.id == id:
-			return n.at_war
-	return false
+	return world.diplomacy.at_war(0, id)
 
 ## The player struck this nation (or it chose war).
 func declare_war(id: int, provoked: bool) -> void:
 	for n in nations:
-		if n.id == id and not n.at_war and not n.defeated:
-			n.at_war = true
+		if n.id == id and not at_war(id) and not n.defeated:
+			if provoked:
+				world.diplomacy.declare_war(0, id, "You attacked %s: you are at war!" % n.name)
+			else:
+				world.diplomacy.declare_war(id, 0)
 			n.next_attack = minf(n.next_attack, float(cfg.firstAttack) * 0.35 / n.speed)
-			world.hud.notice("%s %s" % [n.name, "retaliates: you are at war!" if provoked else "has declared war on you!"])
 
 func _physics_process(delta: float) -> void:
 	if world == null or world.economy == null:
@@ -115,7 +115,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 					var a := randf() * TAU
 					var at: Vector3 = home.root.position + Vector3(cos(a), 0, sin(a)) * (home.footprint * 0.6 + 8.0)
 					world.spawn_unit(key, at, n.id)
-		n.next_train = float(cfg.trainEvery) * randf_range(0.8, 1.2) * (0.55 if n.at_war else 1.0) / s
+		n.next_train = float(cfg.trainEvery) * randf_range(0.8, 1.2) * (0.55 if not world.diplomacy.enemies_of(n.id).is_empty() else 1.0) / s
 
 	# Defence: a threat near the capital brings every unit home.
 	if n.next_defend <= 0.0:
@@ -132,16 +132,27 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	# Attack waves.
 	if n.next_attack <= 0.0:
 		n.next_attack = float(cfg.firstAttack) * randf_range(0.55, 1.05) / s
-		if not n.at_war and randf() < float(cfg.aggression):
-			declare_war(n.id, false)
-		if n.at_war:
+		var d: Node = world.diplomacy
+		if d.enemies_of(n.id).is_empty() and randf() < float(cfg.aggression):
+			# Pick the most hated neighbour it is willing to fight.
+			var worst := -1
+			for i in range(d.n):
+				if i != n.id and not d.defeated(i) and d.ai_wants_war(n.id, i) and (worst < 0 or d.rel(n.id, i) < d.rel(n.id, worst)):
+					worst = i
+			if worst == 0:
+				declare_war(n.id, false)
+			elif worst > 0:
+				d.declare_war(n.id, worst)
+		var enemies: Array = d.enemies_of(n.id)
+		if not enemies.is_empty():
 			var army: Array = world.units.filter(func(u): return u.owner == n.id and not u.dead and u.dmg > 0.0)
 			var guard: int = mini(3, army.size() / 4)
 			var squad: Array = army.slice(guard, guard + maxi(int(cfg.squad), int(army.size() * 0.6)))
-			var target = nearest_player_asset(home.root.position)
+			var target = nearest_enemy_asset(home.root.position, enemies)
 			if squad.size() >= maxi(3, int(cfg.squad) - 2) and target != null:
 				world.order_move(squad, target.root.position, true)
-				world.hud.notice("%s forces are advancing!" % n.name)
+				if target.owner == 0:
+					world.hud.notice("%s forces are advancing!" % n.name)
 			n.next_attack = minf(n.next_attack, float(cfg.firstAttack) * 0.35 / s)
 
 # Money-equivalent price (ai.js weights materials the AI does not stockpile).
@@ -194,11 +205,11 @@ func find_spot(n: Dictionary, home: Dictionary, key: String):
 			return at
 	return null
 
-func nearest_player_asset(from: Vector3):
+func nearest_enemy_asset(from: Vector3, enemies: Array):
 	var best = null
 	var best_d := INF
 	for b in world.buildings:
-		if b.owner == 0 and not b.dead:
+		if b.owner in enemies and not b.dead:
 			var d: float = b.root.position.distance_to(from)
 			if d < best_d:
 				best_d = d
