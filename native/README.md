@@ -30,8 +30,14 @@ It uses the Forward+ renderer:
 - Birch trees as MultiMeshes in 96 m cells, swaying with per-tree wind; grass tufts
   (real blade triangles) drawn near the camera; drifting cloud shadows.
 - Buildings on concrete plinths sunk into the slope.
-- Soldiers: matte field uniforms per nation, a single rifle (the source model holds
-  all 14 weapons), terrain following, run speed matched to the clip.
+- Soldiers: the realistic, photo-textured Mixamo soldier already in the repository
+  (`assets/models/three/Soldier.glb`, also used by the browser game), its suit tinted to each
+  nation's field colour (olive, tan, grey, brown), with a shoulder patch in the flag's
+  colour. Rifles, sniper rifles and SMGs from the Quaternius kit are held in the right
+  hand; rocket launchers are slung across the back. The body topples when killed (the
+  model has no death clip). Terrain following, run speed matched to the clip.
+  `-- --toon-infantry` restores the stylised soldiers; `-- --capture-infantry` saves
+  close-ups to `build/infantry-*.png`. 64-unit benchmark: 21-23 FPS either way on Iris Xe.
 - Tanks: weathered army paint with road dust low on the hull (vehicle.gdshader),
   a traversing turret, track animation only while driving, dust trails, and
   pitch and roll with the ground.
@@ -181,8 +187,8 @@ never through water. Regenerate sounds with
 
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 
-Not yet ported: research and discoveries, and Steam integration. Units are still the stylised
-Quaternius models; realistic units need new art.
+Not yet ported: research and discoveries, and Steam integration. Vehicles, ships and
+aircraft are still stylised (Quaternius tank, modelled craft); realistic vehicles need new art.
 
 ## Refreshing the map data
 

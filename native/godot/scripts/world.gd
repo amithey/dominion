@@ -19,6 +19,9 @@ const MAP_PATH := "res://data/map-seed1.json"
 const SOLDIER_HEIGHT := 2.35       # the browser's readable RTS scale
 const SOLDIER_SPEED := 5.2         # metres per second while running
 const RUN_CLIP_SPEED := 4.6        # speed the run clip was authored for (no foot sliding)
+const REAL_RUN_CLIP_SPEED := 6.4   # the same for the realistic soldier's run, at game scale
+# Weapons carried by the realistic soldier: length in centimetres (skeleton units).
+const WEAPON_LENGTH := {"AK": 88.0, "Sniper_2": 118.0, "RocketLauncher": 92.0, "SMG": 62.0}
 const TANK_SPEED := 4.2
 const BUILDING_MODELS := {
 	"hq": "res://assets/downtown/Building_Medium_2_001.gltf",
@@ -65,6 +68,8 @@ var selection_box: Panel
 var dragging := false
 var drag_start := Vector2.ZERO
 var soldier_scene: PackedScene
+var realistic_scene: PackedScene   # the textured Mixamo soldier; null falls back to the stylised one
+var gun_meshes := {}               # weapon name -> Mesh taken from the stylised kit
 var tank_scene: PackedScene
 
 # Benchmark state (fields match js/benchmark.js)
@@ -181,6 +186,8 @@ func _ready() -> void:
 	craft = preload("res://scripts/craft.gd").new()
 	building_defs = map.get("buildingDefs", {})
 	soldier_scene = load("res://assets/CharacterSoldier.glb")
+	if ResourceLoader.exists("res://assets/Soldier.glb") and not "--toon-infantry" in OS.get_cmdline_user_args():
+		realistic_scene = load("res://assets/Soldier.glb")
 	worker_scene = load("res://assets/Worker.glb")
 	tank_scene = load("res://assets/Tank.fbx")
 
@@ -327,6 +334,8 @@ func _ready() -> void:
 		await save_test()
 	elif "--air-sea-test" in args or "--capture-air-sea" in args:
 		await air_sea_test("--capture-air-sea" in args)
+	elif "--capture-infantry" in args:
+		await capture_infantry()
 	elif "--systems-test" in args or "--capture-systems" in args:
 		await systems_test("--capture-systems" in args)
 	elif "--diplomacy-test" in args or "--capture-diplomacy" in args:
@@ -963,11 +972,14 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	if key in NAVAL or key in AIR:
 		return spawn_craft(key, at, owner)
 	var vehicle := key in VEHICLES
+	var realistic := not vehicle and key != "worker" and realistic_scene != null
 	var node := Node3D.new()
-	var model: Node3D = (tank_scene if vehicle else (worker_scene if key == "worker" else soldier_scene)).instantiate()
+	var model: Node3D = (tank_scene if vehicle else (worker_scene if key == "worker" else (realistic_scene if realistic else soldier_scene))).instantiate()
 	node.add_child(model)
 	if vehicle:
 		model.rotation.y = PI * 0.5  # the Quaternius tank's gun points along -X; units face +Z
+	elif realistic:
+		model.rotation.y = PI  # the Mixamo soldier faces -Z
 	var bounds := model_bounds(model)
 	var factor: float = (6.0 / maxf(maxf(bounds.size.x, bounds.size.z), 0.01)) if vehicle else (SOLDIER_HEIGHT / maxf(bounds.size.y, 0.01))
 	model.scale = Vector3.ONE * factor
@@ -981,6 +993,8 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		node.add_child(dust)
 	elif key == "worker":
 		dress_worker(model)
+	elif realistic:
+		dress_realistic(model, owner, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher", "commando": "SMG"}.get(key, "AK"))
 	else:
 		dress_soldier(model, owner, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher"}.get(key, "AK"))
 	var ring := MeshInstance3D.new()
@@ -1005,6 +1019,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		"speed": TANK_SPEED if vehicle else SOLDIER_SPEED, "heading": 0.0, "moving": false,
 		"turret": turret, "turret_yaw": 0.0, "dust": dust, "phase": at.x * 0.37 + at.z * 0.21,
 		"meshes": model.find_children("*", "MeshInstance3D", true, false) if vehicle else [],
+		"model": model, "clip_speed": REAL_RUN_CLIP_SPEED if realistic else RUN_CLIP_SPEED,
 	}
 	# Combat stats come from the browser's config.js via the map export.
 	var def: Dictionary = unit_defs.get(key, {"hp": 100, "dmg": 10, "range": 13, "cooldown": 1.0, "aggro": 24})
@@ -1101,6 +1116,86 @@ func dress_soldier(model: Node3D, owner: int, weapon_name := "AK") -> void:
 							return skin)
 			if material:
 				mesh_instance.set_surface_override_material(i, material)
+
+# The realistic soldier: its photo-textured combat suit tinted toward the
+# nation's field colour, and a weapon from the stylised kit in the right hand.
+func dress_realistic(model: Node3D, owner: int, weapon_name: String) -> void:
+	var u: Dictionary = UNIFORMS[owner % UNIFORMS.size()]
+	var nation: Color = Color(map.nations[owner].color) if owner < map.nations.size() else Color.WHITE
+	for mesh_instance in model.find_children("*", "MeshInstance3D", true, false):
+		for i in range(mesh_instance.mesh.get_surface_count()):
+			var source: Material = mesh_instance.mesh.surface_get_material(i)
+			if not (source is StandardMaterial3D):
+				continue
+			var visor: bool = source.resource_name.to_lower().contains("visor")
+			var key := "real:%d:%s" % [owner, source.resource_name]
+			mesh_instance.set_surface_override_material(i, cached_material(key, func():
+				var m: StandardMaterial3D = source.duplicate()
+				if visor:
+					m.albedo_color = Color(0.12, 0.13, 0.12).lerp(nation, 0.25)
+					m.roughness = 0.25
+					m.metallic = 0.4
+				else:
+					# The nation's field colour over the texture's own light and shade.
+					m.albedo_color = u.main * 2.3
+					m.roughness = maxf(m.roughness, 0.78)
+					m.metallic = 0.0
+				return m))
+	var skeleton: Skeleton3D = model.find_children("*", "Skeleton3D", true, false)[0]
+	# A shoulder patch in the flag's colour on each upper arm tells the sides apart.
+	for side in ["Left", "Right"]:
+		var arm := BoneAttachment3D.new()
+		arm.bone_name = "mixamorig_%sArm" % side
+		skeleton.add_child(arm)
+		var patch := MeshInstance3D.new()
+		var patch_mesh := BoxMesh.new()
+		patch_mesh.size = Vector3(10.5, 7.0, 10.5)
+		patch.mesh = patch_mesh
+		patch.material_override = cached_material("patch:%d" % owner, func(): return matte(nation, 0.7))
+		patch.position = Vector3(0, 11.0, 0)
+		arm.add_child(patch)
+	var slung := weapon_name == "RocketLauncher"
+	var hand := BoneAttachment3D.new()
+	hand.bone_name = "mixamorig_Spine2" if slung else "mixamorig_RightHand"
+	skeleton.add_child(hand)
+	var gun := MeshInstance3D.new()
+	gun.mesh = gun_mesh(weapon_name)
+	for i in range(gun.mesh.get_surface_count()):
+		var source: Material = gun.mesh.surface_get_material(i)
+		var name: String = source.resource_name if source else ""
+		gun.set_surface_override_material(i, cached_material("gun:" + name, func(): return matte(Color("4a3526"), 0.8) if name.contains("Wood") else (matte(Color("5a2420"), 0.6) if name == "Red" else matte(Color("262829"), 0.42, 0.65))))
+	# The kit's weapons lie along their longest axis; turn that onto the hand's
+	# grip direction and size it in centimetres.
+	var box := gun.mesh.get_aabb()
+	var long_axis := 0 if box.size.x >= maxf(box.size.y, box.size.z) else (1 if box.size.y >= box.size.z else 2)
+	var k: float = WEAPON_LENGTH.get(weapon_name, 90.0) / maxf(box.size[long_axis], 0.001)
+	var align := Basis()
+	if long_axis == 0:
+		align = Basis(Vector3.UP, -PI * 0.5)
+	elif long_axis == 1:
+		align = Basis(Vector3.RIGHT, PI * 0.5)
+	var grip: Basis = GUN_GRIP
+	var offset: Vector3 = GUN_OFFSET + GUN_GRIP * Vector3(0, 0, WEAPON_LENGTH.get(weapon_name, 90.0) * 0.18)
+	if slung:
+		# Across the back, muzzle up over the right shoulder.
+		grip = Basis(Vector3.BACK, -0.6) * Basis(Vector3.RIGHT, -PI * 0.5)
+		offset = Vector3(0, 8.0, -17.0)
+	var basis := grip * align.scaled(Vector3.ONE * k)
+	gun.transform = Transform3D(basis, offset - basis * box.get_center())
+	hand.add_child(gun)
+
+# The grip in the hand bone's frame (bone Y runs along the fingers).
+const GUN_GRIP := Basis(Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0))
+const GUN_OFFSET := Vector3(0, 9.0, 3.0)
+
+func gun_mesh(weapon_name: String) -> Mesh:
+	if not gun_meshes.has(weapon_name):
+		var kit: Node3D = soldier_scene.instantiate()
+		for mesh_instance in kit.find_children("*", "MeshInstance3D", true, false):
+			if mesh_instance.name == weapon_name:
+				gun_meshes[weapon_name] = mesh_instance.mesh
+		kit.free()
+	return gun_meshes.get(weapon_name)
 
 # Painted, weathered hull; the turret and gun move onto one pivot at the turret
 # centre so the turret can traverse. Returns that pivot.
@@ -1308,7 +1403,7 @@ func animate(unit: Dictionary, moving: bool) -> void:
 		return
 	player.play(clip, 0.25)
 	unit.clip = clip
-	player.speed_scale = (unit.speed / RUN_CLIP_SPEED) if moving else 1.0
+	player.speed_scale = (unit.speed / unit.get("clip_speed", RUN_CLIP_SPEED)) if moving else 1.0
 
 func order_attack(selected: Array, enemy: Dictionary) -> void:
 	for u in selected:
@@ -2122,6 +2217,35 @@ func systems_test(capture: bool) -> void:
 	print("SYSTEMS_TEST %s" % ("PASS" if ok else "FAIL"))
 	get_tree().quit(0 if ok else 1)
 
+## Close-ups of every infantry type of every nation, standing and running.
+func capture_infantry() -> void:
+	var spot := land_point(start, 40.0)
+	var kinds := ["soldier", "sniper", "rocketSoldier", "commando"]
+	var line: Array = []
+	for owner in range(4):
+		for i in range(kinds.size()):
+			var u := spawn_unit(kinds[i], spot + Vector3(i * 2.4 - 3.6, 0, owner * 3.0 - 4.5), owner)
+			u.heading = 0.4
+			place_on_ground(u, u.node.position)
+			line.append(u)
+	var runner := spawn_unit("soldier", spot + Vector3(-6, 0, 8), 0)
+	order_move([runner], spot + Vector3(60, 0, 8))
+	cam_yaw = 0.35
+	await capture_view("res://build/infantry-group.png", spot + Vector3(0, 0, 0), 16.0, 0.32, 50)
+	cam_yaw = 1.4
+	await capture_view("res://build/infantry-side.png", spot + Vector3(-1.2, 0, -4.5), 6.5, 0.18, 20)
+	cam_yaw = 0.4 + PI
+	await capture_view("res://build/infantry-back.png", spot + Vector3(1.2, 0, 0), 9.0, 0.3, 10)
+	cam_yaw = runner.heading + PI * 0.5
+	await capture_view("res://build/infantry-run.png", runner.node.position, 7.0, 0.2, 2)
+	damage(line[0], 9999.0, line[1])
+	damage(line[5], 9999.0, line[1])
+	for i in range(60):
+		await get_tree().physics_frame
+	cam_yaw = 0.35
+	await capture_view("res://build/infantry-dead.png", spot + Vector3(0, 0, -2), 12.0, 0.45, 5)
+	get_tree().quit()
+
 ## Frames a point and saves a screenshot.
 func capture_view(path: String, focus: Vector3, dist: float, pitch: float, frames: int) -> void:
 	cam_focus = focus
@@ -2818,6 +2942,11 @@ func kill(unit: Dictionary) -> void:
 		unit.player.get_animation(unit.death_clip).loop_mode = Animation.LOOP_NONE
 		unit.player.speed_scale = 1.0
 		unit.player.play(unit.death_clip, 0.1)
+	else:
+		# No death clip: the body goes limp and topples, forwards or back.
+		unit.fall = 1.0 if randf() < 0.5 else -1.0
+		if unit.player:
+			unit.player.speed_scale = 0.15
 
 # A destroyed building collapses into charred rubble that burns for a while.
 func destroy_building(b: Dictionary) -> void:
@@ -2891,6 +3020,11 @@ func update_dead(unit: Dictionary, delta: float, index: int) -> void:
 		return
 	if unit.vehicle:
 		return
+	if unit.has("fall"):
+		var k := minf(unit.dead_time / 0.6, 1.0)
+		unit.model.rotation.x = unit.fall * PI * 0.47 * k * k
+		if k >= 1.0 and unit.player and unit.player.is_playing():
+			unit.player.pause()
 	if unit.dead_time > 7.0:
 		unit.node.position.y -= delta * 0.35
 	if unit.dead_time > 11.0:
