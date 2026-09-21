@@ -25,6 +25,8 @@ Copy-Assets '.' @(
 )
 Copy-Assets 'Textures' @('assets\models\kenney-city\Textures\colormap.png')
 Copy-Assets 'terrain' @('assets\textures\terrain\*.jpg')
+Copy-Assets 'armor' @('assets\textures\units\armor_*.jpg')
+Copy-Assets 'architecture' @('assets\textures\architecture\concrete_*.jpg')
 Copy-Assets 'nature' @('assets\models\quaternius-nature\BirchTree_*')
 Copy-Assets 'downtown' @('assets\models\quaternius-downtown\Building_Medium_2_001.*', 'assets\models\quaternius-downtown\T_*.png')
 Write-Output 'Desktop prototype assets prepared from the existing local library.'

@@ -21,6 +21,7 @@ uniform sampler2D noise_tex : filter_linear_mipmap, repeat_enable;
 uniform float tile = 0.16;          // repeats per metre, near scale
 uniform float far_tile = 0.031;     // second, coarser scale that hides repetition
 uniform float sea_level = 0.0;
+uniform float cloud_shadow = 0.3;  // how dark drifting cloud shadows get
 
 varying vec3 world_pos;
 varying vec3 world_normal;
@@ -87,6 +88,10 @@ void fragment() {
 	// Large-scale colour variation: meadows are never one flat green.
 	albedo *= mix(0.84, 1.1, macro);
 	albedo = mix(albedo, albedo * vec3(1.06, 1.0, 0.84), smoothstep(0.55, 0.75, noise(p * 0.0017 + 0.13)) * w.x);
+
+	// Shadows of drifting clouds: large soft patches crossing the land slowly.
+	float cloud = noise(p * 0.0016 + vec2(TIME * 0.0009, TIME * 0.0004));
+	albedo *= 1.0 - cloud_shadow * smoothstep(0.5, 0.68, cloud);
 
 	// Wet band just above the water and a darker, smoother seabed below it.
 	float h = world_pos.y - sea_level;

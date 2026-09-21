@@ -75,6 +75,7 @@ var sun: DirectionalLight3D
 var terrain_node: MeshInstance3D
 var sea_node: MeshInstance3D
 var tree_nodes: Array[Node3D] = []
+var grass_nodes: Array[Node3D] = []
 var noise_texture: NoiseTexture2D
 var quality := "high"
 var fps_time := 0.0
@@ -114,6 +115,8 @@ func _ready() -> void:
 	build_terrain()
 	build_sea()
 	build_trees()
+	if quality != "low":
+		build_grass()
 	for b in map.buildings:
 		place_building(b)
 	for u in map.units:
@@ -345,26 +348,29 @@ func build_trees() -> void:
 				mm.set_instance_transform(i, Transform3D(basis, Vector3(t.x, height_at(t.x, t.z) - 0.15, t.z)) * part.local)
 			var node := MultiMeshInstance3D.new()
 			node.multimesh = mm
-			# The birch leaf texture is autumn yellow; summer foliage reads as a
-			# yellow-green with this tint, like the browser's per-tree colours.
 			if not leaf_materials.has(part.mesh):
-				leaf_materials[part.mesh] = tinted_leaves(part.mesh)
+				leaf_materials[part.mesh] = foliage_mesh(part.mesh)
 			mm.mesh = leaf_materials[part.mesh]
 			add_child(node)
 			tree_nodes.append(node)
 
-# Copy of a tree mesh whose leaf surfaces are tinted (bark is left alone).
-func tinted_leaves(source: Mesh) -> Mesh:
+# Copy of a tree mesh drawn with the wind shader. The birch leaf texture is
+# autumn yellow; the tint turns it into summer yellow-green foliage.
+func foliage_mesh(source: Mesh) -> Mesh:
 	var mesh: Mesh = source.duplicate()
+	var shader: Shader = load("res://shaders/foliage.gdshader")
 	for i in range(mesh.get_surface_count()):
 		var material := mesh.surface_get_material(i) as BaseMaterial3D
 		if material == null:
 			continue
 		var leafy: bool = material.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or "leaf" in material.resource_name.to_lower() or (material.albedo_texture != null and "leaves" in material.albedo_texture.resource_path.to_lower())
-		if leafy:
-			var tinted: BaseMaterial3D = material.duplicate()
-			tinted.albedo_color = Color(0.58, 0.84, 0.42)
-			mesh.surface_set_material(i, tinted)
+		var foliage := ShaderMaterial.new()
+		foliage.shader = shader
+		foliage.set_shader_parameter("albedo_tex", material.albedo_texture)
+		foliage.set_shader_parameter("leaves", leafy)
+		foliage.set_shader_parameter("tint", Color(0.58, 0.84, 0.42) if leafy else material.albedo_color)
+		foliage.set_shader_parameter("alpha_cut", material.alpha_scissor_threshold if leafy else 0.0)
+		mesh.surface_set_material(i, foliage)
 	return mesh
 
 func mesh_transform(root: Node3D, node: Node3D) -> Transform3D:
@@ -375,6 +381,75 @@ func mesh_transform(root: Node3D, node: Node3D) -> Transform3D:
 			result = (current as Node3D).transform * result
 		current = current.get_parent()
 	return result
+
+# ---------------------------------------------------------------- grass
+
+# One tuft of real blade triangles (no alpha texture).
+func make_tuft() -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	for i in range(14):
+		var a := rng.randf() * TAU
+		var base := Vector3(cos(a), 0, sin(a)) * rng.randf() * 0.35
+		var across := Vector3(cos(a + 1.4), 0, sin(a + 1.4))
+		var h := rng.randf_range(0.28, 0.6)
+		var w := rng.randf_range(0.05, 0.09)
+		var lean := Vector3(cos(a), 0, sin(a)) * rng.randf_range(0.05, 0.28)
+		# Normals lean up so tufts light like the ground they stand on.
+		st.set_normal(Vector3.UP.lerp(across.cross(Vector3.UP), 0.3).normalized())
+		st.set_uv(Vector2(0, 0))
+		st.add_vertex(base - across * w)
+		st.set_uv(Vector2(1, 0))
+		st.add_vertex(base + across * w)
+		st.set_uv(Vector2(0.5, 1))
+		st.add_vertex(base + lean + Vector3(0, h, 0))
+	return st.commit()
+
+# Tufts on flat grassland in 32 m cells that are only drawn near the camera.
+func build_grass() -> void:
+	var density := 0.6 if quality == "high" else 0.35
+	var reach := 110.0 if quality == "high" else 75.0
+	var tuft := make_tuft()
+	var material := ShaderMaterial.new()
+	material.shader = load("res://shaders/grass.gdshader")
+	material.set_shader_parameter("noise_tex", noise_texture)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var half := float(map.mapSize) * 0.5
+	var cell := 32.0
+	var per_cell := int(cell * cell * density)
+	var cx := -half
+	while cx < half:
+		var cz := -half
+		while cz < half:
+			var transforms := []
+			for i in range(per_cell):
+				var x := cx + rng.randf() * cell
+				var z := cz + rng.randf() * cell
+				var y := height_at(x, z)
+				if y < 1.8 or normal_at(x, z).y < 0.94:
+					continue
+				var size := rng.randf_range(0.7, 1.35)
+				transforms.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(size, size * rng.randf_range(0.8, 1.2), size)), Vector3(x, y - 0.05, z)))
+			if transforms.size() > 8:
+				var mm := MultiMesh.new()
+				mm.transform_format = MultiMesh.TRANSFORM_3D
+				mm.mesh = tuft
+				mm.instance_count = transforms.size()
+				for i in range(transforms.size()):
+					mm.set_instance_transform(i, transforms[i])
+				var node := MultiMeshInstance3D.new()
+				node.multimesh = mm
+				node.material_override = material
+				node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				node.visibility_range_end = reach
+				node.visibility_range_end_margin = 12.0
+				add_child(node)
+				grass_nodes.append(node)
+			cz += cell
+		cx += cell
 
 # ---------------------------------------------------------------- buildings
 
@@ -412,12 +487,12 @@ func place_building(b: Dictionary) -> void:
 	box.size = Vector3(footprint * 1.04, highest - lowest + 1.2, footprint * 1.04)
 	plinth.mesh = box
 	var stone := StandardMaterial3D.new()
-	stone.albedo_texture = load("res://assets/terrain/rock_color.jpg")
+	stone.albedo_texture = load("res://assets/architecture/concrete_diffuse.jpg")
 	stone.normal_enabled = true
-	stone.normal_texture = load("res://assets/terrain/rock_normal.jpg")
+	stone.normal_texture = load("res://assets/architecture/concrete_normal.jpg")
+	stone.roughness_texture = load("res://assets/architecture/concrete_roughness.jpg")
 	stone.uv1_triplanar = true
-	stone.uv1_scale = Vector3.ONE * 0.25
-	stone.albedo_color = Color("c9c3b4")
+	stone.uv1_scale = Vector3.ONE * 0.18
 	plinth.material_override = stone
 	plinth.position.y = -box.size.y * 0.5 + 0.12
 	root.add_child(plinth)
@@ -430,11 +505,21 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	var node := Node3D.new()
 	var model: Node3D = (tank_scene if vehicle else soldier_scene).instantiate()
 	node.add_child(model)
+	if vehicle:
+		model.rotation.y = PI * 0.5  # the Quaternius tank's gun points along -X; units face +Z
 	var bounds := model_bounds(model)
 	var factor: float = (6.0 / maxf(maxf(bounds.size.x, bounds.size.z), 0.01)) if vehicle else (SOLDIER_HEIGHT / maxf(bounds.size.y, 0.01))
 	model.scale = Vector3.ONE * factor
 	model.position.y = -bounds.position.y * factor
 	add_child(node)
+	var turret: Node3D = null
+	var dust: GPUParticles3D = null
+	if vehicle:
+		turret = dress_vehicle(model, owner)
+		dust = make_dust()
+		node.add_child(dust)
+	else:
+		dress_soldier(model, owner)
 	var ring := MeshInstance3D.new()
 	var torus := TorusMesh.new()
 	torus.inner_radius = 1.25 if not vehicle else 3.3
@@ -455,11 +540,13 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		"node": node, "ring": ring, "vehicle": vehicle, "selected": false, "target": null,
 		"player": players[0] if not players.is_empty() else null, "clip": "", "owner": owner,
 		"speed": TANK_SPEED if vehicle else SOLDIER_SPEED, "heading": 0.0, "moving": false,
+		"turret": turret, "turret_yaw": 0.0, "dust": dust, "phase": at.x * 0.37 + at.z * 0.21,
+		"meshes": model.find_children("*", "MeshInstance3D", true, false) if vehicle else [],
 	}
 	if unit.player:
 		# Looked up once: searching the clip list every frame was most of the CPU time.
-		unit.run_clip = find_clip(unit.player, ["run_gun", "run"])
-		unit.idle_clip = find_clip(unit.player, ["idle_gun", "idle"])
+		unit.run_clip = find_clip(unit.player, ["tank_forward"] if vehicle else ["run_gun", "run"])
+		unit.idle_clip = "" if vehicle else find_clip(unit.player, ["idle_gun", "idle"])
 		for clip in [unit.run_clip, unit.idle_clip]:
 			if clip != "":
 				unit.player.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
@@ -467,6 +554,157 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	units.append(unit)
 	animate(unit, false)
 	return unit
+
+# Uniform colours per nation: olive, desert tan, urban grey, woodland brown.
+const UNIFORMS := [
+	{"main": Color("5d6446"), "pants": Color("4c5139"), "gear": Color("55594a")},
+	{"main": Color("9a8a66"), "pants": Color("857656"), "gear": Color("7d7462")},
+	{"main": Color("5f6668"), "pants": Color("4c5254"), "gear": Color("585d5f")},
+	{"main": Color("6a5a44"), "pants": Color("514536"), "gear": Color("5a5040")},
+]
+const VEHICLE_PAINT := [Color("3a4029"), Color("7a6b4b"), Color("4a4f4f"), Color("4d4131")]
+var unit_materials := {}
+
+func cached_material(key: String, make: Callable) -> Material:
+	if not unit_materials.has(key):
+		unit_materials[key] = make.call()
+	return unit_materials[key]
+
+func matte(color: Color, roughness := 0.88, metallic := 0.0) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = color
+	m.roughness = roughness
+	m.metallic = metallic
+	return m
+
+# The Quaternius soldier ships holding all 14 weapons at once; keep the rifle.
+# Its saturated toy colours become matte field uniform in the nation's colour.
+func dress_soldier(model: Node3D, owner: int) -> void:
+	var u: Dictionary = UNIFORMS[owner % UNIFORMS.size()]
+	for mesh_instance in model.find_children("*", "MeshInstance3D", true, false):
+		var weapon: bool = mesh_instance.get_parent().name == "Index1_R"
+		if weapon and mesh_instance.name != "AK":
+			mesh_instance.visible = false
+			continue
+		for i in range(mesh_instance.mesh.get_surface_count()):
+			var source: Material = mesh_instance.mesh.surface_get_material(i)
+			var name: String = source.resource_name if source else ""
+			var key := "%d:%s:%s" % [owner, name, weapon]
+			var material: Material = null
+			if weapon:
+				material = cached_material(key, func(): return matte(Color("5a3f2a"), 0.8) if name == "Wood" else matte(Color("2c2e2f"), 0.45, 0.6))
+			else:
+				match name:
+					"Character_Main": material = cached_material(key, func(): return matte(u.main))
+					"Pants": material = cached_material(key, func(): return matte(u.pants))
+					"Grey": material = cached_material(key, func(): return matte(u.gear, 0.8))
+					"Black": material = cached_material(key, func(): return matte(Color("1e201c"), 0.75))
+					"DarkGrey": material = cached_material(key, func(): return matte(Color("2f322d"), 0.8))
+					"Skin":
+						material = cached_material(key, func():
+							var skin: StandardMaterial3D = (source as StandardMaterial3D).duplicate() if source is StandardMaterial3D else matte(Color("b08560"))
+							skin.roughness = 0.65
+							skin.metallic = 0.0
+							return skin)
+			if material:
+				mesh_instance.set_surface_override_material(i, material)
+
+# Painted, weathered hull; the turret and gun move onto one pivot at the turret
+# centre so the turret can traverse. Returns that pivot.
+func dress_vehicle(model: Node3D, owner: int) -> Node3D:
+	var paint: Color = VEHICLE_PAINT[owner % VEHICLE_PAINT.size()]
+	var shader: Shader = load("res://shaders/vehicle.gdshader")
+	var shades := {"Main": 1.0, "Main_Light": 1.08, "Main_Dark": 0.78, "Main_Details": 0.5, "Wheels": 0.4}
+	for mesh_instance in model.find_children("*", "MeshInstance3D", true, false):
+		for i in range(mesh_instance.mesh.get_surface_count()):
+			var source: Material = mesh_instance.mesh.surface_get_material(i)
+			var name: String = source.resource_name if source else "Main"
+			var key := "vehicle:%d:%s" % [owner, name]
+			var material := cached_material(key, func():
+				var m := ShaderMaterial.new()
+				m.shader = shader
+				m.set_shader_parameter("noise_tex", noise_texture)
+				m.set_shader_parameter("paint", paint)
+				m.set_shader_parameter("shade", shades.get(name, 1.0))
+				m.set_shader_parameter("metal", 1.0 if name in ["Main_Details", "Wheels"] else 0.0)
+				return m)
+			mesh_instance.set_surface_override_material(i, material)
+	var turret := model.get_node_or_null("Tank_Turret") as Node3D
+	var gun := model.get_node_or_null("Tank_Gun") as Node3D
+	if not turret:
+		return null
+	var box: AABB = turret.transform * turret.get_aabb()
+	var pivot := Node3D.new()
+	pivot.name = "TurretPivot"
+	model.add_child(pivot)
+	pivot.position = box.get_center()
+	# FBX models arrive rotated from Z-up, so the model's own Y axis is not
+	# vertical: traverse around world-up expressed in the model's space.
+	pivot.set_meta("axis", (model.transform.basis.orthonormalized().inverse() * Vector3.UP).normalized())
+	for part in [turret, gun]:
+		if part:
+			var local: Transform3D = pivot.transform.affine_inverse() * part.transform
+			part.get_parent().remove_child(part)
+			pivot.add_child(part)
+			part.transform = local
+	return pivot
+
+# Dust kicked up behind the tracks while a vehicle drives.
+var dust_process: ParticleProcessMaterial
+var dust_mesh: QuadMesh
+func make_dust() -> GPUParticles3D:
+	if not dust_process:
+		dust_process = ParticleProcessMaterial.new()
+		dust_process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+		dust_process.emission_box_extents = Vector3(1.6, 0.2, 0.4)
+		dust_process.direction = Vector3(0, 1, -0.6)
+		dust_process.spread = 35
+		dust_process.initial_velocity_min = 0.5
+		dust_process.initial_velocity_max = 1.4
+		dust_process.gravity = Vector3(0, 0.15, 0)
+		dust_process.damping_min = 0.6
+		dust_process.damping_max = 1.2
+		dust_process.scale_min = 0.9
+		dust_process.scale_max = 1.6
+		var grow := Curve.new()
+		grow.add_point(Vector2(0, 0.5))
+		grow.add_point(Vector2(1, 1.0))
+		var grow_tex := CurveTexture.new()
+		grow_tex.curve = grow
+		dust_process.scale_curve = grow_tex
+		var fade := Gradient.new()
+		fade.set_color(0, Color(0.55, 0.49, 0.38, 0.26))
+		fade.set_color(1, Color(0.6, 0.55, 0.45, 0.0))
+		var fade_tex := GradientTexture1D.new()
+		fade_tex.gradient = fade
+		dust_process.color_ramp = fade_tex
+		var puff := Gradient.new()
+		puff.set_color(0, Color(1, 1, 1, 1))
+		puff.set_color(1, Color(1, 1, 1, 0))
+		var puff_tex := GradientTexture2D.new()
+		puff_tex.gradient = puff
+		puff_tex.fill = GradientTexture2D.FILL_RADIAL
+		puff_tex.fill_from = Vector2(0.5, 0.5)
+		puff_tex.fill_to = Vector2(0.5, 0.0)
+		var puff_mat := StandardMaterial3D.new()
+		puff_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		puff_mat.albedo_texture = puff_tex
+		puff_mat.vertex_color_use_as_albedo = true
+		puff_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+		puff_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		dust_mesh = QuadMesh.new()
+		dust_mesh.size = Vector2(2.6, 2.6)
+		dust_mesh.material = puff_mat
+	var dust := GPUParticles3D.new()
+	dust.amount = 28
+	dust.lifetime = 1.8
+	dust.local_coords = false
+	dust.emitting = false
+	dust.process_material = dust_process
+	dust.draw_pass_1 = dust_mesh
+	dust.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	dust.position = Vector3(0, 0.3, -2.6)
+	return dust
 
 func place_on_ground(unit: Dictionary, at: Vector3) -> void:
 	var node: Node3D = unit.node
@@ -477,6 +715,8 @@ func place_on_ground(unit: Dictionary, at: Vector3) -> void:
 		var up := normal_at(at.x, at.z)
 		var travel := (heading * Vector3.BACK).slide(up).normalized()
 		node.basis = Basis.looking_at(-travel, up)  # model +Z along the direction of travel
+		for mesh_instance in unit.get("meshes", []):
+			mesh_instance.set_instance_shader_parameter("ground_y", node.position.y)
 	else:
 		node.basis = heading
 
@@ -490,11 +730,15 @@ func find_clip(player: AnimationPlayer, names: Array) -> String:
 # Clip playback speed follows ground speed, so feet do not slide.
 func animate(unit: Dictionary, moving: bool) -> void:
 	var player: AnimationPlayer = unit.player
-	if not player or unit.vehicle or (unit.moving == moving and unit.clip != ""):
+	if not player or (unit.moving == moving and unit.clip != ""):
 		return
 	unit.moving = moving
+	if unit.dust:
+		unit.dust.emitting = moving
 	var clip: String = unit.run_clip if moving else unit.idle_clip
 	if clip == "":
+		player.pause()  # a parked tank's tracks stop
+		unit.clip = "parked"
 		return
 	player.play(clip, 0.25)
 	unit.clip = clip
@@ -508,6 +752,12 @@ func order_move(selected: Array, point: Vector3) -> void:
 		selected[i].target = point + Vector3((i % width - (width - 1) / 2.0) * spacing, 0, (floori(float(i) / width) - (rows - 1) / 2.0) * spacing)
 
 func _physics_process(delta: float) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	for unit in units:
+		if unit.turret:
+			var aim: float = 0.0 if unit.moving else sin(now * 0.25 + unit.phase) * 0.9
+			unit.turret_yaw = lerp_angle(unit.turret_yaw, aim, minf(1.0, delta * 0.8))
+			unit.turret.basis = Basis(unit.turret.get_meta("axis"), unit.turret_yaw)
 	for unit in units:
 		var node: Node3D = unit.node
 		if unit.target == null:
@@ -775,9 +1025,8 @@ func capture_views() -> void:
 		"coast": [coast, 70.0, 0.55, PI * 0.25 + 0.6],
 		"landscape": [start + Vector3(-60, 0, 40), 230.0, 0.42, PI * 0.25 - 0.4],
 	}
-	for u in units:
-		if u.owner == 0 and not u.vehicle:
-			u.selected = false
+	# Keep the home army on the move so the capture shows running and dust.
+	order_move(units.filter(func(u): return u.owner == 0), start + Vector3(10, 0, 44))
 	for view in views:
 		var v: Array = views[view]
 		cam_focus = v[0]
@@ -786,11 +1035,22 @@ func capture_views() -> void:
 		cam_pitch = v[2]
 		cam_yaw = v[3]
 		for i in range(90):
+			if view == "units":
+				cam_focus = army_centre()
 			await get_tree().process_frame
 		await RenderingServer.frame_post_draw
 		DirAccess.make_dir_recursive_absolute("res://build")
 		get_viewport().get_texture().get_image().save_png("res://build/view-%s.png" % view)
 	get_tree().quit()
+
+func army_centre() -> Vector3:
+	var sum := Vector3.ZERO
+	var count := 0
+	for u in units:
+		if u.owner == 0:
+			sum += u.node.position
+			count += 1
+	return sum / maxi(count, 1)
 
 func find_coast(from: Vector3) -> Vector3:
 	for radius in range(20, 400, 6):
@@ -826,6 +1086,8 @@ func feature_probe() -> void:
 		["no sea", func(on): sea_node.visible = on],
 		["no trees", func(on):
 			for t in tree_nodes: t.visible = on],
+		["no grass", func(on):
+			for g in grass_nodes: g.visible = on],
 		["no units", func(on):
 			for u in units: u.node.visible = on],
 	]

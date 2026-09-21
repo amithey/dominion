@@ -27,14 +27,20 @@ It uses the Forward+ renderer:
 - Sea shader: Gerstner swell, depth-based colour (seabed visible in shallows),
   refraction, sky reflection through Fresnel specular, shore foam.
 - Procedural sky, ACES tone mapping, SSAO, shadows, light fog and glow.
-- Birch trees as MultiMeshes in 96 m cells; buildings on plinths into the slope;
-  soldiers follow the terrain with run speed matched to the clip (no foot sliding);
-  tanks pitch and roll with the ground.
+- Birch trees as MultiMeshes in 96 m cells, swaying with per-tree wind; grass tufts
+  (real blade triangles) drawn near the camera; drifting cloud shadows.
+- Buildings on concrete plinths sunk into the slope.
+- Soldiers: matte field uniforms per nation, a single rifle (the source model holds
+  all 14 weapons), terrain following, run speed matched to the clip.
+- Tanks: weathered army paint with road dust low on the hull (vehicle.gdshader),
+  a traversing turret, track animation only while driving, dust trails, and
+  pitch and roll with the ground.
 - Quality: integrated GPUs start on `balanced` (no SSAO, two shadow cascades, FSR
   at 77%); dedicated GPUs on `high`. Override with `-- --quality=high|balanced|low`.
 
 Controls: click/drag select, right-click move, WASD pan, Q/E rotate, R/F tilt, wheel zoom.
-Diagnostics: `-- --capture-views` writes `build/view-*.png`; `-- --feature-probe --no-vsync`
+Diagnostics: `--script res://tools/inspect.gd -- <model>` prints a model's nodes, materials and
+clips; `-- --capture-views` writes `build/view-*.png`; `-- --feature-probe --no-vsync`
 prints the frame cost of each expensive feature.
 
 The earlier three-district prototype is still available: pass `res://main.tscn`.
