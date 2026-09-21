@@ -210,6 +210,20 @@ func _build_diplomacy_panel() -> void:
 	toggle.offset_bottom = 84
 	toggle.pressed.connect(toggle_diplomacy)
 	add_child(toggle)
+	var row := 0
+	for entry in [["Save (F5)", func(): world.saves.save("quicksave")], ["Load (F9)", func(): world.saves.load_slot("quicksave")]]:
+		var b := Button.new()
+		b.text = entry[0]
+		b.anchor_left = 1.0
+		b.anchor_right = 1.0
+		b.offset_left = -300 - row * 110
+		b.offset_right = -160 - row * 110
+		b.offset_left = b.offset_right - 100
+		b.offset_top = 52
+		b.offset_bottom = 84
+		b.pressed.connect(entry[1])
+		add_child(b)
+		row += 1
 	_diplo = _box(Vector2.ZERO)
 	# Left side, below the info panel: clear of notices and letters.
 	_diplo.offset_left = 16

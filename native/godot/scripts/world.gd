@@ -13,6 +13,7 @@ extends Node3D
 ##   --ai-test / --capture-ai                      AI builds, trains, declares war and attacks
 ##   --logistics-test / --capture-logistics        supply, damage and repair of roads and rails
 ##   --air-sea-test / --capture-air-sea            ships stay at sea, aircraft fly, both fight
+##   --save-test                                   save, change everything, load, compare
 
 const MAP_PATH := "res://data/map-seed1.json"
 const SOLDIER_HEIGHT := 2.35       # the browser's readable RTS scale
@@ -127,6 +128,7 @@ var ai: Node
 var diplomacy: Node
 var game_over := ""
 var craft: RefCounted
+var saves: Node
 var damage_profile := {}
 var infantry_keys := []
 var armor_keys := []
@@ -218,6 +220,9 @@ func _ready() -> void:
 	hud = preload("res://scripts/hud.gd").new()
 	add_child(hud)
 	hud.setup(self, economy)
+	saves = preload("res://scripts/save.gd").new()
+	add_child(saves)
+	saves.setup(self)
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--bench"):
 			bench_units = 1  # set properly below; any benchmark runs without AI
@@ -271,6 +276,8 @@ func _ready() -> void:
 		await economy_test(false)
 	elif "--ai-test" in args:
 		await ai_test(false)
+	elif "--save-test" in args:
+		await save_test()
 	elif "--air-sea-test" in args or "--capture-air-sea" in args:
 		await air_sea_test("--capture-air-sea" in args)
 	elif "--diplomacy-test" in args or "--capture-diplomacy" in args:
@@ -1364,6 +1371,34 @@ func build_navigation() -> void:
 			break
 	print("Navigation: %d walkable cells, ready=%s" % [cells, nav_ready])
 
+## Recomputes every walk cell from the current buildings (after loading).
+func rebuild_walk_grid() -> void:
+	if nav_n == 0:
+		return
+	var half := float(map.mapSize) * 0.5
+	for r in range(nav_n - 1):
+		for c in range(nav_n - 1):
+			nav_open[r * (nav_n - 1) + c] = 1 if walkable(-half + (c + 0.5) * NAV_STEP, -half + (r + 0.5) * NAV_STEP) else 0
+	rebuild_nav_mesh()
+
+## Removes every building, unit and road, before a saved game is restored.
+func clear_match() -> void:
+	cancel_placement()
+	cancel_transport()
+	select_building(null)
+	for b in buildings:
+		b.root.queue_free()
+	for u in units:
+		u.node.queue_free()
+	buildings.clear()
+	units.clear()
+	district_hex.clear()
+	building_spots.clear()
+	for d in deposits:
+		d.extractor = null
+	logistics.edges.clear()
+	drill.clear()
+
 func rebuild_nav_mesh() -> int:
 	var nav := NavigationMesh.new()
 	nav.vertices = nav_heights
@@ -1636,6 +1671,62 @@ func transport_click(screen: Vector2, keep: bool) -> void:
 		logistics.show_preview([])
 	else:
 		cancel_transport()
+
+## Saves a match, changes everything, loads, and checks that it came back.
+func save_test() -> void:
+	economy.res.money = 3210.0
+	var farm_at: Vector3 = snap_to_hex(buildings[0].root.position + Vector3(-34, 0, 20))
+	var site := place_building("farm", farm_at, 0, false)
+	site.progress = 0.4
+	var home: Vector2i = logistics.world_hex(buildings[0].root.position)
+	var route: Array = logistics.plan(home, home + Vector2i(3, 0), 0, "road")
+	logistics.build(route, "road", 0)
+	diplomacy.declare_war(0, 2)
+	diplomacy.set_score(0, 1, 42.0)
+	var soldier: Dictionary = units.filter(func(u): return u.key == "soldier" and u.owner == 0)[0]
+	soldier.hp = 37.0
+	cam_focus = start + Vector3(12, 0, 7)
+	var before: Dictionary = snapshot()
+	if not saves.save("test"):
+		get_tree().quit(1)
+		return
+	# Change everything.
+	economy.res.money = 5.0
+	for b in buildings:
+		if b.key == "farm":
+			destroy_building(b)
+	logistics.edges.clear()
+	diplomacy.make_peace(0, 2)
+	diplomacy.set_score(0, 1, -80.0)
+	for u in units.duplicate():
+		kill(u)
+	var loaded: bool = saves.load_slot("test")
+	for i in range(3):
+		await get_tree().physics_frame
+	var after: Dictionary = snapshot()
+	var same: bool = before == after
+	if not same:
+		for key in before:
+			if before[key] != after.get(key):
+				print("  differs: %s: %s -> %s" % [key, before[key], after.get(key)])
+	var farm_back: bool = buildings.any(func(b): return b.key == "farm" and not b.built and absf(b.progress - 0.4) < 0.01)
+	var path_ok: bool = path_between(start + Vector3(0, 0, 30), start + Vector3(0, 0, -30)).size() > 1
+	print("saved %d buildings, %d units, %d road links; loaded %s, identical %s, construction kept %s, routes work %s" % [before.buildings, before.units, before.edges, loaded, same, farm_back, path_ok])
+	var ok: bool = loaded and same and farm_back and path_ok
+	print("SAVE_TEST %s" % ("PASS" if ok else "FAIL"))
+	get_tree().quit(0 if ok else 1)
+
+func snapshot() -> Dictionary:
+	var hp_sum := 0.0
+	for u in units:
+		if not u.dead:
+			hp_sum += u.hp
+	return {
+		"money": roundi(economy.res.money), "buildings": buildings.filter(func(b): return not b.dead).size(),
+		"units": units.filter(func(u): return not u.dead).size(), "unit_hp": roundi(hp_sum),
+		"edges": logistics.edges.size(), "war_0_2": diplomacy.at_war(0, 2), "rel_0_1": roundi(diplomacy.rel(0, 1)),
+		"camera": Vector2i(roundi(cam_focus.x), roundi(cam_focus.z)),
+	}
 
 ## Checks diplomacy: gifts warm relations, a trade pact pays both sides, a
 ## non-aggression pact stops AI wars, an ally joins the player's war, and peace
@@ -2657,6 +2748,10 @@ func _input(event: InputEvent) -> void:
 		start_battle()
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_G:
 		hud.toggle_diplomacy()
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F5:
+		saves.save("quicksave")
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F9:
+		saves.load_slot("quicksave")
 	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE:
 		cancel_transport()
 		cancel_placement()
