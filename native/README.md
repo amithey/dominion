@@ -42,6 +42,13 @@ It uses the Forward+ renderer:
   and splash nearby units. Soldiers play a death animation and later sink away; tanks
   explode into charred, smoking wrecks with the turret knocked askew. Units steer
   around each other. Explosions shake the camera when close.
+- Sound (audio.gd): positional rifle shots, cannon, explosions and bullet impacts
+  from a pool of 3D players; each tank has a looping engine that rises while driving;
+  wind everywhere and surf from the nearest shore. The listener stands on the ground
+  at the camera focus; distant sounds are quieter and muffled; an SFX bus adds light
+  open-air reverb and a limiter prevents clipping. The WAVs in `godot/audio` are
+  synthesised by `tools/make-sounds.gd` (filtered noise, swept sines, envelopes), so
+  there is nothing to license; a recording can replace any file under the same name.
 - Quality: integrated GPUs start on `balanced` (no SSAO, two shadow cascades, FSR
   at 77%); dedicated GPUs on `high`. Override with `-- --quality=high|balanced|low`.
 
@@ -50,7 +57,9 @@ attack-move, B battle demo, WASD pan, Q/E rotate, R/F tilt, wheel zoom.
 Diagnostics: `--script res://tools/inspect.gd -- <model>` prints a model's nodes, materials and
 clips; `-- --capture-views` writes `build/view-*.png`; `-- --feature-probe --no-vsync`
 prints the frame cost of each expensive feature; `-- --capture-battle` saves five
-frames of the battle demo to `build/battle-*.png`.
+frames of the battle demo to `build/battle-*.png` and records its soundtrack to
+`build/battle-audio.wav`. Regenerate sounds with
+`--headless --path native/godot --script res://tools/make-sounds.gd`.
 
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 

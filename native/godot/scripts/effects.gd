@@ -7,6 +7,8 @@ extends Node3D
 
 signal shake(strength: float, at: Vector3)
 
+var audio: Node  # audio.gd; every effect also plays its sound when set
+
 var _fire: ParticleProcessMaterial
 var _smoke: ParticleProcessMaterial
 var _sparks: ParticleProcessMaterial
@@ -182,6 +184,8 @@ func muzzle_flash(at: Vector3, big: bool) -> void:
 	add_child(flash)
 	flash.global_position = at
 	_live.append({"node": flash, "age": 0.0, "life": 0.07 if not big else 0.12, "kind": "flash"})
+	if audio:
+		audio.play("cannon" if big else "rifle", at, 0.0 if big else -3.0, 2.4 if big else 1.0)
 	if big:
 		_light(at, 5.0, 14.0, 0.15)
 		_burst(_smoke, _smoke_mesh, at, 6, 2.2, 0.6)
@@ -223,10 +227,14 @@ func explosion(at: Vector3, size: float, on_ground: bool) -> void:
 		mark.global_position = at
 		_live.append({"node": mark, "age": 0.0, "life": 45.0, "kind": "scorch"})
 	_light(at + Vector3.UP * size, 9.0 * size, 10.0 + 8.0 * size, 0.35 + 0.1 * size)
+	if audio:
+		audio.play("explosion", at, -4.0 + 3.0 * minf(size, 3.0), 1.6 + size)
 	shake.emit(0.25 * size, at)
 
 ## Bullet striking the ground or a soldier: a small puff of dust.
 func impact(at: Vector3) -> void:
+	if audio:
+		audio.play("impact", at, -12.0, 0.5)
 	_burst(_puff, _smoke_mesh, at, 3, 0.8, 0.35)
 
 ## A wreck that keeps burning and smoking for a while.

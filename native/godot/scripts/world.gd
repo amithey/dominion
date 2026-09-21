@@ -81,6 +81,9 @@ var noise_texture: NoiseTexture2D
 var quality := "high"
 var fps_time := 0.0
 var effects: Node3D
+var audio: Node3D
+var coast_focus := Vector3.INF
+var coast_point := Vector3.ZERO
 var unit_defs := {}
 var shake_strength := 0.0
 var battle_started := false
@@ -119,6 +122,9 @@ func _ready() -> void:
 	effects = preload("res://scripts/effects.gd").new()
 	add_child(effects)
 	effects.shake.connect(_on_shake)
+	audio = preload("res://scripts/audio.gd").new()
+	add_child(audio)
+	effects.audio = audio
 	build_environment()
 	apply_quality()
 	build_terrain()
@@ -563,6 +569,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
 		"reload": randf() * float(def.cooldown), "search": randf() * 0.35, "enemy": null,
 		"attack_move": false, "dead": false, "dead_time": 0.0, "stance": "",
+		"engine": audio.add_engine(node) if vehicle else null,
 	})
 	if unit.player:
 		# Looked up once: searching the clip list every frame was most of the CPU time.
@@ -794,6 +801,8 @@ func _physics_process(delta: float) -> void:
 			update_dead(unit, delta, i)
 			continue
 		update_combat(unit, delta)
+		if unit.engine:
+			audio.engine_update(unit.engine, unit.moving, delta)
 		if unit.turret:
 			var aim: float
 			if unit.enemy != null:
@@ -962,6 +971,8 @@ func kill(unit: Dictionary) -> void:
 				mesh_instance.set_surface_override_material(i, charred)
 		if unit.dust:
 			unit.dust.emitting = false
+		if unit.engine:
+			unit.engine.stop()
 		if unit.player:
 			unit.player.pause()
 		# The blast knocks the turret askew.
@@ -1049,6 +1060,10 @@ func battle_centre() -> Vector3:
 	return sum / maxi(count, 1)
 
 func capture_battle() -> void:
+	# The master mix is recorded too, so the soundtrack can be checked and heard.
+	var recorder := AudioEffectRecord.new()
+	AudioServer.add_bus_effect(0, recorder)
+	recorder.set_recording_active(true)
 	start_battle()
 	cam_pitch = 0.62
 	cam_dist = 62.0
@@ -1065,6 +1080,10 @@ func capture_battle() -> void:
 			await RenderingServer.frame_post_draw
 			get_viewport().get_texture().get_image().save_png("res://build/battle-%d.png" % index)
 			index += 1
+	recorder.set_recording_active(false)
+	var clip := recorder.get_recording()
+	if clip:
+		clip.save_to_wav("res://build/battle-audio.wav")
 	get_tree().quit()
 
 # ---------------------------------------------------------------- camera and input
@@ -1076,6 +1095,11 @@ func update_camera(delta: float) -> void:
 	var focus := Vector3(cam_focus.x, ground, cam_focus.z)
 	camera.global_position = focus + Vector3(sin(cam_yaw) * cam_dist * cos(cam_pitch), cam_dist * sin(cam_pitch), cos(cam_yaw) * cam_dist * cos(cam_pitch))
 	camera.look_at(focus)
+	# Sound: the listener stands at the focus; surf plays from the nearest shore.
+	if focus.distance_to(coast_focus) > 20.0:
+		coast_focus = focus
+		coast_point = nearest_shore(focus)
+	audio.follow(focus, camera, coast_point)
 	if shake_strength > 0.01:
 		camera.global_position += Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * shake_strength
 		shake_strength *= exp(-delta * 7.0)
@@ -1358,6 +1382,17 @@ func capture_views() -> void:
 		DirAccess.make_dir_recursive_absolute("res://build")
 		get_viewport().get_texture().get_image().save_png("res://build/view-%s.png" % view)
 	get_tree().quit()
+
+func nearest_shore(from: Vector3) -> Vector3:
+	for radius in range(0, 260, 10):
+		for i in range(16):
+			var a := i * TAU / 16.0
+			var p := from + Vector3(cos(a), 0, sin(a)) * radius
+			if height_at(p.x, p.z) < 0.0:
+				return Vector3(p.x, 0.5, p.z)
+			if radius == 0:
+				break
+	return from + Vector3(0, -1000, 0)  # far inland: surf out of earshot
 
 func army_centre() -> Vector3:
 	var sum := Vector3.ZERO
