@@ -54,6 +54,15 @@ It uses the Forward+ renderer:
   free deposit for extractors); construction sites call the nearest free worker and
   rise as they are built; barracks and factories train a queue of up to five units.
   New buildings close the walk grid under them.
+- AI nations (ai.gd), ported from ai.js with its difficulty table, opening build
+  order and training pool: abstracted income, self-built construction, training
+  from what their buildings allow, every unit home when the capital is threatened,
+  and attack waves at the nearest player building once at war (easy: first wave
+  after about 13 minutes). Without diplomacy, an AI declares war when its attack
+  timer and aggression roll say so, or at once if the player strikes it. Buildings
+  are targets too (units shoot at the walls; shells hit them) and collapse into
+  burning rubble; losing every headquarters decides victory or defeat. Every
+  building flies its nation's flag.
 - Sound (audio.gd): positional rifle shots, cannon, explosions and bullet impacts
   from a pool of 3D players; each tank has a looping engine that rises while driving;
   wind everywhere and surf from the nearest shore. The listener stands on the ground
@@ -64,6 +73,7 @@ It uses the Forward+ renderer:
 - Quality: integrated GPUs start on `balanced` (no SSAO, two shadow cascades, FSR
   at 77%); dedicated GPUs on `high`. Override with `-- --quality=high|balanced|low`.
 
+Options: `-- --difficulty=easy|normal|hard` (default easy), `-- --ai-speed=N`.
 Controls: click/drag select units, click a building to open its training panel,
 build menu at the bottom left (left click places, Shift+click keeps placing, right
 click or Esc cancels), right-click move or attack an enemy, Ctrl+right-click
@@ -72,7 +82,9 @@ Diagnostics: `--script res://tools/inspect.gd -- <model>` prints a model's nodes
 clips; `-- --capture-views` writes `build/view-*.png`; `-- --feature-probe --no-vsync`
 prints the frame cost of each expensive feature; `-- --capture-battle` saves five
 frames of the battle demo to `build/battle-*.png` and records its soundtrack to
-`build/battle-audio.wav`. `-- --economy-test` places a farm, barracks and housing, lets workers build them and
+`build/battle-audio.wav`. `-- --ai-test` runs hard AI in fast time and requires it to build, train, go to war
+and reach the player's base, then checks the victory screen (`--capture-ai` saves
+screenshots). `-- --economy-test` places a farm, barracks and housing, lets workers build them and
 trains a soldier in fast time (`--capture-economy` does it in real time with
 screenshots). `-- --nav-test` checks that routes across the base go around every building and
 never through water. Regenerate sounds with
@@ -80,7 +92,7 @@ never through water. Regenerate sounds with
 
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 
-Not yet ported: supply logistics (roads, rail), AI, aircraft and ships, saving and Steam integration. Units are still the stylised
+Not yet ported: supply logistics (roads, rail), diplomacy, aircraft and ships, saving and Steam integration. Units are still the stylised
 Quaternius models; realistic units need new art.
 
 ## Validation

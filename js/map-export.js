@@ -52,6 +52,8 @@ function exportMapData(step = 2.5) {
       baseCivCap: 200, startCivilians: 120, taxPerCivilian: 0.035, baseAdmin: 0.28,
       foodPerCivilian: 0.008, foodPerSoldier: 0.05, farmFood: 2.0,
     },
+    // AI opponents: difficulty table, opening build order and training pool (ai.js).
+    ai: { difficulty: DIFFICULTY, buildOrder: AI_BUILD_ORDER, trainPool: AI_TRAIN_POOL },
   };
 }
 

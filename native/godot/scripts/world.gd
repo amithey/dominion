@@ -9,6 +9,8 @@ extends Node3D
 ##   --battle / --capture-battle                   skirmish demo (key B in game)
 ##   --nav-test                                    checks routes around buildings and water
 ##   --economy-test / --capture-economy            build, train and collect in fast time
+##   --difficulty=easy|normal|hard  --ai-speed=N    AI opponents (browser difficulty table)
+##   --ai-test / --capture-ai                      AI builds, trains, declares war and attacks
 
 const MAP_PATH := "res://data/map-seed1.json"
 const SOLDIER_HEIGHT := 2.35       # the browser's readable RTS scale
@@ -110,6 +112,8 @@ var nav_heights := PackedVector3Array()
 var nav_open := PackedByteArray()
 var nav_n := 0
 var site_timer := 0.0
+var ai: Node
+var game_over := ""
 var nav_ready := false
 const NAV_STEP := 4.0
 var fps_frames := 0
@@ -179,6 +183,23 @@ func _ready() -> void:
 	hud = preload("res://scripts/hud.gd").new()
 	add_child(hud)
 	hud.setup(self, economy)
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--bench"):
+			bench_units = 1  # set properly below; any benchmark runs without AI
+	var difficulty := "easy"
+	var ai_speed := 1.0
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--difficulty="):
+			difficulty = arg.get_slice("=", 1)
+		if arg.begins_with("--ai-speed="):
+			ai_speed = float(arg.get_slice("=", 1))
+	if "--ai-test" in OS.get_cmdline_user_args() or "--capture-ai" in OS.get_cmdline_user_args():
+		difficulty = "hard"
+		ai_speed = 12.0
+	ai = preload("res://scripts/ai.gd").new()
+	add_child(ai)
+	if bench_units == 0 and not ("--capture-views" in OS.get_cmdline_user_args() or "--capture-battle" in OS.get_cmdline_user_args() or "--economy-test" in OS.get_cmdline_user_args() or "--capture-economy" in OS.get_cmdline_user_args() or "--nav-test" in OS.get_cmdline_user_args()):
+		ai.setup(self, map.ai, difficulty, ai_speed)
 	selection_marker = MeshInstance3D.new()
 	var marker_mesh := TorusMesh.new()
 	marker_mesh.rings = 48
@@ -210,6 +231,10 @@ func _ready() -> void:
 		nav_test()
 	elif "--economy-test" in args:
 		await economy_test(false)
+	elif "--ai-test" in args:
+		await ai_test(false)
+	elif "--capture-ai" in args:
+		await ai_test(true)
 	elif "--capture-economy" in args:
 		await economy_test(true)
 	elif "--feature-probe" in args:
@@ -553,6 +578,27 @@ func building_model(key: String, x: float, z: float) -> Node3D:
 	model.position = Vector3(-bounds.get_center().x * factor, -bounds.position.y * factor, -bounds.get_center().z * factor)
 	return model
 
+# A pole in the corner of the plot flies the owner's colours.
+func add_flag(root: Node3D, footprint: float, owner: int) -> void:
+	var pole := MeshInstance3D.new()
+	var pole_mesh := CylinderMesh.new()
+	pole_mesh.top_radius = 0.07
+	pole_mesh.bottom_radius = 0.09
+	pole_mesh.height = 7.0
+	pole.mesh = pole_mesh
+	pole.material_override = cached_material("flagpole", func(): return matte(Color("c8c8c0"), 0.4, 0.7))
+	var corner := Vector3(footprint * 0.48, 3.5, footprint * 0.48)
+	pole.position = corner
+	root.add_child(pole)
+	var flag := MeshInstance3D.new()
+	var cloth := BoxMesh.new()
+	cloth.size = Vector3(1.8, 1.1, 0.05)
+	flag.mesh = cloth
+	var colour := Color(map.nations[owner].color) if owner < map.nations.size() else Color.WHITE
+	flag.material_override = cached_material("flag:%d" % owner, func(): return matte(colour, 0.8))
+	flag.position = corner + Vector3(0.95, 2.8, 0)
+	root.add_child(flag)
+
 # A pumpjack-style extraction rig in dark steel.
 func extractor_model() -> Node3D:
 	var rig := Node3D.new()
@@ -614,7 +660,10 @@ func place_building(key: String, at: Vector3, owner: int, built: bool) -> Dictio
 		"key": key, "owner": owner, "def": def, "root": root, "model": model, "footprint": footprint,
 		"built": built, "progress": 1.0 if built else 0.0, "hp": float(def.hp), "max_hp": float(def.hp),
 		"queue": [], "queue_prog": 0.0, "dead": false, "builders": 0, "deposit": null,
+		# Target fields shared with units, so combat treats both alike.
+		"node": root, "vehicle": true, "is_building": true, "dmg": 0.0, "enemy": null, "target": null, "attack_move": false,
 	}
+	add_flag(root, footprint, owner)
 	if def.get("onDeposit", false):
 		var dep = deposit_near(at, 6.0)
 		if dep != null:
@@ -1028,7 +1077,7 @@ func _physics_process(delta: float) -> void:
 		if unit.enemy != null and (unit.target == null or unit.attack_move):
 			var gap: Vector3 = unit.enemy.node.position - node.position
 			gap.y = 0
-			if gap.length() > unit.range * 0.9:
+			if gap_to(unit, unit.enemy) > unit.range * 0.9:
 				goal = unit.enemy.node.position  # close in until in range
 				chasing = true
 			else:
@@ -1359,6 +1408,9 @@ func set_ghost_colour(color: Color) -> void:
 
 ## "" when the building can go here, otherwise the reason it cannot.
 func placement_problem(key: String, at: Vector3) -> String:
+	return site_problem(key, at, 0)
+
+func site_problem(key: String, at: Vector3, owner: int) -> String:
 	var def: Dictionary = building_defs[key]
 	var footprint := footprint_of(key)
 	var half := footprint * 0.5
@@ -1379,7 +1431,7 @@ func placement_problem(key: String, at: Vector3) -> String:
 		var gap := Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length()
 		if gap < (footprint + b.footprint) * 0.55:
 			return "Too close to %s" % b.def.name
-		if b.owner == 0 and b.built and gap < float(b.def.get("buildRadius", 0)):
+		if b.owner == owner and b.built and gap < float(b.def.get("buildRadius", 0)):
 			in_district = true
 	if not in_district:
 		return "Outside your district"
@@ -1514,18 +1566,96 @@ func economy_test(capture: bool) -> void:
 	print("ECONOMY_TEST %s" % ("PASS" if ok else "FAIL"))
 	get_tree().quit(0 if ok else 1)
 
+# Fast-time check of the AI on hard: it must build, train, go to war and
+# send an attack at the player's base; then every rival capital falls and the
+# game must report victory.
+func ai_test(capture: bool) -> void:
+	Engine.time_scale = 1.0 if capture else 3.0
+	var home: Vector3 = buildings[0].root.position
+	var most_buildings := 0
+	var most_units := 0
+	var reached := false
+	var elapsed := 0.0
+	var shot := 0
+	while elapsed < (70.0 if capture else 140.0):
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
+		for n in ai.nations:
+			most_buildings = maxi(most_buildings, buildings.filter(func(b): return b.owner == n.id and not b.dead).size())
+			most_units = maxi(most_units, units.filter(func(u): return u.owner == n.id and not u.dead).size())
+		for u in units:
+			if u.owner > 0 and not u.dead and u.node.position.distance_to(home) < 90.0:
+				reached = true
+		if capture:
+			var rival = ai.hq(1)
+			if rival != null and (shot == 0 and elapsed > 30.0):
+				cam_focus = rival.root.position
+				cam_dist = 110.0
+				cam_dist_target = 110.0
+				cam_pitch = 0.8
+			if shot == 0 and elapsed > 34.0 or shot == 1 and elapsed > 66.0:
+				await RenderingServer.frame_post_draw
+				get_viewport().get_texture().get_image().save_png("res://build/ai-%d.png" % shot)
+				shot += 1
+				cam_focus = home + Vector3(0, 0, 20)
+		if reached and most_buildings >= 5 and not capture:
+			break
+	var wars: int = ai.nations.filter(func(n): return n.at_war).size()
+	print("AI: most buildings %d, most units %d, nations at war %d, reached your base %s" % [most_buildings, most_units, wars, reached])
+	for b in buildings:
+		if b.owner > 0 and b.key == "hq" and not b.dead:
+			destroy_building(b)
+	Engine.time_scale = 1.0
+	print("After rival capitals fall: game_over=%s" % game_over)
+	var ok: bool = most_buildings >= 5 and most_units >= 3 and wars > 0 and reached and game_over == "victory"
+	print("AI_TEST %s" % ("PASS" if ok else "FAIL"))
+	if not capture:
+		get_tree().quit(0 if ok else 1)
+	else:
+		await get_tree().create_timer(2.0).timeout
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png("res://build/ai-2.png")
+		get_tree().quit()
+
 # ---------------------------------------------------------------- combat
 
+## Nations at war fight; AI nations are at peace with each other for now.
+func hostile(a: int, b: int) -> bool:
+	if a == b:
+		return false
+	if ai == null or ai.nations.is_empty():
+		return true  # sandbox scenes without AI: every other owner is an enemy
+	if a == 0:
+		return ai.at_war(b)
+	if b == 0:
+		return ai.at_war(a)
+	return false
+
+# Distance to what can be hit: a building's walls, not its centre.
+func gap_to(unit: Dictionary, target: Dictionary) -> float:
+	var d := Vector2(target.node.position.x - unit.node.position.x, target.node.position.z - unit.node.position.z).length()
+	return d - (target.footprint * 0.45 if target.get("is_building", false) else 0.0)
+
+## Nearest hostile unit in range; buildings only when no unit is near.
 func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
 	var best = null
 	var best_d := radius
 	for other in units:
-		if other.dead or other.owner == unit.owner:
+		if other.dead or not hostile(unit.owner, other.owner):
 			continue
 		var d: float = unit.node.position.distance_to(other.node.position)
 		if d < best_d:
 			best_d = d
 			best = other
+	if best != null:
+		return best
+	for b in buildings:
+		if b.dead or not hostile(unit.owner, b.owner):
+			continue
+		var d := gap_to(unit, b)
+		if d < best_d:
+			best_d = d
+			best = b
 	return best
 
 func update_combat(unit: Dictionary, delta: float) -> void:
@@ -1533,7 +1663,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 		return  # workers do not fight
 	unit.reload -= delta
 	unit.search -= delta
-	if unit.enemy != null and (unit.enemy.dead or unit.node.position.distance_to(unit.enemy.node.position) > unit.aggro * 1.6):
+	if unit.enemy != null and (unit.enemy.dead or gap_to(unit, unit.enemy) > maxf(unit.aggro, unit.range) * 1.6 and not unit.attack_move):
 		unit.enemy = null
 		set_stance(unit)
 	# Units on a plain move order ignore the enemy; idle or attack-moving units engage.
@@ -1544,7 +1674,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 	if unit.enemy == null or unit.reload > 0.0:
 		return
 	var enemy: Dictionary = unit.enemy
-	var d: float = unit.node.position.distance_to(enemy.node.position)
+	var d := gap_to(unit, enemy)
 	if d > unit.range:
 		return
 	if unit.vehicle:
@@ -1558,7 +1688,12 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 	fire(unit, enemy)
 
 func fire(unit: Dictionary, enemy: Dictionary) -> void:
-	var aim: Vector3 = enemy.node.position + Vector3.UP * (1.3 if enemy.vehicle else 1.2)
+	var aim: Vector3 = enemy.node.position + Vector3.UP * (3.0 if enemy.get("is_building", false) else (1.3 if enemy.vehicle else 1.2))
+	if enemy.get("is_building", false):
+		# Aim at the near wall rather than the middle of the roof.
+		var toward: Vector3 = (unit.node.position - enemy.node.position)
+		toward.y = 0
+		aim += toward.normalized() * enemy.footprint * 0.4
 	if unit.vehicle:
 		var dir := Basis(Vector3.UP, unit.heading + unit.turret_yaw) * Vector3.BACK
 		var muzzle: Vector3 = unit.turret.global_position + dir * 4.2 + Vector3.UP * 0.25
@@ -1584,6 +1719,9 @@ func fire(unit: Dictionary, enemy: Dictionary) -> void:
 # A shell explodes where it lands and hurts everything close by.
 func shell_hit(shooter: Dictionary, at: Vector3) -> void:
 	effects.explosion(at, 1.0, at.y - height_at(at.x, at.z) < 1.5)
+	for b in buildings:
+		if not b.dead and hostile(shooter.owner, b.owner) and Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length() < b.footprint * 0.62:
+			damage(b, shooter.dmg, shooter)
 	for other in units:
 		if other.dead or other.owner == shooter.owner:
 			continue
@@ -1594,7 +1732,14 @@ func shell_hit(shooter: Dictionary, at: Vector3) -> void:
 func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	if unit.dead:
 		return
+	# Striking a nation at peace starts a war with it.
+	if ai and source.owner == 0 and unit.owner > 0:
+		ai.declare_war(unit.owner, true)
 	unit.hp -= amount
+	if unit.get("is_building", false):
+		if unit.hp <= 0.0:
+			destroy_building(unit)
+		return
 	if unit.enemy == null and unit.dmg > 0.0 and not source.dead and (unit.target == null or unit.attack_move):
 		unit.enemy = source  # return fire
 	if unit.hp <= 0.0:
@@ -1629,6 +1774,45 @@ func kill(unit: Dictionary) -> void:
 		unit.player.get_animation(unit.death_clip).loop_mode = Animation.LOOP_NONE
 		unit.player.speed_scale = 1.0
 		unit.player.play(unit.death_clip, 0.1)
+
+# A destroyed building collapses into charred rubble that burns for a while.
+func destroy_building(b: Dictionary) -> void:
+	b.dead = true
+	b.queue.clear()
+	var at: Vector3 = b.root.position
+	effects.explosion(at + Vector3.UP * 3.0, 4.0, true)
+	effects.burn(at, 40.0)
+	if not charred:
+		charred = matte(Color("1b1916"), 1.0)
+	for mesh_instance in b.model.find_children("*", "MeshInstance3D", true, false):
+		mesh_instance.material_override = charred
+	if b.model is MeshInstance3D:
+		b.model.material_override = charred
+	b.model.scale.y *= 0.28
+	b.model.rotation.z = randf_range(-0.08, 0.08)
+	if b.deposit != null:
+		b.deposit.extractor = null
+	if selected_building == b:
+		select_building(null)
+	for u in units:
+		if u.build_site == b:
+			u.build_site = null
+	economy.recalculate()
+	var name: String = map.nations[b.owner].name if b.owner < map.nations.size() else "Enemy"
+	hud.notice("%s %s destroyed" % ["Your" if b.owner == 0 else name, b.def.name])
+	if b.key == "hq":
+		check_game_over()
+
+func check_game_over() -> void:
+	if game_over != "":
+		return
+	if not buildings.any(func(b): return b.owner == 0 and b.key == "hq" and not b.dead):
+		game_over = "defeat"
+		hud.show_end("DEFEAT", "Your capital has fallen.")
+		return
+	if ai and not ai.nations.is_empty() and not buildings.any(func(b): return b.owner > 0 and b.key == "hq" and not b.dead):
+		game_over = "victory"
+		hud.show_end("VICTORY", "Every rival capital has fallen.")
 
 # Fallen soldiers lie for a while, then sink away; wrecks stay.
 func update_dead(unit: Dictionary, delta: float, index: int) -> void:
@@ -1689,6 +1873,8 @@ func start_battle() -> void:
 	if battle_started:
 		return
 	battle_started = true
+	if ai and not ai.nations.is_empty():
+		ai.declare_war(1, false)  # the demo enemy fights for nation 1
 	var front := land_point(start, 80.0)
 	var ours := spawn_group(start + (front - start) * 0.15, 0, 12, 2)
 	var theirs := spawn_group(front, 1, 14, 3)
@@ -1776,8 +1962,8 @@ func _process(delta: float) -> void:
 	if fps_time >= 1.0 and bench_phase < 0:
 		var alive := [0, 0]
 		for u in units:
-			if not u.dead and u.owner <= 1:
-				alive[u.owner] += 1
+			if not u.dead:
+				alive[mini(u.owner, 1)] += 1
 		status.text = "Army %d  vs  enemy %d  |  %d FPS  |  %s" % [alive[0], alive[1], roundi(fps_frames / fps_time), RenderingServer.get_video_adapter_name()]
 		fps_time = 0
 		fps_frames = 0
@@ -1863,6 +2049,10 @@ func enemy_under(screen: Vector2) -> Variant:
 		if d < best_d:
 			best_d = d
 			best = u
+	if best == null:
+		var b = building_under(screen)
+		if b != null and b.owner != 0:
+			return b
 	return best
 
 func _input(event: InputEvent) -> void:

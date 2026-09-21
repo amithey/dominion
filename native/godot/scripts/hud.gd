@@ -168,6 +168,31 @@ func _update_enabled() -> void:
 			var cost: Dictionary = button.get_meta("cost")
 			button.disabled = not economy.can_afford(cost)
 
+## Victory or defeat: a large banner across the middle of the screen.
+func show_end(title: String, subtitle: String) -> void:
+	var box := _box(Vector2.ZERO)
+	box.anchor_left = 0.5
+	box.anchor_right = 0.5
+	box.anchor_top = 0.5
+	box.anchor_bottom = 0.5
+	box.offset_left = -260
+	box.offset_right = 260
+	box.offset_top = -70
+	box.offset_bottom = 70
+	var column := VBoxContainer.new()
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_child(column)
+	var big := Label.new()
+	big.text = title
+	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	big.add_theme_font_size_override("font_size", 44)
+	big.add_theme_color_override("font_color", Color("f1e3b4") if title == "VICTORY" else Color("e8836f"))
+	column.add_child(big)
+	var small := Label.new()
+	small.text = subtitle
+	small.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(small)
+
 func notice(text: String) -> void:
 	var label := Label.new()
 	label.text = text
