@@ -6,6 +6,7 @@ extends Node3D
 ## shadows. Command-line (after "--"):
 ##   --bench=N [--no-vsync] [--quit-after-bench]   same phases as the browser
 ##   --capture-views                               renders build/view-*.png
+##   --battle / --capture-battle                   skirmish demo (key B in game)
 
 const MAP_PATH := "res://data/map-seed1.json"
 const SOLDIER_HEIGHT := 2.35       # the browser's readable RTS scale
@@ -79,6 +80,10 @@ var grass_nodes: Array[Node3D] = []
 var noise_texture: NoiseTexture2D
 var quality := "high"
 var fps_time := 0.0
+var effects: Node3D
+var unit_defs := {}
+var shake_strength := 0.0
+var battle_started := false
 var fps_frames := 0
 
 func _ready() -> void:
@@ -94,6 +99,7 @@ func _ready() -> void:
 		heights[i] = maxf(float(cm[i]) / 100.0, -36.0)
 	start = Vector3(map.startPositions[0][0], 0, map.startPositions[0][1])
 	start.y = height_at(start.x, start.z)
+	unit_defs = map.get("unitDefs", {})
 	soldier_scene = load("res://assets/CharacterSoldier.glb")
 	tank_scene = load("res://assets/Tank.fbx")
 
@@ -110,6 +116,9 @@ func _ready() -> void:
 	await noise_texture.changed
 
 	quality = pick_quality()
+	effects = preload("res://scripts/effects.gd").new()
+	add_child(effects)
+	effects.shake.connect(_on_shake)
 	build_environment()
 	apply_quality()
 	build_terrain()
@@ -140,6 +149,10 @@ func _ready() -> void:
 		start_benchmark()
 	elif "--capture-views" in args:
 		await capture_views()
+	elif "--capture-battle" in args:
+		await capture_battle()
+	elif "--battle" in args:
+		start_battle()
 	elif "--feature-probe" in args:
 		await feature_probe()
 
@@ -543,10 +556,22 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		"turret": turret, "turret_yaw": 0.0, "dust": dust, "phase": at.x * 0.37 + at.z * 0.21,
 		"meshes": model.find_children("*", "MeshInstance3D", true, false) if vehicle else [],
 	}
+	# Combat stats come from the browser's config.js via the map export.
+	var def: Dictionary = unit_defs.get(key, {"hp": 100, "dmg": 10, "range": 13, "cooldown": 1.0, "aggro": 24})
+	unit.merge({
+		"key": key, "hp": float(def.hp), "max_hp": float(def.hp), "dmg": float(def.dmg),
+		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
+		"reload": randf() * float(def.cooldown), "search": randf() * 0.35, "enemy": null,
+		"attack_move": false, "dead": false, "dead_time": 0.0, "stance": "",
+	})
 	if unit.player:
 		# Looked up once: searching the clip list every frame was most of the CPU time.
 		unit.run_clip = find_clip(unit.player, ["tank_forward"] if vehicle else ["run_gun", "run"])
 		unit.idle_clip = "" if vehicle else find_clip(unit.player, ["idle_gun", "idle"])
+		unit.shoot_clip = "" if vehicle else find_clip(unit.player, ["idle_shoot"])
+		unit.death_clip = "" if vehicle else find_clip(unit.player, ["death"])
+		if unit.shoot_clip != "":
+			unit.player.get_animation(unit.shoot_clip).loop_mode = Animation.LOOP_LINEAR
 		for clip in [unit.run_clip, unit.idle_clip]:
 			if clip != "":
 				unit.player.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
@@ -735,7 +760,7 @@ func animate(unit: Dictionary, moving: bool) -> void:
 	unit.moving = moving
 	if unit.dust:
 		unit.dust.emitting = moving
-	var clip: String = unit.run_clip if moving else unit.idle_clip
+	var clip: String = unit.run_clip if moving else (unit.get("shoot_clip", "") if unit.get("enemy") != null and unit.get("shoot_clip", "") != "" else unit.idle_clip)
 	if clip == "":
 		player.pause()  # a parked tank's tracks stop
 		unit.clip = "parked"
@@ -744,7 +769,17 @@ func animate(unit: Dictionary, moving: bool) -> void:
 	unit.clip = clip
 	player.speed_scale = (unit.speed / RUN_CLIP_SPEED) if moving else 1.0
 
-func order_move(selected: Array, point: Vector3) -> void:
+func order_attack(selected: Array, enemy: Dictionary) -> void:
+	for u in selected:
+		u.enemy = enemy
+		u.target = null
+		u.attack_move = true
+
+func order_move(selected: Array, point: Vector3, attack := false) -> void:
+	for u in selected:
+		u.attack_move = attack
+		if not attack:
+			u.enemy = null  # a plain move order disengages
 	var width := maxi(1, ceili(sqrt(selected.size())))
 	var rows := ceili(float(selected.size()) / width)
 	for i in range(selected.size()):
@@ -753,23 +788,68 @@ func order_move(selected: Array, point: Vector3) -> void:
 
 func _physics_process(delta: float) -> void:
 	var now := Time.get_ticks_msec() / 1000.0
-	for unit in units:
+	for i in range(units.size() - 1, -1, -1):
+		var unit: Dictionary = units[i]
+		if unit.dead:
+			update_dead(unit, delta, i)
+			continue
+		update_combat(unit, delta)
 		if unit.turret:
-			var aim: float = 0.0 if unit.moving else sin(now * 0.25 + unit.phase) * 0.9
-			unit.turret_yaw = lerp_angle(unit.turret_yaw, aim, minf(1.0, delta * 0.8))
+			var aim: float
+			if unit.enemy != null:
+				var d: Vector3 = unit.enemy.node.position - unit.node.position
+				aim = wrapf(atan2(d.x, d.z) - unit.heading, -PI, PI)
+			else:
+				aim = 0.0 if unit.moving else sin(now * 0.25 + unit.phase) * 0.9
+			unit.turret_yaw = lerp_angle(unit.turret_yaw, aim, minf(1.0, delta * (2.2 if unit.enemy != null else 0.8)))
 			unit.turret.basis = Basis(unit.turret.get_meta("axis"), unit.turret_yaw)
 	for unit in units:
-		var node: Node3D = unit.node
-		if unit.target == null:
+		if unit.dead:
 			continue
-		var to: Vector3 = unit.target - node.position
+		var node: Node3D = unit.node
+		var goal = unit.target
+		var chasing := false
+		if unit.enemy != null and (unit.target == null or unit.attack_move):
+			var gap: Vector3 = unit.enemy.node.position - node.position
+			gap.y = 0
+			if gap.length() > unit.range * 0.9:
+				goal = unit.enemy.node.position  # close in until in range
+				chasing = true
+			else:
+				goal = null  # hold and fire; soldiers turn to face the enemy
+				if not unit.vehicle:
+					unit.heading = lerp_angle(unit.heading, atan2(gap.x, gap.z), minf(1.0, delta * 8.0))
+					place_on_ground(unit, node.position)
+				if unit.moving:
+					animate(unit, false)
+				else:
+					set_stance(unit)
+		if goal == null:
+			if unit.target == null and unit.moving:
+				animate(unit, false)
+			continue
+		var to: Vector3 = goal - node.position
 		to.y = 0
 		if to.length() < 0.3:
-			unit.target = null
+			if not chasing:
+				unit.target = null
+				unit.attack_move = false
 			animate(unit, false)
 			continue
 		var step := minf(to.length(), unit.speed * delta)
 		var next: Vector3 = node.position + to.normalized() * step
+		# Keep clear of other units instead of driving through them.
+		var push := Vector3.ZERO
+		for other in units:
+			if other == unit or other.dead:
+				continue
+			var gap: Vector3 = next - other.node.position
+			gap.y = 0
+			var clearance: float = (1.1 if not (unit.vehicle or other.vehicle) else 3.4) + (1.8 if unit.vehicle and other.vehicle else 0.0)
+			var d := gap.length()
+			if d < clearance and d > 0.001:
+				push += gap / d * (clearance - d)
+		next += push.limit_length(step * 1.5)
 		if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
 			unit.target = null  # land units stop at the waterline
 			animate(unit, false)
@@ -778,6 +858,214 @@ func _physics_process(delta: float) -> void:
 		unit.heading = lerp_angle(unit.heading, want, minf(1.0, delta * (4.0 if unit.vehicle else 10.0)))
 		place_on_ground(unit, next)
 		animate(unit, true)
+
+# ---------------------------------------------------------------- combat
+
+func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
+	var best = null
+	var best_d := radius
+	for other in units:
+		if other.dead or other.owner == unit.owner:
+			continue
+		var d: float = unit.node.position.distance_to(other.node.position)
+		if d < best_d:
+			best_d = d
+			best = other
+	return best
+
+func update_combat(unit: Dictionary, delta: float) -> void:
+	unit.reload -= delta
+	unit.search -= delta
+	if unit.enemy != null and (unit.enemy.dead or unit.node.position.distance_to(unit.enemy.node.position) > unit.aggro * 1.6):
+		unit.enemy = null
+		set_stance(unit)
+	# Units on a plain move order ignore the enemy; idle or attack-moving units engage.
+	if unit.enemy == null and unit.search <= 0.0:
+		unit.search = 0.35
+		if unit.target == null or unit.attack_move:
+			unit.enemy = nearest_enemy(unit, unit.aggro)
+	if unit.enemy == null or unit.reload > 0.0:
+		return
+	var enemy: Dictionary = unit.enemy
+	var d: float = unit.node.position.distance_to(enemy.node.position)
+	if d > unit.range:
+		return
+	if unit.vehicle:
+		# The gun only fires once the turret has swung onto the target.
+		var gap: Vector3 = enemy.node.position - unit.node.position
+		if absf(angle_difference(unit.turret_yaw, atan2(gap.x, gap.z) - unit.heading)) > 0.12:
+			return
+	elif unit.moving:
+		return  # infantry stop to shoot
+	unit.reload = unit.cooldown * randf_range(0.85, 1.15)
+	fire(unit, enemy)
+
+func fire(unit: Dictionary, enemy: Dictionary) -> void:
+	var aim: Vector3 = enemy.node.position + Vector3.UP * (1.3 if enemy.vehicle else 1.2)
+	if unit.vehicle:
+		var dir := Basis(Vector3.UP, unit.heading + unit.turret_yaw) * Vector3.BACK
+		var muzzle: Vector3 = unit.turret.global_position + dir * 4.2 + Vector3.UP * 0.25
+		effects.muzzle_flash(muzzle, true)
+		var miss := Vector3(randf_range(-1.5, 1.5), 0, randf_range(-1.5, 1.5)) if randf() > 0.8 else Vector3.ZERO
+		var landing := aim + miss
+		landing.y = maxf(landing.y if miss == Vector3.ZERO else height_at(landing.x, landing.z), height_at(landing.x, landing.z))
+		effects.shell(muzzle, landing, func(at: Vector3): shell_hit(unit, at))
+	else:
+		var dir := Basis(Vector3.UP, unit.heading) * Vector3.BACK
+		var muzzle: Vector3 = unit.node.position + Vector3.UP * 1.45 + dir * 0.75
+		effects.muzzle_flash(muzzle, false)
+		var hit := randf() < (0.55 if enemy.vehicle else 0.7)
+		var end: Vector3 = aim + Vector3(randf_range(-0.3, 0.3), randf_range(-0.3, 0.3), randf_range(-0.3, 0.3))
+		if not hit:
+			end = enemy.node.position + Vector3(randf_range(-2.5, 2.5), 0, randf_range(-2.5, 2.5))
+			end.y = height_at(end.x, end.z)
+		effects.tracer(muzzle, end)
+		effects.impact(end)
+		if hit:
+			damage(enemy, unit.dmg * (0.35 if enemy.vehicle else 1.0), unit)
+
+# A shell explodes where it lands and hurts everything close by.
+func shell_hit(shooter: Dictionary, at: Vector3) -> void:
+	effects.explosion(at, 1.0, at.y - height_at(at.x, at.z) < 1.5)
+	for other in units:
+		if other.dead or other.owner == shooter.owner:
+			continue
+		var d: float = other.node.position.distance_to(at)
+		if d < 3.5:
+			damage(other, shooter.dmg * (1.0 if d < 1.8 else 0.45), shooter)
+
+func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
+	if unit.dead:
+		return
+	unit.hp -= amount
+	if unit.enemy == null and not source.dead and (unit.target == null or unit.attack_move):
+		unit.enemy = source  # return fire
+	if unit.hp <= 0.0:
+		kill(unit)
+
+var charred: StandardMaterial3D
+func kill(unit: Dictionary) -> void:
+	unit.dead = true
+	unit.selected = false
+	unit.ring.visible = false
+	unit.target = null
+	unit.enemy = null
+	unit.dead_time = 0.0
+	if unit.vehicle:
+		var at: Vector3 = unit.node.position
+		effects.explosion(at + Vector3.UP, 3.2, true)
+		effects.burn(at, 24.0)
+		if not charred:
+			charred = matte(Color("1b1916"), 1.0)
+		for mesh_instance in unit.meshes:
+			for i in range(mesh_instance.mesh.get_surface_count()):
+				mesh_instance.set_surface_override_material(i, charred)
+		if unit.dust:
+			unit.dust.emitting = false
+		if unit.player:
+			unit.player.pause()
+		# The blast knocks the turret askew.
+		unit.turret.basis = Basis(unit.turret.get_meta("axis"), unit.turret_yaw + randf_range(-0.6, 0.6)).rotated(Vector3.RIGHT, randf_range(-0.2, 0.2))
+	elif unit.player and unit.get("death_clip", "") != "":
+		unit.player.get_animation(unit.death_clip).loop_mode = Animation.LOOP_NONE
+		unit.player.speed_scale = 1.0
+		unit.player.play(unit.death_clip, 0.1)
+
+# Fallen soldiers lie for a while, then sink away; wrecks stay.
+func update_dead(unit: Dictionary, delta: float, index: int) -> void:
+	unit.dead_time += delta
+	if unit.vehicle:
+		return
+	if unit.dead_time > 7.0:
+		unit.node.position.y -= delta * 0.35
+	if unit.dead_time > 11.0:
+		unit.node.queue_free()
+		units.remove_at(index)
+
+func set_stance(unit: Dictionary) -> void:
+	if unit.vehicle or unit.player == null or unit.moving:
+		return
+	var want: String = unit.shoot_clip if unit.enemy != null and unit.shoot_clip != "" else unit.idle_clip
+	if want != "" and unit.clip != want:
+		unit.player.play(want, 0.2)
+		unit.player.speed_scale = 1.0
+		unit.clip = want
+
+func _on_shake(strength: float, at: Vector3) -> void:
+	var d := at.distance_to(Vector3(cam_focus.x, at.y, cam_focus.z))
+	if d < 110.0:
+		shake_strength = maxf(shake_strength, strength * (1.0 - d / 110.0))
+
+# ---------------------------------------------------------------- battle demo
+
+# A land point about `reach` metres from `from`, reachable without crossing water.
+func land_point(from: Vector3, reach: float) -> Vector3:
+	var best := from + Vector3(0, 0, reach)
+	var best_score := -1
+	for i in range(16):
+		var a := i * TAU / 16.0
+		var score := 0
+		for k in range(1, 11):
+			var p := from + Vector3(cos(a), 0, sin(a)) * reach * k / 10.0
+			if height_at(p.x, p.z) > 1.5 and normal_at(p.x, p.z).y > 0.9:
+				score += 1
+		if score > best_score:
+			best_score = score
+			best = from + Vector3(cos(a), 0, sin(a)) * reach
+	return best
+
+func spawn_group(centre: Vector3, owner: int, soldiers: int, tanks: int) -> Array:
+	var group := []
+	var facing := atan2(start.x - centre.x, start.z - centre.z)
+	for i in range(soldiers):
+		group.append(spawn_unit("soldier", centre + Vector3((i % 6 - 2.5) * 2.6, 0, floori(i / 6.0) * 2.6), owner))
+	for i in range(tanks):
+		group.append(spawn_unit("tank", centre + Vector3((i - (tanks - 1) / 2.0) * 7.0, 0, -7.0), owner))
+	for u in group:
+		u.heading = facing
+		place_on_ground(u, u.node.position)
+	return group
+
+func start_battle() -> void:
+	if battle_started:
+		return
+	battle_started = true
+	var front := land_point(start, 80.0)
+	var ours := spawn_group(start + (front - start) * 0.15, 0, 12, 2)
+	var theirs := spawn_group(front, 1, 14, 3)
+	for u in units:
+		if u.owner == 0 and not u.dead:
+			ours.append(u)
+	order_move(ours, front, true)
+	order_move(theirs, start + (front - start) * 0.2, true)
+
+func battle_centre() -> Vector3:
+	var sum := Vector3.ZERO
+	var count := 0
+	for u in units:
+		if not u.dead and u.node.position.distance_to(start) < 140.0:
+			sum += u.node.position
+			count += 1
+	return sum / maxi(count, 1)
+
+func capture_battle() -> void:
+	start_battle()
+	cam_pitch = 0.62
+	cam_dist = 62.0
+	cam_dist_target = 62.0
+	var shots := [4.0, 8.0, 12.0, 17.0, 24.0]
+	var elapsed := 0.0
+	var index := 0
+	DirAccess.make_dir_recursive_absolute("res://build")
+	while index < shots.size():
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
+		cam_focus = cam_focus.lerp(battle_centre(), 0.08)
+		if elapsed >= shots[index]:
+			await RenderingServer.frame_post_draw
+			get_viewport().get_texture().get_image().save_png("res://build/battle-%d.png" % index)
+			index += 1
+	get_tree().quit()
 
 # ---------------------------------------------------------------- camera and input
 
@@ -788,6 +1076,9 @@ func update_camera(delta: float) -> void:
 	var focus := Vector3(cam_focus.x, ground, cam_focus.z)
 	camera.global_position = focus + Vector3(sin(cam_yaw) * cam_dist * cos(cam_pitch), cam_dist * sin(cam_pitch), cos(cam_yaw) * cam_dist * cos(cam_pitch))
 	camera.look_at(focus)
+	if shake_strength > 0.01:
+		camera.global_position += Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * shake_strength
+		shake_strength *= exp(-delta * 7.0)
 
 func _process(delta: float) -> void:
 	if bench_phase >= 0:
@@ -808,7 +1099,11 @@ func _process(delta: float) -> void:
 	fps_time += delta
 	fps_frames += 1
 	if fps_time >= 1.0 and bench_phase < 0:
-		status.text = "%d units  |  %d FPS  |  %s" % [units.size(), roundi(fps_frames / fps_time), RenderingServer.get_video_adapter_name()]
+		var alive := [0, 0]
+		for u in units:
+			if not u.dead and u.owner <= 1:
+				alive[u.owner] += 1
+		status.text = "Army %d  vs  enemy %d  |  %d FPS  |  %s" % [alive[0], alive[1], roundi(fps_frames / fps_time), RenderingServer.get_video_adapter_name()]
 		fps_time = 0
 		fps_frames = 0
 
@@ -858,14 +1153,35 @@ func _unhandled_input(event: InputEvent) -> void:
 				for unit in units:
 					unit.ring.visible = unit.selected
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-			var point = ground_point(event.position)
-			if point != null:
-				order_move(units.filter(func(u): return u.selected), point)
+			var selected := units.filter(func(u): return u.selected and not u.dead)
+			var target = enemy_under(event.position)
+			if target != null:
+				order_attack(selected, target)
+			else:
+				var point = ground_point(event.position)
+				if point != null:
+					order_move(selected, point, event.ctrl_pressed)  # Ctrl: attack-move
 	elif event is InputEventMouseMotion and dragging:
 		var rect := Rect2(drag_start, event.position - drag_start).abs()
 		selection_box.position = rect.position
 		selection_box.size = rect.size
 		selection_box.show()
+
+func enemy_under(screen: Vector2) -> Variant:
+	var best = null
+	var best_d := 26.0
+	for u in units:
+		if u.dead or u.owner == 0:
+			continue
+		var d := camera.unproject_position(u.node.position + Vector3.UP).distance_to(screen)
+		if d < best_d:
+			best_d = d
+			best = u
+	return best
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_B:
+		start_battle()
 
 func make_hud() -> void:
 	var layer := CanvasLayer.new()
@@ -886,7 +1202,7 @@ func make_hud() -> void:
 	title.add_theme_font_size_override("font_size", 18)
 	column.add_child(title)
 	var hint := Label.new()
-	hint.text = "Drag/click: select   Right click: move   WASD: pan   Q/E: rotate   R/F: tilt   Wheel: zoom"
+	hint.text = "Drag/click: select   Right click: move / attack   Ctrl+right: attack-move   B: battle demo\nWASD: pan   Q/E: rotate   R/F: tilt   Wheel: zoom"
 	column.add_child(hint)
 	status = Label.new()
 	column.add_child(status)

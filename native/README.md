@@ -35,17 +35,26 @@ It uses the Forward+ renderer:
 - Tanks: weathered army paint with road dust low on the hull (vehicle.gdshader),
   a traversing turret, track animation only while driving, dust trails, and
   pitch and roll with the ground.
+- Combat (effects.gd + world.gd): stats come from config.js through the map export.
+  Units acquire the nearest enemy within their detection range, chase into range and
+  fire; tank turrets must swing onto the target first. Rifles fire tracers that can
+  miss; tank shells fly, explode (fireball, smoke, sparks, light flash, scorch decal)
+  and splash nearby units. Soldiers play a death animation and later sink away; tanks
+  explode into charred, smoking wrecks with the turret knocked askew. Units steer
+  around each other. Explosions shake the camera when close.
 - Quality: integrated GPUs start on `balanced` (no SSAO, two shadow cascades, FSR
   at 77%); dedicated GPUs on `high`. Override with `-- --quality=high|balanced|low`.
 
-Controls: click/drag select, right-click move, WASD pan, Q/E rotate, R/F tilt, wheel zoom.
+Controls: click/drag select, right-click move or attack an enemy, Ctrl+right-click
+attack-move, B battle demo, WASD pan, Q/E rotate, R/F tilt, wheel zoom.
 Diagnostics: `--script res://tools/inspect.gd -- <model>` prints a model's nodes, materials and
 clips; `-- --capture-views` writes `build/view-*.png`; `-- --feature-probe --no-vsync`
-prints the frame cost of each expensive feature.
+prints the frame cost of each expensive feature; `-- --capture-battle` saves five
+frames of the battle demo to `build/battle-*.png`.
 
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 
-Not yet ported: combat, economy, logistics, AI, aircraft and ships, pathfinding
+Not yet ported: economy, logistics, AI, aircraft and ships, pathfinding
 around obstacles, saving and Steam integration. Units are still the stylised
 Quaternius models; realistic units need new art.
 

@@ -30,6 +30,11 @@ function exportMapData(step = 2.5) {
     deposits: G.deposits.map(d => ({ type: d.type, x: round(d.x), z: round(d.z) })),
     buildings: G.buildings.filter(b => !b.dead).map(b => ({ key: b.key, owner: b.owner, x: round(b.x), z: round(b.z), built: !!b.built })),
     units: G.units.filter(u => !u.dead).map(u => ({ key: u.key, owner: u.owner, x: round(u.x), z: round(u.z) })),
+    // Combat stats straight from config.js, so both engines share one balance.
+    unitDefs: Object.fromEntries(Object.entries(UNITS).map(([key, d]) => [key, {
+      name: d.name, hp: d.hp, dmg: d.dmg, range: d.range, cooldown: d.cooldown,
+      aggro: d.aggro ?? d.range, speed: d.speed, fly: !!d.fly, naval: !!d.naval,
+    }])),
   };
 }
 
