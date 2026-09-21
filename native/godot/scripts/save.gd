@@ -3,7 +3,8 @@ extends Node
 ## %APPDATA%/Godot/app_userdata/DOMINION — Desktop Prototype/saves).
 ## A save records what the map file cannot: the economy, every building and
 ## unit with its health and orders, construction and training progress, the
-## road and rail network, diplomacy, AI state and the camera. The terrain,
+## road and rail network, diplomacy, AI state, the camera, and the market,
+## espionage, missile stockpile and territory control. The terrain,
 ## trees and deposits come from the map file named in the save.
 ## F5 quick-saves, F9 quick-loads, and the game autosaves every three minutes.
 
@@ -71,6 +72,9 @@ func capture() -> Dictionary:
 		"ai": nations,
 		"camera": {"focus": _v(world.cam_focus), "yaw": world.cam_yaw, "pitch": world.cam_pitch, "dist": world.cam_dist_target},
 		"game_over": world.game_over,
+		"game_time": world.game_time,
+		"market": world.market.capture(), "espionage": world.espionage.capture(),
+		"missiles": world.missiles.capture(), "territory": world.territory.capture(),
 	}
 
 func save(slot: String) -> bool:
@@ -164,3 +168,9 @@ func restore(data: Dictionary) -> void:
 	world.cam_pitch = float(data.camera.pitch)
 	world.cam_dist_target = float(data.camera.dist)
 	world.game_over = data.get("game_over", "")
+	world.game_time = float(data.get("game_time", 0.0))
+	# Older saves have none of these; the systems then start fresh.
+	world.market.restore(data.get("market", {}))
+	world.espionage.restore(data.get("espionage", {}))
+	world.missiles.restore(data.get("missiles", {}))
+	world.territory.restore(data.get("territory", {}))

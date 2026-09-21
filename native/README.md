@@ -118,6 +118,35 @@ It uses the Forward+ renderer:
   open-air reverb and a limiter prevents clipping. The WAVs in `godot/audio` are
   synthesised by `tools/make-sounds.gd` (filtered noise, swept sines, envelopes), so
   there is nothing to license; a recording can replace any file under the same name.
+- World market (market.gd), ported from the trade engine in diplomacy.js: prices from
+  config.js drift every 10 s. A Market allows instant deals (sell at 90%, buy at 115%).
+  A Commercial Port opens trade routes to nations with a trade pact: each cargo sails
+  30 s and is delivered or lost at sea (8%, less with armed warships). Routes collapse on
+  war or when a pact ends, and cargo at sea is then lost. Market (M).
+- Espionage (espionage.gd): an Intelligence Agency recruits named agents who gain rank
+  with successful operations (the ten SPY_OPS of config.js, including assassinating a
+  named head of state, general, scientist or spymaster). The odds depend on the agency,
+  the network built in that nation, heat, gathered intelligence and difficulty. The
+  effects are real: money changes hands, cyber attacks stop the rival's factories, proxy
+  cells and rebels cut its income, a false flag sets two rivals on each other, and a dead
+  general costs his army 30% of its damage. Stolen research speeds up your training
+  (there is no research tree yet). Failed agents can be captured and ransomed, and a
+  traced assassination can start a war. Intelligence reveals the rival's treasury, army
+  and treaties, and at 60+ warns of attacks 30 s ahead. Hostile services steal and
+  sabotage in turn. Intel (I).
+- Missiles (missiles.gd): a Missile Silo builds the eight MISSILES types in its queue,
+  stored up to 2 plus 4 per Ammo Depot. Pick one on the silo's panel and click a target:
+  cruise types fly low and dive, ballistic types arc high. Blast damage falls off to half
+  at the edge. Cluster missiles shred units, anti-ship missiles hit ships three times as
+  hard, and an EMP disables vehicles, aircraft, ships and buildings for 35 s. Hitting a
+  nation at peace is an act of war. A nuke leaves a mushroom cloud and costs 30 relation
+  with every nation. The browser's discoveries are replaced by buildings: anti-ship
+  missiles need a Shipyard, strategic missiles an Ammo Depot.
+- Territory (territory.gd), ported from territory.js: 40 m cells are claimed by
+  buildings and occupied by armed units. Land changes hands only once control is worn
+  down, and cells where two nations are close in strength are contested. Held land
+  yields money, food (plains) and iron (mountains), more where the hold is firm.
+  Territory (T) shows the borders on the map.
 - Quality: integrated GPUs start on `balanced` (no SSAO, two shadow cascades, FSR
   at 77%); dedicated GPUs on `high`. Override with `-- --quality=high|balanced|low`.
 
@@ -136,7 +165,10 @@ frames of the battle demo to `build/battle-*.png` and records its soundtrack to
 loads, and checks that everything came back and routes still work.
 `-- --air-sea-test` checks that ships stay at sea, aircraft keep altitude, the damage
 table blocks rifles and tanks against aircraft, and both kinds of craft win their
-fights (`--capture-air-sea`). `-- --diplomacy-test` checks gifts, pact income, pacts blocking war, allies joining
+fights (`--capture-air-sea`). `-- --systems-test` builds a Market, Port, Intelligence Agency, Ammo Depot and Missile Silo, then checks
+instant deals, a trade route, espionage effects, a captured agent, missile production and
+strikes (war, EMP, nuclear condemnation), territory capture by an army, and that all four
+survive a save and load (`--capture-systems` saves `build/systems-*.png`). `-- --diplomacy-test` checks gifts, pact income, pacts blocking war, allies joining
 and peace (`--capture-diplomacy`). `-- --logistics-test` checks that a new village is cut off, supplied by a road,
 cut by shelling, repaired at a discount and rail-boosted (`--capture-logistics`).
 `-- --ai-test` runs hard AI in fast time and requires it to build, train, go to war
@@ -149,7 +181,7 @@ never through water. Regenerate sounds with
 
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 
-Not yet ported: espionage, market trade routes, territory, missiles and Steam integration. Units are still the stylised
+Not yet ported: research and discoveries, and Steam integration. Units are still the stylised
 Quaternius models; realistic units need new art.
 
 ## Refreshing the map data

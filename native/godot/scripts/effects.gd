@@ -237,6 +237,104 @@ func impact(at: Vector3) -> void:
 		audio.play("impact", at, -12.0, 0.5)
 	_burst(_puff, _smoke_mesh, at, 3, 0.8, 0.35)
 
+## Exhaust behind a missile in flight: a bright spark and a puff of smoke.
+func trail(at: Vector3) -> void:
+	_burst(_smoke, _smoke_mesh, at, 2, 2.6, 0.5)
+	_burst(_fire, _fire_mesh, at, 1, 0.22, 0.3)
+
+## Nuclear blast: a blinding flash, a rising column and a spreading cap of
+## smoke and fire, and a shock that shakes the camera from far away.
+func mushroom(at: Vector3, size: float) -> void:
+	_light(at + Vector3.UP * size, 60.0, size * 6.0, 2.5)
+	for i in range(6):
+		var h := size * (0.15 + 0.16 * i)
+		_burst(_fire, _fire_mesh, at + Vector3.UP * h, 20, 2.5, size * 0.09 * (1.0 + i * 0.1), Vector3.ONE * size * 0.05)
+		_burst(_smoke, _smoke_mesh, at + Vector3.UP * h, 16, 16.0, size * 0.12)
+	var top := at + Vector3.UP * size * 1.1
+	_burst(_fire, _fire_mesh, top, 60, 3.0, size * 0.22)
+	_burst(_smoke, _smoke_mesh, top, 70, 22.0, size * 0.3)
+	_burst(_dirt, _dirt_mesh, at, 80, 2.5, size * 0.25)
+	# The cloud itself: a column and a cap that climb, swell, cool from glowing
+	# orange to grey-brown smoke and thin out over half a minute.
+	var cloud := Node3D.new()
+	add_child(cloud)
+	cloud.global_position = at
+	# Lumpy billows, not smooth shapes: the column and the cap are each built
+	# from overlapping puffs in three smoke tones. The hot core glows at first.
+	var tones := [Color(0.30, 0.26, 0.23), Color(0.42, 0.37, 0.32), Color(0.55, 0.50, 0.45)]
+	var mats := []
+	for i in range(tones.size()):
+		var m := StandardMaterial3D.new()
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.albedo_color = Color(tones[i], 0.95)
+		m.roughness = 1.0
+		m.emission_enabled = true
+		m.emission = Color(1.0, 0.42, 0.1)
+		m.emission_energy_multiplier = 1.6 - i * 0.6
+		mats.append(m)
+	var puff_mesh := SphereMesh.new()
+	puff_mesh.radius = 1.0
+	puff_mesh.height = 2.0
+	puff_mesh.radial_segments = 14
+	puff_mesh.rings = 7
+	var rng := RandomNumberGenerator.new()
+	var cap := Node3D.new()
+	cap.position.y = size * 0.95
+	cloud.add_child(cap)
+	var puffs := []
+	# Column: a twisting stack, wider at the foot.
+	for i in range(9):
+		var t := i / 8.0
+		var r := size * lerpf(0.2, 0.12, t) * rng.randf_range(0.85, 1.15)
+		puffs.append([cloud, Vector3(rng.randf_range(-0.04, 0.04) * size, size * 0.9 * t, rng.randf_range(-0.04, 0.04) * size), Vector3(r, r * 1.1, r), 0 if t < 0.4 else 1])
+	# Cap: a ring of billows rolling outward, a crown on top, a darker underside.
+	for i in range(14):
+		var a := TAU * i / 14.0 + rng.randf() * 0.2
+		var r := size * rng.randf_range(0.16, 0.22)
+		puffs.append([cap, Vector3(cos(a), rng.randf_range(-0.05, 0.08), sin(a)) * size * 0.3, Vector3(r, r * 0.8, r), 1 + (i % 2)])
+	for i in range(7):
+		var a := TAU * i / 7.0
+		var r := size * rng.randf_range(0.14, 0.19)
+		puffs.append([cap, Vector3(cos(a) * size * 0.14, size * 0.12, sin(a) * size * 0.14), Vector3(r, r * 0.85, r), 2])
+	puffs.append([cap, Vector3(0, -size * 0.08, 0), Vector3(size * 0.3, size * 0.12, size * 0.3), 0])
+	# Base surge: a low ring of dust rolling out along the ground.
+	for i in range(12):
+		var a := TAU * i / 12.0
+		var r := size * rng.randf_range(0.1, 0.15)
+		puffs.append([cloud, Vector3(cos(a), 0.0, sin(a)) * size * 0.4, Vector3(r, r * 0.55, r), 1])
+	for p in puffs:
+		var puff := MeshInstance3D.new()
+		puff.mesh = puff_mesh
+		puff.material_override = mats[p[3]]
+		puff.position = p[1]
+		puff.scale = p[2]
+		puff.rotation = Vector3(rng.randf() * TAU, rng.randf() * TAU, 0)
+		puff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		p[0].add_child(puff)
+	cloud.scale = Vector3.ONE * 0.3
+	_live.append({"node": cloud, "age": 0.0, "life": 40.0, "kind": "mushroom", "mats": mats, "size": size, "cap": cap})
+	var mark := Decal.new()
+	mark.texture_albedo = _scorch
+	mark.size = Vector3(size * 2.2, 12.0, size * 2.2)
+	add_child(mark)
+	mark.global_position = at
+	_live.append({"node": mark, "age": 0.0, "life": 240.0, "kind": "scorch"})
+	burn(at, 60.0)
+	if audio:
+		audio.play("explosion", at, 6.0, 6.0)
+	shake.emit(3.0, at)
+
+## An EMP: a pale blue pulse and a crackle of sparks, no fireball.
+func emp_flash(at: Vector3, size: float) -> void:
+	var light := OmniLight3D.new()
+	light.light_color = Color(0.55, 0.75, 1.0)
+	light.light_energy = 14.0
+	light.omni_range = size * 2.0
+	add_child(light)
+	light.global_position = at + Vector3.UP * 4.0
+	_live.append({"node": light, "age": 0.0, "life": 0.8, "kind": "light", "energy": 14.0})
+	_burst(_sparks, _spark_mesh, at + Vector3.UP * 2.0, 90, 1.6, 1.4, Vector3(size, 2.0, size) * 0.5)
+
 ## A wreck that keeps burning and smoking for a while.
 func burn(at: Vector3, seconds: float) -> void:
 	for i in range(int(seconds / 3.0)):
@@ -269,6 +367,16 @@ func _physics_process(delta: float) -> void:
 				e.node.scale = Vector3(1, 1, e.length)
 			"scorch":
 				e.node.modulate.a = clampf((e.life - e.age) / 8.0, 0.0, 1.0)
+			"mushroom":
+				var k: float = e.age / e.life
+				var grow := 1.0 - pow(1.0 - minf(e.age / 7.0, 1.0), 3.0)
+				e.node.scale = Vector3.ONE * lerpf(0.3, 1.0, grow) * (1.0 + k * 0.3)
+				e.cap.position.y = e.size * (0.95 + 0.35 * k)
+				e.cap.scale = Vector3(1.0 + k * 0.7, 1.0, 1.0 + k * 0.7)
+				e.cap.rotate_y(delta * 0.05)
+				for m in e.mats:
+					m.emission_energy_multiplier = maxf(0.0, m.emission_energy_multiplier - delta * 0.25)
+					m.albedo_color.a = 0.95 * clampf((1.0 - k) * 2.5, 0.0, 1.0)
 			"burn":
 				if e.age >= 0.0 and not e.fired:
 					e.fired = true

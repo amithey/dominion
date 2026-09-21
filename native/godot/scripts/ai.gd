@@ -68,14 +68,16 @@ func _physics_process(delta: float) -> void:
 
 func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	var s: float = n.speed
-	n.money += float(cfg.income) * delta * s
+	var spies: Node = world.espionage
+	n.money += float(cfg.income) * delta * s * (spies.income_mult(n.id) if spies else 1.0)
+	var cyber: bool = spies != null and spies.production_down(n.id)
 	n.next_build -= delta
 	n.next_train -= delta
 	n.next_attack -= delta
 	n.next_defend -= delta
 
 	# Construction: fixed opening, then whatever the economy lacks.
-	if n.next_build <= 0.0:
+	if n.next_build <= 0.0 and not cyber:
 		var key: String = build_order[n.build_idx] if n.build_idx < build_order.size() else pick_building(n)
 		var def: Dictionary = world.building_defs.get(key, {})
 		if not def.is_empty():
@@ -97,14 +99,14 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 
 	# Self-building: AI sites rise on their own.
 	for b in world.buildings:
-		if b.owner == n.id and not b.built and not b.dead and b.get("ai_build", false):
+		if b.owner == n.id and not b.built and not b.dead and b.get("ai_build", false) and not cyber:
 			b.progress = minf(1.0, b.progress + delta * s / maxf(float(b.def.buildTime), 8.0))
 			b.model.scale.y = b.full_scale_y * lerpf(0.06, 1.0, b.progress)
 			if b.progress >= 1.0:
 				world.finish_building(b)
 
 	# Training.
-	if n.next_train <= 0.0:
+	if n.next_train <= 0.0 and not cyber:
 		var army: Array = world.units.filter(func(u): return u.owner == n.id and not u.dead)
 		if army.size() < int(cfg.maxArmy):
 			var options: Array = train_pool.filter(func(k): return world.buildings.any(func(b): return b.owner == n.id and b.built and not b.dead and b.key == TRAINED_AT[k]))
@@ -131,7 +133,12 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 				break
 
 	# Attack waves.
-	if n.next_attack <= 0.0:
+	# Agents inside the nation (intel 60+) report an attack half a minute early.
+	if spies and n.next_attack > 0.0 and n.next_attack * s < 30.0 and not n.get("warned", false) and world.diplomacy.at_war(0, n.id):
+		n.warned = true
+		spies.warn_attack(n.id)
+	if n.next_attack <= 0.0 and not (spies and spies.paralyzed(n.id)):
+		n.warned = false
 		n.next_attack = float(cfg.firstAttack) * randf_range(0.55, 1.05) / s
 		var d: Node = world.diplomacy
 		if d.enemies_of(n.id).is_empty() and randf() < float(cfg.aggression):

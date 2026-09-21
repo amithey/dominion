@@ -10,11 +10,11 @@ extends RefCounted
 ## neighbours (see set_streets).
 
 const STYLE := {
-	"hq": 0, "villageCenter": 0, "cityCenter": 0,
+	"hq": 0, "villageCenter": 0, "cityCenter": 0, "market": 0, "intelAgency": 0,
 	"cottage": 1, "housing": 1, "residential": 1, "workerHouse": 1, "apartments": 1, "luxuryVillas": 1,
 	"warehouse": 2, "foodDepot": 2, "tankFactory": 2, "powerPlant": 2, "oilRefinery": 2,
 	"farm": 3,
-	"barracks": 4, "bunker": 4, "commandCenter": 4, "ammoDepot": 4, "helipad": 4, "airfield": 4,
+	"barracks": 4, "bunker": 4, "commandCenter": 4, "ammoDepot": 4, "helipad": 4, "airfield": 4, "missileSilo": 4,
 	"shipyard": 2, "port": 2,
 }
 const HOUSES := ["res://assets/House_A.glb", "res://assets/House_B.glb", "res://assets/House_C.glb", "res://assets/House_D.glb"]
@@ -76,6 +76,7 @@ func build(key: String, centre: Vector3, seed: float, owner_id := 0, size := 0) 
 			barracks(key, container, st, rng)
 		_:
 			yard(key, container, st, rng)
+	landmarks(key, st, rng)
 	tone(container, owner)
 	var props := MeshInstance3D.new()
 	props.mesh = st.commit()  # normals were set per primitive
@@ -361,3 +362,75 @@ func barracks(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumber
 	box(st, Vector3(2.4, 1.2, 2.4), tower + Vector3(0, 5.0, 0), 0.0, Color("6a5440"))
 	box(st, Vector3(2.8, 0.15, 2.8), tower + Vector3(0, 6.3, 0), 0.0, Color("4a3a2a"))
 	fence(st, Color("5d6264"), 1.8)
+
+# ---------------------------------------------------------------- landmarks
+
+# What makes a special district recognisable from the air.
+func landmarks(key: String, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
+	match key:
+		"market":
+			# Striped stall awnings around the square.
+			var awnings := [Color("9c3b30"), Color("c9a24a"), Color("3e6a8a"), Color("5f7a34")]
+			for k in range(6):
+				var p := slot(k, 6.6)
+				var yaw := deg_to_rad(-(30.0 + 60.0 * k))
+				for dx in [-1.0, 1.0]:
+					for dz in [-0.7, 0.7]:
+						box(st, Vector3(0.1, 2.2, 0.1), p + Basis(Vector3.UP, yaw) * Vector3(dx, 0, dz), 0.0, Color("4a3a2a"))
+				box(st, Vector3(2.4, 0.12, 1.8), p + Vector3(0, 2.2, 0), yaw, awnings[k % awnings.size()])
+				box(st, Vector3(2.0, 0.8, 0.9), p, yaw, Color("7b5f3e"))
+		"intelAgency":
+			# Radar dishes and an antenna mast behind a security fence.
+			for k in [1, 4]:
+				var p := slot(k, 7.2)
+				cylinder(st, 0.25, 2.4, p, Color("8e9396"), 8)
+				var dish := CylinderMesh.new()
+				dish.top_radius = 1.7
+				dish.bottom_radius = 0.3
+				dish.height = 0.7
+				dish.radial_segments = 16
+				dish.rings = 1
+				shape(st, dish, Transform3D(Basis(Vector3.RIGHT, -0.8).rotated(Vector3.UP, rng.randf() * TAU), p + Vector3(0, 2.9, 0)), Color("dfe2e0"))
+			var mast := slot(3, 7.6)
+			cylinder(st, 0.18, 12.0, mast, Color("b0b3b0"), 6)
+			for h in [4.0, 7.0, 10.0]:
+				box(st, Vector3(1.6, 0.08, 0.08), mast + Vector3(0, h, 0), 0.0, Color("b0b3b0"))
+			cylinder(st, 0.22, 0.3, mast + Vector3(0, 12.0, 0), Color("c83a2e"), 8)
+			fence(st, Color("5d6264"), 2.0)
+		"port":
+			# Two gantry cranes and a stack of bollards on the quay.
+			for k in [0, 3]:
+				var p := slot(k, 6.8)
+				var yaw := deg_to_rad(-(30.0 + 60.0 * k))
+				for side in [-1.2, 1.2]:
+					box(st, Vector3(0.35, 11.0, 0.35), p + Basis(Vector3.UP, yaw) * Vector3(side, 0, 0), yaw, Color("c28a2a"))
+				box(st, Vector3(3.2, 0.6, 0.6), p + Vector3(0, 11.0, 0), yaw, Color("c28a2a"))
+				box(st, Vector3(0.5, 0.5, 9.0), p + Vector3(0, 11.3, 0) + Basis(Vector3.UP, yaw) * Vector3(0, 0, 2.5), yaw, Color("c28a2a"))
+				box(st, Vector3(0.9, 1.0, 1.0), p + Vector3(0, 9.6, 0) + Basis(Vector3.UP, yaw) * Vector3(0, 0, 5.0), yaw, Color("3b3f40"))
+		"missileSilo":
+			# Armoured launch hatches, one open with a missile nose showing.
+			for i in range(2):
+				var p := slot(2 + i * 3, 6.6)
+				cylinder(st, 2.0, 0.5, p, Color("5c605d"), 20)
+				cylinder(st, 1.5, 0.12, p + Vector3(0, 0.5, 0), Color("2e3230"), 20)
+				if i == 0:
+					cylinder(st, 0.55, 1.6, p + Vector3(0, 0.3, 0), Color("d8dde2"), 12)
+					var nose := CylinderMesh.new()
+					nose.top_radius = 0.02
+					nose.bottom_radius = 0.55
+					nose.height = 1.1
+					nose.radial_segments = 12
+					nose.rings = 1
+					shape(st, nose, Transform3D(Basis(), p + Vector3(0, 2.45, 0)), Color("c83a2e"))
+				else:
+					box(st, Vector3(3.2, 0.25, 1.6), p + Vector3(1.4, 0.5, 0), 0.0, Color("4b4f4c"))  # hatch door, slid open
+			for k in [0, 1]:
+				var p := slot(k, 8.2)
+				box(st, Vector3(3.0, 1.2, 0.5), p, deg_to_rad(-(30.0 + 60.0 * k)) + PI * 0.5, Color("e2c23a"))  # hazard barrier
+		"ammoDepot":
+			# Earth-covered magazines with blast doors.
+			for k in [0, 2, 4]:
+				var p := slot(k, 7.0)
+				var yaw := deg_to_rad(-(30.0 + 60.0 * k)) + PI * 0.5
+				box(st, Vector3(4.2, 1.8, 3.2), p, yaw, Color("5b6b3a"))
+				box(st, Vector3(1.6, 1.4, 0.2), p + Basis(Vector3.UP, yaw) * Vector3(0, 0, 1.65), yaw, Color("3b3f40"))

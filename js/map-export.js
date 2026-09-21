@@ -23,7 +23,10 @@ function exportMapData(step = 2.5) {
     style: MAP_STYLE, mapSize: MAP_SIZE, seaLevel: SEA_LEVEL,
     grid: { origin: [-extent, -extent], step, size, heightsCm: heights },
     startPositions: START_POS.map(([x, z]) => [round(x), round(z)]),
-    nations: G.nations.map(n => ({ name: n.name, color: '#' + new THREE.Color(n.color).getHexString(), player: !!n.isPlayer })),
+    nations: G.nations.map((n, i) => ({
+      name: n.name, color: '#' + new THREE.Color(n.color).getHexString(), player: !!n.isPlayer,
+      people: (NATION_DEFS[i] && NATION_DEFS[i].people) || {},
+    })),
     trees: TREES.list.filter(t => !t.removed).map(t => ({
       x: round(t.x), z: round(t.z), scale: round(t.s), kind: t.kind, grove: t.grove ?? -1,
     })),
@@ -58,6 +61,20 @@ function exportMapData(step = 2.5) {
     // Who can hurt what, and how much (entities.js DAMAGE_PROFILE / targetClass).
     combat: { damageProfile: DAMAGE_PROFILE, infantry: [...INFANTRY_KEYS], armor: [...ARMOR_KEYS] },
     logistics: { hexRadius: HEX_RADIUS, transport: TRANSPORT, railProductionBonus: 0.25 },
+    // Munitions built at a Missile Silo and stored in Ammo Depots (entities.js).
+    missiles: { types: MISSILES, baseCap: BASE_MISSILE_CAP, capPerDepot: 4 },
+    // Covert operations and named field agents (diplomacy.js).
+    espionage: {
+      ops: SPY_OPS, targets: ASSASSIN_TARGETS, agentNames: AGENT_NAMES, xpLevels: AGENT_XP_LEVELS,
+      skillBonus: AGENT_SKILL_BONUS, ransom: AGENT_RANSOM, ranks: AGENT_RANKS, recruitBase: 400, recruitStep: 120,
+    },
+    // World market prices and overseas trade routes (diplomacy.js).
+    trade: {
+      price: TRADE_PRICE, qty: TRADE_QTY, importMarkup: TRADE_IMPORT_MARKUP, instantSell: TRADE_INSTANT_SELL,
+      instantBuy: TRADE_INSTANT_BUY, voyage: TRADE_VOYAGE_SECONDS, routesPerPort: TRADE_ROUTES_PER_PORT,
+    },
+    // Gradual territory control (territory.js).
+    territory: { cell: TERRITORY_CELL, halfMap: HALF_MAP },
   };
 }
 

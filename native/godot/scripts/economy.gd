@@ -74,8 +74,10 @@ func tick() -> void:
 	for u in world.units:
 		if u.owner == 0 and not u.dead and u.key != "worker":
 			army += 1
-	# Food: farms against mouths to feed.
-	var food_in := owned("farm") * float(cfg.farmFood)
+	# Held land yields by terrain and how firmly it is held (territory.gd).
+	var land: Dictionary = world.territory.yields(0) if world.territory != null else {"money": 0.0, "food": 0.0, "iron": 0.0}
+	# Food: farms and farmland against mouths to feed.
+	var food_in := owned("farm") * float(cfg.farmFood) + float(land.food)
 	var food_out := civilians * float(cfg.foodPerCivilian) + army * float(cfg.foodPerSoldier)
 	rates.food = food_in - food_out
 	res.food = clampf(res.food + rates.food, 0.0, caps.food)
@@ -87,10 +89,13 @@ func tick() -> void:
 	civilians = clampf(civilians + growth, 20.0, civ_cap)
 	# Taxes reach only settlements the supply network connects (config.js
 	# supplyCoverage, weighted by how many people each settlement houses).
-	rates.money = civilians * float(cfg.taxPerCivilian) * admin * supply_coverage()
-	# Extractors on deposits.
+	# Markets and ports add a share of income (config.js incomePct).
+	rates.money = civilians * float(cfg.taxPerCivilian) * admin * supply_coverage() * (1.0 + provided("incomePct"))
+	rates.money += float(land.money)
+	# Extractors on deposits, and iron from held mountains.
 	for key in ["oil", "iron", "silicon", "uranium"]:
 		rates[key] = 0.0
+	rates.iron = float(land.iron)
 	for b in world.buildings:
 		if b.owner != 0 or not b.built or b.dead or b.deposit == null or not b.get("supplied", true):
 			continue

@@ -146,6 +146,13 @@ var transport_start = null
 var transport_route := []
 var transport_hover := Vector2i(1 << 20, 0)
 var nav_ready := false
+var market: Node          # market.gd: world market and trade routes
+var espionage: Node       # espionage.gd: agents and covert operations
+var territory: Node3D     # territory.gd: gradual control of 40 m cells
+var missiles: Node3D      # missiles.gd: silo production, launches, impacts
+var game_time := 0.0      # match seconds (EMP and other timed effects)
+var missile_aim := ""     # missile type waiting for a target click
+var cam_lift := 0.0       # raises the camera's look-at point above the ground (captures)
 const NAV_STEP := 4.0
 var fps_frames := 0
 
@@ -253,6 +260,18 @@ func _ready() -> void:
 	diplomacy.setup(self, map.nations.size(), float(map.ai.difficulty.get(difficulty, map.ai.difficulty.easy).aggression), ai_speed)
 	match_difficulty = difficulty
 	match_speed = ai_speed
+	market = preload("res://scripts/market.gd").new()
+	add_child(market)
+	market.setup(self, map.trade)
+	espionage = preload("res://scripts/espionage.gd").new()
+	add_child(espionage)
+	espionage.setup(self, map.espionage)
+	missiles = preload("res://scripts/missiles.gd").new()
+	add_child(missiles)
+	missiles.setup(self, map.missiles)
+	territory = preload("res://scripts/territory.gd").new()
+	add_child(territory)
+	territory.setup(self, map.territory)
 	if not interactive and bench_units == 0 and not ("--capture-views" in OS.get_cmdline_user_args() or "--capture-menu" in OS.get_cmdline_user_args() or "--menu-test" in OS.get_cmdline_user_args() or "--capture-battle" in OS.get_cmdline_user_args() or "--economy-test" in OS.get_cmdline_user_args() or "--capture-economy" in OS.get_cmdline_user_args() or "--nav-test" in OS.get_cmdline_user_args() or "--logistics-test" in OS.get_cmdline_user_args() or "--capture-logistics" in OS.get_cmdline_user_args()):
 		ai.setup(self, map.ai, difficulty, ai_speed)
 	menu = preload("res://scripts/menu.gd").new()
@@ -308,6 +327,8 @@ func _ready() -> void:
 		await save_test()
 	elif "--air-sea-test" in args or "--capture-air-sea" in args:
 		await air_sea_test("--capture-air-sea" in args)
+	elif "--systems-test" in args or "--capture-systems" in args:
+		await systems_test("--capture-systems" in args)
 	elif "--diplomacy-test" in args or "--capture-diplomacy" in args:
 		await diplomacy_test("--capture-diplomacy" in args)
 	elif "--logistics-test" in args:
@@ -648,6 +669,8 @@ func footprint_of(key: String) -> float:
 func building_model(key: String, x: float, z: float) -> Node3D:
 	if key == "extractor":
 		return extractor_model()
+	if key in ["missileSilo", "ammoDepot"]:
+		return bunker_model(key)
 	var path: String = BUILDING_MODELS.get(key, "res://assets/building-a.glb")
 	if key == "cottage":
 		path = ["res://assets/House_A.glb", "res://assets/House_B.glb", "res://assets/House_C.glb"][absi(int(x * 7.0 + z * 3.0)) % 3]
@@ -679,6 +702,49 @@ func add_flag(root: Node3D, footprint: float, owner: int) -> void:
 	flag.material_override = cached_material("flag:%d" % owner, func(): return matte(colour, 0.8))
 	flag.position = corner + Vector3(0.95, 2.8, 0)
 	root.add_child(flag)
+
+# Low reinforced-concrete blocks: a launch control bunker with a blast wall
+# and a radar mast, or a row of earth-banked magazines.
+func bunker_model(key: String) -> Node3D:
+	var root := Node3D.new()
+	var concrete := cached_material("bunker-concrete", func():
+		var m := StandardMaterial3D.new()
+		m.albedo_texture = load("res://assets/architecture/concrete_diffuse.jpg")
+		m.normal_enabled = true
+		m.normal_texture = load("res://assets/architecture/concrete_normal.jpg")
+		m.uv1_triplanar = true
+		m.uv1_scale = Vector3.ONE * 0.25
+		m.albedo_color = Color("9a9890")
+		return m)
+	var steel := cached_material("bunker-steel", func(): return matte(Color("3b3f40"), 0.5, 0.6))
+	var earth := cached_material("bunker-earth", func(): return matte(Color("56613a"), 0.95))
+	var parts: Array
+	if key == "missileSilo":
+		parts = [
+			[Vector3(7.0, 2.6, 5.0), Vector3(0, 1.3, 0), concrete],
+			[Vector3(7.6, 0.4, 5.6), Vector3(0, 2.8, 0), concrete],
+			[Vector3(1.6, 1.8, 0.2), Vector3(-1.6, 0.9, 2.55), steel],
+			[Vector3(9.0, 3.2, 0.9), Vector3(0, 1.6, -3.6), concrete],
+			[Vector3(0.25, 7.0, 0.25), Vector3(2.8, 6.0, 1.6), steel],
+			[Vector3(1.8, 0.1, 0.1), Vector3(2.8, 8.0, 1.6), steel],
+			[Vector3(1.2, 0.8, 1.2), Vector3(-2.4, 3.4, -1.0), steel],
+		]
+	else:
+		parts = []
+		for i in range(3):
+			var x := (i - 1) * 3.2
+			parts.append([Vector3(2.6, 2.2, 6.0), Vector3(x, 1.1, 0), earth])
+			parts.append([Vector3(2.0, 1.6, 0.2), Vector3(x, 0.8, 3.05), concrete])
+			parts.append([Vector3(1.0, 1.2, 0.12), Vector3(x, 0.6, 3.16), steel])
+	for p in parts:
+		var mesh := BoxMesh.new()
+		mesh.size = p[0]
+		var part := MeshInstance3D.new()
+		part.mesh = mesh
+		part.position = p[1]
+		part.material_override = p[2]
+		root.add_child(part)
+	return root
 
 # A pumpjack-style extraction rig in dark steel.
 func extractor_model() -> Node3D:
@@ -1266,6 +1332,7 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 
 func _physics_process(delta: float) -> void:
 	var now := Time.get_ticks_msec() / 1000.0
+	game_time += delta
 	if economy:
 		update_construction(delta)
 		update_training(delta)
@@ -1291,7 +1358,7 @@ func _physics_process(delta: float) -> void:
 			unit.turret_yaw = lerp_angle(unit.turret_yaw, aim, minf(1.0, delta * (2.2 if unit.enemy != null else 0.8)))
 			unit.turret.basis = Basis(unit.turret.get_meta("axis"), unit.turret_yaw)
 	for unit in units:
-		if unit.dead:
+		if unit.dead or disabled(unit):
 			continue
 		if unit.get("fly", false) or unit.get("naval", false):
 			move_craft(unit, delta)
@@ -1477,6 +1544,11 @@ func clear_match() -> void:
 		d.extractor = null
 	logistics.edges.clear()
 	drill.clear()
+	cancel_missile()
+	if missiles:
+		missiles.restore({})
+	if territory:
+		territory.reset()
 
 func rebuild_nav_mesh() -> int:
 	var nav := NavigationMesh.new()
@@ -1648,7 +1720,7 @@ func queue_unit(b: Dictionary, key: String) -> void:
 	var queued_pop := 0
 	for other in buildings:
 		for q in other.queue:
-			queued_pop += int(unit_defs[q].get("pop", 1))
+			queued_pop += int(unit_defs.get(q, {}).get("pop", 0))
 	if economy.pop_used + queued_pop + int(def.get("pop", 1)) > economy.pop_cap:
 		hud.notice("Army capacity reached: build Housing Blocks")
 		return
@@ -1661,10 +1733,22 @@ func update_training(delta: float) -> void:
 	for b in buildings:
 		if b.dead or not b.built or b.queue.is_empty():
 			continue
-		if not b.get("supplied", true):
-			continue  # cut off: the factory waits for supply
-		var def: Dictionary = unit_defs[b.queue[0]]
+		if not b.get("supplied", true) or disabled(b):
+			continue  # cut off (or struck by an EMP): the factory waits
+		if b.owner > 0 and espionage and espionage.production_down(b.owner):
+			continue  # a cyber attack stopped this nation's factories
 		var rail: float = 1.0 + (logistics.rail_bonus if b.get("rail_supplied", false) else 0.0)
+		if b.owner == 0 and espionage:
+			rail *= espionage.training_boost()
+		var first: String = b.queue[0]
+		if first.begins_with("missile:"):
+			b.queue_prog += delta * rail / maxf(missiles.build_time(first.substr(8)), 0.5)
+			if b.queue_prog >= 1.0:
+				b.queue_prog = 0.0
+				b.queue.pop_front()
+				missiles.finished(first.substr(8))
+			continue
+		var def: Dictionary = unit_defs[first]
 		b.queue_prog += delta * rail / maxf(float(def.get("trainTime", 10)), 0.5)
 		if b.queue_prog < 1.0:
 			continue
@@ -1860,6 +1944,212 @@ func diplomacy_test(capture: bool) -> void:
 	print("DIPLOMACY_TEST %s" % ("PASS" if ok else "FAIL"))
 	get_tree().quit(0 if ok else 1)
 
+## A hex near `from` where `key` may stand, or where only the district rule
+## objects (the test places it directly).
+func test_site(key: String, from: Vector3) -> Variant:
+	var origin: Vector2i = logistics.world_hex(from)
+	for ring in range(1, 18):
+		for dq in range(-ring, ring + 1):
+			for dr in range(-ring, ring + 1):
+				if absi(dq + dr) > ring:
+					continue
+				var at: Vector3 = logistics.hex_center(origin + Vector2i(dq, dr))
+				var problem := site_problem(key, at, 0)
+				if problem == "" or problem == "Outside your district":
+					return at
+	return null
+
+## Market, espionage, missiles, territory and saving them, in fast time.
+func systems_test(capture: bool) -> void:
+	for i in range(30):
+		await get_tree().process_frame
+	var d: Node = diplomacy
+	var hq: Dictionary = buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0]
+	var home: Vector3 = hq.root.position
+	var placed := {}
+	for key in ["market", "port", "intelAgency", "ammoDepot", "missileSilo"]:
+		var at = test_site(key, home)
+		if at == null:
+			print("no site for %s" % key)
+			continue
+		placed[key] = place_building(key, at, 0, true)
+		close_navigation(at, DISTRICT_NAV_SIZE)
+	refresh_streets()
+	economy.recalculate()
+	for key in ["money", "iron", "oil", "silicon", "uranium"]:
+		economy.res[key] = minf(60000.0, economy.caps.get(key, 60000.0))
+	var built_ok := placed.size() == 5
+
+	# Market: instant deals and a trade route that delivers or is lost at sea.
+	var money: float = economy.res.money
+	market.sell("oil", 50)
+	var sold: bool = economy.res.money > money
+	money = economy.res.money
+	economy.res.iron -= 100.0
+	market.buy("iron", 25)
+	var bought: bool = economy.res.money < money
+	d.set_score(0, 1, 40.0)
+	d.set_flag(d.war, 0, 1, false)
+	d.set_flag(d.pact, 0, 1, true)
+	var opened: String = market.open_route(1, "oil", "export", 25)
+	var trips := 0
+	for i in range(12):
+		market.tick()
+		trips = market.delivered + market.lost
+	var trade_ok: bool = sold and bought and market.routes.size() == 1 and trips >= 2
+	print("market: sold %s, bought %s, route: %s, voyages %d (delivered %d, lost %d)" % [sold, bought, opened, trips, market.delivered, market.lost])
+
+	# Espionage: agents, a network, real effects on the target nation.
+	print(espionage.recruit())
+	print(espionage.recruit())
+	var nation2 = market.ai_nation(2)
+	nation2.money = 2000.0
+	for i in range(3):
+		print(espionage.run("buildNetwork", 2, "", -1, 0.0))
+	money = economy.res.money
+	print(espionage.run("stealFunds", 2, "", -1, 0.0))
+	var stolen: bool = economy.res.money > money and nation2.money < 2000.0
+	print(espionage.run("cyberAttack", 2, "", -1, 0.0))
+	print(espionage.run("assassinate", 2, "general", -1, 0.0))
+	var spy_ok: bool = espionage.network[2] >= 18.0 and espionage.intel[2] > 10.0 and stolen and espionage.production_down(2) and espionage.damage_mult(2) < 1.0
+	var failed: String = espionage.run("sabotage", 3, "", -1, 0.99)
+	print(failed)
+	var consequence: bool = "captured" in failed.to_lower() or "escaped" in failed.to_lower()
+	espionage.enemy_attempt("caught")
+	spy_ok = spy_ok and consequence and not espionage.reports.is_empty()
+	print("espionage: network %d, intel %d, funds stolen %s, cyber %s, general %s, failure handled %s" % [espionage.network[2], espionage.intel[2], stolen, espionage.production_down(2), espionage.damage_mult(2) < 1.0, consequence])
+
+	# Missiles: build one in the silo, fire it at a rival building, EMP and nuke.
+	var silo: Dictionary = placed.get("missileSilo", {})
+	var queued: String = missiles.produce(silo, "tactical") if not silo.is_empty() else "no silo"
+	for i in range(400):
+		update_training(0.1)
+		if missiles.stock.tactical > 0:
+			break
+	var produced: bool = missiles.stock.tactical == 1
+	var target = null
+	for b in buildings:
+		if b.owner == 1 and not b.dead and b.key != "hq":
+			target = b
+			break
+	if target == null:
+		target = buildings.filter(func(b): return b.owner == 1)[0]
+	var hp_before: float = target.hp
+	d.set_flag(d.war, 0, 1, false)
+	print(missiles.launch("tactical", target.root.position))
+	if capture:
+		await capture_missile_flight(target.root.position)
+	for i in range(200):
+		missiles._physics_process(0.05)
+		if missiles.flying.is_empty():
+			break
+	var struck: bool = target.hp < hp_before or target.dead
+	var war_started: bool = d.at_war(0, 1)
+	var victims: Array = units.filter(func(u): return u.owner == 1 and not u.dead and u.vehicle and not u.get("fly", false))
+	var emp_target: Vector3 = victims[0].node.position if not victims.is_empty() else target.root.position
+	missiles.stock.emp = 1
+	missiles.launch("emp", emp_target)
+	for i in range(200):
+		missiles._physics_process(0.05)
+		if missiles.flying.is_empty():
+			break
+	var emp_ok: bool = victims.is_empty() or disabled(victims[0]) or victims[0].dead
+	for i in range(1, d.n):
+		d.set_score(0, i, 20.0)
+	var hq3: Dictionary = buildings.filter(func(b): return b.owner == 3 and b.key == "hq")[0]
+	var ground_zero: Vector3 = hq3.root.position + Vector3(30, 0, 0)
+	missiles.stock.nuke = 1
+	print(missiles.launch("nuke", ground_zero))
+	for i in range(300):
+		missiles._physics_process(0.05)
+		if missiles.flying.is_empty():
+			break
+	var condemned: bool = d.rel(0, 2) <= -9.0
+	if capture:
+		cam_yaw = PI * 0.25
+		await capture_view("res://build/systems-nuke.png", ground_zero, 190.0, 0.45, 50)
+	var missile_ok: bool = queued == "" and produced and struck and war_started and emp_ok and condemned
+	print("missiles: queued [%s], produced %s, struck %s, war %s, EMP %s, nuke condemned %s (relation %d)" % [queued, produced, struck, war_started, emp_ok, condemned, int(d.rel(0, 2))])
+
+	# Territory: the capital holds land; an occupying army takes enemy land.
+	territory.tick()
+	var home_cell: int = territory.cell_of(home)
+	var holds: bool = territory.owner_of[home_cell] == 0 and territory.yields(0).cells > 3
+	var enemy_cell := -1
+	var hq2: Dictionary = buildings.filter(func(b): return b.owner == 2 and b.key == "hq")[0]
+	for i in range(territory.owner_of.size()):
+		if territory.owner_of[i] == 2 and territory.center(i).distance_to(hq2.root.position) > 60.0 and height_at(territory.center(i).x, territory.center(i).z) > float(map.seaLevel) + 1.0:
+			enemy_cell = i
+			break
+	var taken := false
+	if enemy_cell >= 0:
+		var c: Vector3 = territory.center(enemy_cell)
+		for i in range(14):
+			spawn_unit("tank", land_point(c + Vector3(randf_range(-8, 8), 0, randf_range(-8, 8)), 18.0), 0)
+		for i in range(120):
+			territory.tick()
+			if territory.owner_of[enemy_cell] == 0:
+				taken = true
+				break
+	var land_ok: bool = holds and taken
+	print("territory: capital holds %s (%d cells), army took cell %d: %s, fronts %d" % [holds, territory.yields(0).cells, enemy_cell, taken, territory.fronts])
+	if capture:
+		hud.toggle_panel("territory")
+		await capture_view("res://build/systems-territory.png", home, 260.0, 1.05, 40)
+		hud.toggle_panel("intel")
+		await capture_view("res://build/systems-intel.png", home, 120.0, 0.9, 30)
+		hud.toggle_panel("market")
+		await capture_view("res://build/systems-market.png", home, 120.0, 0.9, 30)
+		hud.toggle_panel("market")
+		select_building(silo)
+		await capture_view("res://build/systems-silo.png", silo.root.position, 42.0, 0.62, 40)
+
+	# Saving keeps all four.
+	saves.save("systemstest")
+	var routes: int = market.routes.size()
+	var agents: int = espionage.agents.size()
+	var owners: PackedInt32Array = territory.owner_of.duplicate()
+	missiles.stock.cruise = 2
+	market.routes.clear()
+	espionage.agents.clear()
+	territory.reset()
+	saves.load_slot("systemstest")
+	DirAccess.remove_absolute(saves.path_of("systemstest"))
+	var saved_ok: bool = market.routes.size() == routes and espionage.agents.size() == agents and missiles.stock.cruise == 0 and territory.owner_of == owners
+	print("save: routes %d/%d, agents %d/%d, territory kept %s" % [market.routes.size(), routes, espionage.agents.size(), agents, territory.owner_of == owners])
+	var ok: bool = built_ok and trade_ok and spy_ok and missile_ok and land_ok and saved_ok
+	print("built %s, market %s, espionage %s, missiles %s, territory %s, save %s" % [built_ok, trade_ok, spy_ok, missile_ok, land_ok, saved_ok])
+	print("SYSTEMS_TEST %s" % ("PASS" if ok else "FAIL"))
+	get_tree().quit(0 if ok else 1)
+
+## Frames a point and saves a screenshot.
+func capture_view(path: String, focus: Vector3, dist: float, pitch: float, frames: int) -> void:
+	cam_focus = focus
+	cam_dist = dist
+	cam_dist_target = dist
+	cam_pitch = pitch
+	for i in range(frames):
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(path)
+
+## Follows a missile in flight for a screenshot.
+func capture_missile_flight(target: Vector3) -> void:
+	var m: Dictionary = missiles.flying[0]
+	cam_yaw = atan2(m.from.x - target.x, m.from.z - target.z) + 1.3
+	for i in range(int(m.dur * 60.0 * 0.5)):
+		await get_tree().physics_frame
+		if missiles.flying.is_empty():
+			return
+		cam_focus = m.node.global_position
+		cam_lift = m.node.global_position.y - maxf(height_at(cam_focus.x, cam_focus.z), float(map.seaLevel))
+		cam_dist = 30.0
+		cam_dist_target = 30.0
+		cam_pitch = 0.25
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png("res://build/systems-missile.png")
+	cam_lift = 0.0
+
 ## Checks the supply rules: a new village is cut off until a road links it,
 ## breaks when the road is shelled, recovers when repaired, and a railway
 ## gives it the production bonus.
@@ -1918,7 +2208,23 @@ func logistics_test(capture: bool) -> void:
 
 # ---------------------------------------------------------------- placement
 
+## Arms a missile: the next left click on the map is its target.
+func begin_missile(key: String) -> void:
+	cancel_placement()
+	cancel_transport()
+	if int(missiles.stock.get(key, 0)) <= 0:
+		hud.notice("No %s in storage." % missiles.def_of(key).name)
+		return
+	missile_aim = key
+	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
+	hud.notice("%s armed: click a target (Shift keeps firing, right click cancels)." % missiles.def_of(key).name)
+
+func cancel_missile() -> void:
+	missile_aim = ""
+	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+
 func begin_placement(key: String) -> void:
+	cancel_missile()
 	cancel_transport()
 	cancel_placement()
 	var def: Dictionary = building_defs.get(key, {})
@@ -2376,9 +2682,13 @@ func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
 			best = b
 	return best
 
+## Knocked out by an EMP.
+func disabled(ent: Dictionary) -> bool:
+	return ent.get("disabled_until", 0.0) > game_time
+
 func update_combat(unit: Dictionary, delta: float) -> void:
-	if unit.dmg <= 0.0:
-		return  # workers do not fight
+	if unit.dmg <= 0.0 or disabled(unit):
+		return  # workers do not fight; EMP-struck machines are dead weight
 	unit.reload -= delta
 	unit.search -= delta
 	if unit.enemy != null and (unit.enemy.dead or gap_to(unit, unit.enemy) > maxf(unit.aggro, unit.range) * 1.6 and not unit.attack_move):
@@ -2460,6 +2770,8 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	# Striking a nation at peace starts a war with it.
 	if ai and source.owner == 0 and unit.owner > 0:
 		ai.declare_war(unit.owner, true)
+	if espionage:
+		amount *= espionage.damage_mult(source.owner)  # a dead general blunts an army
 	unit.hp -= amount
 	if unit.get("is_building", false):
 		if unit.hp <= 0.0:
@@ -2686,7 +2998,7 @@ func capture_battle() -> void:
 func update_camera(delta: float) -> void:
 	cam_dist += (cam_dist_target - cam_dist) * (1.0 - exp(-delta * 12.0))
 	var ground := maxf(height_at(cam_focus.x, cam_focus.z), float(map.seaLevel))
-	var focus := Vector3(cam_focus.x, ground, cam_focus.z)
+	var focus := Vector3(cam_focus.x, ground + cam_lift, cam_focus.z)
 	camera.global_position = focus + Vector3(sin(cam_yaw) * cam_dist * cos(cam_pitch), cam_dist * sin(cam_pitch), cos(cam_yaw) * cam_dist * cos(cam_pitch))
 	camera.look_at(focus)
 	# Sound: the listener stands at the focus; surf plays from the nearest shore.
@@ -2748,6 +3060,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			cam_dist_target = maxf(18.0, cam_dist_target - 6.0)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			cam_dist_target = minf(260.0, cam_dist_target + 6.0)
+		elif event.button_index == MOUSE_BUTTON_LEFT and missile_aim != "":
+			if event.pressed:
+				var point = ground_point(event.position)
+				if point != null:
+					hud.notice(missiles.launch(missile_aim, point))
+					if int(missiles.stock.get(missile_aim, 0)) <= 0 or not event.shift_pressed:
+						cancel_missile()
+		elif event.button_index == MOUSE_BUTTON_RIGHT and missile_aim != "":
+			if event.pressed:
+				cancel_missile()
 		elif event.button_index == MOUSE_BUTTON_LEFT and transport_kind != "":
 			if event.pressed:
 				transport_click(event.position, event.shift_pressed)
@@ -2827,14 +3149,21 @@ func _input(event: InputEvent) -> void:
 		start_battle()
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_G:
 		hud.toggle_diplomacy()
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_M:
+		hud.toggle_panel("market")
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_I:
+		hud.toggle_panel("intel")
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_T:
+		hud.toggle_panel("territory")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F5:
 		saves.save("quicksave")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F9:
 		saves.load_slot("quicksave")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:
 		# Esc first cancels what is in progress; with nothing to cancel it pauses.
-		if placing == "" and transport_kind == "" and selected_building == null and menu != null and menu._root != null:
+		if placing == "" and transport_kind == "" and missile_aim == "" and selected_building == null and menu != null and menu._root != null:
 			menu.open_pause()
+		cancel_missile()
 		cancel_transport()
 		cancel_placement()
 		select_building(null)
