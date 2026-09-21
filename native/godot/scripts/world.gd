@@ -7,6 +7,7 @@ extends Node3D
 ##   --bench=N [--no-vsync] [--quit-after-bench]   same phases as the browser
 ##   --capture-views                               renders build/view-*.png
 ##   --battle / --capture-battle                   skirmish demo (key B in game)
+##   --nav-test                                    checks routes around buildings and water
 
 const MAP_PATH := "res://data/map-seed1.json"
 const SOLDIER_HEIGHT := 2.35       # the browser's readable RTS scale
@@ -87,6 +88,9 @@ var coast_point := Vector3.ZERO
 var unit_defs := {}
 var shake_strength := 0.0
 var battle_started := false
+var building_spots: Array[Vector3] = []  # x, footprint, z
+var nav_ready := false
+const NAV_STEP := 4.0
 var fps_frames := 0
 
 func _ready() -> void:
@@ -134,6 +138,7 @@ func _ready() -> void:
 		build_grass()
 	for b in map.buildings:
 		place_building(b)
+	await build_navigation()
 	for u in map.units:
 		if u.key in INFANTRY or u.key in VEHICLES:
 			spawn_unit(u.key, Vector3(u.x, 0, u.z), int(u.owner))
@@ -159,6 +164,8 @@ func _ready() -> void:
 		await capture_battle()
 	elif "--battle" in args:
 		start_battle()
+	elif "--nav-test" in args:
+		nav_test()
 	elif "--feature-probe" in args:
 		await feature_probe()
 
@@ -501,6 +508,7 @@ func place_building(b: Dictionary) -> void:
 		lowest = minf(lowest, h)
 		highest = maxf(highest, h)
 	root.position = Vector3(b.x, highest, b.z)
+	building_spots.append(Vector3(b.x, footprint, b.z))
 	var plinth := MeshInstance3D.new()
 	var box := BoxMesh.new()
 	box.size = Vector3(footprint * 1.04, highest - lowest + 1.2, footprint * 1.04)
@@ -569,6 +577,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
 		"reload": randf() * float(def.cooldown), "search": randf() * 0.35, "enemy": null,
 		"attack_move": false, "dead": false, "dead_time": 0.0, "stance": "",
+		"path": PackedVector3Array(), "path_goal": Vector3.INF, "repath": 0.0,
 		"engine": audio.add_engine(node) if vehicle else null,
 	})
 	if unit.player:
@@ -781,10 +790,12 @@ func order_attack(selected: Array, enemy: Dictionary) -> void:
 		u.enemy = enemy
 		u.target = null
 		u.attack_move = true
+		u.path = PackedVector3Array()
 
 func order_move(selected: Array, point: Vector3, attack := false) -> void:
 	for u in selected:
 		u.attack_move = attack
+		u.path = PackedVector3Array()
 		if not attack:
 			u.enemy = null  # a plain move order disengages
 	var width := maxi(1, ceili(sqrt(selected.size())))
@@ -837,9 +848,11 @@ func _physics_process(delta: float) -> void:
 			if unit.target == null and unit.moving:
 				animate(unit, false)
 			continue
-		var to: Vector3 = goal - node.position
+		var waypoint := steer_point(unit, goal, chasing, delta)
+		var end: Vector3 = unit.path[unit.path.size() - 1] if not unit.path.is_empty() else goal
+		var to: Vector3 = waypoint - node.position
 		to.y = 0
-		if to.length() < 0.3:
+		if Vector2(end.x - node.position.x, end.z - node.position.z).length() < 0.35:
 			if not chasing:
 				unit.target = null
 				unit.attack_move = false
@@ -867,6 +880,113 @@ func _physics_process(delta: float) -> void:
 		unit.heading = lerp_angle(unit.heading, want, minf(1.0, delta * (4.0 if unit.vehicle else 10.0)))
 		place_on_ground(unit, next)
 		animate(unit, true)
+
+# ---------------------------------------------------------------- navigation
+
+# A 4 m walk grid over the island: water, steep slopes and building
+# footprints (with room for a tank to pass) are left out. The engine's
+# NavigationServer finds routes on it.
+func walkable(x: float, z: float) -> bool:
+	var h := NAV_STEP * 0.5
+	for corner in [Vector2(-h, -h), Vector2(h, -h), Vector2(-h, h), Vector2(h, h)]:
+		if height_at(x + corner.x, z + corner.y) < float(map.seaLevel) + 0.4:
+			return false
+	if normal_at(x, z).y < 0.8:
+		return false
+	for spot in building_spots:
+		if Vector2(x - spot.x, z - spot.z).length() < spot.y * 0.62 + 3.0:
+			return false
+	return true
+
+func build_navigation() -> void:
+	var half := float(map.mapSize) * 0.5
+	var n := int(half * 2.0 / NAV_STEP) + 1
+	var vertices := PackedVector3Array()
+	vertices.resize(n * n)
+	for r in range(n):
+		for c in range(n):
+			var x := -half + c * NAV_STEP
+			var z := -half + r * NAV_STEP
+			vertices[r * n + c] = Vector3(x, height_at(x, z), z)
+	var nav := NavigationMesh.new()
+	nav.vertices = vertices
+	var cells := 0
+	for r in range(n - 1):
+		for c in range(n - 1):
+			if not walkable(-half + (c + 0.5) * NAV_STEP, -half + (r + 0.5) * NAV_STEP):
+				continue
+			var a := r * n + c
+			nav.add_polygon(PackedInt32Array([a, a + n, a + n + 1, a + 1]))
+			cells += 1
+	var region := NavigationRegion3D.new()
+	region.navigation_mesh = nav
+	add_child(region)
+	var nav_map := get_world_3d().navigation_map
+	NavigationServer3D.map_set_active(nav_map, true)
+	NavigationServer3D.map_set_use_async_iterations(nav_map, false)
+	# The region joins the map on a later physics frame: wait until a query near
+	# the base lands on the walk grid rather than at the empty map's origin.
+	var probe := start + Vector3(0, 0, 30)
+	probe.y = height_at(probe.x, probe.z)
+	for i in range(240):
+		await get_tree().physics_frame
+		if NavigationServer3D.map_get_closest_point(nav_map, probe).distance_to(probe) < 20.0:
+			nav_ready = true
+			break
+	print("Navigation: %d walkable cells, ready=%s" % [cells, nav_ready])
+
+func path_between(from: Vector3, to: Vector3) -> PackedVector3Array:
+	if not nav_ready:
+		return PackedVector3Array([to])
+	var route := NavigationServer3D.map_get_path(get_world_3d().navigation_map, from, to, true)
+	if route.is_empty():
+		return PackedVector3Array([to])
+	route.remove_at(0)  # the unit's own position
+	if route.is_empty():
+		route.append(to)
+	return route
+
+# Next point to head for; plans (and re-plans while chasing) the route.
+func steer_point(unit: Dictionary, goal: Vector3, chasing: bool, delta: float) -> Vector3:
+	unit.repath -= delta
+	var drift: float = unit.path_goal.distance_to(goal) if unit.path_goal != Vector3.INF else INF
+	if unit.path.is_empty() or drift > (4.0 if chasing else 0.5):
+		if not chasing or unit.repath <= 0.0 or unit.path.is_empty():
+			unit.path = path_between(unit.node.position, goal)
+			unit.path_goal = goal
+			unit.repath = 0.8
+	var pos: Vector3 = unit.node.position
+	while unit.path.size() > 1 and Vector2(unit.path[0].x - pos.x, unit.path[0].z - pos.z).length() < 1.5:
+		unit.path.remove_at(0)
+	return unit.path[0] if not unit.path.is_empty() else goal
+
+# Headless check: a route across the base must go around every building.
+func nav_test() -> void:
+	var failures := 0
+	var tested := 0
+	var nav_map := get_world_3d().navigation_map
+	var probe_from := Vector3(start.x - 30, height_at(start.x - 30, start.z + 30), start.z + 30)
+	var probe_to := Vector3(start.x + 30, height_at(start.x + 30, start.z + 30), start.z + 30)
+	print("  map: regions=%d closest_from=%s raw_path=%d iteration=%d" % [NavigationServer3D.map_get_regions(nav_map).size(), NavigationServer3D.map_get_closest_point(nav_map, probe_from), NavigationServer3D.map_get_path(nav_map, probe_from, probe_to, true).size(), NavigationServer3D.map_get_iteration_id(nav_map)])
+	for spot in building_spots:
+		var from := Vector3(spot.x - spot.y * 1.6, 0, spot.z)
+		var to := Vector3(spot.x + spot.y * 1.6, 0, spot.z)
+		if height_at(from.x, from.z) < 1.0 or height_at(to.x, to.z) < 1.0:
+			continue
+		tested += 1
+		var route := path_between(from, to)
+		var previous := from
+		for point in route:
+			for k in range(8):
+				var p := previous.lerp(point, k / 8.0)
+				if Vector2(p.x - spot.x, p.z - spot.z).length() < spot.y * 0.5:
+					failures += 1
+				if height_at(p.x, p.z) < float(map.seaLevel):
+					failures += 1
+			previous = point
+		print("  building at (%.0f, %.0f): %d waypoints" % [spot.x, spot.z, route.size()])
+	print("NAV_TEST %s: %d routes, %d points inside buildings or water" % ["PASS" if failures == 0 and tested > 0 and nav_ready else "FAIL", tested, failures])
+	get_tree().quit(0 if failures == 0 and tested > 0 else 1)
 
 # ---------------------------------------------------------------- combat
 
@@ -1105,6 +1225,8 @@ func update_camera(delta: float) -> void:
 		shake_strength *= exp(-delta * 7.0)
 
 func _process(delta: float) -> void:
+	if camera == null:
+		return  # still loading (_ready awaits the noise texture and navigation)
 	if bench_phase >= 0:
 		benchmark_frame(delta)
 	else:

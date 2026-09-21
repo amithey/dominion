@@ -42,6 +42,9 @@ It uses the Forward+ renderer:
   and splash nearby units. Soldiers play a death animation and later sink away; tanks
   explode into charred, smoking wrecks with the turret knocked askew. Units steer
   around each other. Explosions shake the camera when close.
+- Pathfinding: a 4 m walk grid over the island (no water, steep slopes or building
+  footprints plus room for a tank) feeds Godot's NavigationServer. Units follow the
+  route's waypoints and re-plan every 0.8 s while chasing a moving enemy.
 - Sound (audio.gd): positional rifle shots, cannon, explosions and bullet impacts
   from a pool of 3D players; each tank has a looping engine that rises while driving;
   wind everywhere and surf from the nearest shore. The listener stands on the ground
@@ -58,13 +61,13 @@ Diagnostics: `--script res://tools/inspect.gd -- <model>` prints a model's nodes
 clips; `-- --capture-views` writes `build/view-*.png`; `-- --feature-probe --no-vsync`
 prints the frame cost of each expensive feature; `-- --capture-battle` saves five
 frames of the battle demo to `build/battle-*.png` and records its soundtrack to
-`build/battle-audio.wav`. Regenerate sounds with
+`build/battle-audio.wav`. `-- --nav-test` checks that routes across the base go around every building and
+never through water. Regenerate sounds with
 `--headless --path native/godot --script res://tools/make-sounds.gd`.
 
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 
-Not yet ported: economy, logistics, AI, aircraft and ships, pathfinding
-around obstacles, saving and Steam integration. Units are still the stylised
+Not yet ported: economy, logistics, AI, aircraft and ships, saving and Steam integration. Units are still the stylised
 Quaternius models; realistic units need new art.
 
 ## Validation
