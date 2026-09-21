@@ -1,0 +1,340 @@
+extends Node3D
+
+const RADIUS := 9.0
+const DISTRICTS := [Vector3(-22,0,-8),Vector3(0,0,-8),Vector3(22,0,-8)]
+var units: Array[Dictionary] = []
+var camera: Camera3D
+var rig: Node3D
+var selection_box: Panel
+var status: Label
+var dragging := false
+var drag_start := Vector2.ZERO
+var nav_region: NavigationRegion3D
+var navigation_ready := false
+var anim_names: Dictionary = {}
+var benchmark_time := 0.0
+var benchmark_frames := 0
+var benchmark_samples: Array[float] = []
+var destination_marker: MeshInstance3D
+
+func material(color: Color) -> StandardMaterial3D:
+	var result := StandardMaterial3D.new()
+	result.albedo_color = color
+	result.roughness = 0.82
+	result.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	return result
+
+func mesh_node(mesh: Mesh, surface: Material, pos: Vector3, parent: Node = self) -> MeshInstance3D:
+	var node := MeshInstance3D.new()
+	node.mesh = mesh
+	node.material_override = surface
+	node.position = pos
+	parent.add_child(node)
+	return node
+
+func _ready() -> void:
+	var world := WorldEnvironment.new()
+	world.environment = Environment.new()
+	world.environment.background_mode = Environment.BG_COLOR
+	world.environment.background_color = Color("9cb4bc")
+	world.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	world.environment.ambient_light_color = Color("c3d2d7")
+	world.environment.ambient_light_energy = 0.35
+	world.environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	add_child(world)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-48,-35,0)
+	sun.light_color = Color("fff0d4")
+	sun.light_energy = 0.85
+	sun.shadow_enabled = true
+	add_child(sun)
+	var ground := PlaneMesh.new()
+	ground.size = Vector2(240,240)
+	var grass := material(Color("65705b"))
+	var ground_texture: Texture2D = load("res://assets/grass_color.jpg")
+	var ground_image := ground_texture.get_image()
+	ground_image.generate_mipmaps()
+	grass.albedo_texture = ImageTexture.create_from_image(ground_image)
+	grass.uv1_scale = Vector3(32,32,32)
+	mesh_node(ground,grass,Vector3.ZERO)
+	for center in DISTRICTS:
+		make_district(center)
+	make_navigation()
+	rig = Node3D.new()
+	add_child(rig)
+	camera = Camera3D.new()
+	rig.add_child(camera)
+	camera.position = Vector3(30,42,42)
+	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	camera.size = 59
+	camera.far = 220
+	camera.look_at(Vector3.ZERO)
+	camera.current = true
+	make_hud()
+	var marker_mesh := TorusMesh.new()
+	marker_mesh.inner_radius = 1.0
+	marker_mesh.outer_radius = 1.15
+	destination_marker = mesh_node(marker_mesh,material(Color("d5bc72")),Vector3.ZERO)
+	destination_marker.hide()
+	spawn_company(24)
+	await get_tree().physics_frame
+	NavigationServer3D.map_force_update(get_world_3d().navigation_map)
+	await get_tree().physics_frame
+	for frame in range(120):
+		var probe := NavigationServer3D.map_get_path(get_world_3d().navigation_map,Vector3(0,0,20),Vector3(0,0,-30),true)
+		if probe.size() >= 3:
+			navigation_ready = true
+			break
+		await get_tree().physics_frame
+	if "--smoke-test" in OS.get_cmdline_user_args():
+		await run_smoke_test()
+	elif "--capture-preview" in OS.get_cmdline_user_args():
+		await get_tree().create_timer(3).timeout
+		await RenderingServer.frame_post_draw
+		DirAccess.make_dir_recursive_absolute("res://build")
+		var error := get_viewport().get_texture().get_image().save_png("res://build/preview.png")
+		get_tree().quit(error)
+
+func make_district(center: Vector3) -> void:
+	var district_script = preload("res://scripts/district.gd")
+	var district := Node3D.new()
+	district.set_script(district_script)
+	add_child(district)
+	district.position = center
+	district.build(self, DISTRICTS.find(center))
+
+func model_bounds(root: Node3D) -> AABB:
+	var result := AABB()
+	var first := true
+	for node in root.find_children("*","MeshInstance3D",true,false):
+		var bounds: AABB = root.global_transform.affine_inverse()*node.global_transform*node.get_aabb()
+		result = bounds if first else result.merge(bounds)
+		first = false
+	return result
+
+func make_navigation() -> void:
+	var nav := NavigationMesh.new()
+	var vertices := PackedVector3Array()
+	const COUNT := 51
+	for z in range(COUNT):
+		for x in range(COUNT):
+			vertices.append(Vector3(x*2-50,0,z*2-50))
+	nav.set_vertices(vertices)
+	for z in range(COUNT-1):
+		for x in range(COUNT-1):
+			var center := Vector3(x*2-49,0,z*2-49)
+			var blocked := false
+			for district in DISTRICTS:
+				if center.distance_to(district) < RADIUS+2:
+					blocked = true
+			if not blocked:
+				var a := z*COUNT+x
+				nav.add_polygon(PackedInt32Array([a,a+COUNT,a+COUNT+1,a+1]))
+	nav_region = NavigationRegion3D.new()
+	nav_region.navigation_mesh = nav
+	add_child(nav_region)
+	nav_region.set_navigation_map(get_world_3d().navigation_map)
+	NavigationServer3D.map_set_active(get_world_3d().navigation_map,true)
+	NavigationServer3D.map_set_use_async_iterations(get_world_3d().navigation_map,false)
+
+func spawn_company(count: int) -> void:
+	var packed: PackedScene = load("res://assets/CharacterSoldier.glb")
+	for i in range(count):
+		var index := units.size()
+		if index >= 96:
+			break
+		var root := Node3D.new()
+		add_child(root)
+		var model: Node3D = packed.instantiate()
+		root.add_child(model)
+		var bounds := model_bounds(model)
+		var factor := 1.8/maxf(bounds.size.y,0.01)
+		model.scale = Vector3.ONE*factor
+		model.position.y = -bounds.position.y*factor
+		root.position = Vector3((index%12-6)*2.4,0,12+(index/12)*2.8)
+		var ring_mesh := TorusMesh.new()
+		ring_mesh.inner_radius = 0.65
+		ring_mesh.outer_radius = 0.72
+		ring_mesh.rings = 16
+		ring_mesh.ring_segments = 6
+		var ring := mesh_node(ring_mesh,material(Color("cce58b")),Vector3(0,0.04,0),root)
+		ring.visible = false
+		var players := model.find_children("*","AnimationPlayer",true,false)
+		var player: AnimationPlayer = players[0] if not players.is_empty() else null
+		units.append({"node":root,"ring":ring,"selected":false,"path":PackedVector3Array(),"player":player})
+		play_unit(units.back(),false)
+
+func play_unit(unit: Dictionary, moving: bool) -> void:
+	var player: AnimationPlayer = unit.player
+	if not player:
+		return
+	var wanted := "run" if moving else "idle"
+	if not anim_names.has(wanted):
+		for animation in player.get_animation_list():
+			if wanted in animation.to_lower():
+				anim_names[wanted] = animation
+				break
+	if anim_names.has(wanted) and player.current_animation != anim_names[wanted]:
+		player.get_animation(anim_names[wanted]).loop_mode = Animation.LOOP_LINEAR
+		player.play(anim_names[wanted],0.18)
+
+func order_move(point: Vector3) -> void:
+	if not navigation_ready:
+		return
+	var selected: Array[Dictionary] = []
+	for unit in units:
+		if unit.selected:
+			selected.append(unit)
+	var width := maxi(1,ceili(sqrt(selected.size())))
+	if selected.is_empty():
+		return
+	destination_marker.position = NavigationServer3D.map_get_closest_point(get_world_3d().navigation_map,point)+Vector3(0,0.08,0)
+	destination_marker.show()
+	var rows := ceili(float(selected.size())/width)
+	for i in range(selected.size()):
+		var target := point+Vector3((i%width-(width-1)/2.0)*2.0,0,(floori(float(i)/width)-(rows-1)/2.0)*2.0)
+		target = NavigationServer3D.map_get_closest_point(get_world_3d().navigation_map,target)
+		selected[i].path = NavigationServer3D.map_get_path(get_world_3d().navigation_map,selected[i].node.position,target,true)
+
+func _physics_process(delta: float) -> void:
+	for unit in units:
+		var path: PackedVector3Array = unit.path
+		var node: Node3D = unit.node
+		if not path.is_empty():
+			var difference := path[0]-node.position
+			if difference.length() < 0.15:
+				path.remove_at(0)
+				unit.path = path
+			else:
+				node.position = node.position.move_toward(path[0],delta*5.2)
+				node.rotation.y = lerp_angle(node.rotation.y,atan2(difference.x,difference.z),minf(1,delta*9))
+		play_unit(unit,not unit.path.is_empty())
+
+func ground_point(screen: Vector2) -> Variant:
+	return Plane(Vector3.UP,0).intersects_ray(camera.project_ray_origin(screen),camera.project_ray_normal(screen))
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
+			camera.size = maxf(20,camera.size-4)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
+			camera.size = minf(110,camera.size+4)
+		elif event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				dragging = true
+				drag_start = event.position
+			else:
+				dragging = false
+				selection_box.hide()
+				var rect := Rect2(drag_start,event.position-drag_start).abs()
+				var click := rect.size.length()<8
+				var closest: Dictionary = {}
+				var distance := 22.0
+				for unit in units:
+					var screen := camera.unproject_position(unit.node.position+Vector3.UP)
+					if click and screen.distance_to(event.position)<distance:
+						distance = screen.distance_to(event.position)
+						closest = unit
+					if not event.shift_pressed:
+						unit.selected = false
+					if not click and rect.has_point(screen):
+						unit.selected = true
+				if not closest.is_empty():
+					closest.selected = true
+				for unit in units:
+					unit.ring.visible = unit.selected
+		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			var point = ground_point(event.position)
+			if point != null:
+				order_move(point)
+	elif event is InputEventMouseMotion and dragging:
+		var rect := Rect2(drag_start,event.position-drag_start).abs()
+		selection_box.position = rect.position
+		selection_box.size = rect.size
+		selection_box.show()
+
+func _process(delta: float) -> void:
+	if not rig:
+		return
+	var motion := Vector3(float(Input.is_physical_key_pressed(KEY_D))-float(Input.is_physical_key_pressed(KEY_A)),0,float(Input.is_physical_key_pressed(KEY_S))-float(Input.is_physical_key_pressed(KEY_W)))
+	rig.position += rig.basis*motion*delta*30
+	rig.position.x = clampf(rig.position.x,-45,45)
+	rig.position.z = clampf(rig.position.z,-45,45)
+	rig.rotation.y += (float(Input.is_physical_key_pressed(KEY_Q))-float(Input.is_physical_key_pressed(KEY_E)))*delta
+	benchmark_time += delta
+	benchmark_frames += 1
+	benchmark_samples.append(delta*1000)
+	if benchmark_time >= 2:
+		benchmark_samples.sort()
+		status.text = "%d units  |  %d FPS  |  frame p95 %.1f ms" % [units.size(),roundi(benchmark_frames/benchmark_time),benchmark_samples[int(benchmark_samples.size()*0.95)]]
+		benchmark_time=0
+		benchmark_frames=0
+		benchmark_samples.clear()
+
+func make_hud() -> void:
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	var top := PanelContainer.new()
+	top.position = Vector2(18,18)
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color("18242bea")
+	panel_style.border_color = Color("b7a16b")
+	panel_style.border_width_left = 3
+	panel_style.set_corner_radius_all(4)
+	top.add_theme_stylebox_override("panel",panel_style)
+	layer.add_child(top)
+	var margin := MarginContainer.new()
+	for side in ["left","top","right","bottom"]:
+		margin.add_theme_constant_override("margin_"+side,14)
+	top.add_child(margin)
+	var column := VBoxContainer.new()
+	margin.add_child(column)
+	var title := Label.new()
+	title.text = "DOMINION  /  FRONTIER DISTRICTS"
+	title.add_theme_font_size_override("font_size",22)
+	column.add_child(title)
+	var hint := Label.new()
+	hint.text = "Drag / click: select   |   Right click: move   |   WASD: pan   |   Q/E: orbit   |   Wheel: zoom"
+	column.add_child(hint)
+	status = Label.new()
+	column.add_child(status)
+	var row := HBoxContainer.new()
+	column.add_child(row)
+	var select_all := Button.new()
+	select_all.text = "Select army"
+	select_all.pressed.connect(func():
+		for unit in units:
+			unit.selected=true
+			unit.ring.visible=true)
+	row.add_child(select_all)
+	var add_units := Button.new()
+	add_units.text = "Add 24 units (max 96)"
+	add_units.pressed.connect(func():spawn_company(24))
+	row.add_child(add_units)
+	selection_box=Panel.new()
+	selection_box.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color=Color(0.6,0.8,0.4,0.15)
+	style.border_color=Color("cce58b")
+	style.set_border_width_all(1)
+	selection_box.add_theme_stylebox_override("panel",style)
+	layer.add_child(selection_box)
+	selection_box.hide()
+
+func run_smoke_test() -> void:
+	var path := NavigationServer3D.map_get_path(get_world_3d().navigation_map,Vector3(0,0,20),Vector3(0,0,-30),true)
+	if not navigation_ready or units.size()!=24 or path.size()<3:
+		push_error("Desktop smoke test failed: units or navigation")
+		get_tree().quit(1)
+		return
+	units[0].selected=true
+	var start: Vector3 = units[0].node.position
+	order_move(Vector3(-10,0,4))
+	for frame in range(90):
+		await get_tree().physics_frame
+	if units[0].node.position.distance_to(start)<1:
+		push_error("Desktop smoke test failed: movement")
+		get_tree().quit(1)
+		return
+	print("DESKTOP_SMOKE_PASS: 24 models, navigation around districts, unit movement")
+	get_tree().quit()

@@ -2464,7 +2464,7 @@ function unitMesh(key, color, seed = 0) {
     antenna.rotation.z = (seed % 2 ? 1 : -1) * 0.08;
     g.add(antenna);
   }
-  return g;
+  return batchBuildingGeometry(g);
 }
 
 /* selection ring + hp bar attached to every entity */
@@ -2578,6 +2578,7 @@ function spawnUnit(key, owner, x, z) {
   attachOverlays(ent, def.naval ? 2.4 : 1.3);
   scene.add(ent.mesh);
   G.units.push(ent);
+  if (typeof UNIT_SPATIAL !== 'undefined' && UNIT_SPATIAL.ready) UNIT_SPATIAL.update(ent);
   return ent;
 }
 
@@ -3142,7 +3143,8 @@ function canEngageTarget(attacker, target) {
 
 function nearestEnemy(u, radius) {
   let best = null, bd = radius * radius;
-  for (const e of G.units) {
+  const candidates = typeof UNIT_SPATIAL !== 'undefined' && UNIT_SPATIAL.ready ? UNIT_SPATIAL.query(u.x,u.z,radius) : G.units;
+  for (const e of candidates) {
     if (e.dead || e.owner === u.owner || !isAtWar(u.owner, e.owner)) continue;
     if (!canEngageTarget(u, e)) continue;
     // naval units can't shoot far inland targets and vice versa is fine (range check covers it)
@@ -3452,7 +3454,8 @@ function updateUnit(u, dt) {
 
   // gentle separation from nearby friendly units (same-domain only)
   if (!def.fly && (u.id + G.frame) % 3 === 0) {
-    for (const o of G.units) {
+    const neighbours = typeof UNIT_SPATIAL !== 'undefined' && UNIT_SPATIAL.ready ? UNIT_SPATIAL.query(u.x,u.z,2) : G.units;
+    for (const o of neighbours) {
       if (o === u || o.dead || o.def.fly || !!o.def.naval !== !!def.naval) continue;
       const dx = u.x - o.x, dz = u.z - o.z;
       const d2 = dx * dx + dz * dz;

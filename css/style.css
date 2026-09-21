@@ -409,3 +409,11 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   #side-btns { top: 58px; }
 }
 @media(max-height:650px) { :root { --hud-height: 170px; } #minimap { width: 124px; height: 124px; } #minimap-wrap { width: 150px; } #side-btns { flex-direction: row; top: 75px; } .side-btn { width: 44px; height: 42px; gap: 3px; border-bottom: 0; } .side-btn span { font-size: 8px; } .side-btn .ui-icon { width: 17px; height: 17px; } #review-controls { top: 126px; left: auto; right: 15px; transform: none; } .hud-empty-title { font-size: 18px; margin-top: 7px; } .hud-empty-sub { margin-top: 6px; font-size: 11px; } .hud-hotkeys { margin-top: 9px; font-size: 9px; } }
+
+/* Review navigation belongs beside the command area, not across the units
+   being inspected. Keep a single scrollable row on compact windows. */
+#review-controls { top: auto; bottom: calc(var(--hud-height) + 38px); left: 50%; right: auto; transform: translateX(-50%); max-width: calc(100% - 24px); }
+@media(max-height:650px) {
+  #notifications { top: 58px; width: 210px; }
+  .notif { font-size: 10px; padding: 6px 8px; line-height: 1.35; }
+}

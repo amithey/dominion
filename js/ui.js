@@ -37,7 +37,10 @@ function notifyAction(text, actions, seconds = 15) {
 }
 function trimNotifs() {
   const feed = $('#notifications');
-  while (feed.children.length > 6) feed.firstChild.remove();
+  // Routine notices must not bury the battlefield or remove an unanswered
+  // diplomacy decision that has action buttons.
+  const routine = [...feed.children].filter(el=>!el.querySelector('.n-actions'));
+  while (routine.length > 3) routine.shift().remove();
 }
 
 /* ---------------- decision modal ---------------- */
@@ -838,7 +841,7 @@ function renderSelection() {
   if (!sel.length) {
     stableHTML(el, `<div class="hud-empty-title">NO UNIT SELECTED</div>
       <div class="hud-empty-sub">Select a unit or structure to open its tactical controls.</div>
-      <div class="hud-hotkeys"><span><kbd>LMB</kbd> Select</span><span><kbd>RMB</kbd> Command</span><span><kbd>A</kbd> Attack-move</span><span><kbd>WASD</kbd> Camera</span></div>`);
+      <div class="hud-hotkeys"><span><kbd>LMB</kbd> Select</span><span><kbd>RMB</kbd> Command</span><span><kbd>A</kbd> Attack-move</span><span><kbd>Ctrl+1–9</kbd> Save group</span><span><kbd>1–9</kbd> Recall · twice to focus</span></div>`);
     return;
   }
   if (sel.length === 1) {

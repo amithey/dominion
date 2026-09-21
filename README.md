@@ -28,6 +28,17 @@ Soldier is from the Three.js examples. Existing procedural meshes remain automat
 - **Goal:** destroy every rival Headquarters. Lose yours and it's over.
 - **Controls:** left-click / drag = select · right-click = move / attack / mine / construct ·
   `A`+click = attack-move · `WASD` pan · `Q/E` rotate · wheel zoom · `Space` pause · `Esc` menu/abort.
+- **Control groups:** `Ctrl+1–9` saves the selection, `1–9` recalls it, double-tap
+  focuses the camera, and `Shift+1–9` adds the group to the selection. Dead or
+  captured entities are excluded. Groups reset for each new campaign.
+- **Army drill:** in Visual review, click **Army drill** to create up to 64 extra
+  ground units on valid land and issue a formation move. Click again to reverse
+  the destination. F3 exposes frame-time and rendering statistics. This demo is
+  isolated from normal campaigns; its opponent AI remains paused.
+- **Proximity queries:** moving units update a spatial grid used by target
+  acquisition and separation. Exact combat range and diplomacy checks still
+  apply. The automated distributed-army benchmark measures candidate counts,
+  not end-to-end frame-rate gains; dense groups naturally yield more candidates.
 - **The map is an island** — the coast matters: Shipyards must touch water, warships patrol the ocean ring.
 
 ### Settlements & development

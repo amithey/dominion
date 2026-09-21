@@ -43,6 +43,27 @@ function setupVisualReview() {
   controls.querySelector('[data-view="sea"]').disabled = !sea;
   const subButton=document.createElement('button');subButton.dataset.view='sub';subButton.textContent='Submarine';subButton.disabled=!subReview;
   controls.insertBefore(subButton,controls.querySelector('#review-exit'));
+  const drillButton=document.createElement('button');drillButton.textContent='Army drill';
+  drillButton.title='Create up to 64 units and move them as a formation. Click again to reverse the destination.';
+  controls.insertBefore(drillButton,controls.querySelector('#review-exit'));
+  let drillUnits=null,drillSide=1;
+  drillButton.onclick=()=>{
+    if(!drillUnits) {
+      drillUnits=[];
+      for(let row=-8;row<=8&&drillUnits.length<64;row++) for(let col=-8;col<=8&&drillUnits.length<64;col++) {
+        const px=x+col*4,pz=z+row*4;
+        if(Math.abs(px)>HALF_MAP-8||Math.abs(pz)>HALF_MAP-8||terrainH(px,pz)<.5)continue;
+        if(NAV.land&&!NAV.land[navIndex(px,pz)])continue;
+        if(G.units.some(u=>!u.dead&&dist2d(u.x,u.z,px,pz)<3))continue;
+        drillUnits.push(spawnUnit(drillUnits.length%4===0?'apc':'soldier',0,px,pz));
+      }
+    }
+    const survivors=drillUnits.filter(u=>!u.dead);
+    if(!survivors.length) {notify('No clear land for the army drill.','warn');return;}
+    select(survivors);commandMove(survivors,x+drillSide*28,z+24);drillSide*=-1;
+    camFocus.set(x,0,z+12);camZoomTarget=85;camPitch=.8;
+    drillButton.textContent=`Move army (${survivors.length})`;
+  };
   document.getElementById('game-container').appendChild(controls);
   const showView = kind => {
     G.reviewEffectLoop = kind === 'effects';

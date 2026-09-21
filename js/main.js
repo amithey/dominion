@@ -253,6 +253,7 @@ function startGame() {
   });
 }
 function startGameNow() {
+  CONTROL_GROUPS.slots.clear(); CONTROL_GROUPS.lastSlot=null;
   document.getElementById('main-menu').classList.add('hidden');
   setMapConfig(G.mapSize, G.mapStyle);
   // chosen start corner: swap the player's slot into position 0
@@ -503,6 +504,7 @@ function initInput() {
     const k = e.key.toLowerCase();
     if (e.target.closest('input, select, textarea') || e.target.isContentEditable) return;
     if (!G.started) return;
+    if (handleControlGroup(e)) return;
     if (k === 'home') { e.preventDefault(); focusCapital(); return; }
     if (k === 'f3') { e.preventDefault(); toggleDisplayPanel(); return; }
     if (k === 'f10') { e.preventDefault(); toggleGameHUD(); return; }
@@ -721,7 +723,8 @@ function loop() {
     G.frame++;
 
     // simulation
-    for (const u of G.units) if (!u.dead) updateUnit(u, dt);
+    UNIT_SPATIAL.rebuild(G.units);
+    for (const u of G.units) if (!u.dead) { updateUnit(u, dt); UNIT_SPATIAL.update(u); }
     for (const b of G.buildings) if (!b.dead) updateBuilding(b, dt);
     if (!G.reviewMode) for (const nat of G.nations) if (!nat.isPlayer) aiUpdate(nat, dt);
     updateMissiles(dt);

@@ -92,11 +92,13 @@ const MODELS = {
 function batchBuildingGeometry(root) {
   if (!THREE.mergeGeometries) return root;
   root.updateMatrixWorld(true);
-  const animated = new Set(Object.values(root.userData).filter(v => v?.isObject3D));
+  const animated = new Set(Object.values(root.userData).flatMap(v =>
+    v?.isObject3D ? [v] : Array.isArray(v) ? v.filter(o=>o?.isObject3D)
+      : v && typeof v === 'object' ? Object.values(v).filter(o=>o?.isObject3D) : []));
   const groups = new Map();
   root.traverse(o => {
     if (!o.isMesh || o.isSkinnedMesh || Array.isArray(o.material) || o.material.transparent || o.children.length || !o.visible) return;
-    for (let parent = o; parent; parent = parent.parent) if (animated.has(parent) || !parent.visible) return;
+    for (let parent = o; parent; parent = parent.parent) if (parent.isBone || animated.has(parent) || !parent.visible) return;
     const attributes = Object.keys(o.geometry.attributes).sort().join(',');
     const key = `${o.material.uuid}:${o.castShadow}:${o.receiveShadow}:${attributes}`;
     if (!groups.has(key)) groups.set(key, []);

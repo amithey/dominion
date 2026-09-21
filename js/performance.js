@@ -18,6 +18,8 @@ function recordFrameStats(seconds, cpuMs) {
     triangles: Math.round(s.triangles / s.frames),
     resolution: `${renderer.domElement.width} × ${renderer.domElement.height}`,
     units: G.units.filter(u => !u.dead).length,
+    nearbyQueries: UNIT_SPATIAL.queries,
+    nearbyCandidates: UNIT_SPATIAL.visited,
   };
   document.documentElement.dataset.performance = JSON.stringify(report);
   if (new URLSearchParams(location.search).has('qa')) {
@@ -44,6 +46,6 @@ function recordFrameStats(seconds, cpuMs) {
   const label = document.getElementById('performance-readout');
   if (label) label.textContent = `${report.fps} FPS · ${report.resolution}`;
   const detail = document.getElementById('performance-detail');
-  if (detail) detail.textContent = `Frame p95 ${report.p95} ms · CPU submission ${report.cpu} ms · ${report.calls} draw calls · ${(report.triangles / 1e6).toFixed(2)}M triangles · ${report.units} units`;
+  if (detail) detail.textContent = `Frame p95 ${report.p95} ms · CPU submission ${report.cpu} ms · ${report.calls} draw calls · ${(report.triangles / 1e6).toFixed(2)}M triangles · ${report.units} units · Local queries ${report.nearbyQueries}, candidates ${report.nearbyCandidates} (last simulation frame)`;
   s.elapsed = s.frames = s.cpu = s.calls = s.triangles = 0; s.samples = [];
 }

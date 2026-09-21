@@ -1,0 +1,20 @@
+; DOMINION desktop engine evaluation. Open with Godot 4.7.2.
+config_version=5
+
+[application]
+config/name="DOMINION — Desktop Prototype"
+run/main_scene="res://main.tscn"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=800
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+anti_aliasing/quality/msaa_3d=2
+environment/defaults/default_clear_color=Color(0.09,0.13,0.17,1)
+
+[input]
+
