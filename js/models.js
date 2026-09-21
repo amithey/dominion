@@ -386,6 +386,103 @@ function selectAuthoredWeapon(model, requested) {
   });
 }
 
+/* A character arrives as ~15 meshes (body parts, head pieces, weapon parts,
+   shoulder pads, armband), and every one is drawn again for the shadow map —
+   about 30 draw calls per soldier, which is what capped large armies. None of
+   the parts is textured, so they fold into ONE skinned mesh: material colours
+   become vertex colours, and rigid parts are skinned 100% to the bone they
+   hang from so they still follow the animation. The merged geometry is shared
+   by every character with the same look; each unit keeps its own skeleton. */
+const CHARACTER_BATCH_CACHE = new Map();
+let _characterBatchMaterial = null;
+// ?nocharbatch keeps the separate part meshes, for A/B performance checks.
+const CHARACTER_BATCHING = typeof location === 'undefined' || !new URLSearchParams(location.search).has('nocharbatch');
+function consolidateCharacter(root, cacheKey) {
+  if (!THREE.mergeGeometries || !CHARACTER_BATCHING) return root;
+  root.updateMatrixWorld(true);
+  const parts = [];
+  let target = null;
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    parts.push(o);
+    if (o.isSkinnedMesh && !target) target = o;
+  });
+  if (!target) return root;
+  const visibleInTree = o => { for (let p = o; p && p !== root; p = p.parent) if (!p.visible) return false; return true; };
+  const bones = target.skeleton.bones;
+  const boneIndex = new Map(bones.map((b, i) => [b, i]));
+  const rootBone = bones.find(b => !b.parent?.isBone) || bones[0];
+
+  let geometry = CHARACTER_BATCH_CACHE.get(cacheKey);
+  if (!geometry) {
+    const invBind = target.bindMatrix.clone().invert();
+    const pieces = [];
+    for (const part of parts) {
+      if (!visibleInTree(part) || Array.isArray(part.material)) continue;
+      let g = part.geometry.clone();
+      if (!g.index) g.setIndex([...Array(g.attributes.position.count).keys()]);
+      if (!g.attributes.normal) g.computeVertexNormals();
+      const count = g.attributes.position.count;
+      const skinIndex = new Uint16Array(count * 4), skinWeight = new Float32Array(count * 4);
+      let matrix;
+      if (part.isSkinnedMesh) {
+        if (!part.skeleton.bones.every(b => boneIndex.has(b))) return root;
+        const si = part.geometry.attributes.skinIndex, sw = part.geometry.attributes.skinWeight;
+        for (let v = 0; v < count; v++) for (let k = 0; k < 4; k++) {
+          skinIndex[v * 4 + k] = boneIndex.get(part.skeleton.bones[si.getComponent(v, k)]);
+          skinWeight[v * 4 + k] = sw.getComponent(v, k);
+        }
+        matrix = invBind.clone().multiply(part.bindMatrix);
+      } else {
+        let bone = part.parent;
+        while (bone && !bone.isBone && bone !== root) bone = bone.parent;
+        if (!bone?.isBone) bone = rootBone;
+        const bi = boneIndex.get(bone);
+        for (let v = 0; v < count; v++) { skinIndex[v * 4] = bi; skinWeight[v * 4] = 1; }
+        // bind-space position that skinning to `bone` maps back onto the part
+        matrix = invBind.clone()
+          .multiply(target.skeleton.boneInverses[bi].clone().invert())
+          .multiply(bone.matrixWorld.clone().invert())
+          .multiply(part.matrixWorld);
+      }
+      const colors = new Float32Array(count * 3);
+      const tint = part.material.color || new THREE.Color(1, 1, 1);
+      const vc = part.material.vertexColors ? g.attributes.color : null;
+      for (let v = 0; v < count; v++) {
+        colors[v * 3] = tint.r * (vc ? vc.getX(v) : 1);
+        colors[v * 3 + 1] = tint.g * (vc ? vc.getY(v) : 1);
+        colors[v * 3 + 2] = tint.b * (vc ? vc.getZ(v) : 1);
+      }
+      const clean = new THREE.BufferGeometry();
+      clean.setIndex(g.index);
+      clean.setAttribute('position', g.attributes.position);
+      clean.setAttribute('normal', g.attributes.normal);
+      clean.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      clean.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(skinIndex, 4));
+      clean.setAttribute('skinWeight', new THREE.Float32BufferAttribute(skinWeight, 4));
+      clean.applyMatrix4(matrix);
+      pieces.push(clean);
+    }
+    geometry = pieces.length ? THREE.mergeGeometries(pieces) : null;
+    for (const p of pieces) p.dispose();
+    if (!geometry) return root;
+    geometry.computeBoundingSphere();
+    geometry.userData.shared = true;
+    CHARACTER_BATCH_CACHE.set(cacheKey, geometry);
+  }
+  _characterBatchMaterial ||= new THREE.MeshStandardMaterial({
+    vertexColors: true, roughness: 0.74, metalness: 0.1, envMapIntensity: 0.7,
+  });
+  const mesh = new THREE.SkinnedMesh(geometry, _characterBatchMaterial);
+  mesh.name = 'batched-character';
+  mesh.castShadow = mesh.receiveShadow = true;
+  target.parent.add(mesh);
+  mesh.position.copy(target.position); mesh.quaternion.copy(target.quaternion); mesh.scale.copy(target.scale);
+  mesh.bind(target.skeleton, target.bindMatrix);
+  for (const part of parts) part.removeFromParent();
+  return root;
+}
+
 function makeCharacterRig(character, teamColor, opts = {}) {
   const key = `character:${character}`;
   const gltf = MODELS.loaded.get(key);
@@ -427,6 +524,7 @@ function makeCharacterRig(character, teamColor, opts = {}) {
   model.rotation.y = opts.rotationY || 0;
   g.add(model);
   if (character !== 'infantry') addReadableCharacterProp(g, character === 'worker' ? 'tool' : 'marker', teamColor);
+  if (character !== 'infantry') consolidateCharacter(g, `${character}|${opts.weapon || ''}|${teamColor}|${opts.height || ''}`);
 
   const mixer = new THREE.AnimationMixer(model);
   const clips = character === 'worker' ? {

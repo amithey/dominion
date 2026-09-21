@@ -27,6 +27,14 @@ calls with 88 units, and single-digit FPS in sampled windows. The map and camera
 were not controlled identically across reloads, so these are diagnostic samples,
 not a before/after performance comparison. No stable 60 FPS claim is warranted.
 
+Character batching (2026-09-21) addressed the largest share. Each infantry figure
+was ~15 part meshes, each drawn again for shadows. They now merge into one skinned
+mesh with vertex colours; rigid parts are skinned to their bone. Measured as the
+difference between frames with and without units (camera fixed, army drill, 88 units):
+units cost 3,954 draw calls before and 128 after; the full frame fell from ~4,600
+to ~550. `?nocharbatch` restores the old path for A/B checks. Still not an FPS
+benchmark: the hidden browser pane throttles timing, and the map is not seeded.
+
 ## Next acceptance gates
 
 1. Establish a seeded, repeatable 1080p benchmark on a named target machine.

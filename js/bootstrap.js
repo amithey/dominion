@@ -39,7 +39,7 @@ const gameScripts = [
 for (const file of gameScripts) {
   await new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = `js/${file}?v=rts-foundation-1`;
+    script.src = `js/${file}?v=rts-foundation-2`;
     script.async = false;
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${file}`));
