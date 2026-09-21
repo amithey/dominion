@@ -14,7 +14,8 @@ const STYLE := {
 	"cottage": 1, "housing": 1, "residential": 1, "workerHouse": 1, "apartments": 1, "luxuryVillas": 1,
 	"warehouse": 2, "foodDepot": 2, "tankFactory": 2, "powerPlant": 2, "oilRefinery": 2,
 	"farm": 3,
-	"barracks": 4, "bunker": 4, "commandCenter": 4, "ammoDepot": 4,
+	"barracks": 4, "bunker": 4, "commandCenter": 4, "ammoDepot": 4, "helipad": 4, "airfield": 4,
+	"shipyard": 2, "port": 2,
 }
 const HOUSES := ["res://assets/House_A.glb", "res://assets/House_B.glb", "res://assets/House_C.glb", "res://assets/House_D.glb"]
 # How many houses stand in a residential district, one per wedge between streets.

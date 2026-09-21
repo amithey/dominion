@@ -18,7 +18,8 @@ var nations: Array[Dictionary] = []
 
 # Which building each unit needs (ai.js).
 const TRAINED_AT := {"soldier": "barracks", "rocketSoldier": "barracks", "commando": "barracks", "sniper": "barracks",
-	"tank": "tankFactory", "apc": "tankFactory", "artillery": "tankFactory", "samLauncher": "tankFactory"}
+	"tank": "tankFactory", "apc": "tankFactory", "artillery": "tankFactory", "samLauncher": "tankFactory",
+	"helicopter": "helipad", "jet": "airfield", "drone": "airfield", "gunboat": "shipyard", "destroyer": "shipyard", "corvette": "shipyard"}
 
 func setup(world_node: Node, ai: Dictionary, difficulty: String, speed := 1.0) -> void:
 	world = world_node
@@ -169,6 +170,10 @@ func pick_building(n: Dictionary) -> String:
 		return "tankFactory"
 	if count.call("housing") < 3:
 		return "housing"
+	if n.money > 1200 and count.call("helipad") < 1:
+		return "helipad"
+	if n.money > 1200 and count.call("shipyard") < 1:
+		return "shipyard"
 	return ["farm", "housing", "barracks", "warehouse", "extractor"][randi() % 5]
 
 func find_spot(n: Dictionary, home: Dictionary, key: String):

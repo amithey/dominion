@@ -90,6 +90,15 @@ It uses the Forward+ renderer:
   down each half-link, and rebuilding a damaged link is a cheap repair. A Village
   Center founds a new district (70 m from other settlements). AI nations found
   villages and connect them to their capital by road.
+- Aircraft and ships (craft.gd): destroyers, corvettes, gunboats, submarines,
+  helicopters, gunships, jets, bombers and drones, modelled from primitives with the
+  owner's colour on funnel bands, fins and roundels; rotors and radar turn, ship
+  turrets traverse. Ships sail open water only (they look ahead and turn along the
+  coast), ride the swell and leave a foam wake; aircraft hold their altitude and bank
+  into turns, and jets circle rather than hover. Built at a Shipyard (on the coast;
+  ships launch at sea), Helipad or Airfield. The browser's damage table
+  (DAMAGE_PROFILE) decides who can hurt what: rifles and tanks cannot hit aircraft.
+  Shot-down aircraft spiral in and burn; ships sink.
 - Sound (audio.gd): positional rifle shots, cannon, explosions and bullet impacts
   from a pool of 3D players; each tank has a looping engine that rises while driving;
   wind everywhere and surf from the nearest shore. The listener stands on the ground
@@ -110,7 +119,9 @@ Diagnostics: `--script res://tools/inspect.gd -- <model>` prints a model's nodes
 clips; `-- --capture-views` writes `build/view-*.png`; `-- --feature-probe --no-vsync`
 prints the frame cost of each expensive feature; `-- --capture-battle` saves five
 frames of the battle demo to `build/battle-*.png` and records its soundtrack to
-`build/battle-audio.wav`. `-- --diplomacy-test` checks gifts, pact income, pacts blocking war, allies joining
+`build/battle-audio.wav`. `-- --air-sea-test` checks that ships stay at sea, aircraft keep altitude, the damage
+table blocks rifles and tanks against aircraft, and both kinds of craft win their
+fights (`--capture-air-sea`). `-- --diplomacy-test` checks gifts, pact income, pacts blocking war, allies joining
 and peace (`--capture-diplomacy`). `-- --logistics-test` checks that a new village is cut off, supplied by a road,
 cut by shelling, repaired at a discount and rail-boosted (`--capture-logistics`).
 `-- --ai-test` runs hard AI in fast time and requires it to build, train, go to war
@@ -123,8 +134,14 @@ never through water. Regenerate sounds with
 
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 
-Not yet ported: espionage, market trade routes, territory, aircraft and ships, saving and Steam integration. Units are still the stylised
+Not yet ported: espionage, market trade routes, territory, missiles, saving and Steam integration. Units are still the stylised
 Quaternius models; realistic units need new art.
+
+## Refreshing the map data
+
+`powershell -ExecutionPolicy Bypass -File native/export-map.ps1 [-Seed N]` opens the
+browser game in a hidden Edge window and rewrites `godot/data/map-seedN.json`, so
+changes to config.js (units, buildings, economy, AI, combat, logistics) reach Godot.
 
 ## Validation
 

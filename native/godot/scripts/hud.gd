@@ -3,7 +3,7 @@ extends CanvasLayer
 ## building's details, training buttons and queue) and short notices.
 ## Buttons call back into world.gd; the panel refreshes four times a second.
 
-const BUILD_MENU := ["villageCenter", "farm", "cottage", "housing", "residential", "warehouse", "foodDepot", "workerHouse", "extractor", "barracks", "tankFactory"]
+const BUILD_MENU := ["villageCenter", "farm", "cottage", "housing", "residential", "warehouse", "foodDepot", "workerHouse", "extractor", "barracks", "tankFactory", "shipyard", "helipad", "airfield"]
 const RES_LABELS := {"money": "$", "food": "Food", "iron": "Iron", "oil": "Oil"}
 const GOLD := Color("a29269")
 

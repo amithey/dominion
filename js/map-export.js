@@ -41,7 +41,7 @@ function exportMapData(step = 2.5) {
       name: d.name, cat: d.cat, size: d.size, hp: d.hp, cost: d.cost || {}, buildTime: d.buildTime || 0,
       trains: d.trains || [], provides: d.provides || {}, onDeposit: !!d.onDeposit,
       depositTypes: d.depositTypes || null, unique: !!d.unique, unbuildable: !!d.unbuildable,
-      buildRadius: d.buildRadius || 0, settlement: d.settlement || null, desc: d.desc || '',
+      buildRadius: d.buildRadius || 0, settlement: d.settlement || null, coastal: !!d.coastal, desc: d.desc || '',
     }])),
     depositTypes: Object.fromEntries(Object.entries(DEPOSIT_TYPES).map(([key, d]) => [key, {
       name: d.name, res: d.res, rate: d.rate, water: !!d.water, color: '#' + d.color.toString(16).padStart(6, '0'),
@@ -55,6 +55,8 @@ function exportMapData(step = 2.5) {
     // AI opponents: difficulty table, opening build order and training pool (ai.js).
     ai: { difficulty: DIFFICULTY, buildOrder: AI_BUILD_ORDER, trainPool: AI_TRAIN_POOL },
     // Supply network (logistics.js): hex size and road/rail prices and toughness.
+    // Who can hurt what, and how much (entities.js DAMAGE_PROFILE / targetClass).
+    combat: { damageProfile: DAMAGE_PROFILE, infantry: [...INFANTRY_KEYS], armor: [...ARMOR_KEYS] },
     logistics: { hexRadius: HEX_RADIUS, transport: TRANSPORT, railProductionBonus: 0.25 },
   };
 }

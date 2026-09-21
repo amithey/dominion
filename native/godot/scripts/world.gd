@@ -12,6 +12,7 @@ extends Node3D
 ##   --difficulty=easy|normal|hard  --ai-speed=N    AI opponents (browser difficulty table)
 ##   --ai-test / --capture-ai                      AI builds, trains, declares war and attacks
 ##   --logistics-test / --capture-logistics        supply, damage and repair of roads and rails
+##   --air-sea-test / --capture-air-sea            ships stay at sea, aircraft fly, both fight
 
 const MAP_PATH := "res://data/map-seed1.json"
 const SOLDIER_HEIGHT := 2.35       # the browser's readable RTS scale
@@ -36,6 +37,12 @@ const BUILDING_SIZE := {"hq": 10.0, "barracks": 9.0, "tankFactory": 9.5, "wareho
 const DISTRICT_NAV_SIZE := 6.0
 const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker"]
 const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher"]
+const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub"]
+const AIR := ["helicopter", "gunship", "jet", "bomber", "drone"]
+const FIXED_WING := ["jet", "bomber", "drone"]
+const ALTITUDE := {"helicopter": 14.0, "gunship": 13.0, "jet": 26.0, "bomber": 30.0, "drone": 18.0}
+const SHIP_LENGTH := {"gunboat": 7.5, "corvette": 10.5, "destroyer": 15.0, "submarine": 11.0, "nuclearSub": 14.0}
+const DEEP := -1.2   # water at least this deep (below sea level) carries a ship
 
 var map: Dictionary
 var heights := PackedFloat32Array()
@@ -119,6 +126,10 @@ var site_timer := 0.0
 var ai: Node
 var diplomacy: Node
 var game_over := ""
+var craft: RefCounted
+var damage_profile := {}
+var infantry_keys := []
+var armor_keys := []
 var logistics: Node3D
 var districts: RefCounted
 var district_hex := {}    # Vector2i -> building entity that owns the hex
@@ -144,6 +155,11 @@ func _ready() -> void:
 	start = Vector3(map.startPositions[0][0], 0, map.startPositions[0][1])
 	start.y = height_at(start.x, start.z)
 	unit_defs = map.get("unitDefs", {})
+	var combat_cfg: Dictionary = map.get("combat", {})
+	damage_profile = combat_cfg.get("damageProfile", {})
+	infantry_keys = combat_cfg.get("infantry", INFANTRY)
+	armor_keys = combat_cfg.get("armor", ["tank", "artillery"])
+	craft = preload("res://scripts/craft.gd").new()
 	building_defs = map.get("buildingDefs", {})
 	soldier_scene = load("res://assets/CharacterSoldier.glb")
 	worker_scene = load("res://assets/Worker.glb")
@@ -180,13 +196,14 @@ func _ready() -> void:
 	logistics.setup(self, map.logistics)
 	districts = preload("res://scripts/districts.gd").new()
 	districts.setup(self)
+	craft.setup(self)
 	build_deposits()
 	for b in map.buildings:
 		place_building(b.key, Vector3(b.x, 0, b.z), int(b.owner), true)
 	refresh_streets()
 	await build_navigation()
 	for u in map.units:
-		if u.key in INFANTRY or u.key in VEHICLES:
+		if u.key in INFANTRY or u.key in VEHICLES or u.key in NAVAL or u.key in AIR:
 			spawn_unit(u.key, Vector3(u.x, 0, u.z), int(u.owner))
 	camera = Camera3D.new()
 	camera.fov = 48
@@ -254,6 +271,8 @@ func _ready() -> void:
 		await economy_test(false)
 	elif "--ai-test" in args:
 		await ai_test(false)
+	elif "--air-sea-test" in args or "--capture-air-sea" in args:
+		await air_sea_test("--capture-air-sea" in args)
 	elif "--diplomacy-test" in args or "--capture-diplomacy" in args:
 		await diplomacy_test("--capture-diplomacy" in args)
 	elif "--logistics-test" in args:
@@ -840,6 +859,8 @@ func deposit_near(at: Vector3, radius: float):
 # ---------------------------------------------------------------- units
 
 func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
+	if key in NAVAL or key in AIR:
+		return spawn_craft(key, at, owner)
 	var vehicle := key in VEHICLES
 	var node := Node3D.new()
 	var model: Node3D = (tank_scene if vehicle else (worker_scene if key == "worker" else soldier_scene)).instantiate()
@@ -1077,8 +1098,81 @@ func make_dust() -> GPUParticles3D:
 	dust.position = Vector3(0, 0.3, -2.6)
 	return dust
 
+# Warships and aircraft share the unit record of ground units; movement and
+# placement branch on "naval" and "fly".
+func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
+	var parts: Dictionary = craft.build(key, owner)
+	var node: Node3D = parts.root
+	add_child(node)
+	var naval := key in NAVAL
+	var length: float = SHIP_LENGTH.get(key, 8.0)
+	var ring := MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = length * 0.55 if naval else 3.0
+	torus.outer_radius = torus.inner_radius + 0.12
+	torus.rings = 32
+	torus.ring_segments = 4
+	ring.mesh = torus
+	ring.material_override = cached_material("ring", func():
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.albedo_color = Color("9ff29b")
+		return m)
+	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ring.visible = false
+	node.add_child(ring)
+	var wake: GPUParticles3D = null
+	if naval:
+		wake = craft.wake(length)
+		node.add_child(wake)
+	if parts.turret:
+		parts.turret.set_meta("axis", Vector3.UP)
+	var def: Dictionary = unit_defs.get(key, {"hp": 300, "dmg": 30, "range": 22, "cooldown": 2.0, "aggro": 30, "speed": 14})
+	var unit := {
+		"node": node, "ring": ring, "vehicle": true, "selected": false, "target": null, "player": null, "clip": "",
+		"owner": owner, "speed": float(def.speed) * 0.45, "heading": 0.0, "moving": false,
+		"turret": parts.turret, "turret_yaw": 0.0, "dust": wake, "phase": at.x * 0.37 + at.z * 0.21, "meshes": [],
+		"naval": naval, "fly": key in AIR, "rotor": parts.rotor, "radar": parts.radar,
+		"altitude": ALTITUDE.get(key, 0.0), "bank": 0.0, "length": length,
+		"key": key, "hp": float(def.hp), "max_hp": float(def.hp), "dmg": float(def.dmg),
+		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
+		"reload": randf() * float(def.cooldown), "search": randf() * 0.35, "enemy": null,
+		"attack_move": false, "dead": false, "dead_time": 0.0, "stance": "",
+		"path": PackedVector3Array(), "path_goal": Vector3.INF, "repath": 0.0, "build_site": null,
+		"engine": audio.add_engine(node), "orbit": at,
+	}
+	place_on_ground(unit, at)
+	units.append(unit)
+	return unit
+
+func is_water(p: Vector3, depth := DEEP) -> bool:
+	return height_at(p.x, p.z) < float(map.seaLevel) + depth
+
+# Nearest point on open water to `from` (for ships leaving a shipyard).
+func water_near(from: Vector3, reach := 90):
+	for r in range(6, reach, 3):
+		for i in range(16):
+			var a := i * TAU / 16.0
+			var p := from + Vector3(cos(a), 0, sin(a)) * r
+			if is_water(p, DEEP * 1.5):
+				return p
+	return null
+
 func place_on_ground(unit: Dictionary, at: Vector3) -> void:
 	var node: Node3D = unit.node
+	if unit.get("fly", false):
+		# Aircraft hold their altitude over land or sea and bank into turns.
+		var floor_y := maxf(height_at(at.x, at.z), float(map.seaLevel))
+		var bob := sin(Time.get_ticks_msec() / 700.0 + unit.phase) * 0.35 if not (unit.key in FIXED_WING) else 0.0
+		node.position = Vector3(at.x, floor_y + unit.altitude + bob, at.z)
+		node.basis = Basis(Vector3.UP, unit.heading) * Basis(Vector3.BACK, unit.bank)
+		return
+	if unit.get("naval", false):
+		# Ships ride the swell: a gentle heave, pitch and roll.
+		var t := Time.get_ticks_msec() / 1000.0
+		node.position = Vector3(at.x, float(map.seaLevel) + sin(t * 0.9 + unit.phase) * 0.12 - (0.9 if unit.key.ends_with("ub") or unit.key == "submarine" else 0.0), at.z)
+		node.basis = Basis(Vector3.UP, unit.heading) * Basis(Vector3.RIGHT, sin(t * 0.7 + unit.phase) * 0.02) * Basis(Vector3.BACK, sin(t * 0.55 + unit.phase * 2.0) * 0.03)
+		return
 	node.position = Vector3(at.x, height_at(at.x, at.z), at.z)
 	var heading := Basis(Vector3.UP, unit.heading)
 	if unit.vehicle:
@@ -1146,6 +1240,10 @@ func _physics_process(delta: float) -> void:
 			update_dead(unit, delta, i)
 			continue
 		update_combat(unit, delta)
+		if unit.get("rotor") != null:
+			unit.rotor.rotate_y(delta * 28.0)
+		if unit.get("radar") != null:
+			unit.radar.rotate_y(delta * 1.6)
 		if unit.engine:
 			audio.engine_update(unit.engine, unit.moving, delta)
 		if unit.turret:
@@ -1159,6 +1257,9 @@ func _physics_process(delta: float) -> void:
 			unit.turret.basis = Basis(unit.turret.get_meta("axis"), unit.turret_yaw)
 	for unit in units:
 		if unit.dead:
+			continue
+		if unit.get("fly", false) or unit.get("naval", false):
+			move_craft(unit, delta)
 			continue
 		var node: Node3D = unit.node
 		var goal = unit.target
@@ -1197,8 +1298,8 @@ func _physics_process(delta: float) -> void:
 		# Keep clear of other units instead of driving through them.
 		var push := Vector3.ZERO
 		for other in units:
-			if other == unit or other.dead:
-				continue
+			if other == unit or other.dead or other.get("fly", false) or other.get("naval", false):
+				continue  # aircraft overhead and ships offshore do not jostle ground units
 			var gap: Vector3 = next - other.node.position
 			gap.y = 0
 			var clearance: float = (1.1 if not (unit.vehicle or other.vehicle) else 3.4) + (1.8 if unit.vehicle and other.vehicle else 0.0)
@@ -1460,6 +1561,13 @@ func update_training(delta: float) -> void:
 		out.y = 0
 		out = out.normalized() if out.length() > 1.0 else Vector3.BACK
 		var door: Vector3 = at + out * (b.footprint * 0.62 + 3.5)
+		if key in NAVAL:
+			var launch = water_near(at)
+			if launch == null:
+				b.queue.push_front(key)
+				continue
+			door = launch
+			out = (door - at).normalized()
 		var unit := spawn_unit(key, door, b.owner)
 		unit.heading = atan2(out.x, out.z)
 		order_move([unit], door + out * 8.0 + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4)))
@@ -1701,7 +1809,12 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 			var h := height_at(at.x + cos(a) * logistics.radius * 0.8, at.z + sin(a) * logistics.radius * 0.8)
 			low = minf(low, h)
 			high = maxf(high, h)
-		if low < float(map.seaLevel) + 0.8:
+		if def.get("coastal", false):
+			if water_near(at) == null or at.distance_to(water_near(at)) > logistics.radius * 2.2:
+				return "Must be built on the coast"
+			if height_at(at.x, at.z) < float(map.seaLevel) + 0.8:
+				return "The centre of the hex must be dry land"
+		elif low < float(map.seaLevel) + 0.8:
 			return "Too close to the water"
 		if high - low > 6.0:
 			return "Hex too steep"
@@ -1910,6 +2023,127 @@ func ai_test(capture: bool) -> void:
 		get_viewport().get_texture().get_image().save_png("res://build/ai-2.png")
 		get_tree().quit()
 
+# ---------------------------------------------------------------- aircraft and ships
+
+# Ships sail straight for their goal over open water and turn along the coast
+# when land is ahead; aircraft fly straight at their altitude. Jets cannot
+# hover: when they have nothing to do they circle, and they make strafing
+# passes rather than stopping over a target.
+func move_craft(unit: Dictionary, delta: float) -> void:
+	var node: Node3D = unit.node
+	var pos := node.position
+	var goal = unit.target
+	var fixed: bool = unit.key in FIXED_WING
+	if unit.enemy != null and (unit.target == null or unit.attack_move):
+		var gap := flat_distance(unit, unit.enemy)
+		goal = unit.enemy.node.position if (gap > unit.range * 0.8 or fixed) else null
+	if goal == null and fixed:
+		var t: float = Time.get_ticks_msec() / 1000.0 * 0.35 + unit.phase
+		goal = unit.orbit + Vector3(cos(t), 0, sin(t)) * 30.0
+	if goal == null:
+		unit.moving = false
+		if unit.dust:
+			unit.dust.emitting = false
+		place_on_ground(unit, pos)
+		return
+	var to: Vector3 = goal - pos
+	to.y = 0
+	if to.length() < (6.0 if fixed else 1.0):
+		if not fixed:
+			unit.target = null
+			unit.attack_move = false
+			unit.moving = false
+			if unit.dust:
+				unit.dust.emitting = false
+		else:
+			unit.orbit = goal if unit.target != null else unit.orbit
+			unit.target = null
+		place_on_ground(unit, pos)
+		return
+	var want := atan2(to.x, to.z)
+	var turn := minf(1.0, delta * (1.2 if fixed else (2.4 if unit.fly else 0.9)))
+	var old: float = unit.heading
+	unit.heading = lerp_angle(unit.heading, want, turn)
+	if unit.naval:
+		# Look ahead: if the bow would run aground, try turning either way.
+		var ahead: Vector3 = pos + Basis(Vector3.UP, unit.heading) * Vector3.BACK * unit.length
+		if not is_water(ahead):
+			var turned := false
+			for swing in [0.6, -0.6, 1.2, -1.2, 1.8, -1.8]:
+				var h: float = unit.heading + swing
+				if is_water(pos + Basis(Vector3.UP, h) * Vector3.BACK * unit.length):
+					unit.heading = lerp_angle(unit.heading, h, minf(1.0, delta * 3.0))
+					turned = true
+					break
+			if not turned:
+				unit.target = null
+				unit.moving = false
+				place_on_ground(unit, pos)
+				return
+	var speed: float = unit.speed * (1.0 if fixed or unit.fly else 0.8)
+	var step := Basis(Vector3.UP, unit.heading) * Vector3.BACK * minf(to.length() + (20.0 if fixed else 0.0), speed * delta)
+	var next := pos + step
+	if unit.naval and not is_water(next, DEEP * 0.6):
+		unit.target = null
+		unit.moving = false
+		place_on_ground(unit, pos)
+		return
+	unit.bank = lerpf(unit.bank, clampf(angle_difference(old, unit.heading) / maxf(delta, 0.001) * -0.35, -0.7, 0.7), minf(1.0, delta * 3.0)) if unit.fly else 0.0
+	unit.moving = true
+	if unit.dust:
+		unit.dust.emitting = true
+	place_on_ground(unit, next)
+
+## Aircraft, a ship and a gunboat duel over the coast: checks ships never leave
+## the water, aircraft keep their altitude, and the damage table lets
+## aircraft be hit only by weapons that can reach them.
+func air_sea_test(capture: bool) -> void:
+	var sea = water_near(start, 320)
+	if sea == null:
+		print("AIR_SEA_TEST FAIL: no water near the capital")
+		get_tree().quit(1)
+		return
+	var destroyer := spawn_unit("destroyer", sea, 0)
+	var heli := spawn_unit("helicopter", start + Vector3(0, 0, 20), 0)
+	var jet := spawn_unit("jet", start + Vector3(10, 0, 30), 0)
+	var enemy_sea = water_near(sea + (sea - start).normalized() * 70.0, 200)
+	var gunboat := spawn_unit("gunboat", enemy_sea if enemy_sea != null else sea + Vector3(40, 0, 0), 1)
+	var tank := spawn_unit("tank", start + Vector3(-30, 0, 40), 1)
+	if ai and not ai.nations.is_empty():
+		diplomacy.declare_war(0, 1)
+	var rifle_on_heli := effectiveness(units.filter(func(u): return u.key == "soldier")[0], heli) if units.any(func(u): return u.key == "soldier") else 0.0
+	var tank_on_heli := effectiveness(tank, heli)
+	order_move([destroyer], gunboat.node.position, true)
+	order_move([heli], tank.node.position, true)
+	order_move([jet], tank.node.position, true)
+	cam_focus = sea
+	cam_dist = 80.0
+	cam_dist_target = 80.0
+	cam_pitch = 0.7
+	var worst_ship_ground := -INF
+	var lowest_heli := INF
+	var elapsed := 0.0
+	var shot := 0
+	while elapsed < 60.0:
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
+		if not destroyer.dead:
+			worst_ship_ground = maxf(worst_ship_ground, height_at(destroyer.node.position.x, destroyer.node.position.z))
+		if not heli.dead:
+			lowest_heli = minf(lowest_heli, heli.node.position.y - maxf(height_at(heli.node.position.x, heli.node.position.z), 0.0))
+		if capture:
+			cam_focus = cam_focus.lerp(destroyer.node.position if shot < 1 else heli.node.position, 0.05)
+			if shot == 0 and elapsed > 9.0 or shot == 1 and elapsed > 18.0:
+				await RenderingServer.frame_post_draw
+				get_viewport().get_texture().get_image().save_png("res://build/air-sea-%d.png" % shot)
+				shot += 1
+		if gunboat.dead and tank.dead and not capture:
+			break
+	print("ship stayed at sea %s (highest ground under it %.1f m), helicopter never below %.1f m, rifles vs aircraft x%.2f, tanks vs aircraft x%.2f, gunboat sunk %s, tank destroyed %s" % [worst_ship_ground < 0.0, worst_ship_ground, lowest_heli, rifle_on_heli, tank_on_heli, gunboat.dead, tank.dead])
+	var ok: bool = worst_ship_ground < 0.0 and lowest_heli > 8.0 and tank_on_heli <= 0.01 and gunboat.dead and tank.dead
+	print("AIR_SEA_TEST %s" % ("PASS" if ok else "FAIL"))
+	get_tree().quit(0 if ok else 1)
+
 # ---------------------------------------------------------------- combat
 
 ## Nations at war fight (diplomacy.gd decides who is at war with whom).
@@ -1920,26 +2154,51 @@ func hostile(a: int, b: int) -> bool:
 		return true  # sandbox scenes without AI: every other owner is an enemy
 	return diplomacy.at_war(a, b)
 
+# Ground distance; altitude does not count against weapon range.
+func flat_distance(a: Dictionary, b: Dictionary) -> float:
+	return Vector2(b.node.position.x - a.node.position.x, b.node.position.z - a.node.position.z).length()
+
 # Distance to what can be hit: a building's walls, not its centre.
 func gap_to(unit: Dictionary, target: Dictionary) -> float:
 	var d := Vector2(target.node.position.x - unit.node.position.x, target.node.position.z - unit.node.position.z).length()
 	return d - (target.footprint * 0.45 if target.get("is_building", false) else 0.0)
+
+## What kind of target this is, for the damage table (entities.js targetClass).
+func target_class(t: Dictionary) -> String:
+	if t.get("is_building", false):
+		return "building"
+	if t.get("fly", false):
+		return "air"
+	if t.get("naval", false):
+		return "naval"
+	if t.key in infantry_keys:
+		return "infantry"
+	if t.key in armor_keys:
+		return "armor"
+	return "light"
+
+## Damage multiplier of `attacker` against `target` (0 = cannot engage).
+func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
+	var profile: Dictionary = damage_profile.get(attacker.key, {})
+	if profile.is_empty():
+		return 0.0 if target.get("fly", false) else 1.0
+	return float(profile.get(target_class(target), 0.0))
 
 ## Nearest hostile unit in range; buildings only when no unit is near.
 func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
 	var best = null
 	var best_d := radius
 	for other in units:
-		if other.dead or not hostile(unit.owner, other.owner):
+		if other.dead or not hostile(unit.owner, other.owner) or effectiveness(unit, other) <= 0.01:
 			continue
-		var d: float = unit.node.position.distance_to(other.node.position)
+		var d: float = flat_distance(unit, other)
 		if d < best_d:
 			best_d = d
 			best = other
 	if best != null:
 		return best
 	for b in buildings:
-		if b.dead or not hostile(unit.owner, b.owner):
+		if b.dead or not hostile(unit.owner, b.owner) or effectiveness(unit, b) <= 0.01:
 			continue
 		var d := gap_to(unit, b)
 		if d < best_d:
@@ -1966,7 +2225,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 	var d := gap_to(unit, enemy)
 	if d > unit.range:
 		return
-	if unit.vehicle:
+	if unit.vehicle and unit.turret != null:
 		# The gun only fires once the turret has swung onto the target.
 		var gap: Vector3 = enemy.node.position - unit.node.position
 		if absf(angle_difference(unit.turret_yaw, atan2(gap.x, gap.z) - unit.heading)) > 0.12:
@@ -1983,9 +2242,15 @@ func fire(unit: Dictionary, enemy: Dictionary) -> void:
 		var toward: Vector3 = (unit.node.position - enemy.node.position)
 		toward.y = 0
 		aim += toward.normalized() * enemy.footprint * 0.4
-	if unit.vehicle:
+	if unit.get("fly", false) or (unit.get("naval", false) and unit.turret == null):
+		# Rockets and cannon from aircraft; torpedoes and missiles from boats.
+		var dir := Basis(Vector3.UP, unit.heading) * Vector3.BACK
+		var muzzle: Vector3 = unit.node.position + dir * 2.5 + Vector3.DOWN * (0.6 if unit.fly else 0.0)
+		effects.muzzle_flash(muzzle, false)
+		effects.shell(muzzle, aim + Vector3(randf_range(-0.8, 0.8), 0, randf_range(-0.8, 0.8)), func(at: Vector3): shell_hit(unit, at))
+	elif unit.vehicle:
 		var dir := Basis(Vector3.UP, unit.heading + unit.turret_yaw) * Vector3.BACK
-		var muzzle: Vector3 = unit.turret.global_position + dir * 4.2 + Vector3.UP * 0.25
+		var muzzle: Vector3 = unit.turret.global_position + dir * (2.4 if unit.get("naval", false) else 4.2) + Vector3.UP * 0.25
 		effects.muzzle_flash(muzzle, true)
 		var miss := Vector3(randf_range(-1.5, 1.5), 0, randf_range(-1.5, 1.5)) if randf() > 0.8 else Vector3.ZERO
 		var landing := aim + miss
@@ -2003,7 +2268,7 @@ func fire(unit: Dictionary, enemy: Dictionary) -> void:
 		effects.tracer(muzzle, end)
 		effects.impact(end)
 		if hit:
-			damage(enemy, unit.dmg * (0.35 if enemy.vehicle else 1.0), unit)
+			damage(enemy, unit.dmg * effectiveness(unit, enemy), unit)
 
 # A shell explodes where it lands and hurts everything close by.
 func shell_hit(shooter: Dictionary, at: Vector3) -> void:
@@ -2011,13 +2276,13 @@ func shell_hit(shooter: Dictionary, at: Vector3) -> void:
 	logistics.damage_at(at, 3.0, shooter.dmg * 1.5)
 	for b in buildings:
 		if not b.dead and hostile(shooter.owner, b.owner) and Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length() < b.footprint * 0.62:
-			damage(b, shooter.dmg, shooter)
+			damage(b, shooter.dmg * effectiveness(shooter, b), shooter)
 	for other in units:
 		if other.dead or other.owner == shooter.owner:
 			continue
 		var d: float = other.node.position.distance_to(at)
 		if d < 3.5:
-			damage(other, shooter.dmg * (1.0 if d < 1.8 else 0.45), shooter)
+			damage(other, shooter.dmg * effectiveness(shooter, other) * (1.0 if d < 1.8 else 0.45), shooter)
 
 func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	if unit.dead:
@@ -2043,6 +2308,13 @@ func kill(unit: Dictionary) -> void:
 	unit.target = null
 	unit.enemy = null
 	unit.dead_time = 0.0
+	if unit.get("fly", false) or unit.get("naval", false):
+		effects.explosion(unit.node.position + Vector3.UP, 2.4, false)
+		if unit.engine:
+			unit.engine.stop()
+		if unit.dust:
+			unit.dust.emitting = false
+		return
 	if unit.vehicle:
 		var at: Vector3 = unit.node.position
 		effects.explosion(at + Vector3.UP, 3.2, true)
@@ -2110,6 +2382,31 @@ func check_game_over() -> void:
 # Fallen soldiers lie for a while, then sink away; wrecks stay.
 func update_dead(unit: Dictionary, delta: float, index: int) -> void:
 	unit.dead_time += delta
+	if unit.get("fly", false):
+		# Spiral down trailing smoke, then burn where it hits.
+		var node: Node3D = unit.node
+		var floor_y := maxf(height_at(node.position.x, node.position.z), float(map.seaLevel))
+		if node.position.y > floor_y + 0.5:
+			node.position += (Basis(Vector3.UP, unit.heading) * Vector3.BACK) * delta * 8.0 + Vector3.DOWN * delta * 14.0
+			node.rotate_object_local(Vector3.BACK, delta * 3.0)
+			if randf() < delta * 10.0:
+				effects.impact(node.position)
+		elif not unit.get("crashed", false):
+			unit.crashed = true
+			effects.explosion(node.position, 2.6, floor_y > float(map.seaLevel))
+			effects.burn(node.position, 16.0)
+		if unit.dead_time > 14.0:
+			node.queue_free()
+			units.remove_at(index)
+		return
+	if unit.get("naval", false):
+		# Settle by the stern and slip under.
+		unit.node.position.y -= delta * 0.6
+		unit.node.rotate_object_local(Vector3.RIGHT, delta * 0.05)
+		if unit.dead_time > 12.0:
+			unit.node.queue_free()
+			units.remove_at(index)
+		return
 	if unit.vehicle:
 		return
 	if unit.dead_time > 7.0:
