@@ -417,3 +417,12 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   #notifications { top: 58px; width: 210px; }
   .notif { font-size: 10px; padding: 6px 8px; line-height: 1.35; }
 }
+
+/* ?bench results — same framing as the display panel, readable numbers */
+#benchmark-report { position: fixed; left: 50%; top: 76px; transform: translateX(-50%); z-index: 200; width: 760px; max-width: calc(100vw - 32px); overflow-x: auto; padding: 16px 18px; background: #111f25; border: 1px solid #a29269; border-radius: 3px; box-shadow: 0 8px 35px #0008; font-size: 13px; }
+#benchmark-report h3 { margin: 0 0 4px; font-size: 15px; letter-spacing: .04em; }
+#benchmark-report p { margin: 0 0 10px; color: var(--text-dim); }
+#benchmark-report table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-bottom: 8px; }
+#benchmark-report th, #benchmark-report td { padding: 5px 6px; text-align: right; border-bottom: 1px solid #ffffff14; white-space: nowrap; }
+#benchmark-report th:first-child, #benchmark-report td:first-child { text-align: left; }
+#benchmark-report button { background: var(--panel-light); color: var(--text); border: 1px solid #a29269; padding: 5px 10px; border-radius: 2px; cursor: pointer; }

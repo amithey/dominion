@@ -43,14 +43,16 @@ function setupVisualReview() {
   controls.querySelector('[data-view="sea"]').disabled = !sea;
   const subButton=document.createElement('button');subButton.dataset.view='sub';subButton.textContent='Submarine';subButton.disabled=!subReview;
   controls.insertBefore(subButton,controls.querySelector('#review-exit'));
-  const drillButton=document.createElement('button');drillButton.textContent='Army drill';
-  drillButton.title='Create up to 64 units and move them as a formation. Click again to reverse the destination.';
+  const drillButton=document.createElement('button');drillButton.id='review-drill';drillButton.textContent='Army drill';
+  drillButton.title='Create up to 64 units (?bench=N sets N) and move them as a formation. Click again to reverse the destination.';
   controls.insertBefore(drillButton,controls.querySelector('#review-exit'));
   let drillUnits=null,drillSide=1;
+  // ?bench=N sizes the drill for repeatable performance runs (default 64).
+  const drillMax=Math.min(240,Number(new URLSearchParams(location.search).get('bench'))||64);
   drillButton.onclick=()=>{
     if(!drillUnits) {
       drillUnits=[];
-      for(let row=-8;row<=8&&drillUnits.length<64;row++) for(let col=-8;col<=8&&drillUnits.length<64;col++) {
+      for(let row=-8;row<=8&&drillUnits.length<drillMax;row++) for(let col=-8;col<=8&&drillUnits.length<drillMax;col++) {
         const px=x+col*4,pz=z+row*4;
         if(Math.abs(px)>HALF_MAP-8||Math.abs(pz)>HALF_MAP-8||terrainH(px,pz)<.5)continue;
         if(NAV.land&&!NAV.land[navIndex(px,pz)])continue;

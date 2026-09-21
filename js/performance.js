@@ -4,6 +4,7 @@
 const FRAME_STATS = { elapsed: 0, frames: 0, samples: [], cpu: 0, calls: 0, triangles: 0 };
 function recordFrameStats(seconds, cpuMs) {
   const s = FRAME_STATS;
+  BENCHMARK.sample?.(seconds, cpuMs);
   if (document.hidden || seconds > 1) return;
   s.elapsed += seconds; s.frames++; s.samples.push(seconds * 1000);
   s.cpu += cpuMs; s.calls += renderer.info.render.calls;

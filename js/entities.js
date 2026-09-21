@@ -2468,24 +2468,75 @@ function unitMesh(key, color, seed = 0) {
 }
 
 /* selection ring + hp bar attached to every entity */
+/* Selection rings and health bars used to be three meshes per entity, so
+   selecting a 64-unit army added ~190 draw calls. All of them are now drawn by
+   three shared InstancedMeshes. Each entity keeps invisible proxies
+   (ent.ring / hpBg / hpFg) whose visibility, colour and transform say where
+   an instance goes, so the rest of the game sets them exactly as before. */
+// Layer 1 is rendered by the main camera and the shadow pass but skipped by
+// the water reflection camera, which only sees layer 0.
+const NO_REFLECTION_LAYER = 1;
+const OVERLAYS = { ring: null, bg: null, fg: null, matrix: new THREE.Matrix4() };
+function overlayProxy(color) {
+  const o = new THREE.Object3D();
+  o.visible = false;
+  o.material = { color: new THREE.Color(color), opacity: 1 };
+  return o;
+}
+function overlayBatch(geometry, material, capacity) {
+  const m = new THREE.InstancedMesh(geometry, material, capacity);
+  m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  m.setColorAt(0, new THREE.Color());
+  m.count = 0; m.frustumCulled = false;
+  m.layers.set(NO_REFLECTION_LAYER);
+  return m;
+}
+function updateOverlays(pulse) {
+  const o = OVERLAYS, capacity = G.units.length + G.buildings.length;
+  if (!o.ring || o.ring.instanceMatrix.count < capacity) {
+    for (const m of [o.ring, o.bg, o.fg]) if (m) { scene.remove(m); m.dispose(); }
+    const size = Math.max(512, capacity * 2);
+    o.ring = overlayBatch(new THREE.RingGeometry(0.98, 1.04, 48),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false }), size);
+    o.bg = overlayBatch(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial(), size);
+    o.fg = overlayBatch(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial(), size);
+  }
+  for (const m of [o.ring, o.bg, o.fg]) if (m.parent !== scene) scene.add(m);
+  let rings = 0, bars = 0;
+  for (const list of [G.units, G.buildings]) for (const e of list) {
+    if (!e.ring || !e.mesh.visible || !(e.ring.visible || e.hpBg.visible)) continue;
+    e.ring.updateWorldMatrix(true, false);
+    if (e.ring.visible) {
+      o.ring.setMatrixAt(rings, e.ring.matrixWorld); o.ring.setColorAt(rings++, e.ring.material.color);
+    }
+    if (e.hpBg.visible) {
+      e.hpBg.updateWorldMatrix(false, false); e.hpFg.updateWorldMatrix(false, false);
+      o.bg.setMatrixAt(bars, e.hpBg.matrixWorld); o.bg.setColorAt(bars, e.hpBg.material.color);
+      o.fg.setMatrixAt(bars, e.hpFg.matrixWorld); o.fg.setColorAt(bars++, e.hpFg.material.color);
+    }
+  }
+  o.ring.count = rings; o.bg.count = o.fg.count = bars;
+  o.ring.material.opacity = pulse;
+  for (const m of [o.ring, o.bg, o.fg]) {
+    m.instanceMatrix.needsUpdate = true;
+    if (m.instanceColor) m.instanceColor.needsUpdate = true;
+  }
+}
+
 function attachOverlays(ent, radius) {
-  const ring = new THREE.Mesh(
-    new THREE.RingGeometry(radius * 0.98, radius * 1.04, 48),
-    new THREE.MeshBasicMaterial({ color: 0xc9d4ac, transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false })
-  );
+  const ring = overlayProxy(0xc9d4ac);
   ring.rotation.x = -Math.PI / 2;
   ring.position.y = 0.15;
-  ring.visible = false;
+  ring.scale.setScalar(radius);
   ent.mesh.add(ring);
   ent.ring = ring;
 
   const barY = ent.type === 'building' ? radius * 1.3 + 3 : (UNITS[ent.key] && UNITS[ent.key].fly ? 3.2 : 3);
   const w = ent.type === 'building' ? radius * 1.2 : 1.6;
-  const bg = new THREE.Mesh(new THREE.BoxGeometry(w + .1, 0.14, 0.14), new THREE.MeshBasicMaterial({ color: 0x172127 }));
-  bg.position.y = barY;
-  const fg = new THREE.Mesh(new THREE.BoxGeometry(w, 0.08, 0.16), new THREE.MeshBasicMaterial({ color: 0x95bba0 }));
-  fg.position.y = barY;
-  bg.visible = fg.visible = false;
+  const bg = overlayProxy(0x172127);
+  bg.position.y = barY; bg.scale.set(w + .1, 0.14, 0.14);
+  const fg = overlayProxy(0x95bba0);
+  fg.position.y = barY; fg.scale.set(w, 0.08, 0.16);
   ent.mesh.add(bg); ent.mesh.add(fg);
   ent.hpBg = bg; ent.hpFg = fg; ent.hpW = w;
 }
@@ -2495,7 +2546,7 @@ function updateHpBar(ent) {
   const show = frac < 1 || ent.selected;
   ent.hpBg.visible = ent.hpFg.visible = show;
   if (show) {
-    ent.hpFg.scale.x = Math.max(frac, 0.001);
+    ent.hpFg.scale.x = ent.hpW * Math.max(frac, 0.001);
     ent.hpFg.position.x = -ent.hpW * (1 - frac) / 2;
     ent.hpFg.material.color.setHex(frac > 0.55 ? 0x95bba0 : frac > 0.25 ? 0xcbbb7f : 0xd9796d);
   }
@@ -2576,6 +2627,10 @@ function spawnUnit(key, owner, x, z) {
   ent.mesh.position.set(x, def.naval ? SEA_LEVEL + 0.15 : terrainH(x, z) + def.fly, z);
   ent.mesh.userData.entity = ent;
   attachOverlays(ent, def.naval ? 2.4 : 1.3);
+  // Land units are small and move constantly; leaving them out of the water
+  // reflection saves a full re-draw of the army whenever the camera moves.
+  // Ships and aircraft stay reflected.
+  if (!def.naval && !def.fly) ent.mesh.traverse(o => o.layers.set(NO_REFLECTION_LAYER));
   scene.add(ent.mesh);
   G.units.push(ent);
   if (typeof UNIT_SPATIAL !== 'undefined' && UNIT_SPATIAL.ready) UNIT_SPATIAL.update(ent);

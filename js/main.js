@@ -62,6 +62,7 @@ function initEngine() {
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, 1, 2600);
+  camera.layers.enable(NO_REFLECTION_LAYER);
   updateCameraViewport();
 
   sunLight = buildLights(scene, G.gfxHigh);
@@ -254,6 +255,7 @@ function startGame() {
 }
 function startGameNow() {
   CONTROL_GROUPS.slots.clear(); CONTROL_GROUPS.lastSlot=null;
+  window.reseedRandom?.();
   document.getElementById('main-menu').classList.add('hidden');
   setMapConfig(G.mapSize, G.mapStyle);
   // chosen start corner: swap the player's slot into position 0
@@ -345,6 +347,7 @@ function groundPoint(clientX, clientY) {
 function pickEntity(clientX, clientY) {
   const ndc = new THREE.Vector2((clientX / innerWidth) * 2 - 1, -(clientY / innerHeight) * 2 + 1);
   raycaster.setFromCamera(ndc, camera);
+  raycaster.layers.enableAll(); // land units live on the no-reflection layer
   const meshes = [];
   for (const e of G.units) if (!e.dead) meshes.push(e.mesh);
   for (const e of G.buildings) if (!e.dead) meshes.push(e.mesh);
@@ -358,7 +361,17 @@ function pickEntity(clientX, clientY) {
       o = o.parent;
     }
   }
-  return null;
+  // Infantry are a few pixels wide at RTS zoom: accept a click close to a unit.
+  let best = null, bestD = 18 * 18;
+  const p = new THREE.Vector3();
+  for (const e of G.units) {
+    if (e.dead || !e.mesh.visible) continue;
+    p.set(e.x, e.mesh.position.y + 1, e.z).project(camera);
+    if (p.z > 1) continue;
+    const dx = (p.x + 1) / 2 * innerWidth - clientX, dy = (1 - p.y) / 2 * innerHeight - clientY;
+    if (dx * dx + dy * dy < bestD) { bestD = dx * dx + dy * dy; best = e; }
+  }
+  return best ? { entity: best } : null;
 }
 
 /* ---------------- selection ---------------- */
@@ -791,11 +804,8 @@ function loop() {
     sunLight.position.set(camFocus.x + 120, 180, camFocus.z + 60);
     sunLight.target.position.set(camFocus.x, 0, camFocus.z);
   }
-  // selection rings pulse gently
-  const ringPulse = 0.7 + Math.sin(performance.now() * 0.004) * 0.25;
-  for (const e of G.selection) {
-    if (e.ring && !e.dead) e.ring.material.opacity = ringPulse;
-  }
+  // selection rings pulse gently; rings and health bars draw as three batches
+  updateOverlays(0.7 + Math.sin(performance.now() * 0.004) * 0.25);
 
   // Reuse the shadow atlas between lighting updates. Camera movement refreshes
   // immediately; stationary views update moving-unit shadows at 15 Hz (30 in Cinematic).

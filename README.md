@@ -39,6 +39,13 @@ Soldier is from the Three.js examples. Existing procedural meshes remain automat
   acquisition and separation. Exact combat range and diplomacy checks still
   apply. The automated distributed-army benchmark measures candidate counts,
   not end-to-end frame-rate gains; dense groups naturally yield more candidates.
+- **Benchmark:** open `index.html?bench=64` (any army size up to 240). The map is
+  seeded (`&seed=N` picks another), the army drill marches, and three fixed camera
+  phases are recorded: army close-up, base overview and a camera pan (the pan
+  forces shadows and water reflections to redraw every frame). Results show on
+  screen with FPS, p50/p95/p99 frame time, hitches over 33 ms, CPU time, draw calls
+  and triangles; **Copy JSON** saves them for comparison. Keep the window visible
+  and focused, otherwise the run is marked invalid.
 - **The map is an island** — the coast matters: Shipyards must touch water, warships patrol the ocean ring.
 
 ### Settlements & development

@@ -32,15 +32,35 @@ was ~15 part meshes, each drawn again for shadows. They now merge into one skinn
 mesh with vertex colours; rigid parts are skinned to their bone. Measured as the
 difference between frames with and without units (camera fixed, army drill, 88 units):
 units cost 3,954 draw calls before and 128 after; the full frame fell from ~4,600
-to ~550. `?nocharbatch` restores the old path for A/B checks. Still not an FPS
-benchmark: the hidden browser pane throttles timing, and the map is not seeded.
+to ~550. `?nocharbatch` restores the old path for A/B checks.
+
+Repeatable benchmark (2026-09-21): `?bench=N` seeds Math.random, so the map and
+army are identical between runs, and records three fixed camera phases (see README).
+Draw-call breakdown on seed 1, 64 drill units selected, every pass forced
+(main + shadow + water reflection), same camera, old vs new code:
+
+| | before | after |
+|---|---|---|
+| Whole frame | 2,225 | 1,396 |
+| Units, all passes | 1,557 | 726 |
+| Water reflection pass | 852 | 274 |
+| Shadow pass | 537 | 537 |
+
+Selection rings and health bars now draw as three InstancedMeshes for every
+entity. Land units and those overlays sit on layer 1, which the reflection camera
+skips (ships and aircraft are still reflected). Clicks within 18 px of a unit
+select it, which also makes small infantry easier to pick.
+
+Remaining cost is mostly buildings: each has 20–40 meshes because of distinct
+materials (palette clones, textured walls, glass, animated parts). Reducing that
+needs a shared texture atlas, not more merging.
 
 ## Next acceptance gates
 
-1. Establish a seeded, repeatable 1080p benchmark on a named target machine.
-   Record simulation, render submission, frame p95, calls and triangles separately.
-   Profile shadows, infantry meshes and environment draw calls. Keep image quality
-   fixed when comparing changes. Test dense groups as well as dispersed armies.
+1. Run the benchmark on the named target machine at 1080p with the window
+   visible (the Claude browser pane throttles, so its FPS is invalid). Record
+   24/64/128-unit runs as the baseline for the engine decision. Next render
+   work: building material atlas, then shadow-pass culling of small props.
 2. Validate formation arrival through narrow passages and around a growing city;
    eliminate persistent jams and expose order feedback and rally points.
 3. Build one cohesive art reference scene: terrain, one district, infantry,

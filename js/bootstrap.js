@@ -31,15 +31,35 @@ window.THREE = {
   OutputPass, SMAAPass, GTAOPass,
 };
 
+// ?seed=N (implied by ?bench) makes Math.random repeatable, so the map, start
+// positions and army are identical between benchmark runs. Reset again when a
+// match starts so asynchronous asset loading cannot shift the sequence.
+{
+  const params = new URLSearchParams(location.search);
+  const seed = params.get('seed') ?? (params.has('bench') ? '1' : null);
+  if (seed !== null) {
+    let state = 0;
+    window.reseedRandom = () => { state = (Number(seed) >>> 0) || 1; };
+    Math.random = () => {
+      state = (state + 0x6D2B79F5) >>> 0;
+      let t = state;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    window.reseedRandom();
+  }
+}
+
 const gameScripts = [
   'config.js', 'models.js', 'terrain-picking.js', 'forest-lod.js', 'world.js', 'path.js', 'territory.js', 'unit-spatial.js',
-  'entities.js', 'battle-visuals.js', 'site-art.js', 'logistics.js', 'settlement-art.js', 'vehicle-art.js', 'diplomacy.js', 'ai.js', 'ui.js', 'performance.js', 'presentation.js', 'control-groups.js', 'review.js', 'main.js',
+  'entities.js', 'battle-visuals.js', 'site-art.js', 'logistics.js', 'settlement-art.js', 'vehicle-art.js', 'diplomacy.js', 'ai.js', 'ui.js', 'performance.js', 'presentation.js', 'control-groups.js', 'review.js', 'main.js', 'benchmark.js',
 ];
 
 for (const file of gameScripts) {
   await new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = `js/${file}?v=rts-foundation-2`;
+    script.src = `js/${file}?v=rts-foundation-3`;
     script.async = false;
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${file}`));
