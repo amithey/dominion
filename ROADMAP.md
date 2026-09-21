@@ -95,6 +95,28 @@ JSON to a local collector); Godot ran windowed with V-Sync off.
 Fair next step: build the same scene in both engines, starting with an exported
 seeded map (terrain heights, trees, building placements) that Godot loads.
 
+### Same map in both engines (2026-09-21)
+
+`js/map-export.js` exports seed 1 (height grid, trees, buildings, units); the Godot
+world scene loads it with Forward+ terrain and sea shaders, SSAO, fog and shadows.
+Same laptop, 1920×1080, same drill (82 units), V-Sync off:
+
+| | FPS close-up / overview / pan | Bottleneck |
+|---|---|---|
+| Browser, three.js | 25 / 22 / 19, p95 55–65 ms | CPU: 30–50 ms in `renderer.render()` |
+| Godot, balanced (FSR 77%) | 28 / 25 / 27, p95 37–44 ms | GPU: 34–39 ms; render CPU 10–15 ms |
+
+Godot draws a richer image (refraction, depth-coloured sea, PBR terrain) at a
+higher and steadier frame rate, and it is limited by the GPU, which a dedicated
+card relieves; the browser is limited by CPU work that a faster GPU does not
+reduce. The first Godot version ran at 7 FPS: per-pixel hash noise in the terrain
+shader cost ~110 ms; noise now comes from a texture and weights are per vertex.
+
+Recommendation: continue the migration in Godot. Port gameplay systems in order
+of dependency (units and combat, then economy and logistics, then AI and diplomacy),
+keep the browser build as the reference until each system reaches parity, and
+replace the stylised units with a consistent realistic asset set.
+
 ## Next acceptance gates
 
 1. Run the benchmark on the named target machine at 1080p with the window

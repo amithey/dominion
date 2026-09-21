@@ -53,13 +53,13 @@ window.THREE = {
 
 const gameScripts = [
   'config.js', 'models.js', 'terrain-picking.js', 'forest-lod.js', 'world.js', 'path.js', 'territory.js', 'unit-spatial.js',
-  'entities.js', 'building-batch.js', 'battle-visuals.js', 'site-art.js', 'logistics.js', 'settlement-art.js', 'vehicle-art.js', 'diplomacy.js', 'ai.js', 'ui.js', 'performance.js', 'presentation.js', 'control-groups.js', 'review.js', 'main.js', 'benchmark.js',
+  'entities.js', 'building-batch.js', 'battle-visuals.js', 'site-art.js', 'logistics.js', 'settlement-art.js', 'vehicle-art.js', 'diplomacy.js', 'ai.js', 'ui.js', 'performance.js', 'presentation.js', 'control-groups.js', 'review.js', 'main.js', 'benchmark.js', 'map-export.js',
 ];
 
 for (const file of gameScripts) {
   await new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = `js/${file}?v=rts-foundation-5`;
+    script.src = `js/${file}?v=rts-foundation-6`;
     script.async = false;
     script.onload = resolve;
     script.onerror = () => reject(new Error(`Could not load ${file}`));

@@ -12,45 +12,58 @@ No web server is required. The engine and generated asset copies are ignored by 
 
 On another computer, download Godot 4.7.2 from
 https://godotengine.org/download/windows/, run `prepare-desktop.ps1`, then open
-`godot/project.godot` in the editor and press F6 with main.tscn open (or F5).
+`godot/project.godot` in the editor and press F5.
 Godot is MIT licensed: https://godotengine.org/license/.
 
-## Controls and scope
+## World scene (main scene)
 
-- Click or drag to select; Shift adds to selection. Right-click orders movement.
-- WASD pans, Q/E rotates, and the mouse wheel zooms.
-- Select army selects all units; Add 24 units increases the scene to at most 96.
-- Three hex districts reuse existing Kenney models. Soldiers reuse the existing
-  Quaternius model, with idle/run animation blending and smooth turning.
-- Navigation routes around districts; the short roads are visual only.
-- The HUD samples FPS and frame p95 over two-second windows, including startup.
-  These samples are not a controlled benchmark against the browser game.
+`world.tscn` loads `godot/data/map-seed1.json`, a map exported from the browser game
+(`index.html?seed=1&export=http://localhost:PORT/name`, see `js/map-export.js`), so both
+engines show the same island: 2.5 m height grid, 863 trees, buildings and units.
+It uses the Forward+ renderer:
 
-Compatibility rendering is the initial baseline. Visual assets remain stylized;
-realistic art, combat, economy, logistics, saving, collision avoidance, Steam
-integration and standalone export packaging are not implemented here.
+- Terrain shader: grass, dirt, sand and rock (CC0, ambientCG) blended by height,
+  slope and noise, two texture scales, triplanar rock, wet band at the waterline.
+- Sea shader: Gerstner swell, depth-based colour (seabed visible in shallows),
+  refraction, sky reflection through Fresnel specular, shore foam.
+- Procedural sky, ACES tone mapping, SSAO, shadows, light fog and glow.
+- Birch trees as MultiMeshes in 96 m cells; buildings on plinths into the slope;
+  soldiers follow the terrain with run speed matched to the clip (no foot sliding);
+  tanks pitch and roll with the ground.
+- Quality: integrated GPUs start on `balanced` (no SSAO, two shadow cascades, FSR
+  at 77%); dedicated GPUs on `high`. Override with `-- --quality=high|balanced|low`.
+
+Controls: click/drag select, right-click move, WASD pan, Q/E rotate, R/F tilt, wheel zoom.
+Diagnostics: `-- --capture-views` writes `build/view-*.png`; `-- --feature-probe --no-vsync`
+prints the frame cost of each expensive feature.
+
+The earlier three-district prototype is still available: pass `res://main.tscn`.
+
+Not yet ported: combat, economy, logistics, AI, aircraft and ships, pathfinding
+around obstacles, saving and Steam integration. Units are still the stylised
+Quaternius models; realistic units need new art.
 
 ## Validation
 
 Run the Godot executable with:
 
 ```text
---headless --path native/godot -- --smoke-test
---path native/godot -- --capture-preview
+--headless --path native/godot res://main.tscn -- --smoke-test
+--path native/godot res://main.tscn -- --capture-preview
 ```
 
 Benchmark matching the browser's `?bench=N` (same three camera phases, orbit
 formula, marching army and JSON fields):
 
 ```text
---path native/godot --rendering-method forward_plus --resolution 1920x1080 -- --bench=64 --no-vsync --quit-after-bench
+--path native/godot --resolution 1920x1080 -- --bench=64 --no-vsync --quit-after-bench
 ```
 
-`--rendering-method gl_compatibility` measures the OpenGL renderer instead. The
-result prints as `DOMINION benchmark {...}` and is saved to
-`godot/build/bench-<renderer>-<units>.json`. The scene is still far lighter than
-the browser map (three districts, no terrain relief, trees or water), and its
-soldiers are not merged, so compare cost per extra unit, not absolute FPS.
+This runs in the world scene, on the same seeded map and drill as the browser.
+The result prints as `DOMINION benchmark {...}` and is saved to
+`godot/build/world-bench-<renderer>-<units>.json`, with GPU time and render CPU
+time per frame from the engine. Add `res://main.tscn` before `--` to benchmark the
+old three-district scene instead.
 
 The smoke test requires 24 models, a route around a district, and actual unit
 movement. The graphical command saves `godot/build/preview.png` and exits.
