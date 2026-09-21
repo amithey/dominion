@@ -39,6 +39,19 @@ Run the Godot executable with:
 --path native/godot -- --capture-preview
 ```
 
+Benchmark matching the browser's `?bench=N` (same three camera phases, orbit
+formula, marching army and JSON fields):
+
+```text
+--path native/godot --rendering-method forward_plus --resolution 1920x1080 -- --bench=64 --no-vsync --quit-after-bench
+```
+
+`--rendering-method gl_compatibility` measures the OpenGL renderer instead. The
+result prints as `DOMINION benchmark {...}` and is saved to
+`godot/build/bench-<renderer>-<units>.json`. The scene is still far lighter than
+the browser map (three districts, no terrain relief, trees or water), and its
+soldiers are not merged, so compare cost per extra unit, not absolute FPS.
+
 The smoke test requires 24 models, a route around a district, and actual unit
 movement. The graphical command saves `godot/build/preview.png` and exits.
 The preview was rendered on Intel Iris Xe; this does not establish full-game

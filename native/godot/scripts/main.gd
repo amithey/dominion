@@ -16,6 +16,26 @@ var benchmark_time := 0.0
 var benchmark_frames := 0
 var benchmark_samples: Array[float] = []
 var destination_marker: MeshInstance3D
+var max_units := 96
+# --bench=N mirrors the browser's ?bench=N: same phases, camera formula,
+# marching army and JSON fields, so the two engines can be compared directly.
+const BENCH_WARMUP := 2.0
+const BENCH_DURATION := 8.0
+const BENCH_PHASES := [
+	{"name":"Army close-up","dist":85.0,"pitch":0.8,"focus":Vector3(0,0,20),"pan":0.0},
+	{"name":"Base overview","dist":200.0,"pitch":0.95,"focus":Vector3(0,0,0),"pan":0.0},
+	{"name":"Camera pan","dist":110.0,"pitch":0.85,"focus":Vector3(0,0,10),"pan":45.0},
+]
+var bench_units := 0
+var bench_phase := -1
+var bench_elapsed := 0.0
+var bench_frames: Array[float] = []
+var bench_cpu: Array[float] = []
+var bench_calls := 0
+var bench_primitives := 0
+var bench_results: Array = []
+var bench_march := 0.0
+var bench_side := 1.0
 
 func material(color: Color) -> StandardMaterial3D:
 	var result := StandardMaterial3D.new()
@@ -76,7 +96,17 @@ func _ready() -> void:
 	marker_mesh.outer_radius = 1.15
 	destination_marker = mesh_node(marker_mesh,material(Color("d5bc72")),Vector3.ZERO)
 	destination_marker.hide()
-	spawn_company(24)
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--bench"):
+			bench_units = clampi(int(arg.get_slice("=",1)) if "=" in arg else 64,1,240)
+		if arg == "--no-vsync":
+			DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	if bench_units > 0:
+		max_units = bench_units
+		spawn_company(bench_units)
+		arrange_bench_army()
+	else:
+		spawn_company(24)
 	await get_tree().physics_frame
 	NavigationServer3D.map_force_update(get_world_3d().navigation_map)
 	await get_tree().physics_frame
@@ -86,7 +116,9 @@ func _ready() -> void:
 			navigation_ready = true
 			break
 		await get_tree().physics_frame
-	if "--smoke-test" in OS.get_cmdline_user_args():
+	if bench_units > 0:
+		start_benchmark()
+	elif "--smoke-test" in OS.get_cmdline_user_args():
 		await run_smoke_test()
 	elif "--capture-preview" in OS.get_cmdline_user_args():
 		await get_tree().create_timer(3).timeout
@@ -141,7 +173,7 @@ func spawn_company(count: int) -> void:
 	var packed: PackedScene = load("res://assets/CharacterSoldier.glb")
 	for i in range(count):
 		var index := units.size()
-		if index >= 96:
+		if index >= max_units:
 			break
 		var root := Node3D.new()
 		add_child(root)
@@ -256,6 +288,9 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if not rig:
 		return
+	if bench_phase >= 0:
+		benchmark_frame(delta)
+		return
 	var motion := Vector3(float(Input.is_physical_key_pressed(KEY_D))-float(Input.is_physical_key_pressed(KEY_A)),0,float(Input.is_physical_key_pressed(KEY_S))-float(Input.is_physical_key_pressed(KEY_W)))
 	rig.position += rig.basis*motion*delta*30
 	rig.position.x = clampf(rig.position.x,-45,45)
@@ -338,3 +373,98 @@ func run_smoke_test() -> void:
 		return
 	print("DESKTOP_SMOKE_PASS: 24 models, navigation around districts, unit movement")
 	get_tree().quit()
+
+func arrange_bench_army() -> void:
+	var columns := ceili(sqrt(units.size()*1.5))
+	for i in range(units.size()):
+		units[i].node.position = Vector3((i%columns-(columns-1)/2.0)*2.2,0,14+(i/columns)*2.4)
+
+func start_benchmark() -> void:
+	camera.projection = Camera3D.PROJECTION_PERSPECTIVE
+	camera.fov = 48
+	camera.far = 2600
+	rig.transform = Transform3D.IDENTITY
+	for unit in units:
+		unit.selected = true
+		unit.ring.visible = true
+	bench_march = 0
+	order_move(Vector3(25,0,25))
+	bench_phase = 0
+	bench_elapsed = 0
+
+# Same orbit as updateCamera() in js/main.js, yaw fixed at pi/4.
+func hold_bench_camera() -> void:
+	var phase: Dictionary = BENCH_PHASES[bench_phase]
+	var angle: float = bench_elapsed*0.6 if phase.pan > 0 else 0.0
+	var focus: Vector3 = phase.focus+Vector3(cos(angle),0,sin(angle))*phase.pan
+	var yaw := PI*0.25
+	var dist: float = phase.dist
+	var pitch: float = phase.pitch
+	camera.global_position = focus+Vector3(sin(yaw)*dist*cos(pitch),dist*sin(pitch),cos(yaw)*dist*cos(pitch))
+	camera.look_at(focus)
+
+func benchmark_frame(delta: float) -> void:
+	hold_bench_camera()
+	bench_march += delta
+	if bench_march > 8:
+		bench_march = 0
+		bench_side = -bench_side
+		order_move(Vector3(25*bench_side,0,25))
+	bench_elapsed += delta
+	if bench_elapsed < BENCH_WARMUP:
+		return
+	bench_frames.append(delta*1000)
+	bench_cpu.append((Performance.get_monitor(Performance.TIME_PROCESS)+Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS))*1000)
+	bench_calls += RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
+	bench_primitives += RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)
+	if bench_elapsed < BENCH_WARMUP+BENCH_DURATION:
+		return
+	var sorted := bench_frames.duplicate()
+	sorted.sort()
+	var n := sorted.size()
+	var total := 0.0
+	var hitches := 0
+	for f in bench_frames:
+		total += f
+		if f > 33.4:
+			hitches += 1
+	var cpu_total := 0.0
+	for c in bench_cpu:
+		cpu_total += c
+	bench_results.append({
+		"phase":BENCH_PHASES[bench_phase].name,
+		"fps":snappedf(n/(total/1000.0),0.1),
+		"p50":snappedf(sorted[int(n*0.5)],0.1),"p95":snappedf(sorted[mini(n-1,int(n*0.95))],0.1),
+		"p99":snappedf(sorted[mini(n-1,int(n*0.99))],0.1),"worst":snappedf(sorted[n-1],0.1),
+		"hitches":hitches,"cpu":snappedf(cpu_total/n,0.1),
+		"calls":roundi(float(bench_calls)/n),"triangles":roundi(float(bench_primitives)/n),"frames":n,
+	})
+	bench_phase += 1
+	bench_elapsed = 0
+	bench_frames.clear()
+	bench_cpu.clear()
+	bench_calls = 0
+	bench_primitives = 0
+	if bench_phase < BENCH_PHASES.size():
+		return
+	bench_phase = -1
+	var size := DisplayServer.window_get_size()
+	var valid := true
+	for r in bench_results:
+		if r.frames < 120:
+			valid = false
+	var data := {
+		"version":1,"engine":"godot "+Engine.get_version_info().string,"renderer":RenderingServer.get_current_rendering_method(),
+		"date":Time.get_datetime_string_from_system(true),"units":units.size(),
+		"resolution":"%d×%d" % [size.x,size.y],"vsync":DisplayServer.window_get_vsync_mode()!=DisplayServer.VSYNC_DISABLED,
+		"gpu":RenderingServer.get_video_adapter_name(),"valid":valid,"phases":bench_results,
+	}
+	var json := JSON.stringify(data,"  ")
+	print("DOMINION benchmark ",JSON.stringify(data))
+	DirAccess.make_dir_recursive_absolute("res://build")
+	var out := FileAccess.open("res://build/bench-%s-%d.json" % [RenderingServer.get_current_rendering_method(),units.size()],FileAccess.WRITE)
+	out.store_string(json)
+	out.close()
+	status.text = "Benchmark done: %s" % ["  |  ".join(PackedStringArray(bench_results.map(func(r): return "%s %.0f FPS p95 %.1f ms" % [r.phase,r.fps,r.p95])))]
+	if "--quit-after-bench" in OS.get_cmdline_user_args():
+		get_tree().quit()

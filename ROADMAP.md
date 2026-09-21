@@ -70,6 +70,31 @@ count (7.42M). Close-ups show no visible material change. Cinematic (AO) works.
 Remaining: 45 material batches for the whole map, windows (InstancedMesh per
 building), glass (MeshPhysical) and the per-building hex outline lines.
 
+## Engine comparison, first real numbers (2026-09-21)
+
+Same laptop (Intel Iris Xe), 1080p window, both benchmarks with the same three
+phases. The browser ran in a separate visible Edge window (`&report=` posts the
+JSON to a local collector); Godot ran windowed with V-Sync off.
+
+| Frame rate (close-up / overview / pan) | 64 extra units | 128 extra units |
+|---|---|---|
+| Browser, full seeded map (88 / 152 units in total) | 25 / 22 / 19 | 23 / 19 / 18 |
+| Godot Forward+, 3 districts only | 59 / 69 / 67 | 38 / 44 / 46 |
+| Godot Compatibility, 3 districts only | 41 / 48 / 54 | 21 / 25 / 32 |
+
+- The Godot scene is much lighter, so absolute FPS is not comparable. Cost per
+  extra 64 units in the close-up is: browser +4.4 ms, Godot Forward+ +9.7 ms,
+  Godot Compatibility +22.6 ms. Godot's soldiers are still ~15 separate meshes.
+- The browser is CPU-bound in `renderer.render()` (30–50 ms of a 40–55 ms frame;
+  simulation ≈ 2–4 ms). A 35% smaller window did not change FPS, so it is not
+  fill-rate bound. Early `&probe` readings: shadow pass ≈ 12 ms, units ≈ 12 ms.
+- This laptop throttles under sustained load: the same measurement drifted from
+  49 ms to 92 ms within about a minute. Comparisons must alternate engines in
+  short runs, or use a desktop machine.
+
+Fair next step: build the same scene in both engines, starting with an exported
+seeded map (terrain heights, trees, building placements) that Godot loads.
+
 ## Next acceptance gates
 
 1. Run the benchmark on the named target machine at 1080p with the window

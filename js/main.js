@@ -817,9 +817,11 @@ function loop() {
     (loop._shadowFocus ||= new THREE.Vector3()).copy(camFocus);
     loop._shadowDist = camDist; loop._shadowTime = shadowNow;
   }
+  const renderStart = performance.now();
   if (composer) composer.render();
   else renderer.render(scene, camera);
-  recordFrameStats(measuredDt, performance.now() - frameStart);
+  const frameEnd = performance.now();
+  recordFrameStats(measuredDt, frameEnd - frameStart, frameEnd - renderStart);
 }
 
 /* ---------------- boot ---------------- */
