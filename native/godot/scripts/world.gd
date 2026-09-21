@@ -8,6 +8,7 @@ extends Node3D
 ##   --capture-views                               renders build/view-*.png
 ##   --battle / --capture-battle                   skirmish demo (key B in game)
 ##   --nav-test                                    checks routes around buildings and water
+##   --economy-test / --capture-economy            build, train and collect in fast time
 
 const MAP_PATH := "res://data/map-seed1.json"
 const SOLDIER_HEIGHT := 2.35       # the browser's readable RTS scale
@@ -21,6 +22,10 @@ const BUILDING_MODELS := {
 	"warehouse": "res://assets/building-f.glb",
 	"farm": "res://assets/BigBarn.glb",
 	"cottage": "res://assets/House_A.glb",
+	"housing": "res://assets/building-e.glb",
+	"residential": "res://assets/House_D.glb",
+	"foodDepot": "res://assets/SiloHouse.glb",
+	"workerHouse": "res://assets/House_B.glb",
 }
 const BUILDING_SIZE := {"hq": 15.0, "barracks": 12.0, "tankFactory": 15.0, "warehouse": 12.0, "farm": 13.0, "cottage": 9.0}
 const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker"]
@@ -89,6 +94,22 @@ var unit_defs := {}
 var shake_strength := 0.0
 var battle_started := false
 var building_spots: Array[Vector3] = []  # x, footprint, z
+var buildings: Array[Dictionary] = []
+var deposits: Array[Dictionary] = []
+var building_defs := {}
+var economy: Node
+var hud: CanvasLayer
+var worker_scene: PackedScene
+var placing := ""
+var ghost: Node3D
+var ghost_ok := ""
+var selected_building = null
+var selection_marker: MeshInstance3D
+var nav_region: NavigationRegion3D
+var nav_heights := PackedVector3Array()
+var nav_open := PackedByteArray()
+var nav_n := 0
+var site_timer := 0.0
 var nav_ready := false
 const NAV_STEP := 4.0
 var fps_frames := 0
@@ -107,7 +128,9 @@ func _ready() -> void:
 	start = Vector3(map.startPositions[0][0], 0, map.startPositions[0][1])
 	start.y = height_at(start.x, start.z)
 	unit_defs = map.get("unitDefs", {})
+	building_defs = map.get("buildingDefs", {})
 	soldier_scene = load("res://assets/CharacterSoldier.glb")
+	worker_scene = load("res://assets/Worker.glb")
 	tank_scene = load("res://assets/Tank.fbx")
 
 	noise_texture = NoiseTexture2D.new()
@@ -136,8 +159,9 @@ func _ready() -> void:
 	build_trees()
 	if quality != "low":
 		build_grass()
+	build_deposits()
 	for b in map.buildings:
-		place_building(b)
+		place_building(b.key, Vector3(b.x, 0, b.z), int(b.owner), true)
 	await build_navigation()
 	for u in map.units:
 		if u.key in INFANTRY or u.key in VEHICLES:
@@ -149,6 +173,24 @@ func _ready() -> void:
 	add_child(camera)
 	cam_focus = start + Vector3(0, 0, 1)
 	make_hud()
+	economy = preload("res://scripts/economy.gd").new()
+	add_child(economy)
+	economy.setup(self, map.economy)
+	hud = preload("res://scripts/hud.gd").new()
+	add_child(hud)
+	hud.setup(self, economy)
+	selection_marker = MeshInstance3D.new()
+	var marker_mesh := TorusMesh.new()
+	marker_mesh.rings = 48
+	marker_mesh.ring_segments = 4
+	selection_marker.mesh = marker_mesh
+	var marker_mat := StandardMaterial3D.new()
+	marker_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	marker_mat.albedo_color = Color("9ff29b")
+	selection_marker.material_override = marker_mat
+	selection_marker.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	selection_marker.visible = false
+	add_child(selection_marker)
 
 	var args := OS.get_cmdline_user_args()
 	for arg in args:
@@ -166,6 +208,10 @@ func _ready() -> void:
 		start_battle()
 	elif "--nav-test" in args:
 		nav_test()
+	elif "--economy-test" in args:
+		await economy_test(false)
+	elif "--capture-economy" in args:
+		await economy_test(true)
 	elif "--feature-probe" in args:
 		await feature_probe()
 
@@ -488,14 +534,53 @@ func model_bounds(root: Node3D) -> AABB:
 		first = false
 	return result
 
-func place_building(b: Dictionary) -> void:
-	var path: String = BUILDING_MODELS.get(b.key, "res://assets/building-a.glb")
+func footprint_of(key: String) -> float:
+	return BUILDING_SIZE.get(key, float(building_defs.get(key, {}).get("size", 6)) * 1.9)
+
+# The building's model, centred and scaled to its footprint (also used for the
+# placement preview).
+func building_model(key: String, x: float, z: float) -> Node3D:
+	if key == "extractor":
+		return extractor_model()
+	var path: String = BUILDING_MODELS.get(key, "res://assets/building-a.glb")
+	if key == "cottage":
+		path = ["res://assets/House_A.glb", "res://assets/House_B.glb", "res://assets/House_C.glb"][absi(int(x * 7.0 + z * 3.0)) % 3]
 	var model: Node3D = load(path).instantiate()
 	var bounds := model_bounds(model)
-	var footprint: float = BUILDING_SIZE.get(b.key, 11.0)
+	var footprint := footprint_of(key)
 	var factor := minf(footprint / maxf(maxf(bounds.size.x, bounds.size.z), 0.01), footprint * 1.1 / maxf(bounds.size.y, 0.01))
 	model.scale = Vector3.ONE * factor
 	model.position = Vector3(-bounds.get_center().x * factor, -bounds.position.y * factor, -bounds.get_center().z * factor)
+	return model
+
+# A pumpjack-style extraction rig in dark steel.
+func extractor_model() -> Node3D:
+	var rig := Node3D.new()
+	var steel := matte(Color("3b3f40"), 0.5, 0.6)
+	var paint := matte(Color("8a6a2a"), 0.7)
+	var parts := [
+		[Vector3(4.2, 0.6, 3.0), Vector3(0, 0.3, 0), steel],
+		[Vector3(0.5, 4.0, 0.5), Vector3(-0.9, 2.3, 0), steel],
+		[Vector3(0.5, 4.0, 0.5), Vector3(0.9, 2.3, 0), steel],
+		[Vector3(5.2, 0.5, 0.6), Vector3(0.4, 4.4, 0), paint],
+		[Vector3(0.9, 1.8, 0.9), Vector3(-2.2, 3.6, 0), paint],
+		[Vector3(1.2, 1.4, 1.2), Vector3(2.4, 1.1, 0), steel],
+	]
+	for p in parts:
+		var mesh := BoxMesh.new()
+		mesh.size = p[0]
+		var part := MeshInstance3D.new()
+		part.mesh = mesh
+		part.position = p[1]
+		part.material_override = p[2]
+		rig.add_child(part)
+	return rig
+
+## Creates a building entity. Unbuilt buildings are construction sites.
+func place_building(key: String, at: Vector3, owner: int, built: bool) -> Dictionary:
+	var b := {"key": key, "x": at.x, "z": at.z}
+	var model := building_model(key, at.x, at.z)
+	var footprint := footprint_of(key)
 	var root := Node3D.new()
 	root.add_child(model)
 	# Built on the highest corner of its footprint, with a stone plinth that
@@ -524,13 +609,102 @@ func place_building(b: Dictionary) -> void:
 	plinth.position.y = -box.size.y * 0.5 + 0.12
 	root.add_child(plinth)
 	add_child(root)
+	var def: Dictionary = building_defs.get(key, {"name": key, "hp": 500, "buildTime": 10, "trains": [], "provides": {}, "desc": "", "cost": {}})
+	var entity := {
+		"key": key, "owner": owner, "def": def, "root": root, "model": model, "footprint": footprint,
+		"built": built, "progress": 1.0 if built else 0.0, "hp": float(def.hp), "max_hp": float(def.hp),
+		"queue": [], "queue_prog": 0.0, "dead": false, "builders": 0, "deposit": null,
+	}
+	if def.get("onDeposit", false):
+		var dep = deposit_near(at, 6.0)
+		if dep != null:
+			dep.extractor = entity
+			entity.deposit = dep
+	if not built:
+		model.scale.y *= 0.06
+		entity.full_scale_y = model.scale.y / 0.06
+	buildings.append(entity)
+	return entity
+
+# ---------------------------------------------------------------- deposits
+
+# Resource deposits from the map: a cluster of rocks tinted by type, oil as a
+# dark glossy seep. Sea deposits need ships and are not shown yet.
+func build_deposits() -> void:
+	var types: Dictionary = map.get("depositTypes", {})
+	var meshes := {}
+	for d in map.deposits:
+		var def: Dictionary = types.get(d.type, {})
+		if def.is_empty() or def.get("water", false):
+			continue
+		if not meshes.has(d.type):
+			meshes[d.type] = deposit_mesh(d.type, Color(def.color))
+		var node := MeshInstance3D.new()
+		node.mesh = meshes[d.type]
+		node.position = Vector3(d.x, height_at(d.x, d.z), d.z)
+		node.rotation.y = fmod(d.x * 3.7 + d.z, TAU)
+		add_child(node)
+		deposits.append({"type": d.type, "def": def, "pos": node.position, "node": node, "extractor": null})
+
+func deposit_mesh(type: String, color: Color) -> Mesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = type.hash()
+	if type == "oil":
+		var pool := CylinderMesh.new()
+		pool.top_radius = 2.6
+		pool.bottom_radius = 2.8
+		pool.height = 0.12
+		st.append_from(pool, 0, Transform3D(Basis(), Vector3(0, 0.02, 0)))
+	var crystal := type in ["silicon", "uranium", "diamond"]
+	for i in range(6 if type != "oil" else 3):
+		var a := rng.randf() * TAU
+		var r := rng.randf_range(0.6, 2.6)
+		var size := rng.randf_range(0.5, 1.3)
+		var shape: Mesh
+		if crystal:
+			var prism := PrismMesh.new()
+			prism.size = Vector3(0.6, size * 2.0, 0.6)
+			shape = prism
+		else:
+			var rock := SphereMesh.new()
+			rock.radial_segments = 7
+			rock.rings = 4
+			rock.radius = size
+			rock.height = size * 1.3
+			shape = rock
+		var basis := Basis(Vector3.UP, rng.randf() * TAU).rotated(Vector3.RIGHT, rng.randf_range(-0.3, 0.3)).scaled(Vector3(1.0, rng.randf_range(0.6, 1.1), rng.randf_range(0.7, 1.2)))
+		st.append_from(shape, 0, Transform3D(basis, Vector3(cos(a) * r, size * 0.35, sin(a) * r)))
+	st.generate_normals()
+	var mesh := st.commit()
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color.lerp(Color("5a5750"), 0.35) if not crystal else color
+	material.roughness = 0.12 if type == "oil" else (0.3 if crystal else 0.9)
+	material.metallic = 0.7 if type == "gold" else 0.0
+	if type == "uranium":
+		material.emission_enabled = true
+		material.emission = color
+		material.emission_energy_multiplier = 0.8
+	mesh.surface_set_material(0, material)
+	return mesh
+
+func deposit_near(at: Vector3, radius: float):
+	var best = null
+	var best_d := radius
+	for d in deposits:
+		var gap := Vector2(d.pos.x - at.x, d.pos.z - at.z).length()
+		if gap < best_d:
+			best_d = gap
+			best = d
+	return best
 
 # ---------------------------------------------------------------- units
 
 func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	var vehicle := key in VEHICLES
 	var node := Node3D.new()
-	var model: Node3D = (tank_scene if vehicle else soldier_scene).instantiate()
+	var model: Node3D = (tank_scene if vehicle else (worker_scene if key == "worker" else soldier_scene)).instantiate()
 	node.add_child(model)
 	if vehicle:
 		model.rotation.y = PI * 0.5  # the Quaternius tank's gun points along -X; units face +Z
@@ -545,8 +719,10 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		turret = dress_vehicle(model, owner)
 		dust = make_dust()
 		node.add_child(dust)
+	elif key == "worker":
+		dress_worker(model)
 	else:
-		dress_soldier(model, owner)
+		dress_soldier(model, owner, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher"}.get(key, "AK"))
 	var ring := MeshInstance3D.new()
 	var torus := TorusMesh.new()
 	torus.inner_radius = 1.25 if not vehicle else 3.3
@@ -577,7 +753,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
 		"reload": randf() * float(def.cooldown), "search": randf() * 0.35, "enemy": null,
 		"attack_move": false, "dead": false, "dead_time": 0.0, "stance": "",
-		"path": PackedVector3Array(), "path_goal": Vector3.INF, "repath": 0.0,
+		"path": PackedVector3Array(), "path_goal": Vector3.INF, "repath": 0.0, "build_site": null,
 		"engine": audio.add_engine(node) if vehicle else null,
 	})
 	if unit.player:
@@ -586,6 +762,9 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		unit.idle_clip = "" if vehicle else find_clip(unit.player, ["idle_gun", "idle"])
 		unit.shoot_clip = "" if vehicle else find_clip(unit.player, ["idle_shoot"])
 		unit.death_clip = "" if vehicle else find_clip(unit.player, ["death"])
+		unit.work_clip = find_clip(unit.player, ["interact"]) if key == "worker" else ""
+		if unit.work_clip != "":
+			unit.player.get_animation(unit.work_clip).loop_mode = Animation.LOOP_LINEAR
 		if unit.shoot_clip != "":
 			unit.player.get_animation(unit.shoot_clip).loop_mode = Animation.LOOP_LINEAR
 		for clip in [unit.run_clip, unit.idle_clip]:
@@ -620,11 +799,24 @@ func matte(color: Color, roughness := 0.88, metallic := 0.0) -> StandardMaterial
 
 # The Quaternius soldier ships holding all 14 weapons at once; keep the rifle.
 # Its saturated toy colours become matte field uniform in the nation's colour.
-func dress_soldier(model: Node3D, owner: int) -> void:
+# Workers keep their hi-vis colours, just without the plastic shine.
+func dress_worker(model: Node3D) -> void:
+	for mesh_instance in model.find_children("*", "MeshInstance3D", true, false):
+		for i in range(mesh_instance.mesh.get_surface_count()):
+			var source: Material = mesh_instance.mesh.surface_get_material(i)
+			if source is StandardMaterial3D:
+				var key := "worker:%s" % source.resource_name
+				mesh_instance.set_surface_override_material(i, cached_material(key, func():
+					var m: StandardMaterial3D = source.duplicate()
+					m.roughness = 0.85
+					m.metallic = 0.0
+					return m))
+
+func dress_soldier(model: Node3D, owner: int, weapon_name := "AK") -> void:
 	var u: Dictionary = UNIFORMS[owner % UNIFORMS.size()]
 	for mesh_instance in model.find_children("*", "MeshInstance3D", true, false):
 		var weapon: bool = mesh_instance.get_parent().name == "Index1_R"
-		if weapon and mesh_instance.name != "AK":
+		if weapon and mesh_instance.name != weapon_name:
 			mesh_instance.visible = false
 			continue
 		for i in range(mesh_instance.mesh.get_surface_count()):
@@ -796,6 +988,7 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 	for u in selected:
 		u.attack_move = attack
 		u.path = PackedVector3Array()
+		u.build_site = null  # a new order takes a worker off its construction site
 		if not attack:
 			u.enemy = null  # a plain move order disengages
 	var width := maxi(1, ceili(sqrt(selected.size())))
@@ -806,6 +999,9 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 
 func _physics_process(delta: float) -> void:
 	var now := Time.get_ticks_msec() / 1000.0
+	if economy:
+		update_construction(delta)
+		update_training(delta)
 	for i in range(units.size() - 1, -1, -1):
 		var unit: Dictionary = units[i]
 		if unit.dead:
@@ -901,26 +1097,20 @@ func walkable(x: float, z: float) -> bool:
 func build_navigation() -> void:
 	var half := float(map.mapSize) * 0.5
 	var n := int(half * 2.0 / NAV_STEP) + 1
-	var vertices := PackedVector3Array()
-	vertices.resize(n * n)
+	nav_n = n
+	nav_heights.resize(n * n)
 	for r in range(n):
 		for c in range(n):
 			var x := -half + c * NAV_STEP
 			var z := -half + r * NAV_STEP
-			vertices[r * n + c] = Vector3(x, height_at(x, z), z)
-	var nav := NavigationMesh.new()
-	nav.vertices = vertices
-	var cells := 0
+			nav_heights[r * n + c] = Vector3(x, height_at(x, z), z)
+	nav_open.resize((n - 1) * (n - 1))
 	for r in range(n - 1):
 		for c in range(n - 1):
-			if not walkable(-half + (c + 0.5) * NAV_STEP, -half + (r + 0.5) * NAV_STEP):
-				continue
-			var a := r * n + c
-			nav.add_polygon(PackedInt32Array([a, a + n, a + n + 1, a + 1]))
-			cells += 1
-	var region := NavigationRegion3D.new()
-	region.navigation_mesh = nav
-	add_child(region)
+			nav_open[r * (n - 1) + c] = 1 if walkable(-half + (c + 0.5) * NAV_STEP, -half + (r + 0.5) * NAV_STEP) else 0
+	nav_region = NavigationRegion3D.new()
+	add_child(nav_region)
+	var cells := rebuild_nav_mesh()
 	var nav_map := get_world_3d().navigation_map
 	NavigationServer3D.map_set_active(nav_map, true)
 	NavigationServer3D.map_set_use_async_iterations(nav_map, false)
@@ -934,6 +1124,39 @@ func build_navigation() -> void:
 			nav_ready = true
 			break
 	print("Navigation: %d walkable cells, ready=%s" % [cells, nav_ready])
+
+func rebuild_nav_mesh() -> int:
+	var nav := NavigationMesh.new()
+	nav.vertices = nav_heights
+	var n := nav_n
+	var cells := 0
+	for r in range(n - 1):
+		for c in range(n - 1):
+			if nav_open[r * (n - 1) + c] == 0:
+				continue
+			var a := r * n + c
+			nav.add_polygon(PackedInt32Array([a, a + n, a + n + 1, a + 1]))
+			cells += 1
+	nav_region.navigation_mesh = nav
+	return cells
+
+# A new building closes the walk cells under it (with room for a tank).
+func close_navigation(at: Vector3, footprint: float) -> void:
+	if nav_n == 0:
+		return
+	var half := float(map.mapSize) * 0.5
+	var reach := footprint * 0.62 + 3.0
+	var c0 := maxi(0, int((at.x - reach + half) / NAV_STEP))
+	var c1 := mini(nav_n - 2, int((at.x + reach + half) / NAV_STEP))
+	var r0 := maxi(0, int((at.z - reach + half) / NAV_STEP))
+	var r1 := mini(nav_n - 2, int((at.z + reach + half) / NAV_STEP))
+	for r in range(r0, r1 + 1):
+		for c in range(c0, c1 + 1):
+			var x := -half + (c + 0.5) * NAV_STEP
+			var z := -half + (r + 0.5) * NAV_STEP
+			if Vector2(x - at.x, z - at.z).length() < reach:
+				nav_open[r * (nav_n - 1) + c] = 0
+	rebuild_nav_mesh()
 
 func path_between(from: Vector3, to: Vector3) -> PackedVector3Array:
 	if not nav_ready:
@@ -988,6 +1211,309 @@ func nav_test() -> void:
 	print("NAV_TEST %s: %d routes, %d points inside buildings or water" % ["PASS" if failures == 0 and tested > 0 and nav_ready else "FAIL", tested, failures])
 	get_tree().quit(0 if failures == 0 and tested > 0 else 1)
 
+# ---------------------------------------------------------------- construction and training
+
+# Construction sites call the nearest free worker; progress needs a worker on
+# site (a second or third worker speeds it up). Barracks and factories train
+# their queue and send each new unit a few metres out of the door.
+func update_construction(delta: float) -> void:
+	site_timer -= delta
+	for b in buildings:
+		if b.built or b.dead:
+			continue
+		var reach: float = b.footprint * 0.62 + 4.0
+		var at: Vector3 = b.root.position
+		var count := 0
+		for u in units:
+			if u.dead or u.build_site != b:
+				continue
+			if Vector2(u.node.position.x - at.x, u.node.position.z - at.z).length() < reach + 1.5 and u.target == null:
+				count += 1
+				if u.clip != u.work_clip and u.work_clip != "":
+					u.player.play(u.work_clip, 0.2)
+					u.player.speed_scale = 1.0
+					u.clip = u.work_clip
+				var face: Vector3 = at - u.node.position
+				u.heading = atan2(face.x, face.z)
+				place_on_ground(u, u.node.position)
+		b.builders = count
+		if count > 0:
+			b.progress = minf(1.0, b.progress + delta / maxf(float(b.def.buildTime), 1.0) * (1.0 + 0.5 * (count - 1)))
+			b.model.scale.y = b.full_scale_y * lerpf(0.06, 1.0, b.progress)
+			if randf() < delta * 1.5:
+				effects.impact(at + Vector3(randf_range(-3, 3), 0.3, randf_range(-3, 3)))
+		if b.progress >= 1.0:
+			finish_building(b)
+		elif site_timer <= 0.0 and count == 0 and b.owner == 0:
+			call_worker(b)
+	if site_timer <= 0.0:
+		site_timer = 0.5
+
+func call_worker(site: Dictionary) -> void:
+	for u in units:
+		if u.build_site == site and not u.dead:
+			return  # already on the way
+	var best = null
+	var best_d := INF
+	for u in units:
+		if u.dead or u.owner != site.owner or u.key != "worker" or u.build_site != null or u.target != null:
+			continue
+		var d: float = u.node.position.distance_to(site.root.position)
+		if d < best_d:
+			best_d = d
+			best = u
+	if best == null:
+		return
+	var side: Vector3 = (best.node.position - site.root.position)
+	side.y = 0
+	side = side.normalized() if side.length() > 0.1 else Vector3.BACK
+	order_move([best], site.root.position + side * (site.footprint * 0.62 + 3.0))
+	best.build_site = site  # after the move order, which clears it
+
+func finish_building(b: Dictionary) -> void:
+	b.built = true
+	b.progress = 1.0
+	b.model.scale.y = b.full_scale_y
+	for u in units:
+		if u.build_site == b:
+			u.build_site = null
+			u.clip = ""
+			animate(u, false)
+	economy.recalculate()
+	if b.owner == 0:
+		hud.notice("%s complete" % b.def.name)
+		if selected_building == b:
+			hud.show_building(b)
+
+func queue_unit(b: Dictionary, key: String) -> void:
+	var def: Dictionary = unit_defs.get(key, {})
+	if def.is_empty() or not b.built:
+		return
+	if b.queue.size() >= 5:
+		hud.notice("Queue is full")
+		return
+	var queued_pop := 0
+	for other in buildings:
+		for q in other.queue:
+			queued_pop += int(unit_defs[q].get("pop", 1))
+	if economy.pop_used + queued_pop + int(def.get("pop", 1)) > economy.pop_cap:
+		hud.notice("Army capacity reached: build Housing Blocks")
+		return
+	if not economy.pay(def.cost):
+		hud.notice("Not enough %s" % economy.missing(def.cost))
+		return
+	b.queue.append(key)
+
+func update_training(delta: float) -> void:
+	for b in buildings:
+		if b.dead or not b.built or b.queue.is_empty():
+			continue
+		var def: Dictionary = unit_defs[b.queue[0]]
+		b.queue_prog += delta / maxf(float(def.get("trainTime", 10)), 0.5)
+		if b.queue_prog < 1.0:
+			continue
+		b.queue_prog = 0.0
+		var key: String = b.queue.pop_front()
+		var at: Vector3 = b.root.position
+		var out := (Vector3(0, 0, 0) - at)
+		out.y = 0
+		out = out.normalized() if out.length() > 1.0 else Vector3.BACK
+		var door: Vector3 = at + out * (b.footprint * 0.62 + 3.5)
+		var unit := spawn_unit(key, door, b.owner)
+		unit.heading = atan2(out.x, out.z)
+		order_move([unit], door + out * 8.0 + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4)))
+		economy.recalculate()
+		if b.owner == 0:
+			hud.notice("%s ready" % def.name)
+
+# ---------------------------------------------------------------- placement
+
+func begin_placement(key: String) -> void:
+	cancel_placement()
+	var def: Dictionary = building_defs.get(key, {})
+	if def.is_empty():
+		return
+	if not economy.can_afford(def.cost):
+		hud.notice("Not enough %s" % economy.missing(def.cost))
+		return
+	placing = key
+	ghost = Node3D.new()
+	ghost.add_child(building_model(key, 0, 0))
+	add_child(ghost)
+	set_ghost_colour(Color(0.4, 1.0, 0.5, 0.45))
+
+func cancel_placement() -> void:
+	placing = ""
+	if ghost:
+		ghost.queue_free()
+		ghost = null
+
+func set_ghost_colour(color: Color) -> void:
+	var m := StandardMaterial3D.new()
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_color = color
+	for mesh_instance in ghost.find_children("*", "MeshInstance3D", true, false):
+		mesh_instance.material_override = m
+		mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+## "" when the building can go here, otherwise the reason it cannot.
+func placement_problem(key: String, at: Vector3) -> String:
+	var def: Dictionary = building_defs[key]
+	var footprint := footprint_of(key)
+	var half := footprint * 0.5
+	var lowest := INF
+	var highest := -INF
+	for corner in [Vector2(-half, -half), Vector2(half, -half), Vector2(-half, half), Vector2(half, half), Vector2.ZERO]:
+		var h := height_at(at.x + corner.x, at.z + corner.y)
+		lowest = minf(lowest, h)
+		highest = maxf(highest, h)
+	if lowest < float(map.seaLevel) + 1.0:
+		return "Too close to the water"
+	if highest - lowest > 3.5:
+		return "Ground too steep"
+	var in_district := false
+	for b in buildings:
+		if b.dead:
+			continue
+		var gap := Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length()
+		if gap < (footprint + b.footprint) * 0.55:
+			return "Too close to %s" % b.def.name
+		if b.owner == 0 and b.built and gap < float(b.def.get("buildRadius", 0)):
+			in_district = true
+	if not in_district:
+		return "Outside your district"
+	if def.get("onDeposit", false):
+		var dep = deposit_near(at, 6.0)
+		if dep == null or dep.extractor != null:
+			return "Build on a free resource deposit"
+	for u in units:
+		if not u.dead and Vector2(u.node.position.x - at.x, u.node.position.z - at.z).length() < footprint * 0.45:
+			return "Units in the way"
+	return ""
+
+func update_placement() -> void:
+	if placing == "" or ghost == null:
+		return
+	var point = ground_point(get_viewport().get_mouse_position())
+	if point == null:
+		return
+	var at := Vector3(snappedf(point.x, 2.0), 0, snappedf(point.z, 2.0))
+	if building_defs[placing].get("onDeposit", false):
+		var dep = deposit_near(at, 10.0)
+		if dep != null:
+			at = Vector3(dep.pos.x, 0, dep.pos.z)
+	at.y = height_at(at.x, at.z)
+	ghost.position = at
+	var problem := placement_problem(placing, at)
+	if problem != ghost_ok:
+		ghost_ok = problem
+		set_ghost_colour(Color(0.4, 1.0, 0.5, 0.45) if problem == "" else Color(1.0, 0.35, 0.3, 0.45))
+
+func confirm_placement(keep: bool) -> void:
+	var at := ghost.position
+	var problem := placement_problem(placing, at)
+	if problem != "":
+		hud.notice(problem)
+		return
+	var def: Dictionary = building_defs[placing]
+	if not economy.pay(def.cost):
+		hud.notice("Not enough %s" % economy.missing(def.cost))
+		return
+	var site := place_building(placing, at, 0, false)
+	close_navigation(at, site.footprint)
+	call_worker(site)
+	if not keep or not economy.can_afford(def.cost):
+		cancel_placement()
+
+func select_building(b) -> void:
+	selected_building = b
+	hud.show_building(b)
+	if b == null:
+		selection_marker.visible = false
+		return
+	var torus: TorusMesh = selection_marker.mesh
+	torus.inner_radius = b.footprint * 0.72
+	torus.outer_radius = torus.inner_radius + 0.25
+	selection_marker.position = b.root.position + Vector3.UP * 0.3
+	selection_marker.visible = true
+
+func building_under(screen: Vector2):
+	var best = null
+	var best_d := INF
+	for b in buildings:
+		if b.dead:
+			continue
+		var centre: Vector3 = b.root.position + Vector3.UP * 2.0
+		if camera.is_position_behind(centre):
+			continue
+		var edge := camera.unproject_position(centre + camera.global_basis.x * b.footprint * 0.5)
+		var mid := camera.unproject_position(centre)
+		var d := mid.distance_to(screen)
+		if d < mid.distance_to(edge) and d < best_d:
+			best_d = d
+			best = b
+	return best
+
+# Fast-time check: place a farm and a barracks, let workers build them,
+# train a soldier, and confirm the treasury and food moved as expected.
+func economy_test(capture: bool) -> void:
+	var money_before: float = economy.res.money
+	var hq_pos: Vector3 = buildings[0].root.position
+	var spots := [hq_pos + Vector3(-34, 0, 20), hq_pos + Vector3(-34, 0, -8), hq_pos + Vector3(-14, 0, 34), hq_pos + Vector3(14, 0, 36), hq_pos + Vector3(40, 0, 30)]
+	var placed := []
+	for key in ["farm", "barracks", "housing"]:
+		for spot in spots:
+			var at: Vector3 = spot
+			at.y = height_at(at.x, at.z)
+			if placement_problem(key, at) == "":
+				placing = key
+				ghost = Node3D.new()
+				add_child(ghost)
+				ghost.position = at
+				confirm_placement(false)
+				placed.append(key)
+				break
+	print("Placed: %s, money %.0f -> %.0f" % [placed, money_before, economy.res.money])
+	if not placed.has("barracks"):
+		print("ECONOMY_TEST FAIL: could not place a barracks")
+		get_tree().quit(1)
+		return
+	cam_focus = hq_pos + Vector3(-18, 0, 24)
+	cam_dist = 70.0
+	cam_dist_target = 70.0
+	cam_pitch = 0.7
+	Engine.time_scale = 1.0 if capture else 6.0
+	var trained := false
+	var elapsed := 0.0
+	var shot := 0
+	while elapsed < (60.0 if capture else 120.0):
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
+		var barracks = null
+		for b in buildings:
+			if b.key == "barracks" and b.owner == 0 and not b.built:
+				barracks = b
+			if b.key == "barracks" and b.owner == 0 and b.built and b.queue.is_empty() and not trained and b.get("asked", false) == false:
+				b.asked = true
+				queue_unit(b, "soldier")
+				trained = true
+		if capture and (shot == 0 and elapsed > 6.0 or shot == 1 and elapsed > 22.0 or shot == 2 and elapsed > 50.0):
+			if shot == 1:
+				select_building(buildings.filter(func(b): return b.key == "barracks" and b.owner == 0 and b.built)[0])
+			await RenderingServer.frame_post_draw
+			get_viewport().get_texture().get_image().save_png("res://build/economy-%d.png" % shot)
+			shot += 1
+		if not capture and trained and buildings.all(func(b): return b.built or b.owner != 0) and buildings.all(func(b): return b.queue.is_empty()):
+			break
+	Engine.time_scale = 1.0
+	var all_built := buildings.all(func(b): return b.built or b.owner != 0)
+	var soldiers := units.filter(func(u): return u.owner == 0 and u.key == "soldier" and not u.dead).size()
+	print("Built all: %s, soldiers now %d, money %.0f, food %.0f (%+.2f/s), iron %.0f, army %d/%d" % [all_built, soldiers, economy.res.money, economy.res.food, economy.rates.food, economy.res.iron, economy.pop_used, economy.pop_cap])
+	var ok := all_built and trained
+	print("ECONOMY_TEST %s" % ("PASS" if ok else "FAIL"))
+	get_tree().quit(0 if ok else 1)
+
 # ---------------------------------------------------------------- combat
 
 func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
@@ -1003,6 +1529,8 @@ func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
 	return best
 
 func update_combat(unit: Dictionary, delta: float) -> void:
+	if unit.dmg <= 0.0:
+		return  # workers do not fight
 	unit.reload -= delta
 	unit.search -= delta
 	if unit.enemy != null and (unit.enemy.dead or unit.node.position.distance_to(unit.enemy.node.position) > unit.aggro * 1.6):
@@ -1067,7 +1595,7 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	if unit.dead:
 		return
 	unit.hp -= amount
-	if unit.enemy == null and not source.dead and (unit.target == null or unit.attack_move):
+	if unit.enemy == null and unit.dmg > 0.0 and not source.dead and (unit.target == null or unit.attack_move):
 		unit.enemy = source  # return fire
 	if unit.hp <= 0.0:
 		kill(unit)
@@ -1227,6 +1755,7 @@ func update_camera(delta: float) -> void:
 func _process(delta: float) -> void:
 	if camera == null:
 		return  # still loading (_ready awaits the noise texture and navigation)
+	update_placement()
 	if bench_phase >= 0:
 		benchmark_frame(delta)
 	else:
@@ -1272,6 +1801,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			cam_dist_target = maxf(18.0, cam_dist_target - 6.0)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			cam_dist_target = minf(260.0, cam_dist_target + 6.0)
+		elif event.button_index == MOUSE_BUTTON_LEFT and placing != "":
+			if event.pressed:
+				confirm_placement(event.shift_pressed)  # Shift keeps placing
+		elif event.button_index == MOUSE_BUTTON_RIGHT and placing != "":
+			if event.pressed:
+				cancel_placement()
 		elif event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				dragging = true
@@ -1284,7 +1819,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				var closest: Dictionary = {}
 				var best := 24.0
 				for unit in units:
-					if unit.owner != 0:
+					if unit.owner != 0 or unit.dead:
 						continue
 					var screen := camera.unproject_position(unit.node.position + Vector3.UP)
 					if not event.shift_pressed:
@@ -1296,6 +1831,11 @@ func _unhandled_input(event: InputEvent) -> void:
 						unit.selected = true
 				if not closest.is_empty():
 					closest.selected = true
+				# A click on empty ground or a building selects that building.
+				if click and closest.is_empty():
+					select_building(building_under(event.position))
+				elif not closest.is_empty() or not click:
+					select_building(null)
 				for unit in units:
 					unit.ring.visible = unit.selected
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
@@ -1328,12 +1868,15 @@ func enemy_under(screen: Vector2) -> Variant:
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_B:
 		start_battle()
+	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE:
+		cancel_placement()
+		select_building(null)
 
 func make_hud() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	var panel := PanelContainer.new()
-	panel.position = Vector2(16, 16)
+	panel.position = Vector2(16, 58)  # below the resource strip
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("111f25e6")
 	style.border_color = Color("a29269")

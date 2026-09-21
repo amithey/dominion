@@ -34,7 +34,24 @@ function exportMapData(step = 2.5) {
     unitDefs: Object.fromEntries(Object.entries(UNITS).map(([key, d]) => [key, {
       name: d.name, hp: d.hp, dmg: d.dmg, range: d.range, cooldown: d.cooldown,
       aggro: d.aggro ?? d.range, speed: d.speed, fly: !!d.fly, naval: !!d.naval,
+      cost: d.cost || {}, trainTime: d.trainTime || 10, pop: d.pop ?? 1, desc: d.desc || '',
     }])),
+    // Economy data, so buildings, prices and rates match config.js exactly.
+    buildingDefs: Object.fromEntries(Object.entries(BUILDINGS).map(([key, d]) => [key, {
+      name: d.name, cat: d.cat, size: d.size, hp: d.hp, cost: d.cost || {}, buildTime: d.buildTime || 0,
+      trains: d.trains || [], provides: d.provides || {}, onDeposit: !!d.onDeposit,
+      depositTypes: d.depositTypes || null, unique: !!d.unique, unbuildable: !!d.unbuildable,
+      buildRadius: d.buildRadius || 0, desc: d.desc || '',
+    }])),
+    depositTypes: Object.fromEntries(Object.entries(DEPOSIT_TYPES).map(([key, d]) => [key, {
+      name: d.name, res: d.res, rate: d.rate, water: !!d.water, color: '#' + d.color.toString(16).padStart(6, '0'),
+    }])),
+    economy: {
+      startResources: { money: 1200, food: 250, oil: 0, iron: 120, silicon: 0, uranium: 0 },
+      baseCap: BASE_CAP, warehouseBonus: WAREHOUSE_CAP_BONUS, foodCapBase: 300, foodDepotBonus: 500,
+      baseCivCap: 200, startCivilians: 120, taxPerCivilian: 0.035, baseAdmin: 0.28,
+      foodPerCivilian: 0.008, foodPerSoldier: 0.05, farmFood: 2.0,
+    },
   };
 }
 

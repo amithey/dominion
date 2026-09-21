@@ -1,0 +1,182 @@
+extends CanvasLayer
+## Economy interface: resource bar, command panel (build menu, or the selected
+## building's details, training buttons and queue) and short notices.
+## Buttons call back into world.gd; the panel refreshes four times a second.
+
+const BUILD_MENU := ["farm", "cottage", "housing", "residential", "warehouse", "foodDepot", "workerHouse", "extractor", "barracks", "tankFactory"]
+const RES_LABELS := {"money": "$", "food": "Food", "iron": "Iron", "oil": "Oil"}
+const GOLD := Color("a29269")
+
+var world: Node
+var economy: Node
+var _bar: Label
+var _panel: PanelContainer
+var _title: Label
+var _info: Label
+var _buttons: GridContainer
+var _queue: ProgressBar
+var _notices: VBoxContainer
+var _selected = null      # building entity shown in the panel, or null for the build menu
+var _shown_key := ""
+var _refresh := 0.0
+
+func setup(world_node: Node, economy_node: Node) -> void:
+	world = world_node
+	economy = economy_node
+	# A resource strip across the top of the screen.
+	var top := _box(Vector2(0, 0))
+	top.anchor_right = 1.0
+	top.offset_bottom = 38
+	_bar = Label.new()
+	_bar.add_theme_font_size_override("font_size", 16)
+	_bar.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	top.add_child(_bar)
+
+	_panel = _box(Vector2.ZERO)
+	_panel.anchor_top = 1.0
+	_panel.anchor_bottom = 1.0
+	_panel.offset_left = 16
+	_panel.offset_top = -236
+	_panel.offset_right = 660
+	_panel.offset_bottom = -16
+	var column := VBoxContainer.new()
+	_panel.add_child(column)
+	_title = Label.new()
+	_title.add_theme_font_size_override("font_size", 18)
+	column.add_child(_title)
+	_info = Label.new()
+	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_info.custom_minimum_size = Vector2(610, 0)
+	_info.add_theme_color_override("font_color", Color("b9c4c8"))
+	column.add_child(_info)
+	_queue = ProgressBar.new()
+	_queue.custom_minimum_size = Vector2(610, 10)
+	_queue.show_percentage = false
+	column.add_child(_queue)
+	_buttons = GridContainer.new()
+	_buttons.columns = 5
+	column.add_child(_buttons)
+
+	_notices = VBoxContainer.new()
+	# Notices on the right, clear of the info panel and the command panel.
+	_notices.anchor_left = 1.0
+	_notices.anchor_right = 1.0
+	_notices.offset_left = -420
+	_notices.offset_right = -16
+	_notices.offset_top = 64
+	_notices.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_notices)
+	show_building(null)
+
+func _box(_at: Vector2) -> PanelContainer:
+	var box := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("111f25e6")
+	style.border_color = GOLD
+	style.set_border_width_all(1)
+	style.set_content_margin_all(10)
+	box.add_theme_stylebox_override("panel", style)
+	add_child(box)
+	return box
+
+func cost_text(cost: Dictionary) -> String:
+	var parts := []
+	for key in cost:
+		parts.append(("$%d" % int(cost[key])) if key == "money" else ("%d %s" % [int(cost[key]), key]))
+	return " · ".join(PackedStringArray(parts)) if not parts.is_empty() else "free"
+
+func _process(delta: float) -> void:
+	if economy == null:
+		return
+	_refresh += delta
+	if _refresh < 0.25:
+		return
+	_refresh = 0.0
+	var parts := []
+	for key in RES_LABELS:
+		var rate: float = economy.rates.get(key, 0.0)
+		var cap := ("/%d" % int(economy.caps[key])) if economy.caps.has(key) and key != "food" else ""
+		parts.append("%s %d%s (%s%.1f)" % [RES_LABELS[key], int(economy.res[key]), cap, "+" if rate >= 0 else "", rate])
+	parts.append("Army %d/%d" % [economy.pop_used, economy.pop_cap])
+	parts.append("Citizens %d/%d" % [int(economy.civilians), int(economy.civ_cap)])
+	_bar.text = "   ".join(PackedStringArray(parts))
+	if _selected != null and (_selected.dead or _selected.owner != 0):
+		show_building(null)
+	_update_panel()
+
+## null shows the build menu; a building entity shows its details and training.
+func show_building(building) -> void:
+	_selected = building
+	_shown_key = ""
+	_update_panel()
+
+func _update_panel() -> void:
+	var key: String = "menu" if _selected == null else "%s:%s:%d" % [_selected.key, _selected.built, _selected.queue.size()]
+	if _selected == null:
+		_title.text = "BUILD"
+		_info.text = "Pick a structure, then click the ground inside your capital's district (right click cancels). Workers go and build it."
+		_queue.visible = false
+	else:
+		var def: Dictionary = _selected.def
+		_title.text = def.name.to_upper()
+		if not _selected.built:
+			_info.text = "Under construction: %d%%%s" % [int(_selected.progress * 100), "" if _selected.builders > 0 else " — waiting for a worker"]
+			_queue.visible = true
+			_queue.value = _selected.progress * 100
+		else:
+			var lines := ["HP %d/%d. %s" % [int(_selected.hp), int(_selected.max_hp), def.desc]]
+			if not _selected.queue.is_empty():
+				var names := PackedStringArray()
+				for q in _selected.queue:
+					names.append(world.unit_defs[q].name)
+				lines.append("Training: " + ", ".join(names))
+			_info.text = "\n".join(PackedStringArray(lines))
+			_queue.visible = not _selected.queue.is_empty()
+			_queue.value = _selected.queue_prog * 100
+	if key == _shown_key:
+		_update_enabled()
+		return
+	_shown_key = key
+	for child in _buttons.get_children():
+		child.queue_free()
+	if _selected == null:
+		for b in BUILD_MENU:
+			var def: Dictionary = world.building_defs.get(b, {})
+			if def.is_empty():
+				continue
+			_add_button("%s\n%s" % [def.name, cost_text(def.cost)], def.cost, def.desc, func(): world.begin_placement(b))
+	elif _selected.built:
+		for u in _selected.def.trains:
+			var def: Dictionary = world.unit_defs.get(u, {})
+			if def.is_empty():
+				continue
+			_add_button("%s\n%s" % [def.name, cost_text(def.cost)], def.cost, def.desc, func(): world.queue_unit(_selected, u))
+	_update_enabled()
+
+func _add_button(text: String, cost: Dictionary, tip: String, action: Callable) -> void:
+	var button := Button.new()
+	button.text = text
+	button.tooltip_text = tip
+	button.custom_minimum_size = Vector2(118, 46)
+	button.set_meta("cost", cost)
+	button.pressed.connect(action)
+	_buttons.add_child(button)
+
+func _update_enabled() -> void:
+	for button in _buttons.get_children():
+		if button is Button and button.has_meta("cost"):
+			var cost: Dictionary = button.get_meta("cost")
+			button.disabled = not economy.can_afford(cost)
+
+func notice(text: String) -> void:
+	var label := Label.new()
+	label.text = text
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	label.add_theme_color_override("font_color", Color("f1e3b4"))
+	label.add_theme_color_override("font_outline_color", Color("111f25"))
+	label.add_theme_constant_override("outline_size", 6)
+	_notices.add_child(label)
+	var tween := label.create_tween()
+	tween.tween_interval(2.6)
+	tween.tween_property(label, "modulate:a", 0.0, 0.6)
+	tween.tween_callback(label.queue_free)

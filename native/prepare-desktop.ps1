@@ -13,7 +13,9 @@ function Copy-Assets($destination, $sources) {
 }
 
 Copy-Assets '.' @(
-    'assets\models\quaternius-characters\CharacterSoldier.glb',
+    'assets\models\quaternius-characters\CharacterSoldier.glb', 'assets\models\quaternius-characters\Worker.glb',
+    'assets\models\kenney-suburban\House_D.glb', 'assets\models\quaternius-farm\SiloHouse.glb',
+    'assets\models\kenney-city\building-e.glb', 'assets\models\kenney-city\building-g.glb',
     'assets\models\kenney-city\building-a.glb', 'assets\models\kenney-city\building-b.glb',
     'assets\models\kenney-city\building-c.glb', 'assets\models\kenney-city\building-d.glb',
     'assets\models\kenney-city\building-f.glb', 'assets\models\kenney-city\building-h.glb',

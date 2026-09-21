@@ -45,6 +45,15 @@ It uses the Forward+ renderer:
 - Pathfinding: a 4 m walk grid over the island (no water, steep slopes or building
   footprints plus room for a tank) feeds Godot's NavigationServer. Units follow the
   route's waypoints and re-plan every 0.8 s while chasing a moving enemy.
+- Economy (economy.gd, hud.gd): prices, build times, what buildings provide, deposit
+  rates and the economy constants all come from config.js through the map export.
+  Once a second citizens grow toward housing capacity, taxes are collected through the
+  administration level, farms feed citizens and soldiers, and extractors fill material
+  stores up to warehouse caps; army size is limited by housing. Buildings are placed
+  with a preview inside the capital's district (checks for water, slope, spacing and a
+  free deposit for extractors); construction sites call the nearest free worker and
+  rise as they are built; barracks and factories train a queue of up to five units.
+  New buildings close the walk grid under them.
 - Sound (audio.gd): positional rifle shots, cannon, explosions and bullet impacts
   from a pool of 3D players; each tank has a looping engine that rises while driving;
   wind everywhere and surf from the nearest shore. The listener stands on the ground
@@ -55,19 +64,23 @@ It uses the Forward+ renderer:
 - Quality: integrated GPUs start on `balanced` (no SSAO, two shadow cascades, FSR
   at 77%); dedicated GPUs on `high`. Override with `-- --quality=high|balanced|low`.
 
-Controls: click/drag select, right-click move or attack an enemy, Ctrl+right-click
+Controls: click/drag select units, click a building to open its training panel,
+build menu at the bottom left (left click places, Shift+click keeps placing, right
+click or Esc cancels), right-click move or attack an enemy, Ctrl+right-click
 attack-move, B battle demo, WASD pan, Q/E rotate, R/F tilt, wheel zoom.
 Diagnostics: `--script res://tools/inspect.gd -- <model>` prints a model's nodes, materials and
 clips; `-- --capture-views` writes `build/view-*.png`; `-- --feature-probe --no-vsync`
 prints the frame cost of each expensive feature; `-- --capture-battle` saves five
 frames of the battle demo to `build/battle-*.png` and records its soundtrack to
-`build/battle-audio.wav`. `-- --nav-test` checks that routes across the base go around every building and
+`build/battle-audio.wav`. `-- --economy-test` places a farm, barracks and housing, lets workers build them and
+trains a soldier in fast time (`--capture-economy` does it in real time with
+screenshots). `-- --nav-test` checks that routes across the base go around every building and
 never through water. Regenerate sounds with
 `--headless --path native/godot --script res://tools/make-sounds.gd`.
 
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 
-Not yet ported: economy, logistics, AI, aircraft and ships, saving and Steam integration. Units are still the stylised
+Not yet ported: supply logistics (roads, rail), AI, aircraft and ships, saving and Steam integration. Units are still the stylised
 Quaternius models; realistic units need new art.
 
 ## Validation
