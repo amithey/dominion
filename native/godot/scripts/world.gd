@@ -133,6 +133,7 @@ var ai: Node
 var diplomacy: Node
 var game_over := ""
 var craft: RefCounted
+var armor: RefCounted     # armor.gd: ground vehicles built from code
 var saves: Node
 var menu: CanvasLayer
 var info_layer: CanvasLayer
@@ -223,6 +224,9 @@ func _ready() -> void:
 	districts = preload("res://scripts/districts.gd").new()
 	districts.setup(self)
 	craft.setup(self)
+	if not "--stylised-vehicles" in OS.get_cmdline_user_args():
+		armor = preload("res://scripts/armor.gd").new()
+		armor.setup(self)
 	build_deposits()
 	for b in map.buildings:
 		place_building(b.key, Vector3(b.x, 0, b.z), int(b.owner), true)
@@ -334,6 +338,8 @@ func _ready() -> void:
 		await save_test()
 	elif "--air-sea-test" in args or "--capture-air-sea" in args:
 		await air_sea_test("--capture-air-sea" in args)
+	elif "--capture-vehicles" in args:
+		await capture_vehicles()
 	elif "--capture-infantry" in args:
 		await capture_infantry()
 	elif "--systems-test" in args or "--capture-systems" in args:
@@ -974,20 +980,30 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	var vehicle := key in VEHICLES
 	var realistic := not vehicle and key != "worker" and realistic_scene != null
 	var node := Node3D.new()
-	var model: Node3D = (tank_scene if vehicle else (worker_scene if key == "worker" else (realistic_scene if realistic else soldier_scene))).instantiate()
+	var built: Dictionary = armor.build(key, owner) if vehicle and armor != null else {}
+	var model: Node3D
+	if not built.is_empty():
+		model = built.root  # already in metres, facing +Z, standing on the ground
+	else:
+		model = (tank_scene if vehicle else (worker_scene if key == "worker" else (realistic_scene if realistic else soldier_scene))).instantiate()
 	node.add_child(model)
-	if vehicle:
-		model.rotation.y = PI * 0.5  # the Quaternius tank's gun points along -X; units face +Z
-	elif realistic:
-		model.rotation.y = PI  # the Mixamo soldier faces -Z
-	var bounds := model_bounds(model)
-	var factor: float = (6.0 / maxf(maxf(bounds.size.x, bounds.size.z), 0.01)) if vehicle else (SOLDIER_HEIGHT / maxf(bounds.size.y, 0.01))
-	model.scale = Vector3.ONE * factor
-	model.position.y = -bounds.position.y * factor
+	if built.is_empty():
+		if vehicle:
+			model.rotation.y = PI * 0.5  # the Quaternius tank's gun points along -X; units face +Z
+		elif realistic:
+			model.rotation.y = PI  # the Mixamo soldier faces -Z
+		var bounds := model_bounds(model)
+		var factor: float = (6.0 / maxf(maxf(bounds.size.x, bounds.size.z), 0.01)) if vehicle else (SOLDIER_HEIGHT / maxf(bounds.size.y, 0.01))
+		model.scale = Vector3.ONE * factor
+		model.position.y = -bounds.position.y * factor
 	add_child(node)
 	var turret: Node3D = null
 	var dust: GPUParticles3D = null
-	if vehicle:
+	if not built.is_empty():
+		turret = built.turret
+		dust = make_dust()
+		node.add_child(dust)
+	elif vehicle:
 		turret = dress_vehicle(model, owner)
 		dust = make_dust()
 		node.add_child(dust)
@@ -1020,6 +1036,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		"turret": turret, "turret_yaw": 0.0, "dust": dust, "phase": at.x * 0.37 + at.z * 0.21,
 		"meshes": model.find_children("*", "MeshInstance3D", true, false) if vehicle else [],
 		"model": model, "clip_speed": REAL_RUN_CLIP_SPEED if realistic else RUN_CLIP_SPEED,
+		"axles": built.get("axles", []), "radar": built.get("radar"), "muzzle": built.get("muzzle", 4.2),
 	}
 	# Combat stats come from the browser's config.js via the map export.
 	var def: Dictionary = unit_defs.get(key, {"hp": 100, "dmg": 10, "range": 13, "cooldown": 1.0, "aggro": 24})
@@ -1391,11 +1408,14 @@ func find_clip(player: AnimationPlayer, names: Array) -> String:
 # Clip playback speed follows ground speed, so feet do not slide.
 func animate(unit: Dictionary, moving: bool) -> void:
 	var player: AnimationPlayer = unit.player
-	if not player or (unit.moving == moving and unit.clip != ""):
+	if unit.moving == moving and unit.clip != "":
 		return
 	unit.moving = moving
 	if unit.dust:
 		unit.dust.emitting = moving
+	if not player:
+		unit.clip = "static"  # vehicles built from code: wheels turn in _physics_process
+		return
 	var clip: String = unit.run_clip if moving else (unit.get("shoot_clip", "") if unit.get("enemy") != null and unit.get("shoot_clip", "") != "" else unit.idle_clip)
 	if clip == "":
 		player.pause()  # a parked tank's tracks stop
@@ -1441,6 +1461,9 @@ func _physics_process(delta: float) -> void:
 			unit.rotor.rotate_y(delta * 28.0)
 		if unit.get("radar") != null:
 			unit.radar.rotate_y(delta * 1.6)
+		if unit.moving:
+			for a in unit.get("axles", []):
+				a.node.rotate_x(unit.speed * delta / a.radius)  # wheels roll with the ground
 		if unit.engine:
 			audio.engine_update(unit.engine, unit.moving, delta)
 		if unit.turret:
@@ -2246,6 +2269,31 @@ func capture_infantry() -> void:
 	await capture_view("res://build/infantry-dead.png", spot + Vector3(0, 0, -2), 12.0, 0.45, 5)
 	get_tree().quit()
 
+## Close-ups of every ground vehicle, and a tank of every nation.
+func capture_vehicles() -> void:
+	var spot := land_point(start, 50.0)
+	var kinds := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher"]
+	for i in range(kinds.size()):
+		var u := spawn_unit(kinds[i], spot + Vector3((i % 3) * 20.0 - 20.0, 0, floori(i / 3.0) * 22.0 - 11.0), 0)
+		u.heading = 0.5
+		place_on_ground(u, u.node.position)
+	for owner in range(1, 4):
+		var u := spawn_unit("tank", spot + Vector3(owner * 11.0 - 22.0, 0, 34.0), owner)
+		u.heading = 0.5
+		place_on_ground(u, u.node.position)
+	var mover := spawn_unit("apc", spot + Vector3(-20, 0, -20), 0)
+	order_move([mover], spot + Vector3(60, 0, -20))
+	cam_yaw = 0.9
+	await capture_view("res://build/vehicles-all.png", spot + Vector3(0, 0, 6), 62.0, 0.42, 60)
+	for i in range(kinds.size()):
+		cam_yaw = 0.5 + 0.9
+		await capture_view("res://build/vehicle-%s.png" % kinds[i], spot + Vector3((i % 3) * 20.0 - 20.0, 0, floori(i / 3.0) * 22.0 - 11.0), 13.0, 0.3, 12)
+	cam_yaw = 0.5 - 2.4
+	await capture_view("res://build/vehicle-tank-rear.png", spot + Vector3(-20, 0, -11), 12.0, 0.35, 8)
+	cam_yaw = 0.5
+	await capture_view("res://build/vehicles-nations.png", spot + Vector3(0, 0, 34), 26.0, 0.35, 8)
+	get_tree().quit()
+
 ## Frames a point and saves a screenshot.
 func capture_view(path: String, focus: Vector3, dist: float, pitch: float, frames: int) -> void:
 	cam_focus = focus
@@ -2854,7 +2902,7 @@ func fire(unit: Dictionary, enemy: Dictionary) -> void:
 		effects.shell(muzzle, aim + Vector3(randf_range(-0.8, 0.8), 0, randf_range(-0.8, 0.8)), func(at: Vector3): shell_hit(unit, at))
 	elif unit.vehicle:
 		var dir := Basis(Vector3.UP, unit.heading + unit.turret_yaw) * Vector3.BACK
-		var muzzle: Vector3 = unit.turret.global_position + dir * (2.4 if unit.get("naval", false) else 4.2) + Vector3.UP * 0.25
+		var muzzle: Vector3 = unit.turret.global_position + dir * (2.4 if unit.get("naval", false) else float(unit.get("muzzle", 4.2))) + Vector3.UP * 0.4
 		effects.muzzle_flash(muzzle, true)
 		var miss := Vector3(randf_range(-1.5, 1.5), 0, randf_range(-1.5, 1.5)) if randf() > 0.8 else Vector3.ZERO
 		var landing := aim + miss

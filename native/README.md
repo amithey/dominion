@@ -38,9 +38,16 @@ It uses the Forward+ renderer:
   model has no death clip). Terrain following, run speed matched to the clip.
   `-- --toon-infantry` restores the stylised soldiers; `-- --capture-infantry` saves
   close-ups to `build/infantry-*.png`. 64-unit benchmark: 21-23 FPS either way on Iris Xe.
-- Tanks: weathered army paint with road dust low on the hull (vehicle.gdshader),
-  a traversing turret, track animation only while driving, dust trails, and
-  pitch and roll with the ground.
+- Ground vehicles (armor.gd) are built from code, nothing downloaded: a main battle tank
+  (sloped glacis, tracks with link plates, seven road wheels, side skirts, wedge turret,
+  long gun with fume extractor, cupola, hatches, machine gun, smoke launchers, antennas),
+  an 8x8 APC with a 30 mm turret, a self-propelled howitzer, a Gepard-style anti-aircraft
+  tank with a spinning radar, an MLRS and a SAM truck. Weathered army paint in each
+  nation's colour with road dust low on the hull (vehicle.gdshader, finish per vertex:
+  paint shade, bare metal, markings in the flag's colour, glass), a traversing turret,
+  wheels that roll while driving, dust trails, and pitch and roll with the ground. Each
+  vehicle is 2-6 meshes; the 64-unit benchmark draws fewer calls than the old Quaternius
+  tank. `-- --stylised-vehicles` restores it; `-- --capture-vehicles` saves close-ups.
 - Combat (effects.gd + world.gd): stats come from config.js through the map export.
   Units acquire the nearest enemy within their detection range, chase into range and
   fire; tank turrets must swing onto the target first. Rifles fire tracers that can
@@ -187,8 +194,7 @@ never through water. Regenerate sounds with
 
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 
-Not yet ported: research and discoveries, and Steam integration. Vehicles, ships and
-aircraft are still stylised (Quaternius tank, modelled craft); realistic vehicles need new art.
+Not yet ported: research and discoveries, and Steam integration.
 
 ## Refreshing the map data
 
