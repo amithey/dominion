@@ -172,9 +172,12 @@ var espionage: Node       # espionage.gd: agents and covert operations
 var territory: Node3D     # territory.gd: gradual control of 40 m cells
 var missiles: Node3D      # missiles.gd: silo production, launches, impacts
 var research: Node        # research.gd: discoveries in stages, tracks, eras
+var portraits: Node       # portraits.gd: pictures of every unit and building for the interface
 var game_time := 0.0      # match seconds (EMP and other timed effects)
 var missile_aim := ""     # missile type waiting for a target click
 var cam_lift := 0.0       # raises the camera's look-at point above the ground (captures)
+var edge_scroll := true   # pan when the mouse touches the screen edge (Settings)
+var middle_drag := false  # the middle mouse button drags the map
 const NAV_STEP := 4.0
 var fps_frames := 0
 
@@ -221,6 +224,7 @@ func _ready() -> void:
 	await noise_texture.changed
 
 	quality = pick_quality()
+	preload("res://scripts/ui_theme.gd").install()  # the look of every panel, button and menu
 	effects = preload("res://scripts/effects.gd").new()
 	add_child(effects)
 	effects.shake.connect(_on_shake)
@@ -258,6 +262,9 @@ func _ready() -> void:
 	add_child(camera)
 	cam_focus = start + Vector3(0, 0, 1)
 	make_hud()
+	portraits = preload("res://scripts/portraits.gd").new()
+	add_child(portraits)
+	portraits.setup(self)
 	economy = preload("res://scripts/economy.gd").new()
 	add_child(economy)
 	economy.setup(self, map.economy)
@@ -359,6 +366,10 @@ func _ready() -> void:
 		await air_sea_test("--capture-air-sea" in args)
 	elif "--research-test" in args or "--capture-research" in args:
 		await research_test("--capture-research" in args)
+	elif "--capture-ui" in args:
+		await capture_ui()
+	elif "--camera-test" in args:
+		await camera_test()
 	elif "--capture-craft" in args:
 		await capture_craft()
 	elif "--capture-vehicles" in args:
@@ -1091,6 +1102,41 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	units.append(unit)
 	animate(unit, false)
 	return unit
+
+## A model of `key` (unit, vehicle, ship, aircraft or building) for the
+## interface's picture cards, in the player's colours, wrapped in a holder so
+## its bounds are measured in the stage's space.
+func display_model(key: String) -> Node3D:
+	var holder := Node3D.new()
+	var model: Node3D = null
+	if key in NAVAL or key in AIR:
+		model = craft.build(key, 0).root
+	elif key in VEHICLES:
+		model = armor.build(key, 0).root if armor != null else tank_scene.instantiate()
+	elif key == "worker" or key in INFANTRY:
+		var realistic := key != "worker" and realistic_scene != null
+		model = (realistic_scene if realistic else (worker_scene if key == "worker" else soldier_scene)).instantiate()
+		var bounds := model_bounds(model)
+		model.scale = Vector3.ONE * SOLDIER_HEIGHT / maxf(bounds.size.y, 0.01)
+		if realistic:
+			model.rotation.y = PI
+			dress_realistic(model, 0, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher", "commando": "SMG"}.get(key, "AK"))
+		elif key == "worker":
+			dress_worker(model)
+		else:
+			dress_soldier(model, 0)
+		for player in model.find_children("*", "AnimationPlayer", true, false):
+			var idle := find_clip(player, ["idle_gun", "idle"])
+			if idle != "":
+				player.play(idle)
+				player.seek(0.4, true)
+	elif building_defs.has(key):
+		model = building_model(key, 0.0, 0.0)
+		districts.tone(model, 0)  # the same weathered tones as in the city
+	if model == null:
+		return null
+	holder.add_child(model)
+	return holder
 
 # Uniform colours per nation: olive, desert tan, urban grey, woodland brown.
 const UNIFORMS := [
@@ -2424,6 +2470,88 @@ func research_test(capture: bool) -> void:
 	print("RESEARCH_TEST %s" % ("PASS" if ok else "FAIL"))
 	get_tree().quit(0 if ok else 1)
 
+## Screenshots of the interface: the build list, a selected barracks with
+## its training bars, a selected army, and the controls help.
+func capture_ui() -> void:
+	cam_focus = start
+	cam_dist_target = 110.0
+	cam_pitch = 0.85
+	economy.res.money = 2500.0
+	for i in range(240):  # let the picture studio render the cards
+		await get_tree().process_frame
+	await capture_view("res://build/ui-build.png", start, 110.0, 0.85, 20)
+	var barracks = null
+	for b in buildings:
+		if b.owner == 0 and b.key == "barracks":
+			barracks = b
+	if barracks != null:
+		select_building(barracks)
+		queue_unit(barracks, "soldier")
+		queue_unit(barracks, "sniper")
+		for i in range(200):
+			await get_tree().process_frame
+		await capture_view("res://build/ui-barracks.png", barracks.root.position, 70.0, 0.8, 10)
+	select_building(null)
+	var army := units.filter(func(u): return u.owner == 0 and u.dmg > 0.0 and not u.get("fly", false))
+	for u in army.slice(0, 8):
+		u.selected = true
+		u.ring.visible = true
+	for i in range(120):
+		await get_tree().process_frame
+	await capture_view("res://build/ui-army.png", army[0].node.position, 60.0, 0.8, 10)
+	hud.toggle_help()
+	await capture_view("res://build/ui-help.png", start, 110.0, 0.85, 10)
+	get_tree().quit()
+
+## Moves the camera with keys (WASD and arrows) and a middle-button drag,
+## the way a player would, and checks that the view actually moves.
+func camera_test() -> void:
+	for i in range(10):
+		await get_tree().process_frame
+	var results := {}
+	for entry in [["D", KEY_D, Vector2(1, 0)], ["A", KEY_A, Vector2(-1, 0)], ["W", KEY_W, Vector2(0, 1)], ["Right arrow", KEY_RIGHT, Vector2(1, 0)], ["Left arrow", KEY_LEFT, Vector2(-1, 0)], ["Up arrow", KEY_UP, Vector2(0, 1)]]:
+		cam_focus = start
+		var before := cam_focus
+		var key := InputEventKey.new()
+		key.physical_keycode = entry[1]
+		key.keycode = entry[1]
+		key.pressed = true
+		Input.parse_input_event(key)
+		for i in range(20):
+			await get_tree().process_frame
+		key.pressed = false
+		Input.parse_input_event(key)
+		await get_tree().process_frame
+		var right := Vector3(cos(cam_yaw), 0, -sin(cam_yaw))
+		var forward := Vector3(-sin(cam_yaw), 0, -cos(cam_yaw))
+		var moved := cam_focus - before
+		results[entry[0]] = moved.dot(right) * entry[2].x + moved.dot(forward) * entry[2].y > 1.0
+	cam_focus = start
+	var before := cam_focus
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_MIDDLE
+	press.pressed = true
+	press.position = Vector2(400, 300)
+	_unhandled_input(press)  # straight to the handler, as the engine delivers them
+	var motion := InputEventMouseMotion.new()
+	motion.relative = Vector2(-200, 0)
+	motion.position = Vector2(200, 300)
+	motion.button_mask = MOUSE_BUTTON_MASK_MIDDLE
+	_unhandled_input(motion)
+	press.pressed = false
+	_unhandled_input(press)
+	for i in range(3):
+		await get_tree().process_frame
+	var right := Vector3(cos(cam_yaw), 0, -sin(cam_yaw))
+	results["Middle-button drag"] = (cam_focus - before).dot(right) > 1.0
+	cam_focus = Vector3(99999, 0, 99999)
+	clamp_camera()
+	results["Stays over the island"] = absf(cam_focus.x) <= float(map.mapSize) * 0.5
+	print(results)
+	var ok := results.values().all(func(v): return v)
+	print("CAMERA_TEST %s" % ("PASS" if ok else "FAIL"))
+	get_tree().quit(0 if ok else 1)
+
 ## Close-ups of every warship at sea and every aircraft in the air.
 func capture_craft() -> void:
 	var sea = water_near(start, 320)
@@ -3389,17 +3517,7 @@ func _process(delta: float) -> void:
 	if bench_phase >= 0:
 		benchmark_frame(delta)
 	else:
-		var pan := cam_dist * 0.9 * delta
-		var forward := Vector3(-sin(cam_yaw), 0, -cos(cam_yaw))
-		var right := Vector3(cos(cam_yaw), 0, -sin(cam_yaw))
-		if Input.is_physical_key_pressed(KEY_W): cam_focus += forward * pan
-		if Input.is_physical_key_pressed(KEY_S): cam_focus -= forward * pan
-		if Input.is_physical_key_pressed(KEY_D): cam_focus += right * pan
-		if Input.is_physical_key_pressed(KEY_A): cam_focus -= right * pan
-		if Input.is_physical_key_pressed(KEY_Q): cam_yaw += delta * 1.6
-		if Input.is_physical_key_pressed(KEY_E): cam_yaw -= delta * 1.6
-		if Input.is_physical_key_pressed(KEY_R): cam_pitch = minf(1.25, cam_pitch + delta * 1.1)
-		if Input.is_physical_key_pressed(KEY_F): cam_pitch = maxf(0.3, cam_pitch - delta * 1.1)
+		pan_camera(delta)
 	update_camera(delta)
 	fps_time += delta
 	fps_frames += 1
@@ -3411,6 +3529,44 @@ func _process(delta: float) -> void:
 		status.text = "Army %d  vs  enemy %d  |  %d FPS  |  %s" % [alive[0], alive[1], roundi(fps_frames / fps_time), RenderingServer.get_video_adapter_name()]
 		fps_time = 0
 		fps_frames = 0
+
+# Moves the camera the ways strategy players expect: WASD or the arrow keys,
+# pushing the mouse against the edge of the screen, dragging with the middle
+# mouse button (see _unhandled_input), Q/E to turn, R/F to tilt. Keys are read
+# by their position, so they work with any keyboard layout (Hebrew included).
+func pan_camera(delta: float) -> void:
+	var pan := cam_dist * 0.9 * delta
+	var forward := Vector3(-sin(cam_yaw), 0, -cos(cam_yaw))
+	var right := Vector3(cos(cam_yaw), 0, -sin(cam_yaw))
+	var move := Vector2.ZERO
+	if Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP): move.y += 1.0
+	if Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN): move.y -= 1.0
+	if Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT): move.x += 1.0
+	if Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT): move.x -= 1.0
+	# Edge scrolling, only while the game window has the focus and nothing is
+	# being dragged.
+	if edge_scroll and not dragging and not middle_drag and DisplayServer.window_is_focused():
+		var mouse := get_viewport().get_mouse_position()
+		var view := get_viewport().get_visible_rect().size
+		var edge := 8.0
+		if mouse.x >= 0.0 and mouse.y >= 0.0 and mouse.x <= view.x and mouse.y <= view.y:
+			if mouse.x < edge: move.x -= 1.0
+			elif mouse.x > view.x - edge: move.x += 1.0
+			if mouse.y < edge: move.y += 1.0
+			elif mouse.y > view.y - edge: move.y -= 1.0
+	if move != Vector2.ZERO:
+		cam_focus += (right * move.x + forward * move.y).normalized() * pan * (1.6 if Input.is_physical_key_pressed(KEY_SHIFT) else 1.0)
+	if Input.is_physical_key_pressed(KEY_Q): cam_yaw += delta * 1.6
+	if Input.is_physical_key_pressed(KEY_E): cam_yaw -= delta * 1.6
+	if Input.is_physical_key_pressed(KEY_R) or Input.is_physical_key_pressed(KEY_PAGEUP): cam_pitch = minf(1.25, cam_pitch + delta * 1.1)
+	if Input.is_physical_key_pressed(KEY_F) or Input.is_physical_key_pressed(KEY_PAGEDOWN): cam_pitch = maxf(0.3, cam_pitch - delta * 1.1)
+	clamp_camera()
+
+## Keeps the view over the island.
+func clamp_camera() -> void:
+	var half := float(map.mapSize) * 0.5
+	cam_focus.x = clampf(cam_focus.x, -half, half)
+	cam_focus.z = clampf(cam_focus.z, -half, half)
 
 func ground_point(screen: Vector2) -> Variant:
 	var origin := camera.project_ray_origin(screen)
@@ -3428,9 +3584,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
-			cam_dist_target = maxf(18.0, cam_dist_target - 6.0)
+			# Zoom in toward the point under the cursor, as in most strategy games.
+			var point = ground_point(event.position)
+			if point != null and cam_dist_target > 18.0:
+				cam_focus = cam_focus.lerp(Vector3(point.x, cam_focus.y, point.z), 0.12)
+				clamp_camera()
+			cam_dist_target = maxf(18.0, cam_dist_target * 0.88)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
-			cam_dist_target = minf(260.0, cam_dist_target + 6.0)
+			cam_dist_target = minf(260.0, cam_dist_target / 0.88)
+		elif event.button_index == MOUSE_BUTTON_MIDDLE:
+			middle_drag = event.pressed
 		elif event.button_index == MOUSE_BUTTON_LEFT and missile_aim != "":
 			if event.pressed:
 				var point = ground_point(event.position)
@@ -3493,6 +3656,13 @@ func _unhandled_input(event: InputEvent) -> void:
 				var point = ground_point(event.position)
 				if point != null:
 					order_move(selected, point, event.ctrl_pressed)  # Ctrl: attack-move
+	elif event is InputEventMouseMotion and middle_drag:
+		# The ground follows the mouse: drag it the way you would drag a map.
+		var forward := Vector3(-sin(cam_yaw), 0, -cos(cam_yaw))
+		var right := Vector3(cos(cam_yaw), 0, -sin(cam_yaw))
+		var scale := cam_dist * 0.0021
+		cam_focus -= (right * event.relative.x - forward * event.relative.y) * scale
+		clamp_camera()
 	elif event is InputEventMouseMotion and dragging:
 		var rect := Rect2(drag_start, event.position - drag_start).abs()
 		selection_box.position = rect.position
@@ -3528,6 +3698,8 @@ func _input(event: InputEvent) -> void:
 		hud.toggle_panel("territory")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Y:
 		hud.toggle_research()
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F1:
+		hud.toggle_help()
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F5:
 		saves.save("quicksave")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F9:
@@ -3547,6 +3719,7 @@ func make_hud() -> void:
 	info_layer = layer
 	var panel := PanelContainer.new()
 	panel.position = Vector2(16, 58)  # below the resource strip
+	panel.visible = "--debug-hud" in OS.get_cmdline_user_args()  # the player's HUD is hud.gd
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("111f25e6")
 	style.border_color = Color("a29269")

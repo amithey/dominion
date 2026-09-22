@@ -56,7 +56,7 @@ func setup(world_node: Node) -> void:
 	_panel.add_theme_constant_override("separation", 8)
 	box.add_child(_panel)
 	var credit := Label.new()
-	credit.text = "Prototype build · Godot %s" % Engine.get_version_info().string
+	credit.text = "Version %s  ·  made with Godot %s" % [ProjectSettings.get_setting("application/config/version", ""), Engine.get_version_info().string]
 	credit.add_theme_color_override("font_color", Color(1, 1, 1, 0.35))
 	credit.anchor_top = 1.0
 	credit.anchor_bottom = 1.0

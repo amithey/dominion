@@ -1,71 +1,242 @@
 extends CanvasLayer
-## Economy interface: resource bar, command panel (build menu, or the selected
-## building's details, training buttons and queue) and short notices.
-## Buttons call back into world.gd; the panel refreshes four times a second.
+## The in-game interface, laid out like a 4X game (Civilization):
+## - a top bar of resources, each an icon with its stock and its rate (green
+##   when rising, red when falling), the era, and buttons for the Research,
+##   Diplomacy, Market, Intelligence and Territory screens and the menu;
+## - on the right, the production list: a bar per building or unit with its
+##   picture (rendered from the game's own model), name, what it does, cost in
+##   resource icons and time, grouped in tabs, or the selected building's own
+##   training and missiles;
+## - bottom left, the selection panel: a large picture of the selected
+##   building or unit group, health, status and the training queue;
+## - bottom right, the minimap; notices appear as small cards at the top.
+## Buttons call back into world.gd; the panels refresh four times a second.
 
+const UI := preload("res://scripts/ui_theme.gd")
 const BUILD_MENU := {
 	"Economy": ["villageCenter", "cityCenter", "farm", "cottage", "housing", "residential", "workerHouse", "warehouse", "foodDepot", "extractor", "market", "port", "bank", "oilRefinery", "powerPlant"],
 	"Civic & research": ["school", "library", "university", "techPark", "chipFab", "hospital", "cityHall", "tvStation", "policeStation", "courthouse", "intelAgency", "nuclearReactor"],
 	"Military": ["barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo"],
 }
-const RES_LABELS := {"money": "$", "food": "Food", "iron": "Iron", "oil": "Oil", "silicon": "Silicon", "uranium": "Uranium"}
-const GOLD := Color("a29269")
+const RESOURCES := [
+	["money", "money", "Treasury. Taxes from your citizens, markets and land; spent on everything."],
+	["food", "food", "Food. Farms and farmland against what citizens and soldiers eat. At zero, growth stops."],
+	["iron", "iron", "Iron. From mines on iron deposits and mountain land; for military buildings, vehicles and railways."],
+	["oil", "oil", "Oil. From rigs on oil deposits; for aircraft and some buildings."],
+	["silicon", "silicon", "Silicon. From silicon deposits; for high technology and missiles."],
+	["uranium", "uranium", "Uranium. From uranium deposits; for the nuclear programme."],
+]
+const GOLD := Color("d8b866")
+const RIGHT_W := 392.0
+const MINI := 196.0
 
 var world: Node
 var economy: Node
-var _bar: Label
-var _panel: PanelContainer
-var _title: Label
-var _info: Label
-var _buttons: GridContainer
-var _queue: ProgressBar
-var _notices: VBoxContainer
-var _selected = null      # building entity shown in the panel, or null for the build menu
+var _selected = null      # building entity shown, or null
 var _shown_key := ""
 var _refresh := 0.0
 var build_tab := "Economy"
+var transport_text := ""
+var prod_open := true
+
+var _chips := {}          # resource -> [value Label, rate Label]
+var _extra := {}          # "army" etc. -> Label
+var _era: Label
+var _prod: PanelContainer
+var _prod_title: Label
+var _prod_hint: Label
 var _tabs: HBoxContainer
+var _list: VBoxContainer
+var _sel: PanelContainer
+var _sel_pic: TextureRect
+var _sel_title: Label
+var _sel_sub: Label
+var _sel_hp: ProgressBar
+var _sel_info: Label
+var _sel_queue: HBoxContainer
+var _notices: VBoxContainer
+var _fps: Label
+var _help: PanelContainer
+var _waiting := {}        # portrait key -> [TextureRect]
 
 func setup(world_node: Node, economy_node: Node) -> void:
 	world = world_node
 	economy = economy_node
-	# A resource strip across the top of the screen.
-	var top := _box(Vector2(0, 0))
-	top.anchor_right = 1.0
-	top.offset_bottom = 38
-	_bar = Label.new()
-	_bar.add_theme_font_size_override("font_size", 16)
-	_bar.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	top.add_child(_bar)
+	world.portraits.portrait_ready.connect(_on_portrait)
+	_build_top_bar()
+	_build_production()
+	_build_selection()
+	_build_minimap()
+	_notices = VBoxContainer.new()
+	_notices.anchor_left = 0.5
+	_notices.anchor_right = 0.5
+	_notices.offset_left = -280
+	_notices.offset_right = 280
+	_notices.offset_top = 58
+	_notices.add_theme_constant_override("separation", 6)
+	_notices.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_notices)
+	_build_help()
+	show_building(null)
+	_build_diplomacy_panel()
 
-	_panel = _box(Vector2.ZERO)
-	_panel.anchor_top = 1.0
-	_panel.anchor_bottom = 1.0
-	_panel.offset_left = 16
-	_panel.offset_top = -292
-	_panel.offset_right = 900
-	_panel.offset_bottom = -16
+func _box(_at: Vector2) -> PanelContainer:
+	var box := PanelContainer.new()
+	add_child(box)
+	return box
+
+func _icon(name: String, px := 22) -> TextureRect:
+	var t := TextureRect.new()
+	t.texture = UI.icon(name)
+	t.custom_minimum_size = Vector2(px, px)
+	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return t
+
+func _text(text: String, size := 15, colour := UI.TEXT, header := false) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_color_override("font_color", colour)
+	if header:
+		l.theme_type_variation = "HeaderLabel"
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
+
+func cost_text(cost: Dictionary) -> String:
+	var parts := []
+	for key in cost:
+		parts.append(("$%d" % int(cost[key])) if key == "money" else ("%d %s" % [int(cost[key]), key]))
+	return " · ".join(PackedStringArray(parts)) if not parts.is_empty() else "free"
+
+## A row of cost chips: resource icon and amount, red when short.
+func _cost_row(cost: Dictionary) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for key in cost:
+		var chip := HBoxContainer.new()
+		chip.add_theme_constant_override("separation", 2)
+		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		chip.add_child(_icon(key, 16))
+		var amount := _text(str(int(cost[key])), 13, UI.CREAM)
+		amount.set_meta("res", key)
+		amount.set_meta("need", float(cost[key]))
+		chip.add_child(amount)
+		row.add_child(chip)
+	return row
+
+# ---------------------------------------------------------------- top bar
+
+func _build_top_bar() -> void:
+	var bar := PanelContainer.new()
+	var style := UI.box(Color(UI.BG, 0.96), UI.TRIM, 0, 0, 6.0, 8)
+	style.border_width_bottom = 2
+	style.content_margin_left = 14
+	style.content_margin_right = 10
+	bar.add_theme_stylebox_override("panel", style)
+	bar.anchor_right = 1.0
+	bar.offset_bottom = 46
+	add_child(bar)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 13)
+	bar.add_child(row)
+	for r in RESOURCES:
+		var chip := HBoxContainer.new()
+		chip.add_theme_constant_override("separation", 5)
+		chip.tooltip_text = r[2]
+		chip.mouse_filter = Control.MOUSE_FILTER_PASS
+		chip.add_child(_icon(r[1], 26))
+		var value := _text("0", 17, UI.CREAM)
+		chip.add_child(value)
+		var rate := _text("+0", 13, UI.GOOD)
+		chip.add_child(rate)
+		row.add_child(chip)
+		_chips[r[0]] = [value, rate, chip]
+	for extra in [["army", "army", "Army size against housing capacity. Build Housing Blocks for more."],
+			["citizens", "citizens", "Citizens against the housing they can grow into. Happiness and health speed growth."],
+			["research", "research", "Research points and their rate. Press Y for the research tree."],
+			["land", "land", "Land held: territory cells. Press T for borders."],
+			["missiles", "missile", "Missiles stored against Ammo Depot capacity."]]:
+		var chip := HBoxContainer.new()
+		chip.add_theme_constant_override("separation", 5)
+		chip.tooltip_text = extra[2]
+		chip.mouse_filter = Control.MOUSE_FILTER_PASS
+		chip.add_child(_icon(extra[1], 24))
+		var value := _text("", 16, UI.CREAM)
+		chip.add_child(value)
+		row.add_child(chip)
+		_extra[extra[0]] = [value, chip]
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(spacer)
+	_era = _text("", 15, GOLD, true)
+	row.add_child(_era)
+	# The screens, as in Civilization: a row of icon buttons under the top bar.
+	var screens := HBoxContainer.new()
+	screens.add_theme_constant_override("separation", 6)
+	screens.offset_left = 12
+	screens.offset_top = 54
+	add_child(screens)
+	row = screens
+	for b in [["research", "Research (Y)", func(): toggle_research()], ["diplomacy", "Diplomacy (G)", func(): toggle_diplomacy()],
+			["market", "World market (M)", func(): toggle_panel("market")], ["intel", "Intelligence (I)", func(): toggle_panel("intel")],
+			["land", "Territory (T)", func(): toggle_panel("territory")], ["menu", "Menu (Esc)", func(): world.menu.open_pause() if world.menu and world.menu._root != null else null]]:
+		var button := Button.new()
+		button.icon = UI.icon(b[0])
+		button.expand_icon = true
+		button.custom_minimum_size = Vector2(46, 42)
+		button.add_theme_stylebox_override("normal", UI.box(Color(UI.BG, 0.92), UI.TRIM, 1, 21, 6.0, 6))
+		button.add_theme_stylebox_override("hover", UI.box(Color("233841"), GOLD, 2, 21, 6.0, 6))
+		button.add_theme_stylebox_override("pressed", UI.box(Color("2c2a1d"), GOLD, 2, 21, 6.0, 6))
+		button.tooltip_text = b[1]
+		button.focus_mode = Control.FOCUS_NONE
+		button.pressed.connect(b[2])
+		row.add_child(button)
+
+# ---------------------------------------------------------------- production list
+
+func _build_production() -> void:
+	_prod = PanelContainer.new()
+	_prod.anchor_left = 1.0
+	_prod.anchor_right = 1.0
+	_prod.anchor_bottom = 1.0
+	_prod.offset_left = -RIGHT_W - 12
+	_prod.offset_right = -12
+	_prod.offset_top = 56
+	_prod.offset_bottom = -MINI - 34
+	add_child(_prod)
 	var column := VBoxContainer.new()
-	_panel.add_child(column)
-	_title = Label.new()
-	_title.add_theme_font_size_override("font_size", 18)
-	column.add_child(_title)
-	_info = Label.new()
-	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_info.custom_minimum_size = Vector2(850, 0)
-	_info.add_theme_color_override("font_color", Color("b9c4c8"))
-	column.add_child(_info)
-	_queue = ProgressBar.new()
-	_queue.custom_minimum_size = Vector2(850, 10)
-	_queue.show_percentage = false
-	column.add_child(_queue)
+	column.add_theme_constant_override("separation", 6)
+	_prod.add_child(column)
+	var head := HBoxContainer.new()
+	column.add_child(head)
+	_prod_title = _text("BUILD", 19, UI.CREAM, true)
+	_prod_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(_prod_title)
+	var hide := Button.new()
+	hide.text = "—"
+	hide.tooltip_text = "Hide the production list (the Build button brings it back)"
+	hide.focus_mode = Control.FOCUS_NONE
+	hide.pressed.connect(func(): set_production_open(false))
+	head.add_child(hide)
+	_prod_hint = _text("", 13, UI.MUTED)
+	_prod_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_prod_hint.custom_minimum_size = Vector2(RIGHT_W - 24, 0)
+	column.add_child(_prod_hint)
 	_tabs = HBoxContainer.new()
+	_tabs.add_theme_constant_override("separation", 4)
 	column.add_child(_tabs)
 	for tab in BUILD_MENU:
 		var t := Button.new()
 		t.text = tab
 		t.toggle_mode = true
 		t.button_pressed = tab == build_tab
+		t.focus_mode = Control.FOCUS_NONE
+		t.add_theme_font_size_override("font_size", 13)
+		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		t.pressed.connect(func():
 			build_tab = tab
 			for other in _tabs.get_children():
@@ -73,38 +244,219 @@ func setup(world_node: Node, economy_node: Node) -> void:
 			_shown_key = ""
 			_update_panel())
 		_tabs.add_child(t)
-	_buttons = GridContainer.new()
-	_buttons.columns = 8
-	column.add_child(_buttons)
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(scroll)
+	_list = VBoxContainer.new()
+	_list.add_theme_constant_override("separation", 4)
+	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_list)
+	# A button to reopen the list when it is hidden.
+	var reopen := Button.new()
+	reopen.name = "Reopen"
+	reopen.text = "  Build"
+	reopen.icon = UI.icon("build")
+	reopen.expand_icon = false
+	reopen.anchor_left = 1.0
+	reopen.anchor_right = 1.0
+	reopen.anchor_top = 1.0
+	reopen.anchor_bottom = 1.0
+	reopen.offset_left = -132
+	reopen.offset_right = -12
+	reopen.offset_top = -MINI - 74
+	reopen.offset_bottom = -MINI - 34
+	reopen.focus_mode = Control.FOCUS_NONE
+	reopen.visible = false
+	reopen.pressed.connect(func(): set_production_open(true))
+	add_child(reopen)
 
-	_notices = VBoxContainer.new()
-	# Notices on the right, clear of the info panel and the command panel.
-	_notices.anchor_left = 1.0
-	_notices.anchor_right = 1.0
-	_notices.offset_left = -420
-	_notices.offset_right = -16
-	_notices.offset_top = 130  # below the panel buttons
-	_notices.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_notices)
-	show_building(null)
-	_build_diplomacy_panel()
+func set_production_open(on: bool) -> void:
+	prod_open = on
+	_prod.visible = on
+	get_node("Reopen").visible = not on
 
-func _box(_at: Vector2) -> PanelContainer:
-	var box := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("111f25e6")
-	style.border_color = GOLD
-	style.set_border_width_all(1)
-	style.set_content_margin_all(10)
-	box.add_theme_stylebox_override("panel", style)
-	add_child(box)
-	return box
+func _section(title: String) -> void:
+	var l := _text(title.to_upper(), 13, GOLD, true)
+	l.add_theme_font_size_override("font_size", 13)
+	_list.add_child(l)
 
-func cost_text(cost: Dictionary) -> String:
-	var parts := []
-	for key in cost:
-		parts.append(("$%d" % int(cost[key])) if key == "money" else ("%d %s" % [int(cost[key]), key]))
-	return " · ".join(PackedStringArray(parts)) if not parts.is_empty() else "free"
+## One production bar: picture, name, one line of what it does, cost chips,
+## time. Disabled (dimmed) when it cannot be afforded or is locked.
+func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: float, locked: String, action: Callable) -> void:
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(RIGHT_W - 28, 70)
+	b.focus_mode = Control.FOCUS_NONE
+	b.tooltip_text = desc if locked == "" else "%s\n%s" % [locked, desc]
+	b.set_meta("cost", cost)
+	b.set_meta("locked", locked != "")
+	b.pressed.connect(action)
+	var row := HBoxContainer.new()
+	row.set_anchors_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 6
+	row.offset_right = -8
+	row.offset_top = 4
+	row.offset_bottom = -4
+	row.add_theme_constant_override("separation", 10)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(row)
+	var pic := TextureRect.new()
+	pic.custom_minimum_size = Vector2(80, 60)
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_set_portrait(pic, key)
+	row.add_child(pic)
+	var text := VBoxContainer.new()
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text.add_theme_constant_override("separation", 1)
+	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(text)
+	var name := _text(title, 15, UI.CREAM, true)
+	name.add_theme_font_size_override("font_size", 15)
+	text.add_child(name)
+	var line := _text(locked if locked != "" else desc, 12, UI.BAD if locked != "" else UI.MUTED)
+	line.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	line.custom_minimum_size = Vector2(200, 0)
+	line.clip_text = true
+	text.add_child(line)
+	text.add_child(_cost_row(cost))
+	if seconds > 0.0:
+		var time := _text("%ds" % int(seconds), 13, UI.MUTED)
+		time.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		row.add_child(time)
+	_list.add_child(b)
+
+func _set_portrait(pic: TextureRect, key: String) -> void:
+	var tex: Texture2D = world.portraits.get_portrait(key)
+	if tex != null:
+		pic.texture = tex
+	else:
+		pic.texture = UI.icon("army" if world.unit_defs.has(key) else "build")
+		if not _waiting.has(key):
+			_waiting[key] = []
+		_waiting[key].append(pic)
+
+func _on_portrait(key: String, tex: Texture2D) -> void:
+	for pic in _waiting.get(key, []):
+		if is_instance_valid(pic) and tex != null:
+			pic.texture = tex
+	_waiting.erase(key)
+
+# ---------------------------------------------------------------- selection panel
+
+func _build_selection() -> void:
+	_sel = PanelContainer.new()
+	_sel.anchor_top = 1.0
+	_sel.anchor_bottom = 1.0
+	_sel.offset_left = 12
+	_sel.offset_right = 560
+	_sel.offset_top = -214
+	_sel.offset_bottom = -12
+	add_child(_sel)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	_sel.add_child(row)
+	var frame := PanelContainer.new()
+	frame.add_theme_stylebox_override("panel", UI.box(Color("0a1418"), UI.TRIM, 1, 6, 2.0))
+	row.add_child(frame)
+	_sel_pic = TextureRect.new()
+	_sel_pic.custom_minimum_size = Vector2(224, 168)
+	_sel_pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_sel_pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	frame.add_child(_sel_pic)
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_theme_constant_override("separation", 4)
+	row.add_child(col)
+	_sel_title = _text("", 20, UI.CREAM, true)
+	col.add_child(_sel_title)
+	_sel_sub = _text("", 13, GOLD)
+	col.add_child(_sel_sub)
+	_sel_hp = ProgressBar.new()
+	_sel_hp.custom_minimum_size = Vector2(0, 14)
+	_sel_hp.show_percentage = false
+	col.add_child(_sel_hp)
+	_sel_info = _text("", 13, UI.TEXT)
+	_sel_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_sel_info.custom_minimum_size = Vector2(280, 0)
+	_sel_info.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col.add_child(_sel_info)
+	_sel_queue = HBoxContainer.new()
+	_sel_queue.add_theme_constant_override("separation", 4)
+	col.add_child(_sel_queue)
+	_sel.visible = false
+
+func _build_minimap() -> void:
+	var frame := PanelContainer.new()
+	frame.anchor_left = 1.0
+	frame.anchor_right = 1.0
+	frame.anchor_top = 1.0
+	frame.anchor_bottom = 1.0
+	frame.offset_left = -MINI - 24
+	frame.offset_right = -12
+	frame.offset_top = -MINI - 24
+	frame.offset_bottom = -12
+	frame.add_theme_stylebox_override("panel", UI.box(Color(UI.BG, 0.96), UI.TRIM, 1, 6, 5.0, 8))
+	add_child(frame)
+	var map := preload("res://scripts/minimap.gd").new()
+	map.custom_minimum_size = Vector2(MINI, MINI)
+	frame.add_child(map)
+	map.setup(world)
+	_fps = _text("", 11, Color(1, 1, 1, 0.4))
+	_fps.anchor_left = 1.0
+	_fps.anchor_right = 1.0
+	_fps.anchor_top = 1.0
+	_fps.anchor_bottom = 1.0
+	_fps.offset_left = -MINI - 24
+	_fps.offset_right = -16
+	_fps.offset_top = -30
+	_fps.offset_bottom = -14
+	_fps.z_index = 1
+	_fps.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	add_child(_fps)
+
+func _build_help() -> void:
+	_help = PanelContainer.new()
+	_help.anchor_left = 0.5
+	_help.anchor_right = 0.5
+	_help.anchor_top = 0.5
+	_help.anchor_bottom = 0.5
+	_help.offset_left = -300
+	_help.offset_right = 300
+	_help.offset_top = -210
+	_help.visible = false
+	add_child(_help)
+	var col := VBoxContainer.new()
+	_help.add_child(col)
+	col.add_child(_text("CONTROLS", 20, UI.CREAM, true))
+	for line in [["Move the camera", "W A S D or the arrow keys, the screen edge, or drag with the middle mouse button"],
+			["Turn / tilt / zoom", "Q E  ·  R F  ·  mouse wheel (zooms toward the cursor)"],
+			["Select", "Click a unit or building, or drag a box around units"],
+			["Orders", "Right click: move or attack  ·  Ctrl + right click: attack-move"],
+			["Build", "Pick a building in the list on the right, click a hex in your city (Shift keeps placing)"],
+			["Screens", "Y research  ·  G diplomacy  ·  M market  ·  I intelligence  ·  T territory"],
+			["Game", "F5 save  ·  F9 load  ·  Esc cancel / pause menu  ·  F1 this help"],
+			["Minimap", "Click or drag on it to jump anywhere on the island"]]:
+		var row := HBoxContainer.new()
+		var k := _text(line[0], 14, GOLD)
+		k.custom_minimum_size = Vector2(150, 0)
+		row.add_child(k)
+		var v := _text(line[1], 14, UI.TEXT)
+		v.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.custom_minimum_size = Vector2(410, 0)
+		row.add_child(v)
+		col.add_child(row)
+	var close := Button.new()
+	close.text = "Close (F1)"
+	close.focus_mode = Control.FOCUS_NONE
+	close.pressed.connect(toggle_help)
+	col.add_child(close)
+
+func toggle_help() -> void:
+	_help.visible = not _help.visible
+
+# ---------------------------------------------------------------- refresh
 
 func _process(delta: float) -> void:
 	if economy == null:
@@ -113,29 +465,37 @@ func _process(delta: float) -> void:
 	if _refresh < 0.25:
 		return
 	_refresh = 0.0
-	var parts := []
-	for key in RES_LABELS:
+	for r in RESOURCES:
+		var key: String = r[0]
+		var parts: Array = _chips[key]
 		var rate: float = economy.rates.get(key, 0.0)
-		if key in ["silicon", "uranium"] and economy.res[key] < 0.5 and absf(rate) < 0.01:
-			continue  # shown once the nation has any
-		var cap := ("/%d" % int(economy.caps[key])) if economy.caps.has(key) and key != "food" else ""
-		parts.append("%s %d%s (%s%.1f)" % [RES_LABELS[key], int(economy.res[key]), cap, "+" if rate >= 0 else "", rate])
-	parts.append("Army %d/%d" % [economy.pop_used, economy.pop_cap])
-	parts.append("Citizens %d/%d" % [int(economy.civilians), int(economy.civ_cap)])
-	var settlements: Array = world.buildings.filter(func(b): return b.owner == 0 and not b.dead and b.built and b.def.get("settlement") != null)
-	parts.append("Supplied %d/%d" % [settlements.filter(func(b): return b.get("supplied", true)).size(), settlements.size()])
-	if world.territory:
-		parts.append("Land %d" % world.territory.yields(0).cells)
+		var have: float = economy.res.get(key, 0.0)
+		parts[2].visible = not (key in ["silicon", "uranium", "oil"] and have < 0.5 and absf(rate) < 0.01)
+		# The storage cap shows only when the store is nearly full (and always in the tooltip).
+		var cap: float = float(economy.caps.get(key, INF)) if key != "money" else INF
+		parts[0].text = ("%d/%d" % [int(have), int(cap)]) if have >= cap * 0.9 else str(int(have))
+		parts[0].add_theme_color_override("font_color", Color("f0b25a") if have >= cap * 0.9 else UI.CREAM)
+		parts[2].tooltip_text = "%s
+Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)[0][2], int(have), (" of %d" % int(cap)) if cap < INF else "", "+" if rate >= 0.0 else "", rate]
+		parts[1].text = "%s%.1f" % ["+" if rate >= 0.0 else "", rate]
+		parts[1].add_theme_color_override("font_color", UI.GOOD if rate > 0.01 else (UI.BAD if rate < -0.01 else UI.MUTED))
+	_extra.army[0].text = "%d/%d" % [economy.pop_used, economy.pop_cap]
+	_extra.army[0].add_theme_color_override("font_color", UI.BAD if economy.pop_used >= economy.pop_cap else UI.CREAM)
+	_extra.citizens[0].text = "%d/%d" % [int(economy.civilians), int(economy.civ_cap)]
 	if world.research:
-		parts.append("Research %d (+%.1f)" % [int(world.research.points), world.research.rate])
-	if world.missiles and (world.missiles.stored() > 0 or not world.missiles.silos().is_empty()):
-		parts.append("Missiles %d/%d" % [world.missiles.stored(), world.missiles.capacity()])
-	_bar.text = "   ".join(PackedStringArray(parts))
+		_extra.research[0].text = "%d  +%.1f" % [int(world.research.points), world.research.rate]
+		_era.text = world.research.eras[world.research.era].name.to_upper()
+	if world.territory:
+		_extra.land[0].text = str(world.territory.yields(0).cells)
+	var silos: bool = world.missiles != null and (world.missiles.stored() > 0 or not world.missiles.silos().is_empty())
+	_extra.missiles[1].visible = silos
+	if silos:
+		_extra.missiles[0].text = "%d/%d" % [world.missiles.stored(), world.missiles.capacity()]
+	_fps.text = "%d FPS" % Engine.get_frames_per_second()
 	if _selected != null and (_selected.dead or _selected.owner != 0):
 		show_building(null)
 	_update_panel()
 
-var transport_text := ""
 ## Road or rail planning status (empty ends it).
 func show_transport(text: String) -> void:
 	transport_text = text
@@ -146,117 +506,204 @@ func show_transport(text: String) -> void:
 func show_building(building) -> void:
 	_selected = building
 	_shown_key = ""
+	if building != null and not prod_open:
+		set_production_open(true)
 	_update_panel()
 
+func _selected_units() -> Array:
+	return world.units.filter(func(u): return u.selected and not u.dead and u.owner == 0)
+
 func _update_panel() -> void:
+	_update_selection()
 	var key: String = ("menu:" + build_tab) if _selected == null else "%s:%s:%d" % [_selected.key, _selected.built, _selected.queue.size()]
-	_tabs.visible = _selected == null and transport_text == ""
 	if _selected != null and _selected.key == "missileSilo":
 		key += ":%s" % str(world.missiles.stock)
-	if transport_text != "":
-		_title.text = "ROAD" if world.transport_kind == "road" else "RAILWAY"
-		_info.text = transport_text
-		_queue.visible = false
-	elif _selected == null:
-		_title.text = "BUILD"
-		_info.text = "Pick a structure, then click the ground inside one of your districts (right click cancels). Workers go and build it. A Village Center founds a new district: link it to the capital by road or rail so it is supplied."
-		_queue.visible = false
-	else:
-		var def: Dictionary = _selected.def
-		_title.text = def.name.to_upper()
-		if not _selected.built:
-			_info.text = "Under construction: %d%%%s" % [int(_selected.progress * 100), "" if _selected.builders > 0 else " — waiting for a worker"]
-			_queue.visible = true
-			_queue.value = _selected.progress * 100
-		else:
-			var lines := ["HP %d/%d. %s" % [int(_selected.hp), int(_selected.max_hp), def.desc]]
-			if not _selected.get("supplied", true):
-				lines.append("OUT OF SUPPLY: production stopped. Connect this district to the capital by road or rail.")
-			elif _selected.get("rail_supplied", false):
-				lines.append("Rail supplied: +25% production.")
-			if not _selected.queue.is_empty():
-				var names := PackedStringArray()
-				for q in _selected.queue:
-					names.append(world.missiles.def_of(q.substr(8)).name if String(q).begins_with("missile:") else world.unit_defs[q].name)
-				lines.append("In production: " + ", ".join(names))
-			if _selected.key == "missileSilo":
-				var held := PackedStringArray()
-				for m in world.missiles.stock:
-					if world.missiles.stock[m] > 0:
-						held.append("%s %d" % [world.missiles.def_of(m).name, world.missiles.stock[m]])
-				lines.append("Stored %d/%d (each Ammo Depot adds %d): %s" % [world.missiles.stored(), world.missiles.capacity(), int(world.missiles.cfg.capPerDepot), ", ".join(held) if not held.is_empty() else "none"])
-			if world.disabled(_selected):
-				lines.append("EMP: systems down.")
-			_info.text = "\n".join(PackedStringArray(lines))
-			_queue.visible = not _selected.queue.is_empty()
-			_queue.value = _selected.queue_prog * 100
+	if world.research:
+		key += ":%d:%s" % [world.research.era, str(world.research.completed_count())]
+	_tabs.visible = _selected == null
 	if key == _shown_key:
 		_update_enabled()
 		return
 	_shown_key = key
-	for child in _buttons.get_children():
+	for child in _list.get_children():
+		_list.remove_child(child)
 		child.queue_free()
-	if _selected == null:
-		for b in BUILD_MENU[build_tab]:
-			var def: Dictionary = world.building_defs.get(b, {})
-			if def.is_empty():
-				continue
-			_add_button("%s\n%s" % [def.name, cost_text(def.cost)], def.cost, def.desc, func(): world.begin_placement(b))
-		for kind in (["road", "rail"] if build_tab == "Economy" else []):
-			var price: Dictionary = world.logistics.transport[kind]
-			var cost := {"money": price.money, "iron": price.iron} if float(price.iron) > 0 else {"money": price.money}
-			_add_button("%s\n%s per hex" % ["Road" if kind == "road" else "Railway", cost_text(cost)], cost,
-				"Click a start hex, then a destination. Links settlements to the capital so they are supplied." + ("" if kind == "road" else " Railways speed production by 25%."),
-				func(): world.begin_transport(kind))
-	elif _selected.built and _selected.key == "missileSilo":
-		var ms: Node = world.missiles
-		for m in ms.types():
-			var mdef: Dictionary = ms.def_of(m)
-			var why: String = ms.locked(m)
-			_add_button("%s
-%s" % [mdef.name, cost_text(mdef.cost) if why == "" else why], mdef.cost, "%s Damage %d, blast radius %d m." % [mdef.desc, int(mdef.dmg), int(mdef.radius)],
-				func(): _say(ms.produce(_selected, m)))
-			if why != "":
-				_buttons.get_child(_buttons.get_child_count() - 1).set_meta("locked", true)
-		for m in ms.types():
-			if ms.stock[m] > 0:
-				_add_button("LAUNCH
-%s (%d)" % [ms.def_of(m).name, ms.stock[m]], {}, "Arm it, then click the target on the map.", func(): world.begin_missile(m))
-	elif _selected.built and _selected.key in world.research.LABS:
-		_add_button("Open Research
-(Y)", {}, "Research points from this building flow into the discovery at the head of the queue.", toggle_research)
-	elif _selected.built and _selected.key in ["market", "port", "intelAgency"]:
-		var which: String = "intel" if _selected.key == "intelAgency" else "market"
-		_add_button("Open %s
-(%s)" % ["Intelligence" if which == "intel" else "World Market", "I" if which == "intel" else "M"], {}, "", func(): toggle_panel(which, true))
-	elif _selected.built:
-		for u in _selected.def.trains:
-			var def: Dictionary = world.unit_defs.get(u, {})
-			if def.is_empty():
-				continue
-			var cost: Dictionary = world.research.unit_cost(u, def.cost) if world.research else def.cost
-			var locked: String = world.research.unit_locked(u) if world.research else ""
-			_add_button("%s\n%s" % [def.name, cost_text(cost) if locked == "" else locked], cost, def.desc, func(): world.queue_unit(_selected, u))
-			if locked != "":
-				_buttons.get_child(_buttons.get_child_count() - 1).set_meta("locked", true)
+	if _selected == null or not _selected.built or not _has_actions(_selected):
+		_prod_title.text = "BUILD"
+		_prod_hint.text = "Pick a building, then click a hex inside your city. Workers go and build it. Shift keeps placing; right click cancels."
+		_tabs.visible = true
+		_building_bars()
+	else:
+		_prod_title.text = _selected.def.name.to_upper()
+		_prod_hint.text = "Choose what this building produces. Up to five orders queue here."
+		_action_bars(_selected)
 	_update_enabled()
 
-func _add_button(text: String, cost: Dictionary, tip: String, action: Callable) -> void:
-	var button := Button.new()
-	button.text = text
-	button.tooltip_text = tip
-	button.custom_minimum_size = Vector2(128, 46)
-	button.add_theme_font_size_override("font_size", 13)
-	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # long names wrap instead of widening the panel
-	button.set_meta("cost", cost)
-	button.pressed.connect(action)
-	_buttons.add_child(button)
+func _has_actions(b: Dictionary) -> bool:
+	return not b.def.get("trains", []).is_empty() or b.key in ["missileSilo", "market", "port", "intelAgency"] or b.key in world.research.LABS
+
+func _building_bars() -> void:
+	for b in BUILD_MENU[build_tab]:
+		var def: Dictionary = world.building_defs.get(b, {})
+		if def.is_empty():
+			continue
+		var why := ""
+		if def.get("unique", false) and world.buildings.any(func(x): return x.owner == 0 and x.key == b and not x.dead):
+			why = "Built (one per nation)"
+		_bar(b, def.name, def.desc, def.cost, float(def.get("buildTime", 0)), why, func(): world.begin_placement(b))
+	if build_tab == "Economy":
+		_section("Transport")
+		for kind in ["road", "rail"]:
+			var price: Dictionary = world.logistics.transport[kind]
+			var cost := {"money": price.money, "iron": price.iron} if float(price.iron) > 0 else {"money": price.money}
+			_bar("villageCenter", "Road" if kind == "road" else "Railway", "Per hex. Click a start hex, then a destination: links towns to the capital so they are supplied." + ("" if kind == "road" else " Railways add 25% production."),
+				cost, 0.0, "", func(): world.begin_transport(kind))
+
+func _action_bars(b: Dictionary) -> void:
+	if b.key == "missileSilo":
+		var ms: Node = world.missiles
+		var armed := false
+		for m in ms.types():
+			if ms.stock[m] > 0:
+				if not armed:
+					_section("Launch")
+					armed = true
+				_bar("missileSilo", "LAUNCH %s  (%d)" % [ms.def_of(m).name, ms.stock[m]], "Arm it, then click the target on the map.", {}, 0.0, "", func(): world.begin_missile(m))
+		_section("Build missiles  (%d/%d stored)" % [ms.stored(), ms.capacity()])
+		for m in ms.types():
+			var mdef: Dictionary = ms.def_of(m)
+			_bar("missileSilo", mdef.name, "%s Damage %d, blast %d m." % [mdef.desc, int(mdef.dmg), int(mdef.radius)], mdef.cost, float(mdef.buildTime), ms.locked(m), func(): _say(ms.produce(_selected, m)))
+		return
+	if b.key in world.research.LABS:
+		_bar("university", "Open the research tree", "Research points from this building flow into the discovery at the head of the queue.", {}, 0.0, "", toggle_research)
+		return
+	if b.key in ["market", "port", "intelAgency"]:
+		var which: String = "intel" if b.key == "intelAgency" else "market"
+		_bar(b.key, "Open %s" % ("the intelligence service" if which == "intel" else "the world market"), "", {}, 0.0, "", func(): toggle_panel(which, true))
+		return
+	_section("Train")
+	for u in b.def.trains:
+		var def: Dictionary = world.unit_defs.get(u, {})
+		if def.is_empty():
+			continue
+		var cost: Dictionary = world.research.unit_cost(u, def.cost) if world.research else def.cost
+		var locked: String = world.research.unit_locked(u) if world.research else ""
+		_bar(u, def.name, def.desc, cost, float(def.get("trainTime", 10)), locked, func(): world.queue_unit(_selected, u))
 
 func _update_enabled() -> void:
-	for button in _buttons.get_children():
-		if button is Button and button.has_meta("cost"):
-			var cost: Dictionary = button.get_meta("cost")
-			button.disabled = not economy.can_afford(cost) or button.get_meta("locked", false)
+	for b in _list.get_children():
+		if not (b is Button) or not b.has_meta("cost"):
+			continue
+		var cost: Dictionary = b.get_meta("cost")
+		b.disabled = not economy.can_afford(cost) or b.get_meta("locked", false)
+		for amount in b.find_children("*", "Label", true, false):
+			if amount.has_meta("res"):
+				var short: bool = economy.res.get(amount.get_meta("res"), 0.0) < float(amount.get_meta("need"))
+				amount.add_theme_color_override("font_color", UI.BAD if short else UI.CREAM)
+
+## The selection panel: a building, a group of units, or road planning.
+func _update_selection() -> void:
+	var units := _selected_units()
+	if transport_text != "":
+		_sel.visible = true
+		_sel_title.text = "ROAD" if world.transport_kind == "road" else "RAILWAY"
+		_sel_sub.text = "Supply network"
+		_sel_hp.visible = false
+		_sel_info.text = transport_text
+		_show_pic("villageCenter")
+		_fill_queue([])
+		return
+	if _selected != null:
+		var b: Dictionary = _selected
+		_sel.visible = true
+		_show_pic(b.key)
+		_sel_title.text = b.def.name
+		_sel_sub.text = "Under construction" if not b.built else String(b.def.get("cat", "")).capitalize()
+		_sel_hp.visible = true
+		if not b.built:
+			_sel_hp.max_value = 1.0
+			_sel_hp.value = b.progress
+		else:
+			_sel_hp.max_value = b.max_hp
+			_sel_hp.value = b.hp
+		var lines := []
+		if not b.built:
+			lines.append("%d%% built%s" % [int(b.progress * 100), "" if b.builders > 0 else " — waiting for a worker"])
+		else:
+			lines.append("Health %d/%d. %s" % [int(b.hp), int(b.max_hp), b.def.desc])
+			if not b.get("supplied", true):
+				lines.append("OUT OF SUPPLY: production stopped. Link this town to the capital by road or rail.")
+			elif b.get("rail_supplied", false):
+				lines.append("Rail supplied: +25% production.")
+			if world.disabled(b):
+				lines.append("EMP: systems down.")
+		_sel_info.text = "\n".join(PackedStringArray(lines))
+		_fill_queue(b.queue, b.queue_prog)
+		return
+	if not units.is_empty():
+		_sel.visible = true
+		var counts := {}
+		var hp := 0.0
+		var max_hp := 0.0
+		for u in units:
+			counts[u.key] = counts.get(u.key, 0) + 1
+			hp += u.hp
+			max_hp += u.max_hp
+		var main: String = counts.keys()[0]
+		for k in counts:
+			if counts[k] > counts[main]:
+				main = k
+		_show_pic(main)
+		var name: String = world.unit_defs.get(main, {}).get("name", main)
+		_sel_title.text = name if units.size() == 1 else "%d units" % units.size()
+		var parts := PackedStringArray()
+		for k in counts:
+			parts.append("%d %s" % [counts[k], world.unit_defs.get(k, {}).get("name", k)])
+		_sel_sub.text = ", ".join(parts)
+		_sel_hp.visible = true
+		_sel_hp.max_value = max_hp
+		_sel_hp.value = hp
+		var def: Dictionary = world.unit_defs.get(main, {})
+		_sel_info.text = ("%s\nRight click to move or attack; Ctrl + right click to attack-move." % def.get("desc", "")) if units.size() == 1 else "Right click to move or attack; Ctrl + right click to attack-move."
+		_fill_queue([])
+		return
+	_sel.visible = false
+
+var _pic_key := ""
+func _show_pic(key: String) -> void:
+	if key == _pic_key and _sel_pic.texture != null:
+		return
+	_pic_key = key
+	_set_portrait(_sel_pic, key)
+
+var _queue_sig := ""
+func _fill_queue(queue: Array, progress := 0.0) -> void:
+	var sig := str(queue)
+	if sig != _queue_sig:
+		_queue_sig = sig
+		for child in _sel_queue.get_children():
+			_sel_queue.remove_child(child)
+			child.queue_free()
+		for i in range(queue.size()):
+			var item: String = queue[i]
+			var slot := VBoxContainer.new()
+			slot.add_theme_constant_override("separation", 1)
+			var pic := TextureRect.new()
+			pic.custom_minimum_size = Vector2(56, 42)
+			pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			_set_portrait(pic, "missileSilo" if item.begins_with("missile:") else item)
+			pic.tooltip_text = world.missiles.def_of(item.substr(8)).name if item.begins_with("missile:") else world.unit_defs.get(item, {}).get("name", item)
+			slot.add_child(pic)
+			var bar := ProgressBar.new()
+			bar.custom_minimum_size = Vector2(56, 5)
+			bar.show_percentage = false
+			bar.max_value = 1.0
+			slot.add_child(bar)
+			_sel_queue.add_child(slot)
+	if not queue.is_empty() and _sel_queue.get_child_count() > 0:
+		var first: ProgressBar = _sel_queue.get_child(0).get_child(1)
+		first.value = progress
 
 # ---------------------------------------------------------------- diplomacy
 
@@ -266,48 +713,11 @@ var _letters: Array = []     # pending [text, accept, decline]
 var _letter_box: PanelContainer
 
 func _build_diplomacy_panel() -> void:
-	var toggle := Button.new()
-	toggle.text = "Diplomacy (G)"
-	toggle.anchor_left = 1.0
-	toggle.anchor_right = 1.0
-	toggle.offset_left = -150
-	toggle.offset_right = -16
-	toggle.offset_top = 52
-	toggle.offset_bottom = 84
-	toggle.pressed.connect(toggle_diplomacy)
-	add_child(toggle)
-	var shortcut := 0
-	for entry in [["Territory (T)", "territory"], ["Intel (I)", "intel"], ["Market (M)", "market"], ["Research (Y)", "research"]]:
-		var b := Button.new()
-		b.text = entry[0]
-		b.anchor_left = 1.0
-		b.anchor_right = 1.0
-		b.offset_right = -16 - shortcut * 128
-		b.offset_left = b.offset_right - 120
-		b.offset_top = 90
-		b.offset_bottom = 122
-		b.pressed.connect(toggle_research if entry[1] == "research" else toggle_panel.bind(entry[1]))
-		add_child(b)
-		shortcut += 1
-	var row := 0
-	for entry in [["Save (F5)", func(): world.saves.save("quicksave")], ["Load (F9)", func(): world.saves.load_slot("quicksave")]]:
-		var b := Button.new()
-		b.text = entry[0]
-		b.anchor_left = 1.0
-		b.anchor_right = 1.0
-		b.offset_left = -300 - row * 110
-		b.offset_right = -160 - row * 110
-		b.offset_left = b.offset_right - 100
-		b.offset_top = 52
-		b.offset_bottom = 84
-		b.pressed.connect(entry[1])
-		add_child(b)
-		row += 1
 	_diplo = _box(Vector2.ZERO)
 	# Left side, below the info panel: clear of notices and letters.
 	_diplo.offset_left = 16
 	_diplo.offset_right = 640
-	_diplo.offset_top = 228
+	_diplo.offset_top = 106
 	_diplo.visible = false
 	_diplo_rows = VBoxContainer.new()
 	_diplo.add_child(_diplo_rows)
@@ -438,19 +848,23 @@ func show_end(title: String, subtitle: String) -> void:
 	column.add_child(small)
 
 func notice(text: String) -> void:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UI.box(Color(UI.BG, 0.9), Color(UI.TRIM, 0.8), 1, 6, 8.0, 6))
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var label := Label.new()
 	label.text = text
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.custom_minimum_size = Vector2(404, 0)
-	label.add_theme_color_override("font_color", Color("f1e3b4"))
-	label.add_theme_color_override("font_outline_color", Color("111f25"))
-	label.add_theme_constant_override("outline_size", 6)
-	_notices.add_child(label)
-	var tween := label.create_tween()
-	tween.tween_interval(2.6)
-	tween.tween_property(label, "modulate:a", 0.0, 0.6)
-	tween.tween_callback(label.queue_free)
+	label.custom_minimum_size = Vector2(520, 0)
+	label.add_theme_color_override("font_color", UI.CREAM)
+	card.add_child(label)
+	_notices.add_child(card)
+	while _notices.get_child_count() > 4:
+		_notices.get_child(0).free()  # at most four at once; the oldest goes
+	var tween := card.create_tween()
+	tween.tween_interval(3.4)
+	tween.tween_property(card, "modulate:a", 0.0, 0.6)
+	tween.tween_callback(card.queue_free)
 
 # ---------------------------------------------------------------- market, intel and territory panels
 
@@ -481,14 +895,14 @@ func _show_side(mode: String) -> void:
 		_side = _box(Vector2.ZERO)
 		_side.offset_left = 16
 		_side.offset_right = 700
-		_side.offset_top = 178
+		_side.offset_top = 106
 		_scroll = ScrollContainer.new()
 		_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 		_side.add_child(_scroll)
 		_side_rows = VBoxContainer.new()
 		_scroll.add_child(_side_rows)
 	# Between the info panel and the command panel, scrolling when longer.
-	_scroll.custom_minimum_size = Vector2(676, maxf(160.0, get_viewport().get_visible_rect().size.y - 178.0 - 330.0))
+	_scroll.custom_minimum_size = Vector2(676, maxf(160.0, get_viewport().get_visible_rect().size.y - 106.0 - 250.0))
 	if not _hooked and world.market != null:
 		_hooked = true
 		world.market.changed.connect(func(): if side_mode == "market": refresh_side())
@@ -725,7 +1139,7 @@ func _build_research() -> void:
 	_rs.anchor_bottom = 1.0
 	_rs.offset_left = 16
 	_rs.offset_right = -16
-	_rs.offset_top = 132
+	_rs.offset_top = 56
 	_rs.offset_bottom = -16
 	var solid: StyleBoxFlat = _rs.get_theme_stylebox("panel").duplicate()
 	solid.bg_color = Color("0e191e")  # opaque: a screen of its own, not an overlay on the battle

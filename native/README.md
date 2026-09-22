@@ -186,11 +186,25 @@ It uses the Forward+ renderer:
   with eras as columns and branches as rows, three stage pips per discovery, and a
   details pane with each stage's cost and progress. The build menu has Economy, Civic &
   research and Military tabs, with schools, universities, hospitals, a reactor and more.
+- Interface (hud.gd, ui_theme.gd, portraits.gd, minimap.gd), laid out like a 4X game: a
+  top bar of resources with icons (stock, and the rate in green or red; storage caps show
+  when a store is nearly full), round screen buttons under it (research, diplomacy,
+  market, intelligence, territory, menu), a production list on the right with a bar per
+  building or unit: its picture, rendered from the game's own 3D model in an off-screen
+  studio, name, what it does, cost in resource icons and time; a selection panel bottom
+  left with a large picture, health, status and the training queue as small pictures;
+  a minimap bottom right (click or drag to move the camera) and notices as small cards.
+  One theme styles every panel, button, tooltip and menu: dark teal with gold trim and
+  Windows' Bahnschrift font. The icons are drawn by `tools/make-icons.py` (Pillow) into
+  `ui/icons/`. F1 shows the controls.
+- Camera: WASD or the arrow keys (by key position, so any keyboard layout), the screen
+  edge, a middle-button drag, Q/E to turn, R/F or PageUp/PageDown to tilt, and the wheel,
+  which zooms toward the cursor. The view stays over the island. `-- --camera-test`.
 - Quality: integrated GPUs start on `balanced` (no SSAO, two shadow cascades, FSR
   at 77%); dedicated GPUs on `high`. Override with `-- --quality=high|balanced|low`.
 
 Options: `-- --difficulty=easy|normal|hard` (default easy), `-- --ai-speed=N`.
-Controls: click/drag select units, click a building to open its training panel,
+Controls (F1 in game): click/drag select units, click a building to open its training list,
 build menu at the bottom left (Road / Railway: click a start hex, then the
 destination; left click places buildings, Shift+click keeps placing, right
 click or Esc cancels), right-click move or attack an enemy, Ctrl+right-click
