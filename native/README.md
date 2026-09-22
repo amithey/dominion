@@ -167,6 +167,25 @@ It uses the Forward+ renderer:
   down, and cells where two nations are close in strength are contested. Held land
   yields money, food (plains) and iron (mountains), more where the hold is firm.
   Territory (T) shows the borders on the map.
+- Research (research.gd, research_tree.gd): the 40 discoveries, four research tracks and
+  six development eras of config.js. The nation advances from the Founding to the Future
+  Era by meeting goals (villages, cities, citizens, discoveries, trade routes, research
+  buildings, land); each era pays a reward and opens its discoveries. Every discovery is
+  developed in three stages named for its branch (design, prototype, field trials for
+  weapons; study, pilot programme, national rollout for society...). Each stage needs
+  research points and at least 20 s; the prototype needs the facility (reqBuilding) and
+  materials, the last stage money. A finished prototype gives half the effect, the last
+  stage all of it and the unlocks (Destroyer and Submarine, anti-ship, ballistic,
+  hypersonic and nuclear missiles, the Nuclear Submarine). Research is a queue of up to
+  four projects fed by the capital, schools, libraries, universities, tech parks and chip
+  fabs. Effects are real: food, income, citizens' health and happiness, housing, mining,
+  production and construction speed, trade routes, unit health, damage, range and speed,
+  cheaper vehicles and drones, stealth, spy odds and counter-intelligence, diplomacy.
+  Rival nations research too (income, damage and armour per level); agents steal research
+  and a dead chief scientist sets a rival back. The Research screen (Y) draws the tree
+  with eras as columns and branches as rows, three stage pips per discovery, and a
+  details pane with each stage's cost and progress. The build menu has Economy, Civic &
+  research and Military tabs, with schools, universities, hospitals, a reactor and more.
 - Quality: integrated GPUs start on `balanced` (no SSAO, two shadow cascades, FSR
   at 77%); dedicated GPUs on `high`. Override with `-- --quality=high|balanced|low`.
 
@@ -185,7 +204,10 @@ frames of the battle demo to `build/battle-*.png` and records its soundtrack to
 loads, and checks that everything came back and routes still work.
 `-- --air-sea-test` checks that ships stay at sea, aircraft keep altitude, the damage
 table blocks rifles and tanks against aircraft, and both kinds of craft win their
-fights (`--capture-air-sea`). `-- --systems-test` builds a Market, Port, Intelligence Agency, Ammo Depot and Missile Silo, then checks
+fights (`--capture-air-sea`). `-- --research-test` checks that labs raise research, stages take their time, a prototype waits for its
+facility, effects arrive half then whole, an era is reached and paid, warships unlock, tracks level,
+rivals research, agents steal research and all of it is saved (`--capture-research` saves the Research
+screen to `build/research-tree.png`). `-- --systems-test` builds a Market, Port, Intelligence Agency, Ammo Depot and Missile Silo, then checks
 instant deals, a trade route, espionage effects, a captured agent, missile production and
 strikes (war, EMP, nuclear condemnation), territory capture by an army, and that all four
 survive a save and load (`--capture-systems` saves `build/systems-*.png`). `-- --diplomacy-test` checks gifts, pact income, pacts blocking war, allies joining
@@ -201,7 +223,7 @@ never through water. Regenerate sounds with
 
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 
-Not yet ported: research and discoveries, and Steam integration.
+Not yet ported: Steam integration.
 
 ## Refreshing the map data
 

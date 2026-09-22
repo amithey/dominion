@@ -16,6 +16,8 @@ var res := {}
 var rates := {}
 var caps := {}
 var civilians := 120.0
+var happiness := 60.0
+var health := 55.0
 var civ_cap := 200.0
 var admin := 0.28
 var pop_used := 0
@@ -55,7 +57,7 @@ func provided(stat: String) -> float:
 	return total
 
 func recalculate() -> void:
-	civ_cap = float(cfg.baseCivCap) + provided("civCap")
+	civ_cap = (float(cfg.baseCivCap) + provided("civCap")) * (1.0 + (world.research.bonus("civCapPct") if world.research else 0.0))
 	var mat_cap := owned("warehouse") * float(cfg.warehouseBonus)
 	for key in cfg.baseCap:
 		caps[key] = float(cfg.baseCap[key]) + mat_cap
@@ -77,30 +79,36 @@ func tick() -> void:
 	# Held land yields by terrain and how firmly it is held (territory.gd).
 	var land: Dictionary = world.territory.yields(0) if world.territory != null else {"money": 0.0, "food": 0.0, "iron": 0.0}
 	# Food: farms and farmland against mouths to feed.
-	var food_in := owned("farm") * float(cfg.farmFood) + float(land.food)
+	var r: Node = world.research
+	var food_in: float = owned("farm") * float(cfg.farmFood) * (1.0 + (r.bonus("foodPct") if r else 0.0)) + float(land.food)
 	var food_out := civilians * float(cfg.foodPerCivilian) + army * float(cfg.foodPerSoldier)
 	rates.food = food_in - food_out
 	res.food = clampf(res.food + rates.food, 0.0, caps.food)
 	var starving: bool = res.food <= 0.5
-	# Citizens: happiness 60 and health 55 are the browser's starting values.
-	var growth := civilians * ((60.0 - 45.0) / 50.0) * (55.0 / 100.0) * 0.0025
+	# Citizens grow with happiness and health (the browser's 60 and 55 to start),
+	# which civic buildings and discoveries raise.
+	happiness = clampf(60.0 + provided("happiness") + (r.bonus("happiness") if r else 0.0), 0.0, 100.0)
+	health = clampf(55.0 + provided("health") + (r.bonus("health") if r else 0.0), 0.0, 100.0)
+	var growth := civilians * ((happiness - 45.0) / 50.0) * (health / 100.0) * 0.0025
 	if starving:
 		growth -= civilians * 0.005
 	civilians = clampf(civilians + growth, 20.0, civ_cap)
 	# Taxes reach only settlements the supply network connects (config.js
 	# supplyCoverage, weighted by how many people each settlement houses).
 	# Markets and ports add a share of income (config.js incomePct).
-	rates.money = civilians * float(cfg.taxPerCivilian) * admin * supply_coverage() * (1.0 + provided("incomePct"))
+	rates.money = civilians * float(cfg.taxPerCivilian) * admin * supply_coverage() * (1.0 + provided("incomePct") + (r.bonus("incomePct") if r else 0.0))
 	rates.money += float(land.money)
 	# Extractors on deposits, and iron from held mountains.
 	for key in ["oil", "iron", "silicon", "uranium"]:
 		rates[key] = 0.0
 	rates.iron = float(land.iron)
+	rates.oil = float(land.get("oil", 0.0))
+	var mining: float = 1.0 + (r.bonus("extractPct") if r else 0.0)
 	for b in world.buildings:
 		if b.owner != 0 or not b.built or b.dead or b.deposit == null or not b.get("supplied", true):
 			continue
 		var dep: Dictionary = b.deposit.def
-		rates[dep.res] = rates.get(dep.res, 0.0) + float(dep.rate)
+		rates[dep.res] = rates.get(dep.res, 0.0) + float(dep.rate) * mining
 	for key in RESOURCES:
 		if key == "food":
 			continue

@@ -75,6 +75,15 @@ function exportMapData(step = 2.5) {
     },
     // Gradual territory control (territory.js).
     territory: { cell: TERRITORY_CELL, halfMap: HALF_MAP },
+    // Discoveries, research tracks and national development eras (config.js).
+    research: {
+      discoveries: Object.fromEntries(Object.entries(DISCOVERIES).map(([key, d]) => [key, {
+        name: d.name, cost: d.cost, branch: d.branch, desc: d.desc || '',
+        reqDiscovery: d.reqDiscovery || null, reqBuilding: d.reqBuilding || null, fx: d.fx || {},
+      }])),
+      tracks: Object.fromEntries(Object.entries(TECH_TRACKS).map(([key, t]) => [key, { name: t.name, max: t.max, baseCost: t.baseCost, desc: t.desc }])),
+      eras: DEVELOPMENT_ERAS.map(e => ({ name: e.name, desc: e.desc, req: e.req || {}, reward: e.reward || {} })),
+    },
   };
 }
 

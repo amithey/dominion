@@ -47,7 +47,7 @@ func route_cap() -> int:
 	for i in range(1, d.n):
 		if not d.defeated(i) and d.pact[0][i]:
 			pacts += 1
-	var contracts := pacts + mini(world.economy.owned("market"), 2)
+	var contracts := pacts + mini(world.economy.owned("market"), 2) + (int(world.research.bonus("tradeRoutes")) if world.research else 0)
 	return maxi(0, mini(contracts, ports() * int(cfg.routesPerPort)))
 
 ## Armed warships at sea lower the chance of losing a cargo.

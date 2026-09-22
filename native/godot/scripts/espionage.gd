@@ -14,8 +14,8 @@ extends Node
 ## - the effects are real: stolen money moves between treasuries, cyber
 ##   attacks stop the rival's production, proxy cells and rebels cut its
 ##   income, a false flag turns two rivals on each other, and a dead head of
-##   state or general paralyses its army or blunts it. Stolen research becomes
-##   faster training at home (the native world has no research tree yet).
+##   state or general paralyses its army or blunts it; stolen research and a
+##   dead chief scientist move research points and set the rival's programme back.
 ## Hostile services strike back: sabotage, theft of funds and blueprints,
 ## unless the agency and idle agents catch them.
 
@@ -97,9 +97,6 @@ func paralyzed(nation: int) -> bool:
 func production_down(nation: int) -> bool:
 	return active(nation, "cyber")
 
-func training_boost() -> float:
-	return 1.25 if boost_until > clock else 1.0
-
 # ---------------------------------------------------------------- agents
 
 func recruit() -> String:
@@ -119,7 +116,7 @@ func recruit() -> String:
 func ransom(agent_id: int) -> String:
 	for a in agents:
 		if a.id == agent_id and a.status == "captured":
-			var price := int(cfg.ransom)
+			var price := int(float(cfg.ransom) * (1.0 + (world.research.bonus("ransomPct") if world.research else 0.0)))
 			if not world.economy.pay({"money": price}):
 				return "Buying back \"%s\" costs $%d." % [a.name, price]
 			var captor = world.market.ai_nation(int(a.captured_by))
@@ -162,6 +159,8 @@ func success_chance(op_key: String, nation: int) -> float:
 	p -= heat.get(nation, 0.0) * 0.004
 	p += minf(types[nation].size() * 0.02, 0.10)
 	p -= counter_spy(nation)
+	if world.research:
+		p += world.research.bonus("spyPct")  # Covert Ops levels, Cyber Warfare
 	return clampf(p, 0.05, 0.95)
 
 ## Runs `op_key` against `nation` with the given agent (or the first ready one).
@@ -236,8 +235,10 @@ func _succeed(op_key: String, nation: int, role: String) -> String:
 			world.economy.res.money += amount
 			return "Your agent siphoned $%d from %s." % [int(amount), nat_name]
 		"stealTech":
-			boost_until = maxf(boost_until, clock) + 180.0
-			return "Stolen designs from %s: your units train 25%% faster for 3 minutes." % nat_name
+			world.research.add_points(120.0)
+			if nat:
+				nat.tech = maxf(0.0, float(nat.get("tech", 0.0)) - 0.5)
+			return "Research stolen from %s: +120 research points." % nat_name
 		"sabotage":
 			var t = _random_building(nation)
 			if t == null:
@@ -285,8 +286,10 @@ func _succeed(op_key: String, nation: int, role: String) -> String:
 							u.attack_move = false
 					text = "%s of %s eliminated! Their army deals 30%% less damage for 4 minutes; its offensive collapses." % [who, nat_name]
 				"scientist":
-					boost_until = maxf(boost_until, clock) + 240.0
-					text = "%s of %s eliminated! Their designs are yours: training 25%% faster for 4 minutes." % [who, nat_name]
+					world.research.add_points(250.0)
+					if nat:
+						nat.tech = maxf(0.0, float(nat.get("tech", 0.0)) - 2.0)
+					text = "%s of %s eliminated! You seize 250 research points and set their programme back two levels." % [who, nat_name]
 				_:
 					_set_debuff(nation, "spymaster", 300.0)
 					network[nation] = clampf(network[nation] + 20.0, 0.0, 100.0)
@@ -337,12 +340,13 @@ func enemy_attempt(force_outcome := "") -> String:
 	var attacker: int = hostiles[randi() % hostiles.size()]
 	var name: String = d.name_of(attacker)
 	var nat = world.market.ai_nation(attacker)
-	var defence := 0.25 + (0.18 if has_agency() else 0.0) + ready_agents().size() * 0.05
+	var defence: float = 0.25 + (0.18 if has_agency() else 0.0) + ready_agents().size() * 0.05 + (world.research.bonus("counterSpy") if world.research else 0.0)
 	var text := ""
 	if force_outcome == "caught" or (force_outcome == "" and randf() < clampf(defence, 0.1, 0.9)):
 		d.change(0, attacker, -8.0)
 		add_report(attacker, "counterintel", "Enemy agent from %s captured and interrogated" % name, 8.0)
-		text = "COUNTER-INTELLIGENCE: an agent from %s was caught. Interrogation yields intelligence on them." % name
+		world.research.add_points(40.0)
+		text = "COUNTER-INTELLIGENCE: an agent from %s was caught. Interrogation yields intelligence and +40 research." % name
 	else:
 		var r := randf()
 		if r < 0.4:
@@ -352,10 +356,10 @@ func enemy_attempt(force_outcome := "") -> String:
 				nat.money += amount
 			text = "%s agents siphoned $%d from your treasury!" % [name, int(amount)]
 		elif r < 0.7:
-			boost_until = 0.0
+			world.research.add_points(-70.0)
 			if nat:
-				nat.money += 300.0
-			text = "%s stole your military blueprints and sold them on." % name
+				nat.tech = float(nat.get("tech", 0.0)) + 0.5
+			text = "%s stole your research data (-70 research)!" % name
 		else:
 			var t = _random_building(0)
 			if t != null:
@@ -366,9 +370,9 @@ func enemy_attempt(force_outcome := "") -> String:
 	changed.emit()
 	return text
 
-## Intel at 60+ warns of an attack wave before it sets out.
+## Intel at 60+ (or Satellite Recon) warns of an attack wave before it sets out.
 func warn_attack(nation: int) -> void:
-	if intel.get(nation, 0.0) >= 60.0:
+	if intel.get(nation, 0.0) >= 60.0 or (world.research and world.research.bonus("warn") >= 1.0):
 		world.hud.notice("INTELLIGENCE: %s will launch an attack within 30 seconds." % world.diplomacy.name_of(nation))
 
 # ---------------------------------------------------------------- saving

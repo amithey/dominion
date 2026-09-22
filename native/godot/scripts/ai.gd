@@ -69,7 +69,7 @@ func _physics_process(delta: float) -> void:
 func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	var s: float = n.speed
 	var spies: Node = world.espionage
-	n.money += float(cfg.income) * delta * s * (spies.income_mult(n.id) if spies else 1.0)
+	n.money += float(cfg.income) * delta * s * (spies.income_mult(n.id) if spies else 1.0) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0))))
 	var cyber: bool = spies != null and spies.production_down(n.id)
 	n.next_build -= delta
 	n.next_train -= delta

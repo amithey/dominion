@@ -122,7 +122,8 @@ func offer_peace(other: int) -> String:
 func gift(other: int) -> String:
 	if not world.economy.pay({"money": GIFT}):
 		return "A meaningful gift costs $%d." % int(GIFT)
-	change(0, other, 9.0)
+	var corps: bool = world.research != null and world.research.bonus("warmRelations") >= 1.0
+	change(0, other, 18.0 if corps else 9.0)  # the Diplomatic Corps doubles a gift's effect
 	changed.emit()
 	return "Gift sent to %s. Relations improved." % name_of(other)
 
@@ -218,7 +219,7 @@ func tick() -> void:
 		# aggressive government (hard difficulty) keeps souring on its rival
 		# unless treaties hold it back.
 		if not war[0][a]:
-			var drift := -0.3 if rel(0, a) > 0.0 else 0.5
+			var drift := -0.3 if rel(0, a) > 0.0 else (1.2 if world.research and world.research.bonus("warmRelations") >= 1.0 else 0.5)
 			if not (pact[0][a] or nap[0][a] or alliance[0][a]):
 				drift -= aggression * 0.9
 			change(0, a, drift)

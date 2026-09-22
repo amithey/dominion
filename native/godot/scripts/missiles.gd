@@ -11,12 +11,11 @@ extends Node3D
 ## buildings for 35 s. Striking a nation you are at peace with is an act of
 ## war. A nuclear strike leaves a mushroom cloud, wrecks roads across the
 ## blast, and the whole world turns on you (-30 relations with everyone).
-## Requirements stand in for the browser's discoveries: anti-ship missiles
-## need a Shipyard, strategic missiles an Ammo Depot, nukes uranium.
+## As in the browser, anti-ship missiles need Naval Engineering, ballistic and
+## hypersonic missiles Ballistic Technology, nukes the Nuclear Program.
 
 signal changed
 
-const REQUIRES := {"navalEngineering": ["shipyard", "a Shipyard"], "ballisticTech": ["ammoDepot", "an Ammo Depot"]}
 const EMP_SECONDS := 35.0
 
 var world: Node
@@ -53,11 +52,11 @@ func queued() -> int:
 			n += b.queue.filter(func(q): return String(q).begins_with("missile:")).size()
 	return n
 
-## "" when the player may build this type, otherwise why not.
+## "" when the player may build this type, otherwise the discovery it needs.
 func locked(key: String) -> String:
 	var need: String = def_of(key).get("needsDiscovery", "")
-	if REQUIRES.has(need) and world.economy.owned(REQUIRES[need][0]) == 0:
-		return "Needs %s" % REQUIRES[need][1]
+	if need != "" and world.research and not world.research.done(need):
+		return "Needs %s" % world.research.def_of(need).get("name", need)
 	return ""
 
 func silos(owner := 0) -> Array:

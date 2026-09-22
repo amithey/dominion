@@ -3,8 +3,11 @@ extends CanvasLayer
 ## building's details, training buttons and queue) and short notices.
 ## Buttons call back into world.gd; the panel refreshes four times a second.
 
-const BUILD_MENU := ["villageCenter", "farm", "cottage", "housing", "residential", "warehouse", "foodDepot", "workerHouse", "extractor",
-	"market", "port", "intelAgency", "barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo"]
+const BUILD_MENU := {
+	"Economy": ["villageCenter", "cityCenter", "farm", "cottage", "housing", "residential", "workerHouse", "warehouse", "foodDepot", "extractor", "market", "port", "bank", "oilRefinery", "powerPlant"],
+	"Civic & research": ["school", "library", "university", "techPark", "chipFab", "hospital", "cityHall", "tvStation", "policeStation", "courthouse", "intelAgency", "nuclearReactor"],
+	"Military": ["barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo"],
+}
 const RES_LABELS := {"money": "$", "food": "Food", "iron": "Iron", "oil": "Oil", "silicon": "Silicon", "uranium": "Uranium"}
 const GOLD := Color("a29269")
 
@@ -20,6 +23,8 @@ var _notices: VBoxContainer
 var _selected = null      # building entity shown in the panel, or null for the build menu
 var _shown_key := ""
 var _refresh := 0.0
+var build_tab := "Economy"
+var _tabs: HBoxContainer
 
 func setup(world_node: Node, economy_node: Node) -> void:
 	world = world_node
@@ -54,6 +59,20 @@ func setup(world_node: Node, economy_node: Node) -> void:
 	_queue.custom_minimum_size = Vector2(850, 10)
 	_queue.show_percentage = false
 	column.add_child(_queue)
+	_tabs = HBoxContainer.new()
+	column.add_child(_tabs)
+	for tab in BUILD_MENU:
+		var t := Button.new()
+		t.text = tab
+		t.toggle_mode = true
+		t.button_pressed = tab == build_tab
+		t.pressed.connect(func():
+			build_tab = tab
+			for other in _tabs.get_children():
+				other.button_pressed = other.text == tab
+			_shown_key = ""
+			_update_panel())
+		_tabs.add_child(t)
 	_buttons = GridContainer.new()
 	_buttons.columns = 8
 	column.add_child(_buttons)
@@ -107,6 +126,8 @@ func _process(delta: float) -> void:
 	parts.append("Supplied %d/%d" % [settlements.filter(func(b): return b.get("supplied", true)).size(), settlements.size()])
 	if world.territory:
 		parts.append("Land %d" % world.territory.yields(0).cells)
+	if world.research:
+		parts.append("Research %d (+%.1f)" % [int(world.research.points), world.research.rate])
 	if world.missiles and (world.missiles.stored() > 0 or not world.missiles.silos().is_empty()):
 		parts.append("Missiles %d/%d" % [world.missiles.stored(), world.missiles.capacity()])
 	_bar.text = "   ".join(PackedStringArray(parts))
@@ -128,7 +149,8 @@ func show_building(building) -> void:
 	_update_panel()
 
 func _update_panel() -> void:
-	var key: String = "menu" if _selected == null else "%s:%s:%d" % [_selected.key, _selected.built, _selected.queue.size()]
+	var key: String = ("menu:" + build_tab) if _selected == null else "%s:%s:%d" % [_selected.key, _selected.built, _selected.queue.size()]
+	_tabs.visible = _selected == null and transport_text == ""
 	if _selected != null and _selected.key == "missileSilo":
 		key += ":%s" % str(world.missiles.stock)
 	if transport_text != "":
@@ -175,12 +197,12 @@ func _update_panel() -> void:
 	for child in _buttons.get_children():
 		child.queue_free()
 	if _selected == null:
-		for b in BUILD_MENU:
+		for b in BUILD_MENU[build_tab]:
 			var def: Dictionary = world.building_defs.get(b, {})
 			if def.is_empty():
 				continue
 			_add_button("%s\n%s" % [def.name, cost_text(def.cost)], def.cost, def.desc, func(): world.begin_placement(b))
-		for kind in ["road", "rail"]:
+		for kind in (["road", "rail"] if build_tab == "Economy" else []):
 			var price: Dictionary = world.logistics.transport[kind]
 			var cost := {"money": price.money, "iron": price.iron} if float(price.iron) > 0 else {"money": price.money}
 			_add_button("%s\n%s per hex" % ["Road" if kind == "road" else "Railway", cost_text(cost)], cost,
@@ -200,6 +222,9 @@ func _update_panel() -> void:
 			if ms.stock[m] > 0:
 				_add_button("LAUNCH
 %s (%d)" % [ms.def_of(m).name, ms.stock[m]], {}, "Arm it, then click the target on the map.", func(): world.begin_missile(m))
+	elif _selected.built and _selected.key in world.research.LABS:
+		_add_button("Open Research
+(Y)", {}, "Research points from this building flow into the discovery at the head of the queue.", toggle_research)
 	elif _selected.built and _selected.key in ["market", "port", "intelAgency"]:
 		var which: String = "intel" if _selected.key == "intelAgency" else "market"
 		_add_button("Open %s
@@ -209,7 +234,11 @@ func _update_panel() -> void:
 			var def: Dictionary = world.unit_defs.get(u, {})
 			if def.is_empty():
 				continue
-			_add_button("%s\n%s" % [def.name, cost_text(def.cost)], def.cost, def.desc, func(): world.queue_unit(_selected, u))
+			var cost: Dictionary = world.research.unit_cost(u, def.cost) if world.research else def.cost
+			var locked: String = world.research.unit_locked(u) if world.research else ""
+			_add_button("%s\n%s" % [def.name, cost_text(cost) if locked == "" else locked], cost, def.desc, func(): world.queue_unit(_selected, u))
+			if locked != "":
+				_buttons.get_child(_buttons.get_child_count() - 1).set_meta("locked", true)
 	_update_enabled()
 
 func _add_button(text: String, cost: Dictionary, tip: String, action: Callable) -> void:
@@ -248,7 +277,7 @@ func _build_diplomacy_panel() -> void:
 	toggle.pressed.connect(toggle_diplomacy)
 	add_child(toggle)
 	var shortcut := 0
-	for entry in [["Territory (T)", "territory"], ["Intel (I)", "intel"], ["Market (M)", "market"]]:
+	for entry in [["Territory (T)", "territory"], ["Intel (I)", "intel"], ["Market (M)", "market"], ["Research (Y)", "research"]]:
 		var b := Button.new()
 		b.text = entry[0]
 		b.anchor_left = 1.0
@@ -257,7 +286,7 @@ func _build_diplomacy_panel() -> void:
 		b.offset_left = b.offset_right - 120
 		b.offset_top = 90
 		b.offset_bottom = 122
-		b.pressed.connect(toggle_panel.bind(entry[1]))
+		b.pressed.connect(toggle_research if entry[1] == "research" else toggle_panel.bind(entry[1]))
 		add_child(b)
 		shortcut += 1
 	var row := 0
@@ -469,6 +498,8 @@ func _show_side(mode: String) -> void:
 	_side.visible = mode != ""
 	if mode != "":
 		_diplo.visible = false
+		if _rs != null:
+			_rs.visible = false
 	if world.territory:
 		world.territory.set_visible_borders(mode == "territory")
 	refresh_side()
@@ -662,3 +693,210 @@ func _territory_panel() -> void:
 			Color(world.map.nations[id].color).lerp(Color.WHITE, 0.45))
 	var mine: Dictionary = t.yields(0)
 	_label(_side_rows, "Your land yields +$%.2f, +%.2f food and +%.3f iron per second (plains feed, forests and coasts pay, mountains give iron)." % [mine.money, mine.food, mine.iron], Color("dfe6e8"))
+
+# ---------------------------------------------------------------- research screen
+
+var _rs: PanelContainer
+var _rs_head: Label
+var _rs_era: Label
+var _tree: Control
+var _rs_detail: VBoxContainer
+var _rs_queue: VBoxContainer
+var _rs_tracks: HBoxContainer
+var _rs_sel := ""
+var _rs_sig := ""
+var _rs_live: Array = []   # [Control, callable] refreshed every second without rebuilding
+
+func toggle_research() -> void:
+	if _rs == null:
+		_build_research()
+		_rs.visible = false
+	_rs.visible = not _rs.visible
+	if _rs.visible:
+		_show_side("")
+		_diplo.visible = false
+		_rs_sig = ""
+		_tree.layout()
+		_refresh_research()
+
+func _build_research() -> void:
+	_rs = _box(Vector2.ZERO)
+	_rs.anchor_right = 1.0
+	_rs.anchor_bottom = 1.0
+	_rs.offset_left = 16
+	_rs.offset_right = -16
+	_rs.offset_top = 132
+	_rs.offset_bottom = -16
+	var solid: StyleBoxFlat = _rs.get_theme_stylebox("panel").duplicate()
+	solid.bg_color = Color("0e191e")  # opaque: a screen of its own, not an overlay on the battle
+	_rs.add_theme_stylebox_override("panel", solid)
+	var column := VBoxContainer.new()
+	_rs.add_child(column)
+	var top := HBoxContainer.new()
+	column.add_child(top)
+	_rs_head = Label.new()
+	_rs_head.add_theme_font_size_override("font_size", 18)
+	_rs_head.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(_rs_head)
+	var close := Button.new()
+	close.text = "Close (Y)"
+	close.pressed.connect(toggle_research)
+	top.add_child(close)
+	_rs_era = Label.new()
+	_rs_era.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_rs_era.custom_minimum_size = Vector2(1000, 0)  # a width to wrap at before the first layout
+	_rs_era.add_theme_color_override("font_color", Color("c9d2d6"))
+	column.add_child(_rs_era)
+	var split := HBoxContainer.new()
+	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(split)
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	split.add_child(scroll)
+	_tree = preload("res://scripts/research_tree.gd").new()
+	_tree.setup(world.research)
+	_tree.picked.connect(func(key):
+		_rs_sel = key
+		_rs_sig = ""
+		_refresh_research())
+	scroll.add_child(_tree)
+	var side := ScrollContainer.new()
+	side.custom_minimum_size = Vector2(360, 0)
+	side.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	split.add_child(side)
+	var side_col := VBoxContainer.new()
+	side_col.custom_minimum_size = Vector2(344, 0)
+	side.add_child(side_col)
+	_rs_detail = VBoxContainer.new()
+	side_col.add_child(_rs_detail)
+	_rs_queue = VBoxContainer.new()
+	side_col.add_child(_rs_queue)
+	_rs_tracks = HBoxContainer.new()
+	column.add_child(_rs_tracks)
+	world.research.changed.connect(func(): if _rs.visible: _refresh_research())
+
+func _rs_label(parent: Control, text: String, colour := Color("b9c4c8"), size := 14) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size = Vector2(330, 0)
+	l.add_theme_color_override("font_color", colour)
+	l.add_theme_font_size_override("font_size", size)
+	parent.add_child(l)
+	return l
+
+func _refresh_research() -> void:
+	var r: Node = world.research
+	_rs_head.text = "RESEARCH   %d points  (+%.2f/s)   %s   %d/%d discoveries" % [int(r.points), r.rate, r.eras[r.era].name, r.completed_count(), r.discoveries.size()]
+	if r.era + 1 < r.eras.size():
+		var nxt: Dictionary = r.eras[r.era + 1]
+		var parts := PackedStringArray()
+		for q in r.era_requirements(r.era + 1):
+			var pct: bool = q[0] == "Share of the land"
+			parts.append("%s %s %s/%s" % ["[x]" if q[1] >= q[2] else "[ ]", q[0], ("%d%%" % roundi(q[1] * 100)) if pct else str(int(q[1])), ("%d%%" % roundi(q[2] * 100)) if pct else str(int(q[2]))])
+		_rs_era.text = "Next: the %s (%s). %s   Reward: $%d and %d research." % [nxt.name, nxt.desc, "   ".join(parts), int(nxt.reward.get("money", 0)), int(nxt.reward.get("research", 0))]
+	else:
+		_rs_era.text = "Your nation has reached the final era."
+	_tree.queue_redraw()
+	var sig := "%s|%s|%s|%d|%s" % [_rs_sel, str(r.queue), str(r.tracks), r.era, "" if _rs_sel == "" else "%d:%s" % [r.stage_of(_rs_sel), r.blocker(_rs_sel)]]
+	if sig == _rs_sig:
+		for live in _rs_live:
+			live[1].call(live[0])
+		return
+	_rs_sig = sig
+	_rs_live.clear()
+	for box in [_rs_detail, _rs_queue, _rs_tracks]:
+		for child in box.get_children():
+			box.remove_child(child)
+			child.queue_free()
+	_research_detail()
+	_research_queue()
+	_research_tracks()
+
+func _research_detail() -> void:
+	var r: Node = world.research
+	if _rs_sel == "":
+		_rs_label(_rs_detail, "Pick a discovery in the tree. Each one is developed in three stages; points from schools, libraries, universities and tech parks flow into the project at the head of the queue.")
+		return
+	var key := _rs_sel
+	var def: Dictionary = r.def_of(key)
+	_rs_label(_rs_detail, def.name.to_upper(), Color("f1e3b4"), 18)
+	_rs_label(_rs_detail, "%s  ·  %s  ·  %d research" % [r.BRANCH_NAMES[def.branch], r.eras[r.era_of(key)].name, int(def.cost)], Color("9fb3a2"))
+	_rs_label(_rs_detail, r.desc_of(key), Color("dfe6e8"))
+	var needs := PackedStringArray()
+	if def.get("reqDiscovery") != null:
+		needs.append("%s %s" % ["[x]" if r.done(def.reqDiscovery) else "[ ]", r.def_of(def.reqDiscovery).name])
+	if def.get("reqBuilding") != null:
+		needs.append("%s %s (for the %s)" % ["[x]" if world.economy.owned(def.reqBuilding) > 0 else "[ ]", world.building_defs.get(def.reqBuilding, {"name": def.reqBuilding}).name, r.stage_names(key)[1].to_lower()])
+	if not needs.is_empty():
+		_rs_label(_rs_detail, "Requires: " + ", ".join(needs))
+	var stage: int = r.stage_of(key)
+	for s in range(3):
+		var cost: Dictionary = r.stage_cost(key, s)
+		var mark := "done" if s < stage else ("in development" if s == stage else "")
+		_rs_label(_rs_detail, "%d. %s — %d research%s%s" % [s + 1, r.stage_names(key)[s], int(r.stage_points(key, s)), "" if cost.is_empty() else " + " + cost_text(cost), "   (%s)" % mark if mark != "" else ""],
+			Color("8fd18a") if s < stage else (Color("e3c15a") if s == stage else Color("b9c4c8")))
+		if s == stage:
+			var bar := ProgressBar.new()
+			bar.custom_minimum_size = Vector2(330, 10)
+			bar.show_percentage = false
+			bar.max_value = r.stage_points(key, s)
+			bar.value = r.progress[key].work
+			_rs_detail.add_child(bar)
+			_rs_live.append([bar, func(b): b.value = world.research.progress[key].work])
+	_rs_label(_rs_detail, "A finished prototype (stage 2) gives half the effect; the last stage all of it and any unlocks.", Color("8a979c"), 12)
+	if stage < 3:
+		var row := HBoxContainer.new()
+		_rs_detail.add_child(row)
+		var b := Button.new()
+		if key in r.queue:
+			b.text = "Remove from queue"
+			b.pressed.connect(func(): r.dequeue(key))
+		else:
+			b.text = "Research" if r.queue.is_empty() else "Add to queue"
+			var why: String = r.blocker(key)
+			b.disabled = why != "" and not why.contains(" needs a ")
+			b.tooltip_text = why
+			b.pressed.connect(func(): _say(r.enqueue(key)))
+		row.add_child(b)
+		if key in r.queue and r.queue[0] != key:
+			var front := Button.new()
+			front.text = "Do this first"
+			front.pressed.connect(func():
+				r.queue.erase(key)
+				r.queue.push_front(key)
+				r.changed.emit())
+			row.add_child(front)
+
+func _research_queue() -> void:
+	var r: Node = world.research
+	_rs_label(_rs_queue, "QUEUE (%d/%d)" % [r.queue.size(), r.QUEUE_MAX], Color("f1e3b4"), 16)
+	if r.queue.is_empty():
+		_rs_label(_rs_queue, "Nothing in development: research points are piling up.", Color("e8a86f"))
+	for item in r.queue:
+		var row := HBoxContainer.new()
+		_rs_queue.add_child(row)
+		var name: String = r.tracks_cfg[item.substr(6)].name if item.begins_with("track:") else r.def_of(item).name
+		var l := _rs_label(row, "%s — %s" % [name, r.status_of(item)], Color("dfe6e8"))
+		l.custom_minimum_size = Vector2(290, 0)
+		_rs_live.append([l, func(label): label.text = "%s — %s" % [name, world.research.status_of(item)]])
+		var x := Button.new()
+		x.text = "x"
+		x.pressed.connect(func(): r.dequeue(item))
+		row.add_child(x)
+
+func _research_tracks() -> void:
+	var r: Node = world.research
+	for key in r.tracks_cfg:
+		var t: Dictionary = r.tracks_cfg[key]
+		var b := Button.new()
+		var level: int = r.tracks[key]
+		var why: String = r.track_blocker(key)
+		b.text = "%s %d/%d\n%s" % [t.name, level, int(t.max), "Maxed" if why == "Maxed" else ("Level %d: %d research" % [level + 1, int(r.track_cost(key))] if why == "" else why)]
+		b.tooltip_text = t.desc
+		b.disabled = why != "" or ("track:" + key) in r.queue
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		b.custom_minimum_size = Vector2(250, 44)
+		b.pressed.connect(func(): _say(r.enqueue("track:" + key)))
+		_rs_tracks.add_child(b)

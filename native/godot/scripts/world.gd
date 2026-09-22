@@ -35,6 +35,21 @@ const BUILDING_MODELS := {
 	"foodDepot": "res://assets/SiloHouse.glb",
 	"workerHouse": "res://assets/House_B.glb",
 	"villageCenter": "res://assets/House_C.glb",
+	"school": "res://assets/building-b.glb",
+	"library": "res://assets/House_D.glb",
+	"university": "res://assets/building-c.glb",
+	"hospital": "res://assets/building-g.glb",
+	"cityHall": "res://assets/downtown/Building_Medium_2_001.gltf",
+	"cityCenter": "res://assets/downtown/Building_Medium_2_001.gltf",
+	"bank": "res://assets/building-e.glb",
+	"courthouse": "res://assets/building-c.glb",
+	"policeStation": "res://assets/building-d.glb",
+	"tvStation": "res://assets/building-b.glb",
+	"techPark": "res://assets/building-g.glb",
+	"chipFab": "res://assets/building-h.glb",
+	"oilRefinery": "res://assets/building-f.glb",
+	"nuclearReactor": "res://assets/building-h.glb",
+	"powerPlant": "res://assets/building-f.glb",
 }
 const BUILDING_SIZE := {"hq": 10.0, "barracks": 9.0, "tankFactory": 9.5, "warehouse": 9.5, "farm": 7.5, "cottage": 5.0, "extractor": 6.0}
 # A district fills its hex; only its central building blocks movement.
@@ -156,6 +171,7 @@ var market: Node          # market.gd: world market and trade routes
 var espionage: Node       # espionage.gd: agents and covert operations
 var territory: Node3D     # territory.gd: gradual control of 40 m cells
 var missiles: Node3D      # missiles.gd: silo production, launches, impacts
+var research: Node        # research.gd: discoveries in stages, tracks, eras
 var game_time := 0.0      # match seconds (EMP and other timed effects)
 var missile_aim := ""     # missile type waiting for a target click
 var cam_lift := 0.0       # raises the camera's look-at point above the ground (captures)
@@ -283,6 +299,9 @@ func _ready() -> void:
 	territory = preload("res://scripts/territory.gd").new()
 	add_child(territory)
 	territory.setup(self, map.territory)
+	research = preload("res://scripts/research.gd").new()
+	add_child(research)
+	research.setup(self, map.research)
 	if not interactive and bench_units == 0 and not ("--capture-views" in OS.get_cmdline_user_args() or "--capture-menu" in OS.get_cmdline_user_args() or "--menu-test" in OS.get_cmdline_user_args() or "--capture-battle" in OS.get_cmdline_user_args() or "--economy-test" in OS.get_cmdline_user_args() or "--capture-economy" in OS.get_cmdline_user_args() or "--nav-test" in OS.get_cmdline_user_args() or "--logistics-test" in OS.get_cmdline_user_args() or "--capture-logistics" in OS.get_cmdline_user_args()):
 		ai.setup(self, map.ai, difficulty, ai_speed)
 	menu = preload("res://scripts/menu.gd").new()
@@ -338,6 +357,8 @@ func _ready() -> void:
 		await save_test()
 	elif "--air-sea-test" in args or "--capture-air-sea" in args:
 		await air_sea_test("--capture-air-sea" in args)
+	elif "--research-test" in args or "--capture-research" in args:
+		await research_test("--capture-research" in args)
 	elif "--capture-craft" in args:
 		await capture_craft()
 	elif "--capture-vehicles" in args:
@@ -1065,6 +1086,8 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 			if clip != "":
 				unit.player.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
 	place_on_ground(unit, at)
+	if research:
+		research.equip(unit)  # discoveries and rival tech set health, range and speed
 	units.append(unit)
 	animate(unit, false)
 	return unit
@@ -1357,6 +1380,8 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 		"engine": audio.add_engine(node), "orbit": at,
 	}
 	place_on_ground(unit, at)
+	if research:
+		research.equip(unit)
 	units.append(unit)
 	return unit
 
@@ -1783,7 +1808,8 @@ func update_construction(delta: float) -> void:
 				place_on_ground(u, u.node.position)
 		b.builders = count
 		if count > 0:
-			b.progress = minf(1.0, b.progress + delta / maxf(float(b.def.buildTime), 1.0) * (1.0 + 0.5 * (count - 1)))
+			var skill: float = 1.0 + (research.bonus("prodPct") + research.bonus("buildPct") if research and b.owner == 0 else 0.0)
+			b.progress = minf(1.0, b.progress + delta / maxf(float(b.def.buildTime), 1.0) * (1.0 + 0.5 * (count - 1)) * skill)
 			b.model.scale.y = b.full_scale_y * lerpf(0.06, 1.0, b.progress)
 			if randf() < delta * 1.5:
 				effects.impact(at + Vector3(randf_range(-3, 3), 0.3, randf_range(-3, 3)))
@@ -1844,8 +1870,13 @@ func queue_unit(b: Dictionary, key: String) -> void:
 	if economy.pop_used + queued_pop + int(def.get("pop", 1)) > economy.pop_cap:
 		hud.notice("Army capacity reached: build Housing Blocks")
 		return
-	if not economy.pay(def.cost):
-		hud.notice("Not enough %s" % economy.missing(def.cost))
+	var locked: String = research.unit_locked(key) if research else ""
+	if locked != "":
+		hud.notice("%s: %s." % [def.name, locked.to_lower()])
+		return
+	var cost: Dictionary = research.unit_cost(key, def.cost) if research else def.cost
+	if not economy.pay(cost):
+		hud.notice("Not enough %s" % economy.missing(cost))
 		return
 	b.queue.append(key)
 
@@ -1858,8 +1889,8 @@ func update_training(delta: float) -> void:
 		if b.owner > 0 and espionage and espionage.production_down(b.owner):
 			continue  # a cyber attack stopped this nation's factories
 		var rail: float = 1.0 + (logistics.rail_bonus if b.get("rail_supplied", false) else 0.0)
-		if b.owner == 0 and espionage:
-			rail *= espionage.training_boost()
+		if b.owner == 0 and research:
+			rail *= 1.0 + research.bonus("prodPct")  # Industrialization, Fusion Power
 		var first: String = b.queue[0]
 		if first.begins_with("missile:"):
 			b.queue_prog += delta * rail / maxf(missiles.build_time(first.substr(8)), 0.5)
@@ -2271,6 +2302,128 @@ func capture_infantry() -> void:
 	await capture_view("res://build/infantry-dead.png", spot + Vector3(0, 0, -2), 12.0, 0.45, 5)
 	get_tree().quit()
 
+## Research in fast time: stages, facilities, half and full effects, eras,
+## unit locks, tracks, rival research, espionage and saving.
+func research_test(capture: bool) -> void:
+	for i in range(20):
+		await get_tree().process_frame
+	var r: Node = research
+	var home: Vector3 = buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0].root.position
+	for key in ["money", "iron", "oil", "silicon", "uranium"]:
+		economy.res[key] = 5000.0
+	var place := func(key: String) -> Dictionary:
+		var at = test_site(key, home)
+		var b := place_building(key, at, 0, true)
+		close_navigation(at, DISTRICT_NAV_SIZE)
+		economy.recalculate()
+		return b
+	# Research buildings raise the rate.
+	r.tick(1.0)
+	var base_rate: float = r.rate
+	place.call("school")
+	place.call("university")
+	r.tick(1.0)
+	var labs_ok: bool = r.rate > base_rate + 1.0
+	# Three stages, never faster than 20 s each, half the effect after the prototype.
+	r.points = 5000.0
+	r.enqueue("fertilizers")
+	var stage_times := []
+	for t in range(120):
+		var before: int = r.stage_of("fertilizers")
+		r.tick(1.0)
+		if r.stage_of("fertilizers") != before:
+			stage_times.append(t + 1)
+		if r.done("fertilizers"):
+			break
+	var paced: bool = stage_times.size() == 3 and stage_times[0] >= 20 and stage_times[1] - stage_times[0] >= 20
+	var full_food: float = r.bonus("foodPct")
+	var stages_ok: bool = paced and r.done("fertilizers") and absf(full_food - 0.5) < 0.01 and r.queue.is_empty()
+	print("labs raise rate %s (%.2f -> %.2f); fertilizer stages at %s s, food bonus %.2f" % [labs_ok, base_rate, r.rate, str(stage_times), full_food])
+	# The Regional Era needs a village and 8 buildings.
+	var locked_before: String = r.enqueue("compositeArmor")
+	var money_before: float = economy.res.money
+	var village_at: Vector3 = home + Vector3(95, 0, 0)
+	for a in range(16):
+		var p: Vector3 = home + Vector3(cos(a * TAU / 16.0), 0, sin(a * TAU / 16.0)) * 95.0
+		if site_problem("villageCenter", snap_to_hex(p), 0) == "":
+			village_at = snap_to_hex(p)
+			break
+	place_building("villageCenter", village_at, 0, true)
+	for k in ["farm", "housing", "warehouse", "library"]:
+		place.call(k)
+	r.tick(1.0)
+	var era_ok: bool = r.era >= 1 and locked_before != "" and economy.res.money > money_before
+	print("before the era: [%s]; era now %s, reward paid %s" % [locked_before, r.eras[r.era].name, economy.res.money > money_before])
+	# A prototype needs its facility: Global Logistics waits for a Market.
+	r.points = 5000.0
+	r.enqueue("globalLogistics")
+	for t in range(40):
+		r.tick(1.0)
+	var waited: bool = r.stage_of("globalLogistics") == 1 and r.blocker("globalLogistics").contains("Market")
+	place.call("market")
+	for t in range(80):
+		r.tick(1.0)
+	waited = waited and r.done("globalLogistics") and r.bonus("tradeRoutes") >= 1.0
+	r.enqueue("compositeArmor")
+	for t in range(80):
+		r.tick(1.0)
+	var tank := spawn_unit("tank", land_point(home, 30.0), 0)
+	var armor_ok: bool = waited and r.done("compositeArmor") and absf(tank.max_hp - float(unit_defs.tank.hp) * 1.2) < 1.0
+	print("prototype waited for the market %s, tank hp %d of %d base" % [waited, int(tank.max_hp), int(unit_defs.tank.hp)])
+	# Warships and missiles are locked until their discovery.
+	var ship_locked: bool = r.unit_locked("destroyer") != "" and missiles.locked("ballistic") != ""
+	r.progress.navalEngineering.stage = 3
+	r._recompute()
+	var ship_open: bool = r.unit_locked("destroyer") == "" and missiles.locked("antiShip") == ""
+	# A research track level.
+	r.points = 1000.0
+	r.enqueue("track:economy")
+	for t in range(40):
+		r.tick(1.0)
+	var track_ok: bool = r.tracks.economy == 1 and r.bonus("incomePct") >= 0.12
+	# Rivals research; stolen research moves points.
+	for i in range(40):
+		r.ai_tick()
+	var rival: Dictionary = ai.nations[0]
+	var rival_ok: bool = r.ai_tech(rival.id) >= 1.0 and r.damage_mult({"owner": rival.id}) > 1.0
+	place.call("intelAgency")
+	espionage.recruit()
+	r.points = 0.0
+	espionage.run("stealTech", rival.id, "", -1, 0.0)
+	var stolen_ok: bool = r.points >= 119.0
+	print("ships locked %s then open %s, economics level %d, rival tech %d, stolen %d points" % [ship_locked, ship_open, r.tracks.economy, int(r.ai_tech(rival.id)), int(r.points)])
+	if capture:
+		r.points = 900.0
+		r.enqueue("irrigation")
+		r.enqueue("navalEngineering")
+		r.enqueue("advancedLogistics")
+		for t in range(12):
+			r.tick(1.0)
+		hud.toggle_research()
+		hud._rs_sel = "irrigation"
+		hud._tree.selected = "irrigation"
+		hud._rs_sig = ""
+		hud._refresh_research()
+		await capture_view("res://build/research-tree.png", home, 120.0, 0.9, 30)
+		hud.toggle_research()
+		select_building(buildings.filter(func(b): return b.key == "university")[0])
+		await capture_view("res://build/research-university.png", buildings.filter(func(b): return b.key == "university")[0].root.position, 60.0, 0.7, 30)
+	# Saving keeps it all.
+	r.enqueue("publicEducation")
+	saves.save("researchtest")
+	var saved := {"era": r.era, "points": int(r.points), "queue": r.queue.duplicate(), "tracks": r.tracks.duplicate(), "fert": r.stage_of("fertilizers")}
+	r.era = 0
+	r.points = 0.0
+	r.queue.clear()
+	r.tracks.economy = 0
+	saves.load_slot("researchtest")
+	DirAccess.remove_absolute(saves.path_of("researchtest"))
+	var save_ok: bool = r.era == saved.era and int(r.points) == saved.points and r.queue == saved.queue and r.tracks.economy == saved.tracks.economy and r.stage_of("fertilizers") == 3
+	print("labs %s, stages %s, era %s, facility %s, locks %s, track %s, rivals %s, stolen %s, save %s" % [labs_ok, stages_ok, era_ok, armor_ok, ship_locked and ship_open, track_ok, rival_ok, stolen_ok, save_ok])
+	var ok: bool = labs_ok and stages_ok and era_ok and armor_ok and ship_locked and ship_open and track_ok and rival_ok and stolen_ok and save_ok
+	print("RESEARCH_TEST %s" % ("PASS" if ok else "FAIL"))
+	get_tree().quit(0 if ok else 1)
+
 ## Close-ups of every warship at sea and every aircraft in the air.
 func capture_craft() -> void:
 	var sea = water_near(start, 320)
@@ -2507,6 +2660,8 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 			return "Too close to %s" % b.def.name
 		if b.owner == owner and b.built and gap < float(b.def.get("buildRadius", 0)):
 			in_district = true
+	if def.get("unique", false) and buildings.any(func(b): return b.owner == owner and b.key == key and not b.dead):
+		return "Only one %s per nation" % def.name
 	if def.get("settlement") != null:
 		# A new settlement stands apart from every other one and outside rivals' land.
 		for b in buildings:
@@ -2976,6 +3131,8 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 		ai.declare_war(unit.owner, true)
 	if espionage:
 		amount *= espionage.damage_mult(source.owner)  # a dead general blunts an army
+	if research:
+		amount *= research.damage_mult(source) * research.armor_mult(unit)
 	unit.hp -= amount
 	if unit.get("is_building", false):
 		if unit.hp <= 0.0:
@@ -3369,6 +3526,8 @@ func _input(event: InputEvent) -> void:
 		hud.toggle_panel("intel")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_T:
 		hud.toggle_panel("territory")
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Y:
+		hud.toggle_research()
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F5:
 		saves.save("quicksave")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F9:

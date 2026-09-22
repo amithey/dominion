@@ -113,7 +113,8 @@ func status(i: int) -> String:
 
 ## Per-second yields of the land `nation` holds.
 func yields(nation: int) -> Dictionary:
-	var out := {"money": 0.0, "food": 0.0, "iron": 0.0, "cells": 0, "sovereign": 0, "integrated": 0, "occupied": 0, "contested": 0}
+	var out := {"money": 0.0, "food": 0.0, "iron": 0.0, "oil": 0.0, "cells": 0, "sovereign": 0, "integrated": 0, "occupied": 0, "contested": 0}
+	var r: Node = world.research if nation == 0 else null
 	for i in range(owner_of.size()):
 		if owner_of[i] != nation:
 			continue
@@ -126,11 +127,14 @@ func yields(nation: int) -> Dictionary:
 			Terrain.PLAINS:
 				out.food += 0.020 * m
 			Terrain.FOREST:
-				out.money += 0.030 * m
+				out.money += 0.030 * m * (1.0 + (r.bonus("forestPct") if r else 0.0))
 			Terrain.MOUNTAIN:
 				out.iron += 0.008 * m
 			Terrain.COAST:
 				out.money += 0.040 * m
+				if r:
+					out.food += 0.03 * m * r.bonus("coastFood")      # Aquaculture
+					out.oil += 0.015 * m * r.bonus("coastOil")       # Offshore Drilling
 	return out
 
 func land_cells() -> int:

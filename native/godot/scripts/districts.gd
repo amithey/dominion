@@ -11,6 +11,9 @@ extends RefCounted
 
 const STYLE := {
 	"hq": 0, "villageCenter": 0, "cityCenter": 0, "market": 0, "intelAgency": 0,
+	"school": 0, "library": 0, "university": 0, "hospital": 0, "cityHall": 0, "tvStation": 0, "policeStation": 0,
+	"courthouse": 0, "bank": 0, "techPark": 0,
+	"chipFab": 2, "nuclearReactor": 2, "solarFarm": 2,
 	"cottage": 1, "housing": 1, "residential": 1, "workerHouse": 1, "apartments": 1, "luxuryVillas": 1,
 	"warehouse": 2, "foodDepot": 2, "tankFactory": 2, "powerPlant": 2, "oilRefinery": 2,
 	"farm": 3,
@@ -427,6 +430,72 @@ func landmarks(key: String, st: SurfaceTool, rng: RandomNumberGenerator) -> void
 			for k in [0, 1]:
 				var p := slot(k, 8.2)
 				box(st, Vector3(3.0, 1.2, 0.5), p, deg_to_rad(-(30.0 + 60.0 * k)) + PI * 0.5, Color("e2c23a"))  # hazard barrier
+		"nuclearReactor":
+			# A hyperbolic cooling tower and the containment dome.
+			var tower := slot(4, 6.6)
+			for i in range(8):
+				var t := i / 7.0
+				var r0 := lerpf(3.0, 1.9, sin(t * PI * 0.5)) if t < 0.7 else lerpf(1.95, 2.2, (t - 0.7) / 0.3)
+				cylinder(st, r0, 1.35, tower + Vector3(0, i * 1.3, 0), Color("c9c7c0").darkened(0.04 * (i % 2)), 18)
+			var dome := SphereMesh.new()
+			dome.radius = 2.4
+			dome.height = 2.4
+			dome.radial_segments = 16
+			dome.rings = 6
+			cylinder(st, 2.4, 2.2, slot(1, 6.0), Color("b8b6ae"), 18)
+			shape(st, dome, Transform3D(Basis(), slot(1, 6.0) + Vector3(0, 2.2, 0)), Color("d4d2ca"))
+			fence(st, Color("5d6264"), 2.0)
+		"oilRefinery":
+			# Distillation columns, pipe racks and a flare stack.
+			for i in range(3):
+				cylinder(st, 0.6 - i * 0.1, 7.0 + i * 1.5, slot(5, 5.6) + Vector3(i * 1.6 - 1.6, 0, 0), Color("a9aca8"), 12)
+			box(st, Vector3(6.0, 0.25, 0.4), slot(5, 5.6) + Vector3(0, 3.5, 1.0), 0.0, Color("5d6264"))
+			cylinder(st, 0.25, 11.0, slot(2, 7.6), Color("8a3a2a"), 8)
+			cylinder(st, 0.5, 0.6, slot(2, 7.6) + Vector3(0, 11.0, 0), Color("ffb347"), 8)
+		"powerPlant":
+			for i in range(2):
+				cylinder(st, 0.8, 14.0, slot(4, 6.0) + Vector3(i * 2.2 - 1.1, 0, 0), Color("9a9790"), 12)
+				cylinder(st, 0.85, 0.8, slot(4, 6.0) + Vector3(i * 2.2 - 1.1, 12.0, 0), Color("b43a2e"), 12)
+		"hospital":
+			# A rooftop-style helipad on the ground with a red cross beside it.
+			var pad := slot(3, 7.0)
+			cylinder(st, 2.4, 0.08, pad, Color("5a5d5c"), 20)
+			box(st, Vector3(0.3, 0.05, 2.2), pad + Vector3(0, 0.08, 0), 0.0, Color("e8e8e0"))
+			box(st, Vector3(2.2, 0.05, 0.3), pad + Vector3(0, 0.08, 0), 0.0, Color("e8e8e0"))
+			var sign := slot(0, 8.2)
+			box(st, Vector3(0.5, 1.8, 0.2), sign, 0.0, Color("c8322b"))
+			box(st, Vector3(1.6, 0.5, 0.2), sign + Vector3(0, 0.65, 0), 0.0, Color("c8322b"))
+		"university":
+			# A clock tower on the quad.
+			var tower := slot(1, 7.4)
+			box(st, Vector3(1.8, 9.0, 1.8), tower, 0.0, Color("8a6a52"))
+			box(st, Vector3(2.0, 0.3, 2.0), tower + Vector3(0, 9.0, 0), 0.0, Color("6a5040"))
+			box(st, Vector3(1.9, 1.0, 1.9), tower + Vector3(0, 7.2, 0), 0.0, Color("e8e2cf"))
+			var spire := CylinderMesh.new()
+			spire.top_radius = 0.02
+			spire.bottom_radius = 1.1
+			spire.height = 2.6
+			spire.radial_segments = 4
+			spire.rings = 1
+			shape(st, spire, Transform3D(Basis(Vector3.UP, PI * 0.25), tower + Vector3(0, 10.6, 0)), Color("3e5a4c"))
+		"tvStation":
+			var mast := slot(4, 7.4)
+			cylinder(st, 0.35, 22.0, mast, Color("c8c8c0"), 6)
+			for h in [6.0, 12.0, 18.0]:
+				box(st, Vector3(2.4, 0.12, 0.12), mast + Vector3(0, h, 0), 0.0, Color("c83a2e"))
+			cylinder(st, 0.2, 0.4, mast + Vector3(0, 22.0, 0), Color("ff4a3a"), 6)
+		"school":
+			# A small sports field with white lines.
+			var field := slot(3, 7.0)
+			box(st, Vector3(5.5, 0.05, 3.4), field, deg_to_rad(-210.0), Color("4f7a3a"))
+			box(st, Vector3(5.3, 0.06, 0.08), field, deg_to_rad(-210.0), Color("e8e8e0"))
+			for side in [-1.0, 1.0]:
+				box(st, Vector3(0.08, 1.2, 1.2), field + Basis(Vector3.UP, deg_to_rad(-210.0)) * Vector3(side * 2.6, 0, 0), deg_to_rad(-210.0), Color("e8e8e0"))
+		"techPark", "chipFab":
+			# Glass pavilions and a rooftop solar array.
+			for k in [1, 4]:
+				box(st, Vector3(3.2, 2.6, 3.2), slot(k, 7.0), 0.3, Color("5f8aa0"))
+				box(st, Vector3(3.4, 0.15, 3.4), slot(k, 7.0) + Vector3(0, 2.6, 0), 0.3, Color("2f3a40"))
 		"ammoDepot":
 			# Earth-covered magazines with blast doors.
 			for k in [0, 2, 4]:

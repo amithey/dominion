@@ -75,6 +75,7 @@ func capture() -> Dictionary:
 		"game_time": world.game_time,
 		"market": world.market.capture(), "espionage": world.espionage.capture(),
 		"missiles": world.missiles.capture(), "territory": world.territory.capture(),
+		"research": world.research.capture(),
 	}
 
 func save(slot: String) -> bool:
@@ -174,3 +175,4 @@ func restore(data: Dictionary) -> void:
 	world.espionage.restore(data.get("espionage", {}))
 	world.missiles.restore(data.get("missiles", {}))
 	world.territory.restore(data.get("territory", {}))
+	world.research.restore(data.get("research", {}))
