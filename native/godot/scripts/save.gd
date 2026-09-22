@@ -1,6 +1,6 @@
 extends Node
 ## Saving and loading a match as JSON in user://saves/ (on Windows:
-## %APPDATA%/Godot/app_userdata/DOMINION — Desktop Prototype/saves).
+## %APPDATA%/DOMINION/saves).
 ## A save records what the map file cannot: the economy, every building and
 ## unit with its health and orders, construction and training progress, the
 ## road and rail network, diplomacy, AI state, the camera, and the market,
@@ -17,6 +17,26 @@ var _autosave := AUTOSAVE_EVERY
 func setup(world_node: Node) -> void:
 	world = world_node
 	DirAccess.make_dir_recursive_absolute("user://saves")
+	migrate_prototype_saves()
+
+## Saves and settings from before the game had its own folder (the prototype
+## kept them under Godot's app_userdata) are copied over once.
+func migrate_prototype_saves() -> void:
+	var old := OS.get_data_dir().path_join("Godot/app_userdata/DOMINION — Desktop Prototype")
+	if not DirAccess.dir_exists_absolute(old) or FileAccess.file_exists("user://.migrated"):
+		return
+	var moved := 0
+	var dir := DirAccess.open(old.path_join("saves"))
+	if dir != null:
+		for file in dir.get_files():
+			if file.ends_with(".json") and not FileAccess.file_exists("user://saves/" + file):
+				DirAccess.copy_absolute(old.path_join("saves").path_join(file), ProjectSettings.globalize_path("user://saves/" + file))
+				moved += 1
+	if FileAccess.file_exists(old.path_join("settings.cfg")) and not FileAccess.file_exists("user://settings.cfg"):
+		DirAccess.copy_absolute(old.path_join("settings.cfg"), ProjectSettings.globalize_path("user://settings.cfg"))
+	var mark := FileAccess.open("user://.migrated", FileAccess.WRITE)
+	if mark:
+		mark.store_string("%d saves copied from %s" % [moved, old])
 
 func path_of(slot: String) -> String:
 	return "user://saves/%s.json" % slot

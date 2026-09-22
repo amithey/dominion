@@ -2,8 +2,18 @@
 config_version=5
 
 [application]
-config/name="DOMINION — Desktop Prototype"
+config/name="DOMINION"
+config/description="A real-time strategy game of nations, cities, supply lines, research and war."
+config/version="0.9.0"
 run/main_scene="res://world.tscn"
+config/icon="res://icon.png"
+config/windows_native_icon="res://icon.ico"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="DOMINION"
+boot_splash/bg_color=Color(0.0667, 0.1216, 0.1451, 1)
+boot_splash/image="res://icon.png"
+boot_splash/fullsize=false
+boot_splash/use_filter=true
 
 [display]
 window/size/viewport_width=1280

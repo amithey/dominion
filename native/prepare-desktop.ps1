@@ -23,7 +23,7 @@ Copy-Assets '.' @(
     'assets\models\kenney-suburban\House_C.glb',
     'assets\models\quaternius-farm\BigBarn.glb',
     'assets\models\quaternius-tanks\Tank.fbx',
-    'assets\models	hree\Soldier.glb',
+    'assets\models\three\Soldier.glb',
     'assets\textures\terrain\grass_color.jpg'
 )
 Copy-Assets 'Textures' @('assets\models\kenney-city\Textures\colormap.png')

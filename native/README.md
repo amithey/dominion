@@ -126,7 +126,7 @@ It uses the Forward+ renderer:
   progress): Resume, Save, Load, Settings, Quit to Main Menu, Quit to Desktop. Any
   test or benchmark flag skips the menu.
 - Saving (save.gd): F5 or the Save button writes a JSON save to user://saves
-  (%APPDATA%/Godot/app_userdata/DOMINION — Desktop Prototype/saves), F9 or Load
+  (%APPDATA%/DOMINION/saves; saves from the prototype's old folder are copied over once), F9 or Load
   restores it, and the game autosaves every three minutes. A save holds the economy,
   every building and unit with health, orders, construction and training progress,
   the road and rail network with damage, diplomacy, AI state and the camera; the
@@ -224,6 +224,27 @@ never through water. Regenerate sounds with
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 
 Not yet ported: Steam integration.
+
+## Windows installer
+
+`powershell -ExecutionPolicy Bypass -File native/build-windows.ps1 [-Version 0.9.0]` builds the
+release: it copies the art into the project, exports `dist/DOMINION.exe` (a single file with the
+game packed inside) and wraps it in `dist/DOMINION-Setup-<version>.exe` (about 70 MB). The version
+defaults to `config/version` in `project.godot`. `dist/` is not committed.
+
+The installer (Inno Setup script `installer/dominion.iss`) installs per user without an
+administrator prompt (or for all users, if chosen), adds a Start menu entry and an optional
+desktop shortcut, registers in Apps & features with an uninstaller, and ships `LICENSE.txt` and
+`THIRD-PARTY-NOTICES.txt`. Saved games and settings live in `%APPDATA%/DOMINION` and survive
+uninstalling and upgrading. It needs Windows 10 or later, 64-bit.
+
+Requirements on the build machine: the Godot 4.7.2 Windows release export template (for the
+portable Godot, in `.local-tools/godot/editor_data/export_templates/4.7.2.stable/`; only
+`windows_release_x86_64.exe` and `version.txt` from the official
+`Godot_v4.7.2-stable_export_templates.tpz` are needed) and Inno Setup 6
+(`winget install JRSoftware.InnoSetup`). The build is not code-signed yet, so Windows SmartScreen
+warns on first run; signing is part of the Steam release work. The exported game runs the same
+test flags as the editor: `dist/DOMINION.exe --headless -- --systems-test`.
 
 ## Refreshing the map data
 
