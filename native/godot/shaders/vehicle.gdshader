@@ -15,7 +15,8 @@ instance uniform float ground_y = 0.0;  // terrain height under this vehicle, se
 uniform float metal = 0.0;              // 1 for tracks, wheels and fittings
 // Procedural vehicles (armor.gd) are one mesh per moving part, so each vertex
 // carries its own finish: COLOR.r = shade / 2, COLOR.g = metal, COLOR.b = 1
-// for the nation's markings, 0.5 for glass and lamps.
+// for the nation's markings, 0.5 for glass and lamps, 0.25 for
+// the red antifouling below a ship's waterline.
 uniform bool vertex_tone = false;
 uniform vec3 team : source_color = vec3(0.2, 0.4, 0.9);
 
@@ -49,8 +50,10 @@ void fragment() {
 	vec3 base = mix(paint * s, vec3(0.13, 0.13, 0.12), m);
 	if (vertex_tone && tone.b > 0.75) {
 		base = team * 0.8;
-	} else if (vertex_tone && tone.b > 0.25) {
+	} else if (vertex_tone && tone.b > 0.4) {
 		base = vec3(0.05, 0.07, 0.08);  // vision blocks and lenses
+	} else if (vertex_tone && tone.b > 0.15) {
+		base = vec3(0.32, 0.1, 0.08) * s;  // antifouling
 	}
 	// Mottled weathering: faded and darker patches, like sun-bleached paint.
 	vec3 col = base * mix(0.8, 1.06, grime) * mix(0.94, 1.03, speckle);
@@ -58,7 +61,7 @@ void fragment() {
 	float dust = (1.0 - smoothstep(dust_height * 0.35, dust_height, above_ground)) * smoothstep(0.35, 0.65, grime + speckle * 0.3);
 	col = mix(col, dust_color, dust * 0.7);
 	ALBEDO = col;
-	bool glass = vertex_tone && tone.b > 0.25 && tone.b < 0.75;
+	bool glass = vertex_tone && tone.b > 0.4 && tone.b < 0.75;
 	ROUGHNESS = glass ? 0.12 : mix(mix(0.72, 0.9, grime), 0.55, m) + dust * 0.1;
 	METALLIC = glass ? 0.6 : mix(0.08, 0.55, m) * (1.0 - dust);
 	SPECULAR = 0.4;

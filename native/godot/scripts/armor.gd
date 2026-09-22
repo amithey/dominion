@@ -124,6 +124,51 @@ func block(st: SurfaceTool, size: Vector3, at: Vector3, colour: Color, taper := 
 		at + Vector3(-tw, h, l - slope), at + Vector3(tw, h, l - slope), at + Vector3(tw, h, -l + back_slope), at + Vector3(-tw, h, -l + back_slope),
 	], colour, xf)
 
+## A smooth body skinned over cross-sections (rings with the same number of
+## points, in order along the body): ship hulls, fuselages, submarine hulls.
+## `paint` picks each panel's finish from its centre, so one loft can change
+## colour at a waterline. Open rings (a hull's U section) leave the top open.
+func loft(st: SurfaceTool, rings: Array, closed: bool, paint: Callable) -> void:
+	for i in range(rings.size() - 1):
+		var r0: PackedVector3Array = rings[i]
+		var r1: PackedVector3Array = rings[i + 1]
+		var centre := Vector3.ZERO
+		for v in r0:
+			centre += v
+		for v in r1:
+			centre += v
+		centre /= r0.size() + r1.size()
+		var n := r0.size()
+		for j in range(n if closed else n - 1):
+			var k := (j + 1) % n
+			var a := r0[j]
+			var b := r0[k]
+			var c := r1[k]
+			var d := r1[j]
+			var mid := (a + b + c + d) * 0.25
+			var out := mid - centre
+			out.z = 0.0 if absf(out.x) + absf(out.y) > 0.001 else out.z
+			var colour: Color = paint.call(mid)
+			_tri(st, a, b, c, out, colour)
+			_tri(st, a, c, d, out, colour)
+
+## Closes a ring with a fan, facing `outward`.
+func cap(st: SurfaceTool, ring: PackedVector3Array, outward: Vector3, colour: Color) -> void:
+	var centre := Vector3.ZERO
+	for v in ring:
+		centre += v
+	centre /= ring.size()
+	for j in range(ring.size()):
+		_tri(st, centre, ring[j], ring[(j + 1) % ring.size()], outward, colour)
+
+## An elliptical ring at depth z: half-width rx, half-height ry, centred at cy.
+func ellipse(z: float, rx: float, ry: float, cy := 0.0, points := 12) -> PackedVector3Array:
+	var ring := PackedVector3Array()
+	for j in range(points):
+		var a := TAU * j / points
+		ring.append(Vector3(cos(a) * rx, cy + sin(a) * ry, z))
+	return ring
+
 func prim(st: SurfaceTool, mesh: PrimitiveMesh, xf: Transform3D, colour: Color) -> void:
 	var arrays := mesh.get_mesh_arrays()
 	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]

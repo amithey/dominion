@@ -338,6 +338,8 @@ func _ready() -> void:
 		await save_test()
 	elif "--air-sea-test" in args or "--capture-air-sea" in args:
 		await air_sea_test("--capture-air-sea" in args)
+	elif "--capture-craft" in args:
+		await capture_craft()
 	elif "--capture-vehicles" in args:
 		await capture_vehicles()
 	elif "--capture-infantry" in args:
@@ -2267,6 +2269,36 @@ func capture_infantry() -> void:
 		await get_tree().physics_frame
 	cam_yaw = 0.35
 	await capture_view("res://build/infantry-dead.png", spot + Vector3(0, 0, -2), 12.0, 0.45, 5)
+	get_tree().quit()
+
+## Close-ups of every warship at sea and every aircraft in the air.
+func capture_craft() -> void:
+	var sea = water_near(start, 320)
+	var out: Vector3 = (sea - start).normalized()
+	var side := Vector3(-out.z, 0, out.x)
+	var ships := ["destroyer", "corvette", "gunboat", "submarine", "nuclearSub"]
+	var fleet := []
+	for i in range(ships.size()):
+		var at: Vector3 = sea + out * 26.0 + side * (i - 2) * 22.0
+		var u := spawn_unit(ships[i], at, i % 4)
+		u.heading = atan2(side.x, side.z)
+		place_on_ground(u, at)
+		fleet.append(u)
+	cam_yaw = atan2(-out.x, -out.z) + 0.5
+	await capture_view("res://build/craft-fleet.png", sea + out * 26.0, 70.0, 0.4, 60)
+	for u in fleet:
+		cam_yaw = u.heading + 2.1
+		await capture_view("res://build/craft-%s.png" % u.key, u.node.position, u.length * 1.25, 0.3, 10)
+	for key in ["jet", "bomber", "drone", "helicopter", "gunship"]:
+		var u := spawn_unit(key, start + Vector3(0, 0, 30), 0)
+		for i in range(3):
+			await get_tree().physics_frame
+		cam_lift = u.node.position.y - height_at(u.node.position.x, u.node.position.z)
+		cam_yaw = u.heading + 2.3
+		await capture_view("res://build/craft-%s.png" % key, u.node.position, 12.0 if key in ["drone"] else 17.0, 0.35, 2)
+		cam_lift = 0.0
+		u.node.visible = false
+		u.dead = true
 	get_tree().quit()
 
 ## Close-ups of every ground vehicle, and a tank of every nation.

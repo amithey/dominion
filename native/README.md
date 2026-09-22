@@ -103,10 +103,17 @@ It uses the Forward+ renderer:
   down each half-link, and rebuilding a damaged link is a cheap repair. A Village
   Center founds a new district (70 m from other settlements). AI nations found
   villages and connect them to their capital by road.
-- Aircraft and ships (craft.gd): destroyers, corvettes, gunboats, submarines,
-  helicopters, gunships, jets, bombers and drones, modelled from primitives with the
-  owner's colour on funnel bands, fins and roundels; rotors and radar turn, ship
-  turrets traverse. Ships sail open water only (they look ahead and turn along the
+- Aircraft and ships (craft.gd), built from code with armor.gd's geometry and the vehicle
+  shader: warships have lofted hulls (flared bow rising to a raked stem, transom stern,
+  red antifouling below the waterline), sloped superstructures with bridge windows,
+  masts with a turning radar, a funnel banded in the nation's colour and a traversing
+  gun; the destroyer adds vertical launch cells, a CIWS and a helicopter deck, the
+  corvette missile canisters. Submarines have teardrop hulls, sails with planes, a
+  cruciform tail and propeller; the nuclear boat a missile deck. Aircraft have lofted
+  fuselages and glass canopies: a twin-tail fighter with wing missiles, a four-engine
+  bomber, a long-winged drone with a V-tail, an attack helicopter with rocket pods and
+  a five-bladed gunship; rotors turn and roundels carry the nation's colour.
+  `-- --capture-craft` saves close-ups. Ships sail open water only (they look ahead and turn along the
   coast), ride the swell and leave a foam wake; aircraft hold their altitude and bank
   into turns, and jets circle rather than hover. Built at a Shipyard (on the coast;
   ships launch at sea), Helipad or Airfield. The browser's damage table
