@@ -67,12 +67,17 @@ func setup(world_node: Node, economy_node: Node) -> void:
 	_build_production()
 	_build_selection()
 	_build_minimap()
+	# Notices rise from the bottom centre, between the selection panel and the minimap.
 	_notices = VBoxContainer.new()
 	_notices.anchor_left = 0.5
 	_notices.anchor_right = 0.5
-	_notices.offset_left = -280
-	_notices.offset_right = 280
-	_notices.offset_top = 58
+	_notices.anchor_top = 1.0
+	_notices.anchor_bottom = 1.0
+	_notices.offset_left = -236
+	_notices.offset_right = 236
+	_notices.offset_bottom = -16
+	_notices.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_notices.alignment = BoxContainer.ALIGNMENT_END
 	_notices.add_theme_constant_override("separation", 6)
 	_notices.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_notices)
@@ -705,175 +710,24 @@ func _fill_queue(queue: Array, progress := 0.0) -> void:
 		var first: ProgressBar = _sel_queue.get_child(0).get_child(1)
 		first.value = progress
 
-# ---------------------------------------------------------------- diplomacy
+# ---------------------------------------------------------------- screens
+# Diplomacy, the world market, intelligence and territory share one window,
+# docked on the left under the screen buttons: a title bar with the screen's
+# icon and a close button, then cards. It is only as tall as its content.
 
-var _diplo: PanelContainer
-var _diplo_rows: VBoxContainer
+const SCREENS := {"diplomacy": ["diplomacy", "Diplomacy"], "market": ["market", "World market"],
+	"intel": ["intel", "Intelligence"], "territory": ["land", "Territory"]}
+
+var _win: PanelContainer
+var _win_icon: TextureRect
+var _win_title: Label
+var _win_scroll: ScrollContainer
+var _side_rows: VBoxContainer
+var side_mode := ""          # "", "diplomacy", "market", "intel" or "territory"
+var _hooked := false
 var _letters: Array = []     # pending [text, accept, decline]
 var _letter_box: PanelContainer
-
-func _build_diplomacy_panel() -> void:
-	_diplo = _box(Vector2.ZERO)
-	# Left side, below the info panel: clear of notices and letters.
-	_diplo.offset_left = 16
-	_diplo.offset_right = 640
-	_diplo.offset_top = 106
-	_diplo.visible = false
-	_diplo_rows = VBoxContainer.new()
-	_diplo.add_child(_diplo_rows)
-
-func toggle_diplomacy() -> void:
-	_diplo.visible = not _diplo.visible
-	if _diplo.visible:
-		_show_side("")
-		refresh_diplomacy()
-
-func refresh_diplomacy() -> void:
-	if _diplo == null or not _diplo.visible or world.diplomacy == null:
-		return
-	for child in _diplo_rows.get_children():
-		child.queue_free()
-	var title := Label.new()
-	title.text = "DIPLOMACY"
-	title.add_theme_font_size_override("font_size", 18)
-	_diplo_rows.add_child(title)
-	var d: Node = world.diplomacy
-	for id in range(1, d.n):
-		var row := VBoxContainer.new()
-		var head := Label.new()
-		var score: float = d.rel(0, id)
-		head.text = "%s   relation %+d   %s   army %d" % [d.name_of(id), int(score), d.status_text(id), d.army_strength(id)]
-		head.add_theme_color_override("font_color", Color(world.map.nations[id].color).lerp(Color.WHITE, 0.45))
-		row.add_child(head)
-		if not d.defeated(id):
-			var buttons := HBoxContainer.new()
-			if d.at_war(0, id):
-				_diplo_button(buttons, "Offer peace", d.offer_peace.bind(id))
-			else:
-				_diplo_button(buttons, "Gift $250", d.gift.bind(id))
-				if not d.pact[0][id]:
-					_diplo_button(buttons, "Trade pact", d.propose_pact.bind(id))
-				if not d.nap[0][id]:
-					_diplo_button(buttons, "Non-aggression", d.propose_nap.bind(id))
-				if not d.allied(0, id):
-					_diplo_button(buttons, "Alliance", d.propose_alliance.bind(id))
-				_diplo_button(buttons, "Declare war", _declare.bind(id))
-			if d.allied(0, id):
-				for enemy in range(1, d.n):
-					if d.at_war(0, enemy) and not d.at_war(id, enemy):
-						_diplo_button(buttons, "Call to war vs %s" % d.name_of(enemy).split(" ")[0], d.request_joint_war.bind(id, enemy))
-			row.add_child(buttons)
-		_diplo_rows.add_child(row)
-
-func _declare(id: int) -> String:
-	world.diplomacy.declare_war(0, id)
-	return ""
-
-func _diplo_button(parent: Control, text: String, action: Callable) -> void:
-	var b := Button.new()
-	b.text = text
-	b.pressed.connect(func():
-		var message: String = action.call()
-		if message != "":
-			notice(message)
-		refresh_diplomacy())
-	parent.add_child(b)
-
-## A foreign government's proposal with Accept / Decline buttons.
-func ask(text: String, accept: Callable, decline: Callable) -> void:
-	_letters.append([text, accept, decline])
-	if _letter_box == null:
-		_show_letter()
-
-func _show_letter() -> void:
-	if _letters.is_empty():
-		return
-	var letter: Array = _letters.pop_front()
-	_letter_box = _box(Vector2.ZERO)
-	_letter_box.anchor_left = 0.5
-	_letter_box.anchor_right = 0.5
-	_letter_box.anchor_top = 0.5
-	_letter_box.anchor_bottom = 0.5
-	_letter_box.offset_left = -40  # right of centre, clear of the diplomacy panel
-	_letter_box.offset_right = 480
-	_letter_box.offset_top = -150
-	var column := VBoxContainer.new()
-	_letter_box.add_child(column)
-	var heading := Label.new()
-	heading.text = "FOREIGN OFFICE"
-	heading.add_theme_color_override("font_color", GOLD)
-	column.add_child(heading)
-	var body := Label.new()
-	body.text = letter[0]
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.custom_minimum_size = Vector2(480, 0)
-	column.add_child(body)
-	var buttons := HBoxContainer.new()
-	column.add_child(buttons)
-	for choice in [["Accept", letter[1]], ["Decline", letter[2]]]:
-		var b := Button.new()
-		b.text = choice[0]
-		var action: Callable = choice[1]
-		b.pressed.connect(func():
-			action.call()
-			_letter_box.queue_free()
-			_letter_box = null
-			refresh_diplomacy()
-			_show_letter())
-		buttons.add_child(b)
-
-## Victory or defeat: a large banner across the middle of the screen.
-func show_end(title: String, subtitle: String) -> void:
-	var box := _box(Vector2.ZERO)
-	box.anchor_left = 0.5
-	box.anchor_right = 0.5
-	box.anchor_top = 0.5
-	box.anchor_bottom = 0.5
-	box.offset_left = -260
-	box.offset_right = 260
-	box.offset_top = -70
-	box.offset_bottom = 70
-	var column := VBoxContainer.new()
-	column.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_child(column)
-	var big := Label.new()
-	big.text = title
-	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	big.add_theme_font_size_override("font_size", 44)
-	big.add_theme_color_override("font_color", Color("f1e3b4") if title == "VICTORY" else Color("e8836f"))
-	column.add_child(big)
-	var small := Label.new()
-	small.text = subtitle
-	small.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(small)
-
-func notice(text: String) -> void:
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UI.box(Color(UI.BG, 0.9), Color(UI.TRIM, 0.8), 1, 6, 8.0, 6))
-	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var label := Label.new()
-	label.text = text
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.custom_minimum_size = Vector2(520, 0)
-	label.add_theme_color_override("font_color", UI.CREAM)
-	card.add_child(label)
-	_notices.add_child(card)
-	while _notices.get_child_count() > 4:
-		_notices.get_child(0).free()  # at most four at once; the oldest goes
-	var tween := card.create_tween()
-	tween.tween_interval(3.4)
-	tween.tween_property(card, "modulate:a", 0.0, 0.6)
-	tween.tween_callback(card.queue_free)
-
-# ---------------------------------------------------------------- market, intel and territory panels
-
-var _side: PanelContainer
-var _side_rows: VBoxContainer
-var _scroll: ScrollContainer
-var side_mode := ""          # "", "market", "intel" or "territory"
-var _hooked := false
-# Choices kept across rebuilds of the panels.
+# Choices kept across rebuilds of the screens.
 var trade_qty := 25
 var route_nation := -1
 var route_res := "oil"
@@ -881,6 +735,52 @@ var route_dir := "export"
 var spy_target := 1
 var spy_op := "buildNetwork"
 var spy_role := "president"
+var territory_pick := "Click anywhere on the map to see who holds that land."
+
+func _build_diplomacy_panel() -> void:
+	_win = PanelContainer.new()
+	_win.offset_left = 12
+	_win.offset_top = 104
+	_win.offset_right = 580
+	_win.visible = false
+	add_child(_win)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	_win.add_child(column)
+	var bar := HBoxContainer.new()
+	bar.add_theme_constant_override("separation", 10)
+	column.add_child(bar)
+	_win_icon = _icon("diplomacy", 30)
+	bar.add_child(_win_icon)
+	_win_title = _text("", 21, UI.CREAM, true)
+	_win_title.add_theme_font_size_override("font_size", 21)
+	_win_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.add_child(_win_title)
+	var close := Button.new()
+	close.text = "✕"
+	close.tooltip_text = "Close"
+	close.focus_mode = Control.FOCUS_NONE
+	close.custom_minimum_size = Vector2(34, 30)
+	close.pressed.connect(func(): _show_side(""))
+	bar.add_child(close)
+	var rule := ColorRect.new()
+	rule.color = Color(UI.TRIM, 0.7)
+	rule.custom_minimum_size = Vector2(0, 1)
+	column.add_child(rule)
+	_win_scroll = ScrollContainer.new()
+	_win_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(_win_scroll)
+	_side_rows = VBoxContainer.new()
+	_side_rows.add_theme_constant_override("separation", 8)
+	_side_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_win_scroll.add_child(_side_rows)
+
+func toggle_diplomacy() -> void:
+	toggle_panel("diplomacy")
+
+func refresh_diplomacy() -> void:
+	if side_mode == "diplomacy":
+		refresh_side()
 
 ## Shows a message unless it is empty.
 func _say(message: String) -> void:
@@ -891,73 +791,152 @@ func toggle_panel(mode: String, force_open := false) -> void:
 	_show_side("" if side_mode == mode and not force_open else mode)
 
 func _show_side(mode: String) -> void:
-	if _side == null:
-		_side = _box(Vector2.ZERO)
-		_side.offset_left = 16
-		_side.offset_right = 700
-		_side.offset_top = 106
-		_scroll = ScrollContainer.new()
-		_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-		_side.add_child(_scroll)
-		_side_rows = VBoxContainer.new()
-		_scroll.add_child(_side_rows)
-	# Between the info panel and the command panel, scrolling when longer.
-	_scroll.custom_minimum_size = Vector2(676, maxf(160.0, get_viewport().get_visible_rect().size.y - 106.0 - 250.0))
 	if not _hooked and world.market != null:
 		_hooked = true
 		world.market.changed.connect(func(): if side_mode == "market": refresh_side())
 		world.espionage.changed.connect(func(): if side_mode == "intel": refresh_side())
 		world.territory.changed.connect(func(): if side_mode == "territory": refresh_side())
+		world.diplomacy.changed.connect(func(): if side_mode == "diplomacy": refresh_side())
 	side_mode = mode
-	_side.visible = mode != ""
-	if mode != "":
-		_diplo.visible = false
-		if _rs != null:
-			_rs.visible = false
+	_win.visible = mode != ""
+	if mode != "" and _rs != null:
+		_rs.visible = false
 	if world.territory:
 		world.territory.set_visible_borders(mode == "territory")
+	if mode != "":
+		_win_icon.texture = UI.icon(SCREENS[mode][0])
+		_win_title.text = SCREENS[mode][1].to_upper()
 	refresh_side()
 
 func refresh_side() -> void:
-	if _side == null or side_mode == "":
+	if _win == null or side_mode == "":
 		return
+	var keep := _win_scroll.scroll_vertical
 	for child in _side_rows.get_children():
 		_side_rows.remove_child(child)
 		child.queue_free()
 	match side_mode:
+		"diplomacy":
+			_diplomacy_screen()
 		"market":
 			_market_panel()
 		"intel":
 			_intel_panel()
 		"territory":
 			_territory_panel()
+	_fit_window.call_deferred(keep)
 
-func _label(parent: Control, text: String, colour := Color("b9c4c8"), size := 14) -> Label:
+# The window is as tall as its content, up to the space above the bottom panels.
+func _fit_window(keep_scroll: int) -> void:
+	var room := get_viewport().get_visible_rect().size.y - 104.0 - 250.0
+	_win_scroll.custom_minimum_size = Vector2(540, minf(_side_rows.get_combined_minimum_size().y, maxf(room, 160.0)))
+	_win.reset_size()
+	_win_scroll.scroll_vertical = keep_scroll
+
+# ---------------------------------------------------------------- widgets
+
+func _label(parent: Control, text: String, colour := UI.TEXT, size := 14) -> Label:
 	var l := Label.new()
 	l.text = text
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size = Vector2(660, 0)
+	l.custom_minimum_size = Vector2(500, 0)
 	l.add_theme_color_override("font_color", colour)
 	l.add_theme_font_size_override("font_size", size)
 	parent.add_child(l)
 	return l
 
 func _heading(text: String) -> void:
-	_label(_side_rows, text, Color("f1e3b4"), 18)
+	var l := _text(text.to_upper(), 14, GOLD, true)
+	l.add_theme_font_size_override("font_size", 14)
+	_side_rows.add_child(l)
 
-func _button(parent: Control, text: String, action: Callable, enabled := true) -> Button:
+## A card: a raised panel, with a stripe down the left in `stripe` if given.
+func _card(stripe := Color(0, 0, 0, 0)) -> VBoxContainer:
+	var card := PanelContainer.new()
+	var style := UI.box(Color("172a32"), Color("2c4048"), 1, 6, 10.0)
+	if stripe.a > 0.0:
+		style.border_color = Color(stripe, 0.9)
+		style.border_width_left = 5
+		style.border_width_top = 0
+		style.border_width_right = 0
+		style.border_width_bottom = 0
+		style.content_margin_left = 14
+	card.add_theme_stylebox_override("panel", style)
+	_side_rows.add_child(card)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 5)
+	card.add_child(col)
+	return col
+
+## A small rounded tag, like "AT WAR" or "ALLY".
+func _pill(parent: Control, text: String, colour: Color) -> void:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", UI.box(Color(colour, 0.22), Color(colour, 0.9), 1, 9, 3.0))
+	var l := _text(text, 12, colour.lightened(0.3))
+	p.add_child(l)
+	parent.add_child(p)
+
+## A bar with a caption over it: relation, chance, intelligence, land share.
+func _meter(parent: Control, value: float, max_value: float, colour: Color, caption: String) -> void:
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(0, 20)
+	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(holder)
+	var bar := ProgressBar.new()
+	bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bar.show_percentage = false
+	bar.max_value = max_value
+	bar.value = value
+	bar.add_theme_stylebox_override("fill", UI.box(colour, colour.lightened(0.2), 0, 4, 0.0))
+	holder.add_child(bar)
+	var l := _text(caption, 12, UI.CREAM)
+	l.set_anchors_preset(Control.PRESET_FULL_RECT)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_constant_override("outline_size", 4)
+	holder.add_child(l)
+
+func _row(parent: Control, gap := 8) -> HBoxContainer:
+	var r := HBoxContainer.new()
+	r.add_theme_constant_override("separation", gap)
+	parent.add_child(r)
+	return r
+
+func _button(parent: Control, text: String, action: Callable, enabled := true, tone := "") -> Button:
 	var b := Button.new()
 	b.text = text
 	b.disabled = not enabled
+	b.focus_mode = Control.FOCUS_NONE
+	if tone == "good":
+		b.add_theme_stylebox_override("normal", UI.box(Color("1f3a2a"), Color("4f8a5c"), 1, 5, 7.0))
+	elif tone == "bad":
+		b.add_theme_stylebox_override("normal", UI.box(Color("3a1f1f"), Color("8a4f4f"), 1, 5, 7.0))
 	b.pressed.connect(func():
 		_say(action.call())
 		refresh_side())
 	parent.add_child(b)
 	return b
 
+## Buttons side by side, one of them lit: a compact choice.
+func _segments(parent: Control, items: Array, selected, on_pick: Callable) -> void:
+	var row := _row(parent, 2)
+	for item in items:
+		var b := Button.new()
+		b.text = item[0]
+		b.toggle_mode = true
+		b.button_pressed = item[1] == selected
+		b.focus_mode = Control.FOCUS_NONE
+		b.add_theme_font_size_override("font_size", 13)
+		var value = item[1]
+		b.pressed.connect(func():
+			on_pick.call(value)
+			refresh_side())
+		row.add_child(b)
+
 ## A drop-down of [[label, value], ...]; on_pick receives the value.
 func _choice(parent: Control, items: Array, selected, on_pick: Callable) -> OptionButton:
 	var o := OptionButton.new()
+	o.focus_mode = Control.FOCUS_NONE
 	for i in range(items.size()):
 		o.add_item(items[i][0], i)
 		if items[i][1] == selected:
@@ -966,66 +945,262 @@ func _choice(parent: Control, items: Array, selected, on_pick: Callable) -> Opti
 	parent.add_child(o)
 	return o
 
+func _nation_colour(id: int) -> Color:
+	return Color(world.map.nations[id].color)
+
+# ---------------------------------------------------------------- diplomacy
+
+func _relation_word(score: float) -> String:
+	if score >= 60.0: return "Friendly"
+	if score >= 25.0: return "Cordial"
+	if score > -25.0: return "Neutral"
+	if score > -60.0: return "Unfriendly"
+	return "Hostile"
+
+func _diplomacy_screen() -> void:
+	var d: Node = world.diplomacy
+	_label(_side_rows, "Relations run from -100 to +100. Gifts, pacts and trade warm them; war, spies caught and broken treaties sour them.", UI.MUTED, 13)
+	for id in range(1, d.n):
+		var card := _card(_nation_colour(id))
+		var head := _row(card)
+		var name := _text(d.name_of(id), 18, _nation_colour(id).lightened(0.4), true)
+		name.add_theme_font_size_override("font_size", 18)
+		name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		head.add_child(name)
+		if d.defeated(id):
+			_pill(head, "DEFEATED", UI.MUTED)
+			continue
+		if d.at_war(0, id):
+			_pill(head, "AT WAR", Color("e0574a"))
+		if d.allied(0, id):
+			_pill(head, "ALLY", Color("6fc46a"))
+		if d.pact[0][id]:
+			_pill(head, "TRADE PACT", Color("d8b866"))
+		if d.nap[0][id]:
+			_pill(head, "NON-AGGRESSION", Color("6fa6d8"))
+		if not (d.at_war(0, id) or d.allied(0, id) or d.pact[0][id] or d.nap[0][id]):
+			_pill(head, "PEACE", Color("9aa7ab"))
+		var leader: String = world.map.nations[id].get("people", {}).get("president", "")
+		card.add_child(_text("%s  ·  army of about %d" % [leader, d.army_strength(id)], 13, UI.MUTED))
+		var score: float = d.rel(0, id)
+		var colour := Color("c0564a").lerp(Color("8a9396"), clampf((score + 100.0) / 100.0, 0.0, 1.0)) if score < 0.0 else Color("8a9396").lerp(Color("5fae63"), clampf(score / 100.0, 0.0, 1.0))
+		_meter(card, score + 100.0, 200.0, colour, "Relation %+d  ·  %s" % [int(score), _relation_word(score)])
+		var buttons := _row(card, 6)
+		if d.at_war(0, id):
+			_button(buttons, "Offer peace", d.offer_peace.bind(id), true, "good")
+		else:
+			_button(buttons, "Gift $250", d.gift.bind(id))
+			if not d.pact[0][id]:
+				_button(buttons, "Trade pact", d.propose_pact.bind(id))
+			if not d.nap[0][id]:
+				_button(buttons, "Non-aggression", d.propose_nap.bind(id))
+			if not d.allied(0, id):
+				_button(buttons, "Alliance", d.propose_alliance.bind(id), true, "good")
+			_button(buttons, "Declare war", _declare.bind(id), true, "bad")
+		if d.allied(0, id):
+			for enemy in range(1, d.n):
+				if d.at_war(0, enemy) and not d.at_war(id, enemy):
+					_button(card, "Call them to war against %s" % d.name_of(enemy), d.request_joint_war.bind(id, enemy))
+
+func _declare(id: int) -> String:
+	world.diplomacy.declare_war(0, id)
+	return ""
+
+## A foreign government's proposal, as a letter in the middle of the screen.
+func ask(text: String, accept: Callable, decline: Callable) -> void:
+	_letters.append([text, accept, decline])
+	if _letter_box == null:
+		_show_letter()
+
+func _show_letter() -> void:
+	if _letters.is_empty():
+		return
+	var letter: Array = _letters.pop_front()
+	_letter_box = PanelContainer.new()
+	_letter_box.add_theme_stylebox_override("panel", UI.box(Color(UI.BG, 0.98), UI.GOLD, 2, 8, 18.0, 16))
+	_letter_box.anchor_left = 0.5
+	_letter_box.anchor_right = 0.5
+	_letter_box.anchor_top = 0.3
+	_letter_box.offset_left = -260
+	_letter_box.offset_right = 260
+	add_child(_letter_box)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 10)
+	_letter_box.add_child(column)
+	var head := _row(column, 10)
+	head.add_child(_icon("diplomacy", 34))
+	var heading := _text("FOREIGN OFFICE", 20, GOLD, true)
+	heading.add_theme_font_size_override("font_size", 20)
+	head.add_child(heading)
+	var body := _text(letter[0], 16, UI.CREAM)
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.custom_minimum_size = Vector2(480, 0)
+	column.add_child(body)
+	var buttons := _row(column, 10)
+	buttons.alignment = BoxContainer.ALIGNMENT_END
+	for choice in [["Decline", letter[2], "bad"], ["Accept", letter[1], "good"]]:
+		var b := Button.new()
+		b.text = choice[0]
+		b.custom_minimum_size = Vector2(120, 38)
+		b.focus_mode = Control.FOCUS_NONE
+		b.add_theme_stylebox_override("normal", UI.box(Color("1f3a2a") if choice[2] == "good" else Color("3a1f1f"), Color("4f8a5c") if choice[2] == "good" else Color("8a4f4f"), 1, 5, 7.0))
+		var action: Callable = choice[1]
+		b.pressed.connect(func():
+			action.call()
+			_letter_box.queue_free()
+			_letter_box = null
+			refresh_diplomacy()
+			_show_letter())
+		buttons.add_child(b)
+
+## Victory or defeat: the screen dims and a banner says how it ended.
+func show_end(title: String, subtitle: String) -> void:
+	var dim := ColorRect.new()
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.color = Color(0, 0, 0, 0.45)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(dim)
+	var box := PanelContainer.new()
+	box.add_theme_stylebox_override("panel", UI.box(Color(UI.BG, 0.97), UI.GOLD if title == "VICTORY" else UI.BAD, 2, 10, 26.0, 20))
+	box.anchor_left = 0.5
+	box.anchor_right = 0.5
+	box.anchor_top = 0.5
+	box.anchor_bottom = 0.5
+	box.offset_left = -300
+	box.offset_right = 300
+	box.offset_top = -120
+	add_child(box)
+	var column := VBoxContainer.new()
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_theme_constant_override("separation", 12)
+	box.add_child(column)
+	var big := _text(title, 56, Color("f1e3b4") if title == "VICTORY" else UI.BAD, true)
+	big.add_theme_font_size_override("font_size", 56)
+	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(big)
+	var small := _text(subtitle, 17, UI.TEXT)
+	small.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(small)
+	var buttons := _row(column, 10)
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	var menu := Button.new()
+	menu.text = "Main menu"
+	menu.focus_mode = Control.FOCUS_NONE
+	menu.pressed.connect(func():
+		world.get_tree().paused = false
+		world.get_tree().reload_current_scene())
+	buttons.add_child(menu)
+	var stay := Button.new()
+	stay.text = "Keep watching"
+	stay.focus_mode = Control.FOCUS_NONE
+	stay.pressed.connect(func():
+		dim.queue_free()
+		box.queue_free())
+	buttons.add_child(stay)
+
+## A short message as a card at the bottom of the screen; four at most.
+func notice(text: String) -> void:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UI.box(Color(UI.BG, 0.92), Color(UI.TRIM, 0.8), 1, 6, 8.0, 6))
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var label := Label.new()
+	label.text = text
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(440, 0)
+	label.add_theme_color_override("font_color", UI.CREAM)
+	card.add_child(label)
+	_notices.add_child(card)
+	while _notices.get_child_count() > 4:
+		_notices.get_child(0).free()  # the oldest goes
+	var tween := card.create_tween()
+	tween.tween_interval(3.6)
+	tween.tween_property(card, "modulate:a", 0.0, 0.6)
+	tween.tween_callback(card.queue_free)
+
+# ---------------------------------------------------------------- world market
+
 func _market_panel() -> void:
 	var m: Node = world.market
 	var d: Node = world.diplomacy
-	_heading("WORLD MARKET")
-	if m.has_market():
-		_label(_side_rows, "Instant deals: sell at %d%%, buy at %d%% of the price. Prices move every 10 seconds." % [roundi(float(m.cfg.instantSell) * 100), roundi(float(m.cfg.instantBuy) * 100)])
-	else:
-		_label(_side_rows, "Build a Market to buy and sell instantly. Prices move every 10 seconds.", Color("e8a86f"))
-	var qty_row := HBoxContainer.new()
-	_side_rows.add_child(qty_row)
-	_label(qty_row, "Quantity").custom_minimum_size = Vector2(80, 0)
-	_choice(qty_row, m.cfg.qty.map(func(q): return [str(int(q)), int(q)]), trade_qty, func(v):
-		trade_qty = v
-		refresh_side())
+	var deals := _card()
+	var top := _row(deals)
+	var title := _text("Instant deals", 16, UI.CREAM, true)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(title)
+	_segments(top, m.cfg.qty.map(func(q): return [str(int(q)), int(q)]), trade_qty, func(v): trade_qty = v)
+	if not m.has_market():
+		deals.add_child(_text("Build a Market to trade instantly. Prices move every 10 seconds.", 13, UI.BAD))
 	for res in m.resources():
-		var row := HBoxContainer.new()
-		_side_rows.add_child(row)
-		var trend := "up" if m.mult[res] > 1.05 else ("down" if m.mult[res] < 0.95 else "steady")
-		_label(row, "%s  $%.1f (%s)  stock %d" % [res.capitalize(), m.price(res), trend, int(economy.res.get(res, 0.0))], Color("dfe6e8")).custom_minimum_size = Vector2(300, 0)
-		_button(row, "Sell %d (+$%d)" % [trade_qty, roundi(trade_qty * m.price(res) * float(m.cfg.instantSell))], m.sell.bind(res, trade_qty), m.has_market())
-		_button(row, "Buy %d (-$%d)" % [trade_qty, roundi(trade_qty * m.price(res) * float(m.cfg.instantBuy))], m.buy.bind(res, trade_qty), m.has_market())
-	_heading("TRADE ROUTES  %d/%d" % [m.routes.size(), m.route_cap()])
-	_label(_side_rows, "Ports: %d (%d berths each). Contracts come from trade pacts and up to two Markets. Cargo sails %d s and is lost at sea %d%% of the time; armed warships lower it. Delivered %d, lost %d." % [m.ports(), int(m.cfg.routesPerPort), int(m.cfg.voyage), roundi(m.risk() * 100), m.delivered, m.lost])
+		var row := _row(deals, 8)
+		row.add_child(_icon(res, 24))
+		var name := _text(res.capitalize(), 14, UI.CREAM)
+		name.custom_minimum_size = Vector2(70, 0)
+		row.add_child(name)
+		var up: bool = m.mult[res] > 1.03
+		var down: bool = m.mult[res] < 0.97
+		var price := _text("$%.1f %s" % [m.price(res), "▲" if up else ("▼" if down else "•")], 14, Color("8fd18a") if up else (Color("e8836f") if down else UI.TEXT))
+		price.custom_minimum_size = Vector2(80, 0)
+		row.add_child(price)
+		var stock := _text("have %d" % int(economy.res.get(res, 0.0)), 13, UI.MUTED)
+		stock.custom_minimum_size = Vector2(80, 0)
+		stock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(stock)
+		_button(row, "Sell +$%d" % roundi(trade_qty * m.price(res) * float(m.cfg.instantSell)), m.sell.bind(res, trade_qty), m.has_market(), "good")
+		_button(row, "Buy -$%d" % roundi(trade_qty * m.price(res) * float(m.cfg.instantBuy)), m.buy.bind(res, trade_qty), m.has_market())
+	var routes := _card()
+	var head := _row(routes)
+	var rt := _text("Trade routes  %d/%d" % [m.routes.size(), m.route_cap()], 16, UI.CREAM, true)
+	rt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(rt)
+	head.add_child(_text("ports %d · loss at sea %d%% · delivered %d · lost %d" % [m.ports(), roundi(m.risk() * 100), m.delivered, m.lost], 12, UI.MUTED))
+	routes.add_child(_text("Ships carry %d-second voyages to nations you have a trade pact with. Each port has %d berths; warships lower losses." % [int(m.cfg.voyage), int(m.cfg.routesPerPort)], 12, UI.MUTED))
 	for r in m.routes:
-		var row := HBoxContainer.new()
-		_side_rows.add_child(row)
-		_label(row, "%s %d %s %s %s — %s (total $%d)" % ["Export" if r.dir == "export" else "Import", r.qty, r.res, "to" if r.dir == "export" else "from", d.name_of(r.nation), r.status, int(r.total)], Color("dfe6e8")).custom_minimum_size = Vector2(540, 0)
-		_button(row, "Close", m.close_route.bind(r.id))
+		var row := _row(routes, 8)
+		row.add_child(_icon(r.res, 20))
+		var l := _text("%s %d %s %s  ·  %s  ·  $%d so far" % ["Export" if r.dir == "export" else "Import", r.qty, "to" if r.dir == "export" else "from", d.name_of(r.nation), r.status, int(r.total)], 13, UI.TEXT)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(l)
+		_button(row, "Close", m.close_route.bind(r.id), true, "bad")
 	var partners := []
 	for i in range(1, d.n):
 		if d.pact[0][i] and not d.at_war(0, i) and not d.defeated(i):
 			partners.append([d.name_of(i), i])
 	if partners.is_empty():
-		_label(_side_rows, "No trade partners: sign a trade pact in Diplomacy (G) first.", Color("e8a86f"))
+		routes.add_child(_text("No partners yet: sign a trade pact in Diplomacy (G).", 13, UI.BAD))
 		return
 	if not partners.any(func(p): return p[1] == route_nation):
 		route_nation = partners[0][1]
-	var row := HBoxContainer.new()
-	_side_rows.add_child(row)
-	_choice(row, [["Export", "export"], ["Import", "import"]], route_dir, func(v): route_dir = v)
-	_choice(row, m.resources().map(func(r): return [r.capitalize(), r]), route_res, func(v): route_res = v)
-	_choice(row, partners, route_nation, func(v): route_nation = v)
-	_button(row, "Open route (%d per voyage)" % trade_qty, func(): return m.open_route(route_nation, route_res, route_dir, trade_qty), m.ports() > 0)
+	var form := _row(routes, 6)
+	_segments(form, [["Export", "export"], ["Import", "import"]], route_dir, func(v): route_dir = v)
+	_choice(form, m.resources().map(func(r): return [r.capitalize(), r]), route_res, func(v): route_res = v)
+	_choice(form, partners, route_nation, func(v): route_nation = v)
+	_button(routes, "Open route (%d per voyage)" % trade_qty, func(): return m.open_route(route_nation, route_res, route_dir, trade_qty), m.ports() > 0, "good")
+
+# ---------------------------------------------------------------- intelligence
 
 func _intel_panel() -> void:
 	var e: Node = world.espionage
 	var d: Node = world.diplomacy
-	_heading("INTELLIGENCE")
+	var service := _card()
+	var head := _row(service)
+	var st := _text("Field agents", 16, UI.CREAM, true)
+	st.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(st)
+	_button(head, "Recruit ($%d)" % e.recruit_cost(), e.recruit, e.has_agency(), "good")
 	if not e.has_agency():
-		_label(_side_rows, "Build an Intelligence Agency to recruit agents and run covert operations. Hostile services already work against you.", Color("e8a86f"))
-	var top := HBoxContainer.new()
-	_side_rows.add_child(top)
-	_button(top, "Recruit agent ($%d)" % e.recruit_cost(), e.recruit, e.has_agency())
+		service.add_child(_text("Build an Intelligence Agency (Civic & research) to recruit agents. Rival services already work against you.", 13, UI.BAD))
 	for a in e.agents:
-		var row := HBoxContainer.new()
-		_side_rows.add_child(row)
-		var where: String = a.status if a.status != "captured" else "captured by %s" % d.name_of(int(a.captured_by))
-		_label(row, "%s — %s (skill %d, %d ops) — %s" % [a.name, e.rank(a), a.skill, a.ops, where], Color("dfe6e8") if a.status == "ready" else Color("e8836f")).custom_minimum_size = Vector2(500, 0)
+		var row := _row(service, 8)
+		var stars := "★".repeat(int(a.skill)) + "☆".repeat(5 - int(a.skill))
+		var l := _text("%s  %s  %s  ·  %d ops" % [a.name, stars, e.rank(a), a.ops], 14, UI.CREAM)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(l)
 		if a.status == "captured":
+			_pill(row, "CAPTURED by %s" % d.name_of(int(a.captured_by)), Color("e0574a"))
 			_button(row, "Ransom $%d" % int(e.cfg.ransom), e.ransom.bind(a.id))
+		else:
+			_pill(row, "READY", Color("6fc46a"))
 	var nations := []
 	for i in range(1, d.n):
 		if not d.defeated(i):
@@ -1034,46 +1209,78 @@ func _intel_panel() -> void:
 		return
 	if not nations.any(func(n): return n[1] == spy_target):
 		spy_target = nations[0][1]
-	_heading("OPERATION")
-	var row := HBoxContainer.new()
-	_side_rows.add_child(row)
-	_choice(row, nations, spy_target, func(v):
+	var plan := _card(_nation_colour(spy_target))
+	var ph := _row(plan)
+	var pt := _text("Operation against", 16, UI.CREAM, true)
+	ph.add_child(pt)
+	_choice(ph, nations, spy_target, func(v):
 		spy_target = v
 		refresh_side())
-	var ops := []
+	var agent_bonus := 0.0
+	if not e.ready_agents().is_empty():
+		agent_bonus = (int(e.ready_agents()[0].skill) - 1) * float(e.cfg.skillBonus)
 	for key in e.ops():
-		ops.append(["%s ($%d)" % [e.ops()[key].name, int(e.ops()[key].cost)], key])
-	_choice(row, ops, spy_op, func(v):
-		spy_op = v
-		refresh_side())
+		var op: Dictionary = e.ops()[key]
+		var need := float(op.get("minNetwork", 0))
+		var blocked: bool = e.network.get(spy_target, 0.0) < need
+		var chance := clampf(e.success_chance(key, spy_target) + agent_bonus, 0.05, 0.97)
+		var b := Button.new()
+		b.toggle_mode = true
+		b.button_pressed = key == spy_op
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(0, 34)
+		b.tooltip_text = op.desc
+		b.pressed.connect(func():
+			spy_op = key
+			refresh_side())
+		var row := HBoxContainer.new()
+		row.set_anchors_preset(Control.PRESET_FULL_RECT)
+		row.offset_left = 8
+		row.offset_right = -8
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(row)
+		var n := _text(op.name, 14, UI.MUTED if blocked else UI.CREAM)
+		n.custom_minimum_size = Vector2(150, 0)
+		n.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		row.add_child(n)
+		var c := _text("$%d" % int(op.cost), 13, UI.GOLD)
+		c.custom_minimum_size = Vector2(56, 0)
+		c.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		row.add_child(c)
+		var meter := VBoxContainer.new()
+		meter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		meter.alignment = BoxContainer.ALIGNMENT_CENTER
+		meter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(meter)
+		_meter(meter, chance, 1.0, Color("5fae63").lerp(Color("c0564a"), 1.0 - chance), ("needs network %d" % int(need)) if blocked else "%d%% chance" % roundi(chance * 100))
+		plan.add_child(b)
 	var op: Dictionary = e.ops()[spy_op]
 	var needs_person: bool = op.get("needsPerson", false)
 	if needs_person:
 		var people := []
 		for role in e.cfg.targets:
 			people.append(["%s: %s" % [e.cfg.targets[role].label, e.person(spy_target, role)], role])
-		_choice(row, people, spy_role, func(v):
+		var pr := _row(plan)
+		pr.add_child(_text("Target", 14, UI.MUTED))
+		_choice(pr, people, spy_role, func(v):
 			spy_role = v
 			refresh_side())
-	var agent_bonus := 0.0
-	if not e.ready_agents().is_empty():
-		agent_bonus = (int(e.ready_agents()[0].skill) - 1) * float(e.cfg.skillBonus)
-	var chance := clampf(e.success_chance(spy_op, spy_target) + agent_bonus, 0.05, 0.97)
-	var need := float(op.get("minNetwork", 0))
-	var blocked: bool = e.network.get(spy_target, 0.0) < need
-	var info: String = op.desc + (" " + e.cfg.targets[spy_role].effect if needs_person else "")
-	_label(_side_rows, "%s\nChance of success %d%%%s." % [info, roundi(chance * 100), (" — needs network %d" % int(need)) if blocked else ""])
-	_button(_side_rows, "Run operation", func(): return e.run(spy_op, spy_target, spy_role if needs_person else ""), e.has_agency() and not e.ready_agents().is_empty() and not blocked)
-	_heading("DOSSIERS")
+		plan.add_child(_text(e.cfg.targets[spy_role].effect, 12, UI.MUTED))
+	var blocked_now: bool = e.network.get(spy_target, 0.0) < float(op.get("minNetwork", 0))
+	_button(plan, "Run %s" % op.name, func(): return e.run(spy_op, spy_target, spy_role if needs_person else ""), e.has_agency() and not e.ready_agents().is_empty() and not blocked_now, "good")
+	_heading("What your service knows")
 	for n in nations:
 		var id: int = n[1]
 		var level: float = e.intel.get(id, 0.0)
-		var lines := ["%s — intel %d, network %d, heat %d" % [n[0], int(level), int(e.network.get(id, 0.0)), int(e.heat.get(id, 0.0))]]
+		var card := _card(_nation_colour(id))
+		card.add_child(_text(n[0], 15, _nation_colour(id).lightened(0.4), true))
+		_meter(card, level, 100.0, Color("6fa6d8"), "Intelligence %d  ·  network %d  ·  heat %d" % [int(level), int(e.network.get(id, 0.0)), int(e.heat.get(id, 0.0))])
+		var lines := []
 		var nat = world.market.ai_nation(id)
 		if level >= 10.0 and nat != null:
-			lines.append("  Treasury $%d, %d buildings" % [int(nat.money), world.buildings.filter(func(b): return b.owner == id and not b.dead).size()])
+			lines.append("Treasury $%d, %d buildings" % [int(nat.money), world.buildings.filter(func(b): return b.owner == id and not b.dead).size()])
 		if level >= 25.0:
-			lines.append("  Army about %d" % d.army_strength(id))
+			lines.append("Army about %d" % d.army_strength(id))
 		if level >= 40.0:
 			var ties := []
 			for j in range(d.n):
@@ -1081,32 +1288,58 @@ func _intel_panel() -> void:
 					ties.append("at war with " + ("you" if j == 0 else d.name_of(j)))
 				elif j != id and d.allied(id, j):
 					ties.append("allied with " + ("you" if j == 0 else d.name_of(j)))
-			lines.append("  " + (", ".join(PackedStringArray(ties)) if not ties.is_empty() else "no wars or alliances"))
+			lines.append(", ".join(PackedStringArray(ties)) if not ties.is_empty() else "No wars or alliances")
 		if level >= 60.0:
-			lines.append("  Their attacks on you are reported 30 s early")
+			lines.append("Their attacks on you are reported 30 s early")
 		for tier in e.INTEL_TIERS:
 			if level < tier[0]:
-				lines.append("  At intel %d: %s" % [tier[0], tier[1].to_lower()])
+				lines.append("At %d: %s" % [tier[0], tier[1].to_lower()])
 				break
-		_label(_side_rows, "\n".join(PackedStringArray(lines)), Color(world.map.nations[id].color).lerp(Color.WHITE, 0.5))
+		card.add_child(_text("\n".join(PackedStringArray(lines)), 13, UI.TEXT))
 	if not e.reports.is_empty():
-		_heading("LATEST REPORTS")
+		_heading("Latest reports")
 		for r in e.reports.slice(0, 4):
-			_label(_side_rows, r.text)
+			_label(_side_rows, "•  " + r.text, UI.TEXT, 13)
+
+# ---------------------------------------------------------------- territory
+
+func pick_territory(text: String) -> void:
+	territory_pick = text
+	if side_mode == "territory":
+		refresh_side()
 
 func _territory_panel() -> void:
 	var t: Node = world.territory
 	var land: int = t.land_cells()
-	_heading("TERRITORY")
-	_label(_side_rows, "Buildings project control; armed units occupy the cell they stand in. Land changes hands only once its control is worn down. Borders show on the map while this panel is open (gold = contested). Front cells: %d." % t.fronts)
+	_label(_side_rows, "Each nation's land is painted on the map in its colour; gold stripes mark contested fronts.", UI.MUTED, 13)
 	for id in range(world.map.nations.size()):
 		if world.diplomacy.defeated(id):
 			continue
 		var y: Dictionary = t.yields(id)
-		_label(_side_rows, "%s — %d cells (%d%% of the land): %d sovereign, %d integrated, %d occupied, %d contested" % ["You" if id == 0 else world.diplomacy.name_of(id), y.cells, roundi(100.0 * y.cells / maxf(land, 1)), y.sovereign, y.integrated, y.occupied, y.contested],
-			Color(world.map.nations[id].color).lerp(Color.WHITE, 0.45))
+		var card := _card(_nation_colour(id))
+		var row := _row(card)
+		var name := _text("You" if id == 0 else world.diplomacy.name_of(id), 15, _nation_colour(id).lightened(0.4), true)
+		name.custom_minimum_size = Vector2(170, 0)
+		row.add_child(name)
+		var share := float(y.cells) / maxf(land, 1)
+		var meter := VBoxContainer.new()
+		meter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(meter)
+		_meter(meter, share, 0.5, _nation_colour(id), "%d cells  ·  %d%% of the land" % [y.cells, roundi(share * 100)])
+		if y.contested > 0:
+			_pill(row, "%d contested" % y.contested, Color("d8b866"))
+	var pick := _card(UI.GOLD)
+	pick.add_child(_text("Selected land", 14, GOLD, true))
+	var pl := _text(territory_pick, 14, UI.CREAM)
+	pl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	pl.custom_minimum_size = Vector2(480, 0)
+	pick.add_child(pl)
 	var mine: Dictionary = t.yields(0)
-	_label(_side_rows, "Your land yields +$%.2f, +%.2f food and +%.3f iron per second (plains feed, forests and coasts pay, mountains give iron)." % [mine.money, mine.food, mine.iron], Color("dfe6e8"))
+	var yields := _row(_side_rows, 14)
+	yields.add_child(_text("Your land yields per second:", 13, UI.MUTED))
+	for item in [["money", "%.2f" % mine.money], ["food", "%.2f" % mine.food], ["iron", "%.3f" % mine.iron]]:
+		yields.add_child(_icon(item[0], 18))
+		yields.add_child(_text(item[1], 13, UI.CREAM))
 
 # ---------------------------------------------------------------- research screen
 
@@ -1128,7 +1361,6 @@ func toggle_research() -> void:
 	_rs.visible = not _rs.visible
 	if _rs.visible:
 		_show_side("")
-		_diplo.visible = false
 		_rs_sig = ""
 		_tree.layout()
 		_refresh_research()

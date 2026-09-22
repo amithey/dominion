@@ -268,6 +268,10 @@ func _ready() -> void:
 	economy = preload("res://scripts/economy.gd").new()
 	add_child(economy)
 	economy.setup(self, map.economy)
+	for u in units:
+		if u.owner == 0 and u.key != "worker":
+			economy.garrison += int(unit_defs.get(u.key, {}).get("pop", 1))
+	economy.recalculate()
 	hud = preload("res://scripts/hud.gd").new()
 	add_child(hud)
 	hud.setup(self, economy)
@@ -287,6 +291,9 @@ func _ready() -> void:
 	if "--ai-test" in OS.get_cmdline_user_args() or "--capture-ai" in OS.get_cmdline_user_args():
 		difficulty = "hard"
 		ai_speed = 12.0
+	if "--soak-test" in OS.get_cmdline_user_args():
+		difficulty = "hard"
+		ai_speed = 3.0
 	ai = preload("res://scripts/ai.gd").new()
 	add_child(ai)
 	diplomacy = preload("res://scripts/diplomacy.gd").new()
@@ -366,6 +373,14 @@ func _ready() -> void:
 		await air_sea_test("--capture-air-sea" in args)
 	elif "--research-test" in args or "--capture-research" in args:
 		await research_test("--capture-research" in args)
+	elif "--ui-test" in args:
+		await ui_test()
+	elif "--soak-test" in args:
+		await soak_test(12.0)
+	elif "--capture-screens" in args:
+		await capture_screens()
+	elif "--combat-test" in args or "--capture-combat" in args:
+		await combat_test("--capture-combat" in args)
 	elif "--capture-ui" in args:
 		await capture_ui()
 	elif "--camera-test" in args:
@@ -2470,6 +2485,344 @@ func research_test(capture: bool) -> void:
 	print("RESEARCH_TEST %s" % ("PASS" if ok else "FAIL"))
 	get_tree().quit(0 if ok else 1)
 
+## Drives the interface the way a player would: every screen opens and
+## closes, every button in every screen is pressed, the production list
+## builds and trains, the research tree queues, the menus open, and nothing
+## raises an error on the way.
+func ui_test() -> void:
+	for i in range(30):
+		await get_tree().process_frame
+	var checks := {}
+	var home: Vector3 = buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0].root.position
+	for key in ["market", "port", "intelAgency", "school", "missileSilo", "ammoDepot"]:
+		var at = test_site(key, home)
+		if at != null:
+			place_building(key, at, 0, true)
+	economy.recalculate()
+	for key in ["money", "iron", "oil", "silicon", "uranium"]:
+		economy.res[key] = minf(50000.0, economy.caps.get(key, 50000.0))
+	diplomacy.set_score(0, 1, 60.0)
+	diplomacy.set_flag(diplomacy.pact, 0, 1, true)
+	espionage.recruit()
+	# Every screen opens with content, and every button in it can be pressed.
+	for mode in ["diplomacy", "market", "intel", "territory"]:
+		hud.toggle_panel(mode, true)
+		await get_tree().process_frame
+		var opened: bool = hud._win.visible and hud._side_rows.get_child_count() > 0
+		# The screen redraws after each press, so buttons are looked up afresh
+		# by position every time.
+		var pressed := 0
+		var index := 0
+		while index < 60:
+			var buttons: Array = hud._side_rows.find_children("*", "Button", true, false)
+			if index >= buttons.size():
+				break
+			var b: Button = buttons[index]
+			index += 1
+			if b.disabled or b.text.begins_with("Declare war"):
+				continue  # war is pressed once below, so the other buttons stay useful
+			b.pressed.emit()
+			pressed += 1
+			await get_tree().process_frame
+		for b in hud._side_rows.find_children("*", "Button", true, false):
+			if b.text.begins_with("Declare war"):
+				b.pressed.emit()
+				pressed += 1
+				break
+		checks["%s screen opens and its %d buttons work" % [mode, pressed]] = opened and (pressed > 3 or mode == "territory")
+		hud.toggle_panel(mode)
+		await get_tree().process_frame
+		checks["%s screen closes" % mode] = not hud._win.visible
+	# Territory view paints the terrain and explains a clicked cell.
+	hud.toggle_panel("territory", true)
+	var mat: ShaderMaterial = terrain_node.material_override
+	checks["territory is painted on the terrain"] = mat.get_shader_parameter("show_territory") == true and mat.get_shader_parameter("territory_tex") != null
+	checks["clicked land is described"] = territory.describe(home).contains("held by You")
+	hud.toggle_panel("territory")
+	checks["territory paint goes away"] = mat.get_shader_parameter("show_territory") == false
+	# Production list: every tab lists its buildings; a bar starts placement.
+	for tab in hud.BUILD_MENU:
+		hud.build_tab = tab
+		hud._shown_key = ""
+		hud._update_panel()
+		var bars: Array = hud._list.get_children().filter(func(b): return b is Button)
+		checks["%s tab lists %d buildings" % [tab, bars.size()]] = bars.size() >= hud.BUILD_MENU[tab].filter(func(k): return building_defs.has(k)).size()
+	hud.build_tab = "Economy"
+	hud._shown_key = ""
+	hud._update_panel()
+	var farm_bar = hud._list.get_children().filter(func(b): return b is Button)[2]
+	farm_bar.pressed.emit()
+	checks["a production bar starts placing the building"] = placing == "farm"
+	cancel_placement()
+	# A barracks trains from its bars; the queue shows in the selection panel.
+	var barracks = buildings.filter(func(b): return b.owner == 0 and b.key == "barracks")
+	if not barracks.is_empty():
+		select_building(barracks[0])
+		await get_tree().process_frame
+		hud._update_panel()
+		var train: Array = hud._list.get_children().filter(func(b): return b is Button)
+		var before: int = barracks[0].queue.size()
+		train[0].pressed.emit()
+		await get_tree().process_frame
+		hud._update_panel()
+		checks["barracks lists its %d units" % train.size()] = train.size() == barracks[0].def.trains.size()
+		checks["a unit bar queues training"] = barracks[0].queue.size() == before + 1
+		checks["the queue shows in the selection panel"] = hud._sel.visible and hud._sel_queue.get_child_count() == barracks[0].queue.size()
+		select_building(null)
+	# The silo lists every missile; building one works from its bar.
+	var silo = buildings.filter(func(b): return b.owner == 0 and b.key == "missileSilo")
+	if not silo.is_empty():
+		select_building(silo[0])
+		hud._update_panel()
+		var bars: Array = hud._list.get_children().filter(func(b): return b is Button)
+		checks["the silo lists all %d missiles" % missiles.types().size()] = bars.size() >= missiles.types().size()
+		bars[0].pressed.emit()
+		checks["a missile bar queues a missile"] = silo[0].queue.size() == 1
+		select_building(null)
+	# Selecting units fills the selection panel.
+	var army := units.filter(func(u): return u.owner == 0 and u.dmg > 0.0)
+	for u in army.slice(0, 3):
+		u.selected = true
+	hud._update_panel()
+	checks["selected units show in the selection panel"] = hud._sel.visible and hud._sel_title.text != ""
+	for u in army:
+		u.selected = false
+	# Top bar reads the economy.
+	await get_tree().create_timer(0.3).timeout
+	checks["top bar shows money"] = hud._chips.money[0].text == str(int(economy.res.money)) or hud._chips.money[0].text.begins_with(str(int(economy.res.money)).left(2))
+	# Research screen opens, a discovery can be queued from its pane.
+	hud.toggle_research()
+	await get_tree().process_frame
+	hud._rs_sel = "fertilizers"
+	hud._rs_sig = ""
+	hud._refresh_research()
+	var research_buttons: Array = hud._rs_detail.find_children("*", "Button", true, false)
+	if not research_buttons.is_empty():
+		research_buttons[0].pressed.emit()
+	checks["research screen queues a discovery"] = hud._rs.visible and "fertilizers" in research.queue
+	hud.toggle_research()
+	checks["research screen closes"] = not hud._rs.visible
+	# Help, the minimap and the menus.
+	hud.toggle_help()
+	checks["help opens"] = hud._help.visible
+	hud.toggle_help()
+	var map_ctrl = hud.find_children("*", "Control", true, false).filter(func(c): return c.get_script() == preload("res://scripts/minimap.gd"))[0]
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = Vector2(20, 20)
+	map_ctrl._gui_input(click)
+	checks["a minimap click moves the camera"] = cam_focus.distance_to(home) > 100.0
+	menu.setup(self)
+	menu.open_pause()
+	checks["pause menu opens and pauses"] = get_tree().paused and menu._root.visible
+	menu.open_settings()
+	checks["settings open"] = menu._panel.get_child_count() >= 5
+	menu.close()
+	checks["menu closes and play resumes"] = not get_tree().paused
+	var failed := checks.keys().filter(func(k): return not checks[k])
+	for k in checks:
+		print("%s  %s" % ["ok  " if checks[k] else "FAIL", k])
+	print("UI_TEST %s" % ("PASS" if failed.is_empty() else "FAIL"))
+	get_tree().quit(0 if failed.is_empty() else 1)
+
+## A whole match at speed: every rival on hard, time running four times as
+## fast for `minutes` of game time. Every few seconds the world must still be
+## sound: no unit or building with broken numbers, resources never negative,
+## nothing below the ground or far off the map, and the game still running.
+func soak_test(minutes: float) -> void:
+	for i in range(20):
+		await get_tree().process_frame
+	for n in ai.nations:
+		n.next_attack = 60.0
+	Engine.time_scale = 4.0
+	var problems := {}
+	var seconds := 0.0
+	var checks := 0
+	var peak := 0
+	var half := float(map.mapSize) * 0.6
+	while seconds < minutes * 60.0 and game_over == "":
+		await get_tree().create_timer(2.0).timeout
+		seconds += 2.0 * Engine.time_scale
+		checks += 1
+		peak = maxi(peak, units.size())
+		for key in economy.res:
+			if economy.res[key] < -0.01 or is_nan(economy.res[key]):
+				problems["resource %s went to %s" % [key, economy.res[key]]] = true
+		for u in units:
+			if u.dead:
+				continue
+			var p: Vector3 = u.node.position
+			if is_nan(p.x) or is_nan(p.z) or is_nan(u.hp):
+				problems["%s has broken numbers" % u.key] = true
+			elif absf(p.x) > half or absf(p.z) > half:
+				problems["%s left the map" % u.key] = true
+			elif not u.get("naval", false) and not u.get("fly", false) and p.y < height_at(p.x, p.z) - 1.0:
+				problems["%s sank into the ground" % u.key] = true
+			if u.hp > u.max_hp + 0.5:
+				problems["%s has more health than its maximum" % u.key] = true
+		for b in buildings:
+			if not b.dead and (is_nan(b.hp) or b.hp > b.max_hp + 0.5):
+				problems["%s has broken health" % b.key] = true
+		for n in ai.nations:
+			if is_nan(n.money) or n.money < -0.01:
+				problems["%s treasury broke" % n.name] = true
+	Engine.time_scale = 1.0
+	var built: int = buildings.filter(func(b): return b.owner > 0 and not b.dead).size()
+	var wars: int = 0
+	for a in range(diplomacy.n):
+		for b in range(a + 1, diplomacy.n):
+			if diplomacy.at_war(a, b):
+				wars += 1
+	print("played %d s of game time in %d checks: peak %d units, rivals hold %d buildings, %d wars, game over: %s" % [int(seconds), checks, peak, built, wars, game_over if game_over != "" else "no"])
+	for p in problems:
+		print("FAIL  " + p)
+	var ok: bool = problems.is_empty() and built > 6
+	print("SOAK_TEST %s" % ("PASS" if ok else "FAIL"))
+	get_tree().quit(0 if ok else 1)
+
+## Screenshots of every screen with something in it: diplomacy, the market
+## with a trade route, intelligence with agents, territory with a picked
+## cell, a foreign letter, the pause menu and the main menu.
+func capture_screens() -> void:
+	for i in range(30):
+		await get_tree().process_frame
+	var home: Vector3 = buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0].root.position
+	for key in ["market", "port", "intelAgency"]:
+		var at = test_site(key, home)
+		if at != null:
+			place_building(key, at, 0, true)
+	economy.recalculate()
+	economy.res.money = 9000.0
+	economy.res.oil = 300.0
+	diplomacy.set_score(0, 1, 45.0)
+	diplomacy.set_flag(diplomacy.pact, 0, 1, true)
+	diplomacy.set_score(0, 3, 70.0)
+	diplomacy.set_flag(diplomacy.alliance, 0, 3, true)
+	diplomacy.declare_war(0, 2)
+	market.open_route(1, "oil", "export", 25)
+	market.tick()
+	espionage.recruit()
+	espionage.recruit()
+	for i in range(2):
+		espionage.run("buildNetwork", 2, "", -1, 0.0)
+	espionage.run("reconDossier", 2, "", -1, 0.0)
+	territory.tick()
+	cam_yaw = PI * 0.25
+	for mode in ["diplomacy", "market", "intel", "territory"]:
+		hud.toggle_panel(mode, true)
+		if mode == "territory":
+			hud.pick_territory(territory.describe(home + Vector3(20, 0, 10)))
+			await capture_view("res://build/screen-%s.png" % mode, home + Vector3(-30, 0, 0), 230.0, 1.0, 30)
+			await capture_view("res://build/screen-territory-island.png", Vector3(-60, 0, 0), 520.0, 1.2, 20)
+		else:
+			await capture_view("res://build/screen-%s.png" % mode, home, 120.0, 0.9, 20)
+	hud.toggle_panel("")
+	hud._show_side("")
+	hud.ask("Crimson Empire proposes a trade pact ($40 every 10 s for both).", func(): pass, func(): pass)
+	await capture_view("res://build/screen-letter.png", home, 120.0, 0.9, 15)
+	menu.setup(self)
+	menu.open_pause()
+	for i in range(10):
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png("res://build/screen-pause.png")
+	menu.open_main()
+	for i in range(10):
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png("res://build/screen-main.png")
+	menu.open_new_game()
+	for i in range(10):
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png("res://build/screen-new.png")
+	get_tree().quit()
+
+## Every armed unit type fights the kind of target it is made for; each must
+## fire its own weapon (bombs, missiles, rockets, torpedoes, shells, bullets)
+## and hurt the target, without hurting its own side.
+func combat_test(capture := false) -> void:
+	for i in range(10):
+		await get_tree().process_frame
+	if ai and not ai.nations.is_empty():
+		for n in ai.nations:
+			n.next_attack = 99999.0  # rivals stay home while the test runs
+		diplomacy.declare_war(0, 1)
+	var sea = water_near(start, 320)
+	var land := land_point(start + Vector3(0, 0, -60), 40.0)
+	var out: Vector3 = (sea - start).normalized() if sea != null else Vector3.FORWARD
+	var open_sea: Vector3 = sea + out * 40.0 if sea != null else land
+	var cases := [
+		# attacker, target, attacker at, target at, projectile kind that must fly
+		["jet", "tank", land, land + Vector3(30, 0, 0), "missile"],
+		["bomber", "tank", land, land + Vector3(20, 0, 0), "bomb"],
+		["drone", "apc", land, land + Vector3(20, 0, 0), "missile"],
+		["helicopter", "tank", land, land + Vector3(15, 0, 0), "rocket"],
+		["gunship", "soldier", land, land + Vector3(15, 0, 0), "rocket"],
+		["artillery", "tank", land, land + Vector3(28, 0, 0), "shell_arc"],
+		["mlrs", "soldier", land, land + Vector3(34, 0, 0), "rocket"],
+		["rocketSoldier", "tank", land, land + Vector3(12, 0, 0), "rocket"],
+		["samLauncher", "helicopter", land, land + Vector3(20, 0, 0), "missile"],
+		["aaVehicle", "helicopter", land, land + Vector3(16, 0, 0), ""],
+		["tank", "apc", land, land + Vector3(14, 0, 0), ""],
+		["apc", "soldier", land, land + Vector3(10, 0, 0), ""],
+		["soldier", "soldier", land, land + Vector3(10, 0, 0), ""],
+		["sniper", "soldier", land, land + Vector3(20, 0, 0), ""],
+		["commando", "soldier", land, land + Vector3(8, 0, 0), ""],
+		["submarine", "gunboat", open_sea, open_sea + out.rotated(Vector3.UP, 1.2) * 16.0, "torpedo"],
+		["nuclearSub", "corvette", open_sea, open_sea + out.rotated(Vector3.UP, 1.2) * 18.0, "torpedo"],
+		["destroyer", "gunboat", open_sea, open_sea + out.rotated(Vector3.UP, 1.2) * 22.0, ""],
+		["corvette", "helicopter", open_sea, open_sea + out.rotated(Vector3.UP, 1.2) * 18.0, ""],
+	]
+	var failures := []
+	Engine.time_scale = 3.0
+	for c in cases:
+		var attacker := spawn_unit(c[0], c[2], 0)
+		var target := spawn_unit(c[1], c[3], 1)
+		target.target = target.node.position  # the target holds still
+		target.dmg = 0.0                      # and does not shoot back
+		var hp_start: float = target.hp
+		var fired_before: int = int(effects.launched.get(c[4], 0))
+		var friends_hp: float = attacker.hp
+		order_attack([attacker], target)
+		var hurt := false
+		var shot: bool = not capture or not c[0] in ["jet", "bomber", "helicopter", "gunship", "mlrs", "submarine", "samLauncher"]
+		for f in range(int(30.0 / get_physics_process_delta_time() / 3.0)):
+			await get_tree().physics_frame
+			if not shot and effects._projectiles.size() > 0 and effects._projectiles.any(func(p): return p.t > 0.12):
+				shot = true
+				Engine.time_scale = 1.0
+				var mid: Vector3 = (attacker.node.position + target.node.position) * 0.5
+				cam_focus = mid
+				cam_lift = 4.0 if attacker.get("fly", false) else 0.0
+				cam_dist = 42.0
+				cam_dist_target = 42.0
+				cam_pitch = 0.3
+				cam_yaw = atan2(target.node.position.x - attacker.node.position.x, target.node.position.z - attacker.node.position.z) + PI * 0.55
+				await RenderingServer.frame_post_draw
+				get_viewport().get_texture().get_image().save_png("res://build/combat-%s.png" % c[0])
+				cam_lift = 0.0
+				Engine.time_scale = 3.0
+			if target.hp < hp_start or target.dead:
+				hurt = true
+				if c[4] == "" or int(effects.launched.get(c[4], 0)) > fired_before:
+					break
+		var fired: bool = c[4] == "" or int(effects.launched.get(c[4], 0)) > fired_before
+		var ok: bool = hurt and fired and attacker.hp >= friends_hp
+		print("%-14s vs %-11s fired %-9s %s  target %d/%d  %s" % [c[0], c[1], c[4] if c[4] != "" else "gun", fired, int(maxf(target.hp, 0.0)), int(hp_start), "OK" if ok else "FAIL"])
+		if not ok:
+			failures.append(c[0])
+		for u in [attacker, target]:
+			u.dead = true
+			u.node.visible = false
+		for i in range(4):
+			await get_tree().physics_frame
+	Engine.time_scale = 1.0
+	print("failed: %s" % str(failures))
+	print("COMBAT_TEST %s" % ("PASS" if failures.is_empty() else "FAIL"))
+	get_tree().quit(0 if failures.is_empty() else 1)
+
 ## Screenshots of the interface: the build list, a selected barracks with
 ## its training bars, a selected army, and the controls help.
 func capture_ui() -> void:
@@ -3197,12 +3550,87 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 		var gap: Vector3 = enemy.node.position - unit.node.position
 		if absf(angle_difference(unit.turret_yaw, atan2(gap.x, gap.z) - unit.heading)) > 0.12:
 			return
-	elif unit.moving:
-		return  # infantry stop to shoot
-	unit.reload = unit.cooldown * randf_range(0.85, 1.15)
-	fire(unit, enemy)
+	elif unit.moving and not (unit.get("fly", false) or unit.get("naval", false)):
+		return  # infantry and turretless vehicles stop to shoot; aircraft and ships fire on the move
+	if fire(unit, enemy):
+		unit.reload = unit.cooldown * randf_range(0.85, 1.15)
 
-func fire(unit: Dictionary, enemy: Dictionary) -> void:
+## The weapon a unit fires, when it is more than a rifle or a gun turret.
+const WEAPONS := {"bomber": "bomb", "jet": "missile", "drone": "missile", "helicopter": "rockets", "gunship": "rockets",
+	"submarine": "torpedo", "nuclearSub": "torpedo", "artillery": "shell_arc", "mlrs": "rocket_salvo",
+	"samLauncher": "sam", "rocketSoldier": "rocket"}
+
+## Fires at `enemy`; false when the weapon cannot be used yet (a bomber that
+## is not over its target), so the reload is not spent.
+func fire(unit: Dictionary, enemy: Dictionary) -> bool:
+	var weapon: String = WEAPONS.get(unit.key, "")
+	if weapon != "":
+		return fire_weapon(unit, enemy, weapon)
+	_fire_gun(unit, enemy)
+	return true
+
+## Bombs, missiles, rocket salvos, torpedoes and artillery shells: each a
+## projectile that is seen to fly and explodes where it lands.
+func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
+	var target: Vector3 = enemy.node.position + Vector3.UP * (2.0 if enemy.get("is_building", false) else (0.0 if enemy.get("fly", false) else 0.8))
+	var dir := Basis(Vector3.UP, unit.heading) * Vector3.BACK
+	var from: Vector3 = unit.node.position + dir * 1.5 + Vector3.UP * (1.6 if not unit.get("fly", false) else -0.8)
+	var dmg: float = unit.dmg
+	match weapon:
+		"bomb":
+			# Only over the target: the bomber lines up and releases a stick.
+			var flat := Vector2(target.x - unit.node.position.x, target.z - unit.node.position.z).length()
+			if flat > 11.0:
+				return false
+			for i in range(4):
+				var spot := target + dir * (i - 1.5) * 3.2 + Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
+				spot.y = maxf(height_at(spot.x, spot.z), float(map.seaLevel))
+				effects.projectile("bomb", unit.node.position + Vector3.DOWN * 1.2 + dir * i * 0.8, spot, func(at): blast(unit, at, dmg * 0.55, 5.0, 1.6), i * 0.18)
+		"missile":
+			effects.projectile("missile", from, target, func(at): blast(unit, at, dmg, 3.0, 1.2), 0.0, enemy.node if enemy.get("fly", false) or enemy.vehicle else null)
+		"sam":
+			effects.projectile("missile", unit.node.position + Vector3.UP * 3.0, target, func(at): blast(unit, at, dmg, 3.5, 1.0), 0.0, enemy.node)
+		"rockets":
+			var n := 4 if unit.key == "gunship" else 2
+			for i in range(n):
+				var spot := target + Vector3(randf_range(-1.6, 1.6), 0, randf_range(-1.6, 1.6))
+				effects.projectile("rocket", from + Basis(Vector3.UP, unit.heading) * Vector3((i % 2 - 0.5) * 2.0, 0, 0), spot, func(at): blast(unit, at, dmg * 1.1 / n, 2.8, 0.7), i * 0.09)
+		"rocket":
+			effects.projectile("rocket", unit.node.position + Vector3.UP * 1.6 + dir * 0.6, target, func(at): blast(unit, at, dmg, 2.2, 0.7))
+		"torpedo":
+			if not enemy.get("naval", false):
+				return false
+			var water: Vector3 = Vector3(from.x, float(map.seaLevel) - 0.3, from.z) + dir * unit.length * 0.4
+			var aim := Vector3(target.x, float(map.seaLevel) - 0.3, target.z)
+			effects.projectile("torpedo", water, aim, func(at): blast(unit, at, dmg, 3.5, 1.4))
+		"shell_arc":
+			var landing := target + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
+			effects.muzzle_flash(unit.turret.global_position + dir * float(unit.get("muzzle", 4.0)) if unit.turret else from, true)
+			effects.projectile("shell_arc", from + Vector3.UP * 1.5, landing, func(at): blast(unit, at, dmg, 4.5, 1.5))
+		"rocket_salvo":
+			for i in range(6):
+				var spot := target + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4))
+				spot.y = maxf(height_at(spot.x, spot.z), float(map.seaLevel))
+				effects.projectile("rocket", from + Vector3.UP * 1.5, spot, func(at): blast(unit, at, dmg * 0.3, 3.5, 0.9), i * 0.12)
+	return true
+
+## An explosion that hurts every hostile unit and building within `radius`
+## (full damage near the centre, less toward the edge) and wears down roads.
+func blast(shooter: Dictionary, at: Vector3, dmg: float, radius: float, size: float) -> void:
+	var ground := maxf(height_at(at.x, at.z), float(map.seaLevel))
+	effects.explosion(at, size, at.y - ground < 1.5)
+	logistics.damage_at(at, radius, dmg * 1.5)
+	for b in buildings:
+		if not b.dead and hostile(shooter.owner, b.owner) and Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length() < b.footprint * 0.62 + radius * 0.5:
+			damage(b, dmg * effectiveness(shooter, b), shooter)
+	for other in units:
+		if other.dead or not hostile(shooter.owner, other.owner):
+			continue
+		var d: float = other.node.position.distance_to(at)
+		if d < radius:
+			damage(other, dmg * effectiveness(shooter, other) * (1.0 if d < radius * 0.5 else 0.45), shooter)
+
+func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 	var aim: Vector3 = enemy.node.position + Vector3.UP * (3.0 if enemy.get("is_building", false) else (1.3 if enemy.vehicle else 1.2))
 	if enemy.get("is_building", false):
 		# Aim at the near wall rather than the middle of the roof.
@@ -3245,8 +3673,8 @@ func shell_hit(shooter: Dictionary, at: Vector3) -> void:
 		if not b.dead and hostile(shooter.owner, b.owner) and Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length() < b.footprint * 0.62:
 			damage(b, shooter.dmg * effectiveness(shooter, b), shooter)
 	for other in units:
-		if other.dead or other.owner == shooter.owner:
-			continue
+		if other.dead or not hostile(shooter.owner, other.owner):
+			continue  # splash does not hurt friends, or start wars with bystanders
 		var d: float = other.node.position.distance_to(at)
 		if d < 3.5:
 			damage(other, shooter.dmg * effectiveness(shooter, other) * (1.0 if d < 1.8 else 0.45), shooter)
@@ -3591,7 +4019,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				clamp_camera()
 			cam_dist_target = maxf(18.0, cam_dist_target * 0.88)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
-			cam_dist_target = minf(260.0, cam_dist_target / 0.88)
+			cam_dist_target = minf(520.0, cam_dist_target / 0.88)
 		elif event.button_index == MOUSE_BUTTON_MIDDLE:
 			middle_drag = event.pressed
 		elif event.button_index == MOUSE_BUTTON_LEFT and missile_aim != "":
@@ -3643,6 +4071,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				# A click on empty ground or a building selects that building.
 				if click and closest.is_empty():
 					select_building(building_under(event.position))
+					if hud.side_mode == "territory":
+						var point = ground_point(event.position)
+						if point != null:
+							hud.pick_territory(territory.describe(point))  # who holds this land
 				elif not closest.is_empty() or not click:
 					select_building(null)
 				for unit in units:

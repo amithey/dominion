@@ -197,6 +197,21 @@ It uses the Forward+ renderer:
   One theme styles every panel, button, tooltip and menu: dark teal with gold trim and
   Windows' Bahnschrift font. The icons are drawn by `tools/make-icons.py` (Pillow) into
   `ui/icons/`. F1 shows the controls.
+- Weapons: aircraft, artillery, rocket launchers, SAMs, rocket infantry and submarines fire
+  projectiles that are seen to fly and explode where they land: bombers line up over the
+  target and drop a stick of four bombs, jets and drones fire guided missiles, helicopters
+  and gunships rocket salvos, the MLRS six-rocket barrages, artillery shells on a high arc,
+  submarines torpedoes that run under the water. Splash hurts only enemies.
+- Territory view (T): each nation's land is painted into the terrain in its colour (deeper
+  where control is firm), with bright borders between nations, gold hatching on contested
+  fronts and each nation's name over its land; the minimap shows the same. Clicking the map
+  while the view is open tells who holds that land, its terrain, control and yield.
+- Screens: diplomacy, market, intelligence and territory share one window of cards (a
+  relation meter per nation with treaty tags, prices with trends and buy/sell buttons,
+  agents with rank stars and a success meter per operation, land shares); the main menu,
+  pause menu, foreign letters and the end screen follow the same style.
+- The army a nation starts with is its garrison and does not use up housing, so a new
+  game can train soldiers at once.
 - Camera: WASD or the arrow keys (by key position, so any keyboard layout), the screen
   edge, a middle-button drag, Q/E to turn, R/F or PageUp/PageDown to tilt, and the wheel,
   which zooms toward the cursor. The view stays over the island. `-- --camera-test`.
@@ -238,6 +253,34 @@ never through water. Regenerate sounds with
 The earlier three-district prototype is still available: pass `res://main.tscn`.
 
 Not yet ported: Steam integration.
+
+## Testing everything
+
+`powershell -ExecutionPolicy Bypass -File native/run-tests.ps1` runs every automated test in turn
+(about 25 minutes) and prints a table; `-Quick` skips the AI war and the 12-minute match, and
+`-Exported` runs them against the built `dist/DOMINION.exe`. A test fails if it reports FAIL,
+times out, or prints any SCRIPT ERROR on the way. The suites:
+
+| Flag | What it checks |
+|---|---|
+| `--smoke-test` (main.tscn) | models load, a route around a district, units move |
+| `--nav-test` | routes never cross buildings or water |
+| `--camera-test` | WASD, arrow keys and a middle-button drag move the view; it stays over the island |
+| `--economy-test` | workers build, a soldier trains, money and food move |
+| `--combat-test` | 19 duels: every armed unit fires its own weapon (bombs, missiles, rockets, torpedoes, arcing shells, bullets) and hurts its target, never its own side |
+| `--air-sea-test` | ships stay at sea, aircraft at altitude, the damage table holds |
+| `--diplomacy-test` | gifts, pacts, allies joining, peace |
+| `--logistics-test` | supply cut and restored by roads and rail |
+| `--systems-test` | market, trade routes, espionage, missiles (EMP, nuke), territory capture, saving them |
+| `--research-test` | stages, facilities, eras, unlocks, tracks, rival research |
+| `--ui-test` | every screen opens and every button in it is pressed; build and train from the production list; research, help, minimap, pause and settings |
+| `--save-test`, `--menu-test` | save and load, the menu flow |
+| `--ai-test` | a hard AI builds, trains, goes to war and reaches the player |
+| `--soak-test` | 12 minutes of game time against three hard rivals at 4x speed; every few seconds no unit or building has broken numbers, leaves the map or sinks, and no treasury goes negative |
+
+Screenshot flags for looking at the result: `--capture-screens` (every screen), `--capture-ui`,
+`--capture-combat` (each weapon in flight), `--capture-vehicles`, `--capture-craft`,
+`--capture-infantry`, `--capture-research`, `--capture-systems`.
 
 ## Windows installer
 

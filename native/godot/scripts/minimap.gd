@@ -58,6 +58,16 @@ func _draw() -> void:
 	var colours := []
 	for n in world.map.nations:
 		colours.append(Color(n.color).lightened(0.2))
+	# Territory: every held cell washed in its owner's colour, fronts in gold.
+	var t: Node = world.territory
+	if t != null:
+		var cell_px := size / float(t.cols)
+		for i in range(t.owner_of.size()):
+			var o: int = t.owner_of[i]
+			if o < 0:
+				continue
+			var r := Rect2(Vector2(i % t.cols, i / t.cols) * cell_px, cell_px)
+			draw_rect(r, Color(1.0, 0.84, 0.42, 0.35) if t.contested[i] else Color(colours[o % colours.size()], 0.26))
 	for b in world.buildings:
 		if b.dead:
 			continue

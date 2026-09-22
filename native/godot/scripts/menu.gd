@@ -20,6 +20,13 @@ var _panel: VBoxContainer
 var _title: Label
 var _subtitle: Label
 
+const UI := preload("res://scripts/ui_theme.gd")
+
+var _shade: TextureRect
+var _dim: ColorRect
+var _brand: VBoxContainer
+var _card: PanelContainer
+
 func setup(world_node: Node) -> void:
 	world = world_node
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -27,49 +34,106 @@ func setup(world_node: Node) -> void:
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_root)
-	# A dark band on the left so the menu reads over the moving scene.
-	var shade := ColorRect.new()
-	shade.color = Color(0.04, 0.07, 0.09, 0.78)
-	shade.anchor_bottom = 1.0
-	shade.offset_right = 460
-	_root.add_child(shade)
-	var box := VBoxContainer.new()
-	box.offset_left = 56
-	box.offset_top = 90
-	box.offset_right = 420
-	box.add_theme_constant_override("separation", 10)
-	_root.add_child(box)
+	# Main menu: a dark band that fades into the island turning behind it.
+	var fade := Gradient.new()
+	fade.set_color(0, Color(0.03, 0.06, 0.08, 0.94))
+	fade.add_point(0.62, Color(0.03, 0.06, 0.08, 0.8))
+	fade.set_color(fade.get_point_count() - 1, Color(0.03, 0.06, 0.08, 0.0))
+	var tex := GradientTexture2D.new()
+	tex.gradient = fade
+	tex.width = 256
+	tex.height = 4
+	_shade = TextureRect.new()
+	_shade.texture = tex
+	_shade.stretch_mode = TextureRect.STRETCH_SCALE
+	_shade.anchor_bottom = 1.0
+	_shade.offset_right = 720
+	_root.add_child(_shade)
+	# Pause menu: the whole game dims behind a card.
+	_dim = ColorRect.new()
+	_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_dim.color = Color(0.02, 0.04, 0.05, 0.62)
+	_root.add_child(_dim)
+	_brand = VBoxContainer.new()
+	_brand.offset_left = 64
+	_brand.offset_top = 70
+	_brand.add_theme_constant_override("separation", 4)
+	_root.add_child(_brand)
+	var crest := HBoxContainer.new()
+	crest.add_theme_constant_override("separation", 18)
+	_brand.add_child(crest)
+	var emblem := TextureRect.new()
+	emblem.texture = load("res://icon.png")
+	emblem.custom_minimum_size = Vector2(88, 88)
+	emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	crest.add_child(emblem)
 	_title = Label.new()
 	_title.text = "DOMINION"
-	_title.add_theme_font_size_override("font_size", 64)
+	_title.theme_type_variation = "HeaderLabel"
+	_title.add_theme_font_size_override("font_size", 74)
 	_title.add_theme_color_override("font_color", Color("f1e3b4"))
-	box.add_child(_title)
+	_title.add_theme_constant_override("outline_size", 8)
+	crest.add_child(_title)
 	_subtitle = Label.new()
-	_subtitle.text = "Nations · supply lines · war"
-	_subtitle.add_theme_color_override("font_color", GOLD)
-	_subtitle.add_theme_font_size_override("font_size", 18)
-	box.add_child(_subtitle)
-	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(0, 30)
-	box.add_child(gap)
+	_subtitle.text = "NATIONS  ·  SUPPLY LINES  ·  RESEARCH  ·  WAR"
+	_subtitle.add_theme_color_override("font_color", UI.GOLD)
+	_subtitle.add_theme_font_size_override("font_size", 16)
+	_brand.add_child(_subtitle)
+	var rule := ColorRect.new()
+	rule.color = Color(UI.GOLD, 0.6)
+	rule.custom_minimum_size = Vector2(420, 2)
+	_brand.add_child(rule)
+	# The menu sits in a card: under the title on the main menu, centred over
+	# the dimmed game when paused.
+	_card = PanelContainer.new()
+	_root.add_child(_card)
 	_panel = VBoxContainer.new()
 	_panel.add_theme_constant_override("separation", 8)
-	box.add_child(_panel)
+	_card.add_child(_panel)
 	var credit := Label.new()
 	credit.text = "Version %s  ·  made with Godot %s" % [ProjectSettings.get_setting("application/config/version", ""), Engine.get_version_info().string]
 	credit.add_theme_color_override("font_color", Color(1, 1, 1, 0.35))
 	credit.anchor_top = 1.0
 	credit.anchor_bottom = 1.0
-	credit.offset_left = 56
-	credit.offset_top = -44
+	credit.offset_left = 64
+	credit.offset_top = -40
 	_root.add_child(credit)
 	load_settings()
+
+## Main menu: title and card on the left. Paused: a card in the middle.
+func _layout(paused: bool) -> void:
+	_shade.visible = not paused
+	_brand.visible = not paused
+	_dim.visible = paused
+	if paused:
+		_card.add_theme_stylebox_override("panel", UI.box(Color(UI.BG, 0.97), UI.GOLD, 2, 10, 22.0, 18))
+		_card.anchor_left = 0.5
+		_card.anchor_right = 0.5
+		_card.anchor_top = 0.5
+		_card.anchor_bottom = 0.5
+		_card.offset_left = -212
+		_card.offset_right = 212
+		_card.offset_top = -240
+		_card.offset_bottom = -240
+	else:
+		_card.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		_card.anchor_left = 0.0
+		_card.anchor_right = 0.0
+		_card.anchor_top = 0.0
+		_card.anchor_bottom = 0.0
+		_card.offset_left = 64
+		_card.offset_right = 484
+		_card.offset_top = 230
+		_card.offset_bottom = 230
+	_card.reset_size()
 
 # ---------------------------------------------------------------- screens
 
 func open_main() -> void:
 	in_match = false
 	_show(true)
+	_layout(false)
 	_clear()
 	_heading("")
 	_button("New Game", open_new_game)
@@ -83,6 +147,7 @@ func open_main() -> void:
 func open_pause() -> void:
 	in_match = true
 	_show(true)
+	_layout(true)
 	_clear()
 	_heading("PAUSED")
 	_button("Resume", close)
@@ -98,16 +163,9 @@ func open_pause() -> void:
 
 func open_new_game() -> void:
 	_clear()
-	_heading("NEW GAME")
+	_heading("NEW GAME  ·  CHOOSE THE DIFFICULTY")
 	for d in DIFFICULTIES:
-		var b := _button(d[1], func(): start(d[0]))
-		b.tooltip_text = d[2]
-		var note := Label.new()
-		note.text = d[2]
-		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		note.custom_minimum_size = Vector2(340, 0)
-		note.add_theme_color_override("font_color", Color(1, 1, 1, 0.55))
-		_panel.add_child(note)
+		_option_card(d[1], d[2], func(): start(d[0]))
 	_button("Back", open_main)
 
 func open_load() -> void:
@@ -119,7 +177,7 @@ func open_load() -> void:
 		none.text = "No saved games yet. F5 saves during a match."
 		_panel.add_child(none)
 	for s in slots:
-		_button("%s   %s" % [s.name.capitalize(), s.date], func(): load_game(s.name))
+		_option_card(s.name.capitalize(), "Saved %s" % s.date, func(): load_game(s.name))
 	_button("Back", open_pause if in_match else open_main)
 
 func open_settings() -> void:
@@ -149,6 +207,12 @@ func open_settings() -> void:
 		AudioServer.set_bus_volume_db(0, linear_to_db(maxf(v, 0.1) / 100.0))
 		save_settings())
 	_row("Volume", volume)
+	var edge := CheckButton.new()
+	edge.button_pressed = world.edge_scroll
+	edge.toggled.connect(func(on):
+		world.edge_scroll = on
+		save_settings())
+	_row("Scroll at screen edge", edge)
 	_button("Back", open_pause if in_match else open_main)
 
 func close() -> void:
@@ -203,45 +267,100 @@ func load_settings() -> void:
 	if cfg.get_value("graphics", "fullscreen", false):
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(float(cfg.get_value("audio", "volume", 100.0)), 0.1) / 100.0))
+	world.edge_scroll = bool(cfg.get_value("controls", "edge_scroll", true))
 
 func save_settings() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("graphics", "quality", world.quality)
 	cfg.set_value("graphics", "fullscreen", DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN)
 	cfg.set_value("audio", "volume", roundf(db_to_linear(AudioServer.get_bus_volume_db(0)) * 100.0))
+	cfg.set_value("controls", "edge_scroll", world.edge_scroll)
 	cfg.save(SETTINGS)
 
 # ---------------------------------------------------------------- widgets
 
 func _clear() -> void:
 	for child in _panel.get_children():
+		_panel.remove_child(child)
 		child.queue_free()
+	_card.reset_size.call_deferred()
 
 func _heading(text: String) -> void:
 	if text == "":
 		return
 	var label := Label.new()
 	label.text = text
-	label.add_theme_color_override("font_color", GOLD)
-	label.add_theme_font_size_override("font_size", 20)
+	label.theme_type_variation = "HeaderLabel"
+	label.add_theme_color_override("font_color", UI.GOLD)
+	label.add_theme_font_size_override("font_size", 18)
 	_panel.add_child(label)
 
+func _accent(width: int) -> Array:
+	var normal := UI.box(Color(0.06, 0.1, 0.12, 0.85), Color(UI.TRIM, 0.9), 1, 6, 12.0)
+	normal.border_width_left = width
+	var hover := UI.box(Color("233841"), UI.GOLD, 1, 6, 12.0)
+	hover.border_width_left = width + 2
+	return [normal, hover]
+
+# A menu button: a bar with a gold accent on the left that lights up on hover.
 func _button(text: String, action: Callable) -> Button:
 	var b := Button.new()
-	b.text = text
-	b.custom_minimum_size = Vector2(340, 46)
+	b.text = "  " + text
+	b.custom_minimum_size = Vector2(380, 50)
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.add_theme_font_size_override("font_size", 20)
+	b.focus_mode = Control.FOCUS_NONE
+	b.add_theme_font_size_override("font_size", 21)
+	var styles := _accent(4)
+	b.add_theme_stylebox_override("normal", styles[0])
+	b.add_theme_stylebox_override("hover", styles[1])
+	b.add_theme_stylebox_override("pressed", styles[1])
 	b.pressed.connect(action)
 	_panel.add_child(b)
 	return b
 
+# A larger choice with a line of explanation: difficulties, saved games.
+func _option_card(title: String, detail: String, action: Callable) -> void:
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(380, 72)
+	b.focus_mode = Control.FOCUS_NONE
+	b.tooltip_text = detail
+	var styles := _accent(4)
+	b.add_theme_stylebox_override("normal", styles[0])
+	b.add_theme_stylebox_override("hover", styles[1])
+	b.add_theme_stylebox_override("pressed", styles[1])
+	b.pressed.connect(action)
+	var col := VBoxContainer.new()
+	col.set_anchors_preset(Control.PRESET_FULL_RECT)
+	col.offset_left = 18
+	col.offset_right = -12
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(col)
+	var t := Label.new()
+	t.text = title
+	t.theme_type_variation = "HeaderLabel"
+	t.add_theme_font_size_override("font_size", 19)
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(t)
+	var dl := Label.new()
+	dl.text = detail
+	dl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	dl.add_theme_font_size_override("font_size", 13)
+	dl.add_theme_color_override("font_color", UI.MUTED)
+	dl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(dl)
+	_panel.add_child(b)
+
 func _row(label_text: String, control: Control) -> void:
 	var row := HBoxContainer.new()
+	row.custom_minimum_size = Vector2(380, 40)
 	var label := Label.new()
 	label.text = label_text
-	label.custom_minimum_size = Vector2(150, 0)
+	label.custom_minimum_size = Vector2(180, 0)
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(label)
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	control.focus_mode = Control.FOCUS_NONE
 	row.add_child(control)
 	_panel.add_child(row)
 

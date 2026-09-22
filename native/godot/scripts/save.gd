@@ -86,7 +86,7 @@ func capture() -> Dictionary:
 	return {
 		"format": "dominion-save", "version": VERSION, "map": world.MAP_PATH, "difficulty": world.match_difficulty,
 		"date": Time.get_datetime_string_from_system(), "quality": world.quality,
-		"economy": {"res": world.economy.res, "civilians": world.economy.civilians},
+		"economy": {"res": world.economy.res, "civilians": world.economy.civilians, "garrison": world.economy.garrison},
 		"buildings": buildings, "units": units, "edges": edges,
 		"diplomacy": {"score": d.score, "war": d.war, "alliance": d.alliance, "pact": d.pact, "nap": d.nap},
 		"ai": nations,
@@ -134,6 +134,7 @@ func restore(data: Dictionary) -> void:
 	for key in data.economy.res:
 		world.economy.res[key] = float(data.economy.res[key])
 	world.economy.civilians = float(data.economy.civilians)
+	world.economy.garrison = int(data.economy.get("garrison", world.economy.garrison))
 	# Buildings, then their districts' streets and the walk grid.
 	for s in data.buildings:
 		var b: Dictionary = world.place_building(s.key, _p(s.pos), int(s.owner), bool(s.built))

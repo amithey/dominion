@@ -258,14 +258,80 @@ func tick() -> void:
 	if flipped:
 		_dirty = true
 	if _dirty and show_borders:
-		draw_borders()
+		draw_fill()
 	changed.emit()
 
 func set_visible_borders(on: bool) -> void:
 	show_borders = on
-	_borders.visible = on
-	if on:
-		draw_borders()
+	_borders.visible = false  # the terrain now draws the borders itself
+	draw_fill()
+	for label in _labels:
+		label.visible = on
+
+# ---------------------------------------------------------------- the map view
+
+var _labels: Array[Label3D] = []
+
+## Paints the land each nation holds in its colour, in the terrain itself:
+## a small texture with one texel per cell (colour and tint strength) that
+## terrain.gdshader reads. Firmer control is a deeper colour, borders between
+## nations are bright lines, contested cells are hatched in gold. Each
+## nation's name floats over its heartland.
+func draw_fill() -> void:
+	var img := Image.create(cols, cols, false, Image.FORMAT_RGBA8)
+	var sums := {}
+	for i in range(owner_of.size()):
+		var o := owner_of[i]
+		if o < 0:
+			continue
+		var base: Color = Color(world.map.nations[o].color)
+		var strength := 0.42 + 0.25 * clampf(control[i] / 100.0, 0.0, 1.0)
+		img.set_pixel(i % cols, i / cols, Color(base.r, base.g, base.b, 1.0 if contested[i] else strength))
+		var c := center(i)
+		sums[o] = sums.get(o, Vector3.ZERO) + Vector3(c.x, 1.0, c.z)
+	var mat: ShaderMaterial = world.terrain_node.material_override as ShaderMaterial
+	if mat != null:
+		mat.set_shader_parameter("territory_tex", ImageTexture.create_from_image(img))
+		mat.set_shader_parameter("territory_origin", Vector2(-half_map, -half_map))
+		mat.set_shader_parameter("territory_cell", cell)
+		mat.set_shader_parameter("territory_cols", float(cols))
+		mat.set_shader_parameter("show_territory", show_borders)
+	var sea := float(world.map.seaLevel)
+	for label in _labels:
+		label.queue_free()
+	_labels.clear()
+	for o in sums:
+		var s3: Vector3 = sums[o]
+		var at := Vector3(s3.x / s3.y, 0, s3.z / s3.y)
+		at.y = maxf(world.height_at(at.x, at.z), sea) + 14.0
+		var label := Label3D.new()
+		label.text = world.map.nations[o].name.to_upper()
+		label.font_size = 150
+		label.pixel_size = 0.05
+		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		label.no_depth_test = true
+		label.modulate = Color(world.map.nations[o].color).lightened(0.35)
+		label.outline_size = 36
+		label.outline_modulate = Color(0.05, 0.08, 0.1, 0.85)
+		label.position = at
+		label.visible = show_borders
+		add_child(label)
+		_labels.append(label)
+
+## What the territory view shows about the cell at `at` when it is clicked.
+func describe(at: Vector3) -> String:
+	var i := cell_of(at)
+	var terrain_name: String = TERRAIN_NAMES[terrain[i]]
+	if terrain[i] == Terrain.WATER:
+		return "Open water: nobody holds the sea."
+	var o := owner_of[i]
+	if o < 0:
+		return "%s, unclaimed. Buildings or an army standing here will claim it." % terrain_name
+	var who: String = "You" if o == 0 else world.diplomacy.name_of(o)
+	var status_text := status(i)
+	var yields_text: String = {Terrain.PLAINS: "food and money", Terrain.FOREST: "money (timber)", Terrain.MOUNTAIN: "iron and money", Terrain.COAST: "trade money"}.get(terrain[i], "money")
+	return "%s: held by %s, %s (control %d%%). Yields %s at %d%%.%s" % [terrain_name, who, status_text, int(control[i]), yields_text, roundi(STATUS_YIELD[status_text] * 100.0),
+		" A front line: rival forces are contesting it." if contested[i] else ""]
 
 # Ribbons along every edge between cells of different owners, in the owner's
 # colour (gold where contested), slightly wavy so they read as borders, not a grid.

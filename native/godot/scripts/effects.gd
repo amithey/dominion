@@ -237,6 +237,110 @@ func impact(at: Vector3) -> void:
 		audio.play("impact", at, -12.0, 0.5)
 	_burst(_puff, _smoke_mesh, at, 3, 0.8, 0.35)
 
+## Projectiles that are seen to fly: kind is "missile" (a guided missile with
+## a smoke trail, following `track` if given), "rocket" (a small unguided
+## rocket), "bomb" (falls from the aircraft, gathering speed), "shell_arc" (an
+## artillery shell on a high arc), "torpedo" (runs just under the water with a
+## wake). on_hit(position) runs where it lands; `delay` staggers salvos.
+var _projectiles: Array[Dictionary] = []
+var _projectile_meshes := {}
+var launched := {}   # projectile kind -> how many were fired (checked by tests)
+
+func projectile(kind: String, from: Vector3, to: Vector3, on_hit: Callable, delay := 0.0, track: Node3D = null) -> void:
+	var speed: float = {"missile": 75.0, "rocket": 65.0, "bomb": 0.0, "shell_arc": 55.0, "torpedo": 26.0}.get(kind, 60.0)
+	var dist := from.distance_to(to)
+	var time := sqrt(2.0 * maxf(from.y - to.y, 1.0) / 9.8) if kind == "bomb" else maxf(dist / speed, 0.15)
+	var arc: float = {"missile": 0.12, "rocket": 0.06, "shell_arc": 0.32, "bomb": 0.0, "torpedo": 0.0}.get(kind, 0.0) * dist
+	var node := Node3D.new()
+	var body := MeshInstance3D.new()
+	body.mesh = _projectile_mesh(kind)
+	body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	body.rotation.x = -PI * 0.5  # the cylinder lies along -Z, where look_at points
+	node.add_child(body)
+	if kind in ["missile", "rocket"]:
+		var glow := OmniLight3D.new()
+		glow.light_color = Color(1.0, 0.65, 0.3)
+		glow.light_energy = 2.0
+		glow.omni_range = 5.0
+		node.add_child(glow)
+	node.visible = delay <= 0.0
+	add_child(node)
+	node.global_position = from
+	launched[kind] = int(launched.get(kind, 0)) + 1
+	_projectiles.append({"kind": kind, "node": node, "from": from, "to": to, "t": -delay, "time": time, "arc": arc, "hit": on_hit, "track": track, "puff": 0.0})
+	if delay <= 0.0 and audio and kind != "bomb":
+		audio.play("cannon", from, -8.0, 1.2)
+
+func _projectile_mesh(kind: String) -> Mesh:
+	if not _projectile_meshes.has(kind):
+		var c := CylinderMesh.new()
+		var m := StandardMaterial3D.new()
+		m.roughness = 0.5
+		match kind:
+			"bomb":
+				c.top_radius = 0.12
+				c.bottom_radius = 0.28
+				c.height = 1.3
+				m.albedo_color = Color("3d4432")
+			"torpedo":
+				c.top_radius = 0.2
+				c.bottom_radius = 0.2
+				c.height = 1.8
+				m.albedo_color = Color("2a2e30")
+			"shell_arc":
+				c.top_radius = 0.05
+				c.bottom_radius = 0.14
+				c.height = 0.7
+				m.albedo_color = Color(1.0, 0.8, 0.45)
+				m.emission_enabled = true
+				m.emission = Color(1.0, 0.6, 0.25)
+			_:
+				c.top_radius = 0.03 if kind == "missile" else 0.05
+				c.bottom_radius = 0.1
+				c.height = 1.3 if kind == "missile" else 0.8
+				m.albedo_color = Color("dfe3e6")
+		c.radial_segments = 8
+		c.rings = 1
+		c.material = m
+		_projectile_meshes[kind] = c
+	return _projectile_meshes[kind]
+
+func _move_projectiles(delta: float) -> void:
+	for i in range(_projectiles.size() - 1, -1, -1):
+		var p: Dictionary = _projectiles[i]
+		p.t += delta
+		if p.t < 0.0:
+			continue
+		var node: Node3D = p.node
+		if not node.visible:
+			node.visible = true
+			if audio and p.kind != "bomb":
+				audio.play("cannon", p.from, -8.0, 1.2)
+		if p.track != null and is_instance_valid(p.track):
+			p.to = p.track.global_position  # guided: the missile follows its target
+		var k: float = minf(p.t / p.time, 1.0)
+		var pos: Vector3 = p.from.lerp(p.to, k)
+		if p.kind == "bomb":
+			pos = Vector3(lerpf(p.from.x, p.to.x, k), lerpf(p.from.y, p.to.y, k * k), lerpf(p.from.z, p.to.z, k))
+		else:
+			pos.y += p.arc * 4.0 * k * (1.0 - k)
+		var ahead: Vector3 = pos - node.global_position
+		node.global_position = pos
+		if ahead.length() > 0.01:
+			node.look_at(pos + ahead, Vector3.UP if absf(ahead.normalized().y) < 0.98 else Vector3.RIGHT)
+		p.puff += delta
+		if p.puff > 0.05:
+			p.puff = 0.0
+			match p.kind:
+				"missile", "rocket":
+					trail(pos - ahead.normalized() * 0.6)
+				"torpedo":
+					_burst(_puff, _smoke_mesh, pos + Vector3.UP * 0.4, 2, 1.2, 0.5)
+		if k >= 1.0:
+			node.queue_free()
+			_projectiles.remove_at(i)
+			p.hit.call(p.to)
+
 ## Exhaust behind a missile in flight: a bright spark and a puff of smoke.
 func trail(at: Vector3) -> void:
 	_burst(_smoke, _smoke_mesh, at, 2, 2.6, 0.5)
@@ -343,6 +447,7 @@ func burn(at: Vector3, seconds: float) -> void:
 # ---------------------------------------------------------------- update
 
 func _physics_process(delta: float) -> void:
+	_move_projectiles(delta)
 	for i in range(_shells.size() - 1, -1, -1):
 		var s: Dictionary = _shells[i]
 		s.t += delta

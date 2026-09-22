@@ -22,6 +22,9 @@ var civ_cap := 200.0
 var admin := 0.28
 var pop_used := 0
 var pop_cap := 0
+# The army a nation starts with is its standing garrison: it has barracks of
+# its own and does not take up the housing that new recruits need.
+var garrison := 0
 var _tick := 0.0
 
 func setup(world_node: Node, economy: Dictionary) -> void:
@@ -64,7 +67,7 @@ func recalculate() -> void:
 	caps.food = float(cfg.foodCapBase) + owned("foodDepot") * float(cfg.foodDepotBonus)
 	# Taxes need administration; residential districts extend it (config.js admin).
 	admin = clampf(float(cfg.baseAdmin) + mini(owned("residential"), 3) * 0.05 + mini(owned("villageCenter"), 3) * 0.05 + owned("cityCenter") * 0.10, float(cfg.baseAdmin), 1.0)
-	pop_cap = int(provided("pop"))
+	pop_cap = int(provided("pop")) + garrison
 	pop_used = 0
 	for u in world.units:
 		if u.owner == 0 and not u.dead:

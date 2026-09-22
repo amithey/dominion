@@ -22,6 +22,14 @@ uniform float tile = 0.16;          // repeats per metre, near scale
 uniform float far_tile = 0.031;     // second, coarser scale that hides repetition
 uniform float sea_level = 0.0;
 uniform float cloud_shadow = 0.3;  // how dark drifting cloud shadows get
+// Territory view (territory.gd): one texel per territory cell, the owner's
+// colour in RGB and the strength of the tint in A (0 = unclaimed). Borders
+// between owners get a bright line; contested cells a gold hatch.
+uniform bool show_territory = false;
+uniform sampler2D territory_tex : filter_nearest, repeat_disable;
+uniform vec2 territory_origin = vec2(-320.0, -320.0);
+uniform float territory_cell = 40.0;
+uniform float territory_cols = 16.0;
 
 varying vec3 world_pos;
 varying vec3 world_normal;
@@ -98,6 +106,33 @@ void fragment() {
 	float wet = 1.0 - smoothstep(0.0, 0.7, h);
 	albedo *= mix(1.0, 0.62, wet);
 
+	if (show_territory) {
+		vec2 cellf = (world_pos.xz - territory_origin) / territory_cell;
+		vec2 uv = (floor(cellf) + 0.5) / territory_cols;
+		vec4 own = texture(territory_tex, uv);
+		if (own.a > 0.0 && world_pos.y > sea_level - 0.2) {
+			// Near a cell edge where the neighbour differs, draw the border line.
+			vec2 f = fract(cellf);
+			float edge = 0.0;
+			vec2 d[4] = vec2[](vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, 1.0), vec2(0.0, -1.0));
+			float near[4] = float[](1.0 - f.x, f.x, 1.0 - f.y, f.y);
+			for (int k = 0; k < 4; k++) {
+				vec4 other = texture(territory_tex, uv + d[k] / territory_cols);
+				if (distance(other.rgb, own.rgb) > 0.02 || abs(other.a - own.a) > 0.5) {
+					edge = max(edge, 1.0 - smoothstep(0.015, 0.045, near[k]));
+				}
+			}
+			bool contested = own.a > 0.95;
+			float strength = contested ? 0.5 : own.a;
+			vec3 tint = own.rgb;
+			if (contested) {
+				float stripe = step(0.5, fract((world_pos.x + world_pos.z) * 0.12));
+				tint = mix(own.rgb, vec3(1.0, 0.78, 0.25), stripe);
+			}
+			albedo = mix(albedo, tint * (0.4 + dot(albedo, vec3(0.3, 0.59, 0.11)) * 0.8), strength);
+			albedo = mix(albedo, own.rgb * 1.25 + 0.15, edge * 0.9);
+		}
+	}
 	ALBEDO = albedo;
 	ROUGHNESS = mix(mix(0.92, 0.82, w.w), 0.35, wet);
 	SPECULAR = mix(0.35, 0.5, wet);
