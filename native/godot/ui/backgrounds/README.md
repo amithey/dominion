@@ -1,0 +1,10 @@
+# War council opening screen
+
+`war-table-v1.png` is original artwork generated with the built-in ImageGen tool.
+The image is shipped inside the Godot project; no runtime network access is needed.
+`scripts/war_table.gd` adds a slow drift and sparse dust in window light, without
+moving the menu hit targets. The backdrop is hidden in the pause menu and gameplay.
+
+## Generation prompt
+
+Use case: stylized-concept. Asset type: final background artwork for DOMINION PC strategy game main menu, landscape 16:10, 2560x1600 if possible. Create an exquisite cinematic realistic painterly 3D war council room still life, viewed at a shallow oblique overhead angle across a massive dark walnut command table. Main subject on RIGHT TWO THIRDS: large antique parchment topographical map of an imaginary coastal continent, fine engraved contours, subtle jade green territorial washes, tiny detailed cast brass army figurines, miniature metal tanks and cavalry pieces, slender red and jade flag pins, brass compass and dividers, folded dispatches with a red wax seal at bottom right. Background upper right: soft shafts of warm late afternoon sunlight from tall unseen windows, dust suspended in the rays, indistinct dark library shelves. Left 40 percent MUST be quiet very dark charcoal/jade desk shadow with minimal objects and no map clutter, reserved for readable live menu overlay; scene must still feel continuous across full image. Deep shadow in lower left. Rich physically believable walnut grain, aged paper, brushed bronze, restrained highlights. Prestigious historical strategy game art direction, contemplative political power, ambitious civilization, premium handcrafted cinematic lighting, excellent realistic material detail, restrained teal and warm antique gold palette. Table fills the frame, no humans. Map has NO readable lettering. No text, no titles, no UI, no borders, no logos, no watermark. Not a screenshot of a game map. Compose focal figurines and map in right center so a left aligned menu will not cover them.

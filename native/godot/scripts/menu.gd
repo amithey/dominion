@@ -1,6 +1,6 @@
 extends CanvasLayer
-## Main menu and pause menu. The world loads behind the menu and the camera
-## circles the island slowly while the game is paused. New Game asks for a
+## Main menu and pause menu. An illustrated war table with drifting light
+## fills the opening screen. New Game asks for a
 ## difficulty; Continue loads the newest save; Settings (graphics quality,
 ## full screen, master volume) persist in user://settings.cfg. In a match, Esc
 ## opens the pause menu: resume, save, load, settings, quit to the main menu.
@@ -22,6 +22,7 @@ var _subtitle: Label
 
 const UI := preload("res://scripts/ui_theme.gd")
 
+var _table: Control
 var _shade: TextureRect
 var _dim: ColorRect
 var _brand: VBoxContainer
@@ -43,10 +44,15 @@ func setup(world_node: Node) -> void:
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_root)
-	# Main menu: a dark band that fades into the island turning behind it.
+	# A dedicated council-room backdrop covers the world only in the main menu.
+	_table = preload("res://scripts/war_table.gd").new()
+	_root.add_child(_table)
+	_table.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# Preserve contrast for every submenu without flattening the artwork.
+
 	var fade := Gradient.new()
-	fade.set_color(0, Color(0.03, 0.06, 0.08, 0.94))
-	fade.add_point(0.62, Color(0.03, 0.06, 0.08, 0.8))
+	fade.set_color(0, Color(0.025, 0.04, 0.04, 0.68))
+	fade.add_point(0.62, Color(0.025, 0.04, 0.04, 0.36))
 	fade.set_color(fade.get_point_count() - 1, Color(0.03, 0.06, 0.08, 0.0))
 	var tex := GradientTexture2D.new()
 	tex.gradient = fade
@@ -58,11 +64,6 @@ func setup(world_node: Node) -> void:
 	_shade.anchor_bottom = 1.0
 	_shade.offset_right = 1000
 	_root.add_child(_shade)
-	var atlas := Control.new()
-	atlas.set_script(preload("res://scripts/atlas_decoration.gd"))
-	atlas.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_shade.add_child(atlas)
-	atlas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	# Pause menu: the whole game dims behind a card.
 	_dim = ColorRect.new()
 	_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -138,6 +139,7 @@ func setup(world_node: Node) -> void:
 
 ## Main menu: title and card on the left. Paused: a card in the middle.
 func _layout(paused: bool) -> void:
+	_table.visible = not paused
 	_shade.visible = not paused
 	_brand.visible = not paused
 	_dim.visible = paused
@@ -176,7 +178,7 @@ func open_main() -> void:
 	_layout(false)
 	_clear()
 	_heading("")
-	var invitation := _description("THE NEXT CHAPTER IS YOURS")
+	var invitation := _description("THE WAR COUNCIL")
 	invitation.add_theme_color_override("font_color", UI.GOLD)
 	_button("New Game", open_new_game)
 	var newest := newest_save()
@@ -484,9 +486,3 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _root != null and _root.visible and in_match and event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:
 		close()
 		get_viewport().set_input_as_handled()
-
-# The island turns slowly behind the menu.
-func _process(delta: float) -> void:
-	if _root != null and _root.visible and not in_match and world.camera != null:
-		world.cam_yaw += delta * 0.05
-		world.update_camera(delta)
