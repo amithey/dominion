@@ -14,7 +14,7 @@ extends RefCounted
 ## their size on any wall or roof. Everything a district holds is gathered into
 ## one mesh per material (a handful of draws per district).
 
-enum { PLASTER, BRICK, STONE, ROOF, TRIM, GLASS, WOOD, BANNER }
+enum { PLASTER, BRICK, STONE, ROOF, TRIM, GLASS, WOOD, BANNER, METAL, PLANK }
 
 var world: Node
 var _materials := {}
@@ -97,6 +97,23 @@ func _material(kind: int) -> Material:
 				if gap:
 					shade *= 0.6
 				return [clampf(shade, 0.0, 1.0), in_row])
+		METAL:
+			# Corrugated sheet: vertical ribs every 7.5 cm, lighter on the crests.
+			tex = _texture(128, func(x: int, y: int) -> Array:
+				var rib := 0.5 + 0.5 * cos(float(x) / 128.0 * TAU * 13.0)
+				return [0.78 + rib * 0.18 + n.get_noise_2d(x, y) * 0.03, rib])
+			m.metallic = 0.45
+			m.roughness = 0.55
+		PLANK:
+			# Barn boards: vertical planks 16 cm wide with dark gaps and grain.
+			tex = _texture(128, func(x: int, y: int) -> Array:
+				var gap := x % 20 < 1
+				var grain := n.get_noise_2d(x * 4, y * 0.3) * 0.08
+				var tone := fposmod(sin(float(x / 20) * 12.9898) * 43758.5453, 1.0)
+				if gap:
+					return [0.45, 0.0]
+				return [0.78 + tone * 0.14 + grain, 0.8])
+			m.roughness = 0.9
 		GLASS:
 			m.vertex_color_use_as_albedo = true
 			m.roughness = 0.08
@@ -494,6 +511,157 @@ func civic(key: String, rng: RandomNumberGenerator, footprint: float) -> void:
 			hip_roof(w, d, top, 1.6 * s, Color("5a6068"))
 			banner(0.0, 6.5, d * 0.5, 2.4)
 
+## A gambrel (barn) roof along x over w x d at y0: two pitches each side.
+func gambrel_roof(w: float, d: float, y0: float, rise: float, colour: Color, wall_kind: int, wall_colour: Color, over := 0.35) -> void:
+	var x := w * 0.5 + over
+	var z := d * 0.5 + over
+	var knee_z := d * 0.3
+	var knee_y := y0 + rise * 0.62
+	var top := y0 + rise
+	# Lower steep pitch, then the shallow upper one, each side.
+	quad(ROOF, Vector3(-x, y0, z), Vector3(x, y0, z), Vector3(x, knee_y, knee_z), Vector3(-x, knee_y, knee_z), colour)
+	quad(ROOF, Vector3(-x, knee_y, knee_z), Vector3(x, knee_y, knee_z), Vector3(x, top, 0), Vector3(-x, top, 0), colour)
+	quad(ROOF, Vector3(x, y0, -z), Vector3(-x, y0, -z), Vector3(-x, knee_y, -knee_z), Vector3(x, knee_y, -knee_z), colour)
+	quad(ROOF, Vector3(x, knee_y, -knee_z), Vector3(-x, knee_y, -knee_z), Vector3(-x, top, 0), Vector3(x, top, 0), colour)
+	quad(TRIM, Vector3(-x, y0, -z), Vector3(x, y0, -z), Vector3(x, y0, z), Vector3(-x, y0, z), Color("3a342c"))
+	# The gable ends: a pentagon in the wall material, as three triangles each.
+	for side in [-1.0, 1.0]:
+		var gx: float = side * w * 0.5
+		var a := Vector3(gx, y0, d * 0.5)
+		var b := Vector3(gx, y0, -d * 0.5)
+		var k1 := Vector3(gx, knee_y, knee_z)
+		var k2 := Vector3(gx, knee_y, -knee_z)
+		var t := Vector3(gx, top, 0)
+		if side > 0:
+			tri(wall_kind, a, b, k2, wall_colour)
+			tri(wall_kind, a, k2, k1, wall_colour)
+			tri(wall_kind, k1, k2, t, wall_colour)
+		else:
+			tri(wall_kind, b, a, k1, wall_colour)
+			tri(wall_kind, b, k1, k2, wall_colour)
+			tri(wall_kind, k2, k1, t, wall_colour)
+
+## A corrugated silo at `c`, radius r, height h, with a domed or conical cap.
+func silo(c: Vector3, r: float, h: float, conical := false) -> void:
+	cylinder(STONE, c + Vector3(0, -0.3, 0), r + 0.25, 0.6, Color("a8a090"), 16)
+	cylinder(METAL, c + Vector3(0, 0.3, 0), r, h, Color("b4b7b2"), 18)
+	for band in [0.33, 0.66]:
+		cylinder(TRIM, c + Vector3(0, 0.3 + h * band, 0), r + 0.05, 0.12, Color("9a9c98"), 18)
+	if conical:
+		cylinder(METAL, c + Vector3(0, 0.3 + h, 0), r + 0.1, r * 0.7, Color("b8bab6"), 18, 0.25)
+	else:
+		dome(METAL, c + Vector3(0, 0.3 + h, 0), r, r * 0.6, Color("c8cac6"), 18, 4)
+
+## A farmstead: a red barn with a gambrel roof, a farmhouse with a porch, a silo.
+func farm(rng: RandomNumberGenerator, footprint: float) -> void:
+	var s := footprint / 7.5
+	var w := 7.0 * s
+	var d := 5.2 * s
+	var red := Color("a8432f").lerp(Color("8f3a2a"), rng.randf())
+	box(STONE, Vector3(-w * 0.5 - 0.1, -0.3, -d * 0.5 - 0.1), Vector3(w * 0.5 + 0.1, 0.5, d * 0.5 + 0.1), Color("8c8478"))
+	walls(PLANK, w, d, 0.5, 3.6, red)
+	# White corner boards.
+	for x in [-w * 0.5, w * 0.5]:
+		for z in [-d * 0.5, d * 0.5]:
+			box(TRIM, Vector3(x - 0.12, 0.5, z - 0.12), Vector3(x + 0.12, 4.1, z + 0.12), Color("efe9dc"))
+	# Big doors on both long sides, cross-braced, and a hay-loft door above.
+	for side in [-1.0, 1.0]:
+		var saved := xf
+		if side < 0:
+			xf = xf * Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO)
+		box(PLANK, Vector3(-1.4, 0.5, d * 0.5), Vector3(1.4, 3.3, d * 0.5 + 0.08), red.darkened(0.15))
+		box(TRIM, Vector3(-1.5, 3.3, d * 0.5), Vector3(1.5, 3.45, d * 0.5 + 0.12), Color("efe9dc"))
+		box(TRIM, Vector3(-0.08, 0.5, d * 0.5 + 0.05), Vector3(0.08, 3.3, d * 0.5 + 0.12), Color("efe9dc"))
+		for dx in [-0.7, 0.7]:
+			box(TRIM, Vector3(dx - 0.62, 1.8, d * 0.5 + 0.06), Vector3(dx + 0.62, 1.95, d * 0.5 + 0.12), Color("efe9dc"))
+		box(PLANK, Vector3(-0.6, 4.3, d * 0.5 - 0.05), Vector3(0.6, 5.3, d * 0.5 + 0.08), red.darkened(0.2))
+		xf = saved
+	gambrel_roof(w, d, 4.1, d * 0.62, Color("5a5f64"), PLANK, red)
+	# A cupola on the ridge.
+	var ridge := 4.1 + d * 0.62
+	box(PLANK, Vector3(-0.5, ridge - 0.1, -0.5), Vector3(0.5, ridge + 0.8, 0.5), Color("efe9dc"))
+	cylinder(ROOF, Vector3(0, ridge + 0.8, 0), 0.8, 0.9, Color("5a5f64"), 4, 0.0)
+	# The farmhouse, set to one side, with a porch.
+	var saved2 := xf
+	xf = xf * Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(-w * 0.5 - 3.4, 0, 0.6))
+	cottage(rng, 4.2, 3.6)
+	box(WOOD, Vector3(-1.8, 0.3, 1.8), Vector3(1.8, 0.45, 3.0), Color("7a5a3e"))
+	for px in [-1.6, 1.6]:
+		box(WOOD, Vector3(px - 0.07, 0.45, 2.85), Vector3(px + 0.07, 2.6, 2.95), Color("efe9dc"))
+	box(ROOF, Vector3(-1.9, 2.6, 1.8), Vector3(1.9, 2.7, 3.1), Color("6a5a3a"))
+	xf = saved2
+	silo(Vector3(w * 0.5 + 1.8, 0, -d * 0.3), 1.3, 7.5)
+
+## A granary: tall corrugated silos, the lift tower and gallery that feed them,
+## and a warehouse shed with a loading dock.
+func granary(rng: RandomNumberGenerator, footprint: float) -> void:
+	var s := footprint / 9.5
+	for i in range(4):
+		silo(Vector3((i - 1.5) * 2.7 * s, 0, -1.6 * s), 1.25 * s, 8.5 * s, true)
+	var tx := 2.5 * 2.7 * s
+	box(METAL, Vector3(tx - 1.0, 0.0, -2.6 * s), Vector3(tx + 1.0, 12.0 * s, -0.6 * s), Color("c4c6c2"))
+	box(ROOF, Vector3(tx - 1.2, 12.0 * s, -2.8 * s), Vector3(tx + 1.2, 12.3 * s, -0.4 * s), Color("7a3a2e"))
+	box(METAL, Vector3(-1.5 * 2.7 * s, 9.6 * s, -2.1 * s), Vector3(tx, 10.6 * s, -1.1 * s), Color("b8bab6"))
+	var w := 8.0 * s
+	var d := 3.6 * s
+	var saved := xf
+	xf = xf * Transform3D(Basis(), Vector3(0, 0, 2.6 * s))
+	box(STONE, Vector3(-w * 0.5, -0.3, -d * 0.5), Vector3(w * 0.5, 0.9, d * 0.5 + 1.2), Color("9c9484"))
+	walls(METAL, w, d, 0.9, 3.2, Color("a8b0a8"))
+	for i in range(3):
+		var x := -w * 0.33 + w * 0.33 * i
+		box(WOOD, Vector3(x - 0.9, 0.9, d * 0.5), Vector3(x + 0.9, 3.3, d * 0.5 + 0.06), Color("6a7470"))
+	gable_roof(w, d, 4.1, d * 0.35, Color("7a3a2e"), METAL, Color("a8b0a8"), 0.5)
+	xf = saved
+
+## A coal-fired power station: a brick turbine hall with tall arched windows
+## and a clerestory, two banded stacks, a coal heap and a transformer yard.
+func power_station(rng: RandomNumberGenerator, footprint: float) -> void:
+	var s := footprint / 9.5
+	var w := 8.4 * s
+	var d := 5.4 * s
+	var h := 8.0 * s
+	var brick := Color("9c4e3a")
+	box(STONE, Vector3(-w * 0.5 - 0.2, -0.4, -d * 0.5 - 0.2), Vector3(w * 0.5 + 0.2, 0.6, d * 0.5 + 0.2), Color("8c877e"))
+	walls(BRICK, w, d, 0.6, h, brick)
+	# Tall round-headed windows between brick pilasters, on both long sides.
+	var n := 5
+	for side in [-1.0, 1.0]:
+		var saved := xf
+		if side < 0:
+			xf = xf * Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO)
+		for i in range(n):
+			var x := -w * 0.5 + w * (i + 0.5) / n
+			window(Vector3(x, 0.6 + h * 0.5, d * 0.5), 1.0 * s, h * 0.62, Color("d8d0bc"))
+			dome(STONE, Vector3(x, 0.6 + h * 0.81, d * 0.5 + 0.01), 0.55 * s, 0.35 * s, Color("d8d0bc"), 8, 2)
+			if i > 0:
+				var px := -w * 0.5 + w * i / n
+				box(BRICK, Vector3(px - 0.18, 0.6, d * 0.5), Vector3(px + 0.18, 0.6 + h, d * 0.5 + 0.2), brick.darkened(0.1))
+		xf = saved
+	cornice(w, d, 0.6 + h, Color("c8b898"), 0.25, 0.4)
+	gable_roof(w, d, 1.0 + h, d * 0.3, Color("5a5f64"), BRICK, brick, 0.3)
+	# A glazed lantern along the ridge.
+	var ridge := 1.0 + h + d * 0.3
+	box(GLASS, Vector3(-w * 0.35, ridge - 0.2, -0.5), Vector3(w * 0.35, ridge + 0.7, 0.5), Color("8a9aa4"))
+	box(ROOF, Vector3(-w * 0.37, ridge + 0.7, -0.7), Vector3(w * 0.37, ridge + 0.85, 0.7), Color("5a5f64"))
+	# Two tall stacks with dark bands and red-and-white tops.
+	for i in range(2):
+		var c := Vector3((i - 0.5) * 3.0 * s, 0.6, -d * 0.5 - 2.2 * s)
+		cylinder(BRICK, c, 0.95 * s, 17.0 * s, Color("a85a44"), 14, 0.7 * s)
+		for band in [0.3, 0.6]:
+			cylinder(TRIM, c + Vector3(0, 17.0 * s * band, 0), 0.95 * s * (1.0 - band * 0.27) + 0.06, 0.25, Color("3a3230"), 14)
+		cylinder(TRIM, c + Vector3(0, 15.0 * s, 0), 0.76 * s, 1.0 * s, Color("e8e4dc"), 14)
+		cylinder(TRIM, c + Vector3(0, 16.0 * s, 0), 0.73 * s, 1.0 * s, Color("b83a2e"), 14, 0.7 * s)
+	# A heap of coal and the transformer yard with a lattice pylon.
+	cylinder(TRIM, Vector3(-w * 0.5 - 1.8 * s, 0.0, d * 0.2), 2.0 * s, 1.6 * s, Color("26272a"), 12, 0.3)
+	var yard := Vector3(w * 0.5 + 1.6 * s, 0.0, 0.8 * s)
+	for i in range(3):
+		box(METAL, yard + Vector3(-0.5, 0.0, (i - 1) * 1.4 - 0.4), yard + Vector3(0.5, 1.4, (i - 1) * 1.4 + 0.4), Color("6a7470"))
+	for leg in [Vector3(-0.8, 0, -0.8), Vector3(0.8, 0, -0.8), Vector3(-0.8, 0, 0.8), Vector3(0.8, 0, 0.8)]:
+		var foot: Vector3 = yard + Vector3(0, 0, -3.2 * s) + leg
+		box(TRIM, foot + Vector3(-0.07, 0, -0.07), foot + Vector3(0.07, 9.0 * s, 0.07), Color("8a8c88"))
+	box(TRIM, yard + Vector3(-1.8, 7.5 * s, -3.2 * s - 0.08), yard + Vector3(1.8, 7.5 * s + 0.15, -3.2 * s + 0.08), Color("8a8c88"))
+
 ## An apartment block: storeys of plaster over a stone ground floor, with
 ## balconies, a flat roof behind a parapet and a water tank.
 func apartments(rng: RandomNumberGenerator, footprint: float, floors: int) -> void:
@@ -559,19 +727,27 @@ func commit() -> Node3D:
 static func has_recipe(key: String) -> bool:
 	return key in ["hq", "cityCenter", "cityHall", "courthouse", "bank", "university", "library", "school", "policeStation",
 		"hospital", "market", "villageCenter", "tankFactory", "warehouse", "barracks", "cottage", "residential", "workerHouse",
-		"luxuryVillas", "housing", "apartments", "tvStation", "intelAgency", "techPark"]
+		"luxuryVillas", "housing", "apartments", "tvStation", "intelAgency", "techPark", "farm", "foodDepot", "powerPlant"]
 
 ## --capture-city: close views of the capital's buildings (build/city-*.png).
 static func capture(w: Node) -> void:
 	for i in range(40):
 		await w.get_tree().process_frame
 	var home: Vector3 = w.start
+	# Buildings the capital does not start with are laid out beside it for the pictures.
+	for key in ["foodDepot", "powerPlant"]:
+		if not w.buildings.any(func(b): return b.owner == 0 and b.key == key and not b.dead):
+			var at = w.test_site(key, home)
+			if at != null:
+				w.place_building(key, at, 0, true)
+	for i in range(10):
+		await w.get_tree().process_frame
 	var picks := {}
 	for b in w.buildings:
 		if b.owner == 0 and not b.dead and not picks.has(b.key):
 			picks[b.key] = b.root.position
 	var shots := [["overview", home, 70.0, 0.75, 0.7]]
-	for key in ["hq", "cottage", "tankFactory", "barracks", "housing"]:
+	for key in ["hq", "cottage", "tankFactory", "barracks", "housing", "farm", "foodDepot", "powerPlant"]:
 		if picks.has(key):
 			shots.append([key, picks[key], 32.0, 0.5, 0.35])  # from the front (+z), where the entrances are
 	for shot in shots:

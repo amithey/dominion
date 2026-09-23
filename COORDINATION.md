@@ -106,3 +106,5 @@ UI files listed above.
   porticoes, domes, townhouses, factories, banners in the nation colour), used by `districts.gd` for civic,
   residential, factory, apartment and barracks hexes. Portraits of those buildings (`portraits.gd`) will show the
   new look through the same `building_model` path only for keys without a recipe; tell me if a picture card needs it.
+- 2026-09-23 Claude: farm (red gambrel barn, farmhouse, silo), granary (foodDepot) and power station are now
+  recipes in `architecture.gd` (new METAL and PLANK materials). Only architecture.gd and districts.gd changed.

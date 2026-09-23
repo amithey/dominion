@@ -231,6 +231,12 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 		arch.xf = Transform3D(Basis(), at)
 		if key in ["tankFactory", "warehouse"]:
 			arch.factory(rng, footprint)
+		elif key == "farm":
+			arch.farm(rng, footprint)
+		elif key == "foodDepot":
+			arch.granary(rng, footprint)
+		elif key == "powerPlant":
+			arch.power_station(rng, footprint)
 		elif key in ["housing", "apartments"]:
 			arch.apartments(rng, footprint, 4 + mini(city_size / 4, 2) + (1 if key == "apartments" else 0))
 		else:
@@ -341,12 +347,17 @@ func residential(key: String, container: Node3D, st: SurfaceTool, rng: RandomNum
 		cylinder(st, 0.3, 1.3, Vector3.ZERO, Color("a8a59b"), 8)
 
 func farmstead(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
-	main_building(key, container, 7.5, slot(0, 4.2))
-	cylinder(st, 1.5, 7.0, slot(1, 6.4), Color("9aa0a0"), 14)
-	cylinder(st, 1.6, 0.4, slot(1, 6.4) + Vector3(0, 7.0, 0), Color("6e7474"), 14)
-	for i in range(5):
-		var p := slot(3, 6.0) + Vector3(rng.randf_range(-2.2, 2.2), 0, rng.randf_range(-2.2, 2.2))
-		cylinder(st, 0.7, 0.9, p, Color("c9ae62"), 10)
+	main_building(key, container, 7.5, slot(0, 1.8))  # barn, farmhouse and silo (architecture.gd)
+	# Round hay bales lying in the field.
+	for i in range(6):
+		var p := slot(3, 6.4) + Vector3(rng.randf_range(-2.4, 2.4), 0.65, rng.randf_range(-2.4, 2.4))
+		var bale := CylinderMesh.new()
+		bale.top_radius = 0.65
+		bale.bottom_radius = 0.65
+		bale.height = 1.1
+		bale.radial_segments = 12
+		bale.rings = 1
+		shape(st, bale, Transform3D(Basis(Vector3.BACK, PI * 0.5).rotated(Vector3.UP, rng.randf() * TAU), p), Color("c9ae62").lerp(Color("b89a50"), rng.randf()))
 	fence(st, Color("6b5238"), 1.0)
 
 func yard(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
@@ -354,6 +365,11 @@ func yard(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGene
 		main_building(key, container, 6.0)
 		return
 	main_building(key, container, 9.5)
+	if key in ["foodDepot", "powerPlant"]:
+		for k in [2, 5]:
+			lamp(st, slot(k, 8.8))
+		fence(st, Color("5d6264"), 1.6)
+		return  # the granary and the power station are complete compositions
 	# Stacked shipping containers in faded paint.
 	var paints := [Color("7a3b2e"), Color("35506a"), Color("5b6b3a"), Color("8a6a2a")]
 	for k in [0, 3]:
@@ -480,9 +496,7 @@ func landmarks(key: String, st: SurfaceTool, rng: RandomNumberGenerator) -> void
 			cylinder(st, 0.25, 11.0, slot(2, 7.6), Color("8a3a2a"), 8)
 			cylinder(st, 0.5, 0.6, slot(2, 7.6) + Vector3(0, 11.0, 0), Color("ffb347"), 8)
 		"powerPlant":
-			for i in range(2):
-				cylinder(st, 0.8, 14.0, slot(4, 6.0) + Vector3(i * 2.2 - 1.1, 0, 0), Color("9a9790"), 12)
-				cylinder(st, 0.85, 0.8, slot(4, 6.0) + Vector3(i * 2.2 - 1.1, 12.0, 0), Color("b43a2e"), 12)
+			pass  # its stacks are part of the building (architecture.gd)
 		"hospital":
 			# A rooftop-style helipad on the ground with a red cross beside it.
 			var pad := slot(3, 7.0)
