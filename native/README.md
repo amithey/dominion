@@ -5,6 +5,32 @@ The active game is in `native/godot`. The browser implementation in `js/` is a
 reference for rules and exported data. Run `prepare-desktop.ps1` before changing
 or testing the native game; copied art and the engine are local-only.
 
+## Version 0.9.4: movement physics, debris and a 4X unit card
+
+- **Momentum.** Ground units build up speed and brake onto their mark
+  instead of switching between standing and full speed in one frame
+  (`scripts/motion.gd`). Vehicles drive along their hull: a tank ordered
+  behind itself pivots in place first rather than sliding sideways, slows
+  for corners, and climbs slower than it descends.
+- **Sprung hulls.** Every vehicle rides a damped spring on pitch and roll: it
+  squats when it pulls away, dips its nose when it brakes, leans out of a
+  turn, rocks back when its gun fires and follows the ground smoothly.
+- **Debris.** Explosions throw clods, armour and masonry that fly under
+  gravity, bounce off the slope, tumble, rest and fade (`scripts/debris.gd`,
+  one pooled MultiMesh, one draw call). Pieces in the sea sink. Tank shells
+  follow a gravity arc, blasts send a shock ring along the ground, a
+  destroyed tank may cook off and throw its turret, and buildings burst.
+- **Look.** AgX tonemapping, more aerial haze, deeper summer greens for
+  meadows, tufts and trees; each tree crown has its own shade and is darker
+  inside; leaf edges are anti-aliased.
+- **Interface.** The selection card shows a round bronze-and-gold portrait
+  medallion on the owner's colour, with ATTACK / RANGE / SPEED / HEALTH
+  plaques. The era cartouche counts the years of the reign. Notices run in
+  the lane between the side screens and the production list. Health bars
+  on the battlefield carry the owner's colour and step clear of each other.
+- `--motion-test` checks pivoting, acceleration, stopping, suspension,
+  debris landing and the turret toss; it is part of `run-tests.ps1`.
+
 ## War is decided by the state, not by the soldier
 
 - A soldier ordered to fire carries out the order. What the shot *means* is
