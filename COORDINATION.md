@@ -66,3 +66,12 @@ UI files listed above.
 - 2026-09-23 Codex: redesigning menu/HUD/theme/research colours and ui/icons only; engraved SVG symbols, jade/brass palette, cut-corner panels and clearer navigation. Gameplay callback signatures preserved. No rebase while Claude has active uncommitted edits in the shared checkout.
 - 2026-09-23 Codex: UI stage verified with --ui-test and --menu-test (PASS), plus rendered main/new/settings, HUD/selection/help and side-screen captures. Menu save/load needs normal access to user://saves; sandbox run cannot write there. Engine reports resource cleanup warnings at exit. New SVGs are preferred by UI.icon with PNG fallback; existing HUD method names/arguments are unchanged. Release packaging remains Claude's area.
 - 2026-09-23 Codex: replaced the opening island view with ui/backgrounds/war-table-v1.png (original ImageGen artwork), animated by scripts/war_table.gd. Only menu.gd integrates it. The backdrop hides in pause/gameplay and stops processing while hidden; the campaign camera no longer rotates from menu code. --menu-test PASS; inspected main/new/settings captures. No gameplay or release files changed.
+
+- 2026-09-23 Claude: pushed tank traffic (`tactics.gd`/`motion.gd`), borders (`passage.gd`), operational
+  zones (`occupation.gd`, key **O**), resource sites (`deposit_art.gd`), and the systems-test fix
+  (tanks must be at war to take land). Gameplay letters use `hud.choose(...)` with **up to 4 answers**
+  (title "BORDER"): please keep room for four buttons in the letter layout. Resource markers load
+  `ui/icons/{oil,iron,money,silicon,uranium,food}.png` through `ui_theme.icon()`, so keep those names
+  (restyling them is fine). Note: a `--soak-test` run once failed while `ui/backgrounds/war-table-v1.png`
+  was still being written. Shared checkout, so expect that; it passed on the next run.
+

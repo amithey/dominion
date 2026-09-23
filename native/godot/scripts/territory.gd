@@ -199,8 +199,15 @@ func tick() -> void:
 	for u in world.units:
 		if u.dead or u.dmg <= 0.0 or u.get("fly", false) or u.get("naval", false):
 			continue
+		# In another nation's land only a hostile force wears down its hold: a
+		# guest with passage (or a trespasser at peace) takes nothing.
+		var held := owner_of[cell_of(u.node.position)]
+		if held >= 0 and held != u.owner and not world.hostile(u.owner, held):
+			continue
 		var stance := 1.2 if u.attack_move else 1.0
 		var w: float = (1.1 + float(world.unit_defs.get(u.key, {}).get("pop", 1)) * 0.55) * stance
+		if world.occupation != null:
+			w *= world.occupation.weight(u)  # troops inside their own operational zone count double
 		_presence(presence, u.node.position, u.owner, w, 0, nations)
 	var flipped := false
 	for i in range(cols * cols):
@@ -251,6 +258,8 @@ func tick() -> void:
 	for i in range(cols * cols):
 		if is_front(i):
 			fronts += 1
+	if world.occupation != null:
+		world.occupation.review()
 	# AI nations bank their land's yield as money (twice the per-second rate).
 	if world.ai != null:
 		for nat in world.ai.nations:

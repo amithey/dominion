@@ -7,6 +7,51 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.6: armour that drives like traffic, borders, conquest and resource sites
+
+- **Armoured columns** (`--convoy-test`). Tanks used to weave from side to side and bump each other.
+  Four fixes:
+  - **Proportional steering** instead of all-or-nothing turns.
+  - **Straight routes:** the 4 m nav-grid zigzag is straightened into straight legs wherever the
+    ground allows.
+  - **Pure pursuit:** each vehicle steers at a point 7 m ahead on its route.
+  - **Traffic rules:** a vehicle follows the one ahead at its pace, steers smoothly round a
+    stopped or crossing one, and is never shoved sideways; only real hull overlap is pushed apart.
+
+  Formation slots are 8.5 m apart. A tank waiting in line no longer "gives up" far from its mark.
+  Climbing costs at most 40% of speed. Measured on 8 vehicles over 130 m: 150–700 left/right
+  reversals before, 9–18 after; hulls never closer than 5.2 m.
+- **Borders and passage** (`passage.gd`). Armed forces may enter another nation's land only with a
+  grant of passage, as its ally, or at war or in a limited operation.
+  - **Your orders:** a move order into closed land brings a BORDER letter. Its answers: request
+    passage (the other government decides by how it regards you; +50 or better always says yes), a
+    military operation under the standing orders, cross anyway, or cancel.
+  - **Trespass:** relations fall, and after 25 s their government answers as it would any
+    incident: a protest, a strike in kind, or war.
+  - **Their forces:** an AI force entering your land without leave brings a letter: grant passage,
+    demand withdrawal, or open fire.
+  - **Guests take no land:** only hostile forces wear down another nation's hold on a cell.
+- **Operational zones** (`occupation.gd`). Press **O** and click the ground: a 60 m dashed ring marked
+  OPERATIONAL ZONE appears, and the selected forces spread over the cells still to be taken.
+  - Troops inside their own zone count double toward holding the land.
+  - A zone in the land of a nation you are not fighting asks the cabinet first (standing orders).
+  - When all the land in it is yours, the zone is secured and lifted.
+  - Zones and passage grants persist in saves.
+- **Natural resources** (`deposit_art.gd`). Every deposit is now a site built in code, about 10 m
+  across on its own coloured ground and following the slope, with a fixed-size resource marker over it:
+  - oil: a black pool and a nodding pumpjack
+  - iron: rust boulders
+  - gold: veined granite
+  - silicon: blue quartz
+  - uranium: glowing green crystals
+  - diamonds: a kimberlite pit
+  - offshore oil: a platform with a flare
+  - fish: a shoal with ripples
+
+  Sea deposits now exist in the game, so the Offshore Rig can be built on offshore oil. Land
+  extractors and the AI never pick a sea deposit.
+- `dist/` holds exactly `DOMINION.exe` (play) and `DOMINION-Setup.exe` (the release).
+
 ## Version 0.9.5: how battles are fought, and the minimap turned with the camera
 
 Problems reported in play: armies ran together into one knot where few

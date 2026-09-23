@@ -18,6 +18,7 @@ $tests = @(
     @('movement physics', @('--', '--motion-test'), 'MOTION_TEST PASS', 180),
     @('battle dynamics', @('--', '--battle-test'), 'BATTLE_TEST PASS', 300),
     @('armoured column driving', @('--', '--convoy-test'), 'CONVOY_TEST PASS', 240),
+    @('borders, passage and operational zones', @('--', '--border-test'), 'BORDER_TEST PASS', 400),
     @('economy', @('--', '--economy-test'), 'ECONOMY_TEST PASS', 240),
     @('combat (every weapon)', @('--', '--combat-test'), 'COMBAT_TEST PASS', 400),
     @('combat fixes and aircraft service', @('--', '--combat-regression'), 'COMBAT_REGRESSION PASS', 180),

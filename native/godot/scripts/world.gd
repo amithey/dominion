@@ -172,6 +172,8 @@ var nav_ready := false
 var market: Node          # market.gd: world market and trade routes
 var espionage: Node       # espionage.gd: agents and covert operations
 var territory: Node3D     # territory.gd: gradual control of 40 m cells
+var passage: Node         # passage.gd: who may cross whose land, and border incidents
+var occupation: Node3D    # occupation.gd: operational zones for taking ground
 var missiles: Node3D      # missiles.gd: silo production, launches, impacts
 var research: Node        # research.gd: discoveries in stages, tracks, eras
 var portraits: Node       # portraits.gd: pictures of every unit and building for the interface
@@ -348,6 +350,12 @@ func _ready() -> void:
 	research = preload("res://scripts/research.gd").new()
 	add_child(research)
 	research.setup(self, map.research)
+	passage = preload("res://scripts/passage.gd").new()
+	add_child(passage)
+	passage.setup(self)
+	occupation = preload("res://scripts/occupation.gd").new()
+	add_child(occupation)
+	occupation.setup(self)
 	if not interactive and bench_units == 0 and not ("--capture-views" in OS.get_cmdline_user_args() or "--capture-menu" in OS.get_cmdline_user_args() or "--menu-test" in OS.get_cmdline_user_args() or "--capture-battle" in OS.get_cmdline_user_args() or "--economy-test" in OS.get_cmdline_user_args() or "--capture-economy" in OS.get_cmdline_user_args() or "--nav-test" in OS.get_cmdline_user_args() or "--logistics-test" in OS.get_cmdline_user_args() or "--capture-logistics" in OS.get_cmdline_user_args()):
 		ai.setup(self, map.ai, difficulty, ai_speed)
 	menu = preload("res://scripts/menu.gd").new()
@@ -432,6 +440,10 @@ func _ready() -> void:
 		await capture_screens()
 	elif "--capture-tactics" in args:
 		await preload("res://scripts/battle_regression.gd").capture(self)
+	elif "--capture-deposits" in args:
+		await preload("res://scripts/deposit_art.gd").capture(self)
+	elif "--border-test" in args:
+		await preload("res://scripts/border_regression.gd").run(self)
 	elif "--convoy-test" in args:
 		await preload("res://scripts/battle_regression.gd").convoy(self)
 	elif "--battle-test" in args:
@@ -1029,63 +1041,18 @@ func refresh_streets() -> void:
 # Resource deposits from the map: a cluster of rocks tinted by type, oil as a
 # dark glossy seep. Sea deposits need ships and are not shown yet.
 func build_deposits() -> void:
+	# Every resource, on land and at sea, as a readable site (deposit_art.gd).
 	var types: Dictionary = map.get("depositTypes", {})
-	var meshes := {}
+	var art := preload("res://scripts/deposit_art.gd").new(self)
 	for d in map.deposits:
 		var def: Dictionary = types.get(d.type, {})
-		if def.is_empty() or def.get("water", false):
+		if def.is_empty():
 			continue
-		if not meshes.has(d.type):
-			meshes[d.type] = deposit_mesh(d.type, Color(def.color))
-		var node := MeshInstance3D.new()
-		node.mesh = meshes[d.type]
-		node.position = Vector3(d.x, height_at(d.x, d.z), d.z)
-		node.rotation.y = fmod(d.x * 3.7 + d.z, TAU)
+		var water: bool = def.get("water", false)
+		var at := Vector3(d.x, float(map.seaLevel) if water else height_at(d.x, d.z), d.z)
+		var node := art.build(d.type, at, fmod(d.x * 3.7 + d.z, TAU))
 		add_child(node)
-		deposits.append({"type": d.type, "def": def, "pos": node.position, "node": node, "extractor": null})
-
-func deposit_mesh(type: String, color: Color) -> Mesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = type.hash()
-	if type == "oil":
-		var pool := CylinderMesh.new()
-		pool.top_radius = 2.6
-		pool.bottom_radius = 2.8
-		pool.height = 0.12
-		st.append_from(pool, 0, Transform3D(Basis(), Vector3(0, 0.02, 0)))
-	var crystal := type in ["silicon", "uranium", "diamond"]
-	for i in range(6 if type != "oil" else 3):
-		var a := rng.randf() * TAU
-		var r := rng.randf_range(0.6, 2.6)
-		var size := rng.randf_range(0.5, 1.3)
-		var shape: Mesh
-		if crystal:
-			var prism := PrismMesh.new()
-			prism.size = Vector3(0.6, size * 2.0, 0.6)
-			shape = prism
-		else:
-			var rock := SphereMesh.new()
-			rock.radial_segments = 7
-			rock.rings = 4
-			rock.radius = size
-			rock.height = size * 1.3
-			shape = rock
-		var basis := Basis(Vector3.UP, rng.randf() * TAU).rotated(Vector3.RIGHT, rng.randf_range(-0.3, 0.3)).scaled(Vector3(1.0, rng.randf_range(0.6, 1.1), rng.randf_range(0.7, 1.2)))
-		st.append_from(shape, 0, Transform3D(basis, Vector3(cos(a) * r, size * 0.35, sin(a) * r)))
-	st.generate_normals()
-	var mesh := st.commit()
-	var material := StandardMaterial3D.new()
-	material.albedo_color = color.lerp(Color("5a5750"), 0.35) if not crystal else color
-	material.roughness = 0.12 if type == "oil" else (0.3 if crystal else 0.9)
-	material.metallic = 0.7 if type == "gold" else 0.0
-	if type == "uranium":
-		material.emission_enabled = true
-		material.emission = color
-		material.emission_energy_multiplier = 0.8
-	mesh.surface_set_material(0, material)
-	return mesh
+		deposits.append({"type": d.type, "def": def, "pos": node.position, "node": node, "extractor": null, "water": water})
 
 func deposit_near(at: Vector3, radius: float):
 	var best = null
@@ -2112,6 +2079,10 @@ func clear_match() -> void:
 		missiles.restore({})
 	if territory:
 		territory.reset()
+	if occupation:
+		occupation.clear()
+	if passage:
+		passage.restore({})
 
 func rebuild_nav_mesh() -> int:
 	var nav := NavigationMesh.new()
@@ -2681,6 +2652,8 @@ func systems_test(capture: bool) -> void:
 	var taken := false
 	if enemy_cell >= 0:
 		var c: Vector3 = territory.center(enemy_cell)
+		# Only a hostile army takes land (passage.gd): at peace it would be trespass.
+		diplomacy.declare_war(0, 2)
 		for i in range(14):
 			spawn_unit("tank", land_point(c + Vector3(randf_range(-8, 8), 0, randf_range(-8, 8)), 18.0), 0)
 		for i in range(120):
@@ -3612,6 +3585,11 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 		var dep = deposit_near(at, 6.0)
 		if dep == null or dep.extractor != null:
 			return "Build on a free resource deposit"
+		var kinds = def.get("depositTypes")
+		if kinds != null and not dep.type in kinds:
+			return "Needs a %s" % " or ".join(PackedStringArray(kinds.map(func(k): return map.depositTypes[k].name)))
+		if kinds == null and dep.get("water", false):
+			return "Offshore deposits need an Offshore Rig"
 	for u in units:
 		if not u.dead and Vector2(u.node.position.x - at.x, u.node.position.z - at.z).length() < footprint * 0.45:
 			return "Units in the way"
@@ -4641,6 +4619,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_RIGHT and placing != "":
 			if event.pressed:
 				cancel_placement()
+		elif event.button_index == MOUSE_BUTTON_LEFT and occupation != null and occupation.placing:
+			if event.pressed:
+				var point = ground_point(event.position)
+				if point != null:
+					occupation.place(point, units.filter(func(u): return u.selected and not u.dead and u.owner == 0))
 		elif event.button_index == MOUSE_BUTTON_LEFT and order_mode != "":
 			if event.pressed:
 				var point = ground_point(event.position)
@@ -4649,7 +4632,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					if order_mode == "bombard":
 						request_bombard(selected,point)
 					else:
-						order_move(selected,point,true)
+						passage.check_order(selected, point, func(): order_move(selected,point,true))
 			else:
 				order_mode = ""
 		elif event.button_index == MOUSE_BUTTON_LEFT:
@@ -4700,7 +4683,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif event.ctrl_pressed or Input.is_physical_key_pressed(KEY_CTRL):
 				var point = ground_point(event.position)
 				if point != null:
-					order_move(selected,point,true)
+					passage.check_order(selected, point, func(): order_move(selected,point,true))
 			elif target != null:
 				selected = selected.filter(func(u):return u.dmg>0 and effectiveness(u,target)>0.01)
 				if not selected.is_empty():
@@ -4710,7 +4693,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			else:
 				var point = ground_point(event.position)
 				if point != null:
-					order_move(selected, point, event.ctrl_pressed or Input.is_physical_key_pressed(KEY_CTRL))
+					var attack: bool = event.ctrl_pressed or Input.is_physical_key_pressed(KEY_CTRL)
+					# Borders are checked first (passage.gd): foreign land needs leave.
+					passage.check_order(selected, point, func(): order_move(selected, point, attack))
 	elif event is InputEventMouseMotion and middle_drag:
 		# The ground follows the mouse: drag it the way you would drag a map.
 		var forward := Vector3(-sin(cam_yaw), 0, -cos(cam_yaw))
@@ -4755,6 +4740,8 @@ func _input(event: InputEvent) -> void:
 		hud.toggle_panel("intel")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_T:
 		hud.toggle_panel("territory")
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_O and occupation != null:
+		occupation.begin_zone()  # the next click marks an operational zone
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Y:
 		hud.toggle_research()
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F1:
@@ -4771,6 +4758,8 @@ func _input(event: InputEvent) -> void:
 		cancel_transport()
 		cancel_placement()
 		select_building(null)
+		if occupation != null:
+			occupation.cancel()
 
 func make_hud() -> void:
 	var layer := CanvasLayer.new()

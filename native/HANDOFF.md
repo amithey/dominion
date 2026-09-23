@@ -94,3 +94,23 @@ about 8 runs. The battle test passed 10 of 10 after the final fixes. The install
 - Infantry cannot hurt tanks, by design (`effectiveness`). Soldiers facing only armour stand
   idle. Consider having them fall back or take cover.
 - The browser version (`js/`) did not receive any of these changes.
+
+## Added in 0.9.6 (Claude)
+
+- `tactics.gd`:
+  - `look_ahead()`: pure pursuit.
+  - `traffic()`: follow, or steer round. The lane is measured along the route, and anything past the
+    unit's own mark is ignored.
+  - `hard_push()`: vehicles are only ever separated on real overlap.
+- `world.gd`:
+  - `straighten()` and `clear_line()` post-process every navigation route.
+  - Stall rule: waiting in a queue is not being stuck, and a unit only gives up near its mark.
+- `motion.gd`: `STEER_GAIN` (proportional steering) and `traffic_cap`.
+- `passage.gd`: `check_order()` wraps every player move order in `world._unhandled_input`, and
+  `watch()` runs once a second. Tests drive the letters through `passage.answer(label)`, which is
+  independent of the hud layout.
+- `occupation.gd`: zones. `territory.tick` multiplies unit weight by `occupation.weight(u)` and skips
+  non-hostile units standing in foreign cells.
+- `deposit_art.gd`: land sites are meshed per site (`_conform`); water sites share one mesh per type.
+  Vertex-coloured materials must set `vertex_color_is_srgb = true`, or the colours wash out.
+- New tests: `--convoy-test`, `--border-test`; captures: `--capture-deposits`.

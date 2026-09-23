@@ -219,7 +219,7 @@ func find_spot(n: Dictionary, home: Dictionary, key: String):
 		var best = null
 		var best_d := 300.0
 		for d in world.deposits:
-			if d.extractor == null and d.pos.distance_to(centre) < best_d:
+			if d.extractor == null and not d.get("water", false) and d.pos.distance_to(centre) < best_d:
 				best_d = d.pos.distance_to(centre)
 				best = d
 		return Vector3(best.pos.x, best.pos.y, best.pos.z) if best != null else null

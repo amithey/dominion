@@ -104,6 +104,7 @@ func capture() -> Dictionary:
 		"game_time": world.game_time,
 		"market": world.market.capture(), "espionage": world.espionage.capture(),
 		"missiles": world.missiles.capture(), "territory": world.territory.capture(),
+		"passage": world.passage.capture() if world.passage else {}, "zones": world.occupation.capture() if world.occupation else [],
 		"research": world.research.capture(),
 	}
 
@@ -234,4 +235,8 @@ func restore(data: Dictionary) -> void:
 	world.espionage.restore(data.get("espionage", {}))
 	world.missiles.restore(data.get("missiles", {}))
 	world.territory.restore(data.get("territory", {}))
+	if world.passage:
+		world.passage.restore(data.get("passage", {}))
+	if world.occupation:
+		world.occupation.restore(data.get("zones", []))
 	world.research.restore(data.get("research", {}))
