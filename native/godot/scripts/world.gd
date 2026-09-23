@@ -6,6 +6,7 @@ extends Node3D
 ## shadows. Command-line (after "--"):
 ##   --bench=N [--no-vsync] [--quit-after-bench]   same phases as the browser
 ##   --capture-views                               renders build/view-*.png
+##   --motion-test                                 acceleration, pivot turns, suspension
 ##   --battle / --capture-battle                   skirmish demo (key B in game)
 ##   --nav-test                                    checks routes around buildings and water
 ##   --economy-test / --capture-economy            build, train and collect in fast time
@@ -196,6 +197,7 @@ var match_config: Dictionary = MatchSetup.DEFAULT.duplicate()
 var engagement: RefCounted
 var naval_navigation: RefCounted
 const Repairs := preload("res://scripts/repairs.gd")
+const Motion := preload("res://scripts/motion.gd")
 const NAV_STEP := 4.0
 var fps_frames := 0
 
@@ -423,6 +425,8 @@ func _ready() -> void:
 		await soak_test(12.0)
 	elif "--capture-screens" in args:
 		await capture_screens()
+	elif "--motion-test" in args:
+		await preload("res://scripts/motion_regression.gd").run(self)
 	elif "--combat-regression" in args:
 		await preload("res://scripts/combat_regression.gd").run(self)
 	elif "--polish-test" in args or "--campaign-test" in args or "--capture-polish" in args:
@@ -1537,10 +1541,8 @@ func place_on_ground(unit: Dictionary, at: Vector3) -> void:
 	node.position = Vector3(at.x, height_at(at.x, at.z), at.z)
 	var heading := Basis(Vector3.UP, unit.heading)
 	if unit.vehicle:
-		# Vehicles pitch and roll with the ground under their tracks.
-		var up := normal_at(at.x, at.z)
-		var travel := (heading * Vector3.BACK).slide(up).normalized()
-		node.basis = Basis.looking_at(-travel, up)  # model +Z along the direction of travel
+		# Vehicles pitch and roll with the ground under their tracks, on springs (motion.gd).
+		node.basis = Motion.body_basis(unit, normal_at(at.x, at.z), unit.heading, get_physics_process_delta_time())
 		if absf(node.position.y - float(unit.get("ground_told", -999.0))) > 0.04:
 			unit.ground_told = node.position.y
 			for mesh_instance in unit.get("meshes", []):
@@ -1573,7 +1575,7 @@ func animate(unit: Dictionary, moving: bool) -> void:
 		return
 	player.play(clip, 0.25)
 	unit.clip = clip
-	player.speed_scale = (unit.speed / unit.get("clip_speed", RUN_CLIP_SPEED)) if moving else 1.0
+	player.speed_scale = (maxf(unit.get("cur_speed", unit.speed), 0.8) / unit.get("clip_speed", RUN_CLIP_SPEED)) if moving else 1.0
 
 func order_attack(selected: Array, enemy: Dictionary) -> void:
 	for u in selected:
@@ -1734,7 +1736,7 @@ func _physics_process(delta: float) -> void:
 			unit.radar.rotate_y(delta * 1.6)
 		if unit.moving:
 			for a in unit.get("axles", []):
-				a.node.rotate_x(unit.speed * delta / a.radius)  # wheels roll with the ground
+				a.node.rotate_x(unit.get("cur_speed", unit.speed) * delta / a.radius)  # wheels roll with the ground
 		if unit.engine:
 			audio.engine_update(unit.engine, unit.moving, delta)
 		if unit.turret:
@@ -1770,13 +1772,16 @@ func _physics_process(delta: float) -> void:
 				if not unit.vehicle:
 					unit.heading = lerp_angle(unit.heading, atan2(gap.x, gap.z), minf(1.0, delta * 8.0))
 					place_on_ground(unit, node.position)
+				Motion.halt(unit, delta)
 				if unit.moving:
 					animate(unit, false)
 				else:
 					set_stance(unit)
 		if goal == null:
+			Motion.halt(unit, delta)
 			if unit.target == null and unit.moving:
 				animate(unit, false)
+			settle(unit)
 			continue
 		var t_steer := clock()
 		var waypoint := steer_point(unit, goal, chasing, delta)
@@ -1784,14 +1789,19 @@ func _physics_process(delta: float) -> void:
 		var end: Vector3 = unit.path[unit.path.size() - 1] if not unit.path.is_empty() else goal
 		var to: Vector3 = waypoint - node.position
 		to.y = 0
-		if Vector2(end.x - node.position.x, end.z - node.position.z).length() < 0.35:
+		var remaining := Vector2(end.x - node.position.x, end.z - node.position.z).length()
+		if remaining < 0.35:
 			if not chasing:
 				unit.target = null
 				unit.attack_move = false
+			Motion.halt(unit, delta)
 			animate(unit, false)
+			settle(unit)
 			continue
-		var step := minf(to.length(), unit.speed * delta)
-		var next: Vector3 = node.position + to.normalized() * step
+		# Speed, turning and slope are physical now: see motion.gd.
+		var travel := Motion.drive(self, unit, to, remaining, chasing, delta)
+		var step := travel.length()
+		var next: Vector3 = node.position + travel
 		# Keep clear of other units instead of driving through them.
 		# Crowd pressure is smooth, so each unit works it out every other frame
 		# and keeps the last result in between; nothing moves differently.
@@ -1802,10 +1812,9 @@ func _physics_process(delta: float) -> void:
 			next += push.limit_length(step * 1.5)
 			if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
 				unit.target = null
+				Motion.halt(unit, delta)
 				animate(unit, false)
 				continue
-			var want_now := atan2(to.x, to.z)
-			unit.heading = lerp_angle(unit.heading, want_now, minf(1.0, delta * (4.0 if unit.vehicle else 10.0)))
 			var t_place_now := clock()
 			place_on_ground(unit, next)
 			animate(unit, true)
@@ -1836,16 +1845,20 @@ func _physics_process(delta: float) -> void:
 		next += push.limit_length(step * 1.5)
 		if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
 			unit.target = null  # land units stop at the waterline
+			Motion.halt(unit, delta)
 			animate(unit, false)
 			continue
-		var want := atan2(to.x, to.z)
-		unit.heading = lerp_angle(unit.heading, want, minf(1.0, delta * (4.0 if unit.vehicle else 10.0)))
 		var t_place := clock()
 		place_on_ground(unit, next)
 		animate(unit, true)
 		spent("  placing", t_place)
 	spent("move", t_move)
 	prof_frames += 1 if profiling else 0
+
+# A parked vehicle keeps rocking on its springs until they come to rest.
+func settle(unit: Dictionary) -> void:
+	if unit.vehicle and absf(unit.get("sus_pitch", 0.0)) + absf(unit.get("sus_pitch_v", 0.0)) + absf(unit.get("sus_roll", 0.0)) + absf(unit.get("sus_roll_v", 0.0)) > 0.002:
+		place_on_ground(unit, unit.node.position)
 
 # ---------------------------------------------------------------- navigation
 
@@ -3999,6 +4012,7 @@ func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 		var dir := Basis(Vector3.UP, unit.heading + unit.turret_yaw) * Vector3.BACK
 		var muzzle: Vector3 = unit.turret.global_position + dir * (2.4 if unit.get("naval", false) else float(unit.get("muzzle", 4.2))) + Vector3.UP * 0.4
 		effects.muzzle_flash(muzzle, true)
+		Motion.recoil(unit, 1.4 if unit.key in ["tank", "artillery"] else 0.7)
 		var miss := Vector3(randf_range(-1.5, 1.5), 0, randf_range(-1.5, 1.5)) if randf() > 0.8 else Vector3.ZERO
 		var landing := aim + miss
 		landing.y = maxf(landing.y if miss == Vector3.ZERO else height_at(landing.x, landing.z), height_at(landing.x, landing.z))
