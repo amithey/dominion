@@ -91,3 +91,6 @@ UI files listed above.
   88c5639 (version 0.9.7). The territory, minimap and terrain shader files are stable again: safe to run
   full regressions.
 
+- 2026-09-23 Claude: clicking selects a unit anywhere on its outline on screen (`picking.gd`; used by
+  `world._unhandled_input` selection and `enemy_under`), so ships, submarines, tanks and aircraft no longer
+  need a click on their exact centre. New test `--pick-test`. Did not touch diplomacy/save (yours now).

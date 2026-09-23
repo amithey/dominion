@@ -207,6 +207,7 @@ const Repairs := preload("res://scripts/repairs.gd")
 const Motion := preload("res://scripts/motion.gd")
 const Tactics := preload("res://scripts/tactics.gd")
 const SiteClearing := preload("res://scripts/site_clearing.gd")
+const Picking := preload("res://scripts/picking.gd")
 const NAV_STEP := 4.0
 var fps_frames := 0
 
@@ -445,6 +446,8 @@ func _ready() -> void:
 		await preload("res://scripts/battle_regression.gd").capture(self)
 	elif "--capture-deposits" in args:
 		await preload("res://scripts/deposit_art.gd").capture(self)
+	elif "--pick-test" in args:
+		await preload("res://scripts/picking.gd").run(self)
 	elif "--site-test" in args:
 		await preload("res://scripts/site_clearing.gd").run(self)
 	elif "--border-test" in args:
@@ -4682,18 +4685,15 @@ func _unhandled_input(event: InputEvent) -> void:
 				selection_box.hide()
 				var rect := Rect2(drag_start, event.position - drag_start).abs()
 				var click := rect.size.length() < 8
-				var closest: Dictionary = {}
-				var best := 24.0
-				for unit in units:
-					if unit.owner != 0 or unit.dead:
-						continue
-					var screen := camera.unproject_position(unit.node.position + Vector3.UP)
+				# A click hits a unit anywhere on its outline on screen (picking.gd),
+				# not only near its centre: a whole submarine or destroyer is clickable.
+				var own: Array = units.filter(func(u): return u.owner == 0 and not u.dead)
+				var hit = Picking.pick(camera, own, event.position) if click else null
+				var closest: Dictionary = hit if hit != null else {}
+				for unit in own:
 					if not event.shift_pressed:
 						unit.selected = false
-					if click and screen.distance_to(event.position) < best:
-						best = screen.distance_to(event.position)
-						closest = unit
-					if not click and rect.has_point(screen):
+					if not click and rect.has_point(Picking.screen_centre(camera, unit)):
 						unit.selected = true
 				if not closest.is_empty():
 					closest.selected = true
@@ -4748,15 +4748,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		selection_box.show()
 
 func enemy_under(screen: Vector2) -> Variant:
-	var best = null
-	var best_d := 26.0
-	for u in units:
-		if u.dead or u.owner == 0:
-			continue
-		var d := camera.unproject_position(u.node.position + Vector3.UP).distance_to(screen)
-		if d < best_d:
-			best_d = d
-			best = u
+	var best = Picking.pick(camera, units.filter(func(u): return not u.dead and u.owner != 0), screen)
 	if best == null:
 		var b = building_under(screen)
 		if b != null and b.owner != 0:

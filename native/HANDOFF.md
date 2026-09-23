@@ -131,3 +131,12 @@ about 8 runs. The battle test passed 10 of 10 after the final fixes. The install
     the letter.
 - `build-windows.ps1` exports a clean `git archive` of HEAD under %TEMP%, with `.local-tools` joined
   in, and copies both files to `dist/`. Use `-Working` to build the folder as it is.
+
+## Added after 0.9.7 (Claude): picking units
+
+- `picking.gd`: a click hits a unit anywhere on the screen outline of its mesh box (measured once and
+  cached as `unit.pick_box`, leaving out the selection ring), within 8 px, with an 18 px minimum
+  around the centre for small units. Overlaps go to the nearest centre. A drag box uses the box centre.
+  `--pick-test` checks the middle, ends and sides of a submarine, destroyer, tank, soldier, jet and
+  helicopter. By the old 24 px centre rule, the ends of every large unit were unclickable.
+- `--battle-test` failed once in about 13 runs (a rare random case); it passed the other 12.
