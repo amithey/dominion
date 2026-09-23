@@ -29,6 +29,7 @@ $tests = @(
     @('diplomacy', @('--', '--diplomacy-test'), 'DIPLOMACY_TEST PASS', 180),
     @('supply network', @('--', '--logistics-test'), 'LOGISTICS_TEST PASS', 240),
     @('market, spies, missiles, territory', @('--', '--systems-test'), 'SYSTEMS_TEST PASS', 300),
+    @('intelligence lifecycle', @('--script', 'res://tools/espionage-check.gd'), 'ESPIONAGE_TEST PASS', 180),
     @('research', @('--', '--research-test'), 'RESEARCH_TEST PASS', 300),
     @('interface (every screen and button)', @('--', '--ui-test'), 'UI_TEST PASS', 300),
     @('save and load', @('--', '--save-test'), 'SAVE_TEST PASS', 240),

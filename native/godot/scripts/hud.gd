@@ -1228,8 +1228,8 @@ func _diplomacy_screen() -> void:
 			_pill(head, "NON-AGGRESSION", Color("6fa6d8"))
 		if not (d.at_war(0, id) or d.allied(0, id) or d.pact[0][id] or d.nap[0][id]):
 			_pill(head, "PEACE", Color("9aa7ab"))
-		var leader: String = world.map.nations[id].get("people", {}).get("president", "")
-		card.add_child(_text("%s  ·  army of about %d" % [leader, d.army_strength(id)], 13, UI.MUTED))
+		var leader: String = world.espionage.person(id, "president")
+		card.add_child(_text("%s · army estimates in Intelligence (I)" % leader, 13, UI.MUTED))
 		var score: float = d.rel(0, id)
 		var colour := Color("c0564a").lerp(Color("8a9396"), clampf((score + 100.0) / 100.0, 0.0, 1.0)) if score < 0.0 else Color("8a9396").lerp(Color("5fae63"), clampf(score / 100.0, 0.0, 1.0))
 		_meter(card, score + 100.0, 200.0, colour, "Relation %+d  ·  %s" % [int(score), _relation_word(score)])
@@ -1498,8 +1498,24 @@ func _intel_panel() -> void:
 		if a.status == "captured":
 			_pill(row, "CAPTURED by %s" % d.name_of(int(a.captured_by)), Color("e0574a"))
 			_button(row, "Ransom $%d" % int(e.cfg.ransom), e.ransom.bind(a.id))
-		else:
+		elif a.status == "ready":
 			_pill(row, "READY", Color("6fc46a"))
+		else:
+			_pill(row, ("RECOVERY %ds" % ceili(float(a.get("ready_at", e.clock))-e.clock)) if a.status == "recovering" else str(a.status).to_upper(), UI.GOLD)
+	for mission in e.missions:
+		var remaining := maxi(0, ceili(float(mission.ends) - e.clock))
+		var duration: float = float(mission.ends) - float(mission.started)
+		var progress := 1.0 - float(remaining) / duration
+		_meter(service, progress, 1.0, UI.GOLD, "%s · %s · %ds" % [e.ops()[mission.op].name, d.name_of(int(mission.nation)), remaining])
+		_button(service, "Recall assignment", e.cancel_mission.bind(int(mission.agent)), true, "bad")
+	if e.security_until > e.clock:
+		service.add_child(_text("Domestic security reinforced: %ds" % ceili(e.security_until-e.clock), 13, UI.GOOD))
+	if e.scandal_until > e.clock:
+		service.add_child(_text("Attribution scandal: $2/s for %ds" % ceili(e.scandal_until-e.clock), 13, UI.BAD))
+	for nation in e.proxies:
+		var proxy: Dictionary = e.proxies[nation]
+		service.add_child(_text("%s partner: strength %d · autonomy %d · $3/s" % [d.name_of(int(nation)), proxy.strength, proxy.autonomy], 13, UI.GOLD))
+		_button(service, "End partner funding", e.end_proxy.bind(int(nation)), true, "bad")
 	var nations := []
 	for i in range(1, d.n):
 		if not d.defeated(i):
@@ -1518,41 +1534,14 @@ func _intel_panel() -> void:
 	var agent_bonus := 0.0
 	if not e.ready_agents().is_empty():
 		agent_bonus = (int(e.ready_agents()[0].skill) - 1) * float(e.cfg.skillBonus)
+	var choices := []
 	for key in e.ops():
-		var op: Dictionary = e.ops()[key]
-		var need := float(op.get("minNetwork", 0))
-		var blocked: bool = e.network.get(spy_target, 0.0) < need
-		var chance := clampf(e.success_chance(key, spy_target) + agent_bonus, 0.05, 0.97)
-		var b := Button.new()
-		b.toggle_mode = true
-		b.button_pressed = key == spy_op
-		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(0, 34)
-		b.tooltip_text = op.desc
-		b.pressed.connect(func():
-			spy_op = key
-			refresh_side())
-		var row := HBoxContainer.new()
-		row.set_anchors_preset(Control.PRESET_FULL_RECT)
-		row.offset_left = 8
-		row.offset_right = -8
-		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		b.add_child(row)
-		var n := _text(op.name, 14, UI.MUTED if blocked else UI.CREAM)
-		n.custom_minimum_size = Vector2(150, 0)
-		n.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		row.add_child(n)
-		var c := _text("$%d" % int(op.cost), 13, UI.GOLD)
-		c.custom_minimum_size = Vector2(56, 0)
-		c.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		row.add_child(c)
-		var meter := VBoxContainer.new()
-		meter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		meter.alignment = BoxContainer.ALIGNMENT_CENTER
-		meter.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(meter)
-		_meter(meter, chance, 1.0, Color("5fae63").lerp(Color("c0564a"), 1.0 - chance), ("needs network %d" % int(need)) if blocked else "%d%% chance" % roundi(chance * 100))
-		plan.add_child(b)
+		choices.append([e.ops()[key].name, key])
+	_choice(plan, choices, spy_op, func(v):
+		spy_op = v
+		refresh_side())
+	var chance := clampf(e.success_chance(spy_op, spy_target) + agent_bonus, 0.05, 0.97)
+	_meter(plan, chance, 1.0, UI.GOLD, "Estimated success %d%% · network %d · intel %d" % [roundi(chance*100), e.network.get(spy_target,0), e.intel.get(spy_target,0)])
 	var op: Dictionary = e.ops()[spy_op]
 	var needs_person: bool = op.get("needsPerson", false)
 	if needs_person:
@@ -1564,9 +1553,17 @@ func _intel_panel() -> void:
 		_choice(pr, people, spy_role, func(v):
 			spy_role = v
 			refresh_side())
-		plan.add_child(_text(e.cfg.targets[spy_role].effect, 12, UI.MUTED))
-	var blocked_now: bool = e.network.get(spy_target, 0.0) < float(op.get("minNetwork", 0))
-	_button(plan, "Run %s" % op.name, func(): return e.run(spy_op, spy_target, spy_role if needs_person else ""), e.has_agency() and not e.ready_agents().is_empty() and not blocked_now, "good")
+		plan.add_child(_text(e.role_effect(spy_role), 12, UI.MUTED))
+	var reason: String = e.blocked_reason(spy_op, spy_target, spy_role if needs_person else "")
+	var detail := _text(op.desc, 13, UI.TEXT)
+	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail.custom_minimum_size.x = 440
+	plan.add_child(detail)
+	plan.add_child(_text("$%d · prepare %ds · cooldown %ds · intel %d" % [int(op.cost), e.PROGRAMS[spy_op][0], e.PROGRAMS[spy_op][1], e.PROGRAMS[spy_op][3]], 13, UI.GOLD))
+	plan.add_child(_text("Estimated attribution risk %d%% (even on success)" % roundi(e.exposure_chance(spy_op, spy_target)*100), 13, UI.MUTED))
+	if reason != "":
+		plan.add_child(_text(reason, 13, UI.BAD))
+	_button(plan, "Authorize %s" % op.name, func(): return e.run(spy_op, spy_target, spy_role if needs_person else ""), reason == "", "good")
 	_heading("What your service knows")
 	for n in nations:
 		var id: int = n[1]
@@ -1574,31 +1571,17 @@ func _intel_panel() -> void:
 		var card := _card(_nation_colour(id))
 		card.add_child(_text(n[0], 15, _nation_colour(id).lightened(0.4), true))
 		_meter(card, level, 100.0, Color("6fa6d8"), "Intelligence %d  ·  network %d  ·  heat %d" % [int(level), int(e.network.get(id, 0.0)), int(e.heat.get(id, 0.0))])
-		var lines := []
-		var nat = world.market.ai_nation(id)
-		if level >= 10.0 and nat != null:
-			lines.append("Treasury $%d, %d buildings" % [int(nat.money), world.buildings.filter(func(b): return b.owner == id and not b.dead).size()])
-		if level >= 25.0:
-			lines.append("Army about %d" % d.army_strength(id))
-		if level >= 40.0:
-			var ties := []
-			for j in range(d.n):
-				if j != id and d.at_war(id, j):
-					ties.append("at war with " + ("you" if j == 0 else d.name_of(j)))
-				elif j != id and d.allied(id, j):
-					ties.append("allied with " + ("you" if j == 0 else d.name_of(j)))
-			lines.append(", ".join(PackedStringArray(ties)) if not ties.is_empty() else "No wars or alliances")
-		if level >= 60.0:
-			lines.append("Their attacks on you are reported 30 s early")
-		for tier in e.INTEL_TIERS:
-			if level < tier[0]:
-				lines.append("At %d: %s" % [tier[0], tier[1].to_lower()])
-				break
-		card.add_child(_text("\n".join(PackedStringArray(lines)), 13, UI.TEXT))
+		var assessment := _text(e.dossier_text(id), 13, UI.TEXT)
+		assessment.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		assessment.custom_minimum_size.x = 440
+		card.add_child(assessment)
+		var impact: String = e.impact_text(id)
+		if impact != "":
+			card.add_child(_text(impact, 13, UI.GOLD))
 	if not e.reports.is_empty():
 		_heading("Latest reports")
 		for r in e.reports.slice(0, 4):
-			_label(_side_rows, "•  " + r.text, UI.TEXT, 13)
+			_label(_side_rows, "[%ds ago] %s" % [maxi(0, int(e.clock-float(r.t))), r.text], UI.TEXT, 13)
 
 # ---------------------------------------------------------------- territory
 
