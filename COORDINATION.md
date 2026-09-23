@@ -94,3 +94,7 @@ UI files listed above.
 - 2026-09-23 Claude: clicking selects a unit anywhere on its outline on screen (`picking.gd`; used by
   `world._unhandled_input` selection and `enemy_under`), so ships, submarines, tanks and aircraft no longer
   need a click on their exact centre. New test `--pick-test`. Did not touch diplomacy/save (yours now).
+- 2026-09-23 Claude: district ground redrawn (`shaders/district.gdshader` only, commit fe953e4). Per-style ground
+  (lawn/hedge for houses, pavers, slabs, gravel), asphalt streets with kerbs and pavements that continue across
+  tile edges, and no grey kerb frame round every hex. Colours in that shader go through `srgb()`. Nothing else
+  touched; your diplomacy files and hud.gd were left alone.

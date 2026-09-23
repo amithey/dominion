@@ -140,3 +140,15 @@ about 8 runs. The battle test passed 10 of 10 after the final fixes. The install
   `--pick-test` checks the middle, ends and sides of a submarine, destroyer, tank, soldier, jet and
   helicopter. By the old 24 px centre rule, the ends of every large unit were unclickable.
 - `--battle-test` failed once in about 13 runs (a rare random case); it passed the other 12.
+
+## District ground (Claude, commit fe953e4)
+
+- `shaders/district.gdshader` draws each hex tile by style:
+  - 0 civic: stone pavers laid in courses
+  - 1 residential: mown lawn, flower beds, gravel path, clipped hedge at the edge
+  - 2 industrial: slabs, stains, a yellow safety line
+  - 3 farm: crop rows and a dirt track
+  - 4 military: khaki gravel and painted bays
+- Streets follow the `streets` bit mask as asphalt with kerbs and pavements, and meet in a small square
+  in the middle. The rim kerb/hedge is skipped across a street, so streets join neighbouring tiles.
+- All literal colours are sRGB values converted with `srgb()`; the textures are already linear.
