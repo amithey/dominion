@@ -5,6 +5,8 @@ The active game is in `native/godot`. The browser implementation in `js/` is a
 reference for rules and exported data. Run `prepare-desktop.ps1` before changing
 or testing the native game; copied art and the engine are local-only.
 
+> Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
+
 ## Version 0.9.5: how battles are fought, and the minimap turned with the camera
 
 Problems reported in play: armies ran together into one knot where few
