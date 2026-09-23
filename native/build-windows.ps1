@@ -27,14 +27,17 @@ if (-not $Working) {
     New-Item -ItemType Directory -Force -Path $stage | Out-Null
     $tar = "$stage.tar"
     & git -C $repo archive --format=tar -o $tar HEAD
-    & tar -xf $tar -C $stage
+    # Windows' own tar: from Git Bash, "tar" is GNU tar, which reads "C:" as a remote host.
+    & (Join-Path $env:SystemRoot 'System32	ar.exe') -xf $tar -C $stage
+    if (-not (Test-Path -LiteralPath (Join-Path $stage 'nativeuild-windows.ps1'))) { throw 'Could not unpack the commit snapshot.' }
     Remove-Item -LiteralPath $tar -Force
     cmd /c mklink /J "$tools" "$(Join-Path $repo '.local-tools')" | Out-Null
     Write-Output "Building from commit $head (uncommitted changes in the working folder are not included)"
     $argsList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $stage 'nativeuild-windows.ps1'), '-Working')
     if ($Version) { $argsList += @('-Version', $Version) }
     & powershell @argsList
-    if ($LASTEXITCODE -ne 0) { cmd /c rmdir "$tools" | Out-Null; throw "The release build failed ($LASTEXITCODE)" }
+    $code = $LASTEXITCODE
+    if ($code -ne 0) { cmd /c rmdir "$tools" | Out-Null; throw "The release build failed ($code)" }
     New-Item -ItemType Directory -Force -Path $dist | Out-Null
     Get-ChildItem -LiteralPath $dist -Filter 'DOMINION*.exe' | Remove-Item -Force
     Copy-Item -LiteralPath (Join-Path $stage 'dist\DOMINION.exe') -Destination $dist
