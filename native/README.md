@@ -7,6 +7,37 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.9: architecture in the manner of a modern 4X city
+
+The generic, toy-bright models on the city hexes are replaced by buildings made in code
+(`scripts/architecture.gd`), with nothing downloaded:
+- **Materials** generated at start-up, each with a relief map from its own height field: plaster,
+  brick in courses, cut limestone blocks and overlapping roof tiles. UVs are in metres, so bricks and
+  tiles keep their size on every wall and roof.
+- **Details:**
+  - framed windows with sills and mullions, some lit warm
+  - painted shutters and panelled front doors with canopies and stone steps
+  - cornices and string courses, eaves and ridge tiles
+  - brick chimneys
+  - classical porticoes with columns and pediments
+  - domes and clock towers
+  - crenellations
+  - banners in the nation's colour
+- **Recipes:**
+  - Seat of government: honey limestone, a portico and a green dome.
+  - Courthouse and bank: colonnades.
+  - University and library: a clock tower or a dome.
+  - School, police station and hospital.
+  - Market: an open market hall.
+  - Village centre: a timber-framed hall with a bell turret.
+  - Factories: saw-tooth roofs with glass and a stack.
+  - Apartment blocks: balconies and parapets.
+  - Barracks: crenellations.
+- **Residential quarters:** four to six townhouses and cottages round a small square, in varied
+  colours, heights and roofs; they grow taller as the city grows.
+- **Draw calls:** each district's buildings are merged into one mesh per material.
+- `--capture-city` renders the capital overview and close views (`build/city-*.png`).
+
 ## Version 0.9.8: ships sail round the island, land is bought or won, waters are held
 
 - **Ships go anywhere at sea.** The ships' water grid stopped at the map's edge, where the island runs

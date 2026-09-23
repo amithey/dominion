@@ -446,6 +446,8 @@ func _ready() -> void:
 		await preload("res://scripts/battle_regression.gd").capture(self)
 	elif "--capture-deposits" in args:
 		await preload("res://scripts/deposit_art.gd").capture(self)
+	elif "--capture-city" in args:
+		await preload("res://scripts/architecture.gd").capture(self)
 	elif "--land-test" in args:
 		await preload("res://scripts/land_regression.gd").run(self)
 	elif "--sea-test" in args:

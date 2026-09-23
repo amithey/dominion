@@ -102,3 +102,7 @@ UI files listed above.
   your own territory; troops buy unclaimed hexes ($25) and win enemy ones only in war; territorial waters
   (2 rings of sea off a coast) drawn by the new shared `shaders/territory.gdshaderinc`; textured resource
   rocks. Your uncommitted run-tests line and diplomacy files were left out of my commit.
+- 2026-09-23 Claude (0.9.9): buildings made in code (`architecture.gd`: textured stone, brick, plaster and tiles,
+  porticoes, domes, townhouses, factories, banners in the nation colour), used by `districts.gd` for civic,
+  residential, factory, apartment and barracks hexes. Portraits of those buildings (`portraits.gd`) will show the
+  new look through the same `building_model` path only for keys without a recipe; tell me if a picture card needs it.

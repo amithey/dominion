@@ -24,7 +24,9 @@ const HOUSES := ["res://assets/House_A.glb", "res://assets/House_B.glb", "res://
 # How many houses stand in a residential district, one per wedge between streets.
 const HOUSE_COUNT := {"cottage": 4, "residential": 6, "workerHouse": 3, "luxuryVillas": 3}
 
+const Architecture := preload("res://scripts/architecture.gd")
 var world: Node
+var arch: RefCounted       # architecture.gd: the buildings, made from code
 var radius := 12.0
 var ground: ShaderMaterial
 var props_material: StandardMaterial3D
@@ -37,6 +39,7 @@ const MAX_HEIGHT := {0: 13.0, 1: 8.0, 2: 7.5, 3: 7.0, 4: 6.5}
 
 func setup(world_node: Node) -> void:
 	world = world_node
+	arch = Architecture.new(world)
 	radius = world.logistics.radius
 	ground = ShaderMaterial.new()
 	ground.shader = load("res://shaders/district.gdshader")
@@ -219,6 +222,21 @@ func fence(st: SurfaceTool, color: Color, height := 1.1) -> void:
 			box(st, Vector3(p0.distance_to(p1), 0.08, 0.06), Vector3(mid.x, height * 0.75, mid.y), yaw, color)
 
 func main_building(key: String, container: Node3D, footprint: float, at := Vector3.ZERO) -> void:
+	if Architecture.has_recipe(key):
+		# Real architecture from the kit (architecture.gd) instead of a scaled model.
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(absf(at.x * 131.0 + at.z * 71.0)) + key.hash() + city_size
+		arch.begin()
+		arch.banner_colour = Color(world.map.nations[owner].color) if owner < world.map.nations.size() else Color.WHITE
+		arch.xf = Transform3D(Basis(), at)
+		if key in ["tankFactory", "warehouse"]:
+			arch.factory(rng, footprint)
+		elif key in ["housing", "apartments"]:
+			arch.apartments(rng, footprint, 4 + mini(city_size / 4, 2) + (1 if key == "apartments" else 0))
+		else:
+			arch.civic(key, rng, footprint)
+		container.add_child(arch.commit())
+		return
 	var model: Node3D = world.building_model(key, 0.0, 0.0)
 	var bounds: AABB = world.model_bounds(model)
 	var size := maxf(maxf(bounds.size.x * model.scale.x, bounds.size.z * model.scale.z), 0.01)
@@ -237,8 +255,8 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 func tone(container: Node3D, nation: int) -> void:
 	var colour: Color = Color(world.map.nations[nation].color) if nation < world.map.nations.size() else Color.WHITE
 	for mesh_instance in container.find_children("*", "MeshInstance3D", true, false):
-		if mesh_instance.mesh == null:
-			continue
+		if mesh_instance.mesh == null or mesh_instance.has_meta("architecture"):
+			continue  # the kit's buildings are painted as they should be
 		for i in range(mesh_instance.mesh.get_surface_count()):
 			var source := mesh_instance.get_active_material(i) as BaseMaterial3D
 			if source == null:
@@ -300,13 +318,22 @@ func residential(key: String, container: Node3D, st: SurfaceTool, rng: RandomNum
 	var growth := clampf(city_size / 10.0, 0.0, 1.0)
 	var count: int = mini(6, HOUSE_COUNT.get(key, 4) + int(growth * 2.0))
 	var slots := [0, 1, 3, 4, 2, 5].slice(0, count)
+	# Townhouses and cottages built from the kit (architecture.gd), all of the
+	# block in one set of meshes.
+	arch.begin()
 	for k in slots:
 		var p := slot(k, 6.2)
-		# Houses face the middle of the block; each has a hedge and a tree.
-		house(container, p, deg_to_rad(-(30.0 + 60.0 * k)) - PI * 0.5, 5.0 + growth * 0.9 + rng.randf() * 0.8, rng)
+		var face := deg_to_rad(-(30.0 + 60.0 * k)) - PI * 0.5
+		# Each faces the middle of the block, its front (+z) toward the street square.
+		arch.xf = Transform3D(Basis(Vector3.UP, face + PI * 0.5), p)
+		if key in ["cottage", "workerHouse"] and growth < 0.5:
+			arch.cottage(rng, 4.2 + rng.randf() * 0.6, 3.6)
+		else:
+			arch.townhouse(rng, 3.8 + rng.randf() * 0.8 + growth * 0.4, 4.4, 2 + (1 if growth > 0.4 and rng.randf() < 0.6 else 0) + (1 if key == "luxuryVillas" else 0))
 		var back := slot(k, 9.0)
 		box(st, Vector3(3.6, 0.8, 0.5), back, deg_to_rad(-(30.0 + 60.0 * k)) + PI * 0.5, Color("3f5a2c"))
 		tree(st, slot(k, 8.6) + Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)), rng, 0.8)
+	container.add_child(arch.commit())
 	if growth < 0.6:
 		tree(st, Vector3.ZERO, rng, 1.2)
 	else:

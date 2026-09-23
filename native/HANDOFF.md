@@ -166,3 +166,16 @@ about 8 runs. The battle test passed 10 of 10 after the final fixes. The install
   - `yields()` skips water.
 - `shaders/territory.gdshaderinc` holds the territory uniforms and `hex_territory()`, included by
   terrain and water. `draw_fill()` sets the parameters on both materials.
+
+## Added in 0.9.9 (Claude): architecture kit
+
+- `architecture.gd`:
+  - `begin()`, then shapes placed through `xf` (quad/tri/box/cylinder/dome and the elements windows,
+    doors, cornices, roofs, porticoes, banners), then `commit()` returns a node with one MeshInstance3D
+    per material.
+  - Quads are given counter-clockwise as seen from outside and emitted reversed, because Godot's
+    front faces wind clockwise.
+  - The meshes carry the meta `architecture` so that `districts.tone()` leaves them alone.
+- `districts.gd`: `main_building()` uses the kit when `Architecture.has_recipe(key)`; `residential()`
+  builds townhouses and cottages. Farms, silos, the power plant and the other industry still use the
+  older models and props.
