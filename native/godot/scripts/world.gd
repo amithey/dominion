@@ -255,6 +255,7 @@ func _ready() -> void:
 	add_child(effects)
 	effects.shake.connect(_on_shake)
 	effects.world_ref = self
+	effects.debris.world = self
 	audio = preload("res://scripts/audio.gd").new()
 	add_child(audio)
 	effects.audio = audio
@@ -4120,8 +4121,18 @@ func kill(unit: Dictionary) -> void:
 			unit.engine.stop()
 		if unit.player:
 			unit.player.pause()
-		# The blast knocks the turret askew.
-		unit.turret.basis = Basis(unit.turret.get_meta("axis"), unit.turret_yaw + randf_range(-0.6, 0.6)).rotated(Vector3.RIGHT, randf_range(-0.2, 0.2))
+		# Shards of armour fly out; half the time the ammunition cooks off and
+		# throws the turret clear (it flies and tumbles under gravity in update_dead).
+		effects.debris.scatter(at + Vector3.UP * 1.2, 9, 11.0, 0.45, Color(0.11, 0.1, 0.09), 0.55)
+		if unit.turret != null and randf() < 0.5:
+			var gt: Transform3D = unit.turret.global_transform
+			unit.turret.top_level = true
+			unit.turret.global_transform = gt
+			unit.toss = {"node": unit.turret, "vel": Vector3(randf_range(-3.5, 3.5), randf_range(10.0, 14.0), randf_range(-3.5, 3.5)),
+				"spin": Vector3(randf_range(-5, 5), randf_range(-3, 3), randf_range(-5, 5)), "rest": false}
+		else:
+			# The blast knocks the turret askew.
+			unit.turret.basis = Basis(unit.turret.get_meta("axis"), unit.turret_yaw + randf_range(-0.6, 0.6)).rotated(Vector3.RIGHT, randf_range(-0.2, 0.2))
 	elif unit.player and unit.get("death_clip", "") != "":
 		unit.player.get_animation(unit.death_clip).loop_mode = Animation.LOOP_NONE
 		unit.player.speed_scale = 1.0
@@ -4146,6 +4157,8 @@ func destroy_building(b: Dictionary) -> void:
 		mesh_instance.material_override = charred
 	if b.model is MeshInstance3D:
 		b.model.material_override = charred
+	# The structure comes apart: masonry and beams are thrown and rain down.
+	effects.debris.scatter(at + Vector3.UP * 3.0, 22, 13.0, 0.9, Color(0.36, 0.33, 0.3), 0.6)
 	b.model.scale.y *= 0.28
 	b.model.rotation.z = randf_range(-0.08, 0.08)
 	if b.has("pad"):
@@ -4203,6 +4216,23 @@ func update_dead(unit: Dictionary, delta: float, index: int) -> void:
 			units.remove_at(index)
 		return
 	if unit.vehicle:
+		if unit.has("toss") and not unit.toss.rest:
+			var toss: Dictionary = unit.toss
+			var piece: Node3D = toss.node
+			toss.vel.y -= 16.0 * delta
+			piece.global_position += toss.vel * delta
+			if toss.spin.length() > 0.01:
+				piece.global_transform.basis = Basis(toss.spin.normalized(), toss.spin.length() * delta) * piece.global_transform.basis
+			var floor_y := height_at(piece.global_position.x, piece.global_position.z) + 0.3
+			if piece.global_position.y < floor_y and toss.vel.y < 0.0:
+				piece.global_position.y = floor_y
+				if toss.vel.y > -3.0:
+					toss.rest = true  # it lands and stays, a marker of how the tank died
+				else:
+					toss.vel = Vector3(toss.vel.x * 0.5, -toss.vel.y * 0.3, toss.vel.z * 0.5)
+					toss.spin *= 0.4
+					effects.impact(piece.global_position)
+					effects.debris.scatter(piece.global_position, 3, 4.0, 0.25, Color(0.27, 0.22, 0.16))
 		return
 	if unit.has("fall"):
 		var k := minf(unit.dead_time / 0.6, 1.0)

@@ -23,12 +23,39 @@ var _flash_mesh: QuadMesh
 var _tracer_mesh: BoxMesh
 var _shell_mesh: BoxMesh
 var _scorch: Texture2D
+var _shock_mesh: PlaneMesh
+var debris: MultiMeshInstance3D  # debris.gd: ballistic pieces thrown by blasts
 
 # Live effects: {node, age, life, kind, ...}
 var _live: Array[Dictionary] = []
 var _shells: Array[Dictionary] = []
 
 func _ready() -> void:
+	debris = preload("res://scripts/debris.gd").new()
+	add_child(debris)
+	# The shock front of a blast: a bright ring racing outwards along the ground.
+	var ring := Gradient.new()
+	ring.set_color(0, Color(1, 0.9, 0.7, 0))
+	ring.add_point(0.72, Color(1, 0.85, 0.6, 0))
+	ring.add_point(0.9, Color(1, 0.9, 0.75, 0.55))
+	ring.set_color(ring.get_point_count() - 1, Color(1, 1, 1, 0))
+	var ring_tex := GradientTexture2D.new()
+	ring_tex.gradient = ring
+	ring_tex.fill = GradientTexture2D.FILL_RADIAL
+	ring_tex.fill_from = Vector2(0.5, 0.5)
+	ring_tex.fill_to = Vector2(0.5, 0.0)
+	ring_tex.width = 128
+	ring_tex.height = 128
+	var shock_mat := StandardMaterial3D.new()
+	shock_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	shock_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	shock_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	shock_mat.albedo_texture = ring_tex
+	shock_mat.vertex_color_use_as_albedo = false
+	shock_mat.no_depth_test = false
+	_shock_mesh = PlaneMesh.new()
+	_shock_mesh.size = Vector2(1, 1)
+	_shock_mesh.material = shock_mat
 	var soft := _radial([Color(1, 1, 1, 1), Color(1, 1, 1, 0.55), Color(1, 1, 1, 0)], [0.0, 0.45, 1.0])
 	_fire_mesh = _quad(2.0, _billboard(soft, true, false))
 	_smoke_mesh = _quad(2.4, _billboard(soft, false, true))
@@ -220,6 +247,16 @@ func explosion(at: Vector3, size: float, on_ground: bool) -> void:
 	_burst(_sparks, _spark_mesh, at + Vector3.UP * 0.3, int(18 * size), 1.3, 1.0)
 	if on_ground:
 		_burst(_dirt, _dirt_mesh, at, int(16 * size), 1.4, size * 0.7)
+		# Clods of earth thrown out of the crater fall back and bounce.
+		debris.scatter(at, int(5 + 4 * size), 6.0 + 3.0 * size, 0.28 + 0.1 * minf(size, 3.0), Color(0.27, 0.22, 0.16))
+		if size >= 0.9:
+			var shock := MeshInstance3D.new()
+			shock.mesh = _shock_mesh
+			shock.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			add_child(shock)
+			shock.global_position = at + Vector3.UP * 0.25
+			shock.scale = Vector3.ONE * 0.5
+			_live.append({"node": shock, "age": 0.0, "life": 0.28 + 0.06 * size, "kind": "shock", "reach": 5.0 + 4.5 * size})
 		var mark := Decal.new()
 		mark.texture_albedo = _scorch
 		mark.size = Vector3(size * 3.4, 4.0, size * 3.4)
@@ -455,7 +492,12 @@ func _physics_process(delta: float) -> void:
 		s.t += delta
 		var k: float = minf(s.t / s.time, 1.0)
 		var node: Node3D = s.node
-		node.global_position = s.from.lerp(s.to, k)
+		# A real trajectory: aimed a little high, the shell drops onto its mark under gravity.
+		var pos: Vector3 = s.from.lerp(s.to, k) + Vector3.UP * (0.5 * 9.8 * s.t * maxf(s.time - s.t, 0.0))
+		var ahead: Vector3 = pos - node.global_position
+		node.global_position = pos
+		if ahead.length() > 0.01 and absf(ahead.normalized().y) < 0.98:
+			node.look_at(pos + ahead, Vector3.UP)
 		if k >= 1.0:
 			node.queue_free()
 			_shells.remove_at(i)
@@ -472,6 +514,11 @@ func _physics_process(delta: float) -> void:
 				var k: float = minf(e.age / e.life, 1.0)
 				e.node.global_position = e.from.lerp(e.to, k)
 				e.node.scale = Vector3(1, 1, e.length)
+			"shock":
+				var k: float = minf(e.age / e.life, 1.0)
+				var ease := 1.0 - (1.0 - k) * (1.0 - k)
+				e.node.scale = Vector3.ONE * lerpf(0.5, e.reach * 2.0, ease)
+				e.node.transparency = k
 			"scorch":
 				e.node.modulate.a = clampf((e.life - e.age) / 8.0, 0.0, 1.0)
 			"mushroom":

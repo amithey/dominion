@@ -67,8 +67,48 @@ static func run(w: Node) -> void:
 	w.Motion.recoil(tank, 1.0)
 	if tank.sus_pitch_v >= 0.0:
 		failures.append("Firing did not kick the hull")
+	# Debris flies, lands on the ground and never sinks into it.
+	w.effects.explosion(field + Vector3(0, 0.2, 12), 2.0, true)
+	var thrown: int = w.effects.debris.alive()
+	if thrown == 0:
+		failures.append("An explosion threw no debris")
+	var peak := -INF
+	for i in range(60 * 3):
+		w.effects.debris._physics_process(DT)
+		for k in range(w.effects.debris.POOL):
+			if w.effects.debris._age[k] >= 0.0:
+				peak = maxf(peak, w.effects.debris._pos[k].y - field.y)
+	var buried := 0
+	for k in range(w.effects.debris.POOL):
+		if w.effects.debris._age[k] >= 0.0:
+			var p: Vector3 = w.effects.debris._pos[k]
+			if p.y < w.height_at(p.x, p.z) - 0.05:
+				buried += 1
+	if peak < 1.5:
+		failures.append("Debris never rose (peak %.1f m)" % peak)
+	if buried > 0:
+		failures.append("%d debris pieces fell through the ground" % buried)
+	# A destroyed tank may throw its turret; it must come down and rest on the ground.
+	var tossed = null
+	for attempt in range(12):
+		var wreck: Dictionary = w.spawn_unit("tank", field + Vector3(-10 - attempt * 6, 0, 0), 1)
+		w.kill(wreck)
+		if wreck.has("toss"):
+			tossed = wreck
+			break
+	if tossed == null:
+		failures.append("No destroyed tank threw its turret in 12 tries")
+	else:
+		var rose := 0.0
+		var start_y: float = tossed.toss.node.global_position.y
+		for i in range(60 * 6):
+			step(w, 1)
+			rose = maxf(rose, tossed.toss.node.global_position.y - start_y)
+		var at: Vector3 = tossed.toss.node.global_position
+		if rose < 2.0 or not tossed.toss.rest or at.y < w.height_at(at.x, at.z) - 0.05:
+			failures.append("Tossed turret: rose %.1f m, resting=%s" % [rose, tossed.toss.rest])
 	if failures.is_empty():
-		print("MOTION_TEST PASS: tank top %.1f m/s, max body pitch %.3f rad, stopped %.2f m from its mark" % [top, tilt, miss])
+		print("MOTION_TEST PASS: tank top %.1f m/s, max body pitch %.3f rad, stopped %.2f m from its mark; %d debris pieces peaking at %.1f m" % [top, tilt, miss, thrown, peak])
 	else:
 		for f in failures:
 			print("MOTION_TEST FAIL: " + f)
