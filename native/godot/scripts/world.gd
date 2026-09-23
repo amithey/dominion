@@ -3180,6 +3180,20 @@ func camera_test() -> void:
 	results["Middle-button drag"] = (cam_focus - before).dot(right) > 1.0
 	cam_focus = Vector3(99999, 0, 99999)
 	clamp_camera()
+	# The minimap wedge must point where the camera actually looks: the far edge
+	# of the wedge lies ahead of the near edge, whatever the yaw.
+	var mini = hud.find_children("*", "Control", true, false).filter(func(c): return c.get_script() == preload("res://scripts/minimap.gd"))
+	if not mini.is_empty():
+		cam_focus = start
+		for yaw in [0.0, PI * 0.5, PI * 1.25, PI * 1.75]:
+			cam_yaw = yaw
+			update_camera(0.0)
+			await get_tree().process_frame
+			var wedge: PackedVector2Array = mini[0].camera_outline()
+			var ahead := ((wedge[2] + wedge[3]) * 0.5 - (wedge[0] + wedge[1]) * 0.5).normalized()
+			var look: Vector3 = -camera.global_transform.basis.z
+			var want := Vector2(look.x, look.z).normalized()
+			results["minimap wedge faces the camera at yaw %d" % roundi(rad_to_deg(yaw))] = ahead.dot(want) > 0.95
 	results["Stays over the island"] = absf(cam_focus.x) <= float(map.mapSize) * 0.5
 	print(results)
 	var ok := results.values().all(func(v): return v)

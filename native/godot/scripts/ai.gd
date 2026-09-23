@@ -151,7 +151,14 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 				if i != n.id and not d.defeated(i) and d.ai_wants_war(n.id, i) and (worst < 0 or d.rel(n.id, i) < d.rel(n.id, worst)):
 					worst = i
 			if worst == 0:
-				declare_war(n.id, false)
+				# A government does not go to war over every grievance. Unless
+				# relations have collapsed it strikes across the border first
+				# and calls it a limited operation, and waits to see how the
+				# player's cabinet answers.
+				if world.engagement != null and d.rel(n.id, 0) > -70.0 and not world.engagement.active(0, n.id) and randf() < 0.6:
+					world.engagement.raid(n.id)
+				else:
+					declare_war(n.id, false)
 			elif worst > 0:
 				d.declare_war(n.id, worst)
 		var enemies: Array = d.enemies_of(n.id)

@@ -5,6 +5,33 @@ The active game is in `native/godot`. The browser implementation in `js/` is a
 reference for rules and exported data. Run `prepare-desktop.ps1` before changing
 or testing the native game; copied art and the engine are local-only.
 
+## War is decided by the state, not by the soldier
+
+- A soldier ordered to fire carries out the order. What the shot *means* is
+  settled at the level of the state, so the choice between a limited operation
+  and a full war left the unit panel: it is now the cabinet's standing orders,
+  set in the Diplomacy screen (G) under STANDING ORDERS, and every first strike
+  at a nation you are not at war with still goes to the cabinet for
+  authorization.
+- The struck government then answers for itself: it may contain the incident (a
+  protest and colder relations), answer in kind (a limited operation of its own
+  and a punitive column sent at your nearest holding), or call it war. The
+  choice weighs how far relations had sunk, how many incidents it has already
+  swallowed, how its army compares to yours and how aggressive it is — and a
+  first incident is never called a war.
+- AI governments now hold the same instrument. Unless relations have collapsed,
+  one that wants to move against you strikes across the border and calls it a
+  limited operation rather than declaring war, and your cabinet puts the three
+  answers to you in a letter: contain, answer in kind, or declare war. Answering
+  in kind puts another grievance on their books, and a government that runs out
+  of patience declares war itself.
+- The minimap wedge shows where the camera is really looking: rays through the
+  top of the screen pass above the horizon and never meet the ground, so they
+  are stopped at a sensible distance instead of folding the wedge into the
+  corner of the map. The wedge is filled, carries an arrow at its far edge for
+  the direction of view and a dot at the centre of the view, and is clipped at
+  the frame.
+
 ## Panel and menu redesign
 
 - Every panel, menu and dialog is now built from drawn plates rather than flat

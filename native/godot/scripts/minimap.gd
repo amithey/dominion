@@ -13,6 +13,7 @@ func setup(world_node: Node) -> void:
 	world = world_node
 	_half = float(world.map.mapSize) * 0.5
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	clip_contents = true  # the view wedge is cut at the frame, never drawn over it
 	var n := 160
 	var img := Image.create(n, n, false, Image.FORMAT_RGB8)
 	var sea := float(world.map.seaLevel)
@@ -80,23 +81,40 @@ func _draw() -> void:
 		if u.dead:
 			continue
 		draw_circle(to_map(u.node.position), 1.6 if not u.vehicle else 2.0, colours[u.owner % colours.size()])
+	# The camera: the ground it sees as a wedge, an arrow at the far edge for the
+	# direction it is looking, and a dot where the view is centred.
 	var pts := camera_outline()
 	if pts.size()==4:
-		pts.append(pts[0])
-		draw_polyline(pts, Color("f1d98a"), 1.5)
+		draw_colored_polygon(pts, Color(1.0, 0.85, 0.52, 0.10))
+		var ring := PackedVector2Array(pts)
+		ring.append(pts[0])
+		draw_polyline(ring, Color("f1d98a"), 1.5)
+		var near := (pts[0] + pts[1]) * 0.5
+		var far := (pts[2] + pts[3]) * 0.5
+		if near.distance_to(far) > 4.0:
+			var forward := (far - near).normalized()
+			var side := Vector2(-forward.y, forward.x) * 3.6
+			draw_colored_polygon(PackedVector2Array([far + forward * 5.5, far + side, far - side]), Color("f1d98a"))
+		draw_circle(to_map(world.cam_focus), 1.8, Color("f1d98a"))
 	draw_rect(Rect2(Vector2.ZERO, size), Color("8c7644"), false, 1.0)
 
+## The patch of ground the camera sees, as four points running round the wedge:
+## the two near corners first, then the two far ones. A ray through a top corner
+## of the screen passes above the horizon and never meets the ground, so it is
+## stopped at a sensible distance instead of running out to the far plane and
+## folding the wedge into the corner of the map.
 func camera_outline() -> PackedVector2Array:
 	var result := PackedVector2Array()
 	var viewport: Vector2 = world.get_viewport().get_visible_rect().size
 	var plane := Plane(Vector3.UP,world.height_at(world.cam_focus.x,world.cam_focus.z))
-	for corner in [Vector2.ZERO,Vector2(viewport.x,0),viewport,Vector2(0,viewport.y)]:
+	var reach: float = maxf(world.cam_dist,40.0) * 3.0
+	for corner in [Vector2(0.0,viewport.y),viewport,Vector2(viewport.x,0.0),Vector2.ZERO]:
 		var origin: Vector3 = world.camera.project_ray_origin(corner)
 		var ray: Vector3 = world.camera.project_ray_normal(corner)
 		var at = plane.intersects_ray(origin,ray)
-		if at == null:
-			at = origin+ray*world.camera.far
-		result.append(to_map(at).clamp(Vector2.ZERO,size))
+		if at == null or origin.distance_to(at) > reach:
+			at = origin + ray * reach
+		result.append(to_map(at))
 	return result
 
 func _gui_input(event: InputEvent) -> void:

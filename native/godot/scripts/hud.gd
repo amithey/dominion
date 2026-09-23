@@ -55,7 +55,6 @@ var _sel_hp: ProgressBar
 var _sel_info: Label
 var _sel_queue: HBoxContainer
 var _commands := {}
-var _policy: OptionButton
 var _health_color := Color.TRANSPARENT
 var _notices: VBoxContainer
 var _fps: Label
@@ -487,13 +486,6 @@ func _build_selection() -> void:
 	var commands := HBoxContainer.new()
 	commands.add_theme_constant_override("separation",4)
 	col.add_child(commands)
-	var policy := OptionButton.new()
-	_policy = policy
-	policy.add_item("Limited operation · warning before strike")
-	policy.add_item("Full war · warning before declaration")
-	policy.clip_text = true
-	policy.item_selected.connect(func(i):world.engagement.policy="limited" if i==0 else "war")
-	col.add_child(policy)
 	for action in ["Attack-move","Bombard","Repair"]:
 		var button := Button.new()
 		button.text = action
@@ -772,11 +764,8 @@ func _update_selection() -> void:
 	_commands["Repair"].disabled = not assets.any(func(e):return e.owner==0 and not e.dead and e.hp<e.max_hp and (e.get("is_building",false) and e.get("built",false) or e.get("vehicle",false)))
 	_commands["Attack-move"].set_pressed_no_signal(world.order_mode=="attack")
 	_commands["Bombard"].set_pressed_no_signal(world.order_mode=="bombard")
-	_policy.select(0 if world.engagement.policy=="limited" else 1)
-	_policy.tooltip_text = "Limited operations damage relations without automatically declaring full war. Every first strike requires authorization."
 	for button in _commands.values():
 		button.visible = transport_text==""
-	_policy.visible = transport_text==""
 	if transport_text != "":
 		_sel.visible = true
 		_sel_title.text = UI.caps("Road" if world.transport_kind == "road" else "Railway")
@@ -1164,6 +1153,7 @@ func _relation_word(score: float) -> String:
 func _diplomacy_screen() -> void:
 	var d: Node = world.diplomacy
 	_label(_side_rows, "Relations run from -100 to +100. Gifts, pacts and trade warm them; war, spies caught and broken treaties sour them.", UI.MUTED, 13)
+	_standing_orders()
 	for id in range(1, d.n):
 		var card := _card(_nation_colour(id))
 		var head := _row(card)
@@ -1206,13 +1196,41 @@ func _diplomacy_screen() -> void:
 				if d.at_war(0, enemy) and not d.at_war(id, enemy):
 					_button(card, "Call them to war against %s" % d.name_of(enemy), d.request_joint_war.bind(id, enemy))
 
+## The cabinet's standing orders. A soldier carries out the order he is given;
+## what the shot is called is decided here, by the state.
+func _standing_orders() -> void:
+	var e = world.engagement
+	if e == null:
+		return
+	var card := _card(GOLD)
+	card.add_child(_text(UI.caps("Standing orders"), 14, GOLD, true))
+	_label(card, "How your government frames an attack on a nation you are not at war with. Your soldiers obey the order either way; the cabinet decides what it is called, and their government answers as it sees fit.", UI.MUTED, 13)
+	_segments(card, [["Limited operation", "limited"], ["Full war", "war"]], e.policy, func(v):
+		e.policy = v
+		notice("Standing orders: %s." % e.doctrine_text()))
+	_label(card, "Limited operation: ninety seconds of fighting, no declaration of war. They may contain it, answer in kind, or call it war — a government swallows only so many incidents." if e.policy == "limited" else "Full war: the strike comes with a declaration of war, and their allies may join them.",
+		UI.TEXT, 13)
+	var running := PackedStringArray()
+	for id in range(1, world.diplomacy.n):
+		if e.left(id) > 0.0:
+			running.append("%s · %ds left · %d incident(s)" % [world.diplomacy.name_of(id), int(e.left(id)), int(e.incidents.get(str(id), 0))])
+	if not running.is_empty():
+		_label(card, "Operations under way: " + "   ".join(running), UI.BRIGHT, 13)
+
 func _declare(id: int) -> String:
 	world.diplomacy.declare_war(0, id)
 	return ""
 
 ## A foreign government's proposal, as a letter in the middle of the screen.
 func ask(text: String, accept: Callable, decline: Callable, title := "FOREIGN OFFICE") -> void:
-	_letters.append([text, accept, decline, title])
+	_letters.append([text, accept, decline, title, []])
+	if _letter_box == null:
+		_show_letter()
+
+## A letter with more than two answers, for a decision that is not a yes or a
+## no: each answer is [label, tone ("good", "bad" or ""), what it does].
+func choose(title: String, text: String, answers: Array) -> void:
+	_letters.append([text, func(): pass, func(): pass, title, answers])
 	if _letter_box == null:
 		_show_letter()
 
@@ -1254,14 +1272,22 @@ func _show_letter() -> void:
 	var buttons := _row(column, 10)
 	buttons.alignment = BoxContainer.ALIGNMENT_END
 	var strike: bool = letter[3]=="AUTHORIZE STRIKE"
-	for choice in [["Cancel" if strike else "Decline", letter[2], "bad"], ["Authorize" if strike else "Accept", letter[1], "good"]]:
+	var answers: Array = letter[4] if letter.size() > 4 else []
+	if answers.is_empty():
+		answers = [["Cancel" if strike else "Decline", "bad", letter[2]], ["Authorize" if strike else "Accept", "good", letter[1]]]
+	for answer in answers:
+		var choice := [answer[0], answer[2], answer[1]]
 		var b := Button.new()
 		b.text = choice[0]
 		b.custom_minimum_size = Vector2(120, 38)
 		b.focus_mode = Control.FOCUS_NONE
-		var good: bool = choice[2] == "good"
-		b.add_theme_stylebox_override("normal", UI.plate(Color("27553a") if good else Color("5a2a24"), Color("122a1d") if good else Color("2a1210"), Color("6fae7a") if good else Color("b06a58"), 9.0))
-		b.add_theme_stylebox_override("hover", UI.plate(Color("37724d") if good else Color("7a382f"), Color("1a3a28") if good else Color("3a1a16"), UI.BRIGHT, 9.0, Color(1, 1, 1, 0.18)))
+		# Green for the agreeable answer, red for the grave one; anything else
+		# keeps the ordinary plate.
+		var tone: String = choice[2]
+		if tone != "":
+			var good: bool = tone == "good"
+			b.add_theme_stylebox_override("normal", UI.plate(Color("27553a") if good else Color("5a2a24"), Color("122a1d") if good else Color("2a1210"), Color("6fae7a") if good else Color("b06a58"), 9.0))
+			b.add_theme_stylebox_override("hover", UI.plate(Color("37724d") if good else Color("7a382f"), Color("1a3a28") if good else Color("3a1a16"), UI.BRIGHT, 9.0, Color(1, 1, 1, 0.18)))
 		var action: Callable = choice[1]
 		b.pressed.connect(func():
 			action.call()
