@@ -2,10 +2,14 @@
 #   1. copies the repository's art into the Godot project (prepare-desktop.ps1),
 #   2. imports it and exports dist\DOMINION.exe (one file, the game packed inside),
 #   3. wraps it in an installer, dist\DOMINION-Setup.exe (the version is in its file properties).
+# By default the build is made from the last COMMIT, in a clean copy under %TEMP%:
+# two agents share this working folder, and half-finished, uncommitted work of
+# either must never reach a release. -Working builds the folder as it is (to try
+# uncommitted changes locally).
 # Needs the Godot 4.7.2 Windows export template (for the portable Godot, in
-# .local-tools\godot\editor_data\export_templates\4.7.2.stable) and Inno Setup 6.
-# Usage:  powershell -ExecutionPolicy Bypass -File native\build-windows.ps1 [-Version 0.9.0]
-param([string]$Version = "")
+# .local-tools\godot\editor_data\export_templates.7.2.stable) and Inno Setup 6.
+# Usage:  powershell -ExecutionPolicy Bypass -File nativeuild-windows.ps1 [-Version 0.9.0] [-Working]
+param([string]$Version = "", [switch]$Working)
 $ErrorActionPreference = 'Stop'
 $native = $PSScriptRoot
 $repo = Split-Path -Parent $native
@@ -13,6 +17,32 @@ $project = Join-Path $native 'godot'
 $dist = Join-Path $repo 'dist'
 $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.exe'
 
+if (-not $Working) {
+    # A clean copy of the last commit, with the local Godot tools linked in.
+    $head = (& git -C $repo rev-parse --short HEAD).Trim()
+    $stage = Join-Path $env:TEMP 'dominion-release'
+    $tools = Join-Path $stage '.local-tools'
+    if (Test-Path -LiteralPath $tools) { cmd /c rmdir "$tools" | Out-Null }  # the link only, never its target
+    if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force }
+    New-Item -ItemType Directory -Force -Path $stage | Out-Null
+    $tar = "$stage.tar"
+    & git -C $repo archive --format=tar -o $tar HEAD
+    & tar -xf $tar -C $stage
+    Remove-Item -LiteralPath $tar -Force
+    cmd /c mklink /J "$tools" "$(Join-Path $repo '.local-tools')" | Out-Null
+    Write-Output "Building from commit $head (uncommitted changes in the working folder are not included)"
+    $argsList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $stage 'nativeuild-windows.ps1'), '-Working')
+    if ($Version) { $argsList += @('-Version', $Version) }
+    & powershell @argsList
+    if ($LASTEXITCODE -ne 0) { cmd /c rmdir "$tools" | Out-Null; throw "The release build failed ($LASTEXITCODE)" }
+    New-Item -ItemType Directory -Force -Path $dist | Out-Null
+    Get-ChildItem -LiteralPath $dist -Filter 'DOMINION*.exe' | Remove-Item -Force
+    Copy-Item -LiteralPath (Join-Path $stage 'dist\DOMINION.exe') -Destination $dist
+    Copy-Item -LiteralPath (Join-Path $stage 'dist\DOMINION-Setup.exe') -Destination $dist
+    cmd /c rmdir "$tools" | Out-Null
+    Get-ChildItem -LiteralPath $dist -Filter 'DOMINION*.exe' | ForEach-Object { '{0}  {1:N0} MB  (commit {2})' -f $_.Name, ($_.Length / 1MB), $head }
+    exit 0
+}
 if (-not $Version) {
     $Version = (Select-String -Path (Join-Path $project 'project.godot') -Pattern '^config/version="(.+)"').Matches[0].Groups[1].Value
 }
