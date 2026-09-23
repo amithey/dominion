@@ -94,7 +94,9 @@ void fragment() {
 	}
 
 	// Large-scale colour variation: meadows are never one flat green.
-	albedo *= mix(0.84, 1.1, macro);
+	// The grass photo is a bright spring lime; pull it toward a deeper summer green.
+	albedo = mix(albedo, albedo * vec3(0.82, 0.9, 0.7), w.x);
+	albedo *= mix(0.8, 1.1, macro);
 	albedo = mix(albedo, albedo * vec3(1.06, 1.0, 0.84), smoothstep(0.55, 0.75, noise(p * 0.0017 + 0.13)) * w.x);
 
 	// Shadows of drifting clouds: large soft patches crossing the land slowly.

@@ -601,8 +601,10 @@ func build_environment() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.ambient_light_energy = 0.8
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
-	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = 1.0
+	# AgX keeps bright greens and skies from clipping to neon, like a film camera.
+	env.tonemap_mode = Environment.TONE_MAPPER_AGX
+	env.tonemap_exposure = 1.08
+	env.tonemap_white = 12.0
 	env.ssao_enabled = true
 	env.ssao_radius = 1.6
 	env.ssao_intensity = 1.8
@@ -612,10 +614,11 @@ func build_environment() -> void:
 	env.fog_enabled = true
 	env.fog_light_color = Color("b3c7d3")
 	env.fog_density = 0.0005
-	env.fog_aerial_perspective = 0.2
+	env.fog_aerial_perspective = 0.45  # distant land takes on the sky's blue: depth
 	env.fog_sky_affect = 0.0
 	env.adjustment_enabled = true
-	env.adjustment_saturation = 1.06
+	env.adjustment_saturation = 1.2
+	env.adjustment_contrast = 1.06
 	var world := WorldEnvironment.new()
 	world.environment = env
 	add_child(world)
@@ -694,7 +697,7 @@ func foliage_mesh(source: Mesh) -> Mesh:
 		foliage.shader = shader
 		foliage.set_shader_parameter("albedo_tex", material.albedo_texture)
 		foliage.set_shader_parameter("leaves", leafy)
-		foliage.set_shader_parameter("tint", Color(0.58, 0.84, 0.42) if leafy else material.albedo_color)
+		foliage.set_shader_parameter("tint", Color(0.42, 0.62, 0.3) if leafy else material.albedo_color)
 		foliage.set_shader_parameter("alpha_cut", material.alpha_scissor_threshold if leafy else 0.0)
 		mesh.surface_set_material(i, foliage)
 	return mesh

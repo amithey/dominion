@@ -6,8 +6,8 @@ shader_type spatial;
 render_mode cull_disabled, diffuse_burley;
 
 uniform sampler2D noise_tex : filter_linear_mipmap, repeat_enable;
-uniform vec3 root_color : source_color = vec3(0.2, 0.26, 0.1);
-uniform vec3 tip_color : source_color = vec3(0.4, 0.5, 0.2);
+uniform vec3 root_color : source_color = vec3(0.25, 0.31, 0.13);
+uniform vec3 tip_color : source_color = vec3(0.47, 0.55, 0.25);
 uniform vec3 dry_color : source_color = vec3(0.58, 0.54, 0.30);
 
 varying float dryness;

@@ -54,6 +54,9 @@ var _sel_sub: Label
 var _sel_hp: ProgressBar
 var _sel_info: Label
 var _sel_queue: HBoxContainer
+var _sel_medal: Control
+var _sel_stats: HBoxContainer
+var _stat_values := {}    # caption -> [plate, value Label]
 var _commands := {}
 var _health_color := Color.TRANSPARENT
 var _notices: VBoxContainer
@@ -69,14 +72,15 @@ func setup(world_node: Node, economy_node: Node) -> void:
 	_build_production()
 	_build_selection()
 	_build_minimap()
-	# Keep notices above the battlefield, clear of the selection commands.
+	# Notices stack in the lane between the screens on the left (diplomacy,
+	# market...) and the production list on the right, so they never cover either.
 	_notices = VBoxContainer.new()
 	_notices.anchor_left = 0.5
 	_notices.anchor_right = 0.5
 	_notices.anchor_top = 0.0
 	_notices.anchor_bottom = 0.0
-	_notices.offset_left = -236
-	_notices.offset_right = 236
+	_notices.offset_left = -60
+	_notices.offset_right = 228
 	_notices.offset_top = 106
 	_notices.offset_bottom = 106
 	_notices.grow_vertical = Control.GROW_DIRECTION_END
@@ -462,14 +466,20 @@ func _build_selection() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	body.add_child(row)
-	var frame := PanelContainer.new()
-	frame.add_theme_stylebox_override("panel", UI.inset(3.0))
-	row.add_child(frame)
+	# The portrait sits in a round medallion ringed in bronze and gold, on a
+	# disc of its owner's colour.
+	_sel_medal = Control.new()
+	_sel_medal.set_script(preload("res://scripts/medallion.gd"))
+	_sel_medal.custom_minimum_size = Vector2(150, 150)
+	_sel_medal.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_sel_pic = TextureRect.new()
-	_sel_pic.custom_minimum_size = Vector2(152, 144)
 	_sel_pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_sel_pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	frame.add_child(_sel_pic)
+	_sel_pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_sel_pic.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_sel_pic.offset_top = 2
+	_sel_pic.offset_bottom = 2
+	_sel_medal.add_child(_sel_pic)
+	row.add_child(_sel_medal)
 	var col := VBoxContainer.new()
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.add_theme_constant_override("separation", 5)
@@ -483,6 +493,25 @@ func _build_selection() -> void:
 	_sel_hp.show_percentage = true
 	_sel_hp.add_theme_stylebox_override("fill",UI.plate(Color("6fae7a"),Color("30684a"),Color(0,0,0,0),0.0,Color(1,1,1,0.25)))
 	col.add_child(_sel_hp)
+	# Stat plaques: a small caption over a large figure, as a 4X unit card shows them.
+	_sel_stats = HBoxContainer.new()
+	_sel_stats.add_theme_constant_override("separation", 4)
+	col.add_child(_sel_stats)
+	for caption in ["ATTACK", "RANGE", "SPEED", "HEALTH"]:
+		var plate := PanelContainer.new()
+		plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		plate.add_theme_stylebox_override("panel", UI.plate(Color("1c2e47"), Color("0c1626"), Color(UI.TRIM, 0.8), 4.0))
+		var stack := VBoxContainer.new()
+		stack.add_theme_constant_override("separation", -2)
+		plate.add_child(stack)
+		var cap := _text(caption, 10, UI.MUTED)
+		cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		stack.add_child(cap)
+		var value := _text("", 16, UI.CREAM, true)
+		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		stack.add_child(value)
+		_sel_stats.add_child(plate)
+		_stat_values[caption] = [plate, value]
 	var commands := HBoxContainer.new()
 	commands.add_theme_constant_override("separation",4)
 	col.add_child(commands)
@@ -635,7 +664,8 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 	_extra.citizens[0].text = "%d/%d" % [int(economy.civilians), int(economy.civ_cap)]
 	if world.research:
 		_extra.research[0].text = "%d  +%.1f" % [int(world.research.points), world.research.rate]
-		_era.text = world.research.eras[world.research.era].name.to_upper()
+		# As a 4X game dates its turns: the era, then the year of the reign (a minute a year).
+		_era.text = "%s  ·  YEAR %d" % [world.research.eras[world.research.era].name.to_upper(), 1 + int(world.game_time / 60.0)]
 	if world.territory:
 		_extra.land[0].text = str(world.territory.yields(0).cells)
 	var silos: bool = world.missiles != null and (world.missiles.stored() > 0 or not world.missiles.silos().is_empty())
@@ -766,6 +796,7 @@ func _update_selection() -> void:
 	_commands["Bombard"].set_pressed_no_signal(world.order_mode=="bombard")
 	for button in _commands.values():
 		button.visible = transport_text==""
+	_sel_stats.visible = false
 	if transport_text != "":
 		_sel.visible = true
 		_sel_title.text = UI.caps("Road" if world.transport_kind == "road" else "Railway")
@@ -779,6 +810,7 @@ func _update_selection() -> void:
 		var b: Dictionary = _selected
 		_sel.visible = true
 		_show_pic(b.key)
+		_medal_owner(b.owner)
 		_sel_title.text = UI.caps(b.def.name)
 		_sel_sub.text = "Under construction" if not b.built else String(b.def.get("cat", "")).capitalize()
 		_sel_hp.visible = true
@@ -818,6 +850,10 @@ func _update_selection() -> void:
 			if counts[k] > counts[main]:
 				main = k
 		_show_pic(main)
+		_medal_owner(units[0].owner)
+		var lead: Dictionary = units.filter(func(u): return u.key == main)[0]
+		_show_stats({"ATTACK": "%d" % int(lead.dmg), "RANGE": "%d m" % int(lead.range),
+			"SPEED": "%.1f" % float(lead.speed), "HEALTH": "%d%%" % int(round(100.0 * hp / maxf(max_hp, 1.0)))})
 		var name: String = world.unit_defs.get(main, {}).get("name", main)
 		_sel_title.text = UI.caps(name if units.size() == 1 else "%d units" % units.size())
 		var parts := PackedStringArray()
@@ -838,6 +874,21 @@ func _update_selection() -> void:
 		_sel_info.text += "\nHP %d / %d%s" % [int(hp),int(max_hp)," · Repair ordered" if units.any(func(u): return u.get("repairing",false)) else ""]
 		return
 	_sel.visible = false
+
+func _show_stats(values: Dictionary) -> void:
+	_sel_stats.visible = true
+	for caption in _stat_values:
+		var shown: bool = values.has(caption)
+		_stat_values[caption][0].visible = shown
+		if shown:
+			_stat_values[caption][1].text = values[caption]
+
+func _medal_owner(owner: int) -> void:
+	var colour := Color("20324d")
+	if owner < world.map.nations.size():
+		colour = Color(world.map.nations[owner].color).darkened(0.35).lerp(Color("20324d"), 0.35)
+	if colour != _sel_medal.tint:
+		_sel_medal.set_tint(colour)
 
 func _update_health_color() -> void:
 	var fraction := _sel_hp.value / maxf(_sel_hp.max_value,1.0)
@@ -1351,7 +1402,7 @@ func notice(text: String) -> void:
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.custom_minimum_size = Vector2(330, 0)
+	label.custom_minimum_size = Vector2(264, 0)
 	label.add_theme_color_override("font_color", UI.CREAM)
 	card.add_child(label)
 	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
