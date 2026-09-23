@@ -208,6 +208,9 @@ const Motion := preload("res://scripts/motion.gd")
 const Tactics := preload("res://scripts/tactics.gd")
 const SiteClearing := preload("res://scripts/site_clearing.gd")
 const Picking := preload("res://scripts/picking.gd")
+const Topography := preload("res://scripts/topography.gd")
+const Pines := preload("res://scripts/pines.gd")
+var lake_mask := PackedByteArray()   # 1 where a height-grid cell is lake water (not the open sea)
 const NAV_STEP := 4.0
 var fps_frames := 0
 
@@ -232,6 +235,9 @@ func _ready() -> void:
 	for i in range(cm.size()):
 		# The browser drops the map edge into an abyss; a seabed is enough here.
 		heights[i] = maxf(float(cm[i]) / 100.0, -36.0)
+	# Smoother land and real lake basins (topography.gd).
+	lake_mask = Topography.refine(heights, grid_size, float(map.seaLevel))
+	heights = Topography.heights()
 	start = Vector3(map.startPositions[0][0], 0, map.startPositions[0][1])
 	start.y = height_at(start.x, start.z)
 	unit_defs = map.get("unitDefs", {})
@@ -446,6 +452,8 @@ func _ready() -> void:
 		await preload("res://scripts/battle_regression.gd").capture(self)
 	elif "--capture-deposits" in args:
 		await preload("res://scripts/deposit_art.gd").capture(self)
+	elif "--capture-terrain" in args:
+		await preload("res://scripts/terrain_views.gd").capture(self)
 	elif "--capture-city" in args:
 		await preload("res://scripts/architecture.gd").capture(self)
 	elif "--land-test" in args:
@@ -618,9 +626,27 @@ func build_sea() -> void:
 	sea_node.mesh = plane
 	sea_node.material_override = material
 	sea_node.position.y = float(map.seaLevel)
+	# Lakes are still water: the shader draws them calm, without surf.
+	var lakes := Image.create_from_data(grid_size, grid_size, false, Image.FORMAT_R8, _lake_bytes())
+	material.set_shader_parameter("lake_tex", ImageTexture.create_from_image(lakes))
+	material.set_shader_parameter("lake_rect", Vector4(grid_origin.x, grid_origin.y, grid_size * grid_step, grid_size * grid_step))
+	# Where the swell must die down: over land, lakes and water shallower than 1.5 m.
+	var calm := PackedByteArray()
+	calm.resize(heights.size())
+	for i in range(heights.size()):
+		var depth: float = float(map.seaLevel) - heights[i]
+		calm[i] = int(clampf(1.0 - (depth - 0.3) / 1.2, 0.0, 1.0) * 255.0) if lake_mask[i] == 0 else 255
+	material.set_shader_parameter("depth_map", ImageTexture.create_from_image(Image.create_from_data(grid_size, grid_size, false, Image.FORMAT_R8, calm)))
 	sea_node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	sea_node.name = "Sea"
 	add_child(sea_node)
+
+func _lake_bytes() -> PackedByteArray:
+	var out := PackedByteArray()
+	out.resize(lake_mask.size())
+	for i in range(lake_mask.size()):
+		out[i] = 255 if lake_mask[i] == 1 else 0
+	return out
 
 func build_environment() -> void:
 	var sky_material := ProceduralSkyMaterial.new()
@@ -684,9 +710,14 @@ func build_trees() -> void:
 			top = maxf(top, (local * mesh_instance.get_aabb()).end.y)
 		root.free()
 		variants.append({"parts": parts, "height": maxf(top, 0.1), "trees": []})
+	var pines: Array = []
 	for t in map.trees:
+		if Pines.is_pine(self, t.x, t.z):
+			pines.append(t)
+			continue
 		var index: int = int(t.grove) % 5 if int(t.grove) >= 0 else int(absf(t.x * 7.0 + t.z * 13.0)) % 5
 		variants[index].trees.append(t)
+	build_pines(pines)
 	# Split every variant into 96 m cells so trees outside the view are culled,
 	# instead of one map-wide MultiMesh that is always drawn in full.
 	var cells := {}
@@ -723,6 +754,49 @@ func build_trees() -> void:
 			add_child(node)
 			tree_nodes.append(node)
 
+## Pines (pines.gd): one MultiMesh per 96 m cell. Half of them get a smaller
+## companion a few metres off, so stands of conifers look dense.
+func build_pines(trees: Array) -> void:
+	var mesh := Pines.mesh()
+	var all: Array = []
+	for t in trees:
+		all.append(t)
+		var h := fposmod(sin(t.x * 3.1 + t.z * 7.7) * 43758.5453, 1.0)
+		if h < 0.5:
+			var a := h * TAU * 2.0
+			var extra := {"x": t.x + cos(a) * 4.5, "z": t.z + sin(a) * 4.5, "scale": float(t.scale) * 0.75}
+			if height_at(extra.x, extra.z) > float(map.seaLevel) + 0.6:
+				all.append(extra)
+	var cells := {}
+	for t in all:
+		var key := Vector2i(floori(t.x / 96.0), floori(t.z / 96.0))
+		if not cells.has(key):
+			cells[key] = []
+		cells[key].append(t)
+	for key in cells:
+		var list: Array = cells[key]
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_custom_data = true
+		mm.mesh = mesh
+		mm.instance_count = list.size()
+		for i in range(list.size()):
+			var t: Dictionary = list[i]
+			var size := 10.5 * float(t.scale) * (0.85 + fposmod(t.x * 0.37, 0.3))
+			var spin := fmod(t.x * 12.9898 + t.z * 78.233, TAU)
+			var lean := Basis(Vector3(cos(spin), 0, sin(spin)), fposmod(t.z * 0.13, 0.08) - 0.04)
+			mm.set_instance_transform(i, Transform3D(lean * Basis(Vector3.UP, spin).scaled(Vector3(size * 0.9, size, size * 0.9)), Vector3(t.x, height_at(t.x, t.z) - 0.2, t.z)))
+			var shade := fposmod(sin(t.x * 5.3 + t.z * 1.7) * 43758.5453, 1.0)
+			mm.set_instance_custom_data(i, Color(0.45 + shade * 0.1, 0.5 + shade * 0.08, 0.45, 1.0))
+			var spot := Vector2(t.x, t.z)
+			if not tree_parts.has(spot):
+				tree_parts[spot] = []
+			tree_parts[spot].append([mm, i])
+		var node := MultiMeshInstance3D.new()
+		node.multimesh = mm
+		add_child(node)
+		tree_nodes.append(node)
+
 # Copy of a tree mesh drawn with the wind shader. The birch leaf texture is
 # autumn yellow; the tint turns it into summer yellow-green foliage.
 func foliage_mesh(source: Mesh) -> Mesh:
@@ -737,7 +811,7 @@ func foliage_mesh(source: Mesh) -> Mesh:
 		foliage.shader = shader
 		foliage.set_shader_parameter("albedo_tex", material.albedo_texture)
 		foliage.set_shader_parameter("leaves", leafy)
-		foliage.set_shader_parameter("tint", Color(0.42, 0.62, 0.3) if leafy else material.albedo_color)
+		foliage.set_shader_parameter("tint", Color(0.4, 0.56, 0.3) if leafy else material.albedo_color)
 		foliage.set_shader_parameter("alpha_cut", material.alpha_scissor_threshold if leafy else 0.0)
 		mesh.surface_set_material(i, foliage)
 	return mesh

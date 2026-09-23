@@ -58,11 +58,18 @@ void vertex() {
 	weights = vec4(max(0.0, 1.0 - sand - rock - dirt), dirt, sand, rock);
 }
 
-vec3 two_scale(sampler2D t, vec2 p) {
-	return mix(texture(t, p * tile).rgb, texture(t, p * far_tile).rgb, 0.35);
+// How much of the fine, near texture shows: all of it close up, none from
+// far away (the 6 m repeat of the photo turns into a speckle of dots from high
+// above; the coarse scale alone reads as smooth meadow).
+vec3 two_scale(sampler2D t, vec2 p, float near_detail) {
+	vec3 coarse = texture(t, p * far_tile).rgb;
+	if (near_detail < 0.01) return coarse;
+	return mix(coarse, mix(texture(t, p * tile).rgb, coarse, 0.35), near_detail);
 }
-vec3 two_scale_normal(sampler2D t, vec2 p) {
-	return mix(texture(t, p * tile).rgb, texture(t, p * far_tile).rgb, 0.35) * 2.0 - 1.0;
+vec3 two_scale_normal(sampler2D t, vec2 p, float near_detail) {
+	vec3 coarse = texture(t, p * far_tile).rgb;
+	vec3 n = near_detail < 0.01 ? coarse : mix(coarse, mix(texture(t, p * tile).rgb, coarse, 0.35), near_detail);
+	return mix(vec3(0.5, 0.5, 1.0), n, 0.4 + 0.6 * near_detail) * 2.0 - 1.0;
 }
 // Tangent-space normal -> world, for a surface whose texture axes are u and v.
 vec3 to_world(vec3 n_ts, vec3 n, vec3 u, vec3 v) {
@@ -73,23 +80,24 @@ vec3 to_world(vec3 n_ts, vec3 n, vec3 u, vec3 v) {
 
 void fragment() {
 	vec2 p = world_pos.xz;
+	float nd = 1.0 - smoothstep(70.0, 200.0, length(VERTEX));
 	vec3 n = normalize(world_normal);
 	vec4 w = weights / max(weights.x + weights.y + weights.z + weights.w, 0.001);
 	vec3 albedo = vec3(0.0);
 	vec3 wn = vec3(0.0);
 	const vec3 X = vec3(1, 0, 0);
 	const vec3 Z = vec3(0, 0, 1);
-	if (w.x > 0.01) { albedo += two_scale(grass_albedo, p) * w.x; wn += to_world(two_scale_normal(grass_normal, p), n, X, Z) * w.x; }
-	if (w.y > 0.01) { albedo += two_scale(dirt_albedo, p) * w.y; wn += to_world(two_scale_normal(dirt_normal, p), n, X, Z) * w.y; }
-	if (w.z > 0.01) { albedo += two_scale(sand_albedo, p) * w.z; wn += to_world(two_scale_normal(sand_normal, p), n, X, Z) * w.z; }
+	if (w.x > 0.01) { albedo += two_scale(grass_albedo, p, nd) * w.x; wn += to_world(two_scale_normal(grass_normal, p, nd), n, X, Z) * w.x; }
+	if (w.y > 0.01) { albedo += two_scale(dirt_albedo, p, nd) * w.y; wn += to_world(two_scale_normal(dirt_normal, p, nd), n, X, Z) * w.y; }
+	if (w.z > 0.01) { albedo += two_scale(sand_albedo, p, nd) * w.z; wn += to_world(two_scale_normal(sand_normal, p, nd), n, X, Z) * w.z; }
 	if (w.w > 0.01) {
 		// Rock is projected from the side on steep ground so it does not smear.
 		vec3 blend = pow(abs(n), vec3(4.0));
 		blend /= (blend.x + blend.y + blend.z);
-		vec3 rock = two_scale(rock_albedo, world_pos.zy) * blend.x + two_scale(rock_albedo, p) * blend.y + two_scale(rock_albedo, world_pos.xy) * blend.z;
-		vec3 rn = to_world(two_scale_normal(rock_normal, world_pos.zy), n, Z, vec3(0, 1, 0)) * blend.x
-			+ to_world(two_scale_normal(rock_normal, p), n, X, Z) * blend.y
-			+ to_world(two_scale_normal(rock_normal, world_pos.xy), n, X, vec3(0, 1, 0)) * blend.z;
+		vec3 rock = two_scale(rock_albedo, world_pos.zy, nd) * blend.x + two_scale(rock_albedo, p, nd) * blend.y + two_scale(rock_albedo, world_pos.xy, nd) * blend.z;
+		vec3 rn = to_world(two_scale_normal(rock_normal, world_pos.zy, nd), n, Z, vec3(0, 1, 0)) * blend.x
+			+ to_world(two_scale_normal(rock_normal, p, nd), n, X, Z) * blend.y
+			+ to_world(two_scale_normal(rock_normal, world_pos.xy, nd), n, X, vec3(0, 1, 0)) * blend.z;
 		albedo += rock * w.w;
 		wn += rn * w.w;
 	}

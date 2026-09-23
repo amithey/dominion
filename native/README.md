@@ -7,6 +7,24 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.10: land, lakes and forests
+
+- **No more "lakes by water level".** The sea's waves rose up to about 1.5 m. Flat land just above
+  sea level was therefore washed by a film of water with surf, and hollows showed the sea surface
+  through them. Now:
+  - The swell dies down over land and shallows (a depth map in the water shader).
+  - Land lower than 0.5 m above the sea is lifted clear.
+  - Inland water not reached by the open sea is a real lake (`topography.gd`), with a basin deepening
+    from its shore, a clear bank, darker still water and hardly any surf.
+  - The sea shelves steadily away from its own shore.
+- **Smoother land.** Two smoothing passes over the height grid (the shoreline never moves).
+- **No speckle from above.** The fine grass photo repeats every 6 m and broke into dots at strategy
+  height; the terrain now fades to its coarse scale with distance.
+- **Pines.** Conifers made in code (`pines.gd`, `shaders/pine.gdshader`): a trunk and five jagged
+  tiers, each tree with its own size, lean and shade, swaying in the wind. Pines grow mostly on
+  higher ground, and half of them have a smaller companion. Birches are a less lime green.
+- `--capture-terrain` renders the island from above, a field and the lakes.
+
 ## Version 0.9.9: architecture in the manner of a modern 4X city
 
 The generic, toy-bright models on the city hexes are replaced by buildings made in code

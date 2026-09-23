@@ -16,6 +16,9 @@ uniform float swell = 0.32;            // wave height in metres
 uniform float foam_width = 0.4;
 
 varying vec3 world_pos;
+uniform sampler2D lake_tex : filter_linear, repeat_disable;   // 1 over lakes (topography.gd)
+uniform sampler2D depth_map : filter_linear, repeat_disable;  // 1 over land, lakes and shallows; 0 over open sea
+uniform vec4 lake_rect = vec4(-320.0, -320.0, 640.0, 640.0);   // origin x, z and size of that grid
 #include "res://shaders/territory.gdshaderinc"
 
 uniform sampler2D noise_tex : filter_linear_mipmap, repeat_enable;
@@ -41,7 +44,12 @@ void vertex() {
 	vec3 d = gerstner(w.xz, vec2(1.0, 0.35), 38.0, 0.16, TIME)
 		+ gerstner(w.xz, vec2(-0.4, 1.0), 23.0, 0.12, TIME)
 		+ gerstner(w.xz, vec2(0.7, -0.8), 13.0, 0.08, TIME);
-	VERTEX += d * (swell / 0.32);
+	// The waves die down over shallow ground and are flat over land and lakes, so
+	// the sea never rises through low land as a sheet of surf (open sea is deep).
+	vec2 luv = (w.xz - lake_rect.xy) / lake_rect.zw;
+	float ground = (luv.x >= 0.0 && luv.y >= 0.0 && luv.x <= 1.0 && luv.y <= 1.0) ? textureLod(depth_map, luv, 0.0).r : 0.0;
+	float calm = smoothstep(0.0, 1.0, ground);
+	VERTEX += d * (swell / 0.32) * (1.0 - calm);
 	world_pos = w + d;
 }
 
@@ -86,11 +94,16 @@ void fragment() {
 		}
 	}
 
+	// Lakes are still water: darker and clearer, and no surf at their shores.
+	vec2 luv = (world_pos.xz - lake_rect.xy) / lake_rect.zw;
+	float lake = (luv.x >= 0.0 && luv.y >= 0.0 && luv.x <= 1.0 && luv.y <= 1.0) ? texture(lake_tex, luv).r : 0.0;
+	seen = mix(seen, seen * vec3(0.72, 0.82, 0.8), lake * 0.6);
+
 	// Shore foam: a thin broken line at the waterline with lacy streaks behind it.
-	float band = 1.0 - smoothstep(0.0, foam_width, depth);
+	float band = 1.0 - smoothstep(0.0, foam_width * mix(1.0, 0.35, lake), depth);
 	float lace = noise(world_pos.xz * 0.05 + vec2(TIME * 0.01, 0.0));
 	float foam = smoothstep(0.5, 0.75, lace + band * 0.45) * band;
-	foam = clamp(foam + pow(band, 6.0) * 0.8, 0.0, 1.0) * 0.85;
+	foam = clamp(foam + pow(band, 6.0) * 0.8, 0.0, 1.0) * mix(0.85, 0.3, lake);
 
 	ALBEDO = vec3(0.92, 0.95, 0.95) * foam;
 	EMISSION = seen * (1.0 - foam);

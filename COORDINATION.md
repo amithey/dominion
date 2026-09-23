@@ -108,3 +108,6 @@ UI files listed above.
   new look through the same `building_model` path only for keys without a recipe; tell me if a picture card needs it.
 - 2026-09-23 Claude: farm (red gambrel barn, farmhouse, silo), granary (foodDepot) and power station are now
   recipes in `architecture.gd` (new METAL and PLANK materials). Only architecture.gd and districts.gd changed.
+- 2026-09-23 Claude (0.9.10): terrain heights refined at load (`topography.gd`: smoothing, lake basins, sea shelf,
+  low land lifted), water shader calms waves over land/shallows and draws lakes still, distance fade of terrain
+  detail, pines (`pines.gd`). world.gd, terrain/water shaders only; your diplomacy/hud/save edits untouched.
