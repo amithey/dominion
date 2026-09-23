@@ -5,11 +5,11 @@ extends RefCounted
 ## gold progress bars, and Windows' Bahnschrift (the DIN-style face strategy
 ## games favour) with Segoe UI as the fallback. Nothing is downloaded.
 
-const BG := Color("0f1b21")
-const BG_2 := Color("16262e")
-const TRIM := Color("8c7644")
-const GOLD := Color("d8b866")
-const CREAM := Color("efe6c8")
+const BG := Color("101b30")
+const BG_2 := Color("1b2c43")
+const TRIM := Color("a28b56")
+const GOLD := Color("e0c17c")
+const CREAM := Color("f4e9cf")
 const TEXT := Color("dde5e7")
 const MUTED := Color("93a4aa")
 const GOOD := Color("8fd18a")
@@ -42,8 +42,11 @@ static func build() -> Theme:
 	t.default_font = font(400)
 	t.default_font_size = 15
 	var bold := font(600)
+	var heading := SystemFont.new()
+	heading.font_names = PackedStringArray(["Palatino Linotype", "Georgia", "Times New Roman"])
+	heading.font_weight = 600
 	# Panels.
-	var panel := box(Color(BG, 0.94), TRIM, 1, 7, 10.0, 10)
+	var panel := box(Color(BG, 0.97), TRIM, 1, 2, 12.0, 10)
 	t.set_stylebox("panel", "PanelContainer", panel)
 	t.set_stylebox("panel", "Panel", panel)
 	# Buttons: dark slate, gold on hover, sunk when pressed, faded when disabled.
@@ -52,7 +55,7 @@ static func build() -> Theme:
 	t.set_stylebox("pressed", "Button", box(Color("2c2a1d"), GOLD, 2, 5, 7.0))
 	t.set_stylebox("hover_pressed", "Button", box(Color("35321f"), GOLD, 2, 5, 7.0))
 	t.set_stylebox("disabled", "Button", box(Color("141d21"), Color("263136"), 1, 5, 7.0))
-	t.set_stylebox("focus", "Button", StyleBoxEmpty.new())
+	t.set_stylebox("focus", "Button", box(Color(0,0,0,0), CREAM, 2, 2, 0.0))
 	t.set_color("font_color", "Button", CREAM)
 	t.set_color("font_hover_color", "Button", Color.WHITE)
 	t.set_color("font_pressed_color", "Button", GOLD)
@@ -89,8 +92,8 @@ static func build() -> Theme:
 	# Headings get the heavier face through a type variation.
 	t.add_type("HeaderLabel")
 	t.set_type_variation("HeaderLabel", "Label")
-	t.set_font("font", "HeaderLabel", bold)
-	t.set_font_size("font_size", "HeaderLabel", 19)
+	t.set_font("font", "HeaderLabel", heading)
+	t.set_font_size("font_size", "HeaderLabel", 21)
 	t.set_color("font_color", "HeaderLabel", CREAM)
 	return t
 

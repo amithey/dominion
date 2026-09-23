@@ -67,6 +67,8 @@ func _physics_process(delta: float) -> void:
 		think(n, home, delta)
 
 func think(n: Dictionary, home: Dictionary, delta: float) -> void:
+	if world.match_config.get("style","standard")=="sandbox":
+		n.next_attack = maxf(n.next_attack,99999.0)
 	var s: float = n.speed
 	var spies: Node = world.espionage
 	n.money += float(cfg.income) * delta * s * (spies.income_mult(n.id) if spies else 1.0) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0))))

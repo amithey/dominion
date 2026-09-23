@@ -1,8 +1,66 @@
-# DOMINION desktop engine evaluation
+# DOMINION desktop game
 
 The chosen product target is an installed PC game, with Steam as a future goal.
-This separate Godot prototype evaluates native rendering and navigation before
-committing to a full migration. It is not the complete game or a release build.
+The active game is in `native/godot`. The browser implementation in `js/` is a
+reference for rules and exported data. Run `prepare-desktop.ps1` before changing
+or testing the native game; copied art and the engine are local-only.
+
+## September combat and interface update
+
+- Shared navy/gold panels and serif headings, a cartographic menu ornament, and
+  visible keyboard focus. Original presentation inspired by classic strategy UI.
+- Explicit attacks establish hostility before the first shell's splash filtering.
+  Damaged buildings briefly show their remaining health above the model.
+- Alt + right click orders armed ground/air vehicles to bombard terrain or roads.
+  A move or direct attack cancels the ground order. Conventional infrastructure
+  damage is confined to the impacted hex; nuclear blasts retain radius damage.
+- Aircraft carry a limited number of firing salvos (jet 4, bomber 3, drone 6,
+  helicopters 8). Fixed-wing craft fire forward and continue through waypoints.
+  Empty aircraft return to a friendly, supplied, completed airfield (helicopters
+  can also use a helipad), descend, rearm for 12 seconds and take off. If no base
+  is available they cannot refill; fixed-wing aircraft keep circling.
+  Landing is a simplified approach, not a runway reservation or collision system.
+- Ammunition, service state and ground bombardment orders persist in saves; old
+  saves receive default full loads. Aircraft selection shows ammunition and status.
+- `--combat-regression` checks first-strike damage, hex/radius damage, movement,
+  ammunition, service, unavailable bases, save/load and the aircraft HUD. Add
+  `--capture-operations` for `build/aircraft-ammunition.png`.
+- The full test runner now includes 20 suites and also rejects nonzero exits
+  and explicit FAIL reports even if a PASS marker was printed.
+
+## Campaign, command and balance update
+
+- New Game now offers the original island or its mirrored western layout,
+  2–4 total participants (one human plus AI), four nation/leader pairs, difficulty,
+  and Standard or Sandbox (no AI attack waves). The second layout mirrors the
+  existing terrain and asset positions; it is not a newly authored continent.
+  Setup persists in saves; loading a different setup rebuilds the correct scene.
+- Ctrl + right click has priority over direct enemy selection and replaces an old
+  bombardment order. Alt + right click bombards. The selection panel also provides
+  Attack-move and Bombard buttons: press one, then left-click a destination; Esc or
+  right-click cancels the pending mode.
+- Ships use a deep-water A* grid, safe coastal destinations and heading recovery,
+  including a permitted escape toward deeper water from old shallow-water saves.
+- Selected/damaged units and damaged buildings have segmented on-map HP bars.
+  The selection panel shows percent and HP; Repair orders vehicle/building repair
+  at 2.5% max HP per second for $0.25 per HP. Movement, combat, recent hits (6 s),
+  EMP and lost building supply pause work. Rebuild road/rail links to repair them.
+- Aircraft salvos deal 2.5x their former damage; silo missiles deal 1.75x. This is
+  an initial balance pass, not a claim of competitive balance. Rifle infantry,
+  snipers and commandos cannot penetrate armour or attack aircraft/ships; rocket
+  infantry and dedicated anti-air retain their appropriate damage profiles.
+- The minimap projects actual viewport corner rays onto the ground, so the view
+  outline follows camera rotation and zoom.
+- Choose Limited operation or Full war in the selection panel. An attack on a
+  peaceful nation requires an Authorize/Cancel warning. Limited operations last
+  90 s, cost 18 relation points, break treaties and allow local defence without an
+  automatic full war. Hostile repeated operations can escalate, and normal AI
+  diplomacy can still choose war. Orders against that nation stop at expiration.
+  Map/leader choices and operation/repair state persist in saves.
+- `--polish-test` checks modifiers, cancellation, repairs, weapon roles, coastal
+  navigation, minimap rotation and operation expiry. `--campaign-test` loads the
+  mirrored map with two participants and a different leader, checks remapping and
+  save identity. `--capture-polish` saves the strike warning for visual inspection.
 
 ## Launch on this computer
 
@@ -268,6 +326,10 @@ times out, or prints any SCRIPT ERROR on the way. The suites:
 | `--camera-test` | WASD, arrow keys and a middle-button drag move the view; it stays over the island |
 | `--economy-test` | workers build, a soldier trains, money and food move |
 | `--combat-test` | 19 duels: every armed unit fires its own weapon (bombs, missiles, rockets, torpedoes, arcing shells, bullets) and hurts its target, never its own side |
+| `--combat-regression` | first-strike building damage, visible hit feedback, hex-only infrastructure damage, aircraft service, save/load ammunition and HUD |
+| `--polish-test` | Alt/Ctrl input, strike cancellation, naval recovery, repairs, weapon roles, limited operations and minimap orientation |
+| `--campaign-test` | mirrored terrain, two participants, chosen nation/leader, save configuration |
+| `--script res://tools/campaign-flow-check.gd` | real menu start, scene reload and pending-save reload for a custom campaign |
 | `--air-sea-test` | ships stay at sea, aircraft at altitude, the damage table holds |
 | `--diplomacy-test` | gifts, pacts, allies joining, peace |
 | `--logistics-test` | supply cut and restored by roads and rail |
@@ -340,5 +402,5 @@ Assets are copied from the repository's Kenney city/suburban, Quaternius charact
 and terrain folders. Preserve their original credits and notices; complete the
 per-asset license audit before distribution. No new third-party art was acquired.
 
-Next gate: one polished district and a small combat encounter, validated at
-1080p with repeatable 24/48/96-unit measurements before deciding on full migration.
+Next art/performance gate: repeatable 1080p measurements with 24/48/96 units,
+plus further refinement of building materials and aircraft landing approaches.

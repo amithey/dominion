@@ -282,19 +282,22 @@ func connect_isolated(owner: int) -> void:
 			return
 
 ## Explosions wear down every half-link within `reach` of the blast.
-func damage_at(at: Vector3, reach: float, amount: float) -> int:
+func damage_at(at: Vector3, reach: float, amount: float, area := false) -> int:
 	var hit := 0
+	var impacted := world_hex(at)
 	for e in edges.values():
 		var a := hex_center(e.a)
 		var b := hex_center(e.b)
 		var d := b - a
 		d.y = 0
 		for side in range(2):
+			if not area and (e.a if side == 0 else e.b) != impacted:
+				continue
 			var t := clampf(((at.x - a.x) * d.x + (at.z - a.z) * d.z) / maxf(d.length_squared(), 0.01), side * 0.5, side * 0.5 + 0.5)
 			var gap := Vector2(at.x - a.x - t * d.x, at.z - a.z - t * d.z).length()
-			if gap > reach or e.half[side] <= 0.0:
+			if (area and gap > reach) or e.half[side] <= 0.0:
 				continue
-			e.half[side] = maxf(0.0, e.half[side] - amount * (1.0 - 0.5 * gap / reach))
+			e.half[side] = maxf(0.0, e.half[side] - amount * (1.0 - 0.5 * gap / maxf(reach,0.01) if area else 1.0))
 			hit += 1
 		e.hp = minf(e.half[0], e.half[1])
 	if hit > 0:

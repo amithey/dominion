@@ -17,6 +17,10 @@ $tests = @(
     @('camera', @('--', '--camera-test'), 'CAMERA_TEST PASS', 180),
     @('economy', @('--', '--economy-test'), 'ECONOMY_TEST PASS', 240),
     @('combat (every weapon)', @('--', '--combat-test'), 'COMBAT_TEST PASS', 400),
+    @('combat fixes and aircraft service', @('--', '--combat-regression'), 'COMBAT_REGRESSION PASS', 180),
+    @('naval recovery, repairs and diplomacy', @('--', '--polish-test'), 'POLISH_TEST PASS', 180),
+    @('campaign maps, players and leaders', @('--', '--campaign-test'), 'CAMPAIGN_TEST PASS', 180),
+    @('new campaign and map reload flow', @('--script', 'res://tools/campaign-flow-check.gd'), 'CAMPAIGN FLOW PASS', 180),
     @('air and sea', @('--', '--air-sea-test'), 'AIR_SEA_TEST PASS', 240),
     @('diplomacy', @('--', '--diplomacy-test'), 'DIPLOMACY_TEST PASS', 180),
     @('supply network', @('--', '--logistics-test'), 'LOGISTICS_TEST PASS', 240),
@@ -45,7 +49,7 @@ foreach ($t in $tests) {
     else {
         $log = (Get-Content $out -Raw) + (Get-Content "$out.err" -Raw)
         $errors = ([regex]::Matches($log, 'SCRIPT ERROR')).Count
-        if ($log -notmatch [regex]::Escape($pass)) { $status = 'FAIL' }
+        if ($p.ExitCode -ne 0 -or $log -match '\bFAIL\b' -or $log -notmatch [regex]::Escape($pass)) { $status = 'FAIL' }
         elseif ($errors -gt 0) { $status = "FAIL ($errors script errors)" }
         else { $status = 'PASS' }
     }

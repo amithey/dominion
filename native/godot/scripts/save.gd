@@ -66,6 +66,7 @@ func capture() -> Dictionary:
 			"key": b.key, "owner": b.owner, "pos": _v(b.root.position), "built": b.built,
 			"progress": b.progress, "hp": b.hp, "queue": b.queue, "queue_prog": b.queue_prog,
 			"ai_build": b.get("ai_build", false),
+			"repairing":b.get("repairing",false), "last_hit":b.get("last_hit",-100.0),
 		})
 	var units := []
 	for u in world.units:
@@ -74,6 +75,12 @@ func capture() -> Dictionary:
 		units.append({
 			"key": u.key, "owner": u.owner, "pos": _v(u.node.position), "heading": u.heading, "hp": u.hp,
 			"target": _v(u.target) if u.target != null else null, "attack_move": u.attack_move,
+			"ammo": u.get("ammo", -1), "air_state": u.get("air_state", "ready"),
+			"service_left": u.get("service_left", 0.0),
+			"air_base": _v(u.air_base.node.position) if u.get("air_base") != null else null,
+			"landing_start": _v(u.get("landing_start", u.node.position)), "landing_progress": u.get("landing_progress", 0.0),
+			"ground_attack": _v(u.ground_attack) if u.has("ground_attack") else null,
+			"repairing":u.get("repairing",false), "last_hit":u.get("last_hit",-100.0),
 		})
 	var edges := []
 	for e in world.logistics.edges.values():
@@ -85,6 +92,8 @@ func capture() -> Dictionary:
 		nations.append(copy)
 	return {
 		"format": "dominion-save", "version": VERSION, "map": world.MAP_PATH, "difficulty": world.match_difficulty,
+		"match_config":world.match_config.duplicate(),
+		"engagement":{"operations":world.engagement.operations.duplicate(),"incidents":world.engagement.incidents.duplicate(),"policy":world.engagement.policy},
 		"date": Time.get_datetime_string_from_system(), "quality": world.quality,
 		"economy": {"res": world.economy.res, "civilians": world.economy.civilians, "garrison": world.economy.garrison},
 		"buildings": buildings, "units": units, "edges": edges,
@@ -122,6 +131,13 @@ func load_slot(slot: String) -> bool:
 	if data.map != world.MAP_PATH:
 		world.hud.notice("This save belongs to another map")
 		return false
+	var config: Dictionary = world.MatchSetup.normalize(data.get("match_config",world.MatchSetup.DEFAULT))
+	if config != world.match_config:
+		world.get_tree().set_meta("match_config",config)
+		world.get_tree().set_meta("pending_load",data)
+		world.get_tree().paused = false
+		world.get_tree().reload_current_scene()
+		return true
 	if world.ai.nations.is_empty():
 		world.start_match(data.get("difficulty", "easy"))  # loading from the main menu
 	restore(data)
@@ -139,6 +155,8 @@ func restore(data: Dictionary) -> void:
 	for s in data.buildings:
 		var b: Dictionary = world.place_building(s.key, _p(s.pos), int(s.owner), bool(s.built))
 		b.hp = float(s.hp)
+		b.repairing = s.get("repairing",false)
+		b.last_hit = float(s.get("last_hit",-100.0))
 		b.progress = float(s.progress)
 		b.queue = s.queue.duplicate()
 		b.queue_prog = float(s.queue_prog)
@@ -163,10 +181,26 @@ func restore(data: Dictionary) -> void:
 		var u: Dictionary = world.spawn_unit(s.key, _p(s.pos), int(s.owner))
 		u.heading = float(s.heading)
 		u.hp = float(s.hp)
+		u.repairing = s.get("repairing",false)
+		u.last_hit = float(s.get("last_hit",-100.0))
+		if u.get("fly", false) and int(s.get("ammo", -1)) >= 0:
+			u.ammo = clampi(int(s.ammo),0,world.AirOperations.CAPACITY[u.key])
+			u.air_state = s.get("air_state", "ready")
+			u.service_left = float(s.get("service_left",0.0))
+			u.landing_start = _p(s.get("landing_start",s.pos))
+			u.landing_progress = float(s.get("landing_progress",0.0))
+			if s.get("air_base") != null:
+				for b in world.buildings:
+					if b.node.position.distance_to(_p(s.air_base)) < 0.5 and world.AirOperations.available(world,u,b):
+						u.air_base = b
 		if s.target != null:
 			u.target = _p(s.target)
 			u.attack_move = bool(s.attack_move)
 		world.place_on_ground(u, _p(s.pos))
+		if u.get("air_state", "ready") in ["landing","rearming","takeoff"]:
+			u.node.position = _p(s.pos)
+		if s.get("ground_attack") != null:
+			world.order_bombard([u],_p(s.ground_attack))
 	# Diplomacy and the AI.
 	var d: Node = world.diplomacy
 	for name in ["score", "war", "alliance", "pact", "nap"]:
@@ -191,6 +225,10 @@ func restore(data: Dictionary) -> void:
 	world.cam_dist_target = float(data.camera.dist)
 	world.game_over = data.get("game_over", "")
 	world.game_time = float(data.get("game_time", 0.0))
+	var engagement: Dictionary = data.get("engagement",{})
+	world.engagement.operations = engagement.get("operations",{}).duplicate()
+	world.engagement.incidents = engagement.get("incidents",{}).duplicate()
+	world.engagement.policy = engagement.get("policy","limited")
 	# Older saves have none of these; the systems then start fresh.
 	world.market.restore(data.get("market", {}))
 	world.espionage.restore(data.get("espionage", {}))

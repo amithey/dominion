@@ -356,7 +356,8 @@ func _build_selection() -> void:
 	_sel.anchor_bottom = 1.0
 	_sel.offset_left = 12
 	_sel.offset_right = 560
-	_sel.offset_top = -214
+	_sel.offset_top = -272
+	_sel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_sel.offset_bottom = -12
 	add_child(_sel)
 	var row := HBoxContainer.new()
@@ -366,7 +367,7 @@ func _build_selection() -> void:
 	frame.add_theme_stylebox_override("panel", UI.box(Color("0a1418"), UI.TRIM, 1, 6, 2.0))
 	row.add_child(frame)
 	_sel_pic = TextureRect.new()
-	_sel_pic.custom_minimum_size = Vector2(224, 168)
+	_sel_pic.custom_minimum_size = Vector2(152, 144)
 	_sel_pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_sel_pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	frame.add_child(_sel_pic)
@@ -380,8 +381,36 @@ func _build_selection() -> void:
 	col.add_child(_sel_sub)
 	_sel_hp = ProgressBar.new()
 	_sel_hp.custom_minimum_size = Vector2(0, 14)
-	_sel_hp.show_percentage = false
+	_sel_hp.custom_minimum_size.y = 22
+	_sel_hp.show_percentage = true
+	_sel_hp.add_theme_stylebox_override("fill",UI.box(Color("518d69"),Color("a9d8a9"),0,2,0))
 	col.add_child(_sel_hp)
+	var commands := HBoxContainer.new()
+	commands.add_theme_constant_override("separation",4)
+	col.add_child(commands)
+	var policy := OptionButton.new()
+	policy.add_item("Limited operation · warning before strike")
+	policy.add_item("Full war · warning before declaration")
+	policy.clip_text = true
+	policy.item_selected.connect(func(i):world.engagement.policy="limited" if i==0 else "war")
+	col.add_child(policy)
+	for action in ["Attack-move","Bombard","Repair"]:
+		var button := Button.new()
+		button.text = action
+		button.add_theme_font_size_override("font_size",12)
+		button.pressed.connect(func():
+			if action=="Repair":
+				world.Repairs.request(world,[_selected] if _selected!=null else _selected_units())
+			else:
+				world.order_mode = "bombard" if action=="Bombard" else "attack"
+				world.hud.notice("%s: click a destination on the battlefield." % action))
+		commands.add_child(button)
+	var health := Control.new()
+	health.set_script(preload("res://scripts/health_overlay.gd"))
+	health.world = world
+	health.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(health)
+	move_child(health,0)
 	_sel_info = _text("", 13, UI.TEXT)
 	_sel_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_sel_info.custom_minimum_size = Vector2(280, 0)
@@ -439,6 +468,8 @@ func _build_help() -> void:
 			["Turn / tilt / zoom", "Q E  ·  R F  ·  mouse wheel (zooms toward the cursor)"],
 			["Select", "Click a unit or building, or drag a box around units"],
 			["Orders", "Right click: move or attack  ·  Ctrl + right click: attack-move"],
+			["Bombard", "Alt + right click: fire at ground or infrastructure (armed vehicles)"],
+			["Aircraft", "Limited salvos; empty aircraft return to a supplied airfield / helipad to rearm"],
 			["Build", "Pick a building in the list on the right, click a hex in your city (Shift keeps placing)"],
 			["Screens", "Y research  ·  G diplomacy  ·  M market  ·  I intelligence  ·  T territory"],
 			["Game", "F5 save  ·  F9 load  ·  Esc cancel / pause menu  ·  F1 this help"],
@@ -643,6 +674,8 @@ func _update_selection() -> void:
 			if world.disabled(b):
 				lines.append("EMP: systems down.")
 		_sel_info.text = "\n".join(PackedStringArray(lines))
+		if b.get("repairing",false):
+			_sel_info.text += "\nRepairing · pauses for 6 s after a hit."
 		_fill_queue(b.queue, b.queue_prog)
 		return
 	if not units.is_empty():
@@ -671,6 +704,12 @@ func _update_selection() -> void:
 		var def: Dictionary = world.unit_defs.get(main, {})
 		_sel_info.text = ("%s\nRight click to move or attack; Ctrl + right click to attack-move." % def.get("desc", "")) if units.size() == 1 else "Right click to move or attack; Ctrl + right click to attack-move."
 		_fill_queue([])
+		if units.size() == 1 and units[0].get("fly",false):
+			var u: Dictionary = units[0]
+			_sel_info.text = "Ammunition: %d/%d salvos | %s\n%s" % [u.ammo,world.AirOperations.CAPACITY[u.key],u.air_state.capitalize(),"Rearming: %.0f s" % u.service_left if u.air_state == "rearming" else "Empty aircraft return to a supplied air base."]
+		elif units.any(func(u): return u.vehicle):
+			_sel_info.text += "\nAlt + right click: bombard ground / infrastructure."
+		_sel_info.text += "\nHP %d / %d%s" % [int(hp),int(max_hp)," · Repair ordered" if units.any(func(u): return u.get("repairing",false)) else ""]
 		return
 	_sel.visible = false
 
@@ -1007,8 +1046,8 @@ func _declare(id: int) -> String:
 	return ""
 
 ## A foreign government's proposal, as a letter in the middle of the screen.
-func ask(text: String, accept: Callable, decline: Callable) -> void:
-	_letters.append([text, accept, decline])
+func ask(text: String, accept: Callable, decline: Callable, title := "FOREIGN OFFICE") -> void:
+	_letters.append([text, accept, decline, title])
 	if _letter_box == null:
 		_show_letter()
 
@@ -1029,7 +1068,7 @@ func _show_letter() -> void:
 	_letter_box.add_child(column)
 	var head := _row(column, 10)
 	head.add_child(_icon("diplomacy", 34))
-	var heading := _text("FOREIGN OFFICE", 20, GOLD, true)
+	var heading := _text(letter[3], 20, GOLD, true)
 	heading.add_theme_font_size_override("font_size", 20)
 	head.add_child(heading)
 	var body := _text(letter[0], 16, UI.CREAM)
@@ -1038,7 +1077,8 @@ func _show_letter() -> void:
 	column.add_child(body)
 	var buttons := _row(column, 10)
 	buttons.alignment = BoxContainer.ALIGNMENT_END
-	for choice in [["Decline", letter[2], "bad"], ["Accept", letter[1], "good"]]:
+	var strike: bool = letter[3]=="AUTHORIZE STRIKE"
+	for choice in [["Cancel" if strike else "Decline", letter[2], "bad"], ["Authorize" if strike else "Accept", letter[1], "good"]]:
 		var b := Button.new()
 		b.text = choice[0]
 		b.custom_minimum_size = Vector2(120, 38)

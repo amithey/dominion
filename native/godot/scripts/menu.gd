@@ -26,9 +26,12 @@ var _shade: TextureRect
 var _dim: ColorRect
 var _brand: VBoxContainer
 var _card: PanelContainer
+var setup_options := {"map":"island","players":4,"nation":0,"style":"standard"}
+var setup_difficulty := "easy"
 
 func setup(world_node: Node) -> void:
 	world = world_node
+	setup_options = world.match_config.duplicate()
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 20
 	_root = Control.new()
@@ -49,6 +52,11 @@ func setup(world_node: Node) -> void:
 	_shade.anchor_bottom = 1.0
 	_shade.offset_right = 720
 	_root.add_child(_shade)
+	var atlas := Control.new()
+	atlas.set_script(preload("res://scripts/atlas_decoration.gd"))
+	atlas.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_shade.add_child(atlas)
+	atlas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	# Pause menu: the whole game dims behind a card.
 	_dim = ColorRect.new()
 	_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -92,7 +100,7 @@ func setup(world_node: Node) -> void:
 	_panel.add_theme_constant_override("separation", 8)
 	_card.add_child(_panel)
 	var credit := Label.new()
-	credit.text = "Version %s  ·  made with Godot %s" % [ProjectSettings.get_setting("application/config/version", ""), Engine.get_version_info().string]
+	credit.text = "DOMINION  ·  %s" % ProjectSettings.get_setting("application/config/version", "")
 	credit.add_theme_color_override("font_color", Color(1, 1, 1, 0.35))
 	credit.anchor_top = 1.0
 	credit.anchor_bottom = 1.0
@@ -163,10 +171,30 @@ func open_pause() -> void:
 
 func open_new_game() -> void:
 	_clear()
-	_heading("NEW GAME  ·  CHOOSE THE DIFFICULTY")
+	_heading("CHART YOUR CAMPAIGN")
+	_setup_choice("Map",["Island · original","Island · mirrored west"],["island","mirrored"],"map")
+	_setup_choice("Players",["2 · you + 1 AI","3 · you + 2 AI","4 · you + 3 AI"],[2,3,4],"players")
+	_setup_choice("Nation / leader",world.MatchSetup.NATIONS,[0,1,2,3],"nation")
+	_setup_choice("Style",["Standard strategy","Sandbox · no AI attack waves"],["standard","sandbox"],"style")
+	var difficulty := OptionButton.new()
 	for d in DIFFICULTIES:
-		_option_card(d[1], d[2], func(): start(d[0]))
+		difficulty.add_item(d[1])
+	difficulty.selected = ["easy","normal","hard"].find(setup_difficulty)
+	difficulty.item_selected.connect(func(i):setup_difficulty=DIFFICULTIES[i][0])
+	_row("Difficulty",difficulty)
+	_button("Begin campaign",func():start(setup_difficulty))
 	_button("Back", open_main)
+
+func _setup_choice(title: String,labels: Array,values: Array,key: String) -> void:
+	var choice := OptionButton.new()
+	choice.custom_minimum_size.x = 230
+	choice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	choice.clip_text = true
+	for label in labels:
+		choice.add_item(label)
+	choice.selected = values.find(setup_options[key])
+	choice.item_selected.connect(func(i):setup_options[key]=values[i])
+	_row(title,choice)
 
 func open_load() -> void:
 	_clear()
@@ -228,6 +256,12 @@ func _show(visible_now: bool) -> void:
 # ---------------------------------------------------------------- actions
 
 func start(difficulty: String) -> void:
+	if setup_options != world.match_config:
+		world.get_tree().set_meta("match_config",setup_options.duplicate())
+		world.get_tree().set_meta("start_difficulty",difficulty)
+		world.get_tree().paused = false
+		world.get_tree().reload_current_scene()
+		return
 	world.start_match(difficulty)
 	close()
 

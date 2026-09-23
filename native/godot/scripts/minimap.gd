@@ -80,16 +80,24 @@ func _draw() -> void:
 		if u.dead:
 			continue
 		draw_circle(to_map(u.node.position), 1.6 if not u.vehicle else 2.0, colours[u.owner % colours.size()])
-	# The camera's view: a wedge from the focus in the direction it looks.
-	var c := to_map(world.cam_focus)
-	var reach: float = world.cam_dist * 1.1 / (_half * 2.0) * size.x
-	var ahead := Vector2(-sin(world.cam_yaw), -cos(world.cam_yaw))
-	var side := Vector2(ahead.y, -ahead.x)
-	var pts := PackedVector2Array([c - ahead * reach * 0.35 + side * reach * 0.3, c - ahead * reach * 0.35 - side * reach * 0.3,
-		c + ahead * reach * 0.6 - side * reach * 0.7, c + ahead * reach * 0.6 + side * reach * 0.7])
-	pts.append(pts[0])
-	draw_polyline(pts, Color("f1d98a"), 1.5)
+	var pts := camera_outline()
+	if pts.size()==4:
+		pts.append(pts[0])
+		draw_polyline(pts, Color("f1d98a"), 1.5)
 	draw_rect(Rect2(Vector2.ZERO, size), Color("8c7644"), false, 1.0)
+
+func camera_outline() -> PackedVector2Array:
+	var result := PackedVector2Array()
+	var viewport: Vector2 = world.get_viewport().get_visible_rect().size
+	var plane := Plane(Vector3.UP,world.height_at(world.cam_focus.x,world.cam_focus.z))
+	for corner in [Vector2.ZERO,Vector2(viewport.x,0),viewport,Vector2(0,viewport.y)]:
+		var origin: Vector3 = world.camera.project_ray_origin(corner)
+		var ray: Vector3 = world.camera.project_ray_normal(corner)
+		var at = plane.intersects_ray(origin,ray)
+		if at == null:
+			at = origin+ray*world.camera.far
+		result.append(to_map(at).clamp(Vector2.ZERO,size))
+	return result
 
 func _gui_input(event: InputEvent) -> void:
 	var press: bool = event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed

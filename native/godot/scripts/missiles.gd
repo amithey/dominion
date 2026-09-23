@@ -160,7 +160,7 @@ func _physics_process(delta: float) -> void:
 func impact(key: String, at: Vector3, owner: int) -> void:
 	var def := def_of(key)
 	var radius := float(def.radius)
-	var dmg := float(def.dmg)
+	var dmg := float(def.dmg)*1.75
 	var special: String = def.get("special", "")
 	var nuclear := key == "nuke"
 	world.effects.explosion(at + Vector3.UP, radius * 0.22, true)
@@ -168,7 +168,7 @@ func impact(key: String, at: Vector3, owner: int) -> void:
 		world.effects.mushroom(at, radius)
 	elif radius > 15.0:
 		world.effects.explosion(at + Vector3.UP * 3.0, radius * 0.16, false)
-	world.logistics.damage_at(at, radius if nuclear else radius * 0.4, dmg)
+	world.logistics.damage_at(at, radius if nuclear else radius * 0.4, dmg, nuclear)
 	var source := {"owner": owner, "dead": true, "key": "missile"}
 	var hit := []
 	for ent in world.units + world.buildings:

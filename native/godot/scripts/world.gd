@@ -59,6 +59,7 @@ const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher
 const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub"]
 const AIR := ["helicopter", "gunship", "jet", "bomber", "drone"]
 const FIXED_WING := ["jet", "bomber", "drone"]
+const AirOperations := preload("res://scripts/air_operations.gd")
 const ALTITUDE := {"helicopter": 14.0, "gunship": 13.0, "jet": 26.0, "bomber": 30.0, "drone": 18.0}
 const SHIP_LENGTH := {"gunboat": 7.5, "corvette": 10.5, "destroyer": 15.0, "submarine": 11.0, "nuclearSub": 14.0}
 const DEEP := -1.2   # water at least this deep (below sea level) carries a ship
@@ -178,6 +179,12 @@ var missile_aim := ""     # missile type waiting for a target click
 var cam_lift := 0.0       # raises the camera's look-at point above the ground (captures)
 var edge_scroll := true   # pan when the mouse touches the screen edge (Settings)
 var middle_drag := false  # the middle mouse button drags the map
+var order_mode := ""
+const MatchSetup := preload("res://scripts/match_setup.gd")
+var match_config: Dictionary = MatchSetup.DEFAULT.duplicate()
+var engagement: RefCounted
+var naval_navigation: RefCounted
+const Repairs := preload("res://scripts/repairs.gd")
 const NAV_STEP := 4.0
 var fps_frames := 0
 
@@ -187,6 +194,12 @@ func _ready() -> void:
 		if not (a.begins_with("--quality") or a.begins_with("--difficulty") or a == "--no-vsync"):
 			interactive = false
 	map = JSON.parse_string(FileAccess.get_file_as_string(MAP_PATH))
+	match_config = MatchSetup.normalize(get_tree().get_meta("match_config",MatchSetup.DEFAULT))
+	if "--campaign-test" in OS.get_cmdline_user_args():
+		match_config = {"map":"mirrored","players":2,"nation":2,"style":"sandbox"}
+	MatchSetup.apply(map,match_config)
+	engagement = preload("res://scripts/engagement.gd").new()
+	engagement.world = self
 	var grid: Dictionary = map.grid
 	grid_size = int(grid.size)
 	grid_step = float(grid.step)
@@ -334,6 +347,21 @@ func _ready() -> void:
 	add_child(selection_marker)
 
 	var args := OS.get_cmdline_user_args()
+	if get_tree().has_meta("pending_load"):
+		var data: Dictionary = get_tree().get_meta("pending_load")
+		get_tree().remove_meta("pending_load")
+		start_match(data.get("difficulty","easy"))
+		saves.restore(data)
+		menu.setup(self)
+		menu.close()
+		return
+	if get_tree().has_meta("start_difficulty"):
+		var chosen: String = get_tree().get_meta("start_difficulty")
+		get_tree().remove_meta("start_difficulty")
+		start_match(chosen)
+		menu.setup(self)
+		menu.close()
+		return
 	for arg in args:
 		if arg.begins_with("--bench"):
 			bench_units = clampi(int(arg.get_slice("=", 1)) if "=" in arg else 64, 1, 240)
@@ -379,6 +407,10 @@ func _ready() -> void:
 		await soak_test(12.0)
 	elif "--capture-screens" in args:
 		await capture_screens()
+	elif "--combat-regression" in args:
+		await preload("res://scripts/combat_regression.gd").run(self)
+	elif "--polish-test" in args or "--campaign-test" in args or "--capture-polish" in args:
+		await preload("res://scripts/polish_regression.gd").run(self,"--campaign-test" in args)
 	elif "--combat-test" in args or "--capture-combat" in args:
 		await combat_test("--capture-combat" in args)
 	elif "--capture-ui" in args:
@@ -1440,6 +1472,8 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 		"path": PackedVector3Array(), "path_goal": Vector3.INF, "repath": 0.0, "build_site": null,
 		"engine": audio.add_engine(node), "orbit": at,
 	}
+	if key in AIR:
+		AirOperations.initialize(unit)
 	place_on_ground(unit, at)
 	if research:
 		research.equip(unit)
@@ -1515,13 +1549,24 @@ func animate(unit: Dictionary, moving: bool) -> void:
 
 func order_attack(selected: Array, enemy: Dictionary) -> void:
 	for u in selected:
+		if u.dead or u.owner == enemy.owner or effectiveness(u, enemy) <= 0.01 or u.dmg <= 0:
+			continue
+		# Establish hostility before splash filters run, including the first shell.
+		if u.owner == 0 and enemy.owner > 0 and not hostile(u.owner, enemy.owner):
+			ai.declare_war(enemy.owner, true)
 		u.enemy = enemy
+		u.erase("ground_attack")
 		u.target = null
 		u.attack_move = true
 		u.path = PackedVector3Array()
 
 func order_move(selected: Array, point: Vector3, attack := false) -> void:
 	for u in selected:
+		if u.has("ground_attack"):
+			u.enemy = null
+		u.erase("ground_attack")
+		u.egress = null
+		u.repath = 0.0
 		u.attack_move = attack
 		u.path = PackedVector3Array()
 		u.build_site = null  # a new order takes a worker off its construction site
@@ -1533,9 +1578,34 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 		var spacing := 5.5 if selected[i].vehicle else 2.6
 		selected[i].target = point + Vector3((i % width - (width - 1) / 2.0) * spacing, 0, (floori(float(i) / width) - (rows - 1) / 2.0) * spacing)
 
+func request_bombard(selected: Array, point: Vector3) -> void:
+	var armed := selected.filter(func(u):return not u.dead and u.vehicle and u.dmg>0 and not u.key in ["samLauncher","aaVehicle","submarine","nuclearSub"])
+	if armed.is_empty():
+		hud.notice("Select artillery, a ground-attack aircraft or a vehicle with a ground weapon.")
+		return
+	engagement.authorize_area(point,6.0,func():order_bombard(armed,point))
+
+func order_bombard(selected: Array, point: Vector3) -> void:
+	for u in selected:
+		if u.dead or not u.vehicle or u.dmg <= 0 or u.key in ["samLauncher", "aaVehicle", "submarine", "nuclearSub"]:
+			continue
+		if not is_instance_valid(u.get("bombard_marker")):
+			u.bombard_marker = Node3D.new()
+			add_child(u.bombard_marker)
+		u.bombard_marker.position = point
+		u.ground_attack = point
+		u.enemy = {"node":u.bombard_marker,"root":u.bombard_marker,"dead":false,"owner":u.owner,"vehicle":true,"is_building":true,"footprint":1.0}
+		u.target = null
+		u.attack_move = true
+		u.path = PackedVector3Array()
+
 func _physics_process(delta: float) -> void:
 	var now := Time.get_ticks_msec() / 1000.0
 	game_time += delta
+	if engagement != null:
+		engagement.update()
+	if economy != null:
+		Repairs.update(self,delta)
 	if economy:
 		update_construction(delta)
 		update_training(delta)
@@ -1667,6 +1737,8 @@ func build_navigation() -> void:
 	probe.y = height_at(probe.x, probe.z)
 	for i in range(240):
 		await get_tree().physics_frame
+		if NavigationServer3D.map_get_iteration_id(nav_map)==0:
+			continue
 		if NavigationServer3D.map_get_closest_point(nav_map, probe).distance_to(probe) < 20.0:
 			nav_ready = true
 			break
@@ -1741,6 +1813,8 @@ func clear_match() -> void:
 	for b in buildings:
 		b.root.queue_free()
 	for u in units:
+		if is_instance_valid(u.get("bombard_marker")):
+			u.bombard_marker.queue_free()
 		u.node.queue_free()
 	buildings.clear()
 	units.clear()
@@ -3346,13 +3420,31 @@ func ai_test(capture: bool) -> void:
 # hover: when they have nothing to do they circle, and they make strafing
 # passes rather than stopping over a target.
 func move_craft(unit: Dictionary, delta: float) -> void:
+	if unit.get("fly", false) and AirOperations.update(self, unit, delta):
+		return
 	var node: Node3D = unit.node
 	var pos := node.position
 	var goal = unit.target
 	var fixed: bool = unit.key in FIXED_WING
-	if unit.enemy != null and (unit.target == null or unit.attack_move):
+	var servicing: bool = unit.get("air_state", "ready") != "ready"
+	if servicing:
+		goal = AirOperations.goal(unit)
+	elif unit.enemy != null and (unit.target == null or unit.attack_move):
 		var gap := flat_distance(unit, unit.enemy)
 		goal = unit.enemy.node.position if (gap > unit.range * 0.8 or fixed) else null
+	if unit.get("naval",false) and goal != null:
+		if naval_navigation == null:
+			naval_navigation = preload("res://scripts/naval_navigation.gd").new()
+			naval_navigation.setup(self)
+		naval_navigation.move(unit,goal,delta)
+		if unit.dust:
+			unit.dust.emitting = unit.moving
+		return
+	if fixed and not servicing and unit.get("egress") != null:
+		if node.position.distance_to(unit.egress) < 12.0:
+			unit.egress = null
+		else:
+			goal = unit.egress
 	if goal == null and fixed:
 		var t: float = Time.get_ticks_msec() / 1000.0 * 0.35 + unit.phase
 		goal = unit.orbit + Vector3(cos(t), 0, sin(t)) * 30.0
@@ -3374,8 +3466,12 @@ func move_craft(unit: Dictionary, delta: float) -> void:
 		else:
 			unit.orbit = goal if unit.target != null else unit.orbit
 			unit.target = null
-		place_on_ground(unit, pos)
-		return
+			# Fly through the waypoint and turn back for another pass; never hover.
+			to = Basis(Vector3.UP, unit.heading)*Vector3.BACK*80.0
+			unit.egress = pos+to
+		if not fixed:
+			place_on_ground(unit, pos)
+			return
 	var want := atan2(to.x, to.z)
 	var turn := minf(1.0, delta * (1.2 if fixed else (2.4 if unit.fly else 0.9)))
 	var old: float = unit.heading
@@ -3466,6 +3562,8 @@ func air_sea_test(capture: bool) -> void:
 func hostile(a: int, b: int) -> bool:
 	if a == b:
 		return false
+	if engagement != null and engagement.active(a,b):
+		return true
 	if ai == null or ai.nations.is_empty():
 		return true  # sandbox scenes without AI: every other owner is an enemy
 	return diplomacy.at_war(a, b)
@@ -3495,6 +3593,9 @@ func target_class(t: Dictionary) -> String:
 
 ## Damage multiplier of `attacker` against `target` (0 = cannot engage).
 func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
+	# Small arms cannot penetrate heavy armour; dedicated anti-tank infantry can.
+	if attacker.key in ["soldier","sniper","commando","worker"] and target_class(target) in ["armor","air","naval"]:
+		return 0.0
 	var profile: Dictionary = damage_profile.get(attacker.key, {})
 	if profile.is_empty():
 		return 0.0 if target.get("fly", false) else 1.0
@@ -3527,6 +3628,8 @@ func disabled(ent: Dictionary) -> bool:
 	return ent.get("disabled_until", 0.0) > game_time
 
 func update_combat(unit: Dictionary, delta: float) -> void:
+	if unit.get("fly", false) and (unit.get("ammo", 0) <= 0 or unit.get("air_state", "ready") != "ready"):
+		return
 	if unit.dmg <= 0.0 or disabled(unit):
 		return  # workers do not fight; EMP-struck machines are dead weight
 	unit.reload -= delta
@@ -3563,9 +3666,19 @@ const WEAPONS := {"bomber": "bomb", "jet": "missile", "drone": "missile", "helic
 ## Fires at `enemy`; false when the weapon cannot be used yet (a bomber that
 ## is not over its target), so the reload is not spent.
 func fire(unit: Dictionary, enemy: Dictionary) -> bool:
+	if unit.get("fly", false):
+		if unit.ammo <= 0 or unit.air_state != "ready":
+			return false
+		if unit.key in FIXED_WING:
+			var direction: Vector3 = enemy.node.position-unit.node.position
+			if absf(angle_difference(unit.heading,atan2(direction.x,direction.z))) > 0.65:
+				return false
 	var weapon: String = WEAPONS.get(unit.key, "")
 	if weapon != "":
-		return fire_weapon(unit, enemy, weapon)
+		var fired := fire_weapon(unit, enemy, weapon)
+		if fired and unit.get("fly", false):
+			AirOperations.consume(unit)
+		return fired
 	_fire_gun(unit, enemy)
 	return true
 
@@ -3575,7 +3688,7 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 	var target: Vector3 = enemy.node.position + Vector3.UP * (2.0 if enemy.get("is_building", false) else (0.0 if enemy.get("fly", false) else 0.8))
 	var dir := Basis(Vector3.UP, unit.heading) * Vector3.BACK
 	var from: Vector3 = unit.node.position + dir * 1.5 + Vector3.UP * (1.6 if not unit.get("fly", false) else -0.8)
-	var dmg: float = unit.dmg
+	var dmg: float = unit.dmg * (2.5 if unit.get("fly",false) else 1.0)
 	match weapon:
 		"bomb":
 			# Only over the target: the bomber lines up and releases a stick.
@@ -3683,14 +3796,18 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	if unit.dead:
 		return
 	# Striking a nation at peace starts a war with it.
-	if ai and source.owner == 0 and unit.owner > 0:
+	if ai and source.owner == 0 and unit.owner > 0 and not (engagement != null and engagement.active(0,unit.owner)):
 		ai.declare_war(unit.owner, true)
 	if espionage:
 		amount *= espionage.damage_mult(source.owner)  # a dead general blunts an army
 	if research:
 		amount *= research.damage_mult(source) * research.armor_mult(unit)
 	unit.hp -= amount
+	if amount > 0:
+		unit.last_hit = game_time
 	if unit.get("is_building", false):
+		if amount > 0 and unit.hp > 0:
+			show_building_damage(unit)
 		if unit.hp <= 0.0:
 			destroy_building(unit)
 		return
@@ -3699,8 +3816,29 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	if unit.hp <= 0.0:
 		kill(unit)
 
+func show_building_damage(b: Dictionary) -> void:
+	if not is_instance_valid(b.get("damage_label")):
+		var label := Label3D.new()
+		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		label.no_depth_test = true
+		label.font_size = 40
+		label.pixel_size = 0.025
+		label.outline_size = 9
+		label.position = Vector3(0,10.0,0)
+		b.root.add_child(label)
+		b.damage_label = label
+	if b.get("damage_fade") != null and b.damage_fade.is_valid():
+		b.damage_fade.kill()
+	b.damage_label.text = "%s  %d%%" % [b.def.name,ceili(100.0*maxf(0,b.hp)/b.max_hp)]
+	b.damage_label.modulate = Color("f1b86a")
+	b.damage_fade = create_tween()
+	b.damage_fade.tween_interval(3.0)
+	b.damage_fade.tween_property(b.damage_label,"modulate:a",0.0,1.0)
+
 var charred: StandardMaterial3D
 func kill(unit: Dictionary) -> void:
+	if is_instance_valid(unit.get("bombard_marker")):
+		unit.bombard_marker.queue_free()
 	unit.dead = true
 	unit.selected = false
 	unit.ring.visible = false
@@ -4026,7 +4164,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			if event.pressed:
 				var point = ground_point(event.position)
 				if point != null:
-					hud.notice(missiles.launch(missile_aim, point))
+					var key := missile_aim
+					engagement.authorize_area(point,float(missiles.def_of(key).radius),func():hud.notice(missiles.launch(key,point)))
 					if int(missiles.stock.get(missile_aim, 0)) <= 0 or not event.shift_pressed:
 						cancel_missile()
 		elif event.button_index == MOUSE_BUTTON_RIGHT and missile_aim != "":
@@ -4044,6 +4183,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_RIGHT and placing != "":
 			if event.pressed:
 				cancel_placement()
+		elif event.button_index == MOUSE_BUTTON_LEFT and order_mode != "":
+			if event.pressed:
+				var point = ground_point(event.position)
+				if point != null:
+					var selected := units.filter(func(u): return u.selected and not u.dead and u.owner==0)
+					if order_mode == "bombard":
+						request_bombard(selected,point)
+					else:
+						order_move(selected,point,true)
+			else:
+				order_mode = ""
 		elif event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				dragging = true
@@ -4080,14 +4230,29 @@ func _unhandled_input(event: InputEvent) -> void:
 				for unit in units:
 					unit.ring.visible = unit.selected
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			if order_mode!="":
+				order_mode = ""
+				return
 			var selected := units.filter(func(u): return u.selected and not u.dead)
 			var target = enemy_under(event.position)
-			if target != null:
-				order_attack(selected, target)
+			if event.alt_pressed or Input.is_physical_key_pressed(KEY_ALT):
+				var point = ground_point(event.position)
+				if point != null:
+					request_bombard(selected,point)
+			elif event.ctrl_pressed or Input.is_physical_key_pressed(KEY_CTRL):
+				var point = ground_point(event.position)
+				if point != null:
+					order_move(selected,point,true)
+			elif target != null:
+				selected = selected.filter(func(u):return u.dmg>0 and effectiveness(u,target)>0.01)
+				if not selected.is_empty():
+					engagement.authorize(target.owner,func():
+						if not target.dead:
+							order_attack(selected.filter(func(u):return not u.dead),target))
 			else:
 				var point = ground_point(event.position)
 				if point != null:
-					order_move(selected, point, event.ctrl_pressed)  # Ctrl: attack-move
+					order_move(selected, point, event.ctrl_pressed or Input.is_physical_key_pressed(KEY_CTRL))
 	elif event is InputEventMouseMotion and middle_drag:
 		# The ground follows the mouse: drag it the way you would drag a map.
 		var forward := Vector3(-sin(cam_yaw), 0, -cos(cam_yaw))
@@ -4118,6 +4283,10 @@ func enemy_under(screen: Vector2) -> Variant:
 	return best
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE and order_mode!="":
+		order_mode = ""
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_B:
 		start_battle()
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_G:
