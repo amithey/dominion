@@ -25,6 +25,22 @@ func run() -> void:
 	var d: Node = w.diplomacy
 	w.economy.res.money = 10000.0
 	d.set_score(0, 1, 0)
+	var initial_funds: float = w.economy.res.money
+	c.begin(1, "visit")
+	c.advance(1)
+	c.back_to_channels()
+	check(c.session.phase == "choosing" and w.economy.res.money == initial_funds, "back refunds an unused choice and returns to channel selection")
+	c.restore(JSON.parse_string(JSON.stringify(c.capture())))
+	c.back_to_channels()
+	check(w.economy.res.money == initial_funds and c.begin(1, "phone") == "", "back is idempotent after loading and allows immediate channel switch")
+	c.advance(5)
+	c.propose("aid")
+	c.back_to_channels()
+	check(c.begin(1, "mediator") == "", "can switch channels after a discussion")
+	c.advance(30)
+	check(c.propose("aid") != "" and c.session.results.size() == 1, "switching preserves decisions and prevents replaying a deal")
+	c.restore({})
+	d.set_score(0, 1, 0)
 	check(c.begin(1, "visit") == "", "visit invitation accepted")
 	check(c.session.phase == "travelling" and c.topic_reason("trade") != "", "travel gates negotiations")
 	check(c.begin(2, "phone") != "", "head of government cannot attend two contacts")
@@ -128,6 +144,17 @@ func run() -> void:
 			w._unhandled_input(event)
 			break
 	check(w.hud._diplomatic_contact_screen != null and w.hud._diplomatic_contact_screen.visible, "foreign civic building opens contact screen")
+	for button in w.hud._diplomatic_contact_screen.find_children("*", "Button", true, false):
+		if button.text == "Back to contact options":
+			button.pressed.emit()
+			break
+	check(c.session.phase == "choosing", "visible back button returns to channel options")
+	for button in w.hud._diplomatic_contact_screen.find_children("*", "Button", true, false):
+		if button.text.begins_with("State visit"):
+			check(not button.disabled, "replacement channel button is enabled immediately")
+			button.pressed.emit()
+			break
+	c.advance(float(c.session.duration))
 	var port_at = w.test_site("port", w.start)
 	check(port_at != null, "commercial port site exists")
 	if port_at != null: w.place_building("port", port_at, 0, true)

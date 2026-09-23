@@ -46,9 +46,10 @@ func start_reason(nation: int, channel: String) -> String:
 	var d: Node = world.diplomacy
 	if not CHANNELS.has(channel) or nation <= 0 or nation >= d.n: return "Invalid diplomatic destination."
 	if d.defeated(nation): return "This government no longer controls a nation."
-	if not session.is_empty() and session.phase != "concluded": return "Conclude the current contact first."
+	var switching: bool = not session.is_empty() and session.phase == "choosing" and int(session.nation) == nation
+	if not session.is_empty() and session.phase != "concluded" and not switching: return "Conclude the current contact first."
 	var remaining: float = float(cooldowns.get(str(nation), 0.0)) - clock
-	if remaining > 0: return "Their diplomatic office is busy for %ds." % ceili(remaining)
+	if remaining > 0 and not switching: return "Their diplomatic office is busy for %ds." % ceili(remaining)
 	if channel == "visit" and (d.at_war(0, nation) or d.rel(0, nation) < -25): return "Visit invitation declined. Establish peace and improve relations first."
 	if world.economy.res.money < CHANNELS[channel].fee: return "Insufficient funds for this channel."
 	return ""
@@ -58,11 +59,25 @@ func begin(nation: int, channel: String) -> String:
 	if reason != "": return reason
 	world.economy.pay({"money": CHANNELS[channel].fee})
 	var delay := duration(nation, channel)
+	var previous: Dictionary = session if session.get("phase", "") == "choosing" else {}
 	session = {"nation": nation, "channel": channel, "phase": "travelling" if channel == "visit" else "connecting",
+		"fee_paid": CHANNELS[channel].fee,
 		"ready": clock + delay, "duration": delay, "leader": leader(nation), "visitor": leader(0),
-		"mediator": mediator(nation), "results": [], "used": [], "counter": {}, "expires": clock + delay + 300,
+		"mediator": mediator(nation), "results": previous.get("results", []), "used": previous.get("used", []), "counter": previous.get("counter", {}), "expires": clock + delay + 300,
 		"message": "Invitation accepted. Your delegation is travelling." if channel == "visit" else "The diplomatic office is establishing contact."}
 	cooldowns[str(nation)] = clock + delay + 120
+	changed.emit()
+	return ""
+
+func back_to_channels() -> String:
+	if session.is_empty() or session.phase in ["concluded", "choosing"]: return ""
+	# Correcting an unused choice costs nothing. Once negotiation has begun,
+	# keep its decisions and agenda usage so switching cannot replay a deal.
+	if session.used.is_empty():
+		world.economy.refund({"money": session.get("fee_paid", CHANNELS[session.channel].fee)})
+		session.fee_paid = 0
+	session.phase = "choosing"
+	session.message = "Choose another channel. Previous decisions remain recorded." if not session.used.is_empty() else "Choose another channel. Your unused contact fee was refunded."
 	changed.emit()
 	return ""
 
@@ -89,7 +104,7 @@ func advance(delta: float) -> void:
 	if world.diplomacy.defeated(n) or leader(n) != session.leader or leader(0) != session.visitor:
 		finish("Talks suspended: the government or its leadership has changed.")
 		return
-	if session.channel == "visit" and world.diplomacy.at_war(0, n):
+	if session.phase != "choosing" and session.channel == "visit" and world.diplomacy.at_war(0, n):
 		finish("Visit cancelled following the outbreak of war.")
 		return
 	if clock >= float(session.expires):

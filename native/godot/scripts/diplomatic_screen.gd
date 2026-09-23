@@ -79,6 +79,8 @@ func _refresh() -> void:
 	var title := _text(head, "FOREIGN OFFICE  /  " + world.diplomacy.name_of(nation), 24, UI.BRIGHT)
 	title.add_theme_font_override("font", UI.serif())
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if current and s.phase not in ["concluded", "choosing"]:
+		_button(head, "Back to contact options", func(): _run(service.back_to_channels))
 	_button(head, "Close", hide)
 	_text(column, "%s  ·  Relations %+d  ·  %s" % [service.leader(nation), world.diplomacy.rel(0, nation), "AT WAR" if world.diplomacy.at_war(0, nation) else "Diplomatic relations"], 14, UI.MUTED)
 	var row := HBoxContainer.new()
@@ -106,6 +108,10 @@ func _refresh() -> void:
 	scroll.add_child(content)
 	if not current:
 		_channels()
+	elif s.phase == "choosing":
+		status.text = s.message
+		_channels()
+		_button(content, "End this contact", func(): service.finish())
 	elif s.phase in ["travelling", "connecting"]:
 		_text(content, "INVITATION ACCEPTED" if s.channel == "visit" else "ESTABLISHING CONTACT", 20, UI.GOLD)
 		_text(content, service.CHANNELS[s.channel].name, 18)
