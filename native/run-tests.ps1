@@ -36,13 +36,14 @@ if (-not $Quick) {
 }
 
 $results = @()
+$runId = [guid]::NewGuid().ToString('N')
 foreach ($t in $tests) {
     $name, $testArgs, $pass, $limit = $t
-    if ($Exported -and $testArgs[0] -like 'res://*') { continue }  # the exported game has only the world scene
+    if ($Exported -and ($testArgs[0] -like 'res://*' -or $testArgs[0] -eq '--script')) { continue }  # alternate scenes and tools are not part of the release
     if ($Exported) { $runner = $exe; $argsList = @('--headless') }
     else { $runner = $godot; $argsList = @('--headless', '--path', ('"{0}"' -f (Join-Path $PSScriptRoot 'godot'))) }
     $argsList += $testArgs
-    $out = Join-Path $env:TEMP "dominion-test.log"
+    $out = Join-Path $env:TEMP "dominion-test-$runId.log"
     $start = Get-Date
     $p = Start-Process -FilePath $runner -ArgumentList $argsList -RedirectStandardOutput $out -RedirectStandardError "$out.err" -PassThru -NoNewWindow
     if (-not $p.WaitForExit($limit * 1000)) { $p.Kill(); $status = 'TIMEOUT' }

@@ -2862,7 +2862,8 @@ func combat_test(capture := false) -> void:
 		order_attack([attacker], target)
 		var hurt := false
 		var shot: bool = not capture or not c[0] in ["jet", "bomber", "helicopter", "gunship", "mlrs", "submarine", "samLauncher"]
-		for f in range(int(30.0 / get_physics_process_delta_time() / 3.0)):
+		# Physics delta already includes time_scale; allow a full 30 game seconds for an approach.
+		for f in range(int(30.0 / get_physics_process_delta_time())):
 			await get_tree().physics_frame
 			if not shot and effects._projectiles.size() > 0 and effects._projectiles.any(func(p): return p.t > 0.12):
 				shot = true
@@ -3432,6 +3433,11 @@ func move_craft(unit: Dictionary, delta: float) -> void:
 	elif unit.enemy != null and (unit.target == null or unit.attack_move):
 		var gap := flat_distance(unit, unit.enemy)
 		goal = unit.enemy.node.position if (gap > unit.range * 0.8 or fixed) else null
+		if fixed and unit.get("egress") == null and gap < 45.0:
+			var approach: Vector3 = unit.enemy.node.position - pos
+			if absf(angle_difference(unit.heading, atan2(approach.x, approach.z))) > 1.0:
+				# A close target behind the wing needs a new approach, not an endless tight orbit.
+				unit.egress = pos + Basis(Vector3.UP, unit.heading) * Vector3.BACK * 80.0
 	if unit.get("naval",false) and goal != null:
 		if naval_navigation == null:
 			naval_navigation = preload("res://scripts/naval_navigation.gd").new()
