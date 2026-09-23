@@ -7,8 +7,8 @@
 # either must never reach a release. -Working builds the folder as it is (to try
 # uncommitted changes locally).
 # Needs the Godot 4.7.2 Windows export template (for the portable Godot, in
-# .local-tools\godot\editor_data\export_templates.7.2.stable) and Inno Setup 6.
-# Usage:  powershell -ExecutionPolicy Bypass -File nativeuild-windows.ps1 [-Version 0.9.0] [-Working]
+# .local-tools\godot\editor_data\export_templates\4.7.2.stable) and Inno Setup 6.
+# Usage:  powershell -ExecutionPolicy Bypass -File native\build-windows.ps1 [-Version 0.9.0] [-Working]
 param([string]$Version = "", [switch]$Working)
 $ErrorActionPreference = 'Stop'
 $native = $PSScriptRoot
@@ -28,12 +28,13 @@ if (-not $Working) {
     $tar = "$stage.tar"
     & git -C $repo archive --format=tar -o $tar HEAD
     # Windows' own tar: from Git Bash, "tar" is GNU tar, which reads "C:" as a remote host.
-    & (Join-Path $env:SystemRoot 'System32	ar.exe') -xf $tar -C $stage
-    if (-not (Test-Path -LiteralPath (Join-Path $stage 'nativeuild-windows.ps1'))) { throw 'Could not unpack the commit snapshot.' }
+    & (Join-Path $env:SystemRoot 'System32\tar.exe') -xf $tar -C $stage
+    $inner = Join-Path $stage 'native\build-windows.ps1'
+    if (-not (Test-Path -LiteralPath $inner)) { throw 'Could not unpack the commit snapshot.' }
     Remove-Item -LiteralPath $tar -Force
     cmd /c mklink /J "$tools" "$(Join-Path $repo '.local-tools')" | Out-Null
     Write-Output "Building from commit $head (uncommitted changes in the working folder are not included)"
-    $argsList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $stage 'nativeuild-windows.ps1'), '-Working')
+    $argsList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $inner, '-Working')
     if ($Version) { $argsList += @('-Version', $Version) }
     & powershell @argsList
     $code = $LASTEXITCODE
