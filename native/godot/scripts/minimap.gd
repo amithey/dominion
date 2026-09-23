@@ -81,13 +81,15 @@ func _draw() -> void:
 	# Territory: every held cell washed in its owner's colour, fronts in gold.
 	var t: Node = world.territory
 	if t != null:
-		var cell_px := size / float(t.cols)
+		# Land is held hex by hex (territory.cell_polygon gives each hex's corners).
 		for i in range(t.owner_of.size()):
 			var o: int = t.owner_of[i]
 			if o < 0:
 				continue
-			var r := Rect2(Vector2(i % t.cols, i / t.cols) * cell_px, cell_px)
-			draw_rect(r, Color(1.0, 0.84, 0.42, 0.35) if t.contested[i] else Color(colours[o % colours.size()], 0.26))
+			var poly := PackedVector2Array()
+			for corner in t.cell_polygon(i):
+				poly.append(to_map(Vector3(corner.x, 0, corner.y)))
+			draw_colored_polygon(poly, Color(1.0, 0.84, 0.42, 0.35) if t.contested[i] else Color(colours[o % colours.size()], 0.26))
 	for b in world.buildings:
 		if b.dead:
 			continue

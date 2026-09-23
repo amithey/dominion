@@ -1,8 +1,10 @@
 extends Node3D
-## Gradual territory control, ported from js/territory.js. The island is cut
-## into 40 m cells (TERRITORY_CELL, through the map export). Every two seconds
-## buildings project authority over nearby cells (capitals and city centres
-## furthest) and armed units occupy the cell they stand in. A cell with no
+## Gradual territory control, hex by hex as in a 4X game. The land is the
+## same hex grid the districts are built on (logistics.gd, 12 m hexes): a hex
+## you build on is yours, with a ring of hexes around it, and settlements claim
+## wider (the capital three rings, cities and villages two). Every two seconds
+## buildings project authority over nearby hexes and armed units occupy the
+## hex they stand in. A cell with no
 ## owner goes to the strongest presence; an owned cell loses control while a
 ## rival dominates it and flips only when control is worn down, so conquest is
 ## a campaign, not a switch. Cells where two nations are close in strength are
@@ -34,15 +36,24 @@ var fronts := 0
 var show_borders := false
 var _dirty := true
 var _tick := 0.0
-var _borders: MeshInstance3D
-var _material: StandardMaterial3D
+var hex := 12.0          ## hex radius, centre to corner (the district grid's)
+var rows := 0            ## cells are stored row by row: row = r + r0, column = offset q + c0
+var r0 := 0
+var c0 := 0
+var area_scale := 1.0    ## yields were tuned for 40 m squares; a hex is smaller
+const DIRS := [Vector2i(1, 0), Vector2i(1, -1), Vector2i(0, -1), Vector2i(-1, 0), Vector2i(-1, 1), Vector2i(0, 1)]
 
 func setup(world_node: Node, cfg: Dictionary) -> void:
 	world = world_node
-	cell = float(cfg.get("cell", 40.0))
 	half_map = float(cfg.get("halfMap", float(world.map.mapSize) * 0.5))
-	cols = ceili(half_map * 2.0 / cell)
-	var n := cols * cols
+	hex = float(world.logistics.radius) if world.logistics != null else 12.0
+	cell = hex * sqrt(3.0)  # the width of a hex, where callers want a cell size
+	area_scale = (2.598 * hex * hex) / (40.0 * 40.0)
+	r0 = ceili(half_map / (1.5 * hex)) + 1
+	c0 = ceili(half_map / (sqrt(3.0) * hex)) + 1
+	rows = 2 * r0 + 1
+	cols = 2 * c0 + 1
+	var n := cols * rows
 	owner_of.resize(n)
 	owner_of.fill(-1)
 	control.resize(n)
@@ -61,8 +72,9 @@ func setup(world_node: Node, cfg: Dictionary) -> void:
 			terrain[i] = Terrain.WATER
 			continue
 		var coast := false
-		for d in [Vector2(cell, 0), Vector2(-cell, 0), Vector2(0, cell), Vector2(0, -cell)]:
-			if world.height_at(c.x + d.x, c.z + d.y) < sea:
+		for k in range(6):
+			var a := PI / 6.0 + k * PI / 3.0
+			if world.height_at(c.x + cos(a) * hex, c.z + sin(a) * hex) < sea:
 				coast = true
 				break
 		if coast:
@@ -73,16 +85,6 @@ func setup(world_node: Node, cfg: Dictionary) -> void:
 			terrain[i] = Terrain.FOREST
 		else:
 			terrain[i] = Terrain.PLAINS
-	_material = StandardMaterial3D.new()
-	_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_material.vertex_color_use_as_albedo = true
-	_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_borders = MeshInstance3D.new()
-	_borders.material_override = _material
-	_borders.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_borders.visible = false
-	add_child(_borders)
 	tick()
 
 func reset() -> void:
@@ -91,13 +93,64 @@ func reset() -> void:
 	contested.fill(0)
 	_dirty = true
 
+## Axial hex coordinates (q, r) of cell `i`.
+func axial(i: int) -> Vector2i:
+	var r := i / cols - r0
+	var q := (i % cols - c0) - (r - (r & 1)) / 2
+	return Vector2i(q, r)
+
+## Cell index of hex (q, r), or -1 off the grid.
+func index_of(h: Vector2i) -> int:
+	var row := h.y + r0
+	var col := h.x + (h.y - (h.y & 1)) / 2 + c0
+	if row < 0 or col < 0 or row >= rows or col >= cols:
+		return -1
+	return row * cols + col
+
 func center(i: int) -> Vector3:
-	return Vector3((i % cols + 0.5) * cell - half_map, 0, (i / cols + 0.5) * cell - half_map)
+	var h := axial(i)
+	return Vector3(hex * sqrt(3.0) * (h.x + h.y * 0.5), 0, hex * 1.5 * h.y)
+
+## The hex that contains `at` (the same rounding as logistics.world_hex).
+func hex_at(at: Vector3) -> Vector2i:
+	var q := (sqrt(3.0) * at.x / 3.0 - at.z / 3.0) / hex
+	var r := at.z * 2.0 / (3.0 * hex)
+	var x := roundf(q)
+	var z := roundf(r)
+	var y := roundf(-q - r)
+	var dx := absf(x - q)
+	var dz := absf(z - r)
+	var dy := absf(y + q + r)
+	if dx > dz and dx > dy:
+		x = -y - z
+	elif dz > dy:
+		z = -x - y
+	return Vector2i(int(x), int(z))
 
 func cell_of(at: Vector3) -> int:
-	var cx := clampi(floori((at.x + half_map) / cell), 0, cols - 1)
-	var cz := clampi(floori((at.z + half_map) / cell), 0, cols - 1)
-	return cz * cols + cx
+	var i := index_of(hex_at(at))
+	if i >= 0:
+		return i
+	var h := hex_at(at)
+	return clampi(h.y + r0, 0, rows - 1) * cols + clampi(h.x + (h.y - (h.y & 1)) / 2 + c0, 0, cols - 1)
+
+## The six corners of cell `i` on the ground plane (x, z), for maps.
+func cell_polygon(i: int) -> PackedVector2Array:
+	var c := center(i)
+	var out := PackedVector2Array()
+	for k in range(6):
+		var a := PI / 6.0 + k * PI / 3.0
+		out.append(Vector2(c.x + cos(a) * hex, c.z + sin(a) * hex))
+	return out
+
+func neighbours(i: int) -> Array[int]:
+	var h := axial(i)
+	var out: Array[int] = []
+	for d in DIRS:
+		var j := index_of(h + d)
+		if j >= 0:
+			out.append(j)
+	return out
 
 func owner_at(at: Vector3) -> int:
 	return owner_of[cell_of(at)]
@@ -121,7 +174,7 @@ func yields(nation: int) -> Dictionary:
 		var s := status(i)
 		out[s] += 1
 		out.cells += 1
-		var m: float = STATUS_YIELD[s]
+		var m: float = STATUS_YIELD[s] * area_scale
 		out.money += 0.05 * m
 		match terrain[i]:
 			Terrain.PLAINS:
@@ -150,32 +203,25 @@ func is_front(i: int) -> bool:
 		return false
 	if contested[i]:
 		return true
-	var x := i % cols
-	var z := i / cols
-	for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-		var nx: int = x + d.x
-		var nz: int = z + d.y
-		if nx >= 0 and nz >= 0 and nx < cols and nz < cols:
-			var other := owner_of[nz * cols + nx]
-			if other >= 0 and other != o:
-				return true
+	for j in neighbours(i):
+		var other := owner_of[j]
+		if other >= 0 and other != o:
+			return true
 	return false
 
+## Adds `owner`'s authority to every hex within `spread` rings of `at`,
+## weaker with each ring.
 func _presence(presence: PackedFloat32Array, at: Vector3, owner: int, weight: float, spread: int, nations: int) -> void:
 	if owner < 0 or world.diplomacy.defeated(owner):
 		return
-	var cx := floori((at.x + half_map) / cell)
-	var cz := floori((at.z + half_map) / cell)
-	for dz in range(-spread, spread + 1):
-		for dx in range(-spread, spread + 1):
-			var nx := cx + dx
-			var nz := cz + dz
-			if nx < 0 or nz < 0 or nx >= cols or nz >= cols:
+	var h := hex_at(at)
+	for dq in range(-spread, spread + 1):
+		for dr in range(maxi(-spread, -dq - spread), mini(spread, -dq + spread) + 1):
+			var i := index_of(h + Vector2i(dq, dr))
+			if i < 0 or terrain[i] == Terrain.WATER:
 				continue
-			var i := nz * cols + nx
-			if terrain[i] == Terrain.WATER:
-				continue
-			presence[i * nations + owner] += weight / (1.0 + absi(dx) + absi(dz))
+			var ring := (absi(dq) + absi(dr) + absi(dq + dr)) / 2
+			presence[i * nations + owner] += weight / (1.0 + ring)
 
 func _process(delta: float) -> void:
 	if world == null or world.economy == null or world.game_over != "":
@@ -190,12 +236,14 @@ func _process(delta: float) -> void:
 func tick() -> void:
 	var nations: int = world.map.nations.size()
 	var presence := PackedFloat32Array()
-	presence.resize(cols * cols * nations)
+	presence.resize(cols * rows * nations)
 	for b in world.buildings:
 		if b.dead or not b.built:
 			continue
+		# What you build on is yours, and a ring round it; settlements reach further.
 		var w := 30.0 if b.key == "hq" else 26.0 if b.key == "cityCenter" else 18.0 if b.key == "villageCenter" else 22.0 if b.key == "commandCenter" else 14.0
-		_presence(presence, b.root.position, b.owner, w, 2 if b.key in ["hq", "cityCenter"] else 1, nations)
+		var reach := 3 if b.key == "hq" else (2 if b.key in ["cityCenter", "villageCenter", "commandCenter"] else 1)
+		_presence(presence, b.root.position, b.owner, w, reach, nations)
 	for u in world.units:
 		if u.dead or u.dmg <= 0.0 or u.get("fly", false) or u.get("naval", false):
 			continue
@@ -210,7 +258,7 @@ func tick() -> void:
 			w *= world.occupation.weight(u)  # troops inside their own operational zone count double
 		_presence(presence, u.node.position, u.owner, w, 0, nations)
 	var flipped := false
-	for i in range(cols * cols):
+	for i in range(cols * rows):
 		if terrain[i] == Terrain.WATER:
 			continue
 		if owner_of[i] >= 0 and world.diplomacy.defeated(owner_of[i]):
@@ -255,7 +303,7 @@ func tick() -> void:
 					var c := center(i)
 					world.hud.notice("Territory %s near (%d, %d)." % ["lost to %s" % world.diplomacy.name_of(best) if lost_by == 0 else "taken from %s" % world.diplomacy.name_of(lost_by), int(c.x), int(c.z)])
 	fronts = 0
-	for i in range(cols * cols):
+	for i in range(cols * rows):
 		if is_front(i):
 			fronts += 1
 	if world.occupation != null:
@@ -268,13 +316,12 @@ func tick() -> void:
 				nat.money += (y.money + y.food * 2.5 + y.iron * 5.0) * TICK
 	if flipped:
 		_dirty = true
-	if _dirty and show_borders:
-		draw_fill()
+	if _dirty:
+		draw_fill()  # borders are always on the map; the fill shows in the territory view
 	changed.emit()
 
 func set_visible_borders(on: bool) -> void:
 	show_borders = on
-	_borders.visible = false  # the terrain now draws the borders itself
 	draw_fill()
 	for label in _labels:
 		label.visible = on
@@ -284,12 +331,15 @@ func set_visible_borders(on: bool) -> void:
 var _labels: Array[Label3D] = []
 
 ## Paints the land each nation holds in its colour, in the terrain itself:
-## a small texture with one texel per cell (colour and tint strength) that
-## terrain.gdshader reads. Firmer control is a deeper colour, borders between
-## nations are bright lines, contested cells are hatched in gold. Each
-## nation's name floats over its heartland.
+## a small texture with one texel per hex (colour and tint strength) that
+## terrain.gdshader reads. Every border between nations is drawn as a line
+## along the hex edges at all times, as in a 4X game; the territory view (T)
+## also washes the land in the owner's colour (firmer control, deeper colour)
+## and hatches contested hexes in gold. Each nation's name floats over its
+## heartland in the territory view.
 func draw_fill() -> void:
-	var img := Image.create(cols, cols, false, Image.FORMAT_RGBA8)
+	_dirty = false
+	var img := Image.create(cols, rows, false, Image.FORMAT_RGBA8)
 	var sums := {}
 	for i in range(owner_of.size()):
 		var o := owner_of[i]
@@ -300,13 +350,13 @@ func draw_fill() -> void:
 		img.set_pixel(i % cols, i / cols, Color(base.r, base.g, base.b, 1.0 if contested[i] else strength))
 		var c := center(i)
 		sums[o] = sums.get(o, Vector3.ZERO) + Vector3(c.x, 1.0, c.z)
-	var mat: ShaderMaterial = world.terrain_node.material_override as ShaderMaterial
+	var mat: ShaderMaterial = world.terrain_node.material_override as ShaderMaterial if world.terrain_node != null else null
 	if mat != null:
 		mat.set_shader_parameter("territory_tex", ImageTexture.create_from_image(img))
-		mat.set_shader_parameter("territory_origin", Vector2(-half_map, -half_map))
-		mat.set_shader_parameter("territory_cell", cell)
-		mat.set_shader_parameter("territory_cols", float(cols))
+		mat.set_shader_parameter("hex_radius", hex)
+		mat.set_shader_parameter("hex_grid", Vector4(c0, r0, cols, rows))
 		mat.set_shader_parameter("show_territory", show_borders)
+		mat.set_shader_parameter("show_borders", true)
 	var sea := float(world.map.seaLevel)
 	for label in _labels:
 		label.queue_free()
@@ -344,68 +394,6 @@ func describe(at: Vector3) -> String:
 	return "%s: held by %s, %s (control %d%%). Yields %s at %d%%.%s" % [terrain_name, who, status_text, int(control[i]), yields_text, roundi(STATUS_YIELD[status_text] * 100.0),
 		" A front line: rival forces are contesting it." if contested[i] else ""]
 
-# Ribbons along every edge between cells of different owners, in the owner's
-# colour (gold where contested), slightly wavy so they read as borders, not a grid.
-func draw_borders() -> void:
-	_dirty = false
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var count := 0
-	var gold := Color("ffd66b")
-	for z in range(cols):
-		for x in range(cols):
-			var i := z * cols + x
-			var o := owner_of[i]
-			if o < 0:
-				continue
-			var colour: Color = Color(world.map.nations[o].color).lightened(0.15)
-			var x0 := x * cell - half_map
-			var z0 := z * cell - half_map
-			var sides := [[Vector2i(1, 0), Vector2(x0 + cell, z0), Vector2(x0 + cell, z0 + cell)],
-				[Vector2i(-1, 0), Vector2(x0, z0 + cell), Vector2(x0, z0)],
-				[Vector2i(0, 1), Vector2(x0 + cell, z0 + cell), Vector2(x0, z0 + cell)],
-				[Vector2i(0, -1), Vector2(x0, z0), Vector2(x0 + cell, z0)]]
-			for side in sides:
-				var nx: int = x + side[0].x
-				var nz: int = z + side[0].y
-				var other := owner_of[nz * cols + nx] if nx >= 0 and nz >= 0 and nx < cols and nz < cols else -1
-				if other == o:
-					continue
-				var c := gold if contested[i] else colour
-				# Each nation draws its own side of a shared seam, inset a little.
-				_ribbon(st, side[1], side[2], Vector2(x0 + cell * 0.5, z0 + cell * 0.5), c, o)
-				count += 1
-	_borders.mesh = st.commit() if count > 0 else null
-
-func _ribbon(st: SurfaceTool, a: Vector2, b: Vector2, inside: Vector2, colour: Color, seed: int) -> void:
-	var pieces := 10
-	var along := (b - a).normalized()
-	var normal := Vector2(-along.y, along.x)
-	if normal.dot(inside - a) < 0.0:
-		normal = -normal
-	var points := []
-	for s in range(pieces + 1):
-		var t := float(s) / pieces
-		var p := a.lerp(b, t) + normal * (1.2 + sin(t * PI) * sin((p_hash(a) + seed) * 3.1 + t * 9.0) * 0.8)
-		points.append(p)
-	var sea := float(world.map.seaLevel)
-	for s in range(pieces):
-		var p0: Vector2 = points[s]
-		var p1: Vector2 = points[s + 1]
-		var q0 := p0 + normal * RIBBON
-		var q1 := p1 + normal * RIBBON
-		if world.height_at(p0.x, p0.y) < sea and world.height_at(p1.x, p1.y) < sea:
-			continue  # borders run over land; the coast is border enough
-		var verts := []
-		for p in [p0, p1, q1, q0]:
-			verts.append(Vector3(p.x, maxf(world.height_at(p.x, p.y), sea) + 0.6, p.y))
-		for k in [0, 1, 2, 0, 2, 3]:
-			st.set_color(Color(colour, 0.85 if k in [0, 1] else 0.25))
-			st.add_vertex(verts[k])
-
-func p_hash(p: Vector2) -> float:
-	return fmod(absf(p.x * 0.113 + p.y * 0.071), 7.0)
-
 func capture() -> Dictionary:
 	return {"owner": Array(owner_of), "control": Array(control).map(func(v): return snappedf(v, 0.1)), "contested": Array(contested)}
 
@@ -418,6 +406,4 @@ func restore(data: Dictionary) -> void:
 		owner_of[i] = int(saved[i])
 		control[i] = float(data.control[i])
 		contested[i] = int(data.contested[i])
-	_dirty = true
-	if show_borders:
-		draw_borders()
+	draw_fill()

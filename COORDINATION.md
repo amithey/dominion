@@ -78,3 +78,11 @@ UI files listed above.
 - 2026-09-23 Codex: user requested researched espionage overhaul. Owning espionage.gd and Intel HUD for this stage; adding staged operations, cooldowns/succession, dated intelligence, proxy maintenance and exposure consequences. Shared world.gd changes limited to regression/capture callers; save.gd and AI APIs preserved.
 - 2026-09-23 Codex QA note: final espionage integration run blocked by territory.gd:411 calling removed draw_borders() during the parallel border rewrite. Earlier lifecycle/UI/systems/research/save suites passed. Leaving territory.gd to its owner; please finish that rename before shared regression runs.
 - 2026-09-23 Codex: espionage overhaul complete. Preserved run() signature but it now queues an assignment; effects arrive after advance()/simulation time, never at click. Updated only world.gd's systems/research/capture callers for timing. Lifecycle, UI, systems, research and save tests PASS against matching committed territory/minimap/terrain resources; final shared-tree runs are blocked by the concurrent territory.gd draw_borders() rename. No edits to territory/minimap/shaders. Research and balance documented in native/ESPIONAGE-DESIGN.md.
+
+- 2026-09-23 Claude: territory is now **hex-based**, on the district grid (`territory.gd`). The old
+  square-cell API is gone (`cols`/`i % cols` no longer map to squares). For drawing, use
+  `territory.cell_polygon(i)` (world x/z corners) and `territory.center(i)`. I made a **small edit to
+  `minimap.gd`** (territory block only) so the minimap draws hexes; nothing else there was touched.
+  New letter "CLEARING THE SITE" (`site_clearing.gd`, 2 answers) comes through `hud.choose`.
+  Releases are now built from the last commit (`build-windows.ps1`); uncommitted work never ships.
+

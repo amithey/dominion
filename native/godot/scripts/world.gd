@@ -184,6 +184,8 @@ var health_overlay: Control  # hud.gd's health bars, for the feature probe
 const GRID := 8.0
 var grid := {}
 var air_sea: Array = []   # living ships and aircraft (not in the ground grid)
+var tree_parts := {}       # Vector2(x, z) of a tree -> [[MultiMesh, instance], ...] (site_clearing.gd fells them)
+var site_answers: Array = []  # the answers of the latest site-clearing letter (tests)
 var lod_turn := 0
 # `-- --no-perf` puts the work back the way it was before the performance
 # pass: no neighbour buckets, no distance detail, shadows to the horizon. It
@@ -204,6 +206,7 @@ var naval_navigation: RefCounted
 const Repairs := preload("res://scripts/repairs.gd")
 const Motion := preload("res://scripts/motion.gd")
 const Tactics := preload("res://scripts/tactics.gd")
+const SiteClearing := preload("res://scripts/site_clearing.gd")
 const NAV_STEP := 4.0
 var fps_frames := 0
 
@@ -442,6 +445,8 @@ func _ready() -> void:
 		await preload("res://scripts/battle_regression.gd").capture(self)
 	elif "--capture-deposits" in args:
 		await preload("res://scripts/deposit_art.gd").capture(self)
+	elif "--site-test" in args:
+		await preload("res://scripts/site_clearing.gd").run(self)
 	elif "--border-test" in args:
 		await preload("res://scripts/border_regression.gd").run(self)
 	elif "--convoy-test" in args:
@@ -697,6 +702,10 @@ func build_trees() -> void:
 				var spin := fmod(t.x * 12.9898 + t.z * 78.233, TAU)
 				var basis := Basis(Vector3.UP, spin).scaled(Vector3(size, size * (0.92 + fmod(absf(t.x), 0.16)), size))
 				mm.set_instance_transform(i, Transform3D(basis, Vector3(t.x, height_at(t.x, t.z) - 0.15, t.z)) * part.local)
+				var spot := Vector2(t.x, t.z)
+				if not tree_parts.has(spot):
+					tree_parts[spot] = []
+				tree_parts[spot].append([mm, i])
 			var node := MultiMeshInstance3D.new()
 			node.multimesh = mm
 			if not leaf_materials.has(part.mesh):
@@ -963,6 +972,7 @@ func place_building(key: String, at: Vector3, owner: int, built: bool) -> Dictio
 	plinth.position.y = -box.size.y * 0.5 + 0.12
 	root.add_child(plinth)
 	add_child(root)
+	SiteClearing.fell(self, SiteClearing.conflicts(self, key, at).trees)  # no tree grows through a building
 	return register_building(key, owner, built, root, model, footprint, at)
 
 ## Civilization-style: the building owns the whole hex, with a district tile,
@@ -982,6 +992,7 @@ func place_district(key: String, at: Vector3, owner: int, built: bool) -> Dictio
 	root.add_child(parts.container)
 	building_spots.append(Vector3(centre.x, DISTRICT_NAV_SIZE, centre.z))
 	var footprint: float = logistics.radius * 0.85 if districts.style_of(key) == 1 and not key in ["housing", "apartments"] else footprint_of(key)
+	SiteClearing.fell(self, SiteClearing.conflicts(self, key, centre).trees)  # the whole hex is cleared
 	var entity := register_building(key, owner, built, root, parts.container, footprint, centre)
 	entity.pad = parts.pad
 	entity.hex = logistics.world_hex(centre)
@@ -2666,7 +2677,7 @@ func systems_test(capture: bool) -> void:
 		# Only a hostile army takes land (passage.gd): at peace it would be trespass.
 		diplomacy.declare_war(0, 2)
 		for i in range(14):
-			spawn_unit("tank", land_point(c + Vector3(randf_range(-8, 8), 0, randf_range(-8, 8)), 18.0), 0)
+			spawn_unit("tank", c + Vector3(randf_range(-3, 3), 0, randf_range(-3, 3)), 0)  # inside the hex
 		for i in range(120):
 			territory.tick()
 			if territory.owner_of[enemy_cell] == 0:
@@ -3635,16 +3646,27 @@ func confirm_placement(keep: bool) -> void:
 	if problem != "":
 		hud.notice(problem)
 		return
-	var def: Dictionary = building_defs[placing]
+	var key := placing
+	# Trees or a natural resource on the site: the player decides first (site_clearing.gd).
+	var found := SiteClearing.conflicts(self, key, at)
+	if not (found.trees.is_empty() and found.deposits.is_empty()):
+		SiteClearing.ask(self, key, at, found, func(): build_site(key, at))
+		cancel_placement()
+		return
+	if build_site(key, at) and (not keep or not economy.can_afford(building_defs[key].cost)):
+		cancel_placement()
+
+## Pays for and lays out the player's building `key` at `at`, and sends a worker.
+func build_site(key: String, at: Vector3) -> bool:
+	var def: Dictionary = building_defs[key]
 	if not economy.pay(def.cost):
 		hud.notice("Not enough %s" % economy.missing(def.cost))
-		return
-	var site := place_building(placing, at, 0, false)
-	close_navigation(site.root.position, DISTRICT_NAV_SIZE if is_district(placing) else site.footprint)
+		return false
+	var site := place_building(key, at, 0, false)
+	close_navigation(site.root.position, DISTRICT_NAV_SIZE if is_district(key) else site.footprint)
 	refresh_streets()
 	call_worker(site)
-	if not keep or not economy.can_afford(def.cost):
-		cancel_placement()
+	return true
 
 func select_building(b) -> void:
 	selected_building = b

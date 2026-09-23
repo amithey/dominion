@@ -7,6 +7,27 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.7: land held hex by hex, and asking before clearing a site
+
+- **Territory by hexes** (`territory.gd`), as in a 4X game. Land is the same 12 m hex grid the
+  districts sit on. Every hex you build on is yours, with a ring of hexes around it. The capital
+  claims three rings; city and village centres and Command & Control claim two. Units still
+  hold the hex they stand on, and conquest wears a hex's control down as before.
+  - Borders are always on the map: a line along the hex edges in each nation's colour, with a
+    soft band of colour inside it.
+  - The territory view (T) also washes the land in its owner's colour and hatches contested
+    hexes in gold. The minimap draws the same hexes.
+  - Land yields are scaled to the smaller cells, so the economy keeps its balance.
+- **Clearing a site** (`site_clearing.gd`). Building where trees grow or on a natural resource asks
+  first: "Clear the site and build" or "Cancel".
+  - Felled trees give a little timber money ($4 each).
+  - A deposit destroyed this way can never be mined again.
+  - An extractor or an offshore rig does not count its own deposit.
+  - Rival nations and the buildings a map starts with clear trees without asking.
+  - Trees no longer grow through buildings.
+- The release is built from the last commit, never from uncommitted work in the folder.
+- New test: `--site-test`.
+
 ## Version 0.9.6: armour that drives like traffic, borders, conquest and resource sites
 
 - **Armoured columns** (`--convoy-test`). Tanks used to weave from side to side and bump each other.

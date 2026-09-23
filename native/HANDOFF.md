@@ -114,3 +114,20 @@ about 8 runs. The battle test passed 10 of 10 after the final fixes. The install
 - `deposit_art.gd`: land sites are meshed per site (`_conform`); water sites share one mesh per type.
   Vertex-coloured materials must set `vertex_color_is_srgb = true`, or the colours wash out.
 - New tests: `--convoy-test`, `--border-test`; captures: `--capture-deposits`.
+
+## Added in 0.9.7 (Claude)
+
+- `territory.gd` is hex-based:
+  - Grid functions: `axial(i)`, `index_of(q, r)`, `hex_at(pos)`, `neighbours(i)`, `cell_polygon(i)`.
+  - Storage: by row (`r + r0`) and offset column (`q + (r - (r & 1)) / 2 + c0`); the texture uses the
+    same layout.
+  - The terrain shader works out the hex per pixel (`hex_round`, `hex_owner`) and draws borders
+    along hex edges whenever `show_borders` is on (always).
+  - `area_scale` keeps land yields where they were with 40 m squares.
+- `site_clearing.gd`:
+  - `conflicts()` / `ask()` / `fell()` / `destroy()`.
+  - `world.tree_parts` maps each tree (x, z) to its MultiMesh instances; felling scales them to zero.
+  - `world.confirm_placement` now calls `build_site(key, at)` (paying and laying out), possibly after
+    the letter.
+- `build-windows.ps1` exports a clean `git archive` of HEAD under %TEMP%, with `.local-tools` joined
+  in, and copies both files to `dist/`. Use `-Working` to build the folder as it is.
