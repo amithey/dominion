@@ -25,6 +25,8 @@ var pop_cap := 0
 # The army a nation starts with is its standing garrison: it has barracks of
 # its own and does not take up the housing that new recruits need.
 var garrison := 0
+var test_mode := false   ## F8 (testing): huge stores, set by grant_test_resources()
+const TEST_CAP := 99999.0
 var _tick := 0.0
 
 func setup(world_node: Node, economy: Dictionary) -> void:
@@ -65,6 +67,9 @@ func recalculate() -> void:
 	for key in cfg.baseCap:
 		caps[key] = float(cfg.baseCap[key]) + mat_cap
 	caps.food = float(cfg.foodCapBase) + owned("foodDepot") * float(cfg.foodDepotBonus)
+	if test_mode:
+		for key in caps:
+			caps[key] = maxf(caps[key], TEST_CAP)
 	# Taxes need administration; residential districts extend it (config.js admin).
 	admin = clampf(float(cfg.baseAdmin) + mini(owned("residential"), 3) * 0.05 + mini(owned("villageCenter"), 3) * 0.05 + owned("cityCenter") * 0.10, float(cfg.baseAdmin), 1.0)
 	pop_cap = int(provided("pop")) + garrison
@@ -72,6 +77,18 @@ func recalculate() -> void:
 	for u in world.units:
 		if u.owner == 0 and not u.dead:
 			pop_used += int(world.unit_defs.get(u.key, {}).get("pop", 1))
+
+## For testing the game (F8): $100,000 more, every store raised to 99,999 and
+## filled, and 200 more army capacity. Each press adds again.
+func grant_test_resources() -> void:
+	test_mode = true
+	garrison += 200
+	recalculate()
+	res.money += 100000.0
+	for key in caps:
+		res[key] = caps[key]
+	civilians = civ_cap
+	changed.emit()
 
 func tick() -> void:
 	recalculate()

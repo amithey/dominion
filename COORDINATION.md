@@ -130,3 +130,5 @@ UI files listed above.
   3. The market's trade-route form lists only nations with a trade pact; if you restyle it, say clearly why a
      nation is missing (needs +20 relations and a pact, and a completed Commercial Port).
 
+- 2026-09-23 Claude: F8 (testing) gives +$100,000, raises every store limit to 99,999 and fills it, +200 army
+  capacity (`economy.grant_test_resources`). Please list it on the controls/help sheet if you touch that.

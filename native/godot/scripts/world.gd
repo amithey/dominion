@@ -4900,6 +4900,9 @@ func _input(event: InputEvent) -> void:
 		occupation.begin_zone()  # the next click marks an operational zone
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Y:
 		hud.toggle_research()
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F8 and economy != null:
+		economy.grant_test_resources()  # testing: plenty of everything
+		hud.notice("Testing: +$100,000, every store filled (limits 99,999), +200 army capacity.")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F1:
 		hud.toggle_help()
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F5:

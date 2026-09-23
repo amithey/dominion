@@ -47,6 +47,12 @@ static func run(w: Node) -> void:
 		print("STATE AI nation %d: %d economic and civic, %d military buildings" % [n.id, civil, military])
 		if civil < military or civil < 6:
 			failures.append("AI nation %d built %d economic and %d military buildings" % [n.id, civil, military])
+	# F8, for testing: plenty of everything, and it lasts.
+	var money: float = w.economy.res.money
+	w.economy.grant_test_resources()
+	w.economy.tick()
+	if w.economy.res.money < money + 99000.0 or w.economy.res.get("iron", 0.0) < 90000.0 or w.economy.pop_cap < 200:
+		failures.append("F8 did not grant the test resources (money %.0f, iron %.0f, army cap %d)" % [w.economy.res.money, w.economy.res.get("iron", 0.0), w.economy.pop_cap])
 	if failures.is_empty():
 		print("STATE_TEST PASS")
 	else:
