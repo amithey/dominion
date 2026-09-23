@@ -7,6 +7,31 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.12: a building for every resource, and the rest of the industry
+
+- **One Extractor, a different site for each resource** (`architecture.extractor`):
+  - oil: a drilling derrick with tanks and a separator
+  - iron: a mine headframe with its winding house, an ore heap on a conveyor and ore bins
+  - gold: a headframe and a timber stamp mill
+  - silicon: a sand quarry with a crane and a washing plant
+  - uranium: a headframe, yellow drums under a shelter and a hazard fence
+  - diamond: a stepped open pit and a sorting plant
+
+  The Mountain Mine uses the iron mine.
+- **Built in code:**
+  - an oil refinery (distillation columns, spherical tanks, pipe racks, a flare stack)
+  - a chip fab (a white clean-room hall with a glass front and roof plant)
+  - a nuclear plant (a hyperbolic cooling tower, the containment dome and the turbine hall)
+  - a solar farm
+  - a shipyard (a building shed and a gantry crane) and a port (container stacks, cranes and a
+    warehouse), both turned to face the water
+  - a fishing wharf
+  - an ammo depot (earth-covered magazines with blast doors and a missile rack)
+  - a missile silo (magazines, a rack and launch hatches)
+  - a bunker and a SAM site
+  - a park (a fountain and a bandstand) and a stadium
+- `--capture-industry` photographs each (`build/industry-*.png`).
+
 ## Version 0.9.11: fixes, land that grows with its people, air bases with slots
 
 - **Fixes.**

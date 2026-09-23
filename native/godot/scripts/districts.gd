@@ -18,13 +18,21 @@ const STYLE := {
 	"warehouse": 2, "foodDepot": 2, "tankFactory": 2, "powerPlant": 2, "oilRefinery": 2,
 	"farm": 3,
 	"barracks": 4, "bunker": 4, "commandCenter": 4, "ammoDepot": 4, "helipad": 4, "airfield": 4, "missileSilo": 4,
-	"shipyard": 2, "port": 2,
+	"shipyard": 2, "port": 2, "park": 1, "stadium": 0, "samSite": 4, "museum": 0, "waterTreatment": 2,
 }
 const HOUSES := ["res://assets/House_A.glb", "res://assets/House_B.glb", "res://assets/House_C.glb", "res://assets/House_D.glb"]
 # How many houses stand in a residential district, one per wedge between streets.
 const HOUSE_COUNT := {"cottage": 4, "residential": 6, "workerHouse": 3, "luxuryVillas": 3}
 
 const Architecture := preload("res://scripts/architecture.gd")
+## Buildings the kit makes as whole-hex compositions: key -> recipe.
+const RECIPES := {"extractor": "extractor", "mountainMine": "extractor", "oilRefinery": "refinery",
+	"chipFab": "chip_fab", "nuclearReactor": "nuclear", "solarFarm": "solar", "fishingWharf": "wharf",
+	"bunker": "bunker", "samSite": "sam_site", "park": "park", "stadium": "stadium"}
+## Keys whose kit building is a complete composition (no yard props or landmarks added).
+const COMPLETE := ["extractor", "mountainMine", "oilRefinery", "chipFab", "nuclearReactor", "solarFarm", "shipyard",
+	"port", "fishingWharf", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "foodDepot", "powerPlant"]
+var harbour_turn := 0.0   # a harbour faces the water (set in build)
 var world: Node
 var arch: RefCounted       # architecture.gd: the buildings, made from code
 var radius := 12.0
@@ -63,6 +71,11 @@ func build(key: String, centre: Vector3, seed: float, owner_id := 0, size := 0) 
 	owner = owner_id
 	city_size = size
 	var floor_y := floor_height(centre)
+	var dep = world.deposit_near(centre, 10.0)
+	arch.extract_type = dep.type if dep != null else ("iron" if key == "mountainMine" else "")
+	# A harbour turns its quay (+z) toward the nearest open water.
+	var sea = world.water_near(centre) if key in ["shipyard", "port", "fishingWharf"] else null
+	harbour_turn = atan2(sea.x - centre.x, sea.z - centre.z) if sea != null else 0.0
 	var pad := make_pad(centre, floor_y)
 	pad.set_instance_shader_parameter("style", style_of(key))
 	pad.set_instance_shader_parameter("seed", seed)
@@ -82,7 +95,8 @@ func build(key: String, centre: Vector3, seed: float, owner_id := 0, size := 0) 
 			barracks(key, container, st, rng)
 		_:
 			yard(key, container, st, rng)
-	landmarks(key, st, rng)
+	if not key in COMPLETE:
+		landmarks(key, st, rng)
 	tone(container, owner)
 	var props := MeshInstance3D.new()
 	props.mesh = st.commit()  # normals were set per primitive
@@ -237,6 +251,15 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 			arch.granary(rng, footprint)
 		elif key == "powerPlant":
 			arch.power_station(rng, footprint)
+		elif key in RECIPES:
+			arch.xf = Transform3D.IDENTITY  # these compositions fill their whole hex
+			arch.call(RECIPES[key], rng)
+		elif key in ["missileSilo", "ammoDepot"]:
+			arch.xf = Transform3D.IDENTITY
+			arch.arsenal(rng, key == "missileSilo")
+		elif key in ["shipyard", "port"]:
+			arch.xf = Transform3D(Basis(Vector3.UP, harbour_turn), Vector3.ZERO)
+			arch.harbour(rng, key == "port")
 		elif key == "airfield":
 			arch.xf = Transform3D.IDENTITY  # the runway and slots are laid out over the whole hex
 			arch.airfield(rng)
@@ -303,6 +326,9 @@ func house(container: Node3D, at: Vector3, face: float, size: float, rng: Random
 # ---------------------------------------------------------------- layouts
 
 func plaza(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
+	if key in COMPLETE:
+		main_building(key, container, 10.0)
+		return
 	main_building(key, container, 10.0 if key != "villageCenter" else 7.5)
 	for k in [0, 2, 4]:
 		var p := slot(k, 7.6)
@@ -321,6 +347,9 @@ func plaza(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGen
 			box(st, Vector3(1.6, 0.45, 0.5), p, deg_to_rad(-(30.0 + 60.0 * k)), Color("6a5039"))
 
 func residential(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
+	if key in COMPLETE:
+		main_building(key, container, 9.0)
+		return
 	if key in ["housing", "apartments"]:
 		main_building(key, container, 8.5)
 		for k in [0, 2, 3, 5]:
@@ -369,9 +398,10 @@ func farmstead(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumbe
 func yard(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
 	if key == "extractor":
 		main_building(key, container, 6.0)
+		fence(st, Color("5d6264"), 1.6)
 		return
 	main_building(key, container, 9.5)
-	if key in ["foodDepot", "powerPlant"]:
+	if key in COMPLETE:
 		for k in [2, 5]:
 			lamp(st, slot(k, 8.8))
 		fence(st, Color("5d6264"), 1.6)
@@ -398,9 +428,9 @@ func yard(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGene
 
 func barracks(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
 	main_building(key, container, 9.0)
-	if key in ["airfield", "helipad"]:
+	if key in ["airfield", "helipad"] or key in COMPLETE:
 		fence(st, Color("5d6264"), 1.8)
-		return  # the air base is a complete composition (architecture.gd)
+		return  # a complete composition (architecture.gd)
 	# Sandbag emplacements.
 	for k in [1, 4]:
 		var centre := slot(k, 7.6)

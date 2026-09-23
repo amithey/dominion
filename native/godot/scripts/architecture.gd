@@ -21,6 +21,7 @@ var _materials := {}
 var _st := {}             # surface -> SurfaceTool for the building being made
 var xf := Transform3D.IDENTITY   # where the next piece goes, in the container's space
 var banner_colour := Color.WHITE
+var extract_type := ""    # the deposit under an Extractor, which decides what is built on it
 
 func _init(world_node: Node) -> void:
 	world = world_node
@@ -745,6 +746,356 @@ func helipad(rng: RandomNumberGenerator) -> void:
 	quad(GLASS, Vector3(-2.2, 0.3, 1.81), Vector3(2.2, 0.3, 1.81), Vector3(2.2, 2.6, 1.81), Vector3(-2.2, 2.6, 1.81), Color("1c2026"))
 	xf = saved
 
+
+# ---------------------------------------------------------------- industry
+
+## A steel lattice mast from `base` up `h` metres, `w` wide at the foot, `top_w` at the top.
+func lattice(base: Vector3, h: float, w: float, top_w: float, colour: Color) -> void:
+	var legs := [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]
+	for leg in legs:
+		var a := base + Vector3(leg.x * w * 0.5, 0, leg.y * w * 0.5)
+		var b := base + Vector3(leg.x * top_w * 0.5, h, leg.y * top_w * 0.5)
+		_beam(a, b, 0.09, colour)
+	var bands := int(h / 2.2)
+	for k in range(1, bands + 1):
+		var f := float(k) / bands
+		var ww: float = lerpf(w, top_w, f) * 0.5
+		var y := h * f
+		for i in range(4):
+			var p0: Vector2 = legs[i] * ww
+			var p1: Vector2 = legs[(i + 1) % 4] * ww
+			_beam(base + Vector3(p0.x, y, p0.y), base + Vector3(p1.x, y, p1.y), 0.05, colour)
+			if k > 0:
+				var f0 := float(k - 1) / bands
+				var w0: float = lerpf(w, top_w, f0) * 0.5
+				var q0: Vector2 = legs[i] * w0
+				_beam(base + Vector3(q0.x, h * f0, q0.y), base + Vector3(p1.x, y, p1.y), 0.035, colour)
+
+## A square beam from a to b.
+func _beam(a: Vector3, b: Vector3, t: float, colour: Color) -> void:
+	var d := b - a
+	var length := d.length()
+	if length < 0.01:
+		return
+	var y := d / length
+	var x := y.cross(Vector3.UP if absf(y.y) < 0.95 else Vector3.RIGHT).normalized()
+	var z := x.cross(y)
+	var saved := xf
+	xf = xf * Transform3D(Basis(x, y, z), a)
+	box(TRIM, Vector3(-t, 0, -t), Vector3(t, length, t), colour)
+	xf = saved
+
+## A heap of loose material (ore, coal, sand), a low cone of `r` metres.
+func heap(c: Vector3, r: float, h: float, colour: Color) -> void:
+	cylinder(TRIM, c, r, h, colour, 14, r * 0.15)
+
+## A conveyor from a to b on legs.
+func conveyor(a: Vector3, b: Vector3, colour: Color) -> void:
+	_beam(a, b, 0.35, colour)
+	var n := int(a.distance_to(b) / 2.5)
+	for k in range(1, n):
+		var p := a.lerp(b, float(k) / n)
+		_beam(Vector3(p.x, 0, p.z), p, 0.06, Color("5a5d60"))
+
+## A mine headframe: a steel A-frame over the shaft with its winding wheels,
+## the winding house beside it.
+func headframe(c: Vector3, h: float, steel: Color) -> void:
+	lattice(c, h, 2.6, 1.2, steel)
+	for side in [-1.0, 1.0]:
+		_beam(c + Vector3(side * 1.2, 0, 3.6), c + Vector3(side * 0.5, h * 0.92, 0), 0.12, steel)
+	cylinder(TRIM, c + Vector3(-0.1, h + 0.2, -0.9), 0.9, 0.18, Color("3a3d40"), 16)
+	cylinder(TRIM, c + Vector3(-0.1, h + 0.2, 0.7), 0.9, 0.18, Color("3a3d40"), 16)
+	var saved := xf
+	xf = xf * Transform3D(Basis(), c + Vector3(0, 0, 5.8))
+	box(STONE, Vector3(-2.0, -0.2, -1.4), Vector3(2.0, 0.3, 1.4), Color("9c9484"))
+	walls(BRICK, 4.0, 2.8, 0.3, 3.2, Color("a0583f"))
+	gable_roof(4.0, 2.8, 3.5, 1.0, Color("5a5f64"), BRICK, Color("a0583f"), 0.25)
+	xf = saved
+
+## What stands on an Extractor, by the resource under it.
+func extractor(rng: RandomNumberGenerator) -> void:
+	match extract_type:
+		"oil", "seaOil":
+			# A drilling derrick, storage tanks and the separator.
+			lattice(Vector3(-3.0, 0, -2.0), 11.0, 3.0, 0.8, Color("c96a2b"))
+			box(TRIM, Vector3(-4.2, 0.0, -3.2), Vector3(-1.8, 0.6, -0.8), Color("5a5d60"))
+			for i in range(3):
+				silo(Vector3(3.6, 0, -4.5 + i * 3.2), 1.2, 2.8, false)
+			cylinder(METAL, Vector3(0.2, 0.3, 4.2), 0.6, 2.6, Color("d8d4c8"), 12)
+			_beam(Vector3(-2.4, 1.0, -0.8), Vector3(2.4, 1.0, -4.5), 0.12, Color("3a3d40"))
+		"iron":
+			headframe(Vector3(-2.5, 0, -3.0), 11.0, Color("7a3a2e"))
+			heap(Vector3(3.8, 0, -3.0), 3.0, 2.4, Color("6b3b26"))
+			conveyor(Vector3(0.5, 0.4, -3.0), Vector3(3.6, 2.6, -3.0), Color("5a5d60"))
+			for i in range(3):
+				box(METAL, Vector3(2.0 + i * 1.6, 0.0, 3.2), Vector3(3.3 + i * 1.6, 1.3, 5.0), Color("6a4a3a"))
+		"gold":
+			headframe(Vector3(-2.5, 0, -3.0), 10.0, Color("5a5d60"))
+			# The stamp mill: a tall timber building stepping down the slope.
+			var saved := xf
+			xf = xf * Transform3D(Basis(), Vector3(3.6, 0, 0.5))
+			box(STONE, Vector3(-2.2, -0.2, -2.8), Vector3(2.2, 0.3, 2.8), Color("9c9484"))
+			walls(PLANK, 4.4, 5.6, 0.3, 5.0, Color("8a6a48"))
+			gable_roof(4.4, 5.6, 5.3, 1.6, Color("5a5f64"), PLANK, Color("8a6a48"), 0.3)
+			xf = saved
+			heap(Vector3(0.0, 0, 5.2), 1.8, 1.0, Color("d0b060"))
+		"silicon":
+			# A quarry of pale sand with a crane over it and the washing plant.
+			heap(Vector3(-3.0, 0, 1.0), 3.6, 1.8, Color("ded8c8"))
+			heap(Vector3(-1.0, 0, -3.8), 2.4, 1.2, Color("e8e2d2"))
+			lattice(Vector3(2.4, 0, -3.5), 7.0, 1.6, 0.8, Color("e0b030"))
+			_beam(Vector3(2.4, 7.0, -3.5), Vector3(-3.0, 6.0, 0.5), 0.14, Color("e0b030"))
+			var saved2 := xf
+			xf = xf * Transform3D(Basis(), Vector3(4.0, 0, 2.5))
+			box(STONE, Vector3(-2.0, -0.2, -1.8), Vector3(2.0, 0.3, 1.8), Color("9c9484"))
+			walls(METAL, 4.0, 3.6, 0.3, 3.4, Color("c8d0d4"))
+			quad(GLASS, Vector3(-2.0, 1.6, 1.81), Vector3(2.0, 1.6, 1.81), Vector3(2.0, 3.0, 1.81), Vector3(-2.0, 3.0, 1.81), Color("6a8a9a"))
+			gable_roof(4.0, 3.6, 3.7, 0.9, Color("5a5f64"), METAL, Color("c8d0d4"), 0.25)
+			xf = saved2
+		"uranium":
+			headframe(Vector3(-2.5, 0, -3.0), 9.0, Color("5a5d60"))
+			# Yellow drums under a shelter, behind a hazard fence.
+			box(TRIM, Vector3(1.6, 3.0, 0.8), Vector3(6.0, 3.15, 5.2), Color("5a5f64"))
+			for x in [1.8, 5.8]:
+				for z in [1.0, 5.0]:
+					box(TRIM, Vector3(x - 0.08, 0, z - 0.08), Vector3(x + 0.08, 3.0, z + 0.08), Color("8a8c88"))
+			for i in range(9):
+				cylinder(METAL, Vector3(2.4 + (i % 3) * 1.4, 0.0, 1.6 + (i / 3) * 1.4), 0.45, 1.1, Color("e0c030"), 10)
+			for k in range(6):
+				box(TRIM, Vector3(0.6 + k * 1.0, 0.0, -0.3), Vector3(1.1 + k * 1.0, 0.6, -0.2), Color("e0c030") if k % 2 == 0 else Color("2a2a2a"))
+		"diamond":
+			# A stepped open pit and the sorting plant.
+			for k in range(4):
+				cylinder(STONE, Vector3(-2.5, 0.05 - k * 0.02, 0.5), 5.0 - k * 1.1, 0.05, Color("5a5550").darkened(k * 0.12), 20)
+			var saved3 := xf
+			xf = xf * Transform3D(Basis(), Vector3(4.6, 0, -2.5))
+			box(STONE, Vector3(-1.8, -0.2, -2.0), Vector3(1.8, 0.3, 2.0), Color("9c9484"))
+			walls(METAL, 3.6, 4.0, 0.3, 5.6, Color("b8c0c4"))
+			box(METAL, Vector3(-0.8, 5.9, -0.8), Vector3(0.8, 7.6, 0.8), Color("9aa4a8"))
+			hip_roof(3.6, 4.0, 5.9, 0.8, Color("5a5f64"), 0.2)
+			xf = saved3
+			conveyor(Vector3(-1.5, 0.3, -1.0), Vector3(3.0, 4.0, -2.5), Color("5a5d60"))
+		_:
+			headframe(Vector3(0, 0, -2.0), 9.0, Color("5a5d60"))
+
+## An oil refinery: distillation columns, spherical tanks, pipe racks and a flare stack.
+func refinery(rng: RandomNumberGenerator) -> void:
+	for i in range(3):
+		var c := Vector3(-4.0 + i * 1.9, 0, -3.5)
+		cylinder(METAL, c, 0.75 - i * 0.1, 8.0 + i * 2.0, Color("c8ccc8"), 14)
+		for band in range(3):
+			cylinder(TRIM, c + Vector3(0, 2.4 + band * 2.4, 0), 0.9 - i * 0.1, 0.18, Color("8a8c88"), 14)
+		lattice(c + Vector3(0, 0, 0), 8.0 + i * 2.0, 1.7, 1.7, Color("6a6c6a"))
+	for i in range(2):
+		var c := Vector3(3.0, 0, -4.2 + i * 4.2)
+		dome(METAL, c + Vector3(0, 2.0, 0), 1.6, 1.6, Color("e4e6e2"), 16, 5)
+		var saved := xf
+		xf = xf * Transform3D(Basis(Vector3.RIGHT, PI), c + Vector3(0, 2.0, 0))
+		dome(METAL, Vector3.ZERO, 1.6, 1.6, Color("d8dad6"), 16, 5)
+		xf = saved
+		for leg in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
+			_beam(c + Vector3(leg.x, 0, leg.y) * 0.9, c + Vector3(leg.x, 2.0, leg.y) * 0.9 + Vector3(0, 0, 0), 0.07, Color("8a8c88"))
+	for y in [1.8, 2.3]:
+		_beam(Vector3(-4.0, y, 0.5), Vector3(4.5, y, 0.5), 0.12, Color("7a6a4a"))
+	for x in [-3.5, 0.0, 3.5]:
+		_beam(Vector3(x, 0, 0.5), Vector3(x, 2.4, 0.5), 0.08, Color("5a5d60"))
+	_beam(Vector3(-5.5, 0, 4.5), Vector3(-5.5, 13.0, 4.5), 0.25, Color("8a3a2a"))
+	cylinder(BANNER, Vector3(-5.5, 13.0, 4.5), 0.35, 0.9, Color("ffb347"), 8, 0.05)
+
+## A chip fab: a long white clean-room hall with a glass front, ribbed roof
+## plant and exhaust stacks.
+func chip_fab(rng: RandomNumberGenerator) -> void:
+	var w := 9.0
+	var d := 6.0
+	box(STONE, Vector3(-w * 0.5 - 0.2, -0.3, -d * 0.5 - 0.2), Vector3(w * 0.5 + 0.2, 0.3, d * 0.5 + 0.2), Color("b8b8b0"))
+	walls(METAL, w, d, 0.3, 5.0, Color("eceee8"))
+	quad(GLASS, Vector3(-w * 0.45, 0.4, d * 0.5 + 0.02), Vector3(w * 0.45, 0.4, d * 0.5 + 0.02), Vector3(w * 0.45, 3.4, d * 0.5 + 0.02), Vector3(-w * 0.45, 3.4, d * 0.5 + 0.02), Color("3a6a8a"))
+	box(TRIM, Vector3(-w * 0.5, 5.3, -d * 0.5), Vector3(w * 0.5, 5.5, d * 0.5), Color("d8dad6"))
+	for i in range(4):
+		box(METAL, Vector3(-3.8 + i * 2.1, 5.5, -1.8), Vector3(-2.2 + i * 2.1, 6.4, 0.2), Color("a8b0b4"))
+	for i in range(2):
+		cylinder(METAL, Vector3(2.6 + i * 1.2, 5.5, 2.0), 0.3, 2.8, Color("d8dcd8"), 10)
+	box(TRIM, Vector3(-w * 0.5, 4.6, d * 0.5), Vector3(-w * 0.5 + 3.0, 5.0, d * 0.5 + 0.05), banner_colour)
+
+## A nuclear power station: a hyperbolic cooling tower, the containment dome
+## and the turbine hall.
+func nuclear(rng: RandomNumberGenerator) -> void:
+	var c := Vector3(-3.2, 0, -2.0)
+	var rings := 10
+	for i in range(rings):
+		var f0 := float(i) / rings
+		var f1 := float(i + 1) / rings
+		var r0 := 3.6 - 1.4 * sin(f0 * PI * 0.8)
+		var r1 := 3.6 - 1.4 * sin(f1 * PI * 0.8)
+		cylinder(STONE, c + Vector3(0, f0 * 12.0, 0), r0, 12.0 / rings, Color("d4d0c6").darkened(0.03 * (i % 2)), 22, r1)
+	cylinder(TRIM, c + Vector3(0, 12.0, 0), 2.35, 0.1, Color("3a3a38"), 22)
+	cylinder(STONE, Vector3(3.2, 0, -3.0), 2.4, 3.0, Color("c8c4ba"), 20)
+	dome(STONE, Vector3(3.2, 3.0, -3.0), 2.4, 2.4, Color("dedad0"), 20, 6)
+	var saved := xf
+	xf = xf * Transform3D(Basis(), Vector3(2.0, 0, 3.2))
+	box(STONE, Vector3(-3.0, -0.2, -1.6), Vector3(3.0, 0.3, 1.6), Color("9c9484"))
+	walls(METAL, 6.0, 3.2, 0.3, 4.0, Color("b8c0c4"))
+	fenestrate(6.0, 3.2, 0.3, 1, 4.0, Color("d8dcd8"), Color(0, 0, 0, 0), rng, false)
+	gable_roof(6.0, 3.2, 4.3, 0.8, Color("5a5f64"), METAL, Color("b8c0c4"), 0.25)
+	xf = saved
+
+## A solar farm: rows of tilted panels on frames and an inverter house.
+func solar(rng: RandomNumberGenerator) -> void:
+	for row in range(5):
+		var z := -7.0 + row * 3.2
+		var half := 7.0 - absf(row - 2) * 1.2
+		var saved := xf
+		xf = xf * Transform3D(Basis(Vector3.RIGHT, -0.5), Vector3(0, 1.0, z))
+		quad(GLASS, Vector3(-half, 0, 0.9), Vector3(half, 0, 0.9), Vector3(half, 0, -0.9), Vector3(-half, 0, -0.9), Color("1e2e4a"))
+		for x in range(int(-half), int(half), 1):
+			quad(TRIM, Vector3(x - 0.02, 0.01, 0.9), Vector3(x + 0.02, 0.01, 0.9), Vector3(x + 0.02, 0.01, -0.9), Vector3(x - 0.02, 0.01, -0.9), Color("a8b0b8"))
+		xf = saved
+		for x in range(int(-half) + 1, int(half), 3):
+			_beam(Vector3(x, 0, z), Vector3(x, 1.0, z), 0.06, Color("8a8c88"))
+	box(METAL, Vector3(-1.0, 0, 8.0), Vector3(1.0, 1.8, 9.2), Color("c8ccc8"))
+
+## A shipyard or port on the water's edge: sheds, a gantry crane and a quay;
+## the port adds cranes, stacked containers and a warehouse.
+func harbour(rng: RandomNumberGenerator, port: bool) -> void:
+	box(STONE, Vector3(-8.0, -1.0, 4.0), Vector3(8.0, 0.4, 9.5), Color("a8a296"))  # the quay
+	for x in range(-7, 8, 2):
+		cylinder(TRIM, Vector3(x, 0.4, 9.2), 0.15, 0.4, Color("2a2a2a"), 8)
+	if not port:
+		# A building shed with an open end, and a gantry over the slip.
+		var saved := xf
+		xf = xf * Transform3D(Basis(), Vector3(-3.0, 0, -2.0))
+		box(STONE, Vector3(-3.0, -0.2, -4.0), Vector3(3.0, 0.3, 4.0), Color("9c9484"))
+		walls(METAL, 6.0, 8.0, 0.3, 6.0, Color("8a9aa0"))
+		gable_roof(6.0, 8.0, 6.3, 2.0, Color("5a5f64"), METAL, Color("8a9aa0"), 0.3)
+		xf = saved
+		for x in [2.5, 7.0]:
+			_beam(Vector3(x, 0, -2.0), Vector3(x, 10.0, -2.0), 0.3, Color("d0a030"))
+			_beam(Vector3(x, 0, 6.0), Vector3(x, 10.0, 6.0), 0.3, Color("d0a030"))
+		_beam(Vector3(2.5, 10.0, -2.0), Vector3(7.0, 10.0, -2.0), 0.3, Color("d0a030"))
+		_beam(Vector3(2.5, 10.0, 6.0), Vector3(7.0, 10.0, 6.0), 0.3, Color("d0a030"))
+		_beam(Vector3(4.75, 10.3, -2.0), Vector3(4.75, 10.3, 6.0), 0.35, Color("d0a030"))
+	else:
+		var paints := [Color("7a3b2e"), Color("35506a"), Color("5b6b3a"), Color("8a6a2a"), Color("b8b8b0")]
+		for i in range(8):
+			var x := -6.0 + (i % 4) * 2.8
+			var z := -5.0 + (i / 4) * 2.6
+			for layer in range(1 + rng.randi() % 2):
+				box(METAL, Vector3(x, layer * 1.3, z), Vector3(x + 2.5, layer * 1.3 + 1.25, z + 1.2), paints[rng.randi() % paints.size()])
+		for x in [-4.0, 3.0]:
+			lattice(Vector3(x, 0.4, 7.0), 9.0, 2.0, 1.6, Color("c03a2a"))
+			_beam(Vector3(x, 9.4, 3.0), Vector3(x, 9.4, 14.0), 0.3, Color("c03a2a"))
+		var saved2 := xf
+		xf = xf * Transform3D(Basis(), Vector3(5.0, 0, -3.5))
+		walls(METAL, 4.0, 5.0, 0.0, 4.0, Color("a8b0a8"))
+		gable_roof(4.0, 5.0, 4.0, 1.0, Color("7a3a2e"), METAL, Color("a8b0a8"), 0.3)
+		xf = saved2
+
+## A fishing wharf: a timber jetty, a net shed and boats alongside.
+func wharf(rng: RandomNumberGenerator) -> void:
+	box(PLANK, Vector3(-1.2, 0.1, -2.0), Vector3(1.2, 0.35, 10.0), Color("8a6a48"))
+	for z in range(-1, 11, 2):
+		for side in [-1.2, 1.2]:
+			cylinder(WOOD, Vector3(side, -1.5, z), 0.15, 2.0, Color("5a4232"), 8)
+	var saved := xf
+	xf = xf * Transform3D(Basis(), Vector3(-4.0, 0, -3.0))
+	cottage(rng, 4.0, 3.2)
+	xf = saved
+	for i in range(2):
+		var bz := 3.0 + i * 4.0
+		box(WOOD, Vector3(1.6, -0.2, bz - 1.4), Vector3(2.8, 0.5, bz + 1.4), Color("e8e2d4") if i == 0 else Color("3a5a7a"))
+		box(WOOD, Vector3(1.8, 0.5, bz - 0.4), Vector3(2.6, 1.3, bz + 0.5), Color("d8d0bc"))
+
+## An arsenal: earth-covered magazines with blast doors, a missile rack and a
+## hazard fence. Each Ammo Depot stores more missiles.
+func arsenal(rng: RandomNumberGenerator, silo: bool) -> void:
+	for i in range(3):
+		var a := -0.9 + i * 0.9
+		var c := Vector3(cos(a), 0, sin(a)) * 5.5 + Vector3(-1.5, 0, 0)
+		var saved := xf
+		xf = xf * Transform3D(Basis(Vector3.UP, -a + PI * 0.5), c)
+		for k in range(8):
+			var a0 := PI * k / 8.0
+			var a1 := PI * (k + 1) / 8.0
+			quad(TRIM, Vector3(cos(a0) * 2.0, sin(a0) * 1.8, -2.4), Vector3(cos(a1) * 2.0, sin(a1) * 1.8, -2.4), Vector3(cos(a1) * 2.0, sin(a1) * 1.8, 2.4), Vector3(cos(a0) * 2.0, sin(a0) * 1.8, 2.4), Color("5b6b3a"))
+		box(STONE, Vector3(-2.2, 0, 2.3), Vector3(2.2, 2.0, 2.7), Color("a8a296"))
+		box(METAL, Vector3(-1.0, 0, 2.7), Vector3(1.0, 1.6, 2.8), Color("4a4f4c"))
+		box(TRIM, Vector3(-1.0, 1.7, 2.75), Vector3(1.0, 1.85, 2.85), Color("e0c030"))
+		xf = saved
+	# The missile rack: missiles lying on cradles.
+	for i in range(4 if not silo else 2):
+		var z := -3.5 + i * 1.1
+		box(TRIM, Vector3(-6.4, 0.0, z - 0.1), Vector3(-6.2, 0.7, z + 0.1), Color("5a5d60"))
+		box(TRIM, Vector3(-2.0, 0.0, z - 0.1), Vector3(-1.8, 0.7, z + 0.1), Color("5a5d60"))
+		var saved2 := xf
+		xf = xf * Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3(-1.2, 0.95, z))
+		cylinder(METAL, Vector3.ZERO, 0.28, 5.4, Color("d8dcd8"), 10)
+		cylinder(BANNER, Vector3(0, 5.4, 0), 0.28, 0.9, Color("c03a2a"), 10, 0.0)
+		xf = saved2
+	if silo:
+		for i in range(2):
+			var c2 := Vector3(3.5, 0, -4.0 + i * 3.4)
+			cylinder(STONE, c2, 1.5, 0.5, Color("6a6e6a"), 20)
+			cylinder(METAL, c2 + Vector3(0, 0.5, 0), 1.2, 0.1, Color("3a3e3c"), 20)
+			box(TRIM, c2 + Vector3(-1.5, 0.52, -0.1), c2 + Vector3(1.5, 0.56, 0.1), Color("e0c030"))
+
+## A bunker: a low concrete pillbox with firing slits.
+func bunker(rng: RandomNumberGenerator) -> void:
+	box(STONE, Vector3(-3.0, 0, -2.4), Vector3(3.0, 2.2, 2.4), Color("9a9890"))
+	box(STONE, Vector3(-3.3, 2.2, -2.7), Vector3(3.3, 2.7, 2.7), Color("8a8880"))
+	for x in [-1.8, 0.0, 1.8]:
+		box(TRIM, Vector3(x - 0.6, 1.2, 2.39), Vector3(x + 0.6, 1.5, 2.45), Color("1a1c1e"))
+	for i in range(10):
+		var a := TAU * i / 10.0
+		box(TRIM, Vector3(cos(a) * 4.6 - 0.5, 0, sin(a) * 4.0 - 0.3), Vector3(cos(a) * 4.6 + 0.5, 0.5, sin(a) * 4.0 + 0.3), Color("8a7a58"))
+
+## A surface-to-air missile site: launchers with tilted tubes and a radar.
+func sam_site(rng: RandomNumberGenerator) -> void:
+	for i in range(3):
+		var a := TAU * i / 3.0
+		var c := Vector3(cos(a), 0, sin(a)) * 5.0
+		box(METAL, c + Vector3(-1.4, 0, -0.9), c + Vector3(1.4, 1.0, 0.9), Color("5b6b3a"))
+		var saved := xf
+		xf = xf * Transform3D(Basis(Vector3.UP, -a).rotated(Vector3.UP, 0.0) * Basis(Vector3.BACK, 0.7), c + Vector3(0, 1.0, 0))
+		for k in range(2):
+			box(METAL, Vector3(-0.3 + k * 0.62, 0, -0.3), Vector3(0.27 + k * 0.62, 3.6, 0.3), Color("6a7a4a"))
+		xf = saved
+	lattice(Vector3.ZERO, 5.0, 1.4, 0.6, Color("8a8c88"))
+	box(METAL, Vector3(-1.4, 5.0, -0.1), Vector3(1.4, 6.4, 0.1), Color("c8ccc8"))
+
+## A park: lawns cut by paths, a fountain and a bandstand.
+func park(rng: RandomNumberGenerator) -> void:
+	cylinder(STONE, Vector3.ZERO, 2.2, 0.5, Color("c8c0b0"), 20)
+	cylinder(GLASS, Vector3(0, 0.5, 0), 1.8, 0.04, Color("4a7a9a"), 20)
+	cylinder(STONE, Vector3(0, 0.5, 0), 0.25, 1.4, Color("d8d0c0"), 10)
+	var b := Vector3(5.0, 0, -4.0)
+	cylinder(STONE, b, 2.0, 0.5, Color("c8c0b0"), 8)
+	for k in range(8):
+		var a := TAU * k / 8.0
+		cylinder(WOOD, b + Vector3(cos(a) * 1.8, 0.5, sin(a) * 1.8), 0.08, 2.4, Color("e8e4d8"), 6)
+	cylinder(ROOF, b + Vector3(0, 2.9, 0), 2.3, 1.2, Color("3e6a5a"), 8, 0.0)
+
+## A stadium: an oval of stands round a green pitch, with floodlights.
+func stadium(rng: RandomNumberGenerator) -> void:
+	var rx := 8.5
+	var rz := 6.5
+	for k in range(24):
+		var a0 := TAU * k / 24.0
+		var a1 := TAU * (k + 1) / 24.0
+		for tier in range(3):
+			var f := 1.0 - tier * 0.12
+			var y0 := tier * 1.2
+			var p0 := Vector3(cos(a0) * rx * f, y0, sin(a0) * rz * f)
+			var p1 := Vector3(cos(a1) * rx * f, y0, sin(a1) * rz * f)
+			var q0 := Vector3(cos(a0) * rx * (f - 0.12), y0 + 1.2, sin(a0) * rz * (f - 0.12))
+			var q1 := Vector3(cos(a1) * rx * (f - 0.12), y0 + 1.2, sin(a1) * rz * (f - 0.12))
+			quad(STONE, p1, p0, q0, q1, Color("c8c4ba") if tier % 2 == 0 else banner_colour.lerp(Color("c8c4ba"), 0.5))
+		quad(STONE, Vector3(cos(a1) * rx, 0, sin(a1) * rz), Vector3(cos(a0) * rx, 0, sin(a0) * rz), Vector3(cos(a0) * rx, 3.6, sin(a0) * rz), Vector3(cos(a1) * rx, 3.6, sin(a1) * rz), Color("b8b4aa"))
+	quad(TRIM, Vector3(-4.5, 0.1, 2.6), Vector3(4.5, 0.1, 2.6), Vector3(4.5, 0.1, -2.6), Vector3(-4.5, 0.1, -2.6), Color("4f8a3a"))
+	quad(TRIM, Vector3(-0.05, 0.12, 2.6), Vector3(0.05, 0.12, 2.6), Vector3(0.05, 0.12, -2.6), Vector3(-0.05, 0.12, -2.6), Color("e8e8e0"))
+	for c in [Vector3(-7, 0, -5.5), Vector3(7, 0, -5.5), Vector3(-7, 0, 5.5), Vector3(7, 0, 5.5)]:
+		_beam(c, c + Vector3(0, 9.0, 0), 0.12, Color("8a8c88"))
+		box(TRIM, c + Vector3(-0.8, 9.0, -0.2), c + Vector3(0.8, 9.8, 0.2), Color("f2eed8"))
+
 ## An apartment block: storeys of plaster over a stone ground floor, with
 ## balconies, a flat roof behind a parapet and a water tank.
 func apartments(rng: RandomNumberGenerator, footprint: float, floors: int) -> void:
@@ -810,7 +1161,10 @@ func commit() -> Node3D:
 static func has_recipe(key: String) -> bool:
 	return key in ["hq", "cityCenter", "cityHall", "courthouse", "bank", "university", "library", "school", "policeStation",
 		"hospital", "market", "villageCenter", "tankFactory", "warehouse", "barracks", "cottage", "residential", "workerHouse",
-		"luxuryVillas", "housing", "apartments", "tvStation", "intelAgency", "techPark", "farm", "foodDepot", "powerPlant", "airfield", "helipad"]
+		"luxuryVillas", "housing", "apartments", "tvStation", "intelAgency", "techPark", "farm", "foodDepot", "powerPlant", "airfield", "helipad",
+		"extractor", "mountainMine", "oilRefinery", "chipFab", "nuclearReactor", "solarFarm", "shipyard", "port",
+		"fishingWharf", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "commandCenter",
+		"museum", "waterTreatment"]
 
 ## --capture-city: close views of the capital's buildings (build/city-*.png).
 static func capture(w: Node) -> void:

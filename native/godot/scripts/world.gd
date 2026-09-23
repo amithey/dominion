@@ -452,6 +452,8 @@ func _ready() -> void:
 		await preload("res://scripts/battle_regression.gd").capture(self)
 	elif "--capture-deposits" in args:
 		await preload("res://scripts/deposit_art.gd").capture(self)
+	elif "--capture-industry" in args:
+		await preload("res://scripts/industry_views.gd").capture(self)
 	elif "--airbase-test" in args:
 		await preload("res://scripts/airbase_regression.gd").run(self)
 	elif "--capture-airfield" in args:
@@ -918,7 +920,13 @@ func footprint_of(key: String) -> float:
 # placement preview).
 func building_model(key: String, x: float, z: float) -> Node3D:
 	if key == "extractor":
-		return extractor_model()
+		# The mine, rig or quarry for the resource under it (architecture.gd).
+		var dep = deposit_near(Vector3(x, 0, z), 8.0)
+		districts.arch.begin()
+		districts.arch.extract_type = dep.type if dep != null else ""
+		districts.arch.xf = Transform3D(Basis.from_scale(Vector3.ONE * 0.62), Vector3.ZERO)
+		districts.arch.extractor(RandomNumberGenerator.new())
+		return districts.arch.commit()
 	if key in ["missileSilo", "ammoDepot"]:
 		return bunker_model(key)
 	var path: String = BUILDING_MODELS.get(key, "res://assets/building-a.glb")
