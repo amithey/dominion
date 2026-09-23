@@ -7,6 +7,31 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.13: land bought at the town hall, a calmer build menu, missiles from ships, firm diplomacy
+
+- **Buying land.** Select a capital, city or village centre and press "Buy land". The unclaimed hexes
+  next to your land are outlined in gold; click one to buy it for $1,000. Each settlement may buy four.
+  Troops no longer claim unclaimed land; enemy land is still won in war. AI nations buy land the same way
+  when they have money to spare.
+- **Build menu.**
+  - It opens only when asked (the Build button at the top right, or **B**). It no longer jumps up when
+    you click a soldier, the ground or a building that produces nothing.
+  - A building that produces shows its orders in the same panel.
+  - An enemy building stays selected and shows its card.
+  - The build list is a grid of cards with pictures of the buildings as they now stand in the city.
+- **Missiles from the sea.** A strategic submarine or a destroyer fires missiles from the national
+  stockpile, even with no silo. Select one and use the launch buttons on its card.
+- **Airfields and whole-hex buildings** no longer have district streets running through them.
+- **Firm diplomacy.** In a leader contact, the "Firm language" statements fit the situation:
+  - Peacetime: a formal protest, public condemnation, threatened sanctions, recalling the ambassador,
+    a red-line warning.
+  - Cold war: a red-line warning, expelling diplomats, an ultimatum to withdraw, a de-escalation
+    hotline.
+  - War: demanding surrender, a prisoner exchange, an escalation warning.
+
+  The other government answers for itself, and each statement has consequences.
+- Keyboard: **B** build list, **F8** testing resources.
+
 ## Version 0.9.12: a building for every resource, and the rest of the industry
 
 - **One Extractor, a different site for each resource** (`architecture.extractor`):

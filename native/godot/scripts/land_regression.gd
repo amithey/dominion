@@ -63,48 +63,42 @@ static func run(w: Node) -> void:
 		if problem == "Outside your territory":
 			failures.append("your own land %.0f m beyond the settlement radius was refused" % far_d)
 		print("LAND own hex %.0f m past the settlement radius: %s" % [far_d, problem if problem != "" else "buildable"])
-	# 2. An unclaimed hex well away from everyone.
-	var empty := -1
-	for i in range(t.owner_of.size()):
-		if t.owner_of[i] != -1 or t.terrain[i] == t.Terrain.WATER or not w.open_ground(t.center(i)):
-			continue
-		var clear := true
-		for j in t.neighbours(i):
-			if t.owner_of[j] != -1:
-				clear = false
-		if clear:
-			empty = i
-			break
-	if empty < 0:
-		failures.append("no unclaimed land to test with")
+	# 2. Troops never claim unclaimed land; it is bought at a town hall, four hexes at most.
+	var hall: Dictionary = w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq" and not b.dead)[0]
+	var options: Array = t.purchase_candidates(hall)
+	if options.is_empty():
+		failures.append("the capital's town hall offers no land to buy")
 	else:
-		var spot: Vector3 = t.center(empty)
+		var spot: Vector3 = t.center(options[0])
 		spot.y = w.height_at(spot.x, spot.z)
 		var squad := []
 		for k in range(3):
 			squad.append(w.spawn_unit("soldier", spot + Vector3(k * 1.5, 0, 0), 0))
-		w.economy.res.money = 5000.0
 		for k in range(3):
 			t.tick()
-		if t.owner_of[empty] == 0:
-			failures.append("troops claimed unclaimed land without the player agreeing to buy it")
-		if not empty in t.offer:
-			failures.append("the player was not offered the land the troops stand on")
-		t.decline(t.offer.duplicate())
-		t.tick()
-		if empty in t.offer:
-			failures.append("declined land was offered again at once")
-		t.declined.clear()
-		t.tick()
-		var got: int = t.buy(t.offer.duplicate())
-		var paid: float = 5000.0 - w.economy.res.money
-		if t.owner_of[empty] != 0:
-			failures.append("buying did not give the player the hex")
-		elif absf(paid - got * t.LAND_PRICE) > 0.01 or paid < t.LAND_PRICE:
-			failures.append("buying %d hexes cost %.0f, expected %.0f each" % [got, paid, t.LAND_PRICE])
-		print("LAND bought %d hexes for $%d" % [got, int(paid)])
+		if t.owner_of[options[0]] == 0:
+			failures.append("troops claimed unclaimed land by standing on it")
 		for u in squad:
 			w.kill(u)
+		w.economy.res.money = 10000.0
+		var got := 0
+		for k in range(6):
+			var now: Array = t.purchase_candidates(hall)
+			if now.is_empty():
+				break
+			var said: String = t.purchase(hall, now[0])
+			if said.begins_with("Land bought"):
+				got += 1
+		t.tick()
+		var paid: float = 10000.0 - w.economy.res.money
+		var kept: int = t.purchased.keys().filter(func(k): return t.owner_of[int(k)] == 0).size()
+		print("LAND town hall bought %d hexes for $%d; %d still held after a tick" % [got, int(paid), kept])
+		if got != t.PURCHASES:
+			failures.append("a settlement bought %d hexes (limit %d)" % [got, t.PURCHASES])
+		if absf(paid - got * t.LAND_PRICE) > 0.01:
+			failures.append("buying cost %.0f for %d hexes" % [paid, got])
+		if kept != got:
+			failures.append("bought land was lost on the next territory tick")
 	# 3. Territorial waters: a building on the coast makes the sea off it yours.
 	for i in range(t.owner_of.size()):
 		if t.terrain[i] == t.Terrain.COAST and t.owner_of[i] == -1 and w.open_ground(t.center(i)):

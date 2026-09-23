@@ -195,6 +195,8 @@ var game_time := 0.0      # match seconds (EMP and other timed effects)
 var shots_fired := 0      # every weapon discharge (the battle test watches it)
 var sim_tick := 0         # simulation steps taken (staggers per-unit work; tests step by hand)
 var missile_aim := ""     # missile type waiting for a target click
+var land_buyer = null     # the settlement whose town hall is buying land (click a highlighted hex)
+var land_marks: MeshInstance3D
 var cam_lift := 0.0       # raises the camera's look-at point above the ground (captures)
 var edge_scroll := true   # pan when the mouse touches the screen edge (Settings)
 var middle_drag := false  # the middle mouse button drags the map
@@ -1132,6 +1134,11 @@ func refresh_streets() -> void:
 			continue
 		var centre: Vector3 = logistics.hex_center(hex)
 		var mask := 0
+		# A building that fills its whole hex (an airfield's runway, a stadium,
+		# a refinery...) has no streets running through it.
+		if b.key in districts.COMPLETE or b.key in ["airfield", "helipad"]:
+			districts.set_streets(b.pad, 0)
+			continue
 		for d in logistics.DIRECTIONS:
 			var other: Vector2i = hex + d
 			var neighbour = district_hex.get(other)
@@ -1297,8 +1304,21 @@ func display_model(key: String) -> Node3D:
 				player.play(idle)
 				player.seek(0.4, true)
 	elif building_defs.has(key):
-		model = building_model(key, 0.0, 0.0)
-		districts.tone(model, 0)  # the same weathered tones as in the city
+		if is_district(key):
+			# The building as the city shows it: the district's architecture and
+			# props (architecture.gd), without the hex tile under it.
+			var parts: Dictionary = districts.build(key, Vector3(0, height_at(0, 0), 0), 1.3, 0, 3)
+			parts.pad.free()
+			model = parts.container
+			# Only the building: the district's props (lamps, trees, fences) spread
+			# over the whole hex and would shrink it to a speck in the frame.
+			if not key in ["airfield", "helipad", "extractor"]:
+				for child in model.get_children():
+					if child is MeshInstance3D and is_same(child.material_override, districts.props_material):
+						child.free()
+		else:
+			model = building_model(key, 0.0, 0.0)
+			districts.tone(model, 0)  # the same weathered tones as in the city
 	if model == null:
 		return null
 	holder.add_child(model)
@@ -3042,17 +3062,37 @@ func ui_test() -> void:
 	checks["clicked land is described"] = territory.describe(home).contains("held by You")
 	hud.toggle_panel("territory")
 	checks["territory paint goes away"] = mat.get_shader_parameter("show_territory") == false
+	# The build list stays closed until asked for: clicking the ground or a
+	# soldier does not throw it up; B / the Build button opens it.
+	hud.set_production_open(false)
+	select_building(null)
+	hud._update_panel()
+	checks["the build list does not open by itself"] = not hud._prod.visible
+	var soldier = units.filter(func(u): return u.owner == 0 and not u.dead and not u.vehicle)
+	if not soldier.is_empty():
+		soldier[0].selected = true
+		hud._update_panel()
+		checks["selecting a soldier leaves the build list closed"] = not hud._prod.visible
+		soldier[0].selected = false
+	var enemy_b = buildings.filter(func(b): return b.owner > 0 and not b.dead and b.key in ["barracks", "farm", "housing"])
+	if not enemy_b.is_empty():
+		select_building(enemy_b[0])
+		hud._process(1.0)
+		checks["an enemy building stays selected and shown"] = hud._selected != null and hud._sel.visible
+		select_building(null)
+	hud.toggle_build()
+	checks["B / the Build button opens the build list"] = hud._prod.visible
 	# Production list: every tab lists its buildings; a bar starts placement.
 	for tab in hud.BUILD_MENU:
 		hud.build_tab = tab
 		hud._shown_key = ""
 		hud._update_panel()
-		var bars: Array = hud._list.get_children().filter(func(b): return b is Button)
+		var bars: Array = hud._list.find_children("*", "Button", true, false)
 		checks["%s tab lists %d buildings" % [tab, bars.size()]] = bars.size() >= hud.BUILD_MENU[tab].filter(func(k): return building_defs.has(k)).size()
 	hud.build_tab = "Economy"
 	hud._shown_key = ""
 	hud._update_panel()
-	var farm_bar = hud._list.get_children().filter(func(b): return b is Button)[2]
+	var farm_bar = hud._list.find_children("*", "Button", true, false).filter(func(b): return b.tooltip_text.begins_with("Farm"))[0]
 	farm_bar.pressed.emit()
 	checks["a production bar starts placing the building"] = placing == "farm"
 	cancel_placement()
@@ -3390,6 +3430,7 @@ func capture_ui() -> void:
 	economy.res.money = 2500.0
 	for i in range(240):  # let the picture studio render the cards
 		await get_tree().process_frame
+	hud.set_production_open(true)  # the build list opens on request
 	await capture_view("res://build/ui-build.png", start, 110.0, 0.85, 20)
 	var barracks = null
 	for b in buildings:
@@ -3625,9 +3666,71 @@ func begin_missile(key: String) -> void:
 	if int(missiles.stock.get(key, 0)) <= 0:
 		hud.notice("No %s in storage." % missiles.def_of(key).name)
 		return
+	if missiles.silos().is_empty() and missiles.launch_ships().is_empty():
+		hud.notice("Missiles launch from a Missile Silo, a strategic submarine or a destroyer.")
+		return
 	missile_aim = key
 	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
 	hud.notice("%s armed: click a target (Shift keeps firing, right click cancels)." % missiles.def_of(key).name)
+
+## Buying land at a town hall: the hexes it may buy are outlined in gold;
+## a click on one buys it ($1000), right click or Esc stops.
+func begin_land_purchase(s: Dictionary) -> void:
+	cancel_placement()
+	cancel_missile()
+	var options: Array = territory.purchase_candidates(s)
+	if options.is_empty():
+		hud.notice("No land to buy here: %s" % ("this settlement has bought all it may." if territory.purchases_left(s) <= 0 else "no unclaimed land touches yours."))
+		return
+	land_buyer = s
+	_draw_land_marks(options)
+	hud.notice("Buy land: click a gold-outlined hex ($%d each, %d left here). Right click or Esc to stop." % [int(territory.LAND_PRICE), territory.purchases_left(s)])
+
+func cancel_land_purchase() -> void:
+	land_buyer = null
+	if land_marks != null:
+		land_marks.visible = false
+
+func _draw_land_marks(options: Array) -> void:
+	if land_marks == null:
+		land_marks = MeshInstance3D.new()
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.albedo_color = Color("f2c24a")
+		m.no_depth_test = true
+		land_marks.material_override = m
+		land_marks.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(land_marks)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in options:
+		var poly: PackedVector2Array = territory.cell_polygon(i)
+		var c: Vector3 = territory.center(i)
+		for k in range(6):
+			var a: Vector2 = poly[k]
+			var b: Vector2 = poly[(k + 1) % 6]
+			# A band 0.6 m wide just inside the hex edge.
+			var a_in := a.lerp(Vector2(c.x, c.z), 0.08)
+			var b_in := b.lerp(Vector2(c.x, c.z), 0.08)
+			var pts := []
+			for p in [a, b, b_in, a_in]:
+				pts.append(Vector3(p.x, maxf(height_at(p.x, p.y), float(map.seaLevel)) + 0.4, p.y))
+			for idx in [0, 1, 2, 0, 2, 3]:
+				st.add_vertex(pts[idx])
+	land_marks.mesh = st.commit()
+	land_marks.visible = true
+
+func land_click(point: Vector3) -> void:
+	if land_buyer == null or land_buyer.dead:
+		cancel_land_purchase()
+		return
+	var said: String = territory.purchase(land_buyer, territory.cell_of(point))
+	hud.notice(said)
+	var options: Array = territory.purchase_candidates(land_buyer)
+	if options.is_empty() or territory.purchases_left(land_buyer) <= 0:
+		cancel_land_purchase()
+	else:
+		_draw_land_marks(options)
 
 func cancel_missile() -> void:
 	missile_aim = ""
@@ -4763,12 +4866,26 @@ func _unhandled_input(event: InputEvent) -> void:
 			cam_dist_target = minf(520.0, cam_dist_target / 0.88)
 		elif event.button_index == MOUSE_BUTTON_MIDDLE:
 			middle_drag = event.pressed
+		elif event.button_index == MOUSE_BUTTON_LEFT and land_buyer != null:
+			if event.pressed:
+				var point = ground_point(event.position)
+				if point != null:
+					land_click(point)
+		elif event.button_index == MOUSE_BUTTON_RIGHT and land_buyer != null:
+			if event.pressed:
+				cancel_land_purchase()
 		elif event.button_index == MOUSE_BUTTON_LEFT and missile_aim != "":
 			if event.pressed:
 				var point = ground_point(event.position)
 				if point != null:
 					var key := missile_aim
-					engagement.authorize_area(point,float(missiles.def_of(key).radius),func():hud.notice(missiles.launch(key,point)))
+					# A selected missile ship fires it; otherwise the nearest silo or ship.
+					var ship = null
+					for u in units:
+						if u.selected and not u.dead and u.owner == 0 and u.key in missiles.LAUNCH_SHIPS:
+							ship = u
+							break
+					engagement.authorize_area(point,float(missiles.def_of(key).radius),func():hud.notice(missiles.launch(key,point,ship)))
 					if int(missiles.stock.get(missile_aim, 0)) <= 0 or not event.shift_pressed:
 						cancel_missile()
 		elif event.button_index == MOUSE_BUTTON_RIGHT and missile_aim != "":
@@ -4886,8 +5003,8 @@ func _input(event: InputEvent) -> void:
 		order_mode = ""
 		get_viewport().set_input_as_handled()
 		return
-	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_B:
-		start_battle()
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_B:
+		hud.toggle_build()  # the build list (the skirmish demo is --battle only)
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_G:
 		hud.toggle_diplomacy()
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_M:
@@ -4916,6 +5033,7 @@ func _input(event: InputEvent) -> void:
 		cancel_missile()
 		cancel_transport()
 		cancel_placement()
+		cancel_land_purchase()
 		select_building(null)
 		if occupation != null:
 			occupation.cancel()

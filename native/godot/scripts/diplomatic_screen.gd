@@ -137,12 +137,22 @@ func _refresh() -> void:
 				var reason: String = service.topic_reason(key, terms)
 				_button(content, topic[0], func(): _run(service.propose.bind(key, terms.duplicate())), reason)
 				_text(content, reason if reason != "" else topic[1], 12, UI.MUTED)
+			# Firm language for the situation you are in: peacetime, cold war or war.
+			var state: String = service.relation_state(nation)
+			_text(content, "FIRM LANGUAGE  ·  %s" % service.STANCE_GROUPS[state].to_upper(), 16, UI.GOLD)
+			for key in service.STANCES:
+				if not state in service.STANCES[key][2]:
+					continue
+				var stance: Array = service.STANCES[key]
+				var why: String = service.topic_reason(key)
+				_button(content, stance[0], func(): _run(service.propose.bind(key)), why)
+				_text(content, why if why != "" else stance[1], 12, UI.MUTED)
 	else:
 		status.text = s.message
 		_text(content, "JOINT COMMUNIQUE", 21, UI.GOLD)
 		if s.results.is_empty(): _text(content, "No agreement was signed.")
 		for result in s.results:
-			_text(content, "%s  ·  %s" % [result.outcome.to_upper(), service.TOPICS[result.key][0]], 16, UI.GOOD if result.outcome == "Accepted" else UI.BAD)
+			_text(content, "%s  ·  %s" % [result.outcome.to_upper(), service.title(result.key)], 16, UI.GOOD if result.outcome in ["Accepted", "Regret expressed", "Conceded", "Heeded", "Complied", "Agreed", "Surrendered", "Exchanged"] else UI.BAD)
 			_text(content, result.detail, 13, UI.MUTED)
 		_text(content, "Arrange a follow-up", 18, UI.GOLD)
 		_channels()

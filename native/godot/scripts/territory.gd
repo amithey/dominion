@@ -23,8 +23,8 @@ enum Terrain { WATER, PLAINS, FOREST, MOUNTAIN, COAST }
 const TERRAIN_NAMES := ["Water", "Plains", "Forest", "Mountain", "Coast"]
 const STATUS_YIELD := {"sovereign": 1.0, "integrated": 0.75, "occupied": 0.4, "contested": 0.15}
 const RIBBON := 2.4
-const LAND_PRICE := 1000.0 ## money to buy one unclaimed hex your troops stand on (buildings claim theirs free)
-const OFFER_AGAIN := 120.0 ## seconds before land the player declined to buy is offered again
+const LAND_PRICE := 1000.0 ## money for one hex of unclaimed land, bought at a settlement's town hall
+const PURCHASES := 4       ## hexes each settlement may buy
 ## How far a settlement's land reaches, in rings of hexes round its centre:
 ## it starts small and grows with the people living there, up to a limit.
 const RINGS_MAX := {"hq": 4, "cityCenter": 4, "villageCenter": 3}
@@ -95,6 +95,7 @@ func setup(world_node: Node, cfg: Dictionary) -> void:
 	tick()
 
 func reset() -> void:
+	purchased.clear()
 	owner_of.fill(-1)
 	control.fill(0.0)
 	contested.fill(0)
@@ -278,45 +279,66 @@ func _waters() -> bool:
 		contested[i] = 0
 	return changed
 
-## Puts the pending purchase to the player once (one letter for all the hexes
-## the troops stand on); declined land is offered again after a while.
-func _ask_to_buy() -> void:
-	offer = offer.filter(func(i): return owner_of[i] == -1)
-	if offer.is_empty() or asking or world.hud == null:
-		return
-	asking = true
-	var hexes := offer.duplicate()
-	var price := hexes.size() * LAND_PRICE
-	world.hud.choose("LAND", "Your forces stand on %d hex%s of unclaimed land.\nBuy it for $%d ($%d a hex)? Unclaimed land can only be taken by buying it; another nation's land is won in war." % [hexes.size(), "" if hexes.size() == 1 else "es", int(price), int(LAND_PRICE)], [
-		["Buy the land", "good", func(): buy(hexes)],
-		["Not now", "", func(): decline(hexes)],
-	])
+## Buying land, Civilization style: at a settlement's town hall (the capital,
+## a city or a village centre) its owner picks unclaimed hexes next to its
+## land and pays for each. Each settlement may buy PURCHASES hexes.
+func settlement_key(s: Dictionary) -> String:
+	return "%d,%d" % [roundi(s.root.position.x), roundi(s.root.position.z)]
 
-## The player buys `hexes` (those still unclaimed), as far as the money goes.
-func buy(hexes: Array) -> int:
-	asking = false
-	var got := 0
-	for i in hexes:
-		if owner_of[i] != -1:
+func bought_by(s: Dictionary) -> int:
+	var k := settlement_key(s)
+	var n := 0
+	for key in purchased:
+		if purchased[key].settlement == k:
+			n += 1
+	return n
+
+func purchases_left(s: Dictionary) -> int:
+	return maxi(0, PURCHASES - bought_by(s))
+
+## Hexes settlement `s` may buy now: unclaimed land touching its nation's
+## land, within a few rings of the settlement.
+func purchase_candidates(s: Dictionary) -> Array[int]:
+	var out: Array[int] = []
+	if purchases_left(s) <= 0:
+		return out
+	var centre := hex_at(s.root.position)
+	var reach: int = rings_of(s) + 2
+	for dq in range(-reach, reach + 1):
+		for dr in range(maxi(-reach, -dq - reach), mini(reach, -dq + reach) + 1):
+			var i := index_of(centre + Vector2i(dq, dr))
+			if i < 0 or terrain[i] == Terrain.WATER or owner_of[i] != -1:
+				continue
+			for j in neighbours(i):
+				if owner_of[j] == s.owner:
+					out.append(i)
+					break
+	return out
+
+## Buys hex `i` for settlement `s`. Returns what happened.
+func purchase(s: Dictionary, i: int) -> String:
+	if purchases_left(s) <= 0:
+		return "%s has bought all the land it may (%d hexes)." % [s.def.name, PURCHASES]
+	if not i in purchase_candidates(s):
+		return "That hex cannot be bought here: pick unclaimed land next to your own."
+	if not _buy(s.owner):
+		return "Not enough money: land costs $%d a hex." % int(LAND_PRICE)
+	purchased[str(i)] = {"owner": s.owner, "settlement": settlement_key(s)}
+	owner_of[i] = s.owner
+	control[i] = 40.0
+	draw_fill()
+	changed.emit()
+	return "Land bought for $%d. %d more hex%s may be bought at this %s." % [int(LAND_PRICE), purchases_left(s), "" if purchases_left(s) == 1 else "es", s.def.name]
+
+## An AI nation with money to spare buys land for one of its settlements.
+func ai_purchase(nation: int) -> void:
+	for s in world.buildings:
+		if s.dead or not s.built or s.owner != nation or not RINGS_MAX.has(s.key):
 			continue
-		if not world.economy.pay({"money": LAND_PRICE}):
-			world.hud.notice("Not enough money for the rest of the land ($%d a hex)." % int(LAND_PRICE))
-			break
-		owner_of[i] = 0
-		control[i] = 30.0
-		got += 1
-	offer.clear()
-	if got > 0:
-		world.hud.notice("You bought %d hex%s of land for $%d." % [got, "" if got == 1 else "es", int(got * LAND_PRICE)])
-		draw_fill()
-		changed.emit()
-	return got
-
-func decline(hexes: Array) -> void:
-	asking = false
-	for i in hexes:
-		declined[i] = world.game_time + OFFER_AGAIN
-	offer.clear()
+		var options := purchase_candidates(s)
+		if not options.is_empty():
+			purchase(s, options[randi() % options.size()])
+			return
 
 func is_front(i: int) -> bool:
 	var o := owner_of[i]
@@ -372,7 +394,13 @@ func tick() -> void:
 		var reach := rings_of(b) if RINGS_MAX.has(b.key) else 0
 		_presence(presence, b.root.position, b.owner, w, reach, nations)
 		_presence(built, b.root.position, b.owner, w, reach, nations)
-	var bought := {}   # nation -> hexes bought this tick
+	# Land bought at a town hall is held as firmly as a building's own hex.
+	for key in purchased:
+		var entry: Dictionary = purchased[key]
+		var i: int = int(key)
+		if i >= 0 and i < owner_of.size() and not world.diplomacy.defeated(int(entry.owner)):
+			presence[i * nations + int(entry.owner)] += 20.0
+			built[i * nations + int(entry.owner)] += 20.0
 	for u in world.units:
 		if u.dead or u.dmg <= 0.0 or u.get("fly", false) or u.get("naval", false):
 			continue
@@ -415,15 +443,7 @@ func tick() -> void:
 			continue
 		if owner_of[i] == -1:
 			if built[i * nations + best] <= 0.35:
-				# Troops alone claim unclaimed land only if their nation buys it: the
-				# player is asked first; an AI pays from its treasury.
-				if best == 0:
-					if not i in offer and float(declined.get(i, -1.0)) <= world.game_time:
-						offer.append(i)
-					continue
-				if not _buy(best):
-					continue
-				bought[best] = int(bought.get(best, 0)) + 1
+				continue  # troops alone never claim unclaimed land: it is bought at a town hall
 			owner_of[i] = best
 			control[i] = clampf(best_w * 9.0, 18.0, 45.0)
 			flipped = true
@@ -441,7 +461,6 @@ func tick() -> void:
 				if lost_by == 0 or best == 0:
 					var c := center(i)
 					world.hud.notice("Territory %s near (%d, %d)." % ["lost to %s" % world.diplomacy.name_of(best) if lost_by == 0 else "taken from %s" % world.diplomacy.name_of(lost_by), int(c.x), int(c.z)])
-	_ask_to_buy()
 	if _waters():
 		flipped = true
 	fronts = 0
@@ -471,9 +490,7 @@ func set_visible_borders(on: bool) -> void:
 # ---------------------------------------------------------------- the map view
 
 var _labels: Array[Label3D] = []
-var offer: Array[int] = []        ## unclaimed hexes under the player's troops, awaiting the player's answer
-var declined := {}                ## hex -> match time it may be offered again
-var asking := false
+var purchased := {}               ## hex index (as text) -> {owner, settlement}: land bought at town halls
 
 ## Paints the land each nation holds in its colour, in the terrain itself:
 ## a small texture with one texel per hex (colour and tint strength) that
@@ -545,13 +562,14 @@ func describe(at: Vector3) -> String:
 		" A front line: rival forces are contesting it." if contested[i] else ""]
 
 func capture() -> Dictionary:
-	return {"owner": Array(owner_of), "control": Array(control).map(func(v): return snappedf(v, 0.1)), "contested": Array(contested)}
+	return {"owner": Array(owner_of), "control": Array(control).map(func(v): return snappedf(v, 0.1)), "contested": Array(contested), "purchased": purchased.duplicate(true)}
 
 func restore(data: Dictionary) -> void:
 	var saved: Array = data.get("owner", [])
 	if saved.size() != owner_of.size():
 		reset()
 		return
+	purchased = data.get("purchased", {}).duplicate(true)
 	for i in range(saved.size()):
 		owner_of[i] = int(saved[i])
 		control[i] = float(data.control[i])

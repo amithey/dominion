@@ -47,6 +47,18 @@ static func run(w: Node) -> void:
 		print("STATE AI nation %d: %d economic and civic, %d military buildings" % [n.id, civil, military])
 		if civil < military or civil < 6:
 			failures.append("AI nation %d built %d economic and %d military buildings" % [n.id, civil, military])
+	# A strategic submarine fires from the stockpile, with no silo at all.
+	var sea = w.water_near(w.start, 320)
+	if sea != null:
+		for b in w.missiles.silos():
+			b.dead = true
+		var sub: Dictionary = w.spawn_unit("nuclearSub", sea, 0)
+		var first: String = w.missiles.types().keys()[0]
+		w.missiles.stock[first] = 2
+		var said: String = w.missiles.launch(first, sea + Vector3(60, 0, 60), sub)
+		print("STATE submarine launch: " + said)
+		if w.missiles.stock[first] != 1 or w.missiles.flying.is_empty():
+			failures.append("a strategic submarine could not launch a missile: " + said)
 	# F8, for testing: plenty of everything, and it lasts.
 	var money: float = w.economy.res.money
 	w.economy.grant_test_resources()

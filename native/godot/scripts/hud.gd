@@ -37,7 +37,7 @@ var _shown_key := ""
 var _refresh := 0.0
 var build_tab := "Economy"
 var transport_text := ""
-var prod_open := true
+var prod_open := false   ## the player opened the build list (the Build button or B)
 
 var _chips := {}          # resource -> [value Label, rate Label]
 var _extra := {}          # "army" etc. -> Label
@@ -58,6 +58,8 @@ var _sel_medal: Control
 var _sel_stats: HBoxContainer
 var _stat_values := {}    # caption -> [plate, value Label]
 var _commands := {}
+var _launch_row: HBoxContainer   # missile buttons when a missile ship is selected
+var _launch_sig := ""
 var _health_color := Color.TRANSPARENT
 var _notices: VBoxContainer
 var _fps: Label
@@ -276,7 +278,10 @@ func _build_production() -> void:
 	hide.custom_minimum_size = Vector2(30, 24)
 	hide.tooltip_text = "Hide the production list (the Build button brings it back)"
 	hide.focus_mode = Control.FOCUS_NONE
-	hide.pressed.connect(func(): set_production_open(false))
+	hide.pressed.connect(func():
+		set_production_open(false)
+		if _selected != null:
+			world.select_building(null))
 	head.add_child(hide)
 	# Everything under the band keeps its own margin.
 	var body := MarginContainer.new()
@@ -330,23 +335,45 @@ func _build_production() -> void:
 	reopen.text = "  Build"
 	reopen.icon = UI.icon("build")
 	reopen.expand_icon = false
+	# Top right, under the resource strip: clear of the minimap at any size.
 	reopen.anchor_left = 1.0
 	reopen.anchor_right = 1.0
-	reopen.anchor_top = 1.0
-	reopen.anchor_bottom = 1.0
-	reopen.offset_left = -132
+	reopen.anchor_top = 0.0
+	reopen.anchor_bottom = 0.0
+	reopen.offset_left = -150
 	reopen.offset_right = -12
-	reopen.offset_top = -MINI - 74
-	reopen.offset_bottom = -MINI - 34
+	reopen.offset_top = 56
+	reopen.offset_bottom = 98
+	reopen.expand_icon = true
+	reopen.add_theme_constant_override("icon_max_width", 22)
+	reopen.tooltip_text = "Open the build list (B)"
 	reopen.focus_mode = Control.FOCUS_NONE
-	reopen.visible = false
+	reopen.visible = true
 	reopen.pressed.connect(func(): set_production_open(true))
 	add_child(reopen)
 
+## Opens or closes the build list. Opening it clears a selected building, so
+## the list is what shows.
 func set_production_open(on: bool) -> void:
 	prod_open = on
-	_prod.visible = on
-	get_node("Reopen").visible = not on
+	if on and _selected != null:
+		world.select_building(null)
+	_shown_key = ""
+	_update_panel()
+
+func toggle_build() -> void:
+	set_production_open(not prod_open)
+
+## What the right-hand panel shows: "actions" for your own building that
+## produces something, "build" when the player opened the build list,
+## otherwise nothing (selecting a soldier or clicking the ground no longer
+## throws the build list up).
+func _panel_mode() -> String:
+	if _selected != null and _selected.owner == 0 and _selected.built and _has_actions(_selected):
+		return "actions"
+	if prod_open:
+		return "build"
+	return ""
 
 ## A heading inside the list: gold capitals with a hairline rule beneath.
 func _section(title: String) -> void:
@@ -421,6 +448,60 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 		holder.add_child(tally)
 		row.add_child(holder)
 	_list.add_child(b)
+
+func _tile(key: String, title: String, desc: String, cost: Dictionary, seconds: float, locked: String, action: Callable) -> void:
+	var b := Button.new()
+	b.theme_type_variation = "RowButton"
+	b.custom_minimum_size = Vector2((RIGHT_W - 62) / 2.0, 150)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.focus_mode = Control.FOCUS_NONE
+	b.tooltip_text = "%s\n%s" % [title, desc if locked == "" else "%s\n%s" % [locked, desc]]
+	b.set_meta("cost", cost)
+	b.set_meta("locked", locked != "")
+	b.pressed.connect(action)
+	var column := VBoxContainer.new()
+	column.set_anchors_preset(Control.PRESET_FULL_RECT)
+	column.offset_left = 6
+	column.offset_right = -6
+	column.offset_top = 6
+	column.offset_bottom = -6
+	column.add_theme_constant_override("separation", 3)
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(column)
+	var frame := PanelContainer.new()
+	frame.add_theme_stylebox_override("panel", UI.inset(2.0))
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(frame)
+	var pic := TextureRect.new()
+	pic.custom_minimum_size = Vector2(0, 92)
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_set_portrait(pic, key)
+	frame.add_child(pic)
+	if seconds > 0.0:
+		# The build time as a small brass tally in the picture's corner.
+		var tally := PanelContainer.new()
+		tally.add_theme_stylebox_override("panel", UI.box(Color(0.03, 0.06, 0.09, 0.85), Color(UI.TRIM, 0.8), 1, 2, 3.0))
+		tally.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tally.size_flags_horizontal = Control.SIZE_SHRINK_END
+		tally.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		tally.add_child(_text("%ds" % int(seconds), 11, GOLD))
+		frame.add_child(tally)
+	var name := _text(title, 14, UI.CREAM if locked == "" else UI.MUTED, true)
+	name.add_theme_font_size_override("font_size", 14)
+	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name.clip_text = true
+	column.add_child(name)
+	if locked != "":
+		var why := _text(locked, 11, UI.BAD)
+		why.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		why.clip_text = true
+		column.add_child(why)
+		b.modulate = Color(1, 1, 1, 0.7)
+	else:
+		column.add_child(_cost_row(cost))
+	_grid.add_child(b)
 
 func _set_portrait(pic: TextureRect, key: String) -> void:
 	var tex: Texture2D = world.portraits.get_portrait(key)
@@ -518,21 +599,28 @@ func _build_selection() -> void:
 	var commands := HBoxContainer.new()
 	commands.add_theme_constant_override("separation",4)
 	col.add_child(commands)
-	for action in ["Attack-move","Bombard","Repair"]:
+	for action in ["Attack-move","Bombard","Repair","Buy land"]:
 		var button := Button.new()
 		button.text = action
-		button.toggle_mode = action != "Repair"
-		button.tooltip_text = {"Attack-move":"Move to a destination and engage suitable targets along the way. Ctrl + right click.","Bombard":"Fire at a ground position or infrastructure. Alt + right click. Requires a suitable weapon.","Repair":"Repair damaged vehicles or completed buildings for $0.25 per HP. Pauses in combat."}[action]
+		button.toggle_mode = not action in ["Repair", "Buy land"]
+		button.tooltip_text = {"Attack-move":"Move to a destination and engage suitable targets along the way. Ctrl + right click.","Bombard":"Fire at a ground position or infrastructure. Alt + right click. Requires a suitable weapon.","Repair":"Repair damaged vehicles or completed buildings for $0.25 per HP. Pauses in combat.","Buy land":"Buy unclaimed land next to your own for this settlement: $1000 a hex, up to 4 hexes per settlement."}[action]
 		_commands[action] = button
 		button.add_theme_font_size_override("font_size",12)
 		button.custom_minimum_size = Vector2(0,30)
 		button.pressed.connect(func():
-			if action=="Repair":
+			if action=="Buy land":
+				if _selected != null:
+					world.begin_land_purchase(_selected)
+			elif action=="Repair":
 				world.Repairs.request(world,[_selected] if _selected!=null else _selected_units())
 			else:
 				world.order_mode = "bombard" if action=="Bombard" else "attack"
 				world.hud.notice("%s: click a destination on the battlefield." % action))
 		commands.add_child(button)
+	_launch_row = HBoxContainer.new()
+	_launch_row.add_theme_constant_override("separation", 4)
+	_launch_row.visible = false
+	col.add_child(_launch_row)
 	var health := Control.new()
 	health.set_script(preload("res://scripts/health_overlay.gd"))
 	world.health_overlay = health  # the feature probe can hide it
@@ -676,8 +764,8 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 	if silos:
 		_extra.missiles[0].text = "%d/%d" % [world.missiles.stored(), world.missiles.capacity()]
 	_fps.text = "%d FPS" % Engine.get_frames_per_second()
-	if _selected != null and (_selected.dead or _selected.owner != 0):
-		show_building(null)
+	if _selected != null and _selected.dead:
+		show_building(null)  # an enemy building stays selected: its card shows who holds it
 	_update_panel()
 	world.spent("hud", clock)
 
@@ -704,8 +792,6 @@ func show_building(building) -> void:
 		return
 	_selected = building
 	_shown_key = ""
-	if building != null and not prod_open:
-		set_production_open(true)
 	_update_panel()
 
 func _selected_units() -> Array:
@@ -714,12 +800,17 @@ func _selected_units() -> Array:
 func _update_panel() -> void:
 	_update_selection()
 	_update_health_color()
-	var key: String = ("menu:" + build_tab) if _selected == null else "%s:%s:%d" % [_selected.key, _selected.built, _selected.queue.size()]
+	var mode := _panel_mode()
+	_prod.visible = mode != ""
+	get_node("Reopen").visible = mode == ""
+	if mode == "":
+		return
+	var key: String = ("menu:" + build_tab) if mode == "build" else "%s:%s:%d" % [_selected.key, _selected.built, _selected.queue.size()]
 	if _selected != null and _selected.key == "missileSilo":
 		key += ":%s" % str(world.missiles.stock)
 	if world.research:
 		key += ":%d:%s" % [world.research.era, str(world.research.completed_count())]
-	_tabs.visible = _selected == null
+	_tabs.visible = mode == "build"
 	if key == _shown_key:
 		_update_enabled()
 		return
@@ -727,7 +818,7 @@ func _update_panel() -> void:
 	for child in _list.get_children():
 		_list.remove_child(child)
 		child.queue_free()
-	if _selected == null or not _selected.built or not _has_actions(_selected):
+	if mode == "build":
 		_prod_title.text = UI.caps("Build")
 		_prod_hint.text = "Pick a building, then click a hex inside your city. Workers go and build it. Shift keeps placing; right click cancels."
 		_tabs.visible = true
@@ -741,7 +832,18 @@ func _update_panel() -> void:
 func _has_actions(b: Dictionary) -> bool:
 	return not b.def.get("trains", []).is_empty() or b.key in ["missileSilo", "market", "port", "intelAgency"] or b.key in world.research.LABS
 
+## The build list is a grid of cards, two to a row, so a whole category shows
+## at once: a large picture of the building as it stands in the city, its
+## name, its cost and its build time; the description is the tooltip.
+var _grid: GridContainer
+
 func _building_bars() -> void:
+	_grid = GridContainer.new()
+	_grid.columns = 2
+	_grid.add_theme_constant_override("h_separation", 6)
+	_grid.add_theme_constant_override("v_separation", 6)
+	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_list.add_child(_grid)
 	for b in BUILD_MENU[build_tab]:
 		var def: Dictionary = world.building_defs.get(b, {})
 		if def.is_empty():
@@ -749,7 +851,8 @@ func _building_bars() -> void:
 		var why := ""
 		if def.get("unique", false) and world.buildings.any(func(x): return x.owner == 0 and x.key == b and not x.dead):
 			why = "Built (one per nation)"
-		_bar(b, def.name, def.desc, def.cost, float(def.get("buildTime", 0)), why, func(): world.begin_placement(b))
+		_tile(b, def.name, def.desc, def.cost, float(def.get("buildTime", 0)), why, func(): world.begin_placement(b))
+	_grid = null
 	if build_tab == "Economy":
 		_section("Transport")
 		for kind in ["road", "rail"]:
@@ -790,8 +893,8 @@ func _action_bars(b: Dictionary) -> void:
 		_bar(u, def.name, def.desc, cost, float(def.get("trainTime", 10)), locked, func(): world.queue_unit(_selected, u))
 
 func _update_enabled() -> void:
-	for b in _list.get_children():
-		if not (b is Button) or not b.has_meta("cost"):
+	for b in _list.find_children("*", "Button", true, false):
+		if not b.has_meta("cost"):
 			continue
 		var cost: Dictionary = b.get_meta("cost")
 		b.disabled = not economy.can_afford(cost) or b.get_meta("locked", false)
@@ -808,11 +911,20 @@ func _update_selection() -> void:
 	_commands["Attack-move"].disabled = own_units.is_empty() or not own_units.any(func(u):return u.dmg>0)
 	_commands["Bombard"].disabled = not own_units.any(func(u):return u.vehicle and u.dmg>0 and not u.key in ["aaVehicle","samLauncher","submarine","nuclearSub"])
 	_commands["Repair"].disabled = not assets.any(func(e):return e.owner==0 and not e.dead and e.hp<e.max_hp and (e.get("is_building",false) and e.get("built",false) or e.get("vehicle",false)))
+	# Buying land happens at a settlement's town hall: the capital, a city or a village centre.
+	var hall: bool = _selected != null and _selected.owner == 0 and _selected.built and world.territory.RINGS_MAX.has(_selected.key)
+	_commands["Buy land"].visible = hall
+	if hall:
+		var left: int = world.territory.purchases_left(_selected)
+		_commands["Buy land"].text = "Buy land (%d/%d)" % [left, world.territory.PURCHASES]
+		_commands["Buy land"].disabled = left <= 0
 	_commands["Attack-move"].set_pressed_no_signal(world.order_mode=="attack")
 	_commands["Bombard"].set_pressed_no_signal(world.order_mode=="bombard")
 	for button in _commands.values():
 		button.visible = transport_text==""
+	_commands["Buy land"].visible = hall and transport_text==""
 	_sel_stats.visible = false
+	_launch_row.visible = false
 	if transport_text != "":
 		_sel.visible = true
 		_sel_title.text = UI.caps("Road" if world.transport_kind == "road" else "Railway")
@@ -882,6 +994,7 @@ func _update_selection() -> void:
 		var def: Dictionary = world.unit_defs.get(main, {})
 		_sel_info.text = ("%s\nRight click to move or attack; Ctrl + right click to attack-move." % def.get("desc", "")) if units.size() == 1 else "Right click to move or attack; Ctrl + right click to attack-move."
 		_fill_queue([])
+		_fill_launch(own_units.any(func(u): return u.key in world.missiles.LAUNCH_SHIPS))
 		if units.size() == 1 and units[0].get("fly",false):
 			var u: Dictionary = units[0]
 			_sel_info.text = "Ammunition: %d/%d salvos | %s\n%s" % [u.ammo,world.AirOperations.CAPACITY[u.key],u.air_state.capitalize(),"Rearming: %.0f s" % u.service_left if u.air_state == "rearming" else "Empty aircraft return to a supplied air base."]
@@ -890,6 +1003,37 @@ func _update_selection() -> void:
 		_sel_info.text += "\nHP %d / %d%s" % [int(hp),int(max_hp)," · Repair ordered" if units.any(func(u): return u.get("repairing",false)) else ""]
 		return
 	_sel.visible = false
+
+## Missile buttons for a selected strategic submarine or destroyer: one per
+## missile type in the stockpile; press, then click the target.
+func _fill_launch(show: bool) -> void:
+	var ms: Node = world.missiles
+	var sig := ""
+	if show:
+		for m in ms.types():
+			if int(ms.stock[m]) > 0:
+				sig += "%s%d," % [m, ms.stock[m]]
+	_launch_row.visible = show
+	if sig == _launch_sig:
+		return
+	_launch_sig = sig
+	for c in _launch_row.get_children():
+		c.queue_free()
+	if not show:
+		return
+	if sig == "":
+		_launch_row.add_child(_text("No missiles in storage: build them at a Missile Silo.", 12, UI.MUTED))
+		return
+	for m in ms.types():
+		if int(ms.stock[m]) <= 0:
+			continue
+		var b := Button.new()
+		b.text = "Launch %s (%d)" % [ms.def_of(m).name, ms.stock[m]]
+		b.add_theme_font_size_override("font_size", 12)
+		b.focus_mode = Control.FOCUS_NONE
+		b.tooltip_text = "Arm it, then click the target on the map."
+		b.pressed.connect(func(): world.begin_missile(m))
+		_launch_row.add_child(b)
 
 func _show_stats(values: Dictionary) -> void:
 	_sel_stats.visible = true

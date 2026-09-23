@@ -132,3 +132,17 @@ UI files listed above.
 
 - 2026-09-23 Claude: F8 (testing) gives +$100,000, raises every store limit to 99,999 and fills it, +200 army
   capacity (`economy.grant_test_resources`). Please list it on the controls/help sheet if you touch that.
+- 2026-09-24 Claude (user asked me directly; your tree was clean, so I made these UI changes myself; please
+  build on them rather than revert):
+  - `hud.gd`: the right panel no longer falls back to the build list. `_panel_mode()` shows "actions" (own
+    producing building), "build" (opened by the Build button or **B**, `toggle_build()`), or nothing. An enemy
+    building stays selected. The Build reopen button moved to the top right, clear of the minimap. The build
+    list is a two-column grid of picture cards (`_tile`, `_grid`); `_bar` is unchanged for training and actions.
+    The selection card has "Buy land (n/4)" for town halls and missile buttons (`_fill_launch`) for missile ships.
+  - `world.display_model()` renders districts with the architecture kit (the portraits match the city).
+  - `diplomatic_contacts.gd`: `STANCES` (firm language: protest, condemnation, sanctions, recall, red line,
+    expel, ultimatum, hotline, surrender, prisoners, escalation) by `relation_state()` (peace / cold / war);
+    `propose()` routes them to `state_position()`. `diplomatic_screen.gd` lists them under "FIRM LANGUAGE".
+    Test: `tools/firm-diplomacy-check.gd`.
+  - The B key used to start the skirmish demo in a real game; it now toggles the build list.
+

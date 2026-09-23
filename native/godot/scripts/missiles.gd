@@ -59,6 +59,14 @@ func locked(key: String) -> String:
 		return "Needs %s" % world.research.def_of(need).get("name", need)
 	return ""
 
+## Ships that carry and fire missiles from the nation's stockpile: the
+## strategic submarine and the destroyer (the missile ship).
+const LAUNCH_SHIPS := ["nuclearSub", "destroyer"]
+
+## Missile ships of `owner` able to fire (alive, not disabled).
+func launch_ships(owner := 0) -> Array:
+	return world.units.filter(func(u): return u.owner == owner and not u.dead and u.key in LAUNCH_SHIPS and not world.disabled(u))
+
 func silos(owner := 0) -> Array:
 	return world.buildings.filter(func(b): return b.owner == owner and b.key == "missileSilo" and b.built and not b.dead)
 
@@ -91,19 +99,23 @@ func build_time(key: String) -> float:
 
 # ---------------------------------------------------------------- launching
 
-func launch(key: String, target: Vector3) -> String:
+## Fires `key` at `target` from `platform` (a silo or a missile ship), or
+## from the platform nearest the target when none is given.
+func launch(key: String, target: Vector3, platform = null) -> String:
 	if int(stock.get(key, 0)) <= 0:
 		return "No %s in storage." % def_of(key).get("name", key)
-	var from_silos := silos()
-	if from_silos.is_empty():
-		return "Missiles launch from a Missile Silo."
-	var silo: Dictionary = from_silos[0]
-	for s in from_silos:
-		if s.root.position.distance_to(target) < silo.root.position.distance_to(target):
-			silo = s
+	var platforms: Array = silos() + launch_ships()
+	if platforms.is_empty():
+		return "Missiles launch from a Missile Silo, a strategic submarine or a destroyer."
+	if platform == null or platform.dead:
+		platform = platforms[0]
+		for s in platforms:
+			if s.node.position.distance_to(target) < platform.node.position.distance_to(target):
+				platform = s
 	stock[key] -= 1
 	var def := def_of(key)
-	var from: Vector3 = silo.root.position + Vector3.UP * 3.0
+	var ship: bool = not platform.get("is_building", false)
+	var from: Vector3 = platform.node.position + Vector3.UP * (1.5 if ship else 3.0)
 	target.y = maxf(world.height_at(target.x, target.z), float(world.map.seaLevel))
 	var dist := Vector2(target.x - from.x, target.z - from.z).length()
 	var arc: bool = def.get("arc", false)
@@ -113,8 +125,9 @@ func launch(key: String, target: Vector3) -> String:
 	flying.append({"type": key, "node": node, "from": from, "to": target, "t": 0.0, "owner": 0,
 		"dur": clampf(dist / float(def.speed), 2.5, 9.0) if arc else maxf(0.6, dist / float(def.speed)) + 1.0,
 		"arc": arc, "trail": 0.0, "peak": maxf(60.0, dist * 0.45)})
-	world.effects.explosion(from, 1.2, true)
-	world.effects.burn(from, 6.0)
+	world.effects.explosion(from, 1.2, not ship)
+	if not ship:
+		world.effects.burn(from, 6.0)
 	changed.emit()
 	if key == "nuke":
 		return "NUCLEAR MISSILE LAUNCHED. %d left." % stock[key]

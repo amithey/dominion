@@ -101,6 +101,10 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 		var total: int = world.buildings.filter(func(b): return b.owner == n.id and not b.dead).size()
 		n.next_build = maxf(6.0, float(cfg.buildEvery) * randf_range(0.7, 1.1) - total * 0.3) / s
 
+	# Land: a nation with money to spare buys some at its town halls (as the player does).
+	if n.money > 3500.0 and world.territory != null and randf() < delta * s * 0.02:
+		world.territory.ai_purchase(n.id)
+
 	# Self-building: AI sites rise on their own.
 	for b in world.buildings:
 		if b.owner == n.id and not b.built and not b.dead and b.get("ai_build", false) and not cyber:

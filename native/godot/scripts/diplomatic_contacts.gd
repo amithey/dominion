@@ -15,6 +15,25 @@ const TOPICS := {
 	"arms": ["Conventional arms export", "Manufacture one tank at its normal resource cost. Buyer pays $800; delivery in 60 seconds.", 55],
 	"alliance": ["Defence alliance", "Military partnership, reciprocal access and possible support in war.", 85],
 	"demand": ["Demand compensation", "Demand $300. Requires military leverage; refusal costs 8 relations.", 65]}
+## Firm language: statements rather than bargains, as states use them in
+## peacetime, in a cold war and at war. Each is one agenda item; the other
+## government answers for itself, and each has consequences.
+##   key: [name, what it says, the situations it belongs to]
+const STANCES := {
+	"protest": ["Formal protest (demarche)", "Lodge a formal protest over their conduct. They may express regret, or reject it.", ["peace", "cold"]],
+	"condemn": ["Public condemnation", "Condemn them before the world: relations with them fall, their rivals warm to you.", ["peace", "cold", "war"]],
+	"sanctions": ["Threaten sanctions", "Compensation of $250, or you suspend the trade agreement.", ["peace", "cold"]],
+	"recall": ["Recall your ambassador", "A sharp downgrade: relations fall and no contact for four minutes.", ["peace", "cold"]],
+	"redline": ["Red-line warning", "Warn that an attack will be answered. Credible only with the stronger army: it delays their next offensive.", ["cold", "peace"]],
+	"expel": ["Expel their diplomats", "Expel their intelligence officers: their spying on you stalls, and your own network there suffers.", ["cold"]],
+	"ultimatum": ["Ultimatum: withdraw", "Demand their forces leave your land now, or face war. They pull back or declare war.", ["cold"]],
+	"hotline": ["De-escalation hotline", "Propose a crisis line and confidence-building steps: tension eases.", ["cold"]],
+	"surrender": ["Demand surrender", "With overwhelming force: they pay $600 in reparations and make peace.", ["war"]],
+	"prisoners": ["Prisoner exchange", "A humanitarian exchange in the middle of the war: relations improve a little.", ["war"]],
+	"escalation": ["Escalation warning", "Warn of escalation beyond conventional arms. Credible with nuclear missiles in store.", ["war", "cold"]],
+}
+const STANCE_GROUPS := {"peace": "Peacetime", "cold": "Cold war", "war": "Wartime"}
+
 var world: Node
 var clock := 0.0
 var session: Dictionary = {}
@@ -115,8 +134,28 @@ func advance(delta: float) -> void:
 		world.hud.notice("%s: diplomatic contact ready. Open Diplomacy or click their civic building." % world.diplomacy.name_of(n))
 		changed.emit()
 
+## Where relations with nation `n` stand: at war, a cold war (deep hostility,
+## an open operation or border incidents), or peace.
+func relation_state(n: int) -> String:
+	var d: Node = world.diplomacy
+	if d.at_war(0, n):
+		return "war"
+	var incidents: int = int(world.engagement.incidents.get(str(n), 0)) if world.engagement != null else 0
+	var operation: bool = world.engagement != null and world.engagement.active(0, n)
+	if d.rel(0, n) < -30.0 or operation or incidents > 0:
+		return "cold"
+	return "peace"
+
+func title(key: String) -> String:
+	return TOPICS[key][0] if TOPICS.has(key) else (STANCES[key][0] if STANCES.has(key) else key)
+
 func topic_reason(key: String, terms: Dictionary = {}) -> String:
 	if session.is_empty() or session.phase != "talking": return "Wait until contact is established."
+	if STANCES.has(key):
+		if not session.counter.is_empty(): return "Answer the pending counteroffer first."
+		if key in session.used: return "Already said in this contact."
+		if session.used.size() >= int(CHANNELS[session.channel].topics): return "The agenda is full. Conclude this contact."
+		return _stance_eligibility(key)
 	if not TOPICS.has(key): return "Unknown proposal."
 	if not session.counter.is_empty(): return "Answer the pending counteroffer first."
 	if key in session.used: return "Already discussed in this contact."
@@ -159,7 +198,131 @@ func _eligibility(key: String, terms: Dictionary) -> String:
 		if payer == null or payer.money < 300: return "They cannot fund compensation."
 	return ""
 
+func _stance_eligibility(key: String) -> String:
+	var n: int = int(session.nation)
+	var d: Node = world.diplomacy
+	var state := relation_state(n)
+	if not state in STANCES[key][2]:
+		return "Not in %s: this is for %s." % [STANCE_GROUPS[state].to_lower(), ", ".join(PackedStringArray(STANCES[key][2].map(func(g): return STANCE_GROUPS[g].to_lower())))]
+	match key:
+		"sanctions":
+			if not d.pact[0][n]: return "Sanctions need a trade agreement to suspend."
+		"ultimatum":
+			var inside: bool = world.units.any(func(u): return u.owner == n and not u.dead and world.territory.owner_at(u.node.position) == 0)
+			if not inside: return "None of their forces are in your land."
+		"surrender":
+			if d.army_strength(0) < d.army_strength(n) * 2: return "Needs an army at least twice the size of theirs."
+	return ""
+
+## Says `key` to the government in session: its answer and its consequences.
+func state_position(key: String) -> String:
+	var reason := topic_reason(key)
+	if reason != "": return reason
+	var n: int = int(session.nation)
+	var d: Node = world.diplomacy
+	var ai = world.market.ai_nation(n)
+	var mine: int = d.army_strength(0)
+	var theirs: int = maxi(1, d.army_strength(n))
+	session.used.append(key)
+	var outcome := "Delivered"
+	var detail := ""
+	match key:
+		"protest":
+			if d.rel(0, n) > -20.0 and randf() < 0.6:
+				d.change(0, n, 3)
+				outcome = "Regret expressed"
+				detail = "Their government expressed regret; the matter is closed."
+			else:
+				d.change(0, n, -3)
+				outcome = "Rejected"
+				detail = "They rejected the protest as interference."
+		"condemn":
+			d.change(0, n, -10)
+			for i in range(1, d.n):
+				if i != n and not d.defeated(i) and d.rel(i, n) < 0.0:
+					d.change(0, i, 3)
+			detail = "Relations with them -10; nations hostile to them warmed to you (+3)."
+		"sanctions":
+			if ai != null and ai.money >= 250 and (mine >= theirs or d.rel(0, n) > 0.0):
+				ai.money -= 250
+				world.economy.refund({"money": 250})
+				d.change(0, n, -5)
+				outcome = "Conceded"
+				detail = "They paid $250 to keep the trade agreement."
+			else:
+				d.set_flag(d.pact, 0, n, false)
+				d.change(0, n, -8)
+				outcome = "Refused"
+				detail = "They refused; the trade agreement is suspended."
+		"recall":
+			d.change(0, n, -15)
+			cooldowns[str(n)] = clock + 240
+			detail = "Ambassador recalled. Relations -15; no contact for four minutes."
+		"redline":
+			if ai != null and mine >= theirs:
+				ai.next_attack = float(ai.next_attack) + 150.0
+				outcome = "Heeded"
+				detail = "Your warning is credible: their next offensive is put back."
+			else:
+				d.change(0, n, -5)
+				outcome = "Dismissed"
+				detail = "They doubt you can back it up. Relations -5."
+		"expel":
+			if world.espionage != null:
+				world.espionage.enemy_next += 240.0
+				world.espionage.network[n] = clampf(float(world.espionage.network.get(n, 0.0)) - 10.0, 0.0, 100.0)
+			d.change(0, n, -12)
+			detail = "Their officers are gone: their spying on you stalls. They expelled some of yours in turn (network -10). Relations -12."
+		"ultimatum":
+			if mine >= theirs or randf() < 0.4:
+				world.passage.withdraw(n, 0)
+				d.change(0, n, -8)
+				outcome = "Complied"
+				detail = "They are pulling their forces back across the border."
+			else:
+				d.declare_war(n, 0, "%s answered your ultimatum with a declaration of war!" % d.name_of(n))
+				outcome = "War"
+				detail = "They refused and declared war."
+		"hotline":
+			d.change(0, n, 8)
+			if world.engagement != null:
+				world.engagement.incidents[str(n)] = maxi(0, int(world.engagement.incidents.get(str(n), 0)) - 1)
+			outcome = "Agreed"
+			detail = "A crisis line is open. Relations +8; one old incident forgiven."
+		"surrender":
+			if ai != null and ai.money >= 600:
+				ai.money -= 600
+				world.economy.refund({"money": 600})
+				d.make_peace(0, n)
+				outcome = "Surrendered"
+				detail = "They accept defeat: $600 in reparations and peace."
+			else:
+				d.change(0, n, -5)
+				outcome = "Refused"
+				detail = "They cannot or will not pay, and fight on."
+		"prisoners":
+			d.change(0, n, 6)
+			outcome = "Exchanged"
+			detail = "Prisoners exchanged. Relations +6, though the war goes on."
+		"escalation":
+			var nukes: bool = world.missiles != null and int(world.missiles.stock.get("nuke", 0)) > 0
+			if ai != null and (nukes or randf() < 0.3):
+				ai.next_attack = float(ai.next_attack) + (240.0 if nukes else 90.0)
+				outcome = "Heeded"
+				detail = "They take the threat seriously and hold back their offensive."
+			else:
+				d.change(0, n, -6)
+				outcome = "Called your bluff"
+				detail = "Without the means to back it, the warning rings hollow. Relations -6."
+	session.results.append({"key": key, "outcome": outcome, "detail": detail})
+	session.message = "%s — %s. %s" % [STANCES[key][0], outcome, detail]
+	d.changed.emit()
+	changed.emit()
+	return ""
+
 func propose(key: String, terms: Dictionary = {}) -> String:
+	if STANCES.has(key):
+		return state_position(key)
 	var reason := topic_reason(key, terms)
 	if reason != "": return reason
 	var n: int = int(session.nation)
