@@ -5,6 +5,28 @@ The active game is in `native/godot`. The browser implementation in `js/` is a
 reference for rules and exported data. Run `prepare-desktop.ps1` before changing
 or testing the native game; copied art and the engine are local-only.
 
+## Panel and menu redesign
+
+- Every panel, menu and dialog is now built from drawn plates rather than flat
+  boxes: a navy body that catches the light along its top edge and sinks into
+  shadow at the bottom, a double frame (near black outside, bronze inside) and a
+  soft drop shadow, in the manner of the classic 4X interfaces. The plates are
+  small textures generated once at startup in `ui_theme.gd` and stretched as
+  nine patches, so nothing is downloaded and nothing is loaded from disk.
+- Each panel wears a title band: letterspaced serif capitals on a lit strip
+  closed by a gold rule. The production list, the selection panel, the screens
+  window, the research screen, the controls sheet, the foreign office letters
+  and the pause menu all share it.
+- The build tabs are a strip of plates, the open one struck in gold with dark
+  letters. The list below sits in a sunken trough, and every entry is a plate of
+  its own with the picture in a bronze-lipped frame, the name in cream, the cost
+  as resource chips and the build time in a small brass tally.
+- The resource strip is a lit band with hairline dividers between the yields and
+  the era in a brass cartouche at its end; the screen buttons sit in a mounted
+  rack below it. Menu entries are plates with a gold edge that widens and
+  brightens under the cursor, and the pause card is cut to the height of
+  whatever screen is in it.
+
 ## September combat and interface update
 
 - Shared navy/gold panels and serif headings, a cartographic menu ornament, and
@@ -61,6 +83,25 @@ or testing the native game; copied art and the engine are local-only.
   navigation, minimap rotation and operation expiry. `--campaign-test` loads the
   mirrored map with two participants and a different leader, checks remapping and
   save identity. `--capture-polish` saves the strike warning for visual inspection.
+
+## Interface and unit behaviour refinement
+
+- Campaign choices show a live briefing with the selected leader, rival count and
+  difficulty or sandbox rules. Menu pages fade in, scroll when necessary and support
+  keyboard focus. Settings show a numeric volume readout and graphics guidance.
+- Shared slate/brass styling covers dropdowns, sliders, text fields and focus states.
+  Selection commands disable unavailable actions, indicate active targeting modes,
+  explain their controls on hover and restore the saved engagement policy correctly.
+  Health colour changes with damage; construction uses a separate blue fill.
+- Ships accelerate gradually, reduce speed in turns and slow near their destination.
+  Existing coastal collision checks and recovery remain authoritative; this is an
+  improved kinematic movement model, not a rigid-body fluid simulation.
+- AI production requires an operational, supplied facility and spawns at that
+  facility; ships launch in water. Defenders must be able to damage their target.
+  Aircraft returning/rearming or out of ammunition are excluded from new missions,
+  and ships are excluded from land assault waves.
+- The polish regression suite checks contextual commands, AI water launches,
+  supply restrictions and aircraft availability alongside coastal navigation.
 
 ## Launch on this computer
 
@@ -252,8 +293,8 @@ It uses the Forward+ renderer:
   studio, name, what it does, cost in resource icons and time; a selection panel bottom
   left with a large picture, health, status and the training queue as small pictures;
   a minimap bottom right (click or drag to move the camera) and notices as small cards.
-  One theme styles every panel, button, tooltip and menu: dark teal with gold trim and
-  Windows' Bahnschrift font. The icons are drawn by `tools/make-icons.py` (Pillow) into
+  One theme styles every panel, button, tooltip and menu: navy plates in a bronze
+  frame with gold rules and title bands, in Windows' Bahnschrift with Palatino headings. The icons are drawn by `tools/make-icons.py` (Pillow) into
   `ui/icons/`. F1 shows the controls.
 - Weapons: aircraft, artillery, rocket launchers, SAMs, rocket infantry and submarines fire
   projectiles that are seen to fly and explode where they land: bombers line up over the

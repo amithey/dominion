@@ -141,6 +141,38 @@ static func run(w: Node,campaign: bool) -> void:
 		if outline.size()!=4 or turned.size()!=4 or outline[0].distance_to(turned[0])<1:
 			errors.append("Minimap view failed to rotate")
 		minimap.free()
+		# Commands must reflect ownership, damage and the selected weapon class.
+		for u in w.units:
+			u.selected = false
+		tank.selected = true
+		w.hud._selected = null
+		w.hud.transport_text = ""
+		w.hud._update_selection()
+		if w.hud._commands["Repair"].disabled or w.hud._commands["Bombard"].disabled:
+			errors.append("Damaged tank lost its contextual commands")
+		tank.selected = false
+		rifle.selected = true
+		w.hud._update_selection()
+		if not w.hud._commands["Repair"].disabled or not w.hud._commands["Attack-move"].disabled:
+			errors.append("Enemy selection exposes player commands")
+		# AI production comes from a supplied, operational facility, including water launches.
+		var dock := Node3D.new()
+		w.add_child(dock)
+		dock.position = coast
+		var site := {"owner":1,"key":"shipyard","built":true,"dead":false,"supplied":true,"root":dock,"footprint":12.0}
+		w.buildings.append(site)
+		var count: int = w.units.size()
+		if not w.ai.deploy(1,"gunboat") or w.units.size()!=count+1 or not w.is_water(w.units[-1].node.position):
+			errors.append("AI ship did not launch in water")
+		site.supplied = false
+		if site in w.ai.production_sites(1,"gunboat"):
+			errors.append("AI uses an unsupplied facility")
+		w.buildings.erase(site)
+		dock.queue_free()
+		var aircraft: Dictionary = w.spawn_unit("jet",w.start,1)
+		aircraft.ammo = 0
+		if w.ai.available(aircraft):
+			errors.append("AI orders an empty aircraft into combat")
 	for kind in ["AudioStreamPlayer","AudioStreamPlayer3D"]:
 		for player in w.find_children("*",kind,true,false):
 			player.stop()

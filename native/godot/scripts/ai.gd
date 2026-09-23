@@ -113,15 +113,13 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	if n.next_train <= 0.0 and not cyber:
 		var army: Array = world.units.filter(func(u): return u.owner == n.id and not u.dead)
 		if army.size() < int(cfg.maxArmy):
-			var options: Array = train_pool.filter(func(k): return world.buildings.any(func(b): return b.owner == n.id and b.built and not b.dead and b.key == TRAINED_AT[k]))
+			var options: Array = train_pool.filter(func(k): return not production_sites(n.id,k).is_empty())
 			if not options.is_empty():
 				var key: String = options[randi() % options.size()]
 				var cost := weighted_cost(world.unit_defs[key].cost)
 				if n.money >= cost:
-					n.money -= cost
-					var a := randf() * TAU
-					var at: Vector3 = home.root.position + Vector3(cos(a), 0, sin(a)) * (home.footprint * 0.6 + 8.0)
-					world.spawn_unit(key, at, n.id)
+					if deploy(n.id,key):
+						n.money -= cost
 		n.next_train = float(cfg.trainEvery) * randf_range(0.8, 1.2) * (0.55 if not world.diplomacy.enemies_of(n.id).is_empty() else 1.0) / s
 
 	# Defence: a threat near the capital brings every unit home.
@@ -132,9 +130,10 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 			if u.dead or u.owner == n.id or not world.hostile(n.id, u.owner):
 				continue
 			if u.node.position.distance_to(centre) < 70.0:
-				var defenders: Array = world.units.filter(func(d): return d.owner == n.id and not d.dead and d.dmg > 0.0)
-				world.order_move(defenders, u.node.position, true)
-				break
+				var defenders: Array = world.units.filter(func(d): return d.owner == n.id and available(d) and world.effectiveness(d,u)>0)
+				if not defenders.is_empty():
+					world.order_attack(defenders, u)
+					break
 
 	# Attack waves.
 	# Agents inside the nation (intel 60+) report an attack half a minute early.
@@ -157,7 +156,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 				d.declare_war(n.id, worst)
 		var enemies: Array = d.enemies_of(n.id)
 		if not enemies.is_empty():
-			var army: Array = world.units.filter(func(u): return u.owner == n.id and not u.dead and u.dmg > 0.0)
+			var army: Array = world.units.filter(func(u): return u.owner == n.id and available(u) and not u.get("naval",false))
 			var guard: int = mini(3, army.size() / 4)
 			var squad: Array = army.slice(guard, guard + maxi(int(cfg.squad), int(army.size() * 0.6)))
 			var target = nearest_enemy_asset(home.root.position, enemies)
@@ -168,6 +167,25 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 			n.next_attack = minf(n.next_attack, float(cfg.firstAttack) * 0.35 / s)
 
 # Money-equivalent price (ai.js weights materials the AI does not stockpile).
+func available(u: Dictionary) -> bool:
+	return not u.dead and u.dmg>0 and not world.disabled(u) and (not u.get("fly",false) or u.get("air_state","ready")=="ready" and u.get("ammo",0)>0)
+
+func production_sites(owner: int, key: String) -> Array:
+	return world.buildings.filter(func(b):return b.owner==owner and b.key==TRAINED_AT.get(key,"") and b.built and not b.dead and b.get("supplied",true) and not world.disabled(b))
+
+func deploy(owner: int, key: String) -> bool:
+	for site in production_sites(owner,key):
+		var at: Vector3 = site.root.position
+		var door = world.water_near(at) if key in world.NAVAL else world.land_point(at+Vector3(site.footprint*0.7+5,0,0),20.0)
+		if door==null:
+			continue
+		var unit: Dictionary = world.spawn_unit(key,door,owner)
+		var out: Vector3 = door-at
+		unit.heading = atan2(out.x,out.z)
+		world.place_on_ground(unit,door)
+		return true
+	return false
+
 func weighted_cost(cost: Dictionary) -> float:
 	return float(cost.get("money", 0)) + float(cost.get("iron", 0)) * 2.0 + float(cost.get("oil", 0)) * 3.0 + float(cost.get("silicon", 0)) * 4.0
 

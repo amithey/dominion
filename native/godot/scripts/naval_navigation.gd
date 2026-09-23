@@ -58,6 +58,8 @@ func move(u: Dictionary, goal: Vector3, delta: float) -> void:
 			u.repath = 1.0
 	if u.path.is_empty():
 		u.moving = false
+		u.sailing_speed = 0.0
+		world.place_on_ground(u,u.node.position)
 		return
 	while u.path.size()>1 and Vector2(u.path[0].x-u.node.position.x,u.path[0].z-u.node.position.z).length()<6:
 		u.path.remove_at(0)
@@ -66,6 +68,7 @@ func move(u: Dictionary, goal: Vector3, delta: float) -> void:
 	if u.path.size()==1 and to.length()<4:
 		u.target = null
 		u.moving = false
+		u.sailing_speed = 0.0
 		world.place_on_ground(u,u.node.position)
 		return
 	var desired := atan2(to.x,to.z)
@@ -83,11 +86,19 @@ func move(u: Dictionary, goal: Vector3, delta: float) -> void:
 			best = angle
 	u.heading = rotate_toward(u.heading,best,delta*0.8)
 	var direction := Vector3(sin(u.heading),0,cos(u.heading))
-	var next: Vector3 = u.node.position+direction*u.speed*0.8*delta
+	# Ease into motion, slow during a sharp turn and brake before the final waypoint.
+	var alignment := clampf(cos(angle_difference(u.heading,best)),0.15,1.0)
+	var cruise: float = u.speed*0.8
+	var braking: float = minf(1.0,to.length()/16.0) if u.path.size()==1 else 1.0
+	var wanted: float = cruise*alignment*braking if score<INF else 0.0
+	u.sailing_speed = move_toward(float(u.get("sailing_speed",0.0)),wanted,cruise*delta*0.6)
+	var next: Vector3 = u.node.position+direction*u.sailing_speed*delta
 	# Old saves may contain a ship in shallows accepted by the previous mover.
 	# Permit only motion toward deeper water until it reaches safe depth again.
 	var depth_now: float = world.height_at(u.node.position.x,u.node.position.z)
 	var depth_next: float = world.height_at(next.x,next.z)
 	var escaping: bool = not world.is_water(u.node.position) and depth_next<depth_now and depth_next<float(world.map.seaLevel)-0.2
 	u.moving = score < INF and (world.is_water(next) or escaping) and world.is_water(next+direction*maxf(3,u.length*0.45))
+	if not u.moving:
+		u.sailing_speed = 0.0
 	world.place_on_ground(u,next if u.moving else u.node.position)

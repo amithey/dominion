@@ -54,6 +54,9 @@ var _sel_sub: Label
 var _sel_hp: ProgressBar
 var _sel_info: Label
 var _sel_queue: HBoxContainer
+var _commands := {}
+var _policy: OptionButton
+var _health_color := Color.TRANSPARENT
 var _notices: VBoxContainer
 var _fps: Label
 var _help: PanelContainer
@@ -67,17 +70,18 @@ func setup(world_node: Node, economy_node: Node) -> void:
 	_build_production()
 	_build_selection()
 	_build_minimap()
-	# Notices rise from the bottom centre, between the selection panel and the minimap.
+	# Keep notices above the battlefield, clear of the selection commands.
 	_notices = VBoxContainer.new()
 	_notices.anchor_left = 0.5
 	_notices.anchor_right = 0.5
-	_notices.anchor_top = 1.0
-	_notices.anchor_bottom = 1.0
+	_notices.anchor_top = 0.0
+	_notices.anchor_bottom = 0.0
 	_notices.offset_left = -236
 	_notices.offset_right = 236
-	_notices.offset_bottom = -16
-	_notices.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_notices.alignment = BoxContainer.ALIGNMENT_END
+	_notices.offset_top = 106
+	_notices.offset_bottom = 106
+	_notices.grow_vertical = Control.GROW_DIRECTION_END
+	_notices.alignment = BoxContainer.ALIGNMENT_BEGIN
 	_notices.add_theme_constant_override("separation", 6)
 	_notices.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_notices)
@@ -134,28 +138,45 @@ func _cost_row(cost: Dictionary) -> HBoxContainer:
 
 # ---------------------------------------------------------------- top bar
 
+## A thin bronze divider, the way a 4X game parts one yield from the next.
+func _divider(height := 24) -> Control:
+	var holder := CenterContainer.new()
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var line := ColorRect.new()
+	line.color = Color(UI.TRIM, 0.55)
+	line.custom_minimum_size = Vector2(1, height)
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(line)
+	return holder
+
 func _build_top_bar() -> void:
 	var bar := PanelContainer.new()
-	var style := UI.box(Color(UI.BG, 0.96), UI.TRIM, 0, 0, 6.0, 8)
-	style.border_width_bottom = 2
+	# The yield strip: a lit band closed by a gold rule, as a 4X game wears it.
+	var style := UI.band(5.0, Color("223550"), Color("091422"), UI.GOLD, 2)
 	style.content_margin_left = 14
-	style.content_margin_right = 10
+	style.content_margin_right = 12
+	style.content_margin_bottom = 7
 	bar.add_theme_stylebox_override("panel", style)
 	bar.anchor_right = 1.0
-	bar.offset_bottom = 46
+	bar.offset_bottom = 48
 	add_child(bar)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 13)
+	row.add_theme_constant_override("separation", 8)
 	bar.add_child(row)
+	var first := true
 	for r in RESOURCES:
+		if not first:
+			row.add_child(_divider())
+		first = false
 		var chip := HBoxContainer.new()
 		chip.add_theme_constant_override("separation", 5)
 		chip.tooltip_text = r[2]
 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
-		chip.add_child(_icon(r[1], 26))
+		chip.add_child(_icon(r[1], 24))
 		var value := _text("0", 17, UI.CREAM)
 		chip.add_child(value)
 		var rate := _text("+0", 13, UI.GOOD)
+		rate.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 		chip.add_child(rate)
 		row.add_child(chip)
 		_chips[r[0]] = [value, rate, chip]
@@ -164,27 +185,41 @@ func _build_top_bar() -> void:
 			["research", "research", "Research points and their rate. Press Y for the research tree."],
 			["land", "land", "Land held: territory cells. Press T for borders."],
 			["missiles", "missile", "Missiles stored against Ammo Depot capacity."]]:
+		row.add_child(_divider())
 		var chip := HBoxContainer.new()
 		chip.add_theme_constant_override("separation", 5)
 		chip.tooltip_text = extra[2]
 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
-		chip.add_child(_icon(extra[1], 24))
+		chip.add_child(_icon(extra[1], 22))
 		var value := _text("", 16, UI.CREAM)
 		chip.add_child(value)
 		row.add_child(chip)
 		_extra[extra[0]] = [value, chip]
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(spacer)
-	_era = _text("", 15, GOLD, true)
-	row.add_child(_era)
-	# The screens, as in Civilization: a row of icon buttons under the top bar.
+	# The era is cut into a small brass cartouche pinned to the right end of the
+	# strip, so a nation with every store full never pushes it off the screen.
+	var cartouche := PanelContainer.new()
+	cartouche.add_theme_stylebox_override("panel", UI.plate(Color("2d456a"), Color("13223a"), UI.GOLD, 7.0))
+	cartouche.tooltip_text = "The era your nation has reached. Press Y for the research tree."
+	_era = _text("", 15, UI.BRIGHT, true)
+	_era.add_theme_font_size_override("font_size", 15)
+	cartouche.add_child(_era)
+	var right_end := HBoxContainer.new()
+	right_end.anchor_right = 1.0
+	right_end.offset_right = -12
+	right_end.offset_top = 6
+	right_end.alignment = BoxContainer.ALIGNMENT_END
+	right_end.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(right_end)
+	right_end.add_child(cartouche)
+	# The screens: a mounted rack of round brass buttons under the strip.
+	var rack := PanelContainer.new()
+	rack.add_theme_stylebox_override("panel", UI.plate(Color("16273e"), Color("0a1220"), UI.TRIM, 5.0, UI.LIFT, Color(0, 0, 0, 0), 0, 6))
+	rack.offset_left = 12
+	rack.offset_top = 54
+	add_child(rack)
 	var screens := HBoxContainer.new()
-	screens.add_theme_constant_override("separation", 6)
-	screens.offset_left = 12
-	screens.offset_top = 54
-	add_child(screens)
+	screens.add_theme_constant_override("separation", 5)
+	rack.add_child(screens)
 	row = screens
 	for b in [["research", "Research (Y)", func(): toggle_research()], ["diplomacy", "Diplomacy (G)", func(): toggle_diplomacy()],
 			["market", "World market (M)", func(): toggle_panel("market")], ["intel", "Intelligence (I)", func(): toggle_panel("intel")],
@@ -192,10 +227,10 @@ func _build_top_bar() -> void:
 		var button := Button.new()
 		button.icon = UI.icon(b[0])
 		button.expand_icon = true
-		button.custom_minimum_size = Vector2(46, 42)
-		button.add_theme_stylebox_override("normal", UI.box(Color(UI.BG, 0.92), UI.TRIM, 1, 21, 6.0, 6))
-		button.add_theme_stylebox_override("hover", UI.box(Color("233841"), GOLD, 2, 21, 6.0, 6))
-		button.add_theme_stylebox_override("pressed", UI.box(Color("2c2a1d"), GOLD, 2, 21, 6.0, 6))
+		button.custom_minimum_size = Vector2(44, 44)
+		button.add_theme_stylebox_override("normal", UI.box(Color("1b2c44"), Color(UI.TRIM, 0.95), 2, 22, 7.0))
+		button.add_theme_stylebox_override("hover", UI.box(Color("2c4568"), UI.BRIGHT, 2, 22, 7.0))
+		button.add_theme_stylebox_override("pressed", UI.box(Color("6d5624"), UI.BRIGHT, 2, 22, 7.0))
 		button.tooltip_text = b[1]
 		button.focus_mode = Control.FOCUS_NONE
 		button.pressed.connect(b[2])
@@ -212,34 +247,55 @@ func _build_production() -> void:
 	_prod.offset_right = -12
 	_prod.offset_top = 56
 	_prod.offset_bottom = -MINI - 34
+	# The panel itself carries no padding: the title band runs edge to edge.
+	_prod.add_theme_stylebox_override("panel", UI.plate(Color(UI.PANEL_TOP, 0.97), Color(UI.PANEL_LOW, 0.97), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 8))
 	add_child(_prod)
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 6)
+	column.add_theme_constant_override("separation", 0)
 	_prod.add_child(column)
+	# The title band: letterspaced capitals on brass, closed by a gold rule.
+	var head_band := PanelContainer.new()
+	head_band.add_theme_stylebox_override("panel", UI.band(8.0))
+	column.add_child(head_band)
 	var head := HBoxContainer.new()
-	column.add_child(head)
-	_prod_title = _text("BUILD", 19, UI.CREAM, true)
+	head.add_theme_constant_override("separation", 8)
+	head_band.add_child(head)
+	_prod_title = _text(UI.caps("Build"), 18, UI.BRIGHT, true)
+	_prod_title.add_theme_font_size_override("font_size", 18)
 	_prod_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_prod_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	head.add_child(_prod_title)
 	var hide := Button.new()
 	hide.text = "—"
+	hide.custom_minimum_size = Vector2(30, 24)
 	hide.tooltip_text = "Hide the production list (the Build button brings it back)"
 	hide.focus_mode = Control.FOCUS_NONE
 	hide.pressed.connect(func(): set_production_open(false))
 	head.add_child(hide)
+	# Everything under the band keeps its own margin.
+	var body := MarginContainer.new()
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	for side in ["left", "right", "top", "bottom"]:
+		body.add_theme_constant_override("margin_" + side, 10)
+	column.add_child(body)
+	var inner := VBoxContainer.new()
+	inner.add_theme_constant_override("separation", 7)
+	body.add_child(inner)
 	_prod_hint = _text("", 13, UI.MUTED)
 	_prod_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_prod_hint.custom_minimum_size = Vector2(RIGHT_W - 24, 0)
-	column.add_child(_prod_hint)
+	_prod_hint.custom_minimum_size = Vector2(RIGHT_W - 56, 0)
+	inner.add_child(_prod_hint)
 	_tabs = HBoxContainer.new()
-	_tabs.add_theme_constant_override("separation", 4)
-	column.add_child(_tabs)
+	_tabs.add_theme_constant_override("separation", 3)
+	inner.add_child(_tabs)
 	for tab in BUILD_MENU:
 		var t := Button.new()
 		t.text = tab
+		t.theme_type_variation = "TabButton"
 		t.toggle_mode = true
 		t.button_pressed = tab == build_tab
 		t.focus_mode = Control.FOCUS_NONE
+		t.custom_minimum_size = Vector2(0, 30)
 		t.add_theme_font_size_override("font_size", 13)
 		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		t.pressed.connect(func():
@@ -249,10 +305,15 @@ func _build_production() -> void:
 			_shown_key = ""
 			_update_panel())
 		_tabs.add_child(t)
+	# The list sits in a sunken trough, the way a 4X production list does.
+	var trough := PanelContainer.new()
+	trough.add_theme_stylebox_override("panel", UI.inset(5.0))
+	trough.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	inner.add_child(trough)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	column.add_child(scroll)
+	trough.add_child(scroll)
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 4)
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -281,16 +342,27 @@ func set_production_open(on: bool) -> void:
 	_prod.visible = on
 	get_node("Reopen").visible = not on
 
+## A heading inside the list: gold capitals with a hairline rule beneath.
 func _section(title: String) -> void:
-	var l := _text(title.to_upper(), 13, GOLD, true)
+	var holder := VBoxContainer.new()
+	holder.add_theme_constant_override("separation", 3)
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var l := _text(UI.caps(title), 13, GOLD, true)
 	l.add_theme_font_size_override("font_size", 13)
-	_list.add_child(l)
+	holder.add_child(l)
+	var rule := ColorRect.new()
+	rule.color = Color(UI.TRIM, 0.75)
+	rule.custom_minimum_size = Vector2(0, 1)
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(rule)
+	_list.add_child(holder)
 
 ## One production bar: picture, name, one line of what it does, cost chips,
 ## time. Disabled (dimmed) when it cannot be afforded or is locked.
 func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: float, locked: String, action: Callable) -> void:
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(RIGHT_W - 28, 70)
+	b.theme_type_variation = "RowButton"
+	b.custom_minimum_size = Vector2(0, 76)
 	b.focus_mode = Control.FOCUS_NONE
 	b.tooltip_text = desc if locked == "" else "%s\n%s" % [locked, desc]
 	b.set_meta("cost", cost)
@@ -298,23 +370,29 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 	b.pressed.connect(action)
 	var row := HBoxContainer.new()
 	row.set_anchors_preset(Control.PRESET_FULL_RECT)
-	row.offset_left = 6
-	row.offset_right = -8
-	row.offset_top = 4
-	row.offset_bottom = -4
+	row.offset_left = 7
+	row.offset_right = -9
+	row.offset_top = 6
+	row.offset_bottom = -6
 	row.add_theme_constant_override("separation", 10)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(row)
+	# The picture sits in a sunken bronze-lipped frame, as a 4X entry does.
+	var frame := PanelContainer.new()
+	frame.add_theme_stylebox_override("panel", UI.inset(2.0))
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(frame)
 	var pic := TextureRect.new()
 	pic.custom_minimum_size = Vector2(80, 60)
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_set_portrait(pic, key)
-	row.add_child(pic)
+	frame.add_child(pic)
 	var text := VBoxContainer.new()
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	text.add_theme_constant_override("separation", 1)
+	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	text.add_theme_constant_override("separation", 2)
 	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(text)
 	var name := _text(title, 15, UI.CREAM, true)
@@ -322,14 +400,20 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 	text.add_child(name)
 	var line := _text(locked if locked != "" else desc, 12, UI.BAD if locked != "" else UI.MUTED)
 	line.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	line.custom_minimum_size = Vector2(200, 0)
+	line.custom_minimum_size = Vector2(190, 0)
 	line.clip_text = true
 	text.add_child(line)
 	text.add_child(_cost_row(cost))
 	if seconds > 0.0:
-		var time := _text("%ds" % int(seconds), 13, UI.MUTED)
-		time.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-		row.add_child(time)
+		# The build time in a small brass tally at the end of the row.
+		var holder := CenterContainer.new()
+		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var tally := PanelContainer.new()
+		tally.add_theme_stylebox_override("panel", UI.box(Color("081018"), Color(UI.TRIM, 0.8), 1, 2, 5.0))
+		tally.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tally.add_child(_text("%ds" % int(seconds), 12, GOLD))
+		holder.add_child(tally)
+		row.add_child(holder)
 	_list.add_child(b)
 
 func _set_portrait(pic: TextureRect, key: String) -> void:
@@ -359,12 +443,28 @@ func _build_selection() -> void:
 	_sel.offset_top = -272
 	_sel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_sel.offset_bottom = -12
+	_sel.add_theme_stylebox_override("panel", UI.plate(Color(UI.PANEL_TOP, 0.97), Color(UI.PANEL_LOW, 0.97), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 8))
 	add_child(_sel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 0)
+	_sel.add_child(column)
+	# The name of what is selected rides its own band, as in a 4X portrait.
+	var head_band := PanelContainer.new()
+	head_band.add_theme_stylebox_override("panel", UI.band(8.0))
+	column.add_child(head_band)
+	_sel_title = _text("", 19, UI.BRIGHT, true)
+	_sel_title.add_theme_font_size_override("font_size", 19)
+	head_band.add_child(_sel_title)
+	var body := MarginContainer.new()
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	for side in ["left", "right", "top", "bottom"]:
+		body.add_theme_constant_override("margin_" + side, 10)
+	column.add_child(body)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	_sel.add_child(row)
+	body.add_child(row)
 	var frame := PanelContainer.new()
-	frame.add_theme_stylebox_override("panel", UI.box(Color("0a1418"), UI.TRIM, 1, 6, 2.0))
+	frame.add_theme_stylebox_override("panel", UI.inset(3.0))
 	row.add_child(frame)
 	_sel_pic = TextureRect.new()
 	_sel_pic.custom_minimum_size = Vector2(152, 144)
@@ -373,22 +473,22 @@ func _build_selection() -> void:
 	frame.add_child(_sel_pic)
 	var col := VBoxContainer.new()
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col.add_theme_constant_override("separation", 4)
+	col.add_theme_constant_override("separation", 5)
 	row.add_child(col)
-	_sel_title = _text("", 20, UI.CREAM, true)
-	col.add_child(_sel_title)
 	_sel_sub = _text("", 13, GOLD)
+	_sel_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(_sel_sub)
 	_sel_hp = ProgressBar.new()
 	_sel_hp.custom_minimum_size = Vector2(0, 14)
 	_sel_hp.custom_minimum_size.y = 22
 	_sel_hp.show_percentage = true
-	_sel_hp.add_theme_stylebox_override("fill",UI.box(Color("518d69"),Color("a9d8a9"),0,2,0))
+	_sel_hp.add_theme_stylebox_override("fill",UI.plate(Color("6fae7a"),Color("30684a"),Color(0,0,0,0),0.0,Color(1,1,1,0.25)))
 	col.add_child(_sel_hp)
 	var commands := HBoxContainer.new()
 	commands.add_theme_constant_override("separation",4)
 	col.add_child(commands)
 	var policy := OptionButton.new()
+	_policy = policy
 	policy.add_item("Limited operation · warning before strike")
 	policy.add_item("Full war · warning before declaration")
 	policy.clip_text = true
@@ -397,7 +497,11 @@ func _build_selection() -> void:
 	for action in ["Attack-move","Bombard","Repair"]:
 		var button := Button.new()
 		button.text = action
+		button.toggle_mode = action != "Repair"
+		button.tooltip_text = {"Attack-move":"Move to a destination and engage suitable targets along the way. Ctrl + right click.","Bombard":"Fire at a ground position or infrastructure. Alt + right click. Requires a suitable weapon.","Repair":"Repair damaged vehicles or completed buildings for $0.25 per HP. Pauses in combat."}[action]
+		_commands[action] = button
 		button.add_theme_font_size_override("font_size",12)
+		button.custom_minimum_size = Vector2(0,30)
 		button.pressed.connect(func():
 			if action=="Repair":
 				world.Repairs.request(world,[_selected] if _selected!=null else _selected_units())
@@ -432,11 +536,14 @@ func _build_minimap() -> void:
 	frame.offset_right = -12
 	frame.offset_top = -MINI - 24
 	frame.offset_bottom = -12
-	frame.add_theme_stylebox_override("panel", UI.box(Color(UI.BG, 0.96), UI.TRIM, 1, 6, 5.0, 8))
+	frame.add_theme_stylebox_override("panel", UI.plate(Color(UI.PANEL_TOP, 0.97), Color(UI.PANEL_LOW, 0.97), UI.TRIM, 5.0, UI.LIFT, Color(0, 0, 0, 0), 0, 7))
 	add_child(frame)
+	var well := PanelContainer.new()
+	well.add_theme_stylebox_override("panel", UI.inset(2.0))
+	frame.add_child(well)
 	var map := preload("res://scripts/minimap.gd").new()
 	map.custom_minimum_size = Vector2(MINI, MINI)
-	frame.add_child(map)
+	well.add_child(map)
 	map.setup(world)
 	_fps = _text("", 11, Color(1, 1, 1, 0.4))
 	_fps.anchor_left = 1.0
@@ -461,10 +568,24 @@ func _build_help() -> void:
 	_help.offset_right = 300
 	_help.offset_top = -210
 	_help.visible = false
+	_help.add_theme_stylebox_override("panel", UI.plate(Color("17273c"), Color("080f1a"), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 9))
 	add_child(_help)
+	var sheet := VBoxContainer.new()
+	sheet.add_theme_constant_override("separation", 0)
+	_help.add_child(sheet)
+	var head_band := PanelContainer.new()
+	head_band.add_theme_stylebox_override("panel", UI.band(9.0))
+	sheet.add_child(head_band)
+	var head := _text(UI.caps("Controls"), 19, UI.BRIGHT, true)
+	head.add_theme_font_size_override("font_size", 19)
+	head_band.add_child(head)
+	var body := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		body.add_theme_constant_override("margin_" + side, 14)
+	sheet.add_child(body)
 	var col := VBoxContainer.new()
-	_help.add_child(col)
-	col.add_child(_text("CONTROLS", 20, UI.CREAM, true))
+	col.add_theme_constant_override("separation", 5)
+	body.add_child(col)
 	for line in [["Move the camera", "W A S D or the arrow keys, the screen edge, or drag with the middle mouse button"],
 			["Turn / tilt / zoom", "Q E  ·  R F  ·  mouse wheel (zooms toward the cursor)"],
 			["Select", "Click a unit or building, or drag a box around units"],
@@ -554,6 +675,7 @@ func _selected_units() -> Array:
 
 func _update_panel() -> void:
 	_update_selection()
+	_update_health_color()
 	var key: String = ("menu:" + build_tab) if _selected == null else "%s:%s:%d" % [_selected.key, _selected.built, _selected.queue.size()]
 	if _selected != null and _selected.key == "missileSilo":
 		key += ":%s" % str(world.missiles.stock)
@@ -568,12 +690,12 @@ func _update_panel() -> void:
 		_list.remove_child(child)
 		child.queue_free()
 	if _selected == null or not _selected.built or not _has_actions(_selected):
-		_prod_title.text = "BUILD"
+		_prod_title.text = UI.caps("Build")
 		_prod_hint.text = "Pick a building, then click a hex inside your city. Workers go and build it. Shift keeps placing; right click cancels."
 		_tabs.visible = true
 		_building_bars()
 	else:
-		_prod_title.text = _selected.def.name.to_upper()
+		_prod_title.text = UI.caps(_selected.def.name)
 		_prod_hint.text = "Choose what this building produces. Up to five orders queue here."
 		_action_bars(_selected)
 	_update_enabled()
@@ -643,9 +765,21 @@ func _update_enabled() -> void:
 ## The selection panel: a building, a group of units, or road planning.
 func _update_selection() -> void:
 	var units := _selected_units()
+	var own_units: Array = units.filter(func(u):return u.owner==0 and not u.dead) if _selected==null else []
+	var assets: Array = [_selected] if _selected!=null else own_units
+	_commands["Attack-move"].disabled = own_units.is_empty() or not own_units.any(func(u):return u.dmg>0)
+	_commands["Bombard"].disabled = not own_units.any(func(u):return u.vehicle and u.dmg>0 and not u.key in ["aaVehicle","samLauncher","submarine","nuclearSub"])
+	_commands["Repair"].disabled = not assets.any(func(e):return e.owner==0 and not e.dead and e.hp<e.max_hp and (e.get("is_building",false) and e.get("built",false) or e.get("vehicle",false)))
+	_commands["Attack-move"].set_pressed_no_signal(world.order_mode=="attack")
+	_commands["Bombard"].set_pressed_no_signal(world.order_mode=="bombard")
+	_policy.select(0 if world.engagement.policy=="limited" else 1)
+	_policy.tooltip_text = "Limited operations damage relations without automatically declaring full war. Every first strike requires authorization."
+	for button in _commands.values():
+		button.visible = transport_text==""
+	_policy.visible = transport_text==""
 	if transport_text != "":
 		_sel.visible = true
-		_sel_title.text = "ROAD" if world.transport_kind == "road" else "RAILWAY"
+		_sel_title.text = UI.caps("Road" if world.transport_kind == "road" else "Railway")
 		_sel_sub.text = "Supply network"
 		_sel_hp.visible = false
 		_sel_info.text = transport_text
@@ -656,7 +790,7 @@ func _update_selection() -> void:
 		var b: Dictionary = _selected
 		_sel.visible = true
 		_show_pic(b.key)
-		_sel_title.text = b.def.name
+		_sel_title.text = UI.caps(b.def.name)
 		_sel_sub.text = "Under construction" if not b.built else String(b.def.get("cat", "")).capitalize()
 		_sel_hp.visible = true
 		if not b.built:
@@ -696,7 +830,7 @@ func _update_selection() -> void:
 				main = k
 		_show_pic(main)
 		var name: String = world.unit_defs.get(main, {}).get("name", main)
-		_sel_title.text = name if units.size() == 1 else "%d units" % units.size()
+		_sel_title.text = UI.caps(name if units.size() == 1 else "%d units" % units.size())
 		var parts := PackedStringArray()
 		for k in counts:
 			parts.append("%d %s" % [counts[k], world.unit_defs.get(k, {}).get("name", k)])
@@ -715,6 +849,16 @@ func _update_selection() -> void:
 		_sel_info.text += "\nHP %d / %d%s" % [int(hp),int(max_hp)," · Repair ordered" if units.any(func(u): return u.get("repairing",false)) else ""]
 		return
 	_sel.visible = false
+
+func _update_health_color() -> void:
+	var fraction := _sel_hp.value / maxf(_sel_hp.max_value,1.0)
+	var color := UI.GOOD if fraction>0.6 else (UI.GOLD if fraction>0.3 else UI.BAD)
+	if _selected!=null and not _selected.built:
+		color = Color("82b2dc")
+	if color != _health_color:
+		_health_color = color
+		_sel_hp.add_theme_stylebox_override("fill",UI.plate(color.lightened(0.15),color.darkened(0.3),Color(0,0,0,0),0.0,Color(1,1,1,0.25)))
+	_sel_hp.tooltip_text = "%d / %d HP" % [int(_sel_hp.value),int(_sel_hp.max_value)] if _selected==null or _selected.built else "Construction progress"
 
 var _pic_key := ""
 func _show_pic(key: String) -> void:
@@ -785,33 +929,39 @@ func _build_diplomacy_panel() -> void:
 	_win.offset_top = 104
 	_win.offset_right = 580
 	_win.visible = false
+	_win.add_theme_stylebox_override("panel", UI.plate(Color(UI.PANEL_TOP, 0.97), Color(UI.PANEL_LOW, 0.97), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 8))
 	add_child(_win)
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 8)
+	column.add_theme_constant_override("separation", 0)
 	_win.add_child(column)
+	# The title band: the screen's device, its name in capitals, and the way out.
+	var head_band := PanelContainer.new()
+	head_band.add_theme_stylebox_override("panel", UI.band(8.0))
+	column.add_child(head_band)
 	var bar := HBoxContainer.new()
 	bar.add_theme_constant_override("separation", 10)
-	column.add_child(bar)
+	head_band.add_child(bar)
 	_win_icon = _icon("diplomacy", 30)
 	bar.add_child(_win_icon)
-	_win_title = _text("", 21, UI.CREAM, true)
-	_win_title.add_theme_font_size_override("font_size", 21)
+	_win_title = _text("", 20, UI.BRIGHT, true)
+	_win_title.add_theme_font_size_override("font_size", 20)
 	_win_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_win_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	bar.add_child(_win_title)
 	var close := Button.new()
 	close.text = "✕"
 	close.tooltip_text = "Close"
 	close.focus_mode = Control.FOCUS_NONE
-	close.custom_minimum_size = Vector2(34, 30)
+	close.custom_minimum_size = Vector2(34, 28)
 	close.pressed.connect(func(): _show_side(""))
 	bar.add_child(close)
-	var rule := ColorRect.new()
-	rule.color = Color(UI.TRIM, 0.7)
-	rule.custom_minimum_size = Vector2(0, 1)
-	column.add_child(rule)
+	var body := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		body.add_theme_constant_override("margin_" + side, 10)
+	column.add_child(body)
 	_win_scroll = ScrollContainer.new()
 	_win_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	column.add_child(_win_scroll)
+	body.add_child(_win_scroll)
 	_side_rows = VBoxContainer.new()
 	_side_rows.add_theme_constant_override("separation", 8)
 	_side_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -847,7 +997,7 @@ func _show_side(mode: String) -> void:
 		world.territory.set_visible_borders(mode == "territory")
 	if mode != "":
 		_win_icon.texture = UI.icon(SCREENS[mode][0])
-		_win_title.text = SCREENS[mode][1].to_upper()
+		_win_title.text = UI.caps(SCREENS[mode][1])
 	refresh_side()
 
 func refresh_side() -> void:
@@ -887,17 +1037,27 @@ func _label(parent: Control, text: String, colour := UI.TEXT, size := 14) -> Lab
 	parent.add_child(l)
 	return l
 
+## A heading in a screen: gold capitals over a hairline rule.
 func _heading(text: String) -> void:
-	var l := _text(text.to_upper(), 14, GOLD, true)
+	var holder := VBoxContainer.new()
+	holder.add_theme_constant_override("separation", 3)
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var l := _text(UI.caps(text), 14, GOLD, true)
 	l.add_theme_font_size_override("font_size", 14)
-	_side_rows.add_child(l)
+	holder.add_child(l)
+	var rule := ColorRect.new()
+	rule.color = Color(UI.TRIM, 0.7)
+	rule.custom_minimum_size = Vector2(0, 1)
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(rule)
+	_side_rows.add_child(holder)
 
 ## A card: a raised panel, with a stripe down the left in `stripe` if given.
 func _card(stripe := Color(0, 0, 0, 0)) -> VBoxContainer:
 	var card := PanelContainer.new()
-	var style := UI.box(Color("172a32"), Color("2c4048"), 1, 6, 10.0)
+	var style := UI.box(Color("142337"), Color("2d4460"), 1, 2, 10.0)
 	if stripe.a > 0.0:
-		style.border_color = Color(stripe, 0.9)
+		style.border_color = Color(stripe, 0.95)
 		style.border_width_left = 5
 		style.border_width_top = 0
 		style.border_width_right = 0
@@ -913,7 +1073,7 @@ func _card(stripe := Color(0, 0, 0, 0)) -> VBoxContainer:
 ## A small rounded tag, like "AT WAR" or "ALLY".
 func _pill(parent: Control, text: String, colour: Color) -> void:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", UI.box(Color(colour, 0.22), Color(colour, 0.9), 1, 9, 3.0))
+	p.add_theme_stylebox_override("panel", UI.box(Color(colour, 0.22), Color(colour, 0.9), 1, 3, 4.0))
 	var l := _text(text, 12, colour.lightened(0.3))
 	p.add_child(l)
 	parent.add_child(p)
@@ -929,7 +1089,7 @@ func _meter(parent: Control, value: float, max_value: float, colour: Color, capt
 	bar.show_percentage = false
 	bar.max_value = max_value
 	bar.value = value
-	bar.add_theme_stylebox_override("fill", UI.box(colour, colour.lightened(0.2), 0, 4, 0.0))
+	bar.add_theme_stylebox_override("fill", UI.plate(colour.lightened(0.18), colour.darkened(0.28), Color(0, 0, 0, 0), 0.0, Color(1, 1, 1, 0.25)))
 	holder.add_child(bar)
 	var l := _text(caption, 12, UI.CREAM)
 	l.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -950,9 +1110,11 @@ func _button(parent: Control, text: String, action: Callable, enabled := true, t
 	b.disabled = not enabled
 	b.focus_mode = Control.FOCUS_NONE
 	if tone == "good":
-		b.add_theme_stylebox_override("normal", UI.box(Color("1f3a2a"), Color("4f8a5c"), 1, 5, 7.0))
+		b.add_theme_stylebox_override("normal", UI.plate(Color("27553a"), Color("122a1d"), Color("6fae7a"), 9.0))
+		b.add_theme_stylebox_override("hover", UI.plate(Color("37724d"), Color("1a3a28"), UI.BRIGHT, 9.0, Color(1, 1, 1, 0.18)))
 	elif tone == "bad":
-		b.add_theme_stylebox_override("normal", UI.box(Color("3a1f1f"), Color("8a4f4f"), 1, 5, 7.0))
+		b.add_theme_stylebox_override("normal", UI.plate(Color("5a2a24"), Color("2a1210"), Color("b06a58"), 9.0))
+		b.add_theme_stylebox_override("hover", UI.plate(Color("7a382f"), Color("3a1a16"), UI.BRIGHT, 9.0, Color(1, 1, 1, 0.18)))
 	b.pressed.connect(func():
 		_say(action.call())
 		refresh_side())
@@ -1059,24 +1221,35 @@ func _show_letter() -> void:
 		return
 	var letter: Array = _letters.pop_front()
 	_letter_box = PanelContainer.new()
-	_letter_box.add_theme_stylebox_override("panel", UI.box(Color(UI.BG, 0.98), UI.GOLD, 2, 8, 18.0, 16))
+	_letter_box.add_theme_stylebox_override("panel", UI.plate(Color("1a2c45"), Color("0a1220"), UI.GOLD, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
 	_letter_box.anchor_left = 0.5
 	_letter_box.anchor_right = 0.5
 	_letter_box.anchor_top = 0.3
 	_letter_box.offset_left = -260
 	_letter_box.offset_right = 260
 	add_child(_letter_box)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 10)
-	_letter_box.add_child(column)
-	var head := _row(column, 10)
-	head.add_child(_icon("diplomacy", 34))
-	var heading := _text(letter[3], 20, GOLD, true)
-	heading.add_theme_font_size_override("font_size", 20)
+	var sheet := VBoxContainer.new()
+	sheet.add_theme_constant_override("separation", 0)
+	_letter_box.add_child(sheet)
+	var head_band := PanelContainer.new()
+	head_band.add_theme_stylebox_override("panel", UI.band(10.0))
+	sheet.add_child(head_band)
+	var head := _row(head_band, 10)
+	head.add_child(_icon("diplomacy", 30))
+	var heading := _text(UI.caps(letter[3]), 19, UI.BRIGHT, true)
+	heading.add_theme_font_size_override("font_size", 19)
+	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	head.add_child(heading)
+	var margins := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		margins.add_theme_constant_override("margin_" + side, 18)
+	sheet.add_child(margins)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 14)
+	margins.add_child(column)
 	var body := _text(letter[0], 16, UI.CREAM)
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.custom_minimum_size = Vector2(480, 0)
+	body.custom_minimum_size = Vector2(470, 0)
 	column.add_child(body)
 	var buttons := _row(column, 10)
 	buttons.alignment = BoxContainer.ALIGNMENT_END
@@ -1086,7 +1259,9 @@ func _show_letter() -> void:
 		b.text = choice[0]
 		b.custom_minimum_size = Vector2(120, 38)
 		b.focus_mode = Control.FOCUS_NONE
-		b.add_theme_stylebox_override("normal", UI.box(Color("1f3a2a") if choice[2] == "good" else Color("3a1f1f"), Color("4f8a5c") if choice[2] == "good" else Color("8a4f4f"), 1, 5, 7.0))
+		var good: bool = choice[2] == "good"
+		b.add_theme_stylebox_override("normal", UI.plate(Color("27553a") if good else Color("5a2a24"), Color("122a1d") if good else Color("2a1210"), Color("6fae7a") if good else Color("b06a58"), 9.0))
+		b.add_theme_stylebox_override("hover", UI.plate(Color("37724d") if good else Color("7a382f"), Color("1a3a28") if good else Color("3a1a16"), UI.BRIGHT, 9.0, Color(1, 1, 1, 0.18)))
 		var action: Callable = choice[1]
 		b.pressed.connect(func():
 			action.call()
@@ -1104,7 +1279,7 @@ func show_end(title: String, subtitle: String) -> void:
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(dim)
 	var box := PanelContainer.new()
-	box.add_theme_stylebox_override("panel", UI.box(Color(UI.BG, 0.97), UI.GOLD if title == "VICTORY" else UI.BAD, 2, 10, 26.0, 20))
+	box.add_theme_stylebox_override("panel", UI.plate(Color("1b2d47"), Color("080e18"), UI.GOLD if title == "VICTORY" else UI.BAD, 26.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
 	box.anchor_left = 0.5
 	box.anchor_right = 0.5
 	box.anchor_top = 0.5
@@ -1144,15 +1319,16 @@ func show_end(title: String, subtitle: String) -> void:
 ## A short message as a card at the bottom of the screen; four at most.
 func notice(text: String) -> void:
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UI.box(Color(UI.BG, 0.92), Color(UI.TRIM, 0.8), 1, 6, 8.0, 6))
+	card.add_theme_stylebox_override("panel", UI.plate(Color("1d3050", 0.96), Color("0b1523", 0.96), Color(UI.TRIM, 0.9), 9.0, UI.LIFT, UI.GOLD, 1, 5))
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var label := Label.new()
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.custom_minimum_size = Vector2(440, 0)
+	label.custom_minimum_size = Vector2(330, 0)
 	label.add_theme_color_override("font_color", UI.CREAM)
 	card.add_child(label)
+	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_notices.add_child(card)
 	while _notices.get_child_count() > 4:
 		_notices.get_child(0).free()  # the oldest goes
@@ -1416,21 +1592,37 @@ func _build_research() -> void:
 	_rs.offset_right = -16
 	_rs.offset_top = 56
 	_rs.offset_bottom = -16
-	var solid: StyleBoxFlat = _rs.get_theme_stylebox("panel").duplicate()
-	solid.bg_color = Color("0e191e")  # opaque: a screen of its own, not an overlay on the battle
-	_rs.add_theme_stylebox_override("panel", solid)
+	# Opaque: a screen of its own, not an overlay on the battle.
+	_rs.add_theme_stylebox_override("panel", UI.plate(Color("14233a"), Color("070d17"), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 9))
 	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 0)
 	_rs.add_child(column)
+	var head_band := PanelContainer.new()
+	head_band.add_theme_stylebox_override("panel", UI.band(9.0))
+	column.add_child(head_band)
 	var top := HBoxContainer.new()
-	column.add_child(top)
+	top.add_theme_constant_override("separation", 10)
+	head_band.add_child(top)
+	top.add_child(_icon("research", 28))
 	_rs_head = Label.new()
+	_rs_head.theme_type_variation = "HeaderLabel"
 	_rs_head.add_theme_font_size_override("font_size", 18)
+	_rs_head.add_theme_color_override("font_color", UI.BRIGHT)
+	_rs_head.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_rs_head.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(_rs_head)
 	var close := Button.new()
 	close.text = "Close (Y)"
 	close.pressed.connect(toggle_research)
 	top.add_child(close)
+	var body := MarginContainer.new()
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	for side in ["left", "right", "top", "bottom"]:
+		body.add_theme_constant_override("margin_" + side, 12)
+	column.add_child(body)
+	column = VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	body.add_child(column)
 	_rs_era = Label.new()
 	_rs_era.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_rs_era.custom_minimum_size = Vector2(1000, 0)  # a width to wrap at before the first layout

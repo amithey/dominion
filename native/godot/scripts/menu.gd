@@ -26,8 +26,14 @@ var _shade: TextureRect
 var _dim: ColorRect
 var _brand: VBoxContainer
 var _card: PanelContainer
+var _band: PanelContainer
+var _band_title: Label
+var _margins: MarginContainer
 var setup_options := {"map":"island","players":4,"nation":0,"style":"standard"}
 var setup_difficulty := "easy"
+var _briefing: Label
+var _transition: Tween
+var _scroll: ScrollContainer
 
 func setup(world_node: Node) -> void:
 	world = world_node
@@ -96,9 +102,30 @@ func setup(world_node: Node) -> void:
 	# the dimmed game when paused.
 	_card = PanelContainer.new()
 	_root.add_child(_card)
+	var frame := VBoxContainer.new()
+	frame.add_theme_constant_override("separation", 0)
+	_card.add_child(frame)
+	# The name of the screen rides a lit band closed by a gold rule.
+	_band = PanelContainer.new()
+	_band.add_theme_stylebox_override("panel", UI.band(10.0))
+	_band.visible = false
+	frame.add_child(_band)
+	_band_title = Label.new()
+	_band_title.theme_type_variation = "HeaderLabel"
+	_band_title.add_theme_font_size_override("font_size", 18)
+	_band_title.add_theme_color_override("font_color", UI.BRIGHT)
+	_band.add_child(_band_title)
+	_margins = MarginContainer.new()
+	_margins.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	frame.add_child(_margins)
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.follow_focus = true
+	_margins.add_child(_scroll)
 	_panel = VBoxContainer.new()
+	_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_panel.add_theme_constant_override("separation", 8)
-	_card.add_child(_panel)
+	_scroll.add_child(_panel)
 	var credit := Label.new()
 	credit.text = "DOMINION  ·  %s" % ProjectSettings.get_setting("application/config/version", "")
 	credit.add_theme_color_override("font_color", Color(1, 1, 1, 0.35))
@@ -114,8 +141,13 @@ func _layout(paused: bool) -> void:
 	_shade.visible = not paused
 	_brand.visible = not paused
 	_dim.visible = paused
+	# Paused, the card is a box and needs room inside it; on the main menu the
+	# entries run flush under the title, with only a breath below the band.
+	for side in ["left", "right", "bottom"]:
+		_margins.add_theme_constant_override("margin_" + side, 18 if paused else 0)
+	_margins.add_theme_constant_override("margin_top", 18 if paused else 12)
 	if paused:
-		_card.add_theme_stylebox_override("panel", UI.box(Color(UI.BG, 0.97), UI.GOLD, 2, 10, 22.0, 18))
+		_card.add_theme_stylebox_override("panel", UI.plate(Color("1b2d47", 0.97), Color("080f1a", 0.97), UI.GOLD, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
 		_card.anchor_left = 0.5
 		_card.anchor_right = 0.5
 		_card.anchor_top = 0.5
@@ -123,7 +155,7 @@ func _layout(paused: bool) -> void:
 		_card.offset_left = -212
 		_card.offset_right = 212
 		_card.offset_top = -240
-		_card.offset_bottom = -240
+		_card.offset_bottom = 240
 	else:
 		_card.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 		_card.anchor_left = 0.0
@@ -133,8 +165,8 @@ func _layout(paused: bool) -> void:
 		_card.offset_left = 64
 		_card.offset_right = 484
 		_card.offset_top = 230
-		_card.offset_bottom = 230
-	_card.reset_size()
+		_card.anchor_bottom = 1.0
+		_card.offset_bottom = -64
 
 # ---------------------------------------------------------------- screens
 
@@ -172,6 +204,7 @@ func open_pause() -> void:
 func open_new_game() -> void:
 	_clear()
 	_heading("CHART YOUR CAMPAIGN")
+	_description("Choose your nation, rivals and the rules of engagement.")
 	_setup_choice("Map",["Island · original","Island · mirrored west"],["island","mirrored"],"map")
 	_setup_choice("Players",["2 · you + 1 AI","3 · you + 2 AI","4 · you + 3 AI"],[2,3,4],"players")
 	_setup_choice("Nation / leader",world.MatchSetup.NATIONS,[0,1,2,3],"nation")
@@ -180,8 +213,12 @@ func open_new_game() -> void:
 	for d in DIFFICULTIES:
 		difficulty.add_item(d[1])
 	difficulty.selected = ["easy","normal","hard"].find(setup_difficulty)
-	difficulty.item_selected.connect(func(i):setup_difficulty=DIFFICULTIES[i][0])
+	difficulty.item_selected.connect(func(i):
+		setup_difficulty=DIFFICULTIES[i][0]
+		_update_briefing())
 	_row("Difficulty",difficulty)
+	_briefing = _description("")
+	_update_briefing()
 	_button("Begin campaign",func():start(setup_difficulty))
 	_button("Back", open_main)
 
@@ -193,8 +230,26 @@ func _setup_choice(title: String,labels: Array,values: Array,key: String) -> voi
 	for label in labels:
 		choice.add_item(label)
 	choice.selected = values.find(setup_options[key])
-	choice.item_selected.connect(func(i):setup_options[key]=values[i])
+	choice.item_selected.connect(func(i):
+		setup_options[key]=values[i]
+		_update_briefing())
 	_row(title,choice)
+
+func _description(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size.x = 340
+	label.add_theme_font_size_override("font_size", 14)
+	label.add_theme_color_override("font_color", UI.MUTED)
+	_panel.add_child(label)
+	return label
+
+func _update_briefing() -> void:
+	if not is_instance_valid(_briefing):
+		return
+	var difficulty: Array = DIFFICULTIES[["easy","normal","hard"].find(setup_difficulty)]
+	_briefing.text = "%s\n%d rival nations · %s\n%s" % [world.MatchSetup.NATIONS[int(setup_options.nation)], int(setup_options.players)-1, "mirrored island" if setup_options.map=="mirrored" else "original island", "Sandbox: rivals develop and defend, but launch no attack waves." if setup_options.style=="sandbox" else difficulty[2]]
 
 func open_load() -> void:
 	_clear()
@@ -211,6 +266,7 @@ func open_load() -> void:
 func open_settings() -> void:
 	_clear()
 	_heading("SETTINGS")
+	_description("Changes apply immediately and are saved automatically.")
 	var quality := OptionButton.new()
 	for q in ["high", "balanced", "low"]:
 		quality.add_item(q.capitalize())
@@ -220,6 +276,7 @@ func open_settings() -> void:
 		world.apply_quality()
 		save_settings())
 	_row("Graphics", quality)
+	quality.tooltip_text = "High: full effects. Balanced: lighter shadows and upscaling. Low: prioritise performance."
 	var full := CheckButton.new()
 	full.button_pressed = DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 	full.toggled.connect(func(on):
@@ -235,6 +292,10 @@ func open_settings() -> void:
 		AudioServer.set_bus_volume_db(0, linear_to_db(maxf(v, 0.1) / 100.0))
 		save_settings())
 	_row("Volume", volume)
+	var volume_readout := Label.new()
+	volume_readout.text = "%d%%" % volume.value
+	volume.get_parent().add_child(volume_readout)
+	volume.value_changed.connect(func(v):volume_readout.text = "%d%%" % v)
 	var edge := CheckButton.new()
 	edge.button_pressed = world.edge_scroll
 	edge.toggled.connect(func(on):
@@ -314,26 +375,38 @@ func save_settings() -> void:
 # ---------------------------------------------------------------- widgets
 
 func _clear() -> void:
+	_briefing = null
+	if _transition != null:
+		_transition.kill()
+	_panel.modulate.a = 0.0
+	_transition = create_tween()
+	_transition.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_transition.tween_property(_panel,"modulate:a",1.0,0.16)
+	_scroll.scroll_vertical = 0
 	for child in _panel.get_children():
 		_panel.remove_child(child)
 		child.queue_free()
-	_card.reset_size.call_deferred()
+	_fit_card.call_deferred()
+
+## Paused, the card is cut to the height of whatever screen is in it, so no
+## empty box hangs below the entries.
+func _fit_card() -> void:
+	if _root == null or not in_match:
+		return
+	var tall: float = clampf(_panel.get_combined_minimum_size().y + 104.0, 200.0, _root.size.y - 80.0)
+	_card.offset_top = -tall * 0.5
+	_card.offset_bottom = tall * 0.5
 
 func _heading(text: String) -> void:
-	if text == "":
-		return
-	var label := Label.new()
-	label.text = text
-	label.theme_type_variation = "HeaderLabel"
-	label.add_theme_color_override("font_color", UI.GOLD)
-	label.add_theme_font_size_override("font_size", 18)
-	_panel.add_child(label)
+	_band.visible = text != ""
+	if text != "":
+		_band_title.text = UI.caps(text)
 
 func _accent(width: int) -> Array:
-	var normal := UI.box(Color(0.06, 0.1, 0.12, 0.85), Color(UI.TRIM, 0.9), 1, 6, 12.0)
-	normal.border_width_left = width
-	var hover := UI.box(Color("233841"), UI.GOLD, 1, 6, 12.0)
-	hover.border_width_left = width + 2
+	var normal := UI.plate(Color("1b2d47", 0.93), Color("091321", 0.93), Color(UI.TRIM, 0.95), 12.0, UI.LIFT, Color(0, 0, 0, 0), 0, 0, Color(UI.GOLD, 0.8), width)
+	normal.content_margin_left = 12.0 + width
+	var hover := UI.plate(Color("2d4a6e"), Color("13243a"), UI.GOLD, 12.0, Color(1, 1, 1, 0.18), Color(0, 0, 0, 0), 0, 0, UI.BRIGHT, width + 2)
+	hover.content_margin_left = 12.0 + width
 	return [normal, hover]
 
 # A menu button: a bar with a gold accent on the left that lights up on hover.
@@ -342,7 +415,7 @@ func _button(text: String, action: Callable) -> Button:
 	b.text = "  " + text
 	b.custom_minimum_size = Vector2(380, 50)
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.focus_mode = Control.FOCUS_NONE
+	b.focus_mode = Control.FOCUS_ALL
 	b.add_theme_font_size_override("font_size", 21)
 	var styles := _accent(4)
 	b.add_theme_stylebox_override("normal", styles[0])
@@ -356,7 +429,7 @@ func _button(text: String, action: Callable) -> Button:
 func _option_card(title: String, detail: String, action: Callable) -> void:
 	var b := Button.new()
 	b.custom_minimum_size = Vector2(380, 72)
-	b.focus_mode = Control.FOCUS_NONE
+	b.focus_mode = Control.FOCUS_ALL
 	b.tooltip_text = detail
 	var styles := _accent(4)
 	b.add_theme_stylebox_override("normal", styles[0])
@@ -394,7 +467,7 @@ func _row(label_text: String, control: Control) -> void:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(label)
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	control.focus_mode = Control.FOCUS_NONE
+	control.focus_mode = Control.FOCUS_ALL
 	row.add_child(control)
 	_panel.add_child(row)
 
