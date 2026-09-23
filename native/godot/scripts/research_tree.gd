@@ -93,7 +93,7 @@ func _draw() -> void:
 		var active: bool = not research.queue.is_empty() and research.queue[0] == key
 		var queued: bool = key in research.queue
 		var why: String = research.blocker(key)
-		var fill := Color("152437")
+		var fill := Color("1a3238")
 		if stage >= 3:
 			fill = Color("27553a")
 		elif active or stage > 0:
@@ -101,11 +101,11 @@ func _draw() -> void:
 		elif why == "" or why.contains(" needs a "):
 			fill = Color("1e3349")
 		else:
-			fill = Color("101823")
+			fill = Color("142125")
 		draw_rect(r, fill)
 		# A hairline of light along the top edge, as on every plate.
 		draw_line(r.position + Vector2(1, 1), Vector2(r.end.x - 1, r.position.y + 1), Color(1, 1, 1, 0.10), 1.0)
-		var border := Color("f2dfa9") if key == selected else (Color("7fb7e8") if queued else Color("8c7038"))
+		var border := Color("f2dfa9") if key == selected else (Color("7fb7e8") if queued else Color("83734f"))
 		draw_rect(r, border, false, 2.0 if key == selected or queued else 1.0)
 		var locked: bool = stage == 0 and why != "" and not why.contains(" needs a ")
 		draw_string(font, r.position + Vector2(7, 18), research.def_of(key).name, HORIZONTAL_ALIGNMENT_LEFT, CARD_W - 12, 13,

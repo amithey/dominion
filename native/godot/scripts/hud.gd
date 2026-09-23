@@ -155,7 +155,7 @@ func _divider(height := 24) -> Control:
 func _build_top_bar() -> void:
 	var bar := PanelContainer.new()
 	# The yield strip: a lit band closed by a gold rule, as a 4X game wears it.
-	var style := UI.band(5.0, Color("223550"), Color("091422"), UI.GOLD, 2)
+	var style := UI.band(5.0, Color("203b43"), Color("0a1d22"), UI.GOLD, 2)
 	style.content_margin_left = 14
 	style.content_margin_right = 12
 	style.content_margin_bottom = 7
@@ -168,10 +168,10 @@ func _build_top_bar() -> void:
 	bar.add_child(row)
 	var first := true
 	for r in RESOURCES:
-		if not first:
-			row.add_child(_divider())
-		first = false
 		var chip := HBoxContainer.new()
+		if not first:
+			chip.add_child(_divider())
+		first = false
 		chip.add_theme_constant_override("separation", 5)
 		chip.tooltip_text = r[2]
 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -188,8 +188,8 @@ func _build_top_bar() -> void:
 			["research", "research", "Research points and their rate. Press Y for the research tree."],
 			["land", "land", "Land held: territory cells. Press T for borders."],
 			["missiles", "missile", "Missiles stored against Ammo Depot capacity."]]:
-		row.add_child(_divider())
 		var chip := HBoxContainer.new()
+		chip.add_child(_divider())
 		chip.add_theme_constant_override("separation", 5)
 		chip.tooltip_text = extra[2]
 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -201,7 +201,7 @@ func _build_top_bar() -> void:
 	# The era is cut into a small brass cartouche pinned to the right end of the
 	# strip, so a nation with every store full never pushes it off the screen.
 	var cartouche := PanelContainer.new()
-	cartouche.add_theme_stylebox_override("panel", UI.plate(Color("2d456a"), Color("13223a"), UI.GOLD, 7.0))
+	cartouche.add_theme_stylebox_override("panel", UI.plate(Color("2b4c52"), Color("16333a"), UI.GOLD, 7.0))
 	cartouche.tooltip_text = "The era your nation has reached. Press Y for the research tree."
 	_era = _text("", 15, UI.BRIGHT, true)
 	_era.add_theme_font_size_override("font_size", 15)
@@ -216,7 +216,7 @@ func _build_top_bar() -> void:
 	right_end.add_child(cartouche)
 	# The screens: a mounted rack of round brass buttons under the strip.
 	var rack := PanelContainer.new()
-	rack.add_theme_stylebox_override("panel", UI.plate(Color("16273e"), Color("0a1220"), UI.TRIM, 5.0, UI.LIFT, Color(0, 0, 0, 0), 0, 6))
+	rack.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	rack.offset_left = 12
 	rack.offset_top = 54
 	add_child(rack)
@@ -230,10 +230,13 @@ func _build_top_bar() -> void:
 		var button := Button.new()
 		button.icon = UI.icon(b[0])
 		button.expand_icon = true
-		button.custom_minimum_size = Vector2(44, 44)
-		button.add_theme_stylebox_override("normal", UI.box(Color("1b2c44"), Color(UI.TRIM, 0.95), 2, 22, 7.0))
-		button.add_theme_stylebox_override("hover", UI.box(Color("2c4568"), UI.BRIGHT, 2, 22, 7.0))
-		button.add_theme_stylebox_override("pressed", UI.box(Color("6d5624"), UI.BRIGHT, 2, 22, 7.0))
+		button.custom_minimum_size = Vector2(88, 40)
+		button.text = {"research":"Research", "diplomacy":"Diplomacy", "market":"Market", "intel":"Intel", "land":"Territory", "menu":"Menu"}[b[0]]
+		button.add_theme_font_size_override("font_size", 12)
+		button.add_theme_constant_override("icon_max_width", 20)
+		button.add_theme_stylebox_override("normal", UI.box(Color("1f3941"), Color(UI.TRIM, 0.95), 1, 20, 8.0))
+		button.add_theme_stylebox_override("hover", UI.box(Color("32565c"), UI.BRIGHT, 1, 20, 8.0))
+		button.add_theme_stylebox_override("pressed", UI.box(Color("6d5624"), UI.BRIGHT, 1, 20, 8.0))
 		button.tooltip_text = b[1]
 		button.focus_mode = Control.FOCUS_NONE
 		button.pressed.connect(b[2])
@@ -589,7 +592,7 @@ func _build_help() -> void:
 	_help.offset_right = 300
 	_help.offset_top = -210
 	_help.visible = false
-	_help.add_theme_stylebox_override("panel", UI.plate(Color("17273c"), Color("080f1a"), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 9))
+	_help.add_theme_stylebox_override("panel", UI.plate(Color("183039"), Color("0a191f"), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 9))
 	add_child(_help)
 	var sheet := VBoxContainer.new()
 	sheet.add_theme_constant_override("separation", 0)
@@ -1290,7 +1293,7 @@ func _show_letter() -> void:
 		return
 	var letter: Array = _letters.pop_front()
 	_letter_box = PanelContainer.new()
-	_letter_box.add_theme_stylebox_override("panel", UI.plate(Color("1a2c45"), Color("0a1220"), UI.GOLD, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
+	_letter_box.add_theme_stylebox_override("panel", UI.plate(Color("1a2c45"), Color("0a171c"), UI.GOLD, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
 	_letter_box.anchor_left = 0.5
 	_letter_box.anchor_right = 0.5
 	_letter_box.anchor_top = 0.3
@@ -1356,7 +1359,7 @@ func show_end(title: String, subtitle: String) -> void:
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(dim)
 	var box := PanelContainer.new()
-	box.add_theme_stylebox_override("panel", UI.plate(Color("1b2d47"), Color("080e18"), UI.GOLD if title == "VICTORY" else UI.BAD, 26.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
+	box.add_theme_stylebox_override("panel", UI.plate(Color("1a343d"), Color("0a171b"), UI.GOLD if title == "VICTORY" else UI.BAD, 26.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
 	box.anchor_left = 0.5
 	box.anchor_right = 0.5
 	box.anchor_top = 0.5
@@ -1670,7 +1673,7 @@ func _build_research() -> void:
 	_rs.offset_top = 56
 	_rs.offset_bottom = -16
 	# Opaque: a screen of its own, not an overlay on the battle.
-	_rs.add_theme_stylebox_override("panel", UI.plate(Color("14233a"), Color("070d17"), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 9))
+	_rs.add_theme_stylebox_override("panel", UI.plate(Color("19343b"), Color("070d17"), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 9))
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 0)
 	_rs.add_child(column)

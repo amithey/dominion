@@ -1,6 +1,6 @@
 extends RefCounted
 ## The look of every panel, button and label in DOMINION, cut in the manner of
-## the great 4X strategy games: deep navy plates inside a bronze frame, a body
+## the great 4X strategy games: deep jade plates inside a cut-corner brass frame, a body
 ## that catches the light along its top edge and sinks into shadow at the
 ## bottom, a gold rule under every heading, and headings set in letterspaced
 ## capitals. The plates are small textures drawn here at startup (a gradient,
@@ -11,25 +11,25 @@ extends RefCounted
 ## downloaded.
 
 # ---------------------------------------------------------------- palette
-const INK := Color("05090f")     ## the darkest ground: troughs, insets, frames
-const BG := Color("0b1522")      ## a panel body
-const BG_2 := Color("16263a")    ## a raised body: cards, rows, popups
+const INK := Color("070f13")     ## the darkest ground: troughs, insets, frames
+const BG := Color("0c1c20")      ## a panel body
+const BG_2 := Color("193138")    ## a raised body: cards, rows, popups
 const LIFT := Color(1, 1, 1, 0.09)  ## the lit top edge of a plate
-const TRIM := Color("8c7038")    ## the bronze frame
-const GOLD := Color("d7b264")    ## gold: rules, headings, the active state
+const TRIM := Color("83734f")    ## the bronze frame
+const GOLD := Color("c9ad72")    ## gold: rules, headings, the active state
 const BRIGHT := Color("f2dfa9")  ## lit gold: hover and focus
 const CREAM := Color("f6ecd4")
-const TEXT := Color("cbd8e4")
-const MUTED := Color("8497a9")
+const TEXT := Color("d4ded9")
+const MUTED := Color("9cada8")
 const GOOD := Color("83c98c")
 const BAD := Color("e0805f")
 # The bodies of the plates, lit edge first.
-const PANEL_TOP := Color("17273c")
-const PANEL_LOW := Color("0a1220")
-const BAND_TOP := Color("2a4265")
-const BAND_LOW := Color("101e30")
-const KEY_TOP := Color("1e3149")
-const KEY_LOW := Color("0e1a29")
+const PANEL_TOP := Color("183039")
+const PANEL_LOW := Color("0a171c")
+const BAND_TOP := Color("29464c")
+const BAND_LOW := Color("11262c")
+const KEY_TOP := Color("203a40")
+const KEY_LOW := Color("102329")
 
 static var _plates := {}
 
@@ -117,6 +117,21 @@ static func _plate_texture(top: Color, bottom: Color, border: Color, bevel: Colo
 		var y: int = pad + (2 if border.a > 0.0 else 0)
 		for x in range(pad + 2, size - pad - 2):
 			img.set_pixel(x, y, bevel)
+	# Cut corners in the source nine-patch: the cut stays the same size at any
+	# panel size. A second diagonal hairline makes this an engraved frame.
+	var cut := 8
+	for y in range(size):
+		for x in range(size):
+			var edge_x := mini(x - pad, size - pad - 1 - x)
+			var edge_y := mini(y - pad, size - pad - 1 - y)
+			if edge_x < cut and edge_y < cut:
+				var diagonal := edge_x + edge_y
+				if diagonal < cut:
+					img.set_pixel(x, y, Color.TRANSPARENT)
+				elif diagonal == cut and border.a > 0.0:
+					img.set_pixel(x, y, Color(0, 0, 0, 0.85))
+				elif diagonal == cut + 1 and border.a > 0.0:
+					img.set_pixel(x, y, border)
 	var tex := ImageTexture.create_from_image(img)
 	_plates[key] = tex
 	return tex
@@ -174,16 +189,16 @@ static func build() -> Theme:
 	# Buttons: a navy keycap in a bronze frame; brighter and gold framed under
 	# the cursor; struck in gold while held.
 	t.set_stylebox("normal", "Button", plate(KEY_TOP, KEY_LOW, Color(TRIM, 0.85), 9.0))
-	t.set_stylebox("hover", "Button", plate(Color("2b4462"), Color("15243a"), GOLD, 9.0, Color(1, 1, 1, 0.16)))
+	t.set_stylebox("hover", "Button", plate(Color("304f54"), Color("192f35"), GOLD, 9.0, Color(1, 1, 1, 0.16)))
 	t.set_stylebox("pressed", "Button", plate(Color("caa551"), Color("8a6c28"), BRIGHT, 9.0, Color(1, 1, 1, 0.30)))
 	t.set_stylebox("hover_pressed", "Button", plate(Color("e0bc68"), Color("9c7c2f"), BRIGHT, 9.0, Color(1, 1, 1, 0.35)))
-	t.set_stylebox("disabled", "Button", plate(Color("101823"), Color("0a1017"), Color(TRIM, 0.30), 9.0, Color(0, 0, 0, 0)))
+	t.set_stylebox("disabled", "Button", plate(Color("142125"), Color("0b161a"), Color(TRIM, 0.30), 9.0, Color(0, 0, 0, 0)))
 	t.set_stylebox("focus", "Button", box(Color(0, 0, 0, 0), BRIGHT, 1, 2, 0.0))
 	t.set_color("font_color", "Button", CREAM)
 	t.set_color("font_hover_color", "Button", BRIGHT)
-	t.set_color("font_pressed_color", "Button", Color("14202e"))
-	t.set_color("font_hover_pressed_color", "Button", Color("14202e"))
-	t.set_color("font_disabled_color", "Button", Color("5c6b7a"))
+	t.set_color("font_pressed_color", "Button", Color("10272b"))
+	t.set_color("font_hover_pressed_color", "Button", Color("10272b"))
+	t.set_color("font_disabled_color", "Button", Color("6d7c79"))
 	t.set_font("font", "Button", bold)
 	t.set_font_size("font_size", "Button", 14)
 	# Drop-downs follow the buttons, but an open one stays readable rather
@@ -191,12 +206,12 @@ static func build() -> Theme:
 	for kind in ["OptionButton", "MenuButton"]:
 		for state in ["normal", "hover", "disabled", "focus"]:
 			t.set_stylebox(state, kind, t.get_stylebox(state, "Button"))
-		t.set_stylebox("pressed", kind, plate(Color("2b4462"), Color("15243a"), GOLD, 9.0, Color(1, 1, 1, 0.16)))
+		t.set_stylebox("pressed", kind, plate(Color("304f54"), Color("192f35"), GOLD, 9.0, Color(1, 1, 1, 0.16)))
 		t.set_color("font_color", kind, CREAM)
 		t.set_color("font_hover_color", kind, BRIGHT)
 		t.set_color("font_pressed_color", kind, BRIGHT)
-	t.set_stylebox("panel", "PopupMenu", plate(Color("1a2c42"), Color("0d1726"), TRIM, 6.0, LIFT, Color(0, 0, 0, 0), 0, 7))
-	t.set_stylebox("hover", "PopupMenu", plate(Color("2e4868"), Color("1b2d45"), GOLD, 4.0, Color(1, 1, 1, 0.14)))
+	t.set_stylebox("panel", "PopupMenu", plate(Color("213b41"), Color("0d2026"), TRIM, 6.0, LIFT, Color(0, 0, 0, 0), 0, 7))
+	t.set_stylebox("hover", "PopupMenu", plate(Color("35585c"), Color("1b343b"), GOLD, 4.0, Color(1, 1, 1, 0.14)))
 	t.set_color("font_color", "PopupMenu", TEXT)
 	t.set_color("font_hover_color", "PopupMenu", BRIGHT)
 	t.set_color("font_disabled_color", "PopupMenu", MUTED)
@@ -210,7 +225,7 @@ static func build() -> Theme:
 	t.set_stylebox("focus", "LineEdit", box(Color(0, 0, 0, 0), BRIGHT, 1, 2, 0.0))
 	t.set_color("font_color", "LineEdit", TEXT)
 	t.set_color("caret_color", "LineEdit", GOLD)
-	t.set_color("selection_color", "LineEdit", Color("2f4a66"))
+	t.set_color("selection_color", "LineEdit", Color("35565b"))
 	for kind in ["CheckButton", "CheckBox"]:
 		t.set_color("font_color", kind, TEXT)
 		t.set_color("font_hover_color", kind, BRIGHT)
@@ -225,13 +240,13 @@ static func build() -> Theme:
 	t.set_color("font_outline_color", "ProgressBar", Color(0, 0, 0, 0.8))
 	t.set_constant("outline_size", "ProgressBar", 3)
 	# Tooltips.
-	t.set_stylebox("panel", "TooltipPanel", plate(Color("142234"), Color("080e18"), GOLD, 9.0, LIFT, Color(0, 0, 0, 0), 0, 6))
+	t.set_stylebox("panel", "TooltipPanel", plate(Color("1a3036"), Color("0a171b"), GOLD, 9.0, LIFT, Color(0, 0, 0, 0), 0, 6))
 	t.set_color("font_color", "TooltipLabel", TEXT)
 	t.set_font_size("font_size", "TooltipLabel", 14)
 	# Slim scroll bars.
 	for kind in ["VScrollBar", "HScrollBar"]:
 		t.set_stylebox("scroll", kind, box(Color(0, 0, 0, 0.35), Color(0, 0, 0, 0), 0, 3, 2.0))
-		t.set_stylebox("grabber", kind, box(Color("3f5872"), Color(0, 0, 0, 0), 0, 3, 2.0))
+		t.set_stylebox("grabber", kind, box(Color("4b6668"), Color(0, 0, 0, 0), 0, 3, 2.0))
 		t.set_stylebox("grabber_highlight", kind, box(TRIM, Color(0, 0, 0, 0), 0, 3, 2.0))
 		t.set_stylebox("grabber_pressed", kind, box(GOLD, Color(0, 0, 0, 0), 0, 3, 2.0))
 	# Headings take the serif face.
@@ -244,21 +259,21 @@ static func build() -> Theme:
 	# page is the one on show.
 	t.add_type("TabButton")
 	t.set_type_variation("TabButton", "Button")
-	t.set_stylebox("normal", "TabButton", plate(Color("16243a"), Color("0c1420"), Color(TRIM, 0.55), 7.0, Color(1, 1, 1, 0.05)))
-	t.set_stylebox("hover", "TabButton", plate(Color("26405f"), Color("14233a"), GOLD, 7.0, Color(1, 1, 1, 0.14)))
+	t.set_stylebox("normal", "TabButton", plate(Color("193036"), Color("0d1f24"), Color(TRIM, 0.55), 7.0, Color(1, 1, 1, 0.05)))
+	t.set_stylebox("hover", "TabButton", plate(Color("2d4a50"), Color("19343b"), GOLD, 7.0, Color(1, 1, 1, 0.14)))
 	t.set_stylebox("pressed", "TabButton", plate(Color("d9b566"), Color("9c7a2e"), BRIGHT, 7.0, Color(1, 1, 1, 0.32)))
 	t.set_stylebox("hover_pressed", "TabButton", plate(Color("e8c874"), Color("a88434"), BRIGHT, 7.0, Color(1, 1, 1, 0.36)))
-	t.set_color("font_color", "TabButton", Color("b9c8d6"))
+	t.set_color("font_color", "TabButton", Color("bccdc7"))
 	t.set_color("font_hover_color", "TabButton", BRIGHT)
 	t.set_color("font_pressed_color", "TabButton", Color("141f2b"))
 	t.set_color("font_hover_pressed_color", "TabButton", Color("141f2b"))
 	# A row in a list: a quiet plate that lifts under the cursor.
 	t.add_type("RowButton")
 	t.set_type_variation("RowButton", "Button")
-	t.set_stylebox("normal", "RowButton", plate(Color("152437"), Color("0c1524"), Color(TRIM, 0.50), 6.0, Color(1, 1, 1, 0.06)))
-	t.set_stylebox("hover", "RowButton", plate(Color("24405f"), Color("13243a"), GOLD, 6.0, Color(1, 1, 1, 0.16)))
-	t.set_stylebox("pressed", "RowButton", plate(Color("2d4a6b"), Color("182c45"), BRIGHT, 6.0, Color(1, 1, 1, 0.20)))
-	t.set_stylebox("disabled", "RowButton", plate(Color("101823"), Color("0a1017"), Color(TRIM, 0.22), 6.0, Color(0, 0, 0, 0)))
+	t.set_stylebox("normal", "RowButton", plate(Color("1a3238"), Color("102329"), Color(TRIM, 0.50), 6.0, Color(1, 1, 1, 0.06)))
+	t.set_stylebox("hover", "RowButton", plate(Color("2a4a50"), Color("142f35"), GOLD, 6.0, Color(1, 1, 1, 0.16)))
+	t.set_stylebox("pressed", "RowButton", plate(Color("32565b"), Color("1b3b42"), BRIGHT, 6.0, Color(1, 1, 1, 0.20)))
+	t.set_stylebox("disabled", "RowButton", plate(Color("142125"), Color("0b161a"), Color(TRIM, 0.22), 6.0, Color(0, 0, 0, 0)))
 	t.set_color("font_color", "RowButton", CREAM)
 	t.set_color("font_pressed_color", "RowButton", CREAM)
 	t.set_color("font_hover_pressed_color", "RowButton", CREAM)
@@ -275,7 +290,10 @@ static func install() -> void:
 	ThemeDB.fallback_font = t.default_font
 	ThemeDB.fallback_font_size = t.default_font_size
 
-## A small texture from ui/icons (resources and panels).
+## Original engraved SVG icons, with PNG fallback for older callers.
 static func icon(name: String) -> Texture2D:
+	var vector_path := "res://ui/icons/%s.svg" % name
+	if ResourceLoader.exists(vector_path):
+		return load(vector_path)
 	var path := "res://ui/icons/%s.png" % name
 	return load(path) if ResourceLoader.exists(path) else null

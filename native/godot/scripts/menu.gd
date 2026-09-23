@@ -56,7 +56,7 @@ func setup(world_node: Node) -> void:
 	_shade.texture = tex
 	_shade.stretch_mode = TextureRect.STRETCH_SCALE
 	_shade.anchor_bottom = 1.0
-	_shade.offset_right = 720
+	_shade.offset_right = 1000
 	_root.add_child(_shade)
 	var atlas := Control.new()
 	atlas.set_script(preload("res://scripts/atlas_decoration.gd"))
@@ -71,26 +71,26 @@ func setup(world_node: Node) -> void:
 	_brand = VBoxContainer.new()
 	_brand.offset_left = 64
 	_brand.offset_top = 70
-	_brand.add_theme_constant_override("separation", 4)
+	_brand.add_theme_constant_override("separation", 16)
 	_root.add_child(_brand)
 	var crest := HBoxContainer.new()
 	crest.add_theme_constant_override("separation", 18)
 	_brand.add_child(crest)
 	var emblem := TextureRect.new()
-	emblem.texture = load("res://icon.png")
-	emblem.custom_minimum_size = Vector2(88, 88)
+	emblem.texture = UI.icon("sovereign")
+	emblem.custom_minimum_size = Vector2(70, 70)
 	emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	crest.add_child(emblem)
 	_title = Label.new()
 	_title.text = "DOMINION"
 	_title.theme_type_variation = "HeaderLabel"
-	_title.add_theme_font_size_override("font_size", 74)
+	_title.add_theme_font_size_override("font_size", 62)
 	_title.add_theme_color_override("font_color", Color("f1e3b4"))
-	_title.add_theme_constant_override("outline_size", 8)
+	_title.add_theme_constant_override("outline_size", 2)
 	crest.add_child(_title)
 	_subtitle = Label.new()
-	_subtitle.text = "NATIONS  ·  SUPPLY LINES  ·  RESEARCH  ·  WAR"
+	_subtitle.text = "A WORLD TO SHAPE. A NATION TO LEAD."
 	_subtitle.add_theme_color_override("font_color", UI.GOLD)
 	_subtitle.add_theme_font_size_override("font_size", 16)
 	_brand.add_child(_subtitle)
@@ -124,7 +124,7 @@ func setup(world_node: Node) -> void:
 	_margins.add_child(_scroll)
 	_panel = VBoxContainer.new()
 	_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_panel.add_theme_constant_override("separation", 8)
+	_panel.add_theme_constant_override("separation", 10)
 	_scroll.add_child(_panel)
 	var credit := Label.new()
 	credit.text = "DOMINION  ·  %s" % ProjectSettings.get_setting("application/config/version", "")
@@ -147,7 +147,7 @@ func _layout(paused: bool) -> void:
 		_margins.add_theme_constant_override("margin_" + side, 18 if paused else 0)
 	_margins.add_theme_constant_override("margin_top", 18 if paused else 12)
 	if paused:
-		_card.add_theme_stylebox_override("panel", UI.plate(Color("1b2d47", 0.97), Color("080f1a", 0.97), UI.GOLD, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
+		_card.add_theme_stylebox_override("panel", UI.plate(Color("1a343d", 0.97), Color("0a191f", 0.97), UI.GOLD, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
 		_card.anchor_left = 0.5
 		_card.anchor_right = 0.5
 		_card.anchor_top = 0.5
@@ -176,6 +176,8 @@ func open_main() -> void:
 	_layout(false)
 	_clear()
 	_heading("")
+	var invitation := _description("THE NEXT CHAPTER IS YOURS")
+	invitation.add_theme_color_override("font_color", UI.GOLD)
 	_button("New Game", open_new_game)
 	var newest := newest_save()
 	var continue_button := _button("Continue", func(): load_game(newest))
@@ -402,25 +404,32 @@ func _heading(text: String) -> void:
 	if text != "":
 		_band_title.text = UI.caps(text)
 
-func _accent(width: int) -> Array:
-	var normal := UI.plate(Color("1b2d47", 0.93), Color("091321", 0.93), Color(UI.TRIM, 0.95), 12.0, UI.LIFT, Color(0, 0, 0, 0), 0, 0, Color(UI.GOLD, 0.8), width)
-	normal.content_margin_left = 12.0 + width
-	var hover := UI.plate(Color("2d4a6e"), Color("13243a"), UI.GOLD, 12.0, Color(1, 1, 1, 0.18), Color(0, 0, 0, 0), 0, 0, UI.BRIGHT, width + 2)
-	hover.content_margin_left = 12.0 + width
+func _accent(_width: int) -> Array:
+	# Quiet navigation rests on the scenery; its underline becomes a jade
+	# ribbon under pointer or keyboard focus.
+	var normal := UI.plate(Color(0.06, 0.13, 0.15, 0.30), Color(0.03, 0.08, 0.10, 0.08), Color.TRANSPARENT, 14.0, Color.TRANSPARENT, Color(UI.TRIM, 0.45), 1)
+	var hover := UI.plate(Color("29464c"), Color("11262c"), UI.GOLD, 14.0)
 	return [normal, hover]
 
-# A menu button: a bar with a gold accent on the left that lights up on hover.
+# A quiet serif menu entry; the primary action wears the sovereign seal.
 func _button(text: String, action: Callable) -> Button:
 	var b := Button.new()
 	b.text = "  " + text
-	b.custom_minimum_size = Vector2(380, 50)
+	b.custom_minimum_size = Vector2(380, 54)
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	b.focus_mode = Control.FOCUS_ALL
-	b.add_theme_font_size_override("font_size", 21)
+	b.add_theme_font_size_override("font_size", 22)
+	b.add_theme_font_override("font", UI.serif())
 	var styles := _accent(4)
 	b.add_theme_stylebox_override("normal", styles[0])
 	b.add_theme_stylebox_override("hover", styles[1])
 	b.add_theme_stylebox_override("pressed", styles[1])
+	b.add_theme_color_override("font_pressed_color", UI.BRIGHT)
+	b.add_theme_stylebox_override("focus", UI.box(Color.TRANSPARENT, UI.BRIGHT, 1, 8, 0.0))
+	if text in ["New Game", "Begin campaign", "Resume"]:
+		b.add_theme_stylebox_override("normal", UI.plate(Color("344c49"), Color("18312f"), UI.GOLD, 14.0))
+		b.icon = UI.icon("sovereign")
+		b.add_theme_constant_override("icon_max_width", 28)
 	b.pressed.connect(action)
 	_panel.add_child(b)
 	return b

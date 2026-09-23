@@ -62,3 +62,6 @@ UI files listed above.
 - 2026-09-23 Claude: created this file. Working on tank movement, right of passage, occupying
   territory, resource deposit visuals, and one working build plus one release file in `dist/`.
   Not touching UI design files.
+
+- 2026-09-23 Codex: redesigning menu/HUD/theme/research colours and ui/icons only; engraved SVG symbols, jade/brass palette, cut-corner panels and clearer navigation. Gameplay callback signatures preserved. No rebase while Claude has active uncommitted edits in the shared checkout.
+- 2026-09-23 Codex: UI stage verified with --ui-test and --menu-test (PASS), plus rendered main/new/settings, HUD/selection/help and side-screen captures. Menu save/load needs normal access to user://saves; sandbox run cannot write there. Engine reports resource cleanup warnings at exit. New SVGs are preferred by UI.icon with PNG fallback; existing HUD method names/arguments are unchanged. Release packaging remains Claude's area.
