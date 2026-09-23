@@ -237,6 +237,12 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 			arch.granary(rng, footprint)
 		elif key == "powerPlant":
 			arch.power_station(rng, footprint)
+		elif key == "airfield":
+			arch.xf = Transform3D.IDENTITY  # the runway and slots are laid out over the whole hex
+			arch.airfield(rng)
+		elif key == "helipad":
+			arch.xf = Transform3D.IDENTITY
+			arch.helipad(rng)
 		elif key in ["housing", "apartments"]:
 			arch.apartments(rng, footprint, 4 + mini(city_size / 4, 2) + (1 if key == "apartments" else 0))
 		else:
@@ -392,6 +398,9 @@ func yard(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGene
 
 func barracks(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
 	main_building(key, container, 9.0)
+	if key in ["airfield", "helipad"]:
+		fence(st, Color("5d6264"), 1.8)
+		return  # the air base is a complete composition (architecture.gd)
 	# Sandbag emplacements.
 	for k in [1, 4]:
 		var centre := slot(k, 7.6)

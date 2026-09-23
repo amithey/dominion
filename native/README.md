@@ -7,6 +7,35 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.11: fixes, land that grows with its people, air bases with slots
+
+- **Fixes.**
+  - Production no longer stalls at 0%. A building beyond every settlement's radius belonged to no
+    settlement and counted as cut off; it now belongs to its owner's nearest settlement.
+  - A far Market no longer reads as "no market".
+  - The AI builds a city (farms, cottages, markets, warehouses, schools...), with military buildings
+    about a third, and keeps money back for its next building.
+- **Buying land.** When your troops stand on unclaimed hexes, the game asks whether to buy them
+  ($1,000 a hex). Declined land is offered again after two minutes. AI nations pay from their
+  treasury. Another nation's land is won only in war.
+- **Settlements grow.** A settlement's land reaches as many rings round its centre as its people
+  fill (about 110 people a ring): the capital and cities reach at most four rings, villages three.
+  Other buildings hold the hex they stand on.
+- **Consumption grows with population.**
+  - Food per head rises as a city grows.
+  - Oil is burned from about 150 people.
+  - Chips (silicon) are used from 400 people.
+  - A shortage of oil or chips costs happiness.
+- **Airfields.** A real military airfield on its hex: a marked runway with lights, a taxiway, an apron
+  with four numbered slots, an arched hangar, a control tower, fuel tanks and a windsock. A helipad
+  has two marked pads and a hangar.
+  - New aircraft park on a free slot; a base with every slot taken trains no more.
+  - An aircraft ordered out taxis to the runway and takes off.
+  - Right-click one of your air bases with aircraft selected, and they land, taxi to a slot, rearm and
+    stay.
+  - Aircraft out of ammunition come back to their own slot.
+- New tests: `--state-test`, `--airbase-test`.
+
 ## Version 0.9.10: land, lakes and forests
 
 - **No more "lakes by water level".** The sea's waves rose up to about 1.5 m. Flat land just above

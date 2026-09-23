@@ -84,13 +84,14 @@ func tick() -> void:
 	# Food: farms and farmland against mouths to feed.
 	var r: Node = world.research
 	var food_in: float = owned("farm") * float(cfg.farmFood) * (1.0 + (r.bonus("foodPct") if r else 0.0)) + float(land.food)
-	var food_out := civilians * float(cfg.foodPerCivilian) + army * float(cfg.foodPerSoldier)
+	# A bigger city eats more per head (it no longer grows its own food).
+	var food_out := civilians * float(cfg.foodPerCivilian) * (1.0 + civilians / 2000.0) + army * float(cfg.foodPerSoldier)
 	rates.food = food_in - food_out
 	res.food = clampf(res.food + rates.food, 0.0, caps.food)
 	var starving: bool = res.food <= 0.5
 	# Citizens grow with happiness and health (the browser's 60 and 55 to start),
 	# which civic buildings and discoveries raise.
-	happiness = clampf(60.0 + provided("happiness") + (r.bonus("happiness") if r else 0.0), 0.0, 100.0)
+	happiness = clampf(60.0 + provided("happiness") + (r.bonus("happiness") if r else 0.0) - SHORTAGE_UNREST * shortages.size(), 0.0, 100.0)
 	health = clampf(55.0 + provided("health") + (r.bonus("health") if r else 0.0), 0.0, 100.0)
 	var growth := civilians * ((happiness - 45.0) / 50.0) * (health / 100.0) * 0.0025
 	if starving:
@@ -112,13 +113,30 @@ func tick() -> void:
 			continue
 		var dep: Dictionary = b.deposit.def
 		rates[dep.res] = rates.get(dep.res, 0.0) + float(dep.rate) * mining
+	# A growing population burns fuel and uses electronics: oil from about 150
+	# people up, chips (silicon) once a city passes 400. Running short makes
+	# people unhappy (see happiness above, applied on the next tick).
+	var oil_use := maxf(civilians - 150.0, 0.0) * OIL_PER_PERSON
+	var chip_use := maxf(civilians - 400.0, 0.0) * CHIPS_PER_PERSON
+	rates.oil = rates.get("oil", 0.0) - oil_use
+	rates.silicon = rates.get("silicon", 0.0) - chip_use
+	shortages.clear()
+	if oil_use > 0.0 and res.get("oil", 0.0) <= 0.5:
+		shortages.append("oil")
+	if chip_use > 0.0 and res.get("silicon", 0.0) <= 0.5:
+		shortages.append("chips")
 	for key in RESOURCES:
 		if key == "food":
 			continue
-		res[key] += rates.get(key, 0.0)
+		res[key] = maxf(res[key] + rates.get(key, 0.0), 0.0)
 		if caps.has(key):
 			res[key] = minf(res[key], caps[key])
 	changed.emit()
+
+const OIL_PER_PERSON := 0.0012     ## oil a second for each person past 150
+const CHIPS_PER_PERSON := 0.0006   ## silicon a second for each person past 400
+const SHORTAGE_UNREST := 6.0       ## happiness lost for each shortage (oil, chips)
+var shortages: Array[String] = []
 
 const POPULATION_WEIGHTS := {"hq": 200.0, "villageCenter": 90.0, "cityCenter": 260.0, "residential": 150.0, "cottage": 80.0, "apartments": 280.0, "luxuryVillas": 60.0}
 func supply_coverage() -> float:

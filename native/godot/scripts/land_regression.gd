@@ -10,6 +10,21 @@ static func run(w: Node) -> void:
 	var failures := PackedStringArray()
 	var t: Node = w.territory
 	t.tick()
+	# 0. A settlement's land grows with its people, up to its limit.
+	var hq: Dictionary = w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq" and not b.dead)[0]
+	w.economy.civilians = 40.0
+	var small: int = t.rings_of(hq)
+	w.economy.civilians = w.economy.civ_cap
+	for k in range(6):
+		w.place_building("residential", w.test_site("residential", hq.root.position), 0, true)
+	w.economy.recalculate()
+	w.economy.civilians = w.economy.civ_cap
+	var large: int = t.rings_of(hq)
+	print("LAND capital rings: %d with few people, %d with a full city (limit %d)" % [small, large, t.RINGS_MAX.hq])
+	if not (small < large and large <= t.RINGS_MAX.hq):
+		failures.append("the capital's land did not grow with its people (%d -> %d)" % [small, large])
+	for k in range(4):
+		t.tick()
 	# 1. Grow the land with a building at its edge (every building claims a ring),
 	# then take the hex of it farthest from any settlement centre.
 	var centres: Array = w.buildings.filter(func(b): return b.owner == 0 and not b.dead and b.def.get("settlement") != null)
@@ -32,6 +47,9 @@ static func run(w: Node) -> void:
 		if t.owner_of[i] != 0 or t.terrain[i] == t.Terrain.WATER:
 			continue
 		var c: Vector3 = t.center(i)
+		var taken = w.district_hex.get(w.logistics.world_hex(c))
+		if taken != null and not taken.dead:
+			continue
 		var d := INF
 		for b in centres:
 			d = minf(d, Vector2(b.root.position.x - c.x, b.root.position.z - c.z).length() - float(b.def.get("buildRadius", 0)))
@@ -65,22 +83,36 @@ static func run(w: Node) -> void:
 		var squad := []
 		for k in range(3):
 			squad.append(w.spawn_unit("soldier", spot + Vector3(k * 1.5, 0, 0), 0))
-		w.economy.res.money = 0.0
+		w.economy.res.money = 5000.0
 		for k in range(3):
 			t.tick()
 		if t.owner_of[empty] == 0:
-			failures.append("troops claimed unclaimed land without paying")
-		w.economy.res.money = 500.0
-		for k in range(3):
-			t.tick()
-		var paid: float = 500.0 - w.economy.res.money
+			failures.append("troops claimed unclaimed land without the player agreeing to buy it")
+		if not empty in t.offer:
+			failures.append("the player was not offered the land the troops stand on")
+		t.decline(t.offer.duplicate())
+		t.tick()
+		if empty in t.offer:
+			failures.append("declined land was offered again at once")
+		t.declined.clear()
+		t.tick()
+		var got: int = t.buy(t.offer.duplicate())
+		var paid: float = 5000.0 - w.economy.res.money
 		if t.owner_of[empty] != 0:
-			failures.append("troops with money did not claim the unclaimed hex")
-		elif paid < t.LAND_PRICE - 0.01:
-			failures.append("claiming land cost %.0f, expected at least %.0f" % [paid, t.LAND_PRICE])
-		print("LAND claimed by troops: %s, paid $%d" % [t.owner_of[empty] == 0, int(paid)])
+			failures.append("buying did not give the player the hex")
+		elif absf(paid - got * t.LAND_PRICE) > 0.01 or paid < t.LAND_PRICE:
+			failures.append("buying %d hexes cost %.0f, expected %.0f each" % [got, paid, t.LAND_PRICE])
+		print("LAND bought %d hexes for $%d" % [got, int(paid)])
 		for u in squad:
 			w.kill(u)
+	# 3. Territorial waters: a building on the coast makes the sea off it yours.
+	for i in range(t.owner_of.size()):
+		if t.terrain[i] == t.Terrain.COAST and t.owner_of[i] == -1 and w.open_ground(t.center(i)):
+			var c: Vector3 = t.center(i)
+			w.place_building("park", Vector3(c.x, w.height_at(c.x, c.z), c.z), 0, true)
+			break
+	for k in range(3):
+		t.tick()
 	# 3. Territorial waters.
 	var waters := 0
 	var wrong := 0

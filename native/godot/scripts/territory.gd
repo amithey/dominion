@@ -23,7 +23,12 @@ enum Terrain { WATER, PLAINS, FOREST, MOUNTAIN, COAST }
 const TERRAIN_NAMES := ["Water", "Plains", "Forest", "Mountain", "Coast"]
 const STATUS_YIELD := {"sovereign": 1.0, "integrated": 0.75, "occupied": 0.4, "contested": 0.15}
 const RIBBON := 2.4
-const LAND_PRICE := 25.0   ## money to claim one unclaimed hex with troops (buildings claim theirs free)
+const LAND_PRICE := 1000.0 ## money to buy one unclaimed hex your troops stand on (buildings claim theirs free)
+const OFFER_AGAIN := 120.0 ## seconds before land the player declined to buy is offered again
+## How far a settlement's land reaches, in rings of hexes round its centre:
+## it starts small and grows with the people living there, up to a limit.
+const RINGS_MAX := {"hq": 4, "cityCenter": 4, "villageCenter": 3}
+const PEOPLE_PER_RING := 110.0
 const WATERS := 2          ## rings of sea off a nation's coast that are its territorial waters
 
 var world: Node
@@ -200,6 +205,25 @@ func land_cells() -> int:
 	return n
 
 ## Pays for one hex of unclaimed land; false when the nation cannot afford it.
+## People living around settlement `s`: its own share and that of the homes
+## nearest to it, times how full the nation's housing is.
+func residents(s: Dictionary) -> float:
+	var weights: Dictionary = world.economy.POPULATION_WEIGHTS if world.economy != null else {}
+	var fill := 0.8
+	if s.owner == 0 and world.economy != null:
+		fill = clampf(world.economy.civilians / maxf(world.economy.civ_cap, 1.0), 0.0, 1.0)
+	var people: float = float(weights.get(s.key, 60.0))
+	for b in world.buildings:
+		if b.dead or not b.built or b.owner != s.owner or b.def.get("settlement") != null or not weights.has(b.key):
+			continue
+		if is_same(world.logistics.settlement_of(b), s):
+			people += float(weights[b.key])
+	return people * fill
+
+## Rings of land settlement `s` holds now (at least one, at most its limit).
+func rings_of(s: Dictionary) -> int:
+	return clampi(1 + int(residents(s) / PEOPLE_PER_RING), 1, int(RINGS_MAX.get(s.key, 2)))
+
 func _buy(nation: int) -> bool:
 	if nation == 0:
 		return world.economy != null and world.economy.pay({"money": LAND_PRICE})
@@ -254,6 +278,46 @@ func _waters() -> bool:
 		contested[i] = 0
 	return changed
 
+## Puts the pending purchase to the player once (one letter for all the hexes
+## the troops stand on); declined land is offered again after a while.
+func _ask_to_buy() -> void:
+	offer = offer.filter(func(i): return owner_of[i] == -1)
+	if offer.is_empty() or asking or world.hud == null:
+		return
+	asking = true
+	var hexes := offer.duplicate()
+	var price := hexes.size() * LAND_PRICE
+	world.hud.choose("LAND", "Your forces stand on %d hex%s of unclaimed land.\nBuy it for $%d ($%d a hex)? Unclaimed land can only be taken by buying it; another nation's land is won in war." % [hexes.size(), "" if hexes.size() == 1 else "es", int(price), int(LAND_PRICE)], [
+		["Buy the land", "good", func(): buy(hexes)],
+		["Not now", "", func(): decline(hexes)],
+	])
+
+## The player buys `hexes` (those still unclaimed), as far as the money goes.
+func buy(hexes: Array) -> int:
+	asking = false
+	var got := 0
+	for i in hexes:
+		if owner_of[i] != -1:
+			continue
+		if not world.economy.pay({"money": LAND_PRICE}):
+			world.hud.notice("Not enough money for the rest of the land ($%d a hex)." % int(LAND_PRICE))
+			break
+		owner_of[i] = 0
+		control[i] = 30.0
+		got += 1
+	offer.clear()
+	if got > 0:
+		world.hud.notice("You bought %d hex%s of land for $%d." % [got, "" if got == 1 else "es", int(got * LAND_PRICE)])
+		draw_fill()
+		changed.emit()
+	return got
+
+func decline(hexes: Array) -> void:
+	asking = false
+	for i in hexes:
+		declined[i] = world.game_time + OFFER_AGAIN
+	offer.clear()
+
 func is_front(i: int) -> bool:
 	var o := owner_of[i]
 	if o < 0:
@@ -303,7 +367,9 @@ func tick() -> void:
 			continue
 		# What you build on is yours, and a ring round it; settlements reach further.
 		var w := 30.0 if b.key == "hq" else 26.0 if b.key == "cityCenter" else 18.0 if b.key == "villageCenter" else 22.0 if b.key == "commandCenter" else 14.0
-		var reach := 3 if b.key == "hq" else (2 if b.key in ["cityCenter", "villageCenter", "commandCenter"] else 1)
+		# A settlement's land grows with its people (rings_of); any other
+		# building holds the hex it stands on.
+		var reach := rings_of(b) if RINGS_MAX.has(b.key) else 0
 		_presence(presence, b.root.position, b.owner, w, reach, nations)
 		_presence(built, b.root.position, b.owner, w, reach, nations)
 	var bought := {}   # nation -> hexes bought this tick
@@ -348,9 +414,15 @@ func tick() -> void:
 				control[i] = maxf(12.0, control[i] - 0.15)
 			continue
 		if owner_of[i] == -1:
-			if built[i * nations + best] <= 0.35 and not _buy(best):
-				continue  # troops alone claim unclaimed land only if their nation pays for it
 			if built[i * nations + best] <= 0.35:
+				# Troops alone claim unclaimed land only if their nation buys it: the
+				# player is asked first; an AI pays from its treasury.
+				if best == 0:
+					if not i in offer and float(declined.get(i, -1.0)) <= world.game_time:
+						offer.append(i)
+					continue
+				if not _buy(best):
+					continue
 				bought[best] = int(bought.get(best, 0)) + 1
 			owner_of[i] = best
 			control[i] = clampf(best_w * 9.0, 18.0, 45.0)
@@ -369,8 +441,7 @@ func tick() -> void:
 				if lost_by == 0 or best == 0:
 					var c := center(i)
 					world.hud.notice("Territory %s near (%d, %d)." % ["lost to %s" % world.diplomacy.name_of(best) if lost_by == 0 else "taken from %s" % world.diplomacy.name_of(lost_by), int(c.x), int(c.z)])
-	if bought.has(0):
-		world.hud.notice("Your forces claimed %d hex%s of unclaimed land for $%d." % [bought[0], "" if bought[0] == 1 else "es", int(bought[0] * LAND_PRICE)])
+	_ask_to_buy()
 	if _waters():
 		flipped = true
 	fronts = 0
@@ -400,6 +471,9 @@ func set_visible_borders(on: bool) -> void:
 # ---------------------------------------------------------------- the map view
 
 var _labels: Array[Label3D] = []
+var offer: Array[int] = []        ## unclaimed hexes under the player's troops, awaiting the player's answer
+var declined := {}                ## hex -> match time it may be offered again
+var asking := false
 
 ## Paints the land each nation holds in its colour, in the terrain itself:
 ## a small texture with one texel per hex (colour and tint strength) that

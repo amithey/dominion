@@ -662,6 +662,89 @@ func power_station(rng: RandomNumberGenerator, footprint: float) -> void:
 		box(TRIM, foot + Vector3(-0.07, 0, -0.07), foot + Vector3(0.07, 9.0 * s, 0.07), Color("8a8c88"))
 	box(TRIM, yard + Vector3(-1.8, 7.5 * s, -3.2 * s - 0.08), yard + Vector3(1.8, 7.5 * s + 0.15, -3.2 * s + 0.08), Color("8a8c88"))
 
+## A military airfield on its hex: a runway along z with threshold bars,
+## centre-line dashes and edge lights, a taxiway to an apron of numbered
+## parking slots (air_operations.gd uses the same positions), an arched
+## hangar, a control tower with a glazed cab, fuel tanks and a windsock.
+## Coordinates are the hex's own (the district's container is not rotated).
+func airfield(rng: RandomNumberGenerator) -> void:
+	const AO := preload("res://scripts/air_operations.gd")
+	var rx: float = AO.RUNWAY_X
+	var asphalt := Color("3a3d40")
+	var paint := Color("e8e6dc")
+	# Runway: 3.6 m wide, corner to corner of the hex.
+	quad(TRIM, Vector3(rx - 1.8, 0.12, 11.0), Vector3(rx + 1.8, 0.12, 11.0), Vector3(rx + 1.8, 0.12, -11.0), Vector3(rx - 1.8, 0.12, -11.0), asphalt)
+	for z in range(-9, 10, 3):
+		quad(TRIM, Vector3(rx - 0.07, 0.14, z + 1.0), Vector3(rx + 0.07, 0.14, z + 1.0), Vector3(rx + 0.07, 0.14, z), Vector3(rx - 0.07, 0.14, z), paint)
+	for end in [-10.4, 10.4]:
+		for k in range(4):
+			var x := rx - 1.4 + k * 0.75 + 0.1
+			quad(TRIM, Vector3(x, 0.14, end + 0.5), Vector3(x + 0.35, 0.14, end + 0.5), Vector3(x + 0.35, 0.14, end - 0.5), Vector3(x, 0.14, end - 0.5), paint)
+	for z in range(-10, 11, 4):
+		for side in [-1.0, 1.0]:
+			box(TRIM, Vector3(rx + side * 1.95 - 0.08, 0.1, z - 0.08), Vector3(rx + side * 1.95 + 0.08, 0.35, z + 0.08), Color("f2d060"))
+	# Taxiway from the runway to the apron, and the apron itself.
+	quad(TRIM, Vector3(rx + 1.8, 0.11, 1.2), Vector3(3.2, 0.11, 1.2), Vector3(3.2, 0.11, -1.2), Vector3(rx + 1.8, 0.11, -1.2), Color("45484a"))
+	quad(TRIM, Vector3(3.2, 0.11, 8.4), Vector3(8.0, 0.11, 8.4), Vector3(8.0, 0.11, -8.4), Vector3(3.2, 0.11, -8.4), Color("54575a"))
+	for i in range(AO.SLOT_POSITIONS.airfield.size()):
+		var sp: Vector3 = AO.SLOT_POSITIONS.airfield[i]
+		# A painted parking box with a yellow lead-in line.
+		for side in [-1.0, 1.0]:
+			quad(TRIM, Vector3(sp.x - 1.6, 0.13, sp.z + side * 1.9 + 0.05), Vector3(sp.x + 2.4, 0.13, sp.z + side * 1.9 + 0.05), Vector3(sp.x + 2.4, 0.13, sp.z + side * 1.9 - 0.05), Vector3(sp.x - 1.6, 0.13, sp.z + side * 1.9 - 0.05), Color("f2d060"))
+		quad(TRIM, Vector3(3.2, 0.13, sp.z + 0.05), Vector3(sp.x + 1.6, 0.13, sp.z + 0.05), Vector3(sp.x + 1.6, 0.13, sp.z - 0.05), Vector3(3.2, 0.13, sp.z - 0.05), Color("f2d060"))
+		# The slot number, as bars (1 to 4).
+		for k in range(i + 1):
+			quad(TRIM, Vector3(sp.x + 1.9, 0.14, sp.z - 0.6 + k * 0.35 + 0.12), Vector3(sp.x + 2.2, 0.14, sp.z - 0.6 + k * 0.35 + 0.12), Vector3(sp.x + 2.2, 0.14, sp.z - 0.6 + k * 0.35), Vector3(sp.x + 1.9, 0.14, sp.z - 0.6 + k * 0.35), paint)
+	# An arched hangar west of the runway, doors open toward it.
+	var hx := rx - 5.0
+	var hz := -4.0
+	for i in range(10):
+		var a0 := PI * i / 10.0
+		var a1 := PI * (i + 1) / 10.0
+		var p0 := Vector3(hx + cos(a0) * 2.4, sin(a0) * 2.6, 0)
+		var p1 := Vector3(hx + cos(a1) * 2.4, sin(a1) * 2.6, 0)
+		quad(METAL, Vector3(p1.x, p1.y, hz - 3.0), Vector3(p0.x, p0.y, hz - 3.0), Vector3(p0.x, p0.y, hz + 3.0), Vector3(p1.x, p1.y, hz + 3.0), Color("8a948a"))
+	for i in range(10):
+		var a0 := PI * i / 10.0
+		var a1 := PI * (i + 1) / 10.0
+		tri(METAL, Vector3(hx, 0, hz - 3.0), Vector3(hx + cos(a0) * 2.4, sin(a0) * 2.6, hz - 3.0), Vector3(hx + cos(a1) * 2.4, sin(a1) * 2.6, hz - 3.0), Color("7a847a"))
+	quad(GLASS, Vector3(hx - 2.2, 0.1, hz + 3.01), Vector3(hx + 2.2, 0.1, hz + 3.01), Vector3(hx + 2.2, 2.2, hz + 3.01), Vector3(hx - 2.2, 2.2, hz + 3.01), Color("1c2026"))
+	# Control tower.
+	var tx := rx - 5.0
+	var tz := 5.5
+	box(STONE, Vector3(tx - 1.0, 0.0, tz - 1.0), Vector3(tx + 1.0, 5.2, tz + 1.0), Color("d8d2c2"))
+	fenestrate(2.0, 2.0, 0.0, 1, 4.0, Color("e8e2d4"), Color(0, 0, 0, 0), rng, false)
+	box(TRIM, Vector3(tx - 1.5, 5.2, tz - 1.5), Vector3(tx + 1.5, 5.35, tz + 1.5), Color("c8c2b2"))
+	box(GLASS, Vector3(tx - 1.3, 5.35, tz - 1.3), Vector3(tx + 1.3, 6.6, tz + 1.3), Color("5a7888"))
+	box(ROOF, Vector3(tx - 1.6, 6.6, tz - 1.6), Vector3(tx + 1.6, 6.8, tz + 1.6), Color("5a5f64"))
+	box(TRIM, Vector3(tx - 0.04, 6.8, tz - 0.04), Vector3(tx + 0.04, 8.4, tz + 0.04), Color("a8aaa6"))
+	box(TRIM, Vector3(tx - 0.12, 8.4, tz - 0.12), Vector3(tx + 0.12, 8.6, tz + 0.12), Color("d84030"))
+	# Fuel tanks and the windsock.
+	for i in range(2):
+		cylinder(METAL, Vector3(7.2, 0.0, -9.3 + i * 0.0 + (i * 2.0)), 0.8, 1.6, Color("d8dcd6"), 12)
+	box(TRIM, Vector3(0.6 - 0.04, 0.0, 9.5 - 0.04), Vector3(0.6 + 0.04, 3.0, 9.5 + 0.04), Color("d8d8d0"))
+	cylinder(BANNER, Vector3(0.6, 2.9, 9.5), 0.2, 0.25, Color("f08030"), 8, 0.12)
+	quad(BANNER, Vector3(0.6, 2.95, 9.35), Vector3(1.8, 2.8, 9.42), Vector3(1.8, 2.95, 9.58), Vector3(0.6, 3.1, 9.65), Color("f08030"))
+
+## A helipad hex: two marked pads (the same positions air_operations.gd uses) and a small hangar.
+func helipad(rng: RandomNumberGenerator) -> void:
+	const AO := preload("res://scripts/air_operations.gd")
+	for sp in AO.SLOT_POSITIONS.helipad:
+		cylinder(STONE, sp + Vector3(0, -0.2, 0), 2.6, 0.35, Color("5a5d60"), 24)
+		cylinder(TRIM, sp + Vector3(0, 0.16, 0), 2.1, 0.02, Color("e8e6dc"), 24)
+		cylinder(TRIM, sp + Vector3(0, 0.17, 0), 1.95, 0.02, Color("5a5d60"), 24)
+		# The H.
+		box(TRIM, sp + Vector3(-0.8, 0.18, -0.9), sp + Vector3(-0.5, 0.2, 0.9), Color("e8e6dc"))
+		box(TRIM, sp + Vector3(0.5, 0.18, -0.9), sp + Vector3(0.8, 0.2, 0.9), Color("e8e6dc"))
+		box(TRIM, sp + Vector3(-0.5, 0.18, -0.15), sp + Vector3(0.5, 0.2, 0.15), Color("e8e6dc"))
+	var saved := xf
+	xf = xf * Transform3D(Basis(), Vector3(0, 0, -6.5))
+	box(STONE, Vector3(-3.0, -0.2, -1.8), Vector3(3.0, 0.3, 1.8), Color("9c9484"))
+	walls(METAL, 6.0, 3.6, 0.3, 3.0, Color("8a948a"))
+	gable_roof(6.0, 3.6, 3.3, 1.0, Color("5a5f64"), METAL, Color("8a948a"), 0.3)
+	quad(GLASS, Vector3(-2.2, 0.3, 1.81), Vector3(2.2, 0.3, 1.81), Vector3(2.2, 2.6, 1.81), Vector3(-2.2, 2.6, 1.81), Color("1c2026"))
+	xf = saved
+
 ## An apartment block: storeys of plaster over a stone ground floor, with
 ## balconies, a flat roof behind a parapet and a water tank.
 func apartments(rng: RandomNumberGenerator, footprint: float, floors: int) -> void:
@@ -727,7 +810,7 @@ func commit() -> Node3D:
 static func has_recipe(key: String) -> bool:
 	return key in ["hq", "cityCenter", "cityHall", "courthouse", "bank", "university", "library", "school", "policeStation",
 		"hospital", "market", "villageCenter", "tankFactory", "warehouse", "barracks", "cottage", "residential", "workerHouse",
-		"luxuryVillas", "housing", "apartments", "tvStation", "intelAgency", "techPark", "farm", "foodDepot", "powerPlant"]
+		"luxuryVillas", "housing", "apartments", "tvStation", "intelAgency", "techPark", "farm", "foodDepot", "powerPlant", "airfield", "helipad"]
 
 ## --capture-city: close views of the capital's buildings (build/city-*.png).
 static func capture(w: Node) -> void:

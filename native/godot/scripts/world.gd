@@ -452,6 +452,10 @@ func _ready() -> void:
 		await preload("res://scripts/battle_regression.gd").capture(self)
 	elif "--capture-deposits" in args:
 		await preload("res://scripts/deposit_art.gd").capture(self)
+	elif "--airbase-test" in args:
+		await preload("res://scripts/airbase_regression.gd").run(self)
+	elif "--capture-airfield" in args:
+		await preload("res://scripts/airbase_regression.gd").capture(self)
 	elif "--state-test" in args:
 		await preload("res://scripts/state_regression.gd").run(self)
 	elif "--capture-terrain" in args:
@@ -1681,6 +1685,17 @@ func order_attack(selected: Array, enemy: Dictionary) -> void:
 		u.path = PackedVector3Array()
 
 func order_move(selected: Array, point: Vector3, attack := false) -> void:
+	# Aircraft sent onto one of their nation's air bases land there and stay.
+	var landed := []
+	for b in buildings:
+		if AirOperations.is_base(b) and b.built and not b.dead and Vector2(b.root.position.x - point.x, b.root.position.z - point.z).length() < 11.0:
+			for u in selected:
+				if u.get("fly", false) and u.owner == b.owner and AirOperations.order_land(self, u, b):
+					landed.append(u)
+	if not landed.is_empty():
+		selected = selected.filter(func(u): return not landed.any(func(l): return is_same(l, u)))
+		if landed[0].owner == 0:
+			hud.notice("%d aircraft landing at the base." % landed.size())
 	for u in selected:
 		if u.has("ground_attack"):
 			u.enemy = null
@@ -2388,6 +2403,9 @@ func queue_unit(b: Dictionary, key: String) -> void:
 	if economy.pop_used + queued_pop + int(def.get("pop", 1)) > economy.pop_cap:
 		hud.notice("Army capacity reached: build Housing Blocks")
 		return
+	if key in AIR and AirOperations.is_base(b) and AirOperations.room(self, b) <= 0:
+		hud.notice("All %d aircraft slots at this %s are taken. Build another, or base aircraft elsewhere." % [AirOperations.SLOTS[b.key], b.def.name])
+		return
 	var locked: String = research.unit_locked(key) if research else ""
 	if locked != "":
 		hud.notice("%s: %s." % [def.name, locked.to_lower()])
@@ -2437,7 +2455,10 @@ func update_training(delta: float) -> void:
 			out = (door - at).normalized()
 		var unit := spawn_unit(key, door, b.owner)
 		unit.heading = atan2(out.x, out.z)
-		order_move([unit], door + out * 8.0 + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4)))
+		if unit.get("fly", false) and AirOperations.is_base(b) and AirOperations.park_new(self, unit, b):
+			pass  # parked on its slot on the apron, waiting for orders
+		else:
+			order_move([unit], door + out * 8.0 + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4)))
 		economy.recalculate()
 		if b.owner == 0:
 			hud.notice("%s ready" % def.name)
@@ -2758,7 +2779,7 @@ func systems_test(capture: bool) -> void:
 	var enemy_cell := -1
 	var hq2: Dictionary = buildings.filter(func(b): return b.owner == 2 and b.key == "hq")[0]
 	for i in range(territory.owner_of.size()):
-		if territory.owner_of[i] == 2 and territory.center(i).distance_to(hq2.root.position) > 60.0 and height_at(territory.center(i).x, territory.center(i).z) > float(map.seaLevel) + 1.0:
+		if territory.owner_of[i] == 2 and territory.center(i).distance_to(hq2.root.position) > 20.0 and height_at(territory.center(i).x, territory.center(i).z) > float(map.seaLevel) + 1.0:
 			enemy_cell = i
 			break
 	var taken := false
