@@ -1,7 +1,7 @@
 # Builds the Windows release of DOMINION:
 #   1. copies the repository's art into the Godot project (prepare-desktop.ps1),
 #   2. imports it and exports dist\DOMINION.exe (one file, the game packed inside),
-#   3. wraps it in an installer, dist\DOMINION-Setup-<version>.exe.
+#   3. wraps it in an installer, dist\DOMINION-Setup.exe (the version is in its file properties).
 # Needs the Godot 4.7.2 Windows export template (for the portable Godot, in
 # .local-tools\godot\editor_data\export_templates\4.7.2.stable) and Inno Setup 6.
 # Usage:  powershell -ExecutionPolicy Bypass -File native\build-windows.ps1 [-Version 0.9.0]
@@ -33,6 +33,10 @@ $exe = Join-Path $dist 'DOMINION.exe'
 if (Test-Path -LiteralPath $exe) { Remove-Item -LiteralPath $exe -Force }
 & $godot --headless --path $project --export-release 'Windows Desktop' $exe
 if (-not (Test-Path -LiteralPath $exe)) { throw 'The Godot export did not produce dist\DOMINION.exe' }
+# dist\ holds exactly two files: DOMINION.exe (the game, to play and test) and
+# DOMINION-Setup.exe (the one release for the public; its version is inside the
+# file, in its properties). Older numbered installers are removed.
+Get-ChildItem -LiteralPath $dist -Filter 'DOMINION-Setup*.exe' | Remove-Item -Force
 & $iscc "/DAppVersion=$Version" (Join-Path $native 'installer\dominion.iss')
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed ($LASTEXITCODE)" }
 Get-ChildItem -LiteralPath $dist -Filter 'DOMINION*.exe' | ForEach-Object { '{0}  {1:N0} MB' -f $_.Name, ($_.Length / 1MB) }

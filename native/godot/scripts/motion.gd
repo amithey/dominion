@@ -20,6 +20,7 @@ const VEHICLE_ACCEL := 2.4     # a tank needs about two seconds to reach its top
 const VEHICLE_BRAKE := 5.0
 const VEHICLE_TURN := 1.35     # rad/s; tracked hulls pivot in place
 const PIVOT_ANGLE := 1.25      # past this heading error a vehicle stops and turns first
+const STEER_GAIN := 3.0        # turn rate per radian of heading error (then capped)
 
 const SPRING := 70.0           # body stiffness
 const DAMPING := 8.5           # below critical, so a hard stop rocks once or twice
@@ -35,7 +36,13 @@ static func drive(w: Node, unit: Dictionary, to: Vector3, remaining: float, chas
 	var err := angle_difference(unit.heading, want)
 	var turn_rate := VEHICLE_TURN if vehicle else INFANTRY_TURN
 	var old_heading: float = unit.heading
-	unit.heading = wrapf(unit.heading + clampf(err, -turn_rate * delta, turn_rate * delta), -PI, PI)
+	# Proportional steering: a full-rate turn only when well off the line,
+	# easing in as the heading comes round, so a hull settles on its course
+	# instead of swinging past it and back (the old bang-bang weave).
+	var turn := clampf(err * STEER_GAIN, -turn_rate, turn_rate) * delta
+	if absf(turn) > absf(err):
+		turn = err
+	unit.heading = wrapf(unit.heading + turn, -PI, PI)
 	unit.yaw_rate = angle_difference(old_heading, unit.heading) / maxf(delta, 0.0001)
 	var fwd := Vector3(sin(unit.heading), 0, cos(unit.heading))
 	# Throttle falls with the heading error; a hull facing away turns first.
@@ -48,10 +55,10 @@ static func drive(w: Node, unit: Dictionary, to: Vector3, remaining: float, chas
 	# Grade along the direction of travel (rise over run).
 	var p: Vector3 = unit.node.position
 	var grade: float = (w.height_at(p.x + fwd.x * 2.0, p.z + fwd.z * 2.0) - w.height_at(p.x - fwd.x * 2.0, p.z - fwd.z * 2.0)) / 4.0
-	var slope := clampf(1.0 - grade * (2.4 if vehicle else 1.5), 0.45, 1.12)
+	var slope := clampf(1.0 - grade * (1.6 if vehicle else 1.5), 0.6 if vehicle else 0.45, 1.12)
 	# A formation marches at the pace of its slowest member until it fights.
 	var pace: float = unit.get("pace", INF) if not chasing else INF
-	var top: float = minf(unit.speed, pace) * slope * align
+	var top: float = minf(minf(unit.speed, pace), float(unit.get("traffic_cap", INF))) * slope * align
 	var brake := VEHICLE_BRAKE if vehicle else INFANTRY_BRAKE
 	# Never faster than a stop within the distance left: at the end of a route,
 	# or at a firing position (otherwise a hull circles a moving mark forever).

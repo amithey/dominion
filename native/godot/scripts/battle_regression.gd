@@ -62,6 +62,90 @@ static func capture(w: Node) -> void:
 		img.get_region(Rect2i(sz.x - 240, sz.y - 240, 240, 240)).save_png("res://build/minimap-%d.png" % int(yaw * 100))
 	w.get_tree().quit()
 
+## --convoy-test: an armoured group driven across open ground. Fails when
+## hulls weave left and right, touch each other, wander far off the straight
+## route, or do not all arrive.
+static func convoy(w: Node) -> void:
+	w.set_physics_process(false)
+	w.effects.set_physics_process(false)
+	await w.get_tree().physics_frame
+	var far: Vector3 = w.land_point(w.start, 170.0)
+	var axis: Vector3 = (far - w.start).normalized()
+	var side := Vector3(-axis.z, 0, axis.x)
+	var from: Vector3 = w.start + axis * 40.0
+	var group: Array = []
+	var roster := ["tank", "tank", "tank", "apc", "tank", "tank", "apc", "tank"]
+	for i in range(roster.size()):
+		# A loose, untidy start, as a player's army usually stands.
+		var spot: Vector3 = from + side * (i % 4 - 1.5) * 7.0 - axis * floorf(i / 4.0) * 8.0 + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
+		var u: Dictionary = w.spawn_unit(roster[i], spot, 0)
+		u.heading = atan2(axis.x, axis.z) + randf_range(-0.8, 0.8)
+		group.append(u)
+	var goal: Vector3 = from + axis * 130.0 + side * 25.0
+	w.order_move(group, goal)
+	var weave := 0
+	var last_sign := {}
+	var closest := INF
+	var closest_when := ""
+	var arrivals := {}
+	var travelled := {}
+	var start_pos := {}
+	for u in group:
+		start_pos[u.node.get_instance_id()] = u.node.position
+		travelled[u.node.get_instance_id()] = 0.0
+	var arrived := -1.0
+	for f in range(60 * 80):
+		var before := {}
+		for u in group:
+			before[u.node.get_instance_id()] = u.node.position
+		step(w)
+		for i in range(group.size()):
+			var u: Dictionary = group[i]
+			var id: int = u.node.get_instance_id()
+			travelled[id] += Vector2(u.node.position.x - before[id].x, u.node.position.z - before[id].z).length()
+			var yr: float = u.get("yaw_rate", 0.0)
+			if absf(yr) > 0.2 and u.get("cur_speed", 0.0) > 1.0:
+				var sg := signf(yr)
+				if last_sign.has(id) and last_sign[id] != sg:
+					weave += 1
+					if OS.get_cmdline_user_args().has("--trace"):
+						print("WEAVE t=%.2f #%d %s rate %+.2f v %.1f swerve %.2f cap %s rem %.1f" % [f / 60.0, i, u.key, yr, u.get("cur_speed", 0.0), u.get("swerve", 0.0), str(snappedf(u.get("traffic_cap", INF), 0.1)), Vector2(u.target.x - u.node.position.x, u.target.z - u.node.position.z).length() if u.target != null else 0.0])
+				last_sign[id] = sg
+			if u.target == null and not arrivals.has(id):
+				arrivals[id] = "#%d %.0fs" % [i, f / 60.0]
+			for j in range(i + 1, group.size()):
+				var o: Dictionary = group[j]
+				var gap := Vector2(o.node.position.x - u.node.position.x, o.node.position.z - u.node.position.z).length()
+				if gap < closest and f > 180:  # the untidy start is placed, not driven
+					closest = gap
+					closest_when = "#%d and #%d at %.1f s (moving %s/%s, %.1f m from their marks)" % [i, j, f / 60.0, u.moving, o.moving, Vector2(u.target.x - u.node.position.x, u.target.z - u.node.position.z).length() if u.target != null else 0.0]
+		if OS.get_cmdline_user_args().has("--trace") and f % 15 == 0:
+			for k in [1, 4]:
+				var u: Dictionary = group[k]
+				var tr: Dictionary = u.get("traffic", {})
+				print("TRACE t=%.2f #%d yaw %.2f rate %+.2f v %.2f cap %s rem %.1f path %d stall %.1f stuck %d" % [f / 60.0, k, u.heading, u.get("yaw_rate", 0.0), u.get("cur_speed", 0.0), str(snappedf(tr.get("cap", INF), 0.1)) if tr.get("cap", INF) < 1000 else "-", Vector2(u.target.x - u.node.position.x, u.target.z - u.node.position.z).length() if u.target != null else 0.0, u.path.size(), u.get("stall", 0.0), u.get("stuck", 0)])
+		if group.all(func(u): return u.target == null):
+			arrived = f / 60.0
+			break
+	var detour := 0.0
+	for u in group:
+		var id: int = u.node.get_instance_id()
+		var straight: float = Vector2(u.node.position.x - start_pos[id].x, u.node.position.z - start_pos[id].z).length()
+		detour = maxf(detour, travelled[id] / maxf(straight, 1.0))
+	print("CONVOY arrived %.1f s, direction reversals %d, closest hulls %.1f m, worst route/straight %.2f" % [arrived, weave, closest, detour])
+	print("CONVOY closest: %s; arrivals: %s" % [closest_when, ", ".join(PackedStringArray(arrivals.values()))])
+	var failures := PackedStringArray()
+	if arrived < 0.0:
+		failures.append("the group did not all arrive in 80 s (the route climbs a hill; about 55 s is normal)")
+	if weave > group.size() * 4:  # a swerve round something and back is two; weaving was hundreds
+		failures.append("hulls weaved: %d left/right reversals" % weave)
+	if closest < 4.5:
+		failures.append("hulls came within %.1f m of each other" % closest)
+	if detour > 1.35:
+		failures.append("a vehicle drove %.2f times the straight distance" % detour)
+	print("CONVOY_TEST " + ("PASS" if failures.is_empty() else "FAIL: " + "; ".join(failures)))
+	w.get_tree().quit(0 if failures.is_empty() else 1)
+
 static func run(w: Node) -> void:
 	w.set_physics_process(false)
 	w.effects.set_physics_process(false)

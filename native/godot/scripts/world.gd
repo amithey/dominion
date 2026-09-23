@@ -432,6 +432,8 @@ func _ready() -> void:
 		await capture_screens()
 	elif "--capture-tactics" in args:
 		await preload("res://scripts/battle_regression.gd").capture(self)
+	elif "--convoy-test" in args:
+		await preload("res://scripts/battle_regression.gd").convoy(self)
 	elif "--battle-test" in args:
 		await preload("res://scripts/battle_regression.gd").run(self)
 	elif "--motion-test" in args:
@@ -1856,13 +1858,27 @@ func _physics_process(delta: float) -> void:
 		var end: Vector3 = unit.path[unit.path.size() - 1] if not unit.path.is_empty() else goal
 		var to: Vector3 = waypoint - node.position
 		to.y = 0
+		unit.traffic_cap = INF
+		if unit.vehicle:
+			# Hulls steer at a point further along the route and give way to
+			# each other like traffic (tactics.gd), instead of being shoved.
+			var aim: Vector3 = Tactics.look_ahead(unit, 7.0) if not unit.path.is_empty() else waypoint
+			to = aim - node.position
+			to.y = 0
+			if thinks(unit) or not unit.has("traffic"):
+				unit.traffic = Tactics.traffic(self, unit, to, Vector2(end.x - node.position.x, end.z - node.position.z).length() if not chasing else INF)
+			var steer: Vector3 = unit.traffic.dir
+			var swing := steer.signed_angle_to(to.normalized(), Vector3.UP) if to.length() > 0.001 else 0.0
+			to = to.rotated(Vector3.UP, -swing) if absf(swing) > 0.001 else to
+			unit.traffic_cap = unit.traffic.cap
 		var remaining := Vector2(end.x - node.position.x, end.z - node.position.z).length()
 		# A slot another unit is standing on is never reached exactly: when a
 		# unit stops gaining on its mark, it counts as there if close, or tries
 		# a fresh route, and after a few tries settles where it is.
 		if not chasing:
-			if remaining < float(unit.get("best_rem", INF)) - 0.4:
-				unit.best_rem = remaining
+			# Waiting in line behind a comrade is not being stuck.
+			if remaining < float(unit.get("best_rem", INF)) - 0.4 or float(unit.get("traffic_cap", INF)) < 0.6:
+				unit.best_rem = minf(remaining, float(unit.get("best_rem", INF)))
 				unit.stall = 0.0
 			else:
 				unit.stall = float(unit.get("stall", 0.0)) + delta
@@ -1870,7 +1886,9 @@ func _physics_process(delta: float) -> void:
 				unit.stall = 0.0
 				unit.best_rem = INF
 				unit.stuck = int(unit.get("stuck", 0)) + 1
-				if remaining < (8.0 if unit.vehicle else 4.5) or unit.stuck >= 4:
+				# Close to the mark: that is where it stands. Far from it: a fresh
+				# route, and only after many failures does it stop short.
+				if remaining < (8.0 if unit.vehicle else 4.5) or (unit.stuck >= 4 and remaining < 20.0) or unit.stuck >= 10:
 					remaining = 0.0
 				else:
 					unit.path = PackedVector3Array()
@@ -1895,7 +1913,7 @@ func _physics_process(delta: float) -> void:
 		var push: Vector3 = unit.get("push", Vector3.ZERO)
 		if perf_opts and (sim_tick + slot) % 2 != 0:
 			spent("  keeping clear", t_sep)
-			next += Tactics.sidestep(unit, travel, push).limit_length(maxf(step * 1.5, delta * 1.5))
+			next += (push if unit.vehicle else Tactics.sidestep(unit, travel, push)).limit_length(maxf(step * 1.5, delta * 1.5))
 			if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
 				unit.target = null
 				Motion.halt(unit, delta)
@@ -1906,10 +1924,10 @@ func _physics_process(delta: float) -> void:
 			animate(unit, true)
 			spent("  placing", t_place_now)
 			continue
-		push = Tactics.crowd_push(self, unit, next)
+		push = Tactics.hard_push(self, unit, next) if unit.vehicle else Tactics.crowd_push(self, unit, next)
 		unit.push = push
 		spent("  keeping clear", t_sep)
-		next += Tactics.sidestep(unit, travel, push).limit_length(maxf(step * 1.5, delta * 1.5))
+		next += (push if unit.vehicle else Tactics.sidestep(unit, travel, push)).limit_length(maxf(step * 1.5, delta * 1.5))
 		if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
 			unit.target = null  # land units stop at the waterline
 			Motion.halt(unit, delta)
@@ -2134,10 +2152,38 @@ func path_between(from: Vector3, to: Vector3) -> PackedVector3Array:
 	var route := NavigationServer3D.map_get_path(get_world_3d().navigation_map, from, to, true)
 	if route.is_empty():
 		return PackedVector3Array([to])
+	route = straighten(route)
 	route.remove_at(0)  # the unit's own position
 	if route.is_empty():
 		route.append(to)
 	return route
+
+## The navigation grid is 4 m cells, so its routes zigzag cell to cell (36
+## corners over 140 m of open field). Keep a corner only where the straight
+## line past it would leave walkable ground: open country becomes one leg,
+## and the route still bends round buildings, water and cliffs.
+func straighten(route: PackedVector3Array) -> PackedVector3Array:
+	if route.size() <= 2 or nav_n == 0:
+		return route
+	var out := PackedVector3Array([route[0]])
+	var anchor := 0
+	var i := 2
+	while i < route.size():
+		if not clear_line(route[anchor], route[i]):
+			out.append(route[i - 1])
+			anchor = i - 1
+		i += 1
+	out.append(route[route.size() - 1])
+	return out
+
+## Walkable ground all along the segment (sampled every 2 m on the walk grid).
+func clear_line(a: Vector3, b: Vector3) -> bool:
+	var length := Vector2(b.x - a.x, b.z - a.z).length()
+	var samples := maxi(1, ceili(length / 2.0))
+	for k in range(1, samples):
+		if not open_ground(a.lerp(b, float(k) / samples)):
+			return false
+	return true
 
 # Next point to head for; plans (and re-plans while chasing) the route.
 func steer_point(unit: Dictionary, goal: Vector3, chasing: bool, delta: float) -> Vector3:

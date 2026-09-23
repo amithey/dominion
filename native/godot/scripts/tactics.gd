@@ -184,7 +184,7 @@ static func formation(selected: Array, point: Vector3) -> Array:
 		var members: Array = groups[g]
 		if members.is_empty():
 			continue
-		var spacing := 6.0 if g != 1 else 2.8
+		var spacing := 8.5 if g != 1 else 2.8   # hulls keep 6.5 m apart: slots must be wider
 		var width := maxi(1, ceili(sqrt(members.size() * (1.0 if g != 1 else 2.2))))
 		# Hand out slots left to right in the order units already stand across
 		# the line of march, so nobody crosses a comrade's path.
@@ -256,4 +256,104 @@ static func crowd_push(w: Node, unit: Dictionary, at: Vector3) -> Vector3:
 						d2 = gap.length_squared()
 					var d := sqrt(d2)
 					push += gap / d * (clearance - d)
+	return push
+
+# ---------------------------------------------------------------- vehicle traffic
+
+## A point `ahead` metres along the unit's route (pure pursuit): steering at
+## it instead of at the next corner keeps a hull on a smooth line.
+static func look_ahead(unit: Dictionary, ahead: float) -> Vector3:
+	var pos: Vector3 = unit.node.position
+	var path: PackedVector3Array = unit.path
+	if path.is_empty():
+		return pos
+	var left := ahead
+	var from := pos
+	for p in path:
+		var seg := Vector2(p.x - from.x, p.z - from.z).length()
+		if seg >= left:
+			return from.lerp(p, left / maxf(seg, 0.001))
+		left -= seg
+		from = p
+	return path[path.size() - 1]
+
+## How a vehicle drives among others: `dir` is the direction to steer, `cap`
+## the speed it may not exceed. A vehicle ahead going the same way is
+## followed at its pace; one stopped or crossing is steered round on the side
+## with more room. Nothing pushes a hull sideways (see hard_push).
+static func traffic(w: Node, unit: Dictionary, to: Vector3, remaining := INF) -> Dictionary:
+	var dir := to.normalized() if to.length() > 0.001 else Vector3(sin(unit.heading), 0, cos(unit.heading))
+	# The lane runs along the route, not along the hull: turning away from an
+	# obstacle does not make it vanish from the lane (which used to flip the
+	# manoeuvre on and off five times a second); only driving past it does.
+	var fwd := dir
+	var right := Vector3(fwd.z, 0, -fwd.x)
+	var at: Vector3 = unit.node.position
+	var cap := INF
+	var swerve := 0.0
+	# While already going round something, the lane is a little wider, so the
+	# hull does not drop the manoeuvre halfway and swing back into it.
+	var widen: float = 1.0 + 0.4 * clampf(absf(float(unit.get("swerve", 0.0))), 0.0, 1.0)
+	var cx := floori(at.x / w.GRID)
+	var cz := floori(at.z / w.GRID)
+	for dz in range(-2, 3):
+		for dx in range(-2, 3):
+			var bucket = w.grid.get(Vector2i(cx + dx, cz + dz))
+			if bucket == null:
+				continue
+			for other in bucket:
+				if is_same(other, unit) or other.dead:
+					continue
+				var rel: Vector3 = other.node.position - at
+				rel.y = 0.0
+				var ahead := rel.dot(fwd)
+				var lateral := rel.dot(right)
+				var lane: float = (3.6 if other.vehicle else 2.2) * widen
+				# Something standing past the end of this unit's own route is no
+				# obstacle (the front rank at rest, just ahead of a rear-rank slot).
+				if ahead <= 0.0 or ahead > 13.0 or absf(lateral) > lane or ahead > remaining + 1.0:
+					continue
+				var other_fwd := Vector3(sin(other.heading), 0, cos(other.heading))
+				var other_speed: float = other.get("cur_speed", 0.0) if other.get("moving", false) else 0.0
+				if other_speed > 0.3 and other_fwd.dot(fwd) > 0.5:
+					# Same way: fall in behind at its pace, about two lengths back.
+					cap = minf(cap, maxf(other_speed + (ahead - 9.0) * 0.8, 0.0))
+				else:
+					# Stopped, crossing or oncoming: steer round it, slowing a little.
+					var urgency := clampf((13.0 - ahead) / 8.0, 0.0, 1.0) * clampf((lane - absf(lateral)) / lane + 0.3, 0.0, 1.0)
+					var away := -1.0 if lateral > 0.0 else 1.0
+					var held: float = unit.get("swerve", 0.0)
+					if absf(lateral) < 0.6:
+						# Dead ahead: keep the side already chosen, else this unit's own side.
+						away = signf(held) if absf(held) > 0.05 else (1.0 if fposmod(float(unit.phase), 2.0) < 1.0 else -1.0)
+					swerve += away * urgency
+					cap = minf(cap, float(unit.speed) * (1.0 - 0.45 * urgency))
+	# The swerve eases in and out instead of switching.
+	var eased: float = lerpf(float(unit.get("swerve", 0.0)), clampf(swerve, -1.0, 1.0), 0.35)
+	unit.swerve = eased
+	if absf(eased) > 0.01:
+		dir = dir.rotated(Vector3.UP, -eased * 0.6).normalized()
+	return {"dir": dir, "cap": cap}
+
+## Only real overlap is resolved for a vehicle: two hulls closer than they can
+## physically be are separated. Soft crowding is handled by traffic().
+static func hard_push(w: Node, unit: Dictionary, at: Vector3) -> Vector3:
+	var push := Vector3.ZERO
+	var cx := floori(at.x / w.GRID)
+	var cz := floori(at.z / w.GRID)
+	for dz in range(-1, 2):
+		for dx in range(-1, 2):
+			var bucket = w.grid.get(Vector2i(cx + dx, cz + dz))
+			if bucket == null:
+				continue
+			for other in bucket:
+				if is_same(other, unit) or other.dead:
+					continue
+				var gap: Vector3 = at - other.node.position
+				gap.y = 0.0
+				var hard: float = 5.2 if other.vehicle else 2.4
+				var d2 := gap.length_squared()
+				if d2 < hard * hard and d2 > 0.000001:
+					var d := sqrt(d2)
+					push += gap / d * (hard - d)
 	return push
