@@ -3778,6 +3778,9 @@ func select_building(b) -> void:
 	selection_marker.visible = true
 
 func building_under(screen: Vector2):
+	var mesh_hit = Picking.pick_building(camera, buildings, screen)
+	if mesh_hit != null:
+		return mesh_hit
 	var best = null
 	var best_d := INF
 	for b in buildings:

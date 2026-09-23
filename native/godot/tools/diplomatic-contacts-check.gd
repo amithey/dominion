@@ -110,7 +110,22 @@ func run() -> void:
 	# Clicking the real foreign HQ opens the same contact, not production.
 	for b in w.buildings:
 		if b.owner == 1 and b.key == "hq":
-			w.hud.show_building(b)
+			w.cam_focus = b.root.position
+			w.cam_dist = 45.0
+			w.cam_dist_target = 45.0
+			w.cam_pitch = 0.65
+			w.update_camera(0.0)
+			var bounds: AABB = preload("res://scripts/picking.gd").local_box({"node": b.root})
+			var roof: Vector3 = bounds.get_center() + Vector3.UP * bounds.size.y * 0.42
+			var point: Vector2 = w.camera.unproject_position(b.root.global_transform * roof)
+			check(is_same(w.building_under(point), b), "clicking the visible capital roof selects its building")
+			var event := InputEventMouseButton.new()
+			event.position = point
+			event.button_index = MOUSE_BUTTON_LEFT
+			event.pressed = true
+			w._unhandled_input(event)
+			event.pressed = false
+			w._unhandled_input(event)
 			break
 	check(w.hud._diplomatic_contact_screen != null and w.hud._diplomatic_contact_screen.visible, "foreign civic building opens contact screen")
 	var port_at = w.test_site("port", w.start)

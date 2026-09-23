@@ -13,6 +13,29 @@ extends RefCounted
 const MARGIN := 8.0       ## pixels of grace around a unit's outline
 const MIN_RADIUS := 18.0  ## the smallest clickable radius round a unit's centre
 
+## Buildings can be much taller than their ground footprint. Test the visible
+## meshes with the camera ray, so a dome, roof or facade is also clickable.
+## This runs only on clicks; do not cache construction meshes that can change.
+static func pick_building(camera: Camera3D, buildings: Array, screen: Vector2) -> Variant:
+	var origin := camera.project_ray_origin(screen)
+	var direction := camera.project_ray_normal(screen)
+	var best = null
+	var nearest := INF
+	for building in buildings:
+		if building.dead or not is_instance_valid(building.root): continue
+		for mesh in building.root.find_children("*", "MeshInstance3D", true, false):
+			if not mesh.is_visible_in_tree(): continue
+			var inverse: Transform3D = mesh.global_transform.affine_inverse()
+			var hit = mesh.get_aabb().intersects_ray(inverse * origin, inverse.basis * direction)
+			if hit == null: continue
+			var point: Vector3 = mesh.global_transform * hit
+			if (point - origin).dot(direction) < 0: continue
+			var distance := origin.distance_squared_to(point)
+			if distance < nearest:
+				nearest = distance
+				best = building
+	return best
+
 ## The unit's box in its own space, measured from its meshes once (the
 ## selection ring and effects are left out).
 static func local_box(unit: Dictionary) -> AABB:
