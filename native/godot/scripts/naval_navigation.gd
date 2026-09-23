@@ -1,5 +1,6 @@
 extends RefCounted
 const STEP := 10.0
+const OPEN_SEA := 240.0   ## metres of navigable sea beyond each edge of the map
 var world: Node
 var grid := AStarGrid2D.new()
 var half := 0.0
@@ -7,7 +8,9 @@ var open: Array[Vector2i] = []
 
 func setup(w: Node) -> void:
 	world = w
-	half = float(w.map.mapSize)*0.5
+	# The sea goes on past the edge of the map: the grid does too, so a ship can
+	# always sail round the island even where the land runs up to the map's edge.
+	half = float(w.map.mapSize)*0.5 + OPEN_SEA
 	var n := floori(half*2/STEP)
 	grid.region = Rect2i(0,0,n,n)
 	grid.cell_size = Vector2(STEP,STEP)

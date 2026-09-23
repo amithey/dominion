@@ -21,6 +21,8 @@ $tests = @(
     @('borders, passage and operational zones', @('--', '--border-test'), 'BORDER_TEST PASS', 400),
     @('clearing trees and resources for a building', @('--', '--site-test'), 'SITE_TEST PASS', 200),
     @('clicking any part of a unit selects it', @('--', '--pick-test'), 'PICK_TEST PASS', 200),
+    @('land: build in your territory, buy unclaimed land, territorial waters', @('--', '--land-test'), 'LAND_TEST PASS', 200),
+    @('ships sail round the island', @('--', '--sea-test'), 'SEA_TEST PASS', 600),
     @('economy', @('--', '--economy-test'), 'ECONOMY_TEST PASS', 240),
     @('combat (every weapon)', @('--', '--combat-test'), 'COMBAT_TEST PASS', 400),
     @('combat fixes and aircraft service', @('--', '--combat-regression'), 'COMBAT_REGRESSION PASS', 180),

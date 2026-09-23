@@ -98,3 +98,7 @@ UI files listed above.
   (lawn/hedge for houses, pavers, slabs, gravel), asphalt streets with kerbs and pavements that continue across
   tile edges, and no grey kerb frame round every hex. Colours in that shader go through `srgb()`. Nothing else
   touched; your diplomacy files and hud.gd were left alone.
+- 2026-09-23 Claude (0.9.8): ships navigate beyond the map edge (the sea was split in two); build anywhere in
+  your own territory; troops buy unclaimed hexes ($25) and win enemy ones only in war; territorial waters
+  (2 rings of sea off a coast) drawn by the new shared `shaders/territory.gdshaderinc`; textured resource
+  rocks. Your uncommitted run-tests line and diplomacy files were left out of my commit.

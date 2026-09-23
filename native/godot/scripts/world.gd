@@ -446,6 +446,10 @@ func _ready() -> void:
 		await preload("res://scripts/battle_regression.gd").capture(self)
 	elif "--capture-deposits" in args:
 		await preload("res://scripts/deposit_art.gd").capture(self)
+	elif "--land-test" in args:
+		await preload("res://scripts/land_regression.gd").run(self)
+	elif "--sea-test" in args:
+		await preload("res://scripts/sea_regression.gd").run(self)
 	elif "--pick-test" in args:
 		await preload("res://scripts/picking.gd").run(self)
 	elif "--site-test" in args:
@@ -1506,6 +1510,11 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 	return unit
 
 func is_water(p: Vector3, depth := DEEP) -> bool:
+	# Past the edge of the map there is only open sea (the terrain stops there;
+	# height_at would repeat the edge's heights for ever and close the sea lanes).
+	var half := float(map.mapSize) * 0.5
+	if absf(p.x) > half or absf(p.z) > half:
+		return true
 	return height_at(p.x, p.z) < float(map.seaLevel) + depth
 
 # Nearest point on open water to `from` (for ships leaving a shipyard).
@@ -2526,7 +2535,7 @@ func diplomacy_test(capture: bool) -> void:
 	print("DIPLOMACY_TEST %s" % ("PASS" if ok else "FAIL"))
 	get_tree().quit(0 if ok else 1)
 
-## A hex near `from` where `key` may stand, or where only the district rule
+## A hex near `from` where `key` may stand, or where only the territory rule
 ## objects (the test places it directly).
 func test_site(key: String, from: Vector3) -> Variant:
 	var origin: Vector2i = logistics.world_hex(from)
@@ -2537,7 +2546,7 @@ func test_site(key: String, from: Vector3) -> Variant:
 					continue
 				var at: Vector3 = logistics.hex_center(origin + Vector2i(dq, dr))
 				var problem := site_problem(key, at, 0)
-				if problem == "" or problem == "Outside your district":
+				if problem == "" or problem == "Outside your territory" or problem.begins_with("Inside "):
 					return at
 	return null
 
@@ -3597,6 +3606,13 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 			return "Too close to %s" % b.def.name
 		if b.owner == owner and b.built and gap < float(b.def.get("buildRadius", 0)):
 			in_district = true
+	# Land you hold is land you may build on, anywhere in it (territory.gd, hex
+	# by hex, sea hexes off your coast included); another nation's land is not.
+	var land_owner: int = territory.owner_at(at) if territory != null else -1
+	if land_owner == owner:
+		in_district = true
+	elif land_owner >= 0 and land_owner != owner:
+		return "Inside %s's land" % ("your" if land_owner == 0 else diplomacy.name_of(land_owner))
 	if def.get("unique", false) and buildings.any(func(b): return b.owner == owner and b.key == key and not b.dead):
 		return "Only one %s per nation" % def.name
 	if def.get("settlement") != null:
@@ -3610,7 +3626,7 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 			if b.owner != owner and gap < float(b.def.get("buildRadius", 0)) + 20.0:
 				return "Inside a rival's land"
 	elif not in_district:
-		return "Outside your district"
+		return "Outside your territory"
 	if def.get("onDeposit", false):
 		var dep = deposit_near(at, 6.0)
 		if dep == null or dep.extractor != null:

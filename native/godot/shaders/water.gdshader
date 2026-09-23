@@ -16,6 +16,7 @@ uniform float swell = 0.32;            // wave height in metres
 uniform float foam_width = 0.4;
 
 varying vec3 world_pos;
+#include "res://shaders/territory.gdshaderinc"
 
 uniform sampler2D noise_tex : filter_linear_mipmap, repeat_enable;
 
@@ -71,6 +72,19 @@ void fragment() {
 	float absorb = 1.0 - exp(-path * clarity);
 	vec3 water = mix(shallow_color, deep_color, smoothstep(0.0, 1.0, 1.0 - exp(-depth * 0.09)));
 	vec3 seen = mix(behind * mix(vec3(1.0), shallow_color * 1.6, 0.55), water, absorb);
+
+	// Territorial waters: the owner's border line along the hex edges and a
+	// soft band of colour inside it, as on land (the territory view washes more).
+	if (show_borders || show_territory) {
+		float near;
+		vec4 own = hex_territory(world_pos.xz, near);
+		if (own.a > 0.0) {
+			float line = 1.0 - smoothstep(0.35, 1.3, near);
+			float band = 1.0 - smoothstep(1.3, 6.0, near);
+			seen = mix(seen, own.rgb * 0.55, show_territory ? 0.28 : band * 0.3);
+			seen = mix(seen, own.rgb, line * 0.8);
+		}
+	}
 
 	// Shore foam: a thin broken line at the waterline with lacy streaks behind it.
 	float band = 1.0 - smoothstep(0.0, foam_width, depth);

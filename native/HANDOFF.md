@@ -152,3 +152,17 @@ about 8 runs. The battle test passed 10 of 10 after the final fixes. The install
 - Streets follow the `streets` bit mask as asphalt with kerbs and pavements, and meet in a small square
   in the middle. The rim kerb/hedge is skipped across a street, so streets join neighbouring tiles.
 - All literal colours are sRGB values converted with `srgb()`; the textures are already linear.
+
+## Added in 0.9.8 (Claude)
+
+- `world.is_water()`: outside the map square it is always open sea.
+- `naval_navigation.gd`: the grid reaches `OPEN_SEA` (240 m) beyond the map.
+- `world.site_problem()`: any hex with `territory.owner_at(at) == owner` is buildable. Another nation's
+  land returns "Inside X's land". The test helper `test_site` accepts both messages.
+- `territory.gd`:
+  - `built` presence (buildings only) is kept apart from troops. An unclaimed hex that only troops
+    claim needs `_buy(nation)` (`LAND_PRICE`).
+  - `_waters()` gives sea hexes within `WATERS` rings of a coast to that coast's owner, after every tick.
+  - `yields()` skips water.
+- `shaders/territory.gdshaderinc` holds the territory uniforms and `hex_territory()`, included by
+  terrain and water. `draw_fill()` sets the parameters on both materials.

@@ -16,7 +16,7 @@ extends RefCounted
 ## Each type's mesh is built once and shared; a site is two or three draws.
 
 const UI := preload("res://scripts/ui_theme.gd")
-const ICON_PX := 0.032   ## marker size with fixed_size (a fraction of the view height, about 26 px at 800)
+const ICON_PX := 0.05   ## marker size with fixed_size (a fraction of the view height, about 26 px at 800)
 const ICON := {"oil": "oil", "seaOil": "oil", "iron": "iron", "gold": "money", "diamond": "money",
 	"silicon": "silicon", "uranium": "uranium", "fish": "food"}
 
@@ -70,6 +70,23 @@ func _painted(roughness := 0.9, metallic := 0.0) -> StandardMaterial3D:
 	m.vertex_color_is_srgb = true  # the colours are written as sRGB; read as linear they wash out
 	m.roughness = roughness
 	m.metallic = metallic
+	return m
+
+## Real rock: the photographed rock of the mountains (with its relief),
+## projected from every side so it never stretches, tinted per boulder.
+func _stone() -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load("res://assets/terrain/rock_color.jpg")
+	m.normal_enabled = true
+	m.normal_texture = load("res://assets/terrain/rock_normal.jpg")
+	m.normal_scale = 1.4
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3.ONE * 0.45
+	m.vertex_color_use_as_albedo = true
+	m.vertex_color_is_srgb = true
+	m.albedo_color = Color(2.1, 2.1, 2.1)  # the photo is dark; the tint sets the colour
+	m.roughness = 0.88
 	return m
 
 func _crystal(colour: Color, glow: float) -> StandardMaterial3D:
@@ -171,42 +188,42 @@ func _mesh_for(type: String) -> ArrayMesh:
 			var st := _begin()
 			for i in range(4):
 				var a := rng.randf() * TAU
-				_rock(st, rng, Vector3(cos(a), 0, sin(a)) * rng.randf_range(3.5, 4.6), Vector3.ONE * rng.randf_range(0.4, 0.8), Color("4b4540"))
-			mesh = _commit(st, _mat("rock", func(): return _painted()))
+				_rock(st, rng, Vector3(cos(a), 0, sin(a)) * rng.randf_range(3.5, 4.6), Vector3.ONE * rng.randf_range(0.5, 0.9), Color("a39a90"))
+			mesh = _commit(st, _mat("rock", func(): return _stone()))
 		"iron":
 			var st := _begin()
-			for i in range(8):
+			for i in range(12):
 				var a := rng.randf() * TAU
-				var r := rng.randf_range(0.0, 3.6)
-				var s := rng.randf_range(0.8, 1.8)
-				_rock(st, rng, Vector3(cos(a) * r, 0, sin(a) * r), Vector3(s, s * rng.randf_range(0.6, 0.9), s * rng.randf_range(0.8, 1.2)), Color("8a4a2e").lerp(Color("5b3a2c"), rng.randf()))
-			mesh = _commit(st, _mat("rock", func(): return _painted()))
+				var r := rng.randf_range(0.0, 4.6)
+				var s := rng.randf_range(0.9, 2.3)
+				_rock(st, rng, Vector3(cos(a) * r, 0, sin(a) * r), Vector3(s, s * rng.randf_range(0.6, 0.9), s * rng.randf_range(0.8, 1.2)), Color("e08a5a").lerp(Color("b5643c"), rng.randf()))
+			mesh = _commit(st, _mat("rock", func(): return _stone()))
 		"gold":
 			var st := _begin()
-			for i in range(6):
+			for i in range(9):
 				var a := rng.randf() * TAU
-				var r := rng.randf_range(0.0, 3.4)
-				var s := rng.randf_range(0.9, 1.9)
-				_rock(st, rng, Vector3(cos(a) * r, 0, sin(a) * r), Vector3(s, s * 0.8, s), Color("7d7a74"))
-			mesh = _commit(st, _mat("rock", func(): return _painted()))
+				var r := rng.randf_range(0.0, 4.4)
+				var s := rng.randf_range(1.0, 2.4)
+				_rock(st, rng, Vector3(cos(a) * r, 0, sin(a) * r), Vector3(s, s * 0.8, s), Color("e6e0d4").lerp(Color("c9bfae"), rng.randf()))
+			mesh = _commit(st, _mat("rock", func(): return _stone()))
 			var ore := _begin()
-			for i in range(14):
+			for i in range(22):
 				var a := rng.randf() * TAU
-				var r := rng.randf_range(0.3, 3.8)
-				var s := rng.randf_range(0.18, 0.42)
+				var r := rng.randf_range(0.3, 4.6)
+				var s := rng.randf_range(0.22, 0.55)
 				_rock(ore, rng, Vector3(cos(a) * r, rng.randf_range(0.2, 1.2), sin(a) * r), Vector3(s, s * 0.7, s * 1.4), Color("e0b23c"))
 			mesh = _commit(ore, _mat("gold", func(): return _painted(0.28, 1.0)), mesh)
 		"silicon", "uranium", "diamond":
-			var base_colour: Color = {"silicon": Color("6e6a62"), "uranium": Color("3b3f38"), "diamond": Color("3a3f4a")}[type]
+			var base_colour: Color = {"silicon": Color("d8d2c6"), "uranium": Color("8c9a80"), "diamond": Color("8b93a6")}[type]
 			var st := _begin()
-			for i in range(5):
+			for i in range(8):
 				var a := rng.randf() * TAU
-				var r := rng.randf_range(1.0, 4.0)
-				var s := rng.randf_range(0.6, 1.3)
+				var r := rng.randf_range(1.0, 4.8)
+				var s := rng.randf_range(0.7, 1.6)
 				_rock(st, rng, Vector3(cos(a) * r, 0, sin(a) * r), Vector3(s, s * 0.7, s), base_colour.lerp(Color.BLACK, rng.randf() * 0.3))
-			mesh = _commit(st, _mat("rock", func(): return _painted()))
+			mesh = _commit(st, _mat("rock", func(): return _stone()))
 			var gem := _begin()
-			var clusters := 5 if type != "diamond" else 7
+			var clusters := 7 if type != "diamond" else 9
 			for c in range(clusters):
 				var a := rng.randf() * TAU
 				var r := rng.randf_range(0.0, 3.2)
@@ -265,8 +282,9 @@ func _mesh_for(type: String) -> ArrayMesh:
 ## The ground of the site: an irregular disc of the deposit's own earth,
 ## laid on the terrain so it reads from far away.
 func _patch(at: Vector3, spin: float, type: String) -> MeshInstance3D:
-	var colour: Color = {"oil": Color("15130f"), "iron": Color("6b3b26"), "gold": Color("8a7a55"),
-		"silicon": Color("8d8a80"), "uranium": Color("3c4633"), "diamond": Color("2d323b")}.get(type, Color("555555"))
+	# Tints over the soil texture (which is mid-brown), so lighter than the look.
+	var colour: Color = {"oil": Color("15130f"), "iron": Color("d0805a"), "gold": Color("e8d8a8"),
+		"silicon": Color("e4e0d4"), "uranium": Color("8d9e78"), "diamond": Color("6e7688")}.get(type, Color("999999"))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(at.x * 131.0 + at.z * 17.0)
 	var st := SurfaceTool.new()
@@ -275,7 +293,7 @@ func _patch(at: Vector3, spin: float, type: String) -> MeshInstance3D:
 	# lets a bumpy slope poke through and hide most of the patch.
 	var n := 28
 	var rings := 5
-	var radius := 5.2 if type != "oil" else 4.0
+	var radius := 6.4 if type != "oil" else 4.6
 	var edge_r: Array[float] = []
 	for i in range(n):
 		edge_r.append(radius * rng.randf_range(0.78, 1.12))
@@ -316,6 +334,14 @@ func _patch(at: Vector3, spin: float, type: String) -> MeshInstance3D:
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		m.roughness = 0.04 if type == "oil" else 0.95
 		m.metallic_specular = 0.9 if type == "oil" else 0.3
+		if type != "oil":
+			# Real soil under the tint, so the site reads as disturbed ground, not paint.
+			m.albedo_texture = load("res://assets/terrain/dirt_color.jpg")
+			m.normal_enabled = true
+			m.normal_texture = load("res://assets/terrain/dirt_normal.jpg")
+			m.uv1_triplanar = true
+			m.uv1_world_triplanar = true
+			m.uv1_scale = Vector3.ONE * 0.3
 		return m)
 	return patch
 
@@ -363,6 +389,32 @@ func _pumpjack() -> Node3D:
 	tween.tween_property(beam, "rotation:z", 0.28, 1.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_property(beam, "rotation:z", -0.28, 1.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tween.custom_step(randf() * 3.2)
+	# A storage tank beside the rig and the flowline between them.
+	var tank := MeshInstance3D.new()
+	var drum := CylinderMesh.new()
+	drum.top_radius = 1.2
+	drum.bottom_radius = 1.2
+	drum.height = 2.6
+	drum.radial_segments = 16
+	tank.mesh = drum
+	tank.position = Vector3(-3.4, 1.3, -2.6)
+	tank.material_override = _mat("tank", func():
+		var m := StandardMaterial3D.new()
+		m.albedo_color = Color("d9d4c7")
+		m.roughness = 0.5
+		m.metallic = 0.3
+		return m)
+	rig.add_child(tank)
+	var pipe := MeshInstance3D.new()
+	var tube := CylinderMesh.new()
+	tube.top_radius = 0.09
+	tube.bottom_radius = 0.09
+	tube.height = 4.2
+	pipe.mesh = tube
+	pipe.material_override = dark
+	pipe.position = Vector3(-1.9, 0.25, -1.3)
+	pipe.basis = Basis(Vector3.UP, atan2(-1.9, -2.6) + PI * 0.5) * Basis(Vector3.BACK, PI * 0.5)
+	rig.add_child(pipe)
 	rig.position = Vector3(-0.6, 0, 1.4)
 	return rig
 

@@ -28,11 +28,7 @@ uniform float cloud_shadow = 0.3;  // how dark drifting cloud shadows get
 // drawn along the hex edges, each nation's colour on its own side; the
 // territory view (show_territory) also washes the land and hatches contested
 // hexes in gold.
-uniform bool show_territory = false;
-uniform bool show_borders = false;
-uniform sampler2D territory_tex : filter_nearest, repeat_disable;
-uniform float hex_radius = 12.0;
-uniform vec4 hex_grid = vec4(0.0, 0.0, 1.0, 1.0);   // c0, r0, columns, rows
+#include "res://shaders/territory.gdshaderinc"
 
 varying vec3 world_pos;
 varying vec3 world_normal;
@@ -41,22 +37,7 @@ varying float macro;
 
 float noise(vec2 p) { return textureLod(noise_tex, p, 0.0).r; }
 
-vec2 hex_round(vec2 a) {
-	vec3 c = vec3(a.x, -a.x - a.y, a.y);
-	vec3 r = round(c);
-	vec3 d = abs(r - c);
-	if (d.x > d.y && d.x > d.z) { r.x = -r.y - r.z; }
-	else if (d.y > d.z) { r.y = -r.x - r.z; }
-	else { r.z = -r.x - r.y; }
-	return vec2(r.x, r.z);
-}
-vec2 hex_centre(vec2 h) { return vec2(hex_radius * sqrt(3.0) * (h.x + h.y * 0.5), hex_radius * 1.5 * h.y); }
-vec4 hex_owner(vec2 h) {
-	float col = h.x + (h.y - mod(h.y, 2.0)) * 0.5 + hex_grid.x;
-	float row = h.y + hex_grid.y;
-	if (col < 0.0 || row < 0.0 || col >= hex_grid.z || row >= hex_grid.w) { return vec4(0.0); }
-	return texelFetch(territory_tex, ivec2(int(col), int(row)), 0);
-}
+
 
 void vertex() {
 	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -129,22 +110,9 @@ void fragment() {
 	albedo *= mix(1.0, 0.62, wet);
 
 	if ((show_territory || show_borders) && world_pos.y > sea_level - 0.2) {
-		vec2 p = world_pos.xz;
-		vec2 h = hex_round(vec2((sqrt(3.0) / 3.0 * p.x - p.y / 3.0) / hex_radius, (2.0 / 3.0 * p.y) / hex_radius));
-		vec4 own = hex_owner(h);
+		float near;
+		vec4 own = hex_territory(world_pos.xz, near);
 		if (own.a > 0.0) {
-			vec2 c = hex_centre(h);
-			vec2 d = p - c;
-			// Distance to each of the six edges; a border where the neighbour across differs.
-			float near = 1e6;
-			vec2 dirs[6] = vec2[](vec2(1.0, 0.0), vec2(1.0, -1.0), vec2(0.0, -1.0), vec2(-1.0, 0.0), vec2(-1.0, 1.0), vec2(0.0, 1.0));
-			for (int k = 0; k < 6; k++) {
-				vec4 other = hex_owner(h + dirs[k]);
-				if (distance(other.rgb, own.rgb) > 0.02 || other.a == 0.0) {
-					vec2 n = normalize(hex_centre(h + dirs[k]) - c);
-					near = min(near, hex_radius * 0.8660254 - dot(d, n));
-				}
-			}
 			float edge = 1.0 - smoothstep(0.35, 1.3, near);   // the border line
 			float band = 1.0 - smoothstep(1.3, 5.5, near);    // a soft wash of colour inside it
 			bool contested = own.a > 0.95;
@@ -160,7 +128,7 @@ void fragment() {
 				// Outside the territory view: a soft band of colour inside the border, as a 4X map shows it.
 				albedo = mix(albedo, own.rgb * 0.75 + albedo * 0.35, band * 0.35);
 			}
-			albedo = mix(albedo, own.rgb * 1.25 + 0.15, edge * 0.9);
+			albedo = mix(albedo, own.rgb * 1.05, edge * 0.8);  // the nation's own colour, not washed pale
 		}
 	}
 	ALBEDO = albedo;

@@ -7,6 +7,27 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.8: ships sail round the island, land is bought or won, waters are held
+
+- **Ships go anywhere at sea.** The ships' water grid stopped at the map's edge, where the island runs
+  up to it, so the sea split in two (396 and 250 cells) and a ship could not sail round. The grid now
+  reaches 240 m past the edge (open sea there), and the sea is one body. `--sea-test` sends destroyers
+  from 8 points round the island to the far side; all arrive.
+- **Build anywhere in your land.** A building could stand only within a fixed radius of a settlement
+  centre, so hexes you held further out were refused. Now any hex you hold is buildable; another
+  nation's land is not ("Inside ...'s land").
+- **Unclaimed land is bought, enemy land is won.** Troops standing on unclaimed land claim a hex only
+  when their nation pays for it ($25; AI nations pay from their treasury); without money they claim
+  nothing. Buildings still claim their own hex and ring free. Another nation's land is taken only in
+  war (or a military operation).
+- **Territorial waters.** Sea hexes within two rings of a nation's coast are its own. They are
+  buildable (an Offshore Rig in your waters) and drawn on the sea with the same border line and colour
+  band (`shaders/territory.gdshaderinc`, shared by the terrain and the sea). Waters do not pay yields.
+- **Resource sites.** Boulders now carry the mountains' photographed rock with its relief (tinted per
+  kind), each site is larger with more boulders, the site's ground is real soil, an oil field has a
+  storage tank and flowline, and the markers are larger. Borders are drawn in each nation's own colour.
+- New tests: `--land-test`, `--sea-test`.
+
 ## Version 0.9.7: land held hex by hex, and asking before clearing a site
 
 - **Territory by hexes** (`territory.gd`), as in a 4X game. Land is the same 12 m hex grid the

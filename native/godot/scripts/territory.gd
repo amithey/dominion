@@ -23,6 +23,8 @@ enum Terrain { WATER, PLAINS, FOREST, MOUNTAIN, COAST }
 const TERRAIN_NAMES := ["Water", "Plains", "Forest", "Mountain", "Coast"]
 const STATUS_YIELD := {"sovereign": 1.0, "integrated": 0.75, "occupied": 0.4, "contested": 0.15}
 const RIBBON := 2.4
+const LAND_PRICE := 25.0   ## money to claim one unclaimed hex with troops (buildings claim theirs free)
+const WATERS := 2          ## rings of sea off a nation's coast that are its territorial waters
 
 var world: Node
 var cell := 40.0
@@ -169,8 +171,8 @@ func yields(nation: int) -> Dictionary:
 	var out := {"money": 0.0, "food": 0.0, "iron": 0.0, "oil": 0.0, "cells": 0, "sovereign": 0, "integrated": 0, "occupied": 0, "contested": 0}
 	var r: Node = world.research if nation == 0 else null
 	for i in range(owner_of.size()):
-		if owner_of[i] != nation:
-			continue
+		if owner_of[i] != nation or terrain[i] == Terrain.WATER:
+			continue  # territorial waters are held, but the land is what pays
 		var s := status(i)
 		out[s] += 1
 		out.cells += 1
@@ -196,6 +198,61 @@ func land_cells() -> int:
 		if t != Terrain.WATER:
 			n += 1
 	return n
+
+## Pays for one hex of unclaimed land; false when the nation cannot afford it.
+func _buy(nation: int) -> bool:
+	if nation == 0:
+		return world.economy != null and world.economy.pay({"money": LAND_PRICE})
+	if world.ai != null:
+		for n in world.ai.nations:
+			if n.id == nation and float(n.money) >= LAND_PRICE:
+				n.money -= LAND_PRICE
+				return true
+	return false
+
+## Territorial waters: sea hexes within WATERS rings of a nation's coast are
+## its own (the nearest coast decides; where two coasts are equally near, the
+## firmer hold). Returns whether any changed.
+func _waters() -> bool:
+	var dist := PackedInt32Array()
+	dist.resize(cols * rows)
+	dist.fill(99)
+	var owner_w := PackedInt32Array()
+	owner_w.resize(cols * rows)
+	owner_w.fill(-1)
+	var ctrl := PackedFloat32Array()
+	ctrl.resize(cols * rows)
+	var frontier: Array[int] = []
+	for i in range(owner_of.size()):
+		if terrain[i] != Terrain.WATER and owner_of[i] >= 0:
+			for j in neighbours(i):
+				if terrain[j] == Terrain.WATER and (dist[j] > 1 or control[i] > ctrl[j]):
+					dist[j] = 1
+					owner_w[j] = owner_of[i]
+					ctrl[j] = control[i]
+					if not j in frontier:
+						frontier.append(j)
+	for ring in range(2, WATERS + 1):
+		var next: Array[int] = []
+		for i in frontier:
+			for j in neighbours(i):
+				if terrain[j] == Terrain.WATER and dist[j] > ring - 1 and (dist[j] > ring or ctrl[i] > ctrl[j]):
+					dist[j] = ring
+					owner_w[j] = owner_w[i]
+					ctrl[j] = ctrl[i]
+					if not j in next:
+						next.append(j)
+		frontier = next
+	var changed := false
+	for i in range(owner_of.size()):
+		if terrain[i] != Terrain.WATER:
+			continue
+		if owner_of[i] != owner_w[i]:
+			owner_of[i] = owner_w[i]
+			changed = true
+		control[i] = ctrl[i]
+		contested[i] = 0
+	return changed
 
 func is_front(i: int) -> bool:
 	var o := owner_of[i]
@@ -237,6 +294,10 @@ func tick() -> void:
 	var nations: int = world.map.nations.size()
 	var presence := PackedFloat32Array()
 	presence.resize(cols * rows * nations)
+	# Authority from buildings alone: land they claim is free; land that only
+	# troops stand on, unclaimed by anyone, has to be bought.
+	var built := PackedFloat32Array()
+	built.resize(cols * rows * nations)
 	for b in world.buildings:
 		if b.dead or not b.built:
 			continue
@@ -244,6 +305,8 @@ func tick() -> void:
 		var w := 30.0 if b.key == "hq" else 26.0 if b.key == "cityCenter" else 18.0 if b.key == "villageCenter" else 22.0 if b.key == "commandCenter" else 14.0
 		var reach := 3 if b.key == "hq" else (2 if b.key in ["cityCenter", "villageCenter", "commandCenter"] else 1)
 		_presence(presence, b.root.position, b.owner, w, reach, nations)
+		_presence(built, b.root.position, b.owner, w, reach, nations)
+	var bought := {}   # nation -> hexes bought this tick
 	for u in world.units:
 		if u.dead or u.dmg <= 0.0 or u.get("fly", false) or u.get("naval", false):
 			continue
@@ -285,6 +348,10 @@ func tick() -> void:
 				control[i] = maxf(12.0, control[i] - 0.15)
 			continue
 		if owner_of[i] == -1:
+			if built[i * nations + best] <= 0.35 and not _buy(best):
+				continue  # troops alone claim unclaimed land only if their nation pays for it
+			if built[i * nations + best] <= 0.35:
+				bought[best] = int(bought.get(best, 0)) + 1
 			owner_of[i] = best
 			control[i] = clampf(best_w * 9.0, 18.0, 45.0)
 			flipped = true
@@ -302,6 +369,10 @@ func tick() -> void:
 				if lost_by == 0 or best == 0:
 					var c := center(i)
 					world.hud.notice("Territory %s near (%d, %d)." % ["lost to %s" % world.diplomacy.name_of(best) if lost_by == 0 else "taken from %s" % world.diplomacy.name_of(lost_by), int(c.x), int(c.z)])
+	if bought.has(0):
+		world.hud.notice("Your forces claimed %d hex%s of unclaimed land for $%d." % [bought[0], "" if bought[0] == 1 else "es", int(bought[0] * LAND_PRICE)])
+	if _waters():
+		flipped = true
 	fronts = 0
 	for i in range(cols * rows):
 		if is_front(i):
@@ -350,9 +421,14 @@ func draw_fill() -> void:
 		img.set_pixel(i % cols, i / cols, Color(base.r, base.g, base.b, 1.0 if contested[i] else strength))
 		var c := center(i)
 		sums[o] = sums.get(o, Vector3.ZERO) + Vector3(c.x, 1.0, c.z)
-	var mat: ShaderMaterial = world.terrain_node.material_override as ShaderMaterial if world.terrain_node != null else null
-	if mat != null:
-		mat.set_shader_parameter("territory_tex", ImageTexture.create_from_image(img))
+	# The land and the sea draw the same hexes (territory.gdshaderinc), so
+	# territorial waters show their borders too.
+	var tex := ImageTexture.create_from_image(img)
+	for node in [world.terrain_node, world.sea_node]:
+		var mat: ShaderMaterial = node.material_override as ShaderMaterial if node != null else null
+		if mat == null:
+			continue
+		mat.set_shader_parameter("territory_tex", tex)
 		mat.set_shader_parameter("hex_radius", hex)
 		mat.set_shader_parameter("hex_grid", Vector4(c0, r0, cols, rows))
 		mat.set_shader_parameter("show_territory", show_borders)
