@@ -203,8 +203,12 @@ func settlement_of(b: Dictionary):
 	for s in world.buildings:
 		if s.dead or not s.built or s.owner != b.owner or s.def.get("settlement") == null:
 			continue
+		# The nearest of the owner's settlements. Buildings may stand anywhere in
+		# the nation's land (not only inside a settlement's radius); one beyond
+		# every radius used to belong to none, count as cut off, and stall its
+		# production at 0%.
 		var d: float = s.root.position.distance_to(b.root.position)
-		if d <= float(s.def.buildRadius) and d < best_d:
+		if d < best_d:
 			best_d = d
 			best = s
 	return best

@@ -23,6 +23,7 @@ $tests = @(
     @('clicking any part of a unit selects it', @('--', '--pick-test'), 'PICK_TEST PASS', 200),
     @('land: build in your territory, buy unclaimed land, territorial waters', @('--', '--land-test'), 'LAND_TEST PASS', 200),
     @('ships sail round the island', @('--', '--sea-test'), 'SEA_TEST PASS', 600),
+    @('state: far production, market, AI builds an economy', @('--', '--state-test'), 'STATE_TEST PASS', 400),
     @('economy', @('--', '--economy-test'), 'ECONOMY_TEST PASS', 240),
     @('combat (every weapon)', @('--', '--combat-test'), 'COMBAT_TEST PASS', 400),
     @('combat fixes and aircraft service', @('--', '--combat-regression'), 'COMBAT_REGRESSION PASS', 180),

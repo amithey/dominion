@@ -117,7 +117,12 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 			if not options.is_empty():
 				var key: String = options[randi() % options.size()]
 				var cost := weighted_cost(world.unit_defs[key].cost)
-				if n.money >= cost:
+				# Money for the next building is kept back, unless the nation is at
+				# war or has hardly an army: a state that only trains never grows.
+				var at_war: bool = not world.diplomacy.enemies_of(n.id).is_empty()
+				var next_key: String = build_order[n.build_idx] if n.build_idx < build_order.size() else pick_building(n)
+				var reserve: float = 0.0 if at_war or army.size() < 4 else weighted_cost(world.building_defs.get(next_key, {"cost": {}}).cost)
+				if n.money - cost >= reserve:
 					if deploy(n.id,key):
 						n.money -= cost
 		n.next_train = float(cfg.trainEvery) * randf_range(0.8, 1.2) * (0.55 if not world.diplomacy.enemies_of(n.id).is_empty() else 1.0) / s
@@ -196,21 +201,48 @@ func deploy(owner: int, key: String) -> bool:
 func weighted_cost(cost: Dictionary) -> float:
 	return float(cost.get("money", 0)) + float(cost.get("iron", 0)) * 2.0 + float(cost.get("oil", 0)) * 3.0 + float(cost.get("silicon", 0)) * 4.0
 
-# After the opening: more farms when short of food, factories when rich.
+# After the opening, a city plan: a nation grows as a state, not only as an
+# army. Economic and civic goals have target counts that rise as the nation
+# grows; military buildings are kept to about a third of everything built
+# (more while at war). The first goal still short of its target is built.
+const CITY_PLAN := [
+	# [key, how many per 10 buildings the nation owns (at least 1)]
+	["farm", 1.6], ["cottage", 1.4], ["market", 0.6], ["warehouse", 0.6], ["extractor", 1.0],
+	["school", 0.5], ["foodDepot", 0.4], ["park", 0.5], ["hospital", 0.3], ["library", 0.3],
+	["residential", 0.8], ["powerPlant", 0.4], ["bank", 0.3], ["port", 0.2], ["university", 0.2],
+	["policeStation", 0.3], ["cityCenter", 0.15], ["fishingWharf", 0.3], ["oilRefinery", 0.2], ["techPark", 0.15],
+]
+const MILITARY_PLAN := [["barracks", 0.8], ["housing", 1.2], ["tankFactory", 0.4], ["ammoDepot", 0.3],
+	["helipad", 0.2], ["airfield", 0.15], ["shipyard", 0.15], ["bunker", 0.3], ["samSite", 0.2], ["commandCenter", 0.1]]
+
 func pick_building(n: Dictionary) -> String:
 	var mine: Array = world.buildings.filter(func(b): return b.owner == n.id and not b.dead)
-	var count := func(key): return mine.filter(func(b): return b.key == key).size()
-	if count.call("barracks") < 2:
-		return "barracks"
-	if count.call("tankFactory") < 1 and n.money > 900:
-		return "tankFactory"
-	if count.call("housing") < 3:
-		return "housing"
-	if n.money > 1200 and count.call("helipad") < 1:
-		return "helipad"
-	if n.money > 1200 and count.call("shipyard") < 1:
-		return "shipyard"
-	return ["farm", "housing", "barracks", "warehouse", "extractor"][randi() % 5]
+	var counts := {}
+	var military := 0
+	for b in mine:
+		counts[b.key] = int(counts.get(b.key, 0)) + 1
+		if b.def.get("cat", "") == "military":
+			military += 1
+	var total := maxi(mine.size(), 1)
+	var share := float(military) / total
+	var want_military: float = 0.45 if world.diplomacy != null and not world.diplomacy.enemies_of(n.id).is_empty() else 0.3
+	var plans := [MILITARY_PLAN, CITY_PLAN] if share < want_military else [CITY_PLAN, MILITARY_PLAN]
+	for plan in plans:
+		var short := []
+		for goal in plan:
+			var key: String = goal[0]
+			if not world.building_defs.has(key):
+				continue
+			var def: Dictionary = world.building_defs[key]
+			if def.get("unique", false) and counts.get(key, 0) > 0:
+				continue
+			var target := maxi(1, int(ceil(total / 10.0 * float(goal[1]))))
+			if int(counts.get(key, 0)) < target:
+				short.append(key)
+		if not short.is_empty():
+			# The first two unmet goals, in order of the plan, with a little variety.
+			return short[0] if short.size() == 1 or randf() < 0.7 else short[1]
+	return ["farm", "cottage", "market", "barracks"][randi() % 4]
 
 func find_spot(n: Dictionary, home: Dictionary, key: String):
 	var def: Dictionary = world.building_defs[key]

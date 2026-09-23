@@ -116,3 +116,13 @@ UI files listed above.
 - 2026-09-23 Claude: the fine grain/speckle on the ground on the Iris Xe laptop comes from the "balanced" quality
   preset (FSR upscaling at 0.77 with sharpening). With `--quality=high` it is almost gone. The user decided to leave
   it as is (strong PCs look cleaner), so please do not change the FSR settings for this.
+- 2026-09-23 Claude: fixed production stuck at 0% (a building beyond every settlement radius belonged to no
+  settlement and counted as cut off; `logistics.settlement_of` now takes the nearest settlement). The same bug made
+  a far Market read as "no market". AI now follows a city plan (economy first, military about a third).
+  **UI requests for Codex (reported by the user):**
+  1. The collapsed Build panel is partly hidden behind the minimap (its "Build" plate is cut off at the bottom
+     right). Please keep it clear of the minimap frame.
+  2. In the Build menu, add a way back to the main menu (a Menu/Back button in the Build panel).
+  3. The market's trade-route form lists only nations with a trade pact; if you restyle it, say clearly why a
+     nation is missing (needs +20 relations and a pact, and a completed Commercial Port).
+
