@@ -26,6 +26,7 @@ var aggression := 0.35
 var _tick := 0.0
 var _next_letter := 240.0      # no foreign mail in the first four minutes
 var speed := 1.0
+var contacts: Node
 
 func setup(world_node: Node, nations: int, difficulty_aggression: float, time_speed := 1.0) -> void:
 	world = world_node
@@ -43,6 +44,9 @@ func setup(world_node: Node, nations: int, difficulty_aggression: float, time_sp
 	for a in range(0, n):
 		for b in range(a + 1, n):
 			set_score(a, b, floorf((randf() - 0.4) * 50.0) if a > 0 else floorf((randf() - 0.5) * 30.0))
+	contacts = preload("res://scripts/diplomatic_contacts.gd").new()
+	contacts.world = world
+	add_child(contacts)
 
 func name_of(id: int) -> String:
 	return world.map.nations[id].name

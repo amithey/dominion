@@ -98,6 +98,7 @@ func capture() -> Dictionary:
 		"economy": {"res": world.economy.res, "civilians": world.economy.civilians, "garrison": world.economy.garrison},
 		"buildings": buildings, "units": units, "edges": edges,
 		"diplomacy": {"score": d.score, "war": d.war, "alliance": d.alliance, "pact": d.pact, "nap": d.nap},
+		"diplomatic_contacts": d.contacts.capture(),
 		"ai": nations,
 		"camera": {"focus": _v(world.cam_focus), "yaw": world.cam_yaw, "pitch": world.cam_pitch, "dist": world.cam_dist_target},
 		"game_over": world.game_over,
@@ -240,3 +241,4 @@ func restore(data: Dictionary) -> void:
 	if world.occupation:
 		world.occupation.restore(data.get("zones", []))
 	world.research.restore(data.get("research", {}))
+	world.diplomacy.contacts.restore(data.get("diplomatic_contacts", {}))

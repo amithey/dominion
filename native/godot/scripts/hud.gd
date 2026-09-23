@@ -688,7 +688,20 @@ func show_transport(text: String) -> void:
 	_update_panel()
 
 ## null shows the build menu; a building entity shows its details and training.
+var _diplomatic_contact_screen: Control
+
+func open_diplomatic_contact(nation: int) -> String:
+	if _diplomatic_contact_screen == null:
+		_diplomatic_contact_screen = preload("res://scripts/diplomatic_screen.gd").new()
+		add_child(_diplomatic_contact_screen)
+		_diplomatic_contact_screen.setup(world)
+	_diplomatic_contact_screen.open(nation)
+	return ""
+
 func show_building(building) -> void:
+	if building != null and building.owner != 0 and building.built and not building.dead and building.key in ["hq", "cityHall", "cityCenter"]:
+		open_diplomatic_contact(int(building.owner))
+		return
 	_selected = building
 	_shown_key = ""
 	if building != null and not prod_open:
@@ -1230,20 +1243,12 @@ func _diplomacy_screen() -> void:
 			_pill(head, "PEACE", Color("9aa7ab"))
 		var leader: String = world.espionage.person(id, "president")
 		card.add_child(_text("%s · army estimates in Intelligence (I)" % leader, 13, UI.MUTED))
+		_button(card, "Contact this government", open_diplomatic_contact.bind(id))
 		var score: float = d.rel(0, id)
 		var colour := Color("c0564a").lerp(Color("8a9396"), clampf((score + 100.0) / 100.0, 0.0, 1.0)) if score < 0.0 else Color("8a9396").lerp(Color("5fae63"), clampf(score / 100.0, 0.0, 1.0))
 		_meter(card, score + 100.0, 200.0, colour, "Relation %+d  ·  %s" % [int(score), _relation_word(score)])
 		var buttons := _row(card, 6)
-		if d.at_war(0, id):
-			_button(buttons, "Offer peace", d.offer_peace.bind(id), true, "good")
-		else:
-			_button(buttons, "Gift $250", d.gift.bind(id))
-			if not d.pact[0][id]:
-				_button(buttons, "Trade pact", d.propose_pact.bind(id))
-			if not d.nap[0][id]:
-				_button(buttons, "Non-aggression", d.propose_nap.bind(id))
-			if not d.allied(0, id):
-				_button(buttons, "Alliance", d.propose_alliance.bind(id), true, "good")
+		if not d.at_war(0, id):
 			_button(buttons, "Declare war", _declare.bind(id), true, "bad")
 		if d.allied(0, id):
 			for enemy in range(1, d.n):

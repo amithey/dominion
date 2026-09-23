@@ -31,6 +31,7 @@ $tests = @(
     @('new campaign and map reload flow', @('--script', 'res://tools/campaign-flow-check.gd'), 'CAMPAIGN FLOW PASS', 180),
     @('air and sea', @('--', '--air-sea-test'), 'AIR_SEA_TEST PASS', 240),
     @('diplomacy', @('--', '--diplomacy-test'), 'DIPLOMACY_TEST PASS', 180),
+    @('leader contacts, negotiations and exports', @('--script', 'res://tools/diplomatic-contacts-check.gd'), 'DIPLOMATIC_CONTACTS_TEST PASS', 180),
     @('supply network', @('--', '--logistics-test'), 'LOGISTICS_TEST PASS', 240),
     @('market, spies, missiles, territory', @('--', '--systems-test'), 'SYSTEMS_TEST PASS', 300),
     @('intelligence lifecycle', @('--script', 'res://tools/espionage-check.gd'), 'ESPIONAGE_TEST PASS', 180),
