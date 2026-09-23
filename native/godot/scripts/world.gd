@@ -174,6 +174,17 @@ var territory: Node3D     # territory.gd: gradual control of 40 m cells
 var missiles: Node3D      # missiles.gd: silo production, launches, impacts
 var research: Node        # research.gd: discoveries in stages, tracks, eras
 var portraits: Node       # portraits.gd: pictures of every unit and building for the interface
+var health_overlay: Control  # hud.gd's health bars, for the feature probe
+# Ground units are bucketed into 8 m cells once per frame; keeping clear of
+# each other and looking for targets then reads a handful of buckets instead
+# of the whole army, which is what made large battles crawl.
+const GRID := 8.0
+var grid := {}
+var lod_turn := 0
+# `-- --no-perf` puts the work back the way it was before the performance
+# pass: no neighbour buckets, no distance detail, shadows to the horizon. It
+# is only there so the two can be measured against each other.
+var perf_opts := true
 var game_time := 0.0      # match seconds (EMP and other timed effects)
 var missile_aim := ""     # missile type waiting for a target click
 var cam_lift := 0.0       # raises the camera's look-at point above the ground (captures)
@@ -241,6 +252,7 @@ func _ready() -> void:
 	effects = preload("res://scripts/effects.gd").new()
 	add_child(effects)
 	effects.shake.connect(_on_shake)
+	effects.world_ref = self
 	audio = preload("res://scripts/audio.gd").new()
 	add_child(audio)
 	effects.audio = audio
@@ -367,6 +379,10 @@ func _ready() -> void:
 			bench_units = clampi(int(arg.get_slice("=", 1)) if "=" in arg else 64, 1, 240)
 		if arg == "--no-vsync":
 			DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	profiling = "--profile" in args
+	perf_opts = not "--no-perf" in args
+	if not perf_opts:
+		sun.directional_shadow_max_distance = 320 if quality == "high" else (230 if quality == "balanced" else 150)
 	if bench_units > 0:
 		start_benchmark()
 	elif "--capture-views" in args:
@@ -411,6 +427,8 @@ func _ready() -> void:
 		await preload("res://scripts/combat_regression.gd").run(self)
 	elif "--polish-test" in args or "--campaign-test" in args or "--capture-polish" in args:
 		await preload("res://scripts/polish_regression.gd").run(self,"--campaign-test" in args)
+	elif battle_bench_size(args) > 0:
+		await battle_bench(battle_bench_size(args))
 	elif "--combat-test" in args or "--capture-combat" in args:
 		await combat_test("--capture-combat" in args)
 	elif "--capture-ui" in args:
@@ -436,6 +454,11 @@ func _ready() -> void:
 	elif "--capture-economy" in args:
 		await economy_test(true)
 	elif "--feature-probe" in args:
+		for arg in args:
+			if arg.begins_with("--probe-units="):
+				bench_units = int(arg.get_slice("=", 1))
+				start_benchmark()
+				bench_phase = -1  # the drill army is spawned, but no benchmark runs
 		await feature_probe()
 
 # ---------------------------------------------------------------- quality
@@ -457,12 +480,14 @@ func apply_quality() -> void:
 		"high":
 			env.ssao_enabled = true
 			sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
-			sun.directional_shadow_max_distance = 320
+			sun.directional_shadow_max_distance = 220
+			sun.directional_shadow_fade_start = 0.85
 			viewport.msaa_3d = Viewport.MSAA_2X
 		"balanced":
 			env.ssao_enabled = false
 			sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
-			sun.directional_shadow_max_distance = 230
+			sun.directional_shadow_max_distance = 140
+			sun.directional_shadow_fade_start = 0.8
 			# Integrated GPUs are fill-rate bound: render 3D at 77% and upscale with FSR.
 			viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR
 			viewport.scaling_3d_scale = 0.77
@@ -470,7 +495,8 @@ func apply_quality() -> void:
 			env.ssao_enabled = false
 			env.glow_enabled = false
 			sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
-			sun.directional_shadow_max_distance = 150
+			sun.directional_shadow_max_distance = 95
+			sun.directional_shadow_fade_start = 0.75
 			viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED
 			viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR
 			viewport.scaling_3d_scale = 0.6
@@ -1515,8 +1541,10 @@ func place_on_ground(unit: Dictionary, at: Vector3) -> void:
 		var up := normal_at(at.x, at.z)
 		var travel := (heading * Vector3.BACK).slide(up).normalized()
 		node.basis = Basis.looking_at(-travel, up)  # model +Z along the direction of travel
-		for mesh_instance in unit.get("meshes", []):
-			mesh_instance.set_instance_shader_parameter("ground_y", node.position.y)
+		if absf(node.position.y - float(unit.get("ground_told", -999.0))) > 0.04:
+			unit.ground_told = node.position.y
+			for mesh_instance in unit.get("meshes", []):
+				mesh_instance.set_instance_shader_parameter("ground_y", node.position.y)
 	else:
 		node.basis = heading
 
@@ -1599,8 +1627,91 @@ func order_bombard(selected: Array, point: Vector3) -> void:
 		u.attack_move = true
 		u.path = PackedVector3Array()
 
+# ---------------------------------------------------------------- profiler
+# `-- --profile` during a benchmark measures where each frame goes: every
+# system reports the microseconds it spent, and the benchmark prints the
+# average per frame. Off by default, so it costs nothing in a real game.
+var profiling := false
+var prof := {}
+var prof_frames := 0
+
+func clock() -> int:
+	return Time.get_ticks_usec()
+
+func spent(key: String, from: int) -> void:
+	if profiling:
+		prof[key] = float(prof.get(key, 0.0)) + float(Time.get_ticks_usec() - from)
+
+func profile_report() -> String:
+	if prof_frames == 0:
+		return ""
+	var rows := prof.keys()
+	rows.sort_custom(func(a, b): return prof[a] > prof[b])
+	var parts := PackedStringArray()
+	for key in rows:
+		parts.append("%s %.2f ms" % [key, prof[key] / prof_frames / 1000.0])
+	return "per frame: " + ", ".join(parts)
+
+## Buckets every living ground unit by its position.
+func rebuild_grid() -> void:
+	grid.clear()
+	for u in units:
+		if u.dead or u.get("fly", false) or u.get("naval", false):
+			continue
+		var p: Vector3 = u.node.position
+		var key := Vector2i(floori(p.x / GRID), floori(p.z / GRID))
+		if grid.has(key):
+			grid[key].append(u)
+		else:
+			grid[key] = [u]
+
+## Every ground unit within `reach` metres of `at` (a few buckets wide).
+func near_units(at: Vector3, reach: float) -> Array:
+	var out := []
+	var span := ceili(reach / GRID)
+	var cx := floori(at.x / GRID)
+	var cz := floori(at.z / GRID)
+	for dz in range(-span, span + 1):
+		for dx in range(-span, span + 1):
+			var bucket = grid.get(Vector2i(cx + dx, cz + dz))
+			if bucket != null:
+				out.append_array(bucket)
+	return out
+
+## Distance work that does not have to happen every frame: a unit far from
+## the camera stops animating and stops casting a shadow, and picks both up
+## again as the camera comes near. Split over 12 frames so no frame pays for
+## the whole army at once.
+func update_detail_level() -> void:
+	if units.is_empty() or camera == null or not perf_opts:
+		return
+	lod_turn = (lod_turn + 1) % 12
+	var eye := camera.global_position
+	var i := lod_turn
+	while i < units.size():
+		var u: Dictionary = units[i]
+		i += 12
+		if u.dead:
+			continue
+		var d: float = eye.distance_to(u.node.position)
+		# Figures the camera cannot make out hold their pose: the animation
+		# player is the single most expensive thing per unit.
+		var animating: bool = d < 110.0 or not perf_opts
+		if u.player != null and u.get("animating", true) != animating:
+			u.animating = animating
+			u.player.active = animating
+		var shadow_near: bool = d < 75.0 or not perf_opts
+		if u.get("shadowing", true) != shadow_near:
+			u.shadowing = shadow_near
+			var mode := GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadow_near else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			for mesh in u.node.find_children("*", "MeshInstance3D", true, false):
+				mesh.cast_shadow = mode
+
 func _physics_process(delta: float) -> void:
 	var now := Time.get_ticks_msec() / 1000.0
+	var t0 := clock()
+	rebuild_grid()
+	update_detail_level()
 	game_time += delta
 	if engagement != null:
 		engagement.update()
@@ -1609,6 +1720,8 @@ func _physics_process(delta: float) -> void:
 	if economy:
 		update_construction(delta)
 		update_training(delta)
+	spent("build+train", t0)
+	var t_units := clock()
 	for i in range(units.size() - 1, -1, -1):
 		var unit: Dictionary = units[i]
 		if unit.dead:
@@ -1633,7 +1746,11 @@ func _physics_process(delta: float) -> void:
 				aim = 0.0 if unit.moving else sin(now * 0.25 + unit.phase) * 0.9
 			unit.turret_yaw = lerp_angle(unit.turret_yaw, aim, minf(1.0, delta * (2.2 if unit.enemy != null else 0.8)))
 			unit.turret.basis = Basis(unit.turret.get_meta("axis"), unit.turret_yaw)
+	spent("combat", t_units)
+	var t_move := clock()
+	var slot := 0
 	for unit in units:
+		slot += 1
 		if unit.dead or disabled(unit):
 			continue
 		if unit.get("fly", false) or unit.get("naval", false):
@@ -1661,7 +1778,9 @@ func _physics_process(delta: float) -> void:
 			if unit.target == null and unit.moving:
 				animate(unit, false)
 			continue
+		var t_steer := clock()
 		var waypoint := steer_point(unit, goal, chasing, delta)
+		spent("  steering", t_steer)
 		var end: Vector3 = unit.path[unit.path.size() - 1] if not unit.path.is_empty() else goal
 		var to: Vector3 = waypoint - node.position
 		to.y = 0
@@ -1674,16 +1793,46 @@ func _physics_process(delta: float) -> void:
 		var step := minf(to.length(), unit.speed * delta)
 		var next: Vector3 = node.position + to.normalized() * step
 		# Keep clear of other units instead of driving through them.
-		var push := Vector3.ZERO
-		for other in units:
-			if other == unit or other.dead or other.get("fly", false) or other.get("naval", false):
-				continue  # aircraft overhead and ships offshore do not jostle ground units
-			var gap: Vector3 = next - other.node.position
-			gap.y = 0
-			var clearance: float = (1.1 if not (unit.vehicle or other.vehicle) else 3.4) + (1.8 if unit.vehicle and other.vehicle else 0.0)
-			var d := gap.length()
-			if d < clearance and d > 0.001:
-				push += gap / d * (clearance - d)
+		# Crowd pressure is smooth, so each unit works it out every other frame
+		# and keeps the last result in between; nothing moves differently.
+		var t_sep := clock()
+		var push: Vector3 = unit.get("push", Vector3.ZERO)
+		if perf_opts and (Engine.get_physics_frames() + slot) % 2 != 0:
+			spent("  keeping clear", t_sep)
+			next += push.limit_length(step * 1.5)
+			if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
+				unit.target = null
+				animate(unit, false)
+				continue
+			var want_now := atan2(to.x, to.z)
+			unit.heading = lerp_angle(unit.heading, want_now, minf(1.0, delta * (4.0 if unit.vehicle else 10.0)))
+			var t_place_now := clock()
+			place_on_ground(unit, next)
+			animate(unit, true)
+			spent("  placing", t_place_now)
+			continue
+		push = Vector3.ZERO
+		var cx := floori(next.x / GRID)
+		var cz := floori(next.z / GRID)
+		for dz in range(-1, 2):
+			for dx in range(-1, 2):
+				var bucket = grid.get(Vector2i(cx + dx, cz + dz)) if perf_opts else (units if dx == 0 and dz == 0 else null)
+				if bucket == null:
+					continue
+				for other in bucket:
+					if other.get("fly", false) or other.get("naval", false):
+						continue
+					if other == unit or other.dead:
+						continue  # the buckets hold ground units only
+					var gap: Vector3 = next - other.node.position
+					gap.y = 0
+					var clearance: float = (1.1 if not (unit.vehicle or other.vehicle) else 3.4) + (1.8 if unit.vehicle and other.vehicle else 0.0)
+					var d2 := gap.length_squared()
+					if d2 < clearance * clearance and d2 > 0.000001:
+						var d := sqrt(d2)
+						push += gap / d * (clearance - d)
+		unit.push = push
+		spent("  keeping clear", t_sep)
 		next += push.limit_length(step * 1.5)
 		if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
 			unit.target = null  # land units stop at the waterline
@@ -1691,8 +1840,12 @@ func _physics_process(delta: float) -> void:
 			continue
 		var want := atan2(to.x, to.z)
 		unit.heading = lerp_angle(unit.heading, want, minf(1.0, delta * (4.0 if unit.vehicle else 10.0)))
+		var t_place := clock()
 		place_on_ground(unit, next)
 		animate(unit, true)
+		spent("  placing", t_place)
+	spent("move", t_move)
+	prof_frames += 1 if profiling else 0
 
 # ---------------------------------------------------------------- navigation
 
@@ -2813,6 +2966,59 @@ func capture_screens() -> void:
 	get_viewport().get_texture().get_image().save_png("res://build/screen-new.png")
 	get_tree().quit()
 
+## The army size asked for with --battle-bench=N, or 0 when it was not asked for.
+func battle_bench_size(args: PackedStringArray) -> int:
+	for a in args:
+		if a.begins_with("--battle-bench"):
+			return int(a.get_slice("=", 1)) if "=" in a else 24
+	return 0
+
+## A battle measured: two armies of `size` meet with all the shooting,
+## explosions and smoke of a real fight, and the frame times are reported the
+## way the benchmark reports them. This is where stalls show up.
+func battle_bench(size: int) -> void:
+	for i in range(20):
+		await get_tree().process_frame
+	var centre := land_point(start + Vector3(0, 0, -40), 30.0)
+	var ours := spawn_group(centre + Vector3(-22, 0, 0), 0, size, maxi(1, size / 4))
+	var theirs := spawn_group(centre + Vector3(22, 0, 0), 1, size, maxi(1, size / 4))
+	diplomacy.declare_war(0, 1)
+	order_move(ours, centre + Vector3(12, 0, 0), true)
+	order_move(theirs, centre + Vector3(-12, 0, 0), true)
+	cam_focus = centre
+	cam_dist = 70.0
+	cam_dist_target = 70.0
+	cam_pitch = 0.7
+	cam_yaw = PI * 0.25
+	for i in range(90):
+		await get_tree().process_frame  # let them close and start shooting
+	var times: Array[float] = []
+	var gpu := 0.0
+	var calls := 0
+	var rid := get_viewport().get_viewport_rid()
+	for i in range(600):
+		await get_tree().process_frame
+		times.append(get_process_delta_time() * 1000.0)
+		gpu += RenderingServer.viewport_get_measured_render_time_gpu(rid)
+		calls += RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
+	var sorted := times.duplicate()
+	sorted.sort()
+	var total := 0.0
+	var stalls := 0
+	for t in times:
+		total += t
+		if t > 100.0:
+			stalls += 1
+	var n := times.size()
+	print("DOMINION battle bench %s" % JSON.stringify({
+		"units": units.filter(func(u): return not u.dead).size(), "fps": snappedf(n / (total / 1000.0), 0.1),
+		"p50": snappedf(sorted[n / 2], 0.1), "p95": snappedf(sorted[int(n * 0.95)], 0.1), "worst": snappedf(sorted[n - 1], 0.1),
+		"stalls_over_100ms": stalls, "gpu": snappedf(gpu / n, 0.1), "calls": roundi(float(calls) / n),
+	}))
+	if profiling:
+		print("PROFILE  " + profile_report())
+	get_tree().quit()
+
 ## Every armed unit type fights the kind of target it is made for; each must
 ## fire its own weapon (bombs, missiles, rockets, torpedoes, shells, bullets)
 ## and hurt the target, without hurting its own side.
@@ -3611,7 +3817,20 @@ func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
 func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
 	var best = null
 	var best_d := radius
-	for other in units:
+	# Ground units scan the buckets around them; aircraft and ships, which are
+	# few and range far, still scan everyone.
+	var candidates: Array = units
+	if perf_opts and not (unit.get("fly", false) or unit.get("naval", false)):
+		candidates = []
+		var span := ceili(radius / GRID)
+		var cx := floori(unit.node.position.x / GRID)
+		var cz := floori(unit.node.position.z / GRID)
+		for dz in range(-span, span + 1):
+			for dx in range(-span, span + 1):
+				var bucket = grid.get(Vector2i(cx + dx, cz + dz))
+				if bucket != null:
+					candidates.append_array(bucket)
+	for other in candidates:
 		if other.dead or not hostile(unit.owner, other.owner) or effectiveness(unit, other) <= 0.01:
 			continue
 		var d: float = flat_distance(unit, other)
@@ -4463,6 +4682,8 @@ func benchmark_frame(delta: float) -> void:
 		"gpu": RenderingServer.get_video_adapter_name(), "valid": valid, "phases": bench_results,
 	}
 	print("DOMINION benchmark ", JSON.stringify(data))
+	if profiling:
+		print("PROFILE  " + profile_report())
 	DirAccess.make_dir_recursive_absolute("res://build")
 	var out := FileAccess.open("res://build/world-bench-%s-%d.json" % [RenderingServer.get_current_rendering_method(), bench_units], FileAccess.WRITE)
 	out.store_string(JSON.stringify(data, "  "))
@@ -4556,6 +4777,19 @@ func feature_probe() -> void:
 			for g in grass_nodes: g.visible = on],
 		["no units", func(on):
 			for u in units: u.node.visible = on],
+		["no unit animation", func(on):
+			for u in units:
+				if u.player != null:
+					u.player.active = on],
+		["no unit shadows", func(on):
+			for u in units:
+				for m in u.node.find_children("*", "MeshInstance3D", true, false):
+					m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if on else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF],
+		["no health bars", func(on):
+			if health_overlay != null: health_overlay.visible = on],
+		["no effects", func(on): effects.visible = on],
+		["no buildings", func(on):
+			for b in buildings: b.root.visible = on],
 	]
 	var results := {}
 	for config in configs:

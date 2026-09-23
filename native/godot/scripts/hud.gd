@@ -407,6 +407,7 @@ func _build_selection() -> void:
 		commands.add_child(button)
 	var health := Control.new()
 	health.set_script(preload("res://scripts/health_overlay.gd"))
+	world.health_overlay = health  # the feature probe can hide it
 	health.world = world
 	health.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(health)
@@ -501,6 +502,7 @@ func _process(delta: float) -> void:
 	if _refresh < 0.25:
 		return
 	_refresh = 0.0
+	var clock: int = world.clock()
 	for r in RESOURCES:
 		var key: String = r[0]
 		var parts: Array = _chips[key]
@@ -531,6 +533,7 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 	if _selected != null and (_selected.dead or _selected.owner != 0):
 		show_building(null)
 	_update_panel()
+	world.spent("hud", clock)
 
 ## Road or rail planning status (empty ends it).
 func show_transport(text: String) -> void:

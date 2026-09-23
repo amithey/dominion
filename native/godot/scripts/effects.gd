@@ -8,6 +8,7 @@ extends Node3D
 signal shake(strength: float, at: Vector3)
 
 var audio: Node  # audio.gd; every effect also plays its sound when set
+var world_ref: Node  # world.gd, for the profiler
 
 var _fire: ParticleProcessMaterial
 var _smoke: ParticleProcessMaterial
@@ -447,6 +448,7 @@ func burn(at: Vector3, seconds: float) -> void:
 # ---------------------------------------------------------------- update
 
 func _physics_process(delta: float) -> void:
+	var clock: int = world_ref.clock() if world_ref != null else 0
 	_move_projectiles(delta)
 	for i in range(_shells.size() - 1, -1, -1):
 		var s: Dictionary = _shells[i]
@@ -494,3 +496,5 @@ func _physics_process(delta: float) -> void:
 			if e.node:
 				e.node.queue_free()
 			_live.remove_at(i)
+	if world_ref != null:
+		world_ref.spent("effects", clock)

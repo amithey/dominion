@@ -312,6 +312,41 @@ The earlier three-district prototype is still available: pass `res://main.tscn`.
 
 Not yet ported: Steam integration.
 
+## Performance
+
+Measured on an Intel Iris Xe laptop at 1920x1080 with the seeded benchmark
+(`-- --bench=N --no-vsync --quit-after-bench`), which drills the same army over the same
+three camera phases every run. `-- --no-perf` puts the old behaviour back, so the two can
+be measured against each other in one sitting (the laptop throttles, so only compare runs
+taken minutes apart):
+
+| Scene | Before | After |
+|---|---|---|
+| 128 units, three phases | 7.5 FPS, 2,337 draw calls | 20.1 FPS, 1,456 draw calls |
+| 64 units, three phases | 20.6 FPS, 1,448 draw calls | 25.6 FPS, 931 draw calls |
+| 120-unit battle (`--battle-bench=60`) | 12.8 FPS, median 60 ms, 165 stalls over 100 ms | 17.1 FPS, median 47 ms, 60 stalls |
+
+What was slow, and what changed:
+- **Every unit looked at every other unit** to keep clear and to find a target. Ground
+  units are now bucketed into 8 m cells once a frame and read only the buckets around
+  them; crowd pressure is worked out every other frame and held in between, and distances
+  are compared squared so the square root only runs on a real overlap. Keeping clear fell
+  from 11.5 ms to 3.4 ms a frame with 128 units.
+- **Animation is the most expensive thing per figure.** Units more than 110 m from the
+  camera hold their pose; they pick the animation up again as the camera comes near.
+- **Shadows reached the horizon.** The sun's shadow distance is now 220 m on high, 140 m
+  on balanced and 95 m on low, with a fade at the edge, and units beyond 75 m stop casting
+  a shadow. This is most of the draw-call saving.
+- **Health bars** are drawn only for what is hurt or selected, in front of the camera, on
+  screen and within 130 m, with the tick marks on selected units only.
+- **Vehicles told their shader the ground height every frame**, for every mesh; they now
+  only do it when they have actually moved up or down.
+
+`-- --profile` during any benchmark prints where each frame went, by system
+(`move`, `combat`, `keeping clear`, `placing`, `steering`, `ai`, `hud`, `effects`...).
+`-- --feature-probe --probe-units=N` measures the frame cost of each feature (shadows,
+SSAO, grass, trees, animation, health bars) by turning them off one at a time.
+
 ## Testing everything
 
 `powershell -ExecutionPolicy Bypass -File native/run-tests.ps1` runs every automated test in turn
@@ -338,6 +373,7 @@ times out, or prints any SCRIPT ERROR on the way. The suites:
 | `--ui-test` | every screen opens and every button in it is pressed; build and train from the production list; research, help, minimap, pause and settings |
 | `--save-test`, `--menu-test` | save and load, the menu flow |
 | `--ai-test` | a hard AI builds, trains, goes to war and reaches the player |
+| `--battle-bench=N` | a measured battle: frame times, stalls over 100 ms and draw calls |
 | `--soak-test` | 12 minutes of game time against three hard rivals at 4x speed; every few seconds no unit or building has broken numbers, leaves the map or sinks, and no treasury goes negative |
 
 Screenshot flags for looking at the result: `--capture-screens` (every screen), `--capture-ui`,

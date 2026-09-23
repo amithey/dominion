@@ -183,7 +183,9 @@ func _process(delta: float) -> void:
 	_tick += delta
 	if _tick >= TICK:
 		_tick -= TICK
+		var clock: int = world.clock()
 		tick()
+		world.spent("territory", clock)
 
 func tick() -> void:
 	var nations: int = world.map.nations.size()

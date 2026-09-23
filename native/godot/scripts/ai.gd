@@ -57,6 +57,7 @@ func declare_war(id: int, provoked: bool) -> void:
 func _physics_process(delta: float) -> void:
 	if world == null or world.economy == null:
 		return
+	var clock: int = world.clock()
 	for n in nations:
 		if n.defeated:
 			continue
@@ -65,6 +66,7 @@ func _physics_process(delta: float) -> void:
 			n.defeated = true
 			continue
 		think(n, home, delta)
+	world.spent("ai", clock)
 
 func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	if world.match_config.get("style","standard")=="sandbox":

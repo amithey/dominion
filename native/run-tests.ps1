@@ -46,6 +46,7 @@ foreach ($t in $tests) {
     $out = Join-Path $env:TEMP "dominion-test-$runId.log"
     $start = Get-Date
     $p = Start-Process -FilePath $runner -ArgumentList $argsList -RedirectStandardOutput $out -RedirectStandardError "$out.err" -PassThru -NoNewWindow
+    $null = $p.Handle  # without this PowerShell leaves ExitCode empty after a timed wait
     if (-not $p.WaitForExit($limit * 1000)) { $p.Kill(); $status = 'TIMEOUT' }
     else {
         $log = (Get-Content $out -Raw) + (Get-Content "$out.err" -Raw)
