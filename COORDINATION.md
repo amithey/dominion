@@ -111,3 +111,6 @@ UI files listed above.
 - 2026-09-23 Claude (0.9.10): terrain heights refined at load (`topography.gd`: smoothing, lake basins, sea shelf,
   low land lifted), water shader calms waves over land/shallows and draws lakes still, distance fade of terrain
   detail, pines (`pines.gd`). world.gd, terrain/water shaders only; your diplomacy/hud/save edits untouched.
+- 2026-09-23 Claude: the fine grain/speckle on the ground on the Iris Xe laptop comes from the "balanced" quality
+  preset (FSR upscaling at 0.77 with sharpening). With `--quality=high` it is almost gone. The user decided to leave
+  it as is (strong PCs look cleaner), so please do not change the FSR settings for this.
