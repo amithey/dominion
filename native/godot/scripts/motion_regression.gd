@@ -88,6 +88,24 @@ static func run(w: Node) -> void:
 		failures.append("Debris never rose (peak %.1f m)" % peak)
 	if buried > 0:
 		failures.append("%d debris pieces fell through the ground" % buried)
+	# A blast shoves a soldier back, jolts a hull, and throws a soldier it kills.
+	var standing: Dictionary = w.spawn_unit("soldier", field + Vector3(20, 0, -10), 0)
+	var before: Vector3 = standing.node.position
+	w.Motion.shove(standing, before - Vector3(1.5, 0, 0), 1.0)
+	step(w, 60)
+	var shoved: float = standing.node.position.x - before.x
+	if shoved < 0.4:
+		failures.append("A blast did not shove a soldier (moved %.2f m)" % shoved)
+	var victim: Dictionary = w.spawn_unit("soldier", field + Vector3(24, 0, -14), 1)
+	w.kill(victim)
+	w.Motion.shove(victim, victim.node.position - Vector3(1, 0, 0), 1.0)
+	var ground_y: float = victim.node.position.y
+	var flew := 0.0
+	for i in range(120):
+		step(w, 1)
+		flew = maxf(flew, victim.node.position.y - ground_y)
+	if flew < 0.6 or victim.has("fling"):
+		failures.append("A soldier killed by a blast was not thrown and did not land (peak %.2f m)" % flew)
 	# A destroyed tank may throw its turret; it must come down and rest on the ground.
 	var tossed = null
 	for attempt in range(12):

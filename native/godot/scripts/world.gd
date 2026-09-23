@@ -181,12 +181,15 @@ var health_overlay: Control  # hud.gd's health bars, for the feature probe
 # of the whole army, which is what made large battles crawl.
 const GRID := 8.0
 var grid := {}
+var air_sea: Array = []   # living ships and aircraft (not in the ground grid)
 var lod_turn := 0
 # `-- --no-perf` puts the work back the way it was before the performance
 # pass: no neighbour buckets, no distance detail, shadows to the horizon. It
 # is only there so the two can be measured against each other.
 var perf_opts := true
 var game_time := 0.0      # match seconds (EMP and other timed effects)
+var shots_fired := 0      # every weapon discharge (the battle test watches it)
+var sim_tick := 0         # simulation steps taken (staggers per-unit work; tests step by hand)
 var missile_aim := ""     # missile type waiting for a target click
 var cam_lift := 0.0       # raises the camera's look-at point above the ground (captures)
 var edge_scroll := true   # pan when the mouse touches the screen edge (Settings)
@@ -198,6 +201,7 @@ var engagement: RefCounted
 var naval_navigation: RefCounted
 const Repairs := preload("res://scripts/repairs.gd")
 const Motion := preload("res://scripts/motion.gd")
+const Tactics := preload("res://scripts/tactics.gd")
 const NAV_STEP := 4.0
 var fps_frames := 0
 
@@ -426,6 +430,10 @@ func _ready() -> void:
 		await soak_test(12.0)
 	elif "--capture-screens" in args:
 		await capture_screens()
+	elif "--capture-tactics" in args:
+		await preload("res://scripts/battle_regression.gd").capture(self)
+	elif "--battle-test" in args:
+		await preload("res://scripts/battle_regression.gd").run(self)
 	elif "--motion-test" in args:
 		await preload("res://scripts/motion_regression.gd").run(self)
 	elif "--combat-regression" in args:
@@ -1546,7 +1554,13 @@ func place_on_ground(unit: Dictionary, at: Vector3) -> void:
 	var heading := Basis(Vector3.UP, unit.heading)
 	if unit.vehicle:
 		# Vehicles pitch and roll with the ground under their tracks, on springs (motion.gd).
-		node.basis = Motion.body_basis(unit, normal_at(at.x, at.z), unit.heading, get_physics_process_delta_time())
+		# The ground's slope changes over metres, not millimetres: sample it again
+		# only after the vehicle has moved half a metre.
+		var probe: Vector3 = unit.get("ground_probe", Vector3.INF)
+		if probe == Vector3.INF or Vector2(at.x - probe.x, at.z - probe.z).length_squared() > 0.25:
+			unit.ground_probe = at
+			unit.ground_normal = normal_at(at.x, at.z)
+		node.basis = Motion.body_basis(unit, unit.ground_normal, unit.heading, get_physics_process_delta_time())
 		if absf(node.position.y - float(unit.get("ground_told", -999.0))) > 0.04:
 			unit.ground_told = node.position.y
 			for mesh_instance in unit.get("meshes", []):
@@ -1589,6 +1603,8 @@ func order_attack(selected: Array, enemy: Dictionary) -> void:
 		if u.owner == 0 and enemy.owner > 0 and not hostile(u.owner, enemy.owner):
 			ai.declare_war(enemy.owner, true)
 		u.enemy = enemy
+		u.forced = true  # an ordered target is not swapped for a nearer one
+		u.ignore = {}
 		u.erase("ground_attack")
 		u.target = null
 		u.attack_move = true
@@ -1604,12 +1620,29 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 		u.attack_move = attack
 		u.path = PackedVector3Array()
 		u.build_site = null  # a new order takes a worker off its construction site
+		u.forced = false
+		u.best_rem = INF
+		u.stall = 0.0
+		u.stuck = 0
+		u.holding = false
 		if not attack:
 			u.enemy = null  # a plain move order disengages
+	# Ranks across the line of march (tactics.gd), marching at the pace of the
+	# slowest so the body arrives together.
+	var ground: Array = selected.filter(func(u): return not (u.get("fly", false) or u.get("naval", false)))
+	var slots: Array = Tactics.formation(ground, point) if not ground.is_empty() else []
+	var pace := INF
+	for u in ground:
+		pace = minf(pace, float(u.speed))
+	for i in range(ground.size()):
+		ground[i].target = slots[i]
+		ground[i].pace = pace if ground.size() > 1 else INF
 	var width := maxi(1, ceili(sqrt(selected.size())))
 	var rows := ceili(float(selected.size()) / width)
 	for i in range(selected.size()):
-		var spacing := 5.5 if selected[i].vehicle else 2.6
+		if not (selected[i].get("fly", false) or selected[i].get("naval", false)):
+			continue
+		var spacing := 12.0 if selected[i].get("fly", false) else 14.0
 		selected[i].target = point + Vector3((i % width - (width - 1) / 2.0) * spacing, 0, (floori(float(i) / width) - (rows - 1) / 2.0) * spacing)
 
 func request_bombard(selected: Array, point: Vector3) -> void:
@@ -1661,8 +1694,12 @@ func profile_report() -> String:
 ## Buckets every living ground unit by its position.
 func rebuild_grid() -> void:
 	grid.clear()
+	air_sea.clear()
 	for u in units:
-		if u.dead or u.get("fly", false) or u.get("naval", false):
+		if u.dead:
+			continue
+		if u.get("fly", false) or u.get("naval", false):
+			air_sea.append(u)
 			continue
 		var p: Vector3 = u.node.position
 		var key := Vector2i(floori(p.x / GRID), floori(p.z / GRID))
@@ -1714,6 +1751,7 @@ func update_detail_level() -> void:
 				mesh.cast_shadow = mode
 
 func _physics_process(delta: float) -> void:
+	sim_tick += 1
 	var now := Time.get_ticks_msec() / 1000.0
 	var t0 := clock()
 	rebuild_grid()
@@ -1731,9 +1769,14 @@ func _physics_process(delta: float) -> void:
 	for i in range(units.size() - 1, -1, -1):
 		var unit: Dictionary = units[i]
 		if unit.dead:
+			var t_dead := clock()
 			update_dead(unit, delta, i)
+			spent("  wrecks and bodies", t_dead)
 			continue
+		var t_fight := clock()
 		update_combat(unit, delta)
+		spent("  targeting and firing", t_fight)
+		var t_parts := clock()
 		if unit.get("rotor") != null:
 			unit.rotor.rotate_y(delta * 28.0)
 		if unit.get("radar") != null:
@@ -1741,8 +1784,11 @@ func _physics_process(delta: float) -> void:
 		if unit.moving:
 			for a in unit.get("axles", []):
 				a.node.rotate_x(unit.get("cur_speed", unit.speed) * delta / a.radius)  # wheels roll with the ground
+		spent("  wheels and rotors", t_parts)
 		if unit.engine:
+			var t_audio := clock()
 			audio.engine_update(unit.engine, unit.moving, delta)
+			spent("  engine sound", t_audio)
 		if unit.turret:
 			var aim: float
 			if unit.enemy != null:
@@ -1763,15 +1809,28 @@ func _physics_process(delta: float) -> void:
 			move_craft(unit, delta)
 			continue
 		var node: Node3D = unit.node
+		var t_pre := clock()
+		var shoved := Motion.knock_step(unit, delta)
+		if shoved != Vector3.ZERO:
+			var to_spot: Vector3 = node.position + shoved
+			if height_at(to_spot.x, to_spot.z) > float(map.seaLevel) + 0.3:
+				place_on_ground(unit, to_spot)
 		var goal = unit.target
 		var chasing := false
 		if unit.enemy != null and (unit.target == null or unit.attack_move):
 			var gap: Vector3 = unit.enemy.node.position - node.position
 			gap.y = 0
-			if gap_to(unit, unit.enemy) > unit.range * 0.9:
-				goal = unit.enemy.node.position  # close in until in range
+			# Close in to a firing position of its own (tactics.gd), not onto the
+			# enemy itself; once there, hold until the enemy draws clear of range.
+			if gap_to(unit, unit.enemy) > unit.range * (1.03 if unit.get("holding", false) else 0.99):
+				if thinks(unit) or not unit.has("spot"):
+					unit.spot = Tactics.firing_spot(self, unit, unit.enemy)
+				goal = unit.spot
 				chasing = true
+				unit.holding = false
+				Tactics.unjam(self, unit, delta)
 			else:
+				unit.holding = true
 				goal = null  # hold and fire; soldiers turn to face the enemy
 				if not unit.vehicle:
 					unit.heading = lerp_angle(unit.heading, atan2(gap.x, gap.z), minf(1.0, delta * 8.0))
@@ -1781,11 +1840,15 @@ func _physics_process(delta: float) -> void:
 					animate(unit, false)
 				else:
 					set_stance(unit)
+		spent("  engage", t_pre)
 		if goal == null:
+			var t_idle := clock()
 			Motion.halt(unit, delta)
 			if unit.target == null and unit.moving:
 				animate(unit, false)
 			settle(unit)
+			spread_out(unit, slot, delta)
+			spent("  standing", t_idle)
 			continue
 		var t_steer := clock()
 		var waypoint := steer_point(unit, goal, chasing, delta)
@@ -1794,6 +1857,23 @@ func _physics_process(delta: float) -> void:
 		var to: Vector3 = waypoint - node.position
 		to.y = 0
 		var remaining := Vector2(end.x - node.position.x, end.z - node.position.z).length()
+		# A slot another unit is standing on is never reached exactly: when a
+		# unit stops gaining on its mark, it counts as there if close, or tries
+		# a fresh route, and after a few tries settles where it is.
+		if not chasing:
+			if remaining < float(unit.get("best_rem", INF)) - 0.4:
+				unit.best_rem = remaining
+				unit.stall = 0.0
+			else:
+				unit.stall = float(unit.get("stall", 0.0)) + delta
+			if unit.stall > 1.6:
+				unit.stall = 0.0
+				unit.best_rem = INF
+				unit.stuck = int(unit.get("stuck", 0)) + 1
+				if remaining < (8.0 if unit.vehicle else 4.5) or unit.stuck >= 4:
+					remaining = 0.0
+				else:
+					unit.path = PackedVector3Array()
 		if remaining < 0.35:
 			if not chasing:
 				unit.target = null
@@ -1803,7 +1883,9 @@ func _physics_process(delta: float) -> void:
 			settle(unit)
 			continue
 		# Speed, turning and slope are physical now: see motion.gd.
+		var t_drive := clock()
 		var travel := Motion.drive(self, unit, to, remaining, chasing, delta)
+		spent("  driving", t_drive)
 		var step := travel.length()
 		var next: Vector3 = node.position + travel
 		# Keep clear of other units instead of driving through them.
@@ -1811,9 +1893,9 @@ func _physics_process(delta: float) -> void:
 		# and keeps the last result in between; nothing moves differently.
 		var t_sep := clock()
 		var push: Vector3 = unit.get("push", Vector3.ZERO)
-		if perf_opts and (Engine.get_physics_frames() + slot) % 2 != 0:
+		if perf_opts and (sim_tick + slot) % 2 != 0:
 			spent("  keeping clear", t_sep)
-			next += push.limit_length(step * 1.5)
+			next += Tactics.sidestep(unit, travel, push).limit_length(maxf(step * 1.5, delta * 1.5))
 			if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
 				unit.target = null
 				Motion.halt(unit, delta)
@@ -1824,29 +1906,10 @@ func _physics_process(delta: float) -> void:
 			animate(unit, true)
 			spent("  placing", t_place_now)
 			continue
-		push = Vector3.ZERO
-		var cx := floori(next.x / GRID)
-		var cz := floori(next.z / GRID)
-		for dz in range(-1, 2):
-			for dx in range(-1, 2):
-				var bucket = grid.get(Vector2i(cx + dx, cz + dz)) if perf_opts else (units if dx == 0 and dz == 0 else null)
-				if bucket == null:
-					continue
-				for other in bucket:
-					if other.get("fly", false) or other.get("naval", false):
-						continue
-					if other == unit or other.dead:
-						continue  # the buckets hold ground units only
-					var gap: Vector3 = next - other.node.position
-					gap.y = 0
-					var clearance: float = (1.1 if not (unit.vehicle or other.vehicle) else 3.4) + (1.8 if unit.vehicle and other.vehicle else 0.0)
-					var d2 := gap.length_squared()
-					if d2 < clearance * clearance and d2 > 0.000001:
-						var d := sqrt(d2)
-						push += gap / d * (clearance - d)
+		push = Tactics.crowd_push(self, unit, next)
 		unit.push = push
 		spent("  keeping clear", t_sep)
-		next += push.limit_length(step * 1.5)
+		next += Tactics.sidestep(unit, travel, push).limit_length(maxf(step * 1.5, delta * 1.5))
 		if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
 			unit.target = null  # land units stop at the waterline
 			Motion.halt(unit, delta)
@@ -1859,9 +1922,41 @@ func _physics_process(delta: float) -> void:
 	spent("move", t_move)
 	prof_frames += 1 if profiling else 0
 
+# Standing units that overlap step apart a little at a time (a pile would
+# block fire and feed every splash). Checked every fourth frame per unit.
+func spread_out(unit: Dictionary, slot: int, delta: float) -> void:
+	if (sim_tick + slot) % 4 != 0:
+		return
+	var push := Tactics.crowd_push(self, unit, unit.node.position)
+	if push.length_squared() < 0.0025:
+		return
+	var next: Vector3 = unit.node.position + push.limit_length(delta * 4.0 * 1.6)
+	if open_ground(next):
+		place_on_ground(unit, next)
+
+## Walkable by the walk grid (a lookup, unlike walkable(), which measures slope
+## and every building); off the grid falls back to "above the waterline".
+func open_ground(p: Vector3) -> bool:
+	if nav_n == 0:
+		return height_at(p.x, p.z) > float(map.seaLevel) + 0.3
+	var half := float(map.mapSize) * 0.5
+	var c := int((p.x + half) / NAV_STEP)
+	var r := int((p.z + half) / NAV_STEP)
+	if c < 0 or r < 0 or c >= nav_n - 1 or r >= nav_n - 1:
+		return false
+	return nav_open[r * (nav_n - 1) + c] == 1
+
+## Whether this is one of `unit`'s decision frames (every THINK_EVERY-th
+## physics frame, staggered across units so the work is spread evenly).
+const THINK_EVERY := 6
+func thinks(unit: Dictionary) -> bool:
+	if not unit.has("think_slot"):
+		unit.think_slot = randi() % THINK_EVERY
+	return (sim_tick + int(unit.think_slot)) % THINK_EVERY == 0
+
 # A parked vehicle keeps rocking on its springs until they come to rest.
 func settle(unit: Dictionary) -> void:
-	if unit.vehicle and absf(unit.get("sus_pitch", 0.0)) + absf(unit.get("sus_pitch_v", 0.0)) + absf(unit.get("sus_roll", 0.0)) + absf(unit.get("sus_roll_v", 0.0)) > 0.002:
+	if unit.vehicle and absf(unit.get("sus_pitch", 0.0)) + absf(unit.get("sus_pitch_v", 0.0)) + absf(unit.get("sus_roll", 0.0)) + absf(unit.get("sus_roll_v", 0.0)) > 0.006:
 		place_on_ground(unit, unit.node.position)
 
 # ---------------------------------------------------------------- navigation
@@ -3890,20 +3985,22 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 		return  # workers do not fight; EMP-struck machines are dead weight
 	unit.reload -= delta
 	unit.search -= delta
-	if unit.enemy != null and (unit.enemy.dead or gap_to(unit, unit.enemy) > maxf(unit.aggro, unit.range) * 1.6 and not unit.attack_move):
-		unit.enemy = null
+	# Decisions run ten times a second, each unit on its own tick of six;
+	# aiming and firing below still run every frame.
+	if unit.enemy != null and thinks(unit) and not Tactics.keep_target(self, unit, delta * THINK_EVERY):
 		set_stance(unit)
 	# Units on a plain move order ignore the enemy; idle or attack-moving units engage.
+	# They look as far as their weapon reaches (artillery outranges its own eyes otherwise).
 	if unit.enemy == null and unit.search <= 0.0:
 		unit.search = 0.35
 		if unit.target == null or unit.attack_move:
-			unit.enemy = nearest_enemy(unit, unit.aggro)
+			unit.enemy = Tactics.pick_target(self, unit, maxf(unit.aggro, unit.range))
 	if unit.enemy == null or unit.reload > 0.0:
 		return
 	var enemy: Dictionary = unit.enemy
 	var d := gap_to(unit, enemy)
-	if d > unit.range:
-		return
+	if d > unit.range * 1.03:
+		return  # a unit holding at the edge of range still has its shot
 	if unit.vehicle and unit.turret != null:
 		# The gun only fires once the turret has swung onto the target.
 		var gap: Vector3 = enemy.node.position - unit.node.position
@@ -3911,8 +4008,13 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 			return
 	elif unit.moving and not (unit.get("fly", false) or unit.get("naval", false)):
 		return  # infantry and turretless vehicles stop to shoot; aircraft and ships fire on the move
-	if fire(unit, enemy):
+	var t_shot := clock()
+	var fired := fire(unit, enemy)
+	spent("    shots", t_shot)
+	if fired:
 		unit.reload = unit.cooldown * randf_range(0.85, 1.15)
+		unit.last_fire = game_time
+		shots_fired += 1
 
 ## The weapon a unit fires, when it is more than a rifle or a gun turret.
 const WEAPONS := {"bomber": "bomb", "jet": "missile", "drone": "missile", "helicopter": "rockets", "gunship": "rockets",
@@ -3998,6 +4100,7 @@ func blast(shooter: Dictionary, at: Vector3, dmg: float, radius: float, size: fl
 		var d: float = other.node.position.distance_to(at)
 		if d < radius:
 			damage(other, dmg * effectiveness(shooter, other) * (1.0 if d < radius * 0.5 else 0.45), shooter)
+			Motion.shove(other, at, (1.0 - d / radius) * clampf(size, 0.6, 1.6))
 
 func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 	var aim: Vector3 = enemy.node.position + Vector3.UP * (3.0 if enemy.get("is_building", false) else (1.3 if enemy.vehicle else 1.2))
@@ -4017,7 +4120,9 @@ func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 		var muzzle: Vector3 = unit.turret.global_position + dir * (2.4 if unit.get("naval", false) else float(unit.get("muzzle", 4.2))) + Vector3.UP * 0.4
 		effects.muzzle_flash(muzzle, true)
 		Motion.recoil(unit, 1.4 if unit.key in ["tank", "artillery"] else 0.7)
-		var miss := Vector3(randf_range(-1.5, 1.5), 0, randf_range(-1.5, 1.5)) if randf() > 0.8 else Vector3.ZERO
+		# Long shots and moving targets miss more often; point-blank shots rarely do.
+		var miss_chance := 0.12 + 0.3 * clampf(gap_to(unit, enemy) / maxf(unit.range, 1.0), 0.0, 1.0) + (0.15 if enemy.get("moving", false) else 0.0)
+		var miss := Vector3(randf_range(-2.5, 2.5), 0, randf_range(-2.5, 2.5)) if randf() < miss_chance else Vector3.ZERO
 		var landing := aim + miss
 		landing.y = maxf(landing.y if miss == Vector3.ZERO else height_at(landing.x, landing.z), height_at(landing.x, landing.z))
 		effects.shell(muzzle, landing, func(at: Vector3): shell_hit(unit, at))
@@ -4025,7 +4130,9 @@ func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 		var dir := Basis(Vector3.UP, unit.heading) * Vector3.BACK
 		var muzzle: Vector3 = unit.node.position + Vector3.UP * 1.45 + dir * 0.75
 		effects.muzzle_flash(muzzle, false)
-		var hit := randf() < (0.55 if enemy.vehicle else 0.7)
+		# Rifle fire: accurate close in, poor at the edge of range or at a running man.
+		var reach := clampf(gap_to(unit, enemy) / maxf(unit.range, 1.0), 0.0, 1.0)
+		var hit := randf() < (0.55 if enemy.vehicle else 0.7) * lerpf(1.1, 0.6, reach) * (0.75 if enemy.get("moving", false) else 1.0)
 		var end: Vector3 = aim + Vector3(randf_range(-0.3, 0.3), randf_range(-0.3, 0.3), randf_range(-0.3, 0.3))
 		if not hit:
 			end = enemy.node.position + Vector3(randf_range(-2.5, 2.5), 0, randf_range(-2.5, 2.5))
@@ -4048,6 +4155,7 @@ func shell_hit(shooter: Dictionary, at: Vector3) -> void:
 		var d: float = other.node.position.distance_to(at)
 		if d < 3.5:
 			damage(other, shooter.dmg * effectiveness(shooter, other) * (1.0 if d < 1.8 else 0.45), shooter)
+			Motion.shove(other, at, 1.0 - d / 3.5)
 
 func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	if unit.dead:
@@ -4068,8 +4176,10 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 		if unit.hp <= 0.0:
 			destroy_building(unit)
 		return
-	if unit.enemy == null and unit.dmg > 0.0 and not source.dead and (unit.target == null or unit.attack_move):
-		unit.enemy = source  # return fire
+	# Return fire, at an attacker this weapon can hurt and reach (a rifleman
+	# shelled by a jet does not stand and stare at it).
+	if unit.enemy == null and unit.dmg > 0.0 and not source.dead and (unit.target == null or unit.attack_move) 			and source.has("key") and effectiveness(unit, source) > 0.01 and (Tactics.reachable(unit, source) or gap_to(unit, source) <= unit.range):
+		unit.enemy = source
 	if unit.hp <= 0.0:
 		kill(unit)
 
@@ -4236,6 +4346,22 @@ func update_dead(unit: Dictionary, delta: float, index: int) -> void:
 					toss.spin *= 0.4
 					effects.impact(piece.global_position)
 					effects.debris.scatter(piece.global_position, 3, 4.0, 0.25, Color(0.27, 0.22, 0.16))
+		return
+	if unit.has("fling"):
+		# Thrown by the blast that killed him: a ballistic arc, tumbling, then down.
+		var v: Vector3 = unit.fling
+		v.y -= 16.0 * delta
+		var p: Vector3 = unit.node.position + v * delta
+		var floor_y := height_at(p.x, p.z)
+		if p.y <= floor_y and v.y < 0.0:
+			p.y = floor_y
+			unit.erase("fling")
+			unit.model.basis = unit.fling_base  # lands and lies as he fell (the death pose takes over)
+			effects.impact(p)
+		else:
+			unit.fling = v
+			unit.model.rotate_object_local(Vector3.RIGHT, float(unit.get("fling_spin", 3.0)) * delta)
+		unit.node.position = p
 		return
 	if unit.has("fall"):
 		var k := minf(unit.dead_time / 0.6, 1.0)

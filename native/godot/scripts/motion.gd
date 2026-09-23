@@ -49,11 +49,13 @@ static func drive(w: Node, unit: Dictionary, to: Vector3, remaining: float, chas
 	var p: Vector3 = unit.node.position
 	var grade: float = (w.height_at(p.x + fwd.x * 2.0, p.z + fwd.z * 2.0) - w.height_at(p.x - fwd.x * 2.0, p.z - fwd.z * 2.0)) / 4.0
 	var slope := clampf(1.0 - grade * (2.4 if vehicle else 1.5), 0.45, 1.12)
-	var top: float = unit.speed * slope * align
+	# A formation marches at the pace of its slowest member until it fights.
+	var pace: float = unit.get("pace", INF) if not chasing else INF
+	var top: float = minf(unit.speed, pace) * slope * align
 	var brake := VEHICLE_BRAKE if vehicle else INFANTRY_BRAKE
-	if not chasing:
-		# Never faster than a stop within the distance left.
-		top = minf(top, sqrt(2.0 * brake * maxf(remaining, 0.0)) + 0.35)
+	# Never faster than a stop within the distance left: at the end of a route,
+	# or at a firing position (otherwise a hull circles a moving mark forever).
+	top = minf(top, sqrt(2.0 * brake * maxf(remaining if not chasing else to.length(), 0.0)) + 0.35)
 	var v: float = unit.get("cur_speed", 0.0)
 	var old_v := v
 	v = move_toward(v, top, (VEHICLE_ACCEL if vehicle else INFANTRY_ACCEL) * delta if top > v else brake * delta)
@@ -106,3 +108,37 @@ static func body_basis(unit: Dictionary, ground_up: Vector3, heading: float, del
 	unit.sus_roll = roll
 	unit.sus_roll_v = roll_v
 	return base * Basis(Vector3.RIGHT, pitch) * Basis(Vector3.BACK, roll)
+
+## The shock of a blast at `at` reaching `unit` with `strength` (1 = at the
+## centre of a shell burst, 0 = at the edge). Soldiers are shoved off their
+## feet a step or two; one killed by the blast is thrown (update_dead flies
+## him); a vehicle's hull is jolted on its springs, away from the burst.
+static func shove(unit: Dictionary, at: Vector3, strength: float) -> void:
+	if strength <= 0.0 or unit.get("fly", false) or unit.get("naval", false):
+		return
+	var away: Vector3 = unit.node.position - at
+	away.y = 0.0
+	away = away.normalized() if away.length() > 0.05 else Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)).normalized()
+	if unit.vehicle:
+		var local := Basis(Vector3.UP, unit.heading).inverse() * away
+		unit.sus_pitch_v = float(unit.get("sus_pitch_v", 0.0)) + local.z * 2.2 * strength
+		unit.sus_roll_v = float(unit.get("sus_roll_v", 0.0)) - local.x * 2.2 * strength
+		return
+	if unit.dead:
+		unit.fling = away * randf_range(4.0, 7.0) * strength + Vector3.UP * randf_range(5.5, 8.0) * strength
+		unit.fling_spin = randf_range(-6.0, 6.0)
+		if not unit.has("fling_base"):
+			unit.fling_base = unit.model.basis
+	else:
+		unit.knock = Vector3(unit.get("knock", Vector3.ZERO)) + away * 4.5 * strength
+
+## Slides a shoved soldier along and bleeds the shove off (friction).
+## Returns the displacement for this frame.
+static func knock_step(unit: Dictionary, delta: float) -> Vector3:
+	var k: Vector3 = unit.get("knock", Vector3.ZERO)
+	if k.length_squared() < 0.01:
+		if k != Vector3.ZERO:
+			unit.knock = Vector3.ZERO
+		return Vector3.ZERO
+	unit.knock = k * exp(-delta * 5.0)
+	return k * delta

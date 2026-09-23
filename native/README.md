@@ -5,6 +5,52 @@ The active game is in `native/godot`. The browser implementation in `js/` is a
 reference for rules and exported data. Run `prepare-desktop.ps1` before changing
 or testing the native game; copied art and the engine are local-only.
 
+## Version 0.9.5: how battles are fought, and the minimap turned with the camera
+
+Problems reported in play: armies ran together into one knot where few
+could shoot, a unit sometimes stuck after an attack, and the minimap's view
+frame sat crooked. `scripts/tactics.gd` changes how units fight and march:
+
+- **Firing positions.** A unit closing on an enemy heads for a spot inside
+  its own weapon range, on its own bearing, rather than to the enemy's
+  position, so a squad spreads into a firing line. It stops and fires as
+  soon as the target is in range, and a unit holding at the edge of range
+  still has its shot.
+- **Target choice.** Units prefer targets already in range, those their
+  weapon hurts most and those already wounded. Every unit searches as far as
+  its weapon reaches (artillery and rocket launchers used to look nearer than
+  they could shoot) and swaps to a better target in range now and then.
+- **Never stuck.** A target that stops being hostile (a limited operation
+  ends) is dropped; ground troops do not chase ships or aircraft out of reach
+  and do not "return fire" at an attacker they cannot hurt or reach; a chase
+  that makes no progress for 12 s is abandoned (aircraft excepted, they make
+  passes); a unit whose slot is occupied counts as arrived when close, or
+  re-routes. Blocked units step round each other, and a unit jammed while
+  closing in takes a new bearing.
+- **Formations.** A group move forms ranks across the line of march: armour
+  in front, infantry behind, artillery and air defence at the back. Slots are
+  handed out in the order units already stand, and the body marches at the
+  pace of its slowest member. Standing units that overlap step apart; hulls
+  keep 6.5 m from each other.
+- **Accuracy.** Long shots and moving targets miss more, point-blank shots
+  rarely do. A 16 against 16 fight now lasts about 40 s of contact, not 10.
+- **Blast physics.** Explosions shove soldiers back, jolt vehicle hulls on
+  their springs, and throw a soldier killed by the blast through the air.
+- **Minimap.** The map turns with the camera, so the top of the screen is the
+  top of the map and the view frame always points straight up; a gold needle
+  on the rim marks north. The island is scaled so no land is cut off.
+- **Engine.** Decisions (target upkeep, firing positions) run ten times a
+  second per unit, staggered, while movement stays at 60 Hz; standing units
+  use a walk-grid lookup instead of scanning every building; a vehicle
+  resamples the ground slope only after moving half a metre. In the 48-a-side
+  battle benchmark this took standing units from 4.3 to 1.0 ms and placement
+  from 2.5 to 0.3 ms per physics step.
+- `--battle-test` fights two equal mixed forces and fails on any unit that sits
+  loaded with a target in range for a second, units piling on one spot, a unit
+  frozen with an enemy, a squad that will not move after an attack, or ground
+  troops chasing a ship. `--capture-tactics` renders the march, the firefight
+  and the turned minimap.
+
 ## Version 0.9.4: movement physics, debris and a 4X unit card
 
 - **Momentum.** Ground units build up speed and brake onto their mark

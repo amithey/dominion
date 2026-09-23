@@ -3,11 +3,17 @@ extends Control
 ## shallow water, beach, grass, hills, rock), every building and unit as a dot
 ## in its nation's colour, and the camera's view as a gold wedge. Click or drag
 ## on it to move the camera there. Redrawn four times a second.
+##
+## The map turns with the camera, so what is at the top of the screen is at
+## the top of the map and the view wedge always points straight up; a gold
+## needle on the rim marks north.
 
 var world: Node
 var _terrain: ImageTexture
 var _half := 320.0
 var _refresh := 0.0
+var _fit := 1.0     # the island is scaled so no land is cut off at any angle
+const SEA := Color("12334a")
 
 func setup(world_node: Node) -> void:
 	world = world_node
@@ -15,6 +21,7 @@ func setup(world_node: Node) -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	clip_contents = true  # the view wedge is cut at the frame, never drawn over it
 	var n := 160
+	var far := 0.0  # the land pixel farthest from the centre, as a fraction of the half-width
 	var img := Image.create(n, n, false, Image.FORMAT_RGB8)
 	var sea := float(world.map.seaLevel)
 	for y in range(n):
@@ -37,7 +44,10 @@ func setup(world_node: Node) -> void:
 			var slope: float = world.height_at(wx + 3.0, wz + 3.0) - world.height_at(wx, wz)
 			c = c.lightened(clampf(slope * 0.05, 0.0, 0.2)) if slope > 0.0 else c.darkened(clampf(-slope * 0.05, 0.0, 0.2))
 			img.set_pixel(x, y, c)
+			if h > 0.0:
+				far = maxf(far, Vector2(x + 0.5 - n * 0.5, y + 0.5 - n * 0.5).length() / (n * 0.5))
 	_terrain = ImageTexture.create_from_image(img)
+	_fit = clampf(0.96 / maxf(far, 0.01), 0.68, 1.0)
 
 func _process(delta: float) -> void:
 	_refresh += delta
@@ -48,13 +58,22 @@ func _process(delta: float) -> void:
 func to_map(p: Vector3) -> Vector2:
 	return Vector2((p.x + _half) / (_half * 2.0), (p.z + _half) / (_half * 2.0)) * size
 
+## Map space (north up) to the turned picture on screen.
+func view_transform() -> Transform2D:
+	var centre := size * 0.5
+	var yaw: float = world.cam_yaw if world != null else 0.0
+	return Transform2D(yaw, Vector2(_fit, _fit), 0.0, centre) * Transform2D(0.0, -centre)
+
 func to_world(point: Vector2) -> Vector3:
-	var f := point / size
+	var f := view_transform().affine_inverse() * point / size
 	return Vector3(-_half + f.x * _half * 2.0, 0, -_half + f.y * _half * 2.0)
 
 func _draw() -> void:
 	if world == null or _terrain == null:
 		return
+	draw_rect(Rect2(Vector2.ZERO, size), SEA)
+	var xf := view_transform()
+	draw_set_transform_matrix(xf)
 	draw_texture_rect(_terrain, Rect2(Vector2.ZERO, size), false)
 	var colours := []
 	for n in world.map.nations:
@@ -96,6 +115,16 @@ func _draw() -> void:
 			var side := Vector2(-forward.y, forward.x) * 3.6
 			draw_colored_polygon(PackedVector2Array([far + forward * 5.5, far + side, far - side]), Color("f1d98a"))
 		draw_circle(to_map(world.cam_focus), 1.8, Color("f1d98a"))
+	draw_set_transform_matrix(Transform2D.IDENTITY)
+	# North: a needle on the rim, where the map's top edge now points.
+	var north := xf.basis_xform(Vector2(0, -1)).normalized()
+	var c := size * 0.5
+	var rim := minf(c.x / maxf(absf(north.x), 0.001), c.y / maxf(absf(north.y), 0.001)) - 9.0
+	var tip := c + north * rim
+	var across := Vector2(-north.y, north.x)
+	draw_colored_polygon(PackedVector2Array([tip + north * 6.0, tip + across * 4.0, tip - across * 4.0]), Color("f1d98a"))
+	var font := ThemeDB.fallback_font
+	draw_string(font, tip - north * 9.0 + Vector2(-4, 4), "N", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("f6ecd4"))
 	draw_rect(Rect2(Vector2.ZERO, size), Color("8c7644"), false, 1.0)
 
 ## The patch of ground the camera sees, as four points running round the wedge:
