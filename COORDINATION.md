@@ -181,3 +181,5 @@ UI files listed above.
   - `tools/city-upgrade-check.gd` (Codex's check): its traffic section read the old per-link
     `vehicles["land:..."]`; it now checks that road and rail trips move on test links placed in open
     country, and that cutting the road removes road traffic. `route_traffic._sync()` still exists.
+- 2026-09-24 Claude: 0.9.15 executable and installer in dist, built from 41934b1 (clean snapshot);
+  the packaged DOMINION.exe passes --city-test.
