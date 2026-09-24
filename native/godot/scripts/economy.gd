@@ -8,7 +8,7 @@ extends Node
 
 signal changed
 
-const RESOURCES := ["money", "food", "oil", "iron", "silicon", "uranium"]
+const RESOURCES := ["money", "food", "oil", "iron", "silicon", "uranium", "gas"]
 
 var world: Node  # world.gd: buildings, units, deposits
 var cfg: Dictionary
@@ -103,6 +103,12 @@ func tick() -> void:
 	var food_in: float = owned("farm") * float(cfg.farmFood) * (1.0 + (r.bonus("foodPct") if r else 0.0)) + float(land.food)
 	# A bigger city eats more per head (it no longer grows its own food).
 	var food_out := civilians * float(cfg.foodPerCivilian) * (1.0 + civilians / 2000.0) + army * float(cfg.foodPerSoldier)
+	for b in world.buildings:
+		if b.dead or not b.built or b.owner != 0 or b.key != "fishingWharf" or not b.get("supplied", true): continue
+		var shoals := 0
+		for d in world.deposits:
+			if d.type == "fish" and d.pos.distance_to(b.root.position) <= 60: shoals += 1
+		food_in += 2.0 + mini(shoals, 2) * 2.0
 	rates.food = food_in - food_out
 	res.food = clampf(res.food + rates.food, 0.0, caps.food)
 	var starving: bool = res.food <= 0.5
@@ -120,7 +126,7 @@ func tick() -> void:
 	rates.money = civilians * float(cfg.taxPerCivilian) * admin * supply_coverage() * (1.0 + provided("incomePct") + (r.bonus("incomePct") if r else 0.0))
 	rates.money += float(land.money)
 	# Extractors on deposits, and iron from held mountains.
-	for key in ["oil", "iron", "silicon", "uranium"]:
+	for key in ["oil", "iron", "silicon", "uranium", "gas"]:
 		rates[key] = 0.0
 	rates.iron = float(land.iron)
 	rates.oil = float(land.get("oil", 0.0))
@@ -138,6 +144,10 @@ func tick() -> void:
 	rates.oil = rates.get("oil", 0.0) - oil_use
 	rates.silicon = rates.get("silicon", 0.0) - chip_use
 	shortages.clear()
+	# Four 180-second seasons; the final quarter needs household heating.
+	var heating := civilians * 0.006 if fmod(world.game_time, 720.0) >= 540.0 else 0.0
+	rates.gas -= heating
+	if heating > 0.0 and res.gas <= 0.5: shortages.append("winter heating")
 	if oil_use > 0.0 and res.get("oil", 0.0) <= 0.5:
 		shortages.append("oil")
 	if chip_use > 0.0 and res.get("silicon", 0.0) <= 0.5:

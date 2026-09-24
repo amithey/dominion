@@ -277,6 +277,13 @@ static func build() -> Theme:
 	t.set_color("font_color", "RowButton", CREAM)
 	t.set_color("font_pressed_color", "RowButton", CREAM)
 	t.set_color("font_hover_pressed_color", "RowButton", CREAM)
+	# Search and editable fields follow the same quiet inset treatment.
+	t.set_stylebox("normal", "LineEdit", plate(INK, BG, Color(TRIM, 0.45), 6.0))
+	t.set_stylebox("focus", "LineEdit", box(Color(0, 0, 0, 0), GOLD, 1, 6, 5.0))
+	t.set_color("font_color", "LineEdit", TEXT)
+	t.set_color("font_placeholder_color", "LineEdit", MUTED)
+	t.set_color("caret_color", "LineEdit", BRIGHT)
+	t.set_color("selection_color", "LineEdit", Color("365d69"))
 	return t
 
 ## Merges the look into Godot's default theme, which every Control falls back

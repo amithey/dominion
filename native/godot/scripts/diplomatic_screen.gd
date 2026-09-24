@@ -91,7 +91,8 @@ func _refresh() -> void:
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.size_flags_stretch_ratio = 1.15
 	row.add_child(left)
-	stage = preload("res://scripts/summit_stage.gd").new()
+	var identities := [service.leader(0), service.leader(nation)]
+	stage = preload("res://scripts/leader_gallery.gd").new() if preload("res://scripts/leader_gallery.gd").available(identities) else preload("res://scripts/summit_stage.gd").new()
 	stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(stage)
 	stage.setup([Color(world.map.nations[0].color), Color(world.map.nations[nation].color)], [service.leader(0), service.leader(nation)], current and s.phase == "talking" and s.channel == "visit")

@@ -21,6 +21,16 @@ var delivered := 0
 var lost := 0
 var _next_id := 1
 var _tick := 0.0
+var ai_stock := {} # persistent national commodity inventories
+var volume := {}
+
+func quote(res: String, qty: int, buying: bool) -> float:
+	var after := clampf(float(mult[res]) + (1.0 if buying else -1.0) * qty * 0.0008, 0.55, 1.9)
+	return qty * float(cfg.price[res]) * (float(mult[res]) + after) * 0.5 * float(cfg.instantBuy if buying else cfg.instantSell)
+
+func pressure(res: String, qty: int, buying: bool) -> void:
+	mult[res] = clampf(float(mult[res]) + (1.0 if buying else -1.0) * qty * 0.0008, 0.55, 1.9)
+	volume[res] = int(volume.get(res, 0)) + qty
 
 func setup(world_node: Node, trade: Dictionary) -> void:
 	world = world_node
@@ -64,28 +74,32 @@ func cap_of(res: String) -> float:
 # ---------------------------------------------------------------- instant deals
 
 func sell(res: String, qty: int) -> String:
+	if qty <= 0 or not cfg.price.has(res): return "Choose a positive quantity of a traded commodity."
 	if not has_market():
 		return "Instant market deals require a Market."
 	var eco: Node = world.economy
 	if eco.res.get(res, 0.0) < qty:
 		return "Not enough %s to sell." % res
-	var earned := roundi(qty * price(res) * float(cfg.instantSell))
+	var earned := floori(quote(res, qty, false))
 	eco.res[res] -= qty
 	eco.res.money += earned
+	pressure(res, qty, false)
 	changed.emit()
 	return "Sold %d %s for $%d." % [qty, res, earned]
 
 func buy(res: String, qty: int) -> String:
+	if qty <= 0 or not cfg.price.has(res): return "Choose a positive quantity of a traded commodity."
 	if not has_market():
 		return "Instant market deals require a Market."
 	var eco: Node = world.economy
-	var cost := roundi(qty * price(res) * float(cfg.instantBuy))
+	var cost := ceili(quote(res, qty, true))
 	if eco.res.money < cost:
 		return "Buying %d %s costs $%d." % [qty, res, cost]
 	if eco.res.get(res, 0.0) + qty > cap_of(res):
 		return "Not enough %s storage for this purchase." % res
 	eco.res.money -= cost
 	eco.res[res] += qty
+	pressure(res, qty, true)
 	changed.emit()
 	return "Bought %d %s for $%d." % [qty, res, cost]
 
@@ -135,7 +149,8 @@ func ai_nation(id: int):
 
 func tick() -> void:
 	for res in mult:
-		mult[res] = clampf(mult[res] * (0.97 + randf() * 0.06), 0.55, 1.9)
+		mult[res] = lerpf(float(mult[res]), 1.0, 0.015) # slow recovery; orders drive prices
+	trade_ai()
 	var d: Node = world.diplomacy
 	var eco: Node = world.economy
 	while routes.size() > route_cap():
@@ -181,11 +196,13 @@ func tick() -> void:
 		var voyage := float(cfg.voyage)
 		if r.dir == "export" and eco.res.get(r.res, 0.0) >= r.qty:
 			eco.res[r.res] -= r.qty
+			pressure(r.res, r.qty, false)
 			r.shipment = {"qty": r.qty, "value": value, "eta": voyage}
 			r.status = "Outbound — %ds" % int(voyage)
 		elif r.dir == "import" and eco.res.money >= value:
 			if eco.res.get(r.res, 0.0) + r.qty <= cap_of(r.res):
 				eco.res.money -= value
+				pressure(r.res, r.qty, true)
 				r.shipment = {"qty": r.qty, "value": value, "eta": voyage}
 				r.status = "Inbound — %ds" % int(voyage)
 			else:
@@ -195,9 +212,11 @@ func tick() -> void:
 	changed.emit()
 
 func capture() -> Dictionary:
-	return {"mult": mult, "routes": routes, "delivered": delivered, "lost": lost, "next_id": _next_id}
+	return {"mult": mult, "routes": routes, "delivered": delivered, "lost": lost, "next_id": _next_id, "ai_stock": ai_stock, "volume": volume}
 
 func restore(data: Dictionary) -> void:
+	ai_stock = data.get("ai_stock", {}).duplicate(true)
+	volume = data.get("volume", {}).duplicate(true)
 	for key in data.get("mult", {}):
 		mult[key] = float(data.mult[key])
 	routes.clear()
@@ -210,3 +229,36 @@ func restore(data: Dictionary) -> void:
 	delivered = int(data.get("delivered", 0))
 	lost = int(data.get("lost", 0))
 	_next_id = int(data.get("next_id", routes.size() + 1))
+
+func trade_ai() -> void:
+	if world.ai == null: return
+	for nation in world.ai.nations:
+		if world.diplomacy.defeated(nation.id): continue
+		var id := str(nation.id)
+		if not ai_stock.has(id): ai_stock[id] = {}
+		var stock: Dictionary = ai_stock[id]
+		var desks := 0
+		for b in world.buildings:
+			if b.owner != nation.id or b.dead or not b.built or not b.get("supplied", true): continue
+			if b.key == "market": desks += 1
+			if b.deposit != null:
+				var resource: String = b.deposit.def.res
+				stock[resource] = minf(500.0, float(stock.get(resource, 100.0)) + float(b.deposit.def.rate) * TICK)
+			if b.key in ["farm", "fishingWharf"]: stock["food"] = minf(500.0, float(stock.get("food", 100.0)) + 30.0)
+		var army := 0
+		for u in world.units:
+			if u.owner == nation.id and not u.dead: army += 1
+		for resource in cfg.price:
+			var use: float = 12.0 + army * 0.3 if resource == "food" else (3.0 + army * 0.12 if resource in ["oil", "iron", "gas"] else 2.0)
+			stock[resource] = maxf(0.0, float(stock.get(resource, 100.0)) - use)
+			if desks == 0: continue
+			if stock[resource] < 70.0:
+				var bill := ceili(quote(resource, 30, true))
+				if nation.money >= bill + 150:
+					nation.money -= bill
+					stock[resource] += 30
+					pressure(resource, 30, true)
+			elif stock[resource] > 180.0:
+				nation.money += floori(quote(resource, 30, false))
+				stock[resource] -= 30
+				pressure(resource, 30, false)

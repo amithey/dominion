@@ -95,7 +95,9 @@ static func recoil(unit: Dictionary, strength := 1.0) -> void:
 static func body_basis(unit: Dictionary, ground_up: Vector3, heading: float, delta: float) -> Basis:
 	# The hull follows the ground through its suspension, not triangle by triangle.
 	var up: Vector3 = unit.get("hull_up", ground_up)
-	up = up.slerp(ground_up, minf(1.0, delta * 9.0)).normalized()
+	# Normals on adjacent terrain cells can be almost parallel. Normalised
+	# linear blending avoids an ill-conditioned slerp rotation axis there.
+	up = up.lerp(ground_up, minf(1.0, delta * 9.0)).normalized()
 	unit.hull_up = up
 	var travel := (Basis(Vector3.UP, heading) * Vector3.BACK).slide(up).normalized()
 	var base := Basis.looking_at(-travel, up)

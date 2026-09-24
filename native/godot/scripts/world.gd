@@ -249,6 +249,7 @@ func _ready() -> void:
 	armor_keys = combat_cfg.get("armor", ["tank", "artillery"])
 	craft = preload("res://scripts/craft.gd").new()
 	building_defs = map.get("buildingDefs", {})
+	preload("res://scripts/gameplay_rules.gd").apply(self)
 	soldier_scene = load("res://assets/CharacterSoldier.glb")
 	if ResourceLoader.exists("res://assets/Soldier.glb") and not "--toon-infantry" in OS.get_cmdline_user_args():
 		realistic_scene = load("res://assets/Soldier.glb")
@@ -350,6 +351,9 @@ func _ready() -> void:
 	market = preload("res://scripts/market.gd").new()
 	add_child(market)
 	market.setup(self, map.trade)
+	var traffic := preload("res://scripts/route_traffic.gd").new()
+	traffic.world = self
+	add_child(traffic)
 	espionage = preload("res://scripts/espionage.gd").new()
 	add_child(espionage)
 	espionage.setup(self, map.espionage)
@@ -895,6 +899,7 @@ func build_grass() -> void:
 					mm.set_instance_transform(i, transforms[i])
 				var node := MultiMeshInstance3D.new()
 				node.multimesh = mm
+				node.set_meta("cell_center", Vector2(cx + cell * 0.5, cz + cell * 0.5))
 				node.material_override = material
 				node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 				node.visibility_range_end = reach
@@ -921,6 +926,14 @@ func footprint_of(key: String) -> float:
 # The building's model, centred and scaled to its footprint (also used for the
 # placement preview).
 func building_model(key: String, x: float, z: float) -> Node3D:
+	if key == "offshoreRig":
+		var art := preload("res://scripts/deposit_art.gd").new(self)
+		var platform := Node3D.new()
+		var mesh := MeshInstance3D.new()
+		mesh.mesh = art._mesh_for("platform")
+		platform.add_child(mesh)
+		platform.add_child(art._flare())
+		return platform
 	if key == "extractor":
 		# The mine, rig or quarry for the resource under it (architecture.gd).
 		var dep = deposit_near(Vector3(x, 0, z), 8.0)
@@ -1035,7 +1048,7 @@ func snap_to_hex(at: Vector3) -> Vector3:
 	return c
 
 func is_district(key: String) -> bool:
-	return key != "extractor"
+	return key != "extractor" and not building_defs.get(key, {}).get("water", false)
 
 func place_building(key: String, at: Vector3, owner: int, built: bool) -> Dictionary:
 	if is_district(key):
@@ -1055,6 +1068,8 @@ func place_building(key: String, at: Vector3, owner: int, built: bool) -> Dictio
 		lowest = minf(lowest, h)
 		highest = maxf(highest, h)
 	root.position = Vector3(b.x, highest, b.z)
+	if building_defs[key].get("water", false):
+		root.position.y = float(map.seaLevel) + 0.5
 	building_spots.append(Vector3(b.x, footprint, b.z))
 	var plinth := MeshInstance3D.new()
 	var box := BoxMesh.new()
@@ -1070,6 +1085,7 @@ func place_building(key: String, at: Vector3, owner: int, built: bool) -> Dictio
 	plinth.material_override = stone
 	plinth.position.y = -box.size.y * 0.5 + 0.12
 	root.add_child(plinth)
+	if building_defs[key].get("water", false): plinth.visible = false
 	add_child(root)
 	SiteClearing.fell(self, SiteClearing.conflicts(self, key, at).trees)  # no tree grows through a building
 	return register_building(key, owner, built, root, model, footprint, at)
@@ -1099,6 +1115,7 @@ func place_district(key: String, at: Vector3, owner: int, built: bool) -> Dictio
 	return entity
 
 func register_building(key: String, owner: int, built: bool, root: Node3D, model: Node3D, footprint: float, at: Vector3) -> Dictionary:
+	clear_site_grass(at, logistics.radius if is_district(key) else footprint)
 	var def: Dictionary = building_defs.get(key, {"name": key, "hp": 500, "buildTime": 10, "trains": [], "provides": {}, "desc": "", "cost": {}})
 	var entity := {
 		"key": key, "owner": owner, "def": def, "root": root, "model": model, "footprint": footprint,
@@ -1113,11 +1130,22 @@ func register_building(key: String, owner: int, built: bool, root: Node3D, model
 		if dep != null:
 			dep.extractor = entity
 			entity.deposit = dep
+			if dep.get("water", false): dep.node.hide()
 	if not built:
 		model.scale.y *= 0.06
 		entity.full_scale_y = model.scale.y / 0.06
 	buildings.append(entity)
 	return entity
+
+func clear_site_grass(at: Vector3, radius: float) -> void:
+	for patch in grass_nodes:
+		if patch.get_meta("cell_center", Vector2.INF).distance_to(Vector2(at.x, at.z)) > radius + 24.0: continue
+		var mm: MultiMesh = patch.multimesh
+		for i in range(mm.instance_count):
+			var xf := mm.get_instance_transform(i)
+			if Vector2(xf.origin.x - at.x, xf.origin.z - at.z).length() <= radius:
+				xf.basis = Basis.from_scale(Vector3.ZERO)
+				mm.set_instance_transform(i, xf)
 
 ## Streets in each district run toward neighbouring districts of the same
 ## owner and toward every road or railway that enters its hex. Roads are not
@@ -1433,6 +1461,7 @@ func dress_realistic(model: Node3D, owner: int, weapon_name: String) -> void:
 	hand.bone_name = "mixamorig_Spine2" if slung else "mixamorig_RightHand"
 	skeleton.add_child(hand)
 	var gun := MeshInstance3D.new()
+	gun.name = "HeldWeapon"
 	gun.mesh = gun_mesh(weapon_name)
 	for i in range(gun.mesh.get_surface_count()):
 		var source: Material = gun.mesh.surface_get_material(i)
@@ -1455,6 +1484,10 @@ func dress_realistic(model: Node3D, owner: int, weapon_name: String) -> void:
 		grip = Basis(Vector3.BACK, -0.6) * Basis(Vector3.RIGHT, -PI * 0.5)
 		offset = Vector3(0, 8.0, -17.0)
 	var basis := grip * align.scaled(Vector3.ONE * k)
+	# Place the grip behind the receiver, not the mesh's geometric centre.
+	# The long-axis alignment already points the muzzle along the fingers;
+	# rotating it another half-turn makes the soldier hold the barrel instead.
+	if not slung: offset = GUN_OFFSET + GUN_GRIP * Vector3(0, 0, WEAPON_LENGTH.get(weapon_name, 90.0) * 0.12)
 	gun.transform = Transform3D(basis, offset - basis * box.get_center())
 	hand.add_child(gun)
 
@@ -1877,6 +1910,7 @@ func _physics_process(delta: float) -> void:
 	if economy:
 		update_construction(delta)
 		update_training(delta)
+		preload("res://scripts/air_defence.gd").update(self, delta)
 	spent("build+train", t0)
 	var t_units := clock()
 	for i in range(units.size() - 1, -1, -1):
@@ -1926,7 +1960,7 @@ func _physics_process(delta: float) -> void:
 		var shoved := Motion.knock_step(unit, delta)
 		if shoved != Vector3.ZERO:
 			var to_spot: Vector3 = node.position + shoved
-			if height_at(to_spot.x, to_spot.z) > float(map.seaLevel) + 0.3:
+			if open_ground(to_spot):
 				place_on_ground(unit, to_spot)
 		var goal = unit.target
 		var chasing := false
@@ -1974,6 +2008,7 @@ func _physics_process(delta: float) -> void:
 			# Hulls steer at a point further along the route and give way to
 			# each other like traffic (tactics.gd), instead of being shoved.
 			var aim: Vector3 = Tactics.look_ahead(unit, 7.0) if not unit.path.is_empty() else waypoint
+			if not clear_line(node.position, aim): aim = waypoint
 			to = aim - node.position
 			to.y = 0
 			if thinks(unit) or not unit.has("traffic"):
@@ -2031,6 +2066,7 @@ func _physics_process(delta: float) -> void:
 				animate(unit, false)
 				continue
 			var t_place_now := clock()
+			if not ground_step_clear(unit, next, delta): continue
 			place_on_ground(unit, next)
 			animate(unit, true)
 			spent("  placing", t_place_now)
@@ -2045,6 +2081,7 @@ func _physics_process(delta: float) -> void:
 			animate(unit, false)
 			continue
 		var t_place := clock()
+		if not ground_step_clear(unit, next, delta): continue
 		place_on_ground(unit, next)
 		animate(unit, true)
 		spent("  placing", t_place)
@@ -2065,6 +2102,16 @@ func spread_out(unit: Dictionary, slot: int, delta: float) -> void:
 
 ## Walkable by the walk grid (a lookup, unlike walkable(), which measures slope
 ## and every building); off the grid falls back to "above the waterline".
+func ground_step_clear(unit: Dictionary, next: Vector3, delta: float) -> bool:
+	# Steering and crowd avoidance must obey the same obstacles as pathfinding.
+	# A unit spawned inside a newly blocked cell may still leave that cell.
+	if open_ground(next) or not open_ground(unit.node.position): return true
+	Motion.halt(unit, delta)
+	unit.path = PackedVector3Array()
+	unit.repath = 0.0
+	place_on_ground(unit, unit.node.position) # keep the hull turning while stopped
+	return false
+
 func open_ground(p: Vector3) -> bool:
 	if nav_n == 0:
 		return height_at(p.x, p.z) > float(map.seaLevel) + 0.3
@@ -2216,6 +2263,7 @@ func clear_match() -> void:
 	building_spots.clear()
 	for d in deposits:
 		d.extractor = null
+		if d.get("water", false): d.node.show()
 	logistics.edges.clear()
 	drill.clear()
 	cancel_missile()
@@ -2263,10 +2311,10 @@ func close_navigation(at: Vector3, footprint: float) -> void:
 
 func path_between(from: Vector3, to: Vector3) -> PackedVector3Array:
 	if not nav_ready:
-		return PackedVector3Array([to])
+		return PackedVector3Array()
 	var route := NavigationServer3D.map_get_path(get_world_3d().navigation_map, from, to, true)
 	if route.is_empty():
-		return PackedVector3Array([to])
+		return PackedVector3Array()
 	route = straighten(route)
 	route.remove_at(0)  # the unit's own position
 	if route.is_empty():
@@ -2305,14 +2353,14 @@ func steer_point(unit: Dictionary, goal: Vector3, chasing: bool, delta: float) -
 	unit.repath -= delta
 	var drift: float = unit.path_goal.distance_to(goal) if unit.path_goal != Vector3.INF else INF
 	if unit.path.is_empty() or drift > (4.0 if chasing else 0.5):
-		if not chasing or unit.repath <= 0.0 or unit.path.is_empty():
+		if unit.repath <= 0.0 or drift > (4.0 if chasing else 0.5):
 			unit.path = path_between(unit.node.position, goal)
 			unit.path_goal = goal
 			unit.repath = 0.8
 	var pos: Vector3 = unit.node.position
 	while unit.path.size() > 1 and Vector2(unit.path[0].x - pos.x, unit.path[0].z - pos.z).length() < 1.5:
 		unit.path.remove_at(0)
-	return unit.path[0] if not unit.path.is_empty() else goal
+	return unit.path[0] if not unit.path.is_empty() else unit.node.position
 
 # Headless check: a route across the base must go around every building.
 func nav_test() -> void:
@@ -2355,6 +2403,7 @@ func update_construction(delta: float) -> void:
 		var reach: float = b.footprint * 0.62 + 4.0
 		var at: Vector3 = b.root.position
 		var count := 0
+		if b.def.get("water", false): count = 1 # marine construction contractors
 		for u in units:
 			if u.dead or u.build_site != b:
 				continue
@@ -2382,6 +2431,7 @@ func update_construction(delta: float) -> void:
 		site_timer = 0.5
 
 func call_worker(site: Dictionary) -> void:
+	if site.def.get("water", false): return
 	for u in units:
 		if u.build_site == site and not u.dead:
 			return  # already on the way
@@ -2967,11 +3017,11 @@ func research_test(capture: bool) -> void:
 	var rival: Dictionary = ai.nations[0]
 	var rival_ok: bool = r.ai_tech(rival.id) >= 1.0 and r.damage_mult({"owner": rival.id}) > 1.0
 	place.call("intelAgency")
-	espionage.recruit()
+	print("research spy recruitment: ", espionage.recruit())
 	r.points = 0.0
 	espionage.network[rival.id] = 25.0
 	espionage.intel[rival.id] = 25.0
-	espionage.run("stealTech", rival.id, "", -1, 0.0)
+	print("research spy assignment: ", espionage.run("stealTech", rival.id, "", -1, 0.0))
 	espionage.advance(90.0)
 	var stolen_ok: bool = r.points >= 119.0
 	print("ships locked %s then open %s, economics level %d, rival tech %d, stolen %d points" % [ship_locked, ship_open, r.tracks.economy, int(r.ai_tech(rival.id)), int(r.points)])
@@ -3781,9 +3831,12 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 		var h := height_at(at.x + corner.x, at.z + corner.y)
 		lowest = minf(lowest, h)
 		highest = maxf(highest, h)
-	if not is_district(key) and lowest < float(map.seaLevel) + 1.0:
+	var offshore: bool = def.get("water", false)
+	if offshore and highest >= float(map.seaLevel) - 0.2:
+		return "An offshore platform needs open water"
+	if not offshore and not is_district(key) and lowest < float(map.seaLevel) + 1.0:
 		return "Too close to the water"
-	if not is_district(key) and highest - lowest > 3.5:
+	if not offshore and not is_district(key) and highest - lowest > 3.5:
 		return "Ground too steep"
 	if is_district(key):
 		# One district per hex, on land that is not too steep across the hex.
@@ -3855,6 +3908,9 @@ func update_placement() -> void:
 	if placing == "" or ghost == null:
 		return
 	var point = ground_point(get_viewport().get_mouse_position())
+	if building_defs[placing].get("water", false):
+		var mouse := get_viewport().get_mouse_position()
+		point = Plane(Vector3.UP, float(map.seaLevel)).intersects_ray(camera.project_ray_origin(mouse), camera.project_ray_normal(mouse))
 	if point == null:
 		return
 	var at := snap_to_hex(point) if is_district(placing) else Vector3(snappedf(point.x, 2.0), 0, snappedf(point.z, 2.0))
@@ -3863,6 +3919,7 @@ func update_placement() -> void:
 		if dep != null:
 			at = Vector3(dep.pos.x, 0, dep.pos.z)
 	at.y = height_at(at.x, at.z)
+	if building_defs[placing].get("water", false): at.y = float(map.seaLevel) + 0.5
 	ghost.position = at
 	var problem := placement_problem(placing, at)
 	if problem != ghost_ok:
@@ -4055,7 +4112,7 @@ func move_craft(unit: Dictionary, delta: float) -> void:
 	var fixed: bool = unit.key in FIXED_WING
 	var servicing: bool = unit.get("air_state", "ready") != "ready"
 	if servicing:
-		goal = AirOperations.goal(unit)
+		goal = AirOperations.goal(self, unit)
 	elif unit.enemy != null and (unit.target == null or unit.attack_move):
 		var gap := flat_distance(unit, unit.enemy)
 		goal = unit.enemy.node.position if (gap > unit.range * 0.8 or fixed) else null
@@ -4287,7 +4344,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 	# They look as far as their weapon reaches (artillery outranges its own eyes otherwise).
 	if unit.enemy == null and unit.search <= 0.0:
 		unit.search = 0.35
-		if unit.target == null or unit.attack_move:
+		if unit.target == null or unit.attack_move or unit.key in ["aaVehicle", "samLauncher"]:
 			unit.enemy = Tactics.pick_target(self, unit, maxf(unit.aggro, unit.range))
 	if unit.enemy == null or unit.reload > 0.0:
 		return
@@ -4572,6 +4629,7 @@ func destroy_building(b: Dictionary) -> void:
 		refresh_streets()
 	if b.deposit != null:
 		b.deposit.extractor = null
+		if b.deposit.get("water", false): b.deposit.node.show()
 	if selected_building == b:
 		select_building(null)
 	for u in units:
@@ -4924,6 +4982,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				dragging = true
 				drag_start = event.position
 			else:
+				if not dragging:
+					return # Release after a UI action / missile launch is not a map click.
 				dragging = false
 				selection_box.hide()
 				var rect := Rect2(drag_start, event.position - drag_start).abs()
@@ -4999,6 +5059,8 @@ func enemy_under(screen: Vector2) -> Variant:
 	return best
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey and get_viewport().gui_get_focus_owner() is LineEdit:
+		return # Typing a building name must not trigger B/M/I or army orders.
 	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE and order_mode!="":
 		order_mode = ""
 		get_viewport().set_input_as_handled()

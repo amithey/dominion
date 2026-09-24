@@ -12,6 +12,7 @@ $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.e
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
+    @('city, offshore, market and air defence upgrades', @('--script', 'res://tools/city-upgrade-check.gd'), 'CITY_UPGRADE_TEST PASS', 180),
     @('smoke', @('res://main.tscn', '--', '--smoke-test'), 'DESKTOP_SMOKE_PASS', 120),
     @('navigation', @('--', '--nav-test'), 'NAV_TEST PASS', 180),
     @('camera', @('--', '--camera-test'), 'CAMERA_TEST PASS', 180),

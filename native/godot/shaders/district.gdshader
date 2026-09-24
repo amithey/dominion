@@ -99,8 +99,10 @@ void fragment() {
 		col = mix(soil, crop, smoothstep(-0.1, 0.35, row));
 	} else {
 		// Khaki gravel with painted bays near the core.
-		col = texture(dirt_tex, w * 0.3).rgb * vec3(0.95, 0.9, 0.75);
-		col = mix(col, srgb(vec3(0.62, 0.58, 0.47)), 0.45) * mix(0.85, 1.08, grain);
+		// Maintained concrete apron: quiet broad slabs, not speckled bare soil.
+		col = srgb(vec3(0.48, 0.51, 0.49)) * mix(0.96, 1.03, luma(stone));
+		vec2 slab = abs(fract(w / 5.0) - 0.5);
+		col *= mix(0.82, 1.0, smoothstep(0.496, 0.488, max(slab.x, slab.y)));
 		float bay = step(0.93, fract(p.x / 3.2)) * step(abs(p.y), 3.5) * step(core + 0.5, length(p));
 		col = mix(col, srgb(vec3(0.9, 0.87, 0.72)), bay * 0.8);
 	}

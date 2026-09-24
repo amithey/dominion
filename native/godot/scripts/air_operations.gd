@@ -119,6 +119,11 @@ static func consume(u: Dictionary) -> void:
 static func order_land(world: Node, u: Dictionary, b: Dictionary) -> bool:
 	if not available(world, u, b):
 		return false
+	if is_same(u.get("air_base"), b) and u.air_state in ["parked", "rearming"]:
+		u.stay = true
+		u.target = null
+		u.enemy = null
+		return true
 	if not (is_same(u.get("air_base"), b) and int(u.get("slot", -1)) >= 0):
 		var i := free_slot(world, b)
 		if i < 0:
@@ -170,7 +175,7 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 	var slot := slot_point(world, base, u.slot)
 	var touchdown := slot if vertical else on_base(world, base, Vector3(RUNWAY_X, 0, TOUCHDOWN))
 	if u.air_state == "returning":
-		var approach: Vector3 = touchdown - Vector3(0, 0, 85) if not vertical else touchdown + Vector3(0, 0, -30)
+		var approach: Vector3 = goal(world, u)
 		if Vector2(u.node.position.x - approach.x, u.node.position.z - approach.z).length() < 18.0:
 			u.air_state = "landing"
 			u.landing_start = u.node.position
@@ -254,7 +259,10 @@ static func _taxi_out(world: Node, u: Dictionary) -> void:
 	u.taxi_from = u.node.position
 	u.taxi_progress = 0.0
 
-static func goal(u: Dictionary) -> Variant:
+static func goal(world: Node, u: Dictionary) -> Variant:
 	if u.air_base != null:
-		return u.air_base.node.position - Vector3(0, 0, 85)
+		var base: Dictionary = u.air_base
+		if base.key == "helipad" or u.key in ["helicopter", "gunship"]:
+			return slot_point(world, base, u.slot) + Vector3(0, 0, -30)
+		return on_base(world, base, Vector3(RUNWAY_X, 0, TOUCHDOWN)) - Vector3(0, 0, 85)
 	return null

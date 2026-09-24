@@ -1008,6 +1008,20 @@ func wharf(rng: RandomNumberGenerator) -> void:
 ## An arsenal: earth-covered magazines with blast doors, a missile rack and a
 ## hazard fence. Each Ammo Depot stores more missiles.
 func arsenal(rng: RandomNumberGenerator, silo: bool) -> void:
+	if silo:
+		# Underground launch cells and one raised inspection missile make this
+		# unmistakable beside the low earth-covered ammunition magazines.
+		box(STONE, Vector3(-7, 0, -7), Vector3(7, 0.3, 7), Color("aaa99e"))
+		for x in [-3.5, 3.5]:
+			cylinder(STONE, Vector3(x, 0.3, -2), 2.5, 0.6, Color("727b7c"), 24)
+			cylinder(METAL, Vector3(x, 0.9, -2), 2.15, 0.18, Color("343e43"), 24)
+			box(TRIM, Vector3(x-2.3, 1.09, -2.12), Vector3(x+2.3, 1.14, -1.88), Color("e3b949"))
+		cylinder(METAL, Vector3(-3.5, 1.1, -2), 0.65, 6.0, Color("dce0dc"), 16)
+		cylinder(BANNER, Vector3(-3.5, 7.1, -2), 0.65, 1.8, Color("ad4534"), 16, 0.0)
+		lattice(Vector3(-5.5, 0.3, -2), 7.0, 0.8, 0.6, Color("7c8585"))
+		box(STONE, Vector3(1, 0.3, 3.5), Vector3(5.5, 2.5, 6), Color("b4b2a5"))
+		box(GLASS, Vector3(1.5, 1.3, 6.01), Vector3(5, 2, 6.08), Color("426779"))
+		return
 	for i in range(3):
 		var a := -0.9 + i * 0.9
 		var c := Vector3(cos(a), 0, sin(a)) * 5.5 + Vector3(-1.5, 0, 0)

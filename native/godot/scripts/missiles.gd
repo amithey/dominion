@@ -157,6 +157,10 @@ func _physics_process(delta: float) -> void:
 		var f: float = minf(m.t / m.dur, 1.0)
 		var node: Node3D = m.node
 		var p := position_at(m, f)
+		if preload("res://scripts/air_defence.gd").intercept(world, m, p):
+			node.queue_free()
+			flying.remove_at(i)
+			continue
 		var ahead := position_at(m, minf(f + 0.01, 1.0))
 		node.global_position = p
 		if ahead.distance_to(p) > 0.01:

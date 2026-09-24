@@ -14,9 +14,9 @@ extends CanvasLayer
 
 const UI := preload("res://scripts/ui_theme.gd")
 const BUILD_MENU := {
-	"Economy": ["villageCenter", "cityCenter", "farm", "cottage", "housing", "residential", "workerHouse", "warehouse", "foodDepot", "extractor", "market", "port", "bank", "oilRefinery", "powerPlant"],
+	"Economy": ["villageCenter", "cityCenter", "farm", "cottage", "housing", "residential", "workerHouse", "warehouse", "foodDepot", "extractor", "offshoreRig", "fishingWharf", "mountainMine", "market", "port", "bank", "oilRefinery", "powerPlant"],
 	"Civic & research": ["school", "library", "university", "techPark", "chipFab", "hospital", "cityHall", "tvStation", "policeStation", "courthouse", "intelAgency", "nuclearReactor"],
-	"Military": ["barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo"],
+	"Military": ["barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo", "samSite", "bunker"],
 }
 const RESOURCES := [
 	["money", "money", "Treasury. Taxes from your citizens, markets and land; spent on everything."],
@@ -25,6 +25,7 @@ const RESOURCES := [
 	["oil", "oil", "Oil. From rigs on oil deposits; for aircraft and some buildings."],
 	["silicon", "silicon", "Silicon. From silicon deposits; for high technology and missiles."],
 	["uranium", "uranium", "Uranium. From uranium deposits; for the nuclear programme."],
+	["gas", "gas", "Natural gas. Offshore rigs and imports supply winter heating. Winter lasts from 9 to 12 minutes of each 12-minute year."],
 ]
 const GOLD := Color("d8b866")
 const RIGHT_W := 392.0
@@ -38,6 +39,11 @@ var _refresh := 0.0
 var build_tab := "Economy"
 var transport_text := ""
 var prod_open := false   ## the player opened the build list (the Build button or B)
+var _build_search: LineEdit
+var _unit_roster: HBoxContainer
+var _roster_scroll: ScrollContainer
+var _roster_signature := ""
+var _intel_progress: Array = []
 
 var _chips := {}          # resource -> [value Label, rate Label]
 var _extra := {}          # "army" etc. -> Label
@@ -159,7 +165,7 @@ func _build_top_bar() -> void:
 	# The yield strip: a lit band closed by a gold rule, as a 4X game wears it.
 	var style := UI.band(5.0, Color("203b43"), Color("0a1d22"), UI.GOLD, 2)
 	style.content_margin_left = 14
-	style.content_margin_right = 12
+	style.content_margin_right = 230 # reserve the era cartouche
 	style.content_margin_bottom = 7
 	bar.add_theme_stylebox_override("panel", style)
 	bar.anchor_right = 1.0
@@ -178,11 +184,14 @@ func _build_top_bar() -> void:
 		chip.tooltip_text = r[2]
 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
 		chip.add_child(_icon(r[1], 24))
+		var figures := VBoxContainer.new()
+		figures.add_theme_constant_override("separation", 0)
+		chip.add_child(figures)
 		var value := _text("0", 17, UI.CREAM)
-		chip.add_child(value)
-		var rate := _text("+0", 13, UI.GOOD)
+		figures.add_child(value)
+		var rate := _text("+0", 11, UI.GOOD)
 		rate.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-		chip.add_child(rate)
+		figures.add_child(rate)
 		row.add_child(chip)
 		_chips[r[0]] = [value, rate, chip]
 	for extra in [["army", "army", "Army size against housing capacity. Build Housing Blocks for more."],
@@ -273,6 +282,11 @@ func _build_production() -> void:
 	_prod_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_prod_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	head.add_child(_prod_title)
+	var menu_button := Button.new()
+	menu_button.text = "Menu"
+	menu_button.focus_mode = Control.FOCUS_NONE
+	menu_button.pressed.connect(func(): world.menu.open_pause())
+	head.add_child(menu_button)
 	var hide := Button.new()
 	hide.text = "—"
 	hide.custom_minimum_size = Vector2(30, 24)
@@ -296,6 +310,13 @@ func _build_production() -> void:
 	_prod_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_prod_hint.custom_minimum_size = Vector2(RIGHT_W - 56, 0)
 	inner.add_child(_prod_hint)
+	_build_search = LineEdit.new()
+	_build_search.placeholder_text = "Find a building..."
+	_build_search.clear_button_enabled = true
+	_build_search.text_changed.connect(func(_text):
+		_shown_key = ""
+		_update_panel())
+	inner.add_child(_build_search)
 	_tabs = HBoxContainer.new()
 	_tabs.add_theme_constant_override("separation", 3)
 	inner.add_child(_tabs)
@@ -452,7 +473,7 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 func _tile(key: String, title: String, desc: String, cost: Dictionary, seconds: float, locked: String, action: Callable) -> void:
 	var b := Button.new()
 	b.theme_type_variation = "RowButton"
-	b.custom_minimum_size = Vector2((RIGHT_W - 62) / 2.0, 150)
+	b.custom_minimum_size = Vector2((RIGHT_W - 62) / 2.0, 182)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.focus_mode = Control.FOCUS_NONE
 	b.tooltip_text = "%s\n%s" % [title, desc if locked == "" else "%s\n%s" % [locked, desc]]
@@ -493,6 +514,11 @@ func _tile(key: String, title: String, desc: String, cost: Dictionary, seconds: 
 	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	name.clip_text = true
 	column.add_child(name)
+	var detail := _text(desc, 11, UI.MUTED)
+	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail.max_lines_visible = 2
+	detail.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	column.add_child(detail)
 	if locked != "":
 		var why := _text(locked, 11, UI.BAD)
 		why.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -636,6 +662,14 @@ func _build_selection() -> void:
 	_sel_queue = HBoxContainer.new()
 	_sel_queue.add_theme_constant_override("separation", 4)
 	col.add_child(_sel_queue)
+	_roster_scroll = ScrollContainer.new()
+	_roster_scroll.custom_minimum_size.y = 76
+	_roster_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	col.add_child(_roster_scroll)
+	_unit_roster = HBoxContainer.new()
+	_unit_roster.add_theme_constant_override("separation", 5)
+	_roster_scroll.add_child(_unit_roster)
+	_roster_scroll.hide()
 	_sel.visible = false
 
 func _build_minimap() -> void:
@@ -707,6 +741,7 @@ func _build_help() -> void:
 			["Build", "Pick a building in the list on the right, click a hex in your city (Shift keeps placing)"],
 			["Screens", "Y research  ·  G diplomacy  ·  M market  ·  I intelligence  ·  T territory"],
 			["Game", "F5 save  ·  F9 load  ·  Esc cancel / pause menu  ·  F1 this help"],
+			["Testing", "F8: treasury and full stores, increased army capacity"],
 			["Minimap", "Click or drag on it to jump anywhere on the island"]]:
 		var row := HBoxContainer.new()
 		var k := _text(line[0], 14, GOLD)
@@ -744,7 +779,7 @@ func _process(delta: float) -> void:
 		parts[2].visible = not (key in ["silicon", "uranium", "oil"] and have < 0.5 and absf(rate) < 0.01)
 		# The storage cap shows only when the store is nearly full (and always in the tooltip).
 		var cap: float = float(economy.caps.get(key, INF)) if key != "money" else INF
-		parts[0].text = ("%d/%d" % [int(have), int(cap)]) if have >= cap * 0.9 else str(int(have))
+		parts[0].text = compact_number(have)
 		parts[0].add_theme_color_override("font_color", Color("f0b25a") if have >= cap * 0.9 else UI.CREAM)
 		parts[2].tooltip_text = "%s
 Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)[0][2], int(have), (" of %d" % int(cap)) if cap < INF else "", "+" if rate >= 0.0 else "", rate]
@@ -755,8 +790,8 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 	_extra.citizens[0].text = "%d/%d" % [int(economy.civilians), int(economy.civ_cap)]
 	if world.research:
 		_extra.research[0].text = "%d  +%.1f" % [int(world.research.points), world.research.rate]
-		# As a 4X game dates its turns: the era, then the year of the reign (a minute a year).
-		_era.text = "%s  ·  YEAR %d" % [world.research.eras[world.research.era].name.to_upper(), 1 + int(world.game_time / 60.0)]
+		_era.text = "%s  ·  YEAR %d" % [world.research.eras[world.research.era].name.to_upper(), 1 + int(world.game_time / 720.0)]
+		_era.tooltip_text = "%s · each season lasts 3 minutes. Winter homes consume natural gas." % ["Spring", "Summer", "Autumn", "Winter"][int(world.game_time / 180.0) % 4]
 	if world.territory:
 		_extra.land[0].text = str(world.territory.yields(0).cells)
 	var silos: bool = world.missiles != null and (world.missiles.stored() > 0 or not world.missiles.silos().is_empty())
@@ -767,6 +802,12 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 	if _selected != null and _selected.dead:
 		show_building(null)  # an enemy building stays selected: its card shows who holds it
 	_update_panel()
+	if side_mode == "intel" and world.espionage != null:
+		for item in _intel_progress:
+			if not is_instance_valid(item.bar): continue
+			var left := maxf(0, float(item.ends) - world.espionage.clock)
+			item.bar.value = 1.0 - left / maxf(1, float(item.duration))
+			item.label.text = "%s · %ds" % [item.title, ceili(left)]
 	world.spent("hud", clock)
 
 ## Road or rail planning status (empty ends it).
@@ -787,11 +828,12 @@ func open_diplomatic_contact(nation: int) -> String:
 	return ""
 
 func show_building(building) -> void:
+	if building != null:
+		prod_open = false
 	if building != null and building.owner != 0 and building.built and not building.dead and building.key in ["hq", "cityHall", "cityCenter"]:
 		open_diplomatic_contact(int(building.owner))
 		return
 	_selected = building
-	_shown_key = ""
 	_update_panel()
 
 func _selected_units() -> Array:
@@ -805,12 +847,13 @@ func _update_panel() -> void:
 	get_node("Reopen").visible = mode == ""
 	if mode == "":
 		return
-	var key: String = ("menu:" + build_tab) if mode == "build" else "%s:%s:%d" % [_selected.key, _selected.built, _selected.queue.size()]
+	var key: String = ("menu:" + build_tab) if mode == "build" else "%s:%s:%d:%d" % [_selected.key, _selected.built, _selected.queue.size(), _selected.root.get_instance_id()]
 	if _selected != null and _selected.key == "missileSilo":
 		key += ":%s" % str(world.missiles.stock)
 	if world.research:
 		key += ":%d:%s" % [world.research.era, str(world.research.completed_count())]
 	_tabs.visible = mode == "build"
+	_build_search.visible = mode == "build"
 	if key == _shown_key:
 		_update_enabled()
 		return
@@ -848,6 +891,8 @@ func _building_bars() -> void:
 		var def: Dictionary = world.building_defs.get(b, {})
 		if def.is_empty():
 			continue
+		if _build_search.text.strip_edges() != "" and not (str(def.name) + " " + str(def.desc)).to_lower().contains(_build_search.text.strip_edges().to_lower()):
+			continue
 		var why := ""
 		if def.get("unique", false) and world.buildings.any(func(x): return x.owner == 0 and x.key == b and not x.dead):
 			why = "Built (one per nation)"
@@ -862,6 +907,13 @@ func _building_bars() -> void:
 				cost, 0.0, "", func(): world.begin_transport(kind))
 
 func _action_bars(b: Dictionary) -> void:
+	if world.AirOperations.is_base(b):
+		_bar(b.key, "Recall all assigned aircraft", "Order every aircraft assigned to this base to return and land in its slot.", {}, 0.0, "", func():
+			var recalled := 0
+			for aircraft in world.AirOperations.occupants(world, b):
+				if aircraft != null and world.AirOperations.order_land(world, aircraft, b):
+					recalled += 1
+			notice("%d assigned aircraft returning to base." % recalled))
 	if b.key == "missileSilo":
 		var ms: Node = world.missiles
 		var armed := false
@@ -906,6 +958,7 @@ func _update_enabled() -> void:
 ## The selection panel: a building, a group of units, or road planning.
 func _update_selection() -> void:
 	var units := _selected_units()
+	_update_roster(units if _selected == null else [])
 	var own_units: Array = units.filter(func(u):return u.owner==0 and not u.dead) if _selected==null else []
 	var assets: Array = [_selected] if _selected!=null else own_units
 	_commands["Attack-move"].disabled = own_units.is_empty() or not own_units.any(func(u):return u.dmg>0)
@@ -1003,6 +1056,43 @@ func _update_selection() -> void:
 		_sel_info.text += "\nHP %d / %d%s" % [int(hp),int(max_hp)," · Repair ordered" if units.any(func(u): return u.get("repairing",false)) else ""]
 		return
 	_sel.visible = false
+
+func compact_number(value: float) -> String:
+	if value >= 1000000: return "%.1fM" % (value / 1000000.0)
+	if value >= 10000: return "%.0fk" % (value / 1000.0)
+	if value >= 1000: return "%.1fk" % (value / 1000.0)
+	return str(int(value))
+
+func _update_roster(units: Array) -> void:
+	_roster_scroll.visible = units.size() > 1
+	var signature := ""
+	for u in units: signature += str(u.node.get_instance_id()) + ","
+	if signature == _roster_signature: return
+	_roster_signature = signature
+	for child in _unit_roster.get_children():
+		_unit_roster.remove_child(child)
+		child.queue_free()
+	if units.size() < 2: return
+	for u in units:
+		var card := Button.new()
+		card.custom_minimum_size = Vector2(68, 62)
+		card.focus_mode = Control.FOCUS_NONE
+		card.tooltip_text = "%s · HP %d/%d. Click to select this unit; Shift-click removes it from the group." % [world.unit_defs.get(u.key, {}).get("name", u.key), u.hp, u.max_hp]
+		var picture := TextureRect.new()
+		picture.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_set_portrait(picture, u.key)
+		card.add_child(picture)
+		card.pressed.connect(func():
+			if Input.is_physical_key_pressed(KEY_SHIFT):
+				u.selected = false
+			else:
+				for other in world.units: other.selected = is_same(other, u)
+			for other in world.units: other.ring.visible = other.selected
+			_update_panel())
+		_unit_roster.add_child(card)
 
 ## Missile buttons for a selected strategic submarine or destroyer: one per
 ## missile type in the stockpile; press, then click the target.
@@ -1279,7 +1369,7 @@ func _pill(parent: Control, text: String, colour: Color) -> void:
 	parent.add_child(p)
 
 ## A bar with a caption over it: relation, chance, intelligence, land share.
-func _meter(parent: Control, value: float, max_value: float, colour: Color, caption: String) -> void:
+func _meter(parent: Control, value: float, max_value: float, colour: Color, caption: String) -> Control:
 	var holder := Control.new()
 	holder.custom_minimum_size = Vector2(0, 20)
 	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1297,6 +1387,7 @@ func _meter(parent: Control, value: float, max_value: float, colour: Color, capt
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.add_theme_constant_override("outline_size", 4)
 	holder.add_child(l)
+	return holder
 
 func _row(parent: Control, gap := 8) -> HBoxContainer:
 	var r := HBoxContainer.new()
@@ -1594,8 +1685,8 @@ func _market_panel() -> void:
 		stock.custom_minimum_size = Vector2(80, 0)
 		stock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(stock)
-		_button(row, "Sell +$%d" % roundi(trade_qty * m.price(res) * float(m.cfg.instantSell)), m.sell.bind(res, trade_qty), m.has_market(), "good")
-		_button(row, "Buy -$%d" % roundi(trade_qty * m.price(res) * float(m.cfg.instantBuy)), m.buy.bind(res, trade_qty), m.has_market())
+		_button(row, "Sell +$%d" % floori(m.quote(res, trade_qty, false)), m.sell.bind(res, trade_qty), m.has_market(), "good")
+		_button(row, "Buy -$%d" % ceili(m.quote(res, trade_qty, true)), m.buy.bind(res, trade_qty), m.has_market())
 	var routes := _card()
 	var head := _row(routes)
 	var rt := _text("Trade routes  %d/%d" % [m.routes.size(), m.route_cap()], 16, UI.CREAM, true)
@@ -1628,6 +1719,7 @@ func _market_panel() -> void:
 # ---------------------------------------------------------------- intelligence
 
 func _intel_panel() -> void:
+	_intel_progress.clear()
 	var e: Node = world.espionage
 	var d: Node = world.diplomacy
 	var service := _card()
@@ -1655,7 +1747,9 @@ func _intel_panel() -> void:
 		var remaining := maxi(0, ceili(float(mission.ends) - e.clock))
 		var duration: float = float(mission.ends) - float(mission.started)
 		var progress := 1.0 - float(remaining) / duration
-		_meter(service, progress, 1.0, UI.GOLD, "%s · %s · %ds" % [e.ops()[mission.op].name, d.name_of(int(mission.nation)), remaining])
+		var title: String = "%s · %s" % [e.ops()[mission.op].name, d.name_of(int(mission.nation))]
+		var meter := _meter(service, progress, 1.0, UI.GOLD, "%s · %ds" % [title, remaining])
+		_intel_progress.append({"bar": meter.get_child(0), "label": meter.get_child(1), "ends": mission.ends, "duration": duration, "title": title})
 		_button(service, "Recall assignment", e.cancel_mission.bind(int(mission.agent)), true, "bad")
 	if e.security_until > e.clock:
 		service.add_child(_text("Domestic security reinforced: %ds" % ceili(e.security_until-e.clock), 13, UI.GOOD))

@@ -146,3 +146,15 @@ UI files listed above.
     Test: `tools/firm-diplomacy-check.gd`.
   - The B key used to start the skirmish demo in a real game; it now toggles the build list.
 
+
+- 2026-09-24 Codex, release 0.9.14: the user explicitly assigned the 23-item city/UI/gameplay
+  list to this task, including movement, combat and offshore fixes. Built on a5c5b8f with a
+  clean starting tree; no Claude changes were reverted. See native/CITY-UPGRADE-0.9.14.md.
+  New integration points: gameplay_rules.gd applies native balance/gas rules to campaign data;
+  air_defence.gd runs fixed SAMs; route_traffic.gd renders infrastructure and actual shipments;
+  leader_gallery.gd resolves original generated portraits by identity. Existing diplomacy,
+  territory, airfield slots and intelligence lifecycle are preserved. world.gd, hud.gd,
+  market.gd, economy.gd, air_operations.gd, motion.gd, architecture/district/deposit code and
+  district shader changed under this explicit request. Do not overwrite these files from an
+  older checkout. FSR/quality presets are unchanged. Use the new city-upgrade check alongside
+  the existing tests. Public installer remains the single DOMINION-Setup.exe.

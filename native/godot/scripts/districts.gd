@@ -22,7 +22,7 @@ const STYLE := {
 }
 const HOUSES := ["res://assets/House_A.glb", "res://assets/House_B.glb", "res://assets/House_C.glb", "res://assets/House_D.glb"]
 # How many houses stand in a residential district, one per wedge between streets.
-const HOUSE_COUNT := {"cottage": 4, "residential": 6, "workerHouse": 3, "luxuryVillas": 3}
+const HOUSE_COUNT := {"cottage": 2, "residential": 3, "workerHouse": 2, "luxuryVillas": 2}
 
 const Architecture := preload("res://scripts/architecture.gd")
 ## Buildings the kit makes as whole-hex compositions: key -> recipe.
@@ -357,8 +357,8 @@ func residential(key: String, container: Node3D, st: SurfaceTool, rng: RandomNum
 		return
 	# A growing city fills its blocks: more and larger houses, fewer gardens.
 	var growth := clampf(city_size / 10.0, 0.0, 1.0)
-	var count: int = mini(6, HOUSE_COUNT.get(key, 4) + int(growth * 2.0))
-	var slots := [0, 1, 3, 4, 2, 5].slice(0, count)
+	var count: int = mini(4, HOUSE_COUNT.get(key, 3) + int(growth))
+	var slots := [0, 3, 1, 4, 2, 5].slice(0, count)
 	# Townhouses and cottages built from the kit (architecture.gd), all of the
 	# block in one set of meshes.
 	arch.begin()
@@ -366,7 +366,7 @@ func residential(key: String, container: Node3D, st: SurfaceTool, rng: RandomNum
 		var p := slot(k, 6.2)
 		var face := deg_to_rad(-(30.0 + 60.0 * k)) - PI * 0.5
 		# Each faces the middle of the block, its front (+z) toward the street square.
-		arch.xf = Transform3D(Basis(Vector3.UP, face + PI * 0.5), p)
+		arch.xf = Transform3D(Basis(Vector3.UP, face + PI * 0.5).scaled(Vector3.ONE * 0.82), p)
 		if key in ["cottage", "workerHouse"] and growth < 0.5:
 			arch.cottage(rng, 4.2 + rng.randf() * 0.6, 3.6)
 		else:

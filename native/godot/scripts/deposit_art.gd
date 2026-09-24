@@ -17,7 +17,7 @@ extends RefCounted
 
 const UI := preload("res://scripts/ui_theme.gd")
 const ICON_PX := 0.05   ## marker size with fixed_size (a fraction of the view height, about 26 px at 800)
-const ICON := {"oil": "oil", "seaOil": "oil", "iron": "iron", "gold": "money", "diamond": "money",
+const ICON := {"oil": "oil", "seaOil": "oil", "seaGas": "gas", "iron": "iron", "gold": "money", "diamond": "money",
 	"silicon": "silicon", "uranium": "uranium", "fish": "food"}
 
 var world: Node
@@ -36,7 +36,7 @@ func build(type: String, at: Vector3, spin: float) -> Node3D:
 	var root := Node3D.new()
 	root.position = at
 	root.rotation.y = spin
-	var water: bool = type in ["seaOil", "fish"]
+	var water: bool = type in ["seaOil", "seaGas", "fish"]
 	if not water:
 		root.add_child(_patch(at, spin, type))
 	# Land sites are built for their own spot, so every rock stands on the
@@ -50,7 +50,7 @@ func build(type: String, at: Vector3, spin: float) -> Node3D:
 	match type:
 		"oil":
 			root.add_child(_pumpjack())
-		"seaOil":
+		"platform":
 			root.add_child(_flare())
 		"fish":
 			root.add_child(_school())
@@ -237,7 +237,22 @@ func _mesh_for(type: String) -> ArrayMesh:
 				"uranium": _mat("uranium", func(): return _crystal(Color("55e03a"), 1.6)),
 				"diamond": _mat("diamond", func(): return _crystal(Color("b8e4ff"), 0.45))}[type]
 			mesh = _commit(gem, gem_mat, mesh)
-		"seaOil":
+		"seaOil", "seaGas":
+			# A survey buoy marks the unexploited seabed reserve. The actual
+			# drilling platform appears only after the player commissions it.
+			var st := _begin()
+			var buoy := CylinderMesh.new()
+			buoy.top_radius = 0.6
+			buoy.bottom_radius = 1.0
+			buoy.height = 0.7
+			_shape(st, buoy, Transform3D(Basis(), Vector3(0, 0.4, 0)), Color("c9a550") if type == "seaOil" else Color("4ba6b3"))
+			var mast := CylinderMesh.new()
+			mast.top_radius = 0.08
+			mast.bottom_radius = 0.12
+			mast.height = 2.5
+			_shape(st, mast, Transform3D(Basis(), Vector3(0, 1.8, 0)), Color("c8cec9"))
+			mesh = _commit(st, _painted(0.5, 0.3))
+		"platform":
 			var st := _begin()
 			var steel := Color("5d6166")
 			for leg in [Vector3(-2.6, 0, -2.6), Vector3(2.6, 0, -2.6), Vector3(-2.6, 0, 2.6), Vector3(2.6, 0, 2.6)]:
@@ -452,28 +467,34 @@ func _school() -> Node3D:
 	body.rings = 3
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = body
+	var shape := _begin()
+	_shape(shape, body, Transform3D(Basis().scaled(Vector3(0.65, 0.18, 2.2)), Vector3.ZERO), Color("698f95"))
+	# Forked tail, broad in the horizontal plane, with a tapered head.
+	for v in [Vector3(0, 0.015, -0.45), Vector3(-0.32, 0.015, -0.9), Vector3(0, 0.015, -0.74), Vector3(0, 0.015, -0.45), Vector3(0, 0.015, -0.74), Vector3(0.32, 0.015, -0.9)]:
+		shape.set_color(Color("578087"))
+		shape.add_vertex(v)
+	mm.mesh = _commit(shape, _painted(0.4, 0.1))
 	mm.instance_count = 14
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	for i in range(14):
-		var a := TAU * i / 14.0 + rng.randf_range(-0.2, 0.2)
-		var r := rng.randf_range(2.5, 5.0)
-		var pos := Vector3(cos(a) * r, rng.randf_range(0.0, 0.08), sin(a) * r)
-		mm.set_instance_transform(i, Transform3D(Basis(Vector3.UP, -a).scaled(Vector3(0.9, 0.4, 2.6)), pos))
+		var a := rng.randf() * TAU
+		var r := sqrt(rng.randf()) * 4.5
+		var pos := Vector3(cos(a) * r * 0.65, rng.randf_range(0.0, 0.04), sin(a) * r)
+		mm.set_instance_transform(i, Transform3D(Basis(Vector3.UP, rng.randf_range(-0.35, 0.35)), pos + Vector3.UP * 0.035))
 	var fish := MultiMeshInstance3D.new()
 	fish.multimesh = mm
 	fish.material_override = _mat("fish", func():
 		var m := StandardMaterial3D.new()
-		m.albedo_color = Color("24343d")
-		m.roughness = 0.3
-		m.metallic = 0.6
+		m.albedo_color = Color("608c91")
+		m.roughness = 0.65
+		m.metallic = 0.05
 		return m)
 	fish.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(fish)
 	var swim := root.create_tween().set_loops()
 	swim.tween_property(root, "rotation:y", TAU, 14.0).from(0.0)
-	for k in range(3):
+	for k in range(2):
 		var ring := MeshInstance3D.new()
 		var torus := TorusMesh.new()
 		torus.inner_radius = 0.9
@@ -487,13 +508,13 @@ func _school() -> Node3D:
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.albedo_color = Color(1, 1, 1, 0.55)
+		mat.albedo_color = Color(0.65, 0.84, 0.86, 0.16)
 		ring.material_override = mat
 		root.add_child(ring)
 		var spread := ring.create_tween().set_loops()
 		spread.tween_interval(k * 0.9)
 		spread.tween_property(ring, "scale", Vector3(3.0, 0.05, 3.0), 2.7).from(Vector3(0.5, 0.05, 0.5))
-		spread.parallel().tween_property(mat, "albedo_color:a", 0.0, 2.7).from(0.55)
+		spread.parallel().tween_property(mat, "albedo_color:a", 0.0, 2.7).from(0.16)
 	return root
 
 ## The resource icon over the site, on a dark disc so it reads on any ground.
