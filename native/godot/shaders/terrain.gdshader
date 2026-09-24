@@ -29,6 +29,14 @@ uniform float cloud_shadow = 0.3;  // how dark drifting cloud shadows get
 // territory view (show_territory) also washes the land and hatches contested
 // hexes in gold.
 #include "res://shaders/territory.gdshaderinc"
+// Buildable ground (buildable.gd). The map's heights, so slopes can be measured
+// over a district's width: ground too steep to build on is bare grey rock.
+uniform sampler2D height_tex : filter_linear, repeat_disable;
+uniform vec4 height_grid = vec4(0.0, 0.0, 1.0, 0.0);   // origin x, origin z, step, size (0: none)
+// While a district is being placed, one texel per hex (the territory layout):
+// G = it can go here, R = the land forbids it, B = something else does.
+uniform bool show_build = false;
+uniform sampler2D build_tex : filter_nearest, repeat_disable;
 
 varying vec3 world_pos;
 varying vec3 world_normal;
@@ -36,6 +44,9 @@ varying vec4 weights;               // grass, dirt, sand, rock
 varying float macro;
 
 float noise(vec2 p) { return textureLod(noise_tex, p, 0.0).r; }
+float map_height(vec2 p) {
+	return textureLod(height_tex, ((p - height_grid.xy) / height_grid.z + 0.5) / height_grid.w, 0.0).r;
+}
 
 
 
@@ -53,6 +64,15 @@ void vertex() {
 	float rock = smoothstep(0.16, 0.34, slope + (macro - 0.5) * 0.14);
 	float dirt = smoothstep(0.6, 0.76, noise(p * 0.0045 + 0.57) * 0.65 + noise(p * 0.017 + 0.21) * 0.35) * 0.75;
 	dirt = max(dirt, smoothstep(0.08, 0.16, slope) * 0.6);
+	// Rise across a district's width (16 m), the same measure the building
+	// rules use (more than 6 m across a hex is too steep): such ground reads
+	// as a rocky hillside, not as meadow you could build a town on.
+	if (height_grid.w > 0.0) {
+		float gx = map_height(p + vec2(8.0, 0.0)) - map_height(p - vec2(8.0, 0.0));
+		float gz = map_height(p + vec2(0.0, 8.0)) - map_height(p - vec2(0.0, 8.0));
+		float broad = length(vec2(gx, gz)) / 16.0;
+		rock = max(rock, smoothstep(0.22, 0.32, broad + (detail - 0.5) * 0.05) * 0.95);
+	}
 	rock *= 1.0 - sand * 0.7;
 	dirt *= (1.0 - rock) * (1.0 - sand);
 	weights = vec4(max(0.0, 1.0 - sand - rock - dirt), dirt, sand, rock);
@@ -137,6 +157,35 @@ void fragment() {
 				albedo = mix(albedo, own.rgb * 0.75 + albedo * 0.35, band * 0.35);
 			}
 			albedo = mix(albedo, own.rgb * 1.05, edge * 0.8);  // the nation's own colour, not washed pale
+		}
+	}
+	if (show_build && world_pos.y > sea_level - 1.5) {
+		// Placing a district: every hex says whether it can go there.
+		vec2 hx = hex_round(vec2((sqrt(3.0) / 3.0 * p.x - p.y / 3.0) / hex_radius, (2.0 / 3.0 * p.y) / hex_radius));
+		float col = hx.x + (hx.y - mod(hx.y, 2.0)) * 0.5 + hex_grid.x;
+		float row = hx.y + hex_grid.y;
+		vec4 verdict = vec4(0.0);
+		if (col >= 0.0 && row >= 0.0 && col < hex_grid.z && row < hex_grid.w) {
+			verdict = texelFetch(build_tex, ivec2(int(col), int(row)), 0);
+		}
+		if (verdict.a > 0.0) {
+			vec2 d = p - hex_centre(hx);
+			float inset = hex_radius * 0.8660254 - max(abs(d.x), max(abs(0.5 * d.x + 0.8660254 * d.y), abs(-0.5 * d.x + 0.8660254 * d.y)));
+			float rim = 1.0 - smoothstep(0.25, 0.9, inset);
+			float grey = dot(albedo, vec3(0.3, 0.59, 0.11));
+			vec3 mark;
+			if (verdict.g > 0.5) {
+				mark = vec3(0.3, 0.95, 0.45);
+				albedo = mix(albedo, albedo * 0.7 + mark * 0.3, 0.55);
+			} else if (verdict.r > 0.5) {
+				mark = vec3(0.95, 0.18, 0.12);
+				float stripe = step(0.55, fract((p.x - p.y) * 0.22));
+				albedo = mix(albedo, mix(vec3(grey) * 0.8, mark * (0.35 + grey), 0.35 + 0.4 * stripe), 0.8);
+			} else {
+				mark = vec3(0.55);
+				albedo = mix(albedo, vec3(grey * 0.55), 0.7);
+			}
+			albedo = mix(albedo, mark, rim * 0.85);
 		}
 	}
 	ALBEDO = albedo;

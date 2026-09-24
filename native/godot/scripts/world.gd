@@ -54,7 +54,11 @@ const BUILDING_MODELS := {
 }
 const BUILDING_SIZE := {"hq": 10.0, "barracks": 9.0, "tankFactory": 9.5, "warehouse": 9.5, "farm": 7.5, "cottage": 5.0, "extractor": 6.0}
 # A district fills its hex; only its central building blocks movement.
-const DISTRICT_NAV_SIZE := 6.0
+# The part of a district hex closed to movement (its central building; the
+# walk grid adds 0.62 x this + 3 m for a hull). 4.5 closes 5.8 m round the
+# centre, which leaves at least two 4 m walk cells between any two neighbouring
+# districts (6.0 left a single cell, and armour jammed in city streets).
+const DISTRICT_NAV_SIZE := 4.5
 const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker"]
 const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher"]
 const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub"]
@@ -171,6 +175,7 @@ var transport_hover := Vector2i(1 << 20, 0)
 var nav_ready := false
 var market: Node          # market.gd: world market and trade routes
 var espionage: Node       # espionage.gd: agents and covert operations
+var buildable: Node       # buildable.gd: where building is allowed, shown on the land
 var territory: Node3D     # territory.gd: gradual control of 40 m cells
 var passage: Node         # passage.gd: who may cross whose land, and border incidents
 var occupation: Node3D    # occupation.gd: operational zones for taking ground
@@ -281,6 +286,9 @@ func _ready() -> void:
 	build_environment()
 	apply_quality()
 	build_terrain()
+	buildable = preload("res://scripts/buildable.gd").new()
+	add_child(buildable)
+	buildable.setup(self)  # steep ground shows as rock; placing shows every hex's verdict
 	build_sea()
 	build_trees()
 	if quality != "low":
@@ -480,6 +488,12 @@ func _ready() -> void:
 		await preload("res://scripts/site_clearing.gd").run(self)
 	elif "--border-test" in args:
 		await preload("res://scripts/border_regression.gd").run(self)
+	elif "--capture-traffic" in args:
+		await preload("res://scripts/route_traffic.gd").capture(self)
+	elif "--capture-build" in args:
+		await preload("res://scripts/buildable.gd").capture(self)
+	elif "--city-test" in args:
+		await preload("res://scripts/city_regression.gd").run(self)
 	elif "--convoy-test" in args:
 		await preload("res://scripts/battle_regression.gd").convoy(self)
 	elif "--battle-test" in args:
@@ -2066,7 +2080,8 @@ func _physics_process(delta: float) -> void:
 				animate(unit, false)
 				continue
 			var t_place_now := clock()
-			if not ground_step_clear(unit, next, delta): continue
+			next = ground_step(unit, next, delta)
+			if next == Vector3.INF: continue
 			place_on_ground(unit, next)
 			animate(unit, true)
 			spent("  placing", t_place_now)
@@ -2081,7 +2096,8 @@ func _physics_process(delta: float) -> void:
 			animate(unit, false)
 			continue
 		var t_place := clock()
-		if not ground_step_clear(unit, next, delta): continue
+		next = ground_step(unit, next, delta)
+		if next == Vector3.INF: continue
 		place_on_ground(unit, next)
 		animate(unit, true)
 		spent("  placing", t_place)
@@ -2102,14 +2118,60 @@ func spread_out(unit: Dictionary, slot: int, delta: float) -> void:
 
 ## Walkable by the walk grid (a lookup, unlike walkable(), which measures slope
 ## and every building); off the grid falls back to "above the waterline".
-func ground_step_clear(unit: Dictionary, next: Vector3, delta: float) -> bool:
-	# Steering and crowd avoidance must obey the same obstacles as pathfinding.
-	# A unit spawned inside a newly blocked cell may still leave that cell.
-	if open_ground(next) or not open_ground(unit.node.position): return true
+## Where a ground unit may put its next step: `next` itself, or a slide along
+## the edge of closed ground (a building's plot, water, a cliff), or a step
+## back toward the nearest open cell. Vector3.INF when there is no way on.
+## Steering and crowd avoidance obey the same obstacles as pathfinding, and a
+## unit spawned inside a newly blocked cell may still leave that cell.
+func ground_step(unit: Dictionary, next: Vector3, delta: float) -> Vector3:
+	var pos: Vector3 = unit.node.position
+	if open_near(next) or not open_near(pos):
+		return next
+	# Slide along the wall: keep whichever half of the step stays open.
+	for slide in [Vector3(next.x, next.y, pos.z), Vector3(pos.x, next.y, next.z)]:
+		if Vector2(slide.x - pos.x, slide.z - pos.z).length() > 0.002 and open_near(slide):
+			return slide
+	# Pressed into the wall: ease back toward the middle of the nearest open cell.
+	var centre := nearest_open_centre(pos)
+	var back := Vector3(centre.x - pos.x, 0, centre.z - pos.z)
+	if centre != Vector3.INF and back.length() > 0.05:
+		return pos + back.limit_length(maxf(Vector2(next.x - pos.x, next.z - pos.z).length(), delta * 1.5))
 	Motion.halt(unit, delta)
 	unit.path = PackedVector3Array()
 	unit.repath = 0.0
-	place_on_ground(unit, unit.node.position) # keep the hull turning while stopped
+	place_on_ground(unit, pos) # keep the hull turning while stopped
+	return Vector3.INF
+
+## The centre of the open walk cell nearest to `p` (within two cells), or INF.
+func nearest_open_centre(p: Vector3) -> Vector3:
+	if nav_n == 0:
+		return Vector3.INF
+	var half := float(map.mapSize) * 0.5
+	var c := int((p.x + half) / NAV_STEP)
+	var r := int((p.z + half) / NAV_STEP)
+	var best := Vector3.INF
+	var best_d := INF
+	for dr in range(-2, 3):
+		for dc in range(-2, 3):
+			var cc := c + dc
+			var rr := r + dr
+			if cc < 0 or rr < 0 or cc >= nav_n - 1 or rr >= nav_n - 1 or nav_open[rr * (nav_n - 1) + cc] == 0:
+				continue
+			var at := Vector3(-half + (cc + 0.5) * NAV_STEP, p.y, -half + (rr + 0.5) * NAV_STEP)
+			var d := Vector2(at.x - p.x, at.z - p.z).length()
+			if d < best_d:
+				best_d = d
+				best = at
+	return best
+
+## Open ground within half a metre: true on the edge of a closed cell, where
+## tightened routes run.
+func open_near(p: Vector3) -> bool:
+	if open_ground(p):
+		return true
+	for d in [Vector3(0.5, 0, 0), Vector3(-0.5, 0, 0), Vector3(0, 0, 0.5), Vector3(0, 0, -0.5)]:
+		if open_ground(p + d):
+			return true
 	return false
 
 func open_ground(p: Vector3) -> bool:
@@ -2400,14 +2462,26 @@ func update_construction(delta: float) -> void:
 	for b in buildings:
 		if b.built or b.dead:
 			continue
-		var reach: float = b.footprint * 0.62 + 4.0
+		var reach: float = site_reach(b)
 		var at: Vector3 = b.root.position
 		var count := 0
 		if b.def.get("water", false): count = 1 # marine construction contractors
 		for u in units:
-			if u.dead or u.build_site != b:
+			if u.dead or not is_same(u.build_site, b):
 				continue
-			if Vector2(u.node.position.x - at.x, u.node.position.z - at.z).length() < reach + 1.5 and u.target == null:
+			var gap := Vector2(u.node.position.x - at.x, u.node.position.z - at.z).length()
+			if u.target == null and gap >= reach + 1.5 and site_timer <= 0.0:
+				# Stopped short (a blocked street, a crowd): try again from
+				# another side; after a few tries, hand the site back.
+				u.site_tries = int(u.get("site_tries", 0)) + 1
+				if u.site_tries > 5:
+					u.build_site = null
+					u.site_tries = 0
+				else:
+					order_move([u], approach_point(b, u.node.position, u.site_tries))
+					u.build_site = b
+				continue
+			if gap < reach + 1.5 and u.target == null:
 				count += 1
 				if u.clip != u.work_clip and u.work_clip != "":
 					u.player.play(u.work_clip, 0.2)
@@ -2430,11 +2504,58 @@ func update_construction(delta: float) -> void:
 	if site_timer <= 0.0:
 		site_timer = 0.5
 
+## Sends workers to an unfinished site (a right click on it, or the Resume
+## button): each walks to its own side of the site and builds.
+func order_build(selected: Array, site: Dictionary) -> void:
+	var crew: Array = selected.filter(func(u): return not u.dead and u.key == "worker" and u.owner == site.owner)
+	for i in range(crew.size()):
+		var u: Dictionary = crew[i]
+		order_move([u], approach_point(site, u.node.position, i))
+		u.build_site = site  # after the move order, which clears it
+		u.site_tries = 0
+	if not crew.is_empty() and site.owner == 0:
+		hud.notice("%d worker%s sent to build the %s." % [crew.size(), "" if crew.size() == 1 else "s", site.def.name])
+
+## The Resume construction button: up to two of the nearest workers not
+## already building something go to the site.
+func resume_construction(site: Dictionary) -> void:
+	if site.built or site.dead:
+		return
+	var free: Array = units.filter(func(u): return not u.dead and u.owner == site.owner and u.key == "worker" and (u.build_site == null or is_same(u.build_site, site)))
+	if free.is_empty():
+		if site.owner == 0:
+			hud.notice("No free worker. Train one at a town hall, or take one off another site.")
+		return
+	free.sort_custom(func(a, b): return a.node.position.distance_squared_to(site.root.position) < b.node.position.distance_squared_to(site.root.position))
+	order_build(free.slice(0, 2), site)
+
+## Where a worker stands to build: on the edge of the site facing it, turned
+## by `turn` sixths of a circle for a second worker or a second attempt, and
+## moved onto open walk cells if that spot is closed.
+func approach_point(site: Dictionary, from: Vector3, turn: int) -> Vector3:
+	var side: Vector3 = from - site.root.position
+	side.y = 0
+	side = side.normalized() if side.length() > 0.1 else Vector3.BACK
+	var reach: float = site_reach(site) - 1.0
+	for k in range(6):
+		var dir := side.rotated(Vector3.UP, TAU / 6.0 * (turn + (k if k % 2 == 0 else -k)))
+		var p: Vector3 = site.root.position + dir * reach
+		if open_ground(p):
+			return p
+	return site.root.position + side.rotated(Vector3.UP, TAU / 6.0 * turn) * reach
+
+## How close a worker must stand to work on a site.
+func site_reach(site: Dictionary) -> float:
+	var reach: float = site.footprint * 0.62 + 4.0
+	if is_district(site.key):
+		reach = maxf(reach, DISTRICT_NAV_SIZE * 0.62 + 3.0 + NAV_STEP * 1.5)  # the site closes the walk cells up to here
+	return reach
+
 func call_worker(site: Dictionary) -> void:
 	if site.def.get("water", false): return
 	for u in units:
-		if u.build_site == site and not u.dead:
-			return  # already on the way
+		if is_same(u.build_site, site) and not u.dead:
+			return  # already on the way, or at work
 	var best = null
 	var best_d := INF
 	for u in units:
@@ -2445,19 +2566,20 @@ func call_worker(site: Dictionary) -> void:
 			best_d = d
 			best = u
 	if best == null:
+		if site.owner == 0 and not site.get("no_worker_told", false):
+			site.no_worker_told = true  # said once per site; the card keeps saying it
+			hud.notice("%s is waiting for a worker. Select one and right-click the site, or train one." % site.def.name)
 		return
-	var side: Vector3 = (best.node.position - site.root.position)
-	side.y = 0
-	side = side.normalized() if side.length() > 0.1 else Vector3.BACK
-	order_move([best], site.root.position + side * (site.footprint * 0.62 + 3.0))
+	order_move([best], approach_point(site, best.node.position, 0))
 	best.build_site = site  # after the move order, which clears it
+	best.site_tries = 0
 
 func finish_building(b: Dictionary) -> void:
 	b.built = true
 	b.progress = 1.0
 	b.model.scale.y = b.full_scale_y
 	for u in units:
-		if u.build_site == b:
+		if is_same(u.build_site, b):
 			u.build_site = null
 			u.clip = ""
 			animate(u, false)
@@ -3797,6 +3919,8 @@ func begin_placement(key: String) -> void:
 		hud.notice("Not enough %s" % economy.missing(def.cost))
 		return
 	placing = key
+	if buildable != null:
+		buildable.show_for(key)  # hexes where it can and cannot go
 	ghost = Node3D.new()
 	ghost.add_child(building_model(key, 0, 0))
 	add_child(ghost)
@@ -3804,6 +3928,8 @@ func begin_placement(key: String) -> void:
 
 func cancel_placement() -> void:
 	placing = ""
+	if buildable != null:
+		buildable.show_for("")
 	if ghost:
 		ghost.queue_free()
 		ghost = null
@@ -3856,7 +3982,9 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 				return "Must be built on the coast"
 			if height_at(at.x, at.z) < float(map.seaLevel) + 0.8:
 				return "The centre of the hex must be dry land"
-		elif low < float(map.seaLevel) + 0.8:
+		elif low < float(map.seaLevel) + 0.25 or height_at(at.x, at.z) < float(map.seaLevel) + 1.0:
+			# Dry ground across the hex is enough: a beach at its edge no longer
+			# rules out a whole coastal hex (it used to need 0.8 m everywhere).
 			return "Too close to the water"
 		if high - low > 6.0:
 			return "Hex too steep"
@@ -4633,7 +4761,7 @@ func destroy_building(b: Dictionary) -> void:
 	if selected_building == b:
 		select_building(null)
 	for u in units:
-		if u.build_site == b:
+		if is_same(u.build_site, b):
 			u.build_site = null
 	economy.recalculate()
 	var name: String = map.nations[b.owner].name if b.owner < map.nations.size() else "Enemy"
@@ -5017,7 +5145,15 @@ func _unhandled_input(event: InputEvent) -> void:
 				return
 			var selected := units.filter(func(u): return u.selected and not u.dead)
 			var target = enemy_under(event.position)
-			if event.alt_pressed or Input.is_physical_key_pressed(KEY_ALT):
+			# Workers right-clicked onto one of your unfinished buildings build it.
+			var site = building_under(event.position) if target == null and selected.any(func(u): return u.key == "worker" and u.owner == 0) else null
+			if site != null and site.owner == 0 and not site.built and not site.dead:
+				order_build(selected.filter(func(u): return u.key == "worker" and u.owner == 0), site)
+				var others: Array = selected.filter(func(u): return u.key != "worker")
+				var near = ground_point(event.position)
+				if not others.is_empty() and near != null:
+					order_move(others, near)
+			elif event.alt_pressed or Input.is_physical_key_pressed(KEY_ALT):
 				var point = ground_point(event.position)
 				if point != null:
 					request_bombard(selected,point)

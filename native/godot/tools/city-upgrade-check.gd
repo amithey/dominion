@@ -93,16 +93,22 @@ func run() -> void:
 	w.nav_ready = ready
 	var traffic: Node = w.get_children().filter(func(n): return n.get_script() == preload("res://scripts/route_traffic.gd"))[0]
 	var hex: Vector2i = w.logistics.world_hex(w.start)
-	w.logistics.edges["upgrade-road"] = {"a": hex, "b": hex + Vector2i(1, 0), "kind": "road", "hp": 100.0}
-	w.logistics.edges["upgrade-rail"] = {"a": hex, "b": hex + Vector2i(0, 1), "kind": "rail", "hp": 100.0}
-	traffic._process(0.1)
-	var car: Node3D = traffic.vehicles["land:upgrade-road"].node
-	var was: Vector3 = car.position
-	traffic._process(0.5)
-	check(car.position.distance_to(was) > 0.1 and traffic.vehicles["land:upgrade-rail"].kind == "rail", "cars and trains animate on built infrastructure")
+	# Out in the country, clear of the capital's districts (route_traffic.gd, 0.9.15:
+	# vehicles make trips on the network rather than one per link).
+	w.logistics.edges["upgrade-road"] = {"a": hex + Vector2i(6, 0), "b": hex + Vector2i(7, 0), "kind": "road", "hp": 100.0}
+	w.logistics.edges["upgrade-rail"] = {"a": hex + Vector2i(6, 2), "b": hex + Vector2i(6, 3), "kind": "rail", "hp": 100.0}
+	traffic._sync()
+	var moved := false
+	for i in range(40):
+		var positions: Array = traffic._fleet.map(func(c): return c.s)
+		traffic._process(0.25)
+		for k in range(mini(positions.size(), traffic._fleet.size())):
+			moved = moved or absf(traffic._fleet[k].s - positions[k]) > 0.1
+	var kinds: Array = traffic._fleet.map(func(c): return c.kind)
+	check(moved and "road" in kinds and "rail" in kinds, "cars and trains animate on built infrastructure")
 	w.logistics.edges["upgrade-road"].hp = 0.0
 	traffic._sync()
-	check(not traffic.vehicles.has("land:upgrade-road"), "traffic stops on destroyed roads")
+	check(not traffic._fleet.any(func(c): return c.kind == "road"), "traffic stops on destroyed roads")
 	w.place_building("market", Vector3(w.map.startPositions[2][0], 0, w.map.startPositions[2][1]), 2, true)
 	w.market.ai_stock["2"] = {"iron": 10.0}
 	var iron_price: float = w.market.price("iron")

@@ -7,6 +7,41 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.15: construction you can resume, armour that gets through town, land that shows where you can build, real traffic
+
+- **Construction never stalls.**
+  - An unfinished building has a **Resume construction** button, and you can also select workers and
+    **right-click the site**. Both send workers to finish it, even a site left half-built.
+  - A worker that stopped short of its site (a blocked street, a crowd) tries again from another side.
+    After five tries it hands the site back, and another worker is called.
+  - Workers used to freeze for good at the edge of a building's plot. Routes run along the edges of blocked
+    ground, and one step off that line counted as blocked. Units now slide along the edge instead.
+  - If there is no free worker, a notice says so once, and the building card says "waiting for a worker".
+- **Armour gets through your city.**
+  - Two neighbouring districts used to leave a single 4 m walk cell between them, and tanks jammed there.
+    The blocked area round a district's centre is now 5.8 m (it was 6.7 m), which leaves at least two cells.
+  - Two tanks converging on one gap each waited behind the other forever. A tank now only queues behind a
+    hull that is really in front of it, and one held at a standstill for two seconds edges round instead.
+- **You can see where you can build**, as in Civilization.
+  - While placing a district, every hex near the view is marked: green where it can go, red hatching where
+    the land forbids it (too steep, too close to the water), and grey where something else does (outside
+    your land, already built on, inland for a harbour).
+  - Hillsides too steep to build on are now drawn as grey rock at all times, measured the way the
+    building rules measure them. Before, some of them looked like meadow.
+  - Coastal hexes are buildable when the ground across the hex is dry. Before, a beach at the edge ruled
+    out the whole hex.
+- **Traffic between towns** (`route_traffic.gd`).
+  - Cars, lorries, buses and trains make whole trips from town to town along the roads and railways.
+    Road vehicles keep to the right-hand lane and take bends on a curve.
+  - They speed up and brake gradually, slow for bends and climbs, keep their distance in queues, and show
+    brake lights. At the edge of a town they stop, wait, and turn back; a train reverses out of the station.
+  - Trains are a locomotive and up to three wagons (containers, tank wagons, vans), sized to fit their line.
+  - Roads now have two lanes, verges, edge lines and a dashed centre line. Railways have a ballast bed,
+    dense sleepers and two rails.
+  - Each kind of vehicle is one baked mesh drawn by one MultiMesh, so the traffic costs a few draw calls.
+- New test: `--city-test` (armour through a crowded city, idle and stuck workers, resuming a half-built
+  site). Views: `--capture-build`, `--capture-traffic`.
+
 ## Version 0.9.13: land bought at the town hall, a calmer build menu, missiles from ships, firm diplomacy
 
 - **Buying land.** Select a capital, city or village centre and press "Buy land". The unclaimed hexes

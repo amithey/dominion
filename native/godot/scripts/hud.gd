@@ -392,6 +392,8 @@ func toggle_build() -> void:
 func _panel_mode() -> String:
 	if _selected != null and _selected.owner == 0 and _selected.built and _has_actions(_selected):
 		return "actions"
+	if _selected != null and _selected.owner == 0 and not _selected.built and not _selected.dead and not _selected.def.get("water", false):
+		return "site"  # an unfinished building: send workers to finish it
 	if prod_open:
 		return "build"
 	return ""
@@ -866,6 +868,11 @@ func _update_panel() -> void:
 		_prod_hint.text = "Pick a building, then click a hex inside your city. Workers go and build it. Shift keeps placing; right click cancels."
 		_tabs.visible = true
 		_building_bars()
+	elif mode == "site":
+		var site: Dictionary = _selected
+		_prod_title.text = UI.caps(site.def.name)
+		_prod_hint.text = "Under construction. Workers build it; you can also select workers and right-click the site."
+		_bar("worker", "Resume construction", "Send the nearest free workers to finish this building.", {}, 0.0, "", func(): world.resume_construction(site))
 	else:
 		_prod_title.text = UI.caps(_selected.def.name)
 		_prod_hint.text = "Choose what this building produces. Up to five orders queue here."

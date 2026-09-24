@@ -296,6 +296,9 @@ static func traffic(w: Node, unit: Dictionary, to: Vector3, remaining := INF) ->
 	var widen: float = 1.0 + 0.4 * clampf(absf(float(unit.get("swerve", 0.0))), 0.0, 1.0)
 	var cx := floori(at.x / w.GRID)
 	var cz := floori(at.z / w.GRID)
+	# A queue can close into a ring (each hull waiting on the next): a hull held
+	# at a standstill for two seconds stops queuing for three and edges round.
+	var impatient: bool = int(unit.get("impatient_until", -1)) > w.sim_tick
 	for dz in range(-2, 3):
 		for dx in range(-2, 3):
 			var bucket = w.grid.get(Vector2i(cx + dx, cz + dz))
@@ -315,7 +318,10 @@ static func traffic(w: Node, unit: Dictionary, to: Vector3, remaining := INF) ->
 					continue
 				var other_fwd := Vector3(sin(other.heading), 0, cos(other.heading))
 				var other_speed: float = other.get("cur_speed", 0.0) if other.get("moving", false) else 0.0
-				if other_speed > 0.3 and other_fwd.dot(fwd) > 0.5:
+				# Only a hull that is in front by its own heading too is followed:
+				# two hulls converging on one gap each saw the other "ahead" and
+				# both waited behind the other for good.
+				if other_speed > 0.3 and other_fwd.dot(fwd) > 0.5 and rel.dot(other_fwd) > 0.0 and not impatient:
 					# Same way: fall in behind at its pace, about two lengths back.
 					cap = minf(cap, maxf(other_speed + (ahead - 9.0) * 0.8, 0.0))
 				else:
@@ -328,6 +334,15 @@ static func traffic(w: Node, unit: Dictionary, to: Vector3, remaining := INF) ->
 						away = signf(held) if absf(held) > 0.05 else (1.0 if fposmod(float(unit.phase), 2.0) < 1.0 else -1.0)
 					swerve += away * urgency
 					cap = minf(cap, float(unit.speed) * (1.0 - 0.45 * urgency))
+	var crawling: bool = float(unit.get("cur_speed", 0.0)) < 0.8
+	if crawling and cap < float(unit.speed) * 0.5:
+		if int(unit.get("queued_since", -1)) < 0:
+			unit.queued_since = w.sim_tick
+		elif w.sim_tick - int(unit.queued_since) > 120:
+			unit.impatient_until = w.sim_tick + 180
+			unit.queued_since = -1
+	elif not crawling:
+		unit.queued_since = -1
 	# The swerve eases in and out instead of switching.
 	var eased: float = lerpf(float(unit.get("swerve", 0.0)), clampf(swerve, -1.0, 1.0), 0.35)
 	unit.swerve = eased

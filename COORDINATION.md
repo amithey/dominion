@@ -165,3 +165,19 @@ UI files listed above.
   checks PASS; broad suite's user-data-dependent tests passed with normal filesystem access.
   Captures inspected for build menu/top strip, summit, homes, silo, fish and rifle grip.
   Restart the executable or install DOMINION-Setup.exe to use the embedded new version.
+- 2026-09-24 Claude, 0.9.15: user asked for (1) resuming stalled construction, (2) realistic traffic
+  between towns, (3) visible unbuildable land, (4) armour stuck in city streets, (5) stuck workers.
+  - world.gd: `order_build(workers, site)`, `resume_construction(site)`, right-click on your own
+    unfinished building with workers selected, retries for workers short of their site,
+    `ground_step()` (slides along closed cells; was `ground_step_clear`), `DISTRICT_NAV_SIZE` 6.0 -> 4.5,
+    the coastal rule in `site_problem`, and a `buildable` node.
+  - New `buildable.gd`: the placement overlay and the height texture that `terrain.gdshader` uses to draw
+    steep ground as rock. `tactics.gd`: queue fixes. `logistics.gd`: road and rail meshes.
+    `route_traffic.gd` rewritten (the cargo ships are unchanged).
+  - **hud.gd (Codex's file), a small change made at the user's request:** `_panel_mode()` returns
+    "site" for your own unfinished building, and the panel then shows one `_bar` "Resume construction"
+    that calls `world.resume_construction(site)`. Please restyle it freely, and keep that call.
+  - New test `--city-test` in run-tests.ps1.
+  - `tools/city-upgrade-check.gd` (Codex's check): its traffic section read the old per-link
+    `vehicles["land:..."]`; it now checks that road and rail trips move on test links placed in open
+    country, and that cutting the road removes road traffic. `route_traffic._sync()` still exists.

@@ -316,12 +316,16 @@ func damage_at(at: Vector3, reach: float, amount: float, area := false) -> int:
 func rebuild_mesh() -> void:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var asphalt := Color("3d3d39")
-	var gravel := Color("5a564f")
-	var steel := Color("8e8d86")
-	var paint := Color("c9bf9a")
-	var sleeper := Color("3a2e24")
+	var asphalt := Color("3b3b38")
+	var verge := Color("6b6452")
+	var gravel := Color("6f6a61")
+	var ballast := Color("8a847a")
+	var steel := Color("a9a8a2")
+	var edge_line := Color("d8d6cc")
+	var paint := Color("d9c27a")
+	var sleeper := Color("3f3127")
 	var broken := Color("5a3a2c")
+	var junctions := {}   # hex -> kind of the links meeting there (outside districts)
 	for e in edges.values():
 		var from := hex_center(e.a)
 		var to := hex_center(e.b)
@@ -338,21 +342,50 @@ func rebuild_mesh() -> void:
 				_strip(st, a.lerp(b, 0.0), a.lerp(b, 0.3), 2.4, 0.0, broken, 0.07)
 				_strip(st, a.lerp(b, 0.72), a.lerp(b, 1.0), 2.4, 0.0, broken, 0.07)
 				continue
+			if junctions.get(hex, "") != "road":
+				junctions[hex] = e.kind
 			if e.kind == "rail":
-				_strip(st, a, b, 2.2, 0.0, gravel, 0.08)
+				# Ballast bed, sleepers every 0.8 m, two rails on a 1.1 m gauge.
+				_strip(st, a, b, 3.4, 0.0, gravel, 0.06)
+				_strip(st, a, b, 2.6, 0.0, ballast, 0.09)
 				var dir := (b - a)
 				dir.y = 0
 				var across := Vector3(-dir.z, 0, dir.x).normalized()
-				for k in range(1, 9):
-					var p := a.lerp(b, k / 9.0)
-					_strip(st, p - across * 0.9, p + across * 0.9, 0.22, 0.0, sleeper, 0.11)
+				var count := maxi(1, int(dir.length() / 0.8))
+				for k in range(count):
+					var p := a.lerp(b, (k + 0.5) / count)
+					_strip(st, p - across * 1.05, p + across * 1.05, 0.24, 0.0, sleeper, 0.12)
 				for offset in [-0.55, 0.55]:
-					_strip(st, a, b, 0.1, offset, steel, 0.16)
+					_strip(st, a, b, 0.12, offset, steel, 0.19)
 			else:
-				_strip(st, a, b, 3.0, 0.0, asphalt, 0.08)
-				_strip(st, a, b, 0.1, 0.0, paint, 0.1)
+				# Two lanes: a verge, asphalt, white edge lines and a dashed centre line.
+				_strip(st, a, b, 5.4, 0.0, verge, 0.06)
+				_strip(st, a, b, 4.4, 0.0, asphalt, 0.09)
+				for offset in [-1.95, 1.95]:
+					_strip(st, a, b, 0.12, offset, edge_line, 0.11)
+				var run := Vector2(b.x - a.x, b.z - a.z).length()
+				var dashes := maxi(1, int(run / 4.0))
+				for k in range(dashes):
+					_strip(st, a.lerp(b, (k + 0.2) / dashes), a.lerp(b, (k + 0.7) / dashes), 0.12, 0.0, paint, 0.11)
+	# Where links meet outside a town, a round patch of the same surface joins them.
+	for hex in junctions:
+		var c := hex_center(hex)
+		_disc(st, c, 2.9 if junctions[hex] == "road" else 1.9, asphalt if junctions[hex] == "road" else ballast, 0.095)
 	st.generate_normals()
 	_mesh.mesh = st.commit()
+
+func _disc(st: SurfaceTool, c: Vector3, r: float, color: Color, lift: float) -> void:
+	st.set_color(color)
+	var centre := Vector3(c.x, world.height_at(c.x, c.z) + lift, c.z)
+	for k in range(12):
+		var a0 := TAU * k / 12.0
+		var a1 := TAU * (k + 1) / 12.0
+		var p0 := c + Vector3(cos(a0), 0, sin(a0)) * r
+		var p1 := c + Vector3(cos(a1), 0, sin(a1)) * r
+		p0.y = world.height_at(p0.x, p0.z) + lift
+		p1.y = world.height_at(p1.x, p1.z) + lift
+		for v in [centre, p1, p0]:
+			st.add_vertex(v)
 
 # A ribbon from a to b, `width` wide, draped on the terrain in short steps.
 func _strip(st: SurfaceTool, a: Vector3, b: Vector3, width: float, offset: float, color: Color, lift: float) -> void:

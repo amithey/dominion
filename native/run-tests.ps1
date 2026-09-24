@@ -19,6 +19,7 @@ $tests = @(
     @('movement physics', @('--', '--motion-test'), 'MOTION_TEST PASS', 180),
     @('battle dynamics', @('--', '--battle-test'), 'BATTLE_TEST PASS', 300),
     @('armoured column driving', @('--', '--convoy-test'), 'CONVOY_TEST PASS', 240),
+    @('armour through city streets, workers finish sites', @('--', '--city-test'), 'CITY_TEST PASS', 400),
     @('borders, passage and operational zones', @('--', '--border-test'), 'BORDER_TEST PASS', 400),
     @('clearing trees and resources for a building', @('--', '--site-test'), 'SITE_TEST PASS', 200),
     @('clicking any part of a unit selects it', @('--', '--pick-test'), 'PICK_TEST PASS', 200),
