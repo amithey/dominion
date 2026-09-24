@@ -192,3 +192,7 @@ UI files listed above.
   (target_class of a grounded aircraft is "light"); artillery and MLRS reach 3 hexes (gameplay_rules.gd;
   city-upgrade-check updated); new bunker.gd (machine guns, 1/3 ground damage, shelter). Check:
   tools/combat-rules-check.gd.
+- 2026-09-25 Claude, stage C: path_between uses NavigationServer3D.query_path with no polygon cap (the
+  default 4096 cut marches over ~300 m short); order_move tells the player when no land route exists;
+  workers keep a job list (u.build_queue; shift+right-click queues), finish_building -> next_job().
+  Check: tools/route-check.gd.

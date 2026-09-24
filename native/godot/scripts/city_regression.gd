@@ -146,6 +146,30 @@ static func run(w: Node) -> void:
 	print("CITY right-click resumes a half-built site: assigned %s, built %s" % [assigned, site3.built])
 	if not (assigned and site3.built):
 		failures.append("sending a worker to an unfinished building did not finish it")
+	# A worker's list of jobs: two sites queued (shift + right click) are built
+	# one after the other; then it helps at the nearest unfinished site.
+	var jobs := []
+	for k in range(3):
+		var h: Vector3 = w.logistics.hex_center(w.logistics.world_hex(home + Vector3(-hex_w * 3.0 + k * hex_w, 0, -hex_w * 2.6)))
+		var s: Dictionary = w.place_building("housing", h, 0, false)
+		w.close_navigation(s.root.position, w.DISTRICT_NAV_SIZE)
+		jobs.append(s)
+	await sync_nav(w)
+	for other in w.units:
+		if other.key == "worker" and not is_same(other, worker):
+			other.node.position = home + Vector3(0, 0, 400)  # out of the way: only our worker builds
+			other.build_site = null
+			other.target = null
+	w.order_build([worker], jobs[0])
+	w.order_build([worker], jobs[1], true)
+	var queued_ok: bool = is_same(worker.build_site, jobs[0]) and worker.build_queue.size() == 1
+	for f in range(60 * 400):
+		step(w)
+		if jobs.all(func(j): return j.built):
+			break
+	print("CITY worker's job list: queued %s, built %s" % [queued_ok, jobs.map(func(j): return j.built)])
+	if not (queued_ok and jobs.all(func(j): return j.built)):
+		failures.append("a worker did not work through its list of jobs and then help elsewhere")
 	print("CITY districts placed %d, longest a hull stood still under orders %.1f s" % [placed, worst_wait])
 	if worst_wait > 8.0:
 		failures.append("a hull stood still for %.1f s in the city streets" % worst_wait)

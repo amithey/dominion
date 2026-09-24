@@ -1790,6 +1790,7 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 		u.attack_move = attack
 		u.path = PackedVector3Array()
 		u.build_site = null  # a new order takes a worker off its construction site
+		u.build_queue = []   # and off its list of jobs
 		u.forced = false
 		u.best_rem = INF
 		u.stall = 0.0
@@ -1800,6 +1801,12 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 	# Ranks across the line of march (tactics.gd), marching at the pace of the
 	# slowest so the body arrives together.
 	var ground: Array = selected.filter(func(u): return not (u.get("fly", false) or u.get("naval", false)))
+	if not ground.is_empty() and ground[0].owner == 0 and nav_ready:
+		# Say so when the place cannot be reached on land (across the sea, onto
+		# a cliff): the troops go as close as they can.
+		var probe := path_between(ground[0].node.position, point)
+		if not probe.is_empty() and Vector2(probe[-1].x - point.x, probe[-1].z - point.z).length() > 18.0:
+			hud.notice("No land route to that spot: your troops go as close as they can. Ships or aircraft can reach it.")
 	var slots: Array = Tactics.formation(ground, point) if not ground.is_empty() else []
 	var pace := INF
 	for u in ground:
@@ -2382,10 +2389,25 @@ func close_navigation(at: Vector3, footprint: float) -> void:
 				nav_open[r * (nav_n - 1) + c] = 0
 	rebuild_nav_mesh()
 
+var _path_query: NavigationPathQueryParameters3D
+var _path_result: NavigationPathQueryResult3D
+
 func path_between(from: Vector3, to: Vector3) -> PackedVector3Array:
 	if not nav_ready:
 		return PackedVector3Array()
-	var route := NavigationServer3D.map_get_path(get_world_3d().navigation_map, from, to, true)
+	# The engine's default search gives up after 4096 polygons and returns a
+	# route to the nearest point it reached: on the 4 m walk grid that cut
+	# every march longer than about 300 m short, and the army stopped halfway
+	# (the "they only think in straight lines" complaint). No cap here.
+	if _path_query == null:
+		_path_query = NavigationPathQueryParameters3D.new()
+		_path_query.path_search_max_polygons = 0
+		_path_result = NavigationPathQueryResult3D.new()
+	_path_query.map = get_world_3d().navigation_map
+	_path_query.start_position = from
+	_path_query.target_position = to
+	NavigationServer3D.query_path(_path_query, _path_result)
+	var route := _path_result.path
 	if route.is_empty():
 		return PackedVector3Array()
 	route = straighten(route)
@@ -2489,8 +2511,10 @@ func update_construction(delta: float) -> void:
 					u.build_site = null
 					u.site_tries = 0
 				else:
+					var jobs: Array = u.get("build_queue", [])
 					order_move([u], approach_point(b, u.node.position, u.site_tries))
 					u.build_site = b
+					u.build_queue = jobs
 				continue
 			if gap < reach + 1.5 and u.target == null:
 				count += 1
@@ -2517,15 +2541,49 @@ func update_construction(delta: float) -> void:
 
 ## Sends workers to an unfinished site (a right click on it, or the Resume
 ## button): each walks to its own side of the site and builds.
-func order_build(selected: Array, site: Dictionary) -> void:
+## With `queue` (shift + right click) the site is added to each worker's list
+## of jobs instead: a worker still busy finishes its current site first.
+func order_build(selected: Array, site: Dictionary, queue := false) -> void:
 	var crew: Array = selected.filter(func(u): return not u.dead and u.key == "worker" and u.owner == site.owner)
 	for i in range(crew.size()):
 		var u: Dictionary = crew[i]
+		if queue and u.build_site != null and not is_same(u.build_site, site):
+			var jobs: Array = u.get("build_queue", [])
+			if not jobs.any(func(j): return is_same(j, site)):
+				jobs.append(site)
+			u.build_queue = jobs
+			continue
+		var jobs_kept: Array = u.get("build_queue", []) if queue else []
 		order_move([u], approach_point(site, u.node.position, i))
 		u.build_site = site  # after the move order, which clears it
+		u.build_queue = jobs_kept
 		u.site_tries = 0
 	if not crew.is_empty() and site.owner == 0:
-		hud.notice("%d worker%s sent to build the %s." % [crew.size(), "" if crew.size() == 1 else "s", site.def.name])
+		hud.notice("%d worker%s %s the %s." % [crew.size(), "" if crew.size() == 1 else "s", "will then build" if queue else "sent to build", site.def.name])
+
+## A worker done with a site takes its next job: the next site on its own list,
+## else the nearest unfinished site of its nation (helping whoever is there).
+func next_job(u: Dictionary) -> void:
+	var jobs: Array = u.get("build_queue", [])
+	while not jobs.is_empty():
+		var site: Dictionary = jobs.pop_front()
+		if not site.dead and not site.built:
+			u.build_queue = jobs
+			order_build([u], site, false)
+			u.build_queue = jobs
+			return
+	u.build_queue = []
+	var best = null
+	var best_d := 160.0
+	for b in buildings:
+		if b.dead or b.built or b.owner != u.owner or b.def.get("water", false):
+			continue
+		var d: float = u.node.position.distance_to(b.root.position)
+		if d < best_d:
+			best_d = d
+			best = b
+	if best != null:
+		order_build([u], best, false)
 
 ## The Resume construction button: up to two of the nearest workers not
 ## already building something go to the site.
@@ -2589,11 +2647,15 @@ func finish_building(b: Dictionary) -> void:
 	b.built = true
 	b.progress = 1.0
 	b.model.scale.y = b.full_scale_y
+	var crew: Array = []
 	for u in units:
 		if is_same(u.build_site, b):
 			u.build_site = null
 			u.clip = ""
 			animate(u, false)
+			crew.append(u)
+	for u in crew:
+		next_job(u)  # on to the next site on its list, or help at the nearest
 	economy.recalculate()
 	if b.owner == 0:
 		hud.notice("%s complete" % b.def.name)
@@ -5222,7 +5284,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			# Workers right-clicked onto one of your unfinished buildings build it.
 			var site = building_under(event.position) if target == null and selected.any(func(u): return u.key == "worker" and u.owner == 0) else null
 			if site != null and site.owner == 0 and not site.built and not site.dead:
-				order_build(selected.filter(func(u): return u.key == "worker" and u.owner == 0), site)
+				order_build(selected.filter(func(u): return u.key == "worker" and u.owner == 0), site, event.shift_pressed)
 				var others: Array = selected.filter(func(u): return u.key != "worker")
 				var near = ground_point(event.position)
 				if not others.is_empty() and near != null:
