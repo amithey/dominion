@@ -196,3 +196,9 @@ UI files listed above.
   default 4096 cut marches over ~300 m short); order_move tells the player when no land route exists;
   workers keep a job list (u.build_queue; shift+right-click queues), finish_building -> next_job().
   Check: tools/route-check.gd.
+- 2026-09-25 Claude, stage D: market.gd is an exchange (flow, fair, history; exchange_step every 2 s;
+  quote() includes slippage; change()/sparkline() for the panel; hud.gd market rows show the 1-minute
+  change and a text chart); espionage op "shipping" and enemy shipping sabotage (market.sabotaged);
+  route_traffic.gd: a freighter per open route (moored when waiting) on craft.gd's lofted hull with a
+  wake; tapered car/lorry/locomotive shapes. city-upgrade-check market asserts updated. Check:
+  tools/trade-check.gd.

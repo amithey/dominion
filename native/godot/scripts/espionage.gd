@@ -7,7 +7,7 @@ signal changed
 
 const TICK := 10.0
 const INTEL_TIERS := [[10, "Treasury and buildings"], [25, "Army strength"], [40, "Wars, allies and pacts"], [60, "Warning of attacks on you"]]
-const INTEL_GAIN := {"buildNetwork": 6, "reconDossier": 18, "cyberAttack": 8, "stealFunds": 5, "stealTech": 10, "sabotage": 6, "proxyCell": 8, "armRebels": 8, "falseFlag": 6, "assassinate": 12}
+const INTEL_GAIN := {"buildNetwork": 6, "reconDossier": 18, "cyberAttack": 8, "stealFunds": 5, "stealTech": 10, "sabotage": 6, "shipping": 6, "proxyCell": 8, "armRebels": 8, "falseFlag": 6, "assassinate": 12}
 
 var world: Node
 var cfg: Dictionary
@@ -46,6 +46,7 @@ const PROGRAMS := {
 	"stealFunds": [60, 120, 10, 10, 0.18],
 	"stealTech": [90, 180, 20, 20, 0.20],
 	"sabotage": [100, 180, 25, 25, 0.30],
+	"shipping": [80, 180, 15, 15, 0.25],
 	"proxyCell": [120, 240, 30, 30, 0.25],
 	"armRebels": [150, 300, 40, 40, 0.40],
 	"falseFlag": [150, 300, 45, 45, 0.45],
@@ -73,6 +74,7 @@ func ops() -> Dictionary:
 			"counterSweep": {"name":"Counter-intelligence review", "cost":240, "base":0.90, "desc":"Audit domestic security; raise interception for 3 minutes. An assigned agent cannot work abroad."},
 			"withdrawNetwork": {"name":"Stand down network", "cost":100, "base":0.95, "desc":"Reduce foreign exposure by 35, sacrificing 10 network strength. Not an instant reset."},
 			"influence": {"name":"Influence campaign", "cost":400, "base":0.60, "desc":"Reduce institutional stability temporarily. Can provoke a rally around the government and a diplomatic scandal."},
+			"shipping": {"name":"Sabotage shipping lanes", "cost":350, "base":0.55, "desc":"Mine a harbour approach or wreck a freighter: the nation loses a cargo at sea (its money and the goods), and the shortage lifts that commodity's price on the world market."},
 		})
 		for key in _catalog:
 			_catalog[key].minNetwork = PROGRAMS[key][2]
@@ -286,6 +288,18 @@ func _succeed(op_key: String, nation: int, role: String) -> String:
 			if nat:
 				nat.tech = maxf(0.0, float(nat.get("tech", 0.0)) - 0.5)
 			return "Research stolen from %s: +120 research points." % nat_name
+		"shipping":
+			var goods: Array = world.market.resources()
+			var res: String = goods[randi() % goods.size()]
+			var worth := 0.0
+			if nat:
+				worth = minf(nat.money, world.market.price(res) * 60.0)
+				nat.money -= worth
+			var stock: Dictionary = world.market.ai_stock.get(str(nation), {})
+			stock[res] = maxf(0.0, float(stock.get(res, 100.0)) - 60.0)
+			world.market.ai_stock[str(nation)] = stock
+			world.market.pressure(res, 60, true)  # the lost cargo is bought again elsewhere
+			return "Sabotage at sea: a %s freighter never reached port. A cargo of %s worth $%d is lost." % [nat_name, res, int(worth)]
 		"sabotage":
 			var t = _random_building(nation)
 			if t == null:
@@ -396,6 +410,10 @@ func enemy_attempt(force_outcome := "") -> String:
 			if nat:
 				nat.money += amount
 			text = "%s agents siphoned $%d from your treasury!" % [name, int(amount)]
+		elif r < 0.55 and not world.market.routes.is_empty():
+			# The next of your cargoes never arrives (market.gd).
+			world.market.sabotaged += 1
+			text = "%s saboteurs are working your shipping lanes: your next cargo will not arrive. Warships and counter-intelligence help." % name
 		elif r < 0.7:
 			world.research.add_points(-70.0)
 			if nat:

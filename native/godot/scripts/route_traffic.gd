@@ -476,15 +476,15 @@ var _models := {}           # model name -> {mm: MultiMesh, count}
 var _paint_shader: Shader
 var _lamp_shader: Shader
 
-func _part(parts: Array, shape: String, size: Vector3, at: Vector3, colour: Color, surface := "paint") -> void:
-	var basis := Basis.from_scale(size)
+func _part(parts: Array, shape: String, size: Vector3, at: Vector3, colour: Color, surface := "paint", yaw := 0.0, taper := Vector3.ONE) -> void:
+	var basis := Basis(Vector3.UP, yaw) * Basis.from_scale(size)
 	if shape == "wheel":
 		basis = Basis(Vector3(0, 0, 1), PI * 0.5) * Basis.from_scale(size)  # axle across the vehicle
 	elif shape == "barrel":
 		basis = Basis(Vector3(1, 0, 0), PI * 0.5) * Basis.from_scale(size)  # lying along the vehicle
 	if colour != LIVERY and colour.a >= 0.999:
 		colour.a = 0.0  # a fixed colour, not the vehicle's paint
-	parts.append([shape, Transform3D(basis, at), colour, surface])
+	parts.append([shape, Transform3D(basis, at), colour, surface, taper])
 
 func _wheels(parts: Array, zs: Array, track: float, r: float, width := 0.28) -> void:
 	for z in zs:
@@ -503,7 +503,7 @@ func _model(name: String, build: Callable) -> String:
 	var parts: Array = []
 	build.call(parts)
 	var mesh := ArrayMesh.new()
-	var shapes := {"box": BoxMesh.new(), "wheel": _cylinder(10), "barrel": _cylinder(14)}
+	var shapes := {"box": BoxMesh.new(), "wheel": _cylinder(10), "barrel": _cylinder(14), "round": _cylinder(14)}
 	for surface in ["paint", "glass", "lamp"]:
 		var st := SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -512,6 +512,9 @@ func _model(name: String, build: Callable) -> String:
 			if part[3] != surface:
 				continue
 			any = true
+			if part[0] == "taper":
+				_taper(st, part[1], part[2], part[4])
+				continue
 			var arrays: Array = shapes[part[0]].get_mesh_arrays()
 			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
@@ -537,8 +540,27 @@ func _model(name: String, build: Callable) -> String:
 	var inst := MultiMeshInstance3D.new()
 	inst.multimesh = mm
 	add_child(inst)
-	_models[name] = {"mm": mm, "count": 0}
+	_models[name] = {"mm": mm, "count": 0, "mesh": mesh}
 	return name
+
+# A block whose top face is narrower and shorter than its base (shape
+# [top width, top length, top shift along z], as fractions): sloped
+# windscreens, bonnets and roofs instead of boxes. Flat-shaded.
+func _taper(st: SurfaceTool, xf: Transform3D, colour: Color, shape: Vector3) -> void:
+	var b := [Vector3(-0.5, -0.5, -0.5), Vector3(0.5, -0.5, -0.5), Vector3(0.5, -0.5, 0.5), Vector3(-0.5, -0.5, 0.5)]
+	var t := []
+	for c in b:
+		t.append(Vector3(c.x * shape.x, 0.5, c.z * shape.y + shape.z))
+	var q := [[b[0], b[1], b[2], b[3]], [t[3], t[2], t[1], t[0]], [b[3], b[2], t[2], t[3]], [b[1], b[0], t[0], t[1]], [b[2], b[1], t[1], t[2]], [b[0], b[3], t[3], t[0]]]
+	st.set_color(colour)
+	for face in q:
+		var v := [xf * face[0], xf * face[1], xf * face[2], xf * face[3]]
+		var n: Vector3 = (v[1] - v[0]).cross(v[2] - v[0]).normalized()
+		if n.length() < 0.5:
+			n = (v[2] - v[0]).cross(v[3] - v[0]).normalized()
+		for i in [0, 2, 1, 0, 3, 2]:
+			st.set_normal(-n)
+			st.add_vertex(v[i])
 
 func _cylinder(sides: int) -> CylinderMesh:
 	var m := CylinderMesh.new()
@@ -554,11 +576,16 @@ func _make_road_vehicle(c: Dictionary) -> void:
 	var body := {"lift": 0.1, "offset": 0.0}
 	if roll < 0.58:
 		body.model = _model("car", func(parts):
-			_part(parts, "box", Vector3(1.5, 0.5, 3.6), Vector3(0, 0.55, 0), LIVERY)
-			_part(parts, "box", Vector3(1.3, 0.06, 1.55), Vector3(0, 1.23, -0.2), LIVERY)
-			_part(parts, "box", Vector3(1.36, 0.42, 1.8), Vector3(0, 1.0, -0.15), Color("1c262e"), "glass")
-			_part(parts, "box", Vector3(1.52, 0.18, 0.12), Vector3(0, 0.4, 1.8), Color("2a2c2f"))
-			_part(parts, "box", Vector3(1.52, 0.18, 0.12), Vector3(0, 0.4, -1.8), Color("2a2c2f"))
+			# A saloon: rounded-off body, bonnet sloping to the nose, a glasshouse
+			# with raked windscreen and rear window, the roof in body colour.
+			_part(parts, "taper", Vector3(1.6, 0.42, 3.8), Vector3(0, 0.5, 0), LIVERY, "paint", 0.0, Vector3(0.97, 0.95, 0.0))
+			_part(parts, "taper", Vector3(1.56, 0.18, 1.2), Vector3(0, 0.8, 1.2), LIVERY, "paint", 0.0, Vector3(0.94, 0.8, -0.1))
+			_part(parts, "taper", Vector3(1.5, 0.46, 2.1), Vector3(0, 0.94, -0.35), Color("1c262e"), "glass", 0.0, Vector3(0.84, 0.56, -0.06))
+			_part(parts, "taper", Vector3(1.28, 0.06, 1.2), Vector3(0, 1.2, -0.42), LIVERY, "paint", 0.0, Vector3(0.95, 0.92, 0.0))
+			_part(parts, "box", Vector3(1.62, 0.2, 0.14), Vector3(0, 0.36, 1.86), Color("2a2c2f"))
+			_part(parts, "box", Vector3(1.62, 0.2, 0.14), Vector3(0, 0.36, -1.86), Color("2a2c2f"))
+			for side in [-1.0, 1.0]:
+				_part(parts, "box", Vector3(0.14, 0.08, 0.22), Vector3(side * 0.82, 0.98, 0.52), Color("1c1e20"))  # mirrors
 			_wheels(parts, [1.15, -1.15], 0.66, 0.3, 0.22)
 			_lamps(parts, 1.83, -1.83, 0.5, 0.62))
 		body.tint = Color(CAR_PAINT[_rng.randi() % CAR_PAINT.size()])
@@ -569,8 +596,9 @@ func _make_road_vehicle(c: Dictionary) -> void:
 		var box := Color(LORRY_BOX[_rng.randi() % LORRY_BOX.size()])
 		body.model = _model("tanker" if tank else "lorry-" + box.to_html(false), func(parts):
 			_part(parts, "box", Vector3(1.66, 0.3, 6.2), Vector3(0, 0.62, 0), Color("25282b"))
-			_part(parts, "box", Vector3(1.7, 1.25, 1.5), Vector3(0, 1.25, 2.3), LIVERY)
-			_part(parts, "box", Vector3(1.6, 0.5, 0.1), Vector3(0, 1.55, 3.06), Color("1c262e"), "glass")
+			_part(parts, "taper", Vector3(1.76, 1.4, 1.6), Vector3(0, 1.32, 2.3), LIVERY, "paint", 0.0, Vector3(0.96, 0.8, -0.1))
+			_part(parts, "taper", Vector3(1.64, 0.55, 0.12), Vector3(0, 1.72, 3.0), Color("1c262e"), "glass", 0.0, Vector3(0.96, 1.0, -0.9))
+			_part(parts, "box", Vector3(1.6, 0.22, 0.12), Vector3(0, 0.62, 3.14), Color("3a3d42"))  # grille and bumper
 			if tank:
 				_part(parts, "barrel", Vector3(1.6, 4.1, 1.6), Vector3(0, 1.62, -0.9), Color("c9ccd0"))
 			else:
@@ -599,7 +627,7 @@ func _make_train(c: Dictionary, room: float) -> void:
 	bodies.append({"length": 7.6, "tint": Color(["9c2a22", "1f4f7a", "2d5a3a", "d59b28"][_rng.randi() % 4]), "model": _model("locomotive", func(parts):
 		_part(parts, "box", Vector3(2.0, 0.35, 7.6), Vector3(0, 0.95, 0), Color("22252a"))
 		_part(parts, "box", Vector3(1.8, 1.55, 5.2), Vector3(0, 1.9, -1.0), LIVERY)
-		_part(parts, "box", Vector3(2.0, 2.05, 2.0), Vector3(0, 2.15, 2.6), LIVERY)
+		_part(parts, "taper", Vector3(2.0, 2.05, 2.0), Vector3(0, 2.15, 2.6), LIVERY, "paint", 0.0, Vector3(0.94, 0.75, -0.12))
 		_part(parts, "box", Vector3(1.8, 0.62, 0.08), Vector3(0, 2.62, 3.61), Color("1c262e"), "glass")
 		_part(parts, "box", Vector3(2.04, 0.5, 1.3), Vector3(0, 2.62, 2.6), Color("1c262e"), "glass")
 		_part(parts, "box", Vector3(1.7, 0.12, 6.8), Vector3(0, 2.72, -0.3), Color("3a3d42"))
@@ -706,6 +734,11 @@ func _ground(p: Vector3) -> float:
 	return ground
 
 # ---------------------------------------------------------------- cargo ships
+# Every open trade route has its freighter. While a cargo is on the way it
+# sails out from your Commercial Port to the partner's coast and back, timed
+# by the voyage; while the route waits for stock or money it lies moored off
+# the port. It pitches and rolls a little on the swell. A cargo lost at sea
+# (or sunk by saboteurs) takes the ship out of sight until the next loading.
 
 func _move_ships() -> void:
 	for key in vehicles:
@@ -713,31 +746,52 @@ func _move_ships() -> void:
 		var route = null
 		for r in world.market.routes:
 			if r.id == v.route: route = r
-		if route == null or route.shipment == null:
+		if route == null:
 			v.node.visible = false
 			continue
 		v.node.visible = true
-		var f := clampf(1.0 - (float(route.shipment.eta) - world.market._tick) / float(world.market.cfg.voyage), 0, 1)
-		var reverse: bool = route.dir == "import"
-		if reverse: f = 1.0 - f
-		var step: float = f * (v.path.size() - 1)
-		var i := mini(floori(step), v.path.size() - 2)
-		var a: Vector3 = v.path[i]
-		var b: Vector3 = v.path[i + 1]
-		var p := a.lerp(b, step - i)
-		p.y = float(world.map.seaLevel) + 0.2
-		v.node.position = p
-		var want := atan2(b.x - a.x, b.z - a.z) + (PI if reverse else 0.0)
-		v.node.rotation.y = lerp_angle(v.node.rotation.y, want, 0.05)
+		var path: PackedVector3Array = v.path
+		var p: Vector3
+		var ahead: Vector3
+		if route.shipment == null:
+			# Moored off the port, each route at its own berth.
+			var berth := int(v.berth)
+			var out := (path[mini(3, path.size() - 1)] - path[0]).normalized()
+			var side := Vector3(-out.z, 0, out.x)
+			p = path[0] + out * 6.0 + side * (berth - 0.5) * 9.0
+			ahead = p + out
+		else:
+			var f := clampf(1.0 - (float(route.shipment.eta) - world.market._tick) / float(world.market.cfg.voyage), 0.0, 1.0)
+			var u := f * 2.0 if f < 0.5 else (1.0 - f) * 2.0  # out to the partner, and home again
+			var s: float = u * v.length
+			p = _along(path, v.cum, s)
+			ahead = _along(path, v.cum, s + (4.0 if f < 0.5 else -4.0))
+		p.y = float(world.map.seaLevel) + 0.05
+		var want := atan2(ahead.x - p.x, ahead.z - p.z)
+		var t := elapsed + float(v.berth) * 1.7
+		v.node.position = v.node.position.lerp(p, 0.2) if v.node.position.distance_to(p) < 30.0 else p
+		v.yaw = lerp_angle(float(v.yaw), want, 0.04)
+		v.node.rotation = Vector3(sin(t * 0.9) * 0.018, v.yaw, sin(t * 0.7) * 0.03)
+
+func _along(path: PackedVector3Array, cum: PackedFloat32Array, s: float) -> Vector3:
+	s = clampf(s, 0.0, cum[cum.size() - 1])
+	var i := cum.bsearch(s)
+	if i <= 0:
+		return path[0]
+	if i >= path.size():
+		return path[path.size() - 1]
+	var span: float = cum[i] - cum[i - 1]
+	return path[i - 1].lerp(path[i], (s - cum[i - 1]) / span if span > 0.0001 else 1.0)
 
 func _sync_ships() -> void:
 	if world.market == null:
 		return
 	var live := {}
+	var berth := 0
 	for r in world.market.routes:
-		if r.shipment == null: continue
 		var id := "ship:%d" % r.id
 		live[id] = true
+		berth += 1
 		if vehicles.has(id): continue
 		var port = null
 		for b in world.buildings:
@@ -748,28 +802,64 @@ func _sync_ships() -> void:
 			world.naval_navigation.setup(world)
 		var target: Array = world.map.startPositions[r.nation]
 		var path: PackedVector3Array = world.naval_navigation.route(port.root.position, Vector3(target[0], 0, target[1]))
-		if path.size() >= 2: _add_ship(id, path, r.id)
+		if path.size() >= 2: _add_ship(id, path, r.id, berth - 1)
 	for key in vehicles.keys():
 		if not live.has(key):
 			vehicles[key].node.queue_free()
 			vehicles.erase(key)
 
-func _add_ship(id: String, path: PackedVector3Array, route: int) -> void:
-	var root := Node3D.new()
-	add_child(root)
-	_box(root, Vector3(3.2, 1.3, 9), Vector3(0, 0.7, 0), Color("253b46"))
-	_box(root, Vector3(2.5, 1.5, 2), Vector3(0, 1.6, 2.7), Color("c2c1ae"))
-	_box(root, Vector3(2.4, 1.2, 3.5), Vector3(0, 1.6, -1), Color("ae643c"))
-	vehicles[id] = {"node": root, "path": path, "kind": "ship", "route": route}
+func _add_ship(id: String, path: PackedVector3Array, route: int, berth: int) -> void:
+	var look := randi() % 3
+	var name := _model("freighter%d" % look, func(parts): _freighter(parts, look))
+	if not _models[name].has("hull"):
+		_hull_surface(_models[name].mesh, look)
+		_models[name].hull = true
+	var ship := MeshInstance3D.new()
+	ship.mesh = _models[name].mesh
+	if world.craft != null:
+		var wake: GPUParticles3D = world.craft.wake(17.0)
+		wake.emitting = true
+		ship.add_child(wake)
+	ship.position = path[0]
+	add_child(ship)
+	var cum := _lengths(path)
+	vehicles[id] = {"node": ship, "path": path, "cum": cum, "length": cum[cum.size() - 1], "kind": "ship", "route": route, "berth": berth, "yaw": 0.0}
 
-func _box(root: Node3D, size: Vector3, at: Vector3, colour: Color) -> void:
-	var mesh := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = size
-	mesh.mesh = box
-	mesh.position = at
-	mesh.material_override = world.matte(colour)
-	root.add_child(mesh)
+# A real hull under the freighter: craft.gd lofts the warships' hulls (flared
+# bow rising to a raked stem, transom stern, antifouling red below the
+# waterline); here in merchant colours.
+func _hull_surface(mesh: ArrayMesh, look: int) -> void:
+	if world.craft == null:
+		return
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	world.craft.hull(st, 17.0, 4.3, 2.2, 1.3, 0.9)
+	var mat: ShaderMaterial = world.craft.material_for(0, "ship").duplicate()
+	var paint := Color(["1d2226", "20344a", "3a2a24"][look])
+	mat.set_shader_parameter("paint", paint)
+	mat.set_shader_parameter("dust_color", paint * 0.85)
+	mat.set_shader_parameter("team", Color("d8d4c8"))
+	st.set_material(mat)
+	st.commit(mesh)
+
+# A small coastal freighter, 17 m: a black hull with red boot-topping, a
+# raked bow, containers on deck, the white bridge aft with its funnel.
+func _freighter(parts: Array, look: int) -> void:
+	# The hull itself is lofted by craft.gd (_hull_surface); these are the top-sides.
+	var boxes := [Color("b8452e"), Color("2f5d8a"), Color("c98f2a"), Color("4f7a45"), Color("8c8f93"), Color("d9d4c5")]
+	for row in range(3):
+		for col in range(2):
+			for tier in range(1 + (row + look) % 2):
+				_part(parts, "box", Vector3(1.8, 1.25, 2.6), Vector3((col - 0.5) * 1.95, 2.9 + tier * 1.28, 3.2 - row * 2.75), boxes[(row * 2 + col + tier + look) % boxes.size()])
+	_part(parts, "box", Vector3(3.8, 2.4, 3.2), Vector3(0, 3.4, -5.4), Color("e9e7e0"))     # accommodation
+	_part(parts, "box", Vector3(4.2, 1.0, 2.2), Vector3(0, 5.1, -5.0), Color("e9e7e0"))     # bridge deck
+	_part(parts, "box", Vector3(4.24, 0.42, 0.1), Vector3(0, 5.2, -3.9), Color("1c262e"), "glass")
+	_part(parts, "round", Vector3(1.1, 2.2, 1.1), Vector3(0, 5.6, -6.6), Color("d4a52a"))  # funnel
+	_part(parts, "round", Vector3(1.14, 0.45, 1.14), Vector3(0, 6.5, -6.6), Color("1d1f22"))
+	_part(parts, "box", Vector3(0.12, 3.0, 0.12), Vector3(0, 7.0, -4.7), Color("c8c8c8"))  # radar mast
+	_part(parts, "box", Vector3(1.4, 0.1, 0.25), Vector3(0, 8.3, -4.7), Color("c8c8c8"))
+	_part(parts, "box", Vector3(0.14, 3.2, 0.14), Vector3(0, 3.8, 6.2), Color("c8c8c8"))  # foremast
+	_part(parts, "box", Vector3(0.2, 0.2, 0.2), Vector3(0, 5.5, 6.2), Color("fff3d6"), "lamp")
 
 ## --capture-traffic: two towns joined to the capital by road and one by
 ## railway; after the traffic has run a while, views of the roads, a town

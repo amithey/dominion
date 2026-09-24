@@ -24,6 +24,7 @@ $tests = @(
     @('the whole research tree can be completed', @('--script', 'res://tools/research-complete-check.gd'), 'RESEARCH_COMPLETE PASS', 300),
     @('air defence, artillery range, bunkers', @('--script', 'res://tools/combat-rules-check.gd'), 'COMBAT_RULES PASS', 240),
     @('long marches round lakes and ridges, across the island', @('--script', 'res://tools/route-check.gd'), 'ROUTE_TEST PASS', 900),
+    @('trade ships on every route; shipping sabotage', @('--script', 'res://tools/trade-check.gd'), 'TRADE_TEST PASS', 240),
     @('borders, passage and operational zones', @('--', '--border-test'), 'BORDER_TEST PASS', 400),
     @('clearing trees and resources for a building', @('--', '--site-test'), 'SITE_TEST PASS', 200),
     @('clicking any part of a unit selects it', @('--', '--pick-test'), 'PICK_TEST PASS', 200),

@@ -1,8 +1,19 @@
 extends Node
 ## World market and overseas trade, ported from the trade engine in
-## js/diplomacy.js. Prices come from config.js (TRADE_PRICE and friends,
-## through the map export) and drift every 10 seconds between 55% and 190%.
-## A Market allows instant deals (sell at 90%, buy at 115% of the price).
+## js/diplomacy.js. Base prices come from config.js (TRADE_PRICE and friends,
+## through the map export).
+##
+## The market is an exchange, not a shop. A deal is filled at once, at a quote
+## that gets worse the bigger the order is next to the market's depth
+## (slippage), but the listed price does not jump: every order joins the
+## order flow, and the price moves over the following seconds as the flow is
+## absorbed (exchange_step, every 2 s). The impact grows faster than the
+## order (a few dozen units barely register; a sudden block of hundreds moves
+## the price hard), and the other traders answer in their own ways: value
+## traders buy below fair value and sell above it, momentum traders chase a
+## move, others ignore it, and there is always some noise. Fair value itself
+## drifts, and war drives up oil, gas and iron. AI nations trade on the same
+## book. A Market allows instant deals (sell at 90%, buy at 115% of the price).
 ## A Commercial Port opens standing routes to nations the player has a trade
 ## pact with: each route loads a cargo, sails for 30 s and delivers it, or is
 ## lost at sea (8%, less with warships to escort). Two berths per port;
@@ -12,6 +23,9 @@ extends Node
 signal changed
 
 const TICK := 10.0
+const STEP := 2.0            # seconds between exchange steps
+const DEPTH := 450.0         # units the market absorbs per step before prices strain
+const HISTORY := 90          # price samples kept per commodity (3 minutes)
 
 var world: Node
 var cfg: Dictionary
@@ -23,20 +37,106 @@ var _next_id := 1
 var _tick := 0.0
 var ai_stock := {} # persistent national commodity inventories
 var volume := {}
+var flow := {}           # resource -> net orders not yet absorbed (+ buying, - selling)
+var fair := {}           # resource -> fair value, as a multiplier of the base price
+var history := {}        # resource -> recent multipliers, oldest first
+var _step := 0.0
+var sabotaged := 0       # cargoes enemy saboteurs will sink (espionage.gd)
 
+## Price move from `units` of net order flow (signed): negligible for small
+## orders, steep for a block that is large next to the market's depth.
+func impact(units: float) -> float:
+	var desks := 0
+	if world:
+		for b in world.buildings:
+			if b.key == "market" and b.built and not b.dead:
+				desks += 1
+	var depth: float = DEPTH * (1.0 + 0.25 * desks)
+	return signf(units) * pow(absf(units) / depth, 1.4) * 0.35
+
+## What `qty` units fetch or cost now: the listed price, the dealer's margin,
+## and half the move the order itself will cause (a big order walks the book).
 func quote(res: String, qty: int, buying: bool) -> float:
-	var after := clampf(float(mult[res]) + (1.0 if buying else -1.0) * qty * 0.0008, 0.55, 1.9)
-	return qty * float(cfg.price[res]) * (float(mult[res]) + after) * 0.5 * float(cfg.instantBuy if buying else cfg.instantSell)
+	var signed := float(qty) * (1.0 if buying else -1.0)
+	var slip := impact(float(flow.get(res, 0.0)) + signed) - impact(float(flow.get(res, 0.0)))
+	var avg := maxf(0.1, float(mult[res]) * (1.0 + slip * 0.5))
+	return qty * float(cfg.price[res]) * avg * float(cfg.instantBuy if buying else cfg.instantSell)
 
+## An order joins the flow; the price answers over the next exchange steps.
 func pressure(res: String, qty: int, buying: bool) -> void:
-	mult[res] = clampf(float(mult[res]) + (1.0 if buying else -1.0) * qty * 0.0008, 0.55, 1.9)
+	flow[res] = float(flow.get(res, 0.0)) + (1.0 if buying else -1.0) * qty
 	volume[res] = int(volume.get(res, 0)) + qty
+
+## One step of the exchange: order flow is absorbed, and the other traders act.
+func exchange_step() -> void:
+	var war := false
+	if world and world.diplomacy:
+		for i in range(1, world.diplomacy.n):
+			if world.diplomacy.at_war(0, i):
+				war = true
+	for res in mult:
+		var m := float(mult[res])
+		var f := float(flow.get(res, 0.0))
+		var fv := float(fair.get(res, 1.0))
+		# Fair value wanders slowly; war makes fuel and metal dear.
+		var target := 1.0 + (0.25 if war and res in ["oil", "gas", "iron"] else 0.0)
+		fv = clampf(fv + randfn(0.0, 0.006) + (target - fv) * 0.01, 0.7, 1.6)
+		fair[res] = fv
+		var past: Array = history.get(res, [])
+		var trend := 0.0
+		if past.size() >= 3:
+			trend = m - float(past[past.size() - 3])
+		# A share of the flow is absorbed this step; the rest keeps pressing.
+		var absorbed := f * 0.4
+		var move := impact(absorbed)
+		# Contrarian desks sometimes lean against a sharp move, sometimes not.
+		if absf(move) > 0.02 and randf() < 0.35:
+			move *= randf_range(0.4, 0.8)
+		move += (fv - m) * 0.05                       # value traders
+		move += trend * randf_range(0.0, 0.3)         # momentum traders (or none)
+		move += randfn(0.0, 0.006)                    # noise
+		mult[res] = clampf(m + move, 0.35, 3.0)
+		flow[res] = f - absorbed
+		past.append(mult[res])
+		if past.size() > HISTORY:
+			past.pop_front()
+		history[res] = past
+
+## Change of the listed price over the last `seconds` (a fraction; 0.05 = +5%).
+func change(res: String, seconds := 60.0) -> float:
+	var past: Array = history.get(res, [])
+	var back := int(seconds / STEP)
+	if past.size() <= 1:
+		return 0.0
+	var then := float(past[maxi(0, past.size() - 1 - back)])
+	return float(mult[res]) / maxf(then, 0.01) - 1.0
+
+## The recent price as a little bar chart (text), oldest to newest.
+func sparkline(res: String, points := 16) -> String:
+	var past: Array = history.get(res, [])
+	if past.size() < 2:
+		return ""
+	var take: Array = past.slice(maxi(0, past.size() - points * 2))
+	var lo := INF
+	var hi := -INF
+	for v in take:
+		lo = minf(lo, v)
+		hi = maxf(hi, v)
+	var bars := "▁▂▃▄▅▆▇█"
+	var out := ""
+	for i in range(0, take.size(), 2):
+		var k := int(clampf((float(take[i]) - lo) / maxf(hi - lo, 0.001), 0.0, 1.0) * 7.0)
+		out += bars[k]
+	return out
 
 func setup(world_node: Node, trade: Dictionary) -> void:
 	world = world_node
 	cfg = trade
 	for key in cfg.price:
 		mult[key] = 1.0
+		fair[key] = 1.0
+		flow[key] = 0.0
+		history[key] = [1.0]
 
 func resources() -> Array:
 	return cfg.price.keys()
@@ -136,6 +236,11 @@ func close_route(id: int) -> String:
 func _process(delta: float) -> void:
 	if world == null or world.economy == null or world.game_over != "":
 		return
+	_step += delta
+	if _step >= STEP:
+		_step -= STEP
+		exchange_step()
+		changed.emit()
 	_tick += delta
 	if _tick >= TICK:
 		_tick -= TICK
@@ -148,9 +253,7 @@ func ai_nation(id: int):
 	return null
 
 func tick() -> void:
-	for res in mult:
-		mult[res] = lerpf(float(mult[res]), 1.0, 0.015) # slow recovery; orders drive prices
-	trade_ai()
+	trade_ai()  # prices move in exchange_step: the traders pull them toward fair value
 	var d: Node = world.diplomacy
 	var eco: Node = world.economy
 	while routes.size() > route_cap():
@@ -174,6 +277,12 @@ func tick() -> void:
 				continue
 			var cargo: Dictionary = r.shipment
 			r.shipment = null
+			if sabotaged > 0:
+				sabotaged -= 1
+				lost += 1
+				r.status = "Sunk by saboteurs — reloading"
+				world.hud.notice("SABOTAGE: the %s cargo on the %s route was sunk. It never arrived." % [r.res, d.name_of(r.nation)])
+				continue
 			if randf() < risk():
 				lost += 1
 				r.status = "Shipment lost — reloading"
@@ -212,13 +321,19 @@ func tick() -> void:
 	changed.emit()
 
 func capture() -> Dictionary:
-	return {"mult": mult, "routes": routes, "delivered": delivered, "lost": lost, "next_id": _next_id, "ai_stock": ai_stock, "volume": volume}
+	return {"mult": mult, "routes": routes, "delivered": delivered, "lost": lost, "next_id": _next_id, "ai_stock": ai_stock, "volume": volume, "flow": flow, "fair": fair, "history": history, "sabotaged": sabotaged}
 
 func restore(data: Dictionary) -> void:
 	ai_stock = data.get("ai_stock", {}).duplicate(true)
 	volume = data.get("volume", {}).duplicate(true)
 	for key in data.get("mult", {}):
 		mult[key] = float(data.mult[key])
+	for key in data.get("flow", {}):
+		flow[key] = float(data.flow[key])
+	for key in data.get("fair", {}):
+		fair[key] = float(data.fair[key])
+	for key in data.get("history", {}):
+		history[key] = Array(data.history[key]).map(func(v): return float(v))
 	routes.clear()
 	for r in data.get("routes", []):
 		var copy: Dictionary = r.duplicate(true)
@@ -226,6 +341,7 @@ func restore(data: Dictionary) -> void:
 		copy.nation = int(copy.nation)
 		copy.qty = int(copy.qty)
 		routes.append(copy)
+	sabotaged = int(data.get("sabotaged", 0))
 	delivered = int(data.get("delivered", 0))
 	lost = int(data.get("lost", 0))
 	_next_id = int(data.get("next_id", routes.size() + 1))

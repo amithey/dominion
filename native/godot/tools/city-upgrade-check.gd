@@ -43,11 +43,19 @@ func run() -> void:
 	var depot: Dictionary = w.place_building("market", w.start + Vector3(-50, 0, 50), 0, true)
 	w.logistics.update_supply()
 	w.economy.res.iron = 500
+	# The market is an exchange (market.gd, 0.9.16): a deal fills at once but the
+	# listed price moves as the order flow is absorbed, and big blocks pay more.
 	var price: float = w.market.price("iron")
+	var small: float = w.market.quote("iron", 50, true) / 50.0
+	var block: float = w.market.quote("iron", 600, true) / 600.0
+	check(block > small * 1.02, "a big block pays more a unit than a small order (slippage)")
 	w.market.buy("iron", 100)
-	check(w.market.price("iron") > price, "buy demand raises commodity price")
+	check(is_equal_approx(w.market.price("iron"), price), "a deal does not move the listed price at once")
+	w.market.pressure("iron", 1500, true)
+	for i in range(8):
+		w.market.exchange_step()
+	check(w.market.price("iron") > price * 1.1, "a massive buy drives the price up over the next steps")
 	w.market.sell("iron", 100)
-	check(is_equal_approx(w.market.price("iron"), price), "equal supply reverses market pressure")
 	var treasury: float = w.economy.res.money
 	w.market.buy("iron", -10)
 	check(w.economy.res.money == treasury, "negative trades cannot create money")
@@ -111,9 +119,11 @@ func run() -> void:
 	check(not traffic._fleet.any(func(c): return c.kind == "road"), "traffic stops on destroyed roads")
 	w.place_building("market", Vector3(w.map.startPositions[2][0], 0, w.map.startPositions[2][1]), 2, true)
 	w.market.ai_stock["2"] = {"iron": 10.0}
-	var iron_price: float = w.market.price("iron")
+	for n in w.ai.nations:
+		if n.id == 2: n.money = maxf(n.money, 5000.0)  # iron costs more after the test block above
+	var volume_before: int = int(w.market.volume.get("iron", 0))
 	w.market.trade_ai()
-	check(w.market.price("iron") > iron_price and w.market.ai_stock["2"].iron > 10, "AI buys shortages and contributes real market demand")
+	check(int(w.market.volume.get("iron", 0)) > volume_before and w.market.ai_stock["2"].iron > 10, "AI buys shortages and contributes real market demand")
 	w.logistics.edges.erase("upgrade-road")
 	w.logistics.edges.erase("upgrade-rail")
 	w.place_building("port", w.start + Vector3(0, 0, 60), 0, true)

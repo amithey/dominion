@@ -1685,18 +1685,23 @@ func _market_panel() -> void:
 	top.add_child(title)
 	_segments(top, m.cfg.qty.map(func(q): return [str(int(q)), int(q)]), trade_qty, func(v): trade_qty = v)
 	if not m.has_market():
-		deals.add_child(_text("Build a Market to trade instantly. Prices move every 10 seconds.", 13, UI.BAD))
+		deals.add_child(_text("Build a Market to trade instantly. Prices move as orders are absorbed: a big order moves them hard.", 13, UI.BAD))
 	for res in m.resources():
 		var row := _row(deals, 8)
 		row.add_child(_icon(res, 24))
 		var name := _text(res.capitalize(), 14, UI.CREAM)
 		name.custom_minimum_size = Vector2(70, 0)
 		row.add_child(name)
-		var up: bool = m.mult[res] > 1.03
-		var down: bool = m.mult[res] < 0.97
-		var price := _text("$%.1f %s" % [m.price(res), "▲" if up else ("▼" if down else "•")], 14, Color("8fd18a") if up else (Color("e8836f") if down else UI.TEXT))
-		price.custom_minimum_size = Vector2(80, 0)
+		# The exchange (market.gd): price, its move over the last minute, a chart.
+		var moved: float = m.change(res, 60.0)
+		var up: bool = moved > 0.01
+		var down: bool = moved < -0.01
+		var price := _text("$%.1f %s%.1f%%" % [m.price(res), "▲" if up else ("▼" if down else "•"), absf(moved) * 100.0], 14, Color("8fd18a") if up else (Color("e8836f") if down else UI.TEXT))
+		price.custom_minimum_size = Vector2(104, 0)
 		row.add_child(price)
+		var chart := _text(m.sparkline(res), 12, Color("8fd18a") if up else (Color("e8836f") if down else UI.MUTED))
+		chart.custom_minimum_size = Vector2(70, 0)
+		row.add_child(chart)
 		var stock := _text("have %d" % int(economy.res.get(res, 0.0)), 13, UI.MUTED)
 		stock.custom_minimum_size = Vector2(80, 0)
 		stock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
