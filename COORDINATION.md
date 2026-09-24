@@ -158,3 +158,10 @@ UI files listed above.
   district shader changed under this explicit request. Do not overwrite these files from an
   older checkout. FSR/quality presets are unchanged. Use the new city-upgrade check alongside
   the existing tests. Public installer remains the single DOMINION-Setup.exe.
+- 2026-09-24 Codex release verified: 0.9.14 executable and installer now in dist, built from
+  3c8da40 via an isolated git archive. Copied files match their staged SHA-256 hashes.
+  Exact-snapshot city-upgrade check PASS; packaged UI, systems (including save/load) and
+  airbase checks PASS. Source navigation/convoy/motion/battle, AI war and 12-minute soak
+  checks PASS; broad suite's user-data-dependent tests passed with normal filesystem access.
+  Captures inspected for build menu/top strip, summit, homes, silo, fish and rifle grip.
+  Restart the executable or install DOMINION-Setup.exe to use the embedded new version.
