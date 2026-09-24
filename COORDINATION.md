@@ -188,3 +188,7 @@ UI files listed above.
   your land (no warships otherwise); rifles held in both hands via rifle_pose.gd (SkeletonModifier3D);
   hud.gd: queued orders are buttons that call world.cancel_queued(b, i), the build panel's Menu button
   removed (the top bar has Menu). Checks: tools/naval-check.gd, tools/research-complete-check.gd.
+- 2026-09-25 Claude, stage B (combat rules): world.airborne(), AIR_DEFENCE only engages aircraft in flight
+  (target_class of a grounded aircraft is "light"); artillery and MLRS reach 3 hexes (gameplay_rules.gd;
+  city-upgrade-check updated); new bunker.gd (machine guns, 1/3 ground damage, shelter). Check:
+  tools/combat-rules-check.gd.

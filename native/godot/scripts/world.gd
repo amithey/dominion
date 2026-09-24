@@ -1935,6 +1935,7 @@ func _physics_process(delta: float) -> void:
 		update_construction(delta)
 		update_training(delta)
 		preload("res://scripts/air_defence.gd").update(self, delta)
+		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
 	var t_units := clock()
 	for i in range(units.size() - 1, -1, -1):
@@ -4450,7 +4451,7 @@ func target_class(t: Dictionary) -> String:
 	if t.get("is_building", false):
 		return "building"
 	if t.get("fly", false):
-		return "air"
+		return "air" if airborne(t) else "light"  # an aircraft on the ground is a vehicle
 	if t.get("naval", false):
 		return "naval"
 	if t.key in infantry_keys:
@@ -4459,8 +4460,22 @@ func target_class(t: Dictionary) -> String:
 		return "armor"
 	return "light"
 
+## Air defence (SAM sites, mobile SAMs, anti-aircraft vehicles) engages only
+## aircraft in flight: not ground forces, and not aircraft parked on a base.
+const AIR_DEFENCE := ["samSite", "samLauncher", "aaVehicle"]
+
+## An aircraft actually in the air (not parked or rearming on its base).
+func airborne(u: Dictionary) -> bool:
+	if not u.get("fly", false):
+		return false
+	if String(u.get("air_state", "")) in ["parked", "rearming"]:
+		return false
+	return u.node.position.y - height_at(u.node.position.x, u.node.position.z) > 1.5
+
 ## Damage multiplier of `attacker` against `target` (0 = cannot engage).
 func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
+	if attacker.get("key", "") in AIR_DEFENCE and target_class(target) != "air":
+		return 0.0
 	# Small arms cannot penetrate heavy armour; dedicated anti-tank infantry can.
 	if attacker.key in ["soldier","sniper","commando","worker"] and target_class(target) in ["armor","air","naval"]:
 		return 0.0
@@ -4697,6 +4712,7 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 		amount *= espionage.damage_mult(source.owner)  # a dead general blunts an army
 	if research:
 		amount *= research.damage_mult(source) * research.armor_mult(unit)
+	amount *= preload("res://scripts/bunker.gd").cover(self, unit, source)  # bunkers shield from ground fire
 	unit.hp -= amount
 	if amount > 0:
 		unit.last_hit = game_time

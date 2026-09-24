@@ -82,7 +82,7 @@ func run() -> void:
 	preload("res://scripts/air_defence.gd").update(w, 0.1)
 	check(sam.get("aa_reload", 0.0) > 0, "fixed SAM fires on a hostile aircraft at long range")
 	var artillery: Dictionary = w.spawn_unit("artillery", w.start, 0)
-	check(artillery.range >= 80 and w.unit_defs.samLauncher.range >= 110, "artillery and mobile SAM have distinct long engagement ranges")
+	check(absf(artillery.range - 12.0 * sqrt(3.0) * 3.0) < 0.5 and w.unit_defs.samLauncher.range >= 110, "artillery reaches three hexes; the mobile SAM reaches further")
 	var saved: Dictionary = w.market.capture()
 	w.market.restore(JSON.parse_string(JSON.stringify(saved)))
 	check(w.market.volume.get("iron", 0) >= 200, "market activity survives save serialization")

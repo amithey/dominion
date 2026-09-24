@@ -8,7 +8,7 @@ static func update(w: Node, delta: float) -> void:
 		var enemy = null
 		var nearest := 140.0
 		for u in w.units:
-			if u.dead or not u.get("fly", false) or not w.hostile(b.owner, u.owner): continue
+			if u.dead or not w.airborne(u) or not w.hostile(b.owner, u.owner): continue  # only aircraft in flight
 			var gap: float = w.flat_distance(b, u)
 			if gap < nearest:
 				nearest = gap
