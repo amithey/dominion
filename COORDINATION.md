@@ -207,3 +207,5 @@ UI files listed above.
   toward the rim for plaza/industrial/military tiles. hud.gd: the build list is grouped compact rows
   (BUILD_GROUPS, _build_row via _bar; the card grid _tile/_grid removed), market rows draw a price chart
   (_price_chart), notices move clear of an open side window. Codex: restyle freely, keep the calls.
+- 2026-09-25 Claude: 0.9.16 executable and installer in dist, built from a421aed (clean snapshot); the
+  packaged DOMINION.exe passes --city-test, --ui-test and --combat-test.
