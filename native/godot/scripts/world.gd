@@ -1498,10 +1498,19 @@ func dress_realistic(model: Node3D, owner: int, weapon_name: String) -> void:
 		grip = Basis(Vector3.BACK, -0.6) * Basis(Vector3.RIGHT, -PI * 0.5)
 		offset = Vector3(0, 8.0, -17.0)
 	var basis := grip * align.scaled(Vector3.ONE * k)
-	# Place the grip behind the receiver, not the mesh's geometric centre.
-	# The long-axis alignment already points the muzzle along the fingers;
-	# rotating it another half-turn makes the soldier hold the barrel instead.
-	if not slung: offset = GUN_OFFSET + GUN_GRIP * Vector3(0, 0, WEAPON_LENGTH.get(weapon_name, 90.0) * 0.12)
+	if not slung:
+		# Held in both hands (rifle_pose.gd): the clips are unarmed, so the gun
+		# rides on the chest and the modifier poses the arms round it.
+		hand.queue_free()
+		var pose := preload("res://scripts/rifle_pose.gd").new()
+		pose.gun = gun
+		pose.gun_basis = align.scaled(Vector3.ONE * k)
+		pose.gun_centre = box.get_center()
+		pose.gun_length = WEAPON_LENGTH.get(weapon_name, 90.0)
+		skeleton.add_child(pose)
+		skeleton.add_child(gun)
+		model.set_meta("rifle_pose", pose)
+		return
 	gun.transform = Transform3D(basis, offset - basis * box.get_center())
 	hand.add_child(gun)
 
@@ -1742,6 +1751,7 @@ func animate(unit: Dictionary, moving: bool) -> void:
 		return
 	player.play(clip, 0.25)
 	unit.clip = clip
+	aim_weapon(unit, clip == unit.get("shoot_clip", "_") or (not moving and unit.get("enemy") != null))
 	player.speed_scale = (maxf(unit.get("cur_speed", unit.speed), 0.8) / unit.get("clip_speed", RUN_CLIP_SPEED)) if moving else 1.0
 
 func order_attack(selected: Array, enemy: Dictionary) -> void:
@@ -2615,6 +2625,29 @@ func queue_unit(b: Dictionary, key: String) -> void:
 		hud.notice("Not enough %s" % economy.missing(cost))
 		return
 	b.queue.append(key)
+
+## Takes order `index` off building `b`'s queue and refunds what it cost (a
+## click on it in the queue).
+func cancel_queued(b: Dictionary, index: int) -> void:
+	if index < 0 or index >= b.queue.size():
+		return
+	var key: String = b.queue[index]
+	b.queue.remove_at(index)
+	if index == 0:
+		b.queue_prog = 0.0
+	var cost: Dictionary
+	var name: String
+	if key.begins_with("missile:"):
+		cost = missiles.def_of(key.substr(8)).cost
+		name = missiles.def_of(key.substr(8)).name
+		missiles.changed.emit()
+	else:
+		var def: Dictionary = unit_defs.get(key, {})
+		cost = research.unit_cost(key, def.cost) if research else def.get("cost", {})
+		name = def.get("name", key)
+	if b.owner == 0:
+		economy.refund(cost)
+		hud.notice("%s cancelled; its cost is refunded." % name)
 
 func update_training(delta: float) -> void:
 	for b in buildings:
@@ -4002,6 +4035,8 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 	var land_owner: int = territory.owner_at(at) if territory != null else -1
 	if land_owner == owner:
 		in_district = true
+	elif land_owner < 0 and def.get("coastal", false) and coast_reach(at, owner):
+		in_district = true  # a harbour may claim unclaimed coast near your land
 	elif land_owner >= 0 and land_owner != owner:
 		return "Inside %s's land" % ("your" if land_owner == 0 else diplomacy.name_of(land_owner))
 	if def.get("unique", false) and buildings.any(func(b): return b.owner == owner and b.key == key and not b.dead):
@@ -4031,6 +4066,22 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 		if not u.dead and Vector2(u.node.position.x - at.x, u.node.position.z - at.z).length() < footprint * 0.45:
 			return "Units in the way"
 	return ""
+
+## Harbours (shipyard, port, wharf) may go on unclaimed coast up to three hexes
+## from `owner`'s land: a starting capital often lies inland, and the hex a
+## building stands on becomes its owner's (territory.gd). Without this the
+## player could not build a shipyard, and so no warships, without first buying
+## a strip of land down to the sea.
+func coast_reach(at: Vector3, owner: int) -> bool:
+	if territory == null:
+		return false
+	var h: Vector2i = logistics.world_hex(at)
+	for dq in range(-3, 4):
+		for dr in range(-3, 4):
+			var n := h + Vector2i(dq, dr)
+			if logistics.hex_distance(h, n) <= 3 and territory.owner_at(logistics.hex_center(n)) == owner:
+				return true
+	return false
 
 func update_placement() -> void:
 	if placing == "" or ghost == null:
@@ -4854,10 +4905,17 @@ func update_dead(unit: Dictionary, delta: float, index: int) -> void:
 		unit.node.queue_free()
 		units.remove_at(index)
 
+## A rifleman shoulders his weapon to fire and carries it at the ready otherwise.
+func aim_weapon(unit: Dictionary, aiming: bool) -> void:
+	var model = unit.get("model")
+	if model is Node and model.has_meta("rifle_pose"):
+		model.get_meta("rifle_pose").aiming = aiming
+
 func set_stance(unit: Dictionary) -> void:
 	if unit.vehicle or unit.player == null or unit.moving:
 		return
 	var want: String = unit.shoot_clip if unit.enemy != null and unit.shoot_clip != "" else unit.idle_clip
+	aim_weapon(unit, unit.enemy != null)
 	if want != "" and unit.clip != want:
 		unit.player.play(want, 0.2)
 		unit.player.speed_scale = 1.0

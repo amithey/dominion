@@ -306,17 +306,22 @@ func tick(dt: float) -> void:
 	_check_era()
 	changed.emit()
 
-# The active project draws points: its income, faster from a stockpile, but a
-# stage never completes in under MIN_STAGE_SECONDS.
+# The first project in the queue that can advance draws points: its income,
+# faster from a stockpile, but a stage never completes in under
+# MIN_STAGE_SECONDS. A project waiting for an era, a discovery, a facility or
+# materials keeps its place and the ones behind it carry on (a waiting first
+# project used to stop the whole queue, so research never reached the end).
 func _work(dt: float) -> void:
-	var guard := 0
-	while not queue.is_empty() and guard < QUEUE_MAX:
-		guard += 1
-		var item: String = queue[0]
+	var i := 0
+	while i < queue.size():
+		var item: String = queue[i]
 		if item.begins_with("track:"):
 			var key := item.substr(6)
+			if track_blocker(key) == "Maxed":
+				queue.remove_at(i)
+				continue
 			if track_blocker(key) != "":
-				queue.pop_front()
+				i += 1
 				continue
 			if not progress.has(item):
 				progress[item] = {"work": 0.0}
@@ -327,21 +332,23 @@ func _work(dt: float) -> void:
 			if progress[item].work >= need:
 				tracks[key] += 1
 				progress.erase(item)
-				queue.pop_front()
+				queue.remove_at(i)
 				_recompute()
 				world.hud.notice("%s advanced to level %d." % [tracks_cfg[key].name, tracks[key]])
 			return
 		var stage := stage_of(item)
 		if stage >= 3:
-			queue.pop_front()
+			queue.remove_at(i)
 			continue
 		if blocker(item) != "":
-			return  # waiting for an era, a discovery or a facility
+			i += 1
+			continue  # waiting for an era, a discovery or a facility
 		var p: Dictionary = progress[item]
 		if not p.paid:
 			var cost := stage_cost(item, stage)
 			if not world.economy.pay(cost):
-				return  # waiting for materials
+				i += 1
+				continue  # waiting for materials
 			p.paid = true
 		var need := stage_points(item, stage)
 		var draw := minf(points, maxf(rate, need / MIN_STAGE_SECONDS) * dt)
@@ -355,7 +362,7 @@ func _work(dt: float) -> void:
 			world.economy.recalculate()
 			var name: String = def_of(item).name
 			if p.stage >= 3:
-				queue.pop_front()
+				queue.remove_at(i)
 				world.hud.notice("DISCOVERY: %s is complete. %s" % [name, desc_of(item)])
 			elif p.stage == 2:
 				world.hud.notice("%s: %s done, half the effect is already in service." % [name, stage_names(item)[1]])

@@ -183,3 +183,8 @@ UI files listed above.
     country, and that cutting the road removes road traffic. `route_traffic._sync()` still exists.
 - 2026-09-24 Claude: 0.9.15 executable and installer in dist, built from 41934b1 (clean snapshot);
   the packaged DOMINION.exe passes --city-test.
+- 2026-09-25 Claude (user's 19-item list, stage A: bugs): research works on the first queued project that
+  can advance (a waiting one stalled the queue); harbours may go on unclaimed coast within 3 hexes of
+  your land (no warships otherwise); rifles held in both hands via rifle_pose.gd (SkeletonModifier3D);
+  hud.gd: queued orders are buttons that call world.cancel_queued(b, i), the build panel's Menu button
+  removed (the top bar has Menu). Checks: tools/naval-check.gd, tools/research-complete-check.gd.

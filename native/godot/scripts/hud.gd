@@ -282,11 +282,6 @@ func _build_production() -> void:
 	_prod_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_prod_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	head.add_child(_prod_title)
-	var menu_button := Button.new()
-	menu_button.text = "Menu"
-	menu_button.focus_mode = Control.FOCUS_NONE
-	menu_button.pressed.connect(func(): world.menu.open_pause())
-	head.add_child(menu_button)
 	var hide := Button.new()
 	hide.text = "—"
 	hide.custom_minimum_size = Vector2(30, 24)
@@ -1174,23 +1169,37 @@ func _fill_queue(queue: Array, progress := 0.0) -> void:
 			child.queue_free()
 		for i in range(queue.size()):
 			var item: String = queue[i]
-			var slot := VBoxContainer.new()
-			slot.add_theme_constant_override("separation", 1)
+			# Each order is a button: a click cancels it and refunds its cost.
+			var slot := Button.new()
+			slot.flat = true
+			slot.focus_mode = Control.FOCUS_NONE
+			slot.custom_minimum_size = Vector2(56, 48)
+			var index := i
+			slot.pressed.connect(func():
+				if _selected != null and index < _selected.queue.size():
+					world.cancel_queued(_selected, index))
+			var column := VBoxContainer.new()
+			column.add_theme_constant_override("separation", 1)
+			column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			column.set_anchors_preset(Control.PRESET_FULL_RECT)
+			slot.add_child(column)
 			var pic := TextureRect.new()
+			pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			pic.custom_minimum_size = Vector2(56, 42)
 			pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			_set_portrait(pic, "missileSilo" if item.begins_with("missile:") else item)
-			pic.tooltip_text = world.missiles.def_of(item.substr(8)).name if item.begins_with("missile:") else world.unit_defs.get(item, {}).get("name", item)
-			slot.add_child(pic)
+			slot.tooltip_text = "%s (click to cancel and refund)" % (world.missiles.def_of(item.substr(8)).name if item.begins_with("missile:") else world.unit_defs.get(item, {}).get("name", item))
+			column.add_child(pic)
 			var bar := ProgressBar.new()
 			bar.custom_minimum_size = Vector2(56, 5)
 			bar.show_percentage = false
 			bar.max_value = 1.0
-			slot.add_child(bar)
+			bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			column.add_child(bar)
 			_sel_queue.add_child(slot)
 	if not queue.is_empty() and _sel_queue.get_child_count() > 0:
-		var first: ProgressBar = _sel_queue.get_child(0).get_child(1)
+		var first: ProgressBar = _sel_queue.get_child(0).get_child(0).get_child(1)
 		first.value = progress
 
 # ---------------------------------------------------------------- screens

@@ -75,10 +75,12 @@ func _refill() -> void:
 		_queue.append(pair[1])
 
 func _process(_delta: float) -> void:
-	if _key == "":
+	# The marks exist only while a district is being placed, whatever ended it.
+	var want: String = world.placing if world.placing != "" and world.is_district(world.placing) else ""
+	if want != _key:
+		show_for(want)
 		return
-	if world.placing != _key:
-		show_for(world.placing)  # placement ended or switched building
+	if _key == "":
 		return
 	if _queue.is_empty():
 		_refill()  # keep checking: units move, land changes hands
