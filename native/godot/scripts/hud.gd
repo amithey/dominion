@@ -18,6 +18,16 @@ const BUILD_MENU := {
 	"Civic & research": ["school", "library", "university", "techPark", "chipFab", "hospital", "cityHall", "tvStation", "policeStation", "courthouse", "intelAgency", "nuclearReactor"],
 	"Military": ["barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo", "samSite", "bunker"],
 }
+## The build list in groups under each tab, in the order a city grows.
+const BUILD_GROUPS := {
+	"Economy": [["Settlements", ["villageCenter", "cityCenter"]], ["Homes", ["cottage", "housing", "residential", "workerHouse"]],
+		["Food and resources", ["farm", "extractor", "mountainMine", "offshoreRig", "fishingWharf", "foodDepot", "warehouse"]],
+		["Trade and industry", ["market", "port", "bank", "oilRefinery", "powerPlant"]]],
+	"Civic & research": [["Education and science", ["school", "library", "university", "techPark", "chipFab"]],
+		["Public services", ["hospital", "cityHall", "tvStation", "policeStation", "courthouse"]], ["State", ["intelAgency", "nuclearReactor"]]],
+	"Military": [["Training", ["barracks", "tankFactory", "shipyard", "helipad", "airfield"]], ["Defence", ["bunker", "samSite"]],
+		["Strategic", ["ammoDepot", "missileSilo"]]],
+}
 const RESOURCES := [
 	["money", "money", "Treasury. Taxes from your citizens, markets and land; spent on everything."],
 	["food", "food", "Food. Farms and farmland against what citizens and soldiers eat. At zero, growth stops."],
@@ -467,65 +477,6 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 		row.add_child(holder)
 	_list.add_child(b)
 
-func _tile(key: String, title: String, desc: String, cost: Dictionary, seconds: float, locked: String, action: Callable) -> void:
-	var b := Button.new()
-	b.theme_type_variation = "RowButton"
-	b.custom_minimum_size = Vector2((RIGHT_W - 62) / 2.0, 182)
-	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	b.focus_mode = Control.FOCUS_NONE
-	b.tooltip_text = "%s\n%s" % [title, desc if locked == "" else "%s\n%s" % [locked, desc]]
-	b.set_meta("cost", cost)
-	b.set_meta("locked", locked != "")
-	b.pressed.connect(action)
-	var column := VBoxContainer.new()
-	column.set_anchors_preset(Control.PRESET_FULL_RECT)
-	column.offset_left = 6
-	column.offset_right = -6
-	column.offset_top = 6
-	column.offset_bottom = -6
-	column.add_theme_constant_override("separation", 3)
-	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(column)
-	var frame := PanelContainer.new()
-	frame.add_theme_stylebox_override("panel", UI.inset(2.0))
-	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	column.add_child(frame)
-	var pic := TextureRect.new()
-	pic.custom_minimum_size = Vector2(0, 92)
-	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_set_portrait(pic, key)
-	frame.add_child(pic)
-	if seconds > 0.0:
-		# The build time as a small brass tally in the picture's corner.
-		var tally := PanelContainer.new()
-		tally.add_theme_stylebox_override("panel", UI.box(Color(0.03, 0.06, 0.09, 0.85), Color(UI.TRIM, 0.8), 1, 2, 3.0))
-		tally.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		tally.size_flags_horizontal = Control.SIZE_SHRINK_END
-		tally.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		tally.add_child(_text("%ds" % int(seconds), 11, GOLD))
-		frame.add_child(tally)
-	var name := _text(title, 14, UI.CREAM if locked == "" else UI.MUTED, true)
-	name.add_theme_font_size_override("font_size", 14)
-	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	name.clip_text = true
-	column.add_child(name)
-	var detail := _text(desc, 11, UI.MUTED)
-	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail.max_lines_visible = 2
-	detail.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	column.add_child(detail)
-	if locked != "":
-		var why := _text(locked, 11, UI.BAD)
-		why.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		why.clip_text = true
-		column.add_child(why)
-		b.modulate = Color(1, 1, 1, 0.7)
-	else:
-		column.add_child(_cost_row(cost))
-	_grid.add_child(b)
-
 func _set_portrait(pic: TextureRect, key: String) -> void:
 	var tex: Texture2D = world.portraits.get_portrait(key)
 	if tex != null:
@@ -767,6 +718,12 @@ func _process(delta: float) -> void:
 	if _refresh < 0.25:
 		return
 	_refresh = 0.0
+	# Notices stand clear of an open side window instead of covering it.
+	var clear := 0.0
+	if _win != null and _win.visible:
+		clear = _win.position.x + _win.size.x + 16.0 - get_viewport().get_visible_rect().size.x * 0.5
+	_notices.offset_left = maxf(-60.0, clear)
+	_notices.offset_right = _notices.offset_left + 288.0
 	var clock: int = world.clock()
 	for r in RESOURCES:
 		var key: String = r[0]
@@ -860,7 +817,7 @@ func _update_panel() -> void:
 		child.queue_free()
 	if mode == "build":
 		_prod_title.text = UI.caps("Build")
-		_prod_hint.text = "Pick a building, then click a hex inside your city. Workers go and build it. Shift keeps placing; right click cancels."
+		_prod_hint.text = "Pick a building, then a green hex. Shift places several; right click cancels."
 		_tabs.visible = true
 		_building_bars()
 	elif mode == "site":
@@ -877,36 +834,55 @@ func _update_panel() -> void:
 func _has_actions(b: Dictionary) -> bool:
 	return not b.def.get("trains", []).is_empty() or b.key in ["missileSilo", "market", "port", "intelAgency"] or b.key in world.research.LABS
 
-## The build list is a grid of cards, two to a row, so a whole category shows
-## at once: a large picture of the building as it stands in the city, its
-## name, its cost and its build time; the description is the tooltip.
-var _grid: GridContainer
-
 func _building_bars() -> void:
-	_grid = GridContainer.new()
-	_grid.columns = 2
-	_grid.add_theme_constant_override("h_separation", 6)
-	_grid.add_theme_constant_override("v_separation", 6)
-	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_list.add_child(_grid)
-	for b in BUILD_MENU[build_tab]:
-		var def: Dictionary = world.building_defs.get(b, {})
-		if def.is_empty():
+	# Compact rows under group headings: picture, name, one line of what it
+	# does, cost and build time (the whole description is the tooltip).
+	var query := _build_search.text.strip_edges().to_lower()
+	var listed := {}
+	for group in BUILD_GROUPS.get(build_tab, []):
+		var rows := []
+		for b in group[1]:
+			var def: Dictionary = world.building_defs.get(b, {})
+			if def.is_empty() or not b in BUILD_MENU[build_tab]:
+				continue
+			if query != "" and not (str(def.name) + " " + str(def.desc)).to_lower().contains(query):
+				continue
+			rows.append(b)
+		if rows.is_empty():
 			continue
-		if _build_search.text.strip_edges() != "" and not (str(def.name) + " " + str(def.desc)).to_lower().contains(_build_search.text.strip_edges().to_lower()):
-			continue
-		var why := ""
-		if def.get("unique", false) and world.buildings.any(func(x): return x.owner == 0 and x.key == b and not x.dead):
-			why = "Built (one per nation)"
-		_tile(b, def.name, def.desc, def.cost, float(def.get("buildTime", 0)), why, func(): world.begin_placement(b))
-	_grid = null
-	if build_tab == "Economy":
+		_section(group[0])
+		for b in rows:
+			listed[b] = true
+			_build_row(b)
+	# Anything in the tab that no group names still appears.
+	var rest: Array = BUILD_MENU[build_tab].filter(func(b): return not listed.has(b) and world.building_defs.has(b) and (query == "" or (str(world.building_defs[b].name) + " " + str(world.building_defs[b].desc)).to_lower().contains(query)))
+	if not rest.is_empty():
+		_section("Other")
+		for b in rest:
+			_build_row(b)
+	if build_tab == "Economy" and query == "":
 		_section("Transport")
 		for kind in ["road", "rail"]:
 			var price: Dictionary = world.logistics.transport[kind]
 			var cost := {"money": price.money, "iron": price.iron} if float(price.iron) > 0 else {"money": price.money}
 			_bar("villageCenter", "Road" if kind == "road" else "Railway", "Per hex. Click a start hex, then a destination: links towns to the capital so they are supplied." + ("" if kind == "road" else " Railways add 25% production."),
 				cost, 0.0, "", func(): world.begin_transport(kind))
+
+func _build_row(b: String) -> void:
+	var def: Dictionary = world.building_defs[b]
+	var why := ""
+	if def.get("unique", false) and world.buildings.any(func(x): return x.owner == 0 and x.key == b and not x.dead):
+		why = "Built (one per nation)"
+	var desc := str(def.desc)
+	var first := desc.split(". ")[0].strip_edges()
+	var row_desc := first if first.ends_with(".") else first + "."
+	_bar(b, def.name, row_desc, def.cost, float(def.get("buildTime", 0)), why, func(): world.begin_placement(b))
+	var row: Control = _list.get_child(_list.get_child_count() - 1)
+	row.custom_minimum_size.y = 66  # compact: about six to a screen
+	var pics := row.find_children("*", "TextureRect", true, false)
+	if not pics.is_empty():
+		pics[0].custom_minimum_size = Vector2(66, 48)  # the building's picture (the others are cost icons)
+	row.tooltip_text = "%s\n%s" % [def.name, desc if why == "" else "%s\n%s" % [why, desc]]
 
 func _action_bars(b: Dictionary) -> void:
 	if world.AirOperations.is_base(b):
@@ -1675,6 +1651,28 @@ func notice(text: String) -> void:
 
 # ---------------------------------------------------------------- world market
 
+## A small line chart of recent prices (market.gd history), drawn, not typed.
+func _price_chart(points: Array, colour: Color) -> Control:
+	var chart := Control.new()
+	chart.custom_minimum_size = Vector2(72, 22)
+	chart.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var values: Array = points.slice(maxi(0, points.size() - 30))
+	chart.draw.connect(func():
+		if values.size() < 2:
+			chart.draw_line(Vector2(0, 11), Vector2(72, 11), Color(colour, 0.5), 1.0)
+			return
+		var lo := INF
+		var hi := -INF
+		for v in values:
+			lo = minf(lo, float(v))
+			hi = maxf(hi, float(v))
+		var span := maxf(hi - lo, 0.02)
+		var line := PackedVector2Array()
+		for i in range(values.size()):
+			line.append(Vector2(72.0 * i / (values.size() - 1), 20.0 - 18.0 * (float(values[i]) - lo) / span))
+		chart.draw_polyline(line, colour, 1.5, true))
+	return chart
+
 func _market_panel() -> void:
 	var m: Node = world.market
 	var d: Node = world.diplomacy
@@ -1699,9 +1697,7 @@ func _market_panel() -> void:
 		var price := _text("$%.1f %s%.1f%%" % [m.price(res), "▲" if up else ("▼" if down else "•"), absf(moved) * 100.0], 14, Color("8fd18a") if up else (Color("e8836f") if down else UI.TEXT))
 		price.custom_minimum_size = Vector2(104, 0)
 		row.add_child(price)
-		var chart := _text(m.sparkline(res), 12, Color("8fd18a") if up else (Color("e8836f") if down else UI.MUTED))
-		chart.custom_minimum_size = Vector2(70, 0)
-		row.add_child(chart)
+		row.add_child(_price_chart(m.history.get(res, []), Color("8fd18a") if up else (Color("e8836f") if down else UI.MUTED)))
 		var stock := _text("have %d" % int(economy.res.get(res, 0.0)), 13, UI.MUTED)
 		stock.custom_minimum_size = Vector2(80, 0)
 		stock.size_flags_horizontal = Control.SIZE_EXPAND_FILL

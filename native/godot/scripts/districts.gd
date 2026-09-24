@@ -22,7 +22,8 @@ const STYLE := {
 }
 const HOUSES := ["res://assets/House_A.glb", "res://assets/House_B.glb", "res://assets/House_C.glb", "res://assets/House_D.glb"]
 # How many houses stand in a residential district, one per wedge between streets.
-const HOUSE_COUNT := {"cottage": 2, "residential": 3, "workerHouse": 2, "luxuryVillas": 2}
+# Civilization-style: a few houses in their gardens, never a packed block.
+const HOUSE_COUNT := {"cottage": 2, "residential": 2, "workerHouse": 2, "luxuryVillas": 2}
 
 const Architecture := preload("res://scripts/architecture.gd")
 ## Buildings the kit makes as whole-hex compositions: key -> recipe.
@@ -267,7 +268,8 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 			arch.xf = Transform3D.IDENTITY
 			arch.helipad(rng)
 		elif key in ["housing", "apartments"]:
-			arch.apartments(rng, footprint, 4 + mini(city_size / 4, 2) + (1 if key == "apartments" else 0))
+			# Low blocks of flats (2-4 floors), not towers over the town.
+			arch.apartments(rng, footprint, 2 + mini(city_size / 6, 1) + (1 if key == "apartments" else 0))
 		else:
 			arch.civic(key, rng, footprint)
 		container.add_child(arch.commit())
@@ -351,13 +353,14 @@ func residential(key: String, container: Node3D, st: SurfaceTool, rng: RandomNum
 		main_building(key, container, 9.0)
 		return
 	if key in ["housing", "apartments"]:
-		main_building(key, container, 8.5)
-		for k in [0, 2, 3, 5]:
-			tree(st, slot(k, 7.8), rng)
+		main_building(key, container, 7.0)
+		for k in range(6):
+			tree(st, slot(k, 7.6) + Vector3(rng.randf_range(-0.8, 0.8), 0, rng.randf_range(-0.8, 0.8)), rng, 0.9)
 		return
-	# A growing city fills its blocks: more and larger houses, fewer gardens.
+	# A growing city dresses its blocks a little more, but keeps the gardens:
+	# at most three houses, each in its own wedge with lawn and trees round it.
 	var growth := clampf(city_size / 10.0, 0.0, 1.0)
-	var count: int = mini(4, HOUSE_COUNT.get(key, 3) + int(growth))
+	var count: int = mini(3, HOUSE_COUNT.get(key, 2) + (1 if growth > 0.7 else 0))
 	var slots := [0, 3, 1, 4, 2, 5].slice(0, count)
 	# Townhouses and cottages built from the kit (architecture.gd), all of the
 	# block in one set of meshes.
@@ -366,14 +369,17 @@ func residential(key: String, container: Node3D, st: SurfaceTool, rng: RandomNum
 		var p := slot(k, 6.2)
 		var face := deg_to_rad(-(30.0 + 60.0 * k)) - PI * 0.5
 		# Each faces the middle of the block, its front (+z) toward the street square.
-		arch.xf = Transform3D(Basis(Vector3.UP, face + PI * 0.5).scaled(Vector3.ONE * 0.82), p)
-		if key in ["cottage", "workerHouse"] and growth < 0.5:
+		arch.xf = Transform3D(Basis(Vector3.UP, face + PI * 0.5).scaled(Vector3.ONE * 0.7), p)
+		if key in ["cottage", "workerHouse"]:
 			arch.cottage(rng, 4.2 + rng.randf() * 0.6, 3.6)
 		else:
-			arch.townhouse(rng, 3.8 + rng.randf() * 0.8 + growth * 0.4, 4.4, 2 + (1 if growth > 0.4 and rng.randf() < 0.6 else 0) + (1 if key == "luxuryVillas" else 0))
-		var back := slot(k, 9.0)
-		box(st, Vector3(3.6, 0.8, 0.5), back, deg_to_rad(-(30.0 + 60.0 * k)) + PI * 0.5, Color("3f5a2c"))
+			arch.townhouse(rng, 3.8 + rng.randf() * 0.6, 4.4, 2 + (1 if key == "luxuryVillas" else 0))
 		tree(st, slot(k, 8.6) + Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)), rng, 0.8)
+	# The empty wedges are gardens: a tree or two and a bench.
+	for k in [0, 3, 1, 4, 2, 5].slice(count):
+		tree(st, slot(k, 6.4) + Vector3(rng.randf_range(-1.2, 1.2), 0, rng.randf_range(-1.2, 1.2)), rng, rng.randf_range(0.9, 1.25))
+		if rng.randf() < 0.6:
+			tree(st, slot(k, 8.4) + Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)), rng, 0.8)
 	container.add_child(arch.commit())
 	if growth < 0.6:
 		tree(st, Vector3.ZERO, rng, 1.2)

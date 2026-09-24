@@ -107,6 +107,17 @@ void fragment() {
 		col = mix(col, srgb(vec3(0.9, 0.87, 0.72)), bay * 0.8);
 	}
 
+	// Civilization-style: hard surfaces (paving, concrete, gravel) only round the
+	// core; toward the edge the tile turns to lawn and meadow, so districts sit
+	// in green instead of ending in a grey slab at the hex edge.
+	if (style == 0 || style == 2 || style == 4) {
+		float wobble = (noise(w * 0.09 + seed * 2.3) - 0.5) * 2.4;
+		float green = smoothstep(core + 3.0, core + 5.2, length(p) + wobble);
+		float mown = step(0.5, fract(dot(w, vec2(0.6, 0.8)) / 3.0));
+		vec3 lawn = meadow * mix(0.95, 1.05, mown);
+		col = mix(col, lawn, green);
+		rough = mix(rough, 0.9, green);
+	}
 	// Streets: asphalt with kerb stones and a pavement on each side (a track on a farm).
 	float road = 0.0;
 	float kerb = 0.0;
@@ -144,9 +155,6 @@ void fragment() {
 	if (style == 1) {
 		float hedge = (1.0 - smoothstep(0.6, 0.75, to_rim)) * (1.0 - open);
 		col = mix(col, srgb(vec3(0.16, 0.27, 0.11)) * mix(0.8, 1.2, grain), hedge);
-	} else if (style == 0 || style == 2) {
-		float curb = (1.0 - smoothstep(0.3, 0.4, to_rim)) * (1.0 - open);
-		col = mix(col, srgb(vec3(0.7, 0.68, 0.63)), curb);
 	}
 	// A touch of shade where the tile meets the ground (none across streets).
 	col *= mix(1.0, 0.82, (1.0 - smoothstep(0.0, 0.12, to_rim)) * (1.0 - open));

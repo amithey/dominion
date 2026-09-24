@@ -202,3 +202,8 @@ UI files listed above.
   route_traffic.gd: a freighter per open route (moored when waiting) on craft.gd's lofted hull with a
   wake; tapered car/lorry/locomotive shapes. city-upgrade-check market asserts updated. Check:
   tools/trade-check.gd.
+- 2026-09-25 Claude, stage E (at the user's request, in Codex's UI files too): districts.gd fewer/smaller
+  houses with gardens, lower flats; world.gd flags only on settlements/military; district.gdshader lawn
+  toward the rim for plaza/industrial/military tiles. hud.gd: the build list is grouped compact rows
+  (BUILD_GROUPS, _build_row via _bar; the card grid _tile/_grid removed), market rows draw a price chart
+  (_price_chart), notices move clear of an open side window. Codex: restyle freely, keep the calls.

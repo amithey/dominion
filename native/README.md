@@ -7,6 +7,47 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.16: an exchange, sea-lane sabotage, armies that plan whole marches, a greener city
+
+- **Bugs fixed**
+  - Research no longer stalls: a project waiting for a building, an era or materials used to stop the
+    whole queue. The projects behind it now carry on, and the whole tree (40 discoveries) can be completed.
+  - Warships: a shipyard (or port, or fishing wharf) may be built on unclaimed coast up to three hexes
+    from your land. The starting land never reaches deep water, so before this no shipyard could be built.
+  - Soldiers hold their rifles in both hands, pointing forward, and shoulder them to fire. The animations
+    are unarmed, so the rifle used to follow a hanging hand and point at the ground or backwards.
+  - Armies plan whole marches. The engine's path search gave up after 4096 polygons, so any order longer
+    than about 300 m stopped halfway. A notice now says when a spot cannot be reached by land at all.
+  - The build marks (green, red, grey) appear only while placing a district.
+- **Production:** click an order in a building's queue to cancel it with a full refund. The build panel's
+  extra Menu button is gone (the top bar has one).
+- **Workers keep a list of jobs:** shift + right-click adds a site to it. A worker who finishes a site takes
+  the next one, or helps at the nearest unfinished site.
+- **Combat rules**
+  - Air defence (SAM sites, mobile SAMs, anti-aircraft vehicles) engages only aircraft in flight: not
+    ground forces, and not aircraft parked on a base.
+  - Artillery and MLRS reach three hexes.
+  - Bunkers fire machine guns at enemy ground forces within two hexes, take a third of the damage from
+    ground fire, and shelter troops beside them (half damage).
+- **The market is an exchange.** A deal fills at once, and a big block pays more per unit, but the listed
+  price moves over the following seconds as the order flow is absorbed. A few dozen units barely register;
+  a sudden block of hundreds moves the price hard. Other traders answer: some buy dips, some chase moves,
+  some ignore them. War lifts oil, gas and iron. Each price shows its move over the last minute and a chart.
+- **Espionage:** "Sabotage shipping lanes" sinks a rival's cargo. Hostile agents can sink your next one.
+- **Trade ships:** every open route shows its freighter, moored off your port while it waits and sailing
+  out and back with a cargo. The freighters have real hulls, deck containers, a bridge, a funnel and a wake.
+  Cars, lorries and locomotives have sloped windscreens, bonnets and cabs.
+- **A greener, Civilization-style city:**
+  - Fewer and smaller houses, with gardens and trees in every block. Blocks of flats are 2-4 floors.
+  - Flags stand only on town halls and military sites.
+  - Paving and concrete cover only each district's core, turning to lawn toward the hex edge.
+- **Build menu:** compact rows under headings (Settlements, Homes, Food and resources, Trade and industry,
+  Transport...), each with its picture, a one-line summary, cost and build time. The full description
+  shows on hover.
+- **Panels:** market prices have a drawn chart, and notices stand clear of an open panel.
+- New checks: `tools/naval-check.gd`, `research-complete-check.gd`, `combat-rules-check.gd`,
+  `route-check.gd`, `trade-check.gd`. Views: `tools/soldier-views.gd`, `tools/town-views.gd`.
+
 ## Version 0.9.15: construction you can resume, armour that gets through town, land that shows where you can build, real traffic
 
 - **Construction never stalls.**

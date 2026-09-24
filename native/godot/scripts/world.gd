@@ -1138,7 +1138,10 @@ func register_building(key: String, owner: int, built: bool, root: Node3D, model
 		# Target fields shared with units, so combat treats both alike.
 		"node": root, "vehicle": true, "is_building": true, "dmg": 0.0, "enemy": null, "target": null, "attack_move": false,
 	}
-	add_flag(root, footprint, owner)
+	# A flag on town halls and military sites only: the borders already say
+	# whose land it is, and a flag on every house cluttered the town.
+	if def.get("settlement") != null or def.get("cat", "") == "military" or key == "hq":
+		add_flag(root, footprint, owner)
 	if def.get("onDeposit", false):
 		var dep = deposit_near(at, 6.0)
 		if dep != null:

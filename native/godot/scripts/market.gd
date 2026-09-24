@@ -111,24 +111,6 @@ func change(res: String, seconds := 60.0) -> float:
 	var then := float(past[maxi(0, past.size() - 1 - back)])
 	return float(mult[res]) / maxf(then, 0.01) - 1.0
 
-## The recent price as a little bar chart (text), oldest to newest.
-func sparkline(res: String, points := 16) -> String:
-	var past: Array = history.get(res, [])
-	if past.size() < 2:
-		return ""
-	var take: Array = past.slice(maxi(0, past.size() - points * 2))
-	var lo := INF
-	var hi := -INF
-	for v in take:
-		lo = minf(lo, v)
-		hi = maxf(hi, v)
-	var bars := "▁▂▃▄▅▆▇█"
-	var out := ""
-	for i in range(0, take.size(), 2):
-		var k := int(clampf((float(take[i]) - lo) / maxf(hi - lo, 0.001), 0.0, 1.0) * 7.0)
-		out += bars[k]
-	return out
-
 func setup(world_node: Node, trade: Dictionary) -> void:
 	world = world_node
 	cfg = trade
