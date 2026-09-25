@@ -7,6 +7,17 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.20: a new main menu
+
+- **Opening screen:** each entry has an icon and a line saying what it does. Continue names the campaign it
+  resumes and when it was saved; Load Game says how many campaigns are saved. A "Dispatch from the front"
+  card on the right gives a gameplay tip.
+- **New Game is a campaign sheet** that fits on one screen:
+  - the four nations as cards with the leader's portrait, flag colour, name and title;
+  - rivals, island, rules and difficulty as choice cards, each with a line of explanation;
+  - a summary of the choices beside Back and Begin campaign.
+- **Pause menu:** a line under the title names your nation, era, difficulty and year.
+
 ## Version 0.9.19: a new Research screen
 
 - **Title band:** points stored, research rate, discoveries completed and research buildings, as figures.

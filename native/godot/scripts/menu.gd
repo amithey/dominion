@@ -1,9 +1,12 @@
 extends CanvasLayer
 ## Main menu and pause menu. An illustrated war table with drifting light
-## fills the opening screen. New Game asks for a
-## difficulty; Continue loads the newest save; Settings (graphics quality,
-## full screen, master volume) persist in user://settings.cfg. In a match, Esc
-## opens the pause menu: resume, save, load, settings, quit to the main menu.
+## fills the opening screen; the entries on the left each say what they do
+## (Continue names the campaign it resumes), and a dispatch card on the right
+## gives a tip. New Game is a campaign sheet: the four nations as portrait
+## cards, rivals, island, rules and difficulty as choice cards, and a summary
+## with Begin. Settings (graphics quality, full screen, master volume) persist
+## in user://settings.cfg. In a match, Esc opens the pause menu: a card with
+## the campaign's name, era and year over resume, save, load, settings, quit.
 
 const SETTINGS := "user://settings.cfg"
 const GOLD := Color("a29269")
@@ -35,6 +38,18 @@ var setup_difficulty := "easy"
 var _briefing: Label
 var _transition: Tween
 var _scroll: ScrollContainer
+var _dispatch: PanelContainer
+const Gallery := preload("res://scripts/leader_gallery.gd")
+const TIPS := [
+	"Right-click an unfinished building with workers selected to finish it; shift + right-click adds it to their list of jobs.",
+	"Prices on the world market answer big orders over a few seconds: sell a large stock in parts.",
+	"A shipyard may stand on free coast up to three hexes from your land.",
+	"Bunkers take a third of the damage from ground fire and shelter troops beside them.",
+	"Air defence only fires at aircraft in the air. Parked aircraft are safe from it, and exposed to everything else.",
+	"Research carries on with the next project when the first one waits for a building or materials.",
+	"The Diplomacy window's World map tab shows who is at war with whom.",
+	"Artillery reaches three hexes: keep it behind your armour.",
+]
 
 func setup(world_node: Node) -> void:
 	world = world_node
@@ -135,6 +150,18 @@ func setup(world_node: Node) -> void:
 	credit.offset_left = 64
 	credit.offset_top = -40
 	_root.add_child(credit)
+	# A dispatch on the right of the opening screen: a tip for the campaign.
+	_dispatch = PanelContainer.new()
+	_dispatch.add_theme_stylebox_override("panel", UI.plate(Color(0.08, 0.15, 0.17, 0.9), Color(0.03, 0.07, 0.09, 0.92), UI.GOLD, 16.0))
+	_dispatch.anchor_left = 1.0
+	_dispatch.anchor_right = 1.0
+	_dispatch.anchor_top = 1.0
+	_dispatch.anchor_bottom = 1.0
+	_dispatch.offset_left = -470
+	_dispatch.offset_right = -56
+	_dispatch.offset_top = -190
+	_dispatch.offset_bottom = -56
+	_root.add_child(_dispatch)
 	load_settings()
 
 ## Main menu: title and card on the left. Paused: a card in the middle.
@@ -143,6 +170,7 @@ func _layout(paused: bool) -> void:
 	_shade.visible = not paused
 	_brand.visible = not paused
 	_dim.visible = paused
+	_dispatch.visible = false  # open_main shows it
 	# Paused, the card is a box and needs room inside it; on the main menu the
 	# entries run flush under the title, with only a breath below the band.
 	for side in ["left", "right", "bottom"]:
@@ -176,17 +204,55 @@ func open_main() -> void:
 	in_match = false
 	_show(true)
 	_layout(false)
+	_wide(false)
 	_clear()
 	_heading("")
 	var invitation := _description("THE WAR COUNCIL")
 	invitation.add_theme_color_override("font_color", UI.GOLD)
-	_button("New Game", open_new_game)
+	_entry("New Game", "Chart a campaign: your nation, its rivals and the rules.", "sovereign", open_new_game, true)
 	var newest := newest_save()
-	var continue_button := _button("Continue", func(): load_game(newest))
+	var slots := list_saves()
+	var last := "No campaign saved yet."
+	if newest != "":
+		last = "Resume \"%s\", saved %s." % [newest.capitalize(), slots[0].date]
+	var continue_button := _entry("Continue", last, "land", func(): load_game(newest))
 	continue_button.disabled = newest == ""
-	_button("Load Game", open_load)
-	_button("Settings", open_settings)
-	_button("Quit", func(): world.get_tree().quit())
+	_entry("Load Game", ("%d saved campaign%s." % [slots.size(), "" if slots.size() == 1 else "s"]) if not slots.is_empty() else "Nothing saved yet: F5 saves during a match.", "research", open_load)
+	_entry("Settings", "Graphics, full screen, sound and scrolling.", "menu", open_settings)
+	_entry("Quit", "Leave for the desktop.", "", func(): world.get_tree().quit())
+	_show_dispatch()
+
+## The tip card on the opening screen.
+func _show_dispatch() -> void:
+	for child in _dispatch.get_children():
+		_dispatch.remove_child(child)
+		child.queue_free()
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 6)
+	_dispatch.add_child(col)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 8)
+	col.add_child(head)
+	var seal := TextureRect.new()
+	seal.texture = UI.icon("diplomacy")
+	seal.custom_minimum_size = Vector2(22, 22)
+	seal.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	seal.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	head.add_child(seal)
+	var title := Label.new()
+	title.text = UI.caps("Dispatch from the front")
+	title.theme_type_variation = "HeaderLabel"
+	title.add_theme_font_size_override("font_size", 14)
+	title.add_theme_color_override("font_color", UI.GOLD)
+	head.add_child(title)
+	var tip := Label.new()
+	tip.text = TIPS[randi() % TIPS.size()]
+	tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tip.custom_minimum_size.x = 380
+	tip.add_theme_font_size_override("font_size", 15)
+	tip.add_theme_color_override("font_color", UI.CREAM)
+	col.add_child(tip)
+	_dispatch.visible = true
 
 func open_pause() -> void:
 	in_match = true
@@ -194,6 +260,7 @@ func open_pause() -> void:
 	_layout(true)
 	_clear()
 	_heading("PAUSED")
+	_campaign_line()
 	_button("Resume", close)
 	_button("Save Game", func():
 		world.saves.save("quicksave")
@@ -207,37 +274,181 @@ func open_pause() -> void:
 
 func open_new_game() -> void:
 	_clear()
+	_wide(true)
+	_dispatch.visible = false
 	_heading("CHART YOUR CAMPAIGN")
-	_description("Choose your nation, rivals and the rules of engagement.")
-	_setup_choice("Map",["Island · original","Island · mirrored west"],["island","mirrored"],"map")
-	_setup_choice("Players",["2 · you + 1 AI","3 · you + 2 AI","4 · you + 3 AI"],[2,3,4],"players")
-	_setup_choice("Nation / leader",world.MatchSetup.NATIONS,[0,1,2,3],"nation")
-	_setup_choice("Style",["Standard strategy","Sandbox · no AI attack waves"],["standard","sandbox"],"style")
-	var difficulty := OptionButton.new()
+	_section("Your nation")
+	var nations := HBoxContainer.new()
+	nations.add_theme_constant_override("separation", 10)
+	_panel.add_child(nations)
+	for i in range(world.MatchSetup.NATIONS.size()):
+		nations.add_child(_nation_card(i))
+	_section("Rivals")
+	_choices([["One rival", "Two nations: a duel for the island.", 2], ["Two rivals", "Three nations, and room for alliances.", 3], ["Three rivals", "The whole island at the table.", 4]], "players")
+	# Island and rules share a row: two choices each.
+	var pair := HBoxContainer.new()
+	pair.add_theme_constant_override("separation", 18)
+	_panel.add_child(pair)
+	for half in [["Island", [["The island", "Your capital in the east.", "island"], ["Mirrored", "Start in the west.", "mirrored"]], "map"],
+			["Rules", [["Standard", "Rivals send attack waves.", "standard"], ["Sandbox", "Rivals never attack.", "sandbox"]], "style"]]:
+		var box := VBoxContainer.new()
+		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		box.add_theme_constant_override("separation", 10)
+		pair.add_child(box)
+		_section(half[0], box)
+		_choices(half[1], half[2], box)
+	_section("Difficulty")
+	var levels := []
 	for d in DIFFICULTIES:
-		difficulty.add_item(d[1])
-	difficulty.selected = ["easy","normal","hard"].find(setup_difficulty)
-	difficulty.item_selected.connect(func(i):
-		setup_difficulty=DIFFICULTIES[i][0]
-		_update_briefing())
-	_row("Difficulty",difficulty)
-	_briefing = _description("")
+		levels.append([d[1], d[2], d[0]])
+	_choices(levels, "difficulty")
+	# The summary and the two buttons, side by side.
+	var foot := HBoxContainer.new()
+	foot.add_theme_constant_override("separation", 12)
+	_panel.add_child(foot)
+	_briefing = Label.new()
+	_briefing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_briefing.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_briefing.add_theme_font_size_override("font_size", 14)
+	_briefing.add_theme_color_override("font_color", UI.CREAM)
+	foot.add_child(_briefing)
+	var back := _button("Back", open_main)
+	back.custom_minimum_size = Vector2(130, 54)
+	_panel.remove_child(back)
+	foot.add_child(back)
+	var go := _button("Begin campaign", func(): start(setup_difficulty))
+	go.custom_minimum_size = Vector2(280, 54)
+	_panel.remove_child(go)
+	foot.add_child(go)
 	_update_briefing()
-	_button("Begin campaign",func():start(setup_difficulty))
-	_button("Back", open_main)
 
-func _setup_choice(title: String,labels: Array,values: Array,key: String) -> void:
-	var choice := OptionButton.new()
-	choice.custom_minimum_size.x = 230
-	choice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	choice.clip_text = true
-	for label in labels:
-		choice.add_item(label)
-	choice.selected = values.find(setup_options[key])
-	choice.item_selected.connect(func(i):
-		setup_options[key]=values[i]
-		_update_briefing())
-	_row(title,choice)
+## The New Game sheet is wide (the four nations side by side); the others are a column.
+func _wide(on: bool) -> void:
+	if in_match:
+		return
+	_card.offset_right = 64 + (880 if on else 420)
+	_card.offset_top = 48 if on else 230
+	_brand.visible = not on  # the sheet needs the height; the title returns with the main menu
+
+func _section(title: String, parent: Control = null) -> void:
+	var l := Label.new()
+	l.text = UI.caps(title)
+	l.theme_type_variation = "HeaderLabel"
+	l.add_theme_font_size_override("font_size", 14)
+	l.add_theme_color_override("font_color", UI.GOLD)
+	(parent if parent != null else _panel).add_child(l)
+
+## A nation as a card: the leader's portrait, the flag colour, name and title.
+func _nation_card(i: int) -> Button:
+	var parts: PackedStringArray = str(world.MatchSetup.NATIONS[i]).split(" \u00b7 ")
+	var colour := Color(world.map.nations[i].color) if i < world.map.nations.size() else UI.GOLD
+	var chosen: bool = int(setup_options.nation) == i
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(200, 206)
+	b.focus_mode = Control.FOCUS_ALL
+	b.toggle_mode = true
+	b.button_pressed = chosen
+	b.add_theme_stylebox_override("normal", UI.box(Color(0.05, 0.1, 0.12, 0.85), colour.darkened(0.3), 1, 4, 6.0))
+	b.add_theme_stylebox_override("hover", UI.box(Color(0.08, 0.15, 0.17, 0.95), colour, 2, 4, 6.0))
+	b.add_theme_stylebox_override("pressed", UI.box(Color(0.1, 0.18, 0.18, 0.95), UI.GOLD, 3, 4, 6.0))
+	b.add_theme_stylebox_override("hover_pressed", UI.box(Color(0.1, 0.18, 0.18, 0.95), UI.GOLD, 3, 4, 6.0))
+	b.pressed.connect(func():
+		setup_options.nation = i
+		open_new_game())
+	var col := VBoxContainer.new()
+	col.set_anchors_preset(Control.PRESET_FULL_RECT)
+	col.offset_left = 6
+	col.offset_right = -6
+	col.offset_top = 6
+	col.offset_bottom = -6
+	col.add_theme_constant_override("separation", 4)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(col)
+	var pic := TextureRect.new()
+	var path := Gallery.portrait(parts[1] if parts.size() > 1 else "")
+	if path != "":
+		pic.texture = load(path)
+	pic.custom_minimum_size = Vector2(0, 124)
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(pic)
+	var flag := ColorRect.new()
+	flag.color = colour
+	flag.custom_minimum_size = Vector2(0, 5)
+	flag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(flag)
+	var name := Label.new()
+	name.text = parts[0]
+	name.theme_type_variation = "HeaderLabel"
+	name.add_theme_font_size_override("font_size", 16)
+	name.add_theme_color_override("font_color", colour.lightened(0.45))
+	name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(name)
+	var leader := Label.new()
+	leader.text = ("\u2713  " if chosen else "") + (parts[1] if parts.size() > 1 else "")
+	leader.add_theme_font_size_override("font_size", 13)
+	leader.add_theme_color_override("font_color", UI.GOLD if chosen else UI.MUTED)
+	leader.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(leader)
+	return b
+
+## A row of choice cards for one setting: [[title, line, value], ...].
+func _choices(items: Array, key: String, parent: Control = null) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	(parent if parent != null else _panel).add_child(row)
+	for item in items:
+		var chosen: bool = (setup_difficulty == item[2]) if key == "difficulty" else (setup_options[key] == item[2])
+		var b := Button.new()
+		b.toggle_mode = true
+		b.button_pressed = chosen
+		b.focus_mode = Control.FOCUS_ALL
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.custom_minimum_size = Vector2(0, 58)
+		b.add_theme_stylebox_override("normal", UI.box(Color(0.05, 0.1, 0.12, 0.8), Color("2d4460"), 1, 4, 8.0))
+		b.add_theme_stylebox_override("hover", UI.box(Color(0.08, 0.15, 0.17, 0.95), Color(UI.GOLD, 0.7), 1, 4, 8.0))
+		b.add_theme_stylebox_override("pressed", UI.box(Color("28443f"), UI.GOLD, 2, 4, 8.0))
+		b.add_theme_stylebox_override("hover_pressed", UI.box(Color("28443f"), UI.GOLD, 2, 4, 8.0))
+		var value = item[2]
+		b.pressed.connect(func():
+			if key == "difficulty":
+				setup_difficulty = value
+			else:
+				setup_options[key] = value
+			open_new_game())
+		var col := VBoxContainer.new()
+		col.set_anchors_preset(Control.PRESET_FULL_RECT)
+		col.offset_left = 12
+		col.offset_right = -10
+		col.alignment = BoxContainer.ALIGNMENT_CENTER
+		col.add_theme_constant_override("separation", 1)
+		col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(col)
+		var t := Label.new()
+		t.text = ("\u2713 " if chosen else "") + str(item[0])
+		t.theme_type_variation = "HeaderLabel"
+		t.add_theme_font_size_override("font_size", 16)
+		t.add_theme_color_override("font_color", UI.BRIGHT if chosen else UI.CREAM)
+		t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		col.add_child(t)
+		var d := Label.new()
+		d.text = item[1]
+		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		d.add_theme_font_size_override("font_size", 12)
+		d.add_theme_color_override("font_color", UI.MUTED)
+		d.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		col.add_child(d)
+		row.add_child(b)
+
+## Paused: which campaign this is, where it stands.
+func _campaign_line() -> void:
+	var nation := str(world.MatchSetup.NATIONS[int(world.match_config.get("nation", 0))]).split(" \u00b7 ")[0]
+	var era := ""
+	if world.research:
+		era = "%s  \u00b7  " % world.research.eras[world.research.era].name
+	var line := _description("%s  \u00b7  %s%s  \u00b7  year %d" % [nation, era, str(world.match_difficulty).capitalize(), 1 + int(world.game_time / 720.0)])
+	line.add_theme_color_override("font_color", UI.GOLD)
 
 func _description(text: String) -> Label:
 	var label := Label.new()
@@ -253,7 +464,8 @@ func _update_briefing() -> void:
 	if not is_instance_valid(_briefing):
 		return
 	var difficulty: Array = DIFFICULTIES[["easy","normal","hard"].find(setup_difficulty)]
-	_briefing.text = "%s\n%d rival nations · %s\n%s" % [world.MatchSetup.NATIONS[int(setup_options.nation)], int(setup_options.players)-1, "mirrored island" if setup_options.map=="mirrored" else "original island", "Sandbox: rivals develop and defend, but launch no attack waves." if setup_options.style=="sandbox" else difficulty[2]]
+	var rivals := int(setup_options.players) - 1
+	_briefing.text = "%s\n%d rival%s  ·  %s  ·  %s  ·  %s" % [world.MatchSetup.NATIONS[int(setup_options.nation)], rivals, "" if rivals == 1 else "s", "mirrored island" if setup_options.map=="mirrored" else "original island", "sandbox" if setup_options.style=="sandbox" else "standard rules", difficulty[1]]
 
 func open_load() -> void:
 	_clear()
@@ -433,6 +645,59 @@ func _button(text: String, action: Callable) -> Button:
 		b.icon = UI.icon("sovereign")
 		b.add_theme_constant_override("icon_max_width", 28)
 	b.pressed.connect(action)
+	_panel.add_child(b)
+	return b
+
+## A main-menu entry: an icon, the name, and a line saying what it does.
+func _entry(text: String, detail: String, icon_name: String, action: Callable, primary := false) -> Button:
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(400, 66)
+	b.focus_mode = Control.FOCUS_ALL
+	b.tooltip_text = detail
+	var styles := _accent(4)
+	b.add_theme_stylebox_override("normal", UI.plate(Color("344c49"), Color("18312f"), UI.GOLD, 14.0) if primary else styles[0])
+	b.add_theme_stylebox_override("hover", styles[1])
+	b.add_theme_stylebox_override("pressed", styles[1])
+	b.add_theme_stylebox_override("focus", UI.box(Color.TRANSPARENT, UI.BRIGHT, 1, 8, 0.0))
+	b.pressed.connect(action)
+	var row := HBoxContainer.new()
+	row.set_anchors_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 16
+	row.offset_right = -12
+	row.add_theme_constant_override("separation", 14)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(row)
+	var pic := TextureRect.new()
+	pic.texture = UI.icon(icon_name) if icon_name != "" else null
+	pic.custom_minimum_size = Vector2(30, 30)
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(pic)
+	var col := VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_theme_constant_override("separation", 0)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(col)
+	var t := Label.new()
+	t.text = text
+	t.add_theme_font_override("font", UI.serif())
+	t.add_theme_font_size_override("font_size", 22)
+	t.add_theme_color_override("font_color", Color("f1e3b4"))
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(t)
+	var d := Label.new()
+	d.text = detail
+	d.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	d.clip_text = true
+	d.add_theme_font_size_override("font_size", 12)
+	d.add_theme_color_override("font_color", UI.MUTED)
+	d.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(d)
+	b.focus_entered.connect(func(): t.add_theme_color_override("font_color", UI.BRIGHT))
+	b.focus_exited.connect(func(): t.add_theme_color_override("font_color", Color("f1e3b4")))
 	_panel.add_child(b)
 	return b
 

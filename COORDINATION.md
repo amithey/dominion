@@ -223,3 +223,8 @@ UI files listed above.
   _rs, _rs_sel, _rs_sig, _rs_detail, _tree, toggle_research, _refresh_research). research_tree.gd: fit(width)
   sizes columns so all eras show, branch colours (colours dict), state words, _get_tooltip.
 - 2026-09-25 Claude: 0.9.19 executable and installer in dist, built from a4d42c9; packaged --ui-test passes.
+- 2026-09-25 Claude, 0.9.20 (user asked for a new main menu, Codex's menu.gd): open_main uses _entry() rows
+  with icons and a line each plus a _dispatch tip card; open_new_game is a campaign sheet (_nation_card,
+  _choices, _section; _wide() widens the card and hides the brand); open_pause adds _campaign_line().
+  Public names kept (setup, open_main/pause/new_game/load/settings, start, load_game, close, setup_options,
+  _root, _panel). Codex: restyle freely.
