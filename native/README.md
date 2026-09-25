@@ -7,6 +7,23 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.18: new World market and Territory windows
+
+- **World market** has two tabs:
+  - **Exchange:** a trading desk for the chosen commodity. It shows the price, its move over one and three
+    minutes, a large price chart, what you hold (and your storage), the quantity choice, the price per unit
+    for selling and buying, and big Sell and Buy buttons. Below it, every commodity is a row with its own
+    small chart, your stock, its price and its move; click one to trade it.
+  - **Trade routes:** figures along the top (ports, routes in use, loss at sea, delivered, lost). Each
+    route is a card in the partner's colour, with the voyage's progress and the cargo's worth. The form
+    for a new route shows what a voyage carries and is worth.
+- **Territory** has two tabs:
+  - **Your land:** how firmly you hold it (sovereign, integrated, occupied, contested) as one bar; the kinds
+    of land you hold (plains, forest, mountain, coast); what the land yields per second; how much land each
+    of your town halls may still buy; and the hex you last clicked.
+  - **Nations:** one bar of the whole island split between the nations and the free land, and a row per
+    nation with how firmly it holds its land.
+
 ## Version 0.9.17: new Diplomacy and Intelligence windows
 
 - **Diplomacy** has three tabs:

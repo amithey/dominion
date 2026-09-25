@@ -48,5 +48,34 @@ func run() -> void:
 	w.hud.spy_op = "shipping"
 	w.hud.refresh_side()
 	await shot("intel-shipping")
+	# World market: some price history, a port and an export route.
+	for i in range(40):
+		w.market.exchange_step()
+	w.market.pressure("oil", 900, true)
+	for i in range(12):
+		w.market.exchange_step()
+	var port_at = null
+	var home: Vector2i = w.logistics.world_hex(w.start)
+	for ring in range(1, 9):
+		for q in range(-ring, ring + 1):
+			for r in range(-ring, ring + 1):
+				var h := home + Vector2i(q, r)
+				if port_at == null and w.logistics.hex_distance(home, h) == ring and w.site_problem("port", w.logistics.hex_center(h), 0) == "":
+					port_at = w.logistics.hex_center(h)
+	if port_at != null:
+		w.place_building("port", port_at, 0, true)
+		w.economy.recalculate()
+		w.market.open_route(1, "oil", "export", 25)
+		w.market.tick()
+	for tab in ["exchange", "routes"]:
+		w.hud._panels.market_tab = tab
+		w.hud.toggle_panel("market", true)
+		if w.hud._side_rows.get_child_count() < 2: errors.append("market %s is empty" % tab)
+		await shot("market-" + tab)
+	for tab in ["yours", "nations"]:
+		w.hud._panels.territory_tab = tab
+		w.hud.toggle_panel("territory", true)
+		if w.hud._side_rows.get_child_count() < 2: errors.append("territory %s is empty" % tab)
+		await shot("territory-" + tab)
 	print("PANEL_VIEWS PASS" if errors.is_empty() else "PANEL_VIEWS FAIL: " + str(errors))
 	quit(0 if errors.is_empty() else 1)

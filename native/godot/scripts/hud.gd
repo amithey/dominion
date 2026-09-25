@@ -1296,11 +1296,11 @@ func refresh_side() -> void:
 		"diplomacy":
 			_panels.diplomacy()  # side_panels.gd: tabs, nation cards, relations chart
 		"market":
-			_market_panel()
+			_panels.market()  # side_panels.gd: exchange desk and trade routes
 		"intel":
 			_panels.intel()  # side_panels.gd: target tabs, grouped operations, agents, dossiers
 		"territory":
-			_territory_panel()
+			_panels.territory()  # side_panels.gd: your land and the nations' shares
 	_fit_window.call_deferred(keep)
 
 # The window is as tall as its content, up to the space above the bottom panels.
@@ -1616,88 +1616,6 @@ func notice(text: String) -> void:
 
 # ---------------------------------------------------------------- world market
 
-## A small line chart of recent prices (market.gd history), drawn, not typed.
-func _price_chart(points: Array, colour: Color) -> Control:
-	var chart := Control.new()
-	chart.custom_minimum_size = Vector2(72, 22)
-	chart.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var values: Array = points.slice(maxi(0, points.size() - 30))
-	chart.draw.connect(func():
-		if values.size() < 2:
-			chart.draw_line(Vector2(0, 11), Vector2(72, 11), Color(colour, 0.5), 1.0)
-			return
-		var lo := INF
-		var hi := -INF
-		for v in values:
-			lo = minf(lo, float(v))
-			hi = maxf(hi, float(v))
-		var span := maxf(hi - lo, 0.02)
-		var line := PackedVector2Array()
-		for i in range(values.size()):
-			line.append(Vector2(72.0 * i / (values.size() - 1), 20.0 - 18.0 * (float(values[i]) - lo) / span))
-		chart.draw_polyline(line, colour, 1.5, true))
-	return chart
-
-func _market_panel() -> void:
-	var m: Node = world.market
-	var d: Node = world.diplomacy
-	var deals := _card()
-	var top := _row(deals)
-	var title := _text("Instant deals", 16, UI.CREAM, true)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(title)
-	_segments(top, m.cfg.qty.map(func(q): return [str(int(q)), int(q)]), trade_qty, func(v): trade_qty = v)
-	if not m.has_market():
-		deals.add_child(_text("Build a Market to trade instantly. Prices move as orders are absorbed: a big order moves them hard.", 13, UI.BAD))
-	for res in m.resources():
-		var row := _row(deals, 8)
-		row.add_child(_icon(res, 24))
-		var name := _text(res.capitalize(), 14, UI.CREAM)
-		name.custom_minimum_size = Vector2(70, 0)
-		row.add_child(name)
-		# The exchange (market.gd): price, its move over the last minute, a chart.
-		var moved: float = m.change(res, 60.0)
-		var up: bool = moved > 0.01
-		var down: bool = moved < -0.01
-		var price := _text("$%.1f %s%.1f%%" % [m.price(res), "▲" if up else ("▼" if down else "•"), absf(moved) * 100.0], 14, Color("8fd18a") if up else (Color("e8836f") if down else UI.TEXT))
-		price.custom_minimum_size = Vector2(104, 0)
-		row.add_child(price)
-		row.add_child(_price_chart(m.history.get(res, []), Color("8fd18a") if up else (Color("e8836f") if down else UI.MUTED)))
-		var stock := _text("have %d" % int(economy.res.get(res, 0.0)), 13, UI.MUTED)
-		stock.custom_minimum_size = Vector2(80, 0)
-		stock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(stock)
-		_button(row, "Sell +$%d" % floori(m.quote(res, trade_qty, false)), m.sell.bind(res, trade_qty), m.has_market(), "good")
-		_button(row, "Buy -$%d" % ceili(m.quote(res, trade_qty, true)), m.buy.bind(res, trade_qty), m.has_market())
-	var routes := _card()
-	var head := _row(routes)
-	var rt := _text("Trade routes  %d/%d" % [m.routes.size(), m.route_cap()], 16, UI.CREAM, true)
-	rt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(rt)
-	head.add_child(_text("ports %d · loss at sea %d%% · delivered %d · lost %d" % [m.ports(), roundi(m.risk() * 100), m.delivered, m.lost], 12, UI.MUTED))
-	routes.add_child(_text("Ships carry %d-second voyages to nations you have a trade pact with. Each port has %d berths; warships lower losses." % [int(m.cfg.voyage), int(m.cfg.routesPerPort)], 12, UI.MUTED))
-	for r in m.routes:
-		var row := _row(routes, 8)
-		row.add_child(_icon(r.res, 20))
-		var l := _text("%s %d %s %s  ·  %s  ·  $%d so far" % ["Export" if r.dir == "export" else "Import", r.qty, "to" if r.dir == "export" else "from", d.name_of(r.nation), r.status, int(r.total)], 13, UI.TEXT)
-		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(l)
-		_button(row, "Close", m.close_route.bind(r.id), true, "bad")
-	var partners := []
-	for i in range(1, d.n):
-		if d.pact[0][i] and not d.at_war(0, i) and not d.defeated(i):
-			partners.append([d.name_of(i), i])
-	if partners.is_empty():
-		routes.add_child(_text("No partners yet: sign a trade pact in Diplomacy (G).", 13, UI.BAD))
-		return
-	if not partners.any(func(p): return p[1] == route_nation):
-		route_nation = partners[0][1]
-	var form := _row(routes, 6)
-	_segments(form, [["Export", "export"], ["Import", "import"]], route_dir, func(v): route_dir = v)
-	_choice(form, m.resources().map(func(r): return [r.capitalize(), r]), route_res, func(v): route_res = v)
-	_choice(form, partners, route_nation, func(v): route_nation = v)
-	_button(routes, "Open route (%d per voyage)" % trade_qty, func(): return m.open_route(route_nation, route_res, route_dir, trade_qty), m.ports() > 0, "good")
-
 # ---------------------------------------------------------------- intelligence
 
 # ---------------------------------------------------------------- territory
@@ -1706,39 +1624,6 @@ func pick_territory(text: String) -> void:
 	territory_pick = text
 	if side_mode == "territory":
 		refresh_side()
-
-func _territory_panel() -> void:
-	var t: Node = world.territory
-	var land: int = t.land_cells()
-	_label(_side_rows, "Each nation's land is painted on the map in its colour; gold stripes mark contested fronts.", UI.MUTED, 13)
-	for id in range(world.map.nations.size()):
-		if world.diplomacy.defeated(id):
-			continue
-		var y: Dictionary = t.yields(id)
-		var card := _card(_nation_colour(id))
-		var row := _row(card)
-		var name := _text("You" if id == 0 else world.diplomacy.name_of(id), 15, _nation_colour(id).lightened(0.4), true)
-		name.custom_minimum_size = Vector2(170, 0)
-		row.add_child(name)
-		var share := float(y.cells) / maxf(land, 1)
-		var meter := VBoxContainer.new()
-		meter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(meter)
-		_meter(meter, share, 0.5, _nation_colour(id), "%d cells  ·  %d%% of the land" % [y.cells, roundi(share * 100)])
-		if y.contested > 0:
-			_pill(row, "%d contested" % y.contested, Color("d8b866"))
-	var pick := _card(UI.GOLD)
-	pick.add_child(_text("Selected land", 14, GOLD, true))
-	var pl := _text(territory_pick, 14, UI.CREAM)
-	pl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	pl.custom_minimum_size = Vector2(480, 0)
-	pick.add_child(pl)
-	var mine: Dictionary = t.yields(0)
-	var yields := _row(_side_rows, 14)
-	yields.add_child(_text("Your land yields per second:", 13, UI.MUTED))
-	for item in [["money", "%.2f" % mine.money], ["food", "%.2f" % mine.food], ["iron", "%.3f" % mine.iron]]:
-		yields.add_child(_icon(item[0], 18))
-		yields.add_child(_text(item[1], 13, UI.CREAM))
 
 # ---------------------------------------------------------------- research screen
 
