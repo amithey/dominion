@@ -256,3 +256,4 @@ UI files listed above.
   new, more generous coast test); logistics.settlement_of prefers the town whose rings (s.rings_now, set in
   territory.tick) or purchased land cover the building; supply/launch notices; hud._city_card tiles;
   leader_gallery.face() crops; MatchSetup.COLOURS. New long check tools/playthrough-check.gd.
+- 2026-09-25 Claude: 0.9.26 executable and installer in dist, built from e003152; packaged --ui-test passes.
