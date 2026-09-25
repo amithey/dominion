@@ -251,3 +251,4 @@ UI files listed above.
   Check: tools/towns-check.gd.
 - 2026-09-25 Claude: 0.9.24 executable and installer in dist, built from ebb5154; packaged --city-test passes.
 - 2026-09-25 Claude, 0.9.25: middle-button drag turns/tilts the view; Shift + middle drag pans (world._unhandled_input, camera_test updated).
+- 2026-09-25 Claude: 0.9.25 built from 2c2bce4; the game was open, so the exe is dist/DOMINION-0.9.25.exe (packaged --camera-test passes); DOMINION-Setup.exe is 0.9.25.
