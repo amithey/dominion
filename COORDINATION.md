@@ -222,3 +222,4 @@ UI files listed above.
   rewritten (stat figures, era strip + goal chips in _rs_goals, card-style detail/queue/tracks; names kept:
   _rs, _rs_sel, _rs_sig, _rs_detail, _tree, toggle_research, _refresh_research). research_tree.gd: fit(width)
   sizes columns so all eras show, branch colours (colours dict), state words, _get_tooltip.
+- 2026-09-25 Claude: 0.9.19 executable and installer in dist, built from a4d42c9; packaged --ui-test passes.
