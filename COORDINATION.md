@@ -229,3 +229,7 @@ UI files listed above.
   Public names kept (setup, open_main/pause/new_game/load/settings, start, load_game, close, setup_options,
   _root, _panel). Codex: restyle freely.
 - 2026-09-25 Claude: 0.9.20 executable and installer in dist, built from 79639e2; packaged --menu-test passes.
+- 2026-09-25 Claude, 0.9.21 (user asked for 4 more maps of different sizes): new scripts/map_generator.gd
+  (small 440, twin 720, archipelago 800, continent 960) replaces the geography of map-seed1.json at load
+  (MatchSetup.apply calls it; normalize accepts the keys). menu.gd New Game: a Map row of six cards, Rivals
+  and Rules share a row. Check: tools/maps-check.gd.

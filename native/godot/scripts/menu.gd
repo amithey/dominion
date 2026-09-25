@@ -283,13 +283,11 @@ func open_new_game() -> void:
 	_panel.add_child(nations)
 	for i in range(world.MatchSetup.NATIONS.size()):
 		nations.add_child(_nation_card(i))
-	_section("Rivals")
-	_choices([["One rival", "Two nations: a duel for the island.", 2], ["Two rivals", "Three nations, and room for alliances.", 3], ["Three rivals", "The whole island at the table.", 4]], "players")
-	# Island and rules share a row: two choices each.
+	# Rivals and rules share a row.
 	var pair := HBoxContainer.new()
 	pair.add_theme_constant_override("separation", 18)
 	_panel.add_child(pair)
-	for half in [["Island", [["The island", "Your capital in the east.", "island"], ["Mirrored", "Start in the west.", "mirrored"]], "map"],
+	for half in [["Rivals", [["One", "A duel.", 2], ["Two", "Room for alliances.", 3], ["Three", "The whole map.", 4]], "players"],
 			["Rules", [["Standard", "Rivals send attack waves.", "standard"], ["Sandbox", "Rivals never attack.", "sandbox"]], "style"]]:
 		var box := VBoxContainer.new()
 		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -297,6 +295,13 @@ func open_new_game() -> void:
 		pair.add_child(box)
 		_section(half[0], box)
 		_choices(half[1], half[2], box)
+	# The maps, smallest to largest.
+	_section("Map")
+	var gen: Dictionary = preload("res://scripts/map_generator.gd").MAPS
+	var maps := [["Small Isle", "440 m", "small"], ["The Island", "640 m, east", "island"], ["Mirrored", "640 m, west", "mirrored"],
+		["Twin Lands", "720 m", "twin"], ["Archipelago", "800 m", "archipelago"], ["Continent", "960 m", "continent"]]
+	_choices(maps, "map")
+	_map_note()
 	_section("Difficulty")
 	var levels := []
 	for d in DIFFICULTIES:
@@ -321,6 +326,10 @@ func open_new_game() -> void:
 	_panel.remove_child(go)
 	foot.add_child(go)
 	_update_briefing()
+
+func _map_name(key: String) -> String:
+	var gen: Dictionary = preload("res://scripts/map_generator.gd").MAPS
+	return gen[key].name if gen.has(key) else ("mirrored island" if key == "mirrored" else "original island")
 
 ## The New Game sheet is wide (the four nations side by side); the others are a column.
 func _wide(on: bool) -> void:
@@ -441,6 +450,14 @@ func _choices(items: Array, key: String, parent: Control = null) -> void:
 		col.add_child(d)
 		row.add_child(b)
 
+## A line under the maps about the one chosen.
+func _map_note() -> void:
+	var gen: Dictionary = preload("res://scripts/map_generator.gd").MAPS
+	var key := str(setup_options.map)
+	var text: String = gen[key].desc if gen.has(key) else ("The original island, 640 m: rivals on every side." if key == "island" else "The original island mirrored: start in the west.")
+	var l := _description(text)
+	l.add_theme_color_override("font_color", UI.CREAM)
+
 ## Paused: which campaign this is, where it stands.
 func _campaign_line() -> void:
 	var nation := str(world.MatchSetup.NATIONS[int(world.match_config.get("nation", 0))]).split(" \u00b7 ")[0]
@@ -465,7 +482,7 @@ func _update_briefing() -> void:
 		return
 	var difficulty: Array = DIFFICULTIES[["easy","normal","hard"].find(setup_difficulty)]
 	var rivals := int(setup_options.players) - 1
-	_briefing.text = "%s\n%d rival%s  ·  %s  ·  %s  ·  %s" % [world.MatchSetup.NATIONS[int(setup_options.nation)], rivals, "" if rivals == 1 else "s", "mirrored island" if setup_options.map=="mirrored" else "original island", "sandbox" if setup_options.style=="sandbox" else "standard rules", difficulty[1]]
+	_briefing.text = "%s\n%d rival%s  ·  %s  ·  %s  ·  %s" % [world.MatchSetup.NATIONS[int(setup_options.nation)], rivals, "" if rivals == 1 else "s", _map_name(str(setup_options.map)), "sandbox" if setup_options.style=="sandbox" else "standard rules", difficulty[1]]
 
 func open_load() -> void:
 	_clear()

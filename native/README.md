@@ -7,6 +7,25 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.21: four new maps, from small to large
+
+Choose them under **Map** in New Game:
+
+| Map | Size | What it is |
+|---|---|---|
+| Small Isle | 440 m | One compact island; the capitals are close and fights come early. |
+| The Island | 640 m | The original map (and its mirrored version). |
+| Twin Lands | 720 m | Two large islands joined by a narrow isthmus. |
+| Archipelago | 800 m | Four islands in a ring, linked by land bridges, with islets holding resources. |
+| Continent | 960 m | A great landmass: a mountain range with passes, lakes and long coasts. |
+
+- The new maps are built by `scripts/map_generator.gd` from a fixed seed, so a map is the same every time
+  and a saved game reopens on the same map.
+- Every capital stands on flat ground, can be reached by land from every other capital, and has oil,
+  iron and gold nearby. Trees and resources scale with the land, warships start at sea, and the
+  minimap, camera limits, territory and navigation follow the map's size.
+- New check: `tools/maps-check.gd` (with a window it also saves `build/map-<name>.png`).
+
 ## Version 0.9.20: a new main menu
 
 - **Opening screen:** each entry has an icon and a line saying what it does. Continue names the campaign it

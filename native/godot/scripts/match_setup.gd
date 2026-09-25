@@ -3,12 +3,17 @@ const DEFAULT := {"map":"island","players":4,"nation":0,"style":"standard"}
 const NATIONS := ["Atlantic Federation · President E. Hale","Crimson Empire · Premier K. Volkov","Verdant Union · Chancellor L. Moreau","Golden Dominion · Sultan R. Qadir"]
 
 static func normalize(options: Dictionary) -> Dictionary:
-	return {"map":"mirrored" if options.get("map", "island")=="mirrored" else "island",
+	var map_key := str(options.get("map", "island"))
+	var maps: Array = ["island", "mirrored"] + preload("res://scripts/map_generator.gd").MAPS.keys()
+	return {"map":map_key if map_key in maps else "island",
 		"players":clampi(int(options.get("players",4)),2,4),
 		"nation":clampi(int(options.get("nation",0)),0,3),
 		"style":"sandbox" if options.get("style","standard")=="sandbox" else "standard"}
 
 static func apply(data: Dictionary, options: Dictionary) -> void:
+	var MapGenerator = preload("res://scripts/map_generator.gd")
+	if MapGenerator.is_generated(str(options.get("map", "island"))):
+		MapGenerator.generate(data, str(options.map))  # a new map's geography (map_generator.gd)
 	if options.get("map","island")=="mirrored":
 		var n := int(data.grid.size)
 		var values: Array = data.grid.heightsCm
