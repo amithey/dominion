@@ -233,3 +233,4 @@ UI files listed above.
   (small 440, twin 720, archipelago 800, continent 960) replaces the geography of map-seed1.json at load
   (MatchSetup.apply calls it; normalize accepts the keys). menu.gd New Game: a Map row of six cards, Rivals
   and Rules share a row. Check: tools/maps-check.gd.
+- 2026-09-25 Claude: 0.9.21 executable and installer in dist, built from f9794ec; packaged --menu-test passes.
