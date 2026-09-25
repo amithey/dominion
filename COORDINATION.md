@@ -228,3 +228,4 @@ UI files listed above.
   _choices, _section; _wide() widens the card and hides the brand); open_pause adds _campaign_line().
   Public names kept (setup, open_main/pause/new_game/load/settings, start, load_game, close, setup_options,
   _root, _panel). Codex: restyle freely.
+- 2026-09-25 Claude: 0.9.20 executable and installer in dist, built from 79639e2; packaged --menu-test passes.
