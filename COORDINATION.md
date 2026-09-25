@@ -213,3 +213,4 @@ UI files listed above.
   builds both windows with tabs (hud.refresh_side calls _panels.diplomacy()/intel()); hud._diplomacy_screen
   and hud._intel_panel removed; _standing_orders, _declare, spy_target/op/role and the widgets stay in hud.gd.
   world.ui_test money check compares hud.compact_number(). Views: tools/panel-views.gd. Codex: restyle freely.
+- 2026-09-25 Claude: 0.9.17 executable and installer in dist, built from bcecf77; packaged --ui-test passes.
