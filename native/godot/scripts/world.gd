@@ -204,6 +204,8 @@ var land_buyer = null     # the settlement whose town hall is buying land (click
 var land_marks: MeshInstance3D
 var cam_lift := 0.0       # raises the camera's look-at point above the ground (captures)
 var edge_scroll := true   # pan when the mouse touches the screen edge (Settings)
+var pan_speed := 1.0      # camera pan speed multiplier (Settings)
+var show_fps := true      # the frame counter in the corner (Settings)
 var middle_drag := false  # the middle mouse button drags the map
 var order_mode := ""
 const MatchSetup := preload("res://scripts/match_setup.gd")
@@ -2318,10 +2320,15 @@ func capture_menu() -> void:
 	cam_dist_target = 230.0
 	cam_pitch = 0.42
 	menu.open_main()
-	for page in ["main", "new", "settings"]:
+	for page in ["main", "new", "settings", "settings-sound", "settings-controls", "settings-game", "settings-paused"]:
 		if page == "new":
 			menu.open_new_game()
-		elif page == "settings":
+		elif page == "settings-paused":
+			menu.open_pause()
+			menu.settings_tab = "sound"
+			menu.open_settings()
+		elif page.begins_with("settings"):
+			menu.settings_tab = page.substr(9) if page.length() > 8 else "graphics"
 			menu.open_settings()
 		for i in range(40):
 			await get_tree().process_frame
@@ -5134,7 +5141,7 @@ func _process(delta: float) -> void:
 # mouse button (see _unhandled_input), Q/E to turn, R/F to tilt. Keys are read
 # by their position, so they work with any keyboard layout (Hebrew included).
 func pan_camera(delta: float) -> void:
-	var pan := cam_dist * 0.9 * delta
+	var pan := cam_dist * 0.9 * delta * pan_speed
 	var forward := Vector3(-sin(cam_yaw), 0, -cos(cam_yaw))
 	var right := Vector3(cos(cam_yaw), 0, -sin(cam_yaw))
 	var move := Vector2.ZERO

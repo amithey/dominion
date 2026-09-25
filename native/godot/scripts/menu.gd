@@ -259,6 +259,7 @@ func open_pause() -> void:
 	_show(true)
 	_layout(true)
 	_clear()
+	_wide(false)
 	_heading("PAUSED")
 	_campaign_line()
 	_button("Resume", close)
@@ -334,6 +335,9 @@ func _map_name(key: String) -> String:
 ## The New Game sheet is wide (the four nations side by side); the others are a column.
 func _wide(on: bool) -> void:
 	if in_match:
+		# Paused: the centred card widens for the settings, and back again.
+		_card.offset_left = -470 if on else -212
+		_card.offset_right = 470 if on else 212
 		return
 	_card.offset_right = 64 + (880 if on else 420)
 	_card.offset_top = 48 if on else 230
@@ -496,46 +500,224 @@ func open_load() -> void:
 		_option_card(s.name.capitalize(), "Saved %s" % s.date, func(): load_game(s.name))
 	_button("Back", open_pause if in_match else open_main)
 
+var settings_tab := "graphics"
+
+## Settings in four tabs, each setting a card with a line saying what it does.
+## Every change applies at once and is saved (user://settings.cfg).
 func open_settings() -> void:
 	_clear()
+	_wide(true)
+	_dispatch.visible = false
 	_heading("SETTINGS")
-	_description("Changes apply immediately and are saved automatically.")
-	var quality := OptionButton.new()
-	for q in ["high", "balanced", "low"]:
-		quality.add_item(q.capitalize())
-	quality.selected = ["high", "balanced", "low"].find(world.quality)
-	quality.item_selected.connect(func(i):
-		world.quality = ["high", "balanced", "low"][i]
-		world.apply_quality()
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 4)
+	_panel.add_child(tabs)
+	for t in [["Graphics", "graphics"], ["Sound", "sound"], ["Controls", "controls"], ["Game", "game"]]:
+		var b := Button.new()
+		b.text = t[0]
+		b.toggle_mode = true
+		b.button_pressed = settings_tab == t[1]
+		b.focus_mode = Control.FOCUS_ALL
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.custom_minimum_size.y = 38
+		b.add_theme_font_size_override("font_size", 16)
+		var key: String = t[1]
+		b.pressed.connect(func():
+			settings_tab = key
+			open_settings())
+		tabs.add_child(b)
+	match settings_tab:
+		"sound":
+			_settings_sound()
+		"controls":
+			_settings_controls()
+		"game":
+			_settings_game()
+		_:
+			_settings_graphics()
+	var foot := HBoxContainer.new()
+	foot.add_theme_constant_override("separation", 12)
+	_panel.add_child(foot)
+	var note := _description("Changes apply at once and are saved.")
+	_panel.remove_child(note)
+	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	foot.add_child(note)
+	var solid := UI.plate(Color("29464c"), Color("11262c"), Color(UI.GOLD, 0.7), 14.0)
+	var reset := _button("Defaults", func():
+		_reset_settings()
+		open_settings())
+	reset.custom_minimum_size = Vector2(150, 50)
+	reset.add_theme_stylebox_override("normal", solid)
+	_panel.remove_child(reset)
+	foot.add_child(reset)
+	var back := _button("Back", open_pause if in_match else open_main)
+	back.custom_minimum_size = Vector2(150, 50)
+	back.add_theme_stylebox_override("normal", solid)
+	_panel.remove_child(back)
+	foot.add_child(back)
+
+## A setting as a card: its name and what it does on the left, the control on the right.
+func _setting(title: String, detail: String, control: Control) -> void:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UI.box(Color(0.05, 0.1, 0.12, 0.85), Color("2d4460"), 1, 4, 12.0))
+	_panel.add_child(card)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	card.add_child(row)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 2)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(col)
+	var t := Label.new()
+	t.text = title
+	t.theme_type_variation = "HeaderLabel"
+	t.add_theme_font_size_override("font_size", 17)
+	t.add_theme_color_override("font_color", UI.CREAM)
+	col.add_child(t)
+	var d := Label.new()
+	d.text = detail
+	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	d.custom_minimum_size.x = 380
+	d.add_theme_font_size_override("font_size", 13)
+	d.add_theme_color_override("font_color", UI.MUTED)
+	col.add_child(d)
+	control.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	control.focus_mode = Control.FOCUS_ALL
+	row.add_child(control)
+
+## Buttons side by side, one lit: [[label, value], ...].
+func _segmented(items: Array, selected, on_pick: Callable) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 3)
+	for item in items:
+		var b := Button.new()
+		b.text = item[0]
+		b.toggle_mode = true
+		b.button_pressed = item[1] == selected
+		b.custom_minimum_size = Vector2(96, 36)
+		var value = item[1]
+		b.pressed.connect(func():
+			on_pick.call(value)
+			save_settings()
+			open_settings())
+		row.add_child(b)
+	return row
+
+func _switch(on: bool, on_toggle: Callable) -> CheckButton:
+	var c := CheckButton.new()
+	c.button_pressed = on
+	c.text = "On" if on else "Off"
+	c.toggled.connect(func(v):
+		c.text = "On" if v else "Off"
+		on_toggle.call(v)
 		save_settings())
-	_row("Graphics", quality)
-	quality.tooltip_text = "High: full effects. Balanced: lighter shadows and upscaling. Low: prioritise performance."
-	var full := CheckButton.new()
-	full.button_pressed = DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
-	full.toggled.connect(func(on):
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if on else DisplayServer.WINDOW_MODE_WINDOWED)
+	return c
+
+func _slider(value: float, low: float, high: float, step: float, shown: Callable, on_change: Callable) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var s := HSlider.new()
+	s.min_value = low
+	s.max_value = high
+	s.step = step
+	s.value = value
+	s.custom_minimum_size = Vector2(220, 0)
+	s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(s)
+	var readout := Label.new()
+	readout.text = shown.call(value)
+	readout.custom_minimum_size.x = 56
+	readout.add_theme_color_override("font_color", UI.GOLD)
+	row.add_child(readout)
+	s.value_changed.connect(func(v):
+		readout.text = shown.call(v)
+		on_change.call(v)
 		save_settings())
-	_row("Full screen", full)
-	var volume := HSlider.new()
-	volume.min_value = 0
-	volume.max_value = 100
-	volume.custom_minimum_size = Vector2(180, 0)
-	volume.value = roundf(db_to_linear(AudioServer.get_bus_volume_db(0)) * 100.0)
-	volume.value_changed.connect(func(v):
-		AudioServer.set_bus_volume_db(0, linear_to_db(maxf(v, 0.1) / 100.0))
-		save_settings())
-	_row("Volume", volume)
-	var volume_readout := Label.new()
-	volume_readout.text = "%d%%" % volume.value
-	volume.get_parent().add_child(volume_readout)
-	volume.value_changed.connect(func(v):volume_readout.text = "%d%%" % v)
-	var edge := CheckButton.new()
-	edge.button_pressed = world.edge_scroll
-	edge.toggled.connect(func(on):
-		world.edge_scroll = on
-		save_settings())
-	_row("Scroll at screen edge", edge)
-	_button("Back", open_pause if in_match else open_main)
+	return row
+
+## 100% is each bus's designed level (the effects bus keeps 4 dB of headroom, audio.gd).
+func _bus_trim(bus: String) -> float:
+	return -4.0 if bus == "SFX" else 0.0
+
+func _bus_volume(bus: String) -> float:
+	var i := AudioServer.get_bus_index(bus)
+	return roundf(db_to_linear(AudioServer.get_bus_volume_db(i) - _bus_trim(bus)) * 100.0) if i >= 0 else 100.0
+
+func _set_bus_volume(bus: String, v: float) -> void:
+	var i := AudioServer.get_bus_index(bus)
+	if i >= 0:
+		AudioServer.set_bus_volume_db(i, linear_to_db(maxf(v, 0.1) / 100.0) + _bus_trim(bus))
+		AudioServer.set_bus_mute(i, v <= 0.5)
+
+func _settings_graphics() -> void:
+	_setting("Quality", {"high": "Full effects: ambient occlusion, four shadow cascades, sharp at full resolution.", "balanced": "Lighter shadows and upscaling: smooth on most laptops.", "low": "Fewest effects, no grass: the fastest."}.get(world.quality, ""),
+		_segmented([["High", "high"], ["Balanced", "balanced"], ["Low", "low"]], world.quality, func(v):
+			world.quality = v
+			world.apply_quality()))
+	var full := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+	_setting("Display", "Play in a window, or across the whole screen.", _segmented([["Window", false], ["Full screen", true]], full, func(v):
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if v else DisplayServer.WINDOW_MODE_WINDOWED)))
+	_setting("Vertical sync", "Matches frames to the screen: no tearing, and less heat and noise from the laptop.", _switch(DisplayServer.window_get_vsync_mode() != DisplayServer.VSYNC_DISABLED, func(v):
+		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if v else DisplayServer.VSYNC_DISABLED)))
+	_setting("Frame limit", "The most frames a second the game draws. A limit keeps a laptop cooler.", _segmented([["30", 30], ["60", 60], ["120", 120], ["None", 0]], Engine.max_fps, func(v): Engine.max_fps = v))
+	_setting("Frame counter", "Frames per second in the bottom-right corner.", _switch(world.show_fps, func(v): world.show_fps = v))
+
+func _settings_sound() -> void:
+	_setting("Master volume", "Everything the game plays.", _slider(_bus_volume("Master"), 0, 100, 1, func(v): return "%d%%" % v, func(v): _set_bus_volume("Master", v)))
+	_setting("Battle and world sounds", "Guns, engines, explosions, wind and surf.", _slider(_bus_volume("SFX"), 0, 100, 1, func(v): return "%d%%" % v, func(v): _set_bus_volume("SFX", v)))
+
+func _settings_controls() -> void:
+	_setting("Scroll at the screen edge", "Move the camera by touching the edge of the screen with the mouse.", _switch(world.edge_scroll, func(v): world.edge_scroll = v))
+	_setting("Camera speed", "How fast the camera pans with the keys and the screen edge.", _slider(world.pan_speed * 100.0, 40, 200, 10, func(v): return "%d%%" % v, func(v): world.pan_speed = v / 100.0))
+	var keys := GridContainer.new()
+	keys.columns = 2
+	keys.add_theme_constant_override("h_separation", 24)
+	keys.add_theme_constant_override("v_separation", 3)
+	for pair in [["W A S D / arrows", "Move the camera (Shift: faster)"], ["Q / E", "Turn the camera"], ["R / F", "Tilt the camera"], ["Wheel", "Zoom"],
+			["Right click", "Move, attack; on a site with workers: build"], ["Shift + right click", "Add a site to the workers' list"], ["Ctrl + right click", "Attack-move"], ["Alt + right click", "Bombard an area"],
+			["B", "Build list"], ["G  M  I  T  Y", "Diplomacy, market, intelligence, territory, research"], ["O", "Mark an operational zone"], ["F5 / F9", "Quick save / load"], ["Esc", "Pause menu"]]:
+		var k := Label.new()
+		k.text = pair[0]
+		k.add_theme_color_override("font_color", UI.GOLD)
+		k.add_theme_font_size_override("font_size", 13)
+		keys.add_child(k)
+		var d := Label.new()
+		d.text = pair[1]
+		d.add_theme_font_size_override("font_size", 13)
+		d.add_theme_color_override("font_color", UI.CREAM)
+		keys.add_child(d)
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UI.box(Color(0.05, 0.1, 0.12, 0.85), Color("2d4460"), 1, 4, 12.0))
+	var col := VBoxContainer.new()
+	card.add_child(col)
+	var t := Label.new()
+	t.text = "Keys and mouse"
+	t.theme_type_variation = "HeaderLabel"
+	t.add_theme_font_size_override("font_size", 17)
+	t.add_theme_color_override("font_color", UI.CREAM)
+	col.add_child(t)
+	col.add_child(keys)
+	_panel.add_child(card)
+
+func _settings_game() -> void:
+	var every: float = world.saves.autosave_every if world.saves else 180.0
+	_setting("Autosave", "Saves the match as \"Autosave\" at this interval, so a crash or a mistake costs little.", _segmented([["1 min", 60.0], ["3 min", 180.0], ["5 min", 300.0], ["Off", 0.0]], every, func(v):
+		if world.saves: world.saves.autosave_every = v))
+
+func _reset_settings() -> void:
+	world.quality = "balanced"
+	world.apply_quality()
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED)
+	Engine.max_fps = 0
+	world.show_fps = true
+	_set_bus_volume("Master", 100.0)
+	_set_bus_volume("SFX", 100.0)
+	world.edge_scroll = true
+	world.pan_speed = 1.0
+	if world.saves:
+		world.saves.autosave_every = 180.0
+	save_settings()
 
 func close() -> void:
 	_show(false)
@@ -595,7 +777,14 @@ func load_settings() -> void:
 	if cfg.get_value("graphics", "fullscreen", false):
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(float(cfg.get_value("audio", "volume", 100.0)), 0.1) / 100.0))
+	_set_bus_volume("SFX", float(cfg.get_value("audio", "effects", 100.0)))
 	world.edge_scroll = bool(cfg.get_value("controls", "edge_scroll", true))
+	world.pan_speed = float(cfg.get_value("controls", "pan_speed", 1.0))
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if bool(cfg.get_value("graphics", "vsync", true)) else DisplayServer.VSYNC_DISABLED)
+	Engine.max_fps = int(cfg.get_value("graphics", "max_fps", 0))
+	world.show_fps = bool(cfg.get_value("graphics", "show_fps", true))
+	if world.saves:
+		world.saves.autosave_every = float(cfg.get_value("game", "autosave", 180.0))
 
 func save_settings() -> void:
 	var cfg := ConfigFile.new()
@@ -603,6 +792,13 @@ func save_settings() -> void:
 	cfg.set_value("graphics", "fullscreen", DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN)
 	cfg.set_value("audio", "volume", roundf(db_to_linear(AudioServer.get_bus_volume_db(0)) * 100.0))
 	cfg.set_value("controls", "edge_scroll", world.edge_scroll)
+	cfg.set_value("controls", "pan_speed", world.pan_speed)
+	cfg.set_value("audio", "effects", _bus_volume("SFX"))
+	cfg.set_value("graphics", "vsync", DisplayServer.window_get_vsync_mode() != DisplayServer.VSYNC_DISABLED)
+	cfg.set_value("graphics", "max_fps", Engine.max_fps)
+	cfg.set_value("graphics", "show_fps", world.show_fps)
+	if world.saves:
+		cfg.set_value("game", "autosave", world.saves.autosave_every)
 	cfg.save(SETTINGS)
 
 # ---------------------------------------------------------------- widgets

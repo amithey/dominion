@@ -13,6 +13,7 @@ const AUTOSAVE_EVERY := 180.0
 
 var world: Node
 var _autosave := AUTOSAVE_EVERY
+var autosave_every := AUTOSAVE_EVERY   # seconds; 0 turns autosave off (Settings)
 
 func setup(world_node: Node) -> void:
 	world = world_node
@@ -44,9 +45,11 @@ func path_of(slot: String) -> String:
 func _process(delta: float) -> void:
 	if world == null or world.game_over != "" or world.bench_phase >= 0:
 		return
-	_autosave -= delta
+	if autosave_every <= 0.0:
+		return
+	_autosave = minf(_autosave, autosave_every) - delta
 	if _autosave <= 0.0:
-		_autosave = AUTOSAVE_EVERY
+		_autosave = autosave_every
 		save("autosave")
 
 func _v(p: Vector3) -> Array:

@@ -234,3 +234,6 @@ UI files listed above.
   (MatchSetup.apply calls it; normalize accepts the keys). menu.gd New Game: a Map row of six cards, Rivals
   and Rules share a row. Check: tools/maps-check.gd.
 - 2026-09-25 Claude: 0.9.21 executable and installer in dist, built from f9794ec; packaged --menu-test passes.
+- 2026-09-25 Claude, 0.9.22 (user asked for a new Settings screen, Codex's menu.gd): open_settings has tabs
+  (settings_tab) with _setting cards; new settings world.pan_speed, world.show_fps, saves.autosave_every,
+  vsync, Engine.max_fps, SFX bus volume, all in user://settings.cfg. Check: tools/settings-check.gd.

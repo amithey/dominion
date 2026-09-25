@@ -752,6 +752,7 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 	_extra.missiles[1].visible = silos
 	if silos:
 		_extra.missiles[0].text = "%d/%d" % [world.missiles.stored(), world.missiles.capacity()]
+	_fps.visible = world.show_fps
 	_fps.text = "%d FPS" % Engine.get_frames_per_second()
 	if _selected != null and _selected.dead:
 		show_building(null)  # an enemy building stays selected: its card shows who holds it

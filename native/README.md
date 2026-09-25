@@ -7,6 +7,18 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.22: a new Settings screen
+
+- Four tabs, each setting a card with a line saying what it does; changes apply at once and are saved.
+  **Defaults** puts everything back.
+  - **Graphics:** quality (High / Balanced / Low, with what each means), window or full screen, and three
+    new settings: vertical sync, a frame limit (30 / 60 / 120 / none), and the frame counter on or off.
+  - **Sound:** master volume, and a new volume for battle and world sounds (100% is the designed mix).
+  - **Controls:** scrolling at the screen edge, a new camera speed, and a list of every key and mouse action.
+  - **Game:** a new autosave interval (1, 3 or 5 minutes, or off).
+- In the pause menu the settings open in a wide card over the game.
+- New check: `tools/settings-check.gd` (every setting is saved and restored).
+
 ## Version 0.9.21: four new maps, from small to large
 
 Choose them under **Map** in New Game:
