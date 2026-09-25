@@ -7,6 +7,12 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.25: turn the view with the middle mouse button
+
+- Hold the middle mouse button and drag: left and right turn the view, up and down tilt it.
+- Shift + middle drag drags the map, as the middle button alone did before. The keyboard still does not turn
+  or tilt the view.
+
 ## Version 0.9.24: towns with accounts, land from people, roads between town halls, overland trade
 
 - **Roads and railways** run from one of your town halls (capital, city, village centre) to another town

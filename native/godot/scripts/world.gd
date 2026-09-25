@@ -206,7 +206,7 @@ var cam_lift := 0.0       # raises the camera's look-at point above the ground (
 var edge_scroll := true   # pan when the mouse touches the screen edge (Settings)
 var pan_speed := 1.0      # camera pan speed multiplier (Settings)
 var show_fps := true      # the frame counter in the corner (Settings)
-var middle_drag := false  # the middle mouse button drags the map
+var middle_drag := false  # the middle mouse button turns the view (with Shift: drags the map)
 var order_mode := ""
 const MatchSetup := preload("res://scripts/match_setup.gd")
 var match_config: Dictionary = MatchSetup.DEFAULT.duplicate()
@@ -3814,13 +3814,29 @@ func camera_test() -> void:
 	motion.relative = Vector2(-200, 0)
 	motion.position = Vector2(200, 300)
 	motion.button_mask = MOUSE_BUTTON_MASK_MIDDLE
+	var yaw_before := cam_yaw
+	var pitch_before := cam_pitch
 	_unhandled_input(motion)
+	var tilt := InputEventMouseMotion.new()
+	tilt.relative = Vector2(0, 40)
+	tilt.position = Vector2(200, 340)
+	tilt.button_mask = MOUSE_BUTTON_MASK_MIDDLE
+	_unhandled_input(tilt)
+	results["Middle-button drag turns the view"] = absf(cam_yaw - yaw_before) > 0.5
+	results["Middle-button drag tilts the view"] = absf(cam_pitch - pitch_before) > 0.05
+	var shifted := InputEventMouseMotion.new()
+	shifted.relative = Vector2(-200, 0)
+	shifted.position = Vector2(0, 340)
+	shifted.button_mask = MOUSE_BUTTON_MASK_MIDDLE
+	shifted.shift_pressed = true
+	var yaw_now := cam_yaw
+	_unhandled_input(shifted)
 	press.pressed = false
 	_unhandled_input(press)
 	for i in range(3):
 		await get_tree().process_frame
 	var right := Vector3(cos(cam_yaw), 0, -sin(cam_yaw))
-	results["Middle-button drag"] = (cam_focus - before).dot(right) > 1.0
+	results["Shift + middle-button drag moves the map"] = (cam_focus - before).dot(right) > 1.0 and is_equal_approx(cam_yaw, yaw_now)
 	cam_focus = Vector3(99999, 0, 99999)
 	clamp_camera()
 	# The minimap wedge must point where the camera actually looks: the far edge
@@ -5190,9 +5206,9 @@ func _process(delta: float) -> void:
 
 # Moves the camera the ways strategy players expect: WASD or the arrow keys,
 # pushing the mouse against the edge of the screen, dragging with the middle
-# mouse button (see _unhandled_input). The view's angle is fixed: turning and
-# tilting from the keyboard (Q/E, R/F) was removed at the player's request, as
-# a stray key beside W swung the view. Keys are read by their position, so
+# mouse button with Shift (see _unhandled_input). The middle button alone turns
+# and tilts the view; the keyboard does not (Q/E, R/F were removed at the
+# player's request, as a stray key beside W swung the view). Keys are read by their position, so
 # they work with any keyboard layout (Hebrew included).
 func pan_camera(delta: float) -> void:
 	var pan := cam_dist * 0.9 * delta * pan_speed
@@ -5371,8 +5387,13 @@ func _unhandled_input(event: InputEvent) -> void:
 					var attack: bool = event.ctrl_pressed or Input.is_physical_key_pressed(KEY_CTRL)
 					# Borders are checked first (passage.gd): foreign land needs leave.
 					passage.check_order(selected, point, func(): order_move(selected, point, attack))
+	elif event is InputEventMouseMotion and middle_drag and not (event.shift_pressed or Input.is_physical_key_pressed(KEY_SHIFT)):
+		# Middle button held: left and right turn the view round its centre,
+		# up and down tilt it.
+		cam_yaw -= event.relative.x * 0.006
+		cam_pitch = clampf(cam_pitch + event.relative.y * 0.004, 0.3, 1.25)
 	elif event is InputEventMouseMotion and middle_drag:
-		# The ground follows the mouse: drag it the way you would drag a map.
+		# With Shift the ground follows the mouse: drag it the way you would drag a map.
 		var forward := Vector3(-sin(cam_yaw), 0, -cos(cam_yaw))
 		var right := Vector3(cos(cam_yaw), 0, -sin(cam_yaw))
 		var scale := cam_dist * 0.0021
@@ -5455,7 +5476,7 @@ func make_hud() -> void:
 	title.add_theme_font_size_override("font_size", 18)
 	column.add_child(title)
 	var hint := Label.new()
-	hint.text = "Drag/click: select   Right click: move / attack   Ctrl+right: attack-move   B: battle demo\nWASD: pan   Wheel: zoom"
+	hint.text = "Drag/click: select   Right click: move / attack   Ctrl+right: attack-move   B: battle demo\nWASD: pan   Wheel: zoom   Middle drag: turn   Shift+middle drag: move"
 	column.add_child(hint)
 	status = Label.new()
 	column.add_child(status)

@@ -673,7 +673,7 @@ func _settings_controls() -> void:
 	keys.columns = 2
 	keys.add_theme_constant_override("h_separation", 24)
 	keys.add_theme_constant_override("v_separation", 3)
-	for pair in [["W A S D / arrows", "Move the camera (Shift: faster)"], ["Wheel", "Zoom"],
+	for pair in [["W A S D / arrows", "Move the camera (Shift: faster)"], ["Wheel", "Zoom"], ["Middle button + drag", "Turn and tilt the view"], ["Shift + middle drag", "Drag the map"],
 			["Right click", "Move, attack; on a site with workers: build"], ["Shift + right click", "Add a site to the workers' list"], ["Ctrl + right click", "Attack-move"], ["Alt + right click", "Bombard an area"],
 			["B", "Build list"], ["G  M  I  T  Y", "Diplomacy, market, intelligence, territory, research"], ["O", "Mark an operational zone"], ["F5 / F9", "Quick save / load"], ["Esc", "Pause menu"]]:
 		var k := Label.new()

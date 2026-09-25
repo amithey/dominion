@@ -250,3 +250,4 @@ UI files listed above.
   camera keys Q/E/R/F removed, cam_ground smoothing; map_generator snaps deposits to hex centres.
   Check: tools/towns-check.gd.
 - 2026-09-25 Claude: 0.9.24 executable and installer in dist, built from ebb5154; packaged --city-test passes.
+- 2026-09-25 Claude, 0.9.25: middle-button drag turns/tilts the view; Shift + middle drag pans (world._unhandled_input, camera_test updated).
