@@ -1626,11 +1626,23 @@ func pick_territory(text: String) -> void:
 		refresh_side()
 
 # ---------------------------------------------------------------- research screen
+# A screen of its own (Y). Along the top: points, rate, era and discoveries
+# as figures, then the six eras as a strip with the next era's goals as
+# progress chips. The tree fills the middle (research_tree.gd); on the right,
+# the chosen discovery's card with its three stages, and the queue with live
+# progress. Along the bottom, the four research tracks with level pips.
+
+const BRANCH_COLOURS := {"society": Color("6fa6d8"), "economy": Color("d8b866"), "army": Color("8a9a5b"), "air": Color("8fb8d8"),
+	"navy": Color("4f8fb0"), "hightech": Color("a78bd8"), "strategic": Color("d8745a"), "politics": Color("c98fb0")}
 
 var _rs: PanelContainer
 var _rs_head: Label
 var _rs_era: Label
+var _rs_stats: HBoxContainer
+var _rs_eras: HBoxContainer
+var _rs_goals: HBoxContainer
 var _tree: Control
+var _tree_scroll: ScrollContainer
 var _rs_detail: VBoxContainer
 var _rs_queue: VBoxContainer
 var _rs_tracks: HBoxContainer
@@ -1646,8 +1658,14 @@ func toggle_research() -> void:
 	if _rs.visible:
 		_show_side("")
 		_rs_sig = ""
-		_tree.layout()
+		_fit_tree.call_deferred()
 		_refresh_research()
+
+func _fit_tree() -> void:
+	if _tree_scroll != null and _tree_scroll.size.x > 100.0:
+		_tree.fit(_tree_scroll.size.x - 14.0)
+	else:
+		_tree.layout()
 
 func _build_research() -> void:
 	_rs = _box(Vector2.ZERO)
@@ -1662,22 +1680,26 @@ func _build_research() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 0)
 	_rs.add_child(column)
+	# Title band: the icon, the title, the figures, Close.
 	var head_band := PanelContainer.new()
 	head_band.add_theme_stylebox_override("panel", UI.band(9.0))
 	column.add_child(head_band)
 	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 10)
+	top.add_theme_constant_override("separation", 12)
 	head_band.add_child(top)
-	top.add_child(_icon("research", 28))
-	_rs_head = Label.new()
-	_rs_head.theme_type_variation = "HeaderLabel"
-	_rs_head.add_theme_font_size_override("font_size", 18)
-	_rs_head.add_theme_color_override("font_color", UI.BRIGHT)
+	top.add_child(_icon("research", 30))
+	_rs_head = _text(UI.caps("Research"), 20, UI.BRIGHT, true)
+	_rs_head.add_theme_font_size_override("font_size", 20)
 	_rs_head.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_rs_head.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(_rs_head)
+	_rs_stats = HBoxContainer.new()
+	_rs_stats.add_theme_constant_override("separation", 6)
+	_rs_stats.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_rs_stats.alignment = BoxContainer.ALIGNMENT_CENTER
+	top.add_child(_rs_stats)
 	var close := Button.new()
 	close.text = "Close (Y)"
+	close.focus_mode = Control.FOCUS_NONE
 	close.pressed.connect(toggle_research)
 	top.add_child(close)
 	var body := MarginContainer.new()
@@ -1686,39 +1708,55 @@ func _build_research() -> void:
 		body.add_theme_constant_override("margin_" + side, 12)
 	column.add_child(body)
 	column = VBoxContainer.new()
-	column.add_theme_constant_override("separation", 8)
+	column.add_theme_constant_override("separation", 10)
 	body.add_child(column)
-	_rs_era = Label.new()
-	_rs_era.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_rs_era.custom_minimum_size = Vector2(1000, 0)  # a width to wrap at before the first layout
-	_rs_era.add_theme_color_override("font_color", Color("c9d2d6"))
+	# The eras, and the next era's goals.
+	_rs_eras = HBoxContainer.new()
+	_rs_eras.add_theme_constant_override("separation", 4)
+	column.add_child(_rs_eras)
+	_rs_goals = HBoxContainer.new()
+	_rs_goals.add_theme_constant_override("separation", 6)
+	column.add_child(_rs_goals)
+	_rs_era = Label.new()  # kept for older callers; the goals are chips now
+	_rs_era.visible = false
 	column.add_child(_rs_era)
 	var split := HBoxContainer.new()
+	split.add_theme_constant_override("separation", 12)
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(split)
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	split.add_child(scroll)
+	var tree_frame := PanelContainer.new()
+	tree_frame.add_theme_stylebox_override("panel", UI.box(Color("0b1720"), Color("24394c"), 1, 4, 4.0))
+	tree_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	split.add_child(tree_frame)
+	_tree_scroll = ScrollContainer.new()
+	_tree_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_tree_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tree_frame.add_child(_tree_scroll)
 	_tree = preload("res://scripts/research_tree.gd").new()
 	_tree.setup(world.research)
+	_tree.colours = BRANCH_COLOURS
 	_tree.picked.connect(func(key):
 		_rs_sel = key
 		_rs_sig = ""
 		_refresh_research())
-	scroll.add_child(_tree)
+	_tree_scroll.add_child(_tree)
+	_tree_scroll.resized.connect(_fit_tree)
 	var side := ScrollContainer.new()
-	side.custom_minimum_size = Vector2(360, 0)
+	side.custom_minimum_size = Vector2(350, 0)
 	side.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	split.add_child(side)
 	var side_col := VBoxContainer.new()
-	side_col.custom_minimum_size = Vector2(344, 0)
+	side_col.custom_minimum_size = Vector2(336, 0)
+	side_col.add_theme_constant_override("separation", 10)
 	side.add_child(side_col)
 	_rs_detail = VBoxContainer.new()
+	_rs_detail.add_theme_constant_override("separation", 6)
 	side_col.add_child(_rs_detail)
 	_rs_queue = VBoxContainer.new()
+	_rs_queue.add_theme_constant_override("separation", 6)
 	side_col.add_child(_rs_queue)
 	_rs_tracks = HBoxContainer.new()
+	_rs_tracks.add_theme_constant_override("separation", 8)
 	column.add_child(_rs_tracks)
 	world.research.changed.connect(func(): if _rs.visible: _refresh_research())
 
@@ -1726,24 +1764,69 @@ func _rs_label(parent: Control, text: String, colour := Color("b9c4c8"), size :=
 	var l := Label.new()
 	l.text = text
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size = Vector2(330, 0)
+	l.custom_minimum_size = Vector2(300, 0)
 	l.add_theme_color_override("font_color", colour)
 	l.add_theme_font_size_override("font_size", size)
 	parent.add_child(l)
 	return l
 
+## A figure in the title band: value over label.
+func _rs_stat(value: String, label: String, colour: Color) -> Label:
+	var box := PanelContainer.new()
+	box.add_theme_stylebox_override("panel", UI.box(Color(0, 0, 0, 0.28), Color(UI.TRIM, 0.5), 1, 3, 5.0))
+	box.custom_minimum_size.x = 118
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", -2)
+	box.add_child(col)
+	var v := _text(value, 17, colour, true)
+	v.add_theme_font_size_override("font_size", 17)
+	v.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(v)
+	var l := _text(label, 11, UI.MUTED)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(l)
+	_rs_stats.add_child(box)
+	return v
+
+## A rounded panel for the side column.
+func _rs_card(parent: Control, stripe := Color(0, 0, 0, 0)) -> VBoxContainer:
+	var card := PanelContainer.new()
+	var style := UI.box(Color("142337"), Color("2d4460"), 1, 3, 10.0)
+	if stripe.a > 0.0:
+		style.border_color = stripe
+		style.border_width_left = 4
+		style.border_width_top = 0
+		style.border_width_right = 0
+		style.border_width_bottom = 0
+		style.content_margin_left = 14
+	card.add_theme_stylebox_override("panel", style)
+	parent.add_child(card)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 5)
+	card.add_child(col)
+	return col
+
+func _rs_bar(parent: Control, value: float, max_value: float, colour: Color, height := 8.0) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.custom_minimum_size = Vector2(0, height)
+	bar.show_percentage = false
+	bar.max_value = maxf(max_value, 0.001)
+	bar.value = value
+	bar.add_theme_stylebox_override("fill", UI.plate(colour.lightened(0.15), colour.darkened(0.25), Color(0, 0, 0, 0), 0.0, Color(1, 1, 1, 0.2)))
+	parent.add_child(bar)
+	return bar
+
 func _refresh_research() -> void:
 	var r: Node = world.research
-	_rs_head.text = "RESEARCH   %d points  (+%.2f/s)   %s   %d/%d discoveries" % [int(r.points), r.rate, r.eras[r.era].name, r.completed_count(), r.discoveries.size()]
-	if r.era + 1 < r.eras.size():
-		var nxt: Dictionary = r.eras[r.era + 1]
-		var parts := PackedStringArray()
-		for q in r.era_requirements(r.era + 1):
-			var pct: bool = q[0] == "Share of the land"
-			parts.append("%s %s %s/%s" % ["[x]" if q[1] >= q[2] else "[ ]", q[0], ("%d%%" % roundi(q[1] * 100)) if pct else str(int(q[1])), ("%d%%" % roundi(q[2] * 100)) if pct else str(int(q[2]))])
-		_rs_era.text = "Next: the %s (%s). %s   Reward: $%d and %d research." % [nxt.name, nxt.desc, "   ".join(parts), int(nxt.reward.get("money", 0)), int(nxt.reward.get("research", 0))]
-	else:
-		_rs_era.text = "Your nation has reached the final era."
+	# Figures (rebuilt each refresh: cheap, and they change every second).
+	for child in _rs_stats.get_children():
+		_rs_stats.remove_child(child)
+		child.queue_free()
+	_rs_stat("%d" % int(r.points), "points stored", UI.CREAM)
+	_rs_stat("+%.2f/s" % r.rate, "research rate", Color("8fd18a") if r.rate > 0.5 else UI.GOLD)
+	_rs_stat("%d / %d" % [r.completed_count(), r.discoveries.size()], "discoveries", UI.CREAM)
+	_rs_stat("%d" % r.labs(), "schools and labs", UI.CREAM)
+	_research_eras()
 	_tree.queue_redraw()
 	var sig := "%s|%s|%s|%d|%s" % [_rs_sel, str(r.queue), str(r.tracks), r.era, "" if _rs_sel == "" else "%d:%s" % [r.stage_of(_rs_sel), r.blocker(_rs_sel)]]
 	if sig == _rs_sig:
@@ -1760,47 +1843,95 @@ func _refresh_research() -> void:
 	_research_queue()
 	_research_tracks()
 
+## The six eras as a strip, then the next era's goals as chips with bars.
+func _research_eras() -> void:
+	var r: Node = world.research
+	for child in _rs_eras.get_children():
+		_rs_eras.remove_child(child)
+		child.queue_free()
+	for e in range(r.eras.size()):
+		var past: bool = e < r.era
+		var now: bool = e == r.era
+		var chip := PanelContainer.new()
+		var fill := Color("27553a") if past else (Color("5f4a1c") if now else Color("142125"))
+		var edge := Color("8fd18a") if past else (Color("f2dfa9") if now else Color("2d4460"))
+		chip.add_theme_stylebox_override("panel", UI.box(fill, edge, 2 if now else 1, 3, 6.0))
+		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var l := _text(("✓ " if past else "") + str(r.eras[e].name), 13, UI.BRIGHT if now else (Color("b9d8b5") if past else UI.MUTED), now)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		chip.add_child(l)
+		chip.tooltip_text = str(r.eras[e].desc)
+		_rs_eras.add_child(chip)
+	for child in _rs_goals.get_children():
+		_rs_goals.remove_child(child)
+		child.queue_free()
+	if r.era + 1 >= r.eras.size():
+		_rs_goals.add_child(_text("Your nation has reached the final era.", 13, UI.GOLD, true))
+		return
+	var goals := _rs_goals
+	var nxt: Dictionary = r.eras[r.era + 1]
+	var label := _text("Next, the %s:" % nxt.name, 13, UI.GOLD, true)
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	goals.add_child(label)
+	for q in r.era_requirements(r.era + 1):
+		var pct: bool = q[0] == "Share of the land"
+		var met: bool = q[1] >= q[2]
+		var chip := PanelContainer.new()
+		chip.add_theme_stylebox_override("panel", UI.box(Color("0f1c2b"), Color("8fd18a") if met else Color("2d4460"), 1, 3, 5.0))
+		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", 2)
+		chip.add_child(col)
+		var have: String = ("%d%%" % roundi(q[1] * 100)) if pct else str(int(q[1]))
+		var need: String = ("%d%%" % roundi(q[2] * 100)) if pct else str(int(q[2]))
+		col.add_child(_text("%s%s  %s / %s" % ["✓ " if met else "", q[0], have, need], 12, Color("b9d8b5") if met else UI.CREAM))
+		_rs_bar(col, minf(float(q[1]), float(q[2])), float(q[2]), Color("8fd18a") if met else UI.GOLD, 5.0)
+		goals.add_child(chip)
+	var reward := _text("Reward $%d, %d research" % [int(nxt.reward.get("money", 0)), int(nxt.reward.get("research", 0))], 12, UI.MUTED)
+	reward.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	goals.add_child(reward)
+
 func _research_detail() -> void:
 	var r: Node = world.research
 	if _rs_sel == "":
-		_rs_label(_rs_detail, "Pick a discovery in the tree. Each one is developed in three stages; points from schools, libraries, universities and tech parks flow into the project at the head of the queue.")
+		var hint := _rs_card(_rs_detail)
+		_rs_label(hint, "Pick a discovery in the tree.", UI.CREAM, 15)
+		_rs_label(hint, "Each one is developed in three stages. Points from the capital, schools, libraries, universities and tech parks flow into the first project in the queue that can advance.", UI.MUTED, 13)
 		return
 	var key := _rs_sel
 	var def: Dictionary = r.def_of(key)
-	_rs_label(_rs_detail, def.name.to_upper(), Color("f1e3b4"), 18)
-	_rs_label(_rs_detail, "%s  ·  %s  ·  %d research" % [r.BRANCH_NAMES[def.branch], r.eras[r.era_of(key)].name, int(def.cost)], Color("9fb3a2"))
-	_rs_label(_rs_detail, r.desc_of(key), Color("dfe6e8"))
-	var needs := PackedStringArray()
+	var colour: Color = BRANCH_COLOURS.get(def.branch, UI.GOLD)
+	var card := _rs_card(_rs_detail, colour)
+	_rs_label(card, def.name, UI.BRIGHT, 19)
+	var tags := HBoxContainer.new()
+	tags.add_theme_constant_override("separation", 6)
+	card.add_child(tags)
+	_pill(tags, r.BRANCH_NAMES[def.branch], colour)
+	_pill(tags, r.eras[r.era_of(key)].name, UI.GOLD)
+	_pill(tags, "%d research" % int(def.cost), Color("9aa7ab"))
+	_rs_label(card, r.desc_of(key), Color("dfe6e8"), 14)
+	# Requirements as ticked lines.
 	if def.get("reqDiscovery") != null:
-		needs.append("%s %s" % ["[x]" if r.done(def.reqDiscovery) else "[ ]", r.def_of(def.reqDiscovery).name])
+		var ok: bool = r.done(def.reqDiscovery)
+		_rs_label(card, "%s  %s" % ["✓" if ok else "✗", r.def_of(def.reqDiscovery).name], Color("8fd18a") if ok else Color("e8836f"), 13)
 	if def.get("reqBuilding") != null:
-		needs.append("%s %s (for the %s)" % ["[x]" if world.economy.owned(def.reqBuilding) > 0 else "[ ]", world.building_defs.get(def.reqBuilding, {"name": def.reqBuilding}).name, r.stage_names(key)[1].to_lower()])
-	if not needs.is_empty():
-		_rs_label(_rs_detail, "Requires: " + ", ".join(needs))
+		var ok: bool = world.economy.owned(def.reqBuilding) > 0
+		_rs_label(card, "%s  %s (for the %s)" % ["✓" if ok else "✗", world.building_defs.get(def.reqBuilding, {"name": def.reqBuilding}).name, r.stage_names(key)[1].to_lower()], Color("8fd18a") if ok else Color("e8836f"), 13)
+	# The buttons come first among the card's buttons (the UI test presses the first).
 	var stage: int = r.stage_of(key)
-	for s in range(3):
-		var cost: Dictionary = r.stage_cost(key, s)
-		var mark := "done" if s < stage else ("in development" if s == stage else "")
-		_rs_label(_rs_detail, "%d. %s — %d research%s%s" % [s + 1, r.stage_names(key)[s], int(r.stage_points(key, s)), "" if cost.is_empty() else " + " + cost_text(cost), "   (%s)" % mark if mark != "" else ""],
-			Color("8fd18a") if s < stage else (Color("e3c15a") if s == stage else Color("b9c4c8")))
-		if s == stage:
-			var bar := ProgressBar.new()
-			bar.custom_minimum_size = Vector2(330, 10)
-			bar.show_percentage = false
-			bar.max_value = r.stage_points(key, s)
-			bar.value = r.progress[key].work
-			_rs_detail.add_child(bar)
-			_rs_live.append([bar, func(b): b.value = world.research.progress[key].work])
-	_rs_label(_rs_detail, "A finished prototype (stage 2) gives half the effect; the last stage all of it and any unlocks.", Color("8a979c"), 12)
 	if stage < 3:
 		var row := HBoxContainer.new()
-		_rs_detail.add_child(row)
+		row.add_theme_constant_override("separation", 6)
+		card.add_child(row)
 		var b := Button.new()
+		b.focus_mode = Control.FOCUS_NONE
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.custom_minimum_size.y = 34
 		if key in r.queue:
 			b.text = "Remove from queue"
 			b.pressed.connect(func(): r.dequeue(key))
 		else:
-			b.text = "Research" if r.queue.is_empty() else "Add to queue"
+			b.text = "Research now" if r.queue.is_empty() else "Add to queue"
 			var why: String = r.blocker(key)
 			b.disabled = why != "" and not why.contains(" needs a ")
 			b.tooltip_text = why
@@ -1809,26 +1940,77 @@ func _research_detail() -> void:
 		if key in r.queue and r.queue[0] != key:
 			var front := Button.new()
 			front.text = "Do this first"
+			front.focus_mode = Control.FOCUS_NONE
 			front.pressed.connect(func():
 				r.queue.erase(key)
 				r.queue.push_front(key)
 				r.changed.emit())
 			row.add_child(front)
+		var why_now: String = r.blocker(key)
+		if why_now != "":
+			_rs_label(card, why_now, Color("e8a86f"), 12)
+	# The three stages.
+	for s in range(3):
+		var cost: Dictionary = r.stage_cost(key, s)
+		var done: bool = s < stage
+		var now: bool = s == stage and stage < 3
+		var sc := PanelContainer.new()
+		sc.add_theme_stylebox_override("panel", UI.box(Color("1c3a2b") if done else (Color("3a3020") if now else Color("0f1c2b")), Color("8fd18a") if done else (Color("e3c15a") if now else Color("2d4460")), 1, 3, 7.0))
+		card.add_child(sc)
+		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", 3)
+		sc.add_child(col)
+		var head := HBoxContainer.new()
+		col.add_child(head)
+		var t := _text("%d. %s" % [s + 1, r.stage_names(key)[s]], 14, Color("b9d8b5") if done else (UI.BRIGHT if now else UI.CREAM), true)
+		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		head.add_child(t)
+		head.add_child(_text("✓ done" if done else ("in development" if now else ""), 12, Color("8fd18a") if done else UI.GOLD))
+		col.add_child(_text("%d research%s%s" % [int(r.stage_points(key, s)), "" if cost.is_empty() else "  +  " + cost_text(cost), "   · half the effect" if s == 1 else ("   · full effect and unlocks" if s == 2 else "")], 12, UI.MUTED))
+		if now:
+			var bar := _rs_bar(col, r.progress[key].work, r.stage_points(key, s), UI.GOLD, 9.0)
+			_rs_live.append([bar, func(b): b.value = world.research.progress[key].work])
 
 func _research_queue() -> void:
 	var r: Node = world.research
-	_rs_label(_rs_queue, "QUEUE (%d/%d)" % [r.queue.size(), r.QUEUE_MAX], Color("f1e3b4"), 16)
+	var card := _rs_card(_rs_queue)
+	var head := HBoxContainer.new()
+	card.add_child(head)
+	var t := _text("Queue", 16, UI.CREAM, true)
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(t)
+	head.add_child(_text("%d / %d" % [r.queue.size(), r.QUEUE_MAX], 13, UI.MUTED))
 	if r.queue.is_empty():
-		_rs_label(_rs_queue, "Nothing in development: research points are piling up.", Color("e8a86f"))
-	for item in r.queue:
+		_rs_label(card, "Nothing in development: research points are piling up.", Color("e8a86f"), 13)
+	for i in range(r.queue.size()):
+		var item: String = r.queue[i]
+		var track: bool = item.begins_with("track:")
+		var name: String = r.tracks_cfg[item.substr(6)].name if track else r.def_of(item).name
+		var colour: Color = UI.GOLD if track else BRANCH_COLOURS.get(r.def_of(item).branch, UI.GOLD)
 		var row := HBoxContainer.new()
-		_rs_queue.add_child(row)
-		var name: String = r.tracks_cfg[item.substr(6)].name if item.begins_with("track:") else r.def_of(item).name
-		var l := _rs_label(row, "%s — %s" % [name, r.status_of(item)], Color("dfe6e8"))
-		l.custom_minimum_size = Vector2(290, 0)
-		_rs_live.append([l, func(label): label.text = "%s — %s" % [name, world.research.status_of(item)]])
+		row.add_theme_constant_override("separation", 8)
+		card.add_child(row)
+		var n := _text(str(i + 1), 16, colour, true)
+		n.custom_minimum_size.x = 18
+		row.add_child(n)
+		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", 2)
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(col)
+		col.add_child(_text(name, 14, UI.CREAM))
+		var status := _text(r.status_of(item), 12, UI.MUTED)
+		col.add_child(status)
+		_rs_live.append([status, func(label): label.text = world.research.status_of(item)])
+		if not track and r.stage_of(item) < 3:
+			var bar := _rs_bar(col, r.progress[item].work, r.stage_points(item, r.stage_of(item)), colour, 5.0)
+			_rs_live.append([bar, func(b):
+				if world.research.stage_of(item) < 3:
+					b.max_value = world.research.stage_points(item, world.research.stage_of(item))
+					b.value = world.research.progress[item].work])
 		var x := Button.new()
-		x.text = "x"
+		x.text = "✕"
+		x.tooltip_text = "Take it off the queue"
+		x.focus_mode = Control.FOCUS_NONE
 		x.pressed.connect(func(): r.dequeue(item))
 		row.add_child(x)
 
@@ -1836,13 +2018,34 @@ func _research_tracks() -> void:
 	var r: Node = world.research
 	for key in r.tracks_cfg:
 		var t: Dictionary = r.tracks_cfg[key]
-		var b := Button.new()
 		var level: int = r.tracks[key]
 		var why: String = r.track_blocker(key)
-		b.text = "%s %d/%d\n%s" % [t.name, level, int(t.max), "Maxed" if why == "Maxed" else ("Level %d: %d research" % [level + 1, int(r.track_cost(key))] if why == "" else why)]
-		b.tooltip_text = t.desc
-		b.disabled = why != "" or ("track:" + key) in r.queue
-		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		b.custom_minimum_size = Vector2(250, 44)
+		var queued: bool = ("track:" + key) in r.queue
+		var card := PanelContainer.new()
+		card.add_theme_stylebox_override("panel", UI.box(Color("142337"), Color(UI.GOLD, 0.8) if queued else Color("2d4460"), 1, 3, 8.0))
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.tooltip_text = t.desc
+		_rs_tracks.add_child(card)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		card.add_child(row)
+		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", 3)
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(col)
+		col.add_child(_text(t.name, 14, UI.CREAM, true))
+		var pips := HBoxContainer.new()
+		pips.add_theme_constant_override("separation", 3)
+		col.add_child(pips)
+		for i in range(int(t.max)):
+			var pip := ColorRect.new()
+			pip.custom_minimum_size = Vector2(22, 6)
+			pip.color = UI.GOLD if i < level else Color(1, 1, 1, 0.12)
+			pips.add_child(pip)
+		col.add_child(_text("Maxed" if why == "Maxed" else (("Level %d: %d research" % [level + 1, int(r.track_cost(key))]) if why == "" else why), 11, UI.MUTED if why == "" or why == "Maxed" else Color("e8a86f")))
+		var b := Button.new()
+		b.text = "Queued" if queued else "Develop"
+		b.focus_mode = Control.FOCUS_NONE
+		b.disabled = why != "" or queued
 		b.pressed.connect(func(): _say(r.enqueue("track:" + key)))
-		_rs_tracks.add_child(b)
+		row.add_child(b)

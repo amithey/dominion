@@ -218,3 +218,7 @@ UI files listed above.
   builds them (market(): Exchange/Trade routes tabs; territory(): Your land/Nations tabs); hud._market_panel,
   _price_chart and _territory_panel removed. hud.trade_qty, route_*, territory_pick stay in hud.gd.
 - 2026-09-25 Claude: 0.9.18 executable and installer in dist, built from 866e549; packaged --ui-test passes.
+- 2026-09-25 Claude, 0.9.19 (user asked for a new Research screen, in Codex's files): hud.gd research section
+  rewritten (stat figures, era strip + goal chips in _rs_goals, card-style detail/queue/tracks; names kept:
+  _rs, _rs_sel, _rs_sig, _rs_detail, _tree, toggle_research, _refresh_research). research_tree.gd: fit(width)
+  sizes columns so all eras show, branch colours (colours dict), state words, _get_tooltip.

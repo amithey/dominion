@@ -7,6 +7,20 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.19: a new Research screen
+
+- **Title band:** points stored, research rate, discoveries completed and research buildings, as figures.
+- **Eras:** the six eras as a strip (done, current, still ahead). Below it, each goal for the next era is a
+  chip with its own progress bar, and the era's reward.
+- **The tree** now fits beside the details, so all six eras show at once. Each card has its branch's colour
+  down the edge and a state (Done, Locked, stage n/3). Hover a card for its full name and state.
+- **Details:** the chosen discovery in a card with branch, era and cost tags, what it does, its
+  requirements ticked or crossed, and the Research / Add to queue button. Its three stages are cards, each
+  with its cost and effect, and a progress bar on the stage in development.
+- **Queue:** numbered, each project with its live status and a progress bar.
+- **Research tracks** (Economics, Military Science, Covert Ops, High-Tech Industry): cards along the bottom
+  with level pips and a Develop button.
+
 ## Version 0.9.18: new World market and Territory windows
 
 - **World market** has two tabs:
