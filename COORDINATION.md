@@ -252,3 +252,7 @@ UI files listed above.
 - 2026-09-25 Claude: 0.9.24 executable and installer in dist, built from ebb5154; packaged --city-test passes.
 - 2026-09-25 Claude, 0.9.25: middle-button drag turns/tilts the view; Shift + middle drag pans (world._unhandled_input, camera_test updated).
 - 2026-09-25 Claude: 0.9.25 built from 2c2bce4; the game was open, so the exe is dist/DOMINION-0.9.25.exe (packaged --camera-test passes); DOMINION-Setup.exe is 0.9.25.
+- 2026-09-25 Claude, 0.9.26: harbours only in own land (coast_reach exception removed; world.coast_near is the
+  new, more generous coast test); logistics.settlement_of prefers the town whose rings (s.rings_now, set in
+  territory.tick) or purchased land cover the building; supply/launch notices; hud._city_card tiles;
+  leader_gallery.face() crops; MatchSetup.COLOURS. New long check tools/playthrough-check.gd.

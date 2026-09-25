@@ -7,6 +7,22 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.26: harbours in your land, warships that get built, town tiles, leader portraits
+
+- **Harbours** (shipyard, port, fishing wharf) must stand inside your own land, as other buildings do. But
+  "on the coast" is far more generous: any sea within about a hex and a half, shallows included (ships
+  launch into the nearest deep water). A notice says if a harbour has no water deep enough.
+- **Warships:** a building belongs to the town whose land it stands in (or where its land was bought), not
+  simply the nearest town. A shipyard next to an unlinked village used to count as cut off, so its queue
+  never moved. A notice now says when a building's orders wait for supply.
+- **Town hall card:** tiles with icons for residents (and a housing bar), happiness (with a mood word),
+  food, taxes, land rings, and supply.
+- **Leaders:** New Game portraits are framed on the face (a centred crop cut through the heads), and each
+  nation's card carries its own flag colour (they were shifted when you picked another nation).
+- **Checks:** a playthrough test plays 12 minutes as a player (town, workers, army, village and road,
+  research, market) and looks for anything stuck; the naval test covers harbours outside your land and
+  a shipyard beside an unlinked village.
+
 ## Version 0.9.25: turn the view with the middle mouse button
 
 - Hold the middle mouse button and drag: left and right turn the view, up and down tilt it.

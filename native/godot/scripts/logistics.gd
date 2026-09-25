@@ -235,7 +235,17 @@ func settlement_of(b: Dictionary):
 		# the nation's land (not only inside a settlement's radius); one beyond
 		# every radius used to belong to none, count as cut off, and stall its
 		# production at 0%.
+		# A town whose land (its rings) covers the building comes first: a
+		# harbour inside a linked town's land is supplied even if another,
+		# unlinked town happens to stand nearer.
 		var d: float = s.root.position.distance_to(b.root.position)
+		if hex_distance(world_hex(s.root.position), world_hex(b.root.position)) <= int(s.get("rings_now", 2)):  # set by territory.tick
+			d -= 10000.0
+		elif world.territory != null:
+			# Land bought at this town hall is this town's too.
+			var bought = world.territory.purchased.get(str(world.territory.index_of(world.territory.hex_at(b.root.position))))
+			if bought != null and str(bought.settlement) == world.territory.settlement_key(s):
+				d -= 10000.0
 		if d < best_d:
 			best_d = d
 			best = s

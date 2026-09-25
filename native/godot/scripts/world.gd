@@ -2758,7 +2758,11 @@ func update_training(delta: float) -> void:
 		if b.dead or not b.built or b.queue.is_empty():
 			continue
 		if not b.get("supplied", true) or disabled(b):
+			if b.owner == 0 and not b.get("supply_told", false) and not b.get("supplied", true):
+				b.supply_told = true
+				hud.notice("%s is out of supply: its orders wait until its town is linked to the capital by road or rail." % b.def.name)
 			continue  # cut off (or struck by an EMP): the factory waits
+		b.supply_told = false
 		if b.owner > 0 and espionage and espionage.production_down(b.owner):
 			continue  # a cyber attack stopped this nation's factories
 		var rail: float = 1.0 + (logistics.rail_bonus if b.get("rail_supplied", false) else 0.0)
@@ -2784,9 +2788,12 @@ func update_training(delta: float) -> void:
 		out = out.normalized() if out.length() > 1.0 else Vector3.BACK
 		var door: Vector3 = at + out * (b.footprint * 0.62 + 3.5)
 		if key in NAVAL:
-			var launch = water_near(at)
+			var launch = water_near(at, 160)
 			if launch == null:
 				b.queue.push_front(key)
+				if b.owner == 0 and not b.get("launch_told", false):
+					b.launch_told = true
+					hud.notice("The %s has no open water deep enough to launch ships." % b.def.name)
 				continue
 			door = launch
 			out = (door - at).normalized()
@@ -4147,9 +4154,11 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 			low = minf(low, h)
 			high = maxf(high, h)
 		if def.get("coastal", false):
-			if water_near(at) == null or at.distance_to(water_near(at)) > logistics.radius * 2.2:
+			# Any sea within about a hex and a half, shallows included: the ships
+			# are launched into the nearest deep water (update_training).
+			if not coast_near(at, logistics.radius * 1.6):
 				return "Must be built on the coast"
-			if height_at(at.x, at.z) < float(map.seaLevel) + 0.8:
+			if height_at(at.x, at.z) < float(map.seaLevel) + 0.3:
 				return "The centre of the hex must be dry land"
 		elif low < float(map.seaLevel) + 0.25 or height_at(at.x, at.z) < float(map.seaLevel) + 1.0:
 			# Dry ground across the hex is enough: a beach at its edge no longer
@@ -4172,8 +4181,6 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 	var land_owner: int = territory.owner_at(at) if territory != null else -1
 	if land_owner == owner:
 		in_district = true
-	elif land_owner < 0 and def.get("coastal", false) and coast_reach(at, owner):
-		in_district = true  # a harbour may claim unclaimed coast near your land
 	elif land_owner >= 0 and land_owner != owner:
 		return "Inside %s's land" % ("your" if land_owner == 0 else diplomacy.name_of(land_owner))
 	if def.get("unique", false) and buildings.any(func(b): return b.owner == owner and b.key == key and not b.dead):
@@ -4209,6 +4216,21 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 ## building stands on becomes its owner's (territory.gd). Without this the
 ## player could not build a shipyard, and so no warships, without first buying
 ## a strip of land down to the sea.
+## Sea (at least half a metre deep, not a lake) within `reach` of `at`.
+func coast_near(at: Vector3, reach: float) -> bool:
+	for r: float in [reach * 0.5, reach * 0.8, reach]:
+		for i in range(16):
+			var a := i * TAU / 16.0
+			var p := at + Vector3(cos(a), 0, sin(a)) * r
+			if is_water(p, -0.5) and not lake_at(p):
+				return true
+	return false
+
+func lake_at(p: Vector3) -> bool:
+	var c := clampi(int(roundf((p.x - grid_origin.x) / grid_step)), 0, grid_size - 1)
+	var r := clampi(int(roundf((p.z - grid_origin.y) / grid_step)), 0, grid_size - 1)
+	return lake_mask.size() > 0 and lake_mask[r * grid_size + c] == 1
+
 func coast_reach(at: Vector3, owner: int) -> bool:
 	if territory == null:
 		return false

@@ -23,7 +23,21 @@ func run() -> void:
 	w.economy.grant_test_resources()
 	for i in range(10):
 		await process_frame
-	# The nearest coastal hex a shipyard may go on, unclaimed coast included.
+	# A harbour must stand in your own land: the nearest coastal hex is granted,
+	# as if the town had grown to it.
+	for ring in range(1, 9):
+		for q in range(-ring, ring + 1):
+			for r in range(-ring, ring + 1):
+				var gh: Vector2i = w.logistics.world_hex(w.start) + Vector2i(q, r)
+				var ga: Vector3 = w.logistics.hex_center(gh)
+				if w.logistics.hex_distance(w.logistics.world_hex(w.start), gh) == ring and w.site_problem("shipyard", ga, 0) == "Outside your territory" and not w.has_meta("granted"):
+					var gi: int = w.territory.index_of(w.territory.hex_at(ga))
+					w.territory.owner_of[gi] = 0
+					w.territory.control[gi] = 80.0
+					var capital: Dictionary = w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0]
+					w.territory.purchased[str(gi)] = {"owner": 0, "settlement": w.territory.settlement_key(capital)}
+					w.set_meta("granted", ga)
+	# The nearest coastal hex a shipyard may go on.
 	var spot = null
 	var home: Vector2i = w.logistics.world_hex(w.start)
 	for ring in range(1, 9):
@@ -38,7 +52,22 @@ func run() -> void:
 	if spot == null:
 		quit(1)
 		return
+	# Outside your land a harbour is refused, however near the sea.
+	var outside_ok := false
+	for i in range(w.territory.cols * w.territory.rows):
+		var c: Vector3 = w.territory.center(i)
+		if w.territory.owner_at(c) < 0 and w.height_at(c.x, c.z) > 0.5 and w.coast_near(c, 19.0):
+			outside_ok = w.site_problem("shipyard", c, 0) != ""
+			break
+	check(outside_ok, "a harbour outside your land is refused")
 	var yard: Dictionary = w.place_building("shipyard", spot, 0, true)
+	# An unlinked village nearer to the yard than the capital must not cut it off.
+	var near_village: Vector3 = w.logistics.hex_center(w.logistics.world_hex(spot) + Vector2i(2, 0))
+	var village: Dictionary = w.place_building("villageCenter", near_village, 0, true)
+	w.territory.tick()
+	w.logistics.update_supply()
+	print("  yard supplied %s (village supplied %s)" % [yard.get("supplied", true), village.get("supplied", true)])
+	check(yard.get("supplied", true), "a harbour in the capital's land stays supplied beside an unlinked village")
 	for key in yard.def.trains:
 		var locked: String = w.research.unit_locked(key) if w.research else ""
 		var before: int = w.units.filter(func(u): return u.key == key).size()

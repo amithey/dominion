@@ -69,6 +69,8 @@ var _sel_title: Label
 var _sel_sub: Label
 var _sel_hp: ProgressBar
 var _sel_info: Label
+var _city_tiles: GridContainer   # a town hall's accounts as tiles (Civilization style)
+var _city_sig := ""
 var _sel_queue: HBoxContainer
 var _sel_medal: Control
 var _sel_stats: HBoxContainer
@@ -607,6 +609,12 @@ func _build_selection() -> void:
 	_sel_info.custom_minimum_size = Vector2(280, 0)
 	_sel_info.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(_sel_info)
+	_city_tiles = GridContainer.new()
+	_city_tiles.columns = 3
+	_city_tiles.add_theme_constant_override("h_separation", 6)
+	_city_tiles.add_theme_constant_override("v_separation", 6)
+	_city_tiles.visible = false
+	col.add_child(_city_tiles)
 	_sel_queue = HBoxContainer.new()
 	_sel_queue.add_theme_constant_override("separation", 4)
 	col.add_child(_sel_queue)
@@ -992,24 +1000,19 @@ func _update_selection() -> void:
 			if world.disabled(b):
 				lines.append("EMP: systems down.")
 			if b.owner == 0 and world.territory.RINGS_MAX.has(b.key):
-				# The town's accounts (economy.city_report).
-				var c: Dictionary = world.economy.city_report(b)
-				var rings: int = world.territory.rings_of(b)
-				var ring_max: int = int(world.territory.RINGS_MAX[b.key])
-				var next := "" if rings >= ring_max else ", %d more for the next ring" % int(ceilf((rings) * world.territory.PEOPLE_PER_RING - c.residents))
-				lines = [
-					"Residents %d of %d (%d home%s, %d buildings)" % [int(c.residents), int(c.capacity), c.homes, "" if c.homes == 1 else "s", c.buildings],
-					"Happiness %d%%  (local amenities %+d)" % [int(c.happiness), int(c.amenities)],
-					"Food %+.1f/s  (grows %.1f, eats %.1f)" % [c.food_in - c.food_out, c.food_in, c.food_out],
-					"Taxes +$%.2f/s%s" % [c.tax, "" if c.supplied else "  (none: cut off from the capital)"],
-					"Land: %d ring%s of %d%s" % [rings, "" if rings == 1 else "s", ring_max, next],
-				] + lines.slice(1)
+				_city_card(b)  # the town's accounts as tiles
+				lines = lines.slice(1)
 		_sel_info.text = "\n".join(PackedStringArray(lines))
+		_sel_info.visible = _sel_info.text != ""
+		if not (b.owner == 0 and b.built and world.territory.RINGS_MAX.has(b.key)):
+			_city_tiles.visible = false
 		if b.get("repairing",false):
 			_sel_info.text += "\nRepairing · pauses for 6 s after a hit."
 		_fill_queue(b.queue, b.queue_prog)
 		return
 	if not units.is_empty():
+		_city_tiles.visible = false
+		_sel_info.visible = true
 		_sel.visible = true
 		var counts := {}
 		var hp := 0.0
@@ -1048,6 +1051,60 @@ func _update_selection() -> void:
 		_sel_info.text += "\nHP %d / %d%s" % [int(hp),int(max_hp)," · Repair ordered" if units.any(func(u): return u.get("repairing",false)) else ""]
 		return
 	_sel.visible = false
+
+## A town hall's accounts as tiles, as a 4X city screen shows them: residents
+## with a housing bar, happiness with a mood word, the food balance, taxes,
+## land rings with the residents the next ring needs, and supply.
+func _city_card(b: Dictionary) -> void:
+	var c: Dictionary = world.economy.city_report(b)
+	var rings: int = world.territory.rings_of(b)
+	var ring_max: int = int(world.territory.RINGS_MAX[b.key])
+	var food: float = c.food_in - c.food_out
+	var mood: String = "Joyful" if c.happiness >= 80 else ("Content" if c.happiness >= 60 else ("Restless" if c.happiness >= 45 else "Unhappy"))
+	var mood_colour: Color = Color("8fd18a") if c.happiness >= 60 else (UI.GOLD if c.happiness >= 45 else Color("e8836f"))
+	var need := int(ceilf(rings * world.territory.PEOPLE_PER_RING - c.residents))
+	var tiles := [
+		["citizens", "%d" % int(c.residents), "Residents", "of %d homes" % int(c.capacity), UI.CREAM, c.residents / maxf(c.capacity, 1.0)],
+		["happiness", "%d%%" % int(c.happiness), mood, "amenities %+d" % int(c.amenities), mood_colour, c.happiness / 100.0],
+		["food", "%+.1f" % food, "Food / s", "grows %.1f, eats %.1f" % [c.food_in, c.food_out], Color("8fd18a") if food >= 0.0 else Color("e8836f"), -1.0],
+		["money", "+%.2f" % c.tax, "Taxes / s", "cut off: none" if not c.supplied else "from %d people" % int(c.residents), UI.GOLD if c.supplied else Color("e8836f"), -1.0],
+		["land", "%d / %d" % [rings, ring_max], "Land rings", ("full" if rings >= ring_max else "%d more people" % maxi(need, 0)), UI.CREAM, float(rings) / ring_max],
+		["supply", "Linked" if c.supplied else "Cut off", "Supply", "rail +25%" if b.get("rail_supplied", false) else ("road" if c.supplied else "build a road"), Color("8fd18a") if c.supplied else Color("e8836f"), -1.0],
+	]
+	var sig := str(tiles)
+	_city_tiles.visible = true
+	if sig == _city_sig:
+		return
+	_city_sig = sig
+	for child in _city_tiles.get_children():
+		_city_tiles.remove_child(child)
+		child.queue_free()
+	for t in tiles:
+		var tile := PanelContainer.new()
+		tile.add_theme_stylebox_override("panel", UI.box(Color("0f1c2b"), Color(t[4], 0.45), 1, 5, 6.0))
+		tile.custom_minimum_size = Vector2(128, 0)
+		tile.tooltip_text = "%s: %s (%s)" % [t[2], t[1], t[3]]
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		tile.add_child(row)
+		row.add_child(_icon(t[0], 26))
+		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", -1)
+		row.add_child(col)
+		var value := _text(t[1], 17, t[4], true)
+		value.add_theme_font_size_override("font_size", 17)
+		col.add_child(value)
+		col.add_child(_text(t[2], 11, UI.CREAM))
+		col.add_child(_text(t[3], 10, UI.MUTED))
+		if float(t[5]) >= 0.0:
+			var bar := ProgressBar.new()
+			bar.custom_minimum_size = Vector2(80, 4)
+			bar.show_percentage = false
+			bar.max_value = 1.0
+			bar.value = clampf(float(t[5]), 0.0, 1.0)
+			bar.add_theme_stylebox_override("fill", UI.plate(Color(t[4]).lightened(0.1), Color(t[4]).darkened(0.3), Color(0, 0, 0, 0), 0.0))
+			col.add_child(bar)
+		_city_tiles.add_child(tile)
 
 func compact_number(value: float) -> String:
 	if value >= 1000000: return "%.1fM" % (value / 1000000.0)

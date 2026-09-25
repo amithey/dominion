@@ -354,7 +354,7 @@ func _section(title: String, parent: Control = null) -> void:
 ## A nation as a card: the leader's portrait, the flag colour, name and title.
 func _nation_card(i: int) -> Button:
 	var parts: PackedStringArray = str(world.MatchSetup.NATIONS[i]).split(" \u00b7 ")
-	var colour := Color(world.map.nations[i].color) if i < world.map.nations.size() else UI.GOLD
+	var colour := Color(world.MatchSetup.COLOURS[i]) if i < world.MatchSetup.COLOURS.size() else UI.GOLD
 	var chosen: bool = int(setup_options.nation) == i
 	var b := Button.new()
 	b.custom_minimum_size = Vector2(200, 206)
@@ -378,9 +378,7 @@ func _nation_card(i: int) -> Button:
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(col)
 	var pic := TextureRect.new()
-	var path := Gallery.portrait(parts[1] if parts.size() > 1 else "")
-	if path != "":
-		pic.texture = load(path)
+	pic.texture = Gallery.face(parts[1] if parts.size() > 1 else "", 188.0 / 124.0)
 	pic.custom_minimum_size = Vector2(0, 124)
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED

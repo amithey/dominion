@@ -1,5 +1,8 @@
 extends RefCounted
 const DEFAULT := {"map":"island","players":4,"nation":0,"style":"standard"}
+## Each nation's own flag colour, in the order of NATIONS (map.nations is
+## reordered once a match is set up, player first).
+const COLOURS := ["#3b82f6", "#e0483e", "#33b86e", "#e8a83a"]
 const NATIONS := ["Atlantic Federation · President E. Hale","Crimson Empire · Premier K. Volkov","Verdant Union · Chancellor L. Moreau","Golden Dominion · Sultan R. Qadir"]
 
 static func normalize(options: Dictionary) -> Dictionary:

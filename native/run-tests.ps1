@@ -57,6 +57,7 @@ $tests = @(
 if (-not $Quick) {
     $tests += ,@('AI war (hard, fast)', @('--', '--ai-test'), 'AI_TEST PASS', 500)
     $tests += ,@('12-minute match (hard)', @('--', '--soak-test'), 'SOAK_TEST PASS', 600)
+    $tests += ,@('12 minutes played as a player: nothing stuck', @('--script', 'res://tools/playthrough-check.gd'), 'PLAYTHROUGH PASS', 2400)
 }
 
 $results = @()

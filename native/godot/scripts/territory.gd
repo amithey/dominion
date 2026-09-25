@@ -394,6 +394,8 @@ func tick() -> void:
 		# A settlement's land grows with its people (rings_of); any other
 		# building holds the hex it stands on.
 		var reach := rings_of(b) if RINGS_MAX.has(b.key) else 0
+		if RINGS_MAX.has(b.key):
+			b.rings_now = reach
 		if b.owner == 0 and RINGS_MAX.has(b.key):
 			var was: int = int(b.get("rings_told", reach))
 			if reach > was:

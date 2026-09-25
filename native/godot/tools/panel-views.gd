@@ -54,6 +54,20 @@ func run() -> void:
 	w.market.pressure("oil", 900, true)
 	for i in range(12):
 		w.market.exchange_step()
+	# A harbour must stand in your own land: the nearest coastal hex is granted,
+	# as if the town had grown to it.
+	for ring in range(1, 9):
+		for q in range(-ring, ring + 1):
+			for r in range(-ring, ring + 1):
+				var gh: Vector2i = w.logistics.world_hex(w.start) + Vector2i(q, r)
+				var ga: Vector3 = w.logistics.hex_center(gh)
+				if w.logistics.hex_distance(w.logistics.world_hex(w.start), gh) == ring and w.site_problem("shipyard", ga, 0) == "Outside your territory" and not w.has_meta("granted"):
+					var gi: int = w.territory.index_of(w.territory.hex_at(ga))
+					w.territory.owner_of[gi] = 0
+					w.territory.control[gi] = 80.0
+					var capital: Dictionary = w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0]
+					w.territory.purchased[str(gi)] = {"owner": 0, "settlement": w.territory.settlement_key(capital)}
+					w.set_meta("granted", ga)
 	var port_at = null
 	var home: Vector2i = w.logistics.world_hex(w.start)
 	for ring in range(1, 9):

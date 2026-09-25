@@ -91,7 +91,7 @@ func _portrait(id: int, size: float) -> Control:
 	var path := Gallery.portrait(leader)
 	if path != "":
 		var pic := TextureRect.new()
-		pic.texture = load(path)
+		pic.texture = Gallery.face(leader, 1.0)
 		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		pic.custom_minimum_size = Vector2(size - 6, size - 6)
