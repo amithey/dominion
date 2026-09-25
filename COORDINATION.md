@@ -243,3 +243,9 @@ UI files listed above.
   a notice when a site cannot be reached. Check: tools/edge-build-check.gd.
 - 2026-09-25 Claude: 0.9.23 built from ab276d2. The user had dist/DOMINION.exe open, so the new executable is
   dist/DOMINION-0.9.23.exe for now (packaged --city-test passes); DOMINION-Setup.exe is 0.9.23.
+- 2026-09-25 Claude, 0.9.24: logistics edges keyed per kind (edge_key(a,b,owner,kind)); road and rail coexist,
+  rail_offset() lays rail beside a road; routes must run town hall to town hall (world.transport_click);
+  market.land_link()/land_links() enable overland routes (route.overland); economy.city_report(s) and the
+  town-hall card lines in hud.gd; territory.residents() uses it; the buildRadius build loophole is closed;
+  camera keys Q/E/R/F removed, cam_ground smoothing; map_generator snaps deposits to hex centres.
+  Check: tools/towns-check.gd.

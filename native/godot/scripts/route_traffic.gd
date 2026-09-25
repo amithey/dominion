@@ -249,6 +249,17 @@ func _track(kind: String, hexes: Array, came: Variant) -> PackedVector3Array:
 			var r := 6.0 if rail else 4.5
 			_bezier(pts, c - d_in * r, c, c + d_out * r, 5)
 	if rail:
+		# Beside a road the railway is laid to one side (logistics.rail_offset).
+		for i in range(pts.size()):
+			var k: int = clampi(int(round(float(i) / maxf(pts.size() - 1, 1) * (n - 1))), 0, n - 1)
+			var shift := Vector3.ZERO
+			var count := 0
+			for j in [k - 1, k]:
+				if j >= 0 and j + 1 < n:
+					shift += world.logistics.rail_offset(hexes[j], hexes[j + 1])
+					count += 1
+			if count > 0:
+				pts[i] += shift / count
 		return pts
 	var lane := PackedVector3Array()
 	lane.resize(pts.size())
@@ -789,6 +800,8 @@ func _sync_ships() -> void:
 	var live := {}
 	var berth := 0
 	for r in world.market.routes:
+		if r.get("overland", false):
+			continue  # goods go by road or rail: the lorries and trains carry them
 		var id := "ship:%d" % r.id
 		live[id] = true
 		berth += 1

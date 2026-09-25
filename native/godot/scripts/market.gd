@@ -132,6 +132,28 @@ func has_market() -> bool:
 func ports() -> int:
 	return world.economy.owned("port")
 
+## "rail", "road" or "": whether your roads or railways reach one of
+## `nation`'s town halls from your capital (overland trade, no port needed).
+func land_link(nation: int) -> String:
+	var lg: Node = world.logistics
+	var best := ""
+	for b in world.buildings:
+		if b.dead or b.owner != nation or b.def.get("settlement") == null:
+			continue
+		var h: Vector2i = lg.world_hex(b.root.position)
+		if lg.rail_reachable.get(0, {}).has(h):
+			return "rail"
+		if lg.reachable.get(0, {}).has(h):
+			best = "road"
+	return best
+
+func land_links() -> int:
+	var n := 0
+	for i in range(1, world.diplomacy.n):
+		if not world.diplomacy.defeated(i) and land_link(i) != "":
+			n += 1
+	return n
+
 ## Routes allowed: commercial contracts (pacts + up to two markets), limited by berths.
 func route_cap() -> int:
 	var d: Node = world.diplomacy
@@ -140,7 +162,7 @@ func route_cap() -> int:
 		if not d.defeated(i) and d.pact[0][i]:
 			pacts += 1
 	var contracts := pacts + mini(world.economy.owned("market"), 2) + (int(world.research.bonus("tradeRoutes")) if world.research else 0)
-	return maxi(0, mini(contracts, ports() * int(cfg.routesPerPort)))
+	return maxi(0, mini(contracts, ports() * int(cfg.routesPerPort) + land_links() * 2))
 
 ## Armed warships at sea lower the chance of losing a cargo.
 func risk() -> float:
@@ -189,8 +211,9 @@ func buy(res: String, qty: int) -> String:
 
 func open_route(nation: int, res: String, dir: String, qty: int) -> String:
 	var d: Node = world.diplomacy
-	if ports() == 0:
-		return "Overseas trade requires a completed Commercial Port."
+	var overland := land_link(nation)
+	if ports() == 0 and overland == "":
+		return "Trade needs a Commercial Port, or a road or railway to one of %s's towns." % world.diplomacy.name_of(nation)
 	if d.defeated(nation):
 		return "That nation no longer exists."
 	if d.at_war(0, nation):
@@ -199,7 +222,7 @@ func open_route(nation: int, res: String, dir: String, qty: int) -> String:
 		return "Trade routes need a trade pact with %s." % d.name_of(nation)
 	if routes.size() >= route_cap():
 		return "Route limit reached (%d). Each port has %d berths; trade pacts and markets give contracts." % [route_cap(), int(cfg.routesPerPort)]
-	routes.append({"id": _next_id, "nation": nation, "res": res, "dir": dir, "qty": qty, "shipment": null, "status": "Awaiting cargo", "total": 0.0})
+	routes.append({"id": _next_id, "nation": nation, "res": res, "dir": dir, "qty": qty, "shipment": null, "status": "Awaiting cargo", "total": 0.0, "overland": overland != ""})
 	_next_id += 1
 	changed.emit()
 	return "Trade route opened: %s %d %s %s %s." % ["exporting" if dir == "export" else "importing", qty, res, "to" if dir == "export" else "from", d.name_of(nation)]
@@ -259,13 +282,13 @@ func tick() -> void:
 				continue
 			var cargo: Dictionary = r.shipment
 			r.shipment = null
-			if sabotaged > 0:
+			if sabotaged > 0 and not r.get("overland", false):
 				sabotaged -= 1
 				lost += 1
 				r.status = "Sunk by saboteurs — reloading"
 				world.hud.notice("SABOTAGE: the %s cargo on the %s route was sunk. It never arrived." % [r.res, d.name_of(r.nation)])
 				continue
-			if randf() < risk():
+			if randf() < (0.02 if r.get("overland", false) else risk()):  # bandits on the road; storms and raiders at sea
 				lost += 1
 				r.status = "Shipment lost — reloading"
 				world.hud.notice("A %s shipment on the %s route was lost at sea. Warships reduce this risk." % [r.res, d.name_of(r.nation)])
@@ -285,6 +308,8 @@ func tick() -> void:
 			continue
 		var value := roundi(r.qty * price(r.res) * (float(cfg.importMarkup) if r.dir == "import" else 1.0))
 		var voyage := float(cfg.voyage)
+		if r.get("overland", false):
+			voyage *= 0.4 if land_link(r.nation) == "rail" else 0.65  # trains are quickest
 		if r.dir == "export" and eco.res.get(r.res, 0.0) >= r.qty:
 			eco.res[r.res] -= r.qty
 			pressure(r.res, r.qty, false)

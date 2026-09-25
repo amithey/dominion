@@ -185,6 +185,50 @@ func supply_coverage() -> float:
 			connected += POPULATION_WEIGHTS[b.key]
 	return connected / total if total > 0.0 else 0.0
 
+## One town's accounts (a capital, city or village centre `s`): the homes and
+## other buildings that belong to it (the nearest town hall, logistics.gd),
+## how many people live there (the nation's citizens shared by housing), what
+## its amenities add to happiness, its food balance and the taxes it pays.
+func city_report(s: Dictionary) -> Dictionary:
+	var own: Array = []
+	for b in world.buildings:
+		if b.owner != s.owner or b.dead or not b.built:
+			continue
+		if is_same(b, s) or (b.def.get("settlement") == null and is_same(world.logistics.settlement_of(b), s)):
+			own.append(b)
+	var capacity := 0.0
+	var amenities := 0.0
+	var farms := 0.0
+	var income_pct := 0.0
+	var homes := 0
+	for b in own:
+		var p: Dictionary = b.def.provides
+		capacity += float(p.get("civCap", 0.0))
+		if float(p.get("civCap", 0.0)) > 0.0 and not is_same(b, s):
+			homes += 1
+		amenities += float(p.get("happiness", 0.0))
+		income_pct += float(p.get("incomePct", 0.0))
+		if b.key == "farm":
+			farms += float(cfg.farmFood)
+		elif b.key == "fishingWharf":
+			farms += 2.0
+	if s.key == "hq":
+		capacity += float(cfg.baseCivCap)  # the capital's own streets
+	# The nation's citizens live where the homes are.
+	var all_capacity := float(cfg.baseCivCap)
+	for b in world.buildings:
+		if b.owner == s.owner and b.built and not b.dead:
+			all_capacity += float(b.def.provides.get("civCap", 0.0))
+	var people := 0.0
+	if s.owner == 0:
+		people = civilians * capacity / maxf(all_capacity, 1.0)
+	var supplied: bool = s.get("supplied", true)
+	var eats := people * float(cfg.foodPerCivilian) * (1.0 + civilians / 2000.0)
+	var r: Node = world.research
+	var tax: float = people * float(cfg.taxPerCivilian) * admin * (1.0 if supplied else 0.0) * (1.0 + provided("incomePct") + (r.bonus("incomePct") if r else 0.0))
+	return {"residents": people, "capacity": capacity, "homes": homes, "buildings": own.size(), "amenities": amenities,
+		"happiness": happiness, "food_in": farms, "food_out": eats, "tax": tax, "supplied": supplied}
+
 func can_afford(cost: Dictionary) -> bool:
 	for key in cost:
 		if res.get(key, 0.0) < float(cost[key]):

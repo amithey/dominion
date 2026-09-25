@@ -398,17 +398,23 @@ func era_requirements(index: int) -> Array:
 		var label: String = key
 		match key:
 			"villages":
-				label = "Villages"
-				have = eco.owned("villageCenter")
+				label = "Village Centers"
+				have = eco.standing("villageCenter")  # linked to the capital or not
 			"cities":
-				label = "Cities"
-				have = eco.owned("cityCenter")
+				label = "City Centers"
+				have = eco.standing("cityCenter")
 			"buildings":
 				label = "Buildings"
 				have = world.buildings.filter(func(b): return b.owner == 0 and b.built and not b.dead).size()
 			"civilians":
 				label = "Citizens"
 				have = eco.civilians
+				var cut := 0
+				for b in world.buildings:
+					if b.owner == 0 and b.built and not b.dead and not b.get("supplied", true) and float(b.def.provides.get("civCap", 0.0)) > 0.0:
+						cut += 1
+				if eco.civ_cap < need:
+					label = "Citizens (homes for %d: build housing%s)" % [int(eco.civ_cap), ", and link %d cut-off town%s by road" % [cut, "" if cut == 1 else "s"] if cut > 0 else ""]
 			"discoveries":
 				label = "Discoveries"
 				have = completed_count()

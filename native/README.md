@@ -7,6 +7,27 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.24: towns with accounts, land from people, roads between town halls, overland trade
+
+- **Roads and railways** run from one of your town halls (capital, city, village centre) to another town
+  hall: yours, or another nation's. A railway laid on a road's link runs beside the road instead of
+  replacing it, and trains use it.
+- **Overland trade:** a road or railway to another nation's town opens trade without a port (a trade pact
+  is still needed). Goods travel faster than by sea (fastest by rail) and are rarely lost.
+- **Land is not free.** Building on a hex no longer claims it: you may only build in your own land.
+  A town's land grows with its **actual residents**, one ring at a time, with a notice when it happens.
+  More land can still be bought at a town hall or won in war. (A harbour may still go on free coast next to
+  your land, or there would be no shipyard.)
+- **Town accounts:** a town hall's card shows residents and housing, happiness and local amenities, the
+  food balance, the taxes it pays, and its land (rings, and how many more residents the next one needs).
+- **Urban Era:** a standing City Center counts, linked by road or not. The citizens goal says how many
+  homes you have, and how many towns are cut off.
+- **Resources:** on the new maps every resource sits at a hex centre. A building on a resource hides its
+  map marker.
+- **Camera:** the keyboard no longer turns or tilts the view (Q/E/R/F sat next to W), and the camera glides
+  over hills instead of bobbing.
+- New check: `tools/towns-check.gd`.
+
 ## Version 0.9.23: research sees your shipyard; hard-to-reach sites get built
 
 - A research facility counts once it is built, even if its town is cut off from the capital (supply

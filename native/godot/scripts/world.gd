@@ -1150,6 +1150,7 @@ func register_building(key: String, owner: int, built: bool, root: Node3D, model
 			dep.extractor = entity
 			entity.deposit = dep
 			if dep.get("water", false): dep.node.hide()
+			deposit_marker(dep, false)
 	if not built:
 		model.scale.y *= 0.06
 		entity.full_scale_y = model.scale.y / 0.06
@@ -1215,6 +1216,13 @@ func build_deposits() -> void:
 		var node := art.build(d.type, at, fmod(d.x * 3.7 + d.z, TAU))
 		add_child(node)
 		deposits.append({"type": d.type, "def": def, "pos": node.position, "node": node, "extractor": null, "water": water})
+
+## Shows or hides a deposit's map marker (hidden while a building works it).
+func deposit_marker(dep: Dictionary, on: bool) -> void:
+	if is_instance_valid(dep.get("node")):
+		var icon: Node = dep.node.find_child("Icon", true, false)
+		if icon != null:
+			icon.visible = on
 
 func deposit_near(at: Vector3, radius: float):
 	var best = null
@@ -2828,16 +2836,26 @@ func update_transport() -> void:
 		hud.show_transport("No land route there: roads cannot cross the sea, steep cliffs or a rival's land.")
 		return
 	var cost: Dictionary = logistics.quote(transport_route, transport_kind, 0)
-	hud.show_transport("%d links · %s. Click to build; intact links are free, damaged ones are repaired at a discount." % [transport_route.size() - 1, hud.cost_text({"money": cost.money, "iron": cost.iron} if cost.iron > 0 else {"money": cost.money})])
+	var target = logistics.town_hall_at(hex)
+	var to_whom: String = "" if target == null else (" to %s's %s: opens overland trade" % [diplomacy.name_of(target.owner), target.def.name] if target.owner != 0 else " to your %s" % target.def.name)
+	hud.show_transport("%d links%s · %s. %s" % [transport_route.size() - 1, to_whom, hud.cost_text({"money": cost.money, "iron": cost.iron} if cost.iron > 0 else {"money": cost.money}), "Click to build." if target != null else "Point at a town hall to end the route there."])
 
 func transport_click(screen: Vector2, keep: bool) -> void:
 	var point = ground_point(screen)
 	if point == null:
 		return
 	if transport_start == null:
+		var hall = logistics.town_hall_at(logistics.world_hex(point))
+		if hall == null or hall.owner != 0:
+			hud.notice("Roads and railways start at one of your town halls: your capital, a city or a village centre.")
+			return
 		transport_start = logistics.world_hex(point)
 		transport_hover = Vector2i(1 << 20, 0)
-		hud.show_transport("Now click the destination hex.")
+		hud.show_transport("Now click the town hall to link it to: one of yours, or another nation's (overland trade).")
+		return
+	var goal_hall = logistics.town_hall_at(logistics.world_hex(point))
+	if goal_hall == null or transport_route.is_empty() or transport_route[-1] != logistics.world_hex(goal_hall.root.position):
+		hud.notice("A road or railway ends at a town hall: a capital, a city or a village centre.")
 		return
 	if transport_route.size() < 2:
 		hud.notice("No route to build")
@@ -2846,7 +2864,11 @@ func transport_click(screen: Vector2, keep: bool) -> void:
 	if not logistics.build(transport_route, transport_kind, 0):
 		hud.notice("Not enough %s" % economy.missing(cost))
 		return
-	hud.notice("%s built: supply network updated" % ("Road" if transport_kind == "road" else "Railway"))
+	var reached = logistics.town_hall_at(transport_route[-1])
+	if reached != null and reached.owner != 0:
+		hud.notice("%s built to %s: overland trade is open (World market, Trade routes; a trade pact is still needed)." % ["Road" if transport_kind == "road" else "Railway", diplomacy.name_of(reached.owner)])
+	else:
+		hud.notice("%s built: supply network updated" % ("Road" if transport_kind == "road" else "Railway"))
 	if keep:
 		transport_start = transport_route[transport_route.size() - 1]
 		transport_route = []
@@ -4126,8 +4148,9 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 		var gap := Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length()
 		if not is_district(key) and gap < (footprint + b.footprint) * 0.55:
 			return "Too close to %s" % b.def.name
-		if b.owner == owner and b.built and gap < float(b.def.get("buildRadius", 0)):
-			in_district = true
+		# (A town's buildRadius no longer makes the land round it buildable: that
+		# let a player build on unclaimed hexes and so take them for nothing.
+		# Land comes from the town's people, purchase, or conquest.)
 	# Land you hold is land you may build on, anywhere in it (territory.gd, hex
 	# by hex, sea hexes off your coast included); another nation's land is not.
 	var land_owner: int = territory.owner_at(at) if territory != null else -1
@@ -4922,6 +4945,7 @@ func destroy_building(b: Dictionary) -> void:
 	if b.deposit != null:
 		b.deposit.extractor = null
 		if b.deposit.get("water", false): b.deposit.node.show()
+		deposit_marker(b.deposit, true)
 	if selected_building == b:
 		select_building(null)
 	for u in units:
@@ -5123,10 +5147,15 @@ func capture_battle() -> void:
 # ---------------------------------------------------------------- camera and input
 
 # Same orbit as updateCamera() in js/main.js.
+var cam_ground := INF
+
 func update_camera(delta: float) -> void:
 	cam_dist += (cam_dist_target - cam_dist) * (1.0 - exp(-delta * 12.0))
+	# The camera rides the ground smoothly: panning over a hill no longer jolts
+	# the view up and down (which read as the angle changing).
 	var ground := maxf(height_at(cam_focus.x, cam_focus.z), float(map.seaLevel))
-	var focus := Vector3(cam_focus.x, ground + cam_lift, cam_focus.z)
+	cam_ground = ground if cam_ground == INF or delta >= 0.99 else lerpf(cam_ground, ground, 1.0 - exp(-delta * 3.0))
+	var focus := Vector3(cam_focus.x, cam_ground + cam_lift, cam_focus.z)
 	camera.global_position = focus + Vector3(sin(cam_yaw) * cam_dist * cos(cam_pitch), cam_dist * sin(cam_pitch), cos(cam_yaw) * cam_dist * cos(cam_pitch))
 	camera.look_at(focus)
 	# Sound: the listener stands at the focus; surf plays from the nearest shore.
@@ -5161,8 +5190,10 @@ func _process(delta: float) -> void:
 
 # Moves the camera the ways strategy players expect: WASD or the arrow keys,
 # pushing the mouse against the edge of the screen, dragging with the middle
-# mouse button (see _unhandled_input), Q/E to turn, R/F to tilt. Keys are read
-# by their position, so they work with any keyboard layout (Hebrew included).
+# mouse button (see _unhandled_input). The view's angle is fixed: turning and
+# tilting from the keyboard (Q/E, R/F) was removed at the player's request, as
+# a stray key beside W swung the view. Keys are read by their position, so
+# they work with any keyboard layout (Hebrew included).
 func pan_camera(delta: float) -> void:
 	var pan := cam_dist * 0.9 * delta * pan_speed
 	var forward := Vector3(-sin(cam_yaw), 0, -cos(cam_yaw))
@@ -5185,10 +5216,6 @@ func pan_camera(delta: float) -> void:
 			elif mouse.y > view.y - edge: move.y -= 1.0
 	if move != Vector2.ZERO:
 		cam_focus += (right * move.x + forward * move.y).normalized() * pan * (1.6 if Input.is_physical_key_pressed(KEY_SHIFT) else 1.0)
-	if Input.is_physical_key_pressed(KEY_Q): cam_yaw += delta * 1.6
-	if Input.is_physical_key_pressed(KEY_E): cam_yaw -= delta * 1.6
-	if Input.is_physical_key_pressed(KEY_R) or Input.is_physical_key_pressed(KEY_PAGEUP): cam_pitch = minf(1.25, cam_pitch + delta * 1.1)
-	if Input.is_physical_key_pressed(KEY_F) or Input.is_physical_key_pressed(KEY_PAGEDOWN): cam_pitch = maxf(0.3, cam_pitch - delta * 1.1)
 	clamp_camera()
 
 ## Keeps the view over the island.
@@ -5428,7 +5455,7 @@ func make_hud() -> void:
 	title.add_theme_font_size_override("font_size", 18)
 	column.add_child(title)
 	var hint := Label.new()
-	hint.text = "Drag/click: select   Right click: move / attack   Ctrl+right: attack-move   B: battle demo\nWASD: pan   Q/E: rotate   R/F: tilt   Wheel: zoom"
+	hint.text = "Drag/click: select   Right click: move / attack   Ctrl+right: attack-move   B: battle demo\nWASD: pan   Wheel: zoom"
 	column.add_child(hint)
 	status = Label.new()
 	column.add_child(status)

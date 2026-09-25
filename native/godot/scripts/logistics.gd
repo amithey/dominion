@@ -66,10 +66,37 @@ func world_hex(p: Vector3) -> Vector2i:
 func hex_distance(a: Vector2i, b: Vector2i) -> int:
 	return (absi(a.x - b.x) + absi(a.y - b.y) + absi(a.x + a.y - b.x - b.y)) / 2
 
-func edge_key(a: Vector2i, b: Vector2i, owner: int) -> String:
+## A road and a railway between the same two hexes are separate links, side by side.
+func edge_key(a: Vector2i, b: Vector2i, owner: int, kind := "road") -> String:
 	var ka := "%d,%d" % [a.x, a.y]
 	var kb := "%d,%d" % [b.x, b.y]
-	return "%d:%s|%s" % [owner, ka, kb] if ka < kb else "%d:%s|%s" % [owner, kb, ka]
+	var key := "%d:%s|%s" % [owner, ka, kb] if ka < kb else "%d:%s|%s" % [owner, kb, ka]
+	return key if kind == "road" else key + "|" + kind
+
+## Where a railway runs beside a road on the same link, it is laid this far
+## to one side (always the same side of the link, whichever way it is walked).
+const RAIL_BESIDE := 3.6
+func rail_offset(a: Vector2i, b: Vector2i) -> Vector3:
+	var beside := false
+	for e in edges.values():
+		if e.kind == "road" and e.hp > 0.0 and ((e.a == a and e.b == b) or (e.a == b and e.b == a)):
+			beside = true
+			break
+	if not beside:
+		return Vector3.ZERO
+	var a_first: bool = a.x < b.x or (a.x == b.x and a.y < b.y)
+	var lo: Vector2i = a if a_first else b
+	var hi: Vector2i = b if a_first else a
+	var d := hex_center(hi) - hex_center(lo)
+	d.y = 0.0
+	return Vector3(-d.z, 0, d.x).normalized() * RAIL_BESIDE
+
+## A town hall's hex (capital, city or village centre), or null.
+func town_hall_at(h: Vector2i):
+	for b in world.buildings:
+		if not b.dead and b.def.get("settlement") != null and world_hex(b.root.position) == h:
+			return b
+	return null
 
 # ---------------------------------------------------------------- planning
 
@@ -122,7 +149,10 @@ func rival_districts(owner: int) -> Array:
 func plan(start: Vector2i, goal: Vector2i, owner: int, kind: String) -> Array:
 	if hex_distance(start, goal) > 70:
 		return []
-	var rivals := rival_districts(owner)
+	# A link may run into another nation's town hall (overland trade) but not
+	# through its other towns.
+	var goal_at := hex_center(goal)
+	var rivals := rival_districts(owner).filter(func(r): return Vector2(r.x - goal_at.x, r.z - goal_at.z).length() > radius)
 	var open := [{"h": start, "g": 0, "f": hex_distance(start, goal)}]
 	var best := {start: 0}
 	var parent := {}
@@ -154,10 +184,10 @@ func plan(start: Vector2i, goal: Vector2i, owner: int, kind: String) -> Array:
 func quote(route: Array, kind: String, owner: int) -> Dictionary:
 	var cost := {"money": 0.0, "iron": 0.0}
 	for i in range(1, route.size()):
-		var e = edges.get(edge_key(route[i - 1], route[i], owner))
-		if e != null and e.hp >= e.max_hp and (e.kind == kind or e.kind == "rail"):
+		var e = edges.get(edge_key(route[i - 1], route[i], owner, kind))
+		if e != null and e.hp >= e.max_hp:
 			continue
-		var repair: bool = e != null and (e.kind == kind or e.kind == "rail")
+		var repair: bool = e != null
 		var rate := 1.0
 		var price: Dictionary = transport[kind]
 		if repair:
@@ -183,11 +213,9 @@ func build(route: Array, kind: String, owner: int) -> bool:
 			return false
 		nation.money -= cost.money + cost.iron * 2.0
 	for i in range(1, route.size()):
-		var key := edge_key(route[i - 1], route[i], owner)
-		var old = edges.get(key)
-		var next_kind: String = "rail" if old != null and old.kind == "rail" else kind
-		var hp := float(transport[next_kind].hp)
-		edges[key] = {"a": route[i - 1], "b": route[i], "owner": owner, "kind": next_kind, "hp": hp, "max_hp": hp, "half": [hp, hp]}
+		var key := edge_key(route[i - 1], route[i], owner, kind)
+		var hp := float(transport[kind].hp)
+		edges[key] = {"a": route[i - 1], "b": route[i], "owner": owner, "kind": kind, "hp": hp, "max_hp": hp, "half": [hp, hp]}
 	dirty = true
 	world.refresh_streets()
 	update_supply()
@@ -327,8 +355,9 @@ func rebuild_mesh() -> void:
 	var broken := Color("5a3a2c")
 	var junctions := {}   # hex -> kind of the links meeting there (outside districts)
 	for e in edges.values():
-		var from := hex_center(e.a)
-		var to := hex_center(e.b)
+		var shift: Vector3 = rail_offset(e.a, e.b) if e.kind == "rail" else Vector3.ZERO
+		var from := hex_center(e.a) + shift
+		var to := hex_center(e.b) + shift
 		var mid := (from + to) * 0.5
 		for side in range(2):
 			var a := from if side == 0 else mid

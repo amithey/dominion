@@ -520,6 +520,7 @@ func _school() -> Node3D:
 ## The resource icon over the site, on a dark disc so it reads on any ground.
 func _icon(type: String, height: float) -> Node3D:
 	var root := Node3D.new()
+	root.name = "Icon"  # hidden while a building stands on the deposit (world.gd)
 	root.position = Vector3(0, height, 0)
 	var back := Sprite3D.new()
 	back.texture = _disc_texture()

@@ -176,7 +176,7 @@ func restore(data: Dictionary) -> void:
 		var kind: String = e.kind
 		var hp := float(world.logistics.transport[kind].hp)
 		var half := [float(e.half[0]), float(e.half[1])]
-		world.logistics.edges[world.logistics.edge_key(a, bb, int(e.owner))] = {
+		world.logistics.edges[world.logistics.edge_key(a, bb, int(e.owner), str(e.get("kind", "road")))] = {
 			"a": a, "b": bb, "owner": int(e.owner), "kind": kind, "hp": minf(half[0], half[1]), "max_hp": hp, "half": half,
 		}
 	world.refresh_streets()

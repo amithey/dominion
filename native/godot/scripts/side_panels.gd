@@ -622,14 +622,15 @@ func _routes(m: Node) -> void:
 	_stat(stats, "%d%%" % roundi(m.risk() * 100), "loss at sea", DOWN if m.risk() > 0.05 else hud.GOLD)
 	_stat(stats, "%d" % m.delivered, "delivered", UP)
 	_stat(stats, "%d" % m.lost, "lost", DOWN if m.lost > 0 else hud.UI.MUTED)
-	if m.ports() == 0:
-		hud._side_rows.add_child(hud._text("Overseas trade needs a Commercial Port on the coast.", 13, hud.UI.BAD))
+	if m.ports() == 0 and m.land_links() == 0:
+		hud._side_rows.add_child(hud._text("Trade needs a Commercial Port, or a road or railway to another nation's town.", 13, hud.UI.BAD))
 	for r in m.routes:
 		var card: VBoxContainer = hud._card(hud._nation_colour(r.nation))
 		var head: HBoxContainer = hud._row(card, 8)
 		head.add_child(hud._icon(r.res, 26))
 		var arrow: String = "→" if r.dir == "export" else "←"
-		var t: Label = hud._text("%s  %d %s  %s  %s" % ["Export" if r.dir == "export" else "Import", r.qty, r.res, arrow, d.name_of(r.nation)], 15, hud.UI.CREAM, true)
+		var by: String = ("by " + (m.land_link(r.nation) if m.land_link(r.nation) != "" else "road")) if r.get("overland", false) else "by sea"
+		var t: Label = hud._text("%s  %d %s  %s  %s  (%s)" % ["Export" if r.dir == "export" else "Import", r.qty, r.res, arrow, d.name_of(r.nation), by], 15, hud.UI.CREAM, true)
 		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		head.add_child(t)
 		hud._button(head, "Close", m.close_route.bind(r.id), true, "bad")
@@ -659,7 +660,7 @@ func _routes(m: Node) -> void:
 	hud._choice(row, partners, hud.route_nation, func(v): hud.route_nation = v)
 	var value := roundi(hud.trade_qty * m.price(hud.route_res) * (float(m.cfg.importMarkup) if hud.route_dir == "import" else 1.0))
 	_note(form, "%d units a voyage (worth about $%d), %d seconds at sea. Warships lower the losses." % [hud.trade_qty, value, int(m.cfg.voyage)])
-	hud._button(form, "Open route", func(): return m.open_route(hud.route_nation, hud.route_res, hud.route_dir, hud.trade_qty), m.ports() > 0, "good")
+	hud._button(form, "Open route", func(): return m.open_route(hud.route_nation, hud.route_res, hud.route_dir, hud.trade_qty), m.ports() > 0 or m.land_link(hud.route_nation) != "", "good")
 
 # ---------------------------------------------------------------- territory
 ## Territory tabs: Your land (how firmly you hold it, what kind of land it is,

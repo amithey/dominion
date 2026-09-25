@@ -260,6 +260,11 @@ func _trees() -> Array:
 			out.append({"x": snappedf(p.x, 0.01), "z": snappedf(p.y, 0.01), "scale": snappedf(_rng.randf_range(1.0, 1.6), 0.01), "kind": "real", "grove": -1})
 	return out
 
+## Deposits sit at hex centres, like the exported island's, one to a hex, and
+## never in a hex a starting town stands on.
+func _snap(p: Vector2) -> Vector2:
+	return _hex_centre(p)
+
 func _free(p: Vector2, taken: Array, gap: float) -> bool:
 	for q in taken:
 		if p.distance_to(q) < gap:
@@ -273,7 +278,7 @@ func _deposits() -> Array:
 	for s in starts:
 		for type in ["oil", "iron", "gold"]:
 			for tries in range(300):
-				var p: Vector2 = s + Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(55.0, 95.0)
+				var p: Vector2 = _snap(s + Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(55.0, 95.0))
 				var h := height(p)
 				if h > 1.5 and h < 14.0 and _slope(p) < 0.35 and _free(p, taken, 24.0) and not _near_start(p, 50.0):
 					out.append({"type": type, "x": snappedf(p.x, 0.01), "z": snappedf(p.y, 0.01)})
@@ -287,7 +292,7 @@ func _deposits() -> Array:
 		for tries in range(want * 200):
 			if placed >= want:
 				break
-			var p := _random_point()
+			var p := _snap(_random_point())
 			var h := height(p)
 			var mountain: bool = type in ["iron", "diamond", "uranium"]
 			if h > 1.5 and h < (24.0 if mountain else 12.0) and _slope(p) < (0.6 if mountain else 0.35) and _free(p, taken, 24.0) and not _near_start(p, 48.0):
@@ -302,7 +307,7 @@ func _deposits() -> Array:
 		for tries in range(want * 300):
 			if placed >= want:
 				break
-			var p := _random_point()
+			var p := _snap(_random_point())
 			var h := height(p)
 			var ok: bool = (h < -4.0 and h > -30.0) if type == "seaOil" else (h < -1.5 and h > -7.0)
 			if ok and _free(p, taken, 30.0):

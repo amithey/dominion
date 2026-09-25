@@ -991,6 +991,19 @@ func _update_selection() -> void:
 				lines.append("Rail supplied: +25% production.")
 			if world.disabled(b):
 				lines.append("EMP: systems down.")
+			if b.owner == 0 and world.territory.RINGS_MAX.has(b.key):
+				# The town's accounts (economy.city_report).
+				var c: Dictionary = world.economy.city_report(b)
+				var rings: int = world.territory.rings_of(b)
+				var ring_max: int = int(world.territory.RINGS_MAX[b.key])
+				var next := "" if rings >= ring_max else ", %d more for the next ring" % int(ceilf((rings) * world.territory.PEOPLE_PER_RING - c.residents))
+				lines = [
+					"Residents %d of %d (%d home%s, %d buildings)" % [int(c.residents), int(c.capacity), c.homes, "" if c.homes == 1 else "s", c.buildings],
+					"Happiness %d%%  (local amenities %+d)" % [int(c.happiness), int(c.amenities)],
+					"Food %+.1f/s  (grows %.1f, eats %.1f)" % [c.food_in - c.food_out, c.food_in, c.food_out],
+					"Taxes +$%.2f/s%s" % [c.tax, "" if c.supplied else "  (none: cut off from the capital)"],
+					"Land: %d ring%s of %d%s" % [rings, "" if rings == 1 else "s", ring_max, next],
+				] + lines.slice(1)
 		_sel_info.text = "\n".join(PackedStringArray(lines))
 		if b.get("repairing",false):
 			_sel_info.text += "\nRepairing · pauses for 6 s after a hit."

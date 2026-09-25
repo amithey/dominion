@@ -209,6 +209,8 @@ func land_cells() -> int:
 ## People living around settlement `s`: its own share and that of the homes
 ## nearest to it, times how full the nation's housing is.
 func residents(s: Dictionary) -> float:
+	if s.owner == 0 and world.economy != null:
+		return float(world.economy.city_report(s).residents)  # the town's actual people
 	var weights: Dictionary = world.economy.POPULATION_WEIGHTS if world.economy != null else {}
 	var fill := 0.8
 	if s.owner == 0 and world.economy != null:
@@ -392,6 +394,11 @@ func tick() -> void:
 		# A settlement's land grows with its people (rings_of); any other
 		# building holds the hex it stands on.
 		var reach := rings_of(b) if RINGS_MAX.has(b.key) else 0
+		if b.owner == 0 and RINGS_MAX.has(b.key):
+			var was: int = int(b.get("rings_told", reach))
+			if reach > was:
+				world.hud.notice("%s has grown to %d residents: its land spreads one ring further." % [b.def.name, int(residents(b))])
+			b.rings_told = reach
 		_presence(presence, b.root.position, b.owner, w, reach, nations)
 		_presence(built, b.root.position, b.owner, w, reach, nations)
 	# Land bought at a town hall is held as firmly as a building's own hex.
