@@ -237,3 +237,4 @@ UI files listed above.
 - 2026-09-25 Claude, 0.9.22 (user asked for a new Settings screen, Codex's menu.gd): open_settings has tabs
   (settings_tab) with _setting cards; new settings world.pan_speed, world.show_fps, saves.autosave_every,
   vsync, Engine.max_fps, SFX bus volume, all in user://settings.cfg. Check: tools/settings-check.gd.
+- 2026-09-25 Claude: 0.9.22 executable and installer in dist, built from 47f28d2; packaged --menu-test passes.
