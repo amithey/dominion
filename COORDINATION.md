@@ -241,3 +241,5 @@ UI files listed above.
 - 2026-09-25 Claude, 0.9.23: research.blocker accepts a built facility even when unsupplied (economy.standing);
   world.approach_point falls back to the closest reachable point (site.site_spot counts as at the site);
   a notice when a site cannot be reached. Check: tools/edge-build-check.gd.
+- 2026-09-25 Claude: 0.9.23 built from ab276d2. The user had dist/DOMINION.exe open, so the new executable is
+  dist/DOMINION-0.9.23.exe for now (packaged --city-test passes); DOMINION-Setup.exe is 0.9.23.
