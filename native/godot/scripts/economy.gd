@@ -54,6 +54,14 @@ func owned(key: String) -> int:
 			n += 1
 	return n
 
+## Built and standing, supplied or not (a research facility need only exist).
+func standing(key: String) -> int:
+	var n := 0
+	for b in world.buildings:
+		if b.owner == 0 and b.built and not b.dead and b.key == key:
+			n += 1
+	return n
+
 func provided(stat: String) -> float:
 	var total := 0.0
 	for b in world.buildings:

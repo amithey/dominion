@@ -179,7 +179,15 @@ func blocker(key: String) -> String:
 		return "Needs %s" % def_of(need).name
 	var building = def_of(key).get("reqBuilding")
 	if stage >= 1 and building != null and world.economy.owned(building) == 0:
-		return "%s needs a %s" % [stage_names(key)[stage], world.building_defs.get(building, {"name": building}).name]
+		var name: String = world.building_defs.get(building, {"name": building}).name
+		if world.economy.standing(building) > 0:
+			# Built, but its settlement is cut off from the capital: it still
+			# counts as a facility, and the player is told what is wrong.
+			return ""
+		for b in world.buildings:
+			if b.owner == 0 and b.key == building and not b.dead and not b.built:
+				return "%s needs a %s (under construction: %d%%)" % [stage_names(key)[stage], name, int(b.progress * 100)]
+		return "%s needs a %s" % [stage_names(key)[stage], name]
 	return ""
 
 func available(key: String) -> bool:

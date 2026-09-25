@@ -7,6 +7,15 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.23: research sees your shipyard; hard-to-reach sites get built
+
+- A research facility counts once it is built, even if its town is cut off from the capital (supply
+  still matters for production). The stage names the building when one is only under construction,
+  with its progress.
+- A worker who cannot reach the spot beside a site (water, a cliff, other buildings round it) goes to the
+  closest point he can walk to and builds from there. If a site truly cannot be reached, a notice says so.
+- New check: `tools/edge-build-check.gd` (coastal, outermost and hemmed-in sites; the shipyard counts).
+
 ## Version 0.9.22: a new Settings screen
 
 - Four tabs, each setting a card with a line saying what it does; changes apply at once and are saved.

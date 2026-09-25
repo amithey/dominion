@@ -2513,6 +2513,11 @@ func update_construction(delta: float) -> void:
 			if u.dead or not is_same(u.build_site, b):
 				continue
 			var gap := Vector2(u.node.position.x - at.x, u.node.position.z - at.z).length()
+			# Standing at the closest point it can reach (approach_point) counts
+			# as being at the site, up to 30 m out.
+			var spot: Vector3 = b.get("site_spot", Vector3.INF)
+			if spot != Vector3.INF and u.target == null and Vector2(u.node.position.x - spot.x, u.node.position.z - spot.z).length() < 4.0 and gap < 30.0:
+				gap = 0.0
 			if u.target == null and gap >= reach + 1.5 and site_timer <= 0.0:
 				# Stopped short (a blocked street, a crowd): try again from
 				# another side; after a few tries, hand the site back.
@@ -2520,6 +2525,9 @@ func update_construction(delta: float) -> void:
 				if u.site_tries > 5:
 					u.build_site = null
 					u.site_tries = 0
+					if b.owner == 0 and not b.get("unreachable_told", false):
+						b.unreachable_told = true
+						hud.notice("Workers cannot reach the %s: clear a way to it, or cancel it and build elsewhere." % b.def.name)
 				else:
 					var jobs: Array = u.get("build_queue", [])
 					order_move([u], approach_point(b, u.node.position, u.site_tries))
@@ -2612,6 +2620,21 @@ func resume_construction(site: Dictionary) -> void:
 ## by `turn` sixths of a circle for a second worker or a second attempt, and
 ## moved onto open walk cells if that spot is closed.
 func approach_point(site: Dictionary, from: Vector3, turn: int) -> Vector3:
+	var spot := _approach_candidate(site, from, turn)
+	# Water, a cliff or other buildings may leave that spot out of the worker's
+	# reach: then he goes to the closest point to the site he can walk to, and
+	# builds from there (site_spot; see update_construction).
+	if nav_ready:
+		var route := path_between(from, spot)
+		var end: Vector3 = route[-1] if not route.is_empty() else from
+		if Vector2(end.x - spot.x, end.z - spot.z).length() > 3.0:
+			var to_site := path_between(from, site.root.position)
+			if not to_site.is_empty():
+				spot = to_site[-1]
+	site.site_spot = spot
+	return spot
+
+func _approach_candidate(site: Dictionary, from: Vector3, turn: int) -> Vector3:
 	var side: Vector3 = from - site.root.position
 	side.y = 0
 	side = side.normalized() if side.length() > 0.1 else Vector3.BACK

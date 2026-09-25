@@ -27,6 +27,7 @@ $tests = @(
     @('trade ships on every route; shipping sabotage', @('--script', 'res://tools/trade-check.gd'), 'TRADE_TEST PASS', 240),
     @('every map loads: capitals linked by land, resources, ships at sea', @('--script', 'res://tools/maps-check.gd'), 'MAPS_TEST PASS', 400),
     @('settings are saved and restored', @('--script', 'res://tools/settings-check.gd'), 'SETTINGS_TEST PASS', 180),
+    @('edge, coastal and hemmed-in sites get built; shipyard counts for research', @('--script', 'res://tools/edge-build-check.gd'), 'EDGE_BUILD PASS', 400),
     @('borders, passage and operational zones', @('--', '--border-test'), 'BORDER_TEST PASS', 400),
     @('clearing trees and resources for a building', @('--', '--site-test'), 'SITE_TEST PASS', 200),
     @('clicking any part of a unit selects it', @('--', '--pick-test'), 'PICK_TEST PASS', 200),
