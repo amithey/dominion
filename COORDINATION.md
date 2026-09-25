@@ -249,3 +249,4 @@ UI files listed above.
   town-hall card lines in hud.gd; territory.residents() uses it; the buildRadius build loophole is closed;
   camera keys Q/E/R/F removed, cam_ground smoothing; map_generator snaps deposits to hex centres.
   Check: tools/towns-check.gd.
+- 2026-09-25 Claude: 0.9.24 executable and installer in dist, built from ebb5154; packaged --city-test passes.
