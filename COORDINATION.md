@@ -209,3 +209,7 @@ UI files listed above.
   (_price_chart), notices move clear of an open side window. Codex: restyle freely, keep the calls.
 - 2026-09-25 Claude: 0.9.16 executable and installer in dist, built from a421aed (clean snapshot); the
   packaged DOMINION.exe passes --city-test, --ui-test and --combat-test.
+- 2026-09-25 Claude, 0.9.17 (user asked for new Diplomacy and Intelligence windows): new scripts/side_panels.gd
+  builds both windows with tabs (hud.refresh_side calls _panels.diplomacy()/intel()); hud._diplomacy_screen
+  and hud._intel_panel removed; _standing_orders, _declare, spy_target/op/role and the widgets stay in hud.gd.
+  world.ui_test money check compares hud.compact_number(). Views: tools/panel-views.gd. Codex: restyle freely.

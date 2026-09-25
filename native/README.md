@@ -7,6 +7,26 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.17: new Diplomacy and Intelligence windows
+
+- **Diplomacy** has three tabs:
+  - **Nations:** a compact card per nation with the leader's portrait and title, status tags (war,
+    alliance, trade pact, non-aggression, peace), a relation gauge, whom they fight and whom they stand
+    with, and the Contact / Declare war buttons.
+  - **World map:** a chart of every nation against every other (war, alliance, trade pact,
+    non-aggression; otherwise relations from red to green).
+  - **Orders:** the cabinet's standing orders.
+- **Intelligence** has four tabs:
+  - **Operations:** choose the target nation from coloured tabs (with your network strength there),
+    then an operation from a list grouped by kind (Intelligence, Economic warfare, Sabotage and
+    subversion, Leadership), each showing its odds and cost. The chosen one opens in a briefing card
+    with the Authorize button.
+  - **Agents:** your agents and the missions under way.
+  - **Dossiers:** what the service knows of each nation, with the leader's portrait and the
+    intelligence levels already reached.
+  - **Reports:** the latest reports.
+- The interface test's top-bar money check now compares the same compact number format the bar shows.
+
 ## Version 0.9.16: an exchange, sea-lane sabotage, armies that plan whole marches, a greener city
 
 - **Bugs fixed**

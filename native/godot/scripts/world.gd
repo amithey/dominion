@@ -3402,7 +3402,9 @@ func ui_test() -> void:
 		u.selected = false
 	# Top bar reads the economy.
 	await get_tree().create_timer(0.3).timeout
-	checks["top bar shows money"] = hud._chips.money[0].text == str(int(economy.res.money)) or hud._chips.money[0].text.begins_with(str(int(economy.res.money)).left(2))
+	hud._refresh = 1.0
+	hud._process(0.0)
+	checks["top bar shows money"] = hud._chips.money[0].text == hud.compact_number(economy.res.money)
 	# Research screen opens, a discovery can be queued from its pane.
 	hud.toggle_research()
 	await get_tree().process_frame

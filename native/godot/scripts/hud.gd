@@ -1200,6 +1200,7 @@ var trade_qty := 25
 var route_nation := -1
 var route_res := "oil"
 var route_dir := "export"
+var _panels: RefCounted       # side_panels.gd: the Diplomacy and Intelligence windows
 var spy_target := 1
 var spy_op := "buildNetwork"
 var spy_role := "president"
@@ -1289,13 +1290,15 @@ func refresh_side() -> void:
 	for child in _side_rows.get_children():
 		_side_rows.remove_child(child)
 		child.queue_free()
+	if _panels == null:
+		_panels = preload("res://scripts/side_panels.gd").new(self)
 	match side_mode:
 		"diplomacy":
-			_diplomacy_screen()
+			_panels.diplomacy()  # side_panels.gd: tabs, nation cards, relations chart
 		"market":
 			_market_panel()
 		"intel":
-			_intel_panel()
+			_panels.intel()  # side_panels.gd: target tabs, grouped operations, agents, dossiers
 		"territory":
 			_territory_panel()
 	_fit_window.call_deferred(keep)
@@ -1443,44 +1446,6 @@ func _relation_word(score: float) -> String:
 	if score > -25.0: return "Neutral"
 	if score > -60.0: return "Unfriendly"
 	return "Hostile"
-
-func _diplomacy_screen() -> void:
-	var d: Node = world.diplomacy
-	_label(_side_rows, "Relations run from -100 to +100. Gifts, pacts and trade warm them; war, spies caught and broken treaties sour them.", UI.MUTED, 13)
-	_standing_orders()
-	for id in range(1, d.n):
-		var card := _card(_nation_colour(id))
-		var head := _row(card)
-		var name := _text(d.name_of(id), 18, _nation_colour(id).lightened(0.4), true)
-		name.add_theme_font_size_override("font_size", 18)
-		name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		head.add_child(name)
-		if d.defeated(id):
-			_pill(head, "DEFEATED", UI.MUTED)
-			continue
-		if d.at_war(0, id):
-			_pill(head, "AT WAR", Color("e0574a"))
-		if d.allied(0, id):
-			_pill(head, "ALLY", Color("6fc46a"))
-		if d.pact[0][id]:
-			_pill(head, "TRADE PACT", Color("d8b866"))
-		if d.nap[0][id]:
-			_pill(head, "NON-AGGRESSION", Color("6fa6d8"))
-		if not (d.at_war(0, id) or d.allied(0, id) or d.pact[0][id] or d.nap[0][id]):
-			_pill(head, "PEACE", Color("9aa7ab"))
-		var leader: String = world.espionage.person(id, "president")
-		card.add_child(_text("%s · army estimates in Intelligence (I)" % leader, 13, UI.MUTED))
-		_button(card, "Contact this government", open_diplomatic_contact.bind(id))
-		var score: float = d.rel(0, id)
-		var colour := Color("c0564a").lerp(Color("8a9396"), clampf((score + 100.0) / 100.0, 0.0, 1.0)) if score < 0.0 else Color("8a9396").lerp(Color("5fae63"), clampf(score / 100.0, 0.0, 1.0))
-		_meter(card, score + 100.0, 200.0, colour, "Relation %+d  ·  %s" % [int(score), _relation_word(score)])
-		var buttons := _row(card, 6)
-		if not d.at_war(0, id):
-			_button(buttons, "Declare war", _declare.bind(id), true, "bad")
-		if d.allied(0, id):
-			for enemy in range(1, d.n):
-				if d.at_war(0, enemy) and not d.at_war(id, enemy):
-					_button(card, "Call them to war against %s" % d.name_of(enemy), d.request_joint_war.bind(id, enemy))
 
 ## The cabinet's standing orders. A soldier carries out the order he is given;
 ## what the shot is called is decided here, by the state.
@@ -1734,114 +1699,6 @@ func _market_panel() -> void:
 	_button(routes, "Open route (%d per voyage)" % trade_qty, func(): return m.open_route(route_nation, route_res, route_dir, trade_qty), m.ports() > 0, "good")
 
 # ---------------------------------------------------------------- intelligence
-
-func _intel_panel() -> void:
-	_intel_progress.clear()
-	var e: Node = world.espionage
-	var d: Node = world.diplomacy
-	var service := _card()
-	var head := _row(service)
-	var st := _text("Field agents", 16, UI.CREAM, true)
-	st.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(st)
-	_button(head, "Recruit ($%d)" % e.recruit_cost(), e.recruit, e.has_agency(), "good")
-	if not e.has_agency():
-		service.add_child(_text("Build an Intelligence Agency (Civic & research) to recruit agents. Rival services already work against you.", 13, UI.BAD))
-	for a in e.agents:
-		var row := _row(service, 8)
-		var stars := "★".repeat(int(a.skill)) + "☆".repeat(5 - int(a.skill))
-		var l := _text("%s  %s  %s  ·  %d ops" % [a.name, stars, e.rank(a), a.ops], 14, UI.CREAM)
-		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(l)
-		if a.status == "captured":
-			_pill(row, "CAPTURED by %s" % d.name_of(int(a.captured_by)), Color("e0574a"))
-			_button(row, "Ransom $%d" % int(e.cfg.ransom), e.ransom.bind(a.id))
-		elif a.status == "ready":
-			_pill(row, "READY", Color("6fc46a"))
-		else:
-			_pill(row, ("RECOVERY %ds" % ceili(float(a.get("ready_at", e.clock))-e.clock)) if a.status == "recovering" else str(a.status).to_upper(), UI.GOLD)
-	for mission in e.missions:
-		var remaining := maxi(0, ceili(float(mission.ends) - e.clock))
-		var duration: float = float(mission.ends) - float(mission.started)
-		var progress := 1.0 - float(remaining) / duration
-		var title: String = "%s · %s" % [e.ops()[mission.op].name, d.name_of(int(mission.nation))]
-		var meter := _meter(service, progress, 1.0, UI.GOLD, "%s · %ds" % [title, remaining])
-		_intel_progress.append({"bar": meter.get_child(0), "label": meter.get_child(1), "ends": mission.ends, "duration": duration, "title": title})
-		_button(service, "Recall assignment", e.cancel_mission.bind(int(mission.agent)), true, "bad")
-	if e.security_until > e.clock:
-		service.add_child(_text("Domestic security reinforced: %ds" % ceili(e.security_until-e.clock), 13, UI.GOOD))
-	if e.scandal_until > e.clock:
-		service.add_child(_text("Attribution scandal: $2/s for %ds" % ceili(e.scandal_until-e.clock), 13, UI.BAD))
-	for nation in e.proxies:
-		var proxy: Dictionary = e.proxies[nation]
-		service.add_child(_text("%s partner: strength %d · autonomy %d · $3/s" % [d.name_of(int(nation)), proxy.strength, proxy.autonomy], 13, UI.GOLD))
-		_button(service, "End partner funding", e.end_proxy.bind(int(nation)), true, "bad")
-	var nations := []
-	for i in range(1, d.n):
-		if not d.defeated(i):
-			nations.append([d.name_of(i), i])
-	if nations.is_empty():
-		return
-	if not nations.any(func(n): return n[1] == spy_target):
-		spy_target = nations[0][1]
-	var plan := _card(_nation_colour(spy_target))
-	var ph := _row(plan)
-	var pt := _text("Operation against", 16, UI.CREAM, true)
-	ph.add_child(pt)
-	_choice(ph, nations, spy_target, func(v):
-		spy_target = v
-		refresh_side())
-	var agent_bonus := 0.0
-	if not e.ready_agents().is_empty():
-		agent_bonus = (int(e.ready_agents()[0].skill) - 1) * float(e.cfg.skillBonus)
-	var choices := []
-	for key in e.ops():
-		choices.append([e.ops()[key].name, key])
-	_choice(plan, choices, spy_op, func(v):
-		spy_op = v
-		refresh_side())
-	var chance := clampf(e.success_chance(spy_op, spy_target) + agent_bonus, 0.05, 0.97)
-	_meter(plan, chance, 1.0, UI.GOLD, "Estimated success %d%% · network %d · intel %d" % [roundi(chance*100), e.network.get(spy_target,0), e.intel.get(spy_target,0)])
-	var op: Dictionary = e.ops()[spy_op]
-	var needs_person: bool = op.get("needsPerson", false)
-	if needs_person:
-		var people := []
-		for role in e.cfg.targets:
-			people.append(["%s: %s" % [e.cfg.targets[role].label, e.person(spy_target, role)], role])
-		var pr := _row(plan)
-		pr.add_child(_text("Target", 14, UI.MUTED))
-		_choice(pr, people, spy_role, func(v):
-			spy_role = v
-			refresh_side())
-		plan.add_child(_text(e.role_effect(spy_role), 12, UI.MUTED))
-	var reason: String = e.blocked_reason(spy_op, spy_target, spy_role if needs_person else "")
-	var detail := _text(op.desc, 13, UI.TEXT)
-	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail.custom_minimum_size.x = 440
-	plan.add_child(detail)
-	plan.add_child(_text("$%d · prepare %ds · cooldown %ds · intel %d" % [int(op.cost), e.PROGRAMS[spy_op][0], e.PROGRAMS[spy_op][1], e.PROGRAMS[spy_op][3]], 13, UI.GOLD))
-	plan.add_child(_text("Estimated attribution risk %d%% (even on success)" % roundi(e.exposure_chance(spy_op, spy_target)*100), 13, UI.MUTED))
-	if reason != "":
-		plan.add_child(_text(reason, 13, UI.BAD))
-	_button(plan, "Authorize %s" % op.name, func(): return e.run(spy_op, spy_target, spy_role if needs_person else ""), reason == "", "good")
-	_heading("What your service knows")
-	for n in nations:
-		var id: int = n[1]
-		var level: float = e.intel.get(id, 0.0)
-		var card := _card(_nation_colour(id))
-		card.add_child(_text(n[0], 15, _nation_colour(id).lightened(0.4), true))
-		_meter(card, level, 100.0, Color("6fa6d8"), "Intelligence %d  ·  network %d  ·  heat %d" % [int(level), int(e.network.get(id, 0.0)), int(e.heat.get(id, 0.0))])
-		var assessment := _text(e.dossier_text(id), 13, UI.TEXT)
-		assessment.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		assessment.custom_minimum_size.x = 440
-		card.add_child(assessment)
-		var impact: String = e.impact_text(id)
-		if impact != "":
-			card.add_child(_text(impact, 13, UI.GOLD))
-	if not e.reports.is_empty():
-		_heading("Latest reports")
-		for r in e.reports.slice(0, 4):
-			_label(_side_rows, "[%ds ago] %s" % [maxi(0, int(e.clock-float(r.t))), r.text], UI.TEXT, 13)
 
 # ---------------------------------------------------------------- territory
 
