@@ -4134,7 +4134,11 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 		lowest = minf(lowest, h)
 		highest = maxf(highest, h)
 	var offshore: bool = def.get("water", false)
-	if offshore and highest >= float(map.seaLevel) - 0.2:
+	# A platform stands on piles over its field: the water must be open under
+	# its centre, but its legs may reach the shallows (half the sea fields lie
+	# a few metres off a beach and could never be worked when every corner had
+	# to be under water).
+	if offshore and (height_at(at.x, at.z) >= float(map.seaLevel) - 0.5 or lowest >= float(map.seaLevel) - 0.5):
 		return "An offshore platform needs open water"
 	if not offshore and not is_district(key) and lowest < float(map.seaLevel) + 1.0:
 		return "Too close to the water"

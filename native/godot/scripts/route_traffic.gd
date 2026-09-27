@@ -97,7 +97,7 @@ func _process(delta: float) -> void:
 	if _layout_dirty:
 		_layout()
 	_pose()
-	_move_ships()
+	_move_ships(delta)
 
 # ---------------------------------------------------------------- the network
 
@@ -751,7 +751,17 @@ func _ground(p: Vector3) -> float:
 # the port. It pitches and rolls a little on the swell. A cargo lost at sea
 # (or sunk by saboteurs) takes the ship out of sight until the next loading.
 
-func _move_ships() -> void:
+## Freighters sail at a merchant ship's pace (SHIP_SPEED), easing out of port
+## and slowing to berth, and lie alongside for a while at each end to load
+## and unload. They sail while their route carries cargo and finish the
+## voyage they are on; an idle route's ship lies moored off the port. The
+## goods themselves arrive on the market's schedule (market.gd): the ships
+## show the trade, they do not time it.
+const SHIP_SPEED := 5.5      # m/s, cruising
+const SHIP_ACCEL := 0.35     # m/s per second
+const DWELL := 8.0           # seconds alongside at each end
+
+func _move_ships(delta: float) -> void:
 	for key in vehicles:
 		var v: Dictionary = vehicles[key]
 		var route = null
@@ -762,9 +772,36 @@ func _move_ships() -> void:
 			continue
 		v.node.visible = true
 		var path: PackedVector3Array = v.path
+		var length: float = v.length
+		var s: float = float(v.get("s", 0.0))
+		var dir: float = float(v.get("dir", 1.0))
+		var speed: float = float(v.get("speed", 0.0))
+		var dwell: float = float(v.get("dwell", 0.0))
+		var at_home: bool = s <= 0.5 and dir > 0.0
+		if dwell > 0.0:
+			v.dwell = dwell - delta
+			speed = 0.0
+		elif at_home and route.shipment == null:
+			speed = 0.0  # nothing to carry: moored off the port
+		else:
+			var left: float = (length - s) if dir > 0.0 else s
+			var target: float = minf(SHIP_SPEED, sqrt(2.0 * SHIP_ACCEL * maxf(left - 1.0, 0.0)) + 0.4)
+			speed = move_toward(speed, target, SHIP_ACCEL * delta)
+			s += dir * speed * delta
+			if dir > 0.0 and s >= length:
+				s = length
+				dir = -1.0
+				v.dwell = DWELL
+			elif dir < 0.0 and s <= 0.0:
+				s = 0.0
+				dir = 1.0
+				v.dwell = DWELL
+		v.s = s
+		v.dir = dir
+		v.speed = speed
 		var p: Vector3
 		var ahead: Vector3
-		if route.shipment == null:
+		if s <= 0.5 and speed == 0.0:
 			# Moored off the port, each route at its own berth.
 			var berth := int(v.berth)
 			var out := (path[mini(3, path.size() - 1)] - path[0]).normalized()
@@ -772,16 +809,13 @@ func _move_ships() -> void:
 			p = path[0] + out * 6.0 + side * (berth - 0.5) * 9.0
 			ahead = p + out
 		else:
-			var f := clampf(1.0 - (float(route.shipment.eta) - world.market._tick) / float(world.market.cfg.voyage), 0.0, 1.0)
-			var u := f * 2.0 if f < 0.5 else (1.0 - f) * 2.0  # out to the partner, and home again
-			var s: float = u * v.length
 			p = _along(path, v.cum, s)
-			ahead = _along(path, v.cum, s + (4.0 if f < 0.5 else -4.0))
+			ahead = _along(path, v.cum, s + 4.0 * dir)
 		p.y = float(world.map.seaLevel) + 0.05
 		var want := atan2(ahead.x - p.x, ahead.z - p.z)
 		var t := elapsed + float(v.berth) * 1.7
-		v.node.position = v.node.position.lerp(p, 0.2) if v.node.position.distance_to(p) < 30.0 else p
-		v.yaw = lerp_angle(float(v.yaw), want, 0.04)
+		v.node.position = v.node.position.lerp(p, minf(1.0, delta * 6.0)) if v.node.position.distance_to(p) < 30.0 else p
+		v.yaw = lerp_angle(float(v.yaw), want, minf(1.0, delta * 1.5))
 		v.node.rotation = Vector3(sin(t * 0.9) * 0.018, v.yaw, sin(t * 0.7) * 0.03)
 
 func _along(path: PackedVector3Array, cum: PackedFloat32Array, s: float) -> Vector3:

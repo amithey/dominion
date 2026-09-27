@@ -69,6 +69,11 @@ func run() -> void:
 		traffic._process(0.25)
 		w.market._tick += 0.25
 	check(ship != null and w.market.routes[0].shipment != null and ship.node.position.distance_to(moored) > 8.0, "with a cargo aboard the freighter sails")
+	var from: Vector3 = ship.node.position
+	for i in range(40):
+		traffic._process(0.25)
+	var pace: float = from.distance_to(ship.node.position) / 10.0
+	check(pace > 1.0 and pace < 7.0, "a freighter sails at a merchant ship's pace (%.1f m/s)" % pace)
 	# Your agents sink a rival's cargo.
 	var nat = w.market.ai_nation(1)
 	var before: float = nat.money

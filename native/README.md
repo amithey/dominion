@@ -7,6 +7,21 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.27: freighters at a ship's pace, towns keep their supply, offshore fields that can be worked
+
+- **Trade ships** sail at a merchant ship's pace (about 5 m/s, easing away from the quay and into it, and
+  lying alongside for a few seconds at each end). They used to race to cover the whole route within the
+  market's delivery timer.
+- **Supply:** a building in land covered by both a linked town and a new, unlinked one belongs to the
+  linked town. A new village near the capital used to cut off the airfields, silos and homes around it
+  (queues stopped, citizen capacity fell) until a road reached it.
+- **Offshore rigs:** the water must be open under the platform, but its legs may reach the shallows. Six of
+  the eleven sea oil and gas fields, the nearest ones to the player's capital among them, lie a few metres
+  off a beach and could never take a rig.
+- **Checks:** a battery of 111 gameplay checks in one match (tools/gameplay-100.gd): every building in the
+  build menu placed and supplied, every unit trained where it belongs, research, taxes, the market,
+  diplomacy, spies, missiles, combat, land, roads and saves.
+
 ## Version 0.9.26: harbours in your land, warships that get built, town tiles, leader portraits
 
 - **Harbours** (shipyard, port, fishing wharf) must stand inside your own land, as other buildings do. But

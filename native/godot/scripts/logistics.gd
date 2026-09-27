@@ -246,6 +246,11 @@ func settlement_of(b: Dictionary):
 			var bought = world.territory.purchased.get(str(world.territory.index_of(world.territory.hex_at(b.root.position))))
 			if bought != null and str(bought.settlement) == world.territory.settlement_key(s):
 				d -= 10000.0
+		# Among the towns that cover it, a linked one comes first: a building in
+		# land held by both the capital and a new, still unlinked town stays
+		# supplied (it used to fall to whichever town hall stood nearer).
+		if d < -5000.0 and reachable.get(s.owner, {}).has(world_hex(s.root.position)):
+			d -= 10000.0
 		if d < best_d:
 			best_d = d
 			best = s

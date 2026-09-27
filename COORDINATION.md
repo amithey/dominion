@@ -257,3 +257,7 @@ UI files listed above.
   territory.tick) or purchased land cover the building; supply/launch notices; hud._city_card tiles;
   leader_gallery.face() crops; MatchSetup.COLOURS. New long check tools/playthrough-check.gd.
 - 2026-09-25 Claude: 0.9.26 executable and installer in dist, built from e003152; packaged --ui-test passes.
+- 2026-09-27 Claude, 0.9.27: route_traffic.gd freighters move on their own (SHIP_SPEED 5.5 m/s, SHIP_ACCEL, DWELL at
+  each end), no longer tied to the market voyage timer; logistics.settlement_of prefers a linked town among those
+  covering a building; world.site_problem: an offshore platform needs water under its centre (legs may touch the
+  shallows). New check tools/gameplay-100.gd (111 checks, registered in run-tests.ps1).
