@@ -172,6 +172,9 @@ func blocker(key: String) -> String:
 	var stage := stage_of(key)
 	if stage >= 3:
 		return "Complete"
+	var only: String = preload("res://scripts/national_arsenal.gd").foreign(world, str(def_of(key).get("nation", "")))
+	if only != "":
+		return only
 	if era_of(key) > era:
 		return "Needs the %s" % eras[era_of(key)].name
 	var need = def_of(key).get("reqDiscovery")
@@ -227,6 +230,9 @@ func _add(stat: String, v: float) -> void:
 
 ## "" when the player may train `unit`, otherwise what it needs.
 func unit_locked(unit: String) -> String:
+	var only: String = preload("res://scripts/national_arsenal.gd").foreign(world, str(world.unit_defs.get(unit, {}).get("nation", "")))
+	if only != "":
+		return only
 	var need: String = UNIT_REQUIRES.get(unit, str(world.unit_defs.get(unit, {}).get("requires", "")))
 	return "" if need == "" or done(need) else "Needs %s" % def_of(need).name
 

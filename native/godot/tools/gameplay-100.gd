@@ -125,6 +125,11 @@ func run() -> void:
 	for key in built:
 		var b: Dictionary = built[key]
 		for unit in b.def.get("trains", []):
+			if not w.unit_allowed(0, unit):
+				continue  # another nation's own weapon (units-100.gd checks those)
+			if unit in w.AIR and not unit in w.AirOperations.TUBE_LAUNCHED:
+				for parked in w.units.filter(func(p): return p.owner == 0 and not p.dead and is_same(p.get("air_base"), b)):
+					w.kill(parked)   # make room on the apron
 			var before: int = w.units.filter(func(u): return u.key == unit and u.owner == 0).size()
 			b.queue.clear()
 			w.queue_unit(b, unit)

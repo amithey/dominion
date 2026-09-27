@@ -7,6 +7,29 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.29: each nation's own weapons
+
+Every nation now fields a "star" weapon of its own, which no other nation can build (the AI plays it too).
+A nation is known by its flag, so the arsenal follows the nation the player picks.
+- **Atlantic Federation (blue, after the United States):** the **F-22 Raptor** (airfield, Stealth Technology):
+  air superiority, supercruise, seen by air defence only at a quarter of its range, and a SEAD mission: its
+  missiles hit air defences 2.5 times as hard. And the **B-21 Raider** from a new discovery only it can
+  research, **Classified Programs**: a flying-wing bomber still largely secret in 2025, seen only at 15% of
+  the range, heavy precision bombs, two sorties before it rearms.
+- **Crimson Empire (red, after China):** the **DF-17 Launcher** (tank factory, Ballistic Technology): a
+  hypersonic glide vehicle six hexes out that a SAM site stops 8% of the time and a missile defence battery
+  30%, and 2.5 times as deadly to ships (the DF-21D / DF-26 "carrier killer" role).
+- **Golden Dominion (gold, after Iran):** the **Shahed Launcher** (tank factory, Microchips): a swarm of five
+  Shahed-136 one-way attack drones five hexes out; each slow and easy to shoot down, together they saturate
+  air defence (up to 15 in the air at once).
+- **Verdant Union (green, after Europe):** **IRIS-T SLM** (tank factory, Guided Munitions): the air defence
+  Ukraine reported hitting ~99% of what it engaged; shoots aircraft and drones 90 m out, stops 95% of cruise
+  missiles, 45% of ballistic and 12% of hypersonic ones.
+
+Other nations' weapons are not listed in your factories. **Checks:** tools/units-100.gd, 135 checks on every
+modern and national unit (model, element, building, research, nation, target, friendly fire, abilities,
+interception odds, movement, saving).
+
 ## Version 0.9.28: modern warfare, missile interception odds, rival missile strikes
 
 From the wars of 2022-2026 (Ukraine, Israel and Iran, the Red Sea). Eleven new units:

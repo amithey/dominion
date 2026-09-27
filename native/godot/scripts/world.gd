@@ -60,12 +60,12 @@ const BUILDING_SIZE := {"hq": 10.0, "barracks": 9.0, "tankFactory": 9.5, "wareho
 # districts (6.0 left a single cell, and armour jammed in city streets).
 const DISTRICT_NAV_SIZE := 4.5
 const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker", "fpvTeam", "atgmTeam", "manpads", "medic"]
-const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher"]
+const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT"]
 const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone"]
-const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter"]
-const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter"]
+const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed"]
+const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed"]
 const AirOperations := preload("res://scripts/air_operations.gd")
-const ALTITUDE := {"helicopter": 14.0, "gunship": 13.0, "jet": 26.0, "bomber": 30.0, "drone": 18.0, "loiterer": 16.0, "stealthFighter": 28.0}
+const ALTITUDE := {"helicopter": 14.0, "gunship": 13.0, "jet": 26.0, "bomber": 30.0, "drone": 18.0, "loiterer": 16.0, "stealthFighter": 28.0, "raptor": 30.0, "raider": 34.0, "shahed": 12.0}
 const SHIP_LENGTH := {"gunboat": 7.5, "corvette": 10.5, "destroyer": 15.0, "submarine": 11.0, "nuclearSub": 14.0, "seaDrone": 4.5}
 const DEEP := -1.2   # water at least this deep (below sea level) carries a ship
 
@@ -219,6 +219,7 @@ const Repairs := preload("res://scripts/repairs.gd")
 const Motion := preload("res://scripts/motion.gd")
 const Tactics := preload("res://scripts/tactics.gd")
 const Modern := preload("res://scripts/modern_warfare.gd")
+const Arsenal := preload("res://scripts/national_arsenal.gd")
 const SiteClearing := preload("res://scripts/site_clearing.gd")
 const Picking := preload("res://scripts/picking.gd")
 const Topography := preload("res://scripts/topography.gd")
@@ -4631,7 +4632,7 @@ func target_class(t: Dictionary) -> String:
 
 ## Air defence (SAM sites, mobile SAMs, anti-aircraft vehicles) engages only
 ## aircraft in flight: not ground forces, and not aircraft parked on a base.
-const AIR_DEFENCE := ["samSite", "samLauncher", "aaVehicle", "manpads", "laserAD"]
+const AIR_DEFENCE := ["samSite", "samLauncher", "aaVehicle", "manpads", "laserAD", "irisT"]
 
 ## An aircraft actually in the air (not parked or rearming on its base).
 func airborne(u: Dictionary) -> bool:
@@ -4651,6 +4652,9 @@ func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
 	# Sea drones ram ships and harbours; nothing else.
 	if attacker.key == "seaDrone" and not (target.get("naval", false) or target.get("is_building", false)):
 		return 0.0
+	# The Raptor's special mission: suppressing air defences.
+	if attacker.key == "raptor" and (target.get("key", "") in AIR_DEFENCE or target.get("key", "") == "abmLauncher"):
+		return float(damage_profile.raptor.get(target_class(target), 1.0)) * Arsenal.SEAD
 	# A laser burns small drones out of the sky in a second or two.
 	if attacker.key == "laserAD" and target.get("key", "") in Modern.DRONES and target_class(target) == "air":
 		return 6.0
@@ -4715,7 +4719,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 	# They look as far as their weapon reaches (artillery outranges its own eyes otherwise).
 	if unit.enemy == null and unit.search <= 0.0:
 		unit.search = 0.35
-		if unit.target == null or unit.attack_move or unit.key in ["aaVehicle", "samLauncher", "manpads", "laserAD"]:
+		if unit.target == null or unit.attack_move or unit.key in ["aaVehicle", "samLauncher", "manpads", "laserAD", "irisT"]:
 			unit.enemy = Tactics.pick_target(self, unit, maxf(unit.aggro, unit.range))
 	if unit.enemy == null or unit.reload > 0.0:
 		return
@@ -4742,7 +4746,8 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 const WEAPONS := {"bomber": "bomb", "jet": "missile", "drone": "missile", "helicopter": "rockets", "gunship": "rockets",
 	"submarine": "torpedo", "nuclearSub": "torpedo", "artillery": "shell_arc", "mlrs": "rocket_salvo",
 	"samLauncher": "sam", "rocketSoldier": "rocket", "stealthFighter": "missile", "manpads": "sam",
-	"fpvTeam": "fpv", "atgmTeam": "atgm", "himars": "guided", "laserAD": "laser", "loiterer": "kamikaze", "seaDrone": "kamikaze"}
+	"fpvTeam": "fpv", "atgmTeam": "atgm", "himars": "guided", "laserAD": "laser", "loiterer": "kamikaze", "seaDrone": "kamikaze",
+	"raptor": "missile", "raider": "bomb", "df17": "hgv", "shahedLauncher": "swarm", "shahed": "kamikaze", "irisT": "sam"}
 
 ## Fires at `enemy`; false when the weapon cannot be used yet (a bomber that
 ## is not over its target), so the reload is not spent.
@@ -4825,6 +4830,13 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			# Two GPS-guided rockets: no scatter, a tall climb and a steep dive.
 			for i in range(2):
 				effects.projectile("rocket", from + Vector3.UP * 1.8 + Vector3((i - 0.5) * 0.6, 0, 0), target, func(at): blast(unit, at, dmg * 0.5, 3.0, 1.1), i * 0.35)
+		"hgv":
+			# A hypersonic glide vehicle: a missile of its own, which air
+			# defence may try to intercept (modern_warfare.gd).
+			missiles.fly("df17", unit.node.position + Vector3.UP * 3.0, enemy.node.position, unit.owner)
+		"swarm":
+			if Arsenal.launch_swarm(self, unit, enemy) == 0:
+				return false
 		"laser":
 			# The beam arrives at once and burns for a moment.
 			effects.beam(unit.node.position + Vector3.UP * 3.2, target)
@@ -5025,6 +5037,10 @@ func kill(unit: Dictionary) -> void:
 		unit.fall = 1.0 if randf() < 0.5 else -1.0
 		if unit.player:
 			unit.player.speed_scale = 0.15
+
+## True when `owner` may field `key` (each nation's own weapons are its alone).
+func unit_allowed(owner: int, key: String) -> bool:
+	return Arsenal.allowed(self, owner, key)
 
 ## Building on a ruin clears it first: the charred shell of a destroyed
 ## building (and its district tile) under the new one is taken away.

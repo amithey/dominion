@@ -21,9 +21,10 @@ const TRAINED_AT := {"soldier": "barracks", "rocketSoldier": "barracks", "comman
 	"tank": "tankFactory", "apc": "tankFactory", "artillery": "tankFactory", "samLauncher": "tankFactory",
 	"helicopter": "helipad", "jet": "airfield", "drone": "airfield", "gunboat": "shipyard", "destroyer": "shipyard", "corvette": "shipyard",
 	"fpvTeam": "barracks", "atgmTeam": "barracks", "manpads": "barracks", "medic": "barracks", "himars": "tankFactory",
-	"ewVehicle": "tankFactory", "loiterer": "airfield"}
+	"ewVehicle": "tankFactory", "loiterer": "airfield", "raptor": "airfield", "df17": "tankFactory",
+	"shahedLauncher": "tankFactory", "irisT": "tankFactory"}
 ## Modern units rival armies field alongside the export's training pool.
-const MODERN_POOL := ["fpvTeam", "atgmTeam", "manpads", "medic", "himars", "ewVehicle", "loiterer"]
+const MODERN_POOL := ["fpvTeam", "atgmTeam", "manpads", "medic", "himars", "ewVehicle", "loiterer", "raptor", "df17", "shahedLauncher", "irisT"]
 ## Missiles a rival at war fires at the player, by its technology level.
 const STRIKE_TYPES := [[2.0, ["tactical", "cruise"]], [4.0, ["tactical", "cruise", "ballistic"]], [6.0, ["cruise", "ballistic", "hypersonic"]]]
 const STRIKE_TARGETS := ["hq", "cityCenter", "villageCenter", "airfield", "tankFactory", "barracks", "missileSilo", "powerPlant", "port", "samSite"]
@@ -127,7 +128,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	if n.next_train <= 0.0 and not cyber:
 		var army: Array = world.units.filter(func(u): return u.owner == n.id and not u.dead)
 		if army.size() < int(cfg.maxArmy):
-			var options: Array = train_pool.filter(func(k): return not production_sites(n.id,k).is_empty())
+			var options: Array = train_pool.filter(func(k): return world.unit_allowed(n.id, k) and not production_sites(n.id,k).is_empty())
 			if not options.is_empty():
 				var key: String = options[randi() % options.size()]
 				var cost := weighted_cost(world.unit_defs[key].cost)

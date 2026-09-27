@@ -36,7 +36,7 @@ func run() -> void:
 			break
 	for n in w.find_children("*", "MultiMeshInstance3D", true, false) + w.find_children("*", "Sprite3D", true, false) + w.find_children("*", "Label3D", true, false):
 		n.visible = false
-	var keys := ["himars", "ewVehicle", "laserAD", "abmLauncher", "loiterer", "stealthFighter", "seaDrone", "fpvTeam", "atgmTeam", "manpads", "medic"]
+	var keys := ["himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "seaDrone", "fpvTeam", "atgmTeam", "manpads", "medic"]
 	var units := {}
 	for i in range(keys.size()):
 		var key: String = keys[i]
@@ -50,7 +50,7 @@ func run() -> void:
 	for i in range(20): await process_frame
 	for key in keys:
 		var u: Dictionary = units[key]
-		var small: bool = key in ["fpvTeam", "atgmTeam", "manpads", "medic", "loiterer", "seaDrone"]
+		var small: bool = key in ["fpvTeam", "atgmTeam", "manpads", "medic", "loiterer", "seaDrone", "shahed"]
 		await shot(key, u.node.position, 7.0 if small else 13.0, 3.0 if small else 5.5, 0.9)
 	await shot("lineup", spot + Vector3(18, 0, 0), 42.0, 16.0, 0.5)
 	quit()

@@ -925,8 +925,8 @@ func _action_bars(b: Dictionary) -> void:
 	_section("Train")
 	for u in b.def.trains:
 		var def: Dictionary = world.unit_defs.get(u, {})
-		if def.is_empty():
-			continue
+		if def.is_empty() or not world.unit_allowed(0, u):
+			continue  # another nation's own weapon
 		var cost: Dictionary = world.research.unit_cost(u, def.cost) if world.research else def.cost
 		var locked: String = world.research.unit_locked(u) if world.research else ""
 		_bar(u, def.name, def.desc, cost, float(def.get("trainTime", 10)), locked, func(): world.queue_unit(_selected, u))

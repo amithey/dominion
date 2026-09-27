@@ -10,9 +10,10 @@ extends RefCounted
 ## (vehicle.gdshader); moving parts stay separate nodes. Models face +Z.
 
 const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone"]
-const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter"]
+const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed"]
 const PAINTS := {"ship": Color("5e676c"), "sub": Color("2b2f32"), "heli": Color("4d5641"), "gunship": Color("454c3c"),
-	"jet": Color("737d84"), "bomber": Color("50585c"), "drone": Color("8a9297"), "stealth": Color("4b5157"), "usv": Color("2e3336")}
+	"jet": Color("737d84"), "bomber": Color("50585c"), "drone": Color("8a9297"), "stealth": Color("4b5157"), "usv": Color("2e3336"),
+	"raptor": Color("6b7378"), "raider": Color("3a3f44"), "shahed": Color("9a9b8f")}
 
 const PAINT := Color(0.5, 0.0, 0.0)
 const LIGHT := Color(0.58, 0.0, 0.0)
@@ -61,6 +62,9 @@ func build(key: String, owner: int) -> Dictionary:
 		"bomber": finish = "bomber"
 		"drone", "loiterer": finish = "drone"
 		"stealthFighter": finish = "stealth"
+		"raptor": finish = "raptor"
+		"raider": finish = "raider"
+		"shahed": finish = "shahed"
 		"seaDrone": finish = "usv"
 	g._mat = material_for(owner, finish)
 	var st := g._begin()
@@ -86,6 +90,12 @@ func build(key: String, owner: int) -> Dictionary:
 			loiterer(st)
 		"stealthFighter":
 			stealth_fighter(st)
+		"raptor":
+			raptor(st)
+		"raider":
+			flying_wing(st)
+		"shahed":
+			shahed(st)
 		"seaDrone":
 			sea_drone(st, 4.5, 1.1)
 		_:
@@ -390,6 +400,54 @@ func stealth_fighter(st: SurfaceTool) -> void:
 		# Intakes beside the cockpit, sawtooth edges.
 		g.block(st, Vector3(0.34, 0.42, 1.2), Vector3(side * 0.75, -0.05, 1.4), DARK, 0.06, 0.4)
 		roundel(st, Vector3(side * 2.2, 0.08, -1.7), 0.3)
+
+## F-22 Raptor: a broad, flat twin-engine body with diamond-shaped wings,
+## two big canted fins, square two-dimensional thrust-vectoring nozzles and
+## caret intakes; everything inside, nothing on pylons.
+func raptor(st: SurfaceTool) -> void:
+	var l := 9.4
+	fuselage(st, l, [[0.0, 0.8, 0.26, 0.02], [0.12, 1.05, 0.32], [0.4, 1.1, 0.36], [0.62, 0.72, 0.38, 0.05], [0.8, 0.42, 0.32, 0.06], [0.92, 0.22, 0.17], [1.0, 0.01, 0.01, -0.02]], PAINT)
+	g.prim(st, _sphere(0.3), Transform3D(Basis().scaled(Vector3(0.95, 0.9, 3.6)), Vector3(0, 0.36, l * 0.24)), GLASS)
+	for side: float in [-1.0, 1.0]:
+		# Square nozzles side by side.
+		g.block(st, Vector3(0.6, 0.42, 0.7), Vector3(side * 0.42, 0.0, -l * 0.5 - 0.1), METAL, 0.05)
+		g.block(st, Vector3(0.44, 0.08, 0.1), Vector3(side * 0.42, 0.16, -l * 0.5 - 0.48), DARK)
+		# Caret intakes beside the cockpit.
+		g.block(st, Vector3(0.42, 0.5, 1.6), Vector3(side * 0.95, -0.05, 1.4), DARK, 0.08, 0.5)
+		surface(st, Vector3(side * 1.0, 0.0, 1.4), Vector3(side * 1.0, 0.0, -3.2), Vector3(side * 4.4, 0.0, -2.4), Vector3(side * 4.4, 0.0, -3.1), 0.16, 0.05, Vector3.UP, PAINT)
+		surface(st, Vector3(side * 0.7, 0.0, -3.4), Vector3(side * 0.7, 0.0, -4.6), Vector3(side * 2.3, 0.0, -4.2), Vector3(side * 2.3, 0.0, -4.8), 0.1, 0.04, Vector3.UP, PAINT)
+		var tip := Vector3(side * 1.6, 1.8, -4.2)
+		surface(st, Vector3(side * 0.9, 0.25, -2.4), Vector3(side * 0.9, 0.25, -4.2), tip, tip + Vector3(0, 0, -0.55), 0.1, 0.04, Vector3(1, -0.4 * side, 0) if side > 0 else Vector3(1, 0.4, 0), PAINT)
+		g.block(st, Vector3(0.1, 0.35, 0.5), Vector3(side * 1.3, 1.1, -3.7), TEAM)
+		roundel(st, Vector3(side * 2.8, 0.09, -2.0), 0.36)
+
+## B-21 Raider: a flying wing with no tail, a raised centre body with a
+## narrow cockpit glazing, buried intakes and a sawtooth trailing edge.
+func flying_wing(st: SurfaceTool) -> void:
+	var l := 7.0
+	fuselage(st, l, [[0.0, 1.0, 0.25, 0.05], [0.25, 1.6, 0.5], [0.6, 1.5, 0.55, 0.05], [0.85, 0.9, 0.35, 0.1], [1.0, 0.02, 0.02, 0.05]], PAINT)
+	g.block(st, Vector3(1.0, 0.14, 0.5), Vector3(0, 0.55, l * 0.3), GLASS, 0.2, 0.2)
+	for side: float in [-1.0, 1.0]:
+		# The wing: straight leading edge swept back to the tips.
+		surface(st, Vector3(side * 1.2, 0.0, 2.9), Vector3(side * 1.2, 0.0, -2.6), Vector3(side * 8.0, 0.0, -2.2), Vector3(side * 8.0, 0.0, -2.9), 0.3, 0.06, Vector3.UP, PAINT)
+		# Sawtooth trailing edge.
+		surface(st, Vector3(side * 1.2, 0.0, -2.6), Vector3(side * 2.4, 0.0, -3.8), Vector3(side * 4.2, 0.0, -2.5), Vector3(side * 3.6, 0.0, -3.0), 0.2, 0.08, Vector3.UP, PAINT)
+		g.block(st, Vector3(0.7, 0.18, 0.9), Vector3(side * 1.0, 0.45, 1.2), DARK, 0.1, 0.3)   # buried intakes
+		g.block(st, Vector3(0.9, 0.1, 0.35), Vector3(side * 0.8, 0.3, -2.9), METAL)          # exhaust slots
+		roundel(st, Vector3(side * 5.2, 0.16, -1.6), 0.34)
+	g.block(st, Vector3(0.6, 0.06, 0.8), Vector3(0, 0.55, -1.0), TEAM)
+
+## Shahed-136: a delta flying wing with tip fins, a nose warhead and a pusher
+## propeller at the back.
+func shahed(st: SurfaceTool) -> void:
+	var l := 3.4
+	fuselage(st, l, [[0.0, 0.1, 0.1], [0.15, 0.2, 0.2], [0.75, 0.2, 0.22], [0.95, 0.12, 0.12], [1.0, 0.03, 0.03]], PAINT)
+	for side: float in [-1.0, 1.0]:
+		surface(st, Vector3(side * 0.15, 0.0, 1.2), Vector3(side * 0.15, 0.0, -1.5), Vector3(side * 1.25, 0.0, -1.1), Vector3(side * 1.25, 0.0, -1.55), 0.08, 0.04, Vector3.UP, LIGHT)
+		surface(st, Vector3(side * 1.25, 0.0, -1.1), Vector3(side * 1.25, 0.0, -1.55), Vector3(side * 1.25, 0.45, -1.35), Vector3(side * 1.25, 0.45, -1.6), 0.04, 0.03, Vector3.RIGHT, PAINT)
+	g.block(st, Vector3(0.18, 0.05, 0.4), Vector3(0, 0.22, 0.2), TEAM)
+	for b in range(2):
+		g.block(st, Vector3(0.05, 0.5, 0.02), Vector3(0, -0.25, 0), METAL, 0.0, 0.0, 0.0, Transform3D(Basis(Vector3.BACK, PI * b), Vector3(0, 0.0, -l * 0.5 - 0.05)))
 
 ## Unmanned surface vessel: a low, dark, fast speedboat with a sensor mast
 ## and the warhead in the bow.

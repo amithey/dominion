@@ -43,6 +43,12 @@ func build(key: String, owner: int) -> Dictionary:
 			laser_truck(body, top, parts)
 		"abmLauncher":
 			abm_launcher(body, top, parts)
+		"df17":
+			df17_launcher(body, top, parts)
+		"shahedLauncher":
+			shahed_launcher(body, top, parts)
+		"irisT":
+			iris_launcher(body, top, parts)
 		_:
 			tank(body, top, parts)
 	_attach(parts.root, body)
@@ -621,3 +627,70 @@ func abm_launcher(st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
 	# Hydraulic ram from the bed to the erector.
 	cyl(top, 0.09, 2.0, Vector3(0, 0.2, 1.1), "z", METAL, 8, -1.0, Transform3D(Basis(Vector3.RIGHT, -0.35), Vector3(0, -0.2, 0.3)))
 	parts.muzzle = 5.0
+
+## DF-17: a long eight-wheeled transporter-erector with a single missile whose
+## nose is the flat, wedge-shaped glide vehicle.
+func df17_launcher(st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
+	for z: float in [3.0, 1.8, -1.6, -2.8]:
+		axle(parts, z, 1.2, 0.58, 0.46)
+	block(st, Vector3(1.5, 0.45, 8.4), Vector3(0, 0.6, -0.1), METAL)
+	block(st, Vector3(2.7, 1.6, 1.6), Vector3(0, 1.0, 3.7), PAINT, 0.1, 0.4, 0.0)
+	block(st, Vector3(2.3, 0.5, 0.06), Vector3(0, 1.9, 4.52), GLASS, 0.0, 0.25)
+	for side: float in [-1.0, 1.0]:
+		block(st, Vector3(0.04, 0.45, 0.8), Vector3(side * 1.36, 1.8, 3.7), GLASS)
+		block(st, Vector3(0.04, 0.4, 1.2), Vector3(side * 1.36, 1.3, 3.3), TEAM)
+		block(st, Vector3(0.9, 0.12, 5.6), Vector3(side * 1.15, 1.15, -0.8), DARK)
+	block(st, Vector3(2.6, 0.25, 6.0), Vector3(0, 1.1, -0.9), PAINT)
+	var turret := Node3D.new()
+	turret.position = Vector3(0, 1.3, -3.4)
+	parts.root.add_child(turret)
+	parts.turret = turret
+	var raise := Transform3D(Basis(Vector3.RIGHT, -0.12), Vector3(0, 0.55, 0))
+	block(top, Vector3(1.4, 0.3, 6.4), Vector3(0, -0.2, 3.0), METAL, 0.0, 0.0, 0.0, raise)
+	cyl(top, 0.45, 5.0, Vector3(0, 0.3, 2.4), "z", LIGHT, 14, -1.0, raise)
+	# The glide vehicle: a flat wedge with small fins.
+	hexa(top, [Vector3(-0.45, 0.05, 4.9), Vector3(0.45, 0.05, 4.9), Vector3(0.05, 0.25, 7.2), Vector3(-0.05, 0.25, 7.2),
+		Vector3(-0.4, 0.55, 4.9), Vector3(0.4, 0.55, 4.9), Vector3(0.03, 0.35, 7.2), Vector3(-0.03, 0.35, 7.2)], PAINT, raise)
+	for side: float in [-1.0, 1.0]:
+		block(top, Vector3(0.5, 0.04, 0.4), Vector3(side * 0.55, 0.3, 5.2), DARK, 0.0, 0.0, 0.0, raise)
+	block(top, Vector3(0.04, 0.5, 1.4), Vector3(0.46, 0.3, 1.6), TEAM, 0.0, 0.0, 0.0, raise)
+	parts.muzzle = 7.0
+
+## Shahed launcher: a truck with a rack of five drones sitting on angled
+## launch rails, ready to go one after another.
+func shahed_launcher(st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
+	var bed := truck(st, parts)
+	var turret := Node3D.new()
+	turret.position = Vector3(0, bed, -1.3)
+	parts.root.add_child(turret)
+	parts.turret = turret
+	block(top, Vector3(2.4, 0.2, 3.8), Vector3(0, 0.1, 0), METAL)
+	var raise := Transform3D(Basis(Vector3.RIGHT, -0.3), Vector3(0, 0.3, 0))
+	for i in range(5):
+		var y := 0.35 + i * 0.5
+		var xf := raise * Transform3D(Basis(), Vector3(0, y, 0))
+		block(top, Vector3(0.08, 0.08, 3.4), Vector3(0, 0, 0), METAL, 0.0, 0.0, 0.0, xf)
+		# A delta drone on each rail: body and wing.
+		cyl(top, 0.14, 2.0, Vector3(0, 0.16, 0.3), "z", LIGHT, 8, -1.0, xf)
+		hexa(top, [Vector3(-0.1, 0.12, 1.0), Vector3(0.1, 0.12, 1.0), Vector3(1.05, 0.12, -0.7), Vector3(-1.05, 0.12, -0.7),
+			Vector3(-0.1, 0.18, 1.0), Vector3(0.1, 0.18, 1.0), Vector3(1.05, 0.16, -0.7), Vector3(-1.05, 0.16, -0.7)], PAINT, xf)
+	block(top, Vector3(0.04, 0.5, 1.4), Vector3(1.2, 0.5, 0.2), TEAM)
+	parts.muzzle = 2.0
+
+## IRIS-T SLM: a truck carrying a launcher box of eight missiles raised
+## upright, and a radar on a mast.
+func iris_launcher(st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
+	var bed := truck(st, parts)
+	block(st, Vector3(0.12, 2.4, 0.12), Vector3(0.9, bed + 1.2, 0.2), METAL)
+	block(st, Vector3(1.1, 0.8, 0.14), Vector3(0.9, bed + 2.6, 0.2), DARK)
+	var turret := Node3D.new()
+	turret.position = Vector3(0, bed + 0.2, -2.6)
+	parts.root.add_child(turret)
+	parts.turret = turret
+	var up := Transform3D(Basis(Vector3.RIGHT, -1.45), Vector3(0, 0.3, 0))
+	block(top, Vector3(2.0, 1.1, 3.6), Vector3(0, 0.0, 1.8), LIGHT, 0.0, 0.0, 0.0, up)
+	for r in range(2):
+		for c in range(4):
+			cyl(top, 0.16, 0.06, Vector3((c - 1.5) * 0.46, -0.25 + r * 0.5, 3.62), "z", DARK, 10, -1.0, up)
+	block(top, Vector3(0.04, 0.6, 1.6), Vector3(1.02, 0.0, 1.8), TEAM, 0.0, 0.0, 0.0, up)
+	parts.muzzle = 3.6

@@ -25,8 +25,9 @@ extends RefCounted
 ## 2025 once the warheads manoeuvred in the dive; cruise missiles and Shahed
 ## drones: 80-97%.
 
-const DRONES := ["drone", "loiterer", "fpvTeam", "seaDrone"]   # jammable
-const KAMIKAZE := ["loiterer", "seaDrone"]
+const DRONES := ["drone", "loiterer", "fpvTeam", "seaDrone", "shahed"]   # jammable
+const KAMIKAZE := ["loiterer", "seaDrone", "shahed"]
+const Arsenal := preload("res://scripts/national_arsenal.gd")
 const JAM_RADIUS := 55.0
 const JAM_FAIL := 0.7          # chance a jammed drone strike is lost
 const JAM_DAMAGE := 0.4        # damage a jammed drone still does with its guns
@@ -37,19 +38,21 @@ const APS_RELOAD := 4.0        # an active protection system rearms between inte
 
 ## Missile classes and each defender's chance to stop one per engagement.
 const CLASS_OF := {"cruise": "cruise", "cluster": "cruise", "emp": "cruise", "antiShip": "seaSkimmer",
-	"tactical": "shortBallistic", "ballistic": "ballistic", "hypersonic": "hypersonic", "nuke": "icbm"}
+	"tactical": "shortBallistic", "ballistic": "ballistic", "hypersonic": "hypersonic", "nuke": "icbm", "df17": "hypersonic"}
 const INTERCEPT := {
-	#                 SAM site  mobile SAM  ABM battery  laser
-	"cruise":         {"samSite": 0.75, "samLauncher": 0.55, "abmLauncher": 0.8, "laserAD": 0.5},
-	"seaSkimmer":     {"samSite": 0.6, "samLauncher": 0.45, "abmLauncher": 0.7, "laserAD": 0.4},
-	"shortBallistic": {"samSite": 0.35, "samLauncher": 0.2, "abmLauncher": 0.8, "laserAD": 0.0},
-	"ballistic":      {"samSite": 0.25, "samLauncher": 0.1, "abmLauncher": 0.86, "laserAD": 0.0},
-	"hypersonic":     {"samSite": 0.08, "samLauncher": 0.03, "abmLauncher": 0.3, "laserAD": 0.0},
-	"icbm":           {"samSite": 0.03, "samLauncher": 0.0, "abmLauncher": 0.55, "laserAD": 0.0},
+	# SAM site, mobile SAM, ABM battery, laser, and the Verdant Union's IRIS-T SLM
+	# (reported ~99% against what it engaged in Ukraine, mostly cruise missiles
+	# and drones, and some ballistic missiles).
+	"cruise":         {"samSite": 0.75, "samLauncher": 0.55, "abmLauncher": 0.8, "laserAD": 0.5, "irisT": 0.95},
+	"seaSkimmer":     {"samSite": 0.6, "samLauncher": 0.45, "abmLauncher": 0.7, "laserAD": 0.4, "irisT": 0.9},
+	"shortBallistic": {"samSite": 0.35, "samLauncher": 0.2, "abmLauncher": 0.8, "laserAD": 0.0, "irisT": 0.6},
+	"ballistic":      {"samSite": 0.25, "samLauncher": 0.1, "abmLauncher": 0.86, "laserAD": 0.0, "irisT": 0.45},
+	"hypersonic":     {"samSite": 0.08, "samLauncher": 0.03, "abmLauncher": 0.3, "laserAD": 0.0, "irisT": 0.12},
+	"icbm":           {"samSite": 0.03, "samLauncher": 0.0, "abmLauncher": 0.55, "laserAD": 0.0, "irisT": 0.0},
 }
 ## How far each defender reaches, and how long it takes to fire again.
-const REACH := {"samSite": 140.0, "samLauncher": 115.0, "abmLauncher": 230.0, "laserAD": 60.0}
-const RELOAD := {"samSite": 2.2, "samLauncher": 3.0, "abmLauncher": 6.0, "laserAD": 1.5}
+const REACH := {"samSite": 140.0, "samLauncher": 115.0, "abmLauncher": 230.0, "laserAD": 60.0, "irisT": 120.0}
+const RELOAD := {"samSite": 2.2, "samLauncher": 3.0, "abmLauncher": 6.0, "laserAD": 1.5, "irisT": 2.5}
 
 const UNITS := {
 	"fpvTeam": {"name": "FPV Drone Team", "hp": 80, "dmg": 55, "range": 30, "cooldown": 5.0, "aggro": 34, "speed": 8.5,
@@ -155,6 +158,7 @@ static func apply(w: Node) -> void:
 	var droneSwarms: Dictionary = discoveries.get("droneSwarms", {})
 	if not droneSwarms.is_empty():
 		droneSwarms.desc = "Drones, FPV teams and loitering munitions deal +40% damage; drones cost 30% less. Unlocks the Loitering Munition."
+	Arsenal.apply(w)   # each nation's own weapons
 	var types: Dictionary = w.map.missiles.types
 	for key in types:
 		var odds: Dictionary = INTERCEPT[CLASS_OF.get(key, "cruise")]
@@ -179,7 +183,8 @@ static func jam_mult(w: Node, source: Dictionary) -> float:
 
 ## An aircraft that radar sees only close in.
 static func hidden(w: Node, target: Dictionary, distance: float, reach: float) -> bool:
-	return target.get("key", "") == "stealthFighter" and w.airborne(target) and distance > reach * STEALTH_SEEN
+	var seen: float = Arsenal.STEALTH.get(target.get("key", ""), 1.0)
+	return seen < 1.0 and w.airborne(target) and distance > reach * seen
 
 ## Chance that `vehicle`'s active protection defeats a missile, rocket or kamikaze drone.
 static func aps_chance(w: Node, vehicle: Dictionary) -> float:
@@ -287,7 +292,7 @@ static func defenders(w: Node) -> Array:
 		if b.key == "samSite" and not b.dead and b.built and b.get("supplied", true) and not w.disabled(b):
 			out.append({"kind": "samSite", "node": b.root, "owner": b.owner, "ent": b})
 	for u in w.units:
-		if u.key in ["samLauncher", "abmLauncher", "laserAD"] and not u.dead and not w.disabled(u):
+		if u.key in ["samLauncher", "abmLauncher", "laserAD", "irisT"] and not u.dead and not w.disabled(u):
 			out.append({"kind": u.key, "node": u.node, "owner": u.owner, "ent": u})
 	return out
 
@@ -295,7 +300,7 @@ static func _report(w: Node, m: Dictionary, d: Dictionary, hit: bool) -> void:
 	if w.hud == null:
 		return
 	var name: String = w.missiles.def_of(m.type).get("name", "missile")
-	var by: String = {"samSite": "a SAM site", "samLauncher": "a mobile SAM", "abmLauncher": "a missile defence battery", "laserAD": "a laser"}[d.kind]
+	var by: String = {"samSite": "a SAM site", "samLauncher": "a mobile SAM", "abmLauncher": "a missile defence battery", "laserAD": "a laser", "irisT": "an IRIS-T battery"}[d.kind]
 	if int(m.owner) == 0:
 		w.hud.notice(("Your %s was shot down by %s." if hit else "Your %s slipped past %s.") % [name, by])
 	elif d.owner == 0:

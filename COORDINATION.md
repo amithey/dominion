@@ -271,3 +271,9 @@ UI files listed above.
   def.era; effects.beam(); armor.gd himars/ew_truck/laser_truck/abm_launcher; craft.gd loiterer/
   stealth_fighter/sea_drone; air_operations.TUBE_LAUNCHED (loiterer takes no slot). Checks: tools/modern-warfare-check.gd; pictures: tools/modern-views.gd.
 - 2026-09-27 Claude: 0.9.28 built from 0a2103f; the game was open, so the exe is dist/DOMINION-0.9.28.exe (packaged --ui-test passes); DOMINION-Setup.exe is 0.9.28.
+- 2026-09-27 Claude, 0.9.29 (user asked for each nation's own star weapon): new scripts/national_arsenal.gd
+  (raptor, raider, df17, shahedLauncher + shahed, irisT; nation by flag colour: identity()/allowed()/foreign();
+  Classified Programs discovery with "nation": "blue"; MISSILES.df17 fired only by the launcher, missiles.def_of
+  falls back to it; impact special "hgv"). modern_warfare: irisT column in INTERCEPT, STEALTH per aircraft.
+  world.unit_allowed(); research.unit_locked/blocker refuse another nation's; ai filters its pool by nation.
+  hud.gd (Codex's): the Train list skips other nations' weapons (one line). Check: tools/units-100.gd.
