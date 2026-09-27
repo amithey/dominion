@@ -270,3 +270,4 @@ UI files listed above.
   ai.gd MODERN_POOL and missile_strike(); research.unit_locked reads unit_defs[unit].requires, era_of reads
   def.era; effects.beam(); armor.gd himars/ew_truck/laser_truck/abm_launcher; craft.gd loiterer/
   stealth_fighter/sea_drone; air_operations.TUBE_LAUNCHED (loiterer takes no slot). Checks: tools/modern-warfare-check.gd; pictures: tools/modern-views.gd.
+- 2026-09-27 Claude: 0.9.28 built from 0a2103f; the game was open, so the exe is dist/DOMINION-0.9.28.exe (packaged --ui-test passes); DOMINION-Setup.exe is 0.9.28.
