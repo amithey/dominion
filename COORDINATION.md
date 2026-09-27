@@ -261,3 +261,4 @@ UI files listed above.
   each end), no longer tied to the market voyage timer; logistics.settlement_of prefers a linked town among those
   covering a building; world.site_problem: an offshore platform needs water under its centre (legs may touch the
   shallows). New check tools/gameplay-100.gd (111 checks, registered in run-tests.ps1).
+- 2026-09-27 Claude: 0.9.27 executable and installer in dist, built from b9b80f8; packaged --ui-test passes.
