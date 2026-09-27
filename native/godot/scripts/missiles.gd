@@ -115,23 +115,30 @@ func launch(key: String, target: Vector3, platform = null) -> String:
 	stock[key] -= 1
 	var def := def_of(key)
 	var ship: bool = not platform.get("is_building", false)
-	var from: Vector3 = platform.node.position + Vector3.UP * (1.5 if ship else 3.0)
+	fly(key, platform.node.position + Vector3.UP * (1.5 if ship else 3.0), target, 0, ship)
+	changed.emit()
+	if key == "nuke":
+		return "NUCLEAR MISSILE LAUNCHED. %d left." % stock[key]
+	return "%s launched." % def.name
+
+## A missile in the air from `from` to `target`, fired by `owner` (rivals'
+## strikes come through here too: ai.gd).
+func fly(key: String, from: Vector3, target: Vector3, owner: int, ship := false) -> Dictionary:
+	var def := def_of(key)
 	target.y = maxf(world.height_at(target.x, target.z), float(world.map.seaLevel))
 	var dist := Vector2(target.x - from.x, target.z - from.z).length()
 	var arc: bool = def.get("arc", false)
 	var node := missile_mesh(key)
 	add_child(node)
 	node.global_position = from
-	flying.append({"type": key, "node": node, "from": from, "to": target, "t": 0.0, "owner": 0,
+	var m := {"type": key, "node": node, "from": from, "to": target, "t": 0.0, "owner": owner,
 		"dur": clampf(dist / float(def.speed), 2.5, 9.0) if arc else maxf(0.6, dist / float(def.speed)) + 1.0,
-		"arc": arc, "trail": 0.0, "peak": maxf(60.0, dist * 0.45)})
+		"arc": arc, "trail": 0.0, "peak": maxf(60.0, dist * 0.45)}
+	flying.append(m)
 	world.effects.explosion(from, 1.2, not ship)
 	if not ship:
 		world.effects.burn(from, 6.0)
-	changed.emit()
-	if key == "nuke":
-		return "NUCLEAR MISSILE LAUNCHED. %d left." % stock[key]
-	return "%s launched." % def.name
+	return m
 
 func position_at(m: Dictionary, f: float) -> Vector3:
 	var from: Vector3 = m.from
@@ -157,7 +164,7 @@ func _physics_process(delta: float) -> void:
 		var f: float = minf(m.t / m.dur, 1.0)
 		var node: Node3D = m.node
 		var p := position_at(m, f)
-		if preload("res://scripts/air_defence.gd").intercept(world, m, p):
+		if preload("res://scripts/air_defence.gd").intercept(world, m, p, f):
 			node.queue_free()
 			flying.remove_at(i)
 			continue

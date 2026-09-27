@@ -14,8 +14,11 @@ extends RefCounted
 ##   takeoff   climbing out along the runway
 ## A base whose slots are all taken accepts no more aircraft, and trains none.
 
-const CAPACITY := {"jet": 4, "bomber": 3, "drone": 6, "helicopter": 8, "gunship": 8}
+const CAPACITY := {"jet": 4, "bomber": 3, "drone": 6, "helicopter": 8, "gunship": 8, "loiterer": 1, "stealthFighter": 4}
 const SERVICE_SECONDS := 12.0
+## Launched from a canister beside the runway, straight into the air: they hold
+## no parking slot (and never come back).
+const TUBE_LAUNCHED := ["loiterer"]
 const SLOTS := {"airfield": 4, "helipad": 2}
 ## Where things are on an airfield, in its hex's own space (architecture.airfield draws the same).
 const RUNWAY_X := -3.2
@@ -67,7 +70,7 @@ static func free_slot(world: Node, b: Dictionary) -> int:
 static func room(world: Node, b: Dictionary) -> int:
 	var slots := occupants(world, b)
 	var free := slots.count(null)
-	return free - b.queue.size()
+	return free - b.queue.filter(func(k): return not k in TUBE_LAUNCHED).size()
 
 ## Takes slot `i` of base `b` for aircraft `u`.
 static func assign(world: Node, u: Dictionary, b: Dictionary, i: int) -> void:

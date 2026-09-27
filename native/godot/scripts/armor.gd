@@ -35,6 +35,14 @@ func build(key: String, owner: int) -> Dictionary:
 			rocket_launcher(body, top, parts)
 		"samLauncher":
 			sam_truck(body, top, parts, owner)
+		"himars":
+			himars(body, top, parts)
+		"ewVehicle":
+			ew_truck(body, top, parts)
+		"laserAD":
+			laser_truck(body, top, parts)
+		"abmLauncher":
+			abm_launcher(body, top, parts)
 		_:
 			tank(body, top, parts)
 	_attach(parts.root, body)
@@ -510,3 +518,106 @@ func sam_truck(st: SurfaceTool, top: SurfaceTool, parts: Dictionary, _owner: int
 		cyl(top, 0.22, 0.05, Vector3(x, y + 0.3, 2.72), "z", DARK, 12, -1.0, raise)
 	block(top, Vector3(1.5, 0.12, 0.8), Vector3(0, -0.1, -0.2), DARK, 0.0, 0.0, 0.0, raise)
 	parts.muzzle = 2.4
+
+## A 6x6 army truck's cab and chassis, shared by the modern trucks below.
+## Returns the height of the bed.
+func truck(st: SurfaceTool, parts: Dictionary, bed_length := 4.2) -> float:
+	for z: float in [2.4, -0.8, -2.2]:
+		axle(parts, z, 1.1, 0.55, 0.45)
+	block(st, Vector3(1.4, 0.4, 6.6), Vector3(0, 0.55, -0.1), METAL)
+	block(st, Vector3(2.5, 1.7, 1.9), Vector3(0, 0.95, 2.35), PAINT, 0.08, 0.35, 0.0)
+	block(st, Vector3(2.2, 0.6, 0.06), Vector3(0, 1.9, 3.12), GLASS, 0.0, 0.25)
+	for side: float in [-1.0, 1.0]:
+		block(st, Vector3(0.04, 0.55, 0.9), Vector3(side * 1.26, 1.85, 2.3), GLASS)
+		block(st, Vector3(0.05, 0.3, 0.1), Vector3(side * 1.4, 2.0, 2.9), METAL)
+		block(st, Vector3(0.9, 0.12, 1.5), Vector3(side * 1.1, 1.1, 2.4), DARK)
+		block(st, Vector3(0.9, 0.12, 2.6), Vector3(side * 1.1, 1.1, -1.5), DARK)
+		block(st, Vector3(0.04, 0.4, 1.0), Vector3(side * 1.27, 1.3, 2.2), TEAM)
+		block(st, Vector3(0.22, 0.14, 0.1), Vector3(side * 0.9, 1.1, 3.3), GLASS)
+	block(st, Vector3(2.5, 0.25, bed_length), Vector3(0, 1.05, -1.1), PAINT)
+	return 1.2
+
+## HIMARS: a 6x6 truck carrying one six-rocket pod on a traversing launcher.
+func himars(st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
+	var bed := truck(st, parts)
+	var turret := Node3D.new()
+	turret.position = Vector3(0, bed, -1.3)
+	parts.root.add_child(turret)
+	parts.turret = turret
+	block(top, Vector3(2.0, 0.3, 2.0), Vector3(0, 0, 0), METAL)
+	var raise := Transform3D(Basis(Vector3.RIGHT, -0.35), Vector3(0, 0.55, -0.2))
+	block(top, Vector3(2.1, 1.1, 3.8), Vector3(0, 0.0, 0.3), LIGHT, 0.0, 0.0, 0.0, raise)
+	for r in range(2):
+		for c in range(3):
+			cyl(top, 0.17, 0.06, Vector3((c - 1) * 0.6, -0.2 + r * 0.5, 2.22), "z", DARK, 10, -1.0, raise)
+	block(top, Vector3(0.04, 0.5, 1.6), Vector3(1.07, 0.55, -0.3), TEAM)
+	parts.muzzle = 2.4
+
+## Electronic warfare truck: a shelter on the bed with a folding antenna
+## array on a mast that turns, and whip aerials everywhere.
+func ew_truck(st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
+	var bed := truck(st, parts)
+	block(st, Vector3(2.4, 1.5, 3.4), Vector3(0, bed + 0.75, -1.2), PAINT, 0.05)
+	for side: float in [-1.0, 1.0]:
+		block(st, Vector3(0.04, 0.5, 1.2), Vector3(side * 1.22, bed + 0.9, -1.2), TEAM)
+		for i in range(3):
+			antenna(st, Vector3(side * 1.0, bed + 1.5, -2.6 + i * 1.0), 2.4 + i * 0.4)
+	var turret := Node3D.new()
+	turret.position = Vector3(0, bed + 1.5, -1.2)
+	parts.root.add_child(turret)
+	parts.turret = turret
+	cyl(top, 0.12, 2.2, Vector3(0, 1.1, 0), "y", METAL, 8)
+	var dish := Node3D.new()
+	dish.position = Vector3(0, 2.2, 0)
+	turret.add_child(dish)
+	var array := _begin()
+	block(array, Vector3(3.2, 1.4, 0.12), Vector3(0, 0.7, 0), DARK)
+	for r in range(3):
+		for c in range(6):
+			block(array, Vector3(0.4, 0.34, 0.04), Vector3(-1.25 + c * 0.5, 0.25 + r * 0.45, 0.08), METAL)
+	_attach(dish, array)
+	parts.radar = dish
+	parts.muzzle = 1.0
+
+## Laser air defence: a truck carrying a power pack and a turret with a big
+## beam director (the lens) and a tracking radar.
+func laser_truck(st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
+	var bed := truck(st, parts)
+	block(st, Vector3(2.3, 1.0, 1.6), Vector3(0, bed + 0.5, -2.4), DARK, 0.05)   # generator and cooling
+	for i in range(4):
+		block(st, Vector3(2.0, 0.04, 0.12), Vector3(0, bed + 1.02, -3.0 + i * 0.35), METAL)
+	var turret := Node3D.new()
+	turret.position = Vector3(0, bed, -0.6)
+	parts.root.add_child(turret)
+	parts.turret = turret
+	cyl(top, 0.7, 0.4, Vector3(0, 0.2, 0), "y", METAL, 16)
+	block(top, Vector3(1.4, 1.2, 1.5), Vector3(0, 0.95, 0), PAINT, 0.1)
+	# The beam director: a drum with a glowing lens, tilted up.
+	var tilt := Transform3D(Basis(Vector3.RIGHT, -0.45), Vector3(0, 1.3, 0.6))
+	cyl(top, 0.55, 1.1, Vector3(0, 0, 0.2), "z", LIGHT, 18, -1.0, tilt)
+	cyl(top, 0.42, 0.06, Vector3(0, 0, 0.78), "z", GLASS, 18, -1.0, tilt)
+	block(top, Vector3(0.5, 0.4, 0.4), Vector3(0.9, 1.5, -0.2), DARK)
+	block(top, Vector3(0.04, 0.5, 0.9), Vector3(0.72, 0.95, -0.2), TEAM)
+	parts.muzzle = 1.4
+
+## Missile defence battery (Arrow / THAAD): a heavy truck with an erector
+## raising a stack of big interceptor canisters almost upright.
+func abm_launcher(st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
+	var bed := truck(st, parts, 4.6)
+	block(st, Vector3(0.5, 0.5, 0.5), Vector3(0, bed + 0.25, -3.2), METAL)
+	var turret := Node3D.new()
+	turret.position = Vector3(0, bed + 0.3, -3.1)
+	parts.root.add_child(turret)
+	parts.turret = turret
+	# The erector hinges at the back of the bed and lifts the canisters about
+	# 40 degrees; their mouths face forward and up, over the cab.
+	var raise := Transform3D(Basis(Vector3.RIGHT, -0.7), Vector3(0, 0.25, 0))
+	block(top, Vector3(2.3, 0.15, 4.4), Vector3(0, -0.1, 2.1), METAL, 0.0, 0.0, 0.0, raise)
+	for c in range(3):
+		for r in range(2):
+			cyl(top, 0.3, 4.2, Vector3((c - 1) * 0.66, 0.32 + r * 0.62, 2.1), "z", LIGHT, 12, -1.0, raise)
+			cyl(top, 0.24, 0.05, Vector3((c - 1) * 0.66, 0.32 + r * 0.62, 4.22), "z", DARK, 12, -1.0, raise)
+	block(top, Vector3(0.04, 0.55, 1.4), Vector3(1.0, 0.6, 2.4), TEAM, 0.0, 0.0, 0.0, raise)
+	# Hydraulic ram from the bed to the erector.
+	cyl(top, 0.09, 2.0, Vector3(0, 0.2, 1.1), "z", METAL, 8, -1.0, Transform3D(Basis(Vector3.RIGHT, -0.35), Vector3(0, -0.2, 0.3)))
+	parts.muzzle = 5.0

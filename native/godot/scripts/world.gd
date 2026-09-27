@@ -59,14 +59,14 @@ const BUILDING_SIZE := {"hq": 10.0, "barracks": 9.0, "tankFactory": 9.5, "wareho
 # centre, which leaves at least two 4 m walk cells between any two neighbouring
 # districts (6.0 left a single cell, and armour jammed in city streets).
 const DISTRICT_NAV_SIZE := 4.5
-const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker"]
-const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher"]
-const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub"]
-const AIR := ["helicopter", "gunship", "jet", "bomber", "drone"]
-const FIXED_WING := ["jet", "bomber", "drone"]
+const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker", "fpvTeam", "atgmTeam", "manpads", "medic"]
+const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher"]
+const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone"]
+const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter"]
+const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter"]
 const AirOperations := preload("res://scripts/air_operations.gd")
-const ALTITUDE := {"helicopter": 14.0, "gunship": 13.0, "jet": 26.0, "bomber": 30.0, "drone": 18.0}
-const SHIP_LENGTH := {"gunboat": 7.5, "corvette": 10.5, "destroyer": 15.0, "submarine": 11.0, "nuclearSub": 14.0}
+const ALTITUDE := {"helicopter": 14.0, "gunship": 13.0, "jet": 26.0, "bomber": 30.0, "drone": 18.0, "loiterer": 16.0, "stealthFighter": 28.0}
+const SHIP_LENGTH := {"gunboat": 7.5, "corvette": 10.5, "destroyer": 15.0, "submarine": 11.0, "nuclearSub": 14.0, "seaDrone": 4.5}
 const DEEP := -1.2   # water at least this deep (below sea level) carries a ship
 
 var map: Dictionary
@@ -198,6 +198,9 @@ var lod_turn := 0
 var perf_opts := true
 var game_time := 0.0      # match seconds (EMP and other timed effects)
 var shots_fired := 0      # every weapon discharge (the battle test watches it)
+var jammed_strikes := 0   # drone strikes lost to jamming (modern_warfare.gd)
+var aps_intercepts := 0   # shots stopped by active protection
+var intercepts: Array = [] # every missile interception attempt: {type, by, hit, owner}
 var sim_tick := 0         # simulation steps taken (staggers per-unit work; tests step by hand)
 var missile_aim := ""     # missile type waiting for a target click
 var land_buyer = null     # the settlement whose town hall is buying land (click a highlighted hex)
@@ -215,6 +218,7 @@ var naval_navigation: RefCounted
 const Repairs := preload("res://scripts/repairs.gd")
 const Motion := preload("res://scripts/motion.gd")
 const Tactics := preload("res://scripts/tactics.gd")
+const Modern := preload("res://scripts/modern_warfare.gd")
 const SiteClearing := preload("res://scripts/site_clearing.gd")
 const Picking := preload("res://scripts/picking.gd")
 const Topography := preload("res://scripts/topography.gd")
@@ -257,6 +261,7 @@ func _ready() -> void:
 	craft = preload("res://scripts/craft.gd").new()
 	building_defs = map.get("buildingDefs", {})
 	preload("res://scripts/gameplay_rules.gd").apply(self)
+	Modern.apply(self)  # drones, jamming, lasers, missile defence (modern_warfare.gd)
 	soldier_scene = load("res://assets/CharacterSoldier.glb")
 	if ResourceLoader.exists("res://assets/Soldier.glb") and not "--toon-infantry" in OS.get_cmdline_user_args():
 		realistic_scene = load("res://assets/Soldier.glb")
@@ -1067,6 +1072,7 @@ func is_district(key: String) -> bool:
 	return key != "extractor" and not building_defs.get(key, {}).get("water", false)
 
 func place_building(key: String, at: Vector3, owner: int, built: bool) -> Dictionary:
+	clear_ruins(key, at)
 	if is_district(key):
 		return place_district(key, at, owner, built)
 	var b := {"key": key, "x": at.x, "z": at.z}
@@ -1272,9 +1278,9 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	elif key == "worker":
 		dress_worker(model)
 	elif realistic:
-		dress_realistic(model, owner, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher", "commando": "SMG"}.get(key, "AK"))
+		dress_realistic(model, owner, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher", "commando": "SMG", "atgmTeam": "RocketLauncher", "manpads": "RocketLauncher", "fpvTeam": "SMG", "medic": "SMG"}.get(key, "AK"))
 	else:
-		dress_soldier(model, owner, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher"}.get(key, "AK"))
+		dress_soldier(model, owner, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher", "atgmTeam": "RocketLauncher", "manpads": "RocketLauncher"}.get(key, "AK"))
 	var ring := MeshInstance3D.new()
 	var torus := TorusMesh.new()
 	torus.inner_radius = 1.25 if not vehicle else 3.3
@@ -1348,7 +1354,7 @@ func display_model(key: String) -> Node3D:
 		model.scale = Vector3.ONE * SOLDIER_HEIGHT / maxf(bounds.size.y, 0.01)
 		if realistic:
 			model.rotation.y = PI
-			dress_realistic(model, 0, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher", "commando": "SMG"}.get(key, "AK"))
+			dress_realistic(model, 0, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher", "commando": "SMG", "atgmTeam": "RocketLauncher", "manpads": "RocketLauncher", "fpvTeam": "SMG", "medic": "SMG"}.get(key, "AK"))
 		elif key == "worker":
 			dress_worker(model)
 		else:
@@ -1955,6 +1961,7 @@ func _physics_process(delta: float) -> void:
 		update_construction(delta)
 		update_training(delta)
 		preload("res://scripts/air_defence.gd").update(self, delta)
+		Modern.update(self, delta)  # medics
 		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
 	var t_units := clock()
@@ -2717,7 +2724,7 @@ func queue_unit(b: Dictionary, key: String) -> void:
 	if economy.pop_used + queued_pop + int(def.get("pop", 1)) > economy.pop_cap:
 		hud.notice("Army capacity reached: build Housing Blocks")
 		return
-	if key in AIR and AirOperations.is_base(b) and AirOperations.room(self, b) <= 0:
+	if key in AIR and not key in AirOperations.TUBE_LAUNCHED and AirOperations.is_base(b) and AirOperations.room(self, b) <= 0:
 		hud.notice("All %d aircraft slots at this %s are taken. Build another, or base aircraft elsewhere." % [AirOperations.SLOTS[b.key], b.def.name])
 		return
 	var locked: String = research.unit_locked(key) if research else ""
@@ -2799,7 +2806,7 @@ func update_training(delta: float) -> void:
 			out = (door - at).normalized()
 		var unit := spawn_unit(key, door, b.owner)
 		unit.heading = atan2(out.x, out.z)
-		if unit.get("fly", false) and AirOperations.is_base(b) and AirOperations.park_new(self, unit, b):
+		if unit.get("fly", false) and not key in AirOperations.TUBE_LAUNCHED and AirOperations.is_base(b) and AirOperations.park_new(self, unit, b):
 			pass  # parked on its slot on the apron, waiting for orders
 		else:
 			order_move([unit], door + out * 8.0 + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4)))
@@ -4624,7 +4631,7 @@ func target_class(t: Dictionary) -> String:
 
 ## Air defence (SAM sites, mobile SAMs, anti-aircraft vehicles) engages only
 ## aircraft in flight: not ground forces, and not aircraft parked on a base.
-const AIR_DEFENCE := ["samSite", "samLauncher", "aaVehicle"]
+const AIR_DEFENCE := ["samSite", "samLauncher", "aaVehicle", "manpads", "laserAD"]
 
 ## An aircraft actually in the air (not parked or rearming on its base).
 func airborne(u: Dictionary) -> bool:
@@ -4639,8 +4646,14 @@ func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
 	if attacker.get("key", "") in AIR_DEFENCE and target_class(target) != "air":
 		return 0.0
 	# Small arms cannot penetrate heavy armour; dedicated anti-tank infantry can.
-	if attacker.key in ["soldier","sniper","commando","worker"] and target_class(target) in ["armor","air","naval"]:
+	if attacker.key in ["soldier","sniper","commando","worker","medic"] and target_class(target) in ["armor","air","naval"]:
 		return 0.0
+	# Sea drones ram ships and harbours; nothing else.
+	if attacker.key == "seaDrone" and not (target.get("naval", false) or target.get("is_building", false)):
+		return 0.0
+	# A laser burns small drones out of the sky in a second or two.
+	if attacker.key == "laserAD" and target.get("key", "") in Modern.DRONES and target_class(target) == "air":
+		return 6.0
 	var profile: Dictionary = damage_profile.get(attacker.key, {})
 	if profile.is_empty():
 		return 0.0 if target.get("fly", false) else 1.0
@@ -4667,6 +4680,8 @@ func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
 		if other.dead or not hostile(unit.owner, other.owner) or effectiveness(unit, other) <= 0.01:
 			continue
 		var d: float = flat_distance(unit, other)
+		if Modern.hidden(self, other, d, radius):
+			continue
 		if d < best_d:
 			best_d = d
 			best = other
@@ -4700,7 +4715,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 	# They look as far as their weapon reaches (artillery outranges its own eyes otherwise).
 	if unit.enemy == null and unit.search <= 0.0:
 		unit.search = 0.35
-		if unit.target == null or unit.attack_move or unit.key in ["aaVehicle", "samLauncher"]:
+		if unit.target == null or unit.attack_move or unit.key in ["aaVehicle", "samLauncher", "manpads", "laserAD"]:
 			unit.enemy = Tactics.pick_target(self, unit, maxf(unit.aggro, unit.range))
 	if unit.enemy == null or unit.reload > 0.0:
 		return
@@ -4726,7 +4741,8 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 ## The weapon a unit fires, when it is more than a rifle or a gun turret.
 const WEAPONS := {"bomber": "bomb", "jet": "missile", "drone": "missile", "helicopter": "rockets", "gunship": "rockets",
 	"submarine": "torpedo", "nuclearSub": "torpedo", "artillery": "shell_arc", "mlrs": "rocket_salvo",
-	"samLauncher": "sam", "rocketSoldier": "rocket"}
+	"samLauncher": "sam", "rocketSoldier": "rocket", "stealthFighter": "missile", "manpads": "sam",
+	"fpvTeam": "fpv", "atgmTeam": "atgm", "himars": "guided", "laserAD": "laser", "loiterer": "kamikaze", "seaDrone": "kamikaze"}
 
 ## Fires at `enemy`; false when the weapon cannot be used yet (a bomber that
 ## is not over its target), so the reload is not spent.
@@ -4741,7 +4757,7 @@ func fire(unit: Dictionary, enemy: Dictionary) -> bool:
 	var weapon: String = WEAPONS.get(unit.key, "")
 	if weapon != "":
 		var fired := fire_weapon(unit, enemy, weapon)
-		if fired and unit.get("fly", false):
+		if fired and unit.get("fly", false) and not unit.dead:
 			AirOperations.consume(unit)
 		return fired
 	_fire_gun(unit, enemy)
@@ -4754,6 +4770,17 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 	var dir := Basis(Vector3.UP, unit.heading) * Vector3.BACK
 	var from: Vector3 = unit.node.position + dir * 1.5 + Vector3.UP * (1.6 if not unit.get("fly", false) else -0.8)
 	var dmg: float = unit.dmg * (2.5 if unit.get("fly",false) else 1.0)
+	# Guided missiles, rockets and kamikaze drones can be blown up short of an
+	# armoured vehicle by its active protection (modern_warfare.gd).
+	if weapon in ["missile", "rocket", "atgm", "fpv", "kamikaze"] and Modern.aps_stops(self, enemy):
+		var short: Vector3 = target.lerp(from, 0.12)
+		if weapon == "kamikaze":
+			from = unit.node.position
+			kill(unit)
+			unit.node.visible = false
+		effects.projectile("rocket" if weapon in ["rocket", "fpv"] else "missile", from, short, func(at): effects.explosion(at, 0.5, false))
+		aps_intercepts += 1
+		return true
 	match weapon:
 		"bomb":
 			# Only over the target: the bomber lines up and releases a stick.
@@ -4767,7 +4794,41 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 		"missile":
 			effects.projectile("missile", from, target, func(at): blast(unit, at, dmg, 3.0, 1.2), 0.0, enemy.node if enemy.get("fly", false) or enemy.vehicle else null)
 		"sam":
-			effects.projectile("missile", unit.node.position + Vector3.UP * 3.0, target, func(at): blast(unit, at, dmg, 3.5, 1.0), 0.0, enemy.node)
+			effects.projectile("missile", unit.node.position + Vector3.UP * (1.7 if unit.key == "manpads" else 3.0), target, func(at): blast(unit, at, dmg, 3.5, 1.0), 0.0, enemy.node)
+		"atgm":
+			# Top attack: the missile climbs and dives onto the roof.
+			effects.projectile("missile", unit.node.position + Vector3.UP * 1.7 + dir * 0.6, target, func(at): blast(unit, at, dmg, 2.0, 0.8), 0.0, enemy.node if enemy.vehicle else null)
+		"fpv":
+			# A small drone flies from the operators to the target; jammers bring most down.
+			var launch: Vector3 = unit.node.position + Vector3.UP * 2.5
+			if (Modern.jammed(self, unit.node.position, unit.owner) or Modern.jammed(self, target, unit.owner)) and randf() < Modern.JAM_FAIL:
+				var lost: Vector3 = launch.lerp(target, randf_range(0.3, 0.8))
+				lost.y = height_at(lost.x, lost.z)
+				effects.projectile("rocket", launch, lost, func(at): effects.explosion(at, 0.4, true))
+				jammed_strikes += 1
+				return true
+			effects.projectile("rocket", launch, target, func(at): blast(unit, at, dmg, 2.4, 0.9), 0.0, enemy.node)
+		"kamikaze":
+			# The drone is the warhead: it dives in and is gone.
+			var start: Vector3 = unit.node.position
+			var jammed := Modern.jammed(self, start, unit.owner) or Modern.jammed(self, target, unit.owner)
+			kill(unit)
+			unit.node.visible = false
+			if jammed and randf() < Modern.JAM_FAIL:
+				var lost: Vector3 = start.lerp(target, randf_range(0.2, 0.7))
+				lost.y = maxf(height_at(lost.x, lost.z), float(map.seaLevel))
+				effects.projectile("missile", start, lost, func(at): effects.explosion(at, 0.8, true))
+				jammed_strikes += 1
+				return true
+			effects.projectile("missile", start, target, func(at): blast(unit, at, dmg, 4.0, 1.6), 0.0, enemy.node)
+		"guided":
+			# Two GPS-guided rockets: no scatter, a tall climb and a steep dive.
+			for i in range(2):
+				effects.projectile("rocket", from + Vector3.UP * 1.8 + Vector3((i - 0.5) * 0.6, 0, 0), target, func(at): blast(unit, at, dmg * 0.5, 3.0, 1.1), i * 0.35)
+		"laser":
+			# The beam arrives at once and burns for a moment.
+			effects.beam(unit.node.position + Vector3.UP * 3.2, target)
+			damage(enemy, dmg * effectiveness(unit, enemy), unit)
 		"rockets":
 			var n := 4 if unit.key == "gunship" else 2
 			for i in range(n):
@@ -4874,6 +4935,7 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 		amount *= espionage.damage_mult(source.owner)  # a dead general blunts an army
 	if research:
 		amount *= research.damage_mult(source) * research.armor_mult(unit)
+	amount *= Modern.jam_mult(self, source)  # a jammed drone flies blind
 	amount *= preload("res://scripts/bunker.gd").cover(self, unit, source)  # bunkers shield from ground fire
 	unit.hp -= amount
 	if amount > 0:
@@ -4963,6 +5025,35 @@ func kill(unit: Dictionary) -> void:
 		unit.fall = 1.0 if randf() < 0.5 else -1.0
 		if unit.player:
 			unit.player.speed_scale = 0.15
+
+## Building on a ruin clears it first: the charred shell of a destroyed
+## building (and its district tile) under the new one is taken away.
+func clear_ruins(key: String, at: Vector3) -> int:
+	var reach := footprint_of(key)
+	var hex: Vector2i = logistics.world_hex(at)
+	var cleared := 0
+	for i in range(buildings.size() - 1, -1, -1):
+		var b: Dictionary = buildings[i]
+		if not b.dead:
+			continue
+		var gap := Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length()
+		var same_hex: bool = b.has("hex") and b.hex == hex and (is_district(key) or b.has("pad"))
+		if not same_hex and gap >= (reach + b.footprint) * 0.5:
+			continue
+		if b.has("hex") and district_hex.get(b.hex) == b:
+			district_hex.erase(b.hex)
+		for j in range(building_spots.size() - 1, -1, -1):
+			var spot: Vector3 = building_spots[j]
+			if absf(spot.x - b.root.position.x) < 0.01 and absf(spot.z - b.root.position.z) < 0.01:
+				building_spots.remove_at(j)
+		if is_instance_valid(b.get("damage_label")):
+			b.damage_label.queue_free()
+		b.root.queue_free()
+		buildings.remove_at(i)
+		cleared += 1
+	if cleared > 0 and is_district(key):
+		refresh_streets()
+	return cleared
 
 # A destroyed building collapses into charred rubble that burns for a while.
 func destroy_building(b: Dictionary) -> void:

@@ -116,7 +116,10 @@ func run() -> void:
 			if site.built: break
 		check(site.built, "workers build a park from its foundations")
 	# ------------------------------------------------ units
-	for r in w.research.UNIT_REQUIRES.values():
+	var needs: Array = w.research.UNIT_REQUIRES.values()
+	for k in w.unit_defs:
+		if w.unit_defs[k].has("requires"): needs.append(w.unit_defs[k].requires)
+	for r in needs:
 		w.research.progress[r].stage = 3  # unlock the late units for this check
 	w.research._recompute()
 	for key in built:

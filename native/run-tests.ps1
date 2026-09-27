@@ -25,6 +25,7 @@ $tests = @(
     @('air defence, artillery range, bunkers', @('--script', 'res://tools/combat-rules-check.gd'), 'COMBAT_RULES PASS', 240),
     @('long marches round lakes and ridges, across the island', @('--script', 'res://tools/route-check.gd'), 'ROUTE_TEST PASS', 900),
     @('trade ships on every route at a merchant ship pace; shipping sabotage', @('--script', 'res://tools/trade-check.gd'), 'TRADE_TEST PASS', 240),
+    @('modern warfare: drones, jamming, active protection, lasers, interception odds, ruins', @('--script', 'res://tools/modern-warfare-check.gd'), 'MODERN_WARFARE PASS', 600),
     @('about 100 gameplay checks: every building, unit, research, market, diplomacy, spies, missiles, land, roads, saves', @('--script', 'res://tools/gameplay-100.gd'), 'GAMEPLAY_100 PASS', 1500),
     @('every map loads: capitals linked by land, resources, ships at sea', @('--script', 'res://tools/maps-check.gd'), 'MAPS_TEST PASS', 400),
     @('settings are saved and restored', @('--script', 'res://tools/settings-check.gd'), 'SETTINGS_TEST PASS', 180),

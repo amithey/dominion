@@ -19,7 +19,7 @@ extends RefCounted
 const RETARGET := 1.2        # seconds between looks for a better target
 const CHASE_LIMIT := 12.0    # seconds of chasing without closing in before giving up
 const IGNORE_FOR := 10.0     # how long an abandoned target is ignored
-const SUPPORT := ["artillery", "mlrs", "samLauncher", "aaVehicle"]
+const SUPPORT := ["artillery", "mlrs", "samLauncher", "aaVehicle", "himars", "ewVehicle", "laserAD", "abmLauncher"]
 
 ## Where `unit` should stand to shoot at `enemy`.
 static func firing_spot(w: Node, unit: Dictionary, enemy: Dictionary) -> Vector3:
@@ -84,6 +84,8 @@ static func pick_target(w: Node, unit: Dictionary, radius: float) -> Variant:
 			if eff <= 0.01:
 				continue
 			var d := sqrt(d2)
+			if preload("res://scripts/modern_warfare.gd").hidden(w, other, d, radius):
+				continue  # a stealth aircraft is seen only close in
 			if d > unit.range and not reachable(unit, other):
 				continue
 			if not ignore.is_empty() and float(ignore.get(other.node.get_instance_id(), -1.0)) > w.game_time:

@@ -9,10 +9,10 @@ extends RefCounted
 ## heads that the game spins. Finishes ride in the vertex colour
 ## (vehicle.gdshader); moving parts stay separate nodes. Models face +Z.
 
-const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub"]
-const AIR := ["helicopter", "gunship", "jet", "bomber", "drone"]
+const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone"]
+const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter"]
 const PAINTS := {"ship": Color("5e676c"), "sub": Color("2b2f32"), "heli": Color("4d5641"), "gunship": Color("454c3c"),
-	"jet": Color("737d84"), "bomber": Color("50585c"), "drone": Color("8a9297")}
+	"jet": Color("737d84"), "bomber": Color("50585c"), "drone": Color("8a9297"), "stealth": Color("4b5157"), "usv": Color("2e3336")}
 
 const PAINT := Color(0.5, 0.0, 0.0)
 const LIGHT := Color(0.58, 0.0, 0.0)
@@ -59,7 +59,9 @@ func build(key: String, owner: int) -> Dictionary:
 		"gunship": finish = "gunship"
 		"jet": finish = "jet"
 		"bomber": finish = "bomber"
-		"drone": finish = "drone"
+		"drone", "loiterer": finish = "drone"
+		"stealthFighter": finish = "stealth"
+		"seaDrone": finish = "usv"
 	g._mat = material_for(owner, finish)
 	var st := g._begin()
 	var parts := {"root": Node3D.new(), "rotor": null, "radar": null, "turret": null}
@@ -80,6 +82,12 @@ func build(key: String, owner: int) -> Dictionary:
 			bomber(st)
 		"drone":
 			drone(st)
+		"loiterer":
+			loiterer(st)
+		"stealthFighter":
+			stealth_fighter(st)
+		"seaDrone":
+			sea_drone(st, 4.5, 1.1)
 		_:
 			fighter(st)
 	g._attach(parts.root, st)
@@ -346,6 +354,53 @@ func drone(st: SurfaceTool) -> void:
 		missile(st, Vector3(side * 1.1, 0.0, 0.1), 0.7)
 	for b in range(3):
 		g.block(st, Vector3(0.05, 0.42, 0.02), Vector3(0, -0.21, 0), METAL, 0.0, 0.0, 0.0, Transform3D(Basis(Vector3.BACK, TAU * b / 3.0), Vector3(0, 0.0, -l * 0.5 - 0.04)))
+
+## Loitering munition: a tube body with a seeker window, two pairs of wings
+## in tandem (they unfold from the tube at launch) and a rear propeller.
+func loiterer(st: SurfaceTool) -> void:
+	var l := 2.2
+	fuselage(st, l, [[0.0, 0.08, 0.08], [0.1, 0.13, 0.13], [0.8, 0.13, 0.13], [0.95, 0.1, 0.1], [1.0, 0.03, 0.03]], PAINT)
+	g.prim(st, _sphere(0.09), Transform3D(Basis(), Vector3(0, -0.05, l * 0.46)), GLASS)
+	g.block(st, Vector3(0.1, 0.05, 0.3), Vector3(0, 0.13, 0.2), TEAM)
+	for side: float in [-1.0, 1.0]:
+		surface(st, Vector3(side * 0.1, 0.05, 0.55), Vector3(side * 0.1, 0.05, 0.35), Vector3(side * 1.0, 0.1, 0.45), Vector3(side * 1.0, 0.1, 0.3), 0.03, 0.02, Vector3.UP, LIGHT)
+		surface(st, Vector3(side * 0.1, -0.05, -0.55), Vector3(side * 0.1, -0.05, -0.8), Vector3(side * 0.9, -0.1, -0.65), Vector3(side * 0.9, -0.1, -0.85), 0.03, 0.02, Vector3.UP, LIGHT)
+	surface(st, Vector3(0, 0.1, -0.6), Vector3(0, 0.1, -0.95), Vector3(0, 0.45, -0.85), Vector3(0, 0.45, -1.0), 0.03, 0.02, Vector3.RIGHT, PAINT)
+	for b in range(2):
+		g.block(st, Vector3(0.04, 0.34, 0.02), Vector3(0, -0.17, 0), METAL, 0.0, 0.0, 0.0, Transform3D(Basis(Vector3.BACK, PI * b), Vector3(0, 0.0, -l * 0.5 - 0.04)))
+
+## Fifth-generation stealth fighter: a flat, faceted body with chined edges,
+## a single engine, a diamond wing, twin canted tails and nothing hung under
+## the wings (the weapons ride inside).
+func stealth_fighter(st: SurfaceTool) -> void:
+	var l := 8.2
+	fuselage(st, l, [[0.0, 0.45, 0.22], [0.1, 0.75, 0.3], [0.35, 0.9, 0.34], [0.6, 0.62, 0.36, 0.05], [0.78, 0.36, 0.3, 0.05], [0.9, 0.2, 0.16], [1.0, 0.01, 0.01, -0.02]], PAINT)
+	g.prim(st, _sphere(0.28), Transform3D(Basis().scaled(Vector3(0.95, 0.85, 3.4)), Vector3(0, 0.34, l * 0.22)), GLASS)
+	g.cyl(st, 0.36, 0.55, Vector3(0, 0.02, -l * 0.5 - 0.1), "z", METAL, 12, 0.3)
+	g.cyl(st, 0.28, 0.06, Vector3(0, 0.02, -l * 0.5 - 0.38), "z", DARK, 12)
+	for side: float in [-1.0, 1.0]:
+		# Chine along the nose, a diamond wing and a small tailplane.
+		surface(st, Vector3(side * 0.4, 0.0, 3.4), Vector3(side * 0.7, 0.0, 0.6), Vector3(side * 0.95, 0.0, 1.2), Vector3(side * 0.95, 0.0, 0.6), 0.06, 0.03, Vector3.UP, PAINT)
+		surface(st, Vector3(side * 0.8, 0.0, 1.0), Vector3(side * 0.8, 0.0, -2.8), Vector3(side * 3.4, 0.0, -1.8), Vector3(side * 3.4, 0.0, -2.6), 0.14, 0.04, Vector3.UP, PAINT)
+		surface(st, Vector3(side * 0.6, 0.0, -2.9), Vector3(side * 0.6, 0.0, -4.0), Vector3(side * 2.0, 0.0, -3.7), Vector3(side * 2.0, 0.0, -4.2), 0.08, 0.03, Vector3.UP, PAINT)
+		# Twin tails, canted out hard.
+		var tip := Vector3(side * 1.55, 1.35, -3.6)
+		surface(st, Vector3(side * 0.7, 0.2, -2.3), Vector3(side * 0.7, 0.2, -3.7), tip, tip + Vector3(0, 0, -0.5), 0.08, 0.04, Vector3(1, -0.55 * side, 0) if side > 0 else Vector3(1, 0.55, 0), PAINT)
+		g.block(st, Vector3(0.1, 0.25, 0.4), Vector3(side * 1.15, 0.8, -3.3), TEAM)
+		# Intakes beside the cockpit, sawtooth edges.
+		g.block(st, Vector3(0.34, 0.42, 1.2), Vector3(side * 0.75, -0.05, 1.4), DARK, 0.06, 0.4)
+		roundel(st, Vector3(side * 2.2, 0.08, -1.7), 0.3)
+
+## Unmanned surface vessel: a low, dark, fast speedboat with a sensor mast
+## and the warhead in the bow.
+func sea_drone(st: SurfaceTool, length: float, beam: float) -> void:
+	var deck: Callable = hull(st, length, beam, 0.35, 0.25, 0.12)
+	var h := func(z: float) -> float: return deck.call(z / length + 0.5)
+	g.block(st, Vector3(beam * 0.6, 0.18, length * 0.4), Vector3(0, h.call(0.2), 0.2), DARK, 0.05, 0.2, 0.05)
+	g.cyl(st, 0.03, 0.55, Vector3(0, h.call(-0.4) + 0.4, -0.4), "y", METAL, 5)
+	g.prim(st, _sphere(0.09), Transform3D(Basis(), Vector3(0, h.call(-0.4) + 0.7, -0.4)), GLASS)
+	g.block(st, Vector3(beam * 0.5, 0.06, 0.4), Vector3(0, h.call(-length * 0.3) + 0.05, -length * 0.3), TEAM)
+	g.cyl(st, 0.12, 0.3, Vector3(0, 0.0, -length * 0.5 - 0.1), "z", METAL, 8)
 
 ## Attack helicopter (tandem cockpits, stub wings with rocket pods and
 ## missiles) or heavy gunship (bigger cabin, five blades, twin pods a side).

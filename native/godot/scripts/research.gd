@@ -115,7 +115,7 @@ func done(key: String) -> bool:
 	return stage_of(key) >= 3
 
 func era_of(key: String) -> int:
-	return ERA_OF.get(key, 5)
+	return int(def_of(key).get("era", ERA_OF.get(key, 5)))
 
 func desc_of(key: String) -> String:
 	var text: String = NATIVE.get(key, [{}, ""])[1]
@@ -227,7 +227,7 @@ func _add(stat: String, v: float) -> void:
 
 ## "" when the player may train `unit`, otherwise what it needs.
 func unit_locked(unit: String) -> String:
-	var need: String = UNIT_REQUIRES.get(unit, "")
+	var need: String = UNIT_REQUIRES.get(unit, str(world.unit_defs.get(unit, {}).get("requires", "")))
 	return "" if need == "" or done(need) else "Needs %s" % def_of(need).name
 
 # ---------------------------------------------------------------- projects
@@ -445,7 +445,7 @@ func _check_era() -> void:
 	var reward: Dictionary = eras[era].reward
 	world.economy.res.money += float(reward.get("money", 0))
 	points += float(reward.get("research", 0))
-	var opened := ERA_OF.keys().filter(func(k): return ERA_OF[k] == era).size()
+	var opened := discoveries.keys().filter(func(k): return era_of(k) == era).size()
 	world.hud.notice("NEW ERA: the %s. %s +$%d, +%d research; %d discoveries open." % [eras[era].name, eras[era].desc, int(reward.get("money", 0)), int(reward.get("research", 0)), opened])
 	changed.emit()
 
@@ -479,11 +479,11 @@ func damage_mult(unit: Dictionary) -> float:
 	var key: String = unit.get("key", "")
 	if key in world.infantry_keys:
 		m += bonus("dmgInfantry")
-	if key in ["artillery", "mlrs"]:
+	if key in ["artillery", "mlrs", "himars"]:
 		m += bonus("dmgArty")
 	if unit.get("fly", false):
 		m += bonus("dmgAir")
-	if key == "drone":
+	if key in ["drone", "loiterer", "fpvTeam"]:
 		m += bonus("dmgDrone")
 	if unit.get("naval", false):
 		m += bonus("dmgNaval")
@@ -506,7 +506,7 @@ func equip(unit: Dictionary) -> void:
 			hp += bonus("hpInfantry")
 		elif unit.vehicle and not unit.get("fly", false) and not unit.get("naval", false):
 			hp += bonus("hpVehicle")
-		if unit.key in ["artillery", "mlrs"]:
+		if unit.key in ["artillery", "mlrs", "himars"]:
 			unit.range *= 1.0 + bonus("rangeArty")
 		if unit.get("naval", false):
 			unit.range *= 1.0 + bonus("rangeNaval")

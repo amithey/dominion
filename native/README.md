@@ -7,6 +7,45 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.28: modern warfare, missile interception odds, rival missile strikes
+
+From the wars of 2022-2026 (Ukraine, Israel and Iran, the Red Sea). Eleven new units:
+- **Barracks:** FPV Drone Team (kamikaze first-person drones, deadly to vehicles), ATGM Team
+  (Javelin-style top attack), MANPADS Team (Stinger-style: infantry that shoot down aircraft), Combat Medic
+  (heals the infantry around it).
+- **Tank factory:** HIMARS (two GPS-guided rockets, four hexes; Guided Munitions), EW Vehicle (jams drones:
+  7 in 10 drone strikes near it fail; Electronic Warfare), Laser Air Defence (Iron Beam-style: burns drones,
+  stops half the cruise missiles; Directed Energy), Missile Defence Battery (Arrow / THAAD; Missile Defence).
+- **Airfield:** Loitering Munition (Switchblade / Lancet-style, dives into its target, one use; launched from a
+  canister, so it takes no parking slot; Drone Swarms),
+  Stealth Fighter (F-35-style: air defence sees it only at 40% of its range; Stealth Technology).
+- **Shipyard:** Sea Drone (Magura-style explosive boat that rams warships and harbours, one use).
+
+New research: Electronic Warfare, Active Protection (Trophy-style: half the missiles, rockets and kamikaze
+drones fired at your armour are blown up short, one every 4 s), Missile Defence (+10% to every interceptor),
+Manoeuvring Warheads (your ballistic and hypersonic missiles 40% harder to intercept), Directed Energy.
+
+**Missile interception** is no longer all-or-nothing. Each air defence the missile passes gets one shot:
+
+| | SAM site | mobile SAM | Missile Defence Battery | laser |
+|---|---|---|---|---|
+| cruise, cluster, EMP | 75% | 55% | 80% | 50% |
+| anti-ship (sea-skimming) | 60% | 45% | 70% | 40% |
+| tactical (short-range ballistic) | 35% | 20% | 80% | - |
+| ballistic | 25% | 10% | 86% | - |
+| hypersonic | 8% | 3% | 30% | - |
+| nuclear (ICBM) | 3% | - | 55% | - |
+
+Two batteries make two layers (86% becomes about 98%). Sources: Israel's reported 86% against Iran's ballistic
+missiles in June 2025; Ukraine's Patriots, 24% of Iskanders and Kinzhals from 2022 to 2025 and 6-37% a month
+once the warheads manoeuvred; Ukraine's 80-97% against cruise missiles and Shahed drones. Each missile card
+shows its odds.
+
+**Rival missile strikes:** a nation at full war with you, once its technology allows, fires tactical and
+cruise missiles at your towns and bases every few minutes (later ballistic, then hypersonic ones).
+
+**Ruins:** building on the site of a destroyed building clears its charred rubble first.
+
 ## Version 0.9.27: freighters at a ship's pace, towns keep their supply, offshore fields that can be worked
 
 - **Trade ships** sail at a merchant ship's pace (about 5 m/s, easing away from the quay and into it, and

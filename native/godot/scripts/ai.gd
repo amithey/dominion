@@ -19,7 +19,14 @@ var nations: Array[Dictionary] = []
 # Which building each unit needs (ai.js).
 const TRAINED_AT := {"soldier": "barracks", "rocketSoldier": "barracks", "commando": "barracks", "sniper": "barracks",
 	"tank": "tankFactory", "apc": "tankFactory", "artillery": "tankFactory", "samLauncher": "tankFactory",
-	"helicopter": "helipad", "jet": "airfield", "drone": "airfield", "gunboat": "shipyard", "destroyer": "shipyard", "corvette": "shipyard"}
+	"helicopter": "helipad", "jet": "airfield", "drone": "airfield", "gunboat": "shipyard", "destroyer": "shipyard", "corvette": "shipyard",
+	"fpvTeam": "barracks", "atgmTeam": "barracks", "manpads": "barracks", "medic": "barracks", "himars": "tankFactory",
+	"ewVehicle": "tankFactory", "loiterer": "airfield"}
+## Modern units rival armies field alongside the export's training pool.
+const MODERN_POOL := ["fpvTeam", "atgmTeam", "manpads", "medic", "himars", "ewVehicle", "loiterer"]
+## Missiles a rival at war fires at the player, by its technology level.
+const STRIKE_TYPES := [[2.0, ["tactical", "cruise"]], [4.0, ["tactical", "cruise", "ballistic"]], [6.0, ["cruise", "ballistic", "hypersonic"]]]
+const STRIKE_TARGETS := ["hq", "cityCenter", "villageCenter", "airfield", "tankFactory", "barracks", "missileSilo", "powerPlant", "port", "samSite"]
 
 func setup(world_node: Node, ai: Dictionary, difficulty: String, speed := 1.0) -> void:
 	world = world_node
@@ -27,6 +34,9 @@ func setup(world_node: Node, ai: Dictionary, difficulty: String, speed := 1.0) -
 	build_order = ai.buildOrder
 	# Only units the native world can draw yet (no aircraft).
 	train_pool = ai.trainPool.filter(func(k): return TRAINED_AT.has(k))
+	for key in MODERN_POOL:
+		if not key in train_pool and world.unit_defs.has(key):
+			train_pool.append(key)
 	for id in range(1, world.map.nations.size()):
 		nations.append({
 			"id": id, "name": world.map.nations[id].name, "money": 400.0, "build_idx": 0,
@@ -181,6 +191,35 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 				if target.owner == 0:
 					world.hud.notice("%s forces are advancing!" % n.name)
 			n.next_attack = minf(n.next_attack, float(cfg.firstAttack) * 0.35 / s)
+
+	# Missile strikes: a nation at full war with the player, with the
+	# technology for it, fires at the player's towns and bases now and then.
+	# Air defence may intercept them (modern_warfare.gd).
+	if world.diplomacy.at_war(0, n.id) and world.missiles != null and world.match_config.get("style", "standard") != "sandbox":
+		var tech: float = float(n.get("tech", 0.0))
+		if tech >= 2.0:
+			n.next_missile = float(n.get("next_missile", 240.0 / s)) - delta
+			if n.next_missile <= 0.0 and n.money > 600.0:
+				n.next_missile = randf_range(200.0, 320.0) / s
+				missile_strike(n, home, tech)
+
+## Fires one missile at one of the player's important buildings.
+func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
+	var kinds: Array = []
+	for row in STRIKE_TYPES:
+		if tech >= float(row[0]):
+			kinds = row[1]
+	if kinds.is_empty():
+		return {}
+	var targets: Array = world.buildings.filter(func(b): return b.owner == 0 and not b.dead and b.built and b.key in STRIKE_TARGETS)
+	if targets.is_empty():
+		return {}
+	var target: Dictionary = targets[randi() % targets.size()]
+	var key: String = kinds[randi() % kinds.size()]
+	n.money -= 400.0
+	var m: Dictionary = world.missiles.fly(key, home.root.position + Vector3.UP * 3.0, target.root.position, n.id)
+	world.hud.notice("%s launched a %s at your %s!" % [n.name, world.missiles.def_of(key).get("name", "missile"), target.def.name])
+	return m
 
 # Money-equivalent price (ai.js weights materials the AI does not stockpile).
 func available(u: Dictionary) -> bool:

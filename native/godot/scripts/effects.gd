@@ -230,6 +230,35 @@ func tracer(from: Vector3, to: Vector3) -> void:
 		streak.look_at_from_position(from, to, Vector3.UP if absf((to - from).normalized().y) < 0.99 else Vector3.RIGHT)
 	_live.append({"node": streak, "age": 0.0, "life": 0.09, "kind": "tracer", "from": from, "to": to, "length": minf(length, 3.5)})
 
+## A laser beam: a thin bright line held for a moment, then gone.
+func beam(from: Vector3, to: Vector3) -> void:
+	if _beam_mesh == null:
+		_beam_mesh = CylinderMesh.new()
+		_beam_mesh.top_radius = 0.06
+		_beam_mesh.bottom_radius = 0.06
+		_beam_mesh.height = 1.0
+		_beam_mesh.radial_segments = 6
+		_beam_mesh.rings = 1
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.albedo_color = Color(1.0, 0.35, 0.3)
+		m.emission_enabled = true
+		m.emission = Color(1.0, 0.3, 0.25)
+		m.emission_energy_multiplier = 4.0
+		_beam_mesh.material = m
+	var ray := MeshInstance3D.new()
+	ray.mesh = _beam_mesh
+	ray.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(ray)
+	var length := from.distance_to(to)
+	ray.global_position = (from + to) * 0.5
+	if length > 0.01:
+		ray.look_at_from_position(ray.global_position, to, Vector3.UP if absf((to - from).normalized().y) < 0.99 else Vector3.RIGHT)
+		ray.rotate_object_local(Vector3.RIGHT, PI * 0.5)   # the cylinder stands along Y
+	ray.scale = Vector3(1, length, 1)
+	_live.append({"node": ray, "age": 0.0, "life": 0.35, "kind": "beam"})
+	_light(to, 3.0, 6.0, 0.3)
+
 ## Tank shell in flight; on_hit(position) runs when it lands.
 func shell(from: Vector3, to: Vector3, on_hit: Callable) -> void:
 	var projectile := MeshInstance3D.new()
@@ -282,6 +311,7 @@ func impact(at: Vector3) -> void:
 ## wake). on_hit(position) runs where it lands; `delay` staggers salvos.
 var _projectiles: Array[Dictionary] = []
 var _projectile_meshes := {}
+var _beam_mesh: CylinderMesh
 var launched := {}   # projectile kind -> how many were fired (checked by tests)
 
 func projectile(kind: String, from: Vector3, to: Vector3, on_hit: Callable, delay := 0.0, track: Node3D = null) -> void:

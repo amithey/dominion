@@ -262,3 +262,11 @@ UI files listed above.
   covering a building; world.site_problem: an offshore platform needs water under its centre (legs may touch the
   shallows). New check tools/gameplay-100.gd (111 checks, registered in run-tests.ps1).
 - 2026-09-27 Claude: 0.9.27 executable and installer in dist, built from b9b80f8; packaged --ui-test passes.
+- 2026-09-27 Claude, 0.9.28 (user asked for modern units and capabilities, and interception odds): new
+  scripts/modern_warfare.gd (11 unit defs, damage profiles, trains lists, 5 discoveries with an "era" field,
+  jamming, stealth, active protection, medics, per-class interception odds). world.gd: new keys in
+  INFANTRY/VEHICLES/NAVAL/AIR/FIXED_WING, WEAPONS fpv/atgm/guided/laser/kamikaze, clear_ruins() in
+  place_building. air_defence.intercept delegates to modern_warfare; missiles.fly(key, from, to, owner);
+  ai.gd MODERN_POOL and missile_strike(); research.unit_locked reads unit_defs[unit].requires, era_of reads
+  def.era; effects.beam(); armor.gd himars/ew_truck/laser_truck/abm_launcher; craft.gd loiterer/
+  stealth_fighter/sea_drone; air_operations.TUBE_LAUNCHED (loiterer takes no slot). Checks: tools/modern-warfare-check.gd; pictures: tools/modern-views.gd.

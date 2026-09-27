@@ -41,7 +41,7 @@ static func update(w: Node, delta: float) -> void:
 static func cover(w: Node, target: Dictionary, source: Dictionary) -> float:
 	if source.get("fly", false) or source.get("is_building", false) or not source.has("key"):
 		return 1.0  # aircraft, missiles and fortifications hit as hard as ever
-	if source.key in ["artillery", "mlrs"]:
+	if source.key in ["artillery", "mlrs", "himars"]:
 		return 1.0  # shells come down from above
 	if target.get("is_building", false):
 		return 0.33 if target.key == "bunker" else 1.0
