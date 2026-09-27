@@ -277,3 +277,4 @@ UI files listed above.
   falls back to it; impact special "hgv"). modern_warfare: irisT column in INTERCEPT, STEALTH per aircraft.
   world.unit_allowed(); research.unit_locked/blocker refuse another nation's; ai filters its pool by nation.
   hud.gd (Codex's): the Train list skips other nations' weapons (one line). Check: tools/units-100.gd.
+- 2026-09-27 Claude: 0.9.29 executable and installer in dist, built from 697f11e; packaged --ui-test passes.
