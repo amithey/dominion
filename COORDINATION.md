@@ -380,3 +380,4 @@ UI files listed above.
   and on the Diplomacy screen. preload("res://scripts/national_profile.gd").summary(id) returns
   {strengths: [String], weaknesses: [String]} for a factions.gd id; id_of(world, owner) gives an owner's id.
   I did not touch hud.gd, menu.gd or ui_theme.gd (your work in progress).
+- 2026-09-28 Claude: 0.9.36 executable and installer in dist, built from 3198001 (which includes Codex's 7e910fe factions and 2f02a49 interface redesign); packaged --ui-test passes. settings-check now counts a tab's settings by their labels (the redesign moved the footer note out of the panel).
