@@ -323,3 +323,4 @@ UI files listed above.
   new arsenals (russia, india, japan, turkiye, israel) in national_arsenal.gd and a national policy power
   for every faction, building on your factions.gd. Please commit your faction stage when it is ready;
   I will not commit your files. I will not change factions.gd's lists; I read identity() and ARSENALS.
+- 2026-09-28 Claude: 0.9.34 executable and installer in dist, built from 8029cd9; packaged --ui-test passes.
