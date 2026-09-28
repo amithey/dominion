@@ -2,9 +2,9 @@ extends CanvasLayer
 ## Main menu and pause menu. An illustrated war table with drifting light
 ## fills the opening screen; the entries on the left each say what they do
 ## (Continue names the campaign it resumes), and a dispatch card on the right
-## gives a tip. New Game is a campaign sheet: the four nations as portrait
-## cards, rivals, island, rules and difficulty as choice cards, and a summary
-## with Begin. Settings (graphics quality, full screen, master volume) persist
+## gives a tip. New Game is a two-column campaign sheet: nine national leaders,
+## a terrain preview, opponents and rules, with a persistent Begin footer.
+## Settings (graphics quality, full screen, master volume) persist
 ## in user://settings.cfg. In a match, Esc opens the pause menu: a card with
 ## the campaign's name, era and year over resume, save, load, settings, quit.
 
@@ -39,6 +39,7 @@ var _briefing: Label
 var _transition: Tween
 var _scroll: ScrollContainer
 var _dispatch: PanelContainer
+var _footer: MarginContainer
 const Gallery := preload("res://scripts/leader_gallery.gd")
 const TIPS := [
 	"Right-click an unfinished building with workers selected to finish it; shift + right-click adds it to their list of jobs.",
@@ -66,8 +67,8 @@ func setup(world_node: Node) -> void:
 	# Preserve contrast for every submenu without flattening the artwork.
 
 	var fade := Gradient.new()
-	fade.set_color(0, Color(0.025, 0.04, 0.04, 0.68))
-	fade.add_point(0.62, Color(0.025, 0.04, 0.04, 0.36))
+	fade.set_color(0, Color(0.018, 0.035, 0.065, 0.94))
+	fade.add_point(0.62, Color(0.018, 0.035, 0.065, 0.60))
 	fade.set_color(fade.get_point_count() - 1, Color(0.03, 0.06, 0.08, 0.0))
 	var tex := GradientTexture2D.new()
 	tex.gradient = fade
@@ -77,7 +78,7 @@ func setup(world_node: Node) -> void:
 	_shade.texture = tex
 	_shade.stretch_mode = TextureRect.STRETCH_SCALE
 	_shade.anchor_bottom = 1.0
-	_shade.offset_right = 1000
+	_shade.anchor_right = 1.0
 	_root.add_child(_shade)
 	# Pause menu: the whole game dims behind a card.
 	_dim = ColorRect.new()
@@ -86,7 +87,7 @@ func setup(world_node: Node) -> void:
 	_root.add_child(_dim)
 	_brand = VBoxContainer.new()
 	_brand.offset_left = 64
-	_brand.offset_top = 70
+	_brand.offset_top = 82
 	_brand.add_theme_constant_override("separation", 16)
 	_root.add_child(_brand)
 	var crest := HBoxContainer.new()
@@ -101,18 +102,18 @@ func setup(world_node: Node) -> void:
 	_title = Label.new()
 	_title.text = "DOMINION"
 	_title.theme_type_variation = "HeaderLabel"
-	_title.add_theme_font_size_override("font_size", 62)
+	_title.add_theme_font_size_override("font_size", 66)
 	_title.add_theme_color_override("font_color", Color("f1e3b4"))
 	_title.add_theme_constant_override("outline_size", 2)
 	crest.add_child(_title)
 	_subtitle = Label.new()
-	_subtitle.text = "A WORLD TO SHAPE. A NATION TO LEAD."
+	_subtitle.text = UI.caps("A world to shape. A nation to lead.")
 	_subtitle.add_theme_color_override("font_color", UI.GOLD)
-	_subtitle.add_theme_font_size_override("font_size", 16)
+	_subtitle.add_theme_font_size_override("font_size", 12)
 	_brand.add_child(_subtitle)
 	var rule := ColorRect.new()
 	rule.color = Color(UI.GOLD, 0.6)
-	rule.custom_minimum_size = Vector2(420, 2)
+	rule.custom_minimum_size = Vector2(420, 1)
 	_brand.add_child(rule)
 	# The menu sits in a card: under the title on the main menu, centred over
 	# the dimmed game when paused.
@@ -123,12 +124,12 @@ func setup(world_node: Node) -> void:
 	_card.add_child(frame)
 	# The name of the screen rides a lit band closed by a gold rule.
 	_band = PanelContainer.new()
-	_band.add_theme_stylebox_override("panel", UI.band(10.0))
+	_band.add_theme_stylebox_override("panel", UI.band(18.0))
 	_band.visible = false
 	frame.add_child(_band)
 	_band_title = Label.new()
 	_band_title.theme_type_variation = "HeaderLabel"
-	_band_title.add_theme_font_size_override("font_size", 18)
+	_band_title.add_theme_font_size_override("font_size", 22)
 	_band_title.add_theme_color_override("font_color", UI.BRIGHT)
 	_band.add_child(_band_title)
 	_margins = MarginContainer.new()
@@ -142,6 +143,12 @@ func setup(world_node: Node) -> void:
 	_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_panel.add_theme_constant_override("separation", 10)
 	_scroll.add_child(_panel)
+	_footer = MarginContainer.new()
+	_footer.name = "CampaignFooter"
+	for side in ["left", "right", "top", "bottom"]:
+		_footer.add_theme_constant_override("margin_" + side, 18)
+	frame.add_child(_footer)
+	_footer.hide()
 	var credit := Label.new()
 	credit.text = "DOMINION  ·  %s" % ProjectSettings.get_setting("application/config/version", "")
 	credit.add_theme_color_override("font_color", Color(1, 1, 1, 0.35))
@@ -152,7 +159,7 @@ func setup(world_node: Node) -> void:
 	_root.add_child(credit)
 	# A dispatch on the right of the opening screen: a tip for the campaign.
 	_dispatch = PanelContainer.new()
-	_dispatch.add_theme_stylebox_override("panel", UI.plate(Color(0.08, 0.15, 0.17, 0.9), Color(0.03, 0.07, 0.09, 0.92), UI.GOLD, 16.0))
+	_dispatch.add_theme_stylebox_override("panel", UI.plate(Color(UI.PANEL_TOP, 0.94), Color(UI.PANEL_LOW, 0.96), UI.GOLD, 16.0))
 	_dispatch.anchor_left = 1.0
 	_dispatch.anchor_right = 1.0
 	_dispatch.anchor_top = 1.0
@@ -177,7 +184,7 @@ func _layout(paused: bool) -> void:
 		_margins.add_theme_constant_override("margin_" + side, 18 if paused else 0)
 	_margins.add_theme_constant_override("margin_top", 18 if paused else 12)
 	if paused:
-		_card.add_theme_stylebox_override("panel", UI.plate(Color("1a343d", 0.97), Color("0a191f", 0.97), UI.GOLD, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
+		_card.add_theme_stylebox_override("panel", UI.plate(Color(UI.PANEL_TOP, 0.98), Color(UI.PANEL_LOW, 0.98), UI.GOLD, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
 		_card.anchor_left = 0.5
 		_card.anchor_right = 0.5
 		_card.anchor_top = 0.5
@@ -207,7 +214,7 @@ func open_main() -> void:
 	_wide(false)
 	_clear()
 	_heading("")
-	var invitation := _description("THE WAR COUNCIL")
+	var invitation := _description(UI.caps("The war council"))
 	invitation.add_theme_color_override("font_color", UI.GOLD)
 	_entry("New Game", "Chart a campaign: your nation, its rivals and the rules.", "sovereign", open_new_game, true)
 	var newest := newest_save()
@@ -277,97 +284,118 @@ func open_new_game() -> void:
 	_clear()
 	_wide(true)
 	_dispatch.visible = false
-	_heading("CHART YOUR CAMPAIGN")
-	_section("Your nation")
+	_heading("Chart your campaign")
+	var columns := HBoxContainer.new()
+	columns.name = "CampaignColumns"
+	columns.add_theme_constant_override("separation", 24)
+	_panel.add_child(columns)
+	var nation := VBoxContainer.new()
+	nation.custom_minimum_size.x = 304
+	nation.add_theme_constant_override("separation", 12)
+	columns.add_child(nation)
+	_section("01  /  Lead a nation", nation)
 	var factions = preload("res://scripts/factions.gd")
-	var nations := HBoxContainer.new()
-	nations.add_theme_constant_override("separation", 16)
-	_panel.add_child(nations)
-	nations.add_child(_nation_card(int(setup_options.nation)))
-	var detail := VBoxContainer.new()
-	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail.add_theme_constant_override("separation", 12)
-	var detail_plate := PanelContainer.new()
-	detail_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail_plate.add_theme_stylebox_override("panel", UI.box(Color(0.04, 0.08, 0.1, 0.92), Color("2d4460"), 1, 4, 12.0))
-	nations.add_child(detail_plate)
-	detail_plate.add_child(detail)
 	var selector := OptionButton.new()
 	selector.name = "FactionPicker"
 	selector.custom_minimum_size.y = 42
-	for name in factions.NAMES:
-		selector.add_item(name)
+	for title in factions.NAMES:
+		selector.add_item(title)
 	selector.select(int(setup_options.nation))
 	selector.item_selected.connect(func(index):
 		setup_options.nation = index
 		open_new_game())
-	detail.add_child(selector)
+	nation.add_child(selector)
+	nation.add_child(_nation_card(int(setup_options.nation)))
 	var national := Label.new()
 	var power: Dictionary = preload("res://scripts/faction_powers.gd").POWERS[factions.ARSENALS[int(setup_options.nation)]]
-	national.text = "Signature: %s\nNational power: %s" % [factions.SIGNATURES[int(setup_options.nation)], power.name]
-	national.tooltip_text = power.desc
+	national.text = "%s\n%s" % [factions.SIGNATURES[int(setup_options.nation)], power.name]
+	national.tooltip_text = "Signature weapon & national power\n" + str(power.desc)
 	national.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	national.add_theme_font_size_override("font_size", 14)
+	national.add_theme_font_size_override("font_size", 15)
 	national.add_theme_color_override("font_color", UI.GOLD)
-	detail.add_child(national)
+	nation.add_child(national)
 	var doctrine := Label.new()
 	doctrine.text = factions.DOCTRINES[int(setup_options.nation)]
 	doctrine.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	doctrine.add_theme_font_size_override("font_size", 15)
-	doctrine.add_theme_color_override("font_color", UI.CREAM)
-	detail.add_child(doctrine)
-	# Rivals and rules share a row.
-	var pair := HBoxContainer.new()
-	pair.add_theme_constant_override("separation", 18)
-	_panel.add_child(pair)
-	for half in [["Rivals", [["One", "A duel.", 2], ["Two", "Room for alliances.", 3], ["Three", "The whole map.", 4]], "players"],
-			["Rules", [["Standard", "Rivals send attack waves.", "standard"], ["Sandbox", "Rivals never attack.", "sandbox"]], "style"]]:
-		var box := VBoxContainer.new()
-		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		box.add_theme_constant_override("separation", 10)
-		pair.add_child(box)
-		_section(half[0], box)
-		_choices(half[1], half[2], box)
-	_rival_pickers()
-	_section("Map")
-	_map_picker()
-	_section("Difficulty")
-	var levels := []
-	for d in DIFFICULTIES:
-		levels.append([d[1], d[2], d[0]])
-	_choices(levels, "difficulty")
-	# The summary and the two buttons, side by side.
+	doctrine.add_theme_font_size_override("font_size", 14)
+	doctrine.add_theme_color_override("font_color", UI.TEXT)
+	nation.add_child(doctrine)
+	preload("res://scripts/nation_profile_view.gd").append_to(nation, factions.IDS[int(setup_options.nation)])
+	var rule := VSeparator.new()
+	columns.add_child(rule)
+	var campaign := VBoxContainer.new()
+	campaign.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	campaign.add_theme_constant_override("separation", 12)
+	columns.add_child(campaign)
+	_section("02  /  Choose your world", campaign)
+	_map_picker(campaign)
+	_section("03  /  Set the balance of power", campaign)
+	var options := HBoxContainer.new()
+	options.add_theme_constant_override("separation", 12)
+	campaign.add_child(options)
+	_setup_select("Rivals", [["One rival", 2], ["Two rivals", 3], ["Three rivals", 4]], "players", options)
+	_setup_select("Rules", [["Standard", "standard"], ["Sandbox", "sandbox"]], "style", options)
+	_setup_select("Difficulty", [["Easy", "easy"], ["Normal", "normal"], ["Hard", "hard"]], "difficulty", options)
+	_rival_pickers(campaign)
+	var explanation := Label.new()
+	explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	explanation.add_theme_font_size_override("font_size", 13)
+	explanation.add_theme_color_override("font_color", UI.MUTED)
+	explanation.text = ("Sandbox: rivals develop their nations without sending attack waves." if setup_options.style == "sandbox" else DIFFICULTIES[["easy", "normal", "hard"].find(setup_difficulty)][2])
+	campaign.add_child(explanation)
+	# Always visible, independently of the campaign sheet's scrolling body.
+	_footer.show()
 	var foot := HBoxContainer.new()
-	foot.add_theme_constant_override("separation", 12)
-	_panel.add_child(foot)
+	foot.add_theme_constant_override("separation", 16)
+	_footer.add_child(foot)
 	_briefing = Label.new()
 	_briefing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_briefing.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_briefing.add_theme_font_size_override("font_size", 14)
-	_briefing.add_theme_color_override("font_color", UI.CREAM)
+	_briefing.add_theme_font_size_override("font_size", 13)
+	_briefing.add_theme_color_override("font_color", UI.MUTED)
 	foot.add_child(_briefing)
 	var back := _button("Back", open_main)
-	back.custom_minimum_size = Vector2(130, 54)
+	back.custom_minimum_size = Vector2(110, 50)
 	_panel.remove_child(back)
 	foot.add_child(back)
 	var go := _button("Begin campaign", func(): start(setup_difficulty))
-	go.custom_minimum_size = Vector2(280, 54)
+	go.name = "BeginCampaign"
+	go.custom_minimum_size = Vector2(250, 50)
 	_panel.remove_child(go)
 	foot.add_child(go)
 	_update_briefing()
 
-func _rival_pickers() -> void:
-	_section("Opponent factions")
+func _setup_select(title: String, items: Array, key: String, parent: Control) -> void:
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(col)
+	_section(title, col)
+	var picker := OptionButton.new()
+	picker.custom_minimum_size.y = 40
+	for item in items:
+		picker.add_item(item[0])
+		if item[1] == (setup_difficulty if key == "difficulty" else setup_options[key]):
+			picker.select(picker.item_count - 1)
+	picker.item_selected.connect(func(index):
+		if key == "difficulty":
+			setup_difficulty = items[index][1]
+		else:
+			setup_options[key] = items[index][1]
+		open_new_game())
+	col.add_child(picker)
+
+func _rival_pickers(parent: Control = null) -> void:
+	_section("Opponent factions", parent)
 	var factions = preload("res://scripts/factions.gd")
 	var chosen: Array = world.MatchSetup.roster(setup_options)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
-	_panel.add_child(row)
+	(parent if parent != null else _panel).add_child(row)
 	for slot in range(1, chosen.size()):
 		var picker := OptionButton.new()
 		picker.name = "RivalPicker%d" % slot
 		picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		picker.custom_minimum_size.y = 34
+		picker.custom_minimum_size.y = 40
 		for i in range(factions.IDS.size()):
 			if i in chosen and i != chosen[slot]:
 				continue
@@ -385,16 +413,21 @@ func _map_name(key: String) -> String:
 	var gen: Dictionary = preload("res://scripts/map_generator.gd").MAPS
 	return gen[key].name if gen.has(key) else ("mirrored island" if key == "mirrored" else "original island")
 
-## The New Game sheet is wide (the four nations side by side); the others are a column.
+## Campaign setup and settings use a wide sheet; navigation remains a column.
 func _wide(on: bool) -> void:
 	if in_match:
-		# Paused: the centred card widens for the settings, and back again.
 		_card.offset_left = -470 if on else -212
 		_card.offset_right = 470 if on else 212
 		return
-	_card.offset_right = 64 + (880 if on else 420)
-	_card.offset_top = 48 if on else 230
-	_brand.visible = not on  # the sheet needs the height; the title returns with the main menu
+	_card.anchor_right = 1.0 if on else 0.0
+	_card.offset_left = 40 if on else 64
+	_card.offset_right = -40 if on else 484
+	_card.offset_top = 32 if on else 250
+	_card.offset_bottom = -48 if on else -64
+	_brand.visible = not on
+	_card.add_theme_stylebox_override("panel", UI.plate(Color(UI.PANEL_TOP, 0.98), Color(UI.PANEL_LOW, 0.98), Color(UI.TRIM, 0.7), 0.0, UI.LIFT, Color.TRANSPARENT, 0, 8) if on else StyleBoxEmpty.new())
+	for side in ["left", "right", "top", "bottom"]:
+		_margins.add_theme_constant_override("margin_" + side, 20 if on else 0)
 
 func _section(title: String, parent: Control = null) -> void:
 	var l := Label.new()
@@ -410,14 +443,14 @@ func _nation_card(i: int) -> Button:
 	var colour := Color(world.MatchSetup.COLOURS[i]) if i < world.MatchSetup.COLOURS.size() else UI.GOLD
 	var chosen: bool = int(setup_options.nation) == i
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(260, 218)
+	b.custom_minimum_size = Vector2(304, 240)
 	b.focus_mode = Control.FOCUS_ALL
 	b.toggle_mode = true
 	b.button_pressed = chosen
 	b.add_theme_stylebox_override("normal", UI.box(Color(0.05, 0.1, 0.12, 0.85), colour.darkened(0.3), 1, 4, 6.0))
 	b.add_theme_stylebox_override("hover", UI.box(Color(0.08, 0.15, 0.17, 0.95), colour, 2, 4, 6.0))
-	b.add_theme_stylebox_override("pressed", UI.box(Color(0.1, 0.18, 0.18, 0.95), UI.GOLD, 3, 4, 6.0))
-	b.add_theme_stylebox_override("hover_pressed", UI.box(Color(0.1, 0.18, 0.18, 0.95), UI.GOLD, 3, 4, 6.0))
+	b.add_theme_stylebox_override("pressed", UI.box(UI.KEY_LOW, UI.GOLD, 1, 3, 6.0))
+	b.add_theme_stylebox_override("hover_pressed", UI.box(UI.KEY_LOW, UI.GOLD, 1, 3, 6.0))
 	b.pressed.connect(func():
 		setup_options.nation = i
 		open_new_game())
@@ -431,8 +464,8 @@ func _nation_card(i: int) -> Button:
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(col)
 	var pic := TextureRect.new()
-	pic.texture = Gallery.face(parts[1] if parts.size() > 1 else "", 248.0 / 124.0)
-	pic.custom_minimum_size = Vector2(0, 124)
+	pic.texture = Gallery.face(parts[1] if parts.size() > 1 else "", 292.0 / 160.0)
+	pic.custom_minimum_size = Vector2(0, 160)
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -508,14 +541,14 @@ func _choices(items: Array, key: String, parent: Control = null) -> void:
 
 ## Terrain previews are baked from the same seed as each campaign, so opening
 ## the picker never generates a large world or stalls the menu.
-func _map_picker() -> void:
+func _map_picker(parent: Control = null) -> void:
 	var catalogue = preload("res://scripts/map_catalogue.gd")
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 18)
-	_panel.add_child(row)
+	(parent if parent != null else _panel).add_child(row)
 	var preview := TextureRect.new()
 	preview.name = "MapPreview"
-	preview.custom_minimum_size = Vector2(176, 176)
+	preview.custom_minimum_size = Vector2(240, 240)
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	row.add_child(preview)
@@ -525,7 +558,9 @@ func _map_picker() -> void:
 	row.add_child(detail)
 	var picker := OptionButton.new()
 	picker.name = "MapPicker"
-	picker.custom_minimum_size.y = 38
+	picker.custom_minimum_size.y = 42
+	picker.fit_to_longest_item = false
+	picker.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for key in catalogue.KEYS:
 		var info: Dictionary = catalogue.entry(key)
@@ -633,12 +668,13 @@ func open_settings() -> void:
 			_settings_graphics()
 	var foot := HBoxContainer.new()
 	foot.add_theme_constant_override("separation", 12)
-	_panel.add_child(foot)
+	_footer.show()
+	_footer.add_child(foot)
 	var note := _description("Changes apply at once and are saved.")
 	_panel.remove_child(note)
 	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	foot.add_child(note)
-	var solid := UI.plate(Color("29464c"), Color("11262c"), Color(UI.GOLD, 0.7), 14.0)
+	var solid := UI.plate(UI.KEY_TOP, UI.KEY_LOW, Color(UI.GOLD, 0.7), 14.0)
 	var reset := _button("Defaults", func():
 		_reset_settings()
 		open_settings())
@@ -655,7 +691,7 @@ func open_settings() -> void:
 ## A setting as a card: its name and what it does on the left, the control on the right.
 func _setting(title: String, detail: String, control: Control) -> void:
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UI.box(Color(0.05, 0.1, 0.12, 0.85), Color("2d4460"), 1, 4, 12.0))
+	card.add_theme_stylebox_override("panel", UI.box(UI.BG, Color("304254"), 1, 3, 14.0))
 	_panel.add_child(card)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 16)
@@ -783,7 +819,7 @@ func _settings_controls() -> void:
 		d.add_theme_color_override("font_color", UI.CREAM)
 		keys.add_child(d)
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UI.box(Color(0.05, 0.1, 0.12, 0.85), Color("2d4460"), 1, 4, 12.0))
+	card.add_theme_stylebox_override("panel", UI.box(UI.BG, Color("304254"), 1, 3, 14.0))
 	var col := VBoxContainer.new()
 	card.add_child(col)
 	var t := Label.new()
@@ -901,6 +937,10 @@ func save_settings() -> void:
 
 func _clear() -> void:
 	_briefing = null
+	_footer.hide()
+	for child in _footer.get_children():
+		_footer.remove_child(child)
+		child.queue_free()
 	if _transition != null:
 		_transition.kill()
 	_panel.modulate.a = 0.0
@@ -918,7 +958,7 @@ func _clear() -> void:
 func _fit_card() -> void:
 	if _root == null or not in_match:
 		return
-	var tall: float = clampf(_panel.get_combined_minimum_size().y + 104.0, 200.0, _root.size.y - 80.0)
+	var tall: float = clampf(_panel.get_combined_minimum_size().y + 104.0 + (_footer.get_combined_minimum_size().y if _footer.visible else 0.0), 200.0, _root.size.y - 80.0)
 	_card.offset_top = -tall * 0.5
 	_card.offset_bottom = tall * 0.5
 
@@ -930,7 +970,7 @@ func _heading(text: String) -> void:
 func _accent(_width: int) -> Array:
 	# Quiet navigation rests on the scenery; its underline becomes a jade
 	# ribbon under pointer or keyboard focus.
-	var normal := UI.plate(Color(0.06, 0.13, 0.15, 0.30), Color(0.03, 0.08, 0.10, 0.08), Color.TRANSPARENT, 14.0, Color.TRANSPARENT, Color(UI.TRIM, 0.45), 1)
+	var normal := UI.plate(Color(0.035, 0.065, 0.10, 0.80), Color(0.025, 0.045, 0.07, 0.72), Color.TRANSPARENT, 14.0, Color.TRANSPARENT, Color(UI.TRIM, 0.45), 1)
 	var hover := UI.plate(Color("29464c"), Color("11262c"), UI.GOLD, 14.0)
 	return [normal, hover]
 
@@ -950,7 +990,7 @@ func _button(text: String, action: Callable) -> Button:
 	b.add_theme_color_override("font_pressed_color", UI.BRIGHT)
 	b.add_theme_stylebox_override("focus", UI.box(Color.TRANSPARENT, UI.BRIGHT, 1, 8, 0.0))
 	if text in ["New Game", "Begin campaign", "Resume"]:
-		b.add_theme_stylebox_override("normal", UI.plate(Color("344c49"), Color("18312f"), UI.GOLD, 14.0))
+		b.add_theme_stylebox_override("normal", UI.plate(Color("375265"), Color("203341"), UI.GOLD, 14.0))
 		b.icon = UI.icon("sovereign")
 		b.add_theme_constant_override("icon_max_width", 28)
 	b.pressed.connect(action)
@@ -960,11 +1000,11 @@ func _button(text: String, action: Callable) -> Button:
 ## A main-menu entry: an icon, the name, and a line saying what it does.
 func _entry(text: String, detail: String, icon_name: String, action: Callable, primary := false) -> Button:
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(400, 66)
+	b.custom_minimum_size = Vector2(400, 70)
 	b.focus_mode = Control.FOCUS_ALL
 	b.tooltip_text = detail
 	var styles := _accent(4)
-	b.add_theme_stylebox_override("normal", UI.plate(Color("344c49"), Color("18312f"), UI.GOLD, 14.0) if primary else styles[0])
+	b.add_theme_stylebox_override("normal", UI.plate(Color("375265"), Color("203341"), UI.GOLD, 14.0) if primary else styles[0])
 	b.add_theme_stylebox_override("hover", styles[1])
 	b.add_theme_stylebox_override("pressed", styles[1])
 	b.add_theme_stylebox_override("focus", UI.box(Color.TRANSPARENT, UI.BRIGHT, 1, 8, 0.0))

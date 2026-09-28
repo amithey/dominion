@@ -86,10 +86,22 @@ func run() -> void:
 	for owner in [0, 1]:
 		for c in cases:
 			w.map.nations[owner] = Factions.nation(0, owner == 0)
+			if owner == 0:
+				w.research._recompute()
 			var baseline: Dictionary = w.spawn_unit(c[1], w.start + Vector3(0, 0, 30), owner)
 			w.map.nations[owner] = Factions.nation(c[0], owner == 0)
+			if owner == 0:
+				w.research._recompute()
 			var u: Dictionary = w.spawn_unit(c[1], w.start + Vector3(12, 0, 30), owner)
-			check(is_equal_approx(u.max_hp / baseline.max_hp, c[2]), "health " + str(c))
+			# National profiles stack with doctrines in 0.9.36. Check the
+			# independently specified bonuses for both player and rival units.
+			var profile_hp := 1.0
+			if ResourceLoader.exists("res://scripts/national_profile.gd"):
+				if c[0] == 4:
+					profile_hp = 1.05
+				elif c[0] == 5 and c[1] == "rocketSoldier":
+					profile_hp = 1.10
+			check(is_equal_approx(u.max_hp / baseline.max_hp, c[2] * profile_hp), "health owner %d " % owner + str(c))
 			check(is_equal_approx(w.research.damage_mult(u), c[3]), "damage " + str(c))
 			check(is_equal_approx(u.range / baseline.range, c[4]), "range " + str(c))
 			check(is_equal_approx(u.speed / baseline.speed, c[5]), "speed " + str(c))
@@ -100,6 +112,7 @@ func run() -> void:
 		w.map.nations[owner] = Factions.nation(8, owner == 0)
 		check(is_equal_approx(Modern.intercept_chance(w, "abmLauncher", {"type": "ballistic", "owner": 1 - owner}, owner), 0.91), "Israel missile interception")
 	w.map.nations = originals
+	w.research._recompute()
 	# Remove synthetic comparison units before validating a real saved campaign.
 	for u in w.units.slice(original_unit_count):
 		u.node.queue_free()

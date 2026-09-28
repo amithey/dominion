@@ -82,6 +82,7 @@ var _health_color := Color.TRANSPARENT
 var _notices: VBoxContainer
 var _fps: Label
 var _help: PanelContainer
+var _screen_buttons := {}
 var _waiting := {}        # portrait key -> [TextureRect]
 
 func setup(world_node: Node, economy_node: Node) -> void:
@@ -175,7 +176,7 @@ func _divider(height := 24) -> Control:
 func _build_top_bar() -> void:
 	var bar := PanelContainer.new()
 	# The yield strip: a lit band closed by a gold rule, as a 4X game wears it.
-	var style := UI.band(5.0, Color("203b43"), Color("0a1d22"), UI.GOLD, 2)
+	var style := UI.band(5.0, UI.PANEL_TOP, UI.PANEL_LOW, Color(UI.GOLD, 0.65), 1)
 	style.content_margin_left = 14
 	style.content_margin_right = 230 # reserve the era cartouche
 	style.content_margin_bottom = 7
@@ -224,7 +225,7 @@ func _build_top_bar() -> void:
 	# The era is cut into a small brass cartouche pinned to the right end of the
 	# strip, so a nation with every store full never pushes it off the screen.
 	var cartouche := PanelContainer.new()
-	cartouche.add_theme_stylebox_override("panel", UI.plate(Color("2b4c52"), Color("16333a"), UI.GOLD, 7.0))
+	cartouche.add_theme_stylebox_override("panel", UI.plate(UI.BAND_TOP, UI.BAND_LOW, UI.GOLD, 7.0))
 	cartouche.tooltip_text = "The era your nation has reached. Press Y for the research tree."
 	_era = _text("", 15, UI.BRIGHT, true)
 	_era.add_theme_font_size_override("font_size", 15)
@@ -237,14 +238,14 @@ func _build_top_bar() -> void:
 	right_end.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(right_end)
 	right_end.add_child(cartouche)
-	# The screens: a mounted rack of round brass buttons under the strip.
+	# A shared command dock under the resource strip; the open screen stays lit.
 	var rack := PanelContainer.new()
-	rack.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	rack.add_theme_stylebox_override("panel", UI.plate(UI.PANEL_TOP, UI.PANEL_LOW, Color(UI.TRIM, 0.6), 5.0, UI.LIFT, Color.TRANSPARENT, 0, 5))
 	rack.offset_left = 12
 	rack.offset_top = 54
 	add_child(rack)
 	var screens := HBoxContainer.new()
-	screens.add_theme_constant_override("separation", 5)
+	screens.add_theme_constant_override("separation", 3)
 	rack.add_child(screens)
 	row = screens
 	for b in [["research", "Research (Y)", func(): toggle_research()], ["diplomacy", "Diplomacy (G)", func(): toggle_diplomacy()],
@@ -253,13 +254,16 @@ func _build_top_bar() -> void:
 		var button := Button.new()
 		button.icon = UI.icon(b[0])
 		button.expand_icon = true
-		button.custom_minimum_size = Vector2(88, 40)
+		button.custom_minimum_size = Vector2(88, 42)
 		button.text = {"research":"Research", "diplomacy":"Diplomacy", "market":"Market", "intel":"Intel", "land":"Territory", "menu":"Menu"}[b[0]]
 		button.add_theme_font_size_override("font_size", 12)
 		button.add_theme_constant_override("icon_max_width", 20)
-		button.add_theme_stylebox_override("normal", UI.box(Color("1f3941"), Color(UI.TRIM, 0.95), 1, 20, 8.0))
-		button.add_theme_stylebox_override("hover", UI.box(Color("32565c"), UI.BRIGHT, 1, 20, 8.0))
-		button.add_theme_stylebox_override("pressed", UI.box(Color("6d5624"), UI.BRIGHT, 1, 20, 8.0))
+		button.add_theme_stylebox_override("normal", UI.box(UI.KEY_LOW, Color(UI.TRIM, 0.35), 1, 3, 9.0))
+		button.add_theme_stylebox_override("hover", UI.box(UI.KEY_TOP.lightened(0.12), UI.GOLD, 1, 3, 9.0))
+		button.toggle_mode = b[0] != "menu"
+		button.add_theme_stylebox_override("pressed", UI.plate(UI.KEY_TOP, UI.KEY_LOW, UI.GOLD, 9.0, UI.LIFT, UI.GOLD, 2))
+		button.add_theme_stylebox_override("hover_pressed", UI.plate(UI.BAND_TOP, UI.KEY_LOW, UI.BRIGHT, 9.0, UI.LIFT, UI.BRIGHT, 2))
+		_screen_buttons[b[0]] = button
 		button.tooltip_text = b[1]
 		button.focus_mode = Control.FOCUS_NONE
 		button.pressed.connect(b[2])
@@ -560,7 +564,7 @@ func _build_selection() -> void:
 	for caption in ["ATTACK", "RANGE", "SPEED", "HEALTH"]:
 		var plate := PanelContainer.new()
 		plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		plate.add_theme_stylebox_override("panel", UI.plate(Color("1c2e47"), Color("0c1626"), Color(UI.TRIM, 0.8), 4.0))
+		plate.add_theme_stylebox_override("panel", UI.plate(UI.KEY_TOP, UI.KEY_LOW, Color(UI.TRIM, 0.8), 4.0))
 		var stack := VBoxContainer.new()
 		stack.add_theme_constant_override("separation", -2)
 		plate.add_child(stack)
@@ -726,12 +730,18 @@ func _process(delta: float) -> void:
 	if _refresh < 0.25:
 		return
 	_refresh = 0.0
-	# Notices stand clear of an open side window instead of covering it.
-	var clear := 0.0
-	if _win != null and _win.visible:
-		clear = _win.position.x + _win.size.x + 16.0 - get_viewport().get_visible_rect().size.x * 0.5
-	_notices.offset_left = maxf(-60.0, clear)
-	_notices.offset_right = _notices.offset_left + 288.0
+	for screen in _screen_buttons:
+		var active: bool = (_rs != null and _rs.visible) if screen == "research" else side_mode == ("territory" if screen == "land" else screen)
+		_screen_buttons[screen].set_pressed_no_signal(active)
+	# Fit notices into the free lane between both docks, including when the
+	# construction list and a diplomatic window are open at the same time.
+	var viewport_width := get_viewport().get_visible_rect().size.x
+	var lane_left: float = _win.position.x + _win.size.x + 16.0 if _win != null and _win.visible else 16.0
+	var lane_right: float = _prod.position.x - 16.0 if _prod.visible else viewport_width - 16.0
+	var notice_width := minf(288.0, maxf(120.0, lane_right - lane_left))
+	var notice_left := clampf(viewport_width * 0.5 - notice_width * 0.5, lane_left, maxf(lane_left, lane_right - notice_width))
+	_notices.offset_left = notice_left - viewport_width * 0.5
+	_notices.offset_right = _notices.offset_left + notice_width
 	var clock: int = world.clock()
 	for r in RESOURCES:
 		var key: String = r[0]
@@ -1664,7 +1674,7 @@ func show_end(title: String, subtitle: String) -> void:
 		box.queue_free())
 	buttons.add_child(stay)
 
-## A short message as a card at the bottom of the screen; four at most.
+## A short message in the open lane between the command panels; four at most.
 func notice(text: String) -> void:
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel", UI.plate(Color("1d3050", 0.96), Color("0b1523", 0.96), Color(UI.TRIM, 0.9), 9.0, UI.LIFT, UI.GOLD, 1, 5))
@@ -1673,10 +1683,9 @@ func notice(text: String) -> void:
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.custom_minimum_size = Vector2(264, 0)
 	label.add_theme_color_override("font_color", UI.CREAM)
 	card.add_child(label)
-	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_notices.add_child(card)
 	while _notices.get_child_count() > 4:
 		_notices.get_child(0).free()  # the oldest goes
@@ -1747,7 +1756,7 @@ func _build_research() -> void:
 	_rs.offset_top = 56
 	_rs.offset_bottom = -16
 	# Opaque: a screen of its own, not an overlay on the battle.
-	_rs.add_theme_stylebox_override("panel", UI.plate(Color("19343b"), Color("070d17"), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 9))
+	_rs.add_theme_stylebox_override("panel", UI.plate(UI.PANEL_TOP, UI.PANEL_LOW, UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 9))
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 0)
 	_rs.add_child(column)

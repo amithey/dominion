@@ -7,9 +7,9 @@ extends Control
 
 signal picked(key: String)
 
-var COL_W := 196.0          # set by fit() so every era shows at once
+var COL_W := 196.0          # fit the viewport, with scrolling below readable widths
 var CARD_W := 176.0
-const CARD_H := 46.0
+const CARD_H := 68.0
 const GAP := 8.0
 const LEFT := 116.0
 const TOP := 34.0
@@ -26,9 +26,9 @@ func setup(r: Node) -> void:
 	tooltip_text = " "  # enables _get_tooltip
 	layout()
 
-## Columns as wide as `width` allows (all six eras on screen), within limits.
+## Fit all eras where possible; keep readable cards on narrower viewports.
 func fit(width: float) -> void:
-	COL_W = clampf((width - LEFT - 6.0) / maxf(research.eras.size(), 1), 128.0, 220.0)
+	COL_W = clampf((width - LEFT - 6.0) / maxf(research.eras.size(), 1), 144.0, 220.0)
 	CARD_W = COL_W - 10.0
 	layout()
 
@@ -52,7 +52,7 @@ func layout() -> void:
 	custom_minimum_size = Vector2(LEFT + research.eras.size() * COL_W + 10.0, y + 6.0)
 	queue_redraw()
 
-## Hovering a card names it in full (long names are cut on the card) with its state.
+## Hovering a card gives its full name, description and current state.
 func _get_tooltip(at: Vector2) -> String:
 	for key in _cards:
 		if _cards[key].has_point(at):
@@ -115,7 +115,7 @@ func _draw() -> void:
 		var active: bool = not research.queue.is_empty() and research.queue[0] == key
 		var queued: bool = key in research.queue
 		var why: String = research.blocker(key)
-		var fill := Color("1a3238")
+		var fill := Color("203348")
 		if stage >= 3:
 			fill = Color("27553a")
 		elif active or stage > 0:
@@ -123,7 +123,7 @@ func _draw() -> void:
 		elif why == "" or why.contains(" needs a "):
 			fill = Color("1e3349")
 		else:
-			fill = Color("142125")
+			fill = Color("111e2c")
 		draw_rect(r, fill)
 		# A hairline of light along the top edge, as on every plate.
 		draw_line(r.position + Vector2(1, 1), Vector2(r.end.x - 1, r.position.y + 1), Color(1, 1, 1, 0.10), 1.0)
@@ -132,16 +132,16 @@ func _draw() -> void:
 		var locked: bool = stage == 0 and why != "" and not why.contains(" needs a ")
 		# The branch's colour down the left edge.
 		draw_rect(Rect2(r.position + Vector2(1, 1), Vector2(4, r.size.y - 2)), Color(colours.get(research.def_of(key).branch, Color("83734f")), 0.45 if locked else 1.0))
-		draw_string(font, r.position + Vector2(10, 17), research.def_of(key).name, HORIZONTAL_ALIGNMENT_LEFT, CARD_W - 14, 12,
-			Color("7d888c") if locked else Color("eef2f3"))
+		draw_multiline_string(font, r.position + Vector2(10, 18), research.def_of(key).name, HORIZONTAL_ALIGNMENT_LEFT, CARD_W - 24, 12, 2,
+			Color("a1afbf") if locked else Color("eef2f3"))
 		var state: String = "Done" if stage >= 3 else ("Locked" if locked else ("%d/3" % stage if stage > 0 else ""))
 		if state != "":
-			draw_string(font, Vector2(r.end.x - 44, r.position.y + 37), state, HORIZONTAL_ALIGNMENT_RIGHT, 38, 10,
-				Color("8fd18a") if stage >= 3 else (Color("7d888c") if locked else Color("e3c15a")))
+			draw_string(font, Vector2(r.end.x - 44, r.position.y + 58), state, HORIZONTAL_ALIGNMENT_RIGHT, 38, 10,
+				Color("8fd18a") if stage >= 3 else (Color("a1afbf") if locked else Color("e3c15a")))
 		# Three development stages as pips, the current one filling up.
 		for s in range(3):
 			var pw: float = (CARD_W - 60.0) / 3.0
-			var pip := Rect2(r.position + Vector2(10 + s * (pw + 3.0), 29), Vector2(pw, 7))
+			var pip := Rect2(r.position + Vector2(10 + s * (pw + 3.0), 50), Vector2(pw, 7))
 			draw_rect(pip, Color(0, 0, 0, 0.35))
 			if s < stage:
 				draw_rect(pip, Color("8fd18a"))

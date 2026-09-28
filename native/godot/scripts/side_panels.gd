@@ -171,6 +171,7 @@ func _nation_card(id: int) -> void:
 		for enemy in range(1, d.n):
 			if d.at_war(0, enemy) and not d.at_war(id, enemy):
 				hud._button(card, "Call them to war against %s" % d.name_of(enemy), d.request_joint_war.bind(id, enemy))
+	preload("res://scripts/nation_profile_view.gd").append_to(card, str(hud.world.map.nations[id].get("id", "")), func(): hud._fit_window(hud._win_scroll.scroll_vertical))
 
 ## Your nation's political power (faction_powers.gd): what it does, when it is
 ## ready, and a button when it takes no target (the others are on each card).

@@ -1,6 +1,6 @@
 extends RefCounted
 ## The look of every panel, button and label in DOMINION, cut in the manner of
-## the great 4X strategy games: deep jade plates inside a cut-corner brass frame, a body
+## the great 4X strategy games: midnight blue plates inside a fine brass frame, a body
 ## that catches the light along its top edge and sinks into shadow at the
 ## bottom, a gold rule under every heading, and headings set in letterspaced
 ## capitals. The plates are small textures drawn here at startup (a gradient,
@@ -11,25 +11,25 @@ extends RefCounted
 ## downloaded.
 
 # ---------------------------------------------------------------- palette
-const INK := Color("070f13")     ## the darkest ground: troughs, insets, frames
-const BG := Color("0c1c20")      ## a panel body
-const BG_2 := Color("193138")    ## a raised body: cards, rows, popups
+const INK := Color("080f19")     ## the darkest ground: troughs, insets, frames
+const BG := Color("101c2b")      ## a panel body
+const BG_2 := Color("1d3042")    ## a raised body: cards, rows, popups
 const LIFT := Color(1, 1, 1, 0.09)  ## the lit top edge of a plate
-const TRIM := Color("83734f")    ## the bronze frame
-const GOLD := Color("c9ad72")    ## gold: rules, headings, the active state
-const BRIGHT := Color("f2dfa9")  ## lit gold: hover and focus
-const CREAM := Color("f6ecd4")
-const TEXT := Color("d4ded9")
-const MUTED := Color("9cada8")
+const TRIM := Color("74674e")    ## the bronze frame
+const GOLD := Color("cdb584")    ## gold: rules, headings, the active state
+const BRIGHT := Color("f5e4bd")  ## lit gold: hover and focus
+const CREAM := Color("f5efe3")
+const TEXT := Color("dbe2e9")
+const MUTED := Color("a8b5c5")
 const GOOD := Color("83c98c")
 const BAD := Color("e0805f")
 # The bodies of the plates, lit edge first.
-const PANEL_TOP := Color("183039")
-const PANEL_LOW := Color("0a171c")
-const BAND_TOP := Color("29464c")
-const BAND_LOW := Color("11262c")
-const KEY_TOP := Color("203a40")
-const KEY_LOW := Color("102329")
+const PANEL_TOP := Color("1a2b3d")
+const PANEL_LOW := Color("0c1623")
+const BAND_TOP := Color("283e51")
+const BAND_LOW := Color("142434")
+const KEY_TOP := Color("263b4e")
+const KEY_LOW := Color("142536")
 
 static var _plates := {}
 
@@ -119,7 +119,7 @@ static func _plate_texture(top: Color, bottom: Color, border: Color, bevel: Colo
 			img.set_pixel(x, y, bevel)
 	# Cut corners in the source nine-patch: the cut stays the same size at any
 	# panel size. A second diagonal hairline makes this an engraved frame.
-	var cut := 8
+	var cut := 4
 	for y in range(size):
 		for x in range(size):
 			var edge_x := mini(x - pad, size - pad - 1 - x)
@@ -150,7 +150,7 @@ static func plate(top: Color, bottom: Color, border := Color(0, 0, 0, 0), margin
 
 ## The band across the head of a panel: light at the top, dark at the bottom,
 ## closed by a gold rule. The title of the panel sits on it.
-static func band(margin := 10.0, top := BAND_TOP, bottom := BAND_LOW, rule := GOLD, rule_px := 2) -> StyleBoxTexture:
+static func band(margin := 10.0, top := BAND_TOP, bottom := BAND_LOW, rule := GOLD, rule_px := 1) -> StyleBoxTexture:
 	return plate(top, bottom, Color(0, 0, 0, 0), margin, Color(1, 1, 1, 0.10), rule, rule_px)
 
 ## A trough: the sunken dark ground that a list, a picture or a bar sits in.
@@ -187,17 +187,17 @@ static func build() -> Theme:
 	t.set_stylebox("panel", "PanelContainer", panel)
 	t.set_stylebox("panel", "Panel", panel)
 	# Buttons: a navy keycap in a bronze frame; brighter and gold framed under
-	# the cursor; struck in gold while held.
+	# the cursor; gold edged and brighter while selected.
 	t.set_stylebox("normal", "Button", plate(KEY_TOP, KEY_LOW, Color(TRIM, 0.85), 9.0))
-	t.set_stylebox("hover", "Button", plate(Color("304f54"), Color("192f35"), GOLD, 9.0, Color(1, 1, 1, 0.16)))
-	t.set_stylebox("pressed", "Button", plate(Color("caa551"), Color("8a6c28"), BRIGHT, 9.0, Color(1, 1, 1, 0.30)))
-	t.set_stylebox("hover_pressed", "Button", plate(Color("e0bc68"), Color("9c7c2f"), BRIGHT, 9.0, Color(1, 1, 1, 0.35)))
+	t.set_stylebox("hover", "Button", plate(Color("36546b"), Color("21384b"), GOLD, 9.0, Color(1, 1, 1, 0.16)))
+	t.set_stylebox("pressed", "Button", plate(Color("354d61"), Color("23394d"), GOLD, 9.0, LIFT, GOLD, 2))
+	t.set_stylebox("hover_pressed", "Button", plate(Color("425e73"), Color("2c4559"), BRIGHT, 9.0, LIFT, BRIGHT, 2))
 	t.set_stylebox("disabled", "Button", plate(Color("142125"), Color("0b161a"), Color(TRIM, 0.30), 9.0, Color(0, 0, 0, 0)))
 	t.set_stylebox("focus", "Button", box(Color(0, 0, 0, 0), BRIGHT, 1, 2, 0.0))
 	t.set_color("font_color", "Button", CREAM)
 	t.set_color("font_hover_color", "Button", BRIGHT)
-	t.set_color("font_pressed_color", "Button", Color("10272b"))
-	t.set_color("font_hover_pressed_color", "Button", Color("10272b"))
+	t.set_color("font_pressed_color", "Button", BRIGHT)
+	t.set_color("font_hover_pressed_color", "Button", BRIGHT)
 	t.set_color("font_disabled_color", "Button", Color("6d7c79"))
 	t.set_font("font", "Button", bold)
 	t.set_font_size("font_size", "Button", 14)
@@ -206,12 +206,12 @@ static func build() -> Theme:
 	for kind in ["OptionButton", "MenuButton"]:
 		for state in ["normal", "hover", "disabled", "focus"]:
 			t.set_stylebox(state, kind, t.get_stylebox(state, "Button"))
-		t.set_stylebox("pressed", kind, plate(Color("304f54"), Color("192f35"), GOLD, 9.0, Color(1, 1, 1, 0.16)))
+		t.set_stylebox("pressed", kind, plate(Color("36546b"), Color("21384b"), GOLD, 9.0, Color(1, 1, 1, 0.16)))
 		t.set_color("font_color", kind, CREAM)
 		t.set_color("font_hover_color", kind, BRIGHT)
 		t.set_color("font_pressed_color", kind, BRIGHT)
-	t.set_stylebox("panel", "PopupMenu", plate(Color("213b41"), Color("0d2026"), TRIM, 6.0, LIFT, Color(0, 0, 0, 0), 0, 7))
-	t.set_stylebox("hover", "PopupMenu", plate(Color("35585c"), Color("1b343b"), GOLD, 4.0, Color(1, 1, 1, 0.14)))
+	t.set_stylebox("panel", "PopupMenu", plate(Color("243c50"), Color("111f30"), TRIM, 6.0, LIFT, Color(0, 0, 0, 0), 0, 7))
+	t.set_stylebox("hover", "PopupMenu", plate(Color("36566e"), Color("20374b"), GOLD, 4.0, Color(1, 1, 1, 0.14)))
 	t.set_color("font_color", "PopupMenu", TEXT)
 	t.set_color("font_hover_color", "PopupMenu", BRIGHT)
 	t.set_color("font_disabled_color", "PopupMenu", MUTED)
@@ -230,6 +230,11 @@ static func build() -> Theme:
 		t.set_color("font_color", kind, TEXT)
 		t.set_color("font_hover_color", kind, BRIGHT)
 		t.set_stylebox("focus", kind, box(Color(0, 0, 0, 0), BRIGHT, 1, 2, 3.0))
+	var separator := box(Color(TRIM, 0.45), Color.TRANSPARENT, 0, 0, 0.0)
+	separator.content_margin_left = 1
+	separator.content_margin_top = 1
+	t.set_stylebox("separator", "VSeparator", separator)
+	t.set_stylebox("separator", "HSeparator", separator)
 	# Text.
 	t.set_color("font_color", "Label", TEXT)
 	t.set_color("font_outline_color", "Label", Color(0, 0, 0, 0.7))
@@ -256,23 +261,23 @@ static func build() -> Theme:
 	t.set_font_size("font_size", "HeaderLabel", 21)
 	t.set_color("font_color", "HeaderLabel", CREAM)
 	# A tab in a strip: dim and flat while it waits, a gold plate while its
-	# page is the one on show.
+	# page is the one on show. Active text remains light for contrast.
 	t.add_type("TabButton")
 	t.set_type_variation("TabButton", "Button")
-	t.set_stylebox("normal", "TabButton", plate(Color("193036"), Color("0d1f24"), Color(TRIM, 0.55), 7.0, Color(1, 1, 1, 0.05)))
-	t.set_stylebox("hover", "TabButton", plate(Color("2d4a50"), Color("19343b"), GOLD, 7.0, Color(1, 1, 1, 0.14)))
-	t.set_stylebox("pressed", "TabButton", plate(Color("d9b566"), Color("9c7a2e"), BRIGHT, 7.0, Color(1, 1, 1, 0.32)))
-	t.set_stylebox("hover_pressed", "TabButton", plate(Color("e8c874"), Color("a88434"), BRIGHT, 7.0, Color(1, 1, 1, 0.36)))
+	t.set_stylebox("normal", "TabButton", plate(Color("203348"), Color("122030"), Color(TRIM, 0.55), 7.0, Color(1, 1, 1, 0.05)))
+	t.set_stylebox("hover", "TabButton", plate(Color("344f66"), Color("203449"), GOLD, 7.0, Color(1, 1, 1, 0.14)))
+	t.set_stylebox("pressed", "TabButton", plate(KEY_TOP, KEY_LOW, GOLD, 7.0, LIFT, GOLD, 2))
+	t.set_stylebox("hover_pressed", "TabButton", plate(BAND_TOP, BAND_LOW, BRIGHT, 7.0, LIFT, BRIGHT, 2))
 	t.set_color("font_color", "TabButton", Color("bccdc7"))
 	t.set_color("font_hover_color", "TabButton", BRIGHT)
-	t.set_color("font_pressed_color", "TabButton", Color("141f2b"))
-	t.set_color("font_hover_pressed_color", "TabButton", Color("141f2b"))
+	t.set_color("font_pressed_color", "TabButton", BRIGHT)
+	t.set_color("font_hover_pressed_color", "TabButton", BRIGHT)
 	# A row in a list: a quiet plate that lifts under the cursor.
 	t.add_type("RowButton")
 	t.set_type_variation("RowButton", "Button")
-	t.set_stylebox("normal", "RowButton", plate(Color("1a3238"), Color("102329"), Color(TRIM, 0.50), 6.0, Color(1, 1, 1, 0.06)))
-	t.set_stylebox("hover", "RowButton", plate(Color("2a4a50"), Color("142f35"), GOLD, 6.0, Color(1, 1, 1, 0.16)))
-	t.set_stylebox("pressed", "RowButton", plate(Color("32565b"), Color("1b3b42"), BRIGHT, 6.0, Color(1, 1, 1, 0.20)))
+	t.set_stylebox("normal", "RowButton", plate(Color("1e3246"), Color("142536"), Color(TRIM, 0.50), 6.0, Color(1, 1, 1, 0.06)))
+	t.set_stylebox("hover", "RowButton", plate(Color("304e64"), Color("203448"), GOLD, 6.0, Color(1, 1, 1, 0.16)))
+	t.set_stylebox("pressed", "RowButton", plate(Color("385870"), Color("263f55"), BRIGHT, 6.0, Color(1, 1, 1, 0.20)))
 	t.set_stylebox("disabled", "RowButton", plate(Color("142125"), Color("0b161a"), Color(TRIM, 0.22), 6.0, Color(0, 0, 0, 0)))
 	t.set_color("font_color", "RowButton", CREAM)
 	t.set_color("font_pressed_color", "RowButton", CREAM)
