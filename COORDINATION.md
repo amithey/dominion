@@ -284,3 +284,4 @@ UI files listed above.
   fx goldenDome; Modern.dome() one orbital shot per missile, $150)). modern_warfare: railgunShip column,
   naval stealth in hidden(). world: update_training escorts a sixthGen; WEAPONS railgun; FPV strikes fail under
   a microwave field. Check: tools/units-100.gd (181).
+- 2026-09-28 Claude: 0.9.30 executable and installer in dist, built from 8a34249; packaged --ui-test passes.
