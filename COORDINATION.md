@@ -399,3 +399,4 @@ UI files listed above.
   _rival_pickers is a grid with a nation and a difficulty per rival; the briefing shows the mix.
   Tests: tools/nations-setup-check.gd (new); maps-check, map-capacity-check (optional map list argument),
   map-picker-check (re-finds the controls after a map change) and gameplay-maps-100 cover the new maps.
+- 2026-09-28 Claude: 0.9.38 executable and installer in dist, built from 8c96348; packaged --ui-test passes. Quick suite: 54 of 56 before the two test fixes in 8c96348 (weapons-live-100's dice, gameplay-deep-100's old start rule); both pass since (weapons-live 4 runs of 4).
