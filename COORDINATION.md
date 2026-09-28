@@ -386,3 +386,4 @@ UI files listed above.
   side_panels._power_card() now names your nation and adds your own profile with the same disclosure.
   tools/profile-views.gd counts the disclosures (picker and Diplomacy) and pictures Diplomacy; the picker's
   picture stays interface-review.gd's (my harness opened the menu in a way that left it blank).
+- 2026-09-28 Claude: 0.9.37 executable and installer in dist, built from 2625162; packaged --ui-test passes.
