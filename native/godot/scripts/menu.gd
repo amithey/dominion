@@ -302,6 +302,10 @@ func open_new_game() -> void:
 	var maps := [["Small Isle", "440 m", "small"], ["The Island", "640 m, east", "island"], ["Mirrored", "640 m, west", "mirrored"],
 		["Twin Lands", "720 m", "twin"], ["Archipelago", "800 m", "archipelago"], ["Continent", "960 m", "continent"]]
 	_choices(maps, "map")
+	var expanded := []
+	for key in preload("res://scripts/map_generator.gd").EXPANDED:
+		expanded.append([gen[key].name, "%d m / %d start regions" % [gen[key].size, gen[key].slots], key])
+	_choices(expanded, "map")
 	_map_note()
 	_section("Difficulty")
 	var levels := []
@@ -457,6 +461,8 @@ func _map_note() -> void:
 	var gen: Dictionary = preload("res://scripts/map_generator.gd").MAPS
 	var key := str(setup_options.map)
 	var text: String = gen[key].desc if gen.has(key) else ("The original island, 640 m: rivals on every side." if key == "island" else "The original island mirrored: start in the west.")
+	if gen.has(key) and gen[key].has("slots"):
+		text += " Prepared for %d nations; current campaigns use up to four." % int(gen[key].slots)
 	var l := _description(text)
 	l.add_theme_color_override("font_color", UI.CREAM)
 

@@ -7,6 +7,48 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.32: a third hundred gameplay checks
+
+**tools/gameplay-deep-100.gd** (103 checks) covers what the other batteries did not: rival nations playing on
+their own for five minutes (they build, train within their army limit, advance in technology, keep the peace,
+rush home to defend their capital, launch attack waves at war, fire missiles only at war and pay for them,
+never attack in a sandbox match); match settings (bounds, two-player matches, playing another nation with its
+flag and weapons, the mirrored and generated maps); every missile type's effect (tactical, cluster against men,
+EMP against machines, anti-ship, the world's anger at a nuclear strike), silo capacity and ammunition depots,
+launching from a submarine; every spy operation; trade routes (port, pact, berths, earnings, war closing them);
+bunkers; air bases; occupation zones and wearing down a rival's hold on its land; saving to and loading from
+disk, and refusing damaged saves. It found and this version fixes:
+- **A building could be told to train any unit**: the command did not check the building's own list, so a
+  helipad would take a jet and a barracks a tank. Now each building trains only its own units.
+- **Aircraft parked on a destroyed airfield stayed tied to it**, sitting on the ruin for ever. Aircraft caught
+  on the ground now go up with their base; those in the air lose it and look for another.
+
+## Expanded map geography (6–8 starting regions)
+
+Three new maps are selectable in New Campaign:
+
+| Map | Width | Prepared capital regions | Geography |
+|---|---:|---:|---|
+| Great Frontier | 1,120 m | 6 | Broad continent with room to expand inland |
+| Inland Sea | 1,280 m | 7 | A continuous land belt around a central sea |
+| Crown Isles | 1,440 m | 8 | Large islands connected by land bridges around a lagoon |
+
+This change covers maps only. Campaign setup still supports 2–4 active nations.
+The extra regions are unoccupied, ready for the separate nation-count expansion.
+Existing armies and towns are spread around the new maps. Each prepared region
+has flat building ground, nearby oil/iron/gold, and a traversable land passage to
+its neighbours. Terrain, trees and resources are deterministic for a given seed.
+
+Integration contract: generated map data exposes `mapCapacity`, `mapSeed`, and
+`spawnPositions` (all capital centres in world x/z coordinates). `startPositions`
+continues to contain only the existing nations' camera/spawn anchors. Future
+6–8 nation setup must populate towns/armies and update match setup independently.
+
+Validation: `tools/map-capacity-check.gd` checks every prepared slot at seeds 7,
+42 and 109 and writes overview PNGs under `build/map-layout-*.png`.
+`tools/maps-check.gd` also loads all three maps in the actual world and checks
+navigation, active capitals, nearby resources, land units and ships.
+
 ## Version 0.9.31: two hundred more checks, and what they found
 
 Two new batteries: **tools/weapons-live-100.gd** (89 checks: every new weapon in live combat on the game's own

@@ -293,3 +293,12 @@ UI files listed above.
   SHAHED_FUEL, Future.update); seaDrone range 10, STEALTH 0.6, +0.35 gun miss chance; Future.follow keeps the
   wingman's orbit on its leader and relinks orphans; move_craft's idle orbit runs on game_time.
 - 2026-09-28 Claude: 0.9.31 executable and installer in dist, built from 8d53931; packaged --ui-test passes.
+- 2026-09-28 Claude, 0.9.32 (user asked for 100 more gameplay checks): new tools/gameplay-deep-100.gd (103, seeded).
+  Fixes: world.queue_unit refuses a unit not in b.def.trains; world.destroy_building kills aircraft on the
+  ground at a destroyed air base (parked/rearming/taxi/landing/takeoff) and frees those in the air.
+
+- 2026-09-28 Codex: user assigned maps only. Added Great Frontier (1120 m / 6 regions), Inland Sea
+  (1280 m / 7), Crown Isles (1440 m / 8) in map_generator.gd and map choices in menu.gd.
+  Gameplay still has 2-4 nations; mapCapacity/spawnPositions/mapSeed expose the full geography for
+  future nation-count work. Added tools/map-capacity-check.gd, expanded maps-check.gd, registered
+  the geography test in run-tests.ps1. No changes to world/combat/AI/release files.

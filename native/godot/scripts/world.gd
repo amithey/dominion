@@ -2716,8 +2716,8 @@ func finish_building(b: Dictionary) -> void:
 
 func queue_unit(b: Dictionary, key: String) -> void:
 	var def: Dictionary = unit_defs.get(key, {})
-	if def.is_empty() or not b.built:
-		return
+	if def.is_empty() or not b.built or not key in b.def.get("trains", []):
+		return  # a building trains only its own units (a helipad no jets, a barracks no tanks)
 	if b.queue.size() >= 5:
 		hud.notice("Queue is full")
 		return
@@ -5115,6 +5115,17 @@ func destroy_building(b: Dictionary) -> void:
 	b.model.rotation.z = randf_range(-0.08, 0.08)
 	if b.has("pad"):
 		refresh_streets()
+	if AirOperations.is_base(b):
+		# Aircraft caught on the ground go up with their base; those in the
+		# air lose it and look for another (air_operations.gd).
+		for u in units:
+			if u.dead or not is_same(u.get("air_base"), b):
+				continue
+			if String(u.get("air_state", "")) in ["parked", "rearming", "taxi_in", "taxi_out", "landing", "takeoff"]:
+				kill(u)
+			else:
+				u.air_base = null
+				u.slot = -1
 	if b.deposit != null:
 		b.deposit.extractor = null
 		if b.deposit.get("water", false): b.deposit.node.show()

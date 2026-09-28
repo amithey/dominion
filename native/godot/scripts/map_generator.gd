@@ -20,7 +20,12 @@ const MAPS := {
 	"twin": {"name": "Twin Lands", "size": 720, "desc": "Two large islands joined by a narrow isthmus."},
 	"archipelago": {"name": "Archipelago", "size": 800, "desc": "Four islands linked by land bridges, and rich islets."},
 	"continent": {"name": "Continent", "size": 960, "desc": "A great landmass with a mountain range, passes and lakes."},
+	"frontier": {"name": "Great Frontier", "size": 1120, "slots": 6, "desc": "Six spacious starting regions on a broad continent, with open inland routes."},
+	"inland_sea": {"name": "Inland Sea", "size": 1280, "slots": 7, "desc": "Seven starting regions around a central sea; a continuous land belt links the coasts."},
+	"crown": {"name": "Crown Isles", "size": 1440, "slots": 8, "desc": "Eight large islands around a lagoon, linked by coastal land bridges."},
 }
+## Capacity describes prepared geography slots, independently of active nations.
+const EXPANDED := ["frontier", "inland_sea", "crown"]
 const STEP := 2.5
 const MARGIN := 32.0
 const HEX := 12.0
@@ -60,12 +65,19 @@ func _build(data: Dictionary, key: String, seed: int) -> void:
 	starts = _start_positions()
 	_heights()
 	var old_starts: Array = data.startPositions.duplicate(true)
+	var active_starts := []
+	for i in range(old_starts.size()):
+		active_starts.append(starts[int(i * starts.size() / old_starts.size())])
 	var old_hq := {}
 	for b in data.buildings:
 		if b.key == "hq":
 			old_hq[int(b.owner)] = Vector2(float(b.x), float(b.z))
 	data.mapSize = int(size)
 	data.style = key
+	data.mapSeed = seed
+	# Geography contract for future 6-8 nation setup; no invented nations or armies.
+	data.spawnPositions = starts.map(func(p): return [p.x, p.y])
+	data.mapCapacity = starts.size()
 	data.grid = {"origin": [_origin, _origin], "step": STEP, "size": _n, "heightsCm": _heights_cm()}
 	data.territory = data.get("territory", {}).duplicate()
 	data.territory.halfMap = half
@@ -73,18 +85,18 @@ func _build(data: Dictionary, key: String, seed: int) -> void:
 	for group in ["buildings", "units"]:
 		for e in data[group]:
 			var owner := int(e.owner)
-			var delta: Vector2 = starts[owner] - old_hq.get(owner, Vector2.ZERO)
+			var delta: Vector2 = active_starts[owner] - old_hq.get(owner, Vector2.ZERO)
 			e.x = float(e.x) + delta.x
 			e.z = float(e.z) + delta.y
 	data.startPositions = []
-	for i in range(starts.size()):
-		var delta: Vector2 = starts[i] - old_hq.get(i, Vector2.ZERO)
+	for i in range(old_starts.size()):
+		var delta: Vector2 = active_starts[i] - old_hq.get(i, Vector2.ZERO)
 		data.startPositions.append([float(old_starts[i][0]) + delta.x, float(old_starts[i][1]) + delta.y])
 	# Warships start at sea off their own coast.
 	var naval := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub"]
 	for u in data.units:
 		if u.key in naval:
-			var at := _sea_near(Vector2(float(u.x), float(u.z)), starts[int(u.owner)])
+			var at := _sea_near(Vector2(float(u.x), float(u.z)), active_starts[int(u.owner)])
 			u.x = at.x
 			u.z = at.y
 	data.trees = _trees()
@@ -95,6 +107,11 @@ func _build(data: Dictionary, key: String, seed: int) -> void:
 ## Capitals: hex centres, so every town's hex offsets stay on the grid.
 func _start_positions() -> Array:
 	var at := []
+	if style in EXPANDED:
+		var count := int(MAPS[style].slots)
+		for i in range(count):
+			at.append(_hex_centre(Vector2.from_angle(-PI / 4.0 + TAU * i / count) * half * 0.64))
+		return at
 	match style:
 		"small":
 			at = [Vector2(0.5, -0.5), Vector2(0.5, 0.5), Vector2(-0.5, 0.5), Vector2(-0.5, -0.5)]
@@ -126,6 +143,14 @@ func _shape(p: Vector2) -> float:
 	var u := p / half   # -1..1 across the map
 	var f := 0.0
 	match style:
+		"frontier":
+			f = 1.0 - (u * Vector2(1.0, 1.04)).length() / 0.92
+		"inland_sea":
+			f = minf((u.length() - 0.32) * 2.8, (0.93 - u.length()) * 2.8)
+		"crown":
+			f = -1.0
+			for s in starts:
+				f = maxf(f, 1.0 - p.distance_to(s) / (half * 0.25))
 		"small":
 			f = 1.0 - (u * Vector2(1.0, 1.0)).length() / 0.86
 		"twin":
@@ -148,10 +173,19 @@ func _shape(p: Vector2) -> float:
 		_:
 			f = 1.0 - (u * Vector2(1.0, 1.08)).length() / 0.92
 	f += (_coast.get_noise_2d(p.x, p.y)) * 0.22
+	# Guaranteed broad land routes round the ring, with sea retained in the middle.
+	if style in EXPANDED:
+		f = maxf(f, (42.0 - _route_distance(p)) / 110.0)
 	# Capitals always stand well inland.
 	for s in starts:
 		f = maxf(f, 0.42 - p.distance_to(s) / 260.0)
 	return f
+
+func _route_distance(p: Vector2) -> float:
+	var nearest := INF
+	for i in range(starts.size()):
+		nearest = minf(nearest, _segment_distance(p, starts[i], starts[(i + 1) % starts.size()]))
+	return nearest
 
 func _segment_distance(p: Vector2, a: Vector2, b: Vector2) -> float:
 	var ab := b - a
@@ -191,6 +225,10 @@ func _heights() -> void:
 				h = lerpf(h, 3.2 + _hills.get_noise_2d(p.x, p.y) * 0.6, flat)
 			else:
 				h = maxf(0.6 + f * 90.0, -60.0)
+			if style in EXPANDED:
+				# Flatten the centre of each passage for ground units and future roads.
+				var road := 1.0 - smoothstep(18.0, 36.0, _route_distance(p))
+				h = lerpf(h, 3.2, road)
 			_h[r * _n + c] = h
 
 ## Land compared with the exported island's (50,665 dry grid points): what
@@ -266,6 +304,9 @@ func _snap(p: Vector2) -> Vector2:
 	return _hex_centre(p)
 
 func _free(p: Vector2, taken: Array, gap: float) -> bool:
+	# Snapping a sampled point to a hex can push it outside the map.
+	if absf(p.x) >= half or absf(p.y) >= half:
+		return false
 	for q in taken:
 		if p.distance_to(q) < gap:
 			return false
