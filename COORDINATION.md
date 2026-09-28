@@ -308,3 +308,4 @@ UI files listed above.
   Codex's map-capacity work that was in the working tree then (map_generator.gd, map-capacity-check.gd,
   maps-check.gd, a runner line, its COORDINATION entry); it had passed the full suite. From now on I stage
   only my own files and leave Codex's work in progress (the map picker) to Codex.
+- 2026-09-28 Claude: 0.9.33 executable and installer in dist, built from ad48b08; packaged --ui-test passes.
