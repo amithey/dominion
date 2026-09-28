@@ -27,16 +27,21 @@ func run() -> void:
 	if picker == null or preview == null or note == null:
 		quit(1)
 		return
-	check(picker.item_count == Catalogue.KEYS.size(), "all nine maps available")
+	check(picker.item_count == Catalogue.KEYS.size(), "all %d maps available" % Catalogue.KEYS.size())
 	for i in range(picker.item_count):
 		var key: String = Catalogue.KEYS[i]
 		picker.select(i)
 		picker.item_selected.emit(i)
 		await process_frame
+		# The sheet is rebuilt for the map's room for rivals.
+		picker = w.menu._panel.find_child("MapPicker", true, false)
+		preview = w.menu._panel.find_child("MapPreview", true, false)
+		note = w.menu._panel.find_child("MapDescription", true, false)
+		check(picker.selected == i, key + " stays selected")
 		check(w.menu.setup_options.map == key, key + " selection updates campaign")
 		check(w.MatchSetup.normalize(w.menu.setup_options).map == key, key + " survives setup normalization")
 		check(preview.texture != null and preview.texture.resource_path == Catalogue.preview_path(key), key + " correct preview")
-		check(note.text.contains("%d prepared regions" % Catalogue.entry(key).slots), key + " correct capacity")
+		check(note.text.contains("%d regions" % Catalogue.entry(key).slots), key + " correct capacity")
 		check(w.menu._briefing.text.contains(w.menu._map_name(key)), key + " briefing updates immediately")
 		check(w.menu.setup_options.players == 4, key + " preserves active players")
 		check(preview.get_global_rect().end.x <= w.menu._panel.get_global_rect().end.x, key + " preview fits panel")
@@ -44,8 +49,8 @@ func run() -> void:
 	w.menu.open_new_game()
 	await process_frame
 	note = w.menu._panel.find_child("MapDescription", true, false)
-	check(note.text.contains("2 active nations"), "rival changes update map information")
-	check(w.menu.setup_options.map == "crown", "map selection survives rebuilding menu")
+	check(note.text.contains("2 in this campaign"), "rival changes update map information")
+	check(w.menu.setup_options.map == Catalogue.KEYS[-1], "map selection survives rebuilding menu")
 	if DisplayServer.get_name() != "headless":
 		w.menu._scroll.ensure_control_visible(w.menu._panel.find_child("MapPicker", true, false))
 		for i in range(20):

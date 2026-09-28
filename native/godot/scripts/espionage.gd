@@ -187,6 +187,8 @@ func add_report(nation: int, kind: String, text: String, amount: float) -> void:
 func counter_spy(nation: int) -> float:
 	if active(nation, "spymaster"):
 		return 0.02
+	if world.ai != null and not world.ai.nations.is_empty():
+		return float(world.ai.row_of(nation).get("counterSpy", 0.0))   # that rival's own difficulty
 	return float(world.map.ai.difficulty.get(world.match_difficulty, world.map.ai.difficulty.easy).get("counterSpy", 0.0))
 
 func success_chance(op_key: String, nation: int) -> float:

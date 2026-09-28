@@ -11,7 +11,7 @@ var w: Node
 const DT := 1.0 / 15.0
 const Generator := preload("res://scripts/map_generator.gd")
 ## Smallest to largest: the original island and its mirror, then the generated maps.
-const KEYS := ["small", "island", "mirrored", "twin", "archipelago", "continent", "frontier", "inland_sea", "crown"]
+const KEYS := ["small", "island", "mirrored", "twin", "archipelago", "continent", "frontier", "highlands", "inland_sea", "crown", "great_lakes", "pangaea", "ten_isles"]
 var only: Array = []
 func _initialize() -> void: call_deferred("run")
 func check(ok: bool, label: String) -> void:
@@ -84,7 +84,7 @@ func run() -> void:
 		set_meta("match_config", {"map": key, "players": 4, "nation": 0, "style": "standard"})
 		change_scene_to_file("res://world.tscn")
 		w = null
-		for i in range(6000):
+		for i in range(20000):
 			await process_frame
 			if current_scene != null and current_scene.get("menu") != null and current_scene.get("nav_ready") == true:
 				w = current_scene

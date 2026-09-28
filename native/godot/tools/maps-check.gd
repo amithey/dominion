@@ -4,7 +4,7 @@ extends SceneTree
 ## and gold lie near each capital, and warships start at sea. With a window,
 ## saves an overview of each map (build/map-<key>.png).
 var errors: Array[String] = []
-const MAPS := ["small", "twin", "archipelago", "continent", "island", "frontier", "inland_sea", "crown"]
+const MAPS := ["small", "twin", "archipelago", "continent", "island", "frontier", "highlands", "inland_sea", "crown", "great_lakes", "pangaea", "ten_isles"]
 func _initialize() -> void: call_deferred("run")
 func check(ok: bool, label: String) -> void:
 	print("ok " if ok else "FAIL ", label)
@@ -15,7 +15,7 @@ func run() -> void:
 		change_scene_to_file("res://world.tscn")
 		var w: Node = null
 		var t0 := Time.get_ticks_msec()
-		for i in range(4000):
+		for i in range(20000):
 			await process_frame
 			if current_scene != null and current_scene.get("menu") != null and current_scene.get("nav_ready") == true:
 				w = current_scene
@@ -29,7 +29,7 @@ func run() -> void:
 		w.menu._root.hide()
 		for i in range(20):
 			await physics_frame  # the navigation map takes in the towns' closed cells
-		check(int(w.map.mapSize) == ({"small": 440, "twin": 720, "archipelago": 800, "continent": 960, "frontier": 1120, "inland_sea": 1280, "crown": 1440}.get(key, 640)), "%s has its size" % key)
+		check(int(w.map.mapSize) == ({"small": 440, "twin": 720, "archipelago": 800, "continent": 960, "frontier": 1120, "inland_sea": 1280, "crown": 1440, "highlands": 1040, "great_lakes": 1520, "pangaea": 1680, "ten_isles": 1760}.get(key, 640)), "%s has its size" % key)
 		var hqs: Array = w.buildings.filter(func(b): return b.key == "hq")
 		check(hqs.size() == 4 and hqs.all(func(b): return w.height_at(b.root.position.x, b.root.position.z) > 1.0), "%s: four capitals on dry land" % key)
 		var mine: Vector3 = hqs.filter(func(b): return b.owner == 0)[0].root.position

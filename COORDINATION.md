@@ -387,3 +387,15 @@ UI files listed above.
   tools/profile-views.gd counts the disclosures (picker and Diplomacy) and pictures Diplomacy; the picker's
   picture stays interface-review.gd's (my harness opened the menu in a way that left it blank).
 - 2026-09-28 Claude: 0.9.37 executable and installer in dist, built from 2625162; packaged --ui-test passes.
+- 2026-09-28 Claude, 0.9.38 (user: more maps, up to 10 players; choose each rival nation and its difficulty;
+  no new factions for now). map_generator.gd: highlands (5), great_lakes (9), pangaea (10), ten_isles (10) in
+  EXPANDED, optional "ring" per map; the route distance is computed once per grid point. match_setup.gd:
+  capacity(key) = min(slots, factions); players 2..capacity; "levels" (each rival's difficulty, "" = the
+  match's) and level_of(); apply() builds the roster BEFORE generating, cloning the rival start (raw owners
+  1-3) for every rival past three, and always gives the player raw owner 0's full town (it used to follow
+  nation % 4, which handed the player's town to a rival). ai.gd: n.level, row(n), row_of(id),
+  aggression_of(id), used by diplomacy.gd, engagement.gd, research.ai_tick and espionage.counter_spy.
+  menu.gd (Codex's): the Rivals choice follows the map's capacity; a map change rebuilds the sheet;
+  _rival_pickers is a grid with a nation and a difficulty per rival; the briefing shows the mix.
+  Tests: tools/nations-setup-check.gd (new); maps-check, map-capacity-check (optional map list argument),
+  map-picker-check (re-finds the controls after a map change) and gameplay-maps-100 cover the new maps.

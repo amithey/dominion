@@ -10,7 +10,7 @@ func check(ok: bool, label: String) -> void:
 		push_error(label)
 func run() -> void:
 	var source: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/map-seed1.json"))
-	for key in Generator.EXPANDED:
+	for key in (Generator.EXPANDED if OS.get_cmdline_user_args().is_empty() else Array(OS.get_cmdline_user_args()[0].split(","))):
 		for seed in [7, 42, 109]:
 			var data: Dictionary = source.duplicate(true)
 			var g = Generator.new()

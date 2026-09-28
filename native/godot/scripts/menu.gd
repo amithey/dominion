@@ -333,7 +333,11 @@ func open_new_game() -> void:
 	var options := HBoxContainer.new()
 	options.add_theme_constant_override("separation", 12)
 	campaign.add_child(options)
-	_setup_select("Rivals", [["One rival", 2], ["Two rivals", 3], ["Three rivals", 4]], "players", options)
+	# As many rivals as the map has regions (and factions to lead them).
+	var counts := []
+	for players in range(2, world.MatchSetup.capacity(str(setup_options.map)) + 1):
+		counts.append(["One rival" if players == 2 else "%d rivals" % (players - 1), players])
+	_setup_select("Rivals", counts, "players", options)
 	_setup_select("Rules", [["Standard", "standard"], ["Sandbox", "sandbox"]], "style", options)
 	_setup_select("Difficulty", [["Easy", "easy"], ["Normal", "normal"], ["Hard", "hard"]], "difficulty", options)
 	_rival_pickers(campaign)
@@ -379,23 +383,35 @@ func _setup_select(title: String, items: Array, key: String, parent: Control) ->
 	picker.item_selected.connect(func(index):
 		if key == "difficulty":
 			setup_difficulty = items[index][1]
+			setup_options.erase("levels")   # every rival follows the new difficulty
 		else:
 			setup_options[key] = items[index][1]
 		open_new_game())
 	col.add_child(picker)
 
+## Each rival: which nation, and how hard it plays (the Difficulty above sets
+## them all at once).
 func _rival_pickers(parent: Control = null) -> void:
-	_section("Opponent factions", parent)
+	_section("Opponents: nation and difficulty", parent)
 	var factions = preload("res://scripts/factions.gd")
 	var chosen: Array = world.MatchSetup.roster(setup_options)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	(parent if parent != null else _panel).add_child(row)
+	var grid := GridContainer.new()
+	grid.name = "RivalGrid"
+	grid.columns = 1 if chosen.size() <= 2 else 2
+	grid.add_theme_constant_override("h_separation", 14)
+	grid.add_theme_constant_override("v_separation", 8)
+	(parent if parent != null else _panel).add_child(grid)
 	for slot in range(1, chosen.size()):
+		var row := HBoxContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_theme_constant_override("separation", 6)
+		grid.add_child(row)
 		var picker := OptionButton.new()
 		picker.name = "RivalPicker%d" % slot
 		picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		picker.custom_minimum_size.y = 40
+		picker.fit_to_longest_item = false
+		picker.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		for i in range(factions.IDS.size()):
 			if i in chosen and i != chosen[slot]:
 				continue
@@ -408,6 +424,23 @@ func _rival_pickers(parent: Control = null) -> void:
 			setup_options.rivals = rivals
 			open_new_game())
 		row.add_child(picker)
+		var level := OptionButton.new()
+		level.name = "RivalLevel%d" % slot
+		level.custom_minimum_size = Vector2(112, 40)
+		level.tooltip_text = "How hard %s plays: its income, how fast it builds and trains, the size of its army and waves, and how readily it goes to war." % factions.NAMES[chosen[slot]]
+		var current: String = world.MatchSetup.level_of(setup_options, slot, setup_difficulty)
+		for item in [["Easy", "easy"], ["Normal", "normal"], ["Hard", "hard"]]:
+			level.add_item(item[0])
+			if item[1] == current:
+				level.select(level.item_count - 1)
+		level.item_selected.connect(func(index):
+			var levels: Array = setup_options.get("levels", []).duplicate()
+			while levels.size() < chosen.size() - 1:
+				levels.append("")
+			levels[slot - 1] = ["easy", "normal", "hard"][index]
+			setup_options.levels = levels
+			_update_briefing())
+		row.add_child(level)
 
 func _map_name(key: String) -> String:
 	var gen: Dictionary = preload("res://scripts/map_generator.gd").MAPS
@@ -586,11 +619,13 @@ func _map_picker(parent: Control = null) -> void:
 		var info: Dictionary = catalogue.entry(key)
 		preview.texture = load(catalogue.preview_path(key))
 		preview.tooltip_text = "%s: %d x %d m" % [info.name, info.size, info.size]
-		note.text = "%s\n%d prepared regions; %d active nations in this campaign." % [info.desc, info.slots, int(setup_options.players)]
-		if int(info.slots) > 4:
-			note.text += " Support for more than four active nations is still pending."
+		note.text = "%s\n%d regions: room for up to %d nations; %d in this campaign." % [info.desc, info.slots, world.MatchSetup.capacity(key), int(setup_options.players)]
 		_update_briefing()
-	picker.item_selected.connect(update)
+	picker.item_selected.connect(func(index):
+		update.call(index)
+		# A smaller map has room for fewer rivals; a larger one offers more.
+		setup_options.players = mini(int(setup_options.players), world.MatchSetup.capacity(str(setup_options.map)))
+		open_new_game())
 	update.call(picker.selected)
 
 ## Paused: which campaign this is, where it stands.
@@ -617,7 +652,15 @@ func _update_briefing() -> void:
 		return
 	var difficulty: Array = DIFFICULTIES[["easy","normal","hard"].find(setup_difficulty)]
 	var rivals := int(setup_options.players) - 1
-	_briefing.text = "%s\n%d rival%s  ·  %s  ·  %s  ·  %s" % [world.MatchSetup.NATIONS[int(setup_options.nation)], rivals, "" if rivals == 1 else "s", _map_name(str(setup_options.map)), "sandbox" if setup_options.style=="sandbox" else "standard rules", difficulty[1]]
+	# Rivals of mixed difficulty: how many play each.
+	var mix := {}
+	for slot in range(1, rivals + 1):
+		var level: String = world.MatchSetup.level_of(setup_options, slot, setup_difficulty)
+		mix[level] = int(mix.get(level, 0)) + 1
+	var hardness: String = difficulty[1]
+	if mix.size() > 1:
+		hardness = "  ".join(["easy", "normal", "hard"].filter(func(l): return mix.has(l)).map(func(l): return "%d %s" % [mix[l], l]))
+	_briefing.text = "%s\n%d rival%s  ·  %s  ·  %s  ·  %s" % [world.MatchSetup.NATIONS[int(setup_options.nation)], rivals, "" if rivals == 1 else "s", _map_name(str(setup_options.map)), "sandbox" if setup_options.style=="sandbox" else "standard rules", hardness]
 
 func open_load() -> void:
 	_clear()

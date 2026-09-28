@@ -9,6 +9,14 @@ extends RefCounted
 ##                                       with islets holding offshore riches
 ##   continent    Continent      960 m   a great landmass: a mountain range with passes,
 ##                                       lakes, long coasts
+##   highlands    Highlands     1040 m   5 regions on a mountainous plateau
+##   great_lakes  Great Lakes   1520 m   9 regions on a continent full of lakes
+##   pangaea      Pangaea       1680 m   10 regions on one supercontinent split by a range
+##   ten_isles    Ten Isles     1760 m   10 islands round an ocean, with a lone central isle
+##
+## The larger maps ("slots") place their capitals on a ring, joined by broad,
+## flat land routes; a match uses as many of them as it has nations
+## (match_setup.gd spreads the nations evenly round the ring).
 ##
 ## Everything that is not geography (unit and building rules, the economy, AI,
 ## research...) is kept from the exported island. Every capital stands on
@@ -23,9 +31,16 @@ const MAPS := {
 	"frontier": {"name": "Great Frontier", "size": 1120, "slots": 6, "desc": "Six spacious starting regions on a broad continent, with open inland routes."},
 	"inland_sea": {"name": "Inland Sea", "size": 1280, "slots": 7, "desc": "Seven starting regions around a central sea; a continuous land belt links the coasts."},
 	"crown": {"name": "Crown Isles", "size": 1440, "slots": 8, "desc": "Eight large islands around a lagoon, linked by coastal land bridges."},
+	"highlands": {"name": "Highlands", "size": 1040, "slots": 5, "desc": "Five regions on a high plateau; mountain walls funnel armies through the valleys."},
+	"great_lakes": {"name": "Great Lakes", "size": 1520, "slots": 9, "ring": 0.7, "desc": "Nine regions on a continent dotted with lakes; a land ring links every capital."},
+	"pangaea": {"name": "Pangaea", "size": 1680, "slots": 10, "ring": 0.7, "desc": "Ten regions on one supercontinent, split by a mountain range with passes."},
+	"ten_isles": {"name": "Ten Isles", "size": 1760, "slots": 10, "desc": "Ten islands round an open ocean, joined by narrow land bridges; a rich isle alone in the middle."},
 }
 ## Capacity describes prepared geography slots, independently of active nations.
-const EXPANDED := ["frontier", "inland_sea", "crown"]
+## "ring": how far out the capitals stand (a share of the half-width; 0.64 when
+## unset), so that on the great continents they are near enough the coast for
+## a harbour.
+const EXPANDED := ["frontier", "inland_sea", "crown", "highlands", "great_lakes", "pangaea", "ten_isles"]
 const STEP := 2.5
 const MARGIN := 32.0
 const HEX := 12.0
@@ -110,7 +125,7 @@ func _start_positions() -> Array:
 	if style in EXPANDED:
 		var count := int(MAPS[style].slots)
 		for i in range(count):
-			at.append(_hex_centre(Vector2.from_angle(-PI / 4.0 + TAU * i / count) * half * 0.64))
+			at.append(_hex_centre(Vector2.from_angle(-PI / 4.0 + TAU * i / count) * half * float(MAPS[style].get("ring", 0.64))))
 		return at
 	match style:
 		"small":
@@ -138,8 +153,9 @@ func _hex_centre(p: Vector2) -> Vector2:
 		z = -x - y
 	return Vector2(HEX * sqrt(3.0) * (x + z * 0.5), HEX * 1.5 * z)
 
-## Land-ness: above 0 is land, the coast at 0, below is sea.
-func _shape(p: Vector2) -> float:
+## Land-ness: above 0 is land, the coast at 0, below is sea. `route`: the
+## distance to the land routes, when the caller has it already.
+func _shape(p: Vector2, route := -1.0) -> float:
 	var u := p / half   # -1..1 across the map
 	var f := 0.0
 	match style:
@@ -151,6 +167,16 @@ func _shape(p: Vector2) -> float:
 			f = -1.0
 			for s in starts:
 				f = maxf(f, 1.0 - p.distance_to(s) / (half * 0.25))
+		"ten_isles":
+			f = 1.0 - p.length() / (half * 0.16)   # the lone isle in the middle
+			for s in starts:
+				f = maxf(f, 1.0 - p.distance_to(s) / (half * 0.17))
+		"highlands":
+			f = 1.0 - (u * Vector2(1.0, 1.02)).length() / 0.9
+		"great_lakes":
+			f = 1.0 - (u * Vector2(1.0, 1.06)).length() / 0.89
+		"pangaea":
+			f = 1.0 - (u * Vector2(1.04, 1.0)).length() / 0.89
 		"small":
 			f = 1.0 - (u * Vector2(1.0, 1.0)).length() / 0.86
 		"twin":
@@ -175,7 +201,7 @@ func _shape(p: Vector2) -> float:
 	f += (_coast.get_noise_2d(p.x, p.y)) * 0.22
 	# Guaranteed broad land routes round the ring, with sea retained in the middle.
 	if style in EXPANDED:
-		f = maxf(f, (42.0 - _route_distance(p)) / 110.0)
+		f = maxf(f, (42.0 - (route if route >= 0.0 else _route_distance(p))) / 110.0)
 	# Capitals always stand well inland.
 	for s in starts:
 		f = maxf(f, 0.42 - p.distance_to(s) / 260.0)
@@ -196,11 +222,14 @@ func _heights() -> void:
 	_origin = -(half + MARGIN)
 	_n = int(ceil((size + MARGIN * 2.0) / STEP)) + 1
 	_h.resize(_n * _n)
-	var mountains: float = {"small": 0.35, "twin": 0.8, "archipelago": 0.55, "continent": 1.25}.get(style, 0.8)
+	var mountains: float = {"small": 0.35, "twin": 0.8, "archipelago": 0.55, "continent": 1.25, "highlands": 1.9, "great_lakes": 0.6, "pangaea": 1.1, "ten_isles": 0.45}.get(style, 0.8)
+	var lakes: float = {"continent": 0.42, "pangaea": 0.42, "great_lakes": 0.28}.get(style, 2.0)   # noise above this is a lake
+	var expanded := style in EXPANDED
 	for r in range(_n):
 		for c in range(_n):
 			var p := Vector2(_origin + c * STEP, _origin + r * STEP)
-			var f := _shape(p)
+			var route := _route_distance(p) if expanded else INF
+			var f := _shape(p, route)
 			var h: float
 			if f > 0.0:
 				var inland := smoothstep(0.0, 0.45, f)
@@ -211,23 +240,23 @@ func _heights() -> void:
 					near = minf(near, p.distance_to(s))
 				var ridge := pow(maxf(0.0, _ridge.get_noise_2d(p.x, p.y) * 0.5 + 0.5), 3.0)
 				var range_mask := smoothstep(0.18, 0.5, f) * smoothstep(90.0, 150.0, near) * mountains
-				if style == "continent":
+				if style == "continent" or style == "pangaea":
 					# A long range across the middle, broken by passes.
 					var spine := 1.0 - smoothstep(0.0, 70.0, absf(p.x * 0.35 + p.y * 0.94))
 					var gap := smoothstep(0.25, 0.55, absf(_lakes.get_noise_2d(p.x * 0.4, 0.0)))
 					range_mask = maxf(range_mask, spine * gap * smoothstep(0.2, 0.5, f) * 1.4)
 				h += ridge * 22.0 * range_mask
 				# Lakes on the continent, far from capitals.
-				if style == "continent" and f > 0.35 and near > 140.0 and _lakes.get_noise_2d(p.x, p.y) > 0.42:
+				if f > 0.35 and near > 140.0 and _lakes.get_noise_2d(p.x, p.y) > lakes:
 					h = minf(h, -2.5)
 				# Flat ground for each capital's town.
 				var flat := 1.0 - smoothstep(58.0, 92.0, near)
 				h = lerpf(h, 3.2 + _hills.get_noise_2d(p.x, p.y) * 0.6, flat)
 			else:
 				h = maxf(0.6 + f * 90.0, -60.0)
-			if style in EXPANDED:
+			if expanded:
 				# Flatten the centre of each passage for ground units and future roads.
-				var road := 1.0 - smoothstep(18.0, 36.0, _route_distance(p))
+				var road := 1.0 - smoothstep(18.0, 36.0, route)
 				h = lerpf(h, 3.2, road)
 			_h[r * _n + c] = h
 

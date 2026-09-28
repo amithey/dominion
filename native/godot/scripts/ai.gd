@@ -11,7 +11,8 @@ extends Node
 ## Attack waves go at the nearest building of any nation it is at war with.
 
 var world: Node
-var cfg: Dictionary      # the difficulty row
+var cfg: Dictionary      # the match's difficulty row
+var levels: Dictionary   # every difficulty row: each rival plays its own (n.level)
 var build_order: Array
 var train_pool: Array
 var nations: Array[Dictionary] = []
@@ -33,6 +34,7 @@ const STRIKE_TARGETS := ["hq", "cityCenter", "villageCenter", "airfield", "tankF
 func setup(world_node: Node, ai: Dictionary, difficulty: String, speed := 1.0) -> void:
 	world = world_node
 	cfg = ai.difficulty.get(difficulty, ai.difficulty.easy)
+	levels = ai.difficulty
 	build_order = ai.buildOrder
 	# Only units the native world can draw yet (no aircraft).
 	train_pool = ai.trainPool.filter(func(k): return TRAINED_AT.has(k))
@@ -40,12 +42,28 @@ func setup(world_node: Node, ai: Dictionary, difficulty: String, speed := 1.0) -
 		if not key in train_pool and world.unit_defs.has(key):
 			train_pool.append(key)
 	for id in range(1, world.map.nations.size()):
+		# Each rival's own difficulty, as chosen in the New Game picker.
+		var level: String = world.MatchSetup.level_of(world.match_config, id, difficulty if ai.difficulty.has(difficulty) else "easy")
 		nations.append({
-			"id": id, "name": world.map.nations[id].name, "money": 400.0, "build_idx": 0,
+			"id": id, "name": world.map.nations[id].name, "money": 400.0, "build_idx": 0, "level": level,
 			"next_build": (14.0 + randf() * 14.0) / speed, "next_train": (22.0 + randf() * 12.0) / speed,
-			"next_attack": float(cfg.firstAttack) * (0.9 + randf() * 0.4) / speed,
+			"next_attack": float(ai.difficulty[level].firstAttack) * (0.9 + randf() * 0.4) / speed,
 			"next_defend": 5.0, "at_war": false, "defeated": false, "speed": speed,
 		})
+
+## Rival `n`'s difficulty row: income, build and training pace, army size,
+## first attack, squad size, aggression.
+func row(n: Dictionary) -> Dictionary:
+	return levels.get(str(n.get("level", "")), cfg)
+
+func row_of(id: int) -> Dictionary:
+	for n in nations:
+		if n.id == id:
+			return row(n)
+	return cfg
+
+func aggression_of(id: int) -> float:
+	return float(row_of(id).get("aggression", 0.35))
 
 func hq(id: int):
 	for b in world.buildings:
@@ -64,7 +82,7 @@ func declare_war(id: int, provoked: bool) -> void:
 				world.diplomacy.declare_war(0, id, "You attacked %s: you are at war!" % n.name)
 			else:
 				world.diplomacy.declare_war(id, 0)
-			n.next_attack = minf(n.next_attack, float(cfg.firstAttack) * 0.35 / n.speed)
+			n.next_attack = minf(n.next_attack, float(row(n).firstAttack) * 0.35 / n.speed)
 
 func _physics_process(delta: float) -> void:
 	if world == null or world.economy == null:
@@ -85,7 +103,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 		n.next_attack = maxf(n.next_attack,99999.0)
 	var s: float = n.speed
 	var spies: Node = world.espionage
-	n.money += float(cfg.income) * delta * s * (spies.income_mult(n.id) if spies else 1.0) * preload("res://scripts/faction_powers.gd").income_mult(world, n.id) * preload("res://scripts/national_profile.gd").ai_income(world, n.id) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0))))
+	n.money += float(row(n).income) * delta * s * (spies.income_mult(n.id) if spies else 1.0) * preload("res://scripts/faction_powers.gd").income_mult(world, n.id) * preload("res://scripts/national_profile.gd").ai_income(world, n.id) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0))))
 	var cyber: bool = spies != null and spies.production_down(n.id) or preload("res://scripts/faction_powers.gd").production_blocked(world, n.id)
 	n.next_build -= delta
 	n.next_train -= delta
@@ -111,7 +129,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 				elif n.build_idx < build_order.size():
 					n.build_idx += 1  # no room for this one: move on
 		var total: int = world.buildings.filter(func(b): return b.owner == n.id and not b.dead).size()
-		n.next_build = maxf(6.0, float(cfg.buildEvery) * randf_range(0.7, 1.1) - total * 0.3) / s
+		n.next_build = maxf(6.0, float(row(n).buildEvery) * randf_range(0.7, 1.1) - total * 0.3) / s
 
 	# Land: a nation with money to spare buys some at its town halls (as the player does).
 	if n.money > 3500.0 and world.territory != null and randf() < delta * s * 0.02:
@@ -128,7 +146,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	# Training.
 	if n.next_train <= 0.0 and not cyber:
 		var army: Array = world.units.filter(func(u): return u.owner == n.id and not u.dead)
-		if army.size() < int(cfg.maxArmy):
+		if army.size() < int(row(n).maxArmy):
 			var options: Array = train_pool.filter(func(k): return world.unit_allowed(n.id, k) and not production_sites(n.id,k).is_empty())
 			if not options.is_empty():
 				var key: String = options[randi() % options.size()]
@@ -141,7 +159,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 				if n.money - cost >= reserve:
 					if deploy(n.id,key):
 						n.money -= cost
-		n.next_train = float(cfg.trainEvery) * randf_range(0.8, 1.2) * (0.55 if not world.diplomacy.enemies_of(n.id).is_empty() else 1.0) / s
+		n.next_train = float(row(n).trainEvery) * randf_range(0.8, 1.2) * (0.55 if not world.diplomacy.enemies_of(n.id).is_empty() else 1.0) / s
 
 	# Defence: a threat near the capital brings every unit home.
 	if n.next_defend <= 0.0:
@@ -163,9 +181,9 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 		spies.warn_attack(n.id)
 	if n.next_attack <= 0.0 and not (spies and spies.paralyzed(n.id)):
 		n.warned = false
-		n.next_attack = float(cfg.firstAttack) * randf_range(0.55, 1.05) / s
+		n.next_attack = float(row(n).firstAttack) * randf_range(0.55, 1.05) / s
 		var d: Node = world.diplomacy
-		if d.enemies_of(n.id).is_empty() and randf() < float(cfg.aggression):
+		if d.enemies_of(n.id).is_empty() and randf() < float(row(n).aggression):
 			# Pick the most hated neighbour it is willing to fight.
 			var worst := -1
 			for i in range(d.n):
@@ -186,13 +204,13 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 		if not enemies.is_empty():
 			var army: Array = world.units.filter(func(u): return u.owner == n.id and available(u) and not u.get("naval",false))
 			var guard: int = mini(3, army.size() / 4)
-			var squad: Array = army.slice(guard, guard + maxi(int(cfg.squad), int(army.size() * 0.6)))
+			var squad: Array = army.slice(guard, guard + maxi(int(row(n).squad), int(army.size() * 0.6)))
 			var target = nearest_enemy_asset(home.root.position, enemies)
-			if squad.size() >= maxi(3, int(cfg.squad) - 2) and target != null:
+			if squad.size() >= maxi(3, int(row(n).squad) - 2) and target != null:
 				world.order_move(squad, target.root.position, true)
 				if target.owner == 0:
 					world.hud.notice("%s forces are advancing!" % n.name)
-			n.next_attack = minf(n.next_attack, float(cfg.firstAttack) * 0.35 / s)
+			n.next_attack = minf(n.next_attack, float(row(n).firstAttack) * 0.35 / s)
 
 	# Missile strikes: a nation at full war with the player, with the
 	# technology for it, fires at the player's towns and bases now and then.

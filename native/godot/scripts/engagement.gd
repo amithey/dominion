@@ -90,7 +90,7 @@ func answer(id: int) -> void:
 	if d.at_war(0,id) or d.defeated(id):
 		return
 	var swallowed: int = maxi(int(incidents.get(str(id),1))-1,0)
-	var pressure: float = float(swallowed)*26.0 - float(d.rel(0,id))*0.45 + float(d.aggression)*45.0
+	var pressure: float = float(swallowed)*26.0 - float(d.rel(0,id))*0.45 + float(d.aggression_of(id))*45.0
 	pressure += float(int(d.army_strength(id))-int(d.army_strength(0)))*2.0 + randf()*30.0
 	# A first incident is never called a war: a government protests or answers
 	# in kind, and only a grievance it has already swallowed can become one.

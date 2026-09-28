@@ -469,10 +469,10 @@ func _check_era() -> void:
 func ai_tick() -> void:
 	if world.ai == null:
 		return
-	var aggression := float(world.diplomacy.aggression) if world.diplomacy else 0.35
 	for n in world.ai.nations:
 		if n.defeated:
 			continue
+		var aggression := float(world.ai.row(n).get("aggression", 0.35))   # its own difficulty
 		n.tech = float(n.get("tech", 0.0)) + 10.0 / lerpf(260.0, 150.0, aggression) * preload("res://scripts/national_profile.gd").ai_research(world, n.id)
 		n.tech = minf(n.tech, 10.0)
 

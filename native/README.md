@@ -7,6 +7,29 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.38: up to nine nations, each rival at its own difficulty
+
+- **Four new maps** (map_generator.gd): Highlands (1040 m, 5 regions, a mountainous plateau), Great Lakes
+  (1520 m, 9 regions, a continent full of lakes), Pangaea (1680 m, 10 regions, one supercontinent split by a
+  range with passes) and Ten Isles (1760 m, 10 islands round an ocean, a lone isle in the middle). Every
+  capital has flat land, oil, iron and gold, a land route to the next capital and a coast for a harbour.
+  The 10-region maps are ready for a tenth nation; today a match has at most the nine factions.
+- **Matches of two to nine nations:** the Rivals choice offers as many rivals as the chosen map has regions.
+  Every rival starts with its capital and guard; the nations spread evenly round the map's regions, and two
+  nations on a four-start map face each other across it.
+- **Choose each rival and its difficulty:** under "Opponents: nation and difficulty" every rival has a nation
+  and an Easy / Normal / Hard choice (the Difficulty above sets them all). A rival's difficulty sets its
+  income, build and training pace, army and wave size, first attack, aggression in diplomacy, its research
+  pace and its counter-intelligence. The briefing tells the mix ("1 easy 5 normal 2 hard"); saves keep it.
+- **Fix:** leading any nation other than the United States, Russia or Israel gave a rival your starting town
+  (workers, factories, tanks, aircraft, warships) and left you an HQ and two soldiers. You now always start
+  with the full town, whichever nation you lead.
+- Generating the ring maps is faster (Crown Isles 4.4 s to 2.5 s).
+
+Checks: tools/nations-setup-check.gd (125 checks: options, 2 to 9 nation matches on seven maps, every
+nation's start, each rival's difficulty in play, saves, the picker), maps-check, map-capacity-check,
+map-picker-check and gameplay-maps-100 now cover the new maps.
+
 ## Version 0.9.37: strengths and weaknesses on screen
 
 Each nation's strengths and weaknesses (0.9.36) now show where you choose and meet nations: on the New Game

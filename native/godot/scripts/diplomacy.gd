@@ -117,7 +117,7 @@ func army_strength(id: int) -> int:
 func offer_peace(other: int) -> String:
 	if not at_war(0, other):
 		return "You are not at war with %s." % name_of(other)
-	var chance := clampf(0.35 + (army_strength(0) - army_strength(other)) * 0.04 + (1.0 - aggression) * 0.3, 0.05, 0.9)
+	var chance := clampf(0.35 + (army_strength(0) - army_strength(other)) * 0.04 + (1.0 - aggression_of(other)) * 0.3, 0.05, 0.9)
 	if randf() < chance:
 		make_peace(0, other)
 		return "%s accepted your peace offer. The guns fall silent." % name_of(other)
@@ -184,7 +184,11 @@ func request_joint_war(ally: int, target: int) -> String:
 func ai_wants_war(id: int, other: int) -> bool:
 	if at_war(id, other) or allied(id, other) or nap[id][other]:
 		return false
-	return rel(id, other) < -35.0 or (other == 0 and rel(id, 0) < 0.0 and randf() < aggression * 0.5)
+	return rel(id, other) < -35.0 or (other == 0 and rel(id, 0) < 0.0 and randf() < aggression_of(id) * 0.5)
+
+## A rival government's aggression: its own difficulty (ai.gd), else the match's.
+func aggression_of(id: int) -> float:
+	return world.ai.aggression_of(id) if world != null and world.ai != null and not world.ai.nations.is_empty() else aggression
 
 ## Enemies of AI nation `id`, player first.
 func enemies_of(id: int) -> Array:
@@ -225,7 +229,7 @@ func tick() -> void:
 		if not war[0][a]:
 			var drift := -0.3 if rel(0, a) > 0.0 else (1.2 if world.research and world.research.bonus("warmRelations") >= 1.0 else 0.5)
 			if not (pact[0][a] or nap[0][a] or alliance[0][a]):
-				drift -= aggression * 0.9
+				drift -= aggression_of(a) * 0.9
 			change(0, a, drift)
 		if pact[0][a]:
 			world.economy.res.money += 40.0

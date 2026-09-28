@@ -151,6 +151,10 @@ func run() -> void:
 	var mine: Dictionary = mk("tank", near(Vector3(20, 0, 0)), 0)
 	var atgm: Dictionary = mk("atgmTeam", near(Vector3.ZERO), 1)
 	mine.dmg = 0.0
+	# Armour enough to take every missile of the half minute (a plain tank dies
+	# after two or three, leaving too few throws of the dice to judge by).
+	mine.max_hp = 3000.0
+	mine.hp = 3000.0
 	hp0 = mine.hp
 	sim(30.0)
 	check(mine.hp < hp0 or mine.dead, "an ATGM team hits a tank from 20 m (%d -> %d)" % [int(hp0), int(mine.hp)])
@@ -160,6 +164,8 @@ func run() -> void:
 	mine = mk("tank", near(Vector3(20, 0, 0)), 0)
 	atgm = mk("atgmTeam", near(Vector3.ZERO), 1)
 	mine.dmg = 0.0   # the tank holds its fire, so the team keeps firing
+	mine.max_hp = 3000.0
+	mine.hp = 3000.0
 	var aps0: int = w.aps_intercepts
 	hp0 = mine.hp
 	sim(30.0)   # about six missiles: half are stopped, one every 4 s
@@ -520,6 +526,7 @@ func run() -> void:
 	for i in range(6):
 		var strike: Dictionary = w.missiles.fly(["ballistic", "cruise", "hypersonic"][i % 3], home.root.position + Vector3.UP * 3.0, hq.root.position, nation.id)
 		sim(14.0, func(): return not strike in w.missiles.flying)
+		sim(6.5)   # the batteries reload (an ABM takes 6 s) before the next launch
 	var fought: Array = w.intercepts.slice(n0)
 	check(fought.size() >= 6, "every rival missile at the capital meets an interceptor (%d attempts for 6 missiles)" % fought.size())
 	check(fought.any(func(t): return t.by == "abmLauncher") and fought.any(func(t): return t.by == "irisT"), "both batteries take part")

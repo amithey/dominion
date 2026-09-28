@@ -105,7 +105,8 @@ func run() -> void:
 	# Known by its flag, not its name (Codex's factions.gd renames the nations).
 	check(str(green.nations[0].color).to_lower() == str(raw.nations[2].color).to_lower() and green.nations[0].player, "choosing the third nation makes it yours (%s)" % green.nations[0].name)
 	check(Arsenal.NATION_OF_COLOUR.get(str(green.nations[0].color).to_lower(), "") == "green", "and its flag, and so its own weapons, come with it")
-	check(green.startPositions[0] == raw.startPositions[2], "you start where the Verdant Union starts")
+	# Whichever nation you lead, you start in the player's town: its workers, factories and army.
+	check(green.startPositions[0] == raw.startPositions[0] and green.units.filter(func(u): return int(u.owner) == 0 and u.key == "worker").size() >= 3, "leading another nation, you still start with the full town and its workers")
 	var mirror: Dictionary = raw.duplicate(true)
 	MatchSetup.apply(mirror, MatchSetup.normalize({"map": "mirrored"}))
 	check(absf(float(mirror.startPositions[0][0]) + float(raw.startPositions[0][0])) < 0.01, "the mirrored map flips the island")

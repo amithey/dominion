@@ -1,7 +1,7 @@
 extends RefCounted
 ## One ordered catalogue for the campaign picker and its baked terrain previews.
 const Generator = preload("res://scripts/map_generator.gd")
-const KEYS := ["small", "island", "mirrored", "twin", "archipelago", "continent", "frontier", "inland_sea", "crown"]
+const KEYS := ["small", "island", "mirrored", "twin", "archipelago", "continent", "frontier", "highlands", "inland_sea", "crown", "great_lakes", "pangaea", "ten_isles"]
 static func entry(key: String) -> Dictionary:
 	if Generator.MAPS.has(key):
 		var info: Dictionary = Generator.MAPS[key].duplicate()
