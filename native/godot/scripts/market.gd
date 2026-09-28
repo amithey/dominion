@@ -275,6 +275,9 @@ func tick() -> void:
 			world.hud.notice("Trade route with %s collapsed%s." % [d.name_of(r.nation), " — the cargo at sea was lost" if r.shipment != null else ""])
 			continue
 		var partner = ai_nation(r.nation)
+		if r.shipment != null and not r.get("overland", false) and preload("res://scripts/faction_powers.gd").sea_closed(world, 0):
+			r.status = "Strait closed: the cargo waits"
+			continue
 		if r.shipment != null:
 			r.shipment.eta -= TICK
 			r.status = "At sea — %ds" % maxi(0, int(r.shipment.eta))

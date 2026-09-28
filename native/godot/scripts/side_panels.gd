@@ -80,6 +80,7 @@ func diplomacy() -> void:
 		_:
 			var line := "%d nations · %s" % [d.n - 1, ("at war with %d" % wars) if wars > 0 else "at peace with all"]
 			hud._side_rows.add_child(hud._text(line, 13, hud.UI.MUTED))
+			_power_card()
 			for id in range(1, d.n):
 				_nation_card(id)
 
@@ -158,10 +159,37 @@ func _nation_card(id: int) -> void:
 	contact.tooltip_text = "Open a channel to this government: proposals, firm language, trade."
 	if not d.at_war(0, id):
 		hud._button(actions, "Declare war", hud._declare.bind(id), true, "bad")
+	var P := preload("res://scripts/faction_powers.gd")
+	var power: Dictionary = P.power_of(hud.world, 0)
+	if not power.is_empty() and power.target:
+		var why: String = P.blocked(hud.world, 0, id)
+		var use: Button = hud._button(actions, str(power.name), func():
+			P.use(hud.world, 0, id)
+			hud.refresh_side(), why == "", "good")
+		use.tooltip_text = str(power.desc) + ("" if why == "" else "  (" + why + ")")
 	if d.allied(0, id):
 		for enemy in range(1, d.n):
 			if d.at_war(0, enemy) and not d.at_war(id, enemy):
 				hud._button(card, "Call them to war against %s" % d.name_of(enemy), d.request_joint_war.bind(id, enemy))
+
+## Your nation's political power (faction_powers.gd): what it does, when it is
+## ready, and a button when it takes no target (the others are on each card).
+func _power_card() -> void:
+	var w: Node = hud.world
+	var P := preload("res://scripts/faction_powers.gd")
+	var p: Dictionary = P.power_of(w, 0)
+	if p.is_empty():
+		return
+	var card: VBoxContainer = hud._card(hud.UI.GOLD)
+	card.add_child(hud._text("National power: " + str(p.name), 16, hud.UI.CREAM, true))
+	card.add_child(hud._text(str(p.desc), 13, hud.UI.TEXT))
+	var wait: float = P.ready_in(w, 0)
+	card.add_child(hud._text("Ready" if wait <= 0.0 else "Ready again in %d s" % int(ceilf(wait)), 13, hud.UI.GOOD if wait <= 0.0 else hud.UI.MUTED))
+	if not p.target:
+		var row: HBoxContainer = hud._row(card, 6)
+		hud._button(row, "Use: " + str(p.name), func():
+			P.use(w, 0)
+			hud.refresh_side(), P.blocked(w, 0) == "", "good")
 
 ## Every nation against every other, you included: one square per pair.
 func _world_chart() -> void:

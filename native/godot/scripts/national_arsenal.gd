@@ -107,7 +107,7 @@ static func apply(w: Node) -> void:
 static func identity(w: Node, owner: int) -> String:
 	if owner < 0 or owner >= w.map.nations.size():
 		return ""
-	return NATION_OF_COLOUR.get(str(w.map.nations[owner].get("color", "")).to_lower(), "")
+	return str(NATION_OF_COLOUR.get(str(w.map.nations[owner].get("color", "")).to_lower(), w.map.nations[owner].get("arsenal", "")))
 
 ## True when `owner` may field `key` (every nation fields the common units).
 static func allowed(w: Node, owner: int, key: String) -> bool:
@@ -118,7 +118,7 @@ static func allowed(w: Node, owner: int, key: String) -> bool:
 static func foreign(w: Node, nation: String) -> String:
 	if nation == "" or nation == identity(w, 0):
 		return ""
-	return "%s only" % NATION_NAMES.get(nation, nation)
+	return "%s only" % NATION_NAMES.get(nation, preload("res://scripts/faction_arsenal.gd").NAMES.get(nation, nation))
 
 ## A salvo of Shaheds from `launcher` at `enemy`. Returns how many flew.
 static func launch_swarm(w: Node, launcher: Dictionary, enemy: Dictionary) -> int:

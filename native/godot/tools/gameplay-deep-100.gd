@@ -204,6 +204,7 @@ func run() -> void:
 	red.next_attack = 99999.0
 
 	# ================================================================ missiles
+	w.power_effects.clear()   # a rival at war may have used its national power on you (export controls stop silos)
 	var ms: Node = w.missiles
 	for k in ["ballisticTech", "navalEngineering", "nuclearProgram"]:
 		w.research.progress[k].stage = 3

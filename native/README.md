@@ -7,6 +7,29 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.35: every nation's weapons and political power
+
+Researched for each of the nine factions (Codex's factions.gd): its signature weapons, what it fields, its
+political levers and its strengths, and put into the game.
+**Five new national weapons** (faction_arsenal.gd), each only for its nation:
+- **Russia: TOS-1A Solntsepyok** (tank factory): 24 thermobaric rockets 40 m out; deadly to infantry and
+  buildings, and no bunker or cover protects from it.
+- **India: BrahMos battery** (tank factory): a Mach 3 cruise missile six hexes out; a SAM site stops only one
+  in four (none of the 15-19 fired in Operation Sindoor, May 2025, was reported intercepted); twice as deadly
+  to ships.
+- **Japan: Aegis cruiser** (shipyard): the Aegis System Equipped Vessel (laid down July 2025), SM-3 Block IIA
+  and SM-6: missile defence at sea, 80% of ballistic and 40% of hypersonic missiles within 250 m.
+- **Turkiye: Bayraktar Akinci** (airfield): a heavy armed drone, eight strikes a sortie, too big for jammers.
+- **Israel: Harop** (airfield): a loitering munition that hunts radars and air defence (three times the damage),
+  as against Iran's air defences in June 2025.
+**A political power for every nation** (faction_powers.gd), on the Diplomacy screen; rival nations use theirs too:
+United States, Dollar Sanctions (income -30%); China, Rare-Earth Export Controls (military factories stop);
+European Union, Sanctions Package (income -20%, partners join); Iran, Close the Strait of Hormuz (everyone
+else's sea trade stops); Russia, Energy Leverage (income -25%); India, Strategic Autonomy (relations +12 with
+all); Japan, Development Aid ($800: +25 and a non-aggression pact); Turkiye, Istanbul Talks (ends a war);
+Israel, Mossad Operation (sabotage, a dossier and stolen research). Each recharges over minutes.
+**Checks:** tools/faction-powers-check.gd (55); units-100 now covers the five new weapons too (205).
+
 ## Version 0.9.34: playing on every map
 
 **tools/gameplay-maps-100.gd** (108 checks) plays on each of the nine maps, Codex's three new large maps

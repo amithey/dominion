@@ -9,12 +9,12 @@ extends RefCounted
 ## heads that the game spins. Finishes ride in the vertex colour
 ## (vehicle.gdshader); moving parts stay separate nodes. Models face +Z.
 
-const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone", "railgunShip", "orca"]
-const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman"]
+const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone", "railgunShip", "orca", "aegisCruiser"]
+const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop"]
 const PAINTS := {"ship": Color("5e676c"), "sub": Color("2b2f32"), "heli": Color("4d5641"), "gunship": Color("454c3c"),
 	"jet": Color("737d84"), "bomber": Color("50585c"), "drone": Color("8a9297"), "stealth": Color("4b5157"), "usv": Color("2e3336"),
 	"raptor": Color("6b7378"), "raider": Color("3a3f44"), "shahed": Color("9a9b8f"),
-	"sixth": Color("41464b"), "wingman": Color("7c8489")}
+	"sixth": Color("41464b"), "wingman": Color("7c8489"), "akinci": Color("b7bcbf"), "harop": Color("8e9579")}
 
 const PAINT := Color(0.5, 0.0, 0.0)
 const LIGHT := Color(0.58, 0.0, 0.0)
@@ -59,6 +59,8 @@ func build(key: String, owner: int) -> Dictionary:
 		"submarine", "nuclearSub", "orca": finish = "sub"
 		"sixthGen": finish = "sixth"
 		"wingman": finish = "wingman"
+		"akinci": finish = "akinci"
+		"harop": finish = "harop"
 		"helicopter": finish = "heli"
 		"gunship": finish = "gunship"
 		"jet": finish = "jet"
@@ -109,6 +111,12 @@ func build(key: String, owner: int) -> Dictionary:
 			sixth_gen(st)
 		"wingman":
 			wingman(st)
+		"akinci":
+			akinci(st)
+		"harop":
+			harop(st)
+		"aegisCruiser":
+			aegis_cruiser(st, parts, 17.0, 3.1)
 		_:
 			fighter(st)
 	g._attach(parts.root, st)
@@ -522,6 +530,50 @@ func railgun_cruiser(st: SurfaceTool, parts: Dictionary, length: float, beam: fl
 	g.block(t, Vector3(0.5, 0.12, 5.0), Vector3(0, 0.66, 3.1), PAINT)                  # the barrel's cover
 	g.block(t, Vector3(0.5, 0.4, 0.3), Vector3(0, 0.5, 5.7), DARK)                    # muzzle
 	g._attach(parts.turret, t)
+
+## Bayraktar Akinci: a long slim body, very long straight wings with a turboprop
+## on each, a T-tail, and munitions under the wings.
+func akinci(st: SurfaceTool) -> void:
+	var l := 8.0
+	fuselage(st, l, [[0.0, 0.25, 0.25], [0.15, 0.45, 0.45], [0.6, 0.45, 0.42], [0.9, 0.25, 0.25], [1.0, 0.05, 0.05]], PAINT)
+	g.prim(st, _sphere(0.3), Transform3D(Basis(), Vector3(0, -0.35, l * 0.35)), GLASS)
+	for side: float in [-1.0, 1.0]:
+		surface(st, Vector3(side * 0.4, 0.2, 0.9), Vector3(side * 0.4, 0.2, -0.2), Vector3(side * 6.5, 0.25, 0.5), Vector3(side * 6.5, 0.25, 0.0), 0.14, 0.05, Vector3.UP, PAINT)
+		g.cyl(st, 0.28, 1.6, Vector3(side * 1.8, 0.1, 0.5), "z", LIGHT, 10, 0.2)
+		for b in range(3):
+			g.block(st, Vector3(0.04, 0.5, 0.02), Vector3(0, 0.25, 0), METAL, 0.0, 0.0, 0.0, Transform3D(Basis(Vector3.BACK, TAU * b / 3.0), Vector3(side * 1.8, 0.1, 1.35)))
+		missile(st, Vector3(side * 3.0, -0.05, 0.3), 1.1)
+		missile(st, Vector3(side * 4.2, 0.0, 0.25), 1.0)
+		roundel(st, Vector3(side * 5.2, 0.3, 0.25), 0.22)
+	surface(st, Vector3(0, 0.3, -2.8), Vector3(0, 0.3, -3.9), Vector3(0, 1.6, -3.5), Vector3(0, 1.6, -4.0), 0.1, 0.05, Vector3.RIGHT, PAINT)
+	for side: float in [-1.0, 1.0]:
+		surface(st, Vector3(0, 1.6, -3.4), Vector3(0, 1.6, -4.0), Vector3(side * 1.6, 1.6, -3.6), Vector3(side * 1.6, 1.6, -4.0), 0.06, 0.04, Vector3.UP, PAINT)
+	g.block(st, Vector3(0.1, 0.3, 0.4), Vector3(0, 1.3, -3.6), TEAM)
+
+## IAI Harop: a canard-delta body with a sensor ball in the nose and a
+## pusher propeller.
+func harop(st: SurfaceTool) -> void:
+	var l := 2.6
+	fuselage(st, l, [[0.0, 0.1, 0.1], [0.2, 0.18, 0.2], [0.8, 0.18, 0.2], [1.0, 0.04, 0.04]], PAINT)
+	g.prim(st, _sphere(0.12), Transform3D(Basis(), Vector3(0, -0.12, l * 0.42)), GLASS)
+	for side: float in [-1.0, 1.0]:
+		surface(st, Vector3(side * 0.12, 0.05, 0.2), Vector3(side * 0.12, 0.05, -1.1), Vector3(side * 1.3, 0.05, -0.8), Vector3(side * 1.3, 0.05, -1.15), 0.06, 0.03, Vector3.UP, LIGHT)
+		surface(st, Vector3(side * 0.1, 0.05, 0.95), Vector3(side * 0.1, 0.05, 0.75), Vector3(side * 0.45, 0.05, 0.85), Vector3(side * 0.45, 0.05, 0.75), 0.04, 0.02, Vector3.UP, PAINT)
+		surface(st, Vector3(side * 1.3, 0.05, -0.8), Vector3(side * 1.3, 0.05, -1.15), Vector3(side * 1.3, 0.35, -0.95), Vector3(side * 1.3, 0.35, -1.15), 0.03, 0.02, Vector3.RIGHT, PAINT)
+	g.block(st, Vector3(0.14, 0.04, 0.35), Vector3(0, 0.2, 0.0), TEAM)
+	for b in range(2):
+		g.block(st, Vector3(0.04, 0.4, 0.02), Vector3(0, -0.2, 0), METAL, 0.0, 0.0, 0.0, Transform3D(Basis(Vector3.BACK, PI * b), Vector3(0, 0.0, -l * 0.5 - 0.04)))
+
+## Aegis System Equipped Vessel: a destroyer's hull grown into a cruiser, with
+## big fixed radar panels and two banks of vertical launch cells.
+func aegis_cruiser(st: SurfaceTool, parts: Dictionary, length: float, beam: float) -> void:
+	destroyer(st, parts, length, beam)
+	for side: float in [-1.0, 1.0]:
+		g.block(st, Vector3(0.06, 1.1, 1.1), Vector3(side * beam * 0.38, 2.4, length * 0.09), DARK, 0.0, 0.1)
+	for bank: float in [length * 0.24, -length * 0.18]:
+		for r in range(3):
+			for c in range(4):
+				g.block(st, Vector3(0.3, 0.08, 0.3), Vector3((c - 1.5) * 0.36, 1.25, bank + (r - 1) * 0.36), METAL)
 
 ## Unmanned surface vessel: a low, dark, fast speedboat with a sensor mast
 ## and the warhead in the bow.

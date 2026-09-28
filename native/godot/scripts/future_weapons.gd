@@ -26,7 +26,7 @@ extends RefCounted
 
 const HPM_RADIUS := 45.0
 const HPM_RELOAD := 6.0
-const HPM_KILLS := ["drone", "loiterer", "shahed", "seaDrone"]   # small drones, not the large wingmen
+const HPM_KILLS := ["drone", "loiterer", "shahed", "seaDrone", "harop"]   # small drones, not the large wingmen
 const WINGMEN := 2
 const DOME_COST := 150.0
 ## Golden Dome's chance per missile, by class: built against ballistic missiles

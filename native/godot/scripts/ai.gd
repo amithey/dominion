@@ -22,9 +22,10 @@ const TRAINED_AT := {"soldier": "barracks", "rocketSoldier": "barracks", "comman
 	"helicopter": "helipad", "jet": "airfield", "drone": "airfield", "gunboat": "shipyard", "destroyer": "shipyard", "corvette": "shipyard",
 	"fpvTeam": "barracks", "atgmTeam": "barracks", "manpads": "barracks", "medic": "barracks", "himars": "tankFactory",
 	"ewVehicle": "tankFactory", "loiterer": "airfield", "raptor": "airfield", "df17": "tankFactory",
-	"shahedLauncher": "tankFactory", "irisT": "tankFactory", "hpmVehicle": "tankFactory", "orca": "shipyard", "sixthGen": "airfield"}
+	"shahedLauncher": "tankFactory", "irisT": "tankFactory", "hpmVehicle": "tankFactory", "orca": "shipyard", "sixthGen": "airfield",
+	"tos1a": "tankFactory", "brahmos": "tankFactory", "aegisCruiser": "shipyard", "akinci": "airfield", "harop": "airfield"}
 ## Modern units rival armies field alongside the export's training pool.
-const MODERN_POOL := ["fpvTeam", "atgmTeam", "manpads", "medic", "himars", "ewVehicle", "loiterer", "raptor", "df17", "shahedLauncher", "irisT", "hpmVehicle", "orca", "sixthGen"]
+const MODERN_POOL := ["fpvTeam", "atgmTeam", "manpads", "medic", "himars", "ewVehicle", "loiterer", "raptor", "df17", "shahedLauncher", "irisT", "hpmVehicle", "orca", "sixthGen", "tos1a", "brahmos", "aegisCruiser", "akinci", "harop"]
 ## Missiles a rival at war fires at the player, by its technology level.
 const STRIKE_TYPES := [[2.0, ["tactical", "cruise"]], [4.0, ["tactical", "cruise", "ballistic"]], [6.0, ["cruise", "ballistic", "hypersonic"]]]
 const STRIKE_TARGETS := ["hq", "cityCenter", "villageCenter", "airfield", "tankFactory", "barracks", "missileSilo", "powerPlant", "port", "samSite"]
@@ -84,8 +85,8 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 		n.next_attack = maxf(n.next_attack,99999.0)
 	var s: float = n.speed
 	var spies: Node = world.espionage
-	n.money += float(cfg.income) * delta * s * (spies.income_mult(n.id) if spies else 1.0) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0))))
-	var cyber: bool = spies != null and spies.production_down(n.id)
+	n.money += float(cfg.income) * delta * s * (spies.income_mult(n.id) if spies else 1.0) * preload("res://scripts/faction_powers.gd").income_mult(world, n.id) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0))))
+	var cyber: bool = spies != null and spies.production_down(n.id) or preload("res://scripts/faction_powers.gd").production_blocked(world, n.id)
 	n.next_build -= delta
 	n.next_train -= delta
 	n.next_attack -= delta

@@ -60,13 +60,13 @@ const BUILDING_SIZE := {"hq": 10.0, "barracks": 9.0, "tankFactory": 9.5, "wareho
 # districts (6.0 left a single cell, and armour jammed in city streets).
 const DISTRICT_NAV_SIZE := 4.5
 const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker", "fpvTeam", "atgmTeam", "manpads", "medic"]
-const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle"]
-const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone", "railgunShip", "orca"]
-const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman"]
-const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman"]
+const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle", "tos1a", "brahmos"]
+const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone", "railgunShip", "orca", "aegisCruiser"]
+const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop"]
+const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop"]
 const AirOperations := preload("res://scripts/air_operations.gd")
-const ALTITUDE := {"helicopter": 14.0, "gunship": 13.0, "jet": 26.0, "bomber": 30.0, "drone": 18.0, "loiterer": 16.0, "stealthFighter": 28.0, "raptor": 30.0, "raider": 34.0, "shahed": 12.0, "sixthGen": 31.0, "wingman": 28.0}
-const SHIP_LENGTH := {"gunboat": 7.5, "corvette": 10.5, "destroyer": 15.0, "submarine": 11.0, "nuclearSub": 14.0, "seaDrone": 4.5, "railgunShip": 16.5, "orca": 9.0}
+const ALTITUDE := {"helicopter": 14.0, "gunship": 13.0, "jet": 26.0, "bomber": 30.0, "drone": 18.0, "loiterer": 16.0, "stealthFighter": 28.0, "raptor": 30.0, "raider": 34.0, "shahed": 12.0, "sixthGen": 31.0, "wingman": 28.0, "akinci": 24.0, "harop": 16.0}
+const SHIP_LENGTH := {"gunboat": 7.5, "corvette": 10.5, "destroyer": 15.0, "submarine": 11.0, "nuclearSub": 14.0, "seaDrone": 4.5, "railgunShip": 16.5, "orca": 9.0, "aegisCruiser": 17.0}
 const DEEP := -1.2   # water at least this deep (below sea level) carries a ship
 
 var map: Dictionary
@@ -201,6 +201,10 @@ var shots_fired := 0      # every weapon discharge (the battle test watches it)
 var jammed_strikes := 0   # drone strikes lost to jamming (modern_warfare.gd)
 var aps_intercepts := 0   # shots stopped by active protection
 var hpm_kills := 0        # drones fried by microwave pulses (future_weapons.gd)
+var power_ready := {}     # nation -> game time its national power is ready again (faction_powers.gd)
+var power_effects: Array = []   # sanctions, export controls, a closed strait: {kind, nation, value, until, by}
+var power_uses: Array = []      # every use of a national power
+var power_think := 5.0
 var intercepts: Array = [] # every missile interception attempt: {type, by, hit, owner}
 var sim_tick := 0         # simulation steps taken (staggers per-unit work; tests step by hand)
 var missile_aim := ""     # missile type waiting for a target click
@@ -222,6 +226,8 @@ const Tactics := preload("res://scripts/tactics.gd")
 const Modern := preload("res://scripts/modern_warfare.gd")
 const Arsenal := preload("res://scripts/national_arsenal.gd")
 const Future := preload("res://scripts/future_weapons.gd")
+const FactionArsenal := preload("res://scripts/faction_arsenal.gd")
+const FactionPowers := preload("res://scripts/faction_powers.gd")
 const SiteClearing := preload("res://scripts/site_clearing.gd")
 const Picking := preload("res://scripts/picking.gd")
 const Topography := preload("res://scripts/topography.gd")
@@ -1966,6 +1972,7 @@ func _physics_process(delta: float) -> void:
 		preload("res://scripts/air_defence.gd").update(self, delta)
 		Modern.update(self, delta)  # medics
 		Future.update(self, delta)  # microwave pulses, wingmen
+		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
 		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
 	var t_units := clock()
@@ -2802,6 +2809,8 @@ func update_training(delta: float) -> void:
 		b.supply_told = false
 		if b.owner > 0 and espionage and espionage.production_down(b.owner):
 			continue  # a cyber attack stopped this nation's factories
+		if b.key in FactionPowers.MILITARY and FactionPowers.production_blocked(self, b.owner):
+			continue  # rare-earth export controls: the military factories wait
 		var rail: float = 1.0 + (logistics.rail_bonus if b.get("rail_supplied", false) else 0.0)
 		if b.owner == 0 and research:
 			rail *= 1.0 + research.bonus("prodPct")  # Industrialization, Fusion Power
@@ -4696,6 +4705,9 @@ func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
 	# The Raptor's special mission: suppressing air defences.
 	if attacker.key == "raptor" and (target.get("key", "") in AIR_DEFENCE or target.get("key", "") == "abmLauncher"):
 		return float(damage_profile.raptor.get(target_class(target), 1.0)) * Arsenal.SEAD
+	# The Harop hunts radars: air defence takes triple damage.
+	if attacker.key == "harop":
+		return float(damage_profile.harop.get(target_class(target), 0.0)) * FactionArsenal.harop_factor(target)
 	# A laser burns small drones out of the sky in a second or two.
 	if attacker.key == "laserAD" and target.get("key", "") in Modern.DRONES and target_class(target) == "air":
 		return 6.0
@@ -4789,7 +4801,8 @@ const WEAPONS := {"bomber": "bomb", "jet": "missile", "drone": "missile", "helic
 	"samLauncher": "sam", "rocketSoldier": "rocket", "stealthFighter": "missile", "manpads": "sam",
 	"fpvTeam": "fpv", "atgmTeam": "atgm", "himars": "guided", "laserAD": "laser", "loiterer": "kamikaze", "seaDrone": "kamikaze",
 	"raptor": "missile", "raider": "bomb", "df17": "hgv", "shahedLauncher": "swarm", "shahed": "kamikaze", "irisT": "sam",
-	"railgunShip": "railgun", "sixthGen": "missile", "wingman": "missile", "orca": "torpedo"}
+	"railgunShip": "railgun", "sixthGen": "missile", "wingman": "missile", "orca": "torpedo",
+	"tos1a": "thermobaric", "brahmos": "brahmos", "aegisCruiser": "missile", "akinci": "missile", "harop": "kamikaze"}
 
 ## Fires at `enemy`; false when the weapon cannot be used yet (a bomber that
 ## is not over its target), so the reload is not spent.
@@ -4878,6 +4891,14 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			var muzzle: Vector3 = (unit.turret.global_position if unit.turret != null else unit.node.position) + Vector3.UP * 0.6
 			effects.muzzle_flash(muzzle, true)
 			effects.shell(muzzle, target, func(at): blast(unit, at, dmg, 2.5, 1.2))
+		"thermobaric":
+			# A ripple of rockets, each a fuel-air blast over a wide area.
+			for i in range(8):
+				var spot := target + Vector3(randf_range(-6, 6), 0, randf_range(-6, 6))
+				spot.y = maxf(height_at(spot.x, spot.z), float(map.seaLevel))
+				effects.projectile("rocket", from + Vector3.UP * 1.8, spot, func(at): blast(unit, at, dmg * 0.45, 5.5, 1.4), i * 0.1)
+		"brahmos":
+			missiles.fly("brahmos", unit.node.position + Vector3.UP * 3.0, enemy.node.position, unit.owner)
 		"hgv":
 			# A hypersonic glide vehicle: a missile of its own, which air
 			# defence may try to intercept (modern_warfare.gd).

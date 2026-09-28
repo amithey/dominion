@@ -133,6 +133,7 @@ func tick() -> void:
 	# Markets and ports add a share of income (config.js incomePct).
 	rates.money = civilians * float(cfg.taxPerCivilian) * admin * supply_coverage() * (1.0 + provided("incomePct") + (r.bonus("incomePct") if r else 0.0))
 	rates.money += float(land.money)
+	rates.money *= preload("res://scripts/faction_powers.gd").income_mult(world, 0)   # sanctions, gas cut off, a closed strait
 	# Extractors on deposits, and iron from held mountains.
 	for key in ["oil", "iron", "silicon", "uranium", "gas"]:
 		rates[key] = 0.0

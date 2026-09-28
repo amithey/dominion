@@ -51,6 +51,10 @@ func build(key: String, owner: int) -> Dictionary:
 			iris_launcher(body, top, parts)
 		"hpmVehicle":
 			hpm_truck(body, top, parts)
+		"tos1a":
+			tos_launcher(body, top, parts)
+		"brahmos":
+			brahmos_battery(body, top, parts)
 		_:
 			tank(body, top, parts)
 	_attach(parts.root, body)
@@ -717,3 +721,44 @@ func hpm_truck(st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
 			block(top, Vector3(0.42, 0.42, 0.05), Vector3(-1.0 + c * 0.5, -0.78 + r * 0.52, 0.2), METAL, 0.0, 0.0, 0.0, tilt)
 	block(top, Vector3(0.3, 1.1, 0.3), Vector3(0, 0.6, -0.1), METAL)
 	parts.muzzle = 1.0
+
+## TOS-1A: a tank chassis carrying a big box of 24 rocket tubes on a
+## traversing, elevating launcher, heavily armoured.
+func tos_launcher(st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
+	var length := 6.9
+	tracks(st, length, 1.4, 0.72, 6, 0.34)
+	block(st, Vector3(2.0, 0.75, length - 0.3), Vector3(0, 0.35, 0), DARK)
+	block(st, Vector3(3.5, 0.6, length - 0.2), Vector3(0, 0.95, 0), PAINT, 0.05, 0.6, 0.2)
+	for side: float in [-1.0, 1.0]:
+		for i in range(6):
+			block(st, Vector3(0.08, 0.6, 1.05), Vector3(side * 1.78, 0.5, -length * 0.5 + 0.7 + i * 1.08), PAINT if i % 2 == 0 else LIGHT)
+		block(st, Vector3(0.04, 0.45, 1.1), Vector3(side * 1.8, 0.95, -1.4), TEAM)
+	hatch(st, Vector3(0.6, 1.55, 2.4), 0.3)
+	var turret := Node3D.new()
+	turret.position = Vector3(0, 1.55, -0.4)
+	parts.root.add_child(turret)
+	parts.turret = turret
+	block(top, Vector3(2.2, 0.35, 2.2), Vector3(0, 0, 0), METAL)
+	var raise := Transform3D(Basis(Vector3.RIGHT, -0.35), Vector3(0, 0.5, -0.6))
+	block(top, Vector3(2.6, 1.5, 4.2), Vector3(0, 0.0, 0.8), LIGHT, 0.0, 0.0, 0.0, raise)
+	for r in range(4):
+		for c in range(6):
+			cyl(top, 0.15, 0.06, Vector3((c - 2.5) * 0.4, -0.55 + r * 0.37, 2.92), "z", DARK, 10, -1.0, raise)
+	block(top, Vector3(0.04, 0.6, 1.8), Vector3(1.32, 0.0, 0.6), TEAM, 0.0, 0.0, 0.0, raise)
+	parts.muzzle = 3.0
+
+## BrahMos coastal battery: a heavy truck with three long canisters on a
+## raised launcher.
+func brahmos_battery(st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
+	var bed := truck(st, parts, 4.8)
+	var turret := Node3D.new()
+	turret.position = Vector3(0, bed + 0.2, -3.0)
+	parts.root.add_child(turret)
+	parts.turret = turret
+	var raise := Transform3D(Basis(Vector3.RIGHT, -0.5), Vector3(0, 0.3, 0))
+	block(top, Vector3(2.2, 0.15, 5.2), Vector3(0, -0.1, 2.5), METAL, 0.0, 0.0, 0.0, raise)
+	for c in range(3):
+		cyl(top, 0.36, 5.2, Vector3((c - 1) * 0.76, 0.35, 2.5), "z", LIGHT, 12, -1.0, raise)
+		cyl(top, 0.3, 0.05, Vector3((c - 1) * 0.76, 0.35, 5.12), "z", DARK, 12, -1.0, raise)
+	block(top, Vector3(0.04, 0.6, 1.6), Vector3(1.18, 0.35, 3.0), TEAM, 0.0, 0.0, 0.0, raise)
+	parts.muzzle = 5.2

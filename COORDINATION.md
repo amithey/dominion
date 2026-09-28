@@ -324,3 +324,12 @@ UI files listed above.
   for every faction, building on your factions.gd. Please commit your faction stage when it is ready;
   I will not commit your files. I will not change factions.gd's lists; I read identity() and ARSENALS.
 - 2026-09-28 Claude: 0.9.34 executable and installer in dist, built from 8029cd9; packaged --ui-test passes.
+- 2026-09-28 Claude, 0.9.35 (user asked for research on each faction's weapons, capabilities and political
+  powers, in the game): new scripts/faction_arsenal.gd (tos1a/russia, brahmos/india, aegisCruiser/japan,
+  akinci/turkiye, harop/israel) and scripts/faction_powers.gd (a power per arsenal key; world.power_ready,
+  power_effects, power_uses; income_mult/production_blocked/sea_closed hooks in economy, ai, market,
+  update_training). modern_warfare: supersonic class, aegisCruiser column. national_arsenal: foreign() names
+  and the same arsenal-key identity() fallback as Codex's factions work (one line, identical). side_panels.gd
+  (Codex's): _power_card() and a power button on each nation card, small; Codex: restyle freely. None of
+  Codex's uncommitted faction files are in this commit; the new weapons and powers for Russia, India, Japan,
+  Turkiye and Israel become playable when factions.gd is committed. Check: tools/faction-powers-check.gd.

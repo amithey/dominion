@@ -34,7 +34,7 @@ func types() -> Dictionary:
 	return cfg.types
 
 func def_of(key: String) -> Dictionary:
-	return cfg.types.get(key, preload("res://scripts/national_arsenal.gd").MISSILES.get(key, {}))
+	return cfg.types.get(key, preload("res://scripts/national_arsenal.gd").MISSILES.get(key, preload("res://scripts/faction_arsenal.gd").MISSILES.get(key, {})))
 
 func capacity() -> int:
 	return int(cfg.baseCap) + int(cfg.capPerDepot) * world.economy.owned("ammoDepot")
@@ -213,6 +213,8 @@ func impact(key: String, at: Vector3, owner: int) -> void:
 				mult = 3.0 if ent.get("naval", false) else 0.25
 			"hgv":
 				mult = 2.5 if ent.get("naval", false) else 1.0
+			"brahmos":
+				mult = 2.0 if ent.get("naval", false) else 1.0
 			"emp":
 				var cls: String = world.target_class(ent)
 				if cls in ["building", "air", "naval", "armor", "light"]:

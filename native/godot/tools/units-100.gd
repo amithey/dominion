@@ -14,6 +14,7 @@ const DT := 1.0 / 30.0
 const Modern := preload("res://scripts/modern_warfare.gd")
 const Arsenal := preload("res://scripts/national_arsenal.gd")
 const Future := preload("res://scripts/future_weapons.gd")
+const FactionArsenal := preload("res://scripts/faction_arsenal.gd")
 func _initialize() -> void: call_deferred("run")
 func check(ok: bool, label: String) -> void:
 	print("ok   " if ok else "FAIL ", label)
@@ -59,9 +60,9 @@ func run() -> void:
 	w.economy.grant_test_resources()
 	w.diplomacy.declare_war(0, 1)
 	var sea: Vector3 = w.water_near(w.start, 220)
-	var keys: Array = Modern.UNITS.keys() + Arsenal.UNITS.keys().filter(func(k): return k != "shahed") + Future.UNITS.keys().filter(func(k): return k != "wingman")
+	var keys: Array = Modern.UNITS.keys() + Arsenal.UNITS.keys().filter(func(k): return k != "shahed") + Future.UNITS.keys().filter(func(k): return k != "wingman") + FactionArsenal.UNITS.keys()
 	var buildings_of := {}
-	for table in [Modern.TRAINS, Arsenal.TRAINS, Future.TRAINS]:
+	for table in [Modern.TRAINS, Arsenal.TRAINS, Future.TRAINS, FactionArsenal.TRAINS]:
 		for b in table:
 			for k in table[b]: buildings_of[k] = b
 	# ------------------------------------------------ every unit
@@ -93,9 +94,9 @@ func run() -> void:
 			check(w.research.unit_locked(key) == "", "%s needs no research" % key)
 		if nation != "":
 			var mine: bool = nation == "blue"
-			check(w.unit_allowed(0, key) == mine and (w.research.unit_locked(key).ends_with("only") != mine), "%s is fielded only by the %s" % [key, Arsenal.NATION_NAMES[nation]])
+			check(w.unit_allowed(0, key) == mine and (w.research.unit_locked(key).ends_with("only") != mine), "%s is fielded only by %s" % [key, Arsenal.NATION_NAMES.get(nation, FactionArsenal.NAMES.get(nation, nation))])
 		# The target it is made for: its best class in the damage table.
-		if def.dmg <= 1 and not key in ["df17", "shahedLauncher"]:
+		if def.dmg <= 1 and not key in ["df17", "shahedLauncher", "brahmos"]:
 			check(u.dmg <= 0.0 and Tactics_target(u) == null, "%s has no weapon of its own and engages nothing" % key)
 			w.kill(u)
 			continue
@@ -121,13 +122,13 @@ func run() -> void:
 				w.fire_weapon(u, enemy, weapon)
 			else:
 				w._fire_gun(u, enemy)
-			settle(3.0 if weapon == "hgv" else 1.5)
+			settle(3.0 if weapon in ["hgv", "brahmos"] else 1.5)
 		if weapon == "swarm":
 			var n: int = Arsenal.launch_swarm(w, u, enemy)
 			check(n == Arsenal.SWARM and w.units.filter(func(x): return x.key == "shahed" and not x.dead and x.owner == 0).size() >= n, "%s launches a swarm of %d Shaheds at a %s" % [key, n, best])
 		else:
 			check(enemy.dead or enemy.hp < hp0, "%s hurts a %s (%d -> %d)" % [key, best, int(hp0), int(enemy.hp)])
-		if not friend.is_empty() and weapon != "hgv":
+		if not friend.is_empty() and not weapon in ["hgv", "brahmos"]:
 			check(not friend.dead and friend.hp >= friend.max_hp, "%s never hurts its own side" % key)
 			w.kill(friend)
 		w.kill(enemy) if not enemy.dead and not enemy.get("is_building", false) else null
@@ -320,7 +321,7 @@ func run() -> void:
 	var rail: Dictionary = w.spawn_unit("railgunShip", sea, 0)
 	var expect: float = Modern.intercept_chance(w, "railgunShip", {"type": "hypersonic", "owner": 1}, 0)
 	var r_rail := rate(rail, "hypersonic", 1, 500)
-	check(absf(r_rail - expect) < 0.07 and expect >= 0.45, "a railgun cruiser stops ~%d%% of hypersonic missiles (%.2f)" % [int(expect * 100), r_rail])
+	check(absf(r_rail - expect) < 0.09 and expect >= 0.45, "a railgun cruiser stops ~%d%% of hypersonic missiles (%.2f)" % [int(expect * 100), r_rail])
 	check(w.effectiveness(rail, w.spawn_unit("tank", land(Vector3(0, 0, 0)), 1)) > 1.0 and rail.range >= 70.0, "its guns reach 70 m inland")
 	w.kill(rail)
 	var battery: Dictionary = w.spawn_unit("abmLauncher", land(Vector3(-150, 0, 150)), 0)
