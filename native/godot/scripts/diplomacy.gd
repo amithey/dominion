@@ -115,6 +115,8 @@ func army_strength(id: int) -> int:
 
 ## Player actions. Each returns the message shown to the player.
 func offer_peace(other: int) -> String:
+	if defeated(other):
+		return "%s has fallen: there is no government to make peace with." % name_of(other)
 	if not at_war(0, other):
 		return "You are not at war with %s." % name_of(other)
 	var chance := clampf(0.35 + (army_strength(0) - army_strength(other)) * 0.04 + (1.0 - aggression_of(other)) * 0.3, 0.05, 0.9)
@@ -124,6 +126,8 @@ func offer_peace(other: int) -> String:
 	return "%s rejected your peace offer. The war continues." % name_of(other)
 
 func gift(other: int) -> String:
+	if defeated(other):
+		return "%s has fallen: there is no one to receive a gift." % name_of(other)
 	if not world.economy.pay({"money": GIFT}):
 		return "A meaningful gift costs $%d." % int(GIFT)
 	var corps: bool = world.research != null and world.research.bonus("warmRelations") >= 1.0
@@ -132,6 +136,8 @@ func gift(other: int) -> String:
 	return "Gift sent to %s. Relations improved." % name_of(other)
 
 func propose_pact(other: int) -> String:
+	if defeated(other):
+		return "%s has fallen: there is no government to sign with." % name_of(other)
 	if at_war(0, other):
 		return "No trade during war."
 	if rel(0, other) < 20.0:
@@ -142,6 +148,8 @@ func propose_pact(other: int) -> String:
 	return "Trade pact signed with %s: $40 every 10 seconds for both sides." % name_of(other)
 
 func propose_nap(other: int) -> String:
+	if defeated(other):
+		return "%s has fallen: there is no government to sign with." % name_of(other)
 	if at_war(0, other):
 		return "You cannot sign a non-aggression pact during war."
 	if nap[0][other]:
@@ -157,6 +165,8 @@ func propose_nap(other: int) -> String:
 	return "%s refuses the non-aggression pact." % name_of(other)
 
 func propose_alliance(other: int) -> String:
+	if defeated(other):
+		return "%s has fallen: there is no government to ally with." % name_of(other)
 	if at_war(0, other):
 		return "Make peace first."
 	if rel(0, other) < 55.0:

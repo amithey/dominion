@@ -40,6 +40,8 @@ $tests = @(
     @('5-10 map regions: space, resources, passages and reproducible seeds', @('--script', 'res://tools/map-capacity-check.gd'), 'MAP_CAPACITY_TEST PASS', 600),
     @('matches of two to nine nations, each rival at its own difficulty; the New Game picker', @('--script', 'res://tools/nations-setup-check.gd'), 'NATIONS_SETUP PASS', 2400),
     @('every map loads: capitals linked by land, resources, ships at sea', @('--script', 'res://tools/maps-check.gd'), 'MAPS_TEST PASS', 900),
+    @('thirty checks on a nine-nation match: wars, a march across Pangaea, treaties, spies, missiles, saves, victory', @('--script', 'res://tools/gameplay-nine-30.gd'), 'GAMEPLAY_NINE PASS', 1200),
+    @('thirty bug hunts: twice, dead, out of bounds, no money, nonsense input, old saves', @('--script', 'res://tools/bugs-30.gd'), 'BUGS_30 PASS', 300),
     @('settings are saved and restored', @('--script', 'res://tools/settings-check.gd'), 'SETTINGS_TEST PASS', 180),
     @('edge, coastal and hemmed-in sites get built; shipyard counts for research', @('--script', 'res://tools/edge-build-check.gd'), 'EDGE_BUILD PASS', 400),
     @('towns: land from residents, city accounts, roads between town halls, overland trade', @('--script', 'res://tools/towns-check.gd'), 'TOWNS_TEST PASS', 400),

@@ -1799,6 +1799,7 @@ func order_attack(selected: Array, enemy: Dictionary) -> void:
 		u.path = PackedVector3Array()
 
 func order_move(selected: Array, point: Vector3, attack := false) -> void:
+	selected = selected.filter(func(u): return not u.dead)   # the fallen take no orders
 	# Aircraft sent onto one of their nation's air bases land there and stay.
 	var landed := []
 	for b in buildings:
@@ -2750,7 +2751,7 @@ func finish_building(b: Dictionary) -> void:
 
 func queue_unit(b: Dictionary, key: String) -> void:
 	var def: Dictionary = unit_defs.get(key, {})
-	if def.is_empty() or not b.built or b.owner != 0 or not key in b.def.get("trains", []):
+	if def.is_empty() or not b.built or b.dead or b.owner != 0 or not key in b.def.get("trains", []):
 		return  # only your own buildings, and each only its own units (a helipad no jets, a barracks no tanks)
 	if b.queue.size() >= 5:
 		hud.notice("Queue is full")
@@ -5058,6 +5059,9 @@ func show_building_damage(b: Dictionary) -> void:
 
 var charred: StandardMaterial3D
 func kill(unit: Dictionary) -> void:
+	if unit.get("killed", false):
+		return   # already dead: no second explosion, no second turret thrown
+	unit.killed = true
 	if is_instance_valid(unit.get("bombard_marker")):
 		unit.bombard_marker.queue_free()
 	unit.dead = true
@@ -5145,6 +5149,9 @@ func clear_ruins(key: String, at: Vector3) -> int:
 
 # A destroyed building collapses into charred rubble that burns for a while.
 func destroy_building(b: Dictionary) -> void:
+	if b.dead and b.has("destroyed"):
+		return   # already a ruin: not crushed, burnt and announced again
+	b.destroyed = true
 	b.dead = true
 	b.queue.clear()
 	var at: Vector3 = b.root.position

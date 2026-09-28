@@ -7,6 +7,23 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.39: sixty more checks, and the bugs they found
+
+Thirty gameplay checks on a full nine-nation match on Pangaea (tools/gameplay-nine-30.gd): starting
+relations among nine, the Diplomacy screen and minimap with nine nations, rivals growing at their own
+difficulty, a war between two rivals, an attack wave marching across the continent, peace, a trade pact,
+trade, spies, a national power and a summit with the ninth nation, missiles both ways, buying land, a
+rival's fall, a save to disk and back, and victory. All passed.
+
+Thirty bug hunts at the edges of the rules (tools/bugs-30.gd) found and fixed:
+- A destroyed barracks or factory still took orders and money, and a destroyed missile silo still built
+  missiles.
+- A building destroyed twice (two hits at once) was crushed, burnt and announced twice; a unit killed twice
+  exploded twice and threw its turret again.
+- Orders given to dead units were kept.
+- Trade pacts, non-aggression pacts, alliances, gifts and peace could be made with a nation that had fallen.
+- A damaged or hand-edited save with odd match settings (text where a number belongs) stopped the load.
+
 ## Version 0.9.38: up to nine nations, each rival at its own difficulty
 
 - **Four new maps** (map_generator.gd): Highlands (1040 m, 5 regions, a mountainous plateau), Great Lakes

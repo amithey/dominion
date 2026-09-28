@@ -21,13 +21,13 @@ static func normalize(options: Dictionary) -> Dictionary:
 	var maps: Array = ["island", "mirrored"] + preload("res://scripts/map_generator.gd").MAPS.keys()
 	map_key = map_key if map_key in maps else "island"
 	var out := {"map":map_key,
-		"players":clampi(int(options.get("players",4)),2,capacity(map_key)),
-		"nation":clampi(int(options.get("nation",0)),0,Factions.IDS.size()-1),
-		"style":"sandbox" if options.get("style","standard")=="sandbox" else "standard"}
+		"players":clampi(_int(options.get("players",4),4),2,capacity(map_key)),
+		"nation":clampi(_int(options.get("nation",0),0),0,Factions.IDS.size()-1),
+		"style":"sandbox" if str(options.get("style","standard"))=="sandbox" else "standard"}
 	if options.get("rivals") is Array:
 		out.rivals = []
 		for rival in options.rivals:
-			var i := int(rival)
+			var i := _int(rival, -1)
 			if i >= 0 and i < Factions.IDS.size() and i != out.nation and not i in out.rivals and out.rivals.size() < int(out.players) - 1:
 				out.rivals.append(i)
 	if options.get("levels") is Array:
@@ -37,6 +37,15 @@ static func normalize(options: Dictionary) -> Dictionary:
 		if out.levels.all(func(l): return l == ""):
 			out.erase("levels")
 	return out
+
+## A whole number from a save or a setting, or `fallback` when it is none
+## (a damaged or hand-edited save must not stop the game loading).
+static func _int(value, fallback: int) -> int:
+	if value is int or value is float:
+		return int(value)
+	if value is String and value.is_valid_int():
+		return value.to_int()
+	return fallback
 
 static func roster(options: Dictionary) -> Array:
 	var nation := int(options.get("nation", 0))

@@ -73,7 +73,7 @@ func silos(owner := 0) -> Array:
 ## Queues a missile at `silo`. Returns an error or "".
 func produce(silo: Dictionary, key: String) -> String:
 	var def := def_of(key)
-	if def.is_empty() or not silo.built:
+	if def.is_empty() or not silo.built or silo.dead:
 		return ""
 	var why := locked(key)
 	if why != "":

@@ -400,3 +400,9 @@ UI files listed above.
   Tests: tools/nations-setup-check.gd (new); maps-check, map-capacity-check (optional map list argument),
   map-picker-check (re-finds the controls after a map change) and gameplay-maps-100 cover the new maps.
 - 2026-09-28 Claude: 0.9.38 executable and installer in dist, built from 8c96348; packaged --ui-test passes. Quick suite: 54 of 56 before the two test fixes in 8c96348 (weapons-live-100's dice, gameplay-deep-100's old start rule); both pass since (weapons-live 4 runs of 4).
+- 2026-09-28 Claude, 0.9.39 (user: 30 more gameplay checks and 30 general bug checks). tools/gameplay-nine-30.gd
+  (32 checks, nine nations on Pangaea) all passed. tools/bugs-30.gd found: world.queue_unit accepted orders in a
+  destroyed building (now refuses b.dead); missiles.produce accepted a destroyed silo; destroy_building ran twice
+  on a ruin (now returns when b.destroyed is set; b.dead alone, as some tests set it, still destroys); kill ran
+  twice (u.killed marker); order_move kept dead units; diplomacy offer_peace/gift/propose_* worked on a defeated
+  nation; match_setup.normalize crashed on non-numeric values (_int helper). Both tools are in run-tests.ps1.
