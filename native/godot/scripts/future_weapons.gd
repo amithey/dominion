@@ -135,6 +135,10 @@ static func update(w: Node, delta: float) -> void:
 			u.hpm_ready = float(u.get("hpm_ready", 0.0)) - delta
 			if u.hpm_ready <= 0.0 and pulse(w, u) > 0:
 				u.hpm_ready = HPM_RELOAD
+		elif u.key == "shahed" and w.game_time > float(u.get("fuel_until", INF)):
+			# Out of fuel: a one-way drone that found nothing to hit comes down.
+			w.effects.explosion(Vector3(u.node.position.x, maxf(w.height_at(u.node.position.x, u.node.position.z), float(w.map.seaLevel)), u.node.position.z), 0.8, true)
+			w.kill(u)
 		elif u.key == "wingman":
 			u.follow_tick = float(u.get("follow_tick", 0.0)) - delta
 			if u.follow_tick <= 0.0:
@@ -168,11 +172,29 @@ static func covered(w: Node, at: Vector3, owner: int) -> bool:
 static func follow(w: Node, u: Dictionary) -> void:
 	var leader = u.get("leader")
 	if leader == null or leader.dead:
-		return
+		# A wingman whose fighter is gone (or that was just loaded from a save)
+		# joins the nearest of its side's sixth-generation fighters short of two.
+		leader = null
+		var best := 90.0
+		for f in w.units:
+			if f.dead or f.key != "sixthGen" or f.owner != u.owner:
+				continue
+			var mates: int = w.units.filter(func(o): return not o.dead and o.key == "wingman" and is_same(o.get("leader"), f)).size()
+			var d: float = f.node.position.distance_to(u.node.position)
+			if mates < WINGMEN and d < best:
+				best = d
+				leader = f
+		u.leader = leader
+		if leader == null:
+			return
 	if leader.enemy != null and not leader.enemy.dead and not is_same(u.enemy, leader.enemy) and w.effectiveness(u, leader.enemy) > 0.01:
 		u.enemy = leader.enemy
 		u.target = null
 		return
-	if u.enemy == null and u.node.position.distance_to(leader.node.position) > 30.0:
+	if u.enemy == null:
+		# Formation: its idle circle is centred on the fighter, wherever it
+		# flies, and it hurries back when it has strayed.
+		# (No waypoint orders: a jet that reaches a waypoint flies on 80 m to
+		# turn, which would throw the formation apart.)
 		var at: Vector3 = leader.node.position
-		w.order_move([u], Vector3(at.x, 0, at.z) + Vector3(randf_range(-8, 8), 0, randf_range(-8, 8)))
+		u.orbit = Vector3(at.x, 0, at.z)

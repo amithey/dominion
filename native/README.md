@@ -7,6 +7,31 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.31: two hundred more checks, and what they found
+
+Two new batteries: **tools/weapons-live-100.gd** (89 checks: every new weapon in live combat on the game's own
+loop, nothing fired on command) and **tools/gameplay-live-100.gd** (95 checks over time: the economy tick by tick,
+workers building, factories training, research, land, supply and roads, diplomacy and war, the market, spies,
+combat and repair, and a full save and load). They found and this version fixes:
+- **Jets forgot their target half way through a turn.** A jet pulls out about 80 m to line up a new pass, but
+  dropped its target past 1.6 times its range (about 74 m), so an idle fighter that spotted an enemy flew off
+  and never came back. It now keeps its target through the turn.
+- **A fast jet could circle its pull-out point for ever.** The point had to be reached within 12 m in three
+  dimensions (the ground's height counted) and a fast jet's turn is wider than that. It is now done with when
+  reached on the map, when it slips behind the wing, or after 8 s.
+- **Ships stopped up to 11 m short of where they were sent** (the end of the route was the nearest point of the
+  sea grid). Sea drones therefore never reached a ship at all. The last leg now goes to the goal itself.
+- **HIMARS reached only 34 m**, though its card says four hexes. It now reaches four hexes.
+- **A new unit could wait its whole reload before its first shot**: 45 s for a Shahed launcher, 30 s for a
+  DF-17. The first shot now comes within 3 s.
+- **Shaheds whose target was gone circled for ever.** They now carry 90 s of fuel and come down.
+- **Sea drones:** guns miss a small, low, fast boat far more often, radar sees it at 60% of the range, and it
+  strikes from 10 m.
+- **Idle aircraft circled by the computer's clock**, not the game's: their circles ignored pause and game
+  speed. They now follow game time.
+- **Wingmen** circle their fighter wherever it flies (they drifted off round their launch point), and after
+  loading a save they rejoin the nearest fighter.
+
 ## Version 0.9.30: weapons still in development (Global and Future eras)
 
 From programmes in development or just entering service in 2025-2026:

@@ -1314,7 +1314,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	unit.merge({
 		"key": key, "hp": float(def.hp), "max_hp": float(def.hp), "dmg": float(def.dmg),
 		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
-		"reload": randf() * float(def.cooldown), "search": randf() * 0.35, "enemy": null,
+		"reload": randf() * minf(float(def.cooldown), 3.0), "search": randf() * 0.35, "enemy": null,
 		"attack_move": false, "dead": false, "dead_time": 0.0, "stance": "",
 		"path": PackedVector3Array(), "path_goal": Vector3.INF, "repath": 0.0, "build_site": null,
 		"engine": audio.add_engine(node) if vehicle else null,
@@ -1684,7 +1684,7 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 		"altitude": ALTITUDE.get(key, 0.0), "bank": 0.0, "length": length,
 		"key": key, "hp": float(def.hp), "max_hp": float(def.hp), "dmg": float(def.dmg),
 		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
-		"reload": randf() * float(def.cooldown), "search": randf() * 0.35, "enemy": null,
+		"reload": randf() * minf(float(def.cooldown), 3.0), "search": randf() * 0.35, "enemy": null,
 		"attack_move": false, "dead": false, "dead_time": 0.0, "stance": "",
 		"path": PackedVector3Array(), "path_goal": Vector3.INF, "repath": 0.0, "build_site": null,
 		"engine": audio.add_engine(node), "orbit": at,
@@ -4485,12 +4485,22 @@ func move_craft(unit: Dictionary, delta: float) -> void:
 			unit.dust.emitting = unit.moving
 		return
 	if fixed and not servicing and unit.get("egress") != null:
-		if node.position.distance_to(unit.egress) < 12.0:
+		# The run-out point is done with when reached (on the map: the height
+		# of the ground below does not count), when it has slipped behind the
+		# wing, or after 8 s: a fast jet can otherwise circle it for ever,
+		# its turn wider than the point it is trying to reach.
+		if not is_same(unit.get("egress_of"), unit.egress):
+			unit.egress_of = unit.egress
+			unit.egress_since = game_time
+		var out: Vector3 = unit.egress - node.position
+		var flat_out := Vector2(out.x, out.z).length()
+		var passed: bool = flat_out < 40.0 and absf(angle_difference(unit.heading, atan2(out.x, out.z))) > 1.6
+		if flat_out < 12.0 or passed or game_time - float(unit.egress_since) > 8.0:
 			unit.egress = null
 		else:
 			goal = unit.egress
 	if goal == null and fixed:
-		var t: float = Time.get_ticks_msec() / 1000.0 * 0.35 + unit.phase
+		var t: float = game_time * 0.35 + unit.phase   # game time: the circle pauses and speeds up with the game
 		goal = unit.orbit + Vector3(cos(t), 0, sin(t)) * 30.0
 	if goal == null:
 		unit.moving = false
@@ -4914,6 +4924,8 @@ func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 		Motion.recoil(unit, 1.4 if unit.key in ["tank", "artillery"] else 0.7)
 		# Long shots and moving targets miss more often; point-blank shots rarely do.
 		var miss_chance := 0.12 + 0.3 * clampf(gap_to(unit, enemy) / maxf(unit.range, 1.0), 0.0, 1.0) + (0.15 if enemy.get("moving", false) else 0.0)
+		if enemy.get("key", "") == "seaDrone":
+			miss_chance += 0.35   # a small, low, fast boat in the waves is hard to hit
 		var miss := Vector3(randf_range(-2.5, 2.5), 0, randf_range(-2.5, 2.5)) if randf() < miss_chance else Vector3.ZERO
 		var landing := aim + miss
 		landing.y = maxf(landing.y if miss == Vector3.ZERO else height_at(landing.x, landing.z), height_at(landing.x, landing.z))

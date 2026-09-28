@@ -285,3 +285,10 @@ UI files listed above.
   naval stealth in hidden(). world: update_training escorts a sixthGen; WEAPONS railgun; FPV strikes fail under
   a microwave field. Check: tools/units-100.gd (181).
 - 2026-09-28 Claude: 0.9.30 executable and installer in dist, built from 8a34249; packaged --ui-test passes.
+- 2026-09-28 Claude, 0.9.31 (user asked for 100 more checks on the new weapons and 100 on gameplay): new
+  tools/weapons-live-100.gd (89) and tools/gameplay-live-100.gd (95), both seeded. Fixes: tactics.keep_target
+  leash +100 m for FIXED_WING; world.move_craft egress done when reached flat / passed / after 8 s
+  (egress_of, egress_since); naval_navigation.move ends the route at the goal when it is water; himars range
+  4 hexes (modern_warfare.apply); initial reload randf()*min(cooldown, 3); shahed fuel_until (Arsenal
+  SHAHED_FUEL, Future.update); seaDrone range 10, STEALTH 0.6, +0.35 gun miss chance; Future.follow keeps the
+  wingman's orbit on its leader and relinks orphans; move_craft's idle orbit runs on game_time.

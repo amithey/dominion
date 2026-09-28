@@ -59,6 +59,11 @@ func move(u: Dictionary, goal: Vector3, delta: float) -> void:
 			u.path = route(u.node.position,goal)
 			u.path_goal = goal
 			u.repath = 1.0
+			# The route ends at the grid point nearest the goal (up to ~11 m off):
+			# the last leg goes to the goal itself when it is open water, so a
+			# ship arrives where it was sent and a sea drone reaches its target.
+			if not u.path.is_empty() and world.is_water(goal):
+				u.path[u.path.size()-1] = goal
 	if u.path.is_empty():
 		u.moving = false
 		u.sailing_speed = 0.0

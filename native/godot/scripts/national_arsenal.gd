@@ -27,6 +27,7 @@ const NATION_NAMES := {"blue": "Atlantic Federation", "red": "Crimson Empire", "
 const SWARM := 5            # Shaheds per salvo
 const SWARM_MAX := 15       # a nation's Shaheds in the air at once
 const SEAD := 2.5           # the Raptor against air defences
+const SHAHED_FUEL := 90.0   # seconds a Shahed can fly before it comes down
 
 const UNITS := {
 	"raptor": {"name": "F-22 Raptor", "nation": "blue", "hp": 280, "dmg": 80, "range": 32, "cooldown": 2.0, "aggro": 44, "speed": 34,
@@ -78,7 +79,7 @@ const DISCOVERIES := {
 }
 
 ## How close (as a share of an observer's range) a stealth aircraft is seen.
-const STEALTH := {"stealthFighter": 0.4, "raptor": 0.25, "raider": 0.15, "sixthGen": 0.2, "orca": 0.5}
+const STEALTH := {"stealthFighter": 0.4, "raptor": 0.25, "raider": 0.15, "sixthGen": 0.2, "orca": 0.5, "seaDrone": 0.6}
 
 static func apply(w: Node) -> void:
 	for key in UNITS:
@@ -134,6 +135,7 @@ static func launch_swarm(w: Node, launcher: Dictionary, enemy: Dictionary) -> in
 		drone.air_state = "ready"
 		drone.heading = yaw
 		drone.stay = false
+		drone.fuel_until = w.game_time + SHAHED_FUEL
 		w.order_attack([drone], enemy)
 	w.effects.explosion(launcher.node.position + Vector3.UP * 2.5, 0.6, false)
 	return n

@@ -127,7 +127,10 @@ static func keep_target(w: Node, unit: Dictionary, delta: float) -> bool:
 	if gap > unit.range and not reachable(unit, enemy):
 		drop(unit)
 		return false
-	if not unit.get("forced", false) and gap > maxf(unit.aggro, unit.range) * 1.6:
+	# A jet pulls out about 80 m to turn for a new pass (world.move_craft): it
+	# keeps its target through the turn instead of forgetting it half way.
+	var leash: float = maxf(unit.aggro, unit.range) * 1.6 + (100.0 if unit.key in w.FIXED_WING else 0.0)
+	if not unit.get("forced", false) and gap > leash:
 		drop(unit)
 		return false
 	# A chase that does not close the distance is given up for a while.

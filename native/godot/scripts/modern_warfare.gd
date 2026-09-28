@@ -93,7 +93,7 @@ const UNITS := {
 		"fly": true, "naval": false, "cost": {"money": 950, "iron": 60, "oil": 60, "silicon": 40}, "trainTime": 30, "pop": 3,
 		"requires": "stealthTech",
 		"desc": "F-35-style fifth-generation fighter: air defence and enemy fighters only see it at 40% of their range."},
-	"seaDrone": {"name": "Sea Drone", "hp": 60, "dmg": 380, "range": 6, "cooldown": 1.0, "aggro": 60, "speed": 24,
+	"seaDrone": {"name": "Sea Drone", "hp": 60, "dmg": 380, "range": 10, "cooldown": 1.0, "aggro": 60, "speed": 24,
 		"fly": false, "naval": true, "cost": {"money": 260, "oil": 10, "silicon": 15}, "trainTime": 10, "pop": 1,
 		"requires": "navalEngineering",
 		"desc": "Magura-style unmanned explosive boat: fast and low, it rams a warship or a harbour and blows up. One use. Jammers stop most of them."},
@@ -160,6 +160,10 @@ static func apply(w: Node) -> void:
 	var droneSwarms: Dictionary = discoveries.get("droneSwarms", {})
 	if not droneSwarms.is_empty():
 		droneSwarms.desc = "Drones, FPV teams and loitering munitions deal +40% damage; drones cost 30% less. Unlocks the Loitering Munition."
+	# HIMARS reaches four hexes (its card says so; it used to stop at 34 m).
+	var hex: float = float(w.map.logistics.hexRadius) * sqrt(3.0)
+	w.unit_defs.himars.range = hex * 4.0
+	w.unit_defs.himars.aggro = hex * 4.0
 	Arsenal.apply(w)   # each nation's own weapons
 	Future.apply(w)    # weapons still in development
 	var types: Dictionary = w.map.missiles.types
