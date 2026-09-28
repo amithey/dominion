@@ -85,7 +85,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 		n.next_attack = maxf(n.next_attack,99999.0)
 	var s: float = n.speed
 	var spies: Node = world.espionage
-	n.money += float(cfg.income) * delta * s * (spies.income_mult(n.id) if spies else 1.0) * preload("res://scripts/faction_powers.gd").income_mult(world, n.id) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0))))
+	n.money += float(cfg.income) * delta * s * (spies.income_mult(n.id) if spies else 1.0) * preload("res://scripts/faction_powers.gd").income_mult(world, n.id) * preload("res://scripts/national_profile.gd").ai_income(world, n.id) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0))))
 	var cyber: bool = spies != null and spies.production_down(n.id) or preload("res://scripts/faction_powers.gd").production_blocked(world, n.id)
 	n.next_build -= delta
 	n.next_train -= delta
@@ -132,7 +132,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 			var options: Array = train_pool.filter(func(k): return world.unit_allowed(n.id, k) and not production_sites(n.id,k).is_empty())
 			if not options.is_empty():
 				var key: String = options[randi() % options.size()]
-				var cost := weighted_cost(world.unit_defs[key].cost)
+				var cost := weighted_cost(world.unit_defs[key].cost) * preload("res://scripts/national_profile.gd").cost_mult(world, n.id, key)
 				# Money for the next building is kept back, unless the nation is at
 				# war or has hardly an army: a state that only trains never grows.
 				var at_war: bool = not world.diplomacy.enemies_of(n.id).is_empty()

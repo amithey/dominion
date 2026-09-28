@@ -21,7 +21,7 @@ func run() -> void:
 	for tab in ["graphics", "sound", "controls", "game"]:
 		m.settings_tab = tab
 		m.open_settings()
-		check(m._panel.get_child_count() >= 3, "the %s tab has its settings" % tab)
+		check(m._panel.find_children("*", "Label", true, false).size() >= 2, "the %s tab has its settings" % tab)   # at least one setting (its title and description); the redesign moved the footer note out of the panel
 	w.pan_speed = 1.6
 	w.edge_scroll = false
 	w.show_fps = false

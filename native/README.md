@@ -7,6 +7,33 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.36: each nation's strengths and weaknesses
+
+Researched for all nine factions from 2024-2025 figures (R&D spending: Israel 6.3% of GDP, the US 3.5%, Japan
+3.3%, China 2.6%, Russia 0.9%, India 0.6%; SIPRI 2024 military spending; IMF 2025 growth and inflation;
+sanctions; energy exporters and importers; ageing and young populations) and put into the rules
+(national_profile.gd), for the player and for rival nations alike:
+- **United States:** +15% income, +20% research, +10% covert success, aircraft 10% cheaper and +10% air damage,
+  +20% oil and gas; tanks and artillery 10% dearer.
+- **China:** +15% production and construction, +10% income, +15% research, warships 15% cheaper, +30% silicon,
+  +15% trade; an ageing population, -20% oil.
+- **European Union:** +10% income, +15% trade, +10% research, +4 happiness, +5 health, air defence 10% cheaper;
+  imported energy (-30% oil, -40% gas), -5% combat damage, a population growing a third slower.
+- **Iran:** +40% oil and gas, drones and missiles 25% cheaper, +5% covert success; sanctions (-20% income,
+  -25% trade), -6 happiness, -10% research.
+- **Russia:** +50% oil, +60% gas, +20% iron, armour and artillery 15% cheaper, +5% health, +10% covert success;
+  sanctions (-10% income, -25% trade), -10% research, a shrinking population.
+- **India:** the fastest-growing population (+40%), +5% income, +10% construction, infantry 10% cheaper and +10%
+  health, +15% iron; -5% research, -2 happiness.
+- **Japan:** +20% research, +10% production, +5 happiness, +8 health, warships 10% cheaper; no resources of its
+  own (-40% oil and gas), the oldest population (half the growth), infantry 10% dearer.
+- **Turkiye:** drones 20% cheaper, +10% trade, +10% industry and construction; inflation (-5% income, -4 happiness).
+- **Israel:** +30% research, +15% covert success and counter-intelligence, +20% gas, +5% income; a small country
+  (15% less room for citizens), -2 happiness.
+**Starting relations** follow real alliances and enmities: the US close to the EU, Japan and Israel; China and
+Russia partners; Iran hostile to the US and Israel; India friendly with both camps.
+**Checks:** tools/national-profile-check.gd (65), each nation measured against a neutral one.
+
 ## Version 0.9.35: every nation's weapons and political power
 
 Researched for each of the nine factions (Codex's factions.gd): its signature weapons, what it fields, its

@@ -82,7 +82,10 @@ func produce(silo: Dictionary, key: String) -> String:
 		return "Queue is full"
 	if stored() + queued() >= capacity():
 		return "Missile storage full (%d). Build Ammo Depots for +%d each." % [capacity(), int(cfg.capPerDepot)]
-	if not world.economy.pay(def.cost):
+	var price: Dictionary = {}
+	for k in def.cost:
+		price[k] = roundf(float(def.cost[k]) * preload("res://scripts/national_profile.gd").cost_mult(world, 0, "missile"))
+	if not world.economy.pay(price):
 		return "Not enough %s" % world.economy.missing(def.cost)
 	silo.queue.append("missile:" + key)
 	changed.emit()

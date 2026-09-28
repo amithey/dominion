@@ -227,6 +227,10 @@ func _recompute() -> void:
 	_add("hpAll", 0.08 * t.get("military", 0))
 	_add("spyPct", 0.08 * t.get("espionage", 0))
 	_add("researchPct", 0.06 * t.get("hightech", 0))
+	# The player's nation: its strengths and weaknesses (national_profile.gd).
+	var national: Dictionary = preload("res://scripts/national_profile.gd").bonuses(world, 0) if world != null and world.get("map") != null else {}
+	for stat in national:
+		_add(stat, float(national[stat]))
 
 func _add(stat: String, v: float) -> void:
 	_bonus[stat] = float(_bonus.get(stat, 0.0)) + v
@@ -469,7 +473,7 @@ func ai_tick() -> void:
 	for n in world.ai.nations:
 		if n.defeated:
 			continue
-		n.tech = float(n.get("tech", 0.0)) + 10.0 / lerpf(260.0, 150.0, aggression)
+		n.tech = float(n.get("tech", 0.0)) + 10.0 / lerpf(260.0, 150.0, aggression) * preload("res://scripts/national_profile.gd").ai_research(world, n.id)
 		n.tech = minf(n.tech, 10.0)
 
 func ai_tech(owner: int) -> float:
@@ -484,7 +488,7 @@ func ai_tech(owner: int) -> float:
 func damage_mult(unit: Dictionary) -> float:
 	var doctrine: Dictionary = preload("res://scripts/factions.gd").for_unit(world, unit)
 	if unit.owner > 0:
-		return (1.0 + 0.03 * ai_tech(unit.owner)) * float(doctrine.damage)
+		return (1.0 + 0.03 * ai_tech(unit.owner)) * float(doctrine.damage) * preload("res://scripts/national_profile.gd").ai_damage(world, unit)
 	var m := 1.0 + bonus("dmgAll")
 	var key: String = unit.get("key", "")
 	if key in world.infantry_keys:
@@ -509,7 +513,7 @@ func armor_mult(unit: Dictionary) -> float:
 func equip(unit: Dictionary) -> void:
 	var hp := 1.0
 	if unit.owner > 0:
-		hp += 0.03 * ai_tech(unit.owner)
+		hp += 0.03 * ai_tech(unit.owner) + preload("res://scripts/national_profile.gd").ai_health(world, unit) - 1.0
 	else:
 		hp += bonus("hpAll")
 		if unit.key in world.infantry_keys:
@@ -535,6 +539,7 @@ func unit_cost(key: String, cost: Dictionary) -> Dictionary:
 		m += bonus("costVehiclePct")
 	if key == "drone":
 		m += bonus("costDronePct")
+	m *= preload("res://scripts/national_profile.gd").cost_mult(world, 0, key)   # the nation's industry: cheaper here, dearer there
 	if absf(m - 1.0) < 0.001:
 		return cost
 	var out := {}

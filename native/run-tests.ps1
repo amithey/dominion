@@ -28,6 +28,7 @@ $tests = @(
     @('modern warfare: drones, jamming, active protection, lasers, interception odds, ruins', @('--script', 'res://tools/modern-warfare-check.gd'), 'MODERN_WARFARE PASS', 600),
     @('about 100 checks on the modern units and each nation''s own weapons', @('--script', 'res://tools/units-100.gd'), 'UNITS_100 PASS', 1200),
     @('about 100 checks on the new weapons in live combat', @('--script', 'res://tools/weapons-live-100.gd'), 'WEAPONS_LIVE PASS', 2400),
+    @('every nation strengths and weaknesses: economy, science, military, diplomacy', @('--script', 'res://tools/national-profile-check.gd'), 'NATIONAL_PROFILE PASS', 600),
     @('the newer factions weapons and every nation political power', @('--script', 'res://tools/faction-powers-check.gd'), 'FACTION_POWERS PASS', 900),
     @('about 100 checks playing on every map', @('--script', 'res://tools/gameplay-maps-100.gd'), 'GAMEPLAY_MAPS PASS', 3600),
     @('fifty checks on playing the game: placement, selection, commands, panels, workers, groups', @('--script', 'res://tools/gameplay-ui-50.gd'), 'GAMEPLAY_UI PASS', 1800),

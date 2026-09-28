@@ -125,6 +125,8 @@ func tick() -> void:
 	happiness = clampf(60.0 + provided("happiness") + (r.bonus("happiness") if r else 0.0) - SHORTAGE_UNREST * shortages.size(), 0.0, 100.0)
 	health = clampf(55.0 + provided("health") + (r.bonus("health") if r else 0.0), 0.0, 100.0)
 	var growth := civilians * ((happiness - 45.0) / 50.0) * (health / 100.0) * 0.0025
+	if growth > 0.0:
+		growth *= preload("res://scripts/national_profile.gd").growth(world, 0)   # a young or an ageing population
 	if starving:
 		growth -= civilians * 0.005
 	civilians = clampf(civilians + growth, 20.0, civ_cap)
@@ -137,14 +139,14 @@ func tick() -> void:
 	# Extractors on deposits, and iron from held mountains.
 	for key in ["oil", "iron", "silicon", "uranium", "gas"]:
 		rates[key] = 0.0
-	rates.iron = float(land.iron)
-	rates.oil = float(land.get("oil", 0.0))
+	rates.iron = float(land.iron) * preload("res://scripts/national_profile.gd").resource_mult(world, 0, "iron")
+	rates.oil = float(land.get("oil", 0.0)) * preload("res://scripts/national_profile.gd").resource_mult(world, 0, "oil")
 	var mining: float = 1.0 + (r.bonus("extractPct") if r else 0.0)
 	for b in world.buildings:
 		if b.owner != 0 or not b.built or b.dead or b.deposit == null or not b.get("supplied", true):
 			continue
 		var dep: Dictionary = b.deposit.def
-		rates[dep.res] = rates.get(dep.res, 0.0) + float(dep.rate) * mining
+		rates[dep.res] = rates.get(dep.res, 0.0) + float(dep.rate) * mining * preload("res://scripts/national_profile.gd").resource_mult(world, 0, dep.res)
 	# A growing population burns fuel and uses electronics: oil from about 150
 	# people up, chips (silicon) once a city passes 400. Running short makes
 	# people unhappy (see happiness above, applied on the next tick).

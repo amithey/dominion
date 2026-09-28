@@ -1,5 +1,18 @@
 # Working in parallel: Claude and Codex
 
+Codex, 2026-09-28: user requested a complete menu/HUD visual refresh and explicitly
+authorized commit + push (including the previous factions commit). Editing menu.gd,
+ui_theme.gd, hud.gd, research_tree.gd, side_panels.gd and UI review tools. Campaign
+setup now has two columns and a persistent action footer. Shared gameplay/release
+files remain with Claude; existing HUD service function signatures stay stable.
+National profile disclosure now appears in the picker and diplomacy via the new
+nation_profile_view.gd (optional profile module). factions-check now recomputes
+player bonuses on identity changes and expects the new Russian/Indian health
+bonuses; all 384 checks pass. Map picker, --ui-test and graphical interface review
+also pass. Notices fit between both docks. Native source updated; release builds
+remain Claude's responsibility. Fetch confirms origin is already an ancestor;
+avoiding an autostash of Claude's concurrent uncommitted gameplay work.
+
 Two agents work on this repository at the same time. This file says who owns
 what, how gameplay code talks to the interface, and how to commit without
 stepping on each other. **Read it before starting and update it when the
@@ -358,3 +371,12 @@ UI files listed above.
   55 checks with play_as also updating the stable faction id. Updated polish_regression to check
   EU id and the real leader instead of the obsolete Verdant Union name; --campaign-test passes.
   The picker now shows 0.9.35 signature weapons and national powers alongside passive doctrines.
+- 2026-09-28 Claude, 0.9.36 (user asked for each nation's strengths and weaknesses in every field): new
+  scripts/national_profile.gd (PROFILES by factions.gd id: player bonus stats, growth, resources, trade, unit
+  prices, strengths/weaknesses text; TIES for starting relations). Hooks: research._recompute adds the player's
+  national stats; research damage/equip/unit_cost/ai_tick; economy growth and resources; market sales and
+  exports; ai income and prices; missiles.produce price; world applies the ties after diplomacy.setup.
+  UI REQUEST for Codex (your redesign): please show each nation's strengths and weaknesses in the nation picker
+  and on the Diplomacy screen. preload("res://scripts/national_profile.gd").summary(id) returns
+  {strengths: [String], weaknesses: [String]} for a factions.gd id; id_of(world, owner) gives an owner's id.
+  I did not touch hud.gd, menu.gd or ui_theme.gd (your work in progress).

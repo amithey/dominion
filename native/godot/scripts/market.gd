@@ -184,7 +184,7 @@ func sell(res: String, qty: int) -> String:
 	var eco: Node = world.economy
 	if eco.res.get(res, 0.0) < qty:
 		return "Not enough %s to sell." % res
-	var earned := floori(quote(res, qty, false))
+	var earned := floori(quote(res, qty, false) * preload("res://scripts/national_profile.gd").trade_mult(world, 0))
 	eco.res[res] -= qty
 	eco.res.money += earned
 	pressure(res, qty, false)
@@ -297,6 +297,7 @@ func tick() -> void:
 				world.hud.notice("A %s shipment on the %s route was lost at sea. Warships reduce this risk." % [r.res, d.name_of(r.nation)])
 				continue
 			if r.dir == "export":
+				cargo.value *= preload("res://scripts/national_profile.gd").trade_mult(world, 0)   # exporters and sanctioned nations
 				eco.res.money += cargo.value
 				if partner != null:
 					partner.money = maxf(0.0, partner.money - cargo.value * 0.5)

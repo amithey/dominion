@@ -370,6 +370,7 @@ func _ready() -> void:
 	diplomacy = preload("res://scripts/diplomacy.gd").new()
 	add_child(diplomacy)
 	diplomacy.setup(self, map.nations.size(), float(map.ai.difficulty.get(difficulty, map.ai.difficulty.easy).aggression), ai_speed)
+	preload("res://scripts/national_profile.gd").apply_relations(self)   # alliances and old enmities
 	match_difficulty = difficulty
 	match_speed = ai_speed
 	market = preload("res://scripts/market.gd").new()
