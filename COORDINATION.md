@@ -406,3 +406,4 @@ UI files listed above.
   on a ruin (now returns when b.destroyed is set; b.dead alone, as some tests set it, still destroys); kill ran
   twice (u.killed marker); order_move kept dead units; diplomacy offer_peace/gift/propose_* worked on a defeated
   nation; match_setup.normalize crashed on non-numeric values (_int helper). Both tools are in run-tests.ps1.
+- 2026-09-28 Claude: 0.9.39 executable and installer in dist, built from 09b682c; packaged --ui-test passes; quick suite: all 58 pass.
