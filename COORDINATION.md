@@ -292,3 +292,4 @@ UI files listed above.
   4 hexes (modern_warfare.apply); initial reload randf()*min(cooldown, 3); shahed fuel_until (Arsenal
   SHAHED_FUEL, Future.update); seaDrone range 10, STEALTH 0.6, +0.35 gun miss chance; Future.follow keeps the
   wingman's orbit on its leader and relinks orphans; move_craft's idle orbit runs on game_time.
+- 2026-09-28 Claude: 0.9.31 executable and installer in dist, built from 8d53931; packaged --ui-test passes.
