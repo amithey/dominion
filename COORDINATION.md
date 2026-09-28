@@ -302,3 +302,4 @@ UI files listed above.
   Gameplay still has 2-4 nations; mapCapacity/spawnPositions/mapSeed expose the full geography for
   future nation-count work. Added tools/map-capacity-check.gd, expanded maps-check.gd, registered
   the geography test in run-tests.ps1. No changes to world/combat/AI/release files.
+- 2026-09-28 Claude: 0.9.32 executable and installer in dist, built from e142139; packaged --ui-test passes.
