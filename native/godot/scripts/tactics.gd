@@ -19,7 +19,7 @@ extends RefCounted
 const RETARGET := 1.2        # seconds between looks for a better target
 const CHASE_LIMIT := 12.0    # seconds of chasing without closing in before giving up
 const IGNORE_FOR := 10.0     # how long an abandoned target is ignored
-const SUPPORT := ["artillery", "mlrs", "samLauncher", "aaVehicle", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT"]
+const SUPPORT := ["artillery", "mlrs", "samLauncher", "aaVehicle", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle"]
 
 ## Where `unit` should stand to shoot at `enemy`.
 static func firing_spot(w: Node, unit: Dictionary, enemy: Dictionary) -> Vector3:

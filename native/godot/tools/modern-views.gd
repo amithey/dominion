@@ -36,7 +36,7 @@ func run() -> void:
 			break
 	for n in w.find_children("*", "MultiMeshInstance3D", true, false) + w.find_children("*", "Sprite3D", true, false) + w.find_children("*", "Label3D", true, false):
 		n.visible = false
-	var keys := ["himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "seaDrone", "fpvTeam", "atgmTeam", "manpads", "medic"]
+	var keys := ["himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "seaDrone", "orca", "railgunShip", "fpvTeam", "atgmTeam", "manpads", "medic"]
 	var units := {}
 	for i in range(keys.size()):
 		var key: String = keys[i]

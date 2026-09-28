@@ -49,6 +49,8 @@ func build(key: String, owner: int) -> Dictionary:
 			shahed_launcher(body, top, parts)
 		"irisT":
 			iris_launcher(body, top, parts)
+		"hpmVehicle":
+			hpm_truck(body, top, parts)
 		_:
 			tank(body, top, parts)
 	_attach(parts.root, body)
@@ -694,3 +696,24 @@ func iris_launcher(st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void
 			cyl(top, 0.16, 0.06, Vector3((c - 1.5) * 0.46, -0.25 + r * 0.5, 3.62), "z", DARK, 10, -1.0, up)
 	block(top, Vector3(0.04, 0.6, 1.6), Vector3(1.02, 0.0, 1.8), TEAM, 0.0, 0.0, 0.0, up)
 	parts.muzzle = 3.6
+
+## High-power microwave: a truck with a power and cooling container and a big
+## flat phased-array antenna on a turntable.
+func hpm_truck(st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
+	var bed := truck(st, parts)
+	block(st, Vector3(2.4, 1.3, 2.0), Vector3(0, bed + 0.65, -2.4), PAINT, 0.05)
+	for i in range(4):
+		block(st, Vector3(2.2, 0.04, 0.12), Vector3(0, bed + 1.32, -3.1 + i * 0.4), METAL)
+	block(st, Vector3(0.04, 0.5, 1.2), Vector3(1.22, bed + 0.7, -2.4), TEAM)
+	var turret := Node3D.new()
+	turret.position = Vector3(0, bed, -0.3)
+	parts.root.add_child(turret)
+	parts.turret = turret
+	cyl(top, 0.6, 0.35, Vector3(0, 0.18, 0), "y", METAL, 16)
+	var tilt := Transform3D(Basis(Vector3.RIGHT, -0.25), Vector3(0, 1.6, 0.2))
+	block(top, Vector3(2.6, 2.2, 0.35), Vector3.ZERO, DARK, 0.0, 0.0, 0.0, tilt)
+	for r in range(4):
+		for c in range(5):
+			block(top, Vector3(0.42, 0.42, 0.05), Vector3(-1.0 + c * 0.5, -0.78 + r * 0.52, 0.2), METAL, 0.0, 0.0, 0.0, tilt)
+	block(top, Vector3(0.3, 1.1, 0.3), Vector3(0, 0.6, -0.1), METAL)
+	parts.muzzle = 1.0

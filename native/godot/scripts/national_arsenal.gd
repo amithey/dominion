@@ -78,7 +78,7 @@ const DISCOVERIES := {
 }
 
 ## How close (as a share of an observer's range) a stealth aircraft is seen.
-const STEALTH := {"stealthFighter": 0.4, "raptor": 0.25, "raider": 0.15}
+const STEALTH := {"stealthFighter": 0.4, "raptor": 0.25, "raider": 0.15, "sixthGen": 0.2, "orca": 0.5}
 
 static func apply(w: Node) -> void:
 	for key in UNITS:

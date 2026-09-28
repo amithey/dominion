@@ -13,6 +13,7 @@ var w: Node
 const DT := 1.0 / 30.0
 const Modern := preload("res://scripts/modern_warfare.gd")
 const Arsenal := preload("res://scripts/national_arsenal.gd")
+const Future := preload("res://scripts/future_weapons.gd")
 func _initialize() -> void: call_deferred("run")
 func check(ok: bool, label: String) -> void:
 	print("ok   " if ok else "FAIL ", label)
@@ -58,9 +59,9 @@ func run() -> void:
 	w.economy.grant_test_resources()
 	w.diplomacy.declare_war(0, 1)
 	var sea: Vector3 = w.water_near(w.start, 220)
-	var keys: Array = Modern.UNITS.keys() + Arsenal.UNITS.keys().filter(func(k): return k != "shahed")
+	var keys: Array = Modern.UNITS.keys() + Arsenal.UNITS.keys().filter(func(k): return k != "shahed") + Future.UNITS.keys().filter(func(k): return k != "wingman")
 	var buildings_of := {}
-	for table in [Modern.TRAINS, Arsenal.TRAINS]:
+	for table in [Modern.TRAINS, Arsenal.TRAINS, Future.TRAINS]:
 		for b in table:
 			for k in table[b]: buildings_of[k] = b
 	# ------------------------------------------------ every unit
@@ -103,7 +104,7 @@ func run() -> void:
 		for cls in profile:
 			if float(profile[cls]) > float(profile[best]): best = cls
 		var spot: Vector3 = u.node.position + Vector3(minf(u.range * 0.5, 20.0), 0, 0)
-		if not def.naval: spot = w.land_point(spot, 20.0)
+		if not def.naval or best != "naval": spot = w.land_point(spot, 60.0)
 		var enemy: Dictionary = target_of(best, spot if best != "naval" or def.naval else sea + Vector3(14, 0, 0), sea + Vector3(14, 0, 0))
 		if def.fly:
 			u.node.position = enemy.node.position + Vector3(-4, 18, 0)   # over the target (bombs need it)
@@ -264,9 +265,110 @@ func run() -> void:
 		var who: String = Arsenal.identity(w, n.id)
 		var fielded: Array = w.ai.train_pool.filter(func(k): return w.unit_allowed(n.id, k) and w.unit_defs[k].has("nation"))
 		check(fielded.all(func(k): return w.unit_defs[k].nation == who) and not fielded.is_empty(), "rival %s trains its own weapon (%s)" % [n.name, ", ".join(PackedStringArray(fielded))])
+	# ------------------------------------------------ weapons in development
+	var fighter: Dictionary = w.spawn_unit("sixthGen", land(Vector3(-60, 0, -160)), 0)
+	fighter.air_state = "ready"
+	var pair: Array = Future.escort(w, fighter)
+	check(pair.size() == 2 and pair.all(func(p): return p.key == "wingman" and is_same(p.leader, fighter) and p.air_state == "ready"), "a sixth-generation fighter takes off with two loyal wingmen")
+	check(w.AirOperations.TUBE_LAUNCHED.has("wingman") and w.AirOperations.CAPACITY.wingman > 50, "wingmen need no parking slot and never run dry")
+	var foe: Dictionary = w.spawn_unit("jet", fighter.node.position + Vector3(20, 0, 0), 1)
+	foe.air_state = "ready"
+	fighter.enemy = foe
+	for p in pair: Future.follow(w, p)
+	check(pair.all(func(p): return is_same(p.enemy, foe)), "the wingmen attack what their fighter attacks")
+	check(Modern.hidden(w, fighter, 70.0 * 0.2 + 3.0, 70.0) and not Modern.hidden(w, fighter, 70.0 * 0.2 - 3.0, 70.0), "the sixth-generation fighter is seen only at a fifth of the range")
+	check(not Modern.hidden(w, pair[0], 60.0, 70.0), "its wingmen are not stealthy: they draw the fire")
+	check(w.effectiveness(fighter, foe) > w.effectiveness(w.spawn_unit("raptor", land(Vector3(0, 0, 0)), 0), foe), "the sixth-generation fighter out-fights an F-22")
+	check(w.unit_defs.sixthGen.name == "F-47", "the Atlantic Federation's sixth-generation fighter is the F-47")
+	w.map.nations[0].color = "#e0483e"
+	Future.apply(w)
+	check(w.unit_defs.sixthGen.name == "J-36" and int(w.research.discoveries.sixthGeneration.cost) == 750, "the Crimson Empire's is the J-36, a quarter cheaper to research (it flies already)")
+	w.map.nations[0].color = "#3b82f6"
+	Future.apply(w)
+	check(int(w.research.discoveries.sixthGeneration.cost) == 1000, "for everyone else it costs the full research")
+	w.kill(foe)
+	# Microwave weapon.
+	var hpm: Dictionary = w.spawn_unit("hpmVehicle", land(Vector3(-80, 0, 180)), 0)
+	var swarm := []
+	for i in range(5):
+		var d: Dictionary = w.spawn_unit("shahed", hpm.node.position + Vector3(10 + i * 4, 0, 6), 1)
+		d.air_state = "ready"
+		swarm.append(d)
+	var big: Dictionary = w.spawn_unit("wingman", hpm.node.position + Vector3(12, 0, -8), 1)
+	big.air_state = "ready"
+	var crewed: Dictionary = w.spawn_unit("jet", hpm.node.position + Vector3(8, 0, -12), 1)
+	crewed.air_state = "ready"
+	var far: Dictionary = w.spawn_unit("shahed", hpm.node.position + Vector3(90, 0, 0), 1)
+	far.air_state = "ready"
+	var fried_before: int = w.hpm_kills
+	Future.update(w, DT)
+	check(swarm.all(func(d): return d.dead) and w.hpm_kills - fried_before == 5, "one microwave pulse destroys a whole Shahed swarm (%d)" % (w.hpm_kills - fried_before))
+	check(not big.dead and not crewed.dead and not far.dead, "it spares large drones, crewed aircraft, and drones out of reach")
+	var again: Dictionary = w.spawn_unit("shahed", hpm.node.position + Vector3(10, 0, 0), 1)
+	again.air_state = "ready"
+	Future.update(w, DT)
+	check(not again.dead, "it must recharge before the next pulse")
+	for i in range(int(Future.HPM_RELOAD / DT) + 2): Future.update(w, DT)
+	check(again.dead, "after 6 s it fires again")
+	var ops: Dictionary = w.spawn_unit("fpvTeam", hpm.node.position + Vector3(-25, 0, 0), 1)
+	var armour: Dictionary = w.spawn_unit("tank", hpm.node.position + Vector3(-10, 0, 5), 0)
+	var lost0: int = w.jammed_strikes
+	for i in range(10): w.fire_weapon(ops, armour, "fpv")
+	check(w.jammed_strikes - lost0 == 10, "no FPV drone gets through a microwave weapon's field (%d of 10 lost)" % (w.jammed_strikes - lost0))
+	for u in [big, crewed, far, ops, armour, hpm]: w.kill(u)
+	# Railgun, Glide Phase Interceptor, Golden Dome.
+	var rail: Dictionary = w.spawn_unit("railgunShip", sea, 0)
+	var expect: float = Modern.intercept_chance(w, "railgunShip", {"type": "hypersonic", "owner": 1}, 0)
+	var r_rail := rate(rail, "hypersonic", 1, 500)
+	check(absf(r_rail - expect) < 0.07 and expect >= 0.45, "a railgun cruiser stops ~%d%% of hypersonic missiles (%.2f)" % [int(expect * 100), r_rail])
+	check(w.effectiveness(rail, w.spawn_unit("tank", land(Vector3(0, 0, 0)), 1)) > 1.0 and rail.range >= 70.0, "its guns reach 70 m inland")
+	w.kill(rail)
+	var battery: Dictionary = w.spawn_unit("abmLauncher", land(Vector3(-150, 0, 150)), 0)
+	var before_gpi: float = Modern.intercept_chance(w, "abmLauncher", {"type": "hypersonic", "owner": 1}, 0)
+	w.research.progress.glidePhaseInterceptor.stage = 3
+	w.research._recompute()
+	var after_gpi: float = Modern.intercept_chance(w, "abmLauncher", {"type": "hypersonic", "owner": 1}, 0)
+	check(absf(after_gpi - before_gpi - 0.3) < 0.001, "the Glide Phase Interceptor doubles hypersonic interception (%.2f -> %.2f)" % [before_gpi, after_gpi])
+	var r_gpi := rate(battery, "hypersonic", 1, 500)
+	check(absf(r_gpi - after_gpi) < 0.07, "measured: %.2f of hypersonic missiles stopped" % r_gpi)
+	w.kill(battery)
+	var lonely: Vector3 = land(Vector3(160, 0, 160))
+	var m0 := {"type": "ballistic", "owner": 1, "arc": true, "engaged": {}}
+	check(not Modern.dome(w, m0, lonely, 0.5), "without Golden Dome nothing fires from orbit")
+	w.research.progress.goldenDome.stage = 3
+	w.research._recompute()
+	w.economy.res.money = 100000.0
+	var cash: float = w.economy.res.money
+	var shots := 0
+	var kills := 0
+	for i in range(400):
+		var m := {"type": "ballistic", "owner": 1, "arc": true, "engaged": {}}
+		if Modern.dome(w, m, lonely, 0.5): kills += 1
+		if m.engaged.has("dome"): shots += 1
+		Modern.dome(w, m, lonely, 0.7)   # one shot per missile
+	check(shots == 400 and absf(cash - w.economy.res.money - 400 * Future.DOME_COST) < 1.0, "Golden Dome fires one interceptor per missile, anywhere, at $%d each" % int(Future.DOME_COST))
+	check(absf(kills / 400.0 - 0.6) < 0.07, "it stops ~60%% of ballistic missiles (%.2f)" % (kills / 400.0))
+	w.economy.res.money = 50.0
+	var poor := {"type": "ballistic", "owner": 1, "arc": true, "engaged": {}}
+	Modern.dome(w, poor, lonely, 0.5)
+	check(w.economy.res.money == 50.0, "an empty treasury launches no interceptors")
+	w.economy.grant_test_resources()
+	w.map.nations[0].color = "#33b86e"
+	var st: int = w.research.progress.goldenDome.stage
+	w.research.progress.goldenDome.stage = 0
+	check(w.research.blocker("goldenDome").ends_with("only"), "only the Atlantic Federation can build Golden Dome")
+	w.research.progress.goldenDome.stage = st
+	w.map.nations[0].color = "#3b82f6"
+	# The uncrewed submarine.
+	var orca: Dictionary = w.spawn_unit("orca", sea, 0)
+	check(Modern.hidden(w, orca, 70.0 * 0.5 + 3.0, 70.0) and not Modern.hidden(w, orca, 70.0 * 0.5 - 3.0, 70.0), "an uncrewed submarine is found only at half the range")
+	check(w.effectiveness(orca, w.spawn_unit("tank", land(Vector3(0, 0, 0)), 1)) == 0.0, "its torpedoes are for ships only")
+	check(int(w.unit_defs.orca.pop) == 1 and float(w.unit_defs.orca.cost.money) < float(w.unit_defs.submarine.cost.money), "it costs less than a crewed submarine")
+	w.kill(orca)
+	check(["hpmVehicle", "orca", "sixthGen"].all(func(k): return w.ai.train_pool.has(k)), "rival nations field the new weapons too")
 	# ------------------------------------------------ orders
 	var movers := {}
-	for key in ["himars", "irisT", "fpvTeam", "ewVehicle"]:
+	for key in ["himars", "irisT", "fpvTeam", "ewVehicle", "hpmVehicle"]:
 		var u: Dictionary = w.spawn_unit(key, land(Vector3(-20 + movers.size() * 8, 0, 20)), 0)
 		var goal: Vector3 = w.land_point(u.node.position + Vector3(30, 0, 18), 10.0)
 		w.order_move([u], goal)

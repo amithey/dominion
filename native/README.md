@@ -7,6 +7,29 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.30: weapons still in development (Global and Future eras)
+
+From programmes in development or just entering service in 2025-2026:
+- **Microwave Weapon** (tank factory; High-Power Microwave, Global era; after Epirus Leonidas, 61 of 61 drones in
+  a 2025 test, 49 with one pulse): every 6 s one pulse destroys every enemy drone within 45 m (Shaheds,
+  loitering munitions, sea drones), and no FPV drone gets through its field, fibre-optic ones included. Crewed
+  aircraft and large drones are untouched.
+- **Uncrewed Submarine** (shipyard; Uncrewed Submarines, Global era; after Boeing's Orca): cheap and quiet,
+  torpedoes ships, found only at half the range.
+- **Railgun Cruiser** (shipyard; Electromagnetic Railgun, Future era; after Japan's 2025 test ship, Mach 6.5):
+  its guns reach 70 m inland, and its cheap shots stop 45% of hypersonic and 70-80% of cruise missiles.
+- **Sixth-generation fighter** (airfield; Future era): the F-47 for the Atlantic Federation, the J-36 for the
+  Crimson Empire (a quarter cheaper to research: China's has flown since December 2024), the GCAP Tempest for
+  the Verdant Union. The stealthiest aircraft (seen at a fifth of the range); it takes off with two **loyal
+  wingman** drones (after the FQ-42 / FQ-44, in production from June 2026) that attack what it attacks and,
+  not being stealthy, draw the enemy's fire.
+- **Glide Phase Interceptor** (Future era): missile defence batteries stop 60% of hypersonic missiles, not 30%.
+- **Golden Dome** (Atlantic Federation only, Future era): interceptors in orbit take one shot at every missile
+  fired at you, anywhere on the map (60% ballistic, 35% hypersonic, 20% cruise), at $150 an interceptor; an
+  empty treasury launches none.
+
+**Checks:** tools/units-100.gd now runs 181 checks, the new weapons included.
+
 ## Version 0.9.29: each nation's own weapons
 
 Every nation now fields a "star" weapon of its own, which no other nation can build (the AI plays it too).

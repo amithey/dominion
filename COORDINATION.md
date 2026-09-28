@@ -278,3 +278,9 @@ UI files listed above.
   world.unit_allowed(); research.unit_locked/blocker refuse another nation's; ai filters its pool by nation.
   hud.gd (Codex's): the Train list skips other nations' weapons (one line). Check: tools/units-100.gd.
 - 2026-09-27 Claude: 0.9.29 executable and installer in dist, built from 697f11e; packaged --ui-test passes.
+- 2026-09-28 Claude, 0.9.30 (user asked for weapons still in development): new scripts/future_weapons.gd
+  (hpmVehicle pulse, railgunShip, sixthGen + wingman escort/follow, orca; discoveries highPowerMicrowave,
+  unmannedSubmarines, railguns, sixthGeneration, glidePhaseInterceptor (fx hgvIntercept), goldenDome (blue,
+  fx goldenDome; Modern.dome() one orbital shot per missile, $150)). modern_warfare: railgunShip column,
+  naval stealth in hidden(). world: update_training escorts a sixthGen; WEAPONS railgun; FPV strikes fail under
+  a microwave field. Check: tools/units-100.gd (181).

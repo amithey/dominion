@@ -14,11 +14,11 @@ extends RefCounted
 ##   takeoff   climbing out along the runway
 ## A base whose slots are all taken accepts no more aircraft, and trains none.
 
-const CAPACITY := {"jet": 4, "bomber": 3, "drone": 6, "helicopter": 8, "gunship": 8, "loiterer": 1, "stealthFighter": 4, "raptor": 4, "raider": 2, "shahed": 1}
+const CAPACITY := {"jet": 4, "bomber": 3, "drone": 6, "helicopter": 8, "gunship": 8, "loiterer": 1, "stealthFighter": 4, "raptor": 4, "raider": 2, "shahed": 1, "sixthGen": 4, "wingman": 99}
 const SERVICE_SECONDS := 12.0
 ## Launched from a canister beside the runway, straight into the air: they hold
 ## no parking slot (and never come back).
-const TUBE_LAUNCHED := ["loiterer", "shahed"]
+const TUBE_LAUNCHED := ["loiterer", "shahed", "wingman"]
 const SLOTS := {"airfield": 4, "helipad": 2}
 ## Where things are on an airfield, in its hex's own space (architecture.airfield draws the same).
 const RUNWAY_X := -3.2

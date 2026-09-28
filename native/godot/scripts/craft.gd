@@ -9,11 +9,12 @@ extends RefCounted
 ## heads that the game spins. Finishes ride in the vertex colour
 ## (vehicle.gdshader); moving parts stay separate nodes. Models face +Z.
 
-const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone"]
-const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed"]
+const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone", "railgunShip", "orca"]
+const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman"]
 const PAINTS := {"ship": Color("5e676c"), "sub": Color("2b2f32"), "heli": Color("4d5641"), "gunship": Color("454c3c"),
 	"jet": Color("737d84"), "bomber": Color("50585c"), "drone": Color("8a9297"), "stealth": Color("4b5157"), "usv": Color("2e3336"),
-	"raptor": Color("6b7378"), "raider": Color("3a3f44"), "shahed": Color("9a9b8f")}
+	"raptor": Color("6b7378"), "raider": Color("3a3f44"), "shahed": Color("9a9b8f"),
+	"sixth": Color("41464b"), "wingman": Color("7c8489")}
 
 const PAINT := Color(0.5, 0.0, 0.0)
 const LIGHT := Color(0.58, 0.0, 0.0)
@@ -55,7 +56,9 @@ func material_for(owner: int, finish: String) -> ShaderMaterial:
 func build(key: String, owner: int) -> Dictionary:
 	var finish := "ship"
 	match key:
-		"submarine", "nuclearSub": finish = "sub"
+		"submarine", "nuclearSub", "orca": finish = "sub"
+		"sixthGen": finish = "sixth"
+		"wingman": finish = "wingman"
 		"helicopter": finish = "heli"
 		"gunship": finish = "gunship"
 		"jet": finish = "jet"
@@ -98,6 +101,14 @@ func build(key: String, owner: int) -> Dictionary:
 			shahed(st)
 		"seaDrone":
 			sea_drone(st, 4.5, 1.1)
+		"orca":
+			uncrewed_sub(st, 9.0)
+		"railgunShip":
+			railgun_cruiser(st, parts, 16.5, 3.0)
+		"sixthGen":
+			sixth_gen(st)
+		"wingman":
+			wingman(st)
 		_:
 			fighter(st)
 	g._attach(parts.root, st)
@@ -448,6 +459,69 @@ func shahed(st: SurfaceTool) -> void:
 	g.block(st, Vector3(0.18, 0.05, 0.4), Vector3(0, 0.22, 0.2), TEAM)
 	for b in range(2):
 		g.block(st, Vector3(0.05, 0.5, 0.02), Vector3(0, -0.25, 0), METAL, 0.0, 0.0, 0.0, Transform3D(Basis(Vector3.BACK, PI * b), Vector3(0, 0.0, -l * 0.5 - 0.05)))
+
+## Sixth-generation fighter: a tailless "cranked kite" flying wing with a long
+## chined nose, blended intakes on top and no fins at all.
+func sixth_gen(st: SurfaceTool) -> void:
+	var l := 10.0
+	fuselage(st, l, [[0.0, 0.7, 0.26, 0.02], [0.15, 1.0, 0.34], [0.45, 1.05, 0.38], [0.7, 0.6, 0.32, 0.05], [0.9, 0.2, 0.14], [1.0, 0.01, 0.01, -0.02]], PAINT)
+	g.prim(st, _sphere(0.28), Transform3D(Basis().scaled(Vector3(0.9, 0.8, 3.4)), Vector3(0, 0.34, l * 0.26)), GLASS)
+	for side: float in [-1.0, 1.0]:
+		# Cranked wing: steep inboard, shallower outboard, straight trailing edge.
+		surface(st, Vector3(side * 0.9, 0.0, 2.6), Vector3(side * 0.9, 0.0, -4.4), Vector3(side * 3.0, 0.0, -1.6), Vector3(side * 3.0, 0.0, -4.4), 0.2, 0.1, Vector3.UP, PAINT)
+		surface(st, Vector3(side * 3.0, 0.0, -1.6), Vector3(side * 3.0, 0.0, -4.4), Vector3(side * 5.4, 0.0, -3.9), Vector3(side * 5.4, 0.0, -4.4), 0.1, 0.04, Vector3.UP, PAINT)
+		g.block(st, Vector3(0.6, 0.2, 1.4), Vector3(side * 0.7, 0.36, 0.2), DARK, 0.1, 0.4)   # dorsal intakes
+		g.block(st, Vector3(0.7, 0.12, 0.3), Vector3(side * 0.5, 0.1, -l * 0.5 + 0.2), METAL)   # buried exhausts
+		roundel(st, Vector3(side * 3.4, 0.09, -3.0), 0.34)
+	g.block(st, Vector3(0.5, 0.05, 0.9), Vector3(0, 0.4, -2.4), TEAM)
+
+## Loyal wingman drone: a small single-engine body with a dorsal intake,
+## swept wings and a V-tail.
+func wingman(st: SurfaceTool) -> void:
+	var l := 6.0
+	fuselage(st, l, [[0.0, 0.3, 0.2], [0.2, 0.5, 0.3], [0.6, 0.5, 0.32], [0.9, 0.25, 0.2], [1.0, 0.02, 0.02]], PAINT)
+	g.block(st, Vector3(0.5, 0.3, 1.2), Vector3(0, 0.35, 0.2), DARK, 0.1, 0.4)
+	for side: float in [-1.0, 1.0]:
+		surface(st, Vector3(side * 0.4, 0.0, 0.8), Vector3(side * 0.4, 0.0, -1.2), Vector3(side * 2.6, 0.0, -0.8), Vector3(side * 2.6, 0.0, -1.3), 0.12, 0.04, Vector3.UP, PAINT)
+		var tip := Vector3(side * 1.2, 1.0, -2.8)
+		surface(st, Vector3(side * 0.3, 0.2, -1.9), Vector3(side * 0.3, 0.2, -2.9), tip, tip + Vector3(0, 0, -0.4), 0.06, 0.03, Vector3(1, -0.9 * side, 0) if side > 0 else Vector3(1, 0.9, 0), PAINT)
+		roundel(st, Vector3(side * 1.8, 0.07, -0.9), 0.2)
+	g.block(st, Vector3(0.3, 0.04, 0.6), Vector3(0, 0.3, -1.0), TEAM)
+
+## Extra-large uncrewed submarine: a long cylinder with no sail, a small mast
+## fairing and a cruciform tail.
+func uncrewed_sub(st: SurfaceTool, length: float) -> void:
+	var r := length * 0.06
+	var rings := []
+	for i in range(15):
+		var t := i / 14.0
+		var k := 1.0
+		if t > 0.9:
+			k = sqrt(maxf(0.0, 1.0 - pow((t - 0.9) / 0.1, 2.0)))
+		elif t < 0.2:
+			k = lerpf(0.2, 1.0, smoothstep(0.0, 0.2, t))
+		rings.append(g.ellipse(-length * 0.5 + t * length, r * maxf(k, 0.04), r * maxf(k, 0.04), 0.0, 12))
+	g.loft(st, rings, true, func(mid: Vector3) -> Color: return PAINT if mid.y > -r * 0.3 else DARK)
+	g.cap(st, rings[0], Vector3.BACK * -1.0, DARK)
+	g.block(st, Vector3(r * 0.6, r * 0.8, length * 0.1), Vector3(0, r * 0.9, length * 0.2), PAINT, 0.05, 0.1)
+	g.block(st, Vector3(r * 0.62, r * 0.2, length * 0.05), Vector3(0, r * 1.3, length * 0.2), TEAM)
+	for a: float in [0.0, PI * 0.5, PI, PI * 1.5]:
+		g.block(st, Vector3(0.04, r * 1.2, length * 0.06), Vector3.ZERO, PAINT, 0.0, length * 0.02, 0.0, Transform3D(Basis(Vector3.BACK, a), Vector3(0, 0, -length * 0.44)))
+
+## Railgun cruiser: a destroyer's hull and superstructure with the gun
+## replaced by a long, flat electromagnetic launcher and its power rooms.
+func railgun_cruiser(st: SurfaceTool, parts: Dictionary, length: float, beam: float) -> void:
+	destroyer(st, parts, length, beam)
+	# Capacitor banks on the after deck.
+	for i in range(3):
+		g.block(st, Vector3(beam * 0.6, 0.5, 0.6), Vector3(0, 1.4, -length * 0.02 - i * 0.7), DARK)
+	var t := g._begin()
+	g.block(t, Vector3(1.1, 0.7, 1.6), Vector3(0, 0.35, 0.0), LIGHT, 0.1, 0.2)
+	for side: float in [-1.0, 1.0]:
+		g.block(t, Vector3(0.12, 0.22, 5.2), Vector3(side * 0.16, 0.5, 3.2), METAL)   # the two rails
+	g.block(t, Vector3(0.5, 0.12, 5.0), Vector3(0, 0.66, 3.1), PAINT)                  # the barrel's cover
+	g.block(t, Vector3(0.5, 0.4, 0.3), Vector3(0, 0.5, 5.7), DARK)                    # muzzle
+	g._attach(parts.turret, t)
 
 ## Unmanned surface vessel: a low, dark, fast speedboat with a sensor mast
 ## and the warhead in the bow.

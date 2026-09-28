@@ -22,9 +22,9 @@ const TRAINED_AT := {"soldier": "barracks", "rocketSoldier": "barracks", "comman
 	"helicopter": "helipad", "jet": "airfield", "drone": "airfield", "gunboat": "shipyard", "destroyer": "shipyard", "corvette": "shipyard",
 	"fpvTeam": "barracks", "atgmTeam": "barracks", "manpads": "barracks", "medic": "barracks", "himars": "tankFactory",
 	"ewVehicle": "tankFactory", "loiterer": "airfield", "raptor": "airfield", "df17": "tankFactory",
-	"shahedLauncher": "tankFactory", "irisT": "tankFactory"}
+	"shahedLauncher": "tankFactory", "irisT": "tankFactory", "hpmVehicle": "tankFactory", "orca": "shipyard", "sixthGen": "airfield"}
 ## Modern units rival armies field alongside the export's training pool.
-const MODERN_POOL := ["fpvTeam", "atgmTeam", "manpads", "medic", "himars", "ewVehicle", "loiterer", "raptor", "df17", "shahedLauncher", "irisT"]
+const MODERN_POOL := ["fpvTeam", "atgmTeam", "manpads", "medic", "himars", "ewVehicle", "loiterer", "raptor", "df17", "shahedLauncher", "irisT", "hpmVehicle", "orca", "sixthGen"]
 ## Missiles a rival at war fires at the player, by its technology level.
 const STRIKE_TYPES := [[2.0, ["tactical", "cruise"]], [4.0, ["tactical", "cruise", "ballistic"]], [6.0, ["cruise", "ballistic", "hypersonic"]]]
 const STRIKE_TARGETS := ["hq", "cityCenter", "villageCenter", "airfield", "tankFactory", "barracks", "missileSilo", "powerPlant", "port", "samSite"]
@@ -236,6 +236,8 @@ func deploy(owner: int, key: String) -> bool:
 		if door==null:
 			continue
 		var unit: Dictionary = world.spawn_unit(key,door,owner)
+		if key == "sixthGen":
+			preload("res://scripts/future_weapons.gd").escort(world, unit)
 		var out: Vector3 = door-at
 		unit.heading = atan2(out.x,out.z)
 		world.place_on_ground(unit,door)
