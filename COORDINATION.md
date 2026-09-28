@@ -333,3 +333,4 @@ UI files listed above.
   (Codex's): _power_card() and a power button on each nation card, small; Codex: restyle freely. None of
   Codex's uncommitted faction files are in this commit; the new weapons and powers for Russia, India, Japan,
   Turkiye and Israel become playable when factions.gd is committed. Check: tools/faction-powers-check.gd.
+- 2026-09-28 Claude: 0.9.35 executable and installer in dist, built from a5932a6; packaged --ui-test passes.
