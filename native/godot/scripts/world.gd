@@ -2716,8 +2716,8 @@ func finish_building(b: Dictionary) -> void:
 
 func queue_unit(b: Dictionary, key: String) -> void:
 	var def: Dictionary = unit_defs.get(key, {})
-	if def.is_empty() or not b.built or not key in b.def.get("trains", []):
-		return  # a building trains only its own units (a helipad no jets, a barracks no tanks)
+	if def.is_empty() or not b.built or b.owner != 0 or not key in b.def.get("trains", []):
+		return  # only your own buildings, and each only its own units (a helipad no jets, a barracks no tanks)
 	if b.queue.size() >= 5:
 		hud.notice("Queue is full")
 		return

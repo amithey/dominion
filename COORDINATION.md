@@ -303,3 +303,8 @@ UI files listed above.
   future nation-count work. Added tools/map-capacity-check.gd, expanded maps-check.gd, registered
   the geography test in run-tests.ps1. No changes to world/combat/AI/release files.
 - 2026-09-28 Claude: 0.9.32 executable and installer in dist, built from e142139; packaged --ui-test passes.
+- 2026-09-28 Claude, 0.9.33 (user asked for 50 more gameplay checks): new tools/gameplay-ui-50.gd (51, seeded);
+  world.queue_unit refuses a building that is not the player's. Note: my 0.9.32 commit (e142139) also carried
+  Codex's map-capacity work that was in the working tree then (map_generator.gd, map-capacity-check.gd,
+  maps-check.gd, a runner line, its COORDINATION entry); it had passed the full suite. From now on I stage
+  only my own files and leave Codex's work in progress (the map picker) to Codex.

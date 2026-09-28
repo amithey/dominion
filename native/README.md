@@ -7,6 +7,20 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.33: fifty checks on playing the game
+
+**tools/gameplay-ui-50.gd** (51 checks) plays through the interface rather than the rules: laying out a
+building with the placement ghost (refused on the sea with the reason shown, paid for on good ground, a worker
+sent, Shift to keep placing, no ghost without the money), selecting buildings and units and what the command
+bar allows (workers cannot attack-move, a SAM launcher cannot bombard, Repair only for the damaged, Buy land
+only at a town hall), each factory's own training list, the side panels and the research tree, notices, the
+pause menu, the road tool, workers working through a build queue and finishing leftover sites on their own,
+groups of soldiers and tanks arriving without standing on each other, attack-move, and the defeat screen.
+It found and this version fixes:
+- **An order could be slipped into a rival's building**: the training command did not check whose building
+  it was, so a unit ordered at a rival's barracks would be paid for by you and join their army. The interface
+  never offered it, but the command now accepts orders only for your own buildings.
+
 ## Version 0.9.32: a third hundred gameplay checks
 
 **tools/gameplay-deep-100.gd** (103 checks) covers what the other batteries did not: rival nations playing on
