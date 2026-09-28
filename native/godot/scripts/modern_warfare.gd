@@ -252,6 +252,8 @@ static func intercept_chance(w: Node, kind: String, m: Dictionary, defender: int
 			odds += w.research.bonus("hgvIntercept")   # Glide Phase Interceptor
 	elif defender > 0 and w.research:
 		odds += 0.01 * w.research.ai_tech(defender)
+	if preload("res://scripts/factions.gd").identity(w, defender) == "israel":
+		odds += 0.05
 	var cls: String = CLASS_OF.get(m.type, "cruise")
 	if cls in ["shortBallistic", "ballistic", "hypersonic", "icbm"]:
 		var evasion := 0.0

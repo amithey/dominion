@@ -2,16 +2,37 @@ extends RefCounted
 const DEFAULT := {"map":"island","players":4,"nation":0,"style":"standard"}
 ## Each nation's own flag colour, in the order of NATIONS (map.nations is
 ## reordered once a match is set up, player first).
-const COLOURS := ["#3b82f6", "#e0483e", "#33b86e", "#e8a83a"]
-const NATIONS := ["Atlantic Federation · President E. Hale","Crimson Empire · Premier K. Volkov","Verdant Union · Chancellor L. Moreau","Golden Dominion · Sultan R. Qadir"]
+const Factions = preload("res://scripts/factions.gd")
+const COLOURS = Factions.COLOURS
+static var NATIONS: Array = Factions.labels()
 
 static func normalize(options: Dictionary) -> Dictionary:
 	var map_key := str(options.get("map", "island"))
 	var maps: Array = ["island", "mirrored"] + preload("res://scripts/map_generator.gd").MAPS.keys()
-	return {"map":map_key if map_key in maps else "island",
+	var out := {"map":map_key if map_key in maps else "island",
 		"players":clampi(int(options.get("players",4)),2,4),
-		"nation":clampi(int(options.get("nation",0)),0,3),
+		"nation":clampi(int(options.get("nation",0)),0,Factions.IDS.size()-1),
 		"style":"sandbox" if options.get("style","standard")=="sandbox" else "standard"}
+	if options.get("rivals") is Array:
+		out.rivals = []
+		for rival in options.rivals:
+			var i := int(rival)
+			if i >= 0 and i < Factions.IDS.size() and i != out.nation and not i in out.rivals and out.rivals.size() < int(out.players) - 1:
+				out.rivals.append(i)
+	return out
+
+static func roster(options: Dictionary) -> Array:
+	var nation := int(options.get("nation", 0))
+	var count := int(options.get("players", 4))
+	var result := [nation]
+	for i in options.get("rivals", []):
+		if int(i) >= 0 and int(i) < Factions.IDS.size() and not int(i) in result and result.size() < count:
+			result.append(int(i))
+	for i in range(Factions.IDS.size()):
+		var candidate := i if nation < 4 else (nation + i + 1) % Factions.IDS.size()
+		if not candidate in result and result.size() < count:
+			result.append(candidate)
+	return result
 
 static func apply(data: Dictionary, options: Dictionary) -> void:
 	var MapGenerator = preload("res://scripts/map_generator.gd")
@@ -33,18 +54,19 @@ static func apply(data: Dictionary, options: Dictionary) -> void:
 				entry.x = -float(entry.x)
 		for p in data.startPositions:
 			p[0] = -float(p[0])
-	var nation := clampi(int(options.get("nation",0)),0,3)
+	var nation := clampi(int(options.get("nation",0)),0,Factions.IDS.size()-1)
 	var count := clampi(int(options.get("players",4)),2,4)
-	var order := [nation]
+	# Faction roster and geographic slots are separate. Old selections retain
+	# their original towns; new factions reuse the same four tested town layouts.
+	var chosen := roster(options)
+	var home := nation % 4
+	var order := [home]
 	for i in range(4):
-		if i!=nation and order.size()<count:
+		if i != home and order.size() < count:
 			order.append(i)
-	var old_nations: Array = data.nations.duplicate(true)
 	data.nations = []
-	for i in range(order.size()):
-		var info: Dictionary = old_nations[order[i]]
-		info.player = i==0
-		data.nations.append(info)
+	for i in range(chosen.size()):
+		data.nations.append(Factions.nation(chosen[i], i == 0))
 	data.startPositions = order.map(func(i): return data.startPositions[i])
 	for group in ["buildings","units"]:
 		data[group] = data[group].filter(func(e): return int(e.owner) in order)

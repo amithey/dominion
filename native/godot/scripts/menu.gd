@@ -279,11 +279,43 @@ func open_new_game() -> void:
 	_dispatch.visible = false
 	_heading("CHART YOUR CAMPAIGN")
 	_section("Your nation")
+	var factions = preload("res://scripts/factions.gd")
 	var nations := HBoxContainer.new()
-	nations.add_theme_constant_override("separation", 10)
+	nations.add_theme_constant_override("separation", 16)
 	_panel.add_child(nations)
-	for i in range(world.MatchSetup.NATIONS.size()):
-		nations.add_child(_nation_card(i))
+	nations.add_child(_nation_card(int(setup_options.nation)))
+	var detail := VBoxContainer.new()
+	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail.add_theme_constant_override("separation", 12)
+	var detail_plate := PanelContainer.new()
+	detail_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_plate.add_theme_stylebox_override("panel", UI.box(Color(0.04, 0.08, 0.1, 0.92), Color("2d4460"), 1, 4, 12.0))
+	nations.add_child(detail_plate)
+	detail_plate.add_child(detail)
+	var selector := OptionButton.new()
+	selector.name = "FactionPicker"
+	selector.custom_minimum_size.y = 42
+	for name in factions.NAMES:
+		selector.add_item(name)
+	selector.select(int(setup_options.nation))
+	selector.item_selected.connect(func(index):
+		setup_options.nation = index
+		open_new_game())
+	detail.add_child(selector)
+	var national := Label.new()
+	var power: Dictionary = preload("res://scripts/faction_powers.gd").POWERS[factions.ARSENALS[int(setup_options.nation)]]
+	national.text = "Signature: %s\nNational power: %s" % [factions.SIGNATURES[int(setup_options.nation)], power.name]
+	national.tooltip_text = power.desc
+	national.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	national.add_theme_font_size_override("font_size", 14)
+	national.add_theme_color_override("font_color", UI.GOLD)
+	detail.add_child(national)
+	var doctrine := Label.new()
+	doctrine.text = factions.DOCTRINES[int(setup_options.nation)]
+	doctrine.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	doctrine.add_theme_font_size_override("font_size", 15)
+	doctrine.add_theme_color_override("font_color", UI.CREAM)
+	detail.add_child(doctrine)
 	# Rivals and rules share a row.
 	var pair := HBoxContainer.new()
 	pair.add_theme_constant_override("separation", 18)
@@ -296,17 +328,9 @@ func open_new_game() -> void:
 		pair.add_child(box)
 		_section(half[0], box)
 		_choices(half[1], half[2], box)
-	# The maps, smallest to largest.
+	_rival_pickers()
 	_section("Map")
-	var gen: Dictionary = preload("res://scripts/map_generator.gd").MAPS
-	var maps := [["Small Isle", "440 m", "small"], ["The Island", "640 m, east", "island"], ["Mirrored", "640 m, west", "mirrored"],
-		["Twin Lands", "720 m", "twin"], ["Archipelago", "800 m", "archipelago"], ["Continent", "960 m", "continent"]]
-	_choices(maps, "map")
-	var expanded := []
-	for key in preload("res://scripts/map_generator.gd").EXPANDED:
-		expanded.append([gen[key].name, "%d m / %d start regions" % [gen[key].size, gen[key].slots], key])
-	_choices(expanded, "map")
-	_map_note()
+	_map_picker()
 	_section("Difficulty")
 	var levels := []
 	for d in DIFFICULTIES:
@@ -331,6 +355,31 @@ func open_new_game() -> void:
 	_panel.remove_child(go)
 	foot.add_child(go)
 	_update_briefing()
+
+func _rival_pickers() -> void:
+	_section("Opponent factions")
+	var factions = preload("res://scripts/factions.gd")
+	var chosen: Array = world.MatchSetup.roster(setup_options)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	_panel.add_child(row)
+	for slot in range(1, chosen.size()):
+		var picker := OptionButton.new()
+		picker.name = "RivalPicker%d" % slot
+		picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		picker.custom_minimum_size.y = 34
+		for i in range(factions.IDS.size()):
+			if i in chosen and i != chosen[slot]:
+				continue
+			picker.add_item(factions.NAMES[i], i)
+			if i == chosen[slot]:
+				picker.select(picker.item_count - 1)
+		picker.item_selected.connect(func(index):
+			var rivals: Array = chosen.slice(1)
+			rivals[slot - 1] = picker.get_item_id(index)
+			setup_options.rivals = rivals
+			open_new_game())
+		row.add_child(picker)
 
 func _map_name(key: String) -> String:
 	var gen: Dictionary = preload("res://scripts/map_generator.gd").MAPS
@@ -361,7 +410,7 @@ func _nation_card(i: int) -> Button:
 	var colour := Color(world.MatchSetup.COLOURS[i]) if i < world.MatchSetup.COLOURS.size() else UI.GOLD
 	var chosen: bool = int(setup_options.nation) == i
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(200, 206)
+	b.custom_minimum_size = Vector2(260, 218)
 	b.focus_mode = Control.FOCUS_ALL
 	b.toggle_mode = true
 	b.button_pressed = chosen
@@ -382,7 +431,7 @@ func _nation_card(i: int) -> Button:
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(col)
 	var pic := TextureRect.new()
-	pic.texture = Gallery.face(parts[1] if parts.size() > 1 else "", 188.0 / 124.0)
+	pic.texture = Gallery.face(parts[1] if parts.size() > 1 else "", 248.0 / 124.0)
 	pic.custom_minimum_size = Vector2(0, 124)
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
@@ -402,6 +451,7 @@ func _nation_card(i: int) -> Button:
 	col.add_child(name)
 	var leader := Label.new()
 	leader.text = ("\u2713  " if chosen else "") + (parts[1] if parts.size() > 1 else "")
+	leader.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	leader.add_theme_font_size_override("font_size", 13)
 	leader.add_theme_color_override("font_color", UI.GOLD if chosen else UI.MUTED)
 	leader.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -456,15 +506,57 @@ func _choices(items: Array, key: String, parent: Control = null) -> void:
 		col.add_child(d)
 		row.add_child(b)
 
-## A line under the maps about the one chosen.
-func _map_note() -> void:
-	var gen: Dictionary = preload("res://scripts/map_generator.gd").MAPS
-	var key := str(setup_options.map)
-	var text: String = gen[key].desc if gen.has(key) else ("The original island, 640 m: rivals on every side." if key == "island" else "The original island mirrored: start in the west.")
-	if gen.has(key) and gen[key].has("slots"):
-		text += " Prepared for %d nations; current campaigns use up to four." % int(gen[key].slots)
-	var l := _description(text)
-	l.add_theme_color_override("font_color", UI.CREAM)
+## Terrain previews are baked from the same seed as each campaign, so opening
+## the picker never generates a large world or stalls the menu.
+func _map_picker() -> void:
+	var catalogue = preload("res://scripts/map_catalogue.gd")
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 18)
+	_panel.add_child(row)
+	var preview := TextureRect.new()
+	preview.name = "MapPreview"
+	preview.custom_minimum_size = Vector2(176, 176)
+	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	row.add_child(preview)
+	var detail := VBoxContainer.new()
+	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail.add_theme_constant_override("separation", 8)
+	row.add_child(detail)
+	var picker := OptionButton.new()
+	picker.name = "MapPicker"
+	picker.custom_minimum_size.y = 38
+	picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for key in catalogue.KEYS:
+		var info: Dictionary = catalogue.entry(key)
+		picker.add_item("%s  /  %d m  /  %d regions" % [info.name, info.size, info.slots])
+		picker.set_item_metadata(picker.item_count - 1, key)
+	picker.select(maxi(0, catalogue.KEYS.find(str(setup_options.map))))
+	detail.add_child(picker)
+	var note := Label.new()
+	note.name = "MapDescription"
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.add_theme_font_size_override("font_size", 14)
+	note.add_theme_color_override("font_color", UI.CREAM)
+	detail.add_child(note)
+	var legend := Label.new()
+	legend.text = "Gold dots: prepared capital regions. North is up."
+	legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	legend.add_theme_font_size_override("font_size", 12)
+	legend.add_theme_color_override("font_color", UI.MUTED)
+	detail.add_child(legend)
+	var update := func(index: int):
+		var key := str(picker.get_item_metadata(index))
+		setup_options.map = key
+		var info: Dictionary = catalogue.entry(key)
+		preview.texture = load(catalogue.preview_path(key))
+		preview.tooltip_text = "%s: %d x %d m" % [info.name, info.size, info.size]
+		note.text = "%s\n%d prepared regions; %d active nations in this campaign." % [info.desc, info.slots, int(setup_options.players)]
+		if int(info.slots) > 4:
+			note.text += " Support for more than four active nations is still pending."
+		_update_briefing()
+	picker.item_selected.connect(update)
+	update.call(picker.selected)
 
 ## Paused: which campaign this is, where it stands.
 func _campaign_line() -> void:

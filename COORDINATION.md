@@ -303,12 +303,30 @@ UI files listed above.
   future nation-count work. Added tools/map-capacity-check.gd, expanded maps-check.gd, registered
   the geography test in run-tests.ps1. No changes to world/combat/AI/release files.
 - 2026-09-28 Claude: 0.9.32 executable and installer in dist, built from e142139; packaged --ui-test passes.
+
+- 2026-09-28 Codex (maps continuation): compact map picker in menu.gd with actual default-seed
+  terrain previews for all nine maps, prepared-region markers, and separate active-nation counts.
+  New map_catalogue.gd, ui/maps/*.png, tools/map-previews-build.gd (rebuild baked previews), and
+  tools/map-picker-check.gd. No nation-count, gameplay or release changes.
 - 2026-09-28 Claude, 0.9.33 (user asked for 50 more gameplay checks): new tools/gameplay-ui-50.gd (51, seeded);
   world.queue_unit refuses a building that is not the player's. Note: my 0.9.32 commit (e142139) also carried
   Codex's map-capacity work that was in the working tree then (map_generator.gd, map-capacity-check.gd,
   maps-check.gd, a runner line, its COORDINATION entry); it had passed the full suite. From now on I stage
   only my own files and leave Codex's work in progress (the map picker) to Codex.
 - 2026-09-28 Claude: 0.9.33 executable and installer in dist, built from ad48b08; packaged --ui-test passes.
+
+- 2026-09-28 Codex: user expanded this task from maps to factions and explicitly chose real
+  leaders plus Russia, India, Japan, Turkiye and Israel. Working on factions.gd, match_setup.gd,
+  national_arsenal identity/display names, research.gd national modifiers, menu.gd, leader_gallery.gd
+  and nine new portrait assets. Keeping four simultaneous nations for now; no edits to world.gd
+  or the ongoing gameplay-maps-100.gd work. Original four retain existing arsenal mechanics.
+
+- 2026-09-28 Codex factions implementation: nine selectable real-leader factions and manually
+  chosen rival identities; 2-4 simultaneous nations retained. Five new player/AI doctrines in
+  factions.gd + research.gd, Israel +5pp interception in modern_warfare.gd, existing national
+  arsenals preserved. Nine built-in ImageGen assets *-v2.png; exact prompts and sources saved.
+  Validation: factions-check 378 checks, units-100 181 checks, campaign-flow pass; art and menu
+  captured for visual review. world.gd and gameplay-maps-100 remain other-agent changes.
 - 2026-09-28 Claude, 0.9.34 (user asked for 100 more gameplay checks and to work with Codex on the maps):
   new tools/gameplay-maps-100.gd (108 checks, all nine maps: land, room for a town, deposits, a shipyard coast,
   a worker building, a tank driving, fair capital spacing, rivals growing, economy, speed, the map in saves).
@@ -334,3 +352,9 @@ UI files listed above.
   Codex's uncommitted faction files are in this commit; the new weapons and powers for Russia, India, Japan,
   Turkiye and Israel become playable when factions.gd is committed. Check: tools/faction-powers-check.gd.
 - 2026-09-28 Claude: 0.9.35 executable and installer in dist, built from a5932a6; packaged --ui-test passes.
+
+- 2026-09-28 Codex integration complete: factions-check now passes 384 checks including a fresh
+  reload of Israel/Russia/India/Turkiye on Great Frontier. The 0.9.35 faction-powers suite passes
+  55 checks with play_as also updating the stable faction id. Updated polish_regression to check
+  EU id and the real leader instead of the obsolete Verdant Union name; --campaign-test passes.
+  The picker now shows 0.9.35 signature weapons and national powers alongside passive doctrines.

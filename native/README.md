@@ -76,9 +76,25 @@ disk, and refusing damaged saves. It found and this version fixes:
 - **Aircraft parked on a destroyed airfield stayed tied to it**, sitting on the ruin for ever. Aircraft caught
   on the ground now go up with their base; those in the air lose it and look for another.
 
+## Nine factions and real-leader portraits
+
+New Campaign lets you choose the United States, China, European Union, Iran,
+Russia, India, Japan, Turkiye or Israel, and choose each opponent independently.
+All nine have new illustrated portraits of real leaders. Campaigns still contain
+2–4 nations. The original four retain their exclusive arsenals; the five new
+factions add distinct unit strengths and weaknesses for player and AI alike.
+See [FACTIONS.md](FACTIONS.md) for the exact bonuses, leader references and checks.
+
 ## Expanded map geography (6–8 starting regions)
 
-Three new maps are selectable in New Campaign:
+New Campaign now has a compact map selector with an actual terrain preview for
+all nine maps. Gold dots mark prepared capital regions. The description shows
+both the region capacity and the number of active nations in the chosen campaign.
+Previews are baked from the default-seed height grids, so browsing does not
+regenerate terrain or stall the menu. Rebuild after terrain changes with
+`--script res://tools/map-previews-build.gd`, then run an editor import.
+
+Three expanded maps are selectable:
 
 | Map | Width | Prepared capital regions | Geography |
 |---|---:|---:|---|
@@ -97,7 +113,8 @@ Integration contract: generated map data exposes `mapCapacity`, `mapSeed`, and
 continues to contain only the existing nations' camera/spawn anchors. Future
 6–8 nation setup must populate towns/armies and update match setup independently.
 
-Validation: `tools/map-capacity-check.gd` checks every prepared slot at seeds 7,
+Validation: `tools/map-picker-check.gd` checks all nine selections, preview assets,
+capacity labels and the campaign summary. `tools/map-capacity-check.gd` checks every prepared slot at seeds 7,
 42 and 109 and writes overview PNGs under `build/map-layout-*.png`.
 `tools/maps-check.gd` also loads all three maps in the actual world and checks
 navigation, active capitals, nearby resources, land units and ships.

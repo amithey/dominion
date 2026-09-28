@@ -4,7 +4,7 @@ static func run(w: Node,campaign: bool) -> void:
 	w.set_physics_process(false)
 	var errors: Array[String] = []
 	if campaign:
-		if w.map.nations.size()!=2 or w.map.nations[0].name!="Verdant Union" or w.ai.nations.size()!=1:
+		if w.map.nations.size()!=2 or w.map.nations[0].get("id", "")!="eu" or w.map.nations[0].people.president!=preload("res://scripts/factions.gd").LEADERS[2] or w.ai.nations.size()!=1:
 			errors.append("Campaign participant/leader selection failed")
 		if w.units.any(func(u):return u.owner>1) or w.buildings.any(func(b):return b.owner>1):
 			errors.append("Inactive nations remained in the world")

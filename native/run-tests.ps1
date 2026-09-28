@@ -34,6 +34,8 @@ $tests = @(
     @('a third hundred gameplay checks: rivals on their own, match settings, missiles, spies, trade, bunkers, air bases, disk saves', @('--script', 'res://tools/gameplay-deep-100.gd'), 'GAMEPLAY_DEEP PASS', 2400),
     @('about 100 gameplay checks over time: economy, building, training, research, land, supply, war, trade, saves', @('--script', 'res://tools/gameplay-live-100.gd'), 'GAMEPLAY_LIVE PASS', 1800),
     @('about 100 gameplay checks: every building, unit, research, market, diplomacy, spies, missiles, land, roads, saves', @('--script', 'res://tools/gameplay-100.gd'), 'GAMEPLAY_100 PASS', 1500),
+    @('nine factions: leaders, roster, doctrines and save identity', @('--script', 'res://tools/factions-check.gd'), 'FACTIONS_TEST PASS', 240),
+    @('map picker: previews, capacities and campaign selection', @('--script', 'res://tools/map-picker-check.gd'), 'MAP_PICKER_TEST PASS', 180),
     @('6-8 map slots: space, resources, passages and reproducible seeds', @('--script', 'res://tools/map-capacity-check.gd'), 'MAP_CAPACITY_TEST PASS', 240),
     @('every map loads: capitals linked by land, resources, ships at sea', @('--script', 'res://tools/maps-check.gd'), 'MAPS_TEST PASS', 400),
     @('settings are saved and restored', @('--script', 'res://tools/settings-check.gd'), 'SETTINGS_TEST PASS', 180),

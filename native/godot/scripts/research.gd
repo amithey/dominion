@@ -102,6 +102,9 @@ func setup(world_node: Node, cfg: Dictionary) -> void:
 	for key in tracks_cfg:
 		tracks[key] = 0
 	_recompute()
+	# Starting armies are created before the research service exists.
+	for unit in world.units:
+		preload("res://scripts/factions.gd").equip(world, unit)
 
 # ---------------------------------------------------------------- queries
 
@@ -479,8 +482,9 @@ func ai_tech(owner: int) -> float:
 
 ## Damage dealt by `unit` (a unit dictionary), from discoveries or rival tech.
 func damage_mult(unit: Dictionary) -> float:
+	var doctrine: Dictionary = preload("res://scripts/factions.gd").for_unit(world, unit)
 	if unit.owner > 0:
-		return 1.0 + 0.03 * ai_tech(unit.owner)
+		return (1.0 + 0.03 * ai_tech(unit.owner)) * float(doctrine.damage)
 	var m := 1.0 + bonus("dmgAll")
 	var key: String = unit.get("key", "")
 	if key in world.infantry_keys:
@@ -493,7 +497,7 @@ func damage_mult(unit: Dictionary) -> float:
 		m += bonus("dmgDrone")
 	if unit.get("naval", false):
 		m += bonus("dmgNaval")
-	return m
+	return m * float(doctrine.damage)
 
 ## Damage taken by `unit` (stealth aircraft shrug some of it off).
 func armor_mult(unit: Dictionary) -> float:
@@ -522,6 +526,7 @@ func equip(unit: Dictionary) -> void:
 			unit.speed *= 1.0 + bonus("spdGround")
 	unit.hp *= hp
 	unit.max_hp *= hp
+	preload("res://scripts/factions.gd").equip(world, unit)
 
 ## A unit's price after Heavy Industry and Drone Swarms.
 func unit_cost(key: String, cost: Dictionary) -> Dictionary:

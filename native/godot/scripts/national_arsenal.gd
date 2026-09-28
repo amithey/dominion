@@ -3,27 +3,27 @@ extends RefCounted
 ## nation field too when the AI plays it). A nation is known by its flag colour,
 ## so the arsenal follows it when the player picks another nation.
 ##
-##   blue (Atlantic Federation, after the United States)
+##   blue (United States, after the United States)
 ##     raptor          F-22 Raptor: air superiority, supercruise, the stealthiest
 ##                     fighter (seen at a quarter of the range), and SEAD: its
 ##                     missiles hit air defences two and a half times as hard
 ##     raider          B-21 Raider, from the Classified Programs discovery: a
 ##                     flying-wing bomber still largely secret in 2025, seen only
 ##                     at 15% of the range, heavy precision bombs
-##   red (Crimson Empire, after China)
+##   red (China, after China)
 ##     df17            DF-17 launcher: a hypersonic glide vehicle six hexes out,
 ##                     hard to intercept, deadly to ships (the DF-21D / DF-26
 ##                     "carrier killer" role)
-##   gold (Golden Dominion, after Iran)
+##   gold (Iran, after Iran)
 ##     shahedLauncher  fires a swarm of five Shahed-136 one-way attack drones; each
 ##                     is slow and easy to shoot down, together they saturate
-##   green (Verdant Union, after Europe)
+##   green (European Union, after Europe)
 ##     irisT           IRIS-T SLM: the air defence Ukraine reported hitting about
 ##                     99% of its targets; stops most cruise missiles and some
 ##                     ballistic ones
 
 const NATION_OF_COLOUR := {"#3b82f6": "blue", "#e0483e": "red", "#33b86e": "green", "#e8a83a": "gold"}
-const NATION_NAMES := {"blue": "Atlantic Federation", "red": "Crimson Empire", "green": "Verdant Union", "gold": "Golden Dominion"}
+const NATION_NAMES := {"blue": "United States", "red": "China", "green": "European Union", "gold": "Iran"}
 const SWARM := 5            # Shaheds per salvo
 const SWARM_MAX := 15       # a nation's Shaheds in the air at once
 const SEAD := 2.5           # the Raptor against air defences
@@ -33,26 +33,26 @@ const UNITS := {
 	"raptor": {"name": "F-22 Raptor", "nation": "blue", "hp": 280, "dmg": 80, "range": 32, "cooldown": 2.0, "aggro": 44, "speed": 34,
 		"fly": true, "naval": false, "cost": {"money": 1300, "iron": 70, "oil": 70, "silicon": 50}, "trainTime": 32, "pop": 3,
 		"requires": "stealthTech",
-		"desc": "Atlantic Federation only. The air superiority fighter: supercruise, and so stealthy that air defence and fighters see it at a quarter of their range. Its missiles hit air defences 2.5 times as hard (SEAD)."},
+		"desc": "United States only. The air superiority fighter: supercruise, and so stealthy that air defence and fighters see it at a quarter of their range. Its missiles hit air defences 2.5 times as hard (SEAD)."},
 	"raider": {"name": "B-21 Raider", "nation": "blue", "hp": 420, "dmg": 160, "range": 20, "cooldown": 4.0, "aggro": 36, "speed": 22,
 		"fly": true, "naval": false, "cost": {"money": 2200, "iron": 120, "oil": 90, "silicon": 80}, "trainTime": 40, "pop": 4,
 		"requires": "classifiedPrograms",
-		"desc": "Atlantic Federation only. A classified flying-wing bomber: seen only at 15% of the range, it drops heavy precision bombs on buildings and armour. Two sorties before it rearms."},
+		"desc": "United States only. A classified flying-wing bomber: seen only at 15% of the range, it drops heavy precision bombs on buildings and armour. Two sorties before it rearms."},
 	"df17": {"name": "DF-17 Launcher", "nation": "red", "hp": 260, "dmg": 1, "range": 60, "cooldown": 30.0, "aggro": 60, "speed": 12,
 		"fly": false, "naval": false, "cost": {"money": 1100, "iron": 80, "oil": 30, "silicon": 45}, "trainTime": 30, "pop": 3,
 		"requires": "ballisticTech",
-		"desc": "Crimson Empire only. Fires a hypersonic glide vehicle six hexes: a SAM site stops 8% of them, a missile defence battery 30%. Two and a half times as deadly to ships (the carrier killer)."},
+		"desc": "China only. Fires a hypersonic glide vehicle six hexes: a SAM site stops 8% of them, a missile defence battery 30%. Two and a half times as deadly to ships (the carrier killer)."},
 	"shahedLauncher": {"name": "Shahed Launcher", "nation": "gold", "hp": 240, "dmg": 1, "range": 50, "cooldown": 45.0, "aggro": 50, "speed": 12,
 		"fly": false, "naval": false, "cost": {"money": 700, "iron": 40, "silicon": 30}, "trainTime": 24, "pop": 3,
 		"requires": "microchips",
-		"desc": "Golden Dominion only. Launches a swarm of five Shahed one-way attack drones five hexes out. Each is slow and easy to shoot down; together they overwhelm air defence."},
+		"desc": "Iran only. Launches a swarm of five Shahed one-way attack drones five hexes out. Each is slow and easy to shoot down; together they overwhelm air defence."},
 	"shahed": {"name": "Shahed Drone", "nation": "gold", "hp": 35, "dmg": 110, "range": 8, "cooldown": 1.0, "aggro": 70, "speed": 14,
 		"fly": true, "naval": false, "cost": {"money": 0}, "trainTime": 1, "pop": 0,
 		"desc": "A one-way attack drone from a Shahed Launcher."},
 	"irisT": {"name": "IRIS-T SLM", "nation": "green", "hp": 300, "dmg": 45, "range": 90, "cooldown": 2.0, "aggro": 100, "speed": 10,
 		"fly": false, "naval": false, "cost": {"money": 950, "iron": 60, "silicon": 45}, "trainTime": 26, "pop": 3,
 		"requires": "guidedMunitions",
-		"desc": "Verdant Union only. The air defence that hit ~99% of its targets in Ukraine: shoots down aircraft and drones 90 m out, stops 95% of cruise missiles and 45% of ballistic ones."},
+		"desc": "European Union only. The air defence that hit ~99% of its targets in Ukraine: shoots down aircraft and drones 90 m out, stops 95% of cruise missiles and 45% of ballistic ones."},
 }
 
 const PROFILES := {
@@ -75,7 +75,7 @@ const MISSILES := {
 const DISCOVERIES := {
 	"classifiedPrograms": {"name": "Classified Programs", "cost": 900, "branch": "air", "era": 5, "nation": "blue",
 		"reqDiscovery": "stealthTech", "reqBuilding": "airfield", "fx": {},
-		"desc": "Atlantic Federation only. Special access programs: unlocks the B-21 Raider, a flying-wing bomber that radar sees only at 15% of its range."},
+		"desc": "United States only. Special access programs: unlocks the B-21 Raider, a flying-wing bomber that radar sees only at 15% of its range."},
 }
 
 ## How close (as a share of an observer's range) a stealth aircraft is seen.

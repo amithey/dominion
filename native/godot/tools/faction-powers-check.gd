@@ -34,6 +34,8 @@ func dry(at: Vector3) -> Vector3:
 	return w.land_point(at, 20.0)
 ## Makes `owner` play the nation with arsenal `key`.
 func play_as(owner: int, key: String) -> void:
+	var factions = preload("res://scripts/factions.gd")
+	w.map.nations[owner].id = factions.IDS[factions.ARSENALS.find(key)]
 	w.map.nations[owner].color = FLAGS[key]
 	w.map.nations[owner].arsenal = key
 func rate(defender: Dictionary, type: String, owner: int, trials: int) -> float:

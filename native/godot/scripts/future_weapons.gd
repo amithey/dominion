@@ -20,7 +20,7 @@ extends RefCounted
 ## Discoveries:
 ##   Glide Phase Interceptor (US-Japan, in development): your missile defence
 ##   batteries stop twice as many hypersonic missiles (30% -> 60%).
-##   Golden Dome (Atlantic Federation only; interceptors in orbit, $1.2 trillion
+##   Golden Dome (United States only; interceptors in orbit, $1.2 trillion
 ##   by the CBO's 2026 estimate): one more shot from space at every missile
 ##   fired at you, anywhere on the map, at $150 an interceptor.
 
@@ -85,7 +85,7 @@ const DISCOVERIES := {
 		"desc": "An interceptor that catches hypersonic glide vehicles while they manoeuvre: missile defence batteries stop 60% of hypersonic missiles instead of 30%."},
 	"goldenDome": {"name": "Golden Dome", "cost": 1600, "branch": "strategic", "era": 5, "nation": "blue",
 		"reqDiscovery": "missileDefence", "reqBuilding": null, "fx": {"goldenDome": 1.0},
-		"desc": "Atlantic Federation only. Interceptors in orbit: one more shot at every missile fired at you, anywhere (60% against ballistic, 35% hypersonic, 20% cruise), at $150 an interceptor."},
+		"desc": "United States only. Interceptors in orbit: one more shot at every missile fired at you, anywhere (60% against ballistic, 35% hypersonic, 20% cruise), at $150 an interceptor."},
 }
 
 static func apply(w: Node) -> void:
