@@ -102,7 +102,8 @@ func run() -> void:
 	check(two.units.all(func(u): return int(u.owner) < 2) and two.buildings.all(func(b): return int(b.owner) < 2), "and nothing belongs to a nation that is not in it")
 	var green: Dictionary = raw.duplicate(true)
 	MatchSetup.apply(green, MatchSetup.normalize({"players": 4, "nation": 2}))
-	check(green.nations[0].name == raw.nations[2].name and green.nations[0].player, "choosing the Verdant Union makes it yours (%s)" % green.nations[0].name)
+	# Known by its flag, not its name (Codex's factions.gd renames the nations).
+	check(str(green.nations[0].color).to_lower() == str(raw.nations[2].color).to_lower() and green.nations[0].player, "choosing the third nation makes it yours (%s)" % green.nations[0].name)
 	check(Arsenal.NATION_OF_COLOUR.get(str(green.nations[0].color).to_lower(), "") == "green", "and its flag, and so its own weapons, come with it")
 	check(green.startPositions[0] == raw.startPositions[2], "you start where the Verdant Union starts")
 	var mirror: Dictionary = raw.duplicate(true)

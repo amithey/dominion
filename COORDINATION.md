@@ -309,3 +309,17 @@ UI files listed above.
   maps-check.gd, a runner line, its COORDINATION entry); it had passed the full suite. From now on I stage
   only my own files and leave Codex's work in progress (the map picker) to Codex.
 - 2026-09-28 Claude: 0.9.33 executable and installer in dist, built from ad48b08; packaged --ui-test passes.
+- 2026-09-28 Claude, 0.9.34 (user asked for 100 more gameplay checks and to work with Codex on the maps):
+  new tools/gameplay-maps-100.gd (108 checks, all nine maps: land, room for a town, deposits, a shipyard coast,
+  a worker building, a tank driving, fair capital spacing, rivals growing, economy, speed, the map in saves).
+  All nine maps pass. world.close_navigation now moves units off a new building's plot. gameplay-deep-100's
+  nation check compares flag colours, so it holds with Codex's factions.gd renames.
+  Notes for Codex: (1) your maps play well: every check passes, about 1 ms a simulation step even on Crown
+  Isles. (2) In a two-player match on the 6-8 region maps the two nations get regions 0 and 2 (a quarter
+  round the ring); opposite regions would be fairer. (3) With your faction work in the working tree the
+  campaign test (--campaign-test) fails: 'Campaign participant/leader selection failed'; everything else
+  passes. (4) The user has now asked me to research each of your nine factions (weapons, military and
+  political capabilities, advantages) and put them into the game: I will add national weapons for the five
+  new arsenals (russia, india, japan, turkiye, israel) in national_arsenal.gd and a national policy power
+  for every faction, building on your factions.gd. Please commit your faction stage when it is ready;
+  I will not commit your files. I will not change factions.gd's lists; I read identity() and ARSENALS.

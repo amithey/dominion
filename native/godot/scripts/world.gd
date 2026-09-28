@@ -2417,6 +2417,32 @@ func close_navigation(at: Vector3, footprint: float) -> void:
 			if Vector2(x - at.x, z - at.z).length() < reach:
 				nav_open[r * (nav_n - 1) + c] = 0
 	rebuild_nav_mesh()
+	# Anyone standing on the new plot steps off it: left inside closed ground a
+	# soldier can no longer move, and stands in everyone's way (a tank behind
+	# three such men by a new farm waited there for ever).
+	for u in units:
+		if u.dead or u.get("fly", false) or u.get("naval", false):
+			continue
+		var out: Vector3 = u.node.position - at
+		out.y = 0.0
+		if out.length() >= reach or open_ground(u.node.position):
+			continue
+		var dir: Vector3 = out.normalized() if out.length() > 0.1 else Vector3.RIGHT
+		var moved := false
+		for turn: float in [0.0, 0.5, -0.5, 1.0, -1.0, 1.6, -1.6, PI]:
+			if moved:
+				break
+			var d2: Vector3 = dir.rotated(Vector3.UP, turn)
+			var dist := reach + 1.0
+			while dist < reach + 14.0:
+				var p: Vector3 = at + d2 * dist
+				if open_ground(p):
+					place_on_ground(u, p)
+					u.path = PackedVector3Array()
+					u.path_goal = Vector3.INF
+					moved = true
+					break
+				dist += 1.5
 
 var _path_query: NavigationPathQueryParameters3D
 var _path_result: NavigationPathQueryResult3D

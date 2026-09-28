@@ -7,6 +7,22 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.34: playing on every map
+
+**tools/gameplay-maps-100.gd** (108 checks) plays on each of the nine maps, Codex's three new large maps
+(Great Frontier, Inland Sea, Crown Isles) included: land of the capital's own; room for a farm, homes, a
+barracks, a warehouse and a market in it; deposits within reach; a coast for a shipyard with open water;
+a worker who builds; a tank that drives 110 m across open country; capitals a fair distance apart; every
+rival building up; the economy running; the simulation fast enough (about 1 ms a step on every map); and the
+map recorded in a save. It found and this version fixes:
+- **Units standing where a building went up were shut inside its plot.** The site check only keeps units
+  off its middle; soldiers near the edge stayed on ground that closed under them, could no longer move, and
+  blocked the way (a tank behind three of them by a new farm waited there until it gave up). Anyone on a new
+  plot now steps off it onto the nearest open ground.
+Known and still open: now and then a tank pressing through a narrow gap between new buildings stalls there;
+the march tests show the movement varying from run to run (the lake crossing passes two runs in three, as
+it did before this version).
+
 ## Version 0.9.33: fifty checks on playing the game
 
 **tools/gameplay-ui-50.gd** (51 checks) plays through the interface rather than the rules: laying out a
