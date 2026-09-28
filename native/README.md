@@ -7,6 +7,13 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.37: strengths and weaknesses on screen
+
+Each nation's strengths and weaknesses (0.9.36) now show where you choose and meet nations: on the New Game
+screen under the chosen nation, on every rival's card in Diplomacy (Codex's nation_profile_view.gd, which
+waited for the profile data), and now also for your own nation at the top of Diplomacy, beside its national
+power. Check: tools/profile-views.gd (with a window).
+
 ## Version 0.9.36: each nation's strengths and weaknesses
 
 Researched for all nine factions from 2024-2025 figures (R&D spending: Israel 6.3% of GDP, the US 3.5%, Japan

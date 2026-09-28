@@ -381,3 +381,8 @@ UI files listed above.
   {strengths: [String], weaknesses: [String]} for a factions.gd id; id_of(world, owner) gives an owner's id.
   I did not touch hud.gd, menu.gd or ui_theme.gd (your work in progress).
 - 2026-09-28 Claude: 0.9.36 executable and installer in dist, built from 3198001 (which includes Codex's 7e910fe factions and 2f02a49 interface redesign); packaged --ui-test passes. settings-check now counts a tab's settings by their labels (the redesign moved the footer note out of the panel).
+- 2026-09-28 Claude, 0.9.37 (user asked me to take over Codex's open task of showing the profiles): Codex's
+  nation_profile_view.gd already shows them in the picker and on rival cards once national_profile.gd exists;
+  side_panels._power_card() now names your nation and adds your own profile with the same disclosure.
+  tools/profile-views.gd counts the disclosures (picker and Diplomacy) and pictures Diplomacy; the picker's
+  picture stays interface-review.gd's (my harness opened the menu in a way that left it blank).

@@ -182,6 +182,7 @@ func _power_card() -> void:
 	if p.is_empty():
 		return
 	var card: VBoxContainer = hud._card(hud.UI.GOLD)
+	card.add_child(hud._text("Your nation: " + w.diplomacy.name_of(0), 13, hud.UI.MUTED))
 	card.add_child(hud._text("National power: " + str(p.name), 16, hud.UI.CREAM, true))
 	card.add_child(hud._text(str(p.desc), 13, hud.UI.TEXT))
 	var wait: float = P.ready_in(w, 0)
@@ -191,6 +192,8 @@ func _power_card() -> void:
 		hud._button(row, "Use: " + str(p.name), func():
 			P.use(w, 0)
 			hud.refresh_side(), P.blocked(w, 0) == "", "good")
+	# Your own strengths and weaknesses, in the same disclosure as the rivals' cards.
+	preload("res://scripts/nation_profile_view.gd").append_to(card, preload("res://scripts/national_profile.gd").id_of(w, 0), func(): hud._fit_window(hud._win_scroll.scroll_vertical))
 
 ## Every nation against every other, you included: one square per pair.
 func _world_chart() -> void:
