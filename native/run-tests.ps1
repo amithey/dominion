@@ -73,6 +73,7 @@ $tests = @(
     @('market, spies, missiles, territory', @('--', '--systems-test'), 'SYSTEMS_TEST PASS', 300),
     @('a hundred intelligence checks: agents, odds, every operation, capture, exposure, warnings, rival services, effects in play, saves', @('--script', 'res://tools/intel-100.gd'), 'INTEL_100 PASS', 900),
     @('intelligence lifecycle', @('--script', 'res://tools/espionage-check.gd'), 'ESPIONAGE_TEST PASS', 180),
+    @('a hundred research checks: queue, stages, rate, eras, tracks, every discovery in play, rival research, saves, the tree', @('--script', 'res://tools/research-100.gd'), 'RESEARCH_100 PASS', 900),
     @('research', @('--', '--research-test'), 'RESEARCH_TEST PASS', 300),
     @('interface (every screen and button)', @('--', '--ui-test'), 'UI_TEST PASS', 300),
     @('save and load', @('--', '--save-test'), 'SAVE_TEST PASS', 240),
