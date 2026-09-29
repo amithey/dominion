@@ -71,6 +71,7 @@ $tests = @(
     @('leader contacts, negotiations and exports', @('--script', 'res://tools/diplomatic-contacts-check.gd'), 'DIPLOMATIC_CONTACTS_TEST PASS', 180),
     @('supply network', @('--', '--logistics-test'), 'LOGISTICS_TEST PASS', 240),
     @('market, spies, missiles, territory', @('--', '--systems-test'), 'SYSTEMS_TEST PASS', 300),
+    @('a hundred intelligence checks: agents, odds, every operation, capture, exposure, warnings, rival services, effects in play, saves', @('--script', 'res://tools/intel-100.gd'), 'INTEL_100 PASS', 900),
     @('intelligence lifecycle', @('--script', 'res://tools/espionage-check.gd'), 'ESPIONAGE_TEST PASS', 180),
     @('research', @('--', '--research-test'), 'RESEARCH_TEST PASS', 300),
     @('interface (every screen and button)', @('--', '--ui-test'), 'UI_TEST PASS', 300),
