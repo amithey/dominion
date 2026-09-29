@@ -85,14 +85,19 @@ func produce(silo: Dictionary, key: String) -> String:
 		return "Queue is full"
 	if stored() + queued() >= capacity():
 		return "Missile storage full (%d). Build Ammo Depots for +%d each." % [capacity(), int(cfg.capPerDepot)]
-	var price: Dictionary = {}
-	for k in def.cost:
-		price[k] = roundf(float(def.cost[k]) * preload("res://scripts/national_profile.gd").cost_mult(world, 0, "missile"))
+	var price := production_cost(key)
 	if not world.economy.pay(price):
-		return "Not enough %s" % world.economy.missing(def.cost)
-	silo.queue.append("missile:" + key)
+		return "Not enough %s" % world.economy.missing(price)
+	world.queue_paid_order(silo, "missile:" + key, price)
 	changed.emit()
 	return ""
+
+func production_cost(key: String) -> Dictionary:
+	var price := {}
+	var cost: Dictionary = def_of(key).get("cost", {})
+	for resource in cost:
+		price[resource] = roundf(float(cost[resource]) * preload("res://scripts/national_profile.gd").cost_mult(world, 0, "missile"))
+	return price
 
 ## Called by world.update_training when a silo finishes one.
 func finished(key: String) -> void:
@@ -306,7 +311,22 @@ func missile_mesh(key: String) -> Node3D:
 # ---------------------------------------------------------------- saving
 
 func capture() -> Dictionary:
-	return {"stock": stock}
+	var flights := []
+	var buildings: Array = world.buildings.filter(func(b): return not b.dead)
+	var units: Array = world.units.filter(func(u): return not u.dead)
+	for m in flying:
+		var engaged: Dictionary = m.get("engaged", {})
+		var defenders_used := []
+		# Runtime node IDs change on load; save indices into the same live
+		# building/unit lists used by save.gd instead of persisting those IDs.
+		for group in [buildings, units]:
+			for i in range(group.size()):
+				if engaged.has(group[i].node.get_instance_id()):
+					defenders_used.append({"building": is_same(group, buildings), "index": i})
+		flights.append({"type": m.type, "owner": m.owner, "from": [m.from.x, m.from.y, m.from.z],
+			"to": [m.to.x, m.to.y, m.to.z], "t": m.t, "dur": m.dur, "arc": m.arc,
+			"peak": m.peak, "trail": m.trail, "dome": engaged.has("dome"), "defenders": defenders_used})
+	return {"stock": stock.duplicate(), "flying": flights, "clock": clock}
 
 func restore(data: Dictionary) -> void:
 	for key in stock:
@@ -314,3 +334,31 @@ func restore(data: Dictionary) -> void:
 	for m in flying:
 		m.node.queue_free()
 	flying.clear()
+	clock = float(data.get("clock", 0.0))
+	var buildings: Array = world.buildings.filter(func(b): return not b.dead)
+	var units: Array = world.units.filter(func(u): return not u.dead)
+	for saved in data.get("flying", []):
+		if def_of(str(saved.type)).is_empty():
+			continue
+		var m: Dictionary = saved.duplicate(true)
+		m.from = Vector3(saved.from[0], saved.from[1], saved.from[2])
+		m.to = Vector3(saved.to[0], saved.to[1], saved.to[2])
+		m.owner = int(saved.owner)
+		m.engaged = {}
+		if saved.get("dome", false):
+			m.engaged["dome"] = true
+		for defender in saved.get("defenders", []):
+			var group: Array = buildings if defender.building else units
+			var index := int(defender.index)
+			if index >= 0 and index < group.size():
+				m.engaged[group[index].node.get_instance_id()] = true
+		# Recreate only the missile, never replay launch effects or spend stock.
+		m.node = missile_mesh(str(m.type))
+		add_child(m.node)
+		var fraction := clampf(float(m.t) / maxf(float(m.dur), 0.001), 0.0, 1.0)
+		var at := position_at(m, fraction)
+		m.node.global_position = at
+		var ahead := position_at(m, minf(fraction + 0.01, 1.0))
+		if ahead.distance_to(at) > 0.01:
+			m.node.look_at(ahead, Vector3.UP if absf((ahead - at).normalized().y) < 0.98 else Vector3.RIGHT)
+		flying.append(m)

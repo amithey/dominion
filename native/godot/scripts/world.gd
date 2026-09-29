@@ -1163,7 +1163,7 @@ func register_building(key: String, owner: int, built: bool, root: Node3D, model
 	var entity := {
 		"key": key, "owner": owner, "def": def, "root": root, "model": model, "footprint": footprint,
 		"built": built, "progress": 1.0 if built else 0.0, "hp": float(def.hp), "max_hp": float(def.hp),
-		"queue": [], "queue_prog": 0.0, "dead": false, "builders": 0, "deposit": null,
+		"queue": [], "queue_costs": [], "queue_prog": 0.0, "dead": false, "builders": 0, "deposit": null,
 		# Target fields shared with units, so combat treats both alike.
 		"node": root, "vehicle": true, "is_building": true, "dmg": 0.0, "enemy": null, "target": null, "attack_move": false,
 	}
@@ -2820,7 +2820,23 @@ func queue_unit(b: Dictionary, key: String) -> void:
 	if not economy.pay(cost):
 		hud.notice("Not enough %s" % economy.missing(cost))
 		return
+	queue_paid_order(b, key, cost)
+
+## Receipts stay aligned with the queue, including legacy orders without receipts.
+func queue_paid_order(b: Dictionary, key: String, cost: Dictionary) -> void:
+	var receipts: Array = b.get("queue_costs", [])
+	receipts.resize(b.queue.size())
+	receipts.append(cost.duplicate())
+	b.queue_costs = receipts
 	b.queue.append(key)
+
+func take_order_receipt(b: Dictionary, index: int) -> Variant:
+	var receipts: Array = b.get("queue_costs", [])
+	if index < receipts.size():
+		var receipt = receipts[index]
+		receipts.remove_at(index)
+		return receipt
+	return null
 
 ## Takes order `index` off building `b`'s queue and refunds what it cost (a
 ## click on it in the queue).
@@ -2828,19 +2844,22 @@ func cancel_queued(b: Dictionary, index: int) -> void:
 	if index < 0 or index >= b.queue.size():
 		return
 	var key: String = b.queue[index]
+	var receipt = take_order_receipt(b, index)
 	b.queue.remove_at(index)
 	if index == 0:
 		b.queue_prog = 0.0
 	var cost: Dictionary
 	var name: String
 	if key.begins_with("missile:"):
-		cost = missiles.def_of(key.substr(8)).cost
+		cost = missiles.production_cost(key.substr(8))
 		name = missiles.def_of(key.substr(8)).name
 		missiles.changed.emit()
 	else:
 		var def: Dictionary = unit_defs.get(key, {})
 		cost = research.unit_cost(key, def.cost) if research else def.get("cost", {})
 		name = def.get("name", key)
+	if receipt is Dictionary:
+		cost = receipt
 	if b.owner == 0:
 		economy.refund(cost)
 		hud.notice("%s cancelled; its cost is refunded." % name)
@@ -2868,6 +2887,7 @@ func update_training(delta: float) -> void:
 			if b.queue_prog >= 1.0:
 				b.queue_prog = 0.0
 				b.queue.pop_front()
+				take_order_receipt(b, 0)
 				missiles.finished(first.substr(8))
 			continue
 		var def: Dictionary = unit_defs[first]
@@ -2876,6 +2896,7 @@ func update_training(delta: float) -> void:
 			continue
 		b.queue_prog = 0.0
 		var key: String = b.queue.pop_front()
+		take_order_receipt(b, 0)
 		var at: Vector3 = b.root.position
 		var out := (Vector3(0, 0, 0) - at)
 		out.y = 0
@@ -5200,6 +5221,7 @@ func destroy_building(b: Dictionary) -> void:
 	b.destroyed = true
 	b.dead = true
 	b.queue.clear()
+	b.queue_costs = []
 	var at: Vector3 = b.root.position
 	effects.explosion(at + Vector3.UP * 3.0, 4.0, true)
 	effects.burn(at, 40.0)

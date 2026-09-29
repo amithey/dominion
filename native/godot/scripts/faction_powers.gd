@@ -51,6 +51,19 @@ static func power_of(w: Node, owner: int) -> Dictionary:
 static func ready_in(w: Node, owner: int) -> float:
 	return maxf(0.0, float(w.power_ready.get(owner, 0.0)) - w.game_time)
 
+static func capture(w: Node) -> Dictionary:
+	return {"ready": w.power_ready.duplicate(), "effects": w.power_effects.duplicate(true),
+		"uses": w.power_uses.duplicate(true), "think": w.power_think}
+
+static func restore(w: Node, data: Dictionary) -> void:
+	w.power_ready.clear()
+	# JSON converts integer dictionary keys into strings.
+	for owner in data.get("ready", {}):
+		w.power_ready[int(owner)] = float(data.ready[owner])
+	w.power_effects = data.get("effects", []).duplicate(true)
+	w.power_uses = data.get("uses", []).duplicate(true)
+	w.power_think = float(data.get("think", 0.0))
+
 ## Why `owner` cannot use its power on `target` now, or "".
 static func blocked(w: Node, owner: int, target := -1) -> String:
 	var p := power_of(w, owner)

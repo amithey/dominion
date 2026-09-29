@@ -48,6 +48,7 @@ $tests = @(
     @('a hundred more: every map at full strength, and air, sea, missiles, supply, people, market, spies, alliances, repairs, defeat', @('--script', 'res://tools/gameplay-campaign-100.gd'), 'GAMEPLAY_CAMPAIGN PASS', 3500),
     @('the New Game sheet offers every map its full count of rivals', @('--', '--setup-test'), 'SETUP_TEST PASS', 240),
     @('thirty bug hunts: twice, dead, out of bounds, no money, nonsense input, old saves', @('--script', 'res://tools/bugs-30.gd'), 'BUGS_30 PASS', 300),
+    @('exact production refunds and saved live missiles, sanctions, EMP and defence cooldowns', @('--script', 'res://tools/gameplay-state-audit.gd'), 'GAMEPLAY_STATE_AUDIT PASS', 300),
     @('settings are saved and restored', @('--script', 'res://tools/settings-check.gd'), 'SETTINGS_TEST PASS', 180),
     @('edge, coastal and hemmed-in sites get built; shipyard counts for research', @('--script', 'res://tools/edge-build-check.gd'), 'EDGE_BUILD PASS', 400),
     @('towns: land from residents, city accounts, roads between town halls, overland trade', @('--script', 'res://tools/towns-check.gd'), 'TOWNS_TEST PASS', 400),

@@ -68,6 +68,8 @@ func capture() -> Dictionary:
 		buildings.append({
 			"key": b.key, "owner": b.owner, "pos": _v(b.root.position), "built": b.built,
 			"progress": b.progress, "hp": b.hp, "queue": b.queue, "queue_prog": b.queue_prog,
+			"queue_costs": b.get("queue_costs", []).duplicate(true),
+			"disabled_until": b.get("disabled_until", 0.0), "intercept_ready": b.get("intercept_ready", 0.0), "aa_reload": b.get("aa_reload", 0.0),
 			"ai_build": b.get("ai_build", false),
 			"repairing":b.get("repairing",false), "last_hit":b.get("last_hit",-100.0),
 		})
@@ -77,6 +79,7 @@ func capture() -> Dictionary:
 			continue
 		units.append({
 			"key": u.key, "owner": u.owner, "pos": _v(u.node.position), "heading": u.heading, "hp": u.hp,
+			"equipment": {"max_hp": u.max_hp, "range": u.range, "speed": u.speed, "cooldown": u.cooldown},
 			"target": _v(u.target) if u.target != null else null, "attack_move": u.attack_move,
 			"ammo": u.get("ammo", -1), "air_state": u.get("air_state", "ready"),
 			"service_left": u.get("service_left", 0.0),
@@ -84,6 +87,7 @@ func capture() -> Dictionary:
 			"landing_start": _v(u.get("landing_start", u.node.position)), "landing_progress": u.get("landing_progress", 0.0),
 			"ground_attack": _v(u.ground_attack) if u.has("ground_attack") else null,
 			"repairing":u.get("repairing",false), "last_hit":u.get("last_hit",-100.0),
+			"disabled_until": u.get("disabled_until", 0.0), "intercept_ready": u.get("intercept_ready", 0.0),
 		})
 	var edges := []
 	for e in world.logistics.edges.values():
@@ -106,6 +110,7 @@ func capture() -> Dictionary:
 		"camera": {"focus": _v(world.cam_focus), "yaw": world.cam_yaw, "pitch": world.cam_pitch, "dist": world.cam_dist_target},
 		"game_over": world.game_over,
 		"game_time": world.game_time,
+		"national_powers": preload("res://scripts/faction_powers.gd").capture(world),
 		"market": world.market.capture(), "espionage": world.espionage.capture(),
 		"missiles": world.missiles.capture(), "territory": world.territory.capture(),
 		"passage": world.passage.capture() if world.passage else {}, "zones": world.occupation.capture() if world.occupation else [],
@@ -151,6 +156,16 @@ func load_slot(slot: String) -> bool:
 
 func restore(data: Dictionary) -> void:
 	world.clear_match()
+	# Spawned units derive stats from research and rival technology. Restore
+	# these first; otherwise a fresh load equips veterans with starting stats.
+	world.research.restore(data.get("research", {}))
+	for saved in data.ai:
+		for n in world.ai.nations:
+			if n.id == int(saved.id):
+				for key in saved:
+					n[key] = saved[key] if not (saved[key] is float and key == "id") else int(saved[key])
+				n.id = int(saved.id)
+				n.build_idx = int(saved.build_idx)
 	# Economy.
 	for key in data.economy.res:
 		world.economy.res[key] = float(data.economy.res[key])
@@ -164,7 +179,10 @@ func restore(data: Dictionary) -> void:
 		b.last_hit = float(s.get("last_hit",-100.0))
 		b.progress = float(s.progress)
 		b.queue = s.queue.duplicate()
+		b.queue_costs = s.get("queue_costs", []).duplicate(true)
 		b.queue_prog = float(s.queue_prog)
+		for timer in ["disabled_until", "intercept_ready", "aa_reload"]:
+			b[timer] = float(s.get(timer, 0.0))
 		if s.get("ai_build", false):
 			b.ai_build = true
 		if not b.built and b.has("full_scale_y"):
@@ -184,10 +202,17 @@ func restore(data: Dictionary) -> void:
 	# Units.
 	for s in data.units:
 		var u: Dictionary = world.spawn_unit(s.key, _p(s.pos), int(s.owner))
+		# Older units may have entered service before the latest upgrade;
+		# retain their actual equipment instead of upgrading them on every load.
+		for stat in ["max_hp", "range", "speed", "cooldown"]:
+			if s.get("equipment", {}).has(stat):
+				u[stat] = float(s.equipment[stat])
 		u.heading = float(s.heading)
 		u.hp = float(s.hp)
 		u.repairing = s.get("repairing",false)
 		u.last_hit = float(s.get("last_hit",-100.0))
+		for timer in ["disabled_until", "intercept_ready"]:
+			u[timer] = float(s.get(timer, 0.0))
 		if u.get("fly", false) and int(s.get("ammo", -1)) >= 0:
 			u.ammo = clampi(int(s.ammo),0,world.AirOperations.CAPACITY[u.key])
 			u.air_state = s.get("air_state", "ready")
@@ -213,13 +238,6 @@ func restore(data: Dictionary) -> void:
 		for a in range(mini(grid.size(), d.n)):
 			for b in range(mini(grid[a].size(), d.n)):
 				d.get(name)[a][b] = float(grid[a][b]) if name == "score" else bool(grid[a][b])
-	for saved in data.ai:
-		for n in world.ai.nations:
-			if n.id == int(saved.id):
-				for key in saved:
-					n[key] = saved[key] if not (saved[key] is float and key == "id") else int(saved[key])
-				n.id = int(saved.id)
-				n.build_idx = int(saved.build_idx)
 	world.logistics.dirty = true
 	world.logistics.update_supply()
 	world.economy.recalculate()
@@ -230,6 +248,7 @@ func restore(data: Dictionary) -> void:
 	world.cam_dist_target = float(data.camera.dist)
 	world.game_over = data.get("game_over", "")
 	world.game_time = float(data.get("game_time", 0.0))
+	preload("res://scripts/faction_powers.gd").restore(world, data.get("national_powers", {}))
 	var engagement: Dictionary = data.get("engagement",{})
 	world.engagement.operations = engagement.get("operations",{}).duplicate()
 	world.engagement.incidents = engagement.get("incidents",{}).duplicate()
@@ -243,5 +262,4 @@ func restore(data: Dictionary) -> void:
 		world.passage.restore(data.get("passage", {}))
 	if world.occupation:
 		world.occupation.restore(data.get("zones", []))
-	world.research.restore(data.get("research", {}))
 	world.diplomacy.contacts.restore(data.get("diplomatic_contacts", {}))

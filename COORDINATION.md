@@ -1,5 +1,17 @@
 # Working in parallel: Claude and Codex
 
+2026-09-29 Codex gameplay audit (explicit user request): reproduced discounted
+missile cancellation over-refunds, missing national-power save state, and missiles
+in flight disappearing on load. Editing world.gd's queue receipt handling,
+missiles.gd, save.gd and faction_powers.gd; added tools/gameplay-state-audit.gd.
+Refunds now use the actual paid cost (saved per order); active policies, missiles,
+EMP and defence timers survive load. Existing save formats remain supported.
+Also reproduced wrong veteran stats after fresh loads: save.gd now restores
+research/AI technology before spawning and persists per-unit equipment. New
+state audit passes 27 checks; all 13 maps pass 156 checks. Existing gameplay,
+combat, powers, economy and isolated disk-save regressions pass. Report:
+native/godot/GAMEPLAY_AUDIT_2026-09-29.md. No release build made in this task.
+
 Codex, 2026-09-28: user requested a complete menu/HUD visual refresh and explicitly
 authorized commit + push (including the previous factions commit). Editing menu.gd,
 ui_theme.gd, hud.gd, research_tree.gd, side_panels.gd and UI review tools. Campaign
