@@ -7,6 +7,27 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.40: every nation's own technology, smoother big maps, traffic fixes
+
+- **Each nation fields what it really has (2025-26)** (national_variants.gd). Shared units carry the name of
+  your own nation's system: China's stealth fighter is the J-20, Russia's the Su-57, Turkiye's the KAAN,
+  Israel's the F-35I Adir; tanks, jets, helicopters, air defence, anti-tank and anti-aircraft teams, rocket
+  artillery, drones, warships and submarines likewise. What a nation lacks is shut to it and to rivals of that
+  nation: heavy bombers only for the United States (B-52), China (H-6K) and Russia (Tu-160); no stealth fighter
+  for Iran; sixth-generation fighters only for the United States (F-47) and China (J-36), as FCAS and GCAP have
+  collapsed; nuclear weapons for the nuclear powers and Israel, nuclear submarines only for those that sail
+  them; no missile defence or combat lasers for Iran; no hypersonic missiles for Europe or Israel; railguns,
+  microwave weapons and uncrewed submarines only where they are tested. Your starting army holds only what your
+  nation fields, and rival missile strikes use only missiles that nation has.
+- **Smoother large maps:** the walk grid is drawn in tiles, so a new building updates only its own tile
+  (1 ms instead of 50-60 ms on Pangaea: every nation's construction used to stutter the game). The land update
+  skips empty hexes and recomputes fronts and waters only when borders move.
+- **Road traffic fixed:** a new car no longer drives across the fields to the far end of its road; at the end
+  of a line cars turn back without cutting into the lane behind them; two cars never start on the same spot.
+- The New Game sheet's rival count checked on every map, in the packaged game too (--setup-test).
+- New checks: nation-tech-check (72), road-traffic-check (18), performance-check (budgets for loading, steps,
+  AI, routes, battles, saves, memory and, with a window, frame rate), gameplay-nations-100 (100).
+
 ## Version 0.9.39: sixty more checks, and the bugs they found
 
 Thirty gameplay checks on a full nine-nation match on Pangaea (tools/gameplay-nine-30.gd): starting

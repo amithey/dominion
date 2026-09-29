@@ -74,7 +74,7 @@ func run() -> void:
 	var iran := owner_of("iran")
 	var israel := owner_of("israel")
 	check(iran > 0 and israel > 0 and d.rel(iran, israel) <= -50.0, "Iran and Israel start as enemies among nine (%d)" % int(d.rel(iran, israel)))
-	check(d.rel(0, israel) >= 30.0, "the United States starts close to Israel (%d)" % int(d.rel(0, israel)))
+	check(d.rel(0, israel) >= 25.0, "the United States starts close to Israel (%d; a tie of +35 with up to 7.5 either way)" % int(d.rel(0, israel)))
 
 	# 4-5: the Diplomacy screen and the minimap hold nine nations.
 	w.hud.show()
@@ -143,7 +143,7 @@ func run() -> void:
 		if n.id == a:
 			n.money = 5000.0
 			n.next_attack = 0.0
-	for i in range(6): w.spawn_unit("tank", w.land_point(hq(a).root.position, 30.0), a)
+	for i in range(12): w.spawn_unit("tank", w.land_point(hq(a).root.position, 30.0), a)   # a hard government waits for a squad of nine or more
 	var toward := 0
 	sim(2.0)
 	for u in w.units:

@@ -9,7 +9,7 @@ extends RefCounted
 ##                ship in 2025, Mach 6.5): a very long gun, and cheap shots
 ##                that stop nearly half the hypersonic missiles it sees
 ##   sixthGen     sixth-generation fighter (F-47 to fly in 2028; China's J-36
-##                and J-50 flying since December 2024; GCAP in design): the
+##                and J-50 flying since December 2024; only these two): the
 ##                stealthiest aircraft, and it leads two loyal wingmen
 ##   wingman      Collaborative Combat Aircraft (FQ-42 / FQ-44, ordered into
 ##                production in June 2026): drones that fly with the fighter,
@@ -33,7 +33,7 @@ const DOME_COST := 150.0
 ## in their boost and mid-course, weaker against low cruise missiles.
 const DOME := {"cruise": 0.2, "seaSkimmer": 0.1, "shortBallistic": 0.4, "ballistic": 0.6, "hypersonic": 0.35, "icbm": 0.6}
 ## Names of the sixth-generation fighter for each nation.
-const SIXTH_GEN_NAMES := {"blue": "F-47", "red": "J-36", "green": "GCAP Tempest", "gold": "Sixth-Gen Fighter"}
+const SIXTH_GEN_NAMES := {"blue": "F-47", "red": "J-36"}
 
 const UNITS := {
 	"hpmVehicle": {"name": "Microwave Weapon", "hp": 260, "dmg": 0, "range": 0, "cooldown": 0, "aggro": 0, "speed": 12,

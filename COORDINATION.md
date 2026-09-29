@@ -407,3 +407,18 @@ UI files listed above.
   twice (u.killed marker); order_move kept dead units; diplomacy offer_peace/gift/propose_* worked on a defeated
   nation; match_setup.normalize crashed on non-numeric values (_int helper). Both tools are in run-tests.ps1.
 - 2026-09-28 Claude: 0.9.39 executable and installer in dist, built from 09b682c; packaged --ui-test passes; quick suite: all 58 pass.
+- 2026-09-29 Claude, 0.9.40. (1) New Game with more than four nations works (verified with real key presses
+  and a new --setup-test in the packaged game); the user's report was probably from an older build.
+  (2) scripts/national_variants.gd: unit_defs/discoveries/missile types get a "nation" LIST (who fields it) and
+  unit names become the player's nation's system names; national_arsenal.allowed/foreign accept lists; research
+  blocker/unit_locked pass the raw field; missiles.locked checks nation; ai.missile_strike filters by nation;
+  match_setup swaps the player's starting units its nation lacks (STAND_IN). FCAS/GCAP removed at the user's
+  request (collapsed programmes): sixthGen only blue/red. (3) route_traffic.gd: a new trip only at the end of
+  the current one (fresh vehicles drove cross-country to the far end), no loop at a dead-end U-turn, no spawn on
+  top of another vehicle, level vehicles yield by fleet order. (4) world.gd: the navigation mesh is split into
+  NAV_TILE (40-cell) regions; close_navigation rebuilds only the tiles it touches (rebuild_nav_tiles);
+  nav_region is now the first tile. territory.tick: fallen nations cached, empty untouched hexes skipped,
+  _waters/fronts only on border changes (and every 3rd/5th tick), AI land pay in one pass (_land_pay).
+  Note for tests: the navigation server takes in a changed tile a few physics frames later.
+  Shared units' descriptions now start with their kind ("Tank. ..."); tests that looked for the word "Tank" in the
+  factory panel use unit_defs.tank.name. Quick suite: 62 of 63 (battle dynamics flaky; passes 3 of 3 alone).

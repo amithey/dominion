@@ -229,6 +229,9 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 	for row in STRIKE_TYPES:
 		if tech >= float(row[0]):
 			kinds = row[1]
+	# Only the missiles this nation really has (national_variants.gd: hypersonic ones).
+	var me: String = preload("res://scripts/national_arsenal.gd").identity(world, n.id)
+	kinds = kinds.filter(func(k): return preload("res://scripts/national_variants.gd").admits(world.missiles.def_of(k).get("nation", ""), me))
 	if kinds.is_empty():
 		return {}
 	var targets: Array = world.buildings.filter(func(b): return b.owner == 0 and not b.dead and b.built and b.key in STRIKE_TARGETS)

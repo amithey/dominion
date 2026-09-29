@@ -145,7 +145,15 @@ var ghost: Node3D
 var ghost_ok := ""
 var selected_building = null
 var selection_marker: MeshInstance3D
-var nav_region: NavigationRegion3D
+var nav_region: NavigationRegion3D   # the first navigation tile
+## The walk grid is drawn as square tiles of NAV_TILE cells, each its own
+## navigation region: a new building rebuilds only the tile(s) it stands on
+## (rebuilding the whole of a 1700 m map took 50-60 ms a time, a stutter every
+## time any nation built something). Neighbouring tiles share their border
+## vertices, so the navigation server joins them edge to edge.
+const NAV_TILE := 40
+var nav_tiles: Array = []
+var nav_tiles_n := 0
 var nav_heights := PackedVector3Array()
 var nav_open := PackedByteArray()
 var nav_n := 0
@@ -464,6 +472,9 @@ func _ready() -> void:
 	elif "--menu-test" in args:
 		menu.setup(self)
 		await menu_test()
+	elif "--setup-test" in args:
+		menu.setup(self)
+		await preload("res://scripts/setup_regression.gd").run(self)
 	elif "--capture-menu" in args:
 		menu.setup(self)
 		await capture_menu()
@@ -2279,8 +2290,6 @@ func build_navigation() -> void:
 	for r in range(n - 1):
 		for c in range(n - 1):
 			nav_open[r * (n - 1) + c] = 1 if walkable(-half + (c + 0.5) * NAV_STEP, -half + (r + 0.5) * NAV_STEP) else 0
-	nav_region = NavigationRegion3D.new()
-	add_child(nav_region)
 	var cells := rebuild_nav_mesh()
 	var nav_map := get_world_3d().navigation_map
 	NavigationServer3D.map_set_active(nav_map, true)
@@ -2395,18 +2404,55 @@ func clear_match() -> void:
 		passage.restore({})
 
 func rebuild_nav_mesh() -> int:
-	var nav := NavigationMesh.new()
-	nav.vertices = nav_heights
-	var n := nav_n
+	var tiles := ceili(float(nav_n - 1) / NAV_TILE)
+	if nav_tiles_n != tiles or nav_tiles.size() != tiles * tiles:
+		for region in nav_tiles:
+			region.queue_free()
+		nav_tiles.clear()
+		nav_tiles_n = tiles
+		for i in range(tiles * tiles):
+			var region := NavigationRegion3D.new()
+			add_child(region)
+			nav_tiles.append(region)
+		nav_region = nav_tiles[0]
 	var cells := 0
-	for r in range(n - 1):
-		for c in range(n - 1):
+	for tr in range(tiles):
+		for tc in range(tiles):
+			cells += _build_nav_tile(tr, tc)
+	return cells
+
+## Rebuilds the tiles holding walk cells rows r0..r1, columns c0..c1.
+func rebuild_nav_tiles(r0: int, r1: int, c0: int, c1: int) -> void:
+	if nav_tiles.is_empty():
+		rebuild_nav_mesh()
+		return
+	for tr in range(maxi(r0, 0) / NAV_TILE, mini(r1, nav_n - 2) / NAV_TILE + 1):
+		for tc in range(maxi(c0, 0) / NAV_TILE, mini(c1, nav_n - 2) / NAV_TILE + 1):
+			_build_nav_tile(tr, tc)
+
+func _build_nav_tile(tr: int, tc: int) -> int:
+	var n := nav_n
+	var r0 := tr * NAV_TILE
+	var r1 := mini(r0 + NAV_TILE, n - 1)
+	var c0 := tc * NAV_TILE
+	var c1 := mini(c0 + NAV_TILE, n - 1)
+	var w := c1 - c0 + 1
+	var verts := PackedVector3Array()
+	verts.resize((r1 - r0 + 1) * w)
+	for r in range(r0, r1 + 1):
+		for c in range(c0, c1 + 1):
+			verts[(r - r0) * w + (c - c0)] = nav_heights[r * n + c]
+	var nav := NavigationMesh.new()
+	nav.vertices = verts
+	var cells := 0
+	for r in range(r0, r1):
+		for c in range(c0, c1):
 			if nav_open[r * (n - 1) + c] == 0:
 				continue
-			var a := r * n + c
-			nav.add_polygon(PackedInt32Array([a, a + n, a + n + 1, a + 1]))
+			var a := (r - r0) * w + (c - c0)
+			nav.add_polygon(PackedInt32Array([a, a + w, a + w + 1, a + 1]))
 			cells += 1
-	nav_region.navigation_mesh = nav
+	nav_tiles[tr * nav_tiles_n + tc].navigation_mesh = nav
 	return cells
 
 # A new building closes the walk cells under it (with room for a tank).
@@ -2425,7 +2471,7 @@ func close_navigation(at: Vector3, footprint: float) -> void:
 			var z := -half + (r + 0.5) * NAV_STEP
 			if Vector2(x - at.x, z - at.z).length() < reach:
 				nav_open[r * (nav_n - 1) + c] = 0
-	rebuild_nav_mesh()
+	rebuild_nav_tiles(r0, r1, c0, c1)
 	# Anyone standing on the new plot steps off it: left inside closed ground a
 	# soldier can no longer move, and stands in everyone's way (a tank behind
 	# three such men by a new farm waited there for ever).

@@ -54,6 +54,9 @@ func queued() -> int:
 
 ## "" when the player may build this type, otherwise the discovery it needs.
 func locked(key: String) -> String:
+	var only: String = preload("res://scripts/national_arsenal.gd").foreign(world, def_of(key).get("nation", ""))
+	if only != "":
+		return only   # e.g. nuclear weapons outside the nuclear powers
 	var need: String = def_of(key).get("needsDiscovery", "")
 	if need != "" and world.research and not world.research.done(need):
 		return "Needs %s" % world.research.def_of(need).get("name", need)

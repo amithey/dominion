@@ -322,7 +322,7 @@ func run() -> void:
 	var needy := ""
 	for k in r.discoveries:
 		var b = r.def_of(k).get("reqBuilding")
-		if needy == "" and b != null and eco.owned(b) == 0 and eco.standing(b) == 0 and r.def_of(k).get("nation", "") == "" and r.era_of(k) <= r.era:
+		if needy == "" and b != null and eco.owned(b) == 0 and eco.standing(b) == 0 and str(r.def_of(k).get("nation", "")) == "" and r.era_of(k) <= r.era:
 			needy = k
 	if needy != "":
 		r.progress[needy].stage = 1

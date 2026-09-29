@@ -557,7 +557,7 @@ func run() -> void:
 		check(w.units.filter(func(u): return u.owner == red.id and u.key == "df17").size() == before + 1, "and it stands by the factory")
 		var wing0: int = w.units.filter(func(u): return u.owner == red.id and u.key == "wingman" and not u.dead).size()
 		check(w.ai.deploy(red.id, "sixthGen") and w.units.filter(func(u): return u.owner == red.id and u.key == "wingman" and not u.dead).size() == wing0 + 2, "its J-36 takes off with two wingmen")
-		check(not w.ai.train_pool.filter(func(k): return w.unit_allowed(red.id, k) and w.unit_defs[k].get("nation", "") == "blue").size() > 0, "it never fields the Atlantic Federation's F-22")
+		check(not w.ai.train_pool.filter(func(k): return w.unit_allowed(red.id, k) and str(w.unit_defs[k].get("nation", "")) == "blue").size() > 0, "it never fields the Atlantic Federation's F-22")
 	cleanup()
 
 	# ---------------------------------------------------------------- saving the new forces

@@ -58,7 +58,8 @@ func run() -> void:
 		r.tick(1.0)
 		if r.completed_count() == r.discoveries.size():
 			break
-	var missing: Array = r.discoveries.keys().filter(func(k): return not r.done(k))
+	# Discoveries of other nations (the Golden Dome, railguns...) are not this nation's to finish.
+	var missing: Array = r.discoveries.keys().filter(func(k): return not r.done(k) and not r.blocker(k).ends_with(" only") and not r.blocker(k).begins_with("Not fielded"))
 	print("  completed %d of %d; not done: %s" % [r.completed_count(), r.discoveries.size(), missing.map(func(k): return "%s (%s)" % [k, r.blocker(k)])])
 	check(missing.is_empty(), "every discovery can be completed")
 	print("RESEARCH_COMPLETE PASS" if errors.is_empty() else "RESEARCH_COMPLETE FAIL: " + str(errors))

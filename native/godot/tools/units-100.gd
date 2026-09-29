@@ -84,7 +84,9 @@ func run() -> void:
 		check(u.node.get_child_count() > 0 and u.hp > 0.0 and in_element, "%s is built with a model, %s" % [key, element])
 		check(key in w.building_defs[buildings_of[key]].trains, "%s is trained at the %s" % [key, buildings_of[key]])
 		var need: String = str(def.get("requires", ""))
-		var nation: String = str(def.get("nation", ""))
+		# A shared unit lists the nations that field it (national_variants.gd).
+		var nations = def.get("nation", "")
+		var nation: String = "" if nations is Array and "blue" in nations else ("-" if nations is Array else str(nations))
 		if need != "" and (nation == "" or nation == "blue"):
 			var before: String = w.research.unit_locked(key)
 			var was_done: bool = w.research.done(need)   # an earlier unit may have needed it too
@@ -92,7 +94,7 @@ func run() -> void:
 			check((was_done or before != "") and w.research.unit_locked(key) == "", "%s waits for %s" % [key, need])
 		elif nation == "":
 			check(w.research.unit_locked(key) == "", "%s needs no research" % key)
-		if nation != "":
+		if nation != "" and not nations is Array:
 			var mine: bool = nation == "blue"
 			check(w.unit_allowed(0, key) == mine and (w.research.unit_locked(key).ends_with("only") != mine), "%s is fielded only by %s" % [key, Arsenal.NATION_NAMES.get(nation, FactionArsenal.NAMES.get(nation, nation))])
 		# The target it is made for: its best class in the damage table.
@@ -264,7 +266,7 @@ func run() -> void:
 	w.map.nations[0].color = saved
 	for n in w.ai.nations:
 		var who: String = Arsenal.identity(w, n.id)
-		var fielded: Array = w.ai.train_pool.filter(func(k): return w.unit_allowed(n.id, k) and w.unit_defs[k].has("nation"))
+		var fielded: Array = w.ai.train_pool.filter(func(k): return w.unit_allowed(n.id, k) and w.unit_defs[k].get("nation") is String and w.unit_defs[k].nation != "")
 		check(fielded.all(func(k): return w.unit_defs[k].nation == who) and not fielded.is_empty(), "rival %s trains its own weapon (%s)" % [n.name, ", ".join(PackedStringArray(fielded))])
 	# ------------------------------------------------ weapons in development
 	var fighter: Dictionary = w.spawn_unit("sixthGen", land(Vector3(-60, 0, -160)), 0)

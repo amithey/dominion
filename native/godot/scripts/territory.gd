@@ -198,6 +198,30 @@ func yields(nation: int) -> Dictionary:
 					out.oil += 0.015 * m * r.bonus("coastOil")       # Offshore Drilling
 	return out
 
+## What each nation's land pays a second in money (food and iron at their
+## money worth), as yields() counts it for a rival: one pass over the map for
+## every nation at once.
+func _land_pay(nations: int) -> PackedFloat32Array:
+	var pay := PackedFloat32Array()
+	pay.resize(nations)
+	for i in range(owner_of.size()):
+		var o := owner_of[i]
+		if o <= 0 or o >= nations or terrain[i] == Terrain.WATER:
+			continue
+		var m: float = STATUS_YIELD[status(i)] * area_scale
+		var v := 0.05 * m
+		match terrain[i]:
+			Terrain.PLAINS:
+				v += 0.020 * m * 2.5
+			Terrain.FOREST:
+				v += 0.030 * m
+			Terrain.MOUNTAIN:
+				v += 0.008 * m * 5.0
+			Terrain.COAST:
+				v += 0.040 * m
+		pay[o] += v
+	return pay
+
 func land_cells() -> int:
 	var n := 0
 	for t in terrain:
@@ -367,6 +391,8 @@ func _presence(presence: PackedFloat32Array, at: Vector3, owner: int, weight: fl
 				continue
 			var ring := (absi(dq) + absi(dr) + absi(dq + dr)) / 2
 			presence[i * nations + owner] += weight / (1.0 + ring)
+			if i < _touched.size():
+				_touched[i] = 1
 
 func _process(delta: float) -> void:
 	if world == null or world.economy == null or world.game_over != "":
@@ -378,14 +404,25 @@ func _process(delta: float) -> void:
 		tick()
 		world.spent("territory", clock)
 
+var _ticks := 0
+var _touched := PackedByteArray()   # hexes someone has presence in this tick
+
 func tick() -> void:
 	var nations: int = world.map.nations.size()
+	_ticks += 1
+	# Which nations have fallen, looked up once (it used to be asked per hex).
+	var fallen := PackedByteArray()
+	fallen.resize(nations)
+	for n in range(nations):
+		fallen[n] = 1 if world.diplomacy.defeated(n) else 0
 	var presence := PackedFloat32Array()
 	presence.resize(cols * rows * nations)
 	# Authority from buildings alone: land they claim is free; land that only
 	# troops stand on, unclaimed by anyone, has to be bought.
 	var built := PackedFloat32Array()
 	built.resize(cols * rows * nations)
+	_touched.resize(cols * rows)
+	_touched.fill(0)
 	for b in world.buildings:
 		if b.dead or not b.built:
 			continue
@@ -407,9 +444,10 @@ func tick() -> void:
 	for key in purchased:
 		var entry: Dictionary = purchased[key]
 		var i: int = int(key)
-		if i >= 0 and i < owner_of.size() and not world.diplomacy.defeated(int(entry.owner)):
+		if i >= 0 and i < owner_of.size() and int(entry.owner) < nations and fallen[int(entry.owner)] == 0:
 			presence[i * nations + int(entry.owner)] += 20.0
 			built[i * nations + int(entry.owner)] += 20.0
+			_touched[i] = 1
 	for u in world.units:
 		if u.dead or u.dmg <= 0.0 or u.get("fly", false) or u.get("naval", false):
 			continue
@@ -427,7 +465,9 @@ func tick() -> void:
 	for i in range(cols * rows):
 		if terrain[i] == Terrain.WATER:
 			continue
-		if owner_of[i] >= 0 and world.diplomacy.defeated(owner_of[i]):
+		if owner_of[i] < 0 and _touched[i] == 0 and contested[i] == 0:
+			continue   # no one's, and no one there: nothing to weigh
+		if owner_of[i] >= 0 and owner_of[i] < nations and fallen[owner_of[i]] == 1:
 			owner_of[i] = -1
 			control[i] = 0.0
 			flipped = true
@@ -470,20 +510,23 @@ func tick() -> void:
 				if lost_by == 0 or best == 0:
 					var c := center(i)
 					world.hud.notice("Territory %s near (%d, %d)." % ["lost to %s" % world.diplomacy.name_of(best) if lost_by == 0 else "taken from %s" % world.diplomacy.name_of(lost_by), int(c.x), int(c.z)])
-	if _waters():
+	# Territorial waters and the count of front hexes change only with the
+	# borders (waters follow control too: every third tick regardless).
+	if (flipped or _ticks % 3 == 0) and _waters():
 		flipped = true
-	fronts = 0
-	for i in range(cols * rows):
-		if is_front(i):
-			fronts += 1
+	if flipped or _ticks % 5 == 1:
+		fronts = 0
+		for i in range(cols * rows):
+			if is_front(i):
+				fronts += 1
 	if world.occupation != null:
 		world.occupation.review()
 	# AI nations bank their land's yield as money (twice the per-second rate).
 	if world.ai != null:
+		var pay := _land_pay(nations)
 		for nat in world.ai.nations:
-			if not nat.defeated:
-				var y := yields(nat.id)
-				nat.money += (y.money + y.food * 2.5 + y.iron * 5.0) * TICK
+			if not nat.defeated and int(nat.id) < nations:
+				nat.money += pay[int(nat.id)] * TICK
 	if flipped:
 		_dirty = true
 	if _dirty:

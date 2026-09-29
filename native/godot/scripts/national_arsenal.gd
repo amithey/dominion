@@ -111,13 +111,14 @@ static func identity(w: Node, owner: int) -> String:
 
 ## True when `owner` may field `key` (every nation fields the common units).
 static func allowed(w: Node, owner: int, key: String) -> bool:
-	var nation: String = str(w.unit_defs.get(key, {}).get("nation", ""))
-	return nation == "" or nation == identity(w, owner)
+	return preload("res://scripts/national_variants.gd").admits(w.unit_defs.get(key, {}).get("nation", ""), identity(w, owner))
 
 ## Why the player may not field `key` or research `discovery`, or "".
-static func foreign(w: Node, nation: String) -> String:
-	if nation == "" or nation == identity(w, 0):
+static func foreign(w: Node, nation) -> String:
+	if preload("res://scripts/national_variants.gd").admits(nation, identity(w, 0)):
 		return ""
+	if nation is Array:
+		return "Not fielded by %s" % str(w.map.nations[0].get("name", "your nation")).split(" · ")[0]
 	return "%s only" % NATION_NAMES.get(nation, preload("res://scripts/faction_arsenal.gd").NAMES.get(nation, nation))
 
 ## A salvo of Shaheds from `launcher` at `enemy`. Returns how many flew.

@@ -170,6 +170,7 @@ static func apply(w: Node) -> void:
 	Arsenal.apply(w)   # each nation's own weapons
 	Future.apply(w)    # weapons still in development
 	FactionArsenal.apply(w)   # the five newer factions' own weapons
+	preload("res://scripts/national_variants.gd").apply(w)   # who really fields what, under which name
 	var types: Dictionary = w.map.missiles.types
 	for key in types:
 		var odds: Dictionary = INTERCEPT[CLASS_OF.get(key, "cruise")]

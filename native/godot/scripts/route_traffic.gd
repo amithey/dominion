@@ -241,6 +241,11 @@ func _track(kind: String, hexes: Array, came: Variant) -> PackedVector3Array:
 		var town := _is_town(hexes[i])
 		if i == 0 and (town or d_in == Vector3.ZERO):
 			pts.append(c + d_out * (STOP if town else 0.0))
+		elif i == 0 and d_in.dot(d_out) < -0.9:
+			# Turning back where it stopped (the end of a line): the U-turn does
+			# that; the track starts out along the other lane, with no loop
+			# forward into the lane it arrived by.
+			pts.append(c)
 		elif d_out == Vector3.ZERO:
 			pts.append(c - d_in * (STOP if town else 0.0))
 		elif d_in.dot(d_out) > 0.98:
@@ -308,6 +313,11 @@ func _new_vehicle(kind: String) -> Dictionary:
 		_make_road_vehicle(c)
 	_set_trip(c, hexes, null, 0.0)
 	c.yaw = _yaw_at(c, c.s)
+	# Never on top of a vehicle already standing there: try again shortly.
+	var at := _point_at(c, 0.0)
+	for o in _fleet:
+		if o.kind == kind and o.bodies[0].has("at") and Vector2(o.bodies[0].at.x - at.x, o.bodies[0].at.z - at.z).length() < 6.0:
+			return {}
 	return c
 
 func _set_trip(c: Dictionary, hexes: Array, came: Variant, lead_in: float) -> void:
@@ -420,7 +430,10 @@ func _drive(c: Dictionary, delta: float) -> void:
 		c.wait -= delta
 		c.v = 0.0
 		c.brake = true
-		if c.wait <= 0.0:
+		if c.wait <= 0.0 and c.total - c.s < 1.0:
+			# Only at the end of a trip: a new vehicle's first pause is at the
+			# start of its trip, and it must drive that trip, not set off from
+			# the far end of it (it used to cut across the fields to get there).
 			_next_trip(c)
 		return
 	var remain: float = c.total - c.s
@@ -466,6 +479,8 @@ func _gap_ahead(c: Dictionary, at: Vector3) -> float:
 				continue
 			var rel := p - at
 			var along := rel.x * fwd.x + rel.z * fwd.z
+			if along <= 0.0 and along > -0.5 and _fleet.find(o) < _fleet.find(c):
+				along = 0.01   # dead level with another: the older one goes first
 			if along <= 0.0 or along > 28.0:
 				continue
 			if absf(rel.x * right.x + rel.z * right.z) > 1.3:
