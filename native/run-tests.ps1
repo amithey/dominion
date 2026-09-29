@@ -67,6 +67,7 @@ $tests = @(
     @('campaign maps, players and leaders', @('--', '--campaign-test'), 'CAMPAIGN_TEST PASS', 180),
     @('new campaign and map reload flow', @('--script', 'res://tools/campaign-flow-check.gd'), 'CAMPAIGN FLOW PASS', 180),
     @('air and sea', @('--', '--air-sea-test'), 'AIR_SEA_TEST PASS', 240),
+    @('a hundred diplomacy checks: war and peace, treaties, letters, leader contacts, firm language, operations, passage', @('--script', 'res://tools/diplomacy-100.gd'), 'DIPLOMACY_100 PASS', 900),
     @('diplomacy', @('--', '--diplomacy-test'), 'DIPLOMACY_TEST PASS', 180),
     @('leader contacts, negotiations and exports', @('--script', 'res://tools/diplomatic-contacts-check.gd'), 'DIPLOMATIC_CONTACTS_TEST PASS', 180),
     @('supply network', @('--', '--logistics-test'), 'LOGISTICS_TEST PASS', 240),

@@ -268,6 +268,18 @@ func write_letter() -> void:
 		world.hud.ask("%s asks for a non-aggression pact." % name_of(id), _accept.bind("nap", id), _decline.bind(id, 3.0))
 
 func _accept(kind: String, id: int) -> void:
+	# A letter waits for its answer; the world does not. An offer made in peace
+	# lapses if war has come since, and no government is left to sign with a
+	# fallen nation (it used to leave you allied with, or trading with, a nation
+	# at war with you).
+	if defeated(id):
+		world.hud.notice("%s has fallen: its offer lapsed." % name_of(id))
+		return
+	if kind in ["alliance", "pact", "nap"] and at_war(0, id):
+		world.hud.notice("The offer from %s lapsed: you are now at war." % name_of(id))
+		return
+	if kind == "peace" and not at_war(0, id):
+		return
 	match kind:
 		"peace":
 			make_peace(0, id)

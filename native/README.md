@@ -7,6 +7,15 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.41: a lapsed offer stays lapsed
+
+A foreign government's letter (an alliance, a trade pact, a non-aggression pact) waits for your answer, but
+the world does not: accepting it after war had broken out left you allied with, or trading with, the nation
+at war with you, and a fallen nation could still sign. Such an offer now lapses, with a notice. Found by
+tools/diplomacy-100.gd, a hundred diplomacy checks (relations, war and peace, treaties, letters, leader
+contacts, firm language, limited operations, passage, saves, the screen); tools/intel-100.gd and
+tools/research-100.gd add a hundred each for intelligence and research.
+
 ## Version 0.9.40: every nation's own technology, smoother big maps, traffic fixes
 
 - **Each nation fields what it really has (2025-26)** (national_variants.gd). Shared units carry the name of
