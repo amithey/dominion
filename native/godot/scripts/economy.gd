@@ -81,6 +81,10 @@ func recalculate() -> void:
 	# Taxes need administration; residential districts extend it (config.js admin).
 	admin = clampf(float(cfg.baseAdmin) + mini(owned("residential"), 3) * 0.05 + mini(owned("villageCenter"), 3) * 0.05 + owned("cityCenter") * 0.10, float(cfg.baseAdmin), 1.0)
 	pop_cap = int(provided("pop")) + garrison
+	_plant = minf(provided("prodPct"), 0.30)
+	_depot_damage = minf(provided("dmgPct"), 0.25)
+	_depot_reload = minf(owned("ammoDepot") * 0.06, 0.18)
+	_command_health = minf(provided("hpPct"), 0.10)
 	pop_used = 0
 	for u in world.units:
 		if u.owner == 0 and not u.dead:
@@ -231,6 +235,29 @@ func city_report(s: Dictionary) -> Dictionary:
 	var tax: float = people * float(cfg.taxPerCivilian) * admin * (1.0 if supplied else 0.0) * (1.0 + provided("incomePct") + (r.bonus("incomePct") if r else 0.0))
 	return {"residents": people, "capacity": capacity, "homes": homes, "buildings": own.size(), "amenities": amenities,
 		"happiness": happiness, "food_in": farms, "food_out": eats, "tax": tax, "supplied": supplied}
+
+## What military and industrial buildings add, with their ceilings (the
+## building cards promise these): power plants +15% production and
+## construction each, up to +30%; ammo depots +5% damage each, up to +25%, and
+## 6% faster reloading each, up to 18%; a command centre +10% health for the
+## units trained while it stands.
+## (Counted in recalculate(), not per shot: a battle fires thousands.)
+var _plant := 0.0
+var _depot_damage := 0.0
+var _depot_reload := 0.0
+var _command_health := 0.0
+
+func plant_bonus() -> float:
+	return _plant
+
+func depot_damage() -> float:
+	return _depot_damage
+
+func depot_reload() -> float:
+	return _depot_reload
+
+func command_health() -> float:
+	return _command_health
 
 func can_afford(cost: Dictionary) -> bool:
 	for key in cost:

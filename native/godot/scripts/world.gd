@@ -2645,7 +2645,7 @@ func update_construction(delta: float) -> void:
 				place_on_ground(u, u.node.position)
 		b.builders = count
 		if count > 0:
-			var skill: float = 1.0 + (research.bonus("prodPct") + research.bonus("buildPct") if research and b.owner == 0 else 0.0)
+			var skill: float = 1.0 + (research.bonus("prodPct") + research.bonus("buildPct") + economy.plant_bonus() if research and b.owner == 0 else 0.0)
 			b.progress = minf(1.0, b.progress + delta / maxf(float(b.def.buildTime), 1.0) * (1.0 + 0.5 * (count - 1)) * skill)
 			b.model.scale.y = b.full_scale_y * lerpf(0.06, 1.0, b.progress)
 			if randf() < delta * 1.5:
@@ -2880,7 +2880,7 @@ func update_training(delta: float) -> void:
 			continue  # rare-earth export controls: the military factories wait
 		var rail: float = 1.0 + (logistics.rail_bonus if b.get("rail_supplied", false) else 0.0)
 		if b.owner == 0 and research:
-			rail *= 1.0 + research.bonus("prodPct")  # Industrialization, Fusion Power
+			rail *= 1.0 + research.bonus("prodPct") + economy.plant_bonus()  # Industrialization, Fusion Power, power plants
 		var first: String = b.queue[0]
 		if first.begins_with("missile:"):
 			b.queue_prog += delta * rail / maxf(missiles.build_time(first.substr(8)), 0.5)
@@ -4860,7 +4860,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 	var fired := fire(unit, enemy)
 	spent("    shots", t_shot)
 	if fired:
-		unit.reload = unit.cooldown * randf_range(0.85, 1.15)
+		unit.reload = unit.cooldown * randf_range(0.85, 1.15) * (1.0 - economy.depot_reload() if unit.owner == 0 and economy != null else 1.0)   # ammo depots
 		unit.last_fire = game_time
 		shots_fired += 1
 

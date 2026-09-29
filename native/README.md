@@ -7,6 +7,23 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.42: buildings do what their cards say
+
+A hundred economy checks (tools/economy-100.gd) found buildings whose cards promised effects the native game
+never applied:
+- **Power Plant** now gives +15% production and construction speed (up to +30% from several).
+- **Ammo Depot** now gives +5% damage (up to +25%) and 6% faster reloading (up to 18%) to all your units,
+  besides storing missiles.
+- **Command & Control** now gives +10% health to the units trained while it stands.
+- Cards that promised approval, public order, culture or education (TV Station, Police Station, School,
+  Library, University, Museum, Park, Stadium, Courthouse), which this game does not have, now say what the
+  building really does: research, happiness, income, or the research it is needed for.
+
+The checks cover the stores and caps, citizens (growth, housing, health, hunger, fuel, chips, winter gas),
+food, taxes and administration, mines and offshore rigs, the world market, trade routes (exports, imports,
+losses, war, lost ports, escorts, overland trade, sabotage), rival economies, army capacity and prices, the
+towns' accounts (they house the whole nation), saves and the resource bar.
+
 ## Version 0.9.41: a lapsed offer stays lapsed
 
 A foreign government's letter (an alliance, a trade pact, a non-aggression pact) waits for your answer, but

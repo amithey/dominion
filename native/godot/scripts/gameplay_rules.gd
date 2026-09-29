@@ -19,6 +19,24 @@ static func apply(w: Node) -> void:
 		if dep.type == "seaOil":
 			index += 1
 			if index % 2 == 0: dep.type = "seaGas"
+	# Building cards say what each building does in this game (the export's
+	# texts promised approval, public order, culture and education, which the
+	# native game does not have; the military and industrial ones now work).
+	for entry in [
+		["powerPlant", "+15% production and construction speed (stacks up to +30%)."],
+		["ammoDepot", "+5% damage (up to +25%) and 6% faster reloading (up to 18%) for all your units; stores 4 more missiles."],
+		["commandCenter", "+10% health for every unit trained while it stands. Coordinates the war effort; holds the land around it."],
+		["tvStation", "The national broadcaster: needed for the Mass Media research (+4 happiness)."],
+		["policeStation", "Needed for the Internal Security Service research (catches enemy agents)."],
+		["school", "+0.2 research a second. Needed for the Public Education research (+10% research)."],
+		["library", "+0.5 research a second."],
+		["university", "+1 research a second. Gateway to great discoveries."],
+		["museum", "+4 happiness. A nation with a story fights for it."],
+		["park", "+6 happiness. Everyone loves a picnic."],
+		["stadium", "+8 happiness, +3% income. Bread and games."],
+		["courthouse", "+5% income. Needed for the Constitutional Framework research."]]:
+		if w.building_defs.has(entry[0]):
+			w.building_defs[entry[0]].desc = entry[1]
 	w.map.economy.startResources["gas"] = 100.0
 	w.map.economy.baseCap["gas"] = 400.0
 	w.map.trade.price["gas"] = 3.0

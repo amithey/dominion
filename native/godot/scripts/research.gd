@@ -489,7 +489,7 @@ func damage_mult(unit: Dictionary) -> float:
 	var doctrine: Dictionary = preload("res://scripts/factions.gd").for_unit(world, unit)
 	if unit.owner > 0:
 		return (1.0 + 0.03 * ai_tech(unit.owner)) * float(doctrine.damage) * preload("res://scripts/national_profile.gd").ai_damage(world, unit)
-	var m := 1.0 + bonus("dmgAll")
+	var m: float = 1.0 + bonus("dmgAll") + (float(world.economy.depot_damage()) if world.economy != null else 0.0)   # ammo depots
 	var key: String = unit.get("key", "")
 	if key in world.infantry_keys:
 		m += bonus("dmgInfantry")
@@ -515,7 +515,7 @@ func equip(unit: Dictionary) -> void:
 	if unit.owner > 0:
 		hp += 0.03 * ai_tech(unit.owner) + preload("res://scripts/national_profile.gd").ai_health(world, unit) - 1.0
 	else:
-		hp += bonus("hpAll")
+		hp += bonus("hpAll") + (float(world.economy.command_health()) if world.economy != null else 0.0)   # a command centre
 		if unit.key in world.infantry_keys:
 			hp += bonus("hpInfantry")
 		elif unit.vehicle and not unit.get("fly", false) and not unit.get("naval", false):

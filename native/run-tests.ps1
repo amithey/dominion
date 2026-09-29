@@ -60,6 +60,7 @@ $tests = @(
     @('state: far production, market, AI builds an economy', @('--', '--state-test'), 'STATE_TEST PASS', 400),
     @('airfield slots, landing and takeoff', @('--', '--airbase-test'), 'AIRBASE_TEST PASS', 240),
     @('firm diplomacy: protest, warnings, ultimatums', @('--script', 'res://tools/firm-diplomacy-check.gd'), 'FIRM_DIPLOMACY PASS', 180),
+    @('a hundred economy checks: stores, citizens, food, taxes, mines, market, trade routes, rivals, army cost, buildings, towns, saves', @('--script', 'res://tools/economy-100.gd'), 'ECONOMY_100 PASS', 900),
     @('economy', @('--', '--economy-test'), 'ECONOMY_TEST PASS', 240),
     @('combat (every weapon)', @('--', '--combat-test'), 'COMBAT_TEST PASS', 400),
     @('combat fixes and aircraft service', @('--', '--combat-regression'), 'COMBAT_REGRESSION PASS', 180),
