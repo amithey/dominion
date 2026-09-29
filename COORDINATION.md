@@ -422,3 +422,4 @@ UI files listed above.
   Note for tests: the navigation server takes in a changed tile a few physics frames later.
   Shared units' descriptions now start with their kind ("Tank. ..."); tests that looked for the word "Tank" in the
   factory panel use unit_defs.tank.name. Quick suite: 62 of 63 (battle dynamics flaky; passes 3 of 3 alone).
+- 2026-09-29 Claude: 0.9.40 executable and installer in dist, built from ce5577e; packaged --ui-test and --setup-test pass (the packaged New Game sheet offers 7 rivals on Crown Isles, 8 on Pangaea).
