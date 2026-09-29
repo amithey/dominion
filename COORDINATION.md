@@ -447,3 +447,4 @@ UI files listed above.
   research.equip. Player only (AI keeps its tech levels). gameplay_rules.gd rewrites the cards of TV Station,
   Police Station, School, Library, University, Museum, Park, Stadium, Courthouse (no approval/order/culture/
   education systems exist). UI note for Codex: nothing in hud.gd changed.
+- 2026-09-29 Claude: 0.9.42 executable and installer in dist, built from e1d02c2; packaged --ui-test passes. Quick suite before the bonus caching: 68 of 69 (performance, run alongside other tests); after caching, economy-100 100/100 and performance-check pass alone (battle 35 ms a step).
