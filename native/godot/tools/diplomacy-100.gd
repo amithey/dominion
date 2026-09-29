@@ -174,6 +174,8 @@ func run() -> void:
 		if d.offer_peace(3).contains("accepted"): weak += 1
 		else: d.make_peace(0, 3)
 	check(strong > weak, "the stronger you are, the readier they are for peace (%d%% against %d%%)" % [strong, weak])
+	for u in w.units:   # equal footing: no army on either side, so only temperament differs
+		if u.owner in [0, 1, 2] and not u.dead and u.dmg > 0.0: w.kill(u)
 	var calm := 0
 	var fierce := 0
 	for i in range(200):
