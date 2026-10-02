@@ -340,6 +340,7 @@ func open_new_game() -> void:
 	_setup_select("Rivals", counts, "players", options)
 	_setup_select("Rules", [["Standard", "standard"], ["Sandbox", "sandbox"]], "style", options)
 	_setup_select("Difficulty", [["Easy", "easy"], ["Normal", "normal"], ["Hard", "hard"]], "difficulty", options)
+	_setup_select("Pace", [["Slow · 60%", 0.6], ["Relaxed · 75%", 0.75], ["Standard · 100%", 1.0]], "pace", options)
 	_rival_pickers(campaign)
 	var explanation := Label.new()
 	explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -378,7 +379,7 @@ func _setup_select(title: String, items: Array, key: String, parent: Control) ->
 	picker.custom_minimum_size.y = 40
 	for item in items:
 		picker.add_item(item[0])
-		if item[1] == (setup_difficulty if key == "difficulty" else setup_options[key]):
+		if item[1] == (setup_difficulty if key == "difficulty" else setup_options.get(key, 0.75 if key == "pace" else null)):
 			picker.select(picker.item_count - 1)
 	picker.item_selected.connect(func(index):
 		if key == "difficulty":
@@ -660,7 +661,7 @@ func _update_briefing() -> void:
 	var hardness: String = difficulty[1]
 	if mix.size() > 1:
 		hardness = "  ".join(["easy", "normal", "hard"].filter(func(l): return mix.has(l)).map(func(l): return "%d %s" % [mix[l], l]))
-	_briefing.text = "%s\n%d rival%s  ·  %s  ·  %s  ·  %s" % [world.MatchSetup.NATIONS[int(setup_options.nation)], rivals, "" if rivals == 1 else "s", _map_name(str(setup_options.map)), "sandbox" if setup_options.style=="sandbox" else "standard rules", hardness]
+	_briefing.text = "%s\n%d rival%s  ·  %s  ·  %s  ·  %s" % [world.MatchSetup.NATIONS[int(setup_options.nation)], rivals, "" if rivals == 1 else "s", _map_name(str(setup_options.map)), "sandbox" if setup_options.style=="sandbox" else "standard rules", "%s · %d%% pace" % [hardness, roundi(float(setup_options.get("pace", 0.75)) * 100.0)]]
 
 func open_load() -> void:
 	_clear()

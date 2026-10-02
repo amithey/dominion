@@ -46,6 +46,7 @@ $tests = @(
     @('performance budgets: loading, steps, AI, routes, battle, saves, memory', @('--script', 'res://tools/performance-check.gd'), 'PERFORMANCE PASS', 900),
     @('a hundred checks: each of the nine nations played, and a six-nation Pangaea match', @('--script', 'res://tools/gameplay-nations-100.gd'), 'GAMEPLAY_NATIONS PASS', 3000),
     @('a hundred more: every map at full strength, and air, sea, missiles, supply, people, market, spies, alliances, repairs, defeat', @('--script', 'res://tools/gameplay-campaign-100.gd'), 'GAMEPLAY_CAMPAIGN PASS', 3500),
+    @('the match pace slows the whole world together; the camera keeps its speed', @('--script', 'res://tools/pace-check.gd'), 'PACE PASS', 240),
     @('the New Game sheet offers every map its full count of rivals', @('--', '--setup-test'), 'SETUP_TEST PASS', 240),
     @('thirty bug hunts: twice, dead, out of bounds, no money, nonsense input, old saves', @('--script', 'res://tools/bugs-30.gd'), 'BUGS_30 PASS', 300),
     @('exact production refunds and saved live missiles, sanctions, EMP and defence cooldowns', @('--script', 'res://tools/gameplay-state-audit.gd'), 'GAMEPLAY_STATE_AUDIT PASS', 300),

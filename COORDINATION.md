@@ -448,3 +448,8 @@ UI files listed above.
   Police Station, School, Library, University, Museum, Park, Stadium, Courthouse (no approval/order/culture/
   education systems exist). UI note for Codex: nothing in hud.gd changed.
 - 2026-09-29 Claude: 0.9.42 executable and installer in dist, built from e1d02c2; packaged --ui-test passes. Quick suite before the bonus caching: 68 of 69 (performance, run alongside other tests); after caching, economy-100 100/100 and performance-check pass alone (battle 35 ms a step).
+- 2026-10-02 Claude: match pace (user: the game is too fast). match_setup: "pace" in {0.6, 0.75, 1.0}, default 0.75,
+  kept in saves. world.apply_pace() sets Engine.time_scale at start_match (not when a SceneTree tool script runs
+  the game, so tests keep full speed; apply_pace(true) forces it); world._process gives pan_camera/update_camera
+  real time. menu.gd (Codex's): a fourth select, "Pace", in "Set the balance of power", and the pace in the
+  briefing. tools/pace-check.gd: game time at 76% of real time at 75%, the camera unchanged.

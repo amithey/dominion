@@ -1,5 +1,9 @@
 extends RefCounted
-const DEFAULT := {"map":"island","players":4,"nation":0,"style":"standard"}
+const DEFAULT := {"map":"island","players":4,"nation":0,"style":"standard","pace":0.75}
+## How fast the world turns: everything (movement, building, training,
+## research, the economy, the seasons, the rivals) runs at this share of the
+## original speed. The camera and the interface keep their own speed.
+const PACES := [0.6, 0.75, 1.0]
 ## Each nation's own flag colour, in the order of NATIONS (map.nations is
 ## reordered once a match is set up, player first).
 const Factions = preload("res://scripts/factions.gd")
@@ -23,7 +27,8 @@ static func normalize(options: Dictionary) -> Dictionary:
 	var out := {"map":map_key,
 		"players":clampi(_int(options.get("players",4),4),2,capacity(map_key)),
 		"nation":clampi(_int(options.get("nation",0),0),0,Factions.IDS.size()-1),
-		"style":"sandbox" if str(options.get("style","standard"))=="sandbox" else "standard"}
+		"style":"sandbox" if str(options.get("style","standard"))=="sandbox" else "standard",
+		"pace":_pace(options.get("pace", 0.75))}
 	if options.get("rivals") is Array:
 		out.rivals = []
 		for rival in options.rivals:
@@ -37,6 +42,14 @@ static func normalize(options: Dictionary) -> Dictionary:
 		if out.levels.all(func(l): return l == ""):
 			out.erase("levels")
 	return out
+
+## The nearest pace on offer to `value` (old saves have none: the default).
+static func _pace(value) -> float:
+	var v: float = float(value) if (value is float or value is int) else 0.75
+	var best: float = PACES[0]
+	for p in PACES:
+		if absf(p - v) < absf(best - v): best = p
+	return best
 
 ## A whole number from a save or a setting, or `fallback` when it is none
 ## (a damaged or hand-edited save must not stop the game loading).

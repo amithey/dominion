@@ -2318,7 +2318,14 @@ func rebuild_walk_grid() -> void:
 	rebuild_nav_mesh()
 
 ## Begins a match from the main menu: the AI nations wake up.
+## The match's pace (match_setup.gd): the whole simulation slows together.
+## A tool driving the game from a script keeps full speed.
+func apply_pace(force := false) -> void:
+	var pace: float = float(match_config.get("pace", 1.0))
+	Engine.time_scale = 1.0 if get_tree().get_script() != null and not force else pace
+
 func start_match(difficulty: String) -> void:
+	apply_pace()
 	match_difficulty = difficulty
 	var row: Dictionary = map.ai.difficulty.get(difficulty, map.ai.difficulty.easy)
 	diplomacy.aggression = float(row.aggression)
@@ -5479,11 +5486,13 @@ func _process(delta: float) -> void:
 		return  # still loading (_ready awaits the noise texture and navigation)
 	update_placement()
 	update_transport()
+	# The camera answers in real time, whatever the pace of the world.
+	var real: float = delta / maxf(Engine.time_scale, 0.05)
 	if bench_phase >= 0:
 		benchmark_frame(delta)
 	else:
-		pan_camera(delta)
-	update_camera(delta)
+		pan_camera(real)
+	update_camera(real)
 	fps_time += delta
 	fps_frames += 1
 	if fps_time >= 1.0 and bench_phase < 0:
