@@ -468,3 +468,8 @@ UI files listed above.
   progress along unit.path (per route: path_serial), so a march round a sea no longer counts as stuck (found on
   East Asia from Seoul); in streets the straight-line measure stands (city-test unchanged, about 4 of 5 either way).
 - 2026-10-02 Claude: 0.9.43 executable and installer in dist, built from 52f4d97 (my commits only; Codex's ten-nation work in progress stays uncommitted in the working tree, untouched). The in-game suite against the exe (run-tests -Exported): 27 of 27 after 52f4d97 (the --campaign-test config now goes through normalize, as it lacked the new pace). Script tools passed one by one on this code: real-maps-check 38/38, maps-check (all 18 maps), road-traffic-check 21/21 on three seeds, gameplay-maps-100 on the new maps, pace-check, city-test (random about 1 in 5 either way).
+- 2026-10-02 Claude, 0.9.44: (user: 100 more checks on the new maps) tools/new-maps-100.gd (20 per map, in
+  run-tests.ps1). Found: on a real map two newcomers in a duel got the first two open cities, Riyadh and
+  Baghdad (320 m apart); map_generator._real_starts now passes over an open city within size/4 of the other
+  capital in a duel only (3+ nations: the list order, unchanged). Codex's CITY_FACTIONS hook in _real_starts
+  left as it is in the working tree, not committed by me.

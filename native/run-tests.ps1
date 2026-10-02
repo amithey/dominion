@@ -40,6 +40,7 @@ $tests = @(
     @('5-10 map regions: space, resources, passages and reproducible seeds', @('--script', 'res://tools/map-capacity-check.gd'), 'MAP_CAPACITY_TEST PASS', 600),
     @('matches of two to nine nations, each rival at its own difficulty; the New Game picker', @('--script', 'res://tools/nations-setup-check.gd'), 'NATIONS_SETUP PASS', 2400),
     @('real-world maps: each nation at its real capital, the seas and mountains where they are on Earth', @('--script', 'res://tools/real-maps-check.gd'), 'REAL_MAPS PASS', 900),
+    @('100 checks on the five newest maps: as generated and played at full count, their geography, rivals, saves', @('--script', 'res://tools/new-maps-100.gd'), 'NEW_MAPS PASS', 2400),
     @('every map loads: capitals linked by land, resources, ships at sea', @('--script', 'res://tools/maps-check.gd'), 'MAPS_TEST PASS', 1500),
     @('thirty checks on a nine-nation match: wars, a march across Pangaea, treaties, spies, missiles, saves, victory', @('--script', 'res://tools/gameplay-nine-30.gd'), 'GAMEPLAY_NINE PASS', 1200),
     @('every nation fields only its own technology (2025-26), rivals too', @('--script', 'res://tools/nation-tech-check.gd'), 'NATION_TECH PASS', 900),

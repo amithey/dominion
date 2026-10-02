@@ -7,6 +7,24 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.44: a hundred checks on the new maps; duels across the map
+
+- **A duel on a real-world map faces across it:** when two nations new to the region met on the Middle East,
+  they took the first two open cities on the list, Riyadh and Baghdad, 320 m apart on a 1600 m map. In a
+  duel an open city within a quarter of the map of the other capital is now passed over (Riyadh and Kyiv);
+  with three nations or more the open cities are taken in the map's order as before.
+- **tools/new-maps-100.gd**, twenty checks on each of the five newest maps. As generated: the same seed
+  makes the same map; land and sea in proportion; every deposit on sound ground (sea oil and fish at sea);
+  whichever of the nine nations you lead, a capital on land, at your real capital where the map shows it;
+  two nations far apart; five nations each in their own place; the map picker entry and preview. Played at
+  the map's full count of nations: every capital on land in its own territory; land for every nation; no unit
+  starts in the sea; a worker builds; no building in the sea; a tank sent into the sea stops on the shore;
+  a corvette sails; the map's own geography (Ankara reaches Tehran, Kyiv to Ankara round the Black Sea,
+  Brussels reaches Moscow, Madrid to Rome round the sea, Tokyo cut off from Beijing by sea, Beijing reaches
+  Hanoi, the other continent only by the isthmus, the Distant Lands out of reach by land, Fractal linked by
+  land and twice as ragged a coast as Continents); rivals grow and keep their land forces ashore; the economy
+  runs and the simulation keeps up (1 to 3 ms a step at 8 or 9 nations); a save comes back as it was.
+
 ## Version 0.9.43: a calmer pace, real-world maps, and roads kept clear
 
 - **Pace:** a new choice on the New Game screen, beside the difficulty: Slow (60%), Relaxed (75%, the default)

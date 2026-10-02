@@ -150,15 +150,32 @@ func _real_starts(nations: Array, count: int) -> Array:
 				taken[k] = true
 				out[i] = starts[k]
 				break
+	# The others take the open cities in the map's order. In a duel the two face
+	# each other across the map, as on the other maps: an open city within a
+	# quarter of the map of the other capital is passed over (two newcomers to
+	# the Middle East got Riyadh and Baghdad, 320 m apart on a 1600 m map).
 	for pass_open in [true, false]:
 		for i in range(count):
 			if out[i] != null:
 				continue
+			var pick := -1
+			var far := -1
+			var far_gap := -1.0
 			for k in range(slots.size()):
-				if not taken.has(k) and (not pass_open or slots[k][2] == ""):
-					taken[k] = true
-					out[i] = starts[k]
-					break
+				if taken.has(k) or (pass_open and slots[k][2] != ""):
+					continue
+				var gap := INF
+				for s in out:
+					if s != null: gap = minf(gap, starts[k].distance_to(s))
+				if pick < 0 and (count > 2 or gap >= size * 0.25):
+					pick = k
+				if gap > far_gap:
+					far = k
+					far_gap = gap
+			if pick < 0: pick = far
+			if pick >= 0:
+				taken[pick] = true
+				out[i] = starts[pick]
 	return out
 
 func _start_positions() -> Array:
