@@ -252,7 +252,7 @@ func _ready() -> void:
 	map = JSON.parse_string(FileAccess.get_file_as_string(MAP_PATH))
 	match_config = MatchSetup.normalize(get_tree().get_meta("match_config",MatchSetup.DEFAULT))
 	if "--campaign-test" in OS.get_cmdline_user_args():
-		match_config = {"map":"mirrored","players":2,"nation":2,"style":"sandbox"}
+		match_config = MatchSetup.normalize({"map":"mirrored","players":2,"nation":2,"style":"sandbox"})
 	MatchSetup.apply(map,match_config)
 	engagement = preload("res://scripts/engagement.gd").new()
 	engagement.world = self
