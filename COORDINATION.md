@@ -481,3 +481,4 @@ UI files listed above.
   the same map as before). menu.gd: a Start picker (StartPicker<i>) beside each nation in _rival_pickers, a
   "You" row, region numbers on MapPreview (_region_marks, preview kept square), starts cleared on a map change.
   Edited menu.gd and the generator in their own hunks only; Codex's uncommitted edits there left as they were.
+- 2026-10-02 Claude: 0.9.45 executable and installer in dist, built from cf9b589 (my commits only; Codex's ten-nation work stays uncommitted). On the exe: ui-test, setup-test, campaign-test pass. On a clean export of cf9b589: start-choice-check 26/26, nations-setup-check 125/125, real-maps-check 38/38, maps-check, map-capacity-check, map-picker-check, new-maps-100.
