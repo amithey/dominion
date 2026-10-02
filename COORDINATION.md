@@ -467,3 +467,4 @@ UI files listed above.
   (4) world.gd movement: on a real detour (route > 1.4x the straight line + 10 m) the stall check also counts
   progress along unit.path (per route: path_serial), so a march round a sea no longer counts as stuck (found on
   East Asia from Seoul); in streets the straight-line measure stands (city-test unchanged, about 4 of 5 either way).
+- 2026-10-02 Claude: 0.9.43 executable and installer in dist, built from 52f4d97 (my commits only; Codex's ten-nation work in progress stays uncommitted in the working tree, untouched). The in-game suite against the exe (run-tests -Exported): 27 of 27 after 52f4d97 (the --campaign-test config now goes through normalize, as it lacked the new pace). Script tools passed one by one on this code: real-maps-check 38/38, maps-check (all 18 maps), road-traffic-check 21/21 on three seeds, gameplay-maps-100 on the new maps, pace-check, city-test (random about 1 in 5 either way).
