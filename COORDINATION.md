@@ -474,3 +474,10 @@ UI files listed above.
   capital in a duel only (3+ nations: the list order, unchanged). Codex's CITY_FACTIONS hook in _real_starts
   left as it is in the working tree, not committed by me.
 - 2026-10-02 Claude: 0.9.44 executable and installer in dist, built from a1a08af (my commits only; Codex's ten-nation work stays uncommitted in the working tree). On the exe: ui-test, setup-test and campaign-test pass. On a clean export of a1a08af: new-maps-100 100/100, real-maps-check 38/38, maps-check, map-capacity-check, nations-setup-check 125/125.
+- 2026-10-02 Claude, 0.9.45: (user: choose where each nation starts) match_config "starts": per roster index a
+  region (match_setup.start_slots / region_count) or -1. normalize drops repeats and bad values; on island and
+  mirrored the player's start is fixed and region 0 is not for rivals (apply swaps the raw order). Generated
+  maps get data.startSlots, used by map_generator._spread_starts / _real_starts via _chosen_starts (no choice:
+  the same map as before). menu.gd: a Start picker (StartPicker<i>) beside each nation in _rival_pickers, a
+  "You" row, region numbers on MapPreview (_region_marks, preview kept square), starts cleared on a map change.
+  Edited menu.gd and the generator in their own hunks only; Codex's uncommitted edits there left as they were.

@@ -393,9 +393,18 @@ func _setup_select(title: String, items: Array, key: String, parent: Control) ->
 ## Each rival: which nation, and how hard it plays (the Difficulty above sets
 ## them all at once).
 func _rival_pickers(parent: Control = null) -> void:
-	_section("Opponents: nation and difficulty", parent)
+	_section("Nations: where each starts, which nation, how hard it plays", parent)
 	var factions = preload("res://scripts/factions.gd")
 	var chosen: Array = world.MatchSetup.roster(setup_options)
+	var you := HBoxContainer.new()
+	you.add_theme_constant_override("separation", 6)
+	(parent if parent != null else _panel).add_child(you)
+	you.add_child(_start_picker(0))
+	var you_label := Label.new()
+	you_label.text = "You: %s" % factions.NAMES[chosen[0]]
+	you_label.add_theme_font_size_override("font_size", 14)
+	you_label.add_theme_color_override("font_color", UI.GOLD)
+	you.add_child(you_label)
 	var grid := GridContainer.new()
 	grid.name = "RivalGrid"
 	grid.columns = 1 if chosen.size() <= 2 else 2
@@ -407,6 +416,7 @@ func _rival_pickers(parent: Control = null) -> void:
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_theme_constant_override("separation", 6)
 		grid.add_child(row)
+		row.add_child(_start_picker(slot))
 		var picker := OptionButton.new()
 		picker.name = "RivalPicker%d" % slot
 		picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -442,6 +452,72 @@ func _rival_pickers(parent: Control = null) -> void:
 			setup_options.levels = levels
 			_update_briefing())
 		row.add_child(level)
+
+## The regions' numbers on the map preview, each beside its dot; a region a
+## nation chose takes that nation's colour.
+func _region_marks(preview: TextureRect, key: String) -> void:
+	for child in preview.get_children():
+		child.queue_free()
+	var roster: Array = world.MatchSetup.roster(setup_options)
+	var picks: Array = world.MatchSetup.starts_of(setup_options)
+	var regions: Array = world.MatchSetup.start_slots(key)
+	for k in range(regions.size()):
+		var p: Vector2 = regions[k].at
+		var mark := Label.new()
+		mark.name = "Region%d" % (k + 1)
+		mark.text = str(k + 1)
+		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		mark.add_theme_font_size_override("font_size", 16 if picks.has(k) else 13)
+		mark.add_theme_constant_override("outline_size", 4)
+		mark.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+		var who := picks.find(k)
+		var colours: Array = world.MatchSetup.COLOURS
+		mark.add_theme_color_override("font_color", Color(colours[roster[who]]) if who >= 0 and who < roster.size() and roster[who] < colours.size() else UI.CREAM)
+		mark.anchor_left = (p.x + 1.0) * 0.5
+		mark.anchor_right = mark.anchor_left
+		mark.anchor_top = (p.y + 1.0) * 0.5
+		mark.anchor_bottom = mark.anchor_top
+		mark.offset_left = 4
+		mark.offset_top = -19
+		mark.offset_right = 24
+		mark.offset_bottom = -1
+		preview.add_child(mark)
+
+## Where nation `slot` of the roster (0: you) starts: Auto, or a region of the
+## map, numbered as on the preview. A region another nation holds is swapped.
+func _start_picker(slot: int) -> OptionButton:
+	var key := str(setup_options.map)
+	var regions: Array = world.MatchSetup.start_slots(key)
+	var picks: Array = world.MatchSetup.starts_of(setup_options)
+	var fixed: bool = not preload("res://scripts/map_generator.gd").is_generated(key)
+	var picker := OptionButton.new()
+	picker.name = "StartPicker%d" % slot
+	picker.custom_minimum_size = Vector2(118, 40)
+	picker.fit_to_longest_item = false
+	picker.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	if fixed and slot == 0:
+		picker.add_item("1 · %s (your town)" % regions[0].name, 1)
+		picker.disabled = true
+		picker.tooltip_text = "On the original islands you always start in your prepared town."
+		return picker
+	picker.tooltip_text = "Where this nation starts: a region of the map, numbered as on the map above, or Auto (the map's own choice: on the real-world maps, a nation's own capital)."
+	picker.add_item("Auto", 0)
+	for k in range(regions.size()):
+		if fixed and k == 0:
+			continue
+		picker.add_item("%d · %s" % [k + 1, regions[k].name], k + 1)
+		if picks[slot] == k:
+			picker.select(picker.item_count - 1)
+	picker.item_selected.connect(func(index):
+		var k: int = picker.get_item_id(index) - 1
+		var now: Array = world.MatchSetup.starts_of(setup_options)
+		var other := now.find(k) if k >= 0 else -1
+		if other >= 0 and other != slot:
+			now[other] = now[slot]
+		now[slot] = k
+		setup_options.starts = now
+		open_new_game())
+	return picker
 
 func _map_name(key: String) -> String:
 	var gen: Dictionary = preload("res://scripts/map_generator.gd").MAPS
@@ -583,6 +659,7 @@ func _map_picker(parent: Control = null) -> void:
 	var preview := TextureRect.new()
 	preview.name = "MapPreview"
 	preview.custom_minimum_size = Vector2(240, 240)
+	preview.size_flags_vertical = Control.SIZE_SHRINK_BEGIN   # square: the region numbers sit on their dots
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	row.add_child(preview)
@@ -609,7 +686,7 @@ func _map_picker(parent: Control = null) -> void:
 	note.add_theme_color_override("font_color", UI.CREAM)
 	detail.add_child(note)
 	var legend := Label.new()
-	legend.text = "Gold dots: prepared capital regions. North is up."
+	legend.text = "Gold dots: prepared capital regions, numbered as in Start below (coloured: a nation chose it). North is up."
 	legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	legend.add_theme_font_size_override("font_size", 12)
 	legend.add_theme_color_override("font_color", UI.MUTED)
@@ -620,10 +697,12 @@ func _map_picker(parent: Control = null) -> void:
 		var info: Dictionary = catalogue.entry(key)
 		preview.texture = load(catalogue.preview_path(key))
 		preview.tooltip_text = "%s: %d x %d m" % [info.name, info.size, info.size]
+		_region_marks(preview, key)
 		note.text = "%s\n%d regions: room for up to %d nations; %d in this campaign." % [info.desc, info.slots, world.MatchSetup.capacity(key), int(setup_options.players)]
 		_update_briefing()
 	picker.item_selected.connect(func(index):
 		update.call(index)
+		setup_options.erase("starts")   # another map, other regions
 		# A smaller map has room for fewer rivals; a larger one offers more.
 		setup_options.players = mini(int(setup_options.players), world.MatchSetup.capacity(str(setup_options.map)))
 		open_new_game())

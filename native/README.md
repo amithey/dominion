@@ -7,6 +7,20 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.45: choose where each nation starts
+
+- **Start**, on the New Game screen beside each nation (yours and every rival's): *Auto* (the map's own choice;
+  on the real-world maps, a nation's own capital), or one of the map's regions, numbered as on the map
+  preview and named by its city on the real-world maps (Ankara, Riyadh, Seoul...) or by its quarter of the map
+  elsewhere (North-east, South...). A region taken by choice shows in that nation's colour on the preview;
+  choosing a region another nation holds swaps the two; another map clears the choices. The nations left on
+  Auto go where they would have, or, when a chosen nation took that place, to the free region farthest from
+  the others; on the real maps a nation whose capital was taken goes to an open city. On the two original
+  islands your prepared town is fixed; the rivals may be placed at the other three starts. Kept in saves.
+  (match_setup.gd "starts", start_slots; map_generator.gd _spread_starts, _chosen_starts, slot_positions.)
+
+Checks: tools/start-choice-check.gd (26).
+
 ## Version 0.9.44: a hundred checks on the new maps; duels across the map
 
 - **A duel on a real-world map faces across it:** when two nations new to the region met on the Middle East,

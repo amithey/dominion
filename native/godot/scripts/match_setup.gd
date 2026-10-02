@@ -35,6 +35,20 @@ static func normalize(options: Dictionary) -> Dictionary:
 			var i := _int(rival, -1)
 			if i >= 0 and i < Factions.IDS.size() and i != out.nation and not i in out.rivals and out.rivals.size() < int(out.players) - 1:
 				out.rivals.append(i)
+	# Where each nation starts, in the order of the roster (you first): a region
+	# of the map (start_slots) or -1 to leave it to the map. Each region once;
+	# on the two original islands your prepared town is fixed, and theirs.
+	if options.get("starts") is Array:
+		var regions := region_count(map_key)
+		var fixed := not preload("res://scripts/map_generator.gd").is_generated(map_key)
+		out.starts = []
+		for s in options.starts.slice(0, int(out.players)):
+			var k := _int(s, -1)
+			if k < 0 or k >= regions or k in out.starts or (fixed and (out.starts.is_empty() or k == 0)):
+				k = -1
+			out.starts.append(k)
+		if out.starts.all(func(v): return v == -1):
+			out.erase("starts")
 	if options.get("levels") is Array:
 		out.levels = []
 		for level in options.levels.slice(0, int(out.players) - 1):
@@ -59,6 +73,46 @@ static func _int(value, fallback: int) -> int:
 	if value is String and value.is_valid_int():
 		return value.to_int()
 	return fallback
+
+## The original island's four starts (data/map-seed1.json), -1..1 across it:
+## the first is your prepared town.
+const ISLAND_STARTS := [Vector2(0.5, -0.5), Vector2(0.5, 0.5), Vector2(-0.5, 0.5), Vector2(-0.5, -0.5)]
+
+## How many capital regions map `key` has.
+static func region_count(key: String) -> int:
+	var maps: Dictionary = preload("res://scripts/map_generator.gd").MAPS
+	return int(maps[key].get("slots", 4)) if maps.has(key) else ISLAND_STARTS.size()
+
+## Map `key`'s capital regions for the New Game screen, in region order:
+## {"at": -1..1 across the map (x east, y south), "name": the city on the
+## real-world maps, else its quarter of the map}.
+static func start_slots(key: String) -> Array:
+	var MapGenerator = preload("res://scripts/map_generator.gd")
+	var at: Array = []
+	if MapGenerator.is_generated(key):
+		at = MapGenerator.slot_positions(key)
+	else:
+		at = ISLAND_STARTS.map(func(p): return Vector2(-p.x, p.y) if key == "mirrored" else p)
+	var out := []
+	for k in range(at.size()):
+		var name := _quarter(at[k])
+		if key in MapGenerator.REAL:
+			name = str(MapGenerator.Geography.MAPS[key].starts[k][3])
+		out.append({"at": at[k], "name": name})
+	return out
+
+static func _quarter(p: Vector2) -> String:
+	if p.length() < 0.2:
+		return "Centre"
+	return ["East", "South-east", "South", "South-west", "West", "North-west", "North", "North-east"][posmod(roundi(p.angle() / (PI / 4.0)), 8)]
+
+## The chosen region of each nation in the roster (-1: left to the map).
+static func starts_of(options: Dictionary) -> Array:
+	var picks: Array = options.starts if options.get("starts") is Array else []
+	var out := []
+	for i in range(int(options.get("players", 4))):
+		out.append(_int(picks[i], -1) if i < picks.size() else -1)
+	return out
 
 static func roster(options: Dictionary) -> Array:
 	var nation := int(options.get("nation", 0))
@@ -93,6 +147,19 @@ static func apply(data: Dictionary, options: Dictionary) -> void:
 	var order := [0, raw / 2] if count == 2 and raw >= 4 else [0]
 	while order.size() < count:
 		order.append(1 + (order.size() - 1) % (raw - 1))
+	var picks: Array = starts_of(options)
+	if MapGenerator.is_generated(key):
+		data.startSlots = picks   # the generator places the towns (map_generator.gd)
+	else:
+		# A rival given a start of the island takes it (from whoever had it).
+		for i in range(1, count):
+			var k: int = picks[i]
+			if k <= 0 or k >= raw or order[i] == k:
+				continue
+			var j := order.find(k)
+			if j > 0:
+				order[j] = order[i]
+			order[i] = k
 	data.nations = []
 	for i in range(chosen.size()):
 		data.nations.append(Factions.nation(chosen[i], i == 0))

@@ -93,12 +93,14 @@ func _build(data: Dictionary, key: String, seed: int) -> void:
 	starts = _start_positions()
 	_heights()
 	var old_starts: Array = data.startPositions.duplicate(true)
+	# (the regions chosen on the New Game screen, by nation: match_setup.gd "starts")
+	var chosen: Array = data.get("startSlots", [])
+	data.erase("startSlots")
 	var active_starts := []
 	if style in REAL:
-		active_starts = _real_starts(data.get("nations", []), old_starts.size())
+		active_starts = _real_starts(data.get("nations", []), old_starts.size(), chosen)
 	else:
-		for i in range(old_starts.size()):
-			active_starts.append(starts[int(i * starts.size() / old_starts.size())])
+		active_starts = _spread_starts(old_starts.size(), chosen)
 	var old_hq := {}
 	for b in data.buildings:
 		if b.key == "hq":
@@ -138,12 +140,13 @@ func _build(data: Dictionary, key: String, seed: int) -> void:
 ## Capitals: hex centres, so every town's hex offsets stay on the grid.
 ## True start locations: each nation at its own capital when the map shows
 ## it; the others at the open starts (other great cities), then anywhere free.
-func _real_starts(nations: Array, count: int) -> Array:
+func _real_starts(nations: Array, count: int, chosen := []) -> Array:
 	var slots: Array = Geography.MAPS[style].starts
 	var taken := {}
-	var out: Array = []
-	out.resize(count)
+	var out: Array = _chosen_starts(count, chosen, taken)
 	for i in range(count):
+		if out[i] != null:
+			continue
 		var id: String = str(nations[i].get("id", "")) if i < nations.size() else ""
 		for k in range(slots.size()):
 			if id != "" and slots[k][2] == id and not taken.has(k):
@@ -177,6 +180,51 @@ func _real_starts(nations: Array, count: int) -> Array:
 				taken[pick] = true
 				out[i] = starts[pick]
 	return out
+
+## The generated maps: the nations spread evenly round the regions, but for
+## those whose region was chosen; a nation whose even share another took by
+## choice goes to the free region farthest from every capital placed.
+func _spread_starts(count: int, chosen: Array) -> Array:
+	var taken := {}
+	var out: Array = _chosen_starts(count, chosen, taken)
+	for i in range(count):
+		if out[i] != null:
+			continue
+		var k := int(i * starts.size() / count)
+		if taken.has(k):
+			var far_gap := -1.0
+			for j in range(starts.size()):
+				if taken.has(j):
+					continue
+				var gap := INF
+				for s in out:
+					if s != null: gap = minf(gap, starts[j].distance_to(s))
+				if gap > far_gap:
+					far_gap = gap
+					k = j
+		taken[k] = true
+		out[i] = starts[k]
+	return out
+
+## The regions chosen on the New Game screen (-1: automatic), each taken once.
+func _chosen_starts(count: int, chosen: Array, taken: Dictionary) -> Array:
+	var out: Array = []
+	out.resize(count)
+	for i in range(mini(count, chosen.size())):
+		var k := int(chosen[i])
+		if k >= 0 and k < starts.size() and not taken.has(k):
+			taken[k] = true
+			out[i] = starts[k]
+	return out
+
+## Where map `key`'s capital regions lie, -1..1 across the map (x east, y
+## south), in region order, without building the map (the New Game screen).
+static func slot_positions(key: String) -> Array:
+	var g = load("res://scripts/map_generator.gd").new()
+	g.style = key
+	g.size = float(MAPS[key].size)
+	g.half = g.size * 0.5
+	return g._start_positions().map(func(p): return p / g.half)
 
 func _start_positions() -> Array:
 	var at := []
