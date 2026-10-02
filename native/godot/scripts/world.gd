@@ -1834,6 +1834,7 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 		u.build_queue = []   # and off its list of jobs
 		u.forced = false
 		u.best_rem = INF
+		u.best_go = INF
 		u.stall = 0.0
 		u.stuck = 0
 		u.holding = false
@@ -2098,15 +2099,31 @@ func _physics_process(delta: float) -> void:
 		# unit stops gaining on its mark, it counts as there if close, or tries
 		# a fresh route, and after a few tries settles where it is.
 		if not chasing:
+			# Progress is the straight line to the mark getting shorter, or, on a
+			# real detour (a route far longer than that line: round a bay, a lake,
+			# a sea), the way still to go along the route. A detour first leads away
+			# from the mark: on the real-world maps a tank sent round the Yellow
+			# Sea used to give up after 16 s. In streets the old measure stands.
+			var to_go := remaining
+			if unit.path.size() > 1:
+				to_go = Vector2(unit.path[0].x - node.position.x, unit.path[0].z - node.position.z).length()
+				for i in range(1, unit.path.size()):
+					to_go += Vector2(unit.path[i].x - unit.path[i - 1].x, unit.path[i].z - unit.path[i - 1].z).length()
+			# A new route sets a new baseline: a shorter plan is not ground covered.
+			if int(unit.get("path_serial", 0)) != int(unit.get("go_serial", -1)):
+				unit.go_serial = int(unit.get("path_serial", 0))
+				unit.best_go = to_go
 			# Waiting in line behind a comrade is not being stuck.
-			if remaining < float(unit.get("best_rem", INF)) - 0.4 or float(unit.get("traffic_cap", INF)) < 0.6:
+			if remaining < float(unit.get("best_rem", INF)) - 0.4 or (to_go > remaining * 1.4 + 10.0 and to_go < float(unit.get("best_go", INF)) - 1.2) or float(unit.get("traffic_cap", INF)) < 0.6:
 				unit.best_rem = minf(remaining, float(unit.get("best_rem", INF)))
+				unit.best_go = minf(to_go, float(unit.get("best_go", INF)))
 				unit.stall = 0.0
 			else:
 				unit.stall = float(unit.get("stall", 0.0)) + delta
 			if unit.stall > 1.6:
 				unit.stall = 0.0
 				unit.best_rem = INF
+				unit.best_go = INF
 				unit.stuck = int(unit.get("stuck", 0)) + 1
 				# Close to the mark: that is where it stands. Far from it: a fresh
 				# route, and only after many failures does it stop short.
@@ -2569,6 +2586,7 @@ func steer_point(unit: Dictionary, goal: Vector3, chasing: bool, delta: float) -
 			unit.path = path_between(unit.node.position, goal)
 			unit.path_goal = goal
 			unit.repath = 0.8
+			unit.path_serial = int(unit.get("path_serial", 0)) + 1
 	var pos: Vector3 = unit.node.position
 	while unit.path.size() > 1 and Vector2(unit.path[0].x - pos.x, unit.path[0].z - pos.z).length() < 1.5:
 		unit.path.remove_at(0)
@@ -4274,6 +4292,11 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 		var taken = district_hex.get(hex)
 		if taken != null and not taken.dead:
 			return "This hex already holds %s" % taken.def.name
+		# A road runs through the middle of a hex: a building there would stand
+		# on it, and the traffic would run into it. A town hall is where roads
+		# lead, so it may.
+		if def.get("settlement") == null and logistics.road_through(hex):
+			return "A road or railway runs through this hex: build beside it"
 		var low := INF
 		var high := -INF
 		for k in range(6):

@@ -221,6 +221,29 @@ func run() -> void:
 	step(150.0, func(): S.back = S.back or traffic._fleet.any(on_cut))
 	check(S.back, "mended, the road carries traffic again")
 
+	# A building on the road: refused; and one already standing there (an old
+	# save) is not driven into, nor does it jam the traffic.
+	var mid: Vector2i = road[road.size() / 2]
+	var block_at: Vector3 = w.logistics.hex_center(mid)
+	check(w.site_problem("cottage", block_at, 0).begins_with("A road or railway runs through"), "no building on a road (%s)" % w.site_problem("cottage", block_at, 0))
+	var house: Dictionary = w.place_building("cottage", block_at, 0, true)
+	traffic._sync()
+	S["inside"] = 0
+	step(20.0)
+	# Cars standing still near the house now: are they still there, unmoved, 20 s on?
+	for c in traffic._fleet:
+		if c.kind == "road" and c.bodies[0].has("at") and c.v < 0.2 and Vector2(c.bodies[0].at.x - block_at.x, c.bodies[0].at.z - block_at.z).length() < 25.0:
+			c["_held"] = c.bodies[0].at
+	step(20.0, func():
+		for c in traffic._fleet:
+			if c.kind != "road" or not c.bodies[0].has("at"): continue
+			var p: Vector3 = c.bodies[0].at
+			if Vector2(p.x - block_at.x, p.z - block_at.z).length() < house.footprint * 0.5: S.inside += 1)
+	var held: int = traffic._fleet.filter(func(c): return c.has("_held") and c.bodies[0].at.distance_to(c._held) < 1.0).size()
+	check(S.inside == 0, "a car never drives into a building standing on its road")
+	check(held == 0, "and no car is left stuck beside it (%d)" % held)
+	w.destroy_building(house)
+
 	# 14: the network costs little.
 	check(frame_ms < 3.0, "all of it costs %.2f ms a frame" % frame_ms)
 	# 15: drawn: one instance per body.

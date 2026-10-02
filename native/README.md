@@ -7,6 +7,34 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Version 0.9.43: a calmer pace, real-world maps, and roads kept clear
+
+- **Pace:** a new choice on the New Game screen, beside the difficulty: Slow (60%), Relaxed (75%, the default)
+  or Standard (100%). The whole world runs at that share of its old speed together (movement, building,
+  training, research, the economy, the seasons, the rivals), so nothing changes in its balance; the camera and
+  the interface keep their own speed. Kept in saves.
+- **Real-world maps**, in the spirit of Civilization's "true start location" Earth maps: each nation whose
+  capital lies on the map starts at it, the others at open great cities of the region.
+  - *Middle East* (8): Ankara, Jerusalem, Tehran, Moscow, Athens for Europe; open: Riyadh, Baghdad, Kyiv.
+  - *Europe* (9): Brussels, Moscow, Ankara, Jerusalem; open: Madrid, Rome, Stockholm, Warsaw, Kyiv.
+  - *East Asia* (9): Beijing, Tokyo, New Delhi; open: Seoul, Ulaanbaatar, Hanoi, Taipei, Manila, Jakarta.
+  Real coastlines, the Mediterranean, Black, Caspian, Red and Baltic seas, the Persian Gulf, and the great
+  ranges: Alps, Pyrenees, Carpathians, Caucasus, Taurus, Zagros, Alborz, Urals, Himalaya, the Tibetan plateau,
+  Tian Shan, Hindu Kush, Atlas and more (scripts/world_geography.gd). Island nations need a navy.
+- **Two maps after Civilization VII:** *Continents and Distant Lands* (8): two homeland continents, joined only
+  by a far southern isthmus, and between them rich islands no one starts on (gold, diamonds, uranium, oil);
+  *Fractal* (6): ragged land of peninsulas and inlets, every region different, a land route still linking each
+  capital to the next.
+- **Units no longer give up on a winding road:** a unit judged its progress by the straight line to its
+  destination, so a route that first leads away from it (round a bay, a lake or a sea) looked like no progress
+  and the unit stopped after some seconds. On such a detour it now counts the way still to go along the route.
+- **Roads kept clear:** a building may no longer be put on a hex a road or railway runs through ("build beside
+  it"; a town hall may, as roads lead to it); and a car whose road has a building standing on it (an old save)
+  leaves the road instead of driving into the building and holding up the cars behind it.
+
+Checks: tools/pace-check.gd, tools/real-maps-check.gd (38), and the map tests now cover the five new maps;
+road-traffic-check.gd adds the building-on-a-road cases.
+
 ## Version 0.9.42: buildings do what their cards say
 
 A hundred economy checks (tools/economy-100.gd) found buildings whose cards promised effects the native game

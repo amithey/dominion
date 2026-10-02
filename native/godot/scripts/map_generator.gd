@@ -35,12 +35,23 @@ const MAPS := {
 	"great_lakes": {"name": "Great Lakes", "size": 1520, "slots": 9, "ring": 0.7, "desc": "Nine regions on a continent dotted with lakes; a land ring links every capital."},
 	"pangaea": {"name": "Pangaea", "size": 1680, "slots": 10, "ring": 0.7, "desc": "Ten regions on one supercontinent, split by a mountain range with passes."},
 	"ten_isles": {"name": "Ten Isles", "size": 1760, "slots": 10, "desc": "Ten islands round an open ocean, joined by narrow land bridges; a rich isle alone in the middle."},
+	"continents_plus": {"name": "Continents and Distant Lands", "size": 1600, "slots": 8, "desc": "Two homeland continents joined only by a far southern isthmus, and between them the Distant Lands: rich islands no one starts on, waiting for the first navy."},
+	"fractal": {"name": "Fractal", "size": 1280, "slots": 6, "desc": "Wild, ragged land of peninsulas, inlets and lakes, every region different; a land route still links each capital to the next."},
+	"middle_east": {"name": "Middle East", "size": 1600, "slots": 8, "real": true, "desc": "The real map, from the Aegean to Persia and from Moscow to Arabia: the Caspian, Black and Red seas, the Caucasus and the Zagros. Each nation whose capital lies here starts there."},
+	"europe": {"name": "Europe", "size": 1760, "slots": 9, "real": true, "desc": "The real map, from Iberia to the Urals and down to the Levant: the Alps, the Baltic and the Mediterranean. Each nation whose capital lies here starts there."},
+	"east_asia": {"name": "East Asia", "size": 1760, "slots": 9, "real": true, "desc": "The real map, from India to Japan and from Mongolia to Java: the Himalaya, the Tibetan plateau and the island chains. Island nations need a navy."},
 }
+## The real-world maps (world_geography.gd): their capitals stand where the real ones do.
+const REAL := ["middle_east", "europe", "east_asia"]
+const Geography = preload("res://scripts/world_geography.gd")
+## Continents and Distant Lands: the islands between the homelands.
+const DISTANT := [Vector2(0.0, -0.62), Vector2(0.03, -0.25), Vector2(-0.03, 0.12), Vector2(0.04, 0.45)]
+var _geo := {}
 ## Capacity describes prepared geography slots, independently of active nations.
 ## "ring": how far out the capitals stand (a share of the half-width; 0.64 when
 ## unset), so that on the great continents they are near enough the coast for
 ## a harbour.
-const EXPANDED := ["frontier", "inland_sea", "crown", "highlands", "great_lakes", "pangaea", "ten_isles"]
+const EXPANDED := ["frontier", "inland_sea", "crown", "highlands", "great_lakes", "pangaea", "ten_isles", "fractal"]
 const STEP := 2.5
 const MARGIN := 32.0
 const HEX := 12.0
@@ -77,12 +88,17 @@ func _build(data: Dictionary, key: String, seed: int) -> void:
 		noise.frequency = pair[1]
 		noise.fractal_octaves = pair[2]
 	_ridge.fractal_type = FastNoiseLite.FRACTAL_RIDGED
+	if style in REAL:
+		_geo = Geography.raster(style, size, 360)
 	starts = _start_positions()
 	_heights()
 	var old_starts: Array = data.startPositions.duplicate(true)
 	var active_starts := []
-	for i in range(old_starts.size()):
-		active_starts.append(starts[int(i * starts.size() / old_starts.size())])
+	if style in REAL:
+		active_starts = _real_starts(data.get("nations", []), old_starts.size())
+	else:
+		for i in range(old_starts.size()):
+			active_starts.append(starts[int(i * starts.size() / old_starts.size())])
 	var old_hq := {}
 	for b in data.buildings:
 		if b.key == "hq":
@@ -120,8 +136,41 @@ func _build(data: Dictionary, key: String, seed: int) -> void:
 # ---------------------------------------------------------------- shape
 
 ## Capitals: hex centres, so every town's hex offsets stay on the grid.
+## True start locations: each nation at its own capital when the map shows
+## it; the others at the open starts (other great cities), then anywhere free.
+func _real_starts(nations: Array, count: int) -> Array:
+	var slots: Array = Geography.MAPS[style].starts
+	var taken := {}
+	var out: Array = []
+	out.resize(count)
+	for i in range(count):
+		var id: String = str(nations[i].get("id", "")) if i < nations.size() else ""
+		for k in range(slots.size()):
+			if id != "" and slots[k][2] == id and not taken.has(k):
+				taken[k] = true
+				out[i] = starts[k]
+				break
+	for pass_open in [true, false]:
+		for i in range(count):
+			if out[i] != null:
+				continue
+			for k in range(slots.size()):
+				if not taken.has(k) and (not pass_open or slots[k][2] == ""):
+					taken[k] = true
+					out[i] = starts[k]
+					break
+	return out
+
 func _start_positions() -> Array:
 	var at := []
+	if style in REAL:
+		for s in Geography.MAPS[style].starts:
+			at.append(_hex_centre(Geography.to_world(style, size, s[0], s[1])))
+		return at
+	if style == "continents_plus":
+		at = [Vector2(-0.72, -0.5), Vector2(-0.38, -0.62), Vector2(-0.72, 0.35), Vector2(-0.38, 0.5),
+			Vector2(0.72, 0.5), Vector2(0.38, 0.62), Vector2(0.72, -0.35), Vector2(0.38, -0.5)]
+		return at.map(func(p): return _hex_centre(p * half))
 	if style in EXPANDED:
 		var count := int(MAPS[style].slots)
 		for i in range(count):
@@ -158,6 +207,11 @@ func _hex_centre(p: Vector2) -> Vector2:
 func _shape(p: Vector2, route := -1.0) -> float:
 	var u := p / half   # -1..1 across the map
 	var f := 0.0
+	if style in REAL:
+		f = _geo_sample(_geo.sdf, p) / 230.0 + _coast.get_noise_2d(p.x * 2.0, p.y * 2.0) * 0.06
+		for s in starts:
+			f = maxf(f, 0.28 - p.distance_to(s) / 160.0)   # (the ground for a capital's town, no more)
+		return f
 	match style:
 		"frontier":
 			f = 1.0 - (u * Vector2(1.0, 1.04)).length() / 0.92
@@ -177,6 +231,17 @@ func _shape(p: Vector2, route := -1.0) -> float:
 			f = 1.0 - (u * Vector2(1.0, 1.06)).length() / 0.89
 		"pangaea":
 			f = 1.0 - (u * Vector2(1.04, 1.0)).length() / 0.89
+		"continents_plus":
+			# Two homelands, a thin isthmus far to the south, and the Distant Lands between.
+			var wobble := _hills.get_noise_2d(p.x * 0.5, p.y * 0.5) * 0.35
+			var west := 1.0 - ((u - Vector2(-0.55, 0.0)) / Vector2(0.34, 0.86)).length() + wobble
+			var east := 1.0 - ((u - Vector2(0.55, 0.0)) / Vector2(0.34, 0.86)).length() + wobble
+			var isthmus := 0.3 - absf(u.y - 0.8 - sin(u.x * 9.0) * 0.04) * 7.0 if absf(u.x) < 0.42 else -1.0
+			f = maxf(maxf(west, east), isthmus)
+			for c in DISTANT:
+				f = maxf(f, 1.0 - (u - c).length() / 0.12 + _hills.get_noise_2d(p.x * 1.6, p.y * 1.6) * 0.7)
+		"fractal":
+			f = 0.2 - u.length() * 0.45 + _coast.get_noise_2d(p.x * 1.8, p.y * 1.8) * 0.9 + _hills.get_noise_2d(p.x * 0.7, p.y * 0.7) * 0.35
 		"small":
 			f = 1.0 - (u * Vector2(1.0, 1.0)).length() / 0.86
 		"twin":
@@ -201,11 +266,28 @@ func _shape(p: Vector2, route := -1.0) -> float:
 	f += (_coast.get_noise_2d(p.x, p.y)) * 0.22
 	# Guaranteed broad land routes round the ring, with sea retained in the middle.
 	if style in EXPANDED:
-		f = maxf(f, (42.0 - (route if route >= 0.0 else _route_distance(p))) / 110.0)
+		# (on Fractal a narrower, wandering route, so the land stays ragged)
+		var wide: float = 26.0 + _hills.get_noise_2d(p.x, p.y) * 10.0 if style == "fractal" else 42.0
+		f = maxf(f, (wide - (route if route >= 0.0 else _route_distance(p))) / 110.0)
 	# Capitals always stand well inland.
 	for s in starts:
 		f = maxf(f, 0.42 - p.distance_to(s) / 260.0)
 	return f
+
+## A raster of world_geography.gd (sdf or mountains) at `p`, bilinearly.
+func _geo_sample(grid: PackedFloat32Array, p: Vector2) -> float:
+	var n: int = _geo.cells
+	var x := clampf((p.x + half) / size * n - 0.5, 0.0, n - 1.001)
+	var y := clampf((p.y + half) / size * n - 0.5, 0.0, n - 1.001)
+	var c := int(x)
+	var r := int(y)
+	var fx := x - c
+	var fy := y - r
+	var c1 := mini(c + 1, n - 1)
+	var r1 := mini(r + 1, n - 1)
+	var top := lerpf(grid[r * n + c], grid[r * n + c1], fx)
+	var bottom := lerpf(grid[r1 * n + c], grid[r1 * n + c1], fx)
+	return lerpf(top, bottom, fy)
 
 func _route_distance(p: Vector2) -> float:
 	var nearest := INF
@@ -222,7 +304,7 @@ func _heights() -> void:
 	_origin = -(half + MARGIN)
 	_n = int(ceil((size + MARGIN * 2.0) / STEP)) + 1
 	_h.resize(_n * _n)
-	var mountains: float = {"small": 0.35, "twin": 0.8, "archipelago": 0.55, "continent": 1.25, "highlands": 1.9, "great_lakes": 0.6, "pangaea": 1.1, "ten_isles": 0.45}.get(style, 0.8)
+	var mountains: float = {"small": 0.35, "twin": 0.8, "archipelago": 0.55, "continent": 1.25, "highlands": 1.9, "great_lakes": 0.6, "pangaea": 1.1, "ten_isles": 0.45, "middle_east": 0.3, "europe": 0.3, "east_asia": 0.3, "continents_plus": 0.9, "fractal": 0.7}.get(style, 0.8)
 	var lakes: float = {"continent": 0.42, "pangaea": 0.42, "great_lakes": 0.28}.get(style, 2.0)   # noise above this is a lake
 	var expanded := style in EXPANDED
 	for r in range(_n):
@@ -245,6 +327,11 @@ func _heights() -> void:
 					var spine := 1.0 - smoothstep(0.0, 70.0, absf(p.x * 0.35 + p.y * 0.94))
 					var gap := smoothstep(0.25, 0.55, absf(_lakes.get_noise_2d(p.x * 0.4, 0.0)))
 					range_mask = maxf(range_mask, spine * gap * smoothstep(0.2, 0.5, f) * 1.4)
+				if style in REAL:
+					# The real ranges: the Alps, the Caucasus, the Zagros, the Himalaya...
+					var real_range: float = _geo_sample(_geo.mountains, p)
+					range_mask = maxf(range_mask, real_range * 2.6 * smoothstep(0.05, 0.3, f) * smoothstep(90.0, 150.0, near))
+					h += real_range * 16.0 * smoothstep(0.05, 0.3, f) * smoothstep(80.0, 140.0, near)
 				h += ridge * 22.0 * range_mask
 				# Lakes on the continent, far from capitals.
 				if f > 0.35 and near > 140.0 and _lakes.get_noise_2d(p.x, p.y) > lakes:
@@ -256,7 +343,7 @@ func _heights() -> void:
 				h = maxf(0.6 + f * 90.0, -60.0)
 			if expanded:
 				# Flatten the centre of each passage for ground units and future roads.
-				var road := 1.0 - smoothstep(18.0, 36.0, route)
+				var road := 1.0 - (smoothstep(10.0, 22.0, route) if style == "fractal" else smoothstep(18.0, 36.0, route))
 				h = lerpf(h, 3.2, road)
 			_h[r * _n + c] = h
 
@@ -345,15 +432,22 @@ func _deposits() -> Array:
 	var out := []
 	var taken := []
 	# Each capital: oil, iron and gold within reach.
+	# (A capital on a small island, as real ones can be, takes what land it has:
+	# a closer ring, then a wider one.)
 	for s in starts:
 		for type in ["oil", "iron", "gold"]:
-			for tries in range(300):
-				var p: Vector2 = _snap(s + Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(55.0, 95.0))
-				var h := height(p)
-				if h > 1.5 and h < 14.0 and _slope(p) < 0.35 and _free(p, taken, 24.0) and not _near_start(p, 50.0):
-					out.append({"type": type, "x": snappedf(p.x, 0.01), "z": snappedf(p.y, 0.01)})
-					taken.append(p)
+			var placed := false
+			for ring in [[55.0, 95.0, 50.0, 0.35, 1.5, 14.0], [38.0, 108.0, 34.0, 0.5, 1.2, 16.0]]:
+				if placed:
 					break
+				for tries in range(300):
+					var p: Vector2 = _snap(s + Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(ring[0], ring[1]))
+					var h := height(p)
+					if h > ring[4] and h < ring[5] and _slope(p) < ring[3] and _free(p, taken, 20.0 if ring[0] < 50.0 else 24.0) and not _near_start(p, ring[2]):
+						out.append({"type": type, "x": snappedf(p.x, 0.01), "z": snappedf(p.y, 0.01)})
+						taken.append(p)
+						placed = true
+						break
 	var area := _land_share() * 0.85
 	var land := {"iron": 13, "oil": 11, "gold": 8, "silicon": 11, "uranium": 9, "diamond": 7}
 	for type in land:
@@ -384,4 +478,15 @@ func _deposits() -> Array:
 				out.append({"type": type, "x": snappedf(p.x, 0.01), "z": snappedf(p.y, 0.01)})
 				taken.append(p)
 				placed += 1
+	# The Distant Lands are rich: each island holds gold, diamonds, uranium and oil.
+	if style == "continents_plus":
+		for c in DISTANT:
+			for type in ["gold", "diamond", "uranium", "oil"]:
+				for tries in range(200):
+					var p: Vector2 = _snap(c * half + Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(0.0, half * 0.07))
+					var h := height(p)
+					if h > 1.5 and h < 16.0 and _slope(p) < 0.5 and _free(p, taken, 20.0):
+						out.append({"type": type, "x": snappedf(p.x, 0.01), "z": snappedf(p.y, 0.01)})
+						taken.append(p)
+						break
 	return out

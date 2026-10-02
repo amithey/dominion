@@ -4,7 +4,7 @@ extends SceneTree
 ## and gold lie near each capital, and warships start at sea. With a window,
 ## saves an overview of each map (build/map-<key>.png).
 var errors: Array[String] = []
-const MAPS := ["small", "twin", "archipelago", "continent", "island", "frontier", "highlands", "inland_sea", "crown", "great_lakes", "pangaea", "ten_isles"]
+const MAPS := ["small", "twin", "archipelago", "continent", "island", "frontier", "highlands", "inland_sea", "crown", "great_lakes", "pangaea", "ten_isles", "fractal", "continents_plus", "middle_east", "europe", "east_asia"]
 func _initialize() -> void: call_deferred("run")
 func check(ok: bool, label: String) -> void:
 	print("ok " if ok else "FAIL ", label)
@@ -29,7 +29,7 @@ func run() -> void:
 		w.menu._root.hide()
 		for i in range(20):
 			await physics_frame  # the navigation map takes in the towns' closed cells
-		check(int(w.map.mapSize) == ({"small": 440, "twin": 720, "archipelago": 800, "continent": 960, "frontier": 1120, "inland_sea": 1280, "crown": 1440, "highlands": 1040, "great_lakes": 1520, "pangaea": 1680, "ten_isles": 1760}.get(key, 640)), "%s has its size" % key)
+		check(int(w.map.mapSize) == ({"small": 440, "twin": 720, "archipelago": 800, "continent": 960, "frontier": 1120, "inland_sea": 1280, "crown": 1440, "highlands": 1040, "great_lakes": 1520, "pangaea": 1680, "ten_isles": 1760, "fractal": 1280, "continents_plus": 1600, "middle_east": 1600, "europe": 1760, "east_asia": 1760}.get(key, 640)), "%s has its size" % key)
 		var hqs: Array = w.buildings.filter(func(b): return b.key == "hq")
 		check(hqs.size() == 4 and hqs.all(func(b): return w.height_at(b.root.position.x, b.root.position.z) > 1.0), "%s: four capitals on dry land" % key)
 		var mine: Vector3 = hqs.filter(func(b): return b.owner == 0)[0].root.position

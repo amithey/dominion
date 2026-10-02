@@ -102,6 +102,13 @@ func town_hall_at(h: Vector2i):
 
 ## Land only, no steep climbs (railways need gentler grades), and no link
 ## through a rival nation's settlement district.
+## Whether an intact road or railway (of any nation) runs through hex `h`.
+func road_through(h: Vector2i) -> bool:
+	for e in edges.values():
+		if e.hp > 0.0 and (e.a == h or e.b == h):
+			return true
+	return false
+
 func passable(a: Vector2i, b: Vector2i, kind: String, rivals: Array) -> bool:
 	if not terrain_ok(a, b, kind):
 		return false

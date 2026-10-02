@@ -11,7 +11,7 @@ var w: Node
 const DT := 1.0 / 15.0
 const Generator := preload("res://scripts/map_generator.gd")
 ## Smallest to largest: the original island and its mirror, then the generated maps.
-const KEYS := ["small", "island", "mirrored", "twin", "archipelago", "continent", "frontier", "highlands", "inland_sea", "crown", "great_lakes", "pangaea", "ten_isles"]
+const KEYS := ["small", "island", "mirrored", "twin", "archipelago", "continent", "frontier", "highlands", "inland_sea", "crown", "great_lakes", "pangaea", "ten_isles", "fractal", "continents_plus", "middle_east", "europe", "east_asia"]
 var only: Array = []
 func _initialize() -> void: call_deferred("run")
 func check(ok: bool, label: String) -> void:
@@ -142,7 +142,9 @@ func run() -> void:
 		var inward: Vector3 = (Vector3.ZERO - hq().root.position).normalized()
 		var from: Vector3 = dry(hq().root.position + inward * 45.0)
 		var away: Vector3 = dry(hq().root.position + inward * 155.0)
-		for turn: float in [0.0, 0.4, -0.4, 0.8, -0.8, 1.2, -1.2]:
+		# (every bearing if need be: a capital on a peninsula, like Seoul, faces the sea toward the middle)
+		var route_len := 110.0
+		for turn: float in [0.0, 0.4, -0.4, 0.8, -0.8, 1.2, -1.2, 1.6, -1.6, 2.1, -2.1, 2.6, -2.6, PI]:
 			var dir: Vector3 = inward.rotated(Vector3.UP, turn)
 			var s0: Vector3 = dry(hq().root.position + dir * 45.0)
 			var g0: Vector3 = dry(hq().root.position + dir * 155.0)
@@ -150,10 +152,16 @@ func run() -> void:
 			if not route.is_empty() and Vector2(route[-1].x - g0.x, route[-1].z - g0.z).length() < 4.0 and s0.distance_to(g0) > 90.0:
 				from = s0
 				away = g0
+				route_len = 0.0
+				var prev: Vector3 = s0
+				for q in route:
+					route_len += Vector2(q.x - prev.x, q.z - prev.z).length()
+					prev = q
 				break
 		var tank: Dictionary = w.spawn_unit("tank", from, 0)
 		w.order_move([tank], away)
-		sim(60.0, false, func(): return tank.target == null)
+		# A minute for 110 m, and as much more as the road winds (Fractal's inlets).
+		sim(60.0 * maxf(1.0, route_len / 130.0), false, func(): return tank.target == null)
 		var got: float = Vector2(tank.node.position.x - away.x, tank.node.position.z - away.z).length()
 		check(got < 15.0, "%s: a tank drives 110 m across the country within a minute (%d m short%s)" % [name, int(got), "" if got < 15.0 else (", still driving" if tank.target != null else ", gave up at %s" % str(tank.node.position.snapped(Vector3.ONE)))])
 		w.kill(tank)

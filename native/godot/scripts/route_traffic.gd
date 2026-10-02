@@ -139,6 +139,11 @@ func _route_intact(c: Dictionary) -> bool:
 	for i in range(1, hexes.size()):
 		if not g.has(hexes[i - 1]) or not hexes[i] in g[hexes[i - 1]]:
 			return false
+	# A building put up on the way since the trip began: the vehicle would drive
+	# into it (and the ones behind would queue there for ever).
+	for i in range(1, hexes.size() - 1):
+		if _is_town(hexes[i]):
+			return false
 	return true
 
 func _populate(delta: float) -> void:

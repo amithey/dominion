@@ -453,3 +453,17 @@ UI files listed above.
   the game, so tests keep full speed; apply_pace(true) forces it); world._process gives pan_camera/update_camera
   real time. menu.gd (Codex's): a fourth select, "Pace", in "Set the balance of power", and the pace in the
   briefing. tools/pace-check.gd: game time at 76% of real time at 75%, the camera unchanged.
+- 2026-10-02 Claude, 0.9.43: (1) pace (see above). (2) New maps (user: more maps, real ones, inspired by Civ 7):
+  scripts/world_geography.gd holds simplified coastlines (one Eurasia-Africa outline with the Mediterranean,
+  Black, Caspian and Baltic seas cut out, plus islands) and mountain ranges in lon/lat, rasterised (360 cells:
+  scanline fill, chamfer signed distance, range strength) for map_generator; REAL maps middle_east, europe,
+  east_asia put each faction at its capital (_real_starts: own capital, else open cities, else any free slot).
+  continents_plus (homelands + Distant Lands with rich deposits, a southern isthmus) and fractal (in EXPANDED,
+  narrower wandering routes). Per-capital deposits get a second, closer/wider ring for island capitals; the
+  first ring is unchanged, so older maps keep their resources. map_catalogue KEYS gained the five maps, with
+  previews. (3) Roads: world.site_problem refuses a non-settlement building on a hex a road or railway runs
+  through (logistics.road_through); route_traffic._route_intact drops a vehicle whose trip passes through a
+  hex that has become built up (it used to drive into the building and jam the queue behind it).
+  (4) world.gd movement: on a real detour (route > 1.4x the straight line + 10 m) the stall check also counts
+  progress along unit.path (per route: path_serial), so a march round a sea no longer counts as stuck (found on
+  East Asia from Seoul); in streets the straight-line measure stands (city-test unchanged, about 4 of 5 either way).
