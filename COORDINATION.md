@@ -473,3 +473,4 @@ UI files listed above.
   Baghdad (320 m apart); map_generator._real_starts now passes over an open city within size/4 of the other
   capital in a duel only (3+ nations: the list order, unchanged). Codex's CITY_FACTIONS hook in _real_starts
   left as it is in the working tree, not committed by me.
+- 2026-10-02 Claude: 0.9.44 executable and installer in dist, built from a1a08af (my commits only; Codex's ten-nation work stays uncommitted in the working tree). On the exe: ui-test, setup-test and campaign-test pass. On a clean export of a1a08af: new-maps-100 100/100, real-maps-check 38/38, maps-check, map-capacity-check, nations-setup-check 125/125.
