@@ -19,7 +19,11 @@ or testing the native game; copied art and the engine are local-only.
   islands your prepared town is fixed; the rivals may be placed at the other three starts. Kept in saves.
   (match_setup.gd "starts", start_slots; map_generator.gd _spread_starts, _chosen_starts, slot_positions.)
 
-Checks: tools/start-choice-check.gd (26).
+Checks: tools/start-choice-check.gd (26), and tools/start-choice-100.gd: every region of all 18 maps as
+yours (a rival's on the original islands) with the town and army, a full house shuffled, half placed and half
+left to the map; the options' rules; real capitals given away; duels; oil, iron and gold by every chosen
+capital; the New Game pickers (swaps, Auto, colours, more and fewer rivals); matches begun with choices,
+saved and reloaded, and begun from the screen.
 
 ## Version 0.9.44: a hundred checks on the new maps; duels across the map
 
