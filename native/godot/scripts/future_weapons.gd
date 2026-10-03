@@ -142,8 +142,13 @@ static func update(w: Node, delta: float) -> void:
 		elif u.key == "wingman":
 			u.follow_tick = float(u.get("follow_tick", 0.0)) - delta
 			if u.follow_tick <= 0.0:
-				u.follow_tick = 0.5
+				u.follow_tick = 0.25
 				follow(w, u)
+		elif u.key == "sixthGen":
+			u.group_tick = float(u.get("group_tick", 0.0)) - delta
+			if u.group_tick <= 0.0:
+				u.group_tick = 0.5
+				command(w, u)
 
 ## Fries every hostile drone within reach of `hpm`. Returns how many.
 static func pulse(w: Node, hpm: Dictionary) -> int:
@@ -172,7 +177,97 @@ static func covered(w: Node, at: Vector3, owner: int) -> bool:
 			if preload("res://scripts/war_costs.gd").pay(w, int(u.owner), 0.35, 0.0, "intercepts"): return true
 	return false
 
-## A wingman attacks what its leader attacks, and keeps close to it otherwise.
+## The battle group: one sixth-generation fighter and its loyal wingmen, each
+## a unit of its own (its own health, its own missiles, its own place on the
+## map), that fly, defend and attack as one (the Air Force's CCA concept: the
+## drones fly beside the crewed fighter, strike what it strikes, meet what
+## threatens it and draw the enemy's fire):
+## - in formation: on a straight leg each wingman holds its slot off the
+##   fighter's wing; circling, they share its circle a little ahead and behind;
+## - attacking: the wingmen take the fighter's target;
+## - defending: whatever shoots at one of the group is engaged by all of it,
+##   the wingmen before anything else;
+## - drawing fire: an escorted fighter is the enemy's last choice of target;
+## - together: a click on any of them selects the group; the wingmen return over
+##   the airfield with the fighter, and a lost wingman is replaced while the
+##   fighter rearms ($200 each, one every 20 s).
+const SLOTS := [Vector3(-10.0, 0, -7.0), Vector3(10.0, 0, -7.0), Vector3(-20.0, 0, -14.0), Vector3(20.0, 0, -14.0)]
+const GROUP_RADIUS := 80.0
+const REPLACE_COST := 200.0
+const REPLACE_SECONDS := 20.0
+
+## The fighter and its wingmen, the fighter first ([] for any other unit).
+static func group_of(w: Node, u: Dictionary) -> Array:
+	var leader = u if u.key == "sixthGen" else (u.get("leader") if u.key == "wingman" else null)
+	if leader == null or leader.dead:
+		return []
+	return [leader] + mates(w, leader)
+
+static func mates(w: Node, leader: Dictionary) -> Array:
+	return w.units.filter(func(o): return not o.dead and o.key == "wingman" and is_same(o.get("leader"), leader))
+
+## A click on one of the group selects all of it (world._unhandled_input).
+static func select_group(w: Node, u: Dictionary) -> void:
+	for member in group_of(w, u):
+		member.selected = true
+
+## Who is shooting at the group, nearest the fighter first.
+static func threats(w: Node, leader: Dictionary, group: Array) -> Array:
+	var out := []
+	var at: Vector3 = leader.node.position
+	for other in w.units:
+		if other.dead or other.owner == leader.owner or not w.hostile(leader.owner, other.owner):
+			continue
+		var aim = other.get("enemy")
+		if not (aim is Dictionary) or not group.any(func(m): return is_same(m, aim)):
+			continue
+		if Vector2(other.node.position.x - at.x, other.node.position.z - at.z).length() < GROUP_RADIUS:
+			out.append(other)
+	out.sort_custom(func(a, b): return a.node.position.distance_squared_to(at) < b.node.position.distance_squared_to(at))
+	return out
+
+## Twice a second for each fighter: the group's orders, defence and repairs.
+static func command(w: Node, leader: Dictionary) -> void:
+	var wing := mates(w, leader)
+	var group: Array = [leader] + wing
+	leader.escorted = wing.size()   # (Tactics.pick_target: the enemy's last choice)
+	var danger := threats(w, leader, group)
+	var airborne: bool = leader.get("air_state", "ready") == "ready"
+	# The fighter answers whoever attacks one of its wingmen when it has nothing else to do.
+	if airborne and leader.enemy == null and leader.target == null and not danger.is_empty():
+		for t in danger:
+			if w.effectiveness(leader, t) > 0.01:
+				leader.enemy = t
+				break
+	for i in range(wing.size()):
+		var u: Dictionary = wing[i]
+		u.slot_index = i
+		var foe = null
+		for t in danger:
+			if w.effectiveness(u, t) > 0.01:
+				foe = t
+				break
+		if foe == null and airborne and leader.enemy != null and not leader.enemy.dead and w.effectiveness(u, leader.enemy) > 0.01:
+			foe = leader.enemy
+		if foe != null:
+			if not is_same(u.enemy, foe):
+				u.enemy = foe
+			u.target = null
+			u.slot_goal = null
+		elif u.enemy != null and not airborne:
+			u.enemy = null   # the fighter has gone home: so do they
+	# A wingman lost: the fighter takes on a new one while it rearms.
+	if leader.get("air_state", "") in ["rearming", "parked"] and wing.size() < WINGMEN and w.game_time >= float(leader.get("wingman_ready", 0.0)):
+		if preload("res://scripts/war_costs.gd").pay(w, int(leader.owner), REPLACE_COST):
+			leader.wingman_ready = w.game_time + REPLACE_SECONDS
+			var fresh: Dictionary = w.spawn_unit("wingman", leader.node.position + Vector3.UP * 4.0, leader.owner)
+			fresh.air_state = "ready"
+			fresh.heading = leader.heading
+			fresh.leader = leader
+			if leader.owner == 0:
+				w.hud.notice("A new loyal wingman joins your %s ($%d)." % [w.unit_defs.sixthGen.name, int(REPLACE_COST)])
+
+## A wingman keeps its place in the group (four times a second).
 static func follow(w: Node, u: Dictionary) -> void:
 	var leader = u.get("leader")
 	if leader == null or leader.dead:
@@ -183,22 +278,44 @@ static func follow(w: Node, u: Dictionary) -> void:
 		for f in w.units:
 			if f.dead or f.key != "sixthGen" or f.owner != u.owner:
 				continue
-			var mates: int = w.units.filter(func(o): return not o.dead and o.key == "wingman" and is_same(o.get("leader"), f)).size()
 			var d: float = f.node.position.distance_to(u.node.position)
-			if mates < WINGMEN and d < best:
+			if mates(w, f).size() < WINGMEN and d < best:
 				best = d
 				leader = f
 		u.leader = leader
+		u.slot_goal = null
 		if leader == null:
 			return
-	if leader.enemy != null and not leader.enemy.dead and not is_same(u.enemy, leader.enemy) and w.effectiveness(u, leader.enemy) > 0.01:
-		u.enemy = leader.enemy
+	var base_speed := float(w.unit_defs.wingman.speed)
+	if (u.enemy == null or u.enemy.dead) and leader.get("air_state", "ready") == "ready" and leader.enemy != null and not leader.enemy.dead and w.effectiveness(u, leader.enemy) > 0.01:
+		u.enemy = leader.enemy   # the fighter's target (command() may give it a nearer threat)
 		u.target = null
+	if u.enemy != null and not u.enemy.dead:
+		u.speed = base_speed
+		u.slot_goal = null
 		return
-	if u.enemy == null:
-		# Formation: its idle circle is centred on the fighter, wherever it
-		# flies, and it hurries back when it has strayed.
-		# (No waypoint orders: a jet that reaches a waypoint flies on 80 m to
-		# turn, which would throw the formation apart.)
-		var at: Vector3 = leader.node.position
-		u.orbit = Vector3(at.x, 0, at.z)
+	u.target = null   # (its own move orders give way to the formation)
+	var slot: Vector3 = SLOTS[int(u.get("slot_index", 0)) % SLOTS.size()]
+	var at: Vector3 = leader.node.position
+	var airborne: bool = leader.get("air_state", "ready") == "ready"
+	var leg = leader.get("egress") if leader.get("egress") != null else (leader.target if leader.target != null else (leader.enemy.node.position if leader.enemy != null and not leader.enemy.dead else null))
+	if airborne and leg != null:
+		# A straight leg: hold the slot off the fighter's wing. It steers for a
+		# point 40 m beyond its slot (so it never turns back on an overshoot) and
+		# matches the fighter's speed, faster when behind its slot, slower ahead.
+		var turn := Basis(Vector3.UP, leader.heading)
+		var forward: Vector3 = turn * Vector3.BACK
+		var place: Vector3 = at + turn * slot
+		var carrot: Vector3 = place + forward * 40.0
+		u.slot_goal = Vector3(carrot.x, 0, carrot.z)
+		var behind: float = Vector2(place.x - u.node.position.x, place.z - u.node.position.z).dot(Vector2(forward.x, forward.z))
+		u.speed = float(leader.speed) * clampf(1.0 + behind / 20.0, 0.7, 1.6)
+	else:
+		# Circling (or over the airfield while the fighter is serviced): the
+		# fighter's own circle, a little ahead or behind it.
+		u.slot_goal = null
+		u.speed = base_speed * 1.05
+		u.orbit = Vector3(leader.orbit.x, 0, leader.orbit.z) if airborne else Vector3(at.x, 0, at.z)
+		if airborne:
+			var rank: int = int(u.get("slot_index", 0))
+			u.phase = float(leader.get("phase", 0.0)) + (0.35 if rank % 2 == 0 else -0.35) * (1 + rank / 2)

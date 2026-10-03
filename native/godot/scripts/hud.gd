@@ -1107,6 +1107,10 @@ func _update_selection() -> void:
 		elif units.any(func(u): return u.vehicle):
 			_sel_info.text += "\nAlt + right click: bombard ground / infrastructure."
 		_sel_info.text += "\nHP %d / %d%s" % [int(hp),int(max_hp)," · Repair ordered" if units.any(func(u): return u.get("repairing",false)) else ""]
+		for fighter in units.filter(func(u): return u.key == "sixthGen"):
+			var wing: int = world.Future.mates(world, fighter).size()
+			_sel_info.text += "\nBattle group: %d of %d loyal wingmen in formation; they strike its target and meet whatever attacks the group." % [wing, world.Future.WINGMEN]
+			break
 		return
 	_sel.visible = false
 

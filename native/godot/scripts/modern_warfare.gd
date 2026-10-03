@@ -173,6 +173,7 @@ static func apply(w: Node) -> void:
 	preload("res://scripts/additional_factions.gd").apply(w)
 	preload("res://scripts/national_variants.gd").apply(w)   # who really fields what, under which name
 	preload("res://scripts/unit_quality.gd").apply(w)   # the systems that replace them (the M1E3 Abrams)
+	preload("res://scripts/national_capabilities.gd").apply(w)   # Russia's from the war in Ukraine
 	var types: Dictionary = w.map.missiles.types
 	for key in types:
 		var odds: Dictionary = INTERCEPT[CLASS_OF.get(key, "cruise")]

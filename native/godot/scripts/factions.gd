@@ -13,7 +13,7 @@ const DOCTRINES := [
 	"Air superiority: exclusive F-22 and B-21, plus Golden Dome research. These capabilities require advanced research and costly aircraft.",
 	"Missile power: exclusive DF-17 hypersonic launcher, particularly effective against ships. Long reloads leave gaps between salvos.",
 	"Layered defence: exclusive IRIS-T SLM air defence. It protects an army from aircraft but cannot fight ground targets.",
-	"Drone saturation: exclusive Shahed launcher. Five drones per salvo can overwhelm defences, but individual drones are fragile and slow.",
+	"Drone saturation: the Shahed launcher (Russia builds it too, as the Geran-2). Five drones per salvo can overwhelm defences, but individual drones are fragile and slow.",
 	"Massed artillery: artillery, MLRS and HIMARS gain 20% damage and 10% range, but move 15% slower.",
 	"Resilient ground forces: combat infantry gain 15% health; rocket soldiers and ATGM teams deal 15% more damage. Crewed aircraft have 10% less health.",
 	"Maritime engineering: ships gain 15% range and 10% speed. Tanks have 10% less health.",
@@ -77,12 +77,17 @@ static func for_unit(w: Node, unit: Dictionary) -> Dictionary:
 	var key := str(unit.get("key", ""))
 	var id := identity(w, int(unit.owner))
 	var m := modifiers(id, key, key in w.infantry_keys, unit.get("naval", false), unit.get("fly", false))
-	var q: Dictionary = preload("res://scripts/unit_quality.gd").of_unit(w, int(unit.owner), id, key)
+	var Q := preload("res://scripts/unit_quality.gd")
+	# A unit keeps the system it was built as: one in service before its
+	# successor was researched stays the older system (an Su-35S stays one).
+	var built_before: bool = unit.get("faction_equipped", false) and not unit.get("upgraded", false)
+	var q: Dictionary = Q.of(id, key) if built_before else Q.of_unit(w, int(unit.owner), id, key)
 	for stat in ["hp", "damage", "speed", "range"]:
 		m[stat] = float(m[stat]) * float(q[stat])
 	m.cooldown = float(m.cooldown) * float(q.get("cooldown", 1.0))
 	m.accuracy = q.accuracy
-	m.aps = q.get("aps", false)   # (the M1E3's own active protection)
+	m.flags = q.get("flags", {})   # (the M1E3's own active protection, a fibre-optic drone)
+	m.upgraded = q.has("name")
 	return m
 
 static func equip(w: Node, unit: Dictionary) -> void:
@@ -97,6 +102,7 @@ static func equip(w: Node, unit: Dictionary) -> void:
 	unit.speed *= float(m.speed)
 	unit.cooldown *= float(m.cooldown)
 	unit.accuracy = float(m.accuracy)
-	if m.aps:
-		unit.aps_builtin = true
+	for flag in m.flags:
+		unit[flag] = m.flags[flag]
+	unit.upgraded = m.upgraded
 	unit.faction_equipped = true

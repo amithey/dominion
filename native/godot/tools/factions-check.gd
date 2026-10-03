@@ -63,7 +63,7 @@ func run() -> void:
 		w.map.nations[0] = Factions.nation(i, true)
 		check(Arsenal.identity(w, 0) == Factions.ARSENALS[i], "arsenal identity " + Factions.IDS[i])
 		for key in ["raptor", "df17", "irisT", "shahedLauncher"]:
-			check(Arsenal.allowed(w, 0, key) == (str(w.unit_defs[key].nation) == Factions.ARSENALS[i]), "exclusive arsenal")
+			check(Arsenal.allowed(w, 0, key) == preload("res://scripts/national_variants.gd").admits(w.unit_defs[key].nation, Factions.ARSENALS[i]), "exclusive arsenal")   # (the Shahed: Iran and Russia)
 	w.menu.setup_options.nation = 0
 	w.menu.open_new_game()
 	await process_frame

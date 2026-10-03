@@ -1991,6 +1991,7 @@ func _physics_process(delta: float) -> void:
 		preload("res://scripts/air_defence.gd").update(self, delta)
 		Modern.update(self, delta)  # medics
 		Future.update(self, delta)  # microwave pulses, wingmen
+		preload("res://scripts/national_capabilities.gd").update(self, delta)  # Russia's foreign recruits
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
 		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
@@ -4658,6 +4659,9 @@ func move_craft(unit: Dictionary, delta: float) -> void:
 			unit.egress = null
 		else:
 			goal = unit.egress
+	var in_formation: bool = goal == null and fixed and not servicing and unit.get("slot_goal") != null
+	if in_formation:
+		goal = unit.slot_goal   # a wingman holding its slot off its fighter's wing (future_weapons.follow)
 	if goal == null and fixed:
 		var t: float = game_time * 0.35 + unit.phase   # game time: the circle pauses and speeds up with the game
 		goal = unit.orbit + Vector3(cos(t), 0, sin(t)) * 30.0
@@ -4669,7 +4673,9 @@ func move_craft(unit: Dictionary, delta: float) -> void:
 		return
 	var to: Vector3 = goal - pos
 	to.y = 0
-	if to.length() < (6.0 if fixed else 1.0):
+	if in_formation and to.length() < 6.0:
+		to = Basis(Vector3.UP, unit.heading) * Vector3.BACK * 10.0   # on its slot: hold the heading
+	if to.length() < (6.0 if fixed else 1.0) and not in_formation:   # (a slot is held, not flown through)
 		if not fixed:
 			unit.target = null
 			unit.attack_move = false
@@ -5007,7 +5013,8 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			# A small drone flies from the operators to the target; jammers bring most down.
 			var launch: Vector3 = unit.node.position + Vector3.UP * 2.5
 			var fried: bool = Future.covered(self, unit.node.position, unit.owner) or Future.covered(self, target, unit.owner)
-			if fried or (Modern.jammed(self, unit.node.position, unit.owner) or Modern.jammed(self, target, unit.owner)) and randf() < Modern.JAM_FAIL:
+			# (a fibre-optic drone has no radio link to jam: national_capabilities.gd)
+			if fried or (not unit.get("fibre_optic", false) and (Modern.jammed(self, unit.node.position, unit.owner) or Modern.jammed(self, target, unit.owner)) and randf() < Modern.JAM_FAIL):
 				var lost: Vector3 = launch.lerp(target, randf_range(0.3, 0.8))
 				lost.y = height_at(lost.x, lost.z)
 				effects.projectile("rocket", launch, lost, func(at): effects.explosion(at, 0.4, true))
@@ -5738,6 +5745,7 @@ func _unhandled_input(event: InputEvent) -> void:
 						unit.selected = true
 				if not closest.is_empty():
 					closest.selected = true
+					Future.select_group(self, closest)   # a sixth-generation fighter and its wingmen together
 				# A click on empty ground or a building selects that building.
 				if click and closest.is_empty():
 					select_building(building_under(event.position))

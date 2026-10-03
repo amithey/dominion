@@ -57,6 +57,9 @@ func run() -> void:
 	w.effects.set_physics_process(false)
 	w.missiles.set_physics_process(false)
 	w.ai.set_physics_process(false)
+	# (every interceptor and drone now costs its owner money, war_costs.gd: the rivals are funded,
+	# so the 500-shot interception rates measure the rules, not an empty treasury)
+	for n in w.ai.nations: n.money = 10000000.0
 	w.economy.grant_test_resources()
 	w.diplomacy.declare_war(0, 1)
 	var sea: Vector3 = w.water_near(w.start, 220)
@@ -266,8 +269,9 @@ func run() -> void:
 	w.map.nations[0].color = saved
 	for n in w.ai.nations:
 		var who: String = Arsenal.identity(w, n.id)
-		var fielded: Array = w.ai.train_pool.filter(func(k): return w.unit_allowed(n.id, k) and w.unit_defs[k].get("nation") is String and w.unit_defs[k].nation != "")
-		check(fielded.all(func(k): return w.unit_defs[k].nation == who) and not fielded.is_empty(), "rival %s trains its own weapon (%s)" % [n.name, ", ".join(PackedStringArray(fielded))])
+		# (a weapon two nations field, as the Shahed for Iran and Russia, counts for both)
+		var fielded: Array = w.ai.train_pool.filter(func(k): return w.unit_allowed(n.id, k) and str(w.unit_defs[k].get("nation", "")) != "" and not (w.unit_defs[k].nation is Array and w.unit_defs[k].nation.size() > 3))
+		check(fielded.all(func(k): return preload("res://scripts/national_variants.gd").admits(w.unit_defs[k].nation, who)) and not fielded.is_empty(), "rival %s trains its own weapon (%s)" % [n.name, ", ".join(PackedStringArray(fielded))])
 	# ------------------------------------------------ weapons in development
 	var fighter: Dictionary = w.spawn_unit("sixthGen", land(Vector3(-60, 0, -160)), 0)
 	fighter.air_state = "ready"

@@ -118,6 +118,9 @@ const NAMES := {
 	"hpmVehicle": {"blue": "Leonidas", "red": "Hurricane 3000", "japan": "ATLA microwave weapon"},
 	"railgunShip": {"red": "Railgun ship (trials)", "japan": "JS Asuka railgun"},
 	"orca": {"blue": "Orca XLUUV", "red": "AJX002"},
+	# Russia builds the Shahed-136 at Alabuga as the Geran-2 (some 70,000 long-range drones planned for 2025).
+	"shahedLauncher": {"russia": "Geran-2 Launcher"},
+	"shahed": {"russia": "Geran-2"},
 }
 
 ## The kind of unit, where the shared name was one nation's system.

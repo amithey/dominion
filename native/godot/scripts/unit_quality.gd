@@ -401,9 +401,14 @@ static func of(id: String, key: String) -> Dictionary:
 ## crew of three in an armoured capsule and the Iron Fist (XM251) active
 ## protection built in (half the missiles, rockets and kamikaze drones fired at
 ## it stopped, without the Active Protection discovery), new sights. Rivals
-## field it once their technology reaches its era.
+## field it once their technology reaches its era. Russia's from the war in
+## Ukraine (national_capabilities.gd): the Su-34 with UMPK glide bombs (+50%
+## range, +20% damage) and fibre-optic FPV drones (no jammer stops them, +30%
+## range). "flags" are set on each unit built.
 const UPGRADES := {
-	"tank": {"usa": {"research": "nextGenAbrams", "name": "M1E3 Abrams", "figures": [1.3, 1.15, 1.2, 1.06, 1.0], "cooldown": 0.8, "aps": true}},
+	"tank": {"usa": {"research": "nextGenAbrams", "name": "M1E3 Abrams", "figures": [1.3, 1.15, 1.2, 1.06, 1.0], "cooldown": 0.8, "flags": {"aps_builtin": true}}},
+	"jet": {"russia": {"research": "glideBombs", "name": "Su-34 (UMPK glide bombs)", "figures": [1.06, 1.2, 1.06, 0.95, 1.5]}},
+	"fpvTeam": {"russia": {"research": "fibreOpticDrones", "name": "Fibre-optic FPV team", "figures": [1.0, 1.0, 1.05, 1.0, 1.3], "flags": {"fibre_optic": true}}},
 }
 const DISCOVERIES := {
 	"nextGenAbrams": {"name": "M1E3 Abrams", "cost": 750, "branch": "army", "era": 4, "nation": "blue",
@@ -419,7 +424,7 @@ static func apply(w: Node) -> void:
 
 ## The upgrade nation `id`'s unit `key` of `owner` has in service, or {}.
 static func upgrade(w: Node, owner: int, id: String, key: String) -> Dictionary:
-	var up: Dictionary = UPGRADES.get(CLASS_OF.get(key, key), {}).get(id, {})
+	var up: Dictionary = UPGRADES.get(key, {}).get(id, {})   # (the unit itself: a bomber is not a jet here)
 	if up.is_empty() or w.get("research") == null or w.research == null:
 		return {}
 	if owner == 0:
@@ -427,14 +432,14 @@ static func upgrade(w: Node, owner: int, id: String, key: String) -> Dictionary:
 	return up if w.research.ai_tech(owner) >= float(w.research.era_of(up.research)) * 2.0 else {}
 
 ## The figures for one unit as it enters service: the nation's system, or the
-## system that replaces it once researched (with its reload and protection).
+## system that replaces it once researched (with its reload and flags).
 static func of_unit(w: Node, owner: int, id: String, key: String) -> Dictionary:
 	var up := upgrade(w, owner, id, key)
 	if up.is_empty():
 		return of(id, key)
 	var row: Array = up.figures
 	return {"hp": float(row[0]), "damage": float(row[1]), "accuracy": float(row[2]), "speed": float(row[3]), "range": float(row[4]),
-		"cooldown": float(up.get("cooldown", 1.0)), "aps": bool(up.get("aps", false)), "name": str(up.name)}
+		"cooldown": float(up.get("cooldown", 1.0)), "flags": up.get("flags", {}), "name": str(up.name)}
 
 ## The player's unit card and build list name the system in service (research._recompute).
 static func rename(w: Node) -> void:

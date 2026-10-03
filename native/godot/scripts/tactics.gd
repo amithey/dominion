@@ -99,6 +99,8 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 			var score: float = d / maxf(unit.range, 1.0) - eff * 0.5 - (1.0 - other.hp / maxf(other.max_hp, 1.0)) * 0.4
 			if d <= unit.range:
 				score -= 1.0
+			if int(other.get("escorted", 0)) > 0:
+				score += 1.5   # its loyal wingmen draw the fire (future_weapons.command)
 			if score < best_score:
 				best_score = score
 				best = other

@@ -23,6 +23,24 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.57: Russia's war capabilities, and the sixth-generation battle group
+
+- **Russia, from the war in Ukraine** (three Russia-only discoveries, scripts/national_capabilities.gd):
+  Foreign Recruitment (North Korea's corps and contract recruits from abroad: while at war, 4 foreign soldiers join
+  at the capital every 2.5 minutes, $60 each), UMPK Glide Bombs (every jet built afterwards is a Su-34 with glide
+  bombs: +50% range, +20% damage) and Fibre-Optic Drones (FPV teams that no jammer can stop, +30% range). Russia
+  also builds the Shahed, as the Geran-2.
+- **The F-47 / J-36 battle group**: the fighter and its two loyal wingmen stay separate units but fly in formation
+  (a slot 12 m off each wing), strike the fighter's target, meet whatever attacks any of them, and draw the enemy's
+  fire away from the fighter; a click on one selects all three; a lost wingman is replaced while the fighter
+  rearms ($200).
+- **A unit keeps the system it was built as**: a Su-35S (or an M1A2 SEPv3) built before its successor was
+  researched stays what it was.
+- The Maduro raid (Operation Absolute Resolve) is researched, with a design for a United States strategic
+  operation, in native/RUSSIA-WAR-CAPABILITIES-2026-10-04.md; not in the game yet.
+
+Checks: tools/russia-capabilities-check.gd (12), tools/battle-group-check.gd (8), unit-quality (23).
+
 ## Version 0.9.56: the CIA, and AbramsX
 
 - **United States intelligence, checked**: $115.5 billion requested for 2026 (NIP $81.9 billion, MIP $33.6 billion),

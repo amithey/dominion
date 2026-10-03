@@ -632,3 +632,13 @@ UI files listed above.
 - 2026-10-03 Claude, 0.9.56 (user: check AbramsX and the CIA): national_profile usa bonus spyPct 0.1 -> 0.2,
   counterSpy 0.1 (strength text updated). espionage.gd: counter_spy(nation) adds that nation's profile counterSpy;
   enemy_attempt's defence subtracts the attacker's profile spyPct. AbramsX: documented only (a GD demonstrator).
+- 2026-10-04 Claude, 0.9.57 (user: Russia's Ukraine-war capabilities; sixth-gen fighters and wingmen as one
+  battle group; research the Maduro raid): new scripts/national_capabilities.gd (Russia-only discoveries
+  foreignRecruitment, glideBombs, fibreOpticDrones; apply() from modern_warfare.apply, update() from world physics);
+  unit_quality UPGRADES jet/russia and fpvTeam/russia, "flags" replace "aps", matched by exact key; factions.for_unit
+  keeps a unit's built system (unit.upgraded); world.gd: fibre_optic skips the FPV jam roll, move_craft flies a
+  wingman's slot_goal, a click selects the group; tactics.pick_target: escorted fighters last; future_weapons:
+  follow() rewritten, command() for the group, select_group(); national_arsenal shahed/shahedLauncher nation
+  ["gold", "russia"], named Geran-2 for Russia; Iran's doctrine text and factions-check's exclusivity test follow.
+  Codex: tools/units-100.gd now funds the rivals at the start (your war_costs.gd made its 500-shot DF-17
+  interception rate and the microwave-vs-FPV check run dry: 0.01 and 2 of 10) and counts shared weapons.
