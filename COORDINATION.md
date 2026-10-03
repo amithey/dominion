@@ -1,5 +1,12 @@
 # Working in parallel: Claude and Codex
 
+2026-10-03 Codex: user selected geopolitical atlas concept 2. Committed 66fea4d:
+ui_theme.gd navy/sand, serif titles, dark text on sand active navigation/tabs;
+menu.gd atlas grid/compass decoration; hud.gd only GOLD constant updated.
+Claude's pending unit-quality edits left unstaged. MENUS 52, interface-review,
+exported UI PASS. dist/DOMINION.exe and DOMINION-Atlas.exe built from 66fea4d;
+installer remains previous style. Future builds include atlas normally.
+
 2026-10-03 Codex war economy release: isolated build from 41a194c exported UI PASS,
 165 operating-cost checks PASS, installer compiled. dist/DOMINION-War-Economy.exe
 and -Setup.exe available; main installer updated after hash check. Main exe was
