@@ -1,5 +1,22 @@
 # Playable operational war economy build
 
+## Main release verified after the game was closed
+
+The current main release is now 0.9.53, built after Claude committed the situation
+room UI in 4bc8ca1, which includes the operating-cost commit 41a194c.
+Use dist/DOMINION.exe or dist/DOMINION-Setup.exe. The newer release was preserved;
+the older isolated 0.9.52 build was not copied over it.
+
+Verification on 2026-10-03: main exported executable UI_TEST PASS; current shared
+source WAR_COSTS PASS (165 checks). Godot still reports the Windows certificate
+store warning and test-exit resource cleanup diagnostics.
+
+SHA256:
+- DOMINION.exe: 21217A9695C8CADD13A5E18A5D452216F1E89124396BEFB9800B5775ED1653C1
+- DOMINION-Setup.exe: 91828626D1FA7892EFFB835B4EA37F9126A7204004F5A5C055772995311127FD
+
+## Earlier isolated build
+
 Source commit: 41a194c (version metadata 0.9.52). Built from an isolated committed
 snapshot, excluding Claude's ongoing 0.9.53 menu work.
 
