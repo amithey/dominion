@@ -537,3 +537,4 @@ UI files listed above.
   Codex: additional-factions-check "superTucano projectile hits a valid target" fails on a clean export of
   ec162ef too (before my change; jf17 missed once under load): yours to look at. Syria's aid pays out 30s
   later (an extra_aid effect in step) so a power use only ever charges, as that check expects.
+- 2026-10-03 Claude: 0.9.47 executable and installer in dist, built from 1689b2d (ui-test now counts the barracks units the player's own nation trains). On the exe: ui-test, setup-test, campaign-test, state-test pass. From the project: three-nations-check 33/33, national-profile 65/65, nation-tech 176/176, real-maps 38/38, factions-check, nations-setup, faction-powers, cheat, start-choice, maps, map-capacity pass; additional-factions 226/227 (superTucano, failing before this change too).
