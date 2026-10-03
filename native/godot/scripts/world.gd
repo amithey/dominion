@@ -5670,6 +5670,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			else:
 				order_mode = ""
 		elif event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed and event.double_click:
+				# A double click on one of your units takes every unit of its kind on screen.
+				var hit = Picking.pick(camera, units.filter(func(u): return u.owner == 0 and not u.dead), event.position)
+				if hit != null:
+					select_same_kind(hit, event.shift_pressed)
+					dragging = false   # (the release is not a new click)
+					return
 			if event.pressed:
 				dragging = true
 				drag_start = event.position
@@ -5755,6 +5762,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		selection_box.size = rect.size
 		selection_box.show()
 
+## Selects every one of your units of `unit`'s kind that is on screen (a double
+## click); with `add`, on top of what is already selected.
+func select_same_kind(unit: Dictionary, add := false) -> int:
+	var view: Rect2 = get_viewport().get_visible_rect()
+	var count := 0
+	for u in units:
+		if u.owner != 0 or u.dead:
+			continue
+		var on_screen: bool = not camera.is_position_behind(u.node.global_position) and view.has_point(Picking.screen_centre(camera, u))
+		var take: bool = u.key == unit.key and on_screen
+		u.selected = take or (add and u.selected)
+		if u.selected and take: count += 1
+		u.ring.visible = u.selected
+	select_building(null)
+	return count
+
 func enemy_under(screen: Vector2) -> Variant:
 	var best = Picking.pick(camera, units.filter(func(u): return not u.dead and u.owner != 0), screen)
 	if best == null:
@@ -5796,8 +5819,11 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F9:
 		saves.load_slot("quicksave")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:
-		# Esc first cancels what is in progress; with nothing to cancel it pauses.
-		if placing == "" and transport_kind == "" and missile_aim == "" and selected_building == null and menu != null and menu._root != null:
+		# Esc first cancels what is in progress and closes an open window; with
+		# nothing to cancel or close it pauses (it used to pause over an open window).
+		var busy: bool = placing != "" or transport_kind != "" or missile_aim != "" or selected_building != null
+		var closed: bool = false if busy else hud.close_windows()
+		if not busy and not closed and menu != null and menu._root != null:
 			menu.open_pause()
 		cancel_missile()
 		cancel_transport()

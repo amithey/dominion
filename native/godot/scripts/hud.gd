@@ -1730,6 +1730,24 @@ var _rs_sel := ""
 var _rs_sig := ""
 var _rs_live: Array = []   # [Control, callable] refreshed every second without rebuilding
 
+## Esc: closes whatever window is open (a side window, the research tree, the
+## help, the build list). True when one was, so Esc does not also pause.
+func close_windows() -> bool:
+	var closed := false
+	if side_mode != "" and _win != null and _win.visible:
+		_show_side("")
+		closed = true
+	if _rs != null and _rs.visible:
+		toggle_research()
+		closed = true
+	if _help != null and _help.visible:
+		toggle_help()
+		closed = true
+	if prod_open:
+		set_production_open(false)
+		closed = true
+	return closed
+
 func toggle_research() -> void:
 	if _rs == null:
 		_build_research()
