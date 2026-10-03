@@ -656,3 +656,9 @@ UI files listed above.
   tools/ai-expansion-check.gd.
   tools/gameplay-state-audit.gd compares loaded unit figures to a millionth, not exactly: unit_quality's
   multipliers leave last-digit fractions (119.60000000000001) that a save writes as 119.6.
+- 2026-10-04 Claude, 0.9.60 (user: messages cover the game; wingmen should appear only on a sortie; a
+  helicopter takes airfield slots): hud.gd notices are a bottom feed (anchored bottom, lane between _sel and the
+  minimap, clear of _win/_prod), 3 at most, notice_log kept. future_weapons: escort() stows wingmen
+  (wingmen_stowed) unless airborne, launch_wingmen()/stow(), command() recovers them on landing and launches on
+  take-off, replacements go aboard; world.update_training escorts after parking. air_operations: ROTARY; airfield
+  for fixed-wing only, helipad for rotorcraft only; park_new checks available().

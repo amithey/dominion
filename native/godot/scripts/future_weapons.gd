@@ -113,18 +113,44 @@ static func apply(w: Node) -> void:
 		discoveries.sixthGeneration.cost = int(discoveries.sixthGeneration.cost * 0.75)
 		discoveries.sixthGeneration.desc += " The Crimson Empire's J-36 has flown since 2024: this costs a quarter less."
 
-## Two loyal wingmen take off with a new sixth-generation fighter.
+## Two loyal wingmen go with a new sixth-generation fighter. While it stands on
+## its airfield they are not on the map at all (counted aboard, in
+## wingmen_stowed); they are launched beside it as it takes off and recovered
+## as it lands (command), so a hangar of fighters costs the game nothing.
 static func escort(w: Node, leader: Dictionary) -> Array:
+	leader.wingmen_stowed = WINGMEN
+	if leader.get("air_state", "ready") == "ready":
+		return launch_wingmen(w, leader)
+	return []
+
+## The wingmen aboard take to the air beside their fighter.
+static func launch_wingmen(w: Node, leader: Dictionary) -> Array:
 	var out := []
-	for i in range(WINGMEN):
-		var side := -1.0 if i == 0 else 1.0
-		var at: Vector3 = leader.node.position + Basis(Vector3.UP, leader.heading) * Vector3(side * 7.0, 0, -5.0)
+	var flying: int = mates(w, leader).size()
+	for i in range(int(leader.get("wingmen_stowed", 0))):
+		var side := -1.0 if (flying + i) % 2 == 0 else 1.0
+		var at: Vector3 = leader.node.position + Basis(Vector3.UP, leader.heading) * Vector3(side * (7.0 + 6.0 * ((flying + i) / 2)), 0, -5.0)
 		var drone: Dictionary = w.spawn_unit("wingman", at, leader.owner)
 		drone.air_state = "ready"
 		drone.heading = leader.heading
 		drone.leader = leader
 		out.append(drone)
+	leader.wingmen_stowed = 0
 	return out
+
+## A wingman recovered with its fighter: off the map, with no wreck or loss.
+static func stow(w: Node, u: Dictionary) -> void:
+	u.stowed = true
+	u.killed = true
+	u.dead = true
+	u.selected = false
+	u.ring.visible = false
+	u.target = null
+	u.enemy = null
+	u.node.visible = false
+	if u.get("engine"):
+		u.engine.stop()
+	u.dead_time = 100.0   # (world.update_dead removes it at once)
 
 ## Microwave pulses and wingmen; called every frame.
 static func update(w: Node, delta: float) -> void:
@@ -229,6 +255,26 @@ static func threats(w: Node, leader: Dictionary, group: Array) -> Array:
 ## Twice a second for each fighter: the group's orders, defence and repairs.
 static func command(w: Node, leader: Dictionary) -> void:
 	var wing := mates(w, leader)
+	if not leader.has("wingmen_stowed"):
+		# Just loaded from a save: its wingmen in the air join it again first, and
+		# only those missing count as aboard (else it would launch two more).
+		for o in w.units:
+			if wing.size() >= WINGMEN:
+				break
+			var lead = o.get("leader")
+			if not o.dead and o.key == "wingman" and o.owner == leader.owner and (lead == null or lead.dead) and o.node.position.distance_to(leader.node.position) < 150.0:
+				o.leader = leader
+				wing.append(o)
+		leader.wingmen_stowed = maxi(0, WINGMEN - wing.size())
+	# Down on the airfield, the wingmen are recovered with it; in the air again,
+	# they are launched beside it.
+	if leader.get("air_state", "ready") in ["landing", "taxi_in", "rearming", "parked", "taxi_out"]:
+		for u in wing:
+			stow(w, u)
+			leader.wingmen_stowed = int(leader.wingmen_stowed) + 1
+		wing = []
+	elif leader.get("air_state", "ready") == "ready" and int(leader.wingmen_stowed) > 0:
+		wing += launch_wingmen(w, leader)
 	var group: Array = [leader] + wing
 	leader.escorted = wing.size()   # (Tactics.pick_target: the enemy's last choice)
 	var danger := threats(w, leader, group)
@@ -257,13 +303,10 @@ static func command(w: Node, leader: Dictionary) -> void:
 		elif u.enemy != null and not airborne:
 			u.enemy = null   # the fighter has gone home: so do they
 	# A wingman lost: the fighter takes on a new one while it rearms.
-	if leader.get("air_state", "") in ["rearming", "parked"] and wing.size() < WINGMEN and w.game_time >= float(leader.get("wingman_ready", 0.0)):
+	if leader.get("air_state", "") in ["rearming", "parked"] and int(leader.wingmen_stowed) < WINGMEN and w.game_time >= float(leader.get("wingman_ready", 0.0)):
 		if preload("res://scripts/war_costs.gd").pay(w, int(leader.owner), REPLACE_COST):
 			leader.wingman_ready = w.game_time + REPLACE_SECONDS
-			var fresh: Dictionary = w.spawn_unit("wingman", leader.node.position + Vector3.UP * 4.0, leader.owner)
-			fresh.air_state = "ready"
-			fresh.heading = leader.heading
-			fresh.leader = leader
+			leader.wingmen_stowed = int(leader.wingmen_stowed) + 1   # (aboard, launched with it)
 			if leader.owner == 0:
 				w.hud.notice("A new loyal wingman joins your %s ($%d)." % [w.unit_defs.sixthGen.name, int(REPLACE_COST)])
 
@@ -279,7 +322,7 @@ static func follow(w: Node, u: Dictionary) -> void:
 			if f.dead or f.key != "sixthGen" or f.owner != u.owner:
 				continue
 			var d: float = f.node.position.distance_to(u.node.position)
-			if mates(w, f).size() < WINGMEN and d < best:
+			if mates(w, f).size() + int(f.get("wingmen_stowed", 0)) < WINGMEN and d < best:
 				best = d
 				leader = f
 		u.leader = leader

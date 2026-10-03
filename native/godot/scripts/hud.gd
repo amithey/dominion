@@ -93,19 +93,20 @@ func setup(world_node: Node, economy_node: Node) -> void:
 	_build_production()
 	_build_selection()
 	_build_minimap()
-	# Notices stack in the lane between the screens on the left (diplomacy,
-	# market...) and the production list on the right, so they never cover either.
+	# Notices are a feed along the bottom edge, in the lane between the unit card
+	# and the minimap, newest at the bottom: out of the middle of the battlefield
+	# (they used to stack under the strip, over the play area).
 	_notices = VBoxContainer.new()
 	_notices.anchor_left = 0.5
 	_notices.anchor_right = 0.5
-	_notices.anchor_top = 0.0
-	_notices.anchor_bottom = 0.0
-	_notices.offset_left = -60
-	_notices.offset_right = 228
-	_notices.offset_top = 106
-	_notices.offset_bottom = 106
-	_notices.grow_vertical = Control.GROW_DIRECTION_END
-	_notices.alignment = BoxContainer.ALIGNMENT_BEGIN
+	_notices.anchor_top = 1.0
+	_notices.anchor_bottom = 1.0
+	_notices.offset_left = -260
+	_notices.offset_right = 260
+	_notices.offset_top = -14
+	_notices.offset_bottom = -14
+	_notices.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_notices.alignment = BoxContainer.ALIGNMENT_END
 	_notices.add_theme_constant_override("separation", 6)
 	_notices.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_notices)
@@ -775,9 +776,16 @@ func _process(delta: float) -> void:
 		if _win_brief_panel.visible != want_brief:
 			_win_brief_panel.visible = want_brief
 			_win.reset_size()
-	var lane_left: float = _win.position.x + _win.size.x + 16.0 if _win != null and _win.visible else 16.0
-	var lane_right: float = _prod.position.x - 16.0 if _prod.visible else viewport_width - 16.0
-	var notice_width := minf(288.0, maxf(120.0, lane_right - lane_left))
+	# The feed runs along the bottom between the unit card and the minimap, and
+	# clear of a ministry window that reaches down that far.
+	var feed_top: float = get_viewport().get_visible_rect().size.y - 14.0 - maxf(_notices.size.y, 120.0)
+	var lane_left: float = _sel.position.x + _sel.size.x + 14.0 if _sel != null and _sel.visible else 16.0
+	if _win != null and _win.visible and _win.position.y + _win.size.y > feed_top:
+		lane_left = maxf(lane_left, _win.position.x + _win.size.x + 16.0)
+	var lane_right: float = viewport_width - MINI - 40.0
+	if _prod.visible and _prod.position.y + _prod.size.y > feed_top:
+		lane_right = minf(lane_right, _prod.position.x - 16.0)
+	var notice_width := minf(560.0, maxf(160.0, lane_right - lane_left))
 	var notice_left := clampf(viewport_width * 0.5 - notice_width * 0.5, lane_left, maxf(lane_left, lane_right - notice_width))
 	_notices.offset_left = notice_left - viewport_width * 0.5
 	_notices.offset_right = _notices.offset_left + notice_width
@@ -1789,23 +1797,40 @@ func show_end(title: String, subtitle: String) -> void:
 		box.queue_free())
 	buttons.add_child(stay)
 
-## A short message in the open lane between the command panels; four at most.
+## Every message of the match, newest last (the feed shows only the latest).
+var notice_log: Array[String] = []
+
+## A short message in the feed along the bottom edge: a slim, see-through line,
+## three at most, each gone after 5 s.
 func notice(text: String) -> void:
+	notice_log.append(text)
+	if notice_log.size() > 80:
+		notice_log.pop_front()
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UI.plate(Color("1d3050", 0.96), Color("0b1523", 0.96), Color(UI.TRIM, 0.9), 9.0, UI.LIFT, UI.GOLD, 1, 5))
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(UI.INK, 0.78)
+	style.border_color = Color(UI.GOLD, 0.9)
+	style.border_width_left = 3
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	card.add_theme_stylebox_override("panel", style)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var label := Label.new()
 	label.text = text
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_color_override("font_color", UI.CREAM)
+	label.max_lines_visible = 3
+	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_color_override("font_color", UI.TEXT)
 	card.add_child(label)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_notices.add_child(card)
-	while _notices.get_child_count() > 4:
+	while _notices.get_child_count() > 3:
 		_notices.get_child(0).free()  # the oldest goes
 	var tween := card.create_tween()
-	tween.tween_interval(3.6)
+	tween.tween_interval(4.4)
 	tween.tween_property(card, "modulate:a", 0.0, 0.6)
 	tween.tween_callback(card.queue_free)
 

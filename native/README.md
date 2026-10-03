@@ -23,6 +23,21 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.60: messages along the bottom, wingmen aboard, helicopters on helipads
+
+- **Messages no longer cover the battlefield**: they were large boxes stacked under the strip in the middle of the
+  play area. Now they are a feed along the bottom edge, in the lane between the unit card and the minimap: slim,
+  see-through lines (13 pt, a blue rule on the left), newest at the bottom, three at most, each gone after 5 s,
+  and clear of any window that reaches down that far. Every message of the match is kept in hud.notice_log.
+- **Loyal wingmen appear only when their fighter flies**: while an F-47 or J-36 stands on its airfield its two
+  wingmen are aboard, off the map (wingmen_stowed); they are launched beside it as it takes off and recovered with
+  no wreck as it lands, and a lost one is replaced while it rearms. A hangar of sixth-generation fighters no longer
+  puts a swarm of circling drones on the map.
+- **Helicopters keep to helipads**: a helicopter or gunship could take one of an airfield's jet slots; airfields
+  now take fixed-wing aircraft only, helipads rotorcraft only, and a new aircraft is never parked on the wrong one.
+
+Checks: tools/battle-group-check.gd (12).
+
 ## Version 0.9.59: rival nations found towns
 
 The player noticed that a rival only ever had its capital and one village. Measured over fifteen minutes of a

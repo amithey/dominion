@@ -2961,12 +2961,12 @@ func update_training(delta: float) -> void:
 			out = (door - at).normalized()
 		var unit := spawn_unit(key, door, b.owner)
 		unit.heading = atan2(out.x, out.z)
-		if key == "sixthGen":
-			Future.escort(self, unit)   # two loyal wingmen take off with it
 		if unit.get("fly", false) and not key in AirOperations.TUBE_LAUNCHED and AirOperations.is_base(b) and AirOperations.park_new(self, unit, b):
 			pass  # parked on its slot on the apron, waiting for orders
 		else:
 			order_move([unit], door + out * 8.0 + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4)))
+		if key == "sixthGen":
+			Future.escort(self, unit)   # two loyal wingmen: aboard while it is parked, launched as it takes off
 		economy.recalculate()
 		if b.owner == 0:
 			hud.notice("%s ready" % def.name)

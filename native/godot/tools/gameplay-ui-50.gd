@@ -190,7 +190,7 @@ func run() -> void:
 	hud.toggle_panel("", false)
 	n0 = notices()
 	hud.notice("Test notice")
-	check(notices() == n0 + 1, "a notice appears")
+	check(notices() == mini(n0 + 1, 3), "a notice appears (the feed shows three at most)")
 	var last: Control = hud._notices.get_child(hud._notices.get_child_count() - 1)
 	check(last.find_children("*", "Label", true, false)[0].text == "Test notice", "with its text")
 	for i in range(30): hud.notice("flood %d" % i)

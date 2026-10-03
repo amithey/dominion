@@ -43,8 +43,12 @@ static func initialize(u: Dictionary) -> void:
 static func is_base(b: Dictionary) -> bool:
 	return SLOTS.has(b.key)
 
+## Helicopters land on helipads, aircraft on airfields: a helicopter no longer
+## takes a jet's parking slot on the apron.
+const ROTARY := ["helicopter", "gunship"]
+
 static func available(world: Node, u: Dictionary, b: Dictionary) -> bool:
-	return not b.dead and b.built and b.owner == u.owner and b.get("supplied", true) and not world.disabled(b) and (b.key == "airfield" or (b.key == "helipad" and u.key in ["helicopter", "gunship"]))
+	return not b.dead and b.built and b.owner == u.owner and b.get("supplied", true) and not world.disabled(b) and ((b.key == "airfield" and not u.key in ROTARY) or (b.key == "helipad" and u.key in ROTARY))
 
 ## The aircraft holding each slot of base `b` (null where free); dead or
 ## departed holders are cleared.
@@ -142,6 +146,8 @@ static func order_land(world: Node, u: Dictionary, b: Dictionary) -> bool:
 
 ## A new aircraft from `b`'s production line, parked on a free slot.
 static func park_new(world: Node, u: Dictionary, b: Dictionary) -> bool:
+	if not available(world, u, b):
+		return false
 	var i := free_slot(world, b)
 	if i < 0:
 		return false

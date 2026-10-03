@@ -1,8 +1,9 @@
 extends SceneTree
 ## The sixth-generation battle group (future_weapons.gd): a fighter and its
 ## two loyal wingmen are three units that select, fly, attack and defend as
-## one; the enemy shoots the wingmen first; a lost wingman is replaced while
-## the fighter rearms.
+## one; the enemy shoots the wingmen first; on the ground they wait aboard
+## (off the map), a lost one is replaced while the fighter rearms, and they
+## launch as it takes off. Helicopters keep to helipads.
 var errors: Array[String] = []
 var passed := 0
 var w: Node
@@ -109,19 +110,43 @@ func run() -> void:
 	check(picked != null and picked.key == "wingman", "an enemy fighter goes for a wingman before the escorted fighter (it picked the %s)" % ("nothing" if picked == null else picked.key))
 	w.kill(hunter)
 
-	# 6: home together, and a lost wingman replaced while the fighter rearms.
+	# 6: home together: on the ground the wingmen are aboard (off the map), a lost
+	# one is replaced while the fighter rearms, and both launch as it takes off.
 	w.kill(wing[0])
+	sim(0.2)
 	leader.air_state = "rearming"
 	leader.service_left = 30.0
 	var money: float = w.economy.res.money
+	var flying_before: int = w.units.filter(func(u): return not u.dead and u.key == "wingman").size()
 	Future.command(w, leader)
-	sim(0.5)
-	var now: Array = Future.mates(w, leader)
-	check(now.size() == 2 and money - w.economy.res.money >= Future.REPLACE_COST,
-		"a lost wingman is replaced while the fighter rearms ($%d)" % int(money - w.economy.res.money))
-	sim(0.5)
-	var over: bool = now.all(func(u): return u.get("slot_goal") == null and Vector2(u.orbit.x - leader.node.position.x, u.orbit.z - leader.node.position.z).length() < 15.0)
-	check(over, "while the fighter is on the ground the wingmen circle over it")
+	sim(0.2)
+	var flying_after: int = w.units.filter(func(u): return not u.dead and u.key == "wingman").size()
+	check(Future.mates(w, leader).is_empty() and flying_after == flying_before - 1 and int(leader.wingmen_stowed) == 2 and money - w.economy.res.money >= Future.REPLACE_COST,
+		"on the ground its wingmen are aboard, off the map, and the lost one is replaced ($%d; %d aboard)" % [int(money - w.economy.res.money), int(leader.wingmen_stowed)])
+	leader.air_state = "ready"
+	Future.command(w, leader)
+	check(Future.mates(w, leader).size() == 2 and int(leader.wingmen_stowed) == 0, "as it takes off, both are launched beside it")
+	# A squadron parked on its airfield puts no wingman on the map.
+	var parked := []
+	for i in range(6):
+		var f: Dictionary = w.spawn_unit("sixthGen", air(start + Vector3(-60 - i * 12, 0, 0)), 0)
+		f.air_state = "parked"
+		parked.append(f)
+		Future.escort(w, f)
+	var extra: int = w.units.filter(func(u): return not u.dead and u.key == "wingman" and parked.any(func(f): return is_same(u.get("leader"), f))).size()
+	check(extra == 0 and parked.all(func(f): return int(f.wingmen_stowed) == 2), "six parked fighters: their twelve wingmen wait aboard, none on the map")
+
+	# 7: helicopters land on helipads only; an airfield's slots are the jets'.
+	var Air := preload("res://scripts/air_operations.gd")
+	var field: Dictionary = w.place_building("airfield", w.test_site("airfield", home + Vector3(-90, 0, -60)), 0, true)
+	var pad: Dictionary = w.place_building("helipad", w.test_site("helipad", home + Vector3(90, 0, -60)), 0, true)
+	var heli: Dictionary = w.spawn_unit("helicopter", air(home + Vector3(0, 0, -40)), 0)
+	var jet: Dictionary = w.spawn_unit("jet", air(home + Vector3(10, 0, -40)), 0)
+	check(not Air.available(w, heli, field) and Air.available(w, heli, pad) and Air.available(w, jet, field) and not Air.available(w, jet, pad),
+		"a helicopter may not take an airfield slot; a jet may not take a helipad")
+	check(not Air.park_new(w, heli, field), "a helicopter is never parked on an airfield's apron")
+	var base = Air.base_for(w, heli)
+	check(base != null and base.key == "helipad", "a returning helicopter heads for a helipad (%s)" % ("none" if base == null else base.key))
 	print("\nBATTLE_GROUP: %d passed, %d failed" % [passed, errors.size()])
 	for f in errors: print("  FAILED: " + f)
 	print("BATTLE_GROUP PASS" if errors.is_empty() else "BATTLE_GROUP FAIL")
