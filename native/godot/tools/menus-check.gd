@@ -108,8 +108,27 @@ func run() -> void:
 			if hud._side_rows.get_child_count() == 0: empty.append(n)
 			if not on_screen(hud._win): off.append(n)
 		check(hud._win.visible and pressed >= 1 and pressed == names.size() and empty.is_empty() and off.is_empty(), "%s: all %d tabs open with content, the window on screen (%s)%s" % [mode, pressed, ", ".join(PackedStringArray(names)), "" if empty.is_empty() and off.is_empty() else " empty %s, off screen %s" % [str(empty), str(off)]])
+		# The ministry's briefing down the left, its name under the title, its tabs in its colour.
+		var figures: int = hud._win_brief.get_children().filter(func(c): return c is PanelContainer).size()
+		var tab_row: Array = buttons_in(hud._win).filter(func(b): return b.toggle_mode and b.text == names[0]) if not names.is_empty() else []
+		var tab_style = tab_row[0].get_theme_stylebox("normal") if not tab_row.is_empty() else null
+		check(figures >= 3 and hud._win_sub.text != "" and tab_style is StyleBoxFlat and tab_style.border_color.is_equal_approx(Color(UI.ministry(mode), tab_style.border_color.a)), "%s: a briefing of %d key figures, \"%s\" under the title, its tabs in its colour" % [mode, figures, hud._win_sub.text])
 		hud.toggle_panel(mode)
 		await settle()
+	# The window stays on screen with the longest text there is: Afghanistan's power
+	# (one long line, it once stretched the window past the right of the screen).
+	var was: Dictionary = w.map.nations[0].duplicate()
+	var Factions := preload("res://scripts/factions.gd")
+	w.map.nations[0] = Factions.nation(Factions.IDS.find("afghanistan"), true)
+	hud.toggle_panel("diplomacy", true)
+	await settle()
+	await frames(3)
+	var long_ok: bool = on_screen(hud._win)
+	var width: float = hud._win.size.x
+	hud.toggle_panel("diplomacy")
+	w.map.nations[0] = was
+	await settle()
+	check(long_ok, "the diplomacy window stays on screen with Afghanistan's long power text (%d px wide)" % int(width))
 	# 18-21: research.
 	print("== research")
 	hud.toggle_research()
@@ -221,6 +240,8 @@ func run() -> void:
 	await key(KEY_TAB)
 	await settle()
 	var cab = hud._cabinet
+	var charts: Array = cab.find_children("Chart_*", "", true, false)
+	check(charts.size() >= 4 and hud.history.money.size() >= 1, "the Cabinet charts the treasury, the citizens, the army and research over time (%d charts)" % charts.size())
 	var tiles: Array = cab._grid.get_children().filter(func(t): return not t.is_queued_for_deletion())
 	check(cab != null and cab.visible and on_screen(cab) and tiles.size() == 8, "Tab opens the Cabinet, full screen, with its 8 ministries (%d)" % tiles.size())
 	check(hud._screen_buttons.cabinet.button_pressed or (func(): hud._process(0.3); return hud._screen_buttons.cabinet.button_pressed).call(), "its screen button is lit while it is open")
@@ -249,6 +270,11 @@ func run() -> void:
 	await settle()
 	await key(KEY_ESCAPE)
 	check(not cab.visible and not w.menu._root.visible, "Esc closes the Cabinet, without pausing")
+	hud._id_face.pressed.emit()
+	await settle()
+	var by_face: bool = cab.visible
+	hud.toggle_cabinet()
+	check(hud._id_face.icon != null and by_face, "the leader's portrait heads the strip, and opens the Cabinet")
 	var coloured := []
 	for s in hud._screen_buttons:
 		var style = hud._screen_buttons[s].get_theme_stylebox("normal")

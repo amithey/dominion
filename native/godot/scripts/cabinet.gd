@@ -15,6 +15,43 @@ var _grid: GridContainer
 var _head: HBoxContainer
 var _refresh := 0.0
 
+## A small chart of a figure over the last minutes (hud.history), in a ministry's colour.
+class Sparkline extends Control:
+	var points: Array = []
+	var colour := Color.WHITE
+	func _draw() -> void:
+		var w := size.x
+		var h := size.y
+		draw_rect(Rect2(Vector2.ZERO, size), Color("0a1522"))
+		if points.size() < 2:
+			draw_string(ThemeDB.fallback_font, Vector2(8, h * 0.6), "Charting… a point every 5 s", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 1, 1, 0.4))
+			return
+		var lo: float = points.min()
+		var hi: float = points.max()
+		if hi - lo < 0.001:
+			hi = lo + 1.0
+		var line := PackedVector2Array()
+		for i in range(points.size()):
+			line.append(Vector2(w * i / float(points.size() - 1), h - 4.0 - (h - 8.0) * (float(points[i]) - lo) / (hi - lo)))
+		var area := line.duplicate()
+		area.append(Vector2(w, h))
+		area.append(Vector2(0, h))
+		draw_colored_polygon(area, Color(colour, 0.18))
+		draw_polyline(line, colour, 2.0, true)
+		draw_circle(line[line.size() - 1], 3.5, colour)
+
+## The chart of `key` from the HUD's history, with its span.
+func _spark(parent: Control, key: String, accent: Color, caption: String) -> void:
+	var points: Array = hud.history.get(key, [])
+	var chart := Sparkline.new()
+	chart.name = "Chart_" + key
+	chart.points = points.duplicate()
+	chart.colour = accent.lightened(0.2)
+	chart.custom_minimum_size = Vector2(0, 46)
+	chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(chart)
+	_label(parent, "%s, the last %d min" % [caption, maxi(1, ceili(points.size() * 5.0 / 60.0))], 11, UI.MUTED)
+
 func setup(hud_node: Node) -> void:
 	hud = hud_node
 	world = hud.world
@@ -255,7 +292,8 @@ func _header() -> void:
 		chip.add_child(box)
 		var v := _label(box, c[1], 26, UI.CREAM, true)
 		v.autowrap_mode = TextServer.AUTOWRAP_OFF
-		_label(box, c[0], 12, UI.ministry(c[2]).lightened(0.3))
+		var cap := _label(box, c[0], 12, UI.ministry(c[2]).lightened(0.3))
+		cap.autowrap_mode = TextServer.AUTOWRAP_OFF
 	var shut := Button.new()
 	shut.name = "CloseCabinet"
 	shut.text = "Close  (Tab)"
@@ -272,6 +310,7 @@ func _treasury() -> void:
 	_figure(row, "$" + hud.compact_number(eco.res.get("money", 0.0)), "in the treasury", UI.ministry("economy").lightened(0.4))
 	var rate: float = eco.rates.get("money", 0.0)
 	_figure(row, _rate(rate), "income", UI.GOOD if rate >= 0.0 else UI.BAD)
+	_spark(col, "money", UI.ministry("economy"), "Treasury")
 	for r in [["food", "Food", Color("8fd16a")], ["iron", "Iron", Color("a9b8c8")], ["oil", "Oil", Color("4fb3a8")], ["silicon", "Silicon", Color("7fd3f0")], ["gas", "Gas", Color("f0a65a")]]:
 		var cap: float = float(eco.caps.get(r[0], 0.0))
 		if cap > 0.0:
@@ -287,6 +326,7 @@ func _people() -> void:
 	var row := _figures(col)
 	_figure(row, hud.compact_number(eco.civilians), "citizens, room for %s" % hud.compact_number(eco.civ_cap))
 	_figure(row, _rate(eco.rates.get("food", 0.0)), "food", UI.GOOD if eco.rates.get("food", 0.0) >= 0.0 else UI.BAD)
+	_spark(col, "citizens", UI.ministry("people"), "Citizens")
 	_gauge(col, "Approval", eco.happiness, 100.0, Color("f0c25a") if eco.happiness >= 50.0 else UI.BAD, "%d%%" % int(eco.happiness))
 	_gauge(col, "Health", eco.health, 100.0, Color("6ad0a0") if eco.health >= 50.0 else UI.BAD, "%d%%" % int(eco.health))
 	_gauge(col, "Housing", eco.civilians, eco.civ_cap, UI.ministry("people"))
@@ -307,6 +347,7 @@ func _forces() -> void:
 	for i in range(1, world.diplomacy.n):
 		if world.diplomacy.at_war(0, i) and not world.diplomacy.defeated(i): wars.append(world.diplomacy.name_of(i).split(" · ")[0])
 	_figure(row, str(wars.size()), "at war" if wars.size() != 1 else "war", UI.BAD if not wars.is_empty() else UI.GOOD)
+	_spark(col, "army", UI.ministry("military"), "Units in service")
 	_gauge(col, "Manpower", eco.pop_used, eco.pop_cap, UI.ministry("military"))
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", 14)
@@ -325,6 +366,7 @@ func _research() -> void:
 	_figure(row, str(r.completed_count()), "discoveries made", UI.ministry("research").lightened(0.4))
 	_figure(row, "+%.1f/s" % r.rate, "%d points" % int(r.points))
 	_label(col, "Now: " + (r.status_of(r.queue[0]) if not r.queue.is_empty() else "nothing in development"), 13, UI.CREAM)
+	_spark(col, "research", UI.ministry("research"), "Discoveries")
 	if r.era + 1 < r.eras.size():
 		_label(col, "Towards the %s:" % r.eras[r.era + 1].name, 13, UI.MUTED)
 		for need in r.era_requirements(r.era + 1).slice(0, 3):

@@ -603,3 +603,10 @@ UI files listed above.
   the strip's resource icons are tinted, toggle_cabinet(), close_windows() closes the Cabinet too; the F1 help lists
   Tab and the double click. New scripts/cabinet.gd (mine). world: Tab toggles the Cabinet. menus-check now 45.
 - 2026-10-03 Claude: 0.9.52 executable and installer in dist, built from e9a18a3. On the exe: ui, setup, campaign, state tests pass. From the project: menus-check 45/45, gameplay-ui-50 51/51, interface-review, settings-check, pick-test pass.
+- 2026-10-03 Claude, 0.9.53 (user chose the "situation room" look from three mockups; Codex, this restyles your UI):
+  ui_theme.gd palette and plate()/band() are now flat StyleBoxFlat (plate returns StyleBox), caps() returns the text
+  as written (letterspaced() keeps the old setting), serif() is the sans heavier; ministry_button/tab/band restyled.
+  hud.gd: GOLD -> signal blue; the side window has a subtitle (_win_sub) and a briefing column (_win_brief, new
+  ministry_brief.gd) that folds away on narrow screens; _dress_window() wraps long labels and colours the tab row;
+  _fit_window caps the width to the screen; the leader's face heads the strip (_id_face); history for the Cabinet's
+  charts. menu.gd: GOLD -> signal blue (one constant). Your side_panels.gd edits in progress were left untouched.

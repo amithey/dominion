@@ -1,35 +1,33 @@
 extends RefCounted
-## The look of every panel, button and label in DOMINION, cut in the manner of
-## the great 4X strategy games: midnight blue plates inside a fine brass frame, a body
-## that catches the light along its top edge and sinks into shadow at the
-## bottom, a gold rule under every heading, and headings set in letterspaced
-## capitals. The plates are small textures drawn here at startup (a gradient,
-## a bevel, a double frame and a soft drop shadow) and stretched as nine
-## patches, which is what gives the panels their depth. Built once and merged
-## into the default theme, so the HUD, the menus and the dialogs all share it.
-## Windows' Bahnschrift carries the text and Palatino the headings; nothing is
-## downloaded.
+## The look of every panel, button and label in DOMINION: a situation room
+## (2026-10-03, chosen by the player over an imperial and a war-room style).
+## Dark slate glass, hairline rules, flat surfaces with soft corners, figures in
+## clear type, and each ministry known by its own colour (MINISTRY): a bar of
+## it marks the open tab, the selected row, the window's title. Headings are in
+## sentence case, not letterspaced capitals. Built once and merged into the
+## default theme, so the HUD, the menus and the dialogs all share it.
+## Windows' Bahnschrift carries the text; nothing is downloaded.
 
 # ---------------------------------------------------------------- palette
-const INK := Color("080f19")     ## the darkest ground: troughs, insets, frames
-const BG := Color("101c2b")      ## a panel body
-const BG_2 := Color("1d3042")    ## a raised body: cards, rows, popups
-const LIFT := Color(1, 1, 1, 0.09)  ## the lit top edge of a plate
-const TRIM := Color("74674e")    ## the bronze frame
-const GOLD := Color("cdb584")    ## gold: rules, headings, the active state
-const BRIGHT := Color("f5e4bd")  ## lit gold: hover and focus
-const CREAM := Color("f5efe3")
-const TEXT := Color("dbe2e9")
-const MUTED := Color("a8b5c5")
-const GOOD := Color("83c98c")
-const BAD := Color("e0805f")
-# The bodies of the plates, lit edge first.
-const PANEL_TOP := Color("1a2b3d")
-const PANEL_LOW := Color("0c1623")
-const BAND_TOP := Color("283e51")
-const BAND_LOW := Color("142434")
-const KEY_TOP := Color("263b4e")
-const KEY_LOW := Color("142536")
+const INK := Color("060b11")     ## the darkest ground: troughs, insets, wells
+const BG := Color("0c141d")      ## a panel body
+const BG_2 := Color("12212f")    ## a raised body: cards, rows, popups
+const LIFT := Color(1, 1, 1, 0.0)   ## (the old plates' lit edge: flat now)
+const TRIM := Color("23415a")    ## the hairline rules and frames
+const GOLD := Color("5ab4e6")    ## the signal blue: headings, rules, the active state
+const BRIGHT := Color("e6f3ff")  ## hover and focus
+const CREAM := Color("f1f6fb")
+const TEXT := Color("d3e1ee")
+const MUTED := Color("7f98ad")
+const GOOD := Color("5fd39a")
+const BAD := Color("f08a6b")
+# The surfaces (the plates were two-tone gradients; now one flat colour each).
+const PANEL_TOP := Color("0e1823")
+const PANEL_LOW := Color("0c141d")
+const BAND_TOP := Color("111f2c")
+const BAND_LOW := Color("101c28")
+const KEY_TOP := Color("14243a")
+const KEY_LOW := Color("112033")
 
 ## Each ministry's colour, so a screen is known at a glance: the Treasury gold,
 ## Research turquoise, Foreign Affairs emerald, Intelligence violet, Territory
@@ -38,7 +36,7 @@ const KEY_LOW := Color("142536")
 const MINISTRY := {
 	"economy": Color("e8b04a"), "market": Color("e8b04a"), "research": Color("3fc1e0"),
 	"diplomacy": Color("3cc48e"), "intel": Color("a685f2"), "territory": Color("ee8a3c"),
-	"land": Color("ee8a3c"), "military": Color("e35d5d"), "build": Color("e35d5d"),
+	"land": Color("ee8a3c"), "military": Color("e35d5d"), "build": Color("5fa8e8"),
 	"people": Color("e889b0"), "cabinet": Color("f2d27a"), "menu": Color("9fb0c4"),
 }
 ## Each resource's colour on the strip.
@@ -53,36 +51,58 @@ static func ministry(key: String) -> Color:
 ## A screen button in its ministry's colour: lit from below by a bar of it.
 static func ministry_button(b: Button, key: String) -> void:
 	var accent := ministry(key)
-	for state in [["normal", 0.10, 0.55, 3], ["hover", 0.22, 0.9, 3], ["pressed", 0.34, 1.0, 4], ["hover_pressed", 0.42, 1.0, 4]]:
+	for state in [["normal", 0.0, 0.0, 0], ["hover", 0.10, 0.6, 2], ["pressed", 0.16, 1.0, 3], ["hover_pressed", 0.22, 1.0, 3]]:
 		var s := StyleBoxFlat.new()
-		s.bg_color = Color(KEY_LOW.lerp(accent, float(state[1])), 0.97)
+		s.bg_color = Color(BG.lerp(accent, float(state[1])), 0.96)
 		s.border_color = Color(accent, float(state[2]))
 		s.border_width_bottom = int(state[3])
-		s.border_width_top = 1
-		s.border_width_left = 1
-		s.border_width_right = 1
 		s.set_corner_radius_all(6)
+		s.corner_radius_bottom_left = 0 if int(state[3]) > 0 else 6
+		s.corner_radius_bottom_right = 0 if int(state[3]) > 0 else 6
 		s.content_margin_left = 10
 		s.content_margin_right = 10
 		s.content_margin_top = 4
 		s.content_margin_bottom = 4
 		b.add_theme_stylebox_override(state[0], s)
-	b.add_theme_color_override("font_color", accent.lightened(0.45))
+	b.add_theme_color_override("font_color", TEXT)
 	b.add_theme_color_override("font_hover_color", Color.WHITE)
 	b.add_theme_color_override("font_pressed_color", Color.WHITE)
-	b.add_theme_color_override("icon_normal_color", accent.lightened(0.2))
+	b.add_theme_color_override("font_hover_pressed_color", Color.WHITE)
+	b.add_theme_color_override("icon_normal_color", accent.lightened(0.1))
 	b.add_theme_color_override("icon_hover_color", Color.WHITE)
 	b.add_theme_color_override("icon_pressed_color", Color.WHITE)
 
-## A window's title band in its ministry's colour.
+## A tab inside a ministry's window: the open one filled with its colour.
+static func ministry_tab(b: Button, key: String) -> void:
+	var accent := ministry(key)
+	for state in [["normal", 0.0, 0.0, 0], ["hover", 0.08, 0.5, 2], ["pressed", 0.14, 1.0, 2], ["hover_pressed", 0.2, 1.0, 2]]:
+		var s := StyleBoxFlat.new()
+		s.bg_color = Color(BG_2.lerp(accent, float(state[1])), 0.98)
+		s.border_color = Color(accent, float(state[2]))
+		s.border_width_bottom = int(state[3])
+		s.set_corner_radius_all(6)
+		s.corner_radius_bottom_left = 0
+		s.corner_radius_bottom_right = 0
+		s.content_margin_left = 8
+		s.content_margin_right = 8
+		s.content_margin_top = 4
+		s.content_margin_bottom = 4
+		b.add_theme_stylebox_override(state[0], s)
+	b.add_theme_color_override("font_color", MUTED)
+	b.add_theme_color_override("font_hover_color", TEXT)
+	b.add_theme_color_override("font_pressed_color", Color.WHITE)
+	b.add_theme_color_override("font_hover_pressed_color", Color.WHITE)
+
+## A window's title band: the slate band, a bar of the ministry's colour down
+## its left, a hairline beneath.
 static func ministry_band(key: String) -> StyleBoxFlat:
 	var accent := ministry(key)
 	var s := StyleBoxFlat.new()
-	s.bg_color = BAND_LOW.lerp(accent, 0.28)
+	s.bg_color = BAND_TOP.lerp(accent, 0.06)
 	s.border_color = accent
-	s.border_width_bottom = 3
+	s.border_width_left = 4
 	s.set_corner_radius_all(0)
-	s.content_margin_left = 12
+	s.content_margin_left = 14
 	s.content_margin_right = 10
 	s.content_margin_top = 9
 	s.content_margin_bottom = 9
@@ -100,17 +120,21 @@ static func font(weight := 400) -> SystemFont:
 	f.hinting = TextServer.HINTING_LIGHT
 	return f
 
+## The headings' and the big figures' face (it was a serif; the situation room
+## sets them in the same clear type as the text, heavier).
 static func serif(weight := 600) -> SystemFont:
 	var f := SystemFont.new()
-	f.font_names = PackedStringArray(["Palatino Linotype", "Georgia", "Times New Roman"])
+	f.font_names = PackedStringArray(["Bahnschrift", "Segoe UI Semibold", "Segoe UI", "Arial"])
 	f.font_weight = weight
 	f.antialiasing = TextServer.FONT_ANTIALIASING_LCD
 	return f
 
-## Capitals with a hair space between the letters, the way a strategy game
-## sets the name of a panel. Spaces between words open wider so the words
-## still read as words.
+## A panel's name, as the situation room sets it: in sentence case, as written
+## (it was letterspaced capitals). letterspaced() keeps the old setting.
 static func caps(text: String) -> String:
+	return text
+
+static func letterspaced(text: String) -> String:
 	var upper := text.to_upper()
 	var out := ""
 	for i in range(upper.length()):
@@ -195,24 +219,39 @@ static func _plate_texture(top: Color, bottom: Color, border: Color, bevel: Colo
 
 ## A plate as a stylebox: the two body colours, the frame, and the room the
 ## content needs inside it.
-static func plate(top: Color, bottom: Color, border := Color(0, 0, 0, 0), margin := 10.0, bevel := LIFT, rule := Color(0, 0, 0, 0), rule_px := 0, shadow := 0, accent := Color(0, 0, 0, 0), accent_px := 0) -> StyleBoxTexture:
-	var s := StyleBoxTexture.new()
-	s.texture = _plate_texture(top, bottom, border, bevel, rule, rule_px, shadow, accent, accent_px)
-	var pad: int = clampi(shadow, 0, 10)
-	s.set_texture_margin_all(pad + 10)
+## (The situation room draws it flat: one colour, a hairline frame, soft
+## corners, a rule or an accent bar where asked, a soft shadow for a window.)
+static func plate(top: Color, bottom: Color, border := Color(0, 0, 0, 0), margin := 10.0, bevel := LIFT, rule := Color(0, 0, 0, 0), rule_px := 0, shadow := 0, accent := Color(0, 0, 0, 0), accent_px := 0) -> StyleBox:
+	var s := StyleBoxFlat.new()
+	s.bg_color = top.lerp(bottom, 0.5)
+	s.anti_aliasing = true
+	s.set_corner_radius_all(7 if shadow > 0 else 6)
+	if border.a > 0.0:
+		s.border_color = Color(TRIM, 0.9) if border.s < 0.35 or border.v < 0.6 else Color(border, 0.9)
+		s.set_border_width_all(1)
+	if rule_px > 0 and rule.a > 0.0:
+		s.border_width_bottom = clampi(rule_px, 1, 3)
+		s.border_color = rule
+	if accent_px > 0 and accent.a > 0.0:
+		s.border_width_left = clampi(accent_px, 2, 4)
+		s.border_color = accent
+	if shadow > 0:
+		s.shadow_size = clampi(shadow, 0, 12)
+		s.shadow_color = Color(0, 0, 0, 0.5)
+		s.shadow_offset = Vector2(0, 3)
 	s.set_content_margin_all(margin)
-	if pad > 0:
-		s.set_expand_margin_all(pad)
 	return s
 
 ## The band across the head of a panel: light at the top, dark at the bottom,
 ## closed by a gold rule. The title of the panel sits on it.
-static func band(margin := 10.0, top := BAND_TOP, bottom := BAND_LOW, rule := GOLD, rule_px := 1) -> StyleBoxTexture:
-	return plate(top, bottom, Color(0, 0, 0, 0), margin, Color(1, 1, 1, 0.10), rule, rule_px)
+static func band(margin := 10.0, top := BAND_TOP, bottom := BAND_LOW, rule := GOLD, rule_px := 1) -> StyleBox:
+	var s := plate(top, bottom, Color(0, 0, 0, 0), margin, LIFT, Color(TRIM, 1.0), 1)
+	s.set_corner_radius_all(0)
+	return s
 
 ## A trough: the sunken dark ground that a list, a picture or a bar sits in.
 static func inset(margin := 6.0, radius := 2) -> StyleBoxFlat:
-	return box(INK, Color(TRIM, 0.55), 1, radius, margin)
+	return box(INK, Color(TRIM, 0.7), 1, maxi(radius, 4), margin)
 
 ## A flat box, kept for the small parts — pills, rings, meters, rounded icon
 ## buttons — that want one colour and a round corner rather than a plate.
@@ -245,17 +284,17 @@ static func build() -> Theme:
 	t.set_stylebox("panel", "Panel", panel)
 	# Buttons: a navy keycap in a bronze frame; brighter and gold framed under
 	# the cursor; gold edged and brighter while selected.
-	t.set_stylebox("normal", "Button", plate(KEY_TOP, KEY_LOW, Color(TRIM, 0.85), 9.0))
-	t.set_stylebox("hover", "Button", plate(Color("36546b"), Color("21384b"), GOLD, 9.0, Color(1, 1, 1, 0.16)))
-	t.set_stylebox("pressed", "Button", plate(Color("354d61"), Color("23394d"), GOLD, 9.0, LIFT, GOLD, 2))
-	t.set_stylebox("hover_pressed", "Button", plate(Color("425e73"), Color("2c4559"), BRIGHT, 9.0, LIFT, BRIGHT, 2))
-	t.set_stylebox("disabled", "Button", plate(Color("142125"), Color("0b161a"), Color(TRIM, 0.30), 9.0, Color(0, 0, 0, 0)))
-	t.set_stylebox("focus", "Button", box(Color(0, 0, 0, 0), BRIGHT, 1, 2, 0.0))
-	t.set_color("font_color", "Button", CREAM)
-	t.set_color("font_hover_color", "Button", BRIGHT)
-	t.set_color("font_pressed_color", "Button", BRIGHT)
-	t.set_color("font_hover_pressed_color", "Button", BRIGHT)
-	t.set_color("font_disabled_color", "Button", Color("6d7c79"))
+	t.set_stylebox("normal", "Button", box(Color("14263a"), Color(TRIM, 1.0), 1, 6, 9.0))
+	t.set_stylebox("hover", "Button", box(Color("1b3450"), GOLD, 1, 6, 9.0))
+	t.set_stylebox("pressed", "Button", box(Color(GOLD, 0.30), GOLD, 1, 6, 9.0))
+	t.set_stylebox("hover_pressed", "Button", box(Color(GOLD, 0.40), BRIGHT, 1, 6, 9.0))
+	t.set_stylebox("disabled", "Button", box(Color("0d1822"), Color(TRIM, 0.5), 1, 6, 9.0))
+	t.set_stylebox("focus", "Button", box(Color(0, 0, 0, 0), Color(GOLD, 0.7), 1, 6, 0.0))
+	t.set_color("font_color", "Button", TEXT)
+	t.set_color("font_hover_color", "Button", Color.WHITE)
+	t.set_color("font_pressed_color", "Button", Color.WHITE)
+	t.set_color("font_hover_pressed_color", "Button", Color.WHITE)
+	t.set_color("font_disabled_color", "Button", Color("4f6476"))
 	t.set_font("font", "Button", bold)
 	t.set_font_size("font_size", "Button", 14)
 	# Drop-downs follow the buttons, but an open one stays readable rather
@@ -297,7 +336,7 @@ static func build() -> Theme:
 	t.set_color("font_outline_color", "Label", Color(0, 0, 0, 0.7))
 	# Progress bars: a sunken trough with a struck-gold fill.
 	t.set_stylebox("background", "ProgressBar", inset(0.0, 2))
-	t.set_stylebox("fill", "ProgressBar", plate(Color("e3c47c"), Color("ac8636"), Color(0, 0, 0, 0), 0.0, Color(1, 1, 1, 0.28)))
+	t.set_stylebox("fill", "ProgressBar", box(GOLD, Color(0, 0, 0, 0), 0, 4, 0.0))
 	t.set_color("font_color", "ProgressBar", CREAM)
 	t.set_color("font_outline_color", "ProgressBar", Color(0, 0, 0, 0.8))
 	t.set_constant("outline_size", "ProgressBar", 3)
@@ -321,21 +360,25 @@ static func build() -> Theme:
 	# page is the one on show. Active text remains light for contrast.
 	t.add_type("TabButton")
 	t.set_type_variation("TabButton", "Button")
-	t.set_stylebox("normal", "TabButton", plate(Color("203348"), Color("122030"), Color(TRIM, 0.55), 7.0, Color(1, 1, 1, 0.05)))
-	t.set_stylebox("hover", "TabButton", plate(Color("344f66"), Color("203449"), GOLD, 7.0, Color(1, 1, 1, 0.14)))
-	t.set_stylebox("pressed", "TabButton", plate(KEY_TOP, KEY_LOW, GOLD, 7.0, LIFT, GOLD, 2))
-	t.set_stylebox("hover_pressed", "TabButton", plate(BAND_TOP, BAND_LOW, BRIGHT, 7.0, LIFT, BRIGHT, 2))
-	t.set_color("font_color", "TabButton", Color("bccdc7"))
+	t.set_stylebox("normal", "TabButton", box(Color(BG_2, 0.6), Color(0, 0, 0, 0), 0, 6, 7.0))
+	t.set_stylebox("hover", "TabButton", box(Color("1a3046"), Color(0, 0, 0, 0), 0, 6, 7.0))
+	var tab_on := box(Color(GOLD, 0.16), GOLD, 0, 6, 7.0)
+	tab_on.border_width_bottom = 2
+	t.set_stylebox("pressed", "TabButton", tab_on)
+	t.set_stylebox("hover_pressed", "TabButton", tab_on)
+	t.set_color("font_color", "TabButton", MUTED)
 	t.set_color("font_hover_color", "TabButton", BRIGHT)
 	t.set_color("font_pressed_color", "TabButton", BRIGHT)
 	t.set_color("font_hover_pressed_color", "TabButton", BRIGHT)
 	# A row in a list: a quiet plate that lifts under the cursor.
 	t.add_type("RowButton")
 	t.set_type_variation("RowButton", "Button")
-	t.set_stylebox("normal", "RowButton", plate(Color("1e3246"), Color("142536"), Color(TRIM, 0.50), 6.0, Color(1, 1, 1, 0.06)))
-	t.set_stylebox("hover", "RowButton", plate(Color("304e64"), Color("203448"), GOLD, 6.0, Color(1, 1, 1, 0.16)))
-	t.set_stylebox("pressed", "RowButton", plate(Color("385870"), Color("263f55"), BRIGHT, 6.0, Color(1, 1, 1, 0.20)))
-	t.set_stylebox("disabled", "RowButton", plate(Color("142125"), Color("0b161a"), Color(TRIM, 0.22), 6.0, Color(0, 0, 0, 0)))
+	t.set_stylebox("normal", "RowButton", box(Color("12212f"), Color(TRIM, 0.6), 1, 6, 6.0))
+	t.set_stylebox("hover", "RowButton", box(Color("18304a"), GOLD, 1, 6, 6.0))
+	var row_on := box(Color(GOLD, 0.18), GOLD, 0, 6, 6.0)
+	row_on.border_width_left = 3
+	t.set_stylebox("pressed", "RowButton", row_on)
+	t.set_stylebox("disabled", "RowButton", box(Color("0d1822"), Color(TRIM, 0.4), 1, 6, 6.0))
 	t.set_color("font_color", "RowButton", CREAM)
 	t.set_color("font_pressed_color", "RowButton", CREAM)
 	t.set_color("font_hover_pressed_color", "RowButton", CREAM)

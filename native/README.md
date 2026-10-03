@@ -23,6 +23,25 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.53: the situation room
+
+The player chose, from three directions (imperial, war room, situation room), the situation room for every menu:
+- **One look for the whole game** (ui_theme.gd): dark slate glass, hairline rules, flat surfaces with soft corners,
+  clear type for headings and figures alike, headings in sentence case instead of letterspaced capitals, signal blue
+  for the active state; the old bevelled brass plates are gone. Every panel, button, tab, list row, bar and menu,
+  the pause menu and the New Game screen included, takes it from the shared theme.
+- **Each ministry's window**: a title band with a bar of the ministry's colour, the ministry's name beneath the title
+  ("Ministry of Foreign Affairs", "Intelligence Directorate"...), a **briefing** down the left with the ministry's key
+  figures in large type (wars, allies and the warmest and coldest nations; the treasury, income, routes and the
+  dearest goods; agents, operations and the deepest network; land held, settlements and the largest rival), and tabs
+  that light in the ministry's colour. On a narrow screen with the build list open too, the briefing folds away.
+- **The strip**: your leader's portrait at its head, in your nation's colour; a click opens the Cabinet.
+- **The Cabinet**: charts of the treasury, the citizens, the army and the discoveries over the last minutes.
+- **A window never runs off the screen**: Afghanistan's long power text stretched the diplomacy window past the right
+  edge; long lines now wrap and a window is never wider than the screen.
+
+Checks: tools/menus-check.gd (52); interface-review, gameplay-ui-50, settings, pick and ui tests pass.
+
 ## Version 0.9.52: the Cabinet, ministries in colour, double click, Esc
 
 - **The Cabinet (Tab, or the new first screen button):** the whole state at a glance, as a head of government sees it

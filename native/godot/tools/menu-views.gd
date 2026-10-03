@@ -24,6 +24,13 @@ func run() -> void:
 	w.economy.grant_test_resources()
 	w.place_building("intelAgency", w.test_site("intelAgency", w.start), 0, true)
 	w.economy.recalculate()
+	# (a few minutes of history for the Cabinet's charts)
+	for i in range(36):
+		w.game_time += 5.0
+		w.economy.res.money += randf_range(-800.0, 1500.0)
+		w.economy.civilians += randf_range(-3.0, 6.0)
+		w.hud._refresh = 1.0
+		w.hud._process(0.3)
 	for i in range(30): await process_frame
 	await shot("hud")
 	w.hud.toggle_cabinet()

@@ -9,7 +9,7 @@ extends CanvasLayer
 ## the campaign's name, era and year over resume, save, load, settings, quit.
 
 const SETTINGS := "user://settings.cfg"
-const GOLD := Color("a29269")
+const GOLD := Color("5ab4e6")   ## the situation room's signal blue
 const DIFFICULTIES := [
 	["easy", "Easy", "Rivals grow slowly and rarely attack. The first wave comes after about 13 minutes."],
 	["normal", "Normal", "A fair fight: stronger economies, earlier and larger attacks."],

@@ -37,7 +37,7 @@ const RESOURCES := [
 	["uranium", "uranium", "Uranium. From uranium deposits; for the nuclear programme."],
 	["gas", "gas", "Natural gas. Offshore rigs and imports supply winter heating. Winter lasts from 9 to 12 minutes of each 12-minute year."],
 ]
-const GOLD := Color("d8b866")
+const GOLD := Color("5ab4e6")   ## the situation room's signal blue (headings, labels)
 const RIGHT_W := 392.0
 const MINI := 196.0
 
@@ -187,6 +187,15 @@ func _build_top_bar() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	bar.add_child(row)
+	# The nation at the head of the strip: its leader in its colour; a click opens the Cabinet.
+	_id_face = Button.new()
+	_id_face.name = "LeaderFace"
+	_id_face.custom_minimum_size = Vector2(40, 40)
+	_id_face.expand_icon = true
+	_id_face.focus_mode = Control.FOCUS_NONE
+	_id_face.pressed.connect(func(): toggle_cabinet())
+	row.add_child(_id_face)
+	_dress_face()
 	var first := true
 	for r in RESOURCES:
 		var chip := HBoxContainer.new()
@@ -270,6 +279,28 @@ func _build_top_bar() -> void:
 
 # ---------------------------------------------------------------- production list
 
+## The leader's portrait in the nation's colour (again when a save brings another nation).
+func _dress_face() -> void:
+	if _id_face == null or world == null or world.map == null or world.map.nations.is_empty():
+		return
+	var me: Dictionary = world.map.nations[0]
+	var leader: String = str(me.get("people", {}).get("president", ""))
+	var sig: String = leader + str(me.get("color", ""))
+	if sig == _id_sig:
+		return
+	_id_sig = sig
+	_id_face.icon = preload("res://scripts/leader_gallery.gd").face(leader, 1.0)
+	var colour := Color(str(me.get("color", "#cdb584")))
+	for state in ["normal", "hover", "pressed"]:
+		var s := StyleBoxFlat.new()
+		s.bg_color = Color("0a1522")
+		s.border_color = colour.lightened(0.25 if state != "normal" else 0.0)
+		s.set_border_width_all(2 if state == "normal" else 3)
+		s.set_corner_radius_all(20)
+		s.set_content_margin_all(2)
+		_id_face.add_theme_stylebox_override(state, s)
+	_id_face.tooltip_text = "%s · %s\nThe Cabinet (Tab): the whole state at a glance." % [str(me.get("name", "")).split(" · ")[0], leader]
+
 func _build_production() -> void:
 	_prod = PanelContainer.new()
 	_prod.anchor_left = 1.0
@@ -287,12 +318,12 @@ func _build_production() -> void:
 	_prod.add_child(column)
 	# The title band: letterspaced capitals on brass, closed by a gold rule.
 	var head_band := PanelContainer.new()
-	head_band.add_theme_stylebox_override("panel", UI.band(8.0))
+	head_band.add_theme_stylebox_override("panel", UI.ministry_band("build"))
 	column.add_child(head_band)
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 8)
 	head_band.add_child(head)
-	_prod_title = _text(UI.caps("Build"), 18, UI.BRIGHT, true)
+	_prod_title = _text(UI.caps("Build"), 18, UI.ministry("build").lightened(0.5), true)
 	_prod_title.add_theme_font_size_override("font_size", 18)
 	_prod_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_prod_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -736,6 +767,14 @@ func _process(delta: float) -> void:
 	# Fit notices into the free lane between both docks, including when the
 	# construction list and a diplomatic window are open at the same time.
 	var viewport_width := get_viewport().get_visible_rect().size.x
+	# On a narrow screen with the build list open too, the briefing folds away so
+	# the window leaves the notices a lane (and opens again when there is room).
+	if _win != null and _win.visible and _win_brief_panel != null:
+		var room_w: float = viewport_width - (_prod.size.x + 40.0 if _prod.visible else 0.0) - 12.0
+		var want_brief: bool = room_w - (_win_scroll.size.x + 260.0) >= 240.0
+		if _win_brief_panel.visible != want_brief:
+			_win_brief_panel.visible = want_brief
+			_win.reset_size()
 	var lane_left: float = _win.position.x + _win.size.x + 16.0 if _win != null and _win.visible else 16.0
 	var lane_right: float = _prod.position.x - 16.0 if _prod.visible else viewport_width - 16.0
 	var notice_width := minf(288.0, maxf(120.0, lane_right - lane_left))
@@ -743,6 +782,14 @@ func _process(delta: float) -> void:
 	_notices.offset_left = notice_left - viewport_width * 0.5
 	_notices.offset_right = _notices.offset_left + notice_width
 	var clock: int = world.clock()
+	_dress_face()
+	if world.game_time - _history_at >= 5.0:
+		_history_at = world.game_time
+		var army: int = world.units.filter(func(u): return u.owner == 0 and not u.dead and u.key != "worker").size()
+		for pair in [["money", economy.res.get("money", 0.0)], ["income", economy.rates.get("money", 0.0)], ["citizens", economy.civilians], ["army", float(army)], ["research", float(world.research.completed_count()) if world.research else 0.0]]:
+			history[pair[0]].append(float(pair[1]))
+			if history[pair[0]].size() > 144:
+				history[pair[0]].pop_front()   # the last 12 minutes
 	for r in RESOURCES:
 		var key: String = r[0]
 		var parts: Array = _chips[key]
@@ -1270,6 +1317,14 @@ const SCREENS := {"diplomacy": ["diplomacy", "Diplomacy"], "market": ["market", 
 var _win: PanelContainer
 var _win_icon: TextureRect
 var _win_band: PanelContainer
+var _win_sub: Label
+var _win_brief_panel: PanelContainer
+var _win_brief: VBoxContainer
+var _id_face: Button            # the leader's portrait at the start of the strip (the Cabinet)
+var _id_sig := ""
+## The state over time for the Cabinet's charts: a sample every 5 s of game time.
+var history := {"money": [], "income": [], "citizens": [], "army": [], "research": []}
+var _history_at := -INF
 var _cabinet: Control          # cabinet.gd: the whole state at a glance (Tab)
 var _win_title: Label
 var _win_scroll: ScrollContainer
@@ -1310,11 +1365,16 @@ func _build_diplomacy_panel() -> void:
 	head_band.add_child(bar)
 	_win_icon = _icon("diplomacy", 34)
 	bar.add_child(_win_icon)
-	_win_title = _text("", 20, UI.BRIGHT, true)
-	_win_title.add_theme_font_size_override("font_size", 20)
-	_win_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var titles := VBoxContainer.new()
+	titles.add_theme_constant_override("separation", -2)
+	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.add_child(titles)
+	_win_title = _text("", 22, UI.BRIGHT, true)
+	_win_title.add_theme_font_size_override("font_size", 22)
 	_win_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	bar.add_child(_win_title)
+	titles.add_child(_win_title)
+	_win_sub = _text("", 13, UI.MUTED)
+	titles.add_child(_win_sub)
 	var close := Button.new()
 	close.text = "✕"
 	close.tooltip_text = "Close"
@@ -1326,9 +1386,20 @@ func _build_diplomacy_panel() -> void:
 	for side in ["left", "right", "top", "bottom"]:
 		body.add_theme_constant_override("margin_" + side, 10)
 	column.add_child(body)
+	# The ministry's briefing down the left (ministry_brief.gd), its work beside it.
+	var split := HBoxContainer.new()
+	split.add_theme_constant_override("separation", 12)
+	body.add_child(split)
+	_win_brief_panel = PanelContainer.new()
+	_win_brief_panel.custom_minimum_size = Vector2(212, 0)
+	split.add_child(_win_brief_panel)
+	_win_brief = VBoxContainer.new()
+	_win_brief.add_theme_constant_override("separation", 8)
+	_win_brief_panel.add_child(_win_brief)
 	_win_scroll = ScrollContainer.new()
 	_win_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	body.add_child(_win_scroll)
+	_win_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	split.add_child(_win_scroll)
 	_side_rows = VBoxContainer.new()
 	_side_rows.add_theme_constant_override("separation", 8)
 	_side_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1370,6 +1441,14 @@ func _show_side(mode: String) -> void:
 		_win_band.add_theme_stylebox_override("panel", UI.ministry_band(mode))
 		_win_icon.modulate = accent.lightened(0.3)
 		_win_title.add_theme_color_override("font_color", accent.lightened(0.5))
+		_win_sub.text = preload("res://scripts/ministry_brief.gd").subtitle(mode)
+		var brief_style := StyleBoxFlat.new()
+		brief_style.bg_color = Color(UI.BG.lerp(accent, 0.07), 0.9)
+		brief_style.border_color = Color(accent, 0.45)
+		brief_style.border_width_right = 1
+		brief_style.set_corner_radius_all(6)
+		brief_style.set_content_margin_all(10)
+		_win_brief_panel.add_theme_stylebox_override("panel", brief_style)
 	refresh_side()
 
 func refresh_side() -> void:
@@ -1390,13 +1469,35 @@ func refresh_side() -> void:
 			_panels.intel()  # side_panels.gd: target tabs, grouped operations, agents, dossiers
 		"territory":
 			_panels.territory()  # side_panels.gd: your land and the nations' shares
+	preload("res://scripts/ministry_brief.gd").fill(self, _win_brief, side_mode)
+	_dress_window()
 	_fit_window.call_deferred(keep)
+
+## The window's contents in its ministry's colour: the tab row along the top;
+## and a long line wraps instead of widening the window past the screen.
+func _dress_window() -> void:
+	# (Afghanistan's power, one long line, stretched the window past the right of the screen)
+	for l in _side_rows.find_children("*", "Label", true, false):
+		if l.autowrap_mode == TextServer.AUTOWRAP_OFF and not l.clip_text and l.text.length() > 40:
+			l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		if l.autowrap_mode != TextServer.AUTOWRAP_OFF:
+			l.custom_minimum_size.x = minf(l.custom_minimum_size.x, 480.0)
+	for row in _side_rows.get_children():
+		if row is HBoxContainer and row.get_child_count() > 0 and row.get_children().all(func(b): return b is Button and b.toggle_mode):
+			for b in row.get_children():
+				UI.ministry_tab(b, side_mode)
+				b.custom_minimum_size.y = 36
+			break
 
 # The window is as tall as its content, up to the space above the bottom panels.
 func _fit_window(keep_scroll: int) -> void:
 	var room := get_viewport().get_visible_rect().size.y - 104.0 - 250.0
-	_win_scroll.custom_minimum_size = Vector2(540, minf(_side_rows.get_combined_minimum_size().y, maxf(room, 160.0)))
+	_win_scroll.custom_minimum_size = Vector2(560, minf(maxf(_side_rows.get_combined_minimum_size().y, _win_brief.get_combined_minimum_size().y), maxf(room, 160.0)))
 	_win.reset_size()
+	# Never wider than the screen, whatever the contents ask for.
+	var most: float = get_viewport().get_visible_rect().size.x - _win.position.x - 12.0
+	if _win.size.x > most:
+		_win.size.x = most
 	_win_scroll.scroll_vertical = keep_scroll
 
 # ---------------------------------------------------------------- widgets
@@ -1416,11 +1517,12 @@ func _heading(text: String) -> void:
 	var holder := VBoxContainer.new()
 	holder.add_theme_constant_override("separation", 3)
 	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var l := _text(UI.caps(text), 14, GOLD, true)
-	l.add_theme_font_size_override("font_size", 14)
+	var accent: Color = UI.ministry(side_mode) if side_mode != "" else GOLD
+	var l := _text(UI.caps(text), 15, accent.lightened(0.3) if side_mode != "" else GOLD, true)
+	l.add_theme_font_size_override("font_size", 15)
 	holder.add_child(l)
 	var rule := ColorRect.new()
-	rule.color = Color(UI.TRIM, 0.7)
+	rule.color = Color(accent, 0.6) if side_mode != "" else Color(UI.TRIM, 0.7)
 	rule.custom_minimum_size = Vector2(0, 1)
 	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	holder.add_child(rule)
@@ -1975,8 +2077,8 @@ func _research_eras() -> void:
 		var past: bool = e < r.era
 		var now: bool = e == r.era
 		var chip := PanelContainer.new()
-		var fill := Color("27553a") if past else (Color("5f4a1c") if now else Color("142125"))
-		var edge := Color("8fd18a") if past else (Color("f2dfa9") if now else Color("2d4460"))
+		var fill := Color("173a2c") if past else (Color("103a4a") if now else Color("0f1c28"))
+		var edge := Color("5fd39a") if past else (UI.ministry("research") if now else Color("23415a"))
 		chip.add_theme_stylebox_override("panel", UI.box(fill, edge, 2 if now else 1, 3, 6.0))
 		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var l := _text(("✓ " if past else "") + str(r.eras[e].name), 13, UI.BRIGHT if now else (Color("b9d8b5") if past else UI.MUTED), now)
@@ -2077,7 +2179,7 @@ func _research_detail() -> void:
 		var done: bool = s < stage
 		var now: bool = s == stage and stage < 3
 		var sc := PanelContainer.new()
-		sc.add_theme_stylebox_override("panel", UI.box(Color("1c3a2b") if done else (Color("3a3020") if now else Color("0f1c2b")), Color("8fd18a") if done else (Color("e3c15a") if now else Color("2d4460")), 1, 3, 7.0))
+		sc.add_theme_stylebox_override("panel", UI.box(Color("173a2c") if done else (Color("103a4a") if now else Color("0f1c2b")), Color("5fd39a") if done else (UI.ministry("research") if now else Color("23415a")), 1, 5, 7.0))
 		card.add_child(sc)
 		var col := VBoxContainer.new()
 		col.add_theme_constant_override("separation", 3)
