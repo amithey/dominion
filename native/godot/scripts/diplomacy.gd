@@ -119,7 +119,7 @@ func offer_peace(other: int) -> String:
 		return "%s has fallen: there is no government to make peace with." % name_of(other)
 	if not at_war(0, other):
 		return "You are not at war with %s." % name_of(other)
-	var chance := clampf(0.35 + (army_strength(0) - army_strength(other)) * 0.04 + (1.0 - aggression_of(other)) * 0.3, 0.05, 0.9)
+	var chance := clampf(0.35 + (army_strength(0) - army_strength(other)) * 0.04 + (1.0 - aggression_of(other)) * 0.3 + preload("res://scripts/regime_change.gd").fear_bonus(world), 0.05, 0.9)
 	if randf() < chance:
 		make_peace(0, other)
 		return "%s accepted your peace offer. The guns fall silent." % name_of(other)
@@ -156,7 +156,7 @@ func propose_nap(other: int) -> String:
 		return "A non-aggression pact is already active."
 	if rel(0, other) < 10.0:
 		return "Relations need to be at least +10 for a non-aggression pact."
-	if randf() < clampf(0.45 + rel(0, other) / 120.0, 0.25, 0.9):
+	if randf() < clampf(0.45 + rel(0, other) / 120.0 + preload("res://scripts/regime_change.gd").fear_bonus(world), 0.25, 0.9):
 		set_flag(nap, 0, other, true)
 		change(0, other, 8.0)
 		changed.emit()
@@ -191,9 +191,13 @@ func request_joint_war(ally: int, target: int) -> String:
 # ---------------------------------------------------------------- AI decisions
 
 ## Whether AI nation `id` is willing to start a war with `other` now.
+const RegimeChange := preload("res://scripts/regime_change.gd")
+
 func ai_wants_war(id: int, other: int) -> bool:
 	if at_war(id, other) or allied(id, other) or nap[id][other]:
 		return false
+	if preload("res://scripts/regime_change.gd").restrains(world, id, other):
+		return false   # a client state of `other`, or a world that fears that United States
 	return rel(id, other) < -35.0 or (other == 0 and rel(id, 0) < 0.0 and randf() < aggression_of(id) * 0.5)
 
 ## A rival government's aggression: its own difficulty (ai.gd), else the match's.
@@ -228,7 +232,7 @@ func tick() -> void:
 			if defeated(b):
 				continue
 			change(a, b, (randf() - 0.5) * 4.0)
-			if not war[a][b] and rel(a, b) < -75.0 and not nap[a][b] and randf() < 0.05:
+			if not war[a][b] and rel(a, b) < -75.0 and not nap[a][b] and randf() < 0.05 and not RegimeChange.restrains(world, a, b) and not RegimeChange.restrains(world, b, a):
 				declare_war(a, b)
 			elif war[a][b] and randf() < 0.04:
 				make_peace(a, b)

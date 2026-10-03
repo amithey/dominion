@@ -59,6 +59,36 @@ Recommendation: yes, as a rare United States strategic operation, not an "I win"
 The game has the parts already: the espionage network and dossiers, succession, the cyber attack, special forces
 and helicopters.
 
+## 3b. The leadership raid in the game (0.9.58)
+
+The player asked for it, with one change: a successful raid replaces the regime with a ruler who answers to
+Washington, and the world fears the United States. scripts/regime_change.gd, in the Intel window under Leadership:
+- **United States only.** Against a nation at war with it or below -50; needs an intelligence agency and a ready
+  agent, a network of 60 and intelligence of 50 in the target, a field dossier under 180 s old (the leader's pattern
+  of life), a commando unit (Delta Force) and an airfield or helipad. $3,000, 150 s of preparation, 20 minutes
+  before it can be tried on the same nation again. Success about 70% with a network of 70, more with a deeper one.
+- **The raid, either way**: the target's capital blacked out (factories down for 90 s) and its air defences within
+  140 m of the capital struck for 60% of their strength.
+- **Success: a puppet ruler.** The leader is captured ("Interim President (backed by Washington)" takes office; the
+  old leader's portrait goes). The nation becomes a US client state: the war ends, it allies itself with the United
+  States (alliance, trade pact, non-aggression pact, relations held at +70 or more), pays tribute every 10 s ($25 and
+  4% of its treasury), declares war on every enemy of the United States, and never starts a war with it. Its people
+  resent the new government (stability 40, so its own income falls), and its army stands down for a minute.
+- **Success: the world fears the United States** for 15 minutes: no government starts a war with it, its peace
+  offers and non-aggression pacts are accepted 30% more often, every enemy weaker than it sues for peace at once,
+  and every government thinks a little less of it (-6).
+- **Failure**: a commando team and a helicopter lost, the target at war with the United States (-40 relations) and
+  on alert for 10 minutes, every other government's relations -8, a scandal at home.
+- **A rival United States raids too**: once its technology reaches era 3 and it can spare $4,000, it plans a raid
+  on a nation it is at war with (one every 20 minutes at most): 150 s of preparation, then the same blackout and
+  strike. A rival it takes becomes its client state (allied to it, paying it tribute, joining its wars, never
+  turning on it), and the world fears that United States. The player's country cannot become a puppet: a raid on
+  the player seizes the player's leader, a quarter of the treasury is lost in the chaos and a provisional government
+  signs a ceasefire. An intelligence agency usually warns of it (70%); the agency, counter-intelligence research and
+  a counter-intelligence review make it likelier to fail (37% with an agency, 12% with a review as well); a foiled
+  raid costs the player nothing.
+- A client state stays one until it is destroyed or the United States goes to war with it. The state is saved.
+
 ## Sources
 
 - North Korean troops: NPR, 28 April 2025; RFA, 28 April 2025; Yahoo/Yonhap, "Nearly 11,000 North Korean troops

@@ -642,3 +642,11 @@ UI files listed above.
   ["gold", "russia"], named Geran-2 for Russia; Iran's doctrine text and factions-check's exclusivity test follow.
   Codex: tools/units-100.gd now funds the rivals at the start (your war_costs.gd made its 500-shot DF-17
   interception rate and the microwave-vs-FPV check run dry: 0.01 and 2 of 10) and counts shared weapons.
+- 2026-10-04 Claude, 0.9.58 (user: implement the Maduro raid; success installs a US puppet ruler and the world
+  fears the US): new scripts/regime_change.gd. espionage.gd: puppets and fear_until (saved), PROGRAMS
+  decapitationRaid, the op merged into ops() for the US only, blocked_reason/_resolve/person/tick/impact_text
+  call into regime_change. diplomacy.gd: ai_wants_war refuses war on the player for a client state or while
+  feared; offer_peace and propose_nap +30% while feared. side_panels.gd: the op under Leadership.
+  Then (user: the AI's United States uses it too): puppets carry a "patron"; fears (patron -> until) replaces
+  fear_until; ai_raids / ai_raid_next (saved); regime_change.ai_consider/launch/ai_advance from the espionage tick;
+  diplomacy.ai_wants_war and the AI-AI war roll in tick() honour restrains(world, id, other).

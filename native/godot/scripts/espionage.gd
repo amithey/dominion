@@ -5,6 +5,8 @@ extends Node
 
 signal changed
 
+const RegimeChange := preload("res://scripts/regime_change.gd")
+
 const TICK := 10.0
 const INTEL_TIERS := [[10, "Treasury and buildings"], [25, "Army strength"], [40, "Wars, allies and pacts"], [60, "Warning of attacks on you"]]
 const INTEL_GAIN := {"buildNetwork": 6, "reconDossier": 18, "cyberAttack": 8, "stealFunds": 5, "stealTech": 10, "sabotage": 6, "shipping": 6, "proxyCell": 8, "armRebels": 8, "falseFlag": 6, "assassinate": 12}
@@ -31,6 +33,10 @@ var stability := {}
 var security_until := 0.0
 var scandal_until := 0.0
 var enemy_next := 240.0
+var puppets := {}             # nation -> {since, leader, deposed, tribute, patron}: US client states (regime_change.gd)
+var fears := {}               # patron -> until: the world fears that United States until then
+var ai_raids: Array = []      # a rival United States' raids in preparation: {raider, target, ends, roll}
+var ai_raid_next := {}        # raider -> the earliest time it plans another
 var _catalog := {}
 
 # Seconds of compressed campaign time, not real-world operational guidance.
@@ -51,6 +57,7 @@ const PROGRAMS := {
 	"armRebels": [150, 300, 40, 40, 0.40],
 	"falseFlag": [150, 300, 45, 45, 0.45],
 	"assassinate": [180, 600, 55, 55, 0.60],
+	"decapitationRaid": [150, 1200, 60, 50, 1.0],   # the United States' leadership raid (regime_change.gd)
 }
 
 func setup(world_node: Node, espionage: Dictionary) -> void:
@@ -76,6 +83,8 @@ func ops() -> Dictionary:
 			"influence": {"name":"Influence campaign", "cost":400, "base":0.60, "desc":"Reduce institutional stability temporarily. Can provoke a rally around the government and a diplomatic scandal."},
 			"shipping": {"name":"Sabotage shipping lanes", "cost":350, "base":0.55, "desc":"Mine a harbour approach or wreck a freighter: the nation loses a cargo at sea (its money and the goods), and the shortage lifts that commodity's price on the world market."},
 		})
+		if RegimeChange.us(world):
+			_catalog[RegimeChange.KEY] = RegimeChange.OP.duplicate(true)
 		for key in _catalog:
 			_catalog[key].minNetwork = PROGRAMS[key][2]
 		_catalog.assassinate.cost = 1400
@@ -98,6 +107,8 @@ func recruit_cost() -> int:
 	return int(cfg.recruitBase) + agents.size() * int(cfg.recruitStep)
 
 func person(nation: int, role: String) -> String:
+	if role == "president" and puppets.has(nation):
+		return str(puppets[nation].leader)   # a puppet ruler (regime_change.gd)
 	var generation := int(succession.get(nation, {}).get(role, 0))
 	if generation > 0:
 		return "Successor %d (%s)" % [generation, role.capitalize()]
@@ -219,6 +230,8 @@ func _resolve(mission: Dictionary) -> String:
 	var p := clampf(success_chance(op_key, nation) + (int(agent.skill) - 1) * float(cfg.skillBonus), 0.05, 0.97)
 	var r := randf() if roll < 0.0 else roll
 	var nat_name: String = d.name_of(nation)
+	if op_key == RegimeChange.KEY:
+		return RegimeChange.resolve(self, mission, p, r)
 	var message := ""
 	if r < p:
 		if op_key not in ["openSources", "counterSweep", "withdrawNetwork"]:
@@ -385,6 +398,7 @@ func tick() -> void:
 		intel[i] = maxf(0.0, intel[i] - 0.35)
 	if clock >= enemy_next and randf() < 0.028:
 		enemy_attempt()
+	RegimeChange.tick(self)   # client states pay tribute and join your wars
 	changed.emit()
 
 func enemy_attempt(force_outcome := "") -> String:
@@ -446,7 +460,8 @@ func capture() -> Dictionary:
 	return {"agents": agents, "network": network, "heat": heat, "intel": intel, "types": types, "reports": reports,
 		"dossiers": dossiers, "debuffs": debuffs, "clock": clock, "boost_until": boost_until, "next_id": _next_id, "missions":missions, "cooldowns":cooldowns,
 		"succession":succession, "proxies":proxies, "stability":stability,
-		"security_until":security_until, "scandal_until":scandal_until, "enemy_next":enemy_next}.duplicate(true)
+		"security_until":security_until, "scandal_until":scandal_until, "enemy_next":enemy_next,
+		"puppets":puppets, "fears":fears, "ai_raids":ai_raids, "ai_raid_next":ai_raid_next}.duplicate(true)
 
 func restore(data: Dictionary) -> void:
 	agents.clear()
@@ -489,6 +504,16 @@ func restore(data: Dictionary) -> void:
 	security_until = float(data.get("security_until", 0.0))
 	scandal_until = float(data.get("scandal_until", 0.0))
 	enemy_next = float(data.get("enemy_next", clock + 150.0))
+	puppets.clear()
+	for key in data.get("puppets", {}):
+		puppets[int(key)] = data.puppets[key].duplicate(true)
+	fears.clear()
+	for key in data.get("fears", {}):
+		fears[int(key)] = float(data.fears[key])
+	ai_raids = data.get("ai_raids", []).duplicate(true)
+	ai_raid_next.clear()
+	for key in data.get("ai_raid_next", {}):
+		ai_raid_next[int(key)] = float(data.ai_raid_next[key])
 	_tick = 0.0
 	# Old saves with a leadership strike in effect must not revive its victim.
 	if not data.has("succession"):
@@ -530,6 +555,9 @@ func blocked_reason(key: String, nation: int, role := "", agent_id := -1) -> Str
 			return "Requires a field dossier less than 180 seconds old."
 	if key == "proxyCell" and proxies.has(nation): return "A local partner is already supported."
 	if key == "armRebels" and not proxies.has(nation): return "Establish a local partner first."
+	if key == RegimeChange.KEY:
+		var raid := RegimeChange.blocked(self, nation)
+		if raid != "": return raid
 	if key == "falseFlag" and not range(1, world.diplomacy.n).any(func(i): return i != nation and not world.diplomacy.defeated(i)):
 		return "No other surviving rival to implicate."
 	if world.economy.res.money < float(ops()[key].cost): return "Insufficient treasury for this program."
@@ -657,6 +685,9 @@ func impact_text(nation: int) -> String:
 	for entry in [["cyber", "Production disrupted"], ["unrest", "Unrest pressure"], ["influence", "Influence pressure"], ["president", "Leadership transition"], ["general", "Command disruption"], ["spymaster", "Intelligence disruption"], ["alert", "Heightened security"]]:
 		if active(nation, entry[0]):
 			lines.append("%s: %ds" % [entry[1], ceili(float(debuffs[nation][entry[0]]) - clock)])
+	if puppets.has(nation):
+		var patron: int = int(puppets[nation].get("patron", 0))
+		lines.append("%s client state under a puppet ruler: $%d tribute so far" % ["Your" if patron == 0 else world.diplomacy.name_of(patron) + "'s", int(puppets[nation].get("tribute", 0.0))])
 	if not lines.is_empty() or proxies.has(nation):
 		lines.append("Combined income penalty: %d%% (recovers over time)" % roundi((1.0-income_mult(nation))*100.0))
 	return "\n".join(PackedStringArray(lines))

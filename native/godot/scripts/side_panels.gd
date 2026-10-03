@@ -33,7 +33,7 @@ const OP_GROUPS := [
 	["Intelligence", ["openSources", "buildNetwork", "reconDossier", "counterSweep", "withdrawNetwork"]],
 	["Economic warfare", ["stealFunds", "stealTech", "cyberAttack", "shipping"]],
 	["Sabotage and subversion", ["sabotage", "influence", "proxyCell", "armRebels", "falseFlag"]],
-	["Leadership", ["assassinate"]],
+	["Leadership", ["assassinate", "decapitationRaid"]],
 ]
 
 var hud: Node
@@ -122,15 +122,19 @@ func _nation_card(id: int) -> void:
 	if d.defeated(id):
 		hud._pill(head, "DEFEATED", hud.UI.MUTED)
 		return
+	var client: bool = hud.world.espionage.puppets.has(id)
+	if client:
+		var patron: int = int(hud.world.espionage.puppets[id].get("patron", 0))
+		hud._pill(head, "US CLIENT STATE" if patron == 0 else "CLIENT OF %s" % d.name_of(patron).to_upper(), PACT)   # a puppet ruler (regime_change.gd)
 	if d.at_war(0, id):
 		hud._pill(head, "AT WAR", WAR)
-	if d.allied(0, id):
+	if d.allied(0, id) and not client:
 		hud._pill(head, "ALLY", ALLY)
-	if d.pact[0][id]:
+	if d.pact[0][id] and not client:
 		hud._pill(head, "TRADE", PACT)
-	if d.nap[0][id]:
+	if d.nap[0][id] and not client:
 		hud._pill(head, "NON-AGGRESSION", NAP)
-	if not (d.at_war(0, id) or d.allied(0, id) or d.pact[0][id] or d.nap[0][id]):
+	if not (client or d.at_war(0, id) or d.allied(0, id) or d.pact[0][id] or d.nap[0][id]):
 		hud._pill(head, "PEACE", Color("9aa7ab"))
 	info.add_child(hud._text(hud.world.espionage.person(id, "president"), 13, hud.UI.MUTED))
 	var score: float = d.rel(0, id)

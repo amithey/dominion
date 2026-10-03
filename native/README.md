@@ -23,6 +23,21 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.58: the leadership raid (Operation Absolute Resolve)
+
+A United States-only Intel operation after the capture of Nicolas Maduro (3 January 2026): a CIA network and a
+fresh dossier on the leader, a cyber blackout of the capital, a strike on its air defences, and a Delta Force raid
+by helicopter. On success the regime falls to a **puppet ruler**: the nation becomes a US client state (it allies
+with the United States, pays tribute, joins its wars and never turns on it), and **the world fears the United
+States** for 15 minutes (no government dares start a war with it, its peace offers and pacts go through more
+easily, weaker enemies sue for peace at once). On failure: special forces and a helicopter lost, war, a scandal.
+A rival United States raids too (era 3, $4,000, against nations it is at war with): a rival it takes becomes its
+client state; a raid on you seizes your leader, a quarter of the treasury and a ceasefire (your agency usually warns
+you, and a counter-intelligence review makes it likelier to fail).
+See native/RUSSIA-WAR-CAPABILITIES-2026-10-04.md (3b).
+
+Checks: tools/regime-change-check.gd (29).
+
 ## Version 0.9.57: Russia's war capabilities, and the sixth-generation battle group
 
 - **Russia, from the war in Ukraine** (three Russia-only discoveries, scripts/national_capabilities.gd):
