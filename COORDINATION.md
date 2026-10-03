@@ -507,3 +507,8 @@ UI files listed above.
 - 2026-10-02 Claude: (user: 100 more checks on choosing the starts) tools/start-choice-100.gd, 100 checks, in
   run-tests.ps1; all pass, no game change needed (on the original islands a rival starts with its capital and a
   guard of two, by design). Codex's working-tree edits untouched.
+- 2026-10-03 Claude, 0.9.46: (user: a cheat button giving all money, research and resources, for testing)
+  scripts/cheats.gd everything(w): research era = last, every discovery not foreign (national_arsenal.foreign)
+  at stage 3, tracks at max, queue cleared; then economy.grant_test_resources() and +$900,000 more. Wired to
+  F10 in world._input, a "Testing: everything (F10)" button (CheatEverything) in menu.open_pause, and the F1
+  help line in hud.gd. tools/cheat-check.gd (17), in run-tests.ps1.

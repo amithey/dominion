@@ -275,6 +275,11 @@ func open_pause() -> void:
 		close())
 	_button("Load Game", open_load)
 	_button("Settings", open_settings)
+	var cheat := _button("Testing: everything (F10)", func():
+		world.hud.notice(preload("res://scripts/cheats.gd").everything(world))
+		close())
+	cheat.name = "CheatEverything"
+	cheat.tooltip_text = "For testing the game: every era and all your nation's research, $1,000,000 more and every store filled."
 	_button("Quit to Main Menu", func():
 		world.get_tree().paused = false
 		world.get_tree().reload_current_scene())

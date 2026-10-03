@@ -701,7 +701,7 @@ func _build_help() -> void:
 			["Build", "Pick a building in the list on the right, click a hex in your city (Shift keeps placing)"],
 			["Screens", "Y research  ·  G diplomacy  ·  M market  ·  I intelligence  ·  T territory"],
 			["Game", "F5 save  ·  F9 load  ·  Esc cancel / pause menu  ·  F1 this help"],
-			["Testing", "F8: treasury and full stores, increased army capacity"],
+			["Testing", "F8: treasury and full stores, increased army capacity  ·  F10 (or the pause menu): everything, all research too"],
 			["Minimap", "Click or drag on it to jump anywhere on the island"]]:
 		var row := HBoxContainer.new()
 		var k := _text(line[0], 14, GOLD)

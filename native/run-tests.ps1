@@ -45,6 +45,7 @@ $tests = @(
     @('100 checks on the five newest maps: as generated and played at full count, their geography, rivals, saves', @('--script', 'res://tools/new-maps-100.gd'), 'NEW_MAPS PASS', 2400),
     @('choosing where each nation starts: regions, placement on every kind of map, the New Game pickers, saves', @('--script', 'res://tools/start-choice-check.gd'), 'START_CHOICE PASS', 900),
     @('100 more checks on choosing where each nation starts: every region of every map, rules, real capitals, the screen, matches', @('--script', 'res://tools/start-choice-100.gd'), 'START_CHOICE_100 PASS', 2400),
+    @('the testing cheat: every era, all your research, money and stores; another nation''s technology stays theirs', @('--script', 'res://tools/cheat-check.gd'), 'CHEAT PASS', 900),
     @('every map loads: capitals linked by land, resources, ships at sea', @('--script', 'res://tools/maps-check.gd'), 'MAPS_TEST PASS', 1500),
     @('thirty checks on a nine-nation match: wars, a march across Pangaea, treaties, spies, missiles, saves, victory', @('--script', 'res://tools/gameplay-nine-30.gd'), 'GAMEPLAY_NINE PASS', 1200),
     @('every nation fields only its own technology (2025-26), rivals too', @('--script', 'res://tools/nation-tech-check.gd'), 'NATION_TECH PASS', 900),

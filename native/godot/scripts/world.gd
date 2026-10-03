@@ -5769,6 +5769,8 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F8 and economy != null:
 		economy.grant_test_resources()  # testing: plenty of everything
 		hud.notice("Testing: +$100,000, every store filled (limits 99,999), +200 army capacity.")
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F10 and economy != null:
+		hud.notice(preload("res://scripts/cheats.gd").everything(self))  # testing: all research, money and stores
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F1:
 		hud.toggle_help()
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F5:

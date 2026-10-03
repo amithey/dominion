@@ -22,6 +22,16 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 These are source changes; the existing 0.9.45 release installer has not been rebuilt.
 
+## Version 0.9.46: a testing cheat for everything
+
+- **F10, or "Testing: everything (F10)" in the pause menu (Esc):** for testing the game. Every era reached,
+  every discovery your nation fields complete, every research track at its last level, $1,000,000 more, every
+  store filled with the limits raised to 99,999 (as F8 does), every home filled and 200 more army capacity.
+  Every unit and missile your nation fields is unlocked; what is trained next has the research's bonuses
+  (units already in the field keep their stats). A discovery or weapon only another nation fields stays
+  theirs: Iran still gets no F-35. F8 is unchanged (money and stores only). Kept in saves.
+  (scripts/cheats.gd; checks: tools/cheat-check.gd, 17.)
+
 ## Version 0.9.45: choose where each nation starts
 
 - **Start**, on the New Game screen beside each nation (yours and every rival's): *Auto* (the map's own choice;
@@ -688,7 +698,7 @@ Choose them under **Map** in New Game:
   - War: demanding surrender, a prisoner exchange, an escalation warning.
 
   The other government answers for itself, and each statement has consequences.
-- Keyboard: **B** build list, **F8** testing resources.
+- Keyboard: **B** build list, **F8** testing resources, **F10** testing: everything (all research too).
 
 ## Version 0.9.12: a building for every resource, and the rest of the industry
 
