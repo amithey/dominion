@@ -200,6 +200,7 @@ func quote(route: Array, kind: String, owner: int) -> Dictionary:
 		if repair:
 			rate = 0.5 * (1.0 - (e.half[0] + e.half[1]) * 0.5 / e.max_hp)
 			price = transport[e.kind]
+		rate *= preload("res://scripts/additional_factions.gd").road_mult(world, owner, repair)
 		cost.money += ceilf(float(price.money) * rate)
 		cost.iron += ceilf(float(price.iron) * rate)
 	return cost

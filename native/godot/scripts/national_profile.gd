@@ -113,7 +113,7 @@ static func id_of(w: Node, owner: int) -> String:
 	return {"#3b82f6": "usa", "#e0483e": "china", "#33b86e": "eu", "#e8a83a": "iran"}.get(str(n.get("color", "")).to_lower(), "")
 
 static func of(w: Node, owner: int) -> Dictionary:
-	return PROFILES.get(id_of(w, owner), {})
+	return PROFILES.get(id_of(w, owner), preload("res://scripts/additional_factions.gd").PROFILES.get(id_of(w, owner), {}))
 
 ## Research bonus stats for the player's nation (research._recompute adds them).
 static func bonuses(w: Node, owner := 0) -> Dictionary:
@@ -129,6 +129,7 @@ static func trade_mult(w: Node, owner: int) -> float:
 	return float(of(w, owner).get("trade", 1.0))
 
 static func group_of(key: String) -> String:
+	key = preload("res://scripts/additional_factions.gd").base(key)
 	for g in UNIT_GROUPS:
 		if key in UNIT_GROUPS[g]:
 			return g
@@ -136,7 +137,9 @@ static func group_of(key: String) -> String:
 
 ## Price multiplier for `key` (a unit, or "missile" for a silo's missiles).
 static func cost_mult(w: Node, owner: int, key: String) -> float:
-	var costs: Dictionary = of(w, owner).get("costs", {})
+	var p := of(w, owner)
+	if p.get("unit_costs", {}).has(key): return float(p.unit_costs[key])
+	var costs: Dictionary = p.get("costs", {})
 	if key == "missile":
 		return float(costs.get("missile", 1.0))
 	return float(costs.get(group_of(key), 1.0))
@@ -147,7 +150,7 @@ static func ai_income(w: Node, owner: int) -> float:
 	return maxf(0.5, 1.0 + float(bonuses(w, owner).get("incomePct", 0.0)))
 
 static func ai_research(w: Node, owner: int) -> float:
-	return maxf(0.5, 1.0 + float(bonuses(w, owner).get("researchPct", 0.0)))
+	return maxf(0.5, 1.0 + float(bonuses(w, owner).get("researchPct", 0.0)) + preload("res://scripts/additional_powers.gd").bonus(w, owner, "researchPct"))
 
 static func ai_damage(w: Node, unit: Dictionary) -> float:
 	var b := bonuses(w, int(unit.get("owner", -1)))
@@ -174,12 +177,12 @@ static func apply_relations(w: Node) -> void:
 				d.set_score(a, b, clampf(d.rel(a, b) * 0.5 + tie, -95.0, 95.0))
 
 static func tie_between(x: String, y: String) -> float:
-	for t in TIES:
+	for t in TIES + preload("res://scripts/additional_factions.gd").TIES:
 		if (t[0] == x and t[1] == y) or (t[0] == y and t[1] == x):
 			return float(t[2])
 	return 0.0
 
 ## Strengths and weaknesses of `id`, for the interface.
 static func summary(id: String) -> Dictionary:
-	var p: Dictionary = PROFILES.get(id, {})
+	var p: Dictionary = PROFILES.get(id, preload("res://scripts/additional_factions.gd").PROFILES.get(id, {}))
 	return {"strengths": p.get("strengths", []), "weaknesses": p.get("weaknesses", [])}

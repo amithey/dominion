@@ -23,13 +23,13 @@ const ALL := ["blue", "red", "green", "gold", "russia", "india", "japan", "turki
 ## Who fields a shared unit (absent: every nation).
 const ONLY := {
 	"bomber": ["blue", "red", "russia"],
-	"stealthFighter": ["blue", "red", "green", "russia", "india", "japan", "turkiye", "israel"],
+	"stealthFighter": ["blue", "red", "green", "russia", "india", "japan", "turkiye", "israel", "uk", "south_korea", "australia"],
 	"sixthGen": ["blue", "red"],
 	"wingman": ["blue", "red"],
-	"nuclearSub": ["blue", "red", "green", "russia", "india"],
-	"destroyer": ["blue", "red", "green", "gold", "russia", "india", "japan", "turkiye"],
+	"nuclearSub": ["blue", "red", "green", "russia", "india", "uk"],
+	"destroyer": ["blue", "red", "green", "gold", "russia", "india", "japan", "turkiye", "uk", "south_korea", "australia"],
 	"laserAD": ["blue", "red", "green", "russia", "india", "japan", "turkiye", "israel"],
-	"abmLauncher": ["blue", "red", "green", "russia", "india", "japan", "turkiye", "israel"],
+	"abmLauncher": ["blue", "red", "green", "russia", "india", "japan", "turkiye", "israel", "uk", "south_korea", "saudi"],
 	"hpmVehicle": ["blue", "red", "japan"],
 	"railgunShip": ["red", "japan"],
 	"orca": ["blue", "red"],
@@ -38,19 +38,19 @@ const ONLY := {
 ## Who may research a discovery (absent: every nation).
 const RESEARCH_ONLY := {
 	"sixthGeneration": ["blue", "red"],
-	"nuclearProgram": ["blue", "red", "green", "russia", "india", "israel"],
+	"nuclearProgram": ["blue", "red", "green", "russia", "india", "israel", "uk", "north_korea", "pakistan"],
 	"railguns": ["red", "japan"],
 	"unmannedSubmarines": ["blue", "red"],
 	"highPowerMicrowave": ["blue", "red", "japan"],
 	"glidePhaseInterceptor": ["blue", "japan"],
 	"directedEnergy": ["blue", "red", "green", "russia", "india", "japan", "turkiye", "israel"],
-	"missileDefence": ["blue", "red", "green", "russia", "india", "japan", "turkiye", "israel"],
+	"missileDefence": ["blue", "red", "green", "russia", "india", "japan", "turkiye", "israel", "uk", "south_korea", "saudi"],
 	"activeProtection": ["blue", "red", "green", "russia", "turkiye", "israel"],
 }
 
 ## Who may build a missile type (absent: every nation).
 const MISSILE_ONLY := {
-	"nuke": ["blue", "red", "green", "russia", "india", "israel"],
+	"nuke": ["blue", "red", "green", "russia", "india", "israel", "uk", "north_korea", "pakistan"],
 	"hypersonic": ["blue", "red", "russia", "india", "gold", "japan", "turkiye"],
 }
 
@@ -69,10 +69,10 @@ const NAMES := {
 	"bomber": {"blue": "B-52H Stratofortress", "red": "H-6K", "russia": "Tu-160M"},
 	"drone": {"blue": "MQ-9 Reaper", "red": "Wing Loong II", "green": "Heron TP", "gold": "Mohajer-6", "russia": "Orion", "india": "TAPAS-BH", "japan": "MQ-9B SeaGuardian", "turkiye": "Bayraktar TB2", "israel": "Hermes 900"},
 	"corvette": {"blue": "Freedom-class LCS", "red": "Type 056A", "green": "K130 Braunschweig", "gold": "Shahid Soleimani-class", "russia": "Karakurt-class", "india": "Kamorta-class", "japan": "Mogami-class", "turkiye": "Ada-class", "israel": "Sa'ar 6"},
-	"destroyer": {"blue": "Arleigh Burke-class", "red": "Type 055", "green": "Horizon-class", "gold": "Moudge-class", "russia": "Admiral Gorshkov-class", "india": "Visakhapatnam-class", "japan": "Maya-class", "turkiye": "Istanbul-class"},
+	"destroyer": {"uk": "Type 45", "south_korea": "Sejong the Great-class", "australia": "Hobart-class", "blue": "Arleigh Burke-class", "red": "Type 055", "green": "Horizon-class", "gold": "Moudge-class", "russia": "Admiral Gorshkov-class", "india": "Visakhapatnam-class", "japan": "Maya-class", "turkiye": "Istanbul-class"},
 	"submarine": {"blue": "Virginia-class", "red": "Type 039C", "green": "Type 212CD", "gold": "Fateh-class", "russia": "Improved Kilo", "india": "Kalvari-class", "japan": "Taigei-class", "turkiye": "Reis-class", "israel": "Dolphin II"},
-	"nuclearSub": {"blue": "Ohio-class", "red": "Type 094", "green": "Triomphant-class", "russia": "Borei-A", "india": "Arihant-class"},
-	"stealthFighter": {"blue": "F-35A Lightning II", "red": "J-20", "green": "F-35A", "russia": "Su-57", "india": "AMCA", "japan": "F-35A", "turkiye": "KAAN", "israel": "F-35I Adir"},
+	"nuclearSub": {"uk": "Vanguard-class", "blue": "Ohio-class", "red": "Type 094", "green": "Triomphant-class", "russia": "Borei-A", "india": "Arihant-class"},
+	"stealthFighter": {"uk": "F-35B Lightning", "south_korea": "F-35A", "australia": "F-35A", "blue": "F-35A Lightning II", "red": "J-20", "green": "F-35A", "russia": "Su-57", "india": "AMCA", "japan": "F-35A", "turkiye": "KAAN", "israel": "F-35I Adir"},
 	"sixthGen": {"blue": "F-47", "red": "J-36"},
 	"wingman": {"blue": "YFQ-42A CCA", "red": "FH-97A"},
 	"atgmTeam": {"blue": "Javelin team", "red": "HJ-12 team", "green": "MMP team", "gold": "Dehlavieh team", "russia": "Kornet team", "india": "MPATGM team", "japan": "Type 01 LMAT team", "turkiye": "OMTAS team", "israel": "Spike team"},

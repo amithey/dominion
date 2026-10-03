@@ -189,9 +189,20 @@ func _power_card() -> void:
 	card.add_child(hud._text("Ready" if wait <= 0.0 else "Ready again in %d s" % int(ceilf(wait)), 13, hud.UI.GOOD if wait <= 0.0 else hud.UI.MUTED))
 	if not p.target:
 		var row: HBoxContainer = hud._row(card, 6)
-		hud._button(row, "Use: " + str(p.name), func():
+		var why: String = P.blocked(w, 0)
+		var button: Button = hud._button(row, "Use: " + str(p.name), func():
 			P.use(w, 0)
-			hud.refresh_side(), P.blocked(w, 0) == "", "good")
+			hud.refresh_side(), why == "", "good")
+		button.tooltip_text = str(p.desc) + ("" if why == "" else " (" + why + ")")
+		if why != "" and wait <= 0.0: card.add_child(hud._text(why, 13, hud.UI.MUTED))
+	var active_until := 0.0
+	for effect in w.power_effects:
+		if int(effect.by) == 0 and str(effect.kind).begins_with("extra_") and effect.kind != "extra_food_aid":
+			active_until = maxf(active_until, float(effect.until))
+	if active_until > w.game_time:
+		card.add_child(hud._text("Effect active for up to %d s" % ceili(active_until - w.game_time), 13, hud.UI.GOOD))
+	if w.power_effects.any(func(e): return e.kind == "extra_food_aid" and int(e.by) == 0 and float(e.until) > w.game_time):
+		card.add_child(hud._text("Food aid shipment in transit", 13, hud.UI.GOOD))
 	# Your own strengths and weaknesses, in the same disclosure as the rivals' cards.
 	preload("res://scripts/nation_profile_view.gd").append_to(card, preload("res://scripts/national_profile.gd").id_of(w, 0), func(): hud._fit_window(hud._win_scroll.scroll_vertical))
 

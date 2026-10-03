@@ -49,7 +49,7 @@ func options_checks() -> void:
 	var o: Dictionary = Setup.normalize({"map": "island", "players": 9})
 	check(int(o.players) == 4, "the original island holds four nations at most (asked 9, got %d)" % int(o.players))
 	o = Setup.normalize({"map": "pangaea", "players": 12})
-	check(int(o.players) == Factions.IDS.size(), "a ten-region map holds every faction there is (asked 12, got %d)" % int(o.players))
+	check(int(o.players) == mini(10, Factions.IDS.size()), "a ten-region map holds every faction there is (asked 12, got %d)" % int(o.players))
 	check(Setup.capacity("ten_isles") == mini(10, Factions.IDS.size()) and Setup.capacity("highlands") == 5 and Setup.capacity("small") == 4, "each map's room for nations follows its regions")
 	o = Setup.normalize({"map": "pangaea", "players": 4, "levels": ["hard", "bogus", "easy", "hard", "hard"]})
 	check(o.levels == ["hard", "", "easy"], "rival difficulties: unknown ones dropped, no more than the rivals (%s)" % str(o.levels))
@@ -182,7 +182,7 @@ func picker_checks() -> void:
 	for b in menu._panel.find_children("*", "OptionButton", true, false):
 		for i in range(b.item_count):
 			if b.get_item_text(i) == "9 rivals": counts += 1
-	check(counts == 0, "no more rivals than factions to lead them")
+	check(counts == 1, "ten-region map offers nine rivals")
 	var eight := false
 	for b in menu._panel.find_children("*", "OptionButton", true, false):
 		for i in range(b.item_count):

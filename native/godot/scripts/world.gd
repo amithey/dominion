@@ -60,13 +60,13 @@ const BUILDING_SIZE := {"hq": 10.0, "barracks": 9.0, "tankFactory": 9.5, "wareho
 # districts (6.0 left a single cell, and armour jammed in city streets).
 const DISTRICT_NAV_SIZE := 4.5
 const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker", "fpvTeam", "atgmTeam", "manpads", "medic"]
-const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle", "tos1a", "brahmos"]
-const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone", "railgunShip", "orca", "aegisCruiser"]
-const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop"]
-const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop"]
+const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle", "tos1a", "brahmos", "k9", "saudiThaad", "heavyRocket", "bushmaster"]
+const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone", "railgunShip", "orca", "aegisCruiser", "type45", "kcr60"]
+const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17"]
+const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17"]
 const AirOperations := preload("res://scripts/air_operations.gd")
-const ALTITUDE := {"helicopter": 14.0, "gunship": 13.0, "jet": 26.0, "bomber": 30.0, "drone": 18.0, "loiterer": 16.0, "stealthFighter": 28.0, "raptor": 30.0, "raider": 34.0, "shahed": 12.0, "sixthGen": 31.0, "wingman": 28.0, "akinci": 24.0, "harop": 16.0}
-const SHIP_LENGTH := {"gunboat": 7.5, "corvette": 10.5, "destroyer": 15.0, "submarine": 11.0, "nuclearSub": 14.0, "seaDrone": 4.5, "railgunShip": 16.5, "orca": 9.0, "aegisCruiser": 17.0}
+const ALTITUDE := {"helicopter": 14.0, "gunship": 13.0, "jet": 26.0, "bomber": 30.0, "drone": 18.0, "loiterer": 16.0, "stealthFighter": 28.0, "raptor": 30.0, "raider": 34.0, "shahed": 12.0, "sixthGen": 31.0, "wingman": 28.0, "akinci": 24.0, "harop": 16.0, "superTucano": 22.0, "interceptorDrone": 18.0, "jf17": 26.0}
+const SHIP_LENGTH := {"gunboat": 7.5, "corvette": 10.5, "destroyer": 15.0, "submarine": 11.0, "nuclearSub": 14.0, "seaDrone": 4.5, "railgunShip": 16.5, "orca": 9.0, "aegisCruiser": 17.0, "type45": 15.0, "kcr60": 10.5}
 const DEEP := -1.2   # water at least this deep (below sea level) carries a ship
 
 var map: Dictionary
@@ -1181,6 +1181,9 @@ func register_building(key: String, owner: int, built: bool, root: Node3D, model
 	if not built:
 		model.scale.y *= 0.06
 		entity.full_scale_y = model.scale.y / 0.06
+	var national_hp: float = preload("res://scripts/additional_factions.gd").building_health(self, owner, key)
+	entity.hp *= national_hp
+	entity.max_hp *= national_hp
 	buildings.append(entity)
 	return entity
 
@@ -1352,6 +1355,8 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 			if clip != "":
 				unit.player.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
 	place_on_ground(unit, at)
+	if preload("res://scripts/additional_factions.gd").UNITS.has(key):
+		unit.speed *= float(preload("res://scripts/additional_factions.gd").UNITS[key].scale.get("speed", 1.0))
 	if research:
 		research.equip(unit)  # discoveries and rival tech set health, range and speed
 	units.append(unit)
@@ -2671,6 +2676,7 @@ func update_construction(delta: float) -> void:
 		b.builders = count
 		if count > 0:
 			var skill: float = 1.0 + (research.bonus("prodPct") + research.bonus("buildPct") + economy.plant_bonus() if research and b.owner == 0 else 0.0)
+			skill *= preload("res://scripts/additional_factions.gd").construction_mult(self, b.owner)
 			b.progress = minf(1.0, b.progress + delta / maxf(float(b.def.buildTime), 1.0) * (1.0 + 0.5 * (count - 1)) * skill)
 			b.model.scale.y = b.full_scale_y * lerpf(0.06, 1.0, b.progress)
 			if randf() < delta * 1.5:
@@ -2916,6 +2922,7 @@ func update_training(delta: float) -> void:
 				missiles.finished(first.substr(8))
 			continue
 		var def: Dictionary = unit_defs[first]
+		rail *= preload("res://scripts/additional_factions.gd").train_mult(self, b.owner, first)
 		b.queue_prog += delta * rail / maxf(float(def.get("trainTime", 10)), 0.5)
 		if b.queue_prog < 1.0:
 			continue
@@ -4775,7 +4782,7 @@ func target_class(t: Dictionary) -> String:
 		return "naval"
 	if t.key in infantry_keys:
 		return "infantry"
-	if t.key in armor_keys:
+	if preload("res://scripts/additional_factions.gd").base(t.key) in armor_keys:
 		return "armor"
 	return "light"
 
@@ -4793,6 +4800,7 @@ func airborne(u: Dictionary) -> bool:
 
 ## Damage multiplier of `attacker` against `target` (0 = cannot engage).
 func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
+	if attacker.key == "interceptorDrone" and not (target.get("fly", false) and target.get("key", "") in ["drone", "loiterer", "shahed", "harop", "akinci", "wingman", "interceptorDrone"]): return 0.0
 	if attacker.get("key", "") in AIR_DEFENCE and target_class(target) != "air":
 		return 0.0
 	# Small arms cannot penetrate heavy armour; dedicated anti-tank infantry can.
@@ -4890,7 +4898,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 	var fired := fire(unit, enemy)
 	spent("    shots", t_shot)
 	if fired:
-		unit.reload = unit.cooldown * randf_range(0.85, 1.15) * (1.0 - economy.depot_reload() if unit.owner == 0 and economy != null else 1.0)   # ammo depots
+		unit.reload = unit.cooldown * (1.0 - preload("res://scripts/additional_powers.gd").bonus(self, unit.owner, "reload") if preload("res://scripts/additional_factions.gd").base(unit.key) in ["artillery", "mlrs", "himars"] else 1.0) * randf_range(0.85, 1.15) * (1.0 - economy.depot_reload() if unit.owner == 0 and economy != null else 1.0)   # ammo depots
 		unit.last_fire = game_time
 		shots_fired += 1
 
@@ -4901,7 +4909,7 @@ const WEAPONS := {"bomber": "bomb", "jet": "missile", "drone": "missile", "helic
 	"fpvTeam": "fpv", "atgmTeam": "atgm", "himars": "guided", "laserAD": "laser", "loiterer": "kamikaze", "seaDrone": "kamikaze",
 	"raptor": "missile", "raider": "bomb", "df17": "hgv", "shahedLauncher": "swarm", "shahed": "kamikaze", "irisT": "sam",
 	"railgunShip": "railgun", "sixthGen": "missile", "wingman": "missile", "orca": "torpedo",
-	"tos1a": "thermobaric", "brahmos": "brahmos", "aegisCruiser": "missile", "akinci": "missile", "harop": "kamikaze"}
+	"tos1a": "thermobaric", "brahmos": "brahmos", "aegisCruiser": "missile", "akinci": "missile", "harop": "kamikaze", "type45": "sam", "k9": "shell_arc", "superTucano": "missile", "kcr60": "missile", "interceptorDrone": "kamikaze", "heavyRocket": "rocket_salvo", "jf17": "missile"}
 
 ## Fires at `enemy`; false when the weapon cannot be used yet (a bomber that
 ## is not over its target), so the reload is not spent.
@@ -5119,6 +5127,7 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 		amount *= research.damage_mult(source) * research.armor_mult(unit)
 	amount *= Modern.jam_mult(self, source)  # a jammed drone flies blind
 	amount *= preload("res://scripts/bunker.gd").cover(self, unit, source)  # bunkers shield from ground fire
+	amount *= preload("res://scripts/additional_factions.gd").explosive_armor(unit.key, str(source.get("key", "")))
 	unit.hp -= amount
 	if amount > 0:
 		unit.last_hit = game_time

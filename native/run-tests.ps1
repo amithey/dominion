@@ -30,6 +30,8 @@ $tests = @(
     @('about 100 checks on the new weapons in live combat', @('--script', 'res://tools/weapons-live-100.gd'), 'WEAPONS_LIVE PASS', 2400),
     @('every nation strengths and weaknesses: economy, science, military, diplomacy', @('--script', 'res://tools/national-profile-check.gd'), 'NATIONAL_PROFILE PASS', 600),
     @('the newer factions weapons and every nation political power', @('--script', 'res://tools/faction-powers-check.gd'), 'FACTION_POWERS PASS', 900),
+    @('ten additional nations: production, combat, powers, AI and persistence', @('--script', 'res://tools/additional-factions-check.gd'), 'ADDITIONAL_FACTIONS PASS', 900),
+    @('additional nations: resource boundaries, interrupted powers, cargo and saved cooldowns', @('--script', 'res://tools/additional-factions-100.gd'), 'ADDITIONAL_FACTIONS_100 PASS', 300),
     @('about 100 checks playing on every map', @('--script', 'res://tools/gameplay-maps-100.gd'), 'GAMEPLAY_MAPS PASS', 7200),
     @('fifty checks on playing the game: placement, selection, commands, panels, workers, groups', @('--script', 'res://tools/gameplay-ui-50.gd'), 'GAMEPLAY_UI PASS', 1800),
     @('a third hundred gameplay checks: rivals on their own, match settings, missiles, spies, trade, bunkers, air bases, disk saves', @('--script', 'res://tools/gameplay-deep-100.gd'), 'GAMEPLAY_DEEP PASS', 2400),

@@ -15,7 +15,7 @@ func check(ok: bool, label: String) -> void:
 		push_error(label)
 func run() -> void:
 	var source: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/map-seed1.json"))
-	for i in range(9):
+	for i in range(Factions.IDS.size()):
 		for count in [2, 3, 4]:
 			var data := source.duplicate(true)
 			Setup.apply(data, Setup.normalize({"nation": i, "players": count}))
@@ -33,7 +33,7 @@ func run() -> void:
 	check(Gallery.portrait("Successor 1 (President)") == "", "successor does not inherit incumbent image")
 	var selected := Setup.normalize({"nation": 0, "players": 4, "rivals": [4, 5, 8]})
 	check(Setup.roster(selected) == [0, 4, 5, 8], "choose US versus Russia, India and Israel")
-	check(Setup.roster(Setup.normalize({"nation": 0, "players": 4, "rivals": [0, 9, -1, 4, 4]})) == [0, 4, 1, 2], "invalid or duplicate rivals repaired")
+	check(Setup.roster(Setup.normalize({"nation": 0, "players": 4, "rivals": [0, Factions.IDS.size(), -1, 4, 4]})) == [0, 4, 1, 2], "invalid or duplicate rivals repaired")
 	check(Setup.normalize(JSON.parse_string(JSON.stringify(selected))) == selected, "chosen rivals survive JSON save")
 	set_meta("match_config", Setup.normalize({"map": "frontier", "nation": 8, "players": 4, "rivals": [4, 5, 7], "style": "sandbox"}))
 	change_scene_to_file("res://world.tscn")
@@ -53,12 +53,12 @@ func run() -> void:
 	check(w.map.mapCapacity == 6 and int(w.map.mapSize) == 1120, "factions integrate with expanded geography")
 	var original_unit_count: int = w.units.size()
 	var originals: Array = w.map.nations.duplicate(true)
-	for i in range(9):
+	for i in range(Factions.IDS.size()):
 		w.menu.setup_options.nation = i
 		w.menu.open_new_game()
 		await process_frame
 		var picker: OptionButton = w.menu._panel.find_child("FactionPicker", true, false)
-		check(picker.item_count == 9 and picker.selected == i, "nine selectable leaders")
+		check(picker.item_count == Factions.IDS.size() and picker.selected == i, "all selectable leaders")
 		check(w.menu._briefing.text.contains(Factions.NAMES[i]), "leader summary " + Factions.IDS[i])
 		w.map.nations[0] = Factions.nation(i, true)
 		check(Arsenal.identity(w, 0) == Factions.ARSENALS[i], "arsenal identity " + Factions.IDS[i])

@@ -33,7 +33,7 @@ func run() -> void:
 		return
 	w.menu.open_main()
 	await shot("main")
-	for nation in [0, 2, 8]:
+	for nation in [0, 2, 8, 9, 11, 18]:
 		w.menu.setup_options.nation = nation
 		w.menu.setup_options.map = "crown" if nation == 8 else "island"
 		w.menu.open_new_game()
@@ -71,6 +71,7 @@ func run() -> void:
 	w.hud.set_production_open(false)
 	for mode in ["diplomacy", "market", "intel", "territory"]:
 		w.hud.toggle_panel(mode, true)
+		w.hud._process(0.3) # Exercise the timed HUD refresh even in fast headless tests.
 		await shot(mode)
 		check(root.get_visible_rect().encloses(w.hud._win.get_global_rect()), mode + " panel fits viewport")
 		if mode == "diplomacy":

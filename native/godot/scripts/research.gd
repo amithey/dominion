@@ -209,7 +209,7 @@ func completed_count() -> int:
 ## The total of one effect over every discovery (half from a finished
 ## prototype, all of it once complete) and the research tracks.
 func bonus(stat: String) -> float:
-	return float(_bonus.get(stat, 0.0))
+	return float(_bonus.get(stat, 0.0)) + (preload("res://scripts/additional_powers.gd").bonus(world, 0, stat) if world != null and world.get("diplomacy") != null else 0.0)
 
 func _recompute() -> void:
 	_bonus = {}
@@ -490,7 +490,7 @@ func damage_mult(unit: Dictionary) -> float:
 	if unit.owner > 0:
 		return (1.0 + 0.03 * ai_tech(unit.owner)) * float(doctrine.damage) * preload("res://scripts/national_profile.gd").ai_damage(world, unit)
 	var m: float = 1.0 + bonus("dmgAll") + (float(world.economy.depot_damage()) if world.economy != null else 0.0)   # ammo depots
-	var key: String = unit.get("key", "")
+	var key: String = preload("res://scripts/additional_factions.gd").base(str(unit.get("key", "")))
 	if key in world.infantry_keys:
 		m += bonus("dmgInfantry")
 	if key in ["artillery", "mlrs", "himars"]:
@@ -520,7 +520,7 @@ func equip(unit: Dictionary) -> void:
 			hp += bonus("hpInfantry")
 		elif unit.vehicle and not unit.get("fly", false) and not unit.get("naval", false):
 			hp += bonus("hpVehicle")
-		if unit.key in ["artillery", "mlrs", "himars"]:
+		if preload("res://scripts/additional_factions.gd").base(unit.key) in ["artillery", "mlrs", "himars"]:
 			unit.range *= 1.0 + bonus("rangeArty")
 		if unit.get("naval", false):
 			unit.range *= 1.0 + bonus("rangeNaval")

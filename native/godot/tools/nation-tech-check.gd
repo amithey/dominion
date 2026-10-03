@@ -34,6 +34,16 @@ const LACKS := {
 	"japan": ["bomber", "sixthGen", "nuclearSub", "orca"],
 	"turkiye": ["bomber", "sixthGen", "nuclearSub", "hpmVehicle", "railgunShip", "orca"],
 	"israel": ["bomber", "sixthGen", "nuclearSub", "destroyer", "hpmVehicle", "railgunShip", "orca"],
+	"uk": ["bomber", "sixthGen", "railgunShip", "orca", "raptor"],
+	"south_korea": ["bomber", "sixthGen", "nuclearSub", "railgunShip", "orca"],
+	"saudi": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "railgunShip"],
+	"brazil": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "abmLauncher"],
+	"indonesia": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "abmLauncher"],
+	"ukraine": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "abmLauncher"],
+	"north_korea": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "abmLauncher"],
+	"egypt": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "abmLauncher"],
+	"australia": ["bomber", "sixthGen", "nuclearSub", "railgunShip", "orca"],
+	"pakistan": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "abmLauncher"],
 }
 const EXPECT_NAMES := {"china": {"stealthFighter": "J-20", "sixthGen": "J-36", "tank": "Type 99A"}, "russia": {"stealthFighter": "Su-57", "tank": "T-90M Proryv"},
 	"usa": {"stealthFighter": "F-35A Lightning II", "sixthGen": "F-47"}, "iran": {"jet": "MiG-29", "tank": "Karrar"}, "israel": {"stealthFighter": "F-35I Adir", "laserAD": "Iron Beam"},
@@ -98,7 +108,7 @@ func run() -> void:
 			if str(w.unit_defs[key].name) != EXPECT_NAMES[id][key]: wrong.append("%s is %s" % [key, w.unit_defs[key].name])
 		check(wrong.is_empty(), "%s: its systems by their own names %s" % [id, str(EXPECT_NAMES.get(id, {}).values()) if wrong.is_empty() else str(wrong)])
 		# 4: nuclear weapons and hypersonic missiles.
-		var nuclear: bool = id in ["usa", "china", "eu", "russia", "india", "israel"]
+		var nuclear: bool = id in ["usa", "china", "eu", "russia", "india", "israel", "uk", "north_korea", "pakistan"]
 		var hyper: bool = id in ["usa", "china", "russia", "india", "iran", "japan", "turkiye"]
 		var nuke_open: bool = not w.missiles.locked("nuke").ends_with("only") and not w.missiles.locked("nuke").begins_with("Not fielded")
 		var hyper_open: bool = not w.missiles.locked("hypersonic").begins_with("Not fielded")

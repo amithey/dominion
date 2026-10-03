@@ -1,13 +1,14 @@
 extends RefCounted
 ## Playable identities, independent of map slots. Real leaders are a snapshot
 ## dated 2026-09-28; military modifiers are game balance, not factual rankings.
-const NAMES := ["United States", "China", "European Union", "Iran", "Russia", "India", "Japan", "Turkiye", "Israel"]
-const LEADERS := ["President Donald Trump", "President Xi Jinping", "Commission President Ursula von der Leyen", "President Masoud Pezeshkian", "President Vladimir Putin", "Prime Minister Narendra Modi", "Prime Minister Sanae Takaichi", "President Recep Tayyip Erdogan", "Prime Minister Benjamin Netanyahu"]
-const IDS := ["usa", "china", "eu", "iran", "russia", "india", "japan", "turkiye", "israel"]
-const ARSENALS := ["blue", "red", "green", "gold", "russia", "india", "japan", "turkiye", "israel"]
-const COLOURS := ["#3b82f6", "#e0483e", "#33b86e", "#e8a83a", "#9868d9", "#ed7938", "#da79af", "#28b9ab", "#8fbce6"]
-const PORTRAITS := ["trump", "xi", "vonderleyen", "pezeshkian", "putin", "modi", "takaichi", "erdogan", "netanyahu"]
-const SIGNATURES := ["F-22 Raptor / B-21 Raider", "DF-17 Launcher", "IRIS-T SLM", "Shahed Launcher", "TOS-1A Solntsepyok", "BrahMos Battery", "Aegis Cruiser", "Bayraktar Akinci", "Harop"]
+const Extra := preload("res://scripts/additional_factions.gd")
+const NAMES := ["United States", "China", "European Union", "Iran", "Russia", "India", "Japan", "Turkiye", "Israel"] + Extra.NAMES
+const LEADERS := ["President Donald Trump", "President Xi Jinping", "Commission President Ursula von der Leyen", "President Masoud Pezeshkian", "President Vladimir Putin", "Prime Minister Narendra Modi", "Prime Minister Sanae Takaichi", "President Recep Tayyip Erdogan", "Prime Minister Benjamin Netanyahu"] + Extra.LEADERS
+const IDS := ["usa", "china", "eu", "iran", "russia", "india", "japan", "turkiye", "israel"] + Extra.IDS
+const ARSENALS := ["blue", "red", "green", "gold", "russia", "india", "japan", "turkiye", "israel"] + Extra.IDS
+const COLOURS := ["#3b82f6", "#e0483e", "#33b86e", "#e8a83a", "#9868d9", "#ed7938", "#da79af", "#28b9ab", "#8fbce6"] + Extra.COLOURS
+const PORTRAITS := ["trump", "xi", "vonderleyen", "pezeshkian", "putin", "modi", "takaichi", "erdogan", "netanyahu"] + Extra.PORTRAITS
+const SIGNATURES := ["F-22 Raptor / B-21 Raider", "DF-17 Launcher", "IRIS-T SLM", "Shahed Launcher", "TOS-1A Solntsepyok", "BrahMos Battery", "Aegis Cruiser", "Bayraktar Akinci", "Harop"] + Extra.SIGNATURES
 const DOCTRINES := [
 	"Air superiority: exclusive F-22 and B-21, plus Golden Dome research. These capabilities require advanced research and costly aircraft.",
 	"Missile power: exclusive DF-17 hypersonic launcher, particularly effective against ships. Long reloads leave gaps between salvos.",
@@ -18,7 +19,7 @@ const DOCTRINES := [
 	"Maritime engineering: ships gain 15% range and 10% speed. Tanks have 10% less health.",
 	"Agile drones: drones, FPV teams and loitering munitions gain 20% speed and 10% damage, but have 15% less health.",
 	"Precision defence: mobile SAMs, MANPADS and lasers gain 10% range and 15% shorter reloads. Missile interception gains 5 percentage points (capped at 97%). Commandos deal 15% more damage. These specialists have 10% less health."
-]
+] + Extra.DOCTRINES
 static func labels() -> Array:
 	var out := []
 	for i in range(IDS.size()):

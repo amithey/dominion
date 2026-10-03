@@ -15,6 +15,6 @@ static func update(w: Node, delta: float) -> void:
 			continue
 		if e.get("moving",false) or e.get("enemy")!=null or w.game_time-e.get("last_hit",-100.0)<6 or not e.get("supplied",true) or w.disabled(e):
 			continue
-		var amount := minf(e.max_hp-e.hp,e.max_hp*0.025*delta)
+		var amount := minf(e.max_hp-e.hp,e.max_hp*0.025*delta*preload("res://scripts/additional_factions.gd").construction_mult(w, int(e.owner)))
 		if w.economy.pay({"money":amount*0.25}):
 			e.hp += amount

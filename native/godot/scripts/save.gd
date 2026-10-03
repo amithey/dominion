@@ -70,7 +70,7 @@ func capture() -> Dictionary:
 			"progress": b.progress, "hp": b.hp, "queue": b.queue, "queue_prog": b.queue_prog,
 			"queue_costs": b.get("queue_costs", []).duplicate(true),
 			"disabled_until": b.get("disabled_until", 0.0), "intercept_ready": b.get("intercept_ready", 0.0), "aa_reload": b.get("aa_reload", 0.0),
-			"ai_build": b.get("ai_build", false),
+			"ai_build": b.get("ai_build", false), "reconstruction_tag": b.get("reconstruction_tag", ""),
 			"repairing":b.get("repairing",false), "last_hit":b.get("last_hit",-100.0),
 		})
 	var units := []
@@ -175,6 +175,7 @@ func restore(data: Dictionary) -> void:
 	for s in data.buildings:
 		var b: Dictionary = world.place_building(s.key, _p(s.pos), int(s.owner), bool(s.built))
 		b.hp = float(s.hp)
+		if str(s.get("reconstruction_tag", "")) != "": b.reconstruction_tag = s.reconstruction_tag
 		b.repairing = s.get("repairing",false)
 		b.last_hit = float(s.get("last_hit",-100.0))
 		b.progress = float(s.progress)

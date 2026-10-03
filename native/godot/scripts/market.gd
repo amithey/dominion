@@ -170,7 +170,7 @@ func risk() -> float:
 	for u in world.units:
 		if u.owner == 0 and not u.dead and u.get("naval", false) and u.dmg > 0.0:
 			escorts += 1
-	return clampf(0.08 - escorts * 0.015, 0.015, 0.08)
+	return clampf(0.08 - escorts * 0.015, 0.015, 0.08) * (1.0 - preload("res://scripts/additional_powers.gd").bonus(world, 0, "shipping"))
 
 func cap_of(res: String) -> float:
 	return float(world.economy.caps.get(res, INF))
@@ -259,6 +259,7 @@ func ai_nation(id: int):
 
 func tick() -> void:
 	trade_ai()  # prices move in exchange_step: the traders pull them toward fair value
+	preload("res://scripts/additional_trade.gd").tick(world, TICK)
 	var d: Node = world.diplomacy
 	var eco: Node = world.economy
 	while routes.size() > route_cap():
@@ -311,7 +312,7 @@ func tick() -> void:
 			d.change(0, r.nation, 0.8)
 			continue
 		var value := roundi(r.qty * price(r.res) * (float(cfg.importMarkup) if r.dir == "import" else 1.0))
-		var voyage := float(cfg.voyage)
+		var voyage := float(cfg.voyage) * (1.0 - preload("res://scripts/additional_powers.gd").bonus(world, 0, "voyage"))
 		if r.get("overland", false):
 			voyage *= 0.4 if land_link(r.nation) == "rail" else 0.65  # trains are quickest
 		if r.dir == "export" and eco.res.get(r.res, 0.0) >= r.qty:
@@ -370,13 +371,14 @@ func trade_ai() -> void:
 			if b.key == "market": desks += 1
 			if b.deposit != null:
 				var resource: String = b.deposit.def.res
-				stock[resource] = minf(500.0, float(stock.get(resource, 100.0)) + float(b.deposit.def.rate) * TICK)
-			if b.key in ["farm", "fishingWharf"]: stock["food"] = minf(500.0, float(stock.get("food", 100.0)) + 30.0)
+				stock[resource] = minf(500.0, float(stock.get(resource, 100.0)) + float(b.deposit.def.rate) * TICK * preload("res://scripts/national_profile.gd").resource_mult(world, nation.id, resource) * (1.0 + preload("res://scripts/additional_powers.gd").bonus(world, nation.id, "mining")))
+			if b.key in ["farm", "fishingWharf"]: stock["food"] = minf(500.0, float(stock.get("food", 100.0)) + 30.0 * ((1.0 + float(preload("res://scripts/additional_factions.gd").profile(world, nation.id).get("bonus", {}).get("foodPct", 0.0))) if b.key == "farm" else float(preload("res://scripts/additional_factions.gd").profile(world, nation.id).get("fishing", 1.0))))
 		var army := 0
 		for u in world.units:
 			if u.owner == nation.id and not u.dead: army += 1
 		for resource in cfg.price:
 			var use: float = 12.0 + army * 0.3 if resource == "food" else (3.0 + army * 0.12 if resource in ["oil", "iron", "gas"] else 2.0)
+			if resource == "food": use *= float(nation.get("civilians", 120.0)) / 120.0 * float(preload("res://scripts/additional_factions.gd").profile(world, nation.id).get("civilian_food", 1.0))
 			stock[resource] = maxf(0.0, float(stock.get(resource, 100.0)) - use)
 			if desks == 0: continue
 			if stock[resource] < 70.0:
@@ -386,6 +388,6 @@ func trade_ai() -> void:
 					stock[resource] += 30
 					pressure(resource, 30, true)
 			elif stock[resource] > 180.0:
-				nation.money += floori(quote(resource, 30, false))
+				nation.money += floori(quote(resource, 30, false) * preload("res://scripts/national_profile.gd").trade_mult(world, nation.id))
 				stock[resource] -= 30
 				pressure(resource, 30, false)

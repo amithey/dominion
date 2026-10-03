@@ -38,7 +38,7 @@ func setup(world_node: Node, ai: Dictionary, difficulty: String, speed := 1.0) -
 	build_order = ai.buildOrder
 	# Only units the native world can draw yet (no aircraft).
 	train_pool = ai.trainPool.filter(func(k): return TRAINED_AT.has(k))
-	for key in MODERN_POOL:
+	for key in MODERN_POOL + preload("res://scripts/additional_factions.gd").BASE.keys():
 		if not key in train_pool and world.unit_defs.has(key):
 			train_pool.append(key)
 	for id in range(1, world.map.nations.size()):
@@ -103,10 +103,10 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 		n.next_attack = maxf(n.next_attack,99999.0)
 	var s: float = n.speed
 	var spies: Node = world.espionage
-	n.money += float(row(n).income) * delta * s * (spies.income_mult(n.id) if spies else 1.0) * preload("res://scripts/faction_powers.gd").income_mult(world, n.id) * preload("res://scripts/national_profile.gd").ai_income(world, n.id) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0))))
+	n.money += float(row(n).income) * delta * s * preload("res://scripts/additional_powers.gd").civic_income(world, n, delta) * (spies.income_mult(n.id) if spies else 1.0) * preload("res://scripts/faction_powers.gd").income_mult(world, n.id) * preload("res://scripts/national_profile.gd").ai_income(world, n.id) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0))))
 	var cyber: bool = spies != null and spies.production_down(n.id) or preload("res://scripts/faction_powers.gd").production_blocked(world, n.id)
-	n.next_build -= delta
-	n.next_train -= delta
+	n.next_build -= delta * (1.0 + preload("res://scripts/additional_powers.gd").bonus(world, n.id, "buildPct"))
+	n.next_train -= delta * maxf(0.1, 1.0 + float(preload("res://scripts/additional_factions.gd").profile(world, n.id).get("bonus", {}).get("prodPct", 0.0)) + preload("res://scripts/additional_powers.gd").bonus(world, n.id, "prodPct"))
 	n.next_attack -= delta
 	n.next_defend -= delta
 
@@ -115,7 +115,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 		var key: String = build_order[n.build_idx] if n.build_idx < build_order.size() else pick_building(n)
 		var def: Dictionary = world.building_defs.get(key, {})
 		if not def.is_empty():
-			var cost := weighted_cost(def.cost)
+			var cost := weighted_cost(preload("res://scripts/additional_factions.gd").building_cost(world, n.id, key, def.get("base_cost", def.cost)))
 			if n.money >= cost:
 				var spot = find_spot(n, home, key)
 				if spot != null:
@@ -138,7 +138,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	# Self-building: AI sites rise on their own.
 	for b in world.buildings:
 		if b.owner == n.id and not b.built and not b.dead and b.get("ai_build", false) and not cyber:
-			b.progress = minf(1.0, b.progress + delta * s / maxf(float(b.def.buildTime), 8.0))
+			b.progress = minf(1.0, b.progress + delta * s * preload("res://scripts/additional_factions.gd").construction_mult(world, n.id) * (1.0 + preload("res://scripts/additional_powers.gd").bonus(world, n.id, "buildPct")) / maxf(float(b.def.buildTime), 8.0))
 			b.model.scale.y = b.full_scale_y * lerpf(0.06, 1.0, b.progress)
 			if b.progress >= 1.0:
 				world.finish_building(b)
@@ -147,7 +147,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	if n.next_train <= 0.0 and not cyber:
 		var army: Array = world.units.filter(func(u): return u.owner == n.id and not u.dead)
 		if army.size() < int(row(n).maxArmy):
-			var options: Array = train_pool.filter(func(k): return world.unit_allowed(n.id, k) and not production_sites(n.id,k).is_empty())
+			var options: Array = train_pool.filter(func(k): return world.unit_allowed(n.id, k) and preload("res://scripts/additional_factions.gd").ai_unlocked(world, n.id, k) and not production_sites(n.id,k).is_empty())
 			if not options.is_empty():
 				var key: String = options[randi() % options.size()]
 				var cost := weighted_cost(world.unit_defs[key].cost) * preload("res://scripts/national_profile.gd").cost_mult(world, n.id, key)
@@ -155,11 +155,14 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 				# war or has hardly an army: a state that only trains never grows.
 				var at_war: bool = not world.diplomacy.enemies_of(n.id).is_empty()
 				var next_key: String = build_order[n.build_idx] if n.build_idx < build_order.size() else pick_building(n)
-				var reserve: float = 0.0 if at_war or army.size() < 4 else weighted_cost(world.building_defs.get(next_key, {"cost": {}}).cost)
+				var next_def: Dictionary = world.building_defs.get(next_key, {"cost": {}})
+				var reserve: float = 0.0 if at_war or army.size() < 4 else weighted_cost(preload("res://scripts/additional_factions.gd").building_cost(world, n.id, next_key, next_def.get("base_cost", next_def.cost)))
 				if n.money - cost >= reserve:
 					if deploy(n.id,key):
 						n.money -= cost
-		n.next_train = float(row(n).trainEvery) * randf_range(0.8, 1.2) * (0.55 if not world.diplomacy.enemies_of(n.id).is_empty() else 1.0) / s
+						n.train_mult = preload("res://scripts/additional_factions.gd").train_mult(world, n.id, key)
+						n.train_mult /= float(preload("res://scripts/additional_factions.gd").UNITS.get(key, {}).get("scale", {}).get("trainTime", 1.0))
+		n.next_train = float(row(n).trainEvery) / float(n.get("train_mult", 1.0)) * randf_range(0.8, 1.2) * (0.55 if not world.diplomacy.enemies_of(n.id).is_empty() else 1.0) / s
 
 	# Defence: a threat near the capital brings every unit home.
 	if n.next_defend <= 0.0:
@@ -249,7 +252,8 @@ func available(u: Dictionary) -> bool:
 	return not u.dead and u.dmg>0 and not world.disabled(u) and (not u.get("fly",false) or u.get("air_state","ready")=="ready" and u.get("ammo",0)>0)
 
 func production_sites(owner: int, key: String) -> Array:
-	return world.buildings.filter(func(b):return b.owner==owner and b.key==TRAINED_AT.get(key,"") and b.built and not b.dead and b.get("supplied",true) and not world.disabled(b))
+	var home: String = preload("res://scripts/additional_factions.gd").HOME.get(key, TRAINED_AT.get(key, ""))
+	return world.buildings.filter(func(b):return b.owner==owner and b.key==home and b.built and not b.dead and b.get("supplied",true) and not world.disabled(b))
 
 func deploy(owner: int, key: String) -> bool:
 	for site in production_sites(owner,key):

@@ -307,7 +307,8 @@ func open_new_game() -> void:
 	nation.add_child(selector)
 	nation.add_child(_nation_card(int(setup_options.nation)))
 	var national := Label.new()
-	var power: Dictionary = preload("res://scripts/faction_powers.gd").POWERS[factions.ARSENALS[int(setup_options.nation)]]
+	var arsenal: String = factions.ARSENALS[int(setup_options.nation)]
+	var power: Dictionary = preload("res://scripts/faction_powers.gd").POWERS.get(arsenal, preload("res://scripts/additional_powers.gd").POWERS.get(arsenal, {}))
 	national.text = "%s\n%s" % [factions.SIGNATURES[int(setup_options.nation)], power.name]
 	national.tooltip_text = "Signature weapon & national power\n" + str(power.desc)
 	national.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -553,7 +554,7 @@ func _nation_card(i: int) -> Button:
 	var colour := Color(world.MatchSetup.COLOURS[i]) if i < world.MatchSetup.COLOURS.size() else UI.GOLD
 	var chosen: bool = int(setup_options.nation) == i
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(304, 240)
+	b.custom_minimum_size = Vector2(304, 260)
 	b.focus_mode = Control.FOCUS_ALL
 	b.toggle_mode = true
 	b.button_pressed = chosen

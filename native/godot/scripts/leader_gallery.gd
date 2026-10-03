@@ -7,7 +7,10 @@ static func portrait(identity: String) -> String:
 	var factions = preload("res://scripts/factions.gd")
 	for i in range(factions.LEADERS.size()):
 		if identity == factions.LEADERS[i]:
-			return "res://ui/leaders/%s-v2.png" % factions.PORTRAITS[i]
+			var image := "res://ui/leaders/%s-v2.png" % factions.PORTRAITS[i]
+			if ResourceLoader.exists(image): return image
+			var emblem := "res://ui/leaders/%s-emblem.svg" % factions.PORTRAITS[i]
+			return emblem if ResourceLoader.exists(emblem) else ""
 	for key in ART:
 		if key in identity: return "res://ui/leaders/%s-v1.png" % ART[key]
 	return ""
@@ -20,6 +23,7 @@ static func face(identity: String, aspect: float) -> Texture2D:
 	if path == "":
 		return null
 	var full: Texture2D = load(path)
+	if path.ends_with(".svg"): return full
 	var w := float(full.get_width())
 	var h := float(full.get_height())
 	var cw := minf(w, h * aspect)

@@ -1,5 +1,27 @@
 # Working in parallel: Claude and Codex
 
+2026-10-02 Codex: user authorized research and implementation of ten additional
+factions (UK, South Korea, Saudi Arabia, Brazil, Indonesia, Ukraine, North Korea,
+Egypt, Australia, Pakistan). Owning new additional_factions/additional_powers
+modules and narrow registry, economy, combat, AI, save/UI integration hooks.
+Preserving Claude's current map/geography/traffic/release edits. No rebase over
+the active shared working tree. Research and validation recorded separately.
+
+2026-10-03 Codex: ten-faction implementation complete in native source. New
+additional_factions, additional_powers and additional_trade modules; 19-way picker,
+nine units plus Egyptian worker specialty, ten paid powers, AI and save integration.
+New research report: native/FACTIONS-RESEARCH-2026-10-02.md. Existing geographic
+slots for Riyadh/Kyiv/Seoul/Jakarta are matched through one narrow map_generator hook;
+Claude's map geometry and explicit starting-position choices remain intact. Existing
+release was not rebuilt. Validation details are recorded in the research report.
+
+2026-10-03 Codex follow-up: user requested roughly 100 additional tests. Added
+tools/additional-factions-100.gd: 113 new boundary/interruption checks, all passing,
+including player/AI atomic payments, JSON cooldowns, unavailable prerequisites,
+invalid targets, exact expiry, interrupted/delivered cargo and replacement buildings.
+Registered in run-tests.ps1. No gameplay fixes were needed. Results and scope:
+native/FACTIONS-ADDITIONAL-TESTS-2026-10-03.md.
+
 2026-09-29 Codex gameplay audit (explicit user request): reproduced discounted
 missile cancellation over-refunds, missing national-power save state, and missiles
 in flight disappearing on load. Editing world.gd's queue receipt handling,

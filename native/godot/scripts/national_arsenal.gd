@@ -119,6 +119,8 @@ static func foreign(w: Node, nation) -> String:
 		return ""
 	if nation is Array:
 		return "Not fielded by %s" % str(w.map.nations[0].get("name", "your nation")).split(" · ")[0]
+	var extra := preload("res://scripts/additional_factions.gd")
+	if nation in extra.IDS: return "%s only" % extra.NAMES[extra.IDS.find(nation)]
 	return "%s only" % NATION_NAMES.get(nation, preload("res://scripts/faction_arsenal.gd").NAMES.get(nation, nation))
 
 ## A salvo of Shaheds from `launcher` at `enemy`. Returns how many flew.

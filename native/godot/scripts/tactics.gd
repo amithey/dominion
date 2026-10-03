@@ -180,7 +180,7 @@ static func formation(selected: Array, point: Vector3) -> Array:
 	var groups := [[], [], []]
 	for i in range(selected.size()):
 		var u: Dictionary = selected[i]
-		groups[2 if u.key in SUPPORT else (0 if u.vehicle else 1)].append(i)
+		groups[2 if preload("res://scripts/additional_factions.gd").base(u.key) in SUPPORT else (0 if u.vehicle else 1)].append(i)
 	var result := []
 	result.resize(selected.size())
 	var depth := 0.0

@@ -20,6 +20,7 @@ func setup(world_node: Node) -> void:
 
 ## Returns {root, turret, radar, axles: [{node, radius}], muzzle}.
 func build(key: String, owner: int) -> Dictionary:
+	key = preload("res://scripts/additional_factions.gd").base(key)
 	var parts := {"root": Node3D.new(), "turret": null, "radar": null, "axles": [], "muzzle": 4.2}
 	_mat = material_for(owner)
 	var body := _begin()

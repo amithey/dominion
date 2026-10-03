@@ -25,8 +25,8 @@ extends RefCounted
 ## 2025 once the warheads manoeuvred in the dive; cruise missiles and Shahed
 ## drones: 80-97%.
 
-const DRONES := ["drone", "loiterer", "fpvTeam", "seaDrone", "shahed", "harop"]   # jammable
-const KAMIKAZE := ["loiterer", "seaDrone", "shahed", "harop"]
+const DRONES := ["drone", "loiterer", "fpvTeam", "seaDrone", "shahed", "harop", "interceptorDrone"]   # jammable
+const KAMIKAZE := ["loiterer", "seaDrone", "shahed", "harop", "interceptorDrone"]
 const Arsenal := preload("res://scripts/national_arsenal.gd")
 const Future := preload("res://scripts/future_weapons.gd")
 const FactionArsenal := preload("res://scripts/faction_arsenal.gd")
@@ -56,8 +56,8 @@ const INTERCEPT := {
 	"icbm":           {"samSite": 0.03, "samLauncher": 0.0, "abmLauncher": 0.55, "laserAD": 0.0, "irisT": 0.0, "railgunShip": 0.1, "aegisCruiser": 0.5},
 }
 ## How far each defender reaches, and how long it takes to fire again.
-const REACH := {"samSite": 140.0, "samLauncher": 115.0, "abmLauncher": 230.0, "laserAD": 60.0, "irisT": 120.0, "railgunShip": 150.0, "aegisCruiser": 250.0}
-const RELOAD := {"samSite": 2.2, "samLauncher": 3.0, "abmLauncher": 6.0, "laserAD": 1.5, "irisT": 2.5, "railgunShip": 1.5, "aegisCruiser": 3.0}
+const REACH := {"samSite": 140.0, "samLauncher": 115.0, "abmLauncher": 230.0, "laserAD": 60.0, "irisT": 120.0, "railgunShip": 150.0, "aegisCruiser": 250.0, "type45": 200.0, "saudiThaad": 253.0}
+const RELOAD := {"samSite": 2.2, "samLauncher": 3.0, "abmLauncher": 6.0, "laserAD": 1.5, "irisT": 2.5, "railgunShip": 1.5, "aegisCruiser": 3.0, "type45": 3.0, "saudiThaad": 6.0}
 
 const UNITS := {
 	"fpvTeam": {"name": "FPV Drone Team", "hp": 80, "dmg": 55, "range": 30, "cooldown": 5.0, "aggro": 34, "speed": 8.5,
@@ -170,6 +170,7 @@ static func apply(w: Node) -> void:
 	Arsenal.apply(w)   # each nation's own weapons
 	Future.apply(w)    # weapons still in development
 	FactionArsenal.apply(w)   # the five newer factions' own weapons
+	preload("res://scripts/additional_factions.gd").apply(w)
 	preload("res://scripts/national_variants.gd").apply(w)   # who really fields what, under which name
 	var types: Dictionary = w.map.missiles.types
 	for key in types:
@@ -245,6 +246,8 @@ static func update(w: Node, delta: float) -> void:
 ## Chance that defender `kind` (owned by `defender`) stops missile `m`.
 static func intercept_chance(w: Node, kind: String, m: Dictionary, defender: int) -> float:
 	var odds: float = INTERCEPT[CLASS_OF.get(m.type, "cruise")].get(kind, 0.0)
+	if kind == "type45": odds = {"cruise": 0.7, "seaSkimmer": 0.65, "shortBallistic": 0.25}.get(CLASS_OF.get(m.type, "cruise"), 0.0)
+	if kind == "saudiThaad": odds = {"shortBallistic": 0.8, "ballistic": 0.86}.get(CLASS_OF.get(m.type, "cruise"), 0.0)
 	if odds <= 0.0:
 		return 0.0
 	if defender == 0 and w.research:
@@ -278,7 +281,7 @@ static func intercept(w: Node, m: Dictionary, at: Vector3, f: float) -> bool:
 		var id: int = d.node.get_instance_id()
 		if m.engaged.has(id) or not w.hostile(d.owner, int(m.owner)):
 			continue
-		if not dive and d.kind != "abmLauncher":
+		if not dive and d.kind not in ["abmLauncher", "saudiThaad"]:
 			continue
 		if not m.arc and d.kind == "abmLauncher" and f < 0.3:
 			continue
@@ -333,7 +336,7 @@ static func defenders(w: Node) -> Array:
 		if b.key == "samSite" and not b.dead and b.built and b.get("supplied", true) and not w.disabled(b):
 			out.append({"kind": "samSite", "node": b.root, "owner": b.owner, "ent": b})
 	for u in w.units:
-		if u.key in ["samLauncher", "abmLauncher", "laserAD", "irisT", "railgunShip", "aegisCruiser"] and not u.dead and not w.disabled(u):
+		if u.key in ["samLauncher", "abmLauncher", "laserAD", "irisT", "railgunShip", "aegisCruiser", "type45", "saudiThaad"] and not u.dead and not w.disabled(u):
 			out.append({"kind": u.key, "node": u.node, "owner": u.owner, "ent": u})
 	return out
 
@@ -341,7 +344,7 @@ static func _report(w: Node, m: Dictionary, d: Dictionary, hit: bool) -> void:
 	if w.hud == null:
 		return
 	var name: String = w.missiles.def_of(m.type).get("name", "missile")
-	var by: String = {"samSite": "a SAM site", "samLauncher": "a mobile SAM", "abmLauncher": "a missile defence battery", "laserAD": "a laser", "irisT": "an IRIS-T battery", "railgunShip": "a railgun", "goldenDome": "Golden Dome", "aegisCruiser": "an Aegis cruiser"}[d.kind]
+	var by: String = {"samSite": "a SAM site", "samLauncher": "a mobile SAM", "abmLauncher": "a missile defence battery", "laserAD": "a laser", "irisT": "an IRIS-T battery", "railgunShip": "a railgun", "goldenDome": "Golden Dome", "aegisCruiser": "an Aegis cruiser", "type45": "a Type 45 destroyer", "saudiThaad": "a THAAD battery"}[d.kind]
 	if int(m.owner) == 0:
 		w.hud.notice(("Your %s was shot down by %s." if hit else "Your %s slipped past %s.") % [name, by])
 	elif d.owner == 0:

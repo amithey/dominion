@@ -45,7 +45,7 @@ static func identity(w: Node, owner: int) -> String:
 	return preload("res://scripts/national_arsenal.gd").identity(w, owner)
 
 static func power_of(w: Node, owner: int) -> Dictionary:
-	return POWERS.get(identity(w, owner), {})
+	return POWERS.get(identity(w, owner), preload("res://scripts/additional_powers.gd").POWERS.get(identity(w, owner), {}))
 
 ## Seconds until `owner` may use its power again (0 when ready).
 static func ready_in(w: Node, owner: int) -> float:
@@ -67,6 +67,8 @@ static func restore(w: Node, data: Dictionary) -> void:
 ## Why `owner` cannot use its power on `target` now, or "".
 static func blocked(w: Node, owner: int, target := -1) -> String:
 	var p := power_of(w, owner)
+	if owner < 0 or owner >= w.map.nations.size() or w.diplomacy.defeated(owner):
+		return "Nation is unavailable"
 	if p.is_empty():
 		return "No national power"
 	if ready_in(w, owner) > 0.0:
@@ -75,6 +77,8 @@ static func blocked(w: Node, owner: int, target := -1) -> String:
 	if p.target:
 		if target < 0 or target == owner or target >= d.n or d.defeated(target):
 			return "Choose a nation"
+	if preload("res://scripts/additional_powers.gd").POWERS.has(identity(w, owner)):
+		return preload("res://scripts/additional_powers.gd").blocked(w, owner, target)
 	match identity(w, owner):
 		"japan":
 			if d.at_war(owner, target):
@@ -100,6 +104,8 @@ static func use(w: Node, owner: int, target := -1) -> String:
 	var who: String = d.name_of(target) if target >= 0 else ""
 	var me: String = "You" if owner == 0 else d.name_of(owner)
 	var text := ""
+	if preload("res://scripts/additional_powers.gd").POWERS.has(identity(w, owner)):
+		text = preload("res://scripts/additional_powers.gd").use(w, owner, target)
 	match identity(w, owner):
 		"blue":
 			_effect(w, "income", target, 0.7, until, owner)
@@ -214,6 +220,7 @@ const MILITARY := ["barracks", "tankFactory", "airfield", "helipad", "shipyard",
 
 ## Rival nations use their powers: mostly on the player when at war with it.
 static func update(w: Node, delta: float) -> void:
+	preload("res://scripts/additional_powers.gd").step(w, delta)
 	w.power_effects = _active(w)
 	if w.ai == null:
 		return
@@ -228,6 +235,10 @@ static func update(w: Node, delta: float) -> void:
 		if w.game_time < 240.0:
 			continue   # nobody reaches for the big levers in the opening minutes
 		var p := power_of(w, n.id)
+		if preload("res://scripts/additional_powers.gd").POWERS.has(identity(w, n.id)):
+			var candidate: int = preload("res://scripts/additional_powers.gd").ai_target(w, n.id)
+			if blocked(w, n.id, candidate) == "": use(w, n.id, candidate)
+			continue
 		var foe := -1
 		for other in range(d.n):
 			if other != n.id and not d.defeated(other) and d.at_war(n.id, other):

@@ -7,6 +7,21 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## In development: ten additional nations
+
+The native source now offers 19 factions: the existing nine plus the United Kingdom,
+South Korea, Saudi Arabia, Brazil, Indonesia, Ukraine, North Korea, Egypt, Australia
+and Pakistan. Each addition has a researched leader identity, economic strengths and
+weaknesses, an exclusive unit or worker specialty, and a national power with costs,
+prerequisites and cooldown. Select them for yourself or as rivals in New Game; use
+national powers from Diplomacy. Map capacity still limits each match to 2–10 nations.
+
+The additions integrate with production, research, combat, trade, AI and saves.
+Their cards use vector national emblems; unit art reuses existing procedural models.
+Research sources and precise gameplay rules are in
+[the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
+These are source changes; the existing 0.9.45 release installer has not been rebuilt.
+
 ## Version 0.9.45: choose where each nation starts
 
 - **Start**, on the New Game screen beside each nation (yours and every rival's): *Auto* (the map's own choice;

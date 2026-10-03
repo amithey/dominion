@@ -114,13 +114,13 @@ func tick() -> void:
 	var r: Node = world.research
 	var food_in: float = owned("farm") * float(cfg.farmFood) * (1.0 + (r.bonus("foodPct") if r else 0.0)) + float(land.food)
 	# A bigger city eats more per head (it no longer grows its own food).
-	var food_out := civilians * float(cfg.foodPerCivilian) * (1.0 + civilians / 2000.0) + army * float(cfg.foodPerSoldier)
+	var food_out := civilians * float(cfg.foodPerCivilian) * (1.0 + civilians / 2000.0) * float(preload("res://scripts/additional_factions.gd").profile(world, 0).get("civilian_food", 1.0)) + army * float(cfg.foodPerSoldier)
 	for b in world.buildings:
 		if b.dead or not b.built or b.owner != 0 or b.key != "fishingWharf" or not b.get("supplied", true): continue
 		var shoals := 0
 		for d in world.deposits:
 			if d.type == "fish" and d.pos.distance_to(b.root.position) <= 60: shoals += 1
-		food_in += 2.0 + mini(shoals, 2) * 2.0
+		food_in += (2.0 + mini(shoals, 2) * 2.0) * float(preload("res://scripts/additional_factions.gd").profile(world, 0).get("fishing", 1.0))
 	rates.food = food_in - food_out
 	res.food = clampf(res.food + rates.food, 0.0, caps.food)
 	var starving: bool = res.food <= 0.5
@@ -150,7 +150,7 @@ func tick() -> void:
 		if b.owner != 0 or not b.built or b.dead or b.deposit == null or not b.get("supplied", true):
 			continue
 		var dep: Dictionary = b.deposit.def
-		rates[dep.res] = rates.get(dep.res, 0.0) + float(dep.rate) * mining * preload("res://scripts/national_profile.gd").resource_mult(world, 0, dep.res)
+		rates[dep.res] = rates.get(dep.res, 0.0) + float(dep.rate) * mining * (1.0 + preload("res://scripts/additional_powers.gd").bonus(world, 0, "mining")) * preload("res://scripts/national_profile.gd").resource_mult(world, 0, dep.res)
 	# A growing population burns fuel and uses electronics: oil from about 150
 	# people up, chips (silicon) once a city passes 400. Running short makes
 	# people unhappy (see happiness above, applied on the next tick).

@@ -149,7 +149,8 @@ func _real_starts(nations: Array, count: int, chosen := []) -> Array:
 			continue
 		var id: String = str(nations[i].get("id", "")) if i < nations.size() else ""
 		for k in range(slots.size()):
-			if id != "" and slots[k][2] == id and not taken.has(k):
+			var faction: String = preload("res://scripts/additional_factions.gd").CITY_FACTIONS.get(str(slots[k][3]), slots[k][2])
+			if id != "" and faction == id and not taken.has(k):
 				taken[k] = true
 				out[i] = starts[k]
 				break
