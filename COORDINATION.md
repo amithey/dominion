@@ -573,3 +573,4 @@ UI files listed above.
   gameplay-nations-100: meet_needs() gives the newer nations' powers their prerequisites before the power check
   (12 of them failed since the ten were added). Still failing, also on 144067c before this change: "your troops
   take on the invaders" (Pangaea: the wave halts ~200 m out, the guard waits 25 m from the base) - to look at.
+- 2026-10-03 Claude: 0.9.50 built from 352f813: ui, setup, campaign, state tests pass on the new exe. The user had the game open, so dist/DOMINION.exe (0.9.49) stayed locked: the 0.9.50 installer is in dist, the exe in %TEMP%/dominion-release/dist. From the project: national-profile, three-nations (37), nations-setup, factions, research-100, economy-100 pass; gameplay-nations-100 190/191 (the invaders check, failing before too); additional-factions 226/227 (jf17, intermittent).
