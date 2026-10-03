@@ -4981,6 +4981,11 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 		effects.projectile("rocket" if weapon in ["rocket", "fpv"] else "missile", from, short, func(at): effects.explosion(at, 0.5, false))
 		aps_intercepts += 1
 		return true
+	# An older missile's seeker loses its target now and then (unit_quality.gd).
+	var wild: bool = weapon in ["missile", "sam", "atgm"] and astray(unit)
+	if wild:
+		target += Vector3(randf_range(3.5, 5.0) * (1 if randf() < 0.5 else -1), 0, randf_range(3.5, 5.0) * (1 if randf() < 0.5 else -1))
+	var spread := scatter(unit)
 	match weapon:
 		"bomb":
 			# Only over the target: the bomber lines up and releases a stick.
@@ -4992,12 +4997,12 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 				spot.y = maxf(height_at(spot.x, spot.z), float(map.seaLevel))
 				effects.projectile("bomb", unit.node.position + Vector3.DOWN * 1.2 + dir * i * 0.8, spot, func(at): blast(unit, at, dmg * 0.55, 5.0, 1.6), i * 0.18)
 		"missile":
-			effects.projectile("missile", from, target, func(at): blast(unit, at, dmg, 3.0, 1.2), 0.0, enemy.node if enemy.get("fly", false) or enemy.vehicle else null)
+			effects.projectile("missile", from, target, func(at): blast(unit, at, dmg, 3.0, 1.2), 0.0, enemy.node if (enemy.get("fly", false) or enemy.vehicle) and not wild else null)
 		"sam":
-			effects.projectile("missile", unit.node.position + Vector3.UP * (1.7 if unit.key == "manpads" else 3.0), target, func(at): blast(unit, at, dmg, 3.5, 1.0), 0.0, enemy.node)
+			effects.projectile("missile", unit.node.position + Vector3.UP * (1.7 if unit.key == "manpads" else 3.0), target, func(at): blast(unit, at, dmg, 3.5, 1.0), 0.0, null if wild else enemy.node)
 		"atgm":
 			# Top attack: the missile climbs and dives onto the roof.
-			effects.projectile("missile", unit.node.position + Vector3.UP * 1.7 + dir * 0.6, target, func(at): blast(unit, at, dmg, 2.0, 0.8), 0.0, enemy.node if enemy.vehicle else null)
+			effects.projectile("missile", unit.node.position + Vector3.UP * 1.7 + dir * 0.6, target, func(at): blast(unit, at, dmg, 2.0, 0.8), 0.0, enemy.node if enemy.vehicle and not wild else null)
 		"fpv":
 			# A small drone flies from the operators to the target; jammers bring most down.
 			var launch: Vector3 = unit.node.position + Vector3.UP * 2.5
@@ -5062,7 +5067,7 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 		"rockets":
 			var n := 4 if unit.key == "gunship" else 2
 			for i in range(n):
-				var spot := target + Vector3(randf_range(-1.6, 1.6), 0, randf_range(-1.6, 1.6))
+				var spot := target + Vector3(randf_range(-1.6, 1.6), 0, randf_range(-1.6, 1.6)) * spread
 				effects.projectile("rocket", from + Basis(Vector3.UP, unit.heading) * Vector3((i % 2 - 0.5) * 2.0, 0, 0), spot, func(at): blast(unit, at, dmg * 1.1 / n, 2.8, 0.7), i * 0.09)
 		"rocket":
 			effects.projectile("rocket", unit.node.position + Vector3.UP * 1.6 + dir * 0.6, target, func(at): blast(unit, at, dmg, 2.2, 0.7))
@@ -5073,12 +5078,12 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			var aim := Vector3(target.x, float(map.seaLevel) - 0.3, target.z)
 			effects.projectile("torpedo", water, aim, func(at): blast(unit, at, dmg, 3.5, 1.4))
 		"shell_arc":
-			var landing := target + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
+			var landing := target + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2)) * spread
 			effects.muzzle_flash(unit.turret.global_position + dir * float(unit.get("muzzle", 4.0)) if unit.turret else from, true)
 			effects.projectile("shell_arc", from + Vector3.UP * 1.5, landing, func(at): blast(unit, at, dmg, 4.5, 1.5))
 		"rocket_salvo":
 			for i in range(6):
-				var spot := target + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4))
+				var spot := target + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4)) * spread
 				spot.y = maxf(height_at(spot.x, spot.z), float(map.seaLevel))
 				effects.projectile("rocket", from + Vector3.UP * 1.5, spot, func(at): blast(unit, at, dmg * 0.3, 3.5, 0.9), i * 0.12)
 	return true
@@ -5099,6 +5104,15 @@ func blast(shooter: Dictionary, at: Vector3, dmg: float, radius: float, size: fl
 		if d < radius:
 			damage(other, dmg * effectiveness(shooter, other) * (1.0 if d < radius * 0.5 else 0.45), shooter)
 			Motion.shove(other, at, (1.0 - d / radius) * clampf(size, 0.6, 1.6))
+
+## How widely a unit's shots scatter from its nation's fire control (unit_quality.gd):
+## 1 for the shared unit, more for old sights, less for the best.
+func scatter(unit: Dictionary) -> float:
+	return clampf(2.0 - float(unit.get("accuracy", 1.0)), 0.7, 1.6)
+
+## The chance an older guided missile goes astray (60% of its accuracy shortfall, at most 35%).
+func astray(unit: Dictionary) -> bool:
+	return randf() < clampf((1.0 - float(unit.get("accuracy", 1.0))) * 0.6, 0.0, 0.35)
 
 func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 	var aim: Vector3 = enemy.node.position + Vector3.UP * (3.0 if enemy.get("is_building", false) else (1.3 if enemy.vehicle else 1.2))
@@ -5122,6 +5136,7 @@ func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 		var miss_chance := 0.12 + 0.3 * clampf(gap_to(unit, enemy) / maxf(unit.range, 1.0), 0.0, 1.0) + (0.15 if enemy.get("moving", false) else 0.0)
 		if enemy.get("key", "") == "seaDrone":
 			miss_chance += 0.35   # a small, low, fast boat in the waves is hard to hit
+		miss_chance = minf(miss_chance * scatter(unit), 0.92)   # a T-62's sights against a K2's
 		var miss := Vector3(randf_range(-2.5, 2.5), 0, randf_range(-2.5, 2.5)) if randf() < miss_chance else Vector3.ZERO
 		var landing := aim + miss
 		landing.y = maxf(landing.y if miss == Vector3.ZERO else height_at(landing.x, landing.z), height_at(landing.x, landing.z))
@@ -5132,7 +5147,7 @@ func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 		effects.muzzle_flash(muzzle, false)
 		# Rifle fire: accurate close in, poor at the edge of range or at a running man.
 		var reach := clampf(gap_to(unit, enemy) / maxf(unit.range, 1.0), 0.0, 1.0)
-		var hit := randf() < (0.55 if enemy.vehicle else 0.7) * lerpf(1.1, 0.6, reach) * (0.75 if enemy.get("moving", false) else 1.0)
+		var hit := randf() < (0.55 if enemy.vehicle else 0.7) * lerpf(1.1, 0.6, reach) * (0.75 if enemy.get("moving", false) else 1.0) * float(unit.get("accuracy", 1.0))
 		var end: Vector3 = aim + Vector3(randf_range(-0.3, 0.3), randf_range(-0.3, 0.3), randf_range(-0.3, 0.3))
 		if not hit:
 			end = enemy.node.position + Vector3(randf_range(-2.5, 2.5), 0, randf_range(-2.5, 2.5))

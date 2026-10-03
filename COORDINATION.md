@@ -618,3 +618,9 @@ UI files listed above.
   _fit_window caps the width to the screen; the leader's face heads the strip (_id_face); history for the Cabinet's
   charts. menu.gd: GOLD -> signal blue (one constant). Your side_panels.gd edits in progress were left untouched.
 - 2026-10-03 Claude: 0.9.53 built from 4bc8ca1: ui, setup, campaign, state tests pass on the new exe. The game was open, so dist/DOMINION.exe stayed locked: the 0.9.53 installer is in dist, the exe in %TEMP%/dominion-release/dist. From the project: menus-check 52/52, interface-review, gameplay-ui-50, settings, pick pass.
+- 2026-10-03 Claude, 0.9.54 (user: "a T-64 cannot have the power of an Abrams or a Merkava"): new
+  scripts/unit_quality.gd (class -> nation -> health, damage, accuracy, speed, range); factions.for_unit() now
+  multiplies the doctrine by it (modifiers() itself is unchanged) and equip() stores unit.accuracy; world.gd:
+  scatter()/astray() scale gun misses, shell and rocket scatter, and guided-missile misses; hud.gd unit card gains
+  ACCURACY and shows attack after research.damage_mult. national_variants: names for all 22 nations, submarine
+  EXCEPT += saudi, ukraine. Codex: your war_costs.gd was untouched; the duel test funds both rivals for it.

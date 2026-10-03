@@ -109,8 +109,10 @@ func run() -> void:
 	set_nation(0, "australia")
 	var protected: Dictionary = w.spawn_unit("bushmaster", field, 0)
 	var protected_hp: float = protected.hp
-	w.damage(protected, 40.0, {"key":"artillery", "owner":1, "dead":true})
-	check(is_equal_approx(protected_hp - protected.hp, 30.0), "Bushmaster reduces actual explosive damage by 25 percent")
+	var shell := {"key":"artillery", "owner":1, "dead":true}
+	w.damage(protected, 40.0, shell)
+	# (the rival's own artillery hits as hard as its system does: unit_quality.gd)
+	check(is_equal_approx(protected_hp - protected.hp, 30.0 * w.research.damage_mult(shell)), "Bushmaster reduces actual explosive damage by 25 percent")
 	for owner in [0, 1]:
 		for id in F.IDS:
 			reset_power()

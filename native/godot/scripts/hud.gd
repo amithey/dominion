@@ -591,7 +591,7 @@ func _build_selection() -> void:
 	_sel_stats = HBoxContainer.new()
 	_sel_stats.add_theme_constant_override("separation", 4)
 	col.add_child(_sel_stats)
-	for caption in ["ATTACK", "RANGE", "SPEED", "HEALTH"]:
+	for caption in ["ATTACK", "ACCURACY", "RANGE", "SPEED", "HEALTH"]:
 		var plate := PanelContainer.new()
 		plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		plate.add_theme_stylebox_override("panel", UI.plate(UI.KEY_TOP, UI.KEY_LOW, Color(UI.TRIM, 0.8), 4.0))
@@ -1085,7 +1085,8 @@ func _update_selection() -> void:
 		_show_pic(main)
 		_medal_owner(units[0].owner)
 		var lead: Dictionary = units.filter(func(u): return u.key == main)[0]
-		_show_stats({"ATTACK": "%d" % int(lead.dmg), "RANGE": "%d m" % int(lead.range),
+		# Attack after research and the nation's own system; accuracy from its fire control.
+		_show_stats({"ATTACK": "%d" % int(round(float(lead.dmg) * world.research.damage_mult(lead))), "ACCURACY": "%d%%" % int(round(100.0 * float(lead.get("accuracy", 1.0)))), "RANGE": "%d m" % int(lead.range),
 			"SPEED": "%.1f" % float(lead.speed), "HEALTH": "%d%%" % int(round(100.0 * hp / maxf(max_hp, 1.0)))})
 		var name: String = world.unit_defs.get(main, {}).get("name", main)
 		_sel_title.text = UI.caps(name if units.size() == 1 else "%d units" % units.size())

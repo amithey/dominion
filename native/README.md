@@ -23,6 +23,28 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.54: every nation's own tanks, jets and missiles
+
+A T-64BV no longer fights like an M1A2 SEPv3 or a Merkava 4. Every shared unit class (tanks, carriers, artillery,
+rockets, air defence, helicopters, jets, drones, warships, submarines, stealth fighters, missile teams, infantry)
+now takes, for each of the 22 nations, its own real system of 2025-26 and that system's generation
+(scripts/unit_quality.gd; the research in native/UNIT-QUALITY-RESEARCH-2026-10-03.md):
+- **Protection, firepower, accuracy, speed and range** by generation: from a captured T-62 (-50% health, -38%
+  firepower, -45% accuracy) through the T-64BV, T-72 and Karrar (-24 to -35%), the export M1A1 and Leopard 2A4
+  (-14%), the shared unit's own figures (T-90M, Type 99A, Altay, M1A2S), up to the M1A2 SEPv3, Leopard 2A8, K2 and
+  Merkava 4 (+12 to +20%). Infantry varies half as much. Traits on top: the heavy Merkava and Challenger 2 are
+  slower, Brazil's old Leopard 1 has a modern fire-control system, North Korea's 170 mm Koksan outranges all.
+- **Accuracy is a new figure**: tank guns miss more or less often, shells and rockets scatter wider or tighter, an
+  older guided missile sometimes goes astray. The unit card shows it, and an attack after research and nation.
+- **Every nation's system by name**: 152 names added (the K2 Black Panther, the VT-4 Haider, the Chonma-216...).
+- Saudi Arabia and Ukraine no longer field submarines (they have none).
+
+Checks: tools/unit-quality-check.gd (14): four Merkava 4s beat four T-64BVs 5 of 5, four T-64BVs beat four captured
+T-62s 5 of 5, and two equal armies each win some (the stronger side always takes the slot that shoots second).
+nation-tech, factions (the doctrine checks now include each nation's system), additional-factions, combat-rules,
+menus, three-nations, national-profile and assist checks pass. Syria's and Afghanistan's battle-hardened infantry
+keep their profile's extra health; only their firepower and accuracy reflect the lighter kit.
+
 ## Version 0.9.53: the situation room
 
 The player chose, from three directions (imperial, war room, situation room), the situation room for every menu:

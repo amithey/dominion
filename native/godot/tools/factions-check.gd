@@ -101,10 +101,13 @@ func run() -> void:
 					profile_hp = 1.05
 				elif c[0] == 5 and c[1] == "rocketSoldier":
 					profile_hp = 1.10
-			check(is_equal_approx(u.max_hp / baseline.max_hp, c[2] * profile_hp), "health owner %d " % owner + str(c))
-			check(is_equal_approx(w.research.damage_mult(u), c[3]), "damage " + str(c))
-			check(is_equal_approx(u.range / baseline.range, c[4]), "range " + str(c))
-			check(is_equal_approx(u.speed / baseline.speed, c[5]), "speed " + str(c))
+			# Each nation's own system (unit_quality.gd, 0.9.54) on top: this nation's against the American baseline.
+			var qn: Dictionary = preload("res://scripts/unit_quality.gd").of(Factions.IDS[c[0]], c[1])
+			var qb: Dictionary = preload("res://scripts/unit_quality.gd").of("usa", c[1])
+			check(is_equal_approx(u.max_hp / baseline.max_hp, c[2] * profile_hp * qn.hp / qb.hp), "health owner %d " % owner + str(c))
+			check(is_equal_approx(w.research.damage_mult(u), c[3] * qn.damage), "damage " + str(c))
+			check(is_equal_approx(u.range / baseline.range, c[4] * qn.range / qb.range), "range " + str(c))
+			check(is_equal_approx(u.speed / baseline.speed, c[5] * qn.speed / qb.speed), "speed " + str(c))
 			check(is_equal_approx(u.cooldown / baseline.cooldown, c[6]), "reload " + str(c))
 			var hp: float = u.max_hp
 			Factions.equip(w, u)
