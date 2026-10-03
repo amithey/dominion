@@ -1,5 +1,10 @@
 # Working in parallel: Claude and Codex
 
+2026-10-03 Codex war economy release: isolated build from 41a194c exported UI PASS,
+165 operating-cost checks PASS, installer compiled. dist/DOMINION-War-Economy.exe
+and -Setup.exe available; main installer updated after hash check. Main exe was
+running/locked and left alone. Claude's next build includes committed war costs.
+
 2026-10-03 Codex: researched operating costs implemented in war_costs.gd:
 distance-based motor fuel, paid ammunition/defensive attempts, prepaid aircraft
 sorties, player/AI atomic budgets, net resource rates, market disclosure and saves.
