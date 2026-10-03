@@ -862,7 +862,7 @@ func _building_bars() -> void:
 		var rows := []
 		for b in group[1]:
 			var def: Dictionary = world.building_defs.get(b, {})
-			if def.is_empty() or not b in BUILD_MENU[build_tab]:
+			if def.is_empty() or not b in BUILD_MENU[build_tab] or not preload("res://scripts/national_variants.gd").builds(world, 0, b):
 				continue
 			if query != "" and not (str(def.name) + " " + str(def.desc)).to_lower().contains(query):
 				continue
@@ -874,7 +874,7 @@ func _building_bars() -> void:
 			listed[b] = true
 			_build_row(b)
 	# Anything in the tab that no group names still appears.
-	var rest: Array = BUILD_MENU[build_tab].filter(func(b): return not listed.has(b) and world.building_defs.has(b) and (query == "" or (str(world.building_defs[b].name) + " " + str(world.building_defs[b].desc)).to_lower().contains(query)))
+	var rest: Array = BUILD_MENU[build_tab].filter(func(b): return not listed.has(b) and world.building_defs.has(b) and preload("res://scripts/national_variants.gd").builds(world, 0, b) and (query == "" or (str(world.building_defs[b].name) + " " + str(world.building_defs[b].desc)).to_lower().contains(query)))
 	if not rest.is_empty():
 		_section("Other")
 		for b in rest:

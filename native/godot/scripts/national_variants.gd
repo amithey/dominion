@@ -54,20 +54,52 @@ const MISSILE_ONLY := {
 	"hypersonic": ["blue", "red", "russia", "india", "gold", "japan", "turkiye"],
 }
 
+## Shared units a nation does not field although most do (2026): Iraq, Syria
+## and Afghanistan. Afghanistan is landlocked and has no air force but a few
+## captured helicopters; the new Syrian army lost its jets, attack helicopters,
+## navy and strategic air defence to the strikes of December 2024; Iraq has no
+## submarines and no guided rocket artillery. See
+## native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md.
+const EXCEPT := {
+	"jet": ["syria", "afghanistan"],
+	"gunship": ["syria", "afghanistan"],
+	"gunboat": ["afghanistan"],
+	"corvette": ["syria", "afghanistan"],
+	"submarine": ["iraq", "syria", "afghanistan"],
+	"samLauncher": ["syria", "afghanistan"],
+	"himars": ["iraq", "syria", "afghanistan"],
+	"seaDrone": ["afghanistan"],
+}
+## Discoveries a nation does not pursue (2026).
+const RESEARCH_EXCEPT := {
+	"navalEngineering": ["afghanistan"],
+	"ballisticTech": ["iraq", "syria", "afghanistan"],
+	"stealthTech": ["iraq", "syria", "afghanistan"],
+	"satelliteRecon": ["syria", "afghanistan"],
+}
+## Buildings a nation does not put up: no nuclear reactor for Iraq (Osirak,
+## 1981), Syria (al-Kibar, 2007) or Afghanistan; no missile silo for any of
+## the three; no naval shipyard for landlocked Afghanistan.
+const BUILD_EXCEPT := {
+	"nuclearReactor": ["iraq", "syria", "afghanistan"],
+	"missileSilo": ["iraq", "syria", "afghanistan"],
+	"shipyard": ["afghanistan"],
+}
+
 ## Each nation's own system for a shared unit.
 const NAMES := {
-	"tank": {"blue": "M1A2 Abrams", "red": "Type 99A", "green": "Leopard 2A8", "gold": "Karrar", "russia": "T-90M Proryv", "india": "Arjun Mk1A", "japan": "Type 10", "turkiye": "Altay", "israel": "Merkava Mk 4"},
-	"apc": {"blue": "Stryker", "red": "ZBL-08", "green": "Boxer", "gold": "Rakhsh", "russia": "BTR-82A", "india": "WhAP", "japan": "Type 96 APC", "turkiye": "Pars", "israel": "Eitan"},
+	"tank": {"iraq": "M1A1M Abrams", "syria": "T-72", "afghanistan": "T-62 (captured)", "blue": "M1A2 Abrams", "red": "Type 99A", "green": "Leopard 2A8", "gold": "Karrar", "russia": "T-90M Proryv", "india": "Arjun Mk1A", "japan": "Type 10", "turkiye": "Altay", "israel": "Merkava Mk 4"},
+	"apc": {"afghanistan": "Humvee (captured)", "blue": "Stryker", "red": "ZBL-08", "green": "Boxer", "gold": "Rakhsh", "russia": "BTR-82A", "india": "WhAP", "japan": "Type 96 APC", "turkiye": "Pars", "israel": "Eitan"},
 	"artillery": {"blue": "M109A7 Paladin", "red": "PLZ-05", "green": "PzH 2000", "gold": "Raad-2", "russia": "2S19 Msta-S", "india": "K9 Vajra-T", "japan": "Type 99 SPH", "turkiye": "T-155 Firtina", "israel": "Roem"},
-	"mlrs": {"blue": "M270 MLRS", "red": "PHL-03", "green": "MARS II", "gold": "Fajr-5", "russia": "BM-30 Smerch", "india": "Pinaka", "japan": "M270 (JGSDF)", "turkiye": "T-122 Sakarya", "israel": "Lynx"},
+	"mlrs": {"iraq": "BM-21 Grad", "syria": "BM-21 Grad", "afghanistan": "BM-21 Grad", "blue": "M270 MLRS", "red": "PHL-03", "green": "MARS II", "gold": "Fajr-5", "russia": "BM-30 Smerch", "india": "Pinaka", "japan": "M270 (JGSDF)", "turkiye": "T-122 Sakarya", "israel": "Lynx"},
 	"himars": {"blue": "HIMARS", "red": "PCH-191", "green": "EuroPULS", "gold": "Fath-360 launcher", "russia": "Tornado-S", "india": "Guided Pinaka", "japan": "M270 GMLRS", "turkiye": "TRLG-230", "israel": "PULS"},
-	"aaVehicle": {"blue": "M-SHORAD", "red": "PGZ-09", "green": "Skyranger 30", "gold": "ZSU-23-4 Shilka", "russia": "Pantsir-S1", "india": "2K22 Tunguska", "japan": "Type 87 SPAAG", "turkiye": "Korkut", "israel": "Iron Dome battery"},
-	"samLauncher": {"blue": "Patriot PAC-3", "red": "HQ-9B", "green": "SAMP/T NG", "gold": "Bavar-373", "russia": "S-400", "india": "Akash-NG", "japan": "Type 03 Chu-SAM", "turkiye": "Hisar-O", "israel": "David's Sling"},
-	"helicopter": {"blue": "UH-60M Black Hawk", "red": "Z-20", "green": "NH90", "gold": "Shabaviz 2-75", "russia": "Mi-8AMTSh", "india": "Dhruv ALH", "japan": "UH-60JA", "turkiye": "T70 Black Hawk", "israel": "UH-60 Yanshuf"},
-	"gunship": {"blue": "AH-64E Apache", "red": "Z-10ME", "green": "Tiger", "gold": "Toufan", "russia": "Ka-52M", "india": "LCH Prachand", "japan": "AH-64DJP", "turkiye": "T129 ATAK", "israel": "AH-64 Saraf"},
-	"jet": {"blue": "F-15EX Eagle II", "red": "J-16", "green": "Rafale / Typhoon", "gold": "MiG-29", "russia": "Su-35S", "india": "Su-30MKI", "japan": "F-15J", "turkiye": "F-16 Block 50", "israel": "F-15I Ra'am"},
+	"aaVehicle": {"iraq": "Pantsir-S1", "syria": "35 mm air defence gun", "afghanistan": "ZU-23-2", "blue": "M-SHORAD", "red": "PGZ-09", "green": "Skyranger 30", "gold": "ZSU-23-4 Shilka", "russia": "Pantsir-S1", "india": "2K22 Tunguska", "japan": "Type 87 SPAAG", "turkiye": "Korkut", "israel": "Iron Dome battery"},
+	"samLauncher": {"iraq": "Cheongung II (KM-SAM)", "blue": "Patriot PAC-3", "red": "HQ-9B", "green": "SAMP/T NG", "gold": "Bavar-373", "russia": "S-400", "india": "Akash-NG", "japan": "Type 03 Chu-SAM", "turkiye": "Hisar-O", "israel": "David's Sling"},
+	"helicopter": {"iraq": "Mi-17", "syria": "Mi-17", "afghanistan": "UH-60 (captured)", "blue": "UH-60M Black Hawk", "red": "Z-20", "green": "NH90", "gold": "Shabaviz 2-75", "russia": "Mi-8AMTSh", "india": "Dhruv ALH", "japan": "UH-60JA", "turkiye": "T70 Black Hawk", "israel": "UH-60 Yanshuf"},
+	"gunship": {"iraq": "Mi-28NE", "blue": "AH-64E Apache", "red": "Z-10ME", "green": "Tiger", "gold": "Toufan", "russia": "Ka-52M", "india": "LCH Prachand", "japan": "AH-64DJP", "turkiye": "T129 ATAK", "israel": "AH-64 Saraf"},
+	"jet": {"iraq": "F-16IQ Fighting Falcon", "blue": "F-15EX Eagle II", "red": "J-16", "green": "Rafale / Typhoon", "gold": "MiG-29", "russia": "Su-35S", "india": "Su-30MKI", "japan": "F-15J", "turkiye": "F-16 Block 50", "israel": "F-15I Ra'am"},
 	"bomber": {"blue": "B-52H Stratofortress", "red": "H-6K", "russia": "Tu-160M"},
-	"drone": {"blue": "MQ-9 Reaper", "red": "Wing Loong II", "green": "Heron TP", "gold": "Mohajer-6", "russia": "Orion", "india": "TAPAS-BH", "japan": "MQ-9B SeaGuardian", "turkiye": "Bayraktar TB2", "israel": "Hermes 900"},
+	"drone": {"iraq": "CH-4B", "blue": "MQ-9 Reaper", "red": "Wing Loong II", "green": "Heron TP", "gold": "Mohajer-6", "russia": "Orion", "india": "TAPAS-BH", "japan": "MQ-9B SeaGuardian", "turkiye": "Bayraktar TB2", "israel": "Hermes 900"},
 	"corvette": {"blue": "Freedom-class LCS", "red": "Type 056A", "green": "K130 Braunschweig", "gold": "Shahid Soleimani-class", "russia": "Karakurt-class", "india": "Kamorta-class", "japan": "Mogami-class", "turkiye": "Ada-class", "israel": "Sa'ar 6"},
 	"destroyer": {"uk": "Type 45", "south_korea": "Sejong the Great-class", "australia": "Hobart-class", "blue": "Arleigh Burke-class", "red": "Type 055", "green": "Horizon-class", "gold": "Moudge-class", "russia": "Admiral Gorshkov-class", "india": "Visakhapatnam-class", "japan": "Maya-class", "turkiye": "Istanbul-class"},
 	"submarine": {"blue": "Virginia-class", "red": "Type 039C", "green": "Type 212CD", "gold": "Fateh-class", "russia": "Improved Kilo", "india": "Kalvari-class", "japan": "Taigei-class", "turkiye": "Reis-class", "israel": "Dolphin II"},
@@ -115,6 +147,11 @@ static func apply(w: Node) -> void:
 	for key in ONLY:
 		if w.unit_defs.has(key) and str(w.unit_defs[key].get("nation", "")) == "":
 			w.unit_defs[key].nation = ONLY[key].duplicate()
+	# A shared unit three nations lack: every other nation fields it.
+	var everyone: Array = preload("res://scripts/factions.gd").ARSENALS
+	for key in EXCEPT:
+		if w.unit_defs.has(key) and str(w.unit_defs[key].get("nation", "")) == "":
+			w.unit_defs[key].nation = everyone.filter(func(id): return not id in EXCEPT[key])
 	for key in DESCS:
 		if w.unit_defs.has(key):
 			w.unit_defs[key].desc = DESCS[key]
@@ -128,12 +165,19 @@ static func apply(w: Node) -> void:
 	for key in RESEARCH_ONLY:
 		if discoveries.has(key) and str(discoveries[key].get("nation", "")) == "":
 			discoveries[key].nation = RESEARCH_ONLY[key].duplicate()
+	for key in RESEARCH_EXCEPT:
+		if discoveries.has(key) and str(discoveries[key].get("nation", "")) == "":
+			discoveries[key].nation = everyone.filter(func(id): return not id in RESEARCH_EXCEPT[key])
 	for key in RESEARCH_DESCS:
 		if discoveries.has(key):
 			discoveries[key].desc = RESEARCH_DESCS[key]
 	for key in MISSILE_ONLY:
 		if w.map.missiles.get("types", {}).has(key):
 			w.map.missiles.types[key].nation = MISSILE_ONLY[key].duplicate()
+
+## Whether nation `owner` may put up building `key`.
+static func builds(w: Node, owner: int, key: String) -> bool:
+	return not preload("res://scripts/national_arsenal.gd").identity(w, owner) in BUILD_EXCEPT.get(key, [])
 
 ## Whether a nation field ("" / a key / a list of keys) admits nation `id`.
 static func admits(field, id: String) -> bool:
@@ -152,8 +196,26 @@ static func name_for(w: Node, owner: int, key: String) -> String:
 ## Stand-ins in a starting army for units the chosen nation does not field.
 const STAND_IN := {"bomber": "jet", "nuclearSub": "submarine", "destroyer": "corvette", "stealthFighter": "jet", "sixthGen": "jet"}
 
-## Swaps the player's starting units its nation does not have (match_setup).
+## Swaps the player's starting units its nation does not have (match_setup):
+## a stand-in it does field, else a drone for an aircraft and nothing for a
+## warship (landlocked Afghanistan has no navy at all).
 static func fix_start(data: Dictionary, arsenal: String) -> void:
+	var kept := []
 	for u in data.units:
-		if int(u.owner) == 0 and ONLY.has(u.key) and not arsenal in ONLY[u.key]:
-			u.key = STAND_IN.get(u.key, "tank")
+		if int(u.owner) == 0:
+			var guard := 0
+			while not fields(u.key, arsenal) and guard < 4:
+				guard += 1
+				var naval: bool = u.key in ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub"]
+				var air: bool = u.key in ["jet", "bomber", "stealthFighter", "sixthGen", "gunship"]
+				u.key = STAND_IN.get(u.key, "drone" if air else ("gunboat" if naval else "tank"))
+			if not fields(u.key, arsenal):
+				continue   # (a warship for a nation without a navy)
+		kept.append(u)
+	data.units = kept
+
+## Whether nation `arsenal` fields shared unit `key` (ONLY and EXCEPT).
+static func fields(key: String, arsenal: String) -> bool:
+	if ONLY.has(key) and not arsenal in ONLY[key]:
+		return false
+	return not arsenal in EXCEPT.get(key, [])

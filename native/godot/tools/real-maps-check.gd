@@ -61,7 +61,17 @@ func run() -> void:
 			for s in slots:
 				if s[2] == "": nearest = minf(nearest, hqs[i].distance_to(at(key, size, s[0], s[1])))
 			if nearest > 25.0: open_ok = false
-		check(open_ok, "%s: the other nations take the open cities" % name)
+		# (when the nations whose capitals these are stay out of the match, the
+		# open cities fill first and then their capitals: 22 nations, 3 open cities)
+		var opens: int = slots.filter(func(s): return s[2] == "").size()
+		var outsiders: int = data.nations.filter(func(n): return not str(n.get("id", "")) in natives).size()
+		var at_open := 0
+		for i in range(data.nations.size()):
+			if str(data.nations[i].get("id", "")) in natives: continue
+			for s in slots:
+				if s[2] == "" and hqs[i].distance_to(at(key, size, s[0], s[1])) < 25.0: at_open += 1
+		open_ok = at_open == mini(outsiders, opens)
+		check(open_ok, "%s: the other nations take the open cities first (%d of %d)" % [name, at_open, mini(outsiders, opens)])
 		# 3-6: capitals.
 		var dry := 0
 		var room := 0

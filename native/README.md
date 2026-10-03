@@ -22,6 +22,29 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 These are source changes; the existing 0.9.45 release installer has not been rebuilt.
 
+## Version 0.9.47: Iraq, Syria and Afghanistan
+
+Three more nations, 22 in all, each researched as it stands in 2026 (native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md):
+- **Iraq**, Prime Minister Ali al-Zaidi: oil +50%; F-16IQs, M1A1M Abrams and the Cheongung II; its own unit the
+  *Golden Division (CTS)*, elite assault infantry hard on buildings; its power *Popular Mobilization*, six militia
+  fighters at the capital at a price in Washington (relations with the United States -6, Iran +4). Research -15%,
+  harvests -20% (drought). Starts at Baghdad on the Middle East map.
+- **Syria**, President Ahmed al-Sharaa: battle-hardened, cheap infantry; *Shaheen Drone Teams*; its power
+  *Reconstruction Aid*, money from its partners and repairs at home. No jets, attack helicopters, warships but
+  gunboats, or strategic air defence (lost in December 2024); income -25%, research -20%.
+- **Afghanistan**, Supreme Leader Hibatullah Akhundzada (the Taliban): cheap, fast-raised, hardy infantry; its own
+  unit the *Suicide Attack Squad*, which closes in and detonates; its power *Insurgent Attacks*, three buildings
+  struck deep inside an enemy country and its income cut, condemned by every other nation. No air force but
+  captured helicopters, no navy, no strategic air defence or missiles, and no nuclear reactor; income -30%,
+  research -35%, trade -40% (sanctions). Starts hostile to Pakistan (the 2026 war).
+- New national rules: a shared unit, a discovery or a **building** a nation does not have (national_variants.gd
+  EXCEPT, RESEARCH_EXCEPT, BUILD_EXCEPT). No nuclear reactor or missile silo for any of the three, no shipyard for
+  landlocked Afghanistan: the build menu leaves them out, placing one is refused ("Not built by ..."), and the
+  rivals never build them. A starting army holds only what its nation fields. Even F10 does not open them.
+- Leader emblems until portraits are made.
+
+Checks: tools/three-nations-check.gd (33); additional-factions-check now also covers the three new units.
+
 ## Version 0.9.46: a testing cheat for everything
 
 - **F10, or "Testing: everything (F10)" in the pause menu (Esc):** for testing the game. Every era reached,

@@ -71,7 +71,7 @@ func run() -> void:
 	w.place_building("market", w.land_point(w.start, 60.0), 0, true)
 	w.economy.recalculate()
 
-	check(Factions.IDS.all(func(id): return NP.PROFILES.has(id)), "every faction has a national profile (%d)" % Factions.IDS.size())
+	check(Factions.IDS.all(func(id): return NP.PROFILES.has(id) or preload("res://scripts/additional_factions.gd").PROFILES.has(id)), "every faction has a national profile (%d)" % Factions.IDS.size())
 	for id in NP.PROFILES:
 		var s: Dictionary = NP.summary(id)
 		check(s.strengths.size() >= 2 and s.weaknesses.size() >= 1, "%s: %d strengths and %d weaknesses written down" % [id, s.strengths.size(), s.weaknesses.size()])

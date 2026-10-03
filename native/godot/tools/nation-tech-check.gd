@@ -44,10 +44,14 @@ const LACKS := {
 	"egypt": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "abmLauncher"],
 	"australia": ["bomber", "sixthGen", "nuclearSub", "railgunShip", "orca"],
 	"pakistan": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "abmLauncher"],
+	"iraq": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "submarine", "himars", "abmLauncher", "railgunShip", "orca"],
+	"syria": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "submarine", "jet", "gunship", "corvette", "samLauncher", "himars", "abmLauncher"],
+	"afghanistan": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "submarine", "destroyer", "corvette", "gunboat", "jet", "gunship", "samLauncher", "himars", "seaDrone", "abmLauncher"],
 }
 const EXPECT_NAMES := {"china": {"stealthFighter": "J-20", "sixthGen": "J-36", "tank": "Type 99A"}, "russia": {"stealthFighter": "Su-57", "tank": "T-90M Proryv"},
 	"usa": {"stealthFighter": "F-35A Lightning II", "sixthGen": "F-47"}, "iran": {"jet": "MiG-29", "tank": "Karrar"}, "israel": {"stealthFighter": "F-35I Adir", "laserAD": "Iron Beam"},
-	"turkiye": {"stealthFighter": "KAAN", "drone": "Bayraktar TB2"}, "japan": {"stealthFighter": "F-35A", "tank": "Type 10"}, "india": {"stealthFighter": "AMCA", "jet": "Su-30MKI"}, "eu": {"tank": "Leopard 2A8"}}
+	"turkiye": {"stealthFighter": "KAAN", "drone": "Bayraktar TB2"}, "japan": {"stealthFighter": "F-35A", "tank": "Type 10"}, "india": {"stealthFighter": "AMCA", "jet": "Su-30MKI"}, "eu": {"tank": "Leopard 2A8"},
+	"iraq": {"jet": "F-16IQ Fighting Falcon", "tank": "M1A1M Abrams"}, "syria": {"tank": "T-72"}, "afghanistan": {"helicopter": "UH-60 (captured)"}}
 func _initialize() -> void: call_deferred("run")
 func check(ok: bool, label: String) -> void:
 	print(("ok   " if ok else "FAIL ") + label)

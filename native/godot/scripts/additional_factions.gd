@@ -1,14 +1,15 @@
 extends RefCounted
 ## Research snapshot 2026-10-02. See native/FACTIONS-RESEARCH-2026-10-02.md.
+## Iraq, Syria and Afghanistan: 2026-10-03, native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md.
 ## Numerical modifiers are game balance, never claims about real effectiveness.
-const IDS := ["uk", "south_korea", "saudi", "brazil", "indonesia", "ukraine", "north_korea", "egypt", "australia", "pakistan"]
+const IDS := ["uk", "south_korea", "saudi", "brazil", "indonesia", "ukraine", "north_korea", "egypt", "australia", "pakistan", "iraq", "syria", "afghanistan"]
 ## Claim existing capital slots without changing the parallel map work's geometry.
-const CITY_FACTIONS := {"Riyadh": "saudi", "Kyiv": "ukraine", "Seoul": "south_korea", "Jakarta": "indonesia"}
-const NAMES := ["United Kingdom", "South Korea", "Saudi Arabia", "Brazil", "Indonesia", "Ukraine", "North Korea", "Egypt", "Australia", "Pakistan"]
-const LEADERS := ["Prime Minister Andy Burnham", "President Lee Jae Myung", "Crown Prince and Prime Minister Mohammed bin Salman", "President Luiz Inacio Lula da Silva", "President Prabowo Subianto", "President Volodymyr Zelenskyy", "General Secretary Kim Jong Un", "President Abdel Fattah el-Sisi", "Prime Minister Anthony Albanese", "Prime Minister Shehbaz Sharif"]
-const COLOURS := ["#bc354b", "#6d92bf", "#368250", "#a2b83f", "#ed6550", "#e7c443", "#905059", "#c38c52", "#628a9e", "#6c9560"]
-const PORTRAITS := ["burnham", "lee", "bin-salman", "lula", "prabowo", "zelenskyy", "kim", "sisi", "albanese", "sharif"]
-const SIGNATURES := ["Type 45 Destroyer", "K9 Thunder", "Saudi THAAD", "A-29 Super Tucano", "KCR-60", "Interceptor Drone", "Heavy Rocket Launcher", "Engineering Corps", "Bushmaster", "JF-17 Thunder"]
+const CITY_FACTIONS := {"Riyadh": "saudi", "Kyiv": "ukraine", "Seoul": "south_korea", "Jakarta": "indonesia", "Baghdad": "iraq"}
+const NAMES := ["United Kingdom", "South Korea", "Saudi Arabia", "Brazil", "Indonesia", "Ukraine", "North Korea", "Egypt", "Australia", "Pakistan", "Iraq", "Syria", "Afghanistan"]
+const LEADERS := ["Prime Minister Andy Burnham", "President Lee Jae Myung", "Crown Prince and Prime Minister Mohammed bin Salman", "President Luiz Inacio Lula da Silva", "President Prabowo Subianto", "President Volodymyr Zelenskyy", "General Secretary Kim Jong Un", "President Abdel Fattah el-Sisi", "Prime Minister Anthony Albanese", "Prime Minister Shehbaz Sharif", "Prime Minister Ali al-Zaidi", "President Ahmed al-Sharaa", "Supreme Leader Hibatullah Akhundzada"]
+const COLOURS := ["#bc354b", "#6d92bf", "#368250", "#a2b83f", "#ed6550", "#e7c443", "#905059", "#c38c52", "#628a9e", "#6c9560", "#a0522d", "#5d6d7e", "#d9d4c5"]
+const PORTRAITS := ["burnham", "lee", "bin-salman", "lula", "prabowo", "zelenskyy", "kim", "sisi", "albanese", "sharif", "zaidi", "sharaa", "akhundzada"]
+const SIGNATURES := ["Type 45 Destroyer", "K9 Thunder", "Saudi THAAD", "A-29 Super Tucano", "KCR-60", "Interceptor Drone", "Heavy Rocket Launcher", "Engineering Corps", "Bushmaster", "JF-17 Thunder", "Golden Division (CTS)", "Shaheen Drone Team", "Suicide Attack Squad"]
 const DOCTRINES := [
 	"Maritime protection: Type 45 air defence protects commerce. Expensive infantry and slower population growth reward a compact force.",
 	"Mobile industry: K9 artillery reloads and moves quickly. Strong research and production depend on imported energy.",
@@ -19,7 +20,10 @@ const DOCTRINES := [
 	"Fortified firepower: durable bunkers and heavy rocket salvos. Artillery readiness diverts money from an already weak trade economy.",
 	"Logistics hub: cheaper routes and faster shipments. Engineering Corps workers build 25% faster; civilians consume more food.",
 	"Resource frontier: iron and uranium fund a compact army. Bushmasters resist explosive attacks but lack anti-tank firepower.",
-	"Defence partnerships: affordable fighters and fast infantry recruitment. Joint research requires a living ally and ends if the alliance breaks."
+	"Defence partnerships: affordable fighters and fast infantry recruitment. Joint research requires a living ally and ends if the alliance breaks.",
+	"Oil state between two patrons: oil pays for an army of Abrams and F-16IQs, and the Popular Mobilization raises militias at a call, at a price in Washington. Drought cuts the harvest; no nuclear or missile programme.",
+	"Rebuilding after the war: battle-hardened infantry and cheap Shaheen drones. No jets, no attack helicopters, no navy and no strategic air defence: partners pay for the reconstruction.",
+	"Insurgency: cheap, fast-raised, hardy infantry, suicide attack squads and attacks deep inside an enemy country. No air force, no navy, no nuclear reactor; sanctions and isolation starve its economy and research."
 ]
 const PROFILES := {
 	"uk": {"bonus": {"spyPct": 0.1}, "growth": 0.85, "trade": 1.15, "costs": {"infantry": 1.1}, "strengths": ["Trade income +15%", "Covert success +10%", "Type 45 fleet air defence"], "weaknesses": ["Infantry costs +10%", "Population growth -15%"]},
@@ -31,12 +35,18 @@ const PROFILES := {
 	"north_korea": {"bonus": {"researchPct": -0.2}, "trade": 0.7, "build_costs": {"bunker": 0.8}, "unit_costs": {"mlrs": 0.85, "heavyRocket": 0.85}, "strengths": ["Bunkers cost -20% and have +25% health", "Rocket launchers cost -15%", "Short bursts of artillery readiness"], "weaknesses": ["Trade income -30%, research -20%", "Readiness reduces income for 90 seconds"]},
 	"egypt": {"bonus": {"researchPct": -0.1}, "trade": 1.15, "road_cost": 0.8, "civilian_food": 1.1, "strengths": ["Road and rail costs -20%", "Trade income +15%", "Engineering Corps workers build 25% faster"], "weaknesses": ["Research -10%", "Civilian food consumption +10%"]},
 	"australia": {"bonus": {"researchPct": 0.1, "civCapPct": -0.15}, "resources": {"iron": 1.25, "uranium": 1.25}, "costs": {"infantry": 1.2}, "strengths": ["Iron and uranium output +25%, research +10%", "Mining boom accelerates supplied extractors"], "weaknesses": ["Infantry costs +20%", "Civilian capacity -15%"]},
-	"pakistan": {"bonus": {"incomePct": -0.1}, "train": {"infantry": 1.15}, "unit_costs": {"jet": 0.85, "jf17": 0.85}, "costs": {"naval": 1.2}, "strengths": ["Conventional fighters cost -15%", "Infantry recruitment +15%", "Joint research with an ally"], "weaknesses": ["Income -10%", "Warship costs +20%"]}
+	"pakistan": {"bonus": {"incomePct": -0.1}, "train": {"infantry": 1.15}, "unit_costs": {"jet": 0.85, "jf17": 0.85}, "costs": {"naval": 1.2}, "strengths": ["Conventional fighters cost -15%", "Infantry recruitment +15%", "Joint research with an ally"], "weaknesses": ["Income -10%", "Warship costs +20%"]},
+	"iraq": {"bonus": {"researchPct": -0.15, "foodPct": -0.2}, "resources": {"oil": 1.5, "gas": 0.75}, "costs": {"air": 1.1}, "strengths": ["Oil output +50%", "Popular Mobilization raises six militia fighters at a call", "Golden Division counter-terrorism troops"], "weaknesses": ["Research -15%, farm output -20% (drought)", "Gas output -25%; crewed aircraft cost +10%", "No submarines, missile silo or nuclear reactor"]},
+	"syria": {"bonus": {"incomePct": -0.25, "researchPct": -0.2, "hpInfantry": 0.1}, "resources": {"oil": 0.7}, "train": {"drone": 1.25, "infantry": 1.15}, "costs": {"infantry": 0.9}, "strengths": ["Infantry +10% health, -10% cost, recruited 15% faster", "Drones produced 25% faster; Shaheen drone teams", "Reconstruction aid from its partners"], "weaknesses": ["Income -25%, research -20%, oil -30%", "No jets, attack helicopters, warships or strategic air defence", "No missile silo or nuclear reactor"]},
+	"afghanistan": {"bonus": {"incomePct": -0.3, "researchPct": -0.35, "hpInfantry": 0.15, "happiness": -5}, "resources": {"iron": 1.2}, "trade": 0.6, "train": {"infantry": 1.3}, "costs": {"infantry": 0.8, "armor": 1.25}, "strengths": ["Infantry +15% health, -20% cost, recruited 30% faster", "Suicide attack squads; insurgent attacks deep in an enemy country", "Iron output +20% (mines)"], "weaknesses": ["Income -30%, research -35%, trade -40% (sanctions)", "No air force, navy, strategic air defence, missiles or nuclear reactor", "Armour costs +25%; happiness -5"]}
 }
-const TIES := [["uk", "usa", 25.0], ["uk", "eu", 20.0], ["uk", "ukraine", 30.0], ["uk", "russia", -30.0], ["south_korea", "usa", 25.0], ["south_korea", "japan", 10.0], ["south_korea", "north_korea", -65.0], ["saudi", "usa", 15.0], ["saudi", "pakistan", 20.0], ["saudi", "iran", -20.0], ["brazil", "india", 10.0], ["brazil", "china", 15.0], ["indonesia", "japan", 10.0], ["ukraine", "eu", 30.0], ["ukraine", "russia", -75.0], ["north_korea", "russia", 25.0], ["north_korea", "china", 20.0], ["north_korea", "usa", -50.0], ["egypt", "saudi", 15.0], ["australia", "uk", 25.0], ["australia", "usa", 30.0], ["australia", "japan", 20.0], ["pakistan", "china", 30.0], ["pakistan", "india", -45.0]]
+const TIES := [["uk", "usa", 25.0], ["uk", "eu", 20.0], ["uk", "ukraine", 30.0], ["uk", "russia", -30.0], ["south_korea", "usa", 25.0], ["south_korea", "japan", 10.0], ["south_korea", "north_korea", -65.0], ["saudi", "usa", 15.0], ["saudi", "pakistan", 20.0], ["saudi", "iran", -20.0], ["brazil", "india", 10.0], ["brazil", "china", 15.0], ["indonesia", "japan", 10.0], ["ukraine", "eu", 30.0], ["ukraine", "russia", -75.0], ["north_korea", "russia", 25.0], ["north_korea", "china", 20.0], ["north_korea", "usa", -50.0], ["egypt", "saudi", 15.0], ["australia", "uk", 25.0], ["australia", "usa", 30.0], ["australia", "japan", 20.0], ["pakistan", "china", 30.0], ["pakistan", "india", -45.0],
+	["iraq", "iran", 35.0], ["iraq", "usa", 5.0], ["iraq", "turkiye", -10.0], ["iraq", "saudi", 10.0], ["iraq", "china", 15.0], ["iraq", "israel", -45.0], ["iraq", "syria", 5.0],
+	["syria", "turkiye", 40.0], ["syria", "saudi", 25.0], ["syria", "usa", 10.0], ["syria", "eu", 10.0], ["syria", "iran", -45.0], ["syria", "israel", -20.0], ["syria", "russia", -10.0],
+	["afghanistan", "pakistan", -55.0], ["afghanistan", "russia", 15.0], ["afghanistan", "china", 10.0], ["afghanistan", "india", 5.0], ["afghanistan", "iran", -5.0], ["afghanistan", "usa", -45.0], ["afghanistan", "israel", -45.0], ["afghanistan", "uk", -30.0]]
 ## Art models reuse the game's procedural chassis. Each unit has its own rules.
-const BASE := {"type45": "destroyer", "k9": "artillery", "saudiThaad": "abmLauncher", "superTucano": "jet", "kcr60": "corvette", "interceptorDrone": "loiterer", "heavyRocket": "mlrs", "bushmaster": "apc", "jf17": "jet"}
-const HOME := {"type45": "shipyard", "k9": "tankFactory", "saudiThaad": "tankFactory", "superTucano": "airfield", "kcr60": "shipyard", "interceptorDrone": "airfield", "heavyRocket": "tankFactory", "bushmaster": "tankFactory", "jf17": "airfield"}
+const BASE := {"ctsGolden": "commando", "shaheenDrone": "fpvTeam", "suicideSquad": "soldier", "type45": "destroyer", "k9": "artillery", "saudiThaad": "abmLauncher", "superTucano": "jet", "kcr60": "corvette", "interceptorDrone": "loiterer", "heavyRocket": "mlrs", "bushmaster": "apc", "jf17": "jet"}
+const HOME := {"ctsGolden": "barracks", "shaheenDrone": "barracks", "suicideSquad": "barracks", "type45": "shipyard", "k9": "tankFactory", "saudiThaad": "tankFactory", "superTucano": "airfield", "kcr60": "shipyard", "interceptorDrone": "airfield", "heavyRocket": "tankFactory", "bushmaster": "tankFactory", "jf17": "airfield"}
 const UNITS := {
 	"type45": {"nation": "uk", "name": "Type 45 Destroyer", "requires": "guidedMunitions", "scale": {"range": 1.2, "cost": 1.25}, "desc": "UK only. Fleet air defence: 70% cruise and 65% sea-skimming interception within 200 m. Limited ground firepower; expensive."},
 	"k9": {"nation": "south_korea", "name": "K9 Thunder", "requires": "compositeArmor", "scale": {"cooldown": 0.8, "speed": 1.15, "cost": 1.2}, "desc": "South Korea only. Mobile artillery: 20% shorter reload and 15% more speed than standard artillery; base cost +20%. National industry discounts apply."},
@@ -46,7 +56,10 @@ const UNITS := {
 	"interceptorDrone": {"nation": "ukraine", "name": "Interceptor Drone", "requires": "microchips", "scale": {"speed": 1.3, "cost": 0.7}, "desc": "Ukraine only. A canister-launched, one-use interceptor. Engages airborne drones only; vulnerable to electronic warfare."},
 	"heavyRocket": {"nation": "north_korea", "name": "Heavy Rocket Launcher", "requires": "ballisticTech", "scale": {"dmg": 1.35, "range": 1.2, "cooldown": 1.6, "speed": 0.8}, "desc": "North Korea only. Heavy rocket salvos: +35% damage and +20% range, but 60% longer reload and -20% speed. Needs protection between salvos."},
 	"bushmaster": {"nation": "australia", "name": "Bushmaster", "requires": "compositeArmor", "scale": {"speed": 1.15, "hp": 1.15}, "desc": "Australia only. Protected mobility: +15% speed and health, takes 25% less explosive damage. Weak against tanks."},
-	"jf17": {"nation": "pakistan", "name": "JF-17 Thunder", "requires": "jetPropulsion", "scale": {"hp": 0.85, "trainTime": 0.8}, "desc": "Pakistan only. Multirole fighter: trains 20% faster, with 15% less health. National fighter discount applies."}
+	"jf17": {"nation": "pakistan", "name": "JF-17 Thunder", "requires": "jetPropulsion", "scale": {"hp": 0.85, "trainTime": 0.8}, "desc": "Pakistan only. Multirole fighter: trains 20% faster, with 15% less health. National fighter discount applies."},
+	"ctsGolden": {"nation": "iraq", "name": "Golden Division (CTS)", "requires": "advancedLogistics", "scale": {"hp": 1.2, "cost": 1.15}, "desc": "Iraq only. The Counter-Terrorism Service: elite assault infantry, +20% health, and 40% more damage to buildings (street fighting, Mosul 2017). Base cost +15%."},
+	"shaheenDrone": {"nation": "syria", "name": "Shaheen Drone Team", "requires": "microchips", "scale": {"cost": 0.75, "trainTime": 0.8, "hp": 0.9}, "desc": "Syria only. A team flying cheap FPV attack drones, as the Shaheen units did in 2024: 25% cheaper and 20% faster to train than an FPV team, 10% less health. Jammers bring many down."},
+	"suicideSquad": {"nation": "afghanistan", "name": "Suicide Attack Squad", "requires": "advancedLogistics", "scale": {"hp": 0.8, "speed": 1.1, "range": 0.25, "cost": 1.5}, "desc": "Afghanistan only. Closes in and detonates: one blast, deadly to buildings, vehicles and infantry around it, and the squad is gone. Fragile on the approach; stopped by fire before it arrives."}
 }
 static func id_of(w: Node, owner: int) -> String:
 	return str(w.map.nations[owner].get("id", "")) if owner >= 0 and owner < w.map.nations.size() else ""
@@ -73,6 +86,11 @@ static func apply(w: Node) -> void:
 	w.damage_profile.interceptorDrone = {"air": 2.0}
 	w.damage_profile.kcr60.naval = float(w.damage_profile.kcr60.get("naval", 1.0)) * 1.25
 	w.damage_profile.bushmaster.armor = 0.1
+	w.damage_profile.ctsGolden.building = float(w.damage_profile.ctsGolden.get("building", 1.0)) * 1.4
+	# The squad is the charge: one blast (world.fire_weapon "detonate") at five times a rifleman's damage.
+	w.unit_defs.suicideSquad.dmg = float(w.unit_defs.soldier.dmg) * 5.0
+	w.unit_defs.suicideSquad.aggro = 22.0
+	w.damage_profile.suicideSquad = {"infantry": 1.5, "light": 2.0, "armor": 1.4, "air": 0.0, "naval": 0.8, "building": 3.0}
 	if id_of(w, 0) == "egypt":
 		w.unit_defs.worker.name = "Engineering Corps"
 		w.unit_defs.worker.desc = "Egyptian engineers: build and repair 25% faster. Retain standard worker mining duties."

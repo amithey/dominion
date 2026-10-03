@@ -113,6 +113,9 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	# Construction: fixed opening, then whatever the economy lacks.
 	if n.next_build <= 0.0 and not cyber:
 		var key: String = build_order[n.build_idx] if n.build_idx < build_order.size() else pick_building(n)
+		if not preload("res://scripts/national_variants.gd").builds(world, n.id, key):
+			key = ""   # (no reactor for Afghanistan): the next in the order
+			if n.build_idx < build_order.size(): n.build_idx += 1
 		var def: Dictionary = world.building_defs.get(key, {})
 		if not def.is_empty():
 			var cost := weighted_cost(preload("res://scripts/additional_factions.gd").building_cost(world, n.id, key, def.get("base_cost", def.cost)))
@@ -307,6 +310,8 @@ func pick_building(n: Dictionary) -> String:
 				continue
 			var def: Dictionary = world.building_defs[key]
 			if def.get("unique", false) and counts.get(key, 0) > 0:
+				continue
+			if not preload("res://scripts/national_variants.gd").builds(world, n.id, key):
 				continue
 			var target := maxi(1, int(ceil(total / 10.0 * float(goal[1]))))
 			if int(counts.get(key, 0)) < target:

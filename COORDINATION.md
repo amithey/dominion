@@ -525,3 +525,15 @@ UI files listed above.
   (load 57/107/182 s, memory 430/815/1281 MB, step ~6 ms, cross-map route 0.2-1 s) with the engine work a
   bigger map needs (cached navigation, packed heights, async long routes, chunked terrain, sea plane size,
   rivers, a land-cover mask). Measured in a scratch copy; nothing in the project changed.
+- 2026-10-03 Claude, 0.9.47: (user: add Iraq, Syria, Afghanistan, researched in every field) appended to Codex's
+  additional_factions / additional_powers registries (IDS, PROFILES, TIES, UNITS ctsGolden / shaheenDrone /
+  suicideSquad, CITY_FACTIONS Baghdad, three POWERS) without changing the ten existing entries. national_variants:
+  EXCEPT / RESEARCH_EXCEPT / BUILD_EXCEPT and builds(); fix_start swaps or drops start units a nation lacks.
+  world: "detonate" weapon, site_problem refuses a building a nation does not build; ai skips such buildings; hud
+  build menu hides them. additional-factions-check: "barracks" added to its homes (the new units train there);
+  national-profile-check counts additional_factions.PROFILES too (it failed since the ten). Emblems
+  ui/leaders/zaidi|sharaa|akhundzada-emblem.svg: Codex, portraits (-v2.png) welcome. Research doc
+  native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md. tools/three-nations-check.gd (33) in run-tests.ps1.
+  Codex: additional-factions-check "superTucano projectile hits a valid target" fails on a clean export of
+  ec162ef too (before my change; jf17 missed once under load): yours to look at. Syria's aid pays out 30s
+  later (an extra_aid effect in step) so a power use only ever charges, as that check expects.

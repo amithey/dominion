@@ -54,7 +54,7 @@ func run() -> void:
 	check(is_equal_approx(w.research.bonus("researchPct"), 0.2), "Korean research modifier reaches the research engine")
 	provision(0)
 	var homes := {}
-	for key in ["tankFactory", "airfield", "shipyard", "port", "bank", "techPark", "farm", "school", "powerPlant"]: homes[key] = building(key)
+	for key in ["tankFactory", "airfield", "shipyard", "port", "bank", "techPark", "farm", "school", "powerPlant", "barracks"]: homes[key] = building(key)
 	building("port", 1)
 	building("port", 2)
 	var field: Vector3 = w.land_point(w.start, 30)
@@ -125,6 +125,10 @@ func run() -> void:
 			if id == "australia":
 				var mine := building("extractor", owner)
 				mine.deposit = w.deposits[0]
+			if id == "syria": w.diplomacy.set_score(owner, target, 45.0)   # a partner to pay for the rebuilding
+			if id == "afghanistan":
+				w.diplomacy.set_flag(w.diplomacy.war, owner, target, true)   # insurgent attacks only on an enemy
+				building("farm", target)
 			var resource: String = P.POWERS[id].costs.keys()[0]
 			var balance := P.funds(w, owner, resource)
 			check(FP.blocked(w, owner, target) == "", "%s owner %d prerequisites met" % [id, owner])

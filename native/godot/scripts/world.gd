@@ -4274,6 +4274,8 @@ func placement_problem(key: String, at: Vector3) -> String:
 
 func site_problem(key: String, at: Vector3, owner: int) -> String:
 	var def: Dictionary = building_defs[key]
+	if not preload("res://scripts/national_variants.gd").builds(self, owner, key):
+		return "Not built by %s" % str(map.nations[owner].get("name", "this nation")).split(" · ")[0]
 	var footprint := footprint_of(key)
 	var half := footprint * 0.5
 	var lowest := INF
@@ -4909,7 +4911,7 @@ const WEAPONS := {"bomber": "bomb", "jet": "missile", "drone": "missile", "helic
 	"fpvTeam": "fpv", "atgmTeam": "atgm", "himars": "guided", "laserAD": "laser", "loiterer": "kamikaze", "seaDrone": "kamikaze",
 	"raptor": "missile", "raider": "bomb", "df17": "hgv", "shahedLauncher": "swarm", "shahed": "kamikaze", "irisT": "sam",
 	"railgunShip": "railgun", "sixthGen": "missile", "wingman": "missile", "orca": "torpedo",
-	"tos1a": "thermobaric", "brahmos": "brahmos", "aegisCruiser": "missile", "akinci": "missile", "harop": "kamikaze", "type45": "sam", "k9": "shell_arc", "superTucano": "missile", "kcr60": "missile", "interceptorDrone": "kamikaze", "heavyRocket": "rocket_salvo", "jf17": "missile"}
+	"tos1a": "thermobaric", "brahmos": "brahmos", "aegisCruiser": "missile", "akinci": "missile", "harop": "kamikaze", "type45": "sam", "k9": "shell_arc", "superTucano": "missile", "kcr60": "missile", "interceptorDrone": "kamikaze", "heavyRocket": "rocket_salvo", "jf17": "missile", "suicideSquad": "detonate"}
 
 ## Fires at `enemy`; false when the weapon cannot be used yet (a bomber that
 ## is not over its target), so the reload is not spent.
@@ -4976,6 +4978,15 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 				jammed_strikes += 1
 				return true
 			effects.projectile("rocket", launch, target, func(at): blast(unit, at, dmg, 2.4, 0.9), 0.0, enemy.node)
+		"detonate":
+			# The squad is the charge: it closes in and blows itself up beside its target.
+			var close: Vector3 = unit.node.position - enemy.node.position
+			close.y = 0.0
+			var at: Vector3 = enemy.node.position + close.limit_length(1.5)
+			at.y = maxf(height_at(at.x, at.z), float(map.seaLevel)) + 0.8
+			kill(unit)
+			unit.node.visible = false
+			blast(unit, at, dmg, 5.0, 1.8)
 		"kamikaze":
 			# The drone is the warhead: it dives in and is gone.
 			var start: Vector3 = unit.node.position

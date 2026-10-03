@@ -11,7 +11,10 @@ const POWERS := {
 	"north_korea": {"name": "Artillery Readiness", "target": false, "cooldown": 360.0, "duration": 45.0, "costs": {"money": 400, "iron": 40}, "needs": ["tankFactory"], "desc": "$400 + 40 iron: artillery reloads 25% faster for 45s, but income falls 20% for 90s. Requires supplied tank factory and artillery."},
 	"egypt": {"name": "Logistics Hub", "target": false, "cooldown": 360.0, "duration": 120.0, "costs": {"money": 600}, "needs": ["port"], "desc": "$600: trade shipments departing during the next 120s have 30% shorter journeys. Requires a supplied port; routes still need trading partners."},
 	"australia": {"name": "Mining Boom", "target": false, "cooldown": 360.0, "duration": 90.0, "costs": {"money": 700}, "needs": [], "desc": "$700: supplied extractors produce 40% more for 90s. Requires an active extractor; normal storage caps and resource deposits apply."},
-	"pakistan": {"name": "Defence Partnership", "target": true, "cooldown": 360.0, "duration": 120.0, "costs": {"money": 600, "silicon": 40}, "needs": [], "desc": "$600 + 40 silicon: you and one ally gain +15% research for 120s. Ends when the alliance breaks. Multiple partnerships do not stack."}
+	"pakistan": {"name": "Defence Partnership", "target": true, "cooldown": 360.0, "duration": 120.0, "costs": {"money": 600, "silicon": 40}, "needs": [], "desc": "$600 + 40 silicon: you and one ally gain +15% research for 120s. Ends when the alliance breaks. Multiple partnerships do not stack."},
+	"iraq": {"name": "Popular Mobilization", "target": false, "cooldown": 360.0, "duration": 0.0, "costs": {"money": 500, "food": 60}, "needs": ["barracks"], "desc": "$500 + 60 food: six militia fighters (four riflemen, two rocket teams) muster at your capital. The militias answer to Tehran as much as to Baghdad: relations with the United States -6, with Iran +4. Requires a supplied barracks."},
+	"syria": {"name": "Reconstruction Aid", "target": false, "cooldown": 420.0, "duration": 60.0, "costs": {"money": 100}, "needs": [], "desc": "$100 to host a donors' conference: $250 pledged by every nation at +20 relations or better (up to four) arrives 30s later, and up to five damaged buildings near your capital regain 20% of their health over 60s. Needs at least one such partner."},
+	"afghanistan": {"name": "Insurgent Attacks", "target": true, "cooldown": 300.0, "duration": 90.0, "costs": {"money": 300}, "needs": [], "desc": "$300: attacks deep inside an enemy country, at war with you or at -40 relations or worse. Three of its buildings (not its capital) lose 30% of their health, and its income falls 15% for 90s. Every other nation's opinion of you falls by 5, the target's by 15."}
 }
 static func nation(w: Node, owner: int):
 	if w.ai != null:
@@ -70,6 +73,12 @@ static func blocked(w: Node, owner: int, target: int) -> String:
 			if not w.buildings.any(func(b): return b.owner == owner and b.built and not b.dead and b.get("supplied", true) and not w.disabled(b) and b.deposit != null): return "Needs an active supplied extractor"
 		"pakistan":
 			if not w.diplomacy.allied(owner, target) or w.diplomacy.at_war(owner, target): return "Needs an ally at peace"
+		"syria":
+			if partners(w, owner).is_empty(): return "Needs a partner at +20 relations or better"
+		"afghanistan":
+			if target < 0 or target == owner or w.diplomacy.defeated(target): return "Choose a nation"
+			if not w.diplomacy.at_war(owner, target) and w.diplomacy.rel(owner, target) > -40.0: return "Only against an enemy (at war, or -40 relations or worse)"
+			if insurgency_targets(w, target).is_empty(): return "No buildings to strike there"
 	return ""
 static func effect(w: Node, kind: String, owner: int, value: float, duration: float, by := -1) -> Dictionary:
 	var e := {"kind": kind, "nation": owner, "by": owner if by < 0 else by, "value": value, "until": w.game_time + duration}
@@ -116,6 +125,60 @@ static func use_defence_partnership(w: Node, owner: int, target: int) -> void:
 	for recipient in [owner, target]:
 		var e := effect(w, "extra_researchPct", recipient, 0.15, 120, owner)
 		e.ally = target
+## Iraq: four riflemen and two rocket teams at the capital; Washington frowns, Tehran smiles.
+static func use_popular_mobilization(w: Node, owner: int) -> void:
+	var capital = null
+	for b in w.buildings:
+		if b.owner == owner and b.key == "hq" and not b.dead: capital = b
+	if capital == null: return
+	for i in range(6):
+		var at: Vector3 = w.land_point(capital.root.position + Vector3.FORWARD.rotated(Vector3.UP, TAU * i / 6.0) * 16.0, 10.0)
+		var u: Dictionary = w.spawn_unit("rocketSoldier" if i % 3 == 2 else "soldier", at, owner)
+		u.militia = true
+	for other in range(w.diplomacy.n):
+		match preload("res://scripts/national_arsenal.gd").identity(w, other):
+			"blue": w.diplomacy.change(owner, other, -6.0)
+			"gold": w.diplomacy.change(owner, other, 4.0)
+
+## Syria: the nations at +20 relations or better (four at most).
+static func partners(w: Node, owner: int) -> Array:
+	var out := []
+	for other in range(w.diplomacy.n):
+		if other != owner and not w.diplomacy.defeated(other) and not w.diplomacy.at_war(owner, other) and w.diplomacy.rel(owner, other) >= 20.0:
+			out.append(other)
+	return out.slice(0, 4)
+
+static func use_reconstruction_aid(w: Node, owner: int) -> int:
+	var paid := 250.0 * partners(w, owner).size()
+	# Pledges take time to arrive (step() pays them).
+	var pledge := effect(w, "extra_aid", owner, paid, 86400)
+	pledge.eta = 30.0
+	for b in repairs(w, owner):
+		var e := effect(w, "extra_repair", owner, minf(b.max_hp * 0.2, b.max_hp - b.hp), 60)
+		if not b.has("reconstruction_tag"): b.reconstruction_tag = str(Time.get_ticks_usec()) + ":" + str(b.root.get_instance_id())
+		e.tag = b.reconstruction_tag
+		e.x = b.root.position.x
+		e.z = b.root.position.z
+		e.key = b.key
+		e.last = w.game_time
+		e.rate = float(e.value) / 60.0
+	return int(paid)
+
+## Afghanistan: the target's standing buildings, its capital spared.
+static func insurgency_targets(w: Node, target: int) -> Array:
+	return w.buildings.filter(func(b): return b.owner == target and b.built and not b.dead and b.key != "hq")
+
+static func use_insurgent_attacks(w: Node, owner: int, target: int) -> void:
+	var list := insurgency_targets(w, target)
+	list.shuffle()
+	for b in list.slice(0, 3):
+		w.damage(b, b.max_hp * 0.3, {"owner": owner, "key": "insurgents"})
+	var e := effect(w, "income", target, 0.85, 90, owner)
+	e.erase("ally")
+	for other in range(w.diplomacy.n):
+		if other != owner and not w.diplomacy.defeated(other):
+			w.diplomacy.change(owner, other, -15.0 if other == target else -5.0)
+
 static func use(w: Node, owner: int, target: int) -> String:
 	var id := F.id_of(w, owner)
 	if not pay(w, owner, POWERS[id].costs): return "Insufficient resources"
@@ -130,6 +193,9 @@ static func use(w: Node, owner: int, target: int) -> String:
 		"egypt": use_logistics_hub(w, owner)
 		"australia": use_mining_boom(w, owner)
 		"pakistan": use_defence_partnership(w, owner, target)
+		"iraq": use_popular_mobilization(w, owner)
+		"syria": return "%s secured $%d in reconstruction pledges, arriving in 30 seconds." % [w.diplomacy.name_of(owner), use_reconstruction_aid(w, owner)]
+		"afghanistan": use_insurgent_attacks(w, owner, target)
 	return "%s activated %s." % [w.diplomacy.name_of(owner), POWERS[id].name]
 static func sea_closed(w: Node, owner: int) -> bool:
 	return w.power_effects.any(func(e): return e.kind == "hormuz" and int(e.by) != owner and float(e.until) > w.game_time)
@@ -154,6 +220,14 @@ static func step(w: Node, delta: float) -> void:
 					e.value = maxf(0.0, float(e.value) - amount)
 					break
 			if not found: e.until = 0.0
+		if e.kind == "extra_aid" and float(e.until) > w.game_time:
+			e.eta = float(e.eta) - delta
+			if e.eta <= 0.0:
+				e.until = 0.0
+				if int(e.nation) == 0: w.economy.res.money += float(e.value)
+				else: nation(w, int(e.nation)).money += float(e.value)
+				_notice(w, int(e.nation), -1, "Reconstruction aid arrived: $%d." % int(e.value))
+			continue
 		if e.kind != "extra_food_aid" or float(e.until) <= w.game_time: continue
 		var source := int(e.by)
 		var target := int(e.nation)
