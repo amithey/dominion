@@ -172,6 +172,7 @@ static func apply(w: Node) -> void:
 	FactionArsenal.apply(w)   # the five newer factions' own weapons
 	preload("res://scripts/additional_factions.gd").apply(w)
 	preload("res://scripts/national_variants.gd").apply(w)   # who really fields what, under which name
+	preload("res://scripts/unit_quality.gd").apply(w)   # the systems that replace them (the M1E3 Abrams)
 	var types: Dictionary = w.map.missiles.types
 	for key in types:
 		var odds: Dictionary = INTERCEPT[CLASS_OF.get(key, "cruise")]
@@ -207,6 +208,8 @@ static func aps_chance(w: Node, vehicle: Dictionary) -> float:
 		return 0.0
 	if float(vehicle.get("aps_ready", 0.0)) > w.game_time:
 		return 0.0
+	if vehicle.get("aps_builtin", false):
+		return maxf(0.5, w.research.bonus("aps") if vehicle.owner == 0 and w.research else 0.0)   # the M1E3's Iron Fist
 	if vehicle.owner == 0:
 		return w.research.bonus("aps") if w.research else 0.0
 	return 0.3 if w.research and w.research.ai_tech(vehicle.owner) >= 5.0 else 0.0

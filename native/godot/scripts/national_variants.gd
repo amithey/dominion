@@ -90,7 +90,7 @@ const BUILD_EXCEPT := {
 
 ## Each nation's own system for a shared unit.
 const NAMES := {
-	"tank": {"iraq": "M1A1M Abrams", "syria": "T-72", "afghanistan": "T-62 (captured)", "blue": "M1A2 Abrams", "red": "Type 99A", "green": "Leopard 2A8", "gold": "Karrar", "russia": "T-90M Proryv", "india": "Arjun Mk1A", "japan": "Type 10", "turkiye": "Altay", "israel": "Merkava Mk 4", "uk": "Challenger 2", "south_korea": "K2 Black Panther", "saudi": "M1A2S Abrams", "brazil": "Leopard 1A5BR", "indonesia": "Leopard 2A4", "ukraine": "T-64BV", "north_korea": "Chonma-216", "egypt": "M1A1 Abrams", "australia": "M1A2 SEPv3 Abrams", "pakistan": "VT-4 Haider"},
+	"tank": {"iraq": "M1A1M Abrams", "syria": "T-72", "afghanistan": "T-62 (captured)", "blue": "M1A2 SEPv3 Abrams", "red": "Type 99A", "green": "Leopard 2A8", "gold": "Karrar", "russia": "T-90M Proryv", "india": "Arjun Mk1A", "japan": "Type 10", "turkiye": "Altay", "israel": "Merkava Mk 4", "uk": "Challenger 2", "south_korea": "K2 Black Panther", "saudi": "M1A2S Abrams", "brazil": "Leopard 1A5BR", "indonesia": "Leopard 2A4", "ukraine": "T-64BV", "north_korea": "Chonma-216", "egypt": "M1A1 Abrams", "australia": "M1A2 SEPv3 Abrams", "pakistan": "VT-4 Haider"},
 	"apc": {"afghanistan": "Humvee (captured)", "blue": "Stryker", "red": "ZBL-08", "green": "Boxer", "gold": "Rakhsh", "russia": "BTR-82A", "india": "WhAP", "japan": "Type 96 APC", "turkiye": "Pars", "israel": "Eitan", "uk": "Boxer", "south_korea": "K21", "saudi": "LAV 700", "brazil": "VBTP Guarani", "indonesia": "Anoa", "ukraine": "BTR-4", "north_korea": "M-2010", "egypt": "M113 / Fahd", "australia": "Boxer CRV", "pakistan": "Saad / M113", "iraq": "BTR-4 / M113", "syria": "BMP-1"},
 	"artillery": {"blue": "M109A7 Paladin", "red": "PLZ-05", "green": "PzH 2000", "gold": "Raad-2", "russia": "2S19 Msta-S", "india": "K9 Vajra-T", "japan": "Type 99 SPH", "turkiye": "T-155 Firtina", "israel": "Roem", "uk": "AS-90 / Archer", "south_korea": "K9A1 Thunder", "saudi": "CAESAR", "brazil": "M109A5+ BR", "indonesia": "CAESAR", "ukraine": "2S3 / PzH 2000 / Krab", "north_korea": "M1989 Koksan", "egypt": "M109A5", "australia": "AS9 Huntsman", "pakistan": "M109A5 / SH-15", "iraq": "M109A5", "syria": "2S1 Gvozdika / D-30", "afghanistan": "D-30 (towed)"},
 	"mlrs": {"iraq": "BM-21 Grad", "syria": "BM-21 Grad", "afghanistan": "BM-21 Grad", "blue": "M270 MLRS", "red": "PHL-03", "green": "MARS II", "gold": "Fajr-5", "russia": "BM-30 Smerch", "india": "Pinaka", "japan": "M270 (JGSDF)", "turkiye": "T-122 Sakarya", "israel": "Lynx", "uk": "M270A2 MLRS", "south_korea": "K239 Chunmoo", "saudi": "ASTROS II", "brazil": "ASTROS II Mk6", "indonesia": "ASTROS II / RM-70", "ukraine": "BM-27 / HIMARS", "north_korea": "KN-25 / M1991", "egypt": "BM-21 Sakr", "australia": "M142 HIMARS", "pakistan": "A-100 / Fatah-1"},
@@ -190,6 +190,9 @@ static func admits(field, id: String) -> bool:
 ## Unit `key` as nation `owner` calls it.
 static func name_for(w: Node, owner: int, key: String) -> String:
 	var id: String = preload("res://scripts/national_arsenal.gd").identity(w, owner)
+	var up: Dictionary = preload("res://scripts/unit_quality.gd").upgrade(w, owner, preload("res://scripts/factions.gd").identity(w, owner), key)
+	if not up.is_empty():
+		return str(up.name)   # its successor, once researched (the M1E3 Abrams)
 	if NAMES.has(key) and NAMES[key].has(id):
 		return NAMES[key][id]
 	var def: Dictionary = w.unit_defs.get(key, {})

@@ -39,7 +39,7 @@ captured one poorly kept, combat-proven crews shoot straighter).
 
 | Nation | System | Gen | Health | Damage | Accuracy | Speed | Range | Notes |
 |---|---|---|---|---|---|---|---|---|
-| United States | M1A2 SEPv3 Abrams | 5.0 | +15% | +8% | +12% | +0% | +0% | 120 mm, depleted-uranium armour, 3rd-gen thermal FCS |
+| United States | M1A2 SEPv3 Abrams | 5.0 | +24% | +15% | +12% | -5% | +0% | the only tank with depleted-uranium armour, plus Trophy APS; the M829A4 depleted-uranium round, the most powerful tank round in service; 3rd-gen FLIR; 78 t, so slower |
 | China | Type 99A | 4.0 | +0% | +0% | +0% | +0% | +0% | 125 mm, composite + ERA, modern FCS |
 | European Union | Leopard 2A8 | 5.0 | +12% | +8% | +12% | +3% | +0% | 120 mm L55A1, latest armour, Trophy APS |
 | Iran | Karrar | 2.0 | -24% | -22% | -32% | -5% | +0% | T-72 hull, 125 mm, ERA; older FCS |
@@ -56,7 +56,7 @@ captured one poorly kept, combat-proven crews shoot straighter).
 | Ukraine | T-64BV | 2.0 | -30% | -22% | -28% | -5% | +0% | 1980s tank, ERA, combat-proven crews |
 | North Korea | Chonma-216 | 2.0 | -30% | -22% | -38% | -5% | +0% | T-62 lineage, 125 mm; the Chonma-20 is still rare |
 | Egypt | M1A1 Abrams | 3.0 | -14% | -10% | -12% | +0% | +0% | export M1A1, being upgraded to M1A1SA |
-| Australia | M1A2 SEPv3 Abrams | 5.0 | +15% | +8% | +12% | +0% | +0% | as the US Army's |
+| Australia | M1A2 SEPv3 Abrams | 5.0 | +24% | +15% | +12% | -5% | +0% | as the US Army's |
 | Pakistan | VT-4 Haider | 3.5 | -7% | -5% | -8% | +0% | +0% | 125 mm, composite + FY-4 ERA, modern FCS |
 | Iraq | M1A1M Abrams | 3.0 | -18% | -10% | -16% | -3% | +0% | export armour without depleted uranium, maintenance gaps |
 | Syria | T-72 | 2.0 | -35% | -22% | -32% | -10% | +0% | remnants after 2024, poorly maintained |
@@ -463,6 +463,18 @@ Classes that take another's figures: guided rocket launchers (HIMARS etc.) take 
 submarines the submarine's, heavy bombers the jet's, loitering munitions the drone's. National signature units
 (F-22, DF-17, Harop, KCR-60...) keep their own designed figures.
 
+## The next Abrams: M1E3 (United States, research)
+
+The US Army's tank in service is the M1A2 SEPv3: the only tank armoured with depleted uranium, with Trophy active
+protection, and firing the M829A4, the most powerful kinetic round in service. It now stands above the other
+third-generation-plus tanks: +24% health and +15% firepower (the Leopard 2A8 and K2 +12% and +8%), and 5% slower
+at 78 t. Its successor, the M1E3, was unveiled in Detroit on 14 January 2026 and entered operational tests in
+the summer of 2026; a production decision is expected around 2027 and fielding in the early 2030s. In the game
+it is a United States-only discovery (era 4, after Active Protection, with a tank factory): every tank built
+afterwards is an M1E3: +30% health, +15% firepower, +20% accuracy, 12% faster than the SEPv3 (60 t, a hybrid
+diesel-electric drive), 20% faster reloads (an autoloader) and the Iron Fist (XM251) active protection built in.
+A rival United States fields it once its technology reaches era 4.
+
 ## Units removed
 
 Saudi Arabia has never had a submarine, and Ukraine's only one (the Zaporizhzhia) was seized in Crimea in
@@ -479,4 +491,9 @@ Saudi Arabia has never had a submarine, and Ukraine's only one (the Zaporizhzhia
 - Air: Wikipedia, Egyptian Air Force (Rafale, F-16, MiG-29M); Iraqi Air Force (F-16IQ); Brazil's Gripen E.
 - Air defence: Iraq's Cheongung II order (2024); Ukraine's Patriot, IRIS-T and NASAMS; Brazil's lack of a
   medium-range SAM.
+- The M1A2 SEPv3: Army Recognition and militarytoday.com data sheets; Defense Industry Daily on the SEP
+  programme (Trophy for the SEPv2 and SEPv3, M829A4).
+- The M1E3: Army Recognition, 'U.S. Army to Begin M1E3 Abrams Prototype Operational Testing in Summer 2026' and
+  'U.S. Army unveils first M1E3 Abrams prototype'; Meta-Defense, 15 January 2026; Defence Industry Europe on the
+  uncrewed turret and hybrid powertrain; 19FortyFive, January 2026.
 - Syria and Afghanistan: native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md.

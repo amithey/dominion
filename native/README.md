@@ -23,6 +23,21 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.55: the American tank, and the next one
+
+The player pointed out the American tank was underrated. Checked again:
+- **The M1A2 SEPv3 now leads the tanks in service**: the only tank armoured with depleted uranium, with Trophy active
+  protection, firing the M829A4 (the most powerful kinetic round in service): +24% health and +15% firepower over
+  the shared tank (the Leopard 2A8 and K2 +12% and +8%, the Merkava 4 +20% and +8%), 5% slower at 78 t. Australia's
+  SEPv3s too. Its name in the game is now "M1A2 SEPv3 Abrams".
+- **The M1E3 Abrams, a United States-only discovery** (era 4, after Active Protection, with a tank factory): unveiled
+  in January 2026 and in operational tests since the summer, with production decided around 2027. Every tank built
+  afterwards is an M1E3: +30% health, +15% firepower, +20% accuracy, 12% faster than the SEPv3 (60 t, hybrid drive),
+  reloads 20% faster (autoloader), and the Iron Fist active protection built in (half the missiles and drones fired
+  at it stopped, without the Active Protection discovery). A rival United States fields it at era 4.
+
+Checks: tools/unit-quality-check.gd (21).
+
 ## Version 0.9.54: every nation's own tanks, jets and missiles
 
 A T-64BV no longer fights like an M1A2 SEPv3 or a Merkava 4. Every shared unit class (tanks, carriers, artillery,

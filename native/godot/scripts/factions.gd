@@ -77,10 +77,12 @@ static func for_unit(w: Node, unit: Dictionary) -> Dictionary:
 	var key := str(unit.get("key", ""))
 	var id := identity(w, int(unit.owner))
 	var m := modifiers(id, key, key in w.infantry_keys, unit.get("naval", false), unit.get("fly", false))
-	var q: Dictionary = preload("res://scripts/unit_quality.gd").of(id, key)
+	var q: Dictionary = preload("res://scripts/unit_quality.gd").of_unit(w, int(unit.owner), id, key)
 	for stat in ["hp", "damage", "speed", "range"]:
 		m[stat] = float(m[stat]) * float(q[stat])
+	m.cooldown = float(m.cooldown) * float(q.get("cooldown", 1.0))
 	m.accuracy = q.accuracy
+	m.aps = q.get("aps", false)   # (the M1E3's own active protection)
 	return m
 
 static func equip(w: Node, unit: Dictionary) -> void:
@@ -95,4 +97,6 @@ static func equip(w: Node, unit: Dictionary) -> void:
 	unit.speed *= float(m.speed)
 	unit.cooldown *= float(m.cooldown)
 	unit.accuracy = float(m.accuracy)
+	if m.aps:
+		unit.aps_builtin = true
 	unit.faction_equipped = true

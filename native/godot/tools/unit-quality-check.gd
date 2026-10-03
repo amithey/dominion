@@ -4,7 +4,9 @@ extends SceneTree
 ## third-generation-plus tank outclasses a Cold War one in protection,
 ## firepower and accuracy; in a match the figures reach the units, the unit
 ## card shows them, and four Merkava 4s beat four T-64BVs, four T-64BVs four
-## captured T-62s, while two equal armies each win some.
+## captured T-62s, while two equal armies each win some. The M1A2 SEPv3 leads
+## the tanks in service; the M1E3 Abrams, researched by the United States
+## alone, replaces it with more of everything and its own active protection.
 var errors: Array[String] = []
 var passed := 0
 var w: Node
@@ -101,6 +103,45 @@ func run() -> void:
 		"the unit card shows accuracy %s and an attack of %s (the shared tank's %d)" % [shown, attack, int(def.dmg)])
 	merkava.selected = false
 	for u in [merkava, t64]: w.kill(u)
+
+	# 3b: the American tank. The SEPv3 (depleted-uranium armour, Trophy, the M829A4
+	# round) stands above the Leopard 2A8, K2 and Merkava 4 in protection and
+	# firepower; the M1E3 is a United States-only discovery that replaces it.
+	var top_ok := true
+	for rival in ["eu", "south_korea", "israel"]:
+		top_ok = top_ok and t.usa[0] > t[rival][0] and t.usa[1] > t[rival][1]
+	check(top_ok and t.usa[3] < 1.0, "the M1A2 SEPv3 is the best-protected and hardest-hitting tank in service (%d%% health, %d%% firepower), and slower at 78 t" % [int(round(t.usa[0] * 100)), int(round(t.usa[1] * 100))])
+	check(w.research.def_of("nextGenAbrams").get("nation", "") == "blue" and w.research.blocker("nextGenAbrams") != "" and Q.upgrade(w, 0, "israel", "tank").is_empty(),
+		"the M1E3 discovery is the United States' alone (for Israel: \"%s\")" % w.research.blocker("nextGenAbrams"))
+	w.map.nations[0].id = "usa"
+	w.map.nations[0].arsenal = "blue"
+	var sep: Dictionary = w.spawn_unit("tank", flat(spot + Vector3(-20, 0, 0)), 0)
+	check(not sep.get("aps_builtin", false) and V.name_for(w, 0, "tank") == "M1A2 SEPv3 Abrams", "before the research, the United States builds the %s" % V.name_for(w, 0, "tank"))
+	w.research.progress["nextGenAbrams"].stage = 3
+	w.research._recompute()
+	var m1e3: Dictionary = w.spawn_unit("tank", flat(spot + Vector3(-30, 0, 0)), 0)
+	var aps: float = preload("res://scripts/modern_warfare.gd").aps_chance(w, m1e3)
+	check(w.unit_defs.tank.name == "M1E3 Abrams" and V.name_for(w, 0, "tank") == "M1E3 Abrams", "after it, every new tank is an M1E3 Abrams, by name on the card")
+	check(m1e3.max_hp > sep.max_hp * 1.04 and is_equal_approx(m1e3.cooldown / sep.cooldown, 0.8) and m1e3.speed > sep.speed * 1.1 and m1e3.accuracy > sep.accuracy,
+		"the M1E3: health %d (SEPv3 %d), reload %.1f s (%.1f, the autoloader), speed %.1f (%.1f, 60 t), accuracy %d%% (%d%%)" % [int(m1e3.max_hp), int(sep.max_hp), m1e3.cooldown, sep.cooldown, m1e3.speed, sep.speed, int(round(m1e3.accuracy * 100)), int(round(sep.accuracy * 100))])
+	check(m1e3.get("aps_builtin", false) and aps >= 0.5, "the Iron Fist built in: %d%% of missiles and drones stopped, without the Active Protection discovery" % int(round(aps * 100)))
+	w.map.nations[2].id = "usa"
+	var rival_us: Dictionary = {}
+	for n in w.ai.nations:
+		if n.id == 2: rival_us = n
+	rival_us.tech = 4.0
+	var old_rival: Dictionary = w.spawn_unit("tank", flat(spot + Vector3(-40, 0, 0)), 2)
+	rival_us.tech = 8.0
+	var new_rival: Dictionary = w.spawn_unit("tank", flat(spot + Vector3(-50, 0, 0)), 2)
+	check(not old_rival.get("aps_builtin", false) and new_rival.get("aps_builtin", false) and V.name_for(w, 2, "tank") == "M1E3 Abrams",
+		"a rival United States fields the M1E3 once its technology reaches era 4")
+	rival_us.tech = 0.0
+	w.research.progress["nextGenAbrams"].stage = 0
+	w.map.nations[0].id = "israel"
+	w.map.nations[0].arsenal = "israel"
+	w.research._recompute()
+	w.unit_defs.tank.name = V.NAMES.tank.israel
+	for u in [sep, m1e3, old_rival, new_rival]: w.kill(u)
 
 	# 4: duels between two rivals (the same difficulty on both sides), four tanks a
 	# side, 22 m apart, five rounds each; a mirror match as the control.

@@ -624,3 +624,8 @@ UI files listed above.
   scatter()/astray() scale gun misses, shell and rocket scatter, and guided-missile misses; hud.gd unit card gains
   ACCURACY and shows attack after research.damage_mult. national_variants: names for all 22 nations, submarine
   EXCEPT += saudi, ukraine. Codex: your war_costs.gd was untouched; the duel test funds both rivals for it.
+- 2026-10-03 Claude, 0.9.55 (user: the US tank is stronger than rated): unit_quality.gd: SEPv3 figures raised,
+  UPGRADES/DISCOVERIES (nextGenAbrams, nation blue) with apply() (called from modern_warfare.apply after
+  national_variants), upgrade()/of_unit()/rename(); factions.for_unit takes of_unit (cooldown, aps); equip() sets
+  unit.aps_builtin; modern_warfare.aps_chance honours it; research._recompute renames the player's tank;
+  national_variants.name_for names a rival's M1E3; blue tank name "M1A2 SEPv3 Abrams".

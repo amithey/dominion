@@ -231,6 +231,8 @@ func _recompute() -> void:
 	var national: Dictionary = preload("res://scripts/national_profile.gd").bonuses(world, 0) if world != null and world.get("map") != null else {}
 	for stat in national:
 		_add(stat, float(national[stat]))
+	if world != null and world.get("unit_defs") != null and world.get("map") != null:
+		preload("res://scripts/unit_quality.gd").rename(world)   # an M1E3 once researched
 
 func _add(stat: String, v: float) -> void:
 	_bonus[stat] = float(_bonus.get(stat, 0.0)) + v

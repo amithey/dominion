@@ -15,7 +15,7 @@ const CLASS_OF := {"himars": "mlrs", "nuclearSub": "submarine", "bomber": "jet",
 ## class -> nation -> [health, damage, accuracy, speed, range]
 const QUALITY := {
 	"tank": {
-		"usa": [1.15, 1.08, 1.12, 1.0, 1.0],   # M1A2 SEPv3 Abrams
+		"usa": [1.24, 1.15, 1.12, 0.95, 1.0],   # M1A2 SEPv3 Abrams
 		"china": [1.0, 1.0, 1.0, 1.0, 1.0],   # Type 99A
 		"eu": [1.12, 1.08, 1.12, 1.03, 1.0],   # Leopard 2A8
 		"iran": [0.76, 0.78, 0.68, 0.95, 1.0],   # Karrar
@@ -32,7 +32,7 @@ const QUALITY := {
 		"ukraine": [0.7, 0.78, 0.72, 0.95, 1.0],   # T-64BV
 		"north_korea": [0.7, 0.78, 0.62, 0.95, 1.0],   # Chonma-216
 		"egypt": [0.86, 0.9, 0.88, 1.0, 1.0],   # M1A1 Abrams
-		"australia": [1.15, 1.08, 1.12, 1.0, 1.0],   # M1A2 SEPv3 Abrams
+		"australia": [1.24, 1.15, 1.12, 0.95, 1.0],   # M1A2 SEPv3 Abrams
 		"pakistan": [0.93, 0.95, 0.92, 1.0, 1.0],   # VT-4 Haider
 		"iraq": [0.82, 0.9, 0.84, 0.97, 1.0],   # M1A1M Abrams
 		"syria": [0.65, 0.78, 0.68, 0.9, 1.0],   # T-72
@@ -393,3 +393,54 @@ const QUALITY := {
 static func of(id: String, key: String) -> Dictionary:
 	var row: Array = QUALITY.get(CLASS_OF.get(key, key), {}).get(id, [1.0, 1.0, 1.0, 1.0, 1.0])
 	return {"hp": float(row[0]), "damage": float(row[1]), "accuracy": float(row[2]), "speed": float(row[3]), "range": float(row[4])}
+
+## A nation's next system for a class, in service once it is researched: the
+## M1E3 Abrams (prototype unveiled January 2026, operational tests from summer
+## 2026, a production decision around 2027): 60 t instead of the SEPv3's 78
+## (+12% speed), an autoloader (20% faster reloads), an uncrewed turret with the
+## crew of three in an armoured capsule and the Iron Fist (XM251) active
+## protection built in (half the missiles, rockets and kamikaze drones fired at
+## it stopped, without the Active Protection discovery), new sights. Rivals
+## field it once their technology reaches its era.
+const UPGRADES := {
+	"tank": {"usa": {"research": "nextGenAbrams", "name": "M1E3 Abrams", "figures": [1.3, 1.15, 1.2, 1.06, 1.0], "cooldown": 0.8, "aps": true}},
+}
+const DISCOVERIES := {
+	"nextGenAbrams": {"name": "M1E3 Abrams", "cost": 750, "branch": "army", "era": 4, "nation": "blue",
+		"reqDiscovery": "activeProtection", "reqBuilding": "tankFactory", "fx": {"nextGenAbrams": 1.0},
+		"desc": "United States only. The next Abrams: 60 t instead of 78 (+12% speed), an autoloader (20% faster reloads), the crew in an armoured capsule under an uncrewed turret, Iron Fist active protection built in (stops half the missiles and drones fired at it) and new sights. Every tank built afterwards is an M1E3."},
+}
+
+## Registers the discoveries (modern_warfare.apply, after national_variants).
+static func apply(w: Node) -> void:
+	var discoveries: Dictionary = w.map.research.discoveries
+	for key in DISCOVERIES:
+		discoveries[key] = DISCOVERIES[key].duplicate(true)
+
+## The upgrade nation `id`'s unit `key` of `owner` has in service, or {}.
+static func upgrade(w: Node, owner: int, id: String, key: String) -> Dictionary:
+	var up: Dictionary = UPGRADES.get(CLASS_OF.get(key, key), {}).get(id, {})
+	if up.is_empty() or w.get("research") == null or w.research == null:
+		return {}
+	if owner == 0:
+		return up if w.research.bonus(up.research) >= 1.0 else {}
+	return up if w.research.ai_tech(owner) >= float(w.research.era_of(up.research)) * 2.0 else {}
+
+## The figures for one unit as it enters service: the nation's system, or the
+## system that replaces it once researched (with its reload and protection).
+static func of_unit(w: Node, owner: int, id: String, key: String) -> Dictionary:
+	var up := upgrade(w, owner, id, key)
+	if up.is_empty():
+		return of(id, key)
+	var row: Array = up.figures
+	return {"hp": float(row[0]), "damage": float(row[1]), "accuracy": float(row[2]), "speed": float(row[3]), "range": float(row[4]),
+		"cooldown": float(up.get("cooldown", 1.0)), "aps": bool(up.get("aps", false)), "name": str(up.name)}
+
+## The player's unit card and build list name the system in service (research._recompute).
+static func rename(w: Node) -> void:
+	var id: String = load("res://scripts/factions.gd").identity(w, 0)   # (load: factions.gd preloads this file)
+	for cls in UPGRADES:
+		if UPGRADES[cls].has(id) and w.unit_defs.has(cls):
+			var up := upgrade(w, 0, id, cls)
+			if not up.is_empty() and w.unit_defs[cls].name != up.name:
+				w.unit_defs[cls].name = up.name
