@@ -148,10 +148,14 @@ static func update(w: Node, delta: float) -> void:
 ## Fries every hostile drone within reach of `hpm`. Returns how many.
 static func pulse(w: Node, hpm: Dictionary) -> int:
 	var fried := 0
+	var paid := false
 	for other in w.units:
 		if other.dead or not other.key in HPM_KILLS or not w.hostile(hpm.owner, other.owner):
 			continue
 		if Vector2(other.node.position.x - hpm.node.position.x, other.node.position.z - hpm.node.position.z).length() < HPM_RADIUS:
+			if not paid:
+				if not preload("res://scripts/war_costs.gd").pay(w, int(hpm.owner), 0.35, 0.0, "intercepts"): return 0
+				paid = true
 			w.damage(other, other.hp + 1.0, hpm)
 			fried += 1
 	if fried > 0:
@@ -165,7 +169,7 @@ static func covered(w: Node, at: Vector3, owner: int) -> bool:
 		if u.dead or u.key != "hpmVehicle" or not w.hostile(owner, u.owner) or w.disabled(u):
 			continue
 		if Vector2(u.node.position.x - at.x, u.node.position.z - at.z).length() < HPM_RADIUS:
-			return true
+			if preload("res://scripts/war_costs.gd").pay(w, int(u.owner), 0.35, 0.0, "intercepts"): return true
 	return false
 
 ## A wingman attacks what its leader attacks, and keeps close to it otherwise.

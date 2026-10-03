@@ -15,6 +15,9 @@ static func update(w: Node, delta: float) -> void:
 				nearest = gap
 				enemy = u
 		if enemy == null: continue
+		if not preload("res://scripts/war_costs.gd").pay(w, int(b.owner), 5.0, 0.0, "intercepts"):
+			preload("res://scripts/war_costs.gd").blocked(w, b, "interceptor budget")
+			continue
 		b.aa_reload = 2.2
 		var target: Dictionary = enemy
 		w.effects.projectile("missile", b.root.position + Vector3.UP * 5, target.node.position, func(at):

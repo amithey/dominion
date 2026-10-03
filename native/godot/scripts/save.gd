@@ -83,6 +83,7 @@ func capture() -> Dictionary:
 			"target": _v(u.target) if u.target != null else null, "attack_move": u.attack_move,
 			"ammo": u.get("ammo", -1), "air_state": u.get("air_state", "ready"),
 			"service_left": u.get("service_left", 0.0),
+			"sortie_left": u.get("sortie_left", 90.0),
 			"air_base": _v(u.air_base.node.position) if u.get("air_base") != null else null,
 			"landing_start": _v(u.get("landing_start", u.node.position)), "landing_progress": u.get("landing_progress", 0.0),
 			"ground_attack": _v(u.ground_attack) if u.has("ground_attack") else null,
@@ -102,7 +103,8 @@ func capture() -> Dictionary:
 		"match_config":world.match_config.duplicate(),
 		"engagement":{"operations":world.engagement.operations.duplicate(),"incidents":world.engagement.incidents.duplicate(),"policy":world.engagement.policy},
 		"date": Time.get_datetime_string_from_system(), "quality": world.quality,
-		"economy": {"res": world.economy.res, "civilians": world.economy.civilians, "garrison": world.economy.garrison},
+		"economy": {"res": world.economy.res, "civilians": world.economy.civilians, "garrison": world.economy.garrison,
+			"military_spending": world.economy.military_spending.duplicate()},
 		"buildings": buildings, "units": units, "edges": edges,
 		"diplomacy": {"score": d.score, "war": d.war, "alliance": d.alliance, "pact": d.pact, "nap": d.nap},
 		"diplomatic_contacts": d.contacts.capture(),
@@ -171,6 +173,11 @@ func restore(data: Dictionary) -> void:
 		world.economy.res[key] = float(data.economy.res[key])
 	world.economy.civilians = float(data.economy.civilians)
 	world.economy.garrison = int(data.economy.get("garrison", world.economy.garrison))
+	world.economy.military_spending = {"money": 0.0, "oil": 0.0, "shots": 0.0, "intercepts": 0.0}
+	for key in world.economy.military_spending:
+		world.economy.military_spending[key] = maxf(0.0, float(data.economy.get("military_spending", {}).get(key, 0.0)))
+	world.economy.military_flow = {"money": 0.0, "oil": 0.0}
+	world.economy.military_rates = {"money": 0.0, "oil": 0.0}
 	# Buildings, then their districts' streets and the walk grid.
 	for s in data.buildings:
 		var b: Dictionary = world.place_building(s.key, _p(s.pos), int(s.owner), bool(s.built))
@@ -218,6 +225,7 @@ func restore(data: Dictionary) -> void:
 			u.ammo = clampi(int(s.ammo),0,world.AirOperations.CAPACITY[u.key])
 			u.air_state = s.get("air_state", "ready")
 			u.service_left = float(s.get("service_left",0.0))
+			u.sortie_left = maxf(0.0, float(s.get("sortie_left", 90.0)))
 			u.landing_start = _p(s.get("landing_start",s.pos))
 			u.landing_progress = float(s.get("landing_progress",0.0))
 			if s.get("air_base") != null:

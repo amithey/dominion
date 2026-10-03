@@ -109,4 +109,7 @@ func move(u: Dictionary, goal: Vector3, delta: float) -> void:
 	u.moving = score < INF and (world.is_water(next) or escaping) and world.is_water(next+direction*maxf(3,u.length*0.45))
 	if not u.moving:
 		u.sailing_speed = 0.0
+	if u.moving and not preload("res://scripts/war_costs.gd").travel(world, u, u.node.position, next):
+		u.moving = false
+		u.sailing_speed = 0.0
 	world.place_on_ground(u,next if u.moving else u.node.position)

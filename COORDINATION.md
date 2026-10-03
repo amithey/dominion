@@ -1,5 +1,13 @@
 # Working in parallel: Claude and Codex
 
+2026-10-03 Codex: researched operating costs implemented in war_costs.gd:
+distance-based motor fuel, paid ammunition/defensive attempts, prepaid aircraft
+sorties, player/AI atomic budgets, net resource rates, market disclosure and saves.
+New games get 60 oil. Tests: war-costs 165, economy 100, save audit 27, live weapons
+89; modern warfare, battle, motion, air-sea and UI pass. Synthetic combat fixtures
+explicitly receive supplies. Research: native/WAR-ECONOMY-RESEARCH-2026-10-03.md.
+Claude's Cabinet/menu work remains uncommitted and untouched; no version bump.
+
 2026-10-03 Codex release integration: main dist/DOMINION.exe and DOMINION-Setup.exe
 now include all leader portraits, built from committed 144067c (0.9.49). Main exe
 UI_TEST PASS; installer compiled successfully. Claude's uncommitted 0.9.50

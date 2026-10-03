@@ -500,6 +500,10 @@ const DOWN := Color("e8836f")
 
 func market() -> void:
 	var m: Node = hud.world.market
+	hud._side_rows.add_child(hud._text(preload("res://scripts/war_costs.gd").summary(hud.world), 12, hud.UI.MUTED))
+	var costs: Label = hud._text("Fuel is consumed by motorised travel. Ammunition and interceptors are paid when fired, including misses. Aircraft buy fuel before each sortie.", 12, hud.UI.MUTED)
+	costs.tooltip_text = "Tank: 3.5 oil / 100 m, $1.20 / shell. Artillery: $2 / shell; MLRS: $6 / salvo. SAM: $5; ABM: $18; laser: $0.35 per attempt. Aircraft: 4–12 oil per 90-second sortie. Nuclear submarines use no oil."
+	hud._side_rows.add_child(costs)
 	_tabs([["Exchange", "exchange"], ["Trade routes (%d/%d)" % [m.routes.size(), m.route_cap()], "routes"]], market_tab, func(v): market_tab = v)
 	if market_tab == "routes":
 		_routes(m)

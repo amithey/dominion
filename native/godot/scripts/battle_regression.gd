@@ -13,6 +13,9 @@ static func step(w: Node) -> void:
 
 ## Two equal mixed forces on open ground, ordered to attack-move into each other.
 static func setup(w: Node) -> Dictionary:
+	# This fixture tests tactics, not shortages: provision its synthetic armies.
+	w.economy.grant_test_resources()
+	for n in w.ai.nations: n.money = 1000000.0
 	if w.ai and not w.ai.nations.is_empty():
 		w.ai.declare_war(1, false)
 	# Two equal mixed forces on open ground, 110 m apart, clear of the capital.
@@ -66,6 +69,7 @@ static func capture(w: Node) -> void:
 ## hulls weave left and right, touch each other, wander far off the straight
 ## route, or do not all arrive.
 static func convoy(w: Node) -> void:
+	w.economy.grant_test_resources()
 	w.set_physics_process(false)
 	w.effects.set_physics_process(false)
 	await w.get_tree().physics_frame

@@ -11,6 +11,7 @@ static func step(w: Node, frames: int) -> void:
 		w._physics_process(DT)
 
 static func run(w: Node) -> void:
+	w.economy.grant_test_resources() # physics fixture has a funded fuel supply
 	var failures: Array[String] = []
 	w.set_physics_process(false)
 	await w.get_tree().physics_frame

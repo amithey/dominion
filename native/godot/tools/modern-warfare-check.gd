@@ -37,6 +37,8 @@ func run() -> void:
 	w.effects.set_physics_process(false)
 	w.missiles.set_physics_process(false)
 	w.economy.grant_test_resources()
+	# Probability/weapon tests require funded ammunition for both sides.
+	for n in w.ai.nations: n.money = 1000000.0
 	w.diplomacy.declare_war(0, 1)
 	# ------------------------------------------------ the units
 	var all := Modern.UNITS.keys()

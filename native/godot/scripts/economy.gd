@@ -26,6 +26,10 @@ var pop_cap := 0
 # its own and does not take up the housing that new recruits need.
 var garrison := 0
 var test_mode := false   ## F8 (testing): huge stores, set by grant_test_resources()
+var military_spending := {"money": 0.0, "oil": 0.0, "shots": 0.0, "intercepts": 0.0}
+var military_flow := {"money": 0.0, "oil": 0.0}
+var military_rates := {"money": 0.0, "oil": 0.0}
+var operating_notices := {}
 const TEST_CAP := 99999.0
 var _tick := 0.0
 
@@ -35,6 +39,9 @@ func setup(world_node: Node, economy: Dictionary) -> void:
 	for key in RESOURCES:
 		res[key] = float(cfg.startResources.get(key, 0))
 		rates[key] = 0.0
+	# The starting garrison needs an initial operational fuel reserve; the old
+	# economy started with zero oil because movement was free.
+	res.oil = maxf(float(res.oil), 60.0)
 	civilians = float(cfg.startCivilians)
 	recalculate()
 
@@ -173,6 +180,12 @@ func tick() -> void:
 		res[key] = maxf(res[key] + rates.get(key, 0.0), 0.0)
 		if caps.has(key):
 			res[key] = minf(res[key], caps[key])
+	# Charges were already deducted at launch/travel; subtract from displayed
+	# rates only, so the resource bar shows net flow without charging twice.
+	for key in ["money", "oil"]:
+		military_rates[key] = military_flow[key]
+		rates[key] -= military_flow[key]
+		military_flow[key] = 0.0
 	changed.emit()
 
 const OIL_PER_PERSON := 0.0012     ## oil a second for each person past 150

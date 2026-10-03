@@ -386,7 +386,7 @@ func run() -> void:
 	var top: float = float(m.mult.oil)
 	m.flow["oil"] = -1e7
 	for i in range(60): m.exchange_step()
-	check(top <= 3.0 and float(m.mult.oil) >= 0.35, "prices stay between 35% and 300% of their base (%.2f, %.2f)" % [top, float(m.mult.oil)])
+	check(top <= 3.0 and float(m.mult.oil) >= 0.35, "prices stay between 35%% and 300%% of their base (%.2f, %.2f)" % [top, float(m.mult.oil)])
 	m.flow["oil"] = 0.0
 	m.mult["silicon"] = 2.0
 	for i in range(120): m.exchange_step()
@@ -439,7 +439,7 @@ func run() -> void:
 	var cash_i: float = eco.res.money
 	m.tick()
 	var paid_i: float = cash_i - eco.res.money
-	check(paid_i >= m.price("iron") * 25.0 * 1.14, "an import is paid for on loading, at 115% ($%d)" % int(paid_i))
+	check(paid_i >= m.price("iron") * 25.0 * 1.14, "an import is paid for on loading, at 115%% ($%d)" % int(paid_i))
 	for i in range(8): m.tick()
 	check(eco.res.iron >= 24.9 or m.lost > 0, "and its goods arrive (%d iron)" % int(eco.res.iron))
 	eco.res.iron = eco.caps.iron
@@ -612,7 +612,7 @@ func run() -> void:
 	var hp0: float = w.spawn_unit("tank", w.land_point(w.start, 30.0), 0).max_hp
 	put("commandCenter", 3)
 	var hp1: float = w.spawn_unit("tank", w.land_point(w.start, 30.0), 0).max_hp
-	check(hp1 > hp0 * 1.09, "a command centre: +10% health for units trained after it (%d -> %d)" % [int(hp0), int(hp1)])
+	check(hp1 > hp0 * 1.09, "a command centre: +10%% health for units trained after it (%d -> %d)" % [int(hp0), int(hp1)])
 	var descs_ok := true
 	for key in ["tvStation", "policeStation", "school", "museum", "park", "stadium", "courthouse"]:
 		var text: String = str(w.building_defs[key].get("desc", "")).to_lower()

@@ -32,6 +32,7 @@ const TAXI_SECONDS := 2.2
 const PARK_HEADING := -2.3   ## aircraft park angled, so their wings clear the next slot
 
 static func initialize(u: Dictionary) -> void:
+	u.sortie_left = preload("res://scripts/war_costs.gd").SORTIE_SECONDS
 	u.ammo = CAPACITY.get(u.key, 0)
 	u.air_state = "ready"
 	u.service_left = 0.0
@@ -156,7 +157,12 @@ static func park_new(world: Node, u: Dictionary, b: Dictionary) -> bool:
 ## True means this update owns movement (landing, service, or takeoff).
 static func update(world: Node, u: Dictionary, delta: float) -> bool:
 	if u.air_state == "ready":
-		return false
+		if u.key not in TUBE_LAUNCHED:
+			u.sortie_left = maxf(0.0, float(u.get("sortie_left", preload("res://scripts/war_costs.gd").SORTIE_SECONDS)) - delta)
+			if u.sortie_left <= 0.0:
+				u.air_state = "returning"
+				u.egress = null
+		if u.air_state == "ready": return false
 	if u.air_state == "parked":
 		u.moving = false
 		if u.target != null or u.enemy != null:
@@ -258,6 +264,11 @@ static func _park(u: Dictionary) -> void:
 	u.moving = false
 
 static func _taxi_out(world: Node, u: Dictionary) -> void:
+	if not preload("res://scripts/war_costs.gd").pay(world, int(u.owner), 0.0, preload("res://scripts/war_costs.gd").sortie_fuel(u)):
+		preload("res://scripts/war_costs.gd").blocked(world, u, "aviation fuel")
+		return
+	u.sortie_left = preload("res://scripts/war_costs.gd").SORTIE_SECONDS
+	u.operating_shortage = ""
 	u.air_state = "taxi_out"
 	u.taxi_from = u.node.position
 	u.taxi_progress = 0.0

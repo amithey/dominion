@@ -214,10 +214,11 @@ static func aps_chance(w: Node, vehicle: Dictionary) -> float:
 ## Rolls the target's active protection; true when the shot is defeated.
 static func aps_stops(w: Node, target: Dictionary) -> bool:
 	var chance := aps_chance(w, target)
-	if chance <= 0.0 or randf() >= chance:
+	if chance <= 0.0:
 		return false
+	if not preload("res://scripts/war_costs.gd").pay(w, int(target.owner), 0.75, 0.0, "intercepts"): return false
 	target.aps_ready = w.game_time + APS_RELOAD
-	return true
+	return randf() < chance
 
 ## Medics heal; called every frame.
 static func update(w: Node, delta: float) -> void:
@@ -292,6 +293,9 @@ static func intercept(w: Node, m: Dictionary, at: Vector3, f: float) -> bool:
 			continue
 		if float(d.ent.get("intercept_ready", 0.0)) > w.game_time or (d.kind == "samSite" and float(d.ent.get("aa_reload", 0.0)) > 0.0):
 			continue   # reloading; it may still get its shot while the missile is in reach
+		if not preload("res://scripts/war_costs.gd").pay(w, int(d.owner), float(preload("res://scripts/war_costs.gd").INTERCEPT.get(d.kind, 5.0)), 0.0, "intercepts"):
+			preload("res://scripts/war_costs.gd").blocked(w, d.ent, "interceptor budget")
+			continue
 		m.engaged[id] = true
 		d.ent.intercept_ready = w.game_time + RELOAD[d.kind]
 		if d.kind == "samSite":
@@ -315,10 +319,9 @@ static func dome(w: Node, m: Dictionary, at: Vector3, f: float) -> bool:
 		return false
 	if not w.hostile(0, int(m.owner)) or (m.arc and f < 0.3):
 		return false
-	m.engaged.dome = true
-	if float(w.economy.res.get("money", 0.0)) < Future.DOME_COST:
+	if not preload("res://scripts/war_costs.gd").pay(w, 0, Future.DOME_COST, 0.0, "intercepts"):
 		return false
-	w.economy.res.money -= Future.DOME_COST
+	m.engaged.dome = true
 	var cls: String = CLASS_OF.get(m.type, "cruise")
 	var chance: float = Future.DOME[cls]
 	if cls in ["shortBallistic", "ballistic", "hypersonic", "icbm"] and w.research.ai_tech(int(m.owner)) >= 6.0:

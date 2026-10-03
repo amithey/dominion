@@ -2079,6 +2079,12 @@ func _physics_process(delta: float) -> void:
 			spread_out(unit, slot, delta)
 			spent("  standing", t_idle)
 			continue
+		# Keep a dry vehicle's order/path intact while waiting for fuel.
+		if not preload("res://scripts/war_costs.gd").can_pay(self, int(unit.owner), 0.0, preload("res://scripts/war_costs.gd").fuel_per_metre(unit) * 0.1):
+			preload("res://scripts/war_costs.gd").blocked(self, unit, "fuel")
+			Motion.halt(unit, delta)
+			animate(unit, false)
+			continue
 		var t_steer := clock()
 		var waypoint := steer_point(unit, goal, chasing, delta)
 		spent("  steering", t_steer)
@@ -2166,6 +2172,10 @@ func _physics_process(delta: float) -> void:
 			var t_place_now := clock()
 			next = ground_step(unit, next, delta)
 			if next == Vector3.INF: continue
+			if not preload("res://scripts/war_costs.gd").travel(self, unit, node.position, next):
+				Motion.halt(unit, delta)
+				animate(unit, false)
+				continue
 			place_on_ground(unit, next)
 			animate(unit, true)
 			spent("  placing", t_place_now)
@@ -2182,6 +2192,10 @@ func _physics_process(delta: float) -> void:
 		var t_place := clock()
 		next = ground_step(unit, next, delta)
 		if next == Vector3.INF: continue
+		if not preload("res://scripts/war_costs.gd").travel(self, unit, node.position, next):
+			Motion.halt(unit, delta)
+			animate(unit, false)
+			continue
 		place_on_ground(unit, next)
 		animate(unit, true)
 		spent("  placing", t_place)
@@ -4709,6 +4723,10 @@ func move_craft(unit: Dictionary, delta: float) -> void:
 ## the water, aircraft keep their altitude, and the damage table lets
 ## aircraft be hit only by weapons that can reach them.
 func air_sea_test(capture: bool) -> void:
+	# Synthetic combat fixture: provide consumables so shortages are not
+	# mistaken for a movement or targeting regression.
+	economy.grant_test_resources()
+	for n in ai.nations: n.money = 1000000.0
 	var sea = water_near(start, 320)
 	if sea == null:
 		print("AIR_SEA_TEST FAIL: no water near the capital")
@@ -4910,6 +4928,8 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 		unit.reload = unit.cooldown * (1.0 - preload("res://scripts/additional_powers.gd").bonus(self, unit.owner, "reload") if preload("res://scripts/additional_factions.gd").base(unit.key) in ["artillery", "mlrs", "himars"] else 1.0) * randf_range(0.85, 1.15) * (1.0 - economy.depot_reload() if unit.owner == 0 and economy != null else 1.0)   # ammo depots
 		unit.last_fire = game_time
 		shots_fired += 1
+	else:
+		unit.reload = 0.25 # retry an unfunded shot without per-frame targeting churn
 
 ## The weapon a unit fires, when it is more than a rifle or a gun turret.
 const WEAPONS := {"bomber": "bomb", "jet": "missile", "drone": "missile", "helicopter": "rockets", "gunship": "rockets",
@@ -4936,12 +4956,16 @@ func fire(unit: Dictionary, enemy: Dictionary) -> bool:
 		if fired and unit.get("fly", false) and not unit.dead:
 			AirOperations.consume(unit)
 		return fired
+	if not preload("res://scripts/war_costs.gd").shot(self, unit, ""): return false
 	_fire_gun(unit, enemy)
 	return true
 
 ## Bombs, missiles, rocket salvos, torpedoes and artillery shells: each a
 ## projectile that is seen to fly and explodes where it lands.
 func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
+	if weapon == "bomb" and flat_distance(unit, enemy) > 11.0: return false
+	if weapon == "torpedo" and not enemy.get("naval", false): return false
+	if not preload("res://scripts/war_costs.gd").shot(self, unit, weapon): return false
 	var target: Vector3 = enemy.node.position + Vector3.UP * (2.0 if enemy.get("is_building", false) else (0.0 if enemy.get("fly", false) else 0.8))
 	var dir := Basis(Vector3.UP, unit.heading) * Vector3.BACK
 	var from: Vector3 = unit.node.position + dir * 1.5 + Vector3.UP * (1.6 if not unit.get("fly", false) else -0.8)
