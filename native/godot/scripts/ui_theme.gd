@@ -1,48 +1,40 @@
 extends RefCounted
-## The look of every panel, button and label in DOMINION: a situation room
-## (2026-10-03, chosen by the player over an imperial and a war-room style).
-## Dark slate glass, hairline rules, flat surfaces with soft corners, figures in
-## clear type, and each ministry known by its own colour (MINISTRY): a bar of
-## it marks the open tab, the selected row, the window's title. Headings are in
-## sentence case, not letterspaced capitals. Built once and merged into the
-## default theme, so the HUD, the menus and the dialogs all share it.
-## Windows' Bahnschrift carries the text; nothing is downloaded.
+## Geopolitical atlas: deep navy, pale ink, sand selection and fine map rules.
+## Serif titles with sans-serif body text; semantic warning colours remain.
+## One shared theme covers the HUD, ministries, campaign and pause menus.
 
 # ---------------------------------------------------------------- palette
-const INK := Color("060b11")     ## the darkest ground: troughs, insets, wells
-const BG := Color("0c141d")      ## a panel body
-const BG_2 := Color("12212f")    ## a raised body: cards, rows, popups
+const INK := Color("081725")
+const BG := Color("10233a")
+const BG_2 := Color("172f47")
 const LIFT := Color(1, 1, 1, 0.0)   ## (the old plates' lit edge: flat now)
-const TRIM := Color("23415a")    ## the hairline rules and frames
-const GOLD := Color("5ab4e6")    ## the signal blue: headings, rules, the active state
-const BRIGHT := Color("e6f3ff")  ## hover and focus
-const CREAM := Color("f1f6fb")
-const TEXT := Color("d3e1ee")
-const MUTED := Color("7f98ad")
+const TRIM := Color("526272")
+const GOLD := Color("c1af86")
+const BRIGHT := Color("f4ead4")
+const CREAM := Color("eee9de")
+const TEXT := Color("d8dfe5")
+const MUTED := Color("a1b0bd")
 const GOOD := Color("5fd39a")
 const BAD := Color("f08a6b")
 # The surfaces (the plates were two-tone gradients; now one flat colour each).
-const PANEL_TOP := Color("0e1823")
-const PANEL_LOW := Color("0c141d")
-const BAND_TOP := Color("111f2c")
-const BAND_LOW := Color("101c28")
-const KEY_TOP := Color("14243a")
-const KEY_LOW := Color("112033")
+const PANEL_TOP := Color("10283e")
+const PANEL_LOW := Color("10233a")
+const BAND_TOP := Color("19354d")
+const BAND_LOW := Color("142b42")
+const KEY_TOP := Color("1c3850")
+const KEY_LOW := Color("142b42")
 
-## Each ministry's colour, so a screen is known at a glance: the Treasury gold,
-## Research turquoise, Foreign Affairs emerald, Intelligence violet, Territory
-## orange, the Armed Forces red, the People rose (cabinet.gd, the HUD's screen
-## buttons and window bands).
+## Navigation shares the atlas accent; icons and names identify each ministry.
 const MINISTRY := {
-	"economy": Color("e8b04a"), "market": Color("e8b04a"), "research": Color("3fc1e0"),
-	"diplomacy": Color("3cc48e"), "intel": Color("a685f2"), "territory": Color("ee8a3c"),
-	"land": Color("ee8a3c"), "military": Color("e35d5d"), "build": Color("5fa8e8"),
-	"people": Color("e889b0"), "cabinet": Color("f2d27a"), "menu": Color("9fb0c4"),
+	"economy": GOLD, "market": GOLD, "research": GOLD,
+	"diplomacy": GOLD, "intel": GOLD, "territory": GOLD,
+	"land": GOLD, "military": GOLD, "build": GOLD,
+	"people": GOLD, "cabinet": GOLD, "menu": GOLD,
 }
 ## Each resource's colour on the strip.
 const RESOURCE_TINT := {
-	"money": Color("f2c75c"), "food": Color("8fd16a"), "iron": Color("b4c3d3"), "oil": Color("5cc0b4"),
-	"silicon": Color("7fd3f0"), "uranium": Color("b8e05a"), "gas": Color("f0a65a"),
+	"money": GOLD, "food": CREAM, "iron": CREAM, "oil": GOLD,
+	"silicon": CREAM, "uranium": CREAM, "gas": CREAM,
 }
 
 static func ministry(key: String) -> Color:
@@ -53,12 +45,12 @@ static func ministry_button(b: Button, key: String) -> void:
 	var accent := ministry(key)
 	for state in [["normal", 0.0, 0.0, 0], ["hover", 0.10, 0.6, 2], ["pressed", 0.16, 1.0, 3], ["hover_pressed", 0.22, 1.0, 3]]:
 		var s := StyleBoxFlat.new()
-		s.bg_color = Color(BG.lerp(accent, float(state[1])), 0.96)
+		s.bg_color = accent if int(state[3]) == 3 else Color(BG.lerp(accent, float(state[1])), 0.98)
 		s.border_color = Color(accent, float(state[2]))
 		s.border_width_bottom = int(state[3])
-		s.set_corner_radius_all(6)
-		s.corner_radius_bottom_left = 0 if int(state[3]) > 0 else 6
-		s.corner_radius_bottom_right = 0 if int(state[3]) > 0 else 6
+		s.set_corner_radius_all(2)
+		s.corner_radius_bottom_left = 0 if int(state[3]) > 0 else 2
+		s.corner_radius_bottom_right = 0 if int(state[3]) > 0 else 2
 		s.content_margin_left = 10
 		s.content_margin_right = 10
 		s.content_margin_top = 4
@@ -66,21 +58,22 @@ static func ministry_button(b: Button, key: String) -> void:
 		b.add_theme_stylebox_override(state[0], s)
 	b.add_theme_color_override("font_color", TEXT)
 	b.add_theme_color_override("font_hover_color", Color.WHITE)
-	b.add_theme_color_override("font_pressed_color", Color.WHITE)
-	b.add_theme_color_override("font_hover_pressed_color", Color.WHITE)
+	b.add_theme_color_override("font_pressed_color", INK)
+	b.add_theme_color_override("font_hover_pressed_color", INK)
 	b.add_theme_color_override("icon_normal_color", accent.lightened(0.1))
 	b.add_theme_color_override("icon_hover_color", Color.WHITE)
-	b.add_theme_color_override("icon_pressed_color", Color.WHITE)
+	b.add_theme_color_override("icon_pressed_color", INK)
+	b.add_theme_color_override("icon_hover_pressed_color", INK)
 
 ## A tab inside a ministry's window: the open one filled with its colour.
 static func ministry_tab(b: Button, key: String) -> void:
 	var accent := ministry(key)
 	for state in [["normal", 0.0, 0.0, 0], ["hover", 0.08, 0.5, 2], ["pressed", 0.14, 1.0, 2], ["hover_pressed", 0.2, 1.0, 2]]:
 		var s := StyleBoxFlat.new()
-		s.bg_color = Color(BG_2.lerp(accent, float(state[1])), 0.98)
+		s.bg_color = accent if float(state[1]) >= 0.14 else Color(BG_2.lerp(accent, float(state[1])), 0.98)
 		s.border_color = Color(accent, float(state[2]))
 		s.border_width_bottom = int(state[3])
-		s.set_corner_radius_all(6)
+		s.set_corner_radius_all(2)
 		s.corner_radius_bottom_left = 0
 		s.corner_radius_bottom_right = 0
 		s.content_margin_left = 8
@@ -90,8 +83,8 @@ static func ministry_tab(b: Button, key: String) -> void:
 		b.add_theme_stylebox_override(state[0], s)
 	b.add_theme_color_override("font_color", MUTED)
 	b.add_theme_color_override("font_hover_color", TEXT)
-	b.add_theme_color_override("font_pressed_color", Color.WHITE)
-	b.add_theme_color_override("font_hover_pressed_color", Color.WHITE)
+	b.add_theme_color_override("font_pressed_color", INK)
+	b.add_theme_color_override("font_hover_pressed_color", INK)
 
 ## A window's title band: the slate band, a bar of the ministry's colour down
 ## its left, a hairline beneath.
@@ -100,7 +93,7 @@ static func ministry_band(key: String) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = BAND_TOP.lerp(accent, 0.06)
 	s.border_color = accent
-	s.border_width_left = 4
+	s.border_width_bottom = 1
 	s.set_corner_radius_all(0)
 	s.content_margin_left = 14
 	s.content_margin_right = 10
@@ -114,23 +107,21 @@ static var _plates := {}
 
 static func font(weight := 400) -> SystemFont:
 	var f := SystemFont.new()
-	f.font_names = PackedStringArray(["Bahnschrift", "Segoe UI", "Arial"])
+	f.font_names = PackedStringArray(["Segoe UI", "Arial"])
 	f.font_weight = weight
 	f.antialiasing = TextServer.FONT_ANTIALIASING_LCD
 	f.hinting = TextServer.HINTING_LIGHT
 	return f
 
-## The headings' and the big figures' face (it was a serif; the situation room
-## sets them in the same clear type as the text, heavier).
+## Atlas titles and headline figures, using installed Windows serif families.
 static func serif(weight := 600) -> SystemFont:
 	var f := SystemFont.new()
-	f.font_names = PackedStringArray(["Bahnschrift", "Segoe UI Semibold", "Segoe UI", "Arial"])
+	f.font_names = PackedStringArray(["Georgia", "Cambria", "Times New Roman"])
 	f.font_weight = weight
 	f.antialiasing = TextServer.FONT_ANTIALIASING_LCD
 	return f
 
-## A panel's name, as the situation room sets it: in sentence case, as written
-## (it was letterspaced capitals). letterspaced() keeps the old setting.
+## Keep titles readable as written; letterspaced() is available for short marks.
 static func caps(text: String) -> String:
 	return text
 
@@ -225,7 +216,7 @@ static func plate(top: Color, bottom: Color, border := Color(0, 0, 0, 0), margin
 	var s := StyleBoxFlat.new()
 	s.bg_color = top.lerp(bottom, 0.5)
 	s.anti_aliasing = true
-	s.set_corner_radius_all(7 if shadow > 0 else 6)
+	s.set_corner_radius_all(3 if shadow > 0 else 2)
 	if border.a > 0.0:
 		s.border_color = Color(TRIM, 0.9) if border.s < 0.35 or border.v < 0.6 else Color(border, 0.9)
 		s.set_border_width_all(1)
@@ -245,7 +236,7 @@ static func plate(top: Color, bottom: Color, border := Color(0, 0, 0, 0), margin
 ## The band across the head of a panel: light at the top, dark at the bottom,
 ## closed by a gold rule. The title of the panel sits on it.
 static func band(margin := 10.0, top := BAND_TOP, bottom := BAND_LOW, rule := GOLD, rule_px := 1) -> StyleBox:
-	var s := plate(top, bottom, Color(0, 0, 0, 0), margin, LIFT, Color(TRIM, 1.0), 1)
+	var s := plate(top, bottom, Color(0, 0, 0, 0), margin, LIFT, Color(rule, 0.65), rule_px)
 	s.set_corner_radius_all(0)
 	return s
 
@@ -389,6 +380,26 @@ static func build() -> Theme:
 	t.set_color("font_placeholder_color", "LineEdit", MUTED)
 	t.set_color("caret_color", "LineEdit", BRIGHT)
 	t.set_color("selection_color", "LineEdit", Color("365d69"))
+	# Atlas controls: sand selection has dark ink, including icons, for contrast.
+	for kind in ["Button", "TabButton", "RowButton"]:
+		var normal := box(KEY_LOW, Color(TRIM, 0.6), 1, 2, 9.0 if kind == "Button" else 6.0)
+		var hover := box(KEY_TOP, GOLD, 1, 2, 9.0 if kind == "Button" else 6.0)
+		var selected := box(GOLD, BRIGHT, 1, 2, 9.0 if kind == "Button" else 6.0)
+		t.set_stylebox("normal", kind, normal)
+		t.set_stylebox("hover", kind, hover)
+		for state in ["pressed", "hover_pressed"]:
+			t.set_stylebox(state, kind, selected)
+			t.set_color("font_%s_color" % state, kind, INK)
+			t.set_color("icon_%s_color" % state, kind, INK)
+		t.set_stylebox("focus", kind, box(Color.TRANSPARENT, BRIGHT, 2, 2, 0.0))
+		t.set_color("icon_normal_color", kind, GOLD)
+		t.set_color("font_color", kind, TEXT)
+		t.set_color("font_hover_color", kind, BRIGHT)
+	t.set_stylebox("panel", "TooltipPanel", plate(BG_2, BG, GOLD, 9.0, LIFT, Color.TRANSPARENT, 0, 6))
+	t.set_stylebox("hover", "PopupMenu", box(GOLD, GOLD, 0, 2, 4.0))
+	t.set_color("font_hover_color", "PopupMenu", INK)
+	t.set_stylebox("grabber", "VScrollBar", box(TRIM, Color.TRANSPARENT, 0, 2, 2.0))
+	t.set_stylebox("grabber", "HScrollBar", box(TRIM, Color.TRANSPARENT, 0, 2, 2.0))
 	return t
 
 ## Merges the look into Godot's default theme, which every Control falls back

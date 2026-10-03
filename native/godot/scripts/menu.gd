@@ -9,7 +9,7 @@ extends CanvasLayer
 ## the campaign's name, era and year over resume, save, load, settings, quit.
 
 const SETTINGS := "user://settings.cfg"
-const GOLD := Color("5ab4e6")   ## the situation room's signal blue
+const GOLD := Color("c1af86")   ## atlas sand accent
 const DIFFICULTIES := [
 	["easy", "Easy", "Rivals grow slowly and rarely attack. The first wave comes after about 13 minutes."],
 	["normal", "Normal", "A fair fight: stronger economies, earlier and larger attacks."],
@@ -80,6 +80,9 @@ func setup(world_node: Node) -> void:
 	_shade.anchor_bottom = 1.0
 	_shade.anchor_right = 1.0
 	_root.add_child(_shade)
+	var atlas := preload("res://scripts/atlas_ornament.gd").new()
+	_shade.add_child(atlas)
+	atlas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	# Pause menu: the whole game dims behind a card.
 	_dim = ColorRect.new()
 	_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -94,7 +97,8 @@ func setup(world_node: Node) -> void:
 	crest.add_theme_constant_override("separation", 18)
 	_brand.add_child(crest)
 	var emblem := TextureRect.new()
-	emblem.texture = UI.icon("sovereign")
+	emblem.texture = UI.icon("territory")
+	emblem.modulate = UI.GOLD
 	emblem.custom_minimum_size = Vector2(70, 70)
 	emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

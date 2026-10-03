@@ -37,7 +37,7 @@ const RESOURCES := [
 	["uranium", "uranium", "Uranium. From uranium deposits; for the nuclear programme."],
 	["gas", "gas", "Natural gas. Offshore rigs and imports supply winter heating. Winter lasts from 9 to 12 minutes of each 12-minute year."],
 ]
-const GOLD := Color("5ab4e6")   ## the situation room's signal blue (headings, labels)
+const GOLD := Color("c1af86")   ## atlas sand accent (headings, labels)
 const RIGHT_W := 392.0
 const MINI := 196.0
 
