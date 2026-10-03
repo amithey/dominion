@@ -610,3 +610,4 @@ UI files listed above.
   ministry_brief.gd) that folds away on narrow screens; _dress_window() wraps long labels and colours the tab row;
   _fit_window caps the width to the screen; the leader's face heads the strip (_id_face); history for the Cabinet's
   charts. menu.gd: GOLD -> signal blue (one constant). Your side_panels.gd edits in progress were left untouched.
+- 2026-10-03 Claude: 0.9.53 built from 4bc8ca1: ui, setup, campaign, state tests pass on the new exe. The game was open, so dist/DOMINION.exe stayed locked: the 0.9.53 installer is in dist, the exe in %TEMP%/dominion-release/dist. From the project: menus-check 52/52, interface-review, gameplay-ui-50, settings, pick pass.
