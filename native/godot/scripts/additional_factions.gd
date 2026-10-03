@@ -38,12 +38,19 @@ const PROFILES := {
 	"pakistan": {"bonus": {"incomePct": -0.1}, "train": {"infantry": 1.15}, "unit_costs": {"jet": 0.85, "jf17": 0.85}, "costs": {"naval": 1.2}, "strengths": ["Conventional fighters cost -15%", "Infantry recruitment +15%", "Joint research with an ally"], "weaknesses": ["Income -10%", "Warship costs +20%"]},
 	"iraq": {"bonus": {"researchPct": -0.15, "foodPct": -0.2}, "resources": {"oil": 1.5, "gas": 0.75}, "costs": {"air": 1.1}, "strengths": ["Oil output +50%", "Popular Mobilization raises six militia fighters at a call", "Golden Division counter-terrorism troops"], "weaknesses": ["Research -15%, farm output -20% (drought)", "Gas output -25%; crewed aircraft cost +10%", "No submarines, missile silo or nuclear reactor"]},
 	"syria": {"bonus": {"incomePct": -0.25, "researchPct": -0.2, "hpInfantry": 0.1}, "resources": {"oil": 0.7}, "train": {"drone": 1.25, "infantry": 1.15}, "costs": {"infantry": 0.9}, "strengths": ["Infantry +10% health, -10% cost, recruited 15% faster", "Drones produced 25% faster; Shaheen drone teams", "Reconstruction aid from its partners"], "weaknesses": ["Income -25%, research -20%, oil -30%", "No jets, attack helicopters, warships or strategic air defence", "No missile silo or nuclear reactor"]},
-	"afghanistan": {"bonus": {"incomePct": -0.3, "researchPct": -0.35, "hpInfantry": 0.15, "happiness": -5}, "resources": {"iron": 1.2}, "trade": 0.6, "train": {"infantry": 1.3}, "costs": {"infantry": 0.8, "armor": 1.25}, "strengths": ["Infantry +15% health, -20% cost, recruited 30% faster", "Suicide attack squads; insurgent attacks deep in an enemy country", "Iron output +20% (mines)"], "weaknesses": ["Income -30%, research -35%, trade -40% (sanctions)", "No air force, navy, strategic air defence, missiles or nuclear reactor", "Armour costs +25%; happiness -5"]}
+	# Calibrated 2026-10-03 (see the research doc, "Calibration"): income on the scale the game already gives
+	# Pakistan (-10%, $1,485 a head) and Egypt (0%, about $3,400): $417 a head comes to -25%. Research: North
+	# Korea's -20% for output as low as any, times the 28% of students the ban on women removed, comes to -40%.
+	# Trade -40%: trade with Pakistan fell 40% in 2025, the border shut since October 2025. Happiness -8: the
+	# world's least happy nation (World Happiness Report, last six years) takes the game's largest single effect.
+	"afghanistan": {"bonus": {"incomePct": -0.25, "researchPct": -0.4, "hpInfantry": 0.15, "happiness": -8}, "resources": {"iron": 1.2}, "trade": 0.6, "train": {"infantry": 1.3}, "costs": {"infantry": 0.8, "armor": 1.25}, "strengths": ["Infantry +15% health, -20% cost, recruited 30% faster", "Suicide attack squads; insurgent attacks deep in an enemy country", "Iron output +20% (mines)"], "weaknesses": ["Income -25%, research -40% (women barred from study), trade -40% (borders shut, sanctions)", "No air force, navy, strategic air defence, missiles or nuclear reactor", "Armour costs +25%; happiness -8"]}
 }
 const TIES := [["uk", "usa", 25.0], ["uk", "eu", 20.0], ["uk", "ukraine", 30.0], ["uk", "russia", -30.0], ["south_korea", "usa", 25.0], ["south_korea", "japan", 10.0], ["south_korea", "north_korea", -65.0], ["saudi", "usa", 15.0], ["saudi", "pakistan", 20.0], ["saudi", "iran", -20.0], ["brazil", "india", 10.0], ["brazil", "china", 15.0], ["indonesia", "japan", 10.0], ["ukraine", "eu", 30.0], ["ukraine", "russia", -75.0], ["north_korea", "russia", 25.0], ["north_korea", "china", 20.0], ["north_korea", "usa", -50.0], ["egypt", "saudi", 15.0], ["australia", "uk", 25.0], ["australia", "usa", 30.0], ["australia", "japan", 20.0], ["pakistan", "china", 30.0], ["pakistan", "india", -45.0],
 	["iraq", "iran", 35.0], ["iraq", "usa", 5.0], ["iraq", "turkiye", -10.0], ["iraq", "saudi", 10.0], ["iraq", "china", 15.0], ["iraq", "israel", -45.0], ["iraq", "syria", 5.0],
 	["syria", "turkiye", 40.0], ["syria", "saudi", 25.0], ["syria", "usa", 10.0], ["syria", "eu", 10.0], ["syria", "iran", -45.0], ["syria", "israel", -20.0], ["syria", "russia", -10.0],
 	["afghanistan", "pakistan", -55.0], ["afghanistan", "russia", 15.0], ["afghanistan", "china", 10.0], ["afghanistan", "india", 5.0], ["afghanistan", "iran", -5.0], ["afghanistan", "usa", -45.0], ["afghanistan", "israel", -45.0], ["afghanistan", "uk", -30.0]]
+## A suicide attack's toll over an attack by other means (4.4 against 1.14 killed: the research doc).
+const SQUAD_FACTOR := 3.9
 ## Art models reuse the game's procedural chassis. Each unit has its own rules.
 const BASE := {"ctsGolden": "commando", "shaheenDrone": "fpvTeam", "suicideSquad": "soldier", "type45": "destroyer", "k9": "artillery", "saudiThaad": "abmLauncher", "superTucano": "jet", "kcr60": "corvette", "interceptorDrone": "loiterer", "heavyRocket": "mlrs", "bushmaster": "apc", "jf17": "jet"}
 const HOME := {"ctsGolden": "barracks", "shaheenDrone": "barracks", "suicideSquad": "barracks", "type45": "shipyard", "k9": "tankFactory", "saudiThaad": "tankFactory", "superTucano": "airfield", "kcr60": "shipyard", "interceptorDrone": "airfield", "heavyRocket": "tankFactory", "bushmaster": "tankFactory", "jf17": "airfield"}
@@ -87,10 +94,12 @@ static func apply(w: Node) -> void:
 	w.damage_profile.kcr60.naval = float(w.damage_profile.kcr60.get("naval", 1.0)) * 1.25
 	w.damage_profile.bushmaster.armor = 0.1
 	w.damage_profile.ctsGolden.building = float(w.damage_profile.ctsGolden.get("building", 1.0)) * 1.4
-	# The squad is the charge: one blast (world.fire_weapon "detonate") at five times a rifleman's damage.
-	w.unit_defs.suicideSquad.dmg = float(w.unit_defs.soldier.dmg) * 5.0
+	# The squad is the charge: one blast (world.fire_weapon "detonate"). A Taliban suicide attack killed 4.4
+	# people on average (1982-2015) where an attack by other means killed 1.14: 3.9 times as many. So one blast
+	# is 3.9 of the strongest single infantry attack, a rocket team's shot (armour takes 0.6 of it).
+	w.unit_defs.suicideSquad.dmg = float(w.unit_defs.rocketSoldier.dmg) * SQUAD_FACTOR
 	w.unit_defs.suicideSquad.aggro = 22.0
-	w.damage_profile.suicideSquad = {"infantry": 1.5, "light": 2.0, "armor": 1.4, "air": 0.0, "naval": 0.8, "building": 3.0}
+	w.damage_profile.suicideSquad = {"infantry": 1.0, "light": 1.0, "armor": 0.6, "air": 0.0, "naval": 0.5, "building": 1.2}
 	if id_of(w, 0) == "egypt":
 		w.unit_defs.worker.name = "Engineering Corps"
 		w.unit_defs.worker.desc = "Egyptian engineers: build and repair 25% faster. Retain standard worker mining duties."

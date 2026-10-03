@@ -22,6 +22,19 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 These are source changes; the existing 0.9.45 release installer has not been rebuilt.
 
+## Version 0.9.48: Afghanistan and the suicide squad calibrated against real data
+
+The first numbers were estimates; each is now drawn from a real figure and anchored to values the game already
+gives other nations (native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md, "Calibration"):
+- **Income -25%** (was -30%): $417 a head (2024), on the scale between Pakistan (-10%, $1,485) and Egypt (0%, ~$3,400).
+- **Research -40%** (was -35%): output as low as North Korea's (-20%), times the 28% of students the ban on women removed.
+- **Trade -40%** (confirmed): trade with Pakistan fell 40% in 2025; the border has been shut since October 2025.
+- **Happiness -8** (was -5): last in the World Happiness Report six years running; the game's largest single effect.
+- **Suicide Attack Squad:** one blast is 3.9 rocket-team shots (124), the toll of a Taliban suicide attack (4.4 killed
+  on average) over an attack by other means (1.14): deadlier to infantry (124, was 75); against armour (75) and buildings (149) about as before.
+
+Checks: tools/three-nations-check.gd (35).
+
 ## Version 0.9.47: Iraq, Syria and Afghanistan
 
 Three more nations, 22 in all, each researched as it stands in 2026 (native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md):

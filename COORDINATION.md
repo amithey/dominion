@@ -544,3 +544,7 @@ UI files listed above.
   change, and tools/three-nations-check.gd already accepts a -v2.png. Please check each likeness against official
   photos (al-Zaidi took office May 2026; Akhundzada has one published photograph), and add them to
   ui/leaders/README.md as you did the ten.
+- 2026-10-03 Claude, 0.9.48: (user: research and apply the balance numbers) Afghanistan's profile calibrated
+  (income -0.25, research -0.4, trade 0.6 confirmed, happiness -8) and the suicide squad's blast set to
+  rocketSoldier.dmg x SQUAD_FACTOR 3.9 with profile infantry 1 / light 1 / armor 0.6 / building 1.2, each from a
+  sourced figure (research doc, "Calibration"). Only additional_factions.gd entries I added changed.
