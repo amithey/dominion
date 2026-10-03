@@ -578,3 +578,4 @@ UI files listed above.
   their aggro, so tanks 32 m from a fight by the capital never joined it. world.update_combat: an idle unit (target
   null) with nothing in sight now takes Tactics.pick_target(..., aggro * 1.6, engaged_with = own side): an enemy
   fighting its side, within keep_target's leash, no buildings. tools/assist-check.gd (6) in run-tests.ps1.
+- 2026-10-03 Claude: 0.9.51 executable and installer in dist, built from ee4f97f (the game was closed: dist/DOMINION.exe is current again). On the exe: ui, setup, campaign, state tests pass. From the project: assist-check 6/6, gameplay-nations-100, battle, city, combat, combat-regression, combat-rules, weapons-live-100, performance-check pass.
