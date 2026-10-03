@@ -165,12 +165,12 @@ func run() -> void:
 	check(squad.dead and depot.hp <= depot_hp - 100.0 and (guard.dead or guard.hp < guard_hp), "the suicide squad closes in and detonates: the depot loses %d health, the guard is hit, the squad is gone" % int(depot_hp - depot.hp))
 	check(is_equal_approx(float(w.unit_defs.suicideSquad.dmg), float(w.unit_defs.rocketSoldier.dmg) * 3.9) and float(w.damage_profile.suicideSquad.armor) < 1.0, "the squad's blast: 3.9 rocket shots (a suicide attack's toll over other attacks), less against armour (%d)" % int(w.unit_defs.suicideSquad.dmg))
 	var calibrated: Dictionary = F.PROFILES.afghanistan
-	check(is_equal_approx(float(calibrated.bonus.incomePct), -0.25) and is_equal_approx(float(calibrated.bonus.researchPct), -0.45) and is_equal_approx(float(calibrated.trade), 0.6) and int(calibrated.bonus.happiness) == -8, "Afghanistan as calibrated: income -25%, research -45%, trade -40%, happiness -8")
+	check(is_equal_approx(float(calibrated.bonus.incomePct), -0.25) and is_equal_approx(float(calibrated.bonus.researchPct), -0.5) and is_equal_approx(float(calibrated.trade), 0.6) and int(calibrated.bonus.happiness) == -8, "Afghanistan as calibrated: income -25%, research -50%, trade -40%, happiness -8")
 	var syr: Dictionary = F.PROFILES.syria.bonus
 	var irq_p: Dictionary = F.PROFILES.iraq.bonus
-	check(is_equal_approx(float(syr.incomePct), -0.15) and is_equal_approx(float(syr.researchPct), -0.15) and is_equal_approx(float(syr.foodPct), -0.2) and not irq_p.has("incomePct") and is_equal_approx(float(irq_p.researchPct), -0.1) and is_equal_approx(float(irq_p.foodPct), -0.2), "Syria and Iraq on the same scales: Syria income -15%, research -15%, farms -20%; Iraq research -10%, farms -20%")
+	check(is_equal_approx(float(syr.incomePct), -0.15) and is_equal_approx(float(syr.researchPct), -0.2) and is_equal_approx(float(syr.foodPct), -0.2) and is_equal_approx(float(irq_p.incomePct), -0.1) and not irq_p.has("researchPct") and is_equal_approx(float(irq_p.foodPct), -0.2), "Syria and Iraq on the world scale: Syria income -15%, research -20%, farms -20%; Iraq income -10% outside its oil, research 0, farms -20%")
 	# The order the data gives: research Iraq > Syria > Afghanistan, income Iraq > Syria > Afghanistan.
-	check(float(irq_p.researchPct) > float(syr.researchPct) and float(syr.researchPct) > float(calibrated.bonus.researchPct) and 0.0 > float(syr.incomePct) and float(syr.incomePct) > float(calibrated.bonus.incomePct), "the three in the order of their data: Iraq, then Syria, then Afghanistan")
+	check(float(irq_p.get("researchPct", 0.0)) > float(syr.researchPct) and float(syr.researchPct) > float(calibrated.bonus.researchPct) and float(irq_p.incomePct) > float(syr.incomePct) and float(syr.incomePct) > float(calibrated.bonus.incomePct), "the three in the order of their data: Iraq, then Syria, then Afghanistan")
 	# Insurgent attacks: not on a friend; on an enemy, three buildings and its income.
 	var usa2 := owner_of("usa")
 	w.diplomacy.set_score(0, usa2, 10.0)

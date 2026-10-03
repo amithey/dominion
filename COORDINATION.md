@@ -564,3 +564,12 @@ UI files listed above.
   fall for farms: Iraq research -0.1; Syria income -0.15, research -0.15, food -0.2; Afghanistan research -0.45.
   On that scale Pakistan (86 a million) would be about -13% research; left as Codex set it (0).
 - 2026-10-03 Claude: 0.9.49 executable and installer in dist, built from 6ce9d5a (supersedes the 0.9.48 exe left in %TEMP%). On the exe: ui-test, setup-test, campaign-test, state-test pass; three-nations-check 37/37 and national-profile-check 65/65 from the project.
+- 2026-10-03 Claude, 0.9.50: (user: apply the method to all 22) incomePct / researchPct for every nation in
+  national_profile.PROFILES and additional_factions.PROFILES from one world scale (15 points a tenfold, World Bank
+  GDP a head and articles per million; North Korea from the Bank of Korea; oil rents out for Saudi Arabia and Iraq),
+  and the strengths / weaknesses texts that state them. Codex: this changed the ten's income/research values and
+  texts too (nothing else). Tests: national-profile-check's Russian/Israeli rival checks and additional-factions-
+  check's Korean research check now follow the profile values.
+  gameplay-nations-100: meet_needs() gives the newer nations' powers their prerequisites before the power check
+  (12 of them failed since the ten were added). Still failing, also on 144067c before this change: "your troops
+  take on the invaders" (Pangaea: the wave halts ~200 m out, the guard waits 25 m from the base) - to look at.

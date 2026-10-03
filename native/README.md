@@ -23,6 +23,18 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.50: every nation's income and research from one world scale
+
+All 22 nations now take their income and research from one scale (native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md,
+"All 22"): 15 points for every tenfold above or below the world's level, rounded to 5. Income from GDP a head (World Bank
+2024; North Korea, Bank of Korea), less the oil rents where the game already pays oil (Saudi Arabia, Iraq); research from
+scientific articles per million people (World Bank 2023), Afghanistan's after the ban on women's study.
+- Income: USA, Israel, UK, Australia +10%; EU, Japan, South Korea, Saudi Arabia +5%; China, Russia, Turkiye, Brazil 0;
+  Iran, Indonesia, Ukraine -5%; India, Egypt, Iraq -10%; North Korea, Pakistan, Syria -15%; Afghanistan -25%.
+- Research: Israel, UK, South Korea, Australia +10%; USA, China, EU, Iran, Russia, Japan, Saudi Arabia +5%; Turkiye,
+  Brazil, Ukraine, Iraq 0; India, Indonesia, Egypt -5%; Pakistan -10%; Syria -20%; North Korea -25%; Afghanistan -50%.
+- The leaders' texts say the new numbers. Nothing else about the nations changed.
+
 ## Version 0.9.49: Syria and Iraq on the same scales as Afghanistan
 
 One method for all three (native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md, "Syria and Iraq"): income from GDP a head

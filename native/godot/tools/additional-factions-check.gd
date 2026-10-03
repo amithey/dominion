@@ -51,7 +51,7 @@ func run() -> void:
 	w.effects.set_physics_process(false)
 	w.missiles.set_physics_process(false)
 	check(w.map.nations.map(func(n): return n.id) == ["south_korea", "uk", "egypt", "pakistan"], "new roster launches with all four selected identities")
-	check(is_equal_approx(w.research.bonus("researchPct"), 0.2), "Korean research modifier reaches the research engine")
+	check(is_equal_approx(w.research.bonus("researchPct"), float(F.PROFILES.south_korea.bonus.researchPct)) and w.research.bonus("researchPct") > 0.0, "Korean research modifier reaches the research engine")
 	provision(0)
 	var homes := {}
 	for key in ["tankFactory", "airfield", "shipyard", "port", "bank", "techPark", "farm", "school", "powerPlant", "barracks"]: homes[key] = building(key)

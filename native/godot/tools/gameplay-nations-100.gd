@@ -105,6 +105,51 @@ func drive(a: Vector3, b: Vector3, seconds := 70.0) -> float:
 	w.kill(tank)
 	return short
 
+## A finished building of `key` for `owner`, on the nearest site round its capital.
+func put(key: String, owner: int) -> Dictionary:
+	var centre: Vector3 = hq(owner).root.position
+	for ring in range(14, 160, 7):
+		for k in range(16):
+			var at: Vector3 = w.snap_to_hex(centre + Vector3.FORWARD.rotated(Vector3.UP, TAU * k / 16.0) * ring)
+			if w.site_problem(key, at, owner) == "":
+				return w.place_building(key, at, owner, true)
+	# (no proper site, a port inland: put it by the capital, as additional-factions-check does)
+	var b: Dictionary = w.place_building(key, centre + Vector3(15, 0, 15), owner, true)
+	b.supplied = true
+	return b
+
+## The newer nations' powers ask for something first (additional_powers.gd): give it to them.
+func meet_needs(id: String) -> void:
+	var extra := preload("res://scripts/additional_powers.gd")
+	if not extra.POWERS.has(id):
+		return
+	for need in extra.POWERS[id].needs:
+		if not extra.owned(w, 0, need): put(need, 0)
+	var d: Node = w.diplomacy
+	match id:
+		"uk":
+			var sea = w.water_near(hq().root.position, 300)
+			if sea != null: w.spawn_unit("corvette", sea, 0)
+		"brazil":
+			d.set_flag(d.war, 0, 1, false)
+			d.set_flag(d.pact, 0, 1, true)
+			if not extra.owned(w, 1, "port"): put("port", 1)
+		"pakistan":
+			d.set_flag(d.war, 0, 1, false)
+			d.set_flag(d.alliance, 0, 1, true)
+		"syria":
+			d.set_score(0, 1, 45.0)
+		"afghanistan":
+			d.set_flag(d.war, 0, 1, true)
+			put("farm", 1)
+		"ukraine":
+			hq().hp = hq().max_hp * 0.5
+		"north_korea":
+			w.spawn_unit("artillery", w.land_point(hq().root.position, 30.0), 0)
+		"australia":
+			var pit: Dictionary = put("extractor", 0)
+			if not pit.is_empty(): pit.deposit = w.deposits[0]
+
 func mine(key: String) -> Array:
 	return w.units.filter(func(u): return u.owner == 0 and u.key == key and not u.dead)
 
@@ -160,6 +205,7 @@ func nation_checks(index: int) -> void:
 	var power: Dictionary = Powers.power_of(w, 0)
 	w.economy.res.money = maxf(w.economy.res.money, 5000.0)
 	w.diplomacy.declare_war(1, 2)   # a war for a mediator (Turkiye) to end
+	meet_needs(id)
 	var target := -1
 	if not power.is_empty() and power.target:
 		for n in range(1, w.diplomacy.n):

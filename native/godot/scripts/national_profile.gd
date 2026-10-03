@@ -15,69 +15,75 @@ extends RefCounted
 ## civCapPct, dmgAir, dmgNaval, dmgArty, dmgInfantry, dmgAll, hpAll);
 ## population growth, resources, trade and unit prices have their own hooks.
 ## Rival nations get the same through the AI's income, technology and prices.
+##
+## Income and research, for all 22 nations (here and additional_factions.gd), from one scale (2026-10-03,
+## native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md, "All 22"): 15 points for every tenfold, from the
+## world's level, rounded to 5. Income: GDP a head (World Bank 2024; North Korea, Bank of Korea), less the
+## oil rents where the game already pays oil (Saudi Arabia, Iraq). Research: scientific articles per
+## million people (World Bank, 2023); Afghanistan's times the 72% of students left after the ban on women.
 
 const PROFILES := {
 	"usa": {
-		"bonus": {"incomePct": 0.15, "researchPct": 0.2, "spyPct": 0.1, "dmgAir": 0.1, "happiness": 2.0},
+		"bonus": {"incomePct": 0.1, "researchPct": 0.05, "spyPct": 0.1, "dmgAir": 0.1, "happiness": 2.0},
 		"growth": 1.05, "resources": {"oil": 1.2, "gas": 1.2}, "trade": 1.05,
 		"costs": {"air": 0.9, "armor": 1.1, "artillery": 1.1},
-		"strengths": ["Largest economy and the dollar: +15% income", "Research: +20% (R&D 3.5% of GDP, the top universities)", "Air power: aircraft 10% cheaper, +10% air damage", "Shale oil and gas: +20% output", "Intelligence: +10% covert success"],
+		"strengths": ["Largest economy and the dollar: +10% income", "Research: +5% (three times the world's scientific output a head)", "Air power: aircraft 10% cheaper, +10% air damage", "Shale oil and gas: +20% output", "Intelligence: +10% covert success"],
 		"weaknesses": ["Expensive forces: tanks and artillery cost 10% more", "Rivals everywhere: cold relations with China, Russia and Iran"],
 	},
 	"china": {
-		"bonus": {"incomePct": 0.1, "researchPct": 0.15, "prodPct": 0.15, "buildPct": 0.15, "spyPct": 0.1, "counterSpy": 0.1},
+		"bonus": {"researchPct": 0.05, "prodPct": 0.15, "buildPct": 0.15, "spyPct": 0.1, "counterSpy": 0.1},
 		"growth": 0.9, "resources": {"silicon": 1.3, "oil": 0.8}, "trade": 1.15,
 		"costs": {"naval": 0.85},
-		"strengths": ["The world's factory: +15% production and construction speed", "Shipbuilding: warships 15% cheaper", "Rare earths and chips: +30% silicon", "Exports: +15% trade income", "Research +15%, cyber espionage +10%, counter-intelligence +10%"],
+		"strengths": ["The world's factory: +15% production and construction speed", "Shipbuilding: warships 15% cheaper", "Rare earths and chips: +30% silicon", "Exports: +15% trade income", "Research +5%, cyber espionage +10%, counter-intelligence +10%"],
 		"weaknesses": ["An ageing population: 10% slower growth", "Imports its oil: -20% oil output", "Cold relations with the US, Japan and India"],
 	},
 	"eu": {
-		"bonus": {"incomePct": 0.1, "researchPct": 0.1, "happiness": 4.0, "health": 5.0, "dmgAll": -0.05},
+		"bonus": {"incomePct": 0.05, "researchPct": 0.05, "happiness": 4.0, "health": 5.0, "dmgAll": -0.05},
 		"growth": 0.65, "resources": {"oil": 0.7, "gas": 0.6}, "trade": 1.15,
 		"costs": {"airDefence": 0.9},
-		"strengths": ["The single market: +10% income, +15% trade income", "Welfare and health: +4 happiness, +5 health", "Research +10%", "Air defence 10% cheaper (IRIS-T, SAMP/T)"],
+		"strengths": ["The single market: +5% income, +15% trade income", "Welfare and health: +4 happiness, +5 health", "Research +5%", "Air defence 10% cheaper (IRIS-T, SAMP/T)"],
 		"weaknesses": ["Dependent on imported energy: -30% oil, -40% gas output", "Low readiness after decades of peace: -5% combat damage", "An ageing population: the population grows a third slower, despite the welfare"],
 	},
 	"iran": {
-		"bonus": {"incomePct": -0.2, "researchPct": -0.1, "happiness": -6.0, "spyPct": 0.05},
+		"bonus": {"incomePct": -0.05, "researchPct": 0.05, "happiness": -6.0, "spyPct": 0.05},
 		"growth": 1.0, "resources": {"oil": 1.4, "gas": 1.4}, "trade": 0.75,
 		"costs": {"drone": 0.75, "missile": 0.75},
-		"strengths": ["Oil and gas: +40% output", "Asymmetric arsenal: drones and missiles 25% cheaper", "Covert networks across the region: +5% covert success"],
-		"weaknesses": ["Sanctions: -20% income and -25% trade income", "High inflation and unrest: -6 happiness", "Cut off from technology: -10% research", "Hostile to the US and Israel from the start"],
+		"strengths": ["Oil and gas: +40% output", "Asymmetric arsenal: drones and missiles 25% cheaper", "Covert networks across the region: +5% covert success", "Universities: +5% research despite the sanctions"],
+		"weaknesses": ["Sanctions: -5% income and -25% trade income", "High inflation and unrest: -6 happiness", "Hostile to the US and Israel from the start"],
 	},
 	"russia": {
-		"bonus": {"incomePct": -0.1, "researchPct": -0.1, "spyPct": 0.1, "happiness": -3.0, "hpAll": 0.05},
+		"bonus": {"researchPct": 0.05, "spyPct": 0.1, "happiness": -3.0, "hpAll": 0.05},
 		"growth": 0.8, "resources": {"oil": 1.5, "gas": 1.6, "iron": 1.2}, "trade": 0.75,
 		"costs": {"armor": 0.85, "artillery": 0.85},
-		"strengths": ["Energy superpower: +50% oil, +60% gas output, +20% iron", "Mass-produced armour and artillery: 15% cheaper", "A hardened army: +5% health", "Intelligence services: +10% covert success"],
-		"weaknesses": ["Sanctions: -10% income, -25% trade income", "Brain drain: -10% research", "A shrinking population: 20% slower growth, -3 happiness", "Hostile to the US and the EU from the start"],
+		"strengths": ["Energy superpower: +50% oil, +60% gas output, +20% iron", "Mass-produced armour and artillery: 15% cheaper", "A hardened army: +5% health", "Intelligence services: +10% covert success", "Research +5%"],
+		"weaknesses": ["Sanctions: -25% trade income", "A shrinking population: 20% slower growth, -3 happiness", "Hostile to the US and the EU from the start"],
 	},
 	"india": {
-		"bonus": {"incomePct": 0.05, "researchPct": -0.05, "buildPct": 0.1, "happiness": -2.0, "hpInfantry": 0.1},
+		"bonus": {"incomePct": -0.1, "researchPct": -0.05, "buildPct": 0.1, "happiness": -2.0, "hpInfantry": 0.1},
 		"growth": 1.4, "resources": {"iron": 1.15}, "trade": 1.05,
 		"costs": {"infantry": 0.9},
 		"strengths": ["The fastest-growing large economy and youngest population: 40% faster growth", "Vast manpower: infantry 10% cheaper and +10% infantry health", "Friends in every camp: warm starting relations with the US and Russia alike", "+10% construction, +15% iron"],
-		"weaknesses": ["Low research spending (0.6% of GDP): -5% research", "Poverty and strain: -2 happiness", "Border rivalry with China"],
+		"weaknesses": ["Low research spending (0.6% of GDP): -5% research", "Poverty and strain: -10% income, -2 happiness", "Border rivalry with China"],
 	},
 	"japan": {
-		"bonus": {"incomePct": 0.05, "researchPct": 0.2, "happiness": 5.0, "health": 8.0, "prodPct": 0.1},
+		"bonus": {"incomePct": 0.05, "researchPct": 0.05, "happiness": 5.0, "health": 8.0, "prodPct": 0.1},
 		"growth": 0.5, "resources": {"oil": 0.6, "gas": 0.6, "iron": 0.8}, "trade": 1.1,
 		"costs": {"naval": 0.9, "infantry": 1.1},
-		"strengths": ["Technology: +20% research, +10% production", "A stable, healthy society: +5 happiness, +8 health", "Shipbuilding: warships 10% cheaper", "An alliance with the US from the start"],
+		"strengths": ["Technology: +5% research, +5% income, +10% production", "A stable, healthy society: +5 happiness, +8 health", "Shipbuilding: warships 10% cheaper", "An alliance with the US from the start"],
 		"weaknesses": ["No resources of its own: -40% oil and gas, -20% iron", "The oldest population: it grows at half the pace", "A small army under a pacifist constitution: infantry 10% dearer"],
 	},
 	"turkiye": {
-		"bonus": {"incomePct": -0.05, "happiness": -4.0, "prodPct": 0.1, "buildPct": 0.1},
+		"bonus": {"happiness": -4.0, "prodPct": 0.1, "buildPct": 0.1},
 		"growth": 1.0, "resources": {}, "trade": 1.1,
 		"costs": {"drone": 0.8},
 		"strengths": ["The drone industry (Baykar): drones 20% cheaper", "The crossroads of Europe and Asia: +10% trade income", "Industry and construction +10%", "Talks with every side: mild relations with all"],
-		"weaknesses": ["Inflation (35% in 2025): -5% income, -4 happiness"],
+		"weaknesses": ["Inflation (35% in 2025): -4 happiness"],
 	},
 	"israel": {
-		"bonus": {"incomePct": 0.05, "researchPct": 0.3, "spyPct": 0.15, "counterSpy": 0.15, "civCapPct": -0.15, "happiness": -2.0},
+		"bonus": {"incomePct": 0.1, "researchPct": 0.1, "spyPct": 0.15, "counterSpy": 0.15, "civCapPct": -0.15, "happiness": -2.0},
 		"growth": 1.15, "resources": {"gas": 1.2}, "trade": 1.0,
 		"costs": {},
-		"strengths": ["The start-up nation: +30% research (R&D 6.3% of GDP, the world's highest)", "Mossad and Shin Bet: +15% covert success, +15% counter-intelligence", "Offshore gas (Leviathan): +20% gas", "An alliance with the US from the start"],
+		"strengths": ["The start-up nation: +10% research (R&D 6.3% of GDP, the world's highest), +10% income", "Mossad and Shin Bet: +15% covert success, +15% counter-intelligence", "Offshore gas (Leviathan): +20% gas", "An alliance with the US from the start"],
 		"weaknesses": ["A small country: 15% less room for citizens", "Under constant threat: -2 happiness", "Surrounded by enemies: hostile to Iran from the start"],
 	},
 }
