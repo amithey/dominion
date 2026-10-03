@@ -513,3 +513,10 @@ UI files listed above.
   F10 in world._input, a "Testing: everything (F10)" button (CheatEverything) in menu.open_pause, and the F1
   help line in hud.gd. tools/cheat-check.gd (17), in run-tests.ps1.
 - 2026-10-03 Claude: 0.9.46 executable and installer in dist, built from 9a3fb03. On the exe: ui-test, setup-test, campaign-test, state-test pass; cheat-check 17/17 from the project.
+- 2026-10-03 Claude: (user: research for a future huge Middle East map; findings only, no game change)
+  native/MIDDLE-EAST-MAP-RESEARCH-2026-10-03.md: window 22-64E 10-46N with a cos(lat) correction, sizes
+  3200/4000/4800 m, straits, ranges, deserts, rivers, depressions, cities, real oil/gas fields, data sources
+  (ETOPO 2022 CC0, Natural Earth public domain), and measured engine costs of middle_east at 1600/2400/3200 m
+  (load 57/107/182 s, memory 430/815/1281 MB, step ~6 ms, cross-map route 0.2-1 s) with the engine work a
+  bigger map needs (cached navigation, packed heights, async long routes, chunked terrain, sea plane size,
+  rivers, a land-cover mask). Measured in a scratch copy; nothing in the project changed.
