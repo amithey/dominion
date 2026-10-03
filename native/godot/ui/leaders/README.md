@@ -1,4 +1,18 @@
-# Real-leader portraits (28 September 2026)
+# Real-leader portraits
+
+## Ten additional leaders (3 October 2026)
+
+Ten separate built-in ImageGen illustrations match the original diplomatic-office
+style. Exact prompts and identities are in `additional-leaders-prompts.json`.
+New portraits: `burnham-v2.png`, `lee-v2.png`, `bin-salman-v2.png`, `lula-v2.png`,
+`prabowo-v2.png`, `zelenskyy-v2.png`, `kim-v2.png`, `sisi-v2.png`,
+`albanese-v2.png`, and `sharif-v2.png`.
+
+LeaderGallery automatically prefers these PNGs for the faction picker, side-panel
+portraits and diplomacy. Existing vector emblems remain as fallback assets.
+All images were visually reviewed for identity, composition and matching style.
+
+## Original nine leaders (28 September 2026)
 
 Nine separately generated built-in ImageGen illustrations, used by the playable
 faction picker and diplomatic portraits. `*-v2.png` replaces the corresponding

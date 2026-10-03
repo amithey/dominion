@@ -1,5 +1,10 @@
 # Working in parallel: Claude and Codex
 
+2026-10-03 Codex: completed ten additional leader portraits with built-in ImageGen.
+New ui/leaders/*-v2.png assets and exact prompt manifest. Existing LeaderGallery
+resolves these filenames automatically in picker/diplomacy. Portrait regression:
+122 checks passed (identity paths, unique assets, resolution and crop geometry).
+
 2026-10-02 Codex: user authorized research and implementation of ten additional
 factions (UK, South Korea, Saudi Arabia, Brazil, Indonesia, Ukraine, North Korea,
 Egypt, Australia, Pakistan). Owning new additional_factions/additional_powers
