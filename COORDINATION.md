@@ -512,3 +512,4 @@ UI files listed above.
   at stage 3, tracks at max, queue cleared; then economy.grant_test_resources() and +$900,000 more. Wired to
   F10 in world._input, a "Testing: everything (F10)" button (CheatEverything) in menu.open_pause, and the F1
   help line in hud.gd. tools/cheat-check.gd (17), in run-tests.ps1.
+- 2026-10-03 Claude: 0.9.46 executable and installer in dist, built from 9a3fb03. On the exe: ui-test, setup-test, campaign-test, state-test pass; cheat-check 17/17 from the project.
