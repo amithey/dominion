@@ -650,3 +650,9 @@ UI files listed above.
   Then (user: the AI's United States uses it too): puppets carry a "patron"; fears (patron -> until) replaces
   fear_until; ai_raids / ai_raid_next (saved); regime_change.ai_consider/launch/ai_advance from the espionage tick;
   diplomacy.ai_wants_war and the AI-AI war roll in tick() honour restrains(world, id, other).
+- 2026-10-04 Claude, 0.9.59 (user: the AI builds only one city and one village): ai.gd pick_building founds a
+  town for every 7 buildings (a city per two villages) before the plans; cityCenter left CITY_PLAN; find_spot seeks
+  settlements 75-130 m from any own town; n.no_room/n.age set aside a building with no room for 90 s. New
+  tools/ai-expansion-check.gd.
+  tools/gameplay-state-audit.gd compares loaded unit figures to a millionth, not exactly: unit_quality's
+  multipliers leave last-digit fractions (119.60000000000001) that a save writes as 119.6.

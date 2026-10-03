@@ -23,6 +23,21 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.59: rival nations found towns
+
+The player noticed that a rival only ever had its capital and one village. Measured over fifteen minutes of a
+standard match (tools/ai-expansion-check.gd): every rival had 1 capital, 0 cities and 1 village (the village from
+its fixed opening), with some 23 buildings packed round the capital. Three causes in ai.gd:
+- the city plan had no village at all and a city only at "0.15 per 10 buildings" (one, until 67 buildings), and it
+  builds the first goals still short (farms, cottages), so it never reached either;
+- a new town was only sought 75-120 m from the capital, a ring that fills;
+- a building it had no room for was chosen again every time, holding up the rest.
+Now a rival founds a new town for every 7 buildings it owns (a city for every two villages) before anything else,
+looks for the site 75-130 m out from any of its towns so the state spreads, and sets aside for 90 s a building it
+has no room for. After fifteen minutes each rival has its capital, a city and two villages, and keeps growing.
+
+Checks: tools/ai-expansion-check.gd (6, island and pangaea).
+
 ## Version 0.9.58: the leadership raid (Operation Absolute Resolve)
 
 A United States-only Intel operation after the capture of Nicolas Maduro (3 January 2026): a CIA network and a

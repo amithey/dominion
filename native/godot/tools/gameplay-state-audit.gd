@@ -168,7 +168,14 @@ func run() -> void:
 	check(saved_veterans.size() == 1 and is_equal_approx(saved_veterans[0].max_hp, veteran_max), "fresh load restores researched maximum health before spawning player units")
 	var saved_rivals: Array = w.units.filter(func(u): return u.key == "soldier" and u.owner == 1 and is_equal_approx(u.hp, rival_max))
 	check(saved_rivals.size() == 1 and is_equal_approx(saved_rivals[0].max_hp, rival_max), "fresh load restores rival technology before spawning rival units")
-	check(w.units.map(func(u): return [u.max_hp, u.range, u.speed, u.cooldown]) == original_stats, "loading preserves equipment on both old and upgraded units")
+	# (to a millionth: a save writes figures shorter than a double, and a nation's
+	# quality multipliers, unit_quality.gd, leave fractions in the last digits)
+	var loaded_stats: Array = w.units.map(func(u): return [u.max_hp, u.range, u.speed, u.cooldown])
+	var same: bool = loaded_stats.size() == original_stats.size()
+	for i in range(mini(loaded_stats.size(), original_stats.size())):
+		for j in range(4):
+			same = same and absf(float(loaded_stats[i][j]) - float(original_stats[i][j])) <= 0.000001 * maxf(1.0, absf(float(original_stats[i][j])))
+	check(same, "loading preserves equipment on both old and upgraded units")
 	# Old saves start with no new policy, flight or receipt data.
 	var legacy := json_save()
 	legacy.erase("national_powers")

@@ -105,6 +105,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	var spies: Node = world.espionage
 	n.money += float(row(n).income) * delta * s * preload("res://scripts/additional_powers.gd").civic_income(world, n, delta) * (spies.income_mult(n.id) if spies else 1.0) * preload("res://scripts/faction_powers.gd").income_mult(world, n.id) * preload("res://scripts/national_profile.gd").ai_income(world, n.id) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0))))
 	var cyber: bool = spies != null and spies.production_down(n.id) or preload("res://scripts/faction_powers.gd").production_blocked(world, n.id)
+	n.age = float(n.get("age", 0.0)) + delta   # (its own clock, for the buildings set aside)
 	n.next_build -= delta * (1.0 + preload("res://scripts/additional_powers.gd").bonus(world, n.id, "buildPct"))
 	n.next_train -= delta * maxf(0.1, 1.0 + float(preload("res://scripts/additional_factions.gd").profile(world, n.id).get("bonus", {}).get("prodPct", 0.0)) + preload("res://scripts/additional_powers.gd").bonus(world, n.id, "prodPct"))
 	n.next_attack -= delta
@@ -131,6 +132,11 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 						n.build_idx += 1
 				elif n.build_idx < build_order.size():
 					n.build_idx += 1  # no room for this one: move on
+				else:
+					# No room for it now: set it aside for 90 s, so one building
+					# that fits nowhere does not stop all the others.
+					if not n.has("no_room"): n.no_room = {}
+					n.no_room[key] = float(n.get("age", 0.0)) + 90.0
 		var total: int = world.buildings.filter(func(b): return b.owner == n.id and not b.dead).size()
 		n.next_build = maxf(6.0, float(row(n).buildEvery) * randf_range(0.7, 1.1) - total * 0.3) / s
 
@@ -280,12 +286,14 @@ func weighted_cost(cost: Dictionary) -> float:
 # army. Economic and civic goals have target counts that rise as the nation
 # grows; military buildings are kept to about a third of everything built
 # (more while at war). The first goal still short of its target is built.
+# New towns come before the plan (pick_building): a capital and one village
+# was all a rival ever had.
 const CITY_PLAN := [
 	# [key, how many per 10 buildings the nation owns (at least 1)]
 	["farm", 1.6], ["cottage", 1.4], ["market", 0.6], ["warehouse", 0.6], ["extractor", 1.0],
 	["school", 0.5], ["foodDepot", 0.4], ["park", 0.5], ["hospital", 0.3], ["library", 0.3],
 	["residential", 0.8], ["powerPlant", 0.4], ["bank", 0.3], ["port", 0.2], ["university", 0.2],
-	["policeStation", 0.3], ["cityCenter", 0.15], ["fishingWharf", 0.3], ["oilRefinery", 0.2], ["techPark", 0.15],
+	["policeStation", 0.3], ["fishingWharf", 0.3], ["oilRefinery", 0.2], ["techPark", 0.15],
 ]
 const MILITARY_PLAN := [["barracks", 0.8], ["housing", 1.2], ["tankFactory", 0.4], ["ammoDepot", 0.3],
 	["helipad", 0.2], ["airfield", 0.15], ["shipyard", 0.15], ["bunker", 0.3], ["samSite", 0.2], ["commandCenter", 0.1]]
@@ -301,6 +309,14 @@ func pick_building(n: Dictionary) -> String:
 	var total := maxi(mine.size(), 1)
 	var share := float(military) / total
 	var want_military: float = 0.45 if world.diplomacy != null and not world.diplomacy.enemies_of(n.id).is_empty() else 0.3
+	# A state spreads: a new town for every 7 buildings it owns, a city for every
+	# two villages, before anything else (unless there was no room for it lately).
+	var villages := int(counts.get("villageCenter", 0))
+	var cities := int(counts.get("cityCenter", 0))
+	if villages + cities < total / 7:
+		var town := "cityCenter" if cities * 2 < villages else "villageCenter"
+		if float(n.get("no_room", {}).get(town, 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, town):
+			return town
 	var plans := [MILITARY_PLAN, CITY_PLAN] if share < want_military else [CITY_PLAN, MILITARY_PLAN]
 	for plan in plans:
 		var short := []
@@ -308,6 +324,8 @@ func pick_building(n: Dictionary) -> String:
 			var key: String = goal[0]
 			if not world.building_defs.has(key):
 				continue
+			if float(n.get("no_room", {}).get(key, 0.0)) > float(n.get("age", 0.0)):
+				continue   # no room for it lately: the next goal instead
 			var def: Dictionary = world.building_defs[key]
 			if def.get("unique", false) and counts.get(key, 0) > 0:
 				continue
@@ -346,11 +364,21 @@ func find_spot(n: Dictionary, home: Dictionary, key: String):
 			var at: Vector3 = world.logistics.hex_center(hex)
 			if world.site_problem(key, at, n.id) == "":
 				return at
+	if def.get("settlement") != null:
+		# A new town stands 75-130 m out from one of the nation's towns (the
+		# capital or any village or city), so the state spreads outward.
+		var towns: Array = world.buildings.filter(func(b): return b.owner == n.id and not b.dead and b.key in ["hq", "cityCenter", "villageCenter"])
+		towns.shuffle()
+		for town in towns.slice(0, 4):
+			for attempt in range(12):
+				var a := randf() * TAU
+				var at: Vector3 = world.snap_to_hex(town.root.position + Vector3(cos(a), 0, sin(a)) * randf_range(75.0, 130.0))
+				if world.site_problem(key, at, n.id) == "":
+					return at
+		return null
 	for attempt in range(24):
 		var a := randf() * TAU
-		# New settlements stand well apart (ai.js: villages 65-110 m, cities 90-135 m).
-		var r := randf_range(75.0, 120.0) if def.get("settlement") != null else randf_range(18.0, 56.0)
-		var at: Vector3 = world.snap_to_hex(centre + Vector3(cos(a), 0, sin(a)) * r)
+		var at: Vector3 = world.snap_to_hex(centre + Vector3(cos(a), 0, sin(a)) * randf_range(18.0, 56.0))
 		if world.site_problem(key, at, n.id) == "":
 			return at
 	return null
