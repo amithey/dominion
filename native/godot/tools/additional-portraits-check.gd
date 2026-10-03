@@ -10,7 +10,7 @@ func check(ok: bool, label: String) -> void:
 		push_error(label)
 func _initialize() -> void:
 	var paths := {}
-	for id in ["uk", "south_korea", "saudi", "brazil", "indonesia", "ukraine", "north_korea", "egypt", "australia", "pakistan"]:
+	for id in ["uk", "south_korea", "saudi", "brazil", "indonesia", "ukraine", "north_korea", "egypt", "australia", "pakistan", "iraq", "syria", "afghanistan"]:
 		var i: int = F.IDS.find(id)
 		var path: String = Gallery.portrait(F.LEADERS[i])
 		check(path == "res://ui/leaders/%s-v2.png" % F.PORTRAITS[i], "PNG selected: " + F.IDS[i])
@@ -25,7 +25,7 @@ func _initialize() -> void:
 				var rect: Rect2 = face.region
 				check(absf(rect.size.x / rect.size.y - aspect) < 0.001, "Crop aspect")
 				check(Rect2(Vector2.ZERO, full.get_size()).encloses(rect), "Crop bounds")
-	check(paths.size() == 10, "All ten additional portraits")
+	check(paths.size() == 13, "All thirteen additional portraits")
 	check(Gallery.portrait("Successor 1 (President)") == "", "Successor has no incumbent portrait")
 	print("Additional portraits: %d checks, %d failures" % [checks, failures])
 	quit(0 if failures == 0 else 1)

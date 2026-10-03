@@ -17,10 +17,11 @@ prerequisites and cooldown. Select them for yourself or as rivals in New Game; u
 national powers from Diplomacy. Map capacity still limits each match to 2–10 nations.
 
 The additions integrate with production, research, combat, trade, AI and saves.
-Their cards use vector national emblems; unit art reuses existing procedural models.
+Their cards and diplomatic meetings use illustrated leader portraits generated with
+built-in ImageGen; national emblems remain as fallback. Unit art reuses existing procedural models.
 Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
-These are source changes; the existing 0.9.45 release installer has not been rebuilt.
+The ten portraits are included in the subsequent 0.9.49 local release.
 
 ## Version 0.9.49: Syria and Iraq on the same scales as Afghanistan
 
@@ -67,7 +68,7 @@ Three more nations, 22 in all, each researched as it stands in 2026 (native/NATI
   EXCEPT, RESEARCH_EXCEPT, BUILD_EXCEPT). No nuclear reactor or missile silo for any of the three, no shipyard for
   landlocked Afghanistan: the build menu leaves them out, placing one is refused ("Not built by ..."), and the
   rivals never build them. A starting army holds only what its nation fields. Even F10 does not open them.
-- Leader emblems until portraits are made.
+- Illustrated leader portraits added on 3 October 2026; national emblems remain as fallback.
 
 Checks: tools/three-nations-check.gd (33); additional-factions-check now also covers the three new units.
 

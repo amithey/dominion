@@ -1,5 +1,10 @@
 # Working in parallel: Claude and Codex
 
+2026-10-03 Codex continuation: completed three remaining leader portraits for
+Iraq, Syria and Afghanistan. Built-in ImageGen PNGs and exact prompts; the full
+13-portrait regression passes 158 checks, factions-check passes 774 checks.
+Local Windows export: build/DOMINION-portraits.exe (all 22 leaders have portraits).
+
 2026-10-03 Codex: completed ten additional leader portraits with built-in ImageGen.
 New ui/leaders/*-v2.png assets and exact prompt manifest. Existing LeaderGallery
 resolves these filenames automatically in picker/diplomacy. Portrait regression:

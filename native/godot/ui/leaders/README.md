@@ -1,5 +1,13 @@
 # Real-leader portraits
 
+## Three remaining leaders (3 October 2026)
+
+`zaidi-v2.png` (Iraq, Ali al-Zaidi), `sharaa-v2.png` (Syria, Ahmed al-Sharaa),
+and `akhundzada-v2.png` (Afghanistan, Hibatullah Akhundzada) were separately
+generated with built-in ImageGen. Exact prompts: `three-leaders-prompts.json`.
+These interpretive game illustrations share the same framing and crop handling;
+Akhundzada's public photographic likeness is limited. Emblems remain as fallback.
+
 ## Ten additional leaders (3 October 2026)
 
 Ten separate built-in ImageGen illustrations match the original diplomatic-office
