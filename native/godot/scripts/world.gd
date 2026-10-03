@@ -3586,7 +3586,9 @@ func ui_test() -> void:
 		train[0].pressed.emit()
 		await get_tree().process_frame
 		hud._update_panel()
-		checks["barracks lists its %d units" % train.size()] = train.size() == barracks[0].def.trains.size()
+		# (its own nation's: Iraq's, Syria's and Afghanistan's own infantry train there too)
+		var own: Array = barracks[0].def.trains.filter(func(u): return unit_defs.has(u) and unit_allowed(0, u))
+		checks["barracks lists its %d units" % train.size()] = train.size() == own.size() and train.size() < barracks[0].def.trains.size()
 		checks["a unit bar queues training"] = barracks[0].queue.size() == before + 1
 		checks["the queue shows in the selection panel"] = hud._sel.visible and hud._sel_queue.get_child_count() == barracks[0].queue.size()
 		select_building(null)
