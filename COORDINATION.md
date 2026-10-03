@@ -553,3 +553,4 @@ UI files listed above.
   million for research (North Korea -20% at 9.4, Egypt -10% at 200), GDP a head for income, half the 2025 wheat
   fall for farms: Iraq research -0.1; Syria income -0.15, research -0.15, food -0.2; Afghanistan research -0.45.
   On that scale Pakistan (86 a million) would be about -13% research; left as Codex set it (0).
+- 2026-10-03 Claude: 0.9.49 executable and installer in dist, built from 6ce9d5a (supersedes the 0.9.48 exe left in %TEMP%). On the exe: ui-test, setup-test, campaign-test, state-test pass; three-nations-check 37/37 and national-profile-check 65/65 from the project.
