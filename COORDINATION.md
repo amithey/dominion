@@ -629,3 +629,6 @@ UI files listed above.
   national_variants), upgrade()/of_unit()/rename(); factions.for_unit takes of_unit (cooldown, aps); equip() sets
   unit.aps_builtin; modern_warfare.aps_chance honours it; research._recompute renames the player's tank;
   national_variants.name_for names a rival's M1E3; blue tank name "M1A2 SEPv3 Abrams".
+- 2026-10-03 Claude, 0.9.56 (user: check AbramsX and the CIA): national_profile usa bonus spyPct 0.1 -> 0.2,
+  counterSpy 0.1 (strength text updated). espionage.gd: counter_spy(nation) adds that nation's profile counterSpy;
+  enemy_attempt's defence subtracts the attacker's profile spyPct. AbramsX: documented only (a GD demonstrator).

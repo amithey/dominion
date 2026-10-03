@@ -24,10 +24,12 @@ extends RefCounted
 
 const PROFILES := {
 	"usa": {
-		"bonus": {"incomePct": 0.1, "researchPct": 0.05, "spyPct": 0.1, "dmgAir": 0.1, "happiness": 2.0},
+		# Intelligence: the CIA, NSA and NRO; $115.5 billion requested for 2026 (NIP $81.9 billion,
+		# MIP $33.6 billion), far beyond any other nation's (native/UNIT-QUALITY-RESEARCH-2026-10-03.md).
+		"bonus": {"incomePct": 0.1, "researchPct": 0.05, "spyPct": 0.2, "counterSpy": 0.1, "dmgAir": 0.1, "happiness": 2.0},
 		"growth": 1.05, "resources": {"oil": 1.2, "gas": 1.2}, "trade": 1.05,
 		"costs": {"air": 0.9, "armor": 1.1, "artillery": 1.1},
-		"strengths": ["Largest economy and the dollar: +10% income", "Research: +5% (three times the world's scientific output a head)", "Air power: aircraft 10% cheaper, +10% air damage", "Shale oil and gas: +20% output", "Intelligence: +10% covert success"],
+		"strengths": ["Largest economy and the dollar: +10% income", "Research: +5% (three times the world's scientific output a head)", "Air power: aircraft 10% cheaper, +10% air damage", "Shale oil and gas: +20% output", "The CIA, NSA and NRO ($115.5 billion, the world's largest intelligence budget): +20% covert success, +10% counter-intelligence"],
 		"weaknesses": ["Expensive forces: tanks and artillery cost 10% more", "Rivals everywhere: cold relations with China, Russia and Iran"],
 	},
 	"china": {

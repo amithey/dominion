@@ -143,6 +143,25 @@ func run() -> void:
 	w.unit_defs.tank.name = V.NAMES.tank.israel
 	for u in [sep, m1e3, old_rival, new_rival]: w.kill(u)
 
+	# 3c: the CIA. The largest intelligence budget ($115.5 billion requested for
+	# 2026): the strongest covert success of the 22, and a rival United States
+	# is harder to spy on than a nation without a counter-intelligence service.
+	const Profile := preload("res://scripts/national_profile.gd")
+	var best := ""
+	var best_spy := -1.0
+	for id in Factions.IDS:
+		var p: Dictionary = Profile.PROFILES.get(id, preload("res://scripts/additional_factions.gd").PROFILES.get(id, {}))
+		var spy := float(p.get("bonus", {}).get("spyPct", 0.0))
+		if spy > best_spy:
+			best_spy = spy
+			best = id
+	check(best == "usa" and is_equal_approx(best_spy, 0.2), "the CIA, NSA and NRO: the United States has the strongest covert success (+%d%%)" % int(round(best_spy * 100)))
+	w.map.nations[1].id = "brazil"
+	var plain: float = w.espionage.counter_spy(1)
+	w.map.nations[1].id = "usa"
+	var guarded: float = w.espionage.counter_spy(1)
+	check(is_equal_approx(guarded - plain, 0.1), "spying on a rival United States is 10 points harder than on Brazil (%.2f / %.2f)" % [guarded, plain])
+
 	# 4: duels between two rivals (the same difficulty on both sides), four tanks a
 	# side, 22 m apart, five rounds each; a mirror match as the control.
 	var duels := [["israel", "ukraine", "Merkava 4 against T-64BV", 4], ["ukraine", "afghanistan", "T-64BV against captured T-62", 4], ["saudi", "saudi", "M1A2S against M1A2S (equal)", -1]]

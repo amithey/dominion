@@ -475,6 +475,24 @@ afterwards is an M1E3: +30% health, +15% firepower, +20% accuracy, 12% faster th
 diesel-electric drive), 20% faster reloads (an autoloader) and the Iron Fist (XM251) active protection built in.
 A rival United States fields it once its technology reaches era 4.
 
+AbramsX is not a separate tank: General Dynamics built it with its own money as a technology demonstrator,
+unveiled at AUSA in October 2022 (an autoloader, an uncrewed turret, a hybrid drive, a crew of three, about 60
+t). The Army never ordered it; the M1E3 is the Army's programme of record, and it takes up the AbramsX's ideas.
+So the game models the M1E3 and does not add the AbramsX.
+
+## The CIA: United States intelligence
+
+The US intelligence community requested $115.5 billion for 2026 ($81.9 billion for the National Intelligence
+Program, $33.6 billion for the Military Intelligence Program), up from $101.6 billion for 2025, far beyond any
+other nation's. The CIA runs human intelligence worldwide and covert action through its Special Activities
+Center (paramilitary teams, political action, its own aircraft and armed MQ-9 drones); in late December 2025 it
+struck a dock on the Venezuelan coast, its first known strike on Venezuelan soil, after covert action there was
+authorised in October 2025. The NSA (signals) and the NRO (satellites) add to it. In the game the United States
+had +10% covert success, below Israel's +15%; it now has +20% covert success, the most of the 22, and +10%
+counter-intelligence (Israel keeps +15%, for Shin Bet). A nation's own counter-intelligence now also guards it
+as a rival (spying on a rival United States is 10 points harder), and its spy service makes its agents harder to
+catch when it spies on you.
+
 ## Units removed
 
 Saudi Arabia has never had a submarine, and Ukraine's only one (the Zaporizhzhia) was seized in Crimea in
@@ -496,4 +514,8 @@ Saudi Arabia has never had a submarine, and Ukraine's only one (the Zaporizhzhia
 - The M1E3: Army Recognition, 'U.S. Army to Begin M1E3 Abrams Prototype Operational Testing in Summer 2026' and
   'U.S. Army unveils first M1E3 Abrams prototype'; Meta-Defense, 15 January 2026; Defence Industry Europe on the
   uncrewed turret and hybrid powertrain; 19FortyFive, January 2026.
+- AbramsX: The War Zone, 'Our First Glimpse At The M1E3 Abrams'; Defense News, 15 October 2025; Military
+  Machine, 'Abrams X'.
+- The CIA: ODNI, FY 2026 National Intelligence Program request; Wikipedia, United States intelligence budget
+  and Special Activities Center; CNN, 29 December 2025, and Military.com, 3 January 2026, on Venezuela.
 - Syria and Afghanistan: native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md.

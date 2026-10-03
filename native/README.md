@@ -23,6 +23,21 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.56: the CIA, and AbramsX
+
+- **United States intelligence, checked**: $115.5 billion requested for 2026 (NIP $81.9 billion, MIP $33.6 billion),
+  the world's largest; the CIA's worldwide human intelligence and covert action (the Special Activities Center, armed
+  MQ-9s: a strike on a Venezuelan dock in December 2025), the NSA and the NRO. The United States had +10% covert
+  success, below Israel's +15%; it now has **+20% covert success** (the most of the 22) and **+10%
+  counter-intelligence**.
+- **Every nation's service now works as a rival too**: its counter-intelligence makes it harder to spy on (a rival
+  United States 10 points harder than Brazil), and its spy service makes its agents harder to catch when it spies on
+  you (China, Israel, Russia, the United Kingdom, Iran as well).
+- **AbramsX**: General Dynamics' own demonstrator (AUSA, October 2022), never ordered; its ideas went into the
+  Army's M1E3, which the game already models (0.9.55). No separate tank.
+
+Checks: tools/unit-quality-check.gd (23); espionage, intel-100, national-profile, factions and three-nations checks.
+
 ## Version 0.9.55: the American tank, and the next one
 
 The player pointed out the American tank was underrated. Checked again:

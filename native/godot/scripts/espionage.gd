@@ -187,8 +187,10 @@ func add_report(nation: int, kind: String, text: String, amount: float) -> void:
 func counter_spy(nation: int) -> float:
 	if active(nation, "spymaster"):
 		return 0.02
+	# That rival's own security service too (the FBI and CIA, Shin Bet, the MSS: national_profile.gd).
+	var service := float(preload("res://scripts/national_profile.gd").bonuses(world, nation).get("counterSpy", 0.0))
 	if world.ai != null and not world.ai.nations.is_empty():
-		return float(world.ai.row_of(nation).get("counterSpy", 0.0))   # that rival's own difficulty
+		return float(world.ai.row_of(nation).get("counterSpy", 0.0)) + service   # that rival's own difficulty
 	return float(world.map.ai.difficulty.get(world.match_difficulty, world.map.ai.difficulty.easy).get("counterSpy", 0.0))
 
 func success_chance(op_key: String, nation: int) -> float:
@@ -398,6 +400,8 @@ func enemy_attempt(force_outcome := "") -> String:
 	var nat = world.market.ai_nation(attacker)
 	var defence: float = 0.25 + (0.18 if has_agency() else 0.0) + ready_agents().size() * 0.05 + (world.research.bonus("counterSpy") if world.research else 0.0)
 	defence += 0.25 if clock < security_until else 0.0
+	# A stronger service's officers are harder to catch (a CIA officer more than most).
+	defence -= float(preload("res://scripts/national_profile.gd").bonuses(world, attacker).get("spyPct", 0.0))
 	var text := ""
 	if force_outcome == "caught" or (force_outcome == "" and randf() < clampf(defence, 0.1, 0.9)):
 		d.change(0, attacker, -8.0)
