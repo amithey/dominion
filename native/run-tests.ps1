@@ -24,6 +24,7 @@ $tests = @(
     @('shipyards on the coast launch warships; cancelling refunds', @('--script', 'res://tools/naval-check.gd'), 'NAVAL_TEST PASS', 240),
     @('the whole research tree can be completed', @('--script', 'res://tools/research-complete-check.gd'), 'RESEARCH_COMPLETE PASS', 300),
     @('air defence, artillery range, bunkers', @('--script', 'res://tools/combat-rules-check.gd'), 'COMBAT_RULES PASS', 240),
+    @('idle troops answer a fight beside them, not one far off or while on the move', @('--script', 'res://tools/assist-check.gd'), 'ASSIST PASS', 400),
     @('long marches round lakes and ridges, across the island', @('--script', 'res://tools/route-check.gd'), 'ROUTE_TEST PASS', 900),
     @('trade ships on every route at a merchant ship pace; shipping sabotage', @('--script', 'res://tools/trade-check.gd'), 'TRADE_TEST PASS', 240),
     @('modern warfare: drones, jamming, active protection, lasers, interception odds, ruins', @('--script', 'res://tools/modern-warfare-check.gd'), 'MODERN_WARFARE PASS', 600),

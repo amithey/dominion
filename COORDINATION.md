@@ -574,3 +574,7 @@ UI files listed above.
   (12 of them failed since the ten were added). Still failing, also on 144067c before this change: "your troops
   take on the invaders" (Pangaea: the wave halts ~200 m out, the guard waits 25 m from the base) - to look at.
 - 2026-10-03 Claude: 0.9.50 built from 352f813: ui, setup, campaign, state tests pass on the new exe. The user had the game open, so dist/DOMINION.exe (0.9.49) stayed locked: the 0.9.50 installer is in dist, the exe in %TEMP%/dominion-release/dist. From the project: national-profile, three-nations (37), nations-setup, factions, research-100, economy-100 pass; gameplay-nations-100 190/191 (the invaders check, failing before too); additional-factions 226/227 (jf17, intermittent).
+- 2026-10-03 Claude, 0.9.51: (user: look into the invaders bug) not a test fault: idle units only looked within
+  their aggro, so tanks 32 m from a fight by the capital never joined it. world.update_combat: an idle unit (target
+  null) with nothing in sight now takes Tactics.pick_target(..., aggro * 1.6, engaged_with = own side): an enemy
+  fighting its side, within keep_target's leash, no buildings. tools/assist-check.gd (6) in run-tests.ps1.

@@ -50,7 +50,9 @@ static func reachable(unit: Dictionary, target: Dictionary) -> bool:
 ## Ground units read only the grid buckets in reach (plus the short list of
 ## ships and aircraft); the cheap tests (owner, distance) run before the
 ## costly ones (hostility, the damage table).
-static func pick_target(w: Node, unit: Dictionary, radius: float) -> Variant:
+## `engaged_with` >= 0: only an enemy now fighting that nation (world.update_combat:
+## an idle unit answers a fight beside it), and no buildings.
+static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with := -1) -> Variant:
 	var best = null
 	var best_score := INF
 	var ignore: Dictionary = unit.get("ignore", {})
@@ -80,6 +82,10 @@ static func pick_target(w: Node, unit: Dictionary, radius: float) -> Variant:
 				continue
 			if not w.hostile(own, other.owner):
 				continue
+			if engaged_with >= 0:
+				var fighting = other.get("enemy")
+				if not (fighting is Dictionary) or int(fighting.get("owner", -1)) != engaged_with:
+					continue
 			var eff: float = w.effectiveness(unit, other)
 			if eff <= 0.01:
 				continue
@@ -96,7 +102,7 @@ static func pick_target(w: Node, unit: Dictionary, radius: float) -> Variant:
 			if score < best_score:
 				best_score = score
 				best = other
-	if best != null:
+	if best != null or engaged_with >= 0:
 		return best
 	var best_d := radius
 	for b in w.buildings:

@@ -23,6 +23,18 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.51: idle troops answer a fight beside them
+
+A bug found by gameplay-nations-100 ("your troops take on the invaders"): on Pangaea a rival's tanks fought the army
+by your capital 50 m out, and six of your tanks parked 32 m from the fight never joined it. A unit only looked for
+enemies within its own sight (26 m for a tank). Now an idle unit, one with no order, also turns on an enemy that is
+fighting its side, out to the distance it would chase an enemy anyway (1.6 times its sight, about 41 m for a tank).
+A unit on a move order still ignores the enemy, an enemy fighting no one is left alone as before, and nothing farther
+off draws it away. (world.update_combat; Tactics.pick_target engaged_with.) The guard now joins in about 35 s.
+
+Checks: tools/assist-check.gd (6); gameplay-nations-100 passes in full again; battle, city, combat, combat-regression,
+combat-rules, weapons-live-100 and the performance budgets pass.
+
 ## Version 0.9.50: every nation's income and research from one world scale
 
 All 22 nations now take their income and research from one scale (native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md,

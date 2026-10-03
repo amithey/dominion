@@ -4885,6 +4885,11 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 		unit.search = 0.35
 		if unit.target == null or unit.attack_move or unit.key in ["aaVehicle", "samLauncher", "manpads", "laserAD", "irisT"]:
 			unit.enemy = Tactics.pick_target(self, unit, maxf(unit.aggro, unit.range))
+			# An idle unit answers a fight beside it: an enemy fighting its side, out to the
+			# distance it would chase one anyway (Tactics.keep_target's leash). Six tanks used
+			# to watch from 32 m as invaders shot up the capital's army (gameplay-nations-100).
+			if unit.enemy == null and unit.target == null:
+				unit.enemy = Tactics.pick_target(self, unit, maxf(unit.aggro, unit.range) * 1.6, unit.owner)
 	if unit.enemy == null or unit.reload > 0.0:
 		return
 	var enemy: Dictionary = unit.enemy
