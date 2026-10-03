@@ -589,3 +589,4 @@ UI files listed above.
   first one, Cabinet) use ministry_button, the side window's band (_win_band) and the research band use ministry_band,
   the strip's resource icons are tinted, toggle_cabinet(), close_windows() closes the Cabinet too; the F1 help lists
   Tab and the double click. New scripts/cabinet.gd (mine). world: Tab toggles the Cabinet. menus-check now 45.
+- 2026-10-03 Claude: 0.9.52 executable and installer in dist, built from e9a18a3. On the exe: ui, setup, campaign, state tests pass. From the project: menus-check 45/45, gameplay-ui-50 51/51, interface-review, settings-check, pick-test pass.
