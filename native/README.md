@@ -23,6 +23,25 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.52: the Cabinet, ministries in colour, double click, Esc
+
+- **The Cabinet (Tab, or the new first screen button):** the whole state at a glance, as a head of government sees it
+  at the morning briefing: your leader, nation, era and season, the treasury, income, approval and army in large
+  figures, and a large tile for each ministry in its own colour: the Treasury (stores against their limits), the
+  People (approval, health, housing), the Armed Forces (manpower, units by kind, wars), Research (the project, the
+  way to the next era), Foreign Affairs (every nation's standing with you), Territory (your share of the land against
+  the largest rivals), Intelligence (agents, operations, networks) and the National Power. Each tile's button opens
+  that ministry. (scripts/cabinet.gd)
+- **Ministries in colour:** the Treasury gold, Research turquoise, Foreign Affairs emerald, Intelligence violet,
+  Territory orange, the Armed Forces red, the People rose. The screen buttons are larger and wear their ministry's
+  colour; each window's title band, device and title take its colour; the resources on the strip have theirs.
+  (ui_theme.gd MINISTRY, RESOURCE_TINT, ministry_button, ministry_band)
+- **Double click** on one of your units: every unit of its kind on screen (Shift adds them to the selection).
+- **Esc** closes an open window (or the Cabinet) first; it used to pause the game over it.
+
+Checks: tools/menus-check.gd (45): the strip, every screen button and key, every tab of every window, the build list,
+selections, help, the pause menu, Esc, the Cabinet and its tiles, the colours, the double click.
+
 ## Version 0.9.51: idle troops answer a fight beside them
 
 A bug found by gameplay-nations-100 ("your troops take on the invaders"): on Pangaea a rival's tanks fought the army
@@ -772,7 +791,7 @@ Choose them under **Map** in New Game:
   - War: demanding surrender, a prisoner exchange, an escalation warning.
 
   The other government answers for itself, and each statement has consequences.
-- Keyboard: **B** build list, **F8** testing resources, **F10** testing: everything (all research too).
+- Keyboard: **B** build list, **Tab** the Cabinet, **F8** testing resources, **F10** testing: everything (all research too). Double click a unit: every unit of its kind on screen.
 
 ## Version 0.9.12: a building for every resource, and the rest of the industry
 

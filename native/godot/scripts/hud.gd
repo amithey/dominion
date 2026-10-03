@@ -196,7 +196,9 @@ func _build_top_bar() -> void:
 		chip.add_theme_constant_override("separation", 5)
 		chip.tooltip_text = r[2]
 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
-		chip.add_child(_icon(r[1], 24))
+		var tinted := _icon(r[1], 26)
+		tinted.modulate = UI.RESOURCE_TINT.get(r[0], Color.WHITE)
+		chip.add_child(tinted)
 		var figures := VBoxContainer.new()
 		figures.add_theme_constant_override("separation", 0)
 		chip.add_child(figures)
@@ -248,21 +250,18 @@ func _build_top_bar() -> void:
 	screens.add_theme_constant_override("separation", 3)
 	rack.add_child(screens)
 	row = screens
-	for b in [["research", "Research (Y)", func(): toggle_research()], ["diplomacy", "Diplomacy (G)", func(): toggle_diplomacy()],
+	for b in [["cabinet", "Cabinet (Tab): the whole state at a glance", func(): toggle_cabinet()], ["research", "Research (Y)", func(): toggle_research()], ["diplomacy", "Diplomacy (G)", func(): toggle_diplomacy()],
 			["market", "World market (M)", func(): toggle_panel("market")], ["intel", "Intelligence (I)", func(): toggle_panel("intel")],
 			["land", "Territory (T)", func(): toggle_panel("territory")], ["menu", "Menu (Esc)", func(): world.menu.open_pause() if world.menu and world.menu._root != null else null]]:
 		var button := Button.new()
-		button.icon = UI.icon(b[0])
+		button.icon = UI.icon("sovereign" if b[0] == "cabinet" else b[0])
 		button.expand_icon = true
-		button.custom_minimum_size = Vector2(88, 42)
-		button.text = {"research":"Research", "diplomacy":"Diplomacy", "market":"Market", "intel":"Intel", "land":"Territory", "menu":"Menu"}[b[0]]
-		button.add_theme_font_size_override("font_size", 12)
-		button.add_theme_constant_override("icon_max_width", 20)
-		button.add_theme_stylebox_override("normal", UI.box(UI.KEY_LOW, Color(UI.TRIM, 0.35), 1, 3, 9.0))
-		button.add_theme_stylebox_override("hover", UI.box(UI.KEY_TOP.lightened(0.12), UI.GOLD, 1, 3, 9.0))
+		button.custom_minimum_size = Vector2(104, 48)
+		button.text = {"cabinet":"Cabinet", "research":"Research", "diplomacy":"Diplomacy", "market":"Market", "intel":"Intel", "land":"Territory", "menu":"Menu"}[b[0]]
+		button.add_theme_font_size_override("font_size", 14)
+		button.add_theme_constant_override("icon_max_width", 22)
 		button.toggle_mode = b[0] != "menu"
-		button.add_theme_stylebox_override("pressed", UI.plate(UI.KEY_TOP, UI.KEY_LOW, UI.GOLD, 9.0, UI.LIFT, UI.GOLD, 2))
-		button.add_theme_stylebox_override("hover_pressed", UI.plate(UI.BAND_TOP, UI.KEY_LOW, UI.BRIGHT, 9.0, UI.LIFT, UI.BRIGHT, 2))
+		UI.ministry_button(button, b[0])   # each screen in its ministry's colour
 		_screen_buttons[b[0]] = button
 		button.tooltip_text = b[1]
 		button.focus_mode = Control.FOCUS_NONE
@@ -694,7 +693,8 @@ func _build_help() -> void:
 	body.add_child(col)
 	for line in [["Move the camera", "W A S D or the arrow keys, the screen edge, or drag with the middle mouse button"],
 			["Turn / tilt / zoom", "Q E  ·  R F  ·  mouse wheel (zooms toward the cursor)"],
-			["Select", "Click a unit or building, or drag a box around units"],
+			["Select", "Click a unit or building, or drag a box around units  ·  double click: every unit of its kind on screen"],
+			["Cabinet", "Tab: the whole state at a glance, every ministry in its colour"],
 			["Orders", "Right click: move or attack  ·  Ctrl + right click: attack-move"],
 			["Bombard", "Alt + right click: fire at ground or infrastructure (armed vehicles)"],
 			["Aircraft", "Limited salvos; empty aircraft return to a supplied airfield / helipad to rearm"],
@@ -731,7 +731,7 @@ func _process(delta: float) -> void:
 		return
 	_refresh = 0.0
 	for screen in _screen_buttons:
-		var active: bool = (_rs != null and _rs.visible) if screen == "research" else side_mode == ("territory" if screen == "land" else screen)
+		var active: bool = (_rs != null and _rs.visible) if screen == "research" else ((_cabinet != null and _cabinet.visible) if screen == "cabinet" else side_mode == ("territory" if screen == "land" else screen))
 		_screen_buttons[screen].set_pressed_no_signal(active)
 	# Fit notices into the free lane between both docks, including when the
 	# construction list and a diplomatic window are open at the same time.
@@ -1269,6 +1269,8 @@ const SCREENS := {"diplomacy": ["diplomacy", "Diplomacy"], "market": ["market", 
 
 var _win: PanelContainer
 var _win_icon: TextureRect
+var _win_band: PanelContainer
+var _cabinet: Control          # cabinet.gd: the whole state at a glance (Tab)
 var _win_title: Label
 var _win_scroll: ScrollContainer
 var _side_rows: VBoxContainer
@@ -1302,10 +1304,11 @@ func _build_diplomacy_panel() -> void:
 	var head_band := PanelContainer.new()
 	head_band.add_theme_stylebox_override("panel", UI.band(8.0))
 	column.add_child(head_band)
+	_win_band = head_band
 	var bar := HBoxContainer.new()
 	bar.add_theme_constant_override("separation", 10)
 	head_band.add_child(bar)
-	_win_icon = _icon("diplomacy", 30)
+	_win_icon = _icon("diplomacy", 34)
 	bar.add_child(_win_icon)
 	_win_title = _text("", 20, UI.BRIGHT, true)
 	_win_title.add_theme_font_size_override("font_size", 20)
@@ -1362,6 +1365,11 @@ func _show_side(mode: String) -> void:
 	if mode != "":
 		_win_icon.texture = UI.icon(SCREENS[mode][0])
 		_win_title.text = UI.caps(SCREENS[mode][1])
+		# The band, the device and the title in the ministry's colour.
+		var accent: Color = UI.ministry(mode)
+		_win_band.add_theme_stylebox_override("panel", UI.ministry_band(mode))
+		_win_icon.modulate = accent.lightened(0.3)
+		_win_title.add_theme_color_override("font_color", accent.lightened(0.5))
 	refresh_side()
 
 func refresh_side() -> void:
@@ -1734,6 +1742,9 @@ var _rs_live: Array = []   # [Control, callable] refreshed every second without 
 ## help, the build list). True when one was, so Esc does not also pause.
 func close_windows() -> bool:
 	var closed := false
+	if _cabinet != null and _cabinet.visible:
+		_cabinet.close()
+		closed = true
 	if side_mode != "" and _win != null and _win.visible:
 		_show_side("")
 		closed = true
@@ -1747,6 +1758,19 @@ func close_windows() -> bool:
 		set_production_open(false)
 		closed = true
 	return closed
+
+## The Cabinet: the whole state at a glance (cabinet.gd).
+func toggle_cabinet() -> void:
+	if _cabinet == null:
+		_cabinet = preload("res://scripts/cabinet.gd").new()
+		add_child(_cabinet)
+		_cabinet.setup(self)
+	if _cabinet.visible:
+		_cabinet.close()
+	else:
+		_show_side("")
+		if _rs != null and _rs.visible: toggle_research()
+		_cabinet.open()
 
 func toggle_research() -> void:
 	if _rs == null:
@@ -1780,7 +1804,7 @@ func _build_research() -> void:
 	_rs.add_child(column)
 	# Title band: the icon, the title, the figures, Close.
 	var head_band := PanelContainer.new()
-	head_band.add_theme_stylebox_override("panel", UI.band(9.0))
+	head_band.add_theme_stylebox_override("panel", UI.ministry_band("research"))
 	column.add_child(head_band)
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 12)

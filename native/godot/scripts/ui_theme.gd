@@ -31,6 +31,63 @@ const BAND_LOW := Color("142434")
 const KEY_TOP := Color("263b4e")
 const KEY_LOW := Color("142536")
 
+## Each ministry's colour, so a screen is known at a glance: the Treasury gold,
+## Research turquoise, Foreign Affairs emerald, Intelligence violet, Territory
+## orange, the Armed Forces red, the People rose (cabinet.gd, the HUD's screen
+## buttons and window bands).
+const MINISTRY := {
+	"economy": Color("e8b04a"), "market": Color("e8b04a"), "research": Color("3fc1e0"),
+	"diplomacy": Color("3cc48e"), "intel": Color("a685f2"), "territory": Color("ee8a3c"),
+	"land": Color("ee8a3c"), "military": Color("e35d5d"), "build": Color("e35d5d"),
+	"people": Color("e889b0"), "cabinet": Color("f2d27a"), "menu": Color("9fb0c4"),
+}
+## Each resource's colour on the strip.
+const RESOURCE_TINT := {
+	"money": Color("f2c75c"), "food": Color("8fd16a"), "iron": Color("b4c3d3"), "oil": Color("5cc0b4"),
+	"silicon": Color("7fd3f0"), "uranium": Color("b8e05a"), "gas": Color("f0a65a"),
+}
+
+static func ministry(key: String) -> Color:
+	return MINISTRY.get(key, GOLD)
+
+## A screen button in its ministry's colour: lit from below by a bar of it.
+static func ministry_button(b: Button, key: String) -> void:
+	var accent := ministry(key)
+	for state in [["normal", 0.10, 0.55, 3], ["hover", 0.22, 0.9, 3], ["pressed", 0.34, 1.0, 4], ["hover_pressed", 0.42, 1.0, 4]]:
+		var s := StyleBoxFlat.new()
+		s.bg_color = Color(KEY_LOW.lerp(accent, float(state[1])), 0.97)
+		s.border_color = Color(accent, float(state[2]))
+		s.border_width_bottom = int(state[3])
+		s.border_width_top = 1
+		s.border_width_left = 1
+		s.border_width_right = 1
+		s.set_corner_radius_all(6)
+		s.content_margin_left = 10
+		s.content_margin_right = 10
+		s.content_margin_top = 4
+		s.content_margin_bottom = 4
+		b.add_theme_stylebox_override(state[0], s)
+	b.add_theme_color_override("font_color", accent.lightened(0.45))
+	b.add_theme_color_override("font_hover_color", Color.WHITE)
+	b.add_theme_color_override("font_pressed_color", Color.WHITE)
+	b.add_theme_color_override("icon_normal_color", accent.lightened(0.2))
+	b.add_theme_color_override("icon_hover_color", Color.WHITE)
+	b.add_theme_color_override("icon_pressed_color", Color.WHITE)
+
+## A window's title band in its ministry's colour.
+static func ministry_band(key: String) -> StyleBoxFlat:
+	var accent := ministry(key)
+	var s := StyleBoxFlat.new()
+	s.bg_color = BAND_LOW.lerp(accent, 0.28)
+	s.border_color = accent
+	s.border_width_bottom = 3
+	s.set_corner_radius_all(0)
+	s.content_margin_left = 12
+	s.content_margin_right = 10
+	s.content_margin_top = 9
+	s.content_margin_bottom = 9
+	return s
+
 static var _plates := {}
 
 # ---------------------------------------------------------------- fonts

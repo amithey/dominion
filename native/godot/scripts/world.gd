@@ -5793,6 +5793,9 @@ func _input(event: InputEvent) -> void:
 		order_mode = ""
 		get_viewport().set_input_as_handled()
 		return
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_TAB and hud != null:
+		hud.toggle_cabinet()   # the whole state at a glance
+		get_viewport().set_input_as_handled()
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_B:
 		hud.toggle_build()  # the build list (the skirmish demo is --battle only)
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_G:

@@ -9,6 +9,7 @@ var errors: Array[String] = []
 var passed := 0
 var w: Node
 var hud: Node
+const UI := preload("res://scripts/ui_theme.gd")
 func _initialize() -> void: call_deferred("run")
 func check(ok: bool, label: String) -> void:
 	print(("ok   " if ok else "FAIL ") + label)
@@ -215,6 +216,44 @@ func run() -> void:
 	w.menu.close()
 	await frames(3)
 	check(all_on_screen, "every button of the pause menu is on screen")
+	# The Cabinet: the whole state at a glance.
+	print("== the Cabinet")
+	await key(KEY_TAB)
+	await settle()
+	var cab = hud._cabinet
+	var tiles: Array = cab._grid.get_children().filter(func(t): return not t.is_queued_for_deletion())
+	check(cab != null and cab.visible and on_screen(cab) and tiles.size() == 8, "Tab opens the Cabinet, full screen, with its 8 ministries (%d)" % tiles.size())
+	check(hud._screen_buttons.cabinet.button_pressed or (func(): hud._process(0.3); return hud._screen_buttons.cabinet.button_pressed).call(), "its screen button is lit while it is open")
+	var money_shown: bool = cab.find_children("*", "Label", true, false).any(func(l): return l.text == "$" + hud.compact_number(w.economy.res.money))
+	check(money_shown, "it shows the treasury as it stands ($%s)" % hud.compact_number(w.economy.res.money))
+	var opens := {"research": func(): return hud._rs != null and hud._rs.visible, "diplomacy": func(): return hud.side_mode == "diplomacy",
+		"economy": func(): return hud.side_mode == "market", "intel": func(): return hud.side_mode == "intel", "territory": func(): return hud.side_mode == "territory",
+		"military": func(): return hud.prod_open, "people": func(): return w.selected_building != null and w.selected_building.key == "hq"}
+	var failed := []
+	for k in opens:
+		hud.close_windows()
+		w.select_building(null)
+		hud.toggle_cabinet()
+		await settle()
+		var b = cab.find_child("Open_" + k, true, false)
+		if b == null:
+			failed.append(k + " (no button)")
+			continue
+		b.pressed.emit()
+		await settle()
+		if cab.visible or not opens[k].call(): failed.append(k)
+	hud.close_windows()
+	w.select_building(null)
+	check(failed.is_empty(), "each tile's button closes the Cabinet and opens its ministry%s" % ("" if failed.is_empty() else ": not " + str(failed)))
+	hud.toggle_cabinet()
+	await settle()
+	await key(KEY_ESCAPE)
+	check(not cab.visible and not w.menu._root.visible, "Esc closes the Cabinet, without pausing")
+	var coloured := []
+	for s in hud._screen_buttons:
+		var style = hud._screen_buttons[s].get_theme_stylebox("normal")
+		if style is StyleBoxFlat and style.border_color.is_equal_approx(Color(UI.ministry(s), style.border_color.a)): coloured.append(s)
+	check(coloured.size() == hud._screen_buttons.size(), "every screen button wears its ministry's colour (%s)" % ", ".join(PackedStringArray(coloured)))
 	# 39-42: a double click takes every unit of its kind on screen.
 	print("== double click")
 	w.cam_focus = w.start

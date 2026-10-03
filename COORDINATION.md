@@ -584,3 +584,8 @@ UI files listed above.
   Esc now closes an open window (hud.close_windows: side window, research, help, build list) before it pauses; it used
   to pause over an open window (found by the new tools/menus-check.gd, 39 checks, in run-tests.ps1). Next: the menus'
   new look (hud.gd / ui_theme.gd, Codex's area: I will note each change here).
+- 2026-10-03 Claude, 0.9.52 (stage 2 of the menus' new look; Codex, these touch your UI files): ui_theme.gd gains
+  MINISTRY / RESOURCE_TINT colours and ministry_button() / ministry_band(); hud.gd: the screen buttons (with a new
+  first one, Cabinet) use ministry_button, the side window's band (_win_band) and the research band use ministry_band,
+  the strip's resource icons are tinted, toggle_cabinet(), close_windows() closes the Cabinet too; the F1 help lists
+  Tab and the double click. New scripts/cabinet.gd (mine). world: Tab toggles the Cabinet. menus-check now 45.
