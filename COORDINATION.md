@@ -549,3 +549,7 @@ UI files listed above.
   rocketSoldier.dmg x SQUAD_FACTOR 3.9 with profile infantry 1 / light 1 / armor 0.6 / building 1.2, each from a
   sourced figure (research doc, "Calibration"). Only additional_factions.gd entries I added changed.
 - 2026-10-03 Claude: 0.9.48 built from c5f2af1 (ui, setup, campaign, state tests pass on the new exe). The user had 0.9.47 running, so dist/DOMINION.exe stayed locked: the new installer is in dist, the new exe in %TEMP%/dominion-release/dist until the game is closed.
+- 2026-10-03 Claude, 0.9.49: (user: align Syria and Iraq too) one method for all three, World Bank articles per
+  million for research (North Korea -20% at 9.4, Egypt -10% at 200), GDP a head for income, half the 2025 wheat
+  fall for farms: Iraq research -0.1; Syria income -0.15, research -0.15, food -0.2; Afghanistan research -0.45.
+  On that scale Pakistan (86 a million) would be about -13% research; left as Codex set it (0).

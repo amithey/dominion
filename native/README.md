@@ -22,6 +22,19 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 These are source changes; the existing 0.9.45 release installer has not been rebuilt.
 
+## Version 0.9.49: Syria and Iraq on the same scales as Afghanistan
+
+One method for all three (native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md, "Syria and Iraq"): income from GDP a head
+on the scale between Pakistan (-10%) and Egypt (0%); research from scientific articles per million people (World Bank,
+2022) on the scale between North Korea (-20%, 9.4) and Egypt (-10%, 200); farms at half the fall of the 2025 wheat harvest.
+- **Iraq:** research -10% (was -15%; 280 articles a million); income unchanged (its wealth is the oil, already +50%);
+  farms -20% confirmed (the 2025 drought: river-irrigated wheat halved).
+- **Syria:** income -15% (was -25%; $847 a head), research -15% (was -20%; 26 a million), farms -20% (new: wheat -40%
+  in 2025, the worst drought in 36 years).
+- **Afghanistan:** research -45% (was -40%; 3.9 a million, less the students barred), the rest as in 0.9.48.
+
+Checks: tools/three-nations-check.gd (37), including that the three keep the order their data gives.
+
 ## Version 0.9.48: Afghanistan and the suicide squad calibrated against real data
 
 The first numbers were estimates; each is now drawn from a real figure and anchored to values the game already
