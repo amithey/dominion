@@ -548,3 +548,4 @@ UI files listed above.
   (income -0.25, research -0.4, trade 0.6 confirmed, happiness -8) and the suicide squad's blast set to
   rocketSoldier.dmg x SQUAD_FACTOR 3.9 with profile infantry 1 / light 1 / armor 0.6 / building 1.2, each from a
   sourced figure (research doc, "Calibration"). Only additional_factions.gd entries I added changed.
+- 2026-10-03 Claude: 0.9.48 built from c5f2af1 (ui, setup, campaign, state tests pass on the new exe). The user had 0.9.47 running, so dist/DOMINION.exe stayed locked: the new installer is in dist, the new exe in %TEMP%/dominion-release/dist until the game is closed.
