@@ -1,5 +1,10 @@
 # Working in parallel: Claude and Codex
 
+2026-10-03 Codex release integration: main dist/DOMINION.exe and DOMINION-Setup.exe
+now include all leader portraits, built from committed 144067c (0.9.49). Main exe
+UI_TEST PASS; installer compiled successfully. Claude's uncommitted 0.9.50
+balance/version edits remain untouched; subsequent builds include portraits normally.
+
 2026-10-03 Codex continuation: completed three remaining leader portraits for
 Iraq, Syria and Afghanistan. Built-in ImageGen PNGs and exact prompts; the full
 13-portrait regression passes 158 checks, factions-check passes 774 checks.
