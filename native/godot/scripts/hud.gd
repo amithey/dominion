@@ -1701,11 +1701,13 @@ func _show_letter() -> void:
 	var letter: Array = _letters.pop_front()
 	_letter_box = PanelContainer.new()
 	_letter_box.add_theme_stylebox_override("panel", UI.plate(Color("1a2c45"), Color("0a171c"), UI.GOLD, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
-	_letter_box.anchor_left = 0.5
-	_letter_box.anchor_right = 0.5
-	_letter_box.anchor_top = 0.3
-	_letter_box.offset_left = -260
-	_letter_box.offset_right = 260
+	# On the right edge under the Build button, not over the middle of the battlefield.
+	_letter_box.anchor_left = 1.0
+	_letter_box.anchor_right = 1.0
+	_letter_box.anchor_top = 0.0
+	_letter_box.offset_left = -416
+	_letter_box.offset_right = -12
+	_letter_box.offset_top = 112
 	add_child(_letter_box)
 	var sheet := VBoxContainer.new()
 	sheet.add_theme_constant_override("separation", 0)
@@ -1728,7 +1730,7 @@ func _show_letter() -> void:
 	margins.add_child(column)
 	var body := _text(letter[0], 16, UI.CREAM)
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.custom_minimum_size = Vector2(470, 0)
+	body.custom_minimum_size = Vector2(360, 0)
 	column.add_child(body)
 	var buttons := _row(column, 10)
 	buttons.alignment = BoxContainer.ALIGNMENT_END

@@ -49,6 +49,11 @@ func _init(world: Node) -> void:
 	image.fill(Color(0, 0, 0, UNEXPLORED))
 	texture = ImageTexture.create_from_image(image)
 	_bind()
+	# Every government knows where the others' capitals are: they are on the map
+	# from the start (and can be clicked to open contact), the land round them not.
+	for b in w.buildings:
+		if b.key == "hq" and not b.dead:
+			b.seen = true
 
 ## The fog over everything that draws the land (global shader uniforms:
 ## shaders/fog.gdshaderinc).

@@ -23,6 +23,28 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.64: a real take-off, easier intelligence, planned cities
+
+- **Take-off**: an aircraft slid down the runway sideways, frozen in the pose it taxied in (its position moved, its
+  model never turned), and a sixth-generation fighter's wingmen only launch once it is airborne, so its battle group
+  looked stuck. Now it turns onto the runway, rolls, gathers speed, lifts its nose after 22 m and climbs away.
+- **Intelligence without a click a minute** (measured: one agent needed some 8 minutes of clicks every 45-75 s per
+  nation for the big operations): the Intelligence Agency now opens with its first agent; "Standing orders" on a
+  nation (Intel, Operations) keep agents growing the network to 60 and refreshing the dossier on their own (one
+  agent: network 70 and intelligence 52 in 7.3 minutes, no clicks); intelligence fades half as fast.
+- **Rival towns are planned** (scripts/city_planner.gd): by zones round each town centre (the civic heart on rings
+  1-2, homes on 1-3, industry 2-4 and heavy plant further, farms on the outskirts, the army facing the nearest rival)
+  and in each nation's style: a grid of rows with streets between them (the United States, Australia), compact rings
+  (Europe, the UK, Japan, South Korea, Israel, Turkiye), a monumental avenue (China, Russia, North Korea, Ukraine,
+  Iran, Egypt), a linear city (Saudi Arabia) or organic growth (South and Southeast Asia, Brazil, Iraq, Syria,
+  Afghanistan). Measured: 82-83% of a rival's districts in their zone (47-61% before); avenue towns drawn out along it.
+- **Letters from other governments** open on the right edge under the Build button, not over the battlefield.
+- The war-support flag icon is imported (it showed as a blank).
+- **Every capital is on the map from the start** (every government knows where the others' capitals are), so it
+  can be clicked to open contact; the land round it stays under the fog.
+
+Checks: tools/intel-standing-check.gd (6), ai-expansion-check (10).
+
 ## Version 0.9.63: world events with causes
 
 Stage 3 of the roadmap. Nothing happens by chance: each event is caused by what the nations do, lasts while its

@@ -247,16 +247,29 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 		u.moving = true
 		if u.taxi_progress >= 1.0:
 			u.air_state = "takeoff"
-			if not vertical:
-				u.heading = 0.0  # lined up along the runway (+z)
+			u.takeoff_roll = 0.0
 		return true
 	if u.air_state == "takeoff":
-		var next: Vector3 = u.node.position + Basis(Vector3.UP, u.heading) * Vector3.BACK * u.speed * delta
+		# A rolling take-off: it turns onto the runway (+z) and gathers speed,
+		# leaves the ground after 22 m, lifts its nose and climbs away. (It used
+		# to slide down the runway sideways in its taxiing pose.)
+		var next: Vector3
+		var pitch := 0.0
 		if vertical:
 			next = u.node.position + Vector3.UP * delta * 6.0
+		else:
+			u.heading = lerp_angle(u.heading, 0.0, minf(1.0, delta * 5.0))
+			var roll: float = float(u.get("takeoff_roll", 0.0))
+			var pace: float = float(u.speed) * clampf(0.35 + roll / 45.0, 0.35, 1.1)
+			next = u.node.position + Basis(Vector3.UP, u.heading) * Vector3.BACK * pace * delta
+			u.takeoff_roll = roll + pace * delta
+			if roll > 22.0:
+				next.y += delta * 7.0
+				pitch = clampf((roll - 22.0) / 30.0, 0.0, 0.22)
 		var floor_y: float = maxf(world.height_at(next.x, next.z), float(world.map.seaLevel))
-		next.y = maxf(next.y + delta * 5.0, floor_y + 1.2)
+		next.y = maxf(next.y, floor_y + 1.2)
 		u.node.position = next
+		u.node.basis = Basis(Vector3.UP, u.heading) * Basis(Vector3.RIGHT, -pitch)
 		u.moving = true
 		if next.y >= floor_y + u.altitude:
 			u.air_state = "ready"

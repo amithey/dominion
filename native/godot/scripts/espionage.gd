@@ -37,6 +37,8 @@ var puppets := {}             # nation -> {since, leader, deposed, tribute, patr
 var fears := {}               # patron -> until: the world fears that United States until then
 var ai_raids: Array = []      # a rival United States' raids in preparation: {raider, target, ends, roll}
 var ai_raid_next := {}        # raider -> the earliest time it plans another
+var standing := {}            # nation -> true: standing orders to grow the network and keep the dossier fresh
+var first_agent_given := false
 var _catalog := {}
 
 # Seconds of compressed campaign time, not real-world operational guidance.
@@ -395,11 +397,44 @@ func _process(delta: float) -> void:
 func tick() -> void:
 	for i in heat:
 		heat[i] = maxf(0.0, heat[i] - 1.5)
-		intel[i] = maxf(0.0, intel[i] - 0.35)
+		intel[i] = maxf(0.0, intel[i] - 0.18)   # (half the old decay: intelligence was a chore to keep)
 	if clock >= enemy_next and randf() < 0.028:
 		enemy_attempt()
 	RegimeChange.tick(self)   # client states pay tribute and join your wars
+	_standing_orders()
 	changed.emit()
+
+## The first agent comes with the agency; standing orders keep agents growing
+## a network and refreshing its dossier without a click every minute (a ready
+## agent takes the next job on each tick, keeping $300 in the treasury).
+func _standing_orders() -> void:
+	if not has_agency():
+		return
+	if not first_agent_given:
+		first_agent_given = true
+		var used := agents.map(func(a): return a.name)
+		var free: Array = cfg.agentNames.filter(func(n): return not n in used)
+		var name: String = free[0] if not free.is_empty() else "Agent-%d" % _next_id
+		agents.append({"id": _next_id, "name": name, "skill": 1, "xp": 0, "ops": 0, "status": "ready", "captured_by": -1})
+		_next_id += 1
+		world.hud.notice("Your Intelligence Agency opens with its first agent, \"%s\", ready for tasking." % name)
+	for nation in standing.keys():
+		if world.diplomacy.defeated(int(nation)):
+			standing.erase(nation)
+			continue
+		if ready_agents().is_empty():
+			return
+		if missions.any(func(m): return int(m.nation) == int(nation)):
+			continue
+		var fresh: bool = dossiers.has(nation) and clock - float(dossiers[nation].t) <= 120.0 and dossiers[nation].get("confidence", "low") != "low"
+		var op := ""
+		if network.get(nation, 0.0) < 60.0 and blocked_reason("buildNetwork", nation) == "":
+			op = "buildNetwork"
+		elif (intel.get(nation, 0.0) < 60.0 or not fresh) and blocked_reason("reconDossier", nation) == "":
+			op = "reconDossier"
+		if op == "" or world.economy.res.money < float(ops()[op].cost) + 300.0:
+			continue
+		run(op, int(nation))
 
 func enemy_attempt(force_outcome := "") -> String:
 	if force_outcome == "" and clock < enemy_next:
@@ -461,7 +496,8 @@ func capture() -> Dictionary:
 		"dossiers": dossiers, "debuffs": debuffs, "clock": clock, "boost_until": boost_until, "next_id": _next_id, "missions":missions, "cooldowns":cooldowns,
 		"succession":succession, "proxies":proxies, "stability":stability,
 		"security_until":security_until, "scandal_until":scandal_until, "enemy_next":enemy_next,
-		"puppets":puppets, "fears":fears, "ai_raids":ai_raids, "ai_raid_next":ai_raid_next}.duplicate(true)
+		"puppets":puppets, "fears":fears, "ai_raids":ai_raids, "ai_raid_next":ai_raid_next,
+		"standing":standing.keys(), "first_agent_given":first_agent_given}.duplicate(true)
 
 func restore(data: Dictionary) -> void:
 	agents.clear()
@@ -507,6 +543,10 @@ func restore(data: Dictionary) -> void:
 	puppets.clear()
 	for key in data.get("puppets", {}):
 		puppets[int(key)] = data.puppets[key].duplicate(true)
+	standing.clear()
+	for key in data.get("standing", []):
+		standing[int(key)] = true
+	first_agent_given = bool(data.get("first_agent_given", not agents.is_empty()))
 	fears.clear()
 	for key in data.get("fears", {}):
 		fears[int(key)] = float(data.fears[key])

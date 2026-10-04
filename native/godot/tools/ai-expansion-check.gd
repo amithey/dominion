@@ -57,6 +57,18 @@ func run() -> void:
 		var total: int = w.buildings.filter(func(b): return b.owner == n.id and not b.dead).size()
 		check(towns >= 3 and s.cityCenter >= 1, "%s founds new towns in %d minutes: %d cities and %d villages besides its capital" % [n.name, minutes, s.cityCenter, s.villageCenter])
 		check(total >= int(start[n.id]) + 20, "%s keeps building (%d -> %d buildings)" % [n.name, int(start[n.id]), total])
+	# Their towns are laid out in order, each nation in its own style (city_planner.gd).
+	var Planner = load("res://scripts/city_planner.gd")
+	var orders := {}
+	for n in w.ai.nations:
+		var o: Dictionary = Planner.order_of(w, n.id)
+		orders[n.id] = o
+		print("  %s (%s): %d districts, %d%% in their zone, %.2f rows off the avenue, %d%% on even rows" % [n.name, Planner.style_of(w, n.id), o.districts, roundi(o.zoned * 100), o.off_axis, roundi(o.rows * 100)])
+		check(o.zoned >= 0.6, "%s builds by zones: %d%% of its districts in their ring (civic heart, homes, industry, farms, army)" % [n.name, roundi(o.zoned * 100)])
+	var axial: Array = w.ai.nations.filter(func(n): return Planner.style_of(w, n.id) == "axial")
+	var other: Array = w.ai.nations.filter(func(n): return Planner.style_of(w, n.id) in ["compact", "organic"])
+	if not axial.is_empty() and not other.is_empty():
+		check(orders[axial[0].id].off_axis < orders[other[0].id].off_axis, "%s draws its towns out along an avenue (%.2f off it) more than %s (%.2f)" % [axial[0].name, orders[axial[0].id].off_axis, other[0].name, orders[other[0].id].off_axis])
 	print("\nAI_EXPANSION: %d passed, %d failed" % [passed, errors.size()])
 	for f in errors: print("  FAILED: " + f)
 	print("AI_EXPANSION PASS" if errors.is_empty() else "AI_EXPANSION FAIL")

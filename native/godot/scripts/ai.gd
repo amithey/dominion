@@ -359,11 +359,10 @@ func find_spot(n: Dictionary, home: Dictionary, key: String):
 				continue
 			for d in world.logistics.DIRECTIONS:
 				options.append(hex + d)
-		options.shuffle()
-		for hex in options:
-			var at: Vector3 = world.logistics.hex_center(hex)
-			if world.site_problem(key, at, n.id) == "":
-				return at
+		# By zone and in the nation's own style (city_planner.gd), not the first free hex.
+		var planned = preload("res://scripts/city_planner.gd").best(world, n.id, key, options)
+		if planned != null:
+			return planned
 	if def.get("settlement") != null:
 		# A new town stands 75-130 m out from one of the nation's towns (the
 		# capital or any village or city), so the state spreads outward.

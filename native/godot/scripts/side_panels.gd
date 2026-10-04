@@ -358,6 +358,21 @@ func _operations(e: Node, d: Node) -> void:
 		brief.add_child(hud._text(reason, 13, hud.UI.BAD))
 	var go: Button = hud._button(brief, "Authorize operation", func(): return e.run(hud.spy_op, hud.spy_target, hud.spy_role if needs_person else ""), reason == "", "good")
 	go.custom_minimum_size.y = 36
+	# Standing orders: agents keep growing the network here and refreshing its
+	# dossier on their own, one job at a time (espionage._standing_orders).
+	var standing := CheckButton.new()
+	standing.name = "StandingOrders"
+	standing.text = "Standing orders on %s: grow the network to 60 and keep the dossier fresh ($160-180 a job)" % d.name_of(hud.spy_target)
+	standing.button_pressed = e.standing.has(hud.spy_target)
+	standing.focus_mode = Control.FOCUS_NONE
+	standing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	standing.add_theme_font_size_override("font_size", 13)
+	var who: int = hud.spy_target
+	standing.toggled.connect(func(on: bool):
+		if on: e.standing[who] = true
+		else: e.standing.erase(who)
+		hud.notice("Standing orders on %s %s." % [d.name_of(who), "issued: your agents take the next job each time one is free" if on else "withdrawn"]))
+	brief.add_child(standing)
 	# Every operation, grouped, with its cost and odds against this target.
 	var listed := {}
 	for group in OP_GROUPS:

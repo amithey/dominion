@@ -44,7 +44,7 @@ func run() -> void:
 	var rival: Dictionary = hq(1)
 	fog.refresh()
 	check(fog.watches(home) and not fog.watches(rival.root.position) and not fog.charted(rival.root.position), "your capital is watched; a rival's capital, far off, has never been seen")
-	check(not rival.root.visible and not fog.shows(rival), "so the rival's capital is not on the map")
+	check(rival.root.visible and fog.shows(rival), "but every capital is on the map from the start (public knowledge), the land round it dark")
 	# An enemy unit: hidden far off, shown beside your troops.
 	w.diplomacy.declare_war(1, 0)
 	var far_tank: Dictionary = w.spawn_unit("tank", ground(home + Vector3(160, 0, 0)), 1)
@@ -78,8 +78,9 @@ func run() -> void:
 	fog.refresh()
 	check(outpost.root.visible and not fog.watches(outpost.root.position) and fog.charted(outpost.root.position), "when the commando is gone it stays on the map, its land grey (seen, not watched)")
 	# A CIA network reveals a nation's buildings.
-	var third: Dictionary = hq(2)
-	check(not third.root.visible, "a third nation's capital is unseen")
+	var third: Dictionary = w.place_building("barracks", w.test_site("barracks", hq(2).root.position + Vector3(25, 0, 0)), 2, true)
+	fog.refresh()
+	check(not third.root.visible, "a third nation's barracks is unseen")
 	w.espionage.intel[2] = 12.0
 	fog.refresh()
 	check(third.root.visible and third.get("seen", false), "intelligence of 10 in that nation puts its buildings on the map")

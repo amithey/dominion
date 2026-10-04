@@ -683,3 +683,12 @@ UI files listed above.
   Tests: additional-factions-100 now sets up what Syria's, Afghanistan's and Iraq's powers need besides their
   price (a +20 partner, a -40 enemy, a supplied barracks): it failed for them since 0.9.47; faction-powers-check
   funds the rivals before its 400-shot SAM rates (war_costs.gd). menus-check: the Cabinet has 9 tiles.
+- 2026-10-04 Claude, 0.9.64 (user: planes stuck on take-off, battle group not moving, intelligence too hard, AI
+  cities chaotic, popups in the middle): air_operations take-off rolls along the runway and updates the basis
+  (takeoff_roll); espionage: standing orders (standing, _standing_orders from tick), first agent free with the
+  agency (first_agent_given), intel decay 0.18; side_panels StandingOrders toggle; new scripts/city_planner.gd used
+  by ai.find_spot for districts; hud letters anchored top-right; ui/icons/support.svg.import.
+  Also: fog_of_war marks every hq seen at the start. Tests: weapons-live-100 funds the rivals and sets
+  w.support = null (a long war's forced ceasefire ended its wars); diplomatic-contacts-check removes the starting
+  tank factory before "arms require real factory" (it failed since the starting base got one); fog-of-war-check
+  expects capitals on the map.
