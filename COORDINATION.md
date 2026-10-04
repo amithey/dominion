@@ -699,3 +699,13 @@ UI files listed above.
   (HUD child, NO FUEL / NO AMMUNITION markers), hud message log (toggle_log, L, notice_log entries now carry
   "MM:SS"), victory.gd (world.victory; Cabinet tile "victory"), fog_of_war rival_knows/rival_spots used by ai.gd
   (nearest_enemy_asset seeker, missile targets) and tactics.pick_target; health_overlay skips what the fog hides.
+- 2026-10-04 Claude, 0.9.66 (space): new scripts/space.gd (world.space, saved as "space").
+  - Hooks:
+    - world.guidance(unit) in astray() and in the spread of missile, sam, atgm and bomb weapons;
+    - world.jam_factor(unit) on both JAM_FAIL rolls;
+    - space.bonuses() (interceptPct) in research._recompute;
+    - recon reveals stamped in fog_of_war.refresh;
+    - rival recon sets b.known_by.
+  - New discovery antiSatellite (era 4, nation blue/red/russia/india), registered by space.apply from
+    modern_warfare.apply.
+  - New Intel tab "space" in side_panels.

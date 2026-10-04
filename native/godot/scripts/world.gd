@@ -125,6 +125,7 @@ var fog: RefCounted = null   # fog_of_war.gd: what the player's side sees
 var support: RefCounted = null   # war_support.gd: how far each people backs its wars
 var events: RefCounted = null    # world_events.gd: what the wars do to the world
 var victory: RefCounted = null   # victory.gd: dominance and technology, besides conquest
+var space: RefCounted = null   # space.gd: satellites and anti-satellite weapons
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
 var noise_texture: NoiseTexture2D
@@ -2004,6 +2005,8 @@ func _physics_process(delta: float) -> void:
 			events.update(delta)  # world events and their causes
 		if victory != null:
 			victory.update(delta)  # paths to victory
+		if space != null:
+			space.update(delta)  # satellites in orbit
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
 		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
@@ -2388,6 +2391,7 @@ func start_match(difficulty: String) -> void:
 	support = preload("res://scripts/war_support.gd").new(self)
 	events = preload("res://scripts/world_events.gd").new(self)
 	victory = preload("res://scripts/victory.gd").new(self)
+	space = preload("res://scripts/space.gd").new(self)
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 
 ## Walks the menu flow: main menu (paused, no AI) -> new game on normal (AI
@@ -5008,7 +5012,7 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 	var wild: bool = weapon in ["missile", "sam", "atgm"] and astray(unit)
 	if wild:
 		target += Vector3(randf_range(3.5, 5.0) * (1 if randf() < 0.5 else -1), 0, randf_range(3.5, 5.0) * (1 if randf() < 0.5 else -1))
-	var spread := scatter(unit)
+	var spread := scatter(unit) / (guidance(unit) if weapon in ["missile", "sam", "atgm", "bomb"] else 1.0)
 	match weapon:
 		"bomb":
 			# Only over the target: the bomber lines up and releases a stick.
@@ -5031,7 +5035,7 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			var launch: Vector3 = unit.node.position + Vector3.UP * 2.5
 			var fried: bool = Future.covered(self, unit.node.position, unit.owner) or Future.covered(self, target, unit.owner)
 			# (a fibre-optic drone has no radio link to jam: national_capabilities.gd)
-			if fried or (not unit.get("fibre_optic", false) and (Modern.jammed(self, unit.node.position, unit.owner) or Modern.jammed(self, target, unit.owner)) and randf() < Modern.JAM_FAIL):
+			if fried or (not unit.get("fibre_optic", false) and (Modern.jammed(self, unit.node.position, unit.owner) or Modern.jammed(self, target, unit.owner)) and randf() < Modern.JAM_FAIL * jam_factor(unit)):
 				var lost: Vector3 = launch.lerp(target, randf_range(0.3, 0.8))
 				lost.y = height_at(lost.x, lost.z)
 				effects.projectile("rocket", launch, lost, func(at): effects.explosion(at, 0.4, true))
@@ -5053,7 +5057,7 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			var jammed := Modern.jammed(self, start, unit.owner) or Modern.jammed(self, target, unit.owner)
 			kill(unit)
 			unit.node.visible = false
-			if jammed and randf() < Modern.JAM_FAIL:
+			if jammed and randf() < Modern.JAM_FAIL * jam_factor(unit):
 				var lost: Vector3 = start.lerp(target, randf_range(0.2, 0.7))
 				lost.y = maxf(height_at(lost.x, lost.z), float(map.seaLevel))
 				effects.projectile("missile", start, lost, func(at): effects.explosion(at, 0.8, true))
@@ -5136,7 +5140,15 @@ func scatter(unit: Dictionary) -> float:
 
 ## The chance an older guided missile goes astray (60% of its accuracy shortfall, at most 35%).
 func astray(unit: Dictionary) -> bool:
-	return randf() < clampf((1.0 - float(unit.get("accuracy", 1.0))) * 0.6, 0.0, 0.35)
+	return randf() < clampf((1.0 - float(unit.get("accuracy", 1.0)) * guidance(unit)) * 0.6, 0.0, 0.35)
+
+## Satellite navigation (space.gd): 1.1 with a constellation, 0.9 when GPS is denied.
+func guidance(unit: Dictionary) -> float:
+	return space.nav_factor(int(unit.owner)) if space != null else 1.0
+
+## Satellite communications (space.gd): halves the chance jamming downs a drone.
+func jam_factor(unit: Dictionary) -> float:
+	return space.jam_factor(int(unit.owner)) if space != null else 1.0
 
 func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 	var aim: Vector3 = enemy.node.position + Vector3.UP * (3.0 if enemy.get("is_building", false) else (1.3 if enemy.vehicle else 1.2))

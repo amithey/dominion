@@ -243,6 +243,11 @@ func _recompute() -> void:
 		var news: Dictionary = world.events.bonuses()
 		for stat in news:
 			_add(stat, float(news[stat]))
+	# Early-warning satellites (space.gd).
+	if world != null and world.get("space") != null:
+		var orbit: Dictionary = world.space.bonuses()
+		for stat in orbit:
+			_add(stat, float(orbit[stat]))
 
 func _add(stat: String, v: float) -> void:
 	_bonus[stat] = float(_bonus.get(stat, 0.0)) + v

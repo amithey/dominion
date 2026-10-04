@@ -272,7 +272,10 @@ func intel() -> void:
 	hud._intel_progress.clear()
 	var ready: int = e.ready_agents().size()
 	var busy: int = e.missions.size()
-	_tabs([["Operations", "operations"], ["Agents (%d)" % e.agents.size(), "agents"], ["Dossiers", "dossiers"], ["Reports", "reports"]], intel_tab, func(v): intel_tab = v)
+	_tabs([["Operations", "operations"], ["Agents (%d)" % e.agents.size(), "agents"], ["Dossiers", "dossiers"], ["Reports", "reports"], ["Space", "space"]], intel_tab, func(v): intel_tab = v)
+	if intel_tab == "space":
+		_space(d)
+		return
 	var status := PackedStringArray(["%d ready" % ready, "%d on missions" % busy])
 	if e.security_until > e.clock:
 		status.append("security review %ds" % ceili(e.security_until - e.clock))
@@ -290,6 +293,79 @@ func intel() -> void:
 			_reports(e)
 		_:
 			_operations(e, d)
+
+## The space tab (space.gd): your satellites, launches, what you watch from
+## orbit, the debris, and the anti-satellite missile.
+func _space(d: Node) -> void:
+	var s = hud.world.space
+	if s == null:
+		return
+	var card: VBoxContainer = hud._card(hud.UI.GOLD)
+	card.add_child(hud._text("In orbit: %d satellite%s" % [s.total(0), "" if s.total(0) == 1 else "s"], 17, hud.UI.CREAM, true))
+	var summary := PackedStringArray()
+	for kind in s.KINDS:
+		summary.append("%s %d" % [kind.capitalize(), s.count(0, kind)])
+	card.add_child(hud._text("  ·  ".join(summary), 13, hud.UI.TEXT))
+	var effects := PackedStringArray()
+	if s.count(0, "recon") > 0:
+		effects.append("an imaging pass over %s every %ds" % [d.name_of(int(s.watch.get(0, -1))) if int(s.watch.get(0, -1)) >= 0 else "no one", int(s.PASS_SECONDS / s.count(0, "recon"))])
+	var nav: float = s.nav_factor(0)
+	if nav > 1.0: effects.append("guided weapons +10% accuracy")
+	elif nav < 1.0: effects.append("GPS denied: guided weapons -10% accuracy")
+	if s.jam_factor(0) < 1.0: effects.append("drones half as easily jammed")
+	if s.count(0, "warning") > 0: effects.append("+%d%% missile interception" % (5 * mini(s.count(0, "warning"), 2)))
+	var fx: Label = hud._text("Now: " + ("; ".join(effects) if not effects.is_empty() else "nothing in orbit works for you yet."), 13, hud.UI.MUTED)
+	fx.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	fx.custom_minimum_size.x = 460
+	card.add_child(fx)
+	if s.debris > 0.0:
+		hud._meter(card, s.debris, 100.0, hud.UI.BAD, "Debris in orbit %d: each satellite has a %.1f%% chance in 30 s of being struck" % [int(s.debris), s.debris / 10.0])
+	# Launches.
+	var pad: VBoxContainer = hud._card()
+	pad.add_child(hud._text("Launch", 15, hud.UI.CREAM, true))
+	var how := "From your Missile Silo." if s.ident(0) in s.LAUNCHERS else "Your nation has no launcher of its own: launches are bought abroad at +50%."
+	pad.add_child(hud._text(how, 12, hud.UI.MUTED))
+	var help := {"recon": "Sees the watched nation's towns through the fog",
+		"nav": "Two or more: guided weapons +10% accuracy",
+		"comms": "Two or more: drones half as easily jammed",
+		"warning": "+5% missile interception each (up to two)"}
+	for kind in s.KINDS:
+		var row: HBoxContainer = hud._row(pad)
+		var why: String = s.launch_blocked(kind)
+		var k: String = kind
+		var b: Button = hud._button(row, "%s  (%s)" % [s.NAMES[kind], hud.cost_text(s.price(kind))], func(): return s.launch(k), why == "", "good")
+		b.tooltip_text = help[kind] + ("" if why == "" else "
+" + why)
+		b.custom_minimum_size = Vector2(330, 34)
+		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var note: Label = hud._text(why if why != "" else help[kind], 12, hud.UI.BAD if why != "" else hud.UI.MUTED)
+		note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(note)
+	# What the recon satellites watch.
+	var targets := _targets(d)
+	if not targets.is_empty() and s.count(0, "recon") > 0:
+		var wr: HBoxContainer = hud._row(pad)
+		wr.add_child(hud._text("Watch", 14, hud.UI.MUTED))
+		var items := []
+		for id in targets: items.append([d.name_of(id), id])
+		hud._choice(wr, items, int(s.watch.get(0, targets[0])), func(v):
+			s.watch[0] = int(v)
+			hud.refresh_side())
+	# Rivals in orbit, and the anti-satellite missile.
+	var foes: VBoxContainer = hud._card(hud.UI.BAD)
+	foes.add_child(hud._text("Rivals in orbit", 15, hud.UI.CREAM, true))
+	for id in targets:
+		var row: HBoxContainer = hud._row(foes)
+		var lab: Label = hud._text("%s: %d satellites%s" % [d.name_of(id), s.total(id), "  (watching you)" if int(s.watch.get(id, -1)) == 0 and s.count(id, "recon") > 0 else ""], 13, hud._nation_colour(id).lightened(0.35))
+		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(lab)
+		var why: String = s.asat_blocked(id)
+		var target: int = id
+		var b: Button = hud._button(row, "Anti-satellite missile ($%d)" % int(s.ASAT_COST), func(): return s.fire_asat(0, target), why == "", "bad")
+		b.tooltip_text = (why + "
+" if why != "" else "") + "85% to destroy one satellite. An act of war; every other nation thinks less of you, and the debris threatens everyone's satellites, yours too."
 
 func _targets(d: Node) -> Array:
 	var out := []

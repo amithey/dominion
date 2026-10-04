@@ -132,6 +132,10 @@ func refresh() -> void:
 	for b in w.buildings:
 		if not b.dead and friendly(int(b.owner)):
 			_stamp(b.root.position, float(BUILDING_SIGHT.get(b.key, b.footprint * 0.5 + 28.0)))
+	# A reconnaissance satellite's pass (space.gd).
+	if w.get("space") != null:
+		for r in w.space.reveals:
+			_stamp(r.at, float(r.radius))
 	# A CIA network deep enough puts a nation's buildings on the map.
 	var e = w.get("espionage")
 	for b in w.buildings:

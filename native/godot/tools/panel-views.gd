@@ -40,7 +40,7 @@ func run() -> void:
 		w.hud.toggle_panel("diplomacy", true)
 		if w.hud._side_rows.get_child_count() < 2: errors.append("diplomacy %s is empty" % tab)
 		await shot("diplomacy-" + tab)
-	for tab in ["operations", "agents", "dossiers", "reports"]:
+	for tab in ["operations", "agents", "dossiers", "reports", "space"]:
 		w.hud._panels.intel_tab = tab
 		w.hud.toggle_panel("intel", true)
 		if w.hud._side_rows.get_child_count() < 2: errors.append("intel %s is empty" % tab)

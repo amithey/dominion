@@ -23,6 +23,26 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.66: space
+
+- **Satellites** (scripts/space.gd, the new Space tab in the Intel window): once Satellite Recon is researched,
+  launch them from a Missile Silo. Nations without launchers of their own buy launches abroad at +50%;
+  Syria and Afghanistan have no space programme.
+  - **Reconnaissance**: an imaging pass every 40 s over the nation you choose to watch. The land round its
+    towns is seen through the fog for 12 s, its buildings go on your map, and your intelligence on it grows.
+  - **Navigation** (two or more): guided weapons +10% accuracy. A nation that relies on GPS loses 10% at war
+    with the United States.
+  - **Communications** (two or more): your drones are half as easily jammed.
+  - **Early warning**: +5% missile interception each, up to two.
+- **Anti-Satellite Weapons** (a new era-4 discovery for the United States, China, Russia and India): a missile
+  that destroys a rival's satellite 85% of the time. Firing it is an act of war, the world thinks less of you,
+  and its debris can destroy anyone's satellites, yours too, until it falls back.
+- **Rivals in orbit**: rivals launch satellites as their technology grows. Their reconnaissance satellites
+  find your buildings, and the four with anti-satellite weapons may shoot yours down in a war.
+- Research and sources: native/SPACE-RESEARCH-2026-10-04.md.
+
+Checks: tools/space-check.gd (25).
+
 ## Version 0.9.65: from the player's review
 
 - **Why a unit stands idle**: a unit with no fuel or no ammunition money carries a red "NO FUEL" / "NO AMMUNITION"
