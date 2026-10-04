@@ -33,7 +33,7 @@ var _card: PanelContainer
 var _band: PanelContainer
 var _band_title: Label
 var _margins: MarginContainer
-var setup_options := {"map":"island","players":4,"nation":0,"style":"standard"}
+var setup_options := {"map":"island","players":4,"nation":0,"style":"standard","fog":true}
 var setup_difficulty := "easy"
 var _briefing: Label
 var _transition: Tween
@@ -349,6 +349,7 @@ func open_new_game() -> void:
 		counts.append(["One rival" if players == 2 else "%d rivals" % (players - 1), players])
 	_setup_select("Rivals", counts, "players", options)
 	_setup_select("Rules", [["Standard", "standard"], ["Sandbox", "sandbox"]], "style", options)
+	_setup_select("Fog of war", [["On", true], ["Off", false]], "fog", options)
 	_setup_select("Difficulty", [["Easy", "easy"], ["Normal", "normal"], ["Hard", "hard"]], "difficulty", options)
 	_setup_select("Pace", [["Slow · 60%", 0.6], ["Relaxed · 75%", 0.75], ["Standard · 100%", 1.0]], "pace", options)
 	_rival_pickers(campaign)

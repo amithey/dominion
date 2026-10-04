@@ -20,6 +20,7 @@ uniform sampler2D lake_tex : filter_linear, repeat_disable;   // 1 over lakes (t
 uniform sampler2D depth_map : filter_linear, repeat_disable;  // 1 over land, lakes and shallows; 0 over open sea
 uniform vec4 lake_rect = vec4(-320.0, -320.0, 640.0, 640.0);   // origin x, z and size of that grid
 #include "res://shaders/territory.gdshaderinc"
+#include "res://shaders/fog.gdshaderinc"
 
 uniform sampler2D noise_tex : filter_linear_mipmap, repeat_enable;
 
@@ -105,10 +106,11 @@ void fragment() {
 	float foam = smoothstep(0.5, 0.75, lace + band * 0.45) * band;
 	foam = clamp(foam + pow(band, 6.0) * 0.8, 0.0, 1.0) * mix(0.85, 0.3, lake);
 
-	ALBEDO = vec3(0.92, 0.95, 0.95) * foam;
-	EMISSION = seen * (1.0 - foam);
+	float fog = fog_at(world_pos.xz);   // fog of war
+	ALBEDO = vec3(0.92, 0.95, 0.95) * foam * (1.0 - fog);
+	EMISSION = seen * (1.0 - foam) * (1.0 - fog);
 	ROUGHNESS = mix(0.035, 0.6, foam);
 	METALLIC = 0.0;
-	SPECULAR = 0.55;
+	SPECULAR = 0.55 * (1.0 - fog);
 	ALPHA = 1.0;
 }

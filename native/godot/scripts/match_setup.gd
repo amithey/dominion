@@ -29,6 +29,8 @@ static func normalize(options: Dictionary) -> Dictionary:
 		"nation":clampi(_int(options.get("nation",0),0),0,Factions.IDS.size()-1),
 		"style":"sandbox" if str(options.get("style","standard"))=="sandbox" else "standard",
 		"pace":_pace(options.get("pace", 0.75))}
+	# Fog of war (fog_of_war.gd): on unless chosen off, or a sandbox match.
+	out.fog = bool(options.get("fog", out.style != "sandbox")) if not (options.get("fog") is String) else str(options.fog) == "true"
 	if options.get("rivals") is Array:
 		out.rivals = []
 		for rival in options.rivals:

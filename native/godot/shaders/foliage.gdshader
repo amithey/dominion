@@ -15,8 +15,12 @@ uniform float flutter = 0.05;     // leaf movement in metres
 varying float tree_var;           // 0..1 per tree: some greener, some olive or darker
 varying float facing_up;          // leaves facing the sky catch light; those facing down sit in the crown's shade
 
+#include "res://shaders/fog.gdshaderinc"
+varying vec2 fog_xz;
+
 void vertex() {
 	vec3 origin = MODEL_MATRIX[3].xyz;
+	fog_xz = origin.xz;
 	float phase = origin.x * 0.043 + origin.z * 0.061;
 	tree_var = fract(sin(dot(origin.xz, vec2(12.9898, 78.233))) * 43758.5453);
 	facing_up = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz).y * 0.5 + 0.5;
@@ -37,7 +41,7 @@ void fragment() {
 		c.rgb *= mix(vec3(0.82, 0.9, 0.78), vec3(1.08, 1.02, 0.86), tree_var);
 		c.rgb *= mix(0.62, 1.05, facing_up);
 	}
-	ALBEDO = c.rgb;
+	ALBEDO = c.rgb * (1.0 - fog_at(fog_xz));   // fog of war
 	if (leaves) {
 		ALPHA = c.a;
 		ALPHA_SCISSOR_THRESHOLD = alpha_cut;

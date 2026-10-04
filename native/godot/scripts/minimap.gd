@@ -90,8 +90,14 @@ func _draw() -> void:
 			for corner in t.cell_polygon(i):
 				poly.append(to_map(Vector3(corner.x, 0, corner.y)))
 			draw_colored_polygon(poly, Color(1.0, 0.84, 0.42, 0.35) if t.contested[i] else Color(colours[o % colours.size()], 0.26))
+	# Fog of war (fog_of_war.gd): land never seen dark, land not watched now grey.
+	var fog = world.get("fog")
+	if fog != null and fog.enabled:
+		var corner := to_map(Vector3(fog.origin.x, 0, fog.origin.y))
+		var far := to_map(Vector3(fog.origin.x + fog.n * fog.CELL, 0, fog.origin.y + fog.n * fog.CELL))
+		draw_texture_rect(fog.texture, Rect2(corner, far - corner), false)
 	for b in world.buildings:
-		if b.dead:
+		if b.dead or (fog != null and not fog.shows(b)):
 			continue
 		var p := to_map(b.root.position)
 		var s := 5.0 if b.key in ["hq", "cityCenter", "villageCenter"] else 3.5
@@ -99,7 +105,7 @@ func _draw() -> void:
 		if b.key == "hq":
 			draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), Color.WHITE, false, 1.0)
 	for u in world.units:
-		if u.dead:
+		if u.dead or (fog != null and not fog.shows(u)):
 			continue
 		draw_circle(to_map(u.node.position), 1.6 if not u.vehicle else 2.0, colours[u.owner % colours.size()])
 	# The camera: the ground it sees as a wedge, an arrow at the far edge for the

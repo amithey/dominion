@@ -12,8 +12,12 @@ uniform vec3 dry_color : source_color = vec3(0.58, 0.54, 0.30);
 
 varying float dryness;
 
+#include "res://shaders/fog.gdshaderinc"
+varying vec2 fog_xz;
+
 void vertex() {
 	vec3 origin = MODEL_MATRIX[3].xyz;
+	fog_xz = origin.xz;
 	dryness = smoothstep(0.5, 0.8, textureLod(noise_tex, origin.xz * 0.0045 + 0.57, 0.0).r);
 	float phase = origin.x * 0.09 + origin.z * 0.07;
 	float bend = UV.y * UV.y;
@@ -23,7 +27,7 @@ void vertex() {
 
 void fragment() {
 	vec3 tip = mix(tip_color, dry_color, dryness);
-	ALBEDO = mix(root_color, tip, UV.y);
+	ALBEDO = mix(root_color, tip, UV.y) * (1.0 - fog_at(fog_xz));   // fog of war
 	ROUGHNESS = 0.85;
 	SPECULAR = 0.25;
 	BACKLIGHT = ALBEDO * 0.3;

@@ -6,8 +6,12 @@ render_mode cull_disabled, diffuse_burley;
 
 varying vec3 tint;
 
+#include "res://shaders/fog.gdshaderinc"
+varying vec2 fog_xz;
+
 void vertex() {
 	vec3 origin = MODEL_MATRIX[3].xyz;
+	fog_xz = origin.xz;
 	float phase = origin.x * 0.043 + origin.z * 0.061;
 	float gust = sin(TIME * 0.9 + phase) * 0.6 + sin(TIME * 2.1 + phase * 1.7) * 0.25;
 	float height = max(VERTEX.y, 0.0);
@@ -18,7 +22,7 @@ void vertex() {
 
 void fragment() {
 	vec3 c = COLOR.rgb * COLOR.rgb;  // vertex colours are sRGB
-	ALBEDO = c * mix(vec3(1.0), tint * 2.0, 0.6);
+	ALBEDO = c * mix(vec3(1.0), tint * 2.0, 0.6) * (1.0 - fog_at(fog_xz));   // fog of war
 	BACKLIGHT = ALBEDO * 0.25;
 	ROUGHNESS = 0.85;
 	SPECULAR = 0.25;

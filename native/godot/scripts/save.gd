@@ -117,6 +117,7 @@ func capture() -> Dictionary:
 		"missiles": world.missiles.capture(), "territory": world.territory.capture(),
 		"passage": world.passage.capture() if world.passage else {}, "zones": world.occupation.capture() if world.occupation else [],
 		"research": world.research.capture(),
+		"fog": world.fog.capture() if world.fog != null else {},
 	}
 
 func save(slot: String) -> bool:
@@ -267,6 +268,9 @@ func restore(data: Dictionary) -> void:
 	world.espionage.restore(data.get("espionage", {}))
 	world.missiles.restore(data.get("missiles", {}))
 	world.territory.restore(data.get("territory", {}))
+	if world.fog == null:
+		world.fog = preload("res://scripts/fog_of_war.gd").new(world)
+	world.fog.restore(data.get("fog", {}))
 	if world.passage:
 		world.passage.restore(data.get("passage", {}))
 	if world.occupation:

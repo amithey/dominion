@@ -97,6 +97,7 @@ func run() -> void:
 	if w.menu.get("_root") == null: w.menu.setup(w)
 	seed(20260928)   # the same field and the same dice every run
 	w.start_match("easy")
+	w.fog.enabled = false   # (these checks are of the weapons' reach; tools/fog-of-war-check.gd checks spotting)
 	w.menu._root.hide()
 	w.set_physics_process(false)
 	w.effects.set_physics_process(false)

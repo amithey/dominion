@@ -662,3 +662,11 @@ UI files listed above.
   (wingmen_stowed) unless airborne, launch_wingmen()/stow(), command() recovers them on landing and launches on
   take-off, replacements go aboard; world.update_training escorts after parking. air_operations: ROTARY; airfield
   for fixed-wing only, helipad for rotorcraft only; park_new checks available().
+- 2026-10-04 Claude, 0.9.61 (user's roadmap, stage 1: fog of war): new scripts/fog_of_war.gd (world.fog, created
+  in start_match and on load; update() from world physics), shaders/fog.gdshaderinc with global uniforms fog_on /
+  fog_tex / fog_rect (project.godot [shader_globals]) in terrain, water, foliage, pine and grass. tactics.pick_target:
+  the player's units skip what fog.shows() hides beyond their own sight; world.enemy_under ignores hidden enemies;
+  minimap draws the fog and only what is shown; save.gd "fog"; menu "Fog of war" option, match_setup out.fog.
+  Tests: weapons-live-100 turns the fog off (it checks the weapons' reach; long-range weapons now need a
+  spotter); gameplay-nine-30 gives the continent crossing 480 s, not 320 (it fell short at 170-179 m even
+  before the fog: each nation's tanks move at their own system's speed since 0.9.54).

@@ -121,6 +121,7 @@ var env: Environment
 var sun: DirectionalLight3D
 var terrain_node: MeshInstance3D
 var sea_node: MeshInstance3D
+var fog: RefCounted = null   # fog_of_war.gd: what the player's side sees
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
 var noise_texture: NoiseTexture2D
@@ -1992,6 +1993,8 @@ func _physics_process(delta: float) -> void:
 		Modern.update(self, delta)  # medics
 		Future.update(self, delta)  # microwave pulses, wingmen
 		preload("res://scripts/national_capabilities.gd").update(self, delta)  # Russia's foreign recruits
+		if fog != null:
+			fog.update(delta)  # what the player's side sees
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
 		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
@@ -2371,6 +2374,8 @@ func start_match(difficulty: String) -> void:
 	cam_focus = start + Vector3(0, 0, 1)
 	cam_dist_target = 115.0
 	cam_pitch = 0.95
+	fog = preload("res://scripts/fog_of_war.gd").new(self)
+	fog.refresh()
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 
 ## Walks the menu flow: main menu (paused, no AI) -> new game on normal (AI
@@ -5826,10 +5831,11 @@ func select_same_kind(unit: Dictionary, add := false) -> int:
 	return count
 
 func enemy_under(screen: Vector2) -> Variant:
-	var best = Picking.pick(camera, units.filter(func(u): return not u.dead and u.owner != 0), screen)
+	# (an enemy hidden by the fog of war cannot be clicked)
+	var best = Picking.pick(camera, units.filter(func(u): return not u.dead and u.owner != 0 and (fog == null or fog.shows(u))), screen)
 	if best == null:
 		var b = building_under(screen)
-		if b != null and b.owner != 0:
+		if b != null and b.owner != 0 and (fog == null or fog.shows(b)):
 			return b
 	return best
 

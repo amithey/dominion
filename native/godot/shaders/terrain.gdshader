@@ -29,6 +29,7 @@ uniform float cloud_shadow = 0.3;  // how dark drifting cloud shadows get
 // territory view (show_territory) also washes the land and hatches contested
 // hexes in gold.
 #include "res://shaders/territory.gdshaderinc"
+#include "res://shaders/fog.gdshaderinc"
 // Buildable ground (buildable.gd). The map's heights, so slopes can be measured
 // over a district's width: ground too steep to build on is bare grey rock.
 uniform sampler2D height_tex : filter_linear, repeat_disable;
@@ -188,7 +189,7 @@ void fragment() {
 			albedo = mix(albedo, mark, rim * 0.85);
 		}
 	}
-	ALBEDO = albedo;
+	ALBEDO = albedo * (1.0 - fog_at(world_pos.xz));   // fog of war
 	ROUGHNESS = mix(mix(0.92, 0.82, w.w), 0.35, wet);
 	SPECULAR = mix(0.35, 0.5, wet);
 	NORMAL = normalize((VIEW_MATRIX * vec4(normalize(wn), 0.0)).xyz);

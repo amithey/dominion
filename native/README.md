@@ -23,6 +23,28 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.61: the fog of war
+
+The first stage of the roadmap the player set (fog of war, then public war support, world events with causes,
+space, veterancy / generals / DEFCON, blocs). As in Conflict of Nations or any RTS, the player now sees only what
+its side sees (scripts/fog_of_war.gd):
+- **Sight**: every unit and building watches the land round it (a soldier 32 m, a tank 38, an APC 44, a SAM
+  launcher 75, a jet 60, a recon drone 85, a capital 85, an air defence radar 90). Allies and client states share
+  what they see. Land never seen is dark, land seen before but not watched now grey: on the ground, the sea, the
+  trees and the grass (one fog texture, global shader uniforms) and on the minimap.
+- **The enemy**: an enemy unit shows only where it is watched; an enemy building, once seen, stays on the map where
+  it was seen. What cannot be seen cannot be clicked, and the player's units fire only on what their side sees or
+  what is within their own sight.
+- **Reconnaissance matters**: artillery, rocket launchers and missile batteries see only 32 m of their own: they
+  need a spotter (in the check, a gun would not fire at a tank 55 m off until a soldier saw it). Drones and radars
+  see far. A CIA network with intelligence of 10 in a nation puts its buildings on the map.
+- **Saved**: the explored land and the buildings seen are part of a save.
+- **Optional**: "Fog of war: On / Off" on the New Game screen; sandbox matches start without it. Rival governments
+  are not played under the fog.
+- **Cost**: a refresh (four a second) takes under 1 ms.
+
+Checks: tools/fog-of-war-check.gd (16).
+
 ## Version 0.9.60: messages along the bottom, wingmen aboard, helicopters on helipads
 
 - **Messages no longer cover the battlefield**: they were large boxes stacked under the strip in the middle of the

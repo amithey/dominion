@@ -160,7 +160,7 @@ func run() -> void:
 	var mine: Vector3 = hq(0).root.position
 	var start_ms := Time.get_ticks_msec()
 	var arrived := func(): return w.units.any(func(u): return u.owner == far and not u.dead and u.node.position.distance_to(mine) < 150.0)
-	sim(320.0, arrived)
+	sim(480.0, arrived)   # (each nation's tanks now move at their own system's speed: unit_quality.gd)
 	var closest := INF
 	for u in w.units:
 		if u.owner == far and not u.dead: closest = minf(closest, u.node.position.distance_to(mine))
