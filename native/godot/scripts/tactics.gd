@@ -98,6 +98,9 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 			# is within their own sight (fog_of_war.gd).
 			if own == 0 and w.fog != null and w.fog.enabled and not w.fog.shows(other) and d > w.fog.sight_of(unit):
 				continue
+			# A rival's artillery needs a spotter too, against the player's units (fog_of_war.gd).
+			if own > 0 and int(other.owner) == 0 and w.fog != null and w.fog.enabled and d > w.fog.sight_of(unit) and not w.fog.rival_spots(own, other):
+				continue
 			if not ignore.is_empty() and float(ignore.get(other.node.get_instance_id(), -1.0)) > w.game_time:
 				continue
 			var score: float = d / maxf(unit.range, 1.0) - eff * 0.5 - (1.0 - other.hp / maxf(other.max_hp, 1.0)) * 0.4
@@ -121,6 +124,8 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 			continue
 		if own == 0 and w.fog != null and w.fog.enabled and not w.fog.shows(b):
 			continue   # a building never seen (fog_of_war.gd)
+		if own > 0 and w.fog != null and not w.fog.rival_knows(own, b):
+			continue   # a building of the player's this rival has not found
 		var d: float = w.gap_to(unit, b)
 		if d < best_d:
 			best_d = d

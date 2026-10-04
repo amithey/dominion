@@ -692,3 +692,10 @@ UI files listed above.
   w.support = null (a long war's forced ceasefire ended its wars); diplomatic-contacts-check removes the starting
   tank factory before "arms require real factory" (it failed since the starting base got one); fog-of-war-check
   expects capitals on the map.
+- 2026-10-04 Claude, 0.9.65 (player's review): Codex, please use tools/test_kit.gd in new and touched checks:
+  preload("res://tools/test_kit.gd").quiet(w, [systems to keep]) after start_match switches off fog_of_war,
+  war_support, world_events, victory and funds everyone for war_costs. The war costs, the home front and the
+  world events each broke unrelated checks; quiet() keeps a check about one thing. Also: new scripts/unit_overlay.gd
+  (HUD child, NO FUEL / NO AMMUNITION markers), hud message log (toggle_log, L, notice_log entries now carry
+  "MM:SS"), victory.gd (world.victory; Cabinet tile "victory"), fog_of_war rival_knows/rival_spots used by ai.gd
+  (nearest_enemy_asset seeker, missile targets) and tactics.pick_target; health_overlay skips what the fog hides.

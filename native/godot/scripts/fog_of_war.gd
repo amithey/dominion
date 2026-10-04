@@ -8,8 +8,12 @@ extends RefCounted
 ## Reconnaissance matters: artillery and rocket launchers see little of their
 ## own (they need a spotter), drones see far, air defence radars further, and a
 ## CIA network of intelligence 10 in a nation puts its buildings on the map.
-## Rival governments do not play under the fog. Sandbox matches have none
-## (match_config "fog": false turns it off in any match).
+## Rival governments play under it too, as far as the player is concerned: a
+## rival knows only those of the player's buildings its own forces have seen
+## (capitals are known to all), so its attacks and missiles go for what it has
+## found, and its artillery, too, needs a spotter to fire on the player's units.
+## Resource deposits on land never seen are not shown. Sandbox matches have no
+## fog (match_config "fog": false turns it off in any match).
 
 const CELL := 10.0
 const UNEXPLORED := 0.82     # how dark land never seen is
@@ -36,6 +40,8 @@ var image: Image
 var texture: ImageTexture
 var _tick := 0.0
 var _masks := {}
+var _scout_tick := 0
+var rival_seen := {}         # rival -> cells its forces see (refreshed each second)
 
 func _init(world: Node) -> void:
 	w = world
@@ -146,7 +152,67 @@ func refresh() -> void:
 			u.node.visible = show
 			if not show:
 				u.selected = false
+	# Deposits on land never seen are not shown.
+	for dep in w.deposits:
+		var known := charted(dep.pos)
+		if dep.node.visible != known:
+			dep.node.visible = known
+	# Once a second: what the rivals' forces see of the player's buildings.
+	_scout_tick += 1
+	if _scout_tick >= 4:
+		_scout_tick = 0
+		_scout()
 	_paint()
+
+## Once a second: what each rival's forces see, as a map of cells (rival_seen),
+## and the player's buildings inside it become known to that rival.
+func _scout() -> void:
+	rival_seen.clear()
+	var by_owner := {}
+	for u in w.units:
+		if u.dead or int(u.owner) == 0 or friendly(int(u.owner)):
+			continue
+		if not by_owner.has(int(u.owner)): by_owner[int(u.owner)] = []
+		by_owner[int(u.owner)].append(u)
+	for owner in by_owner:
+		var cells := PackedByteArray()
+		cells.resize(n * n)
+		for u in by_owner[owner]:
+			var c := int(floor((u.node.position.x - origin.x) / CELL))
+			var r := int(floor((u.node.position.z - origin.y) / CELL))
+			for off in _mask(int(ceil(sight_of(u) / CELL))):
+				var x: int = c + off.x
+				var z: int = r + off.y
+				if x >= 0 and z >= 0 and x < n and z < n:
+					cells[z * n + x] = 1
+		rival_seen[owner] = cells
+	for b in w.buildings:
+		if b.dead or b.owner != 0:
+			continue
+		var i := index(b.root.position)
+		if i < 0:
+			continue
+		for owner in rival_seen:
+			if rival_seen[owner][i] == 1:
+				if not b.has("known_by"):
+					b.known_by = {}
+				b.known_by[owner] = true
+
+## Whether rival `owner` knows of building `b` (rivals know each other's; the
+## player's they must find, its capital excepted).
+func rival_knows(owner: int, b: Dictionary) -> bool:
+	if not enabled or int(b.owner) != 0 or b.key == "hq":
+		return true
+	return b.get("known_by", {}).has(owner)
+
+## Whether a rival's long-range weapon may fire at the player's unit `target`:
+## one of the rival's own units must see it (a spotter): its sight map, a second old.
+func rival_spots(owner: int, target: Dictionary) -> bool:
+	if not enabled or int(target.owner) != 0:
+		return true
+	var cells = rival_seen.get(owner)
+	var i := index(target.node.position)
+	return cells != null and i >= 0 and cells[i] == 1
 
 func _stamp(p: Vector3, radius: float) -> void:
 	var c := int(floor((p.x - origin.x) / CELL))
@@ -182,7 +248,8 @@ func _paint() -> void:
 
 func capture() -> Dictionary:
 	return {"explored": Marshalls.raw_to_base64(explored.compress(FileAccess.COMPRESSION_DEFLATE)), "size": explored.size(),
-		"seen_buildings": w.buildings.filter(func(b): return not b.dead and b.get("seen", false)).map(func(b): return [b.root.position.x, b.root.position.z])}
+		"seen_buildings": w.buildings.filter(func(b): return not b.dead and b.get("seen", false)).map(func(b): return [b.root.position.x, b.root.position.z]),
+		"known_by_rivals": w.buildings.filter(func(b): return not b.dead and not b.get("known_by", {}).is_empty()).map(func(b): return [b.root.position.x, b.root.position.z, b.known_by.keys()])}
 
 func restore(data: Dictionary) -> void:
 	if data.is_empty():
@@ -191,6 +258,11 @@ func restore(data: Dictionary) -> void:
 	var size := int(data.get("size", 0))
 	if size == n * n and not raw.is_empty():
 		explored = raw.decompress(size, FileAccess.COMPRESSION_DEFLATE)
+	for spot in data.get("known_by_rivals", []):
+		for b in w.buildings:
+			if not b.dead and absf(b.root.position.x - float(spot[0])) < 0.5 and absf(b.root.position.z - float(spot[1])) < 0.5:
+				b.known_by = {}
+				for o in spot[2]: b.known_by[int(o)] = true
 	for spot in data.get("seen_buildings", []):
 		for b in w.buildings:
 			if not b.dead and absf(b.root.position.x - float(spot[0])) < 0.5 and absf(b.root.position.z - float(spot[1])) < 0.5:

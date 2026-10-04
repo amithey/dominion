@@ -241,6 +241,7 @@ func refresh() -> void:
 	_treasury()
 	_people()
 	_world()   # world news: the crises that reach your economy
+	_victory()   # paths to victory
 	_forces()
 	_research()
 	_foreign()
@@ -482,3 +483,14 @@ func _world() -> void:
 			_label(col, "Your income %+d%%" % roundi(float(e.you) * 100.0), 13, UI.GOOD if float(e.you) > 0.0 else UI.BAD)
 		elif str(e.why) != "":
 			_label(col, str(e.why), 12, UI.MUTED)
+
+## Paths to victory (victory.gd): where you stand, and the rival nearest each.
+func _victory() -> void:
+	var v = world.get("victory")
+	if v == null: return
+	var col := _tile("victory", "Paths to Victory", "sovereign", "Territory", func(): hud.toggle_panel("territory", true))
+	for row in v.standings():
+		_label(col, str(row.path), 17, UI.CREAM, true)
+		_label(col, "You: " + str(row.you), 13, UI.TEXT)
+		if str(row.rival) != "":
+			_label(col, "Leading rival: " + str(row.rival), 13, UI.MUTED)

@@ -23,6 +23,26 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.65: from the player's review
+
+- **Why a unit stands idle**: a unit with no fuel or no ammunition money carries a red "NO FUEL" / "NO AMMUNITION"
+  marker over its health bar (scripts/unit_overlay.gd), and its card says "HALTED: no fuel. Buy it on the World
+  market or restore your income."
+- **Message log**: every message of the match, newest first, with its time: the new Log button beside Menu, or L;
+  Esc closes it.
+- **The fog of war, fair both ways**: resource deposits on land never seen are hidden; a rival knows only those of
+  your buildings its forces have seen (your capital excepted), so its attack waves and missiles go for what it has
+  found; its artillery needs a spotter to fire on your units, as yours does. Health bars are no longer drawn over
+  enemies the fog hides (they gave them away). What the rivals know is saved.
+- **Paths to victory** (scripts/victory.gd), besides conquest: Dominance (hold 40% of the land for 3 minutes) and
+  Technology (reach the Future era and complete four of its discoveries; a rival: technology at its height for 5
+  minutes). Each countdown is announced, and the Cabinet's new "Paths to Victory" tile shows where you and the
+  leading rival stand. A diplomatic victory comes with the blocs and alliances.
+- **Tests**: tools/test_kit.gd switches off the systems a check does not test (fog, home front, world events,
+  victory, operating costs), so a new system cannot break an old check again; weapons-live-100 uses it.
+
+Checks: tools/review-fixes-check.gd (13).
+
 ## Version 0.9.64: a real take-off, easier intelligence, planned cities
 
 - **Take-off**: an aircraft slid down the runway sideways, frozen in the pose it taxied in (its position moved, its

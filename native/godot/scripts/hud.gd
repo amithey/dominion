@@ -89,6 +89,10 @@ func setup(world_node: Node, economy_node: Node) -> void:
 	world = world_node
 	economy = economy_node
 	world.portraits.portrait_ready.connect(_on_portrait)
+	# Health bars over damaged units and why a unit stands idle (unit_overlay.gd), under the panels.
+	_overlay = preload("res://scripts/unit_overlay.gd").new()
+	add_child(_overlay)
+	_overlay.setup(world)
 	_build_top_bar()
 	_build_production()
 	_build_selection()
@@ -263,15 +267,15 @@ func _build_top_bar() -> void:
 	row = screens
 	for b in [["cabinet", "Cabinet (Tab): the whole state at a glance", func(): toggle_cabinet()], ["research", "Research (Y)", func(): toggle_research()], ["diplomacy", "Diplomacy (G)", func(): toggle_diplomacy()],
 			["market", "World market (M)", func(): toggle_panel("market")], ["intel", "Intelligence (I)", func(): toggle_panel("intel")],
-			["land", "Territory (T)", func(): toggle_panel("territory")], ["menu", "Menu (Esc)", func(): world.menu.open_pause() if world.menu and world.menu._root != null else null]]:
+			["land", "Territory (T)", func(): toggle_panel("territory")], ["log", "Message log (L): every message of the match", func(): toggle_log()], ["menu", "Menu (Esc)", func(): world.menu.open_pause() if world.menu and world.menu._root != null else null]]:
 		var button := Button.new()
 		button.icon = UI.icon("sovereign" if b[0] == "cabinet" else b[0])
 		button.expand_icon = true
 		button.custom_minimum_size = Vector2(104, 48)
-		button.text = {"cabinet":"Cabinet", "research":"Research", "diplomacy":"Diplomacy", "market":"Market", "intel":"Intel", "land":"Territory", "menu":"Menu"}[b[0]]
+		button.text = {"cabinet":"Cabinet", "research":"Research", "diplomacy":"Diplomacy", "market":"Market", "intel":"Intel", "land":"Territory", "log":"Log", "menu":"Menu"}[b[0]]
 		button.add_theme_font_size_override("font_size", 14)
 		button.add_theme_constant_override("icon_max_width", 22)
-		button.toggle_mode = b[0] != "menu"
+		button.toggle_mode = not b[0] in ["menu", "log"]
 		UI.ministry_button(button, b[0])   # each screen in its ministry's colour
 		_screen_buttons[b[0]] = button
 		button.tooltip_text = b[1]
@@ -1121,6 +1125,10 @@ func _update_selection() -> void:
 		elif units.any(func(u): return u.vehicle):
 			_sel_info.text += "\nAlt + right click: bombard ground / infrastructure."
 		_sel_info.text += "\nHP %d / %d%s" % [int(hp),int(max_hp)," · Repair ordered" if units.any(func(u): return u.get("repairing",false)) else ""]
+		# Why a unit stands idle: no fuel or no ammunition money (war_costs.gd).
+		var halted: Array = units.filter(func(u): return u.owner == 0 and str(u.get("operating_shortage", "")) != "")
+		if not halted.is_empty():
+			_sel_info.text += "\nHALTED (%d): %s. Buy it on the World market or restore your income." % [halted.size(), preload("res://scripts/unit_overlay.gd").shortage_text(str(halted[0].operating_shortage)).to_lower()]
 		for fighter in units.filter(func(u): return u.key == "sixthGen"):
 			var wing: int = world.Future.mates(world, fighter).size()
 			_sel_info.text += "\nBattle group: %d of %d loyal wingmen in formation; they strike its target and meet whatever attacks the group." % [wing, world.Future.WINGMEN]
@@ -1807,13 +1815,19 @@ func show_end(title: String, subtitle: String) -> void:
 
 ## Every message of the match, newest last (the feed shows only the latest).
 var notice_log: Array[String] = []
+var _overlay: Control
+var _log_box: PanelContainer
+var _log_rows: VBoxContainer
 
 ## A short message in the feed along the bottom edge: a slim, see-through line,
 ## three at most, each gone after 5 s.
 func notice(text: String) -> void:
-	notice_log.append(text)
-	if notice_log.size() > 80:
+	var t: int = int(world.game_time) if world != null else 0
+	notice_log.append("%02d:%02d   %s" % [t / 60, t % 60, text])
+	if notice_log.size() > 120:
 		notice_log.pop_front()
+	if _log_box != null and _log_box.visible:
+		_fill_log()
 	var card := PanelContainer.new()
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(UI.INK, 0.78)
@@ -1882,6 +1896,9 @@ var _rs_live: Array = []   # [Control, callable] refreshed every second without 
 ## help, the build list). True when one was, so Esc does not also pause.
 func close_windows() -> bool:
 	var closed := false
+	if _log_box != null and _log_box.visible:
+		_log_box.hide()
+		closed = true
 	if _cabinet != null and _cabinet.visible:
 		_cabinet.close()
 		closed = true
@@ -2311,3 +2328,55 @@ func _research_tracks() -> void:
 		b.disabled = why != "" or queued
 		b.pressed.connect(func(): _say(r.enqueue("track:" + key)))
 		row.add_child(b)
+
+# ---------------------------------------------------------------- message log
+
+## Every message of the match, newest first, with the time it came (L).
+func toggle_log() -> void:
+	if _log_box == null:
+		_log_box = PanelContainer.new()
+		_log_box.name = "MessageLog"
+		_log_box.add_theme_stylebox_override("panel", UI.plate(UI.PANEL_TOP, UI.PANEL_LOW, Color(UI.TRIM, 0.8), 6.0, UI.LIFT, UI.GOLD, 1, 10))
+		_log_box.anchor_left = 0.0
+		_log_box.anchor_top = 0.0
+		_log_box.anchor_bottom = 1.0
+		_log_box.offset_left = 12
+		_log_box.offset_top = 112
+		_log_box.offset_right = 572
+		_log_box.offset_bottom = -250
+		add_child(_log_box)
+		var column := VBoxContainer.new()
+		column.add_theme_constant_override("separation", 8)
+		_log_box.add_child(column)
+		var head := _row(column, 10)
+		var title := _text("Message log", 19, UI.BRIGHT, true)
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		head.add_child(title)
+		var shut := Button.new()
+		shut.text = "Close  (L)"
+		shut.focus_mode = Control.FOCUS_NONE
+		shut.pressed.connect(func(): _log_box.hide())
+		head.add_child(shut)
+		var scroll := ScrollContainer.new()
+		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		column.add_child(scroll)
+		_log_rows = VBoxContainer.new()
+		_log_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_log_rows.add_theme_constant_override("separation", 6)
+		scroll.add_child(_log_rows)
+		_log_box.hide()
+	_log_box.visible = not _log_box.visible
+	if _log_box.visible:
+		_fill_log()
+
+func _fill_log() -> void:
+	for c in _log_rows.get_children():
+		c.queue_free()
+	if notice_log.is_empty():
+		_log_rows.add_child(_text("No messages yet.", 14, UI.MUTED))
+	for i in range(notice_log.size() - 1, -1, -1):
+		var line := _text(notice_log[i], 13, UI.CREAM if i == notice_log.size() - 1 else UI.TEXT)
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		line.custom_minimum_size.x = 500
+		_log_rows.add_child(line)

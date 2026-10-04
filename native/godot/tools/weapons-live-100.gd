@@ -97,9 +97,7 @@ func run() -> void:
 	if w.menu.get("_root") == null: w.menu.setup(w)
 	seed(20260928)   # the same field and the same dice every run
 	w.start_match("easy")
-	w.fog.enabled = false   # (these checks are of the weapons' reach; tools/fog-of-war-check.gd checks spotting)
-	for n in w.ai.nations: n.money = 10000000.0   # (shots cost money: war_costs.gd)
-	w.support = null   # (no home front: its forced ceasefires would end the test's wars; war-support-check checks it)
+	preload("res://tools/test_kit.gd").quiet(w)   # (the weapons' reach alone: no fog, home front, world events or costs)
 	w.menu._root.hide()
 	w.set_physics_process(false)
 	w.effects.set_physics_process(false)

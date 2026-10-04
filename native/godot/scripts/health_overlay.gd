@@ -13,6 +13,9 @@ func _bar(ent: Dictionary, eye: Vector3, screen_rect: Rect2, lift: float) -> voi
 	# Only what has been hurt carries a bar: an untouched unit shows nothing,
 	# selected or not, so a healthy army does not clutter the battlefield.
 	var selected: bool = ent.get("selected", false)
+	var fog = world.get("fog")
+	if fog != null and not fog.shows(ent):
+		return   # no bar over what the fog of war hides
 	if ent.dead or ent.hp >= ent.max_hp:
 		return
 	var p: Vector3 = ent.node.position + Vector3.UP * lift

@@ -120,6 +120,7 @@ func capture() -> Dictionary:
 		"fog": world.fog.capture() if world.fog != null else {},
 		"support": world.support.capture() if world.support != null else {},
 		"events": world.events.capture() if world.events != null else {},
+		"victory": world.victory.capture() if world.victory != null else {},
 	}
 
 func save(slot: String) -> bool:
@@ -279,6 +280,9 @@ func restore(data: Dictionary) -> void:
 	if world.events == null:
 		world.events = preload("res://scripts/world_events.gd").new(world)
 	world.events.restore(data.get("events", {}))
+	if world.victory == null:
+		world.victory = preload("res://scripts/victory.gd").new(world)
+	world.victory.restore(data.get("victory", {}))
 	if world.passage:
 		world.passage.restore(data.get("passage", {}))
 	if world.occupation:

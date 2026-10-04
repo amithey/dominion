@@ -124,6 +124,7 @@ var sea_node: MeshInstance3D
 var fog: RefCounted = null   # fog_of_war.gd: what the player's side sees
 var support: RefCounted = null   # war_support.gd: how far each people backs its wars
 var events: RefCounted = null    # world_events.gd: what the wars do to the world
+var victory: RefCounted = null   # victory.gd: dominance and technology, besides conquest
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
 var noise_texture: NoiseTexture2D
@@ -2001,6 +2002,8 @@ func _physics_process(delta: float) -> void:
 			support.update(delta)  # the home front
 		if events != null:
 			events.update(delta)  # world events and their causes
+		if victory != null:
+			victory.update(delta)  # paths to victory
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
 		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
@@ -2384,6 +2387,7 @@ func start_match(difficulty: String) -> void:
 	fog.refresh()
 	support = preload("res://scripts/war_support.gd").new(self)
 	events = preload("res://scripts/world_events.gd").new(self)
+	victory = preload("res://scripts/victory.gd").new(self)
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 
 ## Walks the menu flow: main menu (paused, no AI) -> new game on normal (AI
@@ -5867,6 +5871,8 @@ func _input(event: InputEvent) -> void:
 		hud.toggle_build()  # the build list (the skirmish demo is --battle only)
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_G:
 		hud.toggle_diplomacy()
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_L and hud != null:
+		hud.toggle_log()   # every message of the match
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_M:
 		hud.toggle_panel("market")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_I:

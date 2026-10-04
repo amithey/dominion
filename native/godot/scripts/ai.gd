@@ -217,7 +217,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 			var army: Array = world.units.filter(func(u): return u.owner == n.id and available(u) and not u.get("naval",false))
 			var guard: int = mini(3, army.size() / 4)
 			var squad: Array = army.slice(guard, guard + maxi(int(row(n).squad), int(army.size() * 0.6)))
-			var target = nearest_enemy_asset(home.root.position, enemies)
+			var target = nearest_enemy_asset(home.root.position, enemies, n.id)
 			if squad.size() >= maxi(3, int(row(n).squad) - 2) and target != null:
 				world.order_move(squad, target.root.position, true)
 				if target.owner == 0:
@@ -246,7 +246,8 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 	kinds = kinds.filter(func(k): return preload("res://scripts/national_variants.gd").admits(world.missiles.def_of(k).get("nation", ""), me))
 	if kinds.is_empty():
 		return {}
-	var targets: Array = world.buildings.filter(func(b): return b.owner == 0 and not b.dead and b.built and b.key in STRIKE_TARGETS)
+	# Only what it has found of the player's (fog_of_war.gd: its capital is known to all).
+	var targets: Array = world.buildings.filter(func(b): return b.owner == 0 and not b.dead and b.built and b.key in STRIKE_TARGETS and (world.fog == null or world.fog.rival_knows(n.id, b)))
 	if targets.is_empty():
 		return {}
 	var target: Dictionary = targets[randi() % targets.size()]
@@ -382,11 +383,11 @@ func find_spot(n: Dictionary, home: Dictionary, key: String):
 			return at
 	return null
 
-func nearest_enemy_asset(from: Vector3, enemies: Array):
+func nearest_enemy_asset(from: Vector3, enemies: Array, seeker := -1):
 	var best = null
 	var best_d := INF
 	for b in world.buildings:
-		if b.owner in enemies and not b.dead:
+		if b.owner in enemies and not b.dead and (seeker < 0 or world.fog == null or world.fog.rival_knows(seeker, b)):
 			var d: float = b.root.position.distance_to(from)
 			if d < best_d:
 				best_d = d
