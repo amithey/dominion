@@ -103,6 +103,14 @@ func run() -> void:
 			amount(owner, resource, float(costs[resource]) - 0.01)
 			check(no_side_effects(owner, target), "%s/%d: short by 0.01, no partial charge or cooldown" % [id, owner])
 			for r in costs: amount(owner, r, float(costs[r]))
+			# (what Syria's, Afghanistan's and Iraq's powers need besides their price: a partner,
+			# an enemy, a supplied barracks)
+			if id == "syria":
+				for o in range(4): if o != owner: w.diplomacy.set_score(owner, o, 40.0)
+			if id == "afghanistan": w.diplomacy.set_score(owner, target, -60.0)
+			if id == "iraq" and not w.buildings.any(func(x): return x.owner == owner and x.key == "barracks" and x.built and not x.dead and x.get("supplied", true)):
+				var home: Vector3 = w.buildings.filter(func(x): return x.owner == owner and x.key == "hq" and not x.dead)[0].root.position
+				w.place_building("barracks", w.test_site("barracks", home), owner, true)
 			FP.use(w, owner, target)
 			check(costs.keys().all(func(r): return is_zero_approx(P.funds(w, owner, r))) and FP.ready_in(w, owner) > 0, "%s/%d: exact balances activate without negative stocks" % [id, owner])
 			var wait_before := FP.ready_in(w, owner)

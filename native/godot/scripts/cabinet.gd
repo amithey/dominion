@@ -240,6 +240,7 @@ func refresh() -> void:
 	_header()
 	_treasury()
 	_people()
+	_world()   # world news: the crises that reach your economy
 	_forces()
 	_research()
 	_foreign()
@@ -330,6 +331,10 @@ func _people() -> void:
 	_gauge(col, "Approval", eco.happiness, 100.0, Color("f0c25a") if eco.happiness >= 50.0 else UI.BAD, "%d%%" % int(eco.happiness))
 	_gauge(col, "Health", eco.health, 100.0, Color("6ad0a0") if eco.health >= 50.0 else UI.BAD, "%d%%" % int(eco.health))
 	_gauge(col, "Housing", eco.civilians, eco.civ_cap, UI.ministry("people"))
+	var front = world.get("support")
+	if front != null:
+		var mood: String = front.tier(0)
+		_gauge(col, "War support", front.value(0), 100.0, UI.GOOD if mood == "Rallied" else (Color("f0c25a") if mood in ["Steady", "Weary"] else UI.BAD), "%d%%  %s" % [roundi(front.value(0)), mood])
 
 func _forces() -> void:
 	var eco: Node = world.economy
@@ -460,3 +465,20 @@ func _power() -> void:
 	_label(col, str(p.get("desc", "")), 13, UI.TEXT)
 	var wait: float = Powers.ready_in(world, 0)
 	_label(col, "Ready" if wait <= 0.0 else "Ready in %ds" % int(ceil(wait)), 15, UI.GOOD if wait <= 0.0 else UI.MUTED)
+
+## World news: each event in force (world_events.gd), why, and what it does to you.
+func _world() -> void:
+	var news = world.get("events")
+	if news == null: return
+	var col := _tile("world", "World News", "market", "World market", func(): hud.toggle_panel("market", true))
+	var lines: Array = news.summary()
+	if lines.is_empty():
+		_label(col, "Calm: no crisis moves the markets.", 15, UI.MUTED)
+		return
+	for e in lines:
+		_label(col, str(e.name), 17, UI.CREAM, true)
+		_label(col, "Because %s. %s" % [str(e.cause), str(e.prices)], 13, UI.TEXT)
+		if float(e.you) != 0.0:
+			_label(col, "Your income %+d%%" % roundi(float(e.you) * 100.0), 13, UI.GOOD if float(e.you) > 0.0 else UI.BAD)
+		elif str(e.why) != "":
+			_label(col, str(e.why), 12, UI.MUTED)

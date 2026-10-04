@@ -238,6 +238,11 @@ func _recompute() -> void:
 		var front: Dictionary = world.support.bonuses()
 		for stat in front:
 			_add(stat, float(front[stat]))
+	# What the world's events do to the player's economy (world_events.gd).
+	if world != null and world.get("events") != null:
+		var news: Dictionary = world.events.bonuses()
+		for stat in news:
+			_add(stat, float(news[stat]))
 
 func _add(stat: String, v: float) -> void:
 	_bonus[stat] = float(_bonus.get(stat, 0.0)) + v

@@ -23,6 +23,26 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.63: world events with causes
+
+Stage 3 of the roadmap. Nothing happens by chance: each event is caused by what the nations do, lasts while its
+cause lasts (and 45 s more), and reaches every nation through the world market and its income, by how exposed it is
+(scripts/world_events.gd; research and figures in native/WORLD-EVENTS-RESEARCH-2026-10-04.md):
+- **The Strait of Hormuz is closed** when Iran is at war with the United States, Israel or Saudi Arabia, or closes
+  it itself: oil +80%, gas +60%; the Gulf exporters lose their outlet, Japan, South Korea, India, China and Europe
+  pay, other producers (Russia, the United States, Brazil) profit. (As in February-March 2026.)
+- **Black Sea grain stops** when Russia or Ukraine is at war: food +50%; Egypt and the grain importers go hungry.
+- **Europe's gas crisis** when Russia fights in Europe or cuts its gas: gas +100%, Europe -10%.
+- **A rare-earth shock** when China fights an industrial power or its export controls are in force: silicon +70%,
+  the chip makers' research slower.
+- **A global recession** when two of the five largest economies fight each other: every nation -6%.
+- **An arms boom** when three wars are fought at once: the arms exporters sell more.
+- **Refugees** when a town is destroyed: its people flee to the two nearest nations.
+Each is announced in the news feed with its cause and its effect on you; the Cabinet's new "World News" tile lists
+those in force, and "The People" now shows war support.
+
+Checks: tools/world-events-check.gd (17).
+
 ## Version 0.9.62: the home front (war support)
 
 Stage 2 of the roadmap. Every nation's people back its wars more or less (0-100, scripts/war_support.gd; research

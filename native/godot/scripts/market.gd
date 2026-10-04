@@ -80,7 +80,9 @@ func exchange_step() -> void:
 		var fv := float(fair.get(res, 1.0))
 		# Fair value wanders slowly; war makes fuel and metal dear.
 		var target := 1.0 + (0.25 if war and res in ["oil", "gas", "iron"] else 0.0)
-		fv = clampf(fv + randfn(0.0, 0.006) + (target - fv) * 0.01, 0.7, 1.6)
+		if world != null and world.get("events") != null:
+			target += world.events.price_shock(res)   # Hormuz, grain, gas, rare earths (world_events.gd)
+		fv = clampf(fv + randfn(0.0, 0.006) + (target - fv) * 0.01, 0.6, 2.4)
 		fair[res] = fv
 		var past: Array = history.get(res, [])
 		var trend := 0.0

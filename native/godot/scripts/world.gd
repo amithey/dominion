@@ -123,6 +123,7 @@ var terrain_node: MeshInstance3D
 var sea_node: MeshInstance3D
 var fog: RefCounted = null   # fog_of_war.gd: what the player's side sees
 var support: RefCounted = null   # war_support.gd: how far each people backs its wars
+var events: RefCounted = null    # world_events.gd: what the wars do to the world
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
 var noise_texture: NoiseTexture2D
@@ -1998,6 +1999,8 @@ func _physics_process(delta: float) -> void:
 			fog.update(delta)  # what the player's side sees
 		if support != null:
 			support.update(delta)  # the home front
+		if events != null:
+			events.update(delta)  # world events and their causes
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
 		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
@@ -2380,6 +2383,7 @@ func start_match(difficulty: String) -> void:
 	fog = preload("res://scripts/fog_of_war.gd").new(self)
 	fog.refresh()
 	support = preload("res://scripts/war_support.gd").new(self)
+	events = preload("res://scripts/world_events.gd").new(self)
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 
 ## Walks the menu flow: main menu (paused, no AI) -> new game on normal (AI
@@ -5336,6 +5340,8 @@ func destroy_building(b: Dictionary) -> void:
 	b.dead = true
 	if support != null:
 		support.building_lost(b)
+	if events != null:
+		events.town_lost(b)   # refugees
 	b.queue.clear()
 	b.queue_costs = []
 	var at: Vector3 = b.root.position

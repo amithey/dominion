@@ -107,6 +107,7 @@ func run() -> void:
 	settle(4.0)
 	check(target_b.hp < target_b.max_hp or target_b.dead, "it strikes its target")
 	var site: Dictionary = w.place_building("samSite", dry(field + Vector3(-60, 0, -60)), 1, true)
+	for n in w.ai.nations: n.money = 10000000.0   # (every interceptor costs its owner money: war_costs.gd)
 	var r_sam := rate(site, "brahmos", 0, 400)
 	var r_cruise := rate(site, "cruise", 0, 400)
 	check(r_sam < r_cruise - 0.3, "a SAM site stops ~25%% of BrahMos against ~75%% of ordinary cruise missiles (%.2f vs %.2f)" % [r_sam, r_cruise])

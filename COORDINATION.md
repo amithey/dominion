@@ -675,3 +675,11 @@ UI files listed above.
   building_lost; diplomacy.declare_war -> war_declared; ai_wants_war refuses below 35; AI-AI peace roll and
   offer_peace weigh weariness; research._recompute adds support.bonuses(); ai.think income x ai_income_mult;
   save.gd "support"; hud strip chip "support" (ui/icons/support.svg).
+- 2026-10-04 Claude, 0.9.63 (roadmap stage 3: world events with causes): new scripts/world_events.gd (world.events,
+  made in start_match and on load; update() from world physics; town_lost() from destroy_building). market.gd:
+  exchange_step's fair-value target adds events.price_shock(res) (fair value now 0.6-2.4). research._recompute
+  adds events.bonuses(); ai.think income x events.ai_income_mult; save.gd "events"; cabinet.gd World News tile and
+  a war-support gauge. The Hormuz event also starts from faction_powers' "hormuz" effect (power_effects).
+  Tests: additional-factions-100 now sets up what Syria's, Afghanistan's and Iraq's powers need besides their
+  price (a +20 partner, a -40 enemy, a supplied barracks): it failed for them since 0.9.47; faction-powers-check
+  funds the rivals before its 400-shot SAM rates (war_costs.gd). menus-check: the Cabinet has 9 tiles.

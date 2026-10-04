@@ -103,7 +103,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 		n.next_attack = maxf(n.next_attack,99999.0)
 	var s: float = n.speed
 	var spies: Node = world.espionage
-	n.money += float(row(n).income) * delta * s * preload("res://scripts/additional_powers.gd").civic_income(world, n, delta) * (spies.income_mult(n.id) if spies else 1.0) * preload("res://scripts/faction_powers.gd").income_mult(world, n.id) * preload("res://scripts/national_profile.gd").ai_income(world, n.id) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0)))) * (world.support.ai_income_mult(n.id) if world.get("support") != null else 1.0)   # the home front
+	n.money += float(row(n).income) * delta * s * preload("res://scripts/additional_powers.gd").civic_income(world, n, delta) * (spies.income_mult(n.id) if spies else 1.0) * preload("res://scripts/faction_powers.gd").income_mult(world, n.id) * preload("res://scripts/national_profile.gd").ai_income(world, n.id) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0)))) * (world.support.ai_income_mult(n.id) if world.get("support") != null else 1.0) * (world.events.ai_income_mult(n.id) if world.get("events") != null else 1.0)   # the home front; world events
 	var cyber: bool = spies != null and spies.production_down(n.id) or preload("res://scripts/faction_powers.gd").production_blocked(world, n.id)
 	n.age = float(n.get("age", 0.0)) + delta   # (its own clock, for the buildings set aside)
 	n.next_build -= delta * (1.0 + preload("res://scripts/additional_powers.gd").bonus(world, n.id, "buildPct"))
