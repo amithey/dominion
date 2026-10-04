@@ -86,6 +86,8 @@ func declare_war(a: int, b: int, reason := "") -> void:
 		return
 	var broke_nap: bool = nap[a][b]
 	set_flag(war, a, b, true)
+	if world != null and world.get("support") != null:
+		world.support.war_declared(a, b)   # the attacked rally; an unprovoked democracy pays
 	for grid in [alliance, pact, nap]:
 		set_flag(grid, a, b, false)
 	set_score(a, b, -100.0)
@@ -119,7 +121,8 @@ func offer_peace(other: int) -> String:
 		return "%s has fallen: there is no government to make peace with." % name_of(other)
 	if not at_war(0, other):
 		return "You are not at war with %s." % name_of(other)
-	var chance := clampf(0.35 + (army_strength(0) - army_strength(other)) * 0.04 + (1.0 - aggression_of(other)) * 0.3 + preload("res://scripts/regime_change.gd").fear_bonus(world), 0.05, 0.9)
+	var weary: float = (50.0 - world.support.value(other)) / 150.0 if world.get("support") != null else 0.0   # a weary rival takes peace sooner
+	var chance := clampf(0.35 + (army_strength(0) - army_strength(other)) * 0.04 + (1.0 - aggression_of(other)) * 0.3 + preload("res://scripts/regime_change.gd").fear_bonus(world) + weary, 0.05, 0.9)
 	if randf() < chance:
 		make_peace(0, other)
 		return "%s accepted your peace offer. The guns fall silent." % name_of(other)
@@ -198,6 +201,8 @@ func ai_wants_war(id: int, other: int) -> bool:
 		return false
 	if preload("res://scripts/regime_change.gd").restrains(world, id, other):
 		return false   # a client state of `other`, or a world that fears that United States
+	if world != null and world.get("support") != null and world.support.value(id) < 35.0:
+		return false   # a weary people will not back another war (war_support.gd)
 	return rel(id, other) < -35.0 or (other == 0 and rel(id, 0) < 0.0 and randf() < aggression_of(id) * 0.5)
 
 ## A rival government's aggression: its own difficulty (ai.gd), else the match's.
@@ -234,7 +239,7 @@ func tick() -> void:
 			change(a, b, (randf() - 0.5) * 4.0)
 			if not war[a][b] and rel(a, b) < -75.0 and not nap[a][b] and randf() < 0.05 and not RegimeChange.restrains(world, a, b) and not RegimeChange.restrains(world, b, a):
 				declare_war(a, b)
-			elif war[a][b] and randf() < 0.04:
+			elif war[a][b] and randf() < 0.04 + (maxf(0.0, 40.0 - minf(world.support.value(a), world.support.value(b))) / 200.0 if world.get("support") != null else 0.0):   # weary peoples make peace sooner
 				make_peace(a, b)
 				world.hud.notice("World news: %s and %s signed a ceasefire." % [name_of(a), name_of(b)])
 		# Peacetime relations with the player drift toward zero, but an

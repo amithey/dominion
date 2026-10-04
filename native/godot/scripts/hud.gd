@@ -223,7 +223,8 @@ func _build_top_bar() -> void:
 			["citizens", "citizens", "Citizens against the housing they can grow into. Happiness and health speed growth."],
 			["research", "research", "Research points and their rate. Press Y for the research tree."],
 			["land", "land", "Land held: territory cells. Press T for borders."],
-			["missiles", "missile", "Missiles stored against Ammo Depot capacity."]]:
+			["missiles", "missile", "Missiles stored against Ammo Depot capacity."],
+			["support", "support", "War support: how far your people back the war. Wars, losses and shortages wear it down; being attacked and victories raise it."]]:
 		var chip := HBoxContainer.new()
 		chip.add_child(_divider())
 		chip.add_theme_constant_override("separation", 5)
@@ -821,6 +822,11 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 		_era.tooltip_text = "%s · each season lasts 3 minutes. Winter homes consume natural gas." % ["Spring", "Summer", "Autumn", "Winter"][int(world.game_time / 180.0) % 4]
 	if world.territory:
 		_extra.land[0].text = str(world.territory.yields(0).cells)
+	if world.support != null:
+		var mood: String = world.support.tier(0)
+		_extra.support[0].text = "%d%%" % roundi(world.support.value(0))
+		_extra.support[0].add_theme_color_override("font_color", UI.GOOD if mood == "Rallied" else (UI.CREAM if mood == "Steady" else (Color("e8b26a") if mood == "Weary" else UI.BAD)))
+		_extra.support[1].tooltip_text = "War support %d%% · %s (%s). %s" % [roundi(world.support.value(0)), mood, world.support.regime(0), world.support.describe(mood)]
 	var silos: bool = world.missiles != null and (world.missiles.stored() > 0 or not world.missiles.silos().is_empty())
 	_extra.missiles[1].visible = silos
 	if silos:

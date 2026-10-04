@@ -23,6 +23,25 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.62: the home front (war support)
+
+Stage 2 of the roadmap. Every nation's people back its wars more or less (0-100, scripts/war_support.gd; research
+in native/WAR-SUPPORT-RESEARCH-2026-10-04.md):
+- **By regime**: democracies (the United States, Europe, Japan, Israel, India, the UK, South Korea, Brazil,
+  Indonesia, Australia, Ukraine) start at 60 and feel every loss in full; hybrid regimes (Turkiye, Pakistan, Iraq)
+  at 65, 70% as sensitive; autocracies (China, Russia, Iran, North Korea, Saudi Arabia, Egypt, Syria, Afghanistan)
+  at 70, 45% as sensitive.
+- **What wears it down**: every minute of war (half in a war of defence), every soldier, vehicle, aircraft and ship
+  lost, towns lost, shortages, and, for a democracy, starting a war unprovoked (-6).
+- **What lifts it**: being attacked (+12, rally round the flag), victories, and peace.
+- **What it does**: Rallied (75+) production +10% and damage +5%; Weary (30-50) income -8%; Protests (15-30)
+  income -15%, production -10%, damage -5%; Collapse (under 15) income -25%, production -20%, damage -10%, and a
+  democracy's parliament forces a ceasefire after two minutes. Rivals: their income follows their support; a weary
+  rival will not start a war and makes peace sooner.
+- **On the strip**: a flag with the figure, coloured by level; its tooltip says what it does.
+
+Checks: tools/war-support-check.gd (13).
+
 ## Version 0.9.61: the fog of war
 
 The first stage of the roadmap the player set (fog of war, then public war support, world events with causes,

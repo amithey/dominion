@@ -122,6 +122,7 @@ var sun: DirectionalLight3D
 var terrain_node: MeshInstance3D
 var sea_node: MeshInstance3D
 var fog: RefCounted = null   # fog_of_war.gd: what the player's side sees
+var support: RefCounted = null   # war_support.gd: how far each people backs its wars
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
 var noise_texture: NoiseTexture2D
@@ -1995,6 +1996,8 @@ func _physics_process(delta: float) -> void:
 		preload("res://scripts/national_capabilities.gd").update(self, delta)  # Russia's foreign recruits
 		if fog != null:
 			fog.update(delta)  # what the player's side sees
+		if support != null:
+			support.update(delta)  # the home front
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
 		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
@@ -2376,6 +2379,7 @@ func start_match(difficulty: String) -> void:
 	cam_pitch = 0.95
 	fog = preload("res://scripts/fog_of_war.gd").new(self)
 	fog.refresh()
+	support = preload("res://scripts/war_support.gd").new(self)
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 
 ## Walks the menu flow: main menu (paused, no AI) -> new game on normal (AI
@@ -5237,6 +5241,8 @@ func kill(unit: Dictionary) -> void:
 	if unit.get("killed", false):
 		return   # already dead: no second explosion, no second turret thrown
 	unit.killed = true
+	if support != null:
+		support.lost(unit)   # the home front mourns (war_support.gd)
 	if is_instance_valid(unit.get("bombard_marker")):
 		unit.bombard_marker.queue_free()
 	unit.dead = true
@@ -5328,6 +5334,8 @@ func destroy_building(b: Dictionary) -> void:
 		return   # already a ruin: not crushed, burnt and announced again
 	b.destroyed = true
 	b.dead = true
+	if support != null:
+		support.building_lost(b)
 	b.queue.clear()
 	b.queue_costs = []
 	var at: Vector3 = b.root.position

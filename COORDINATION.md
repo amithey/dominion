@@ -670,3 +670,8 @@ UI files listed above.
   Tests: weapons-live-100 turns the fog off (it checks the weapons' reach; long-range weapons now need a
   spotter); gameplay-nine-30 gives the continent crossing 480 s, not 320 (it fell short at 170-179 m even
   before the fog: each nation's tanks move at their own system's speed since 0.9.54).
+- 2026-10-04 Claude, 0.9.62 (roadmap stage 2: war support): new scripts/war_support.gd (world.support, made in
+  start_match and on load; update() from world physics). Hooks: world.kill -> support.lost, destroy_building ->
+  building_lost; diplomacy.declare_war -> war_declared; ai_wants_war refuses below 35; AI-AI peace roll and
+  offer_peace weigh weariness; research._recompute adds support.bonuses(); ai.think income x ai_income_mult;
+  save.gd "support"; hud strip chip "support" (ui/icons/support.svg).

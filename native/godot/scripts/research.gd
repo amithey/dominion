@@ -233,6 +233,11 @@ func _recompute() -> void:
 		_add(stat, float(national[stat]))
 	if world != null and world.get("unit_defs") != null and world.get("map") != null:
 		preload("res://scripts/unit_quality.gd").rename(world)   # an M1E3 once researched
+	# The home front: war support's effects (war_support.gd).
+	if world != null and world.get("support") != null:
+		var front: Dictionary = world.support.bonuses()
+		for stat in front:
+			_add(stat, float(front[stat]))
 
 func _add(stat: String, v: float) -> void:
 	_bonus[stat] = float(_bonus.get(stat, 0.0)) + v
