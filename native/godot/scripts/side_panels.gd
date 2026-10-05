@@ -369,6 +369,11 @@ func _space(d: Node) -> void:
 		var b: Button = hud._button(row, "Anti-satellite missile ($%d)" % int(s.ASAT_COST), func(): return s.fire_asat(0, target), why == "", "bad")
 		b.tooltip_text = (why + "
 " if why != "" else "") + "85% to destroy one satellite. An act of war; every other nation thinks less of you, and the debris threatens everyone's satellites, yours too."
+	if preload("res://scripts/cbrn_data.gd").has(hud.world, 0, "nuclearAsat"):
+		var why_n: String = s.orbital_nuke_blocked()
+		var nb: Button = hud._button(foes, "Nuclear detonation in orbit ($%d)" % int(s.ORBITAL_NUKE_COST), func(): return s.orbital_nuke(0), why_n == "", "bad")
+		nb.tooltip_text = (why_n + "
+" if why_n != "" else "") + "Destroys about 70% of all satellites in orbit, yours too, and fills the orbit with debris. A nuclear detonation (DEFCON 1) and a breach of the Outer Space Treaty."
 
 func _targets(d: Node) -> Array:
 	var out := []
@@ -1094,98 +1099,132 @@ func _nuclear() -> void:
 
 # ---------------------------------------------------------------- united nations
 
-## The UN window: the Security Council (its members, the draft on the table and
-## your vote, your own drafts), the General Assembly's votes, and the record.
+## The UN window (un.gd): the Council and the draft before it, your own drafts,
+## the General Assembly, the organisation (elections, the presidency, the
+## Secretary-General, dues, peacekeepers, sanctions in force) and the record.
 func united_nations() -> void:
 	var u = hud.world.un
 	if u == null:
 		return
-	_tabs([["Security Council", "council"], ["General Assembly", "assembly"], ["Resolutions", "record"]], un_tab, func(v): un_tab = v)
+	_tabs([["Council", "council"], ["Draft", "draft"], ["Assembly", "assembly"], ["Organisation", "org"], ["Record", "record"]], un_tab, func(v): un_tab = v)
 	match un_tab:
+		"draft":
+			_un_draft(u)
 		"assembly":
 			_assembly(u)
+		"org":
+			_un_org(u)
 		"record":
 			_un_record(u)
 		_:
 			_council(u)
 
+func _wrap(parent: Control, text: String, size := 12, colour := Color(0, 0, 0, 0)) -> Label:
+	var l: Label = hud._text(text, size, hud.UI.MUTED if colour.a == 0.0 else colour)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size.x = 460
+	parent.add_child(l)
+	return l
+
 func _council(u) -> void:
 	var d: Node = hud.world.diplomacy
 	var seats: VBoxContainer = hud._card(hud.UI.GOLD)
 	seats.add_child(hud._text("The Security Council: %d members" % u.council().size(), 16, hud.UI.CREAM, true))
-	var line := PackedStringArray()
 	for i in u.council():
-		line.append("%s%s" % ["You" if i == 0 else d.name_of(i), " (P5, veto)" if u.permanent(i) else ""])
-	var who: Label = hud._text(" · ".join(line), 13, hud.UI.TEXT)
-	who.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	who.custom_minimum_size.x = 460
-	seats.add_child(who)
-	seats.add_child(hud._text("A draft passes with three-fifths voting yes (%d now) and no permanent member voting no. Elected seats change in %ds." % [ceili(u.council().size() * u.PASS_SHARE), maxi(0, ceili(u.term_ends - hud.world.game_time))], 12, hud.UI.MUTED))
-	# The draft on the table.
+		var tag := "permanent, veto" if u.permanent(i) else "elected, %s, %ds left" % [preload("res://scripts/un_data.gd").region(hud.world, i), maxi(0, ceili(float(u.elected.get(i, 0.0)) - hud.world.game_time))]
+		_wrap(seats, "%s%s  ·  %s" % ["You" if i == 0 else d.name_of(i), "  (President)" if i == u.president else "", tag], 13, hud._nation_colour(i).lightened(0.35) if i != 0 else hud.UI.CREAM)
+	_wrap(seats, "A draft needs three-fifths of the members voting yes (%d now) and no veto; an abstention is no veto. In a ceasefire, a statement or a peacekeeping mission, the parties abstain (Art. 27(3))." % ceili(u.council().size() * u.PASS_SHARE))
 	var floor: VBoxContainer = hud._card(hud.UI.BAD if u.current != null else Color(0, 0, 0, 0))
 	if u.current == null:
 		floor.add_child(hud._text("No draft is before the Council.", 14, hud.UI.MUTED))
 	else:
 		var dr: Dictionary = u.current
-		floor.add_child(hud._text("Draft resolution %d" % int(dr.number), 16, hud.UI.CREAM, true))
-		var t: Label = hud._text(dr.title, 13, hud.UI.TEXT)
-		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		t.custom_minimum_size.x = 460
-		floor.add_child(t)
-		var so_far := PackedStringArray()
-		for i in u.council():
-			if i != 0:
-				so_far.append("%s: %s" % [d.name_of(i), u.vote_of(i, dr)])
-		var votes: Label = hud._text("Expected votes: " + ", ".join(so_far), 12, hud.UI.MUTED)
-		votes.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		votes.custom_minimum_size.x = 460
-		floor.add_child(votes)
-		floor.add_child(hud._text("The vote closes in %ds." % maxi(0, ceili(float(dr.closes) - hud.world.game_time)), 12, hud.UI.MUTED))
+		var head := "Presidential statement" if dr.measure == "statement" else "Draft resolution %d" % int(dr.number)
+		floor.add_child(hud._text("%s  ·  %s" % [head, "consultations" if dr.phase == "consult" else "voting"], 16, hud.UI.CREAM, true))
+		_wrap(floor, dr.title, 13, hud.UI.TEXT)
+		_wrap(floor, "Sponsor: %s  ·  measure: %s" % ["you" if int(dr.by) == 0 else ("the Secretary-General" if int(dr.by) < 0 else d.name_of(int(dr.by))), u.MEASURES[dr.measure].name])
+		var t: Dictionary = u.tally(dr, true)
+		floor.add_child(hud._text("Whip count: %d yes, %d no, %d abstain%s  ·  %s" % [t.yes, t.no, t.abstain, (" · veto by " + ", ".join(PackedStringArray(t.vetoes.map(func(v): return "you" if v == 0 else d.name_of(v))))) if not t.vetoes.is_empty() else "", "it would PASS" if t.passes else "it would FAIL"], 13, hud.UI.GOOD if t.passes else hud.UI.BAD))
+		var closes: float = (float(dr.opens) + u.CONSULT_SECONDS) if dr.phase == "consult" else float(dr.closes)
+		floor.add_child(hud._text("%s in %ds." % ["The vote opens" if dr.phase == "consult" else "The vote closes", maxi(0, ceili(closes - hud.world.game_time))], 12, hud.UI.MUTED))
 		if 0 in u.council():
 			var row: HBoxContainer = hud._row(floor)
 			row.add_child(hud._text("Your vote%s:" % (" (" + u.player_vote + ")" if u.player_vote != "" else ""), 14, hud.UI.CREAM))
 			hud._button(row, "Yes", func(): return u.cast("yes"), true, "good")
 			hud._button(row, "Veto" if u.permanent(0) else "No", func(): return u.cast("no"), true, "bad")
 			hud._button(row, "Abstain", func(): return u.cast("abstain"))
+		if int(dr.by) == 0 and dr.phase == "consult":
+			var amend: HBoxContainer = hud._row(floor, 4)
+			amend.add_child(hud._text("Amend:", 12, hud.UI.MUTED))
+			for m in ["economic", "embargo", "targeted", "condemn", "statement"]:
+				var mm: String = m
+				hud._button(amend, u.MEASURES[m].name, func(): return u.amend(mm), dr.measure != m)
+		# Lobbying: aid to a member moves its vote one step.
+		var lob: VBoxContainer = hud._card()
+		lob.add_child(hud._text("Lobby a member ($%d each)" % int(u.lobby_cost()), 13, hud.UI.CREAM, true))
+		for i in u.council():
+			if i == 0 or i == int(dr.target):
+				continue
+			var row: HBoxContainer = hud._row(lob, 4)
+			var lab: Label = hud._text("%s: %s" % [d.name_of(i), u.vote_of(i, dr)], 12, hud.UI.TEXT)
+			lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(lab)
+			var who: int = i
+			hud._button(row, "Toward yes", func(): return u.lobby(who, 1))
+			hud._button(row, "Toward no", func(): return u.lobby(who, -1))
 	if not u.queue.is_empty():
 		floor.add_child(hud._text("%d more draft%s waiting." % [u.queue.size(), "" if u.queue.size() == 1 else "s"], 12, hud.UI.MUTED))
-	# Your own drafts.
-	var mine: VBoxContainer = hud._card()
-	mine.add_child(hud._text("Table a draft", 15, hud.UI.CREAM, true))
-	var nations := _targets(d)
-	if not nations.is_empty():
-		if not un_target in nations:
-			un_target = nations[0]
-		var pick: HBoxContainer = hud._row(mine)
-		pick.add_child(hud._text("Against", 13, hud.UI.MUTED))
-		var items := []
-		for i in nations: items.append([d.name_of(i), i])
-		hud._choice(pick, items, un_target, func(v):
-			un_target = int(v)
-			hud.refresh_side())
-		var cause: String = u.cause_against(un_target)
-		mine.add_child(hud._text("Cause for sanctions: %s." % (cause if cause != "" else "none on record"), 12, hud.UI.MUTED))
-		var row: HBoxContainer = hud._row(mine)
-		var target: int = un_target
-		var why: String = u.draft_blocked("sanctions", target)
-		var b: Button = hud._button(row, "Sanctions", func(): return u.draft("sanctions", target), why == "", "bad")
-		b.tooltip_text = why if why != "" else "Income -25% for 6 minutes if adopted."
-		var foes: Array = nations.filter(func(o): return o != target and d.at_war(target, o)) + ([0] if d.at_war(target, 0) else [])
-		for o in foes:
-			var other: int = o
-			var why2: String = u.draft_blocked("ceasefire", target, other)
-			var c: Button = hud._button(row, "Ceasefire with %s" % ("you" if other == 0 else d.name_of(other)), func(): return u.draft("ceasefire", target, other), why2 == "")
-			c.tooltip_text = why2 if why2 != "" else "Adopted, it ends the war."
 	for dm in u.demands:
-		mine.add_child(hud._text("Demand in force: %s must make peace with %s within %ds." % ["You" if int(dm.aggressor) == 0 else d.name_of(int(dm.aggressor)), "you" if int(dm.victim) == 0 else d.name_of(int(dm.victim)), maxi(0, ceili(float(dm.until) - hud.world.game_time))], 12, hud.UI.BAD))
+		floor.add_child(hud._text("Demand in force: %s must stop the war on %s within %ds." % ["You" if int(dm.aggressor) == 0 else d.name_of(int(dm.aggressor)), "you" if int(dm.victim) == 0 else d.name_of(int(dm.victim)), maxi(0, ceili(float(dm.until) - hud.world.game_time))], 12, hud.UI.BAD))
+
+func _un_draft(u) -> void:
+	var d: Node = hud.world.diplomacy
+	var box: VBoxContainer = hud._card(hud.UI.GOLD)
+	box.add_child(hud._text("Table a draft", 16, hud.UI.CREAM, true))
+	_wrap(box, "Only Council members table resolutions. Sanctions, an ICC referral or force need a cause on record: weapons of mass destruction, a war of aggression, or a defied demand. Your sponsorship counts with your friends.")
+	var nations := _targets(d)
+	if nations.is_empty():
+		return
+	if not un_target in nations:
+		un_target = nations[0]
+	var pick: HBoxContainer = hud._row(box)
+	pick.add_child(hud._text("Target", 13, hud.UI.MUTED))
+	var items := []
+	for i in nations: items.append([d.name_of(i), i])
+	hud._choice(pick, items, un_target, func(v):
+		un_target = int(v)
+		hud.refresh_side())
+	var target: int = un_target
+	var cause: String = u.cause_against(target)
+	box.add_child(hud._text("Cause on record: %s." % (cause if cause != "" else "none"), 12, hud.UI.TEXT))
+	var foes: Array = nations.filter(func(o): return o != target and d.at_war(target, o)) + ([0] if d.at_war(target, 0) else [])
+	for m in ["condemn", "targeted", "embargo", "economic", "icc", "force", "lift"]:
+		var row: HBoxContainer = hud._row(box, 6)
+		var why: String = u.draft_blocked(m, target)
+		var mm: String = m
+		var b: Button = hud._button(row, u.MEASURES[m].name, func(): return u.draft(mm, target), why == "", "bad" if u.MEASURES[m].severity >= 3 else "")
+		b.custom_minimum_size.x = 220
+		var guess: Dictionary = u.tally({"kind": "player", "measure": m, "target": target, "other": -1, "by": 0, "cause": cause, "votes": {}, "lobby": {}}, true)
+		var note: Label = hud._text(why if why != "" else "Expected: %d-%d-%d%s" % [guess.yes, guess.no, guess.abstain, "  (vetoed)" if not guess.vetoes.is_empty() else ("  (passes)" if guess.passes else "")], 12, hud.UI.BAD if why != "" else hud.UI.MUTED)
+		note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(note)
+	for o in foes:
+		var other: int = o
+		for m in ["ceasefire", "peacekeeping"]:
+			var row: HBoxContainer = hud._row(box, 6)
+			var why: String = u.draft_blocked(m, target, other)
+			var mm: String = m
+			var b: Button = hud._button(row, "%s with %s" % [u.MEASURES[m].name, "you" if other == 0 else d.name_of(other)], func(): return u.draft(mm, target, other), why == "")
+			b.custom_minimum_size.x = 220
+			if why != "":
+				row.add_child(hud._text(why, 12, hud.UI.BAD))
 
 func _assembly(u) -> void:
 	var box: VBoxContainer = hud._card(hud.UI.GOLD)
 	box.add_child(hud._text("The General Assembly: %d members" % u.members().size(), 16, hud.UI.CREAM, true))
-	var how: Label = hud._text("Every nation has a vote. It meets whenever a permanent member vetoes a draft (resolution 76/262, 2022). Two thirds condemn the target: the nations that vote yes think less of it, its people lose heart, and the vetoing member pays in standing. Its resolutions bind no one.", 12, hud.UI.MUTED)
-	how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	how.custom_minimum_size.x = 460
-	box.add_child(how)
+	_wrap(box, "Every member has a vote. It meets whenever a permanent member vetoes a draft (resolution 76/262, 2022): two thirds condemn the target, and under Uniting for Peace (377 A, 1950) the members voting yes cut their trade with it. It elects the Council's members. Its resolutions bind no one, but they isolate.")
+	if u.lost_vote():
+		box.add_child(hud._text("You have lost your vote here: your arrears exceed two years of dues (Art. 19).", 13, hud.UI.BAD))
 	var any := false
 	for i in range(u.record.size() - 1, -1, -1):
 		var r: Dictionary = u.record[i]
@@ -1196,32 +1235,69 @@ func _assembly(u) -> void:
 		var card: VBoxContainer = hud._card(hud.UI.GOOD if a.result == "adopted" else hud.UI.MUTED)
 		card.add_child(hud._text("On draft %d (vetoed): %s" % [int(r.number), str(a.result).to_upper()], 14, hud.UI.CREAM, true))
 		card.add_child(hud._text("%d in favour, %d against, %d abstaining" % [int(a.yes), int(a.no), int(a.abstain)], 13, hud.UI.TEXT))
-		var t: Label = hud._text(r.title, 12, hud.UI.MUTED)
-		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		t.custom_minimum_size.x = 460
-		card.add_child(t)
+		_wrap(card, r.title)
 	if not any:
-		hud._side_rows.add_child(hud._text("The Assembly has not met yet.", 13, hud.UI.MUTED))
+		hud._side_rows.add_child(hud._text("The Assembly has not met on a veto yet.", 13, hud.UI.MUTED))
+
+func _un_org(u) -> void:
+	var d: Node = hud.world.diplomacy
+	var Cb := preload("res://scripts/cbrn_data.gd")
+	var org: VBoxContainer = hud._card(hud.UI.GOLD)
+	org.add_child(hud._text("The organisation", 16, hud.UI.CREAM, true))
+	_wrap(org, "Secretary-General: from %s, recommended by the Council's straw polls (%d to encourage; a permanent member's discouragement is a veto) and appointed by the Assembly. Brings any war of five minutes to the Council (Art. 99)." % [u.sg_region, u.sg_votes], 12, hud.UI.TEXT)
+	_wrap(org, "Presidency: %s, for %ds more (it rotates in alphabetical order)." % ["you" if u.president == 0 else (d.name_of(u.president) if u.president >= 0 else "vacant"), maxi(0, ceili(u.presidency_ends - hud.world.game_time))], 12, hud.UI.TEXT)
+	var el: HBoxContainer = hud._row(org)
+	el.add_child(hud._text("Next election in %ds." % maxi(0, ceili(u.term_ends - hud.world.game_time)), 12, hud.UI.TEXT))
+	if not u.permanent(0) and not u.elected.has(0):
+		hud._button(el, "Campaign for a seat ($1,500)", func(): return u.campaign())
+	# Dues.
+	var dues: VBoxContainer = hud._card(hud.UI.BAD if u.arrears > 0.0 else Color(0, 0, 0, 0))
+	dues.add_child(hud._text("Your dues", 14, hud.UI.CREAM, true))
+	var first: String = "First assessment in %ds, by your income." % maxi(0, ceili(u.next_dues - hud.world.game_time)) if u.assessment <= 0.0 else "Assessed $%d every 4 minutes, by your income." % int(u.assessment)
+	_wrap(dues, "%s Arrears: $%d%s." % [first, int(u.arrears), " (vote lost, Art. 19)" if u.lost_vote() else ""], 12, hud.UI.TEXT)
+	var drow: HBoxContainer = hud._row(dues)
+	var withhold := CheckButton.new()
+	withhold.text = "Withhold your dues (as the United States did in 2025)"
+	withhold.button_pressed = u.withhold
+	withhold.focus_mode = Control.FOCUS_NONE
+	withhold.add_theme_font_size_override("font_size", 12)
+	withhold.toggled.connect(func(on: bool): u.withhold = on)
+	drow.add_child(withhold)
+	if u.arrears > 0.0:
+		hud._button(drow, "Pay arrears", func(): return u.pay_arrears(), true, "good")
+	# Peacekeeping, sanctions, indictments.
+	var state: VBoxContainer = hud._card()
+	state.add_child(hud._text("In force", 14, hud.UI.CREAM, true))
+	for m in u.missions:
+		state.add_child(hud._text("Peacekeepers between %s and %s (%ds)" % ["you" if int(m.a) == 0 else d.name_of(int(m.a)), "you" if int(m.b) == 0 else d.name_of(int(m.b)), maxi(0, ceili(float(m.until) - hud.world.game_time))], 12, hud.UI.TEXT))
+	for i in u.members():
+		var under := PackedStringArray()
+		for m in ["targeted", "embargo", "economic", "voluntary"]:
+			if u.under(i, m): under.append(m)
+		if not under.is_empty():
+			state.add_child(hud._text("%s: %s" % ["You" if i == 0 else d.name_of(i), ", ".join(under)], 12, hud.UI.BAD))
+	for t in u.indicted:
+		state.add_child(hud._text("%s leaders: referred to the ICC" % ("Your" if int(t) == 0 else d.name_of(int(t)) + "'s"), 12, hud.UI.BAD))
+	for t in u.authorised:
+		state.add_child(hud._text("Force authorised against %s" % ("you" if int(t) == 0 else d.name_of(int(t))), 12, hud.UI.BAD))
+	# Your treaties.
+	var law: VBoxContainer = hud._card()
+	law.add_child(hud._text("Your treaties", 14, hud.UI.CREAM, true))
+	var npt: String = {"nws": "a recognised nuclear-weapon state", "party": "a party (no nuclear weapons)", "outside": "never joined", "withdrawn": "withdrawn"}.get(str(Cb.treaty(hud.world, 0, "npt")), "")
+	_wrap(law, "Non-Proliferation Treaty: %s.  Chemical Weapons Convention: %s.  Biological Weapons Convention: %s.  International Criminal Court: %s." % [npt, str(Cb.treaty(hud.world, 0, "cwc")), str(Cb.treaty(hud.world, 0, "bwc")), "party" if bool(Cb.treaty(hud.world, 0, "icc")) else "not a party"], 12, hud.UI.TEXT)
 
 func _un_record(u) -> void:
 	var d: Node = hud.world.diplomacy
-	var held := PackedStringArray()
-	for i in u.members():
-		if u.sanctioned(i):
-			held.append("You" if i == 0 else d.name_of(i))
-	hud._side_rows.add_child(hud._text("Under UN sanctions: %s" % (", ".join(held) if not held.is_empty() else "no one"), 13, hud.UI.BAD if not held.is_empty() else hud.UI.MUTED))
 	if u.record.is_empty():
 		hud._side_rows.add_child(hud._text("No resolution has been voted yet.", 13, hud.UI.MUTED))
 		return
-	for i in range(u.record.size() - 1, maxi(-1, u.record.size() - 13), -1):
+	for i in range(u.record.size() - 1, maxi(-1, u.record.size() - 15), -1):
 		var r: Dictionary = u.record[i]
-		var tone: Color = hud.UI.GOOD if r.result == "adopted" else (hud.UI.BAD if r.result == "vetoed" else hud.UI.MUTED)
+		var tone: Color = hud.UI.GOOD if r.result in ["adopted", "in force"] else (hud.UI.BAD if r.result == "vetoed" else hud.UI.MUTED)
 		var card: VBoxContainer = hud._card(tone)
-		var head := "Resolution %d: %s" % [int(r.number), str(r.result).to_upper()]
+		var head := ("Resolution %d" % int(r.number)) if int(r.number) > 0 else ("Presidential statement" if r.measure == "statement" else "In force")
+		head += ": %s" % str(r.result).to_upper()
 		if r.result == "vetoed":
 			head += " by " + ", ".join(PackedStringArray(r.get("vetoed_by", []).map(func(v): return "you" if int(v) == 0 else d.name_of(int(v)))))
 		card.add_child(hud._text(head, 14, hud.UI.CREAM, true))
-		var t: Label = hud._text("%s  (%d-%d-%d)" % [r.title, int(r.tally.yes), int(r.tally.no), int(r.tally.abstain)], 12, hud.UI.TEXT)
-		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		t.custom_minimum_size.x = 460
-		card.add_child(t)
+		_wrap(card, "%s%s" % [r.title, "  (%d-%d-%d)" % [int(r.tally.yes), int(r.tally.no), int(r.tally.abstain)] if int(r.number) > 0 else ""], 12, hud.UI.TEXT)

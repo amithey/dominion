@@ -134,7 +134,7 @@ static func _un(hud: Node, box: VBoxContainer, accent: Color) -> void:
 	if u == null:
 		return
 	_figure(box, "Permanent" if u.permanent(0) else ("Elected" if 0 in u.council() else "Not a member"), "your seat on the Security Council", accent)
-	_figure(box, str(u.record.size()), "draft resolutions voted", accent)
+	_figure(box, str(u.record.filter(func(r): return int(r.get("number", 0)) > 0).size()), "draft resolutions voted", accent)
 	_figure(box, "Yes" if u.sanctioned(0) else "No", "UN sanctions on you", accent, UI.BAD if u.sanctioned(0) else Color(0, 0, 0, 0))
 
 static func _defence(hud: Node, box: VBoxContainer, accent: Color) -> void:

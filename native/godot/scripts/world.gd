@@ -2963,6 +2963,8 @@ func update_training(delta: float) -> void:
 		if b.key in FactionPowers.MILITARY and FactionPowers.production_blocked(self, b.owner):
 			continue  # rare-earth export controls: the military factories wait
 		var rail: float = 1.0 + (logistics.rail_bonus if b.get("rail_supplied", false) else 0.0)
+		if un != null and b.key in FactionPowers.MILITARY:
+			rail *= un.production_mult(b.owner)   # a UN arms embargo (un.gd)
 		if b.owner == 0 and research:
 			rail *= 1.0 + research.bonus("prodPct") + economy.plant_bonus()  # Industrialization, Fusion Power, power plants
 		var first: String = b.queue[0]
@@ -5241,6 +5243,8 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	amount *= preload("res://scripts/bunker.gd").cover(self, unit, source)  # bunkers shield from ground fire
 	amount *= preload("res://scripts/additional_factions.gd").explosive_armor(unit.key, str(source.get("key", "")))
 	amount *= Vet.damage_mult(source) * Vet.taken_mult(unit)  # veterans (veterancy.gd)
+	if source.has("owner"):
+		unit.last_by = int(source.owner)   # who struck last (a reactor's ruin is laid at their door: wmd.gd)
 	if generals != null:
 		amount *= generals.damage_mult(source) * generals.taken_mult(unit)  # a general's traits
 	unit.hp -= amount
@@ -5379,6 +5383,8 @@ func destroy_building(b: Dictionary) -> void:
 		return   # already a ruin: not crushed, burnt and announced again
 	b.destroyed = true
 	b.dead = true
+	if b.key == "nuclearReactor" and wmd != null:
+		wmd.reactor_destroyed(b)   # its core spreads downwind
 	if support != null:
 		support.building_lost(b)
 	if events != null:

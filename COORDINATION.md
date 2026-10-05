@@ -744,3 +744,20 @@ UI files listed above.
     - save.gd now saves world.power_effects.
   - The silo hides foreign missiles.
   - Side mode "un" (side_panels.united_nations), key U.
+- 2026-10-05 Claude, 0.9.69 (CBRN and the UN):
+  - Who has which unconventional weapon is now only in scripts/cbrn_data.gd (CAPABILITY by faction id,
+    "rule" for chlorine/dirty bomb; TREATIES; THRESHOLD). Missile "nation" fields are filled from it.
+    missiles.locked asks wmd.capability_blocked.
+  - **When you add a nation:** add it to cbrn_data.CAPABILITY/TREATIES and un_data.REGION, or give its
+    nation dictionary "cbrn", "npt", "cwc", "bwc", "icc", "un_region", "nam" or "un".
+  - New missile keys: mirv (+ hidden mirvWarhead), nuclearGlide, burevestnik, poseidon (sub_only),
+    chlorine, riotAgent, incapacitant, anthrax. Discovery nuclearBreakout. space.orbital_nuke.
+  - Engine changes:
+    - modern_warfare.INTERCEPT has the classes "glide" and "underwater";
+    - world.damage sets unit.last_by;
+    - destroy_building calls wmd.reactor_destroyed;
+    - bunker.cover returns 1.0 under riot agents.
+  - un.gd is rewritten (measures, consultations, lobbying, elections, presidency, Art. 27(3), the
+    Assembly, Art. 19, Art. 99, standing sanctions as power_effects with "un": measure). Hooks:
+    - world.update_training and ai.gd next_train use un.production_mult;
+    - market buy/sell refuse under comprehensive sanctions.

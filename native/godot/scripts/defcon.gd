@@ -62,6 +62,8 @@ func _init(world: Node) -> void:
 func nuclear(owner: int) -> bool:
 	if owner < 0 or w.missiles == null:
 		return false
+	if w.get("wmd") != null and w.wmd != null and owner in w.wmd.broken_out:
+		return true   # a nuclear breakout (wmd.gd)
 	return Variants.admits(w.missiles.def_of("nuke").get("nation", ""), Arsenal.identity(w, owner))
 
 func level() -> int:
@@ -135,7 +137,7 @@ func update(delta: float) -> void:
 	for owner in retaliation.keys():
 		if w.game_time >= float(retaliation[owner]):
 			retaliation.erase(owner)
-			_strike(owner, "a second strike")
+			_strike(owner, "a second strike", "mirv" if preload("res://scripts/cbrn_data.gd").has(w, owner, "mirv") else "nuke")
 	if _ai_tick >= 10.0:
 		_ai_tick = 0.0
 		_ai_nuclear()

@@ -160,7 +160,7 @@ func run() -> void:
 	w.game_time += 45.0
 	var flying: int = w.missiles.flying.size()
 	dc.update(0.1)
-	check(w.missiles.flying.size() == flying + 1 and w.missiles.flying[-1].type == "nuke" and int(w.missiles.flying[-1].owner) == nuke_rival, "%s strikes back with a nuclear missile" % d.name_of(nuke_rival))
+	check(w.missiles.flying.size() == flying + 1 and preload("res://scripts/wmd.gd").is_nuclear(str(w.missiles.flying[-1].type)) and int(w.missiles.flying[-1].owner) == nuke_rival, "%s strikes back with a nuclear missile (%s)" % [d.name_of(nuke_rival), str(w.missiles.flying[-1].type)])
 	# A rival fighting for its survival.
 	their_hq.hp = their_hq.max_hp * 0.3
 	check(dc.existential(nuke_rival), "a nuclear power with its capital half destroyed fights for its survival")

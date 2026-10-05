@@ -42,7 +42,9 @@ const APS_RELOAD := 4.0        # an active protection system rearms between inte
 const CLASS_OF := {"cruise": "cruise", "cluster": "cruise", "emp": "cruise", "antiShip": "seaSkimmer",
 	"tactical": "shortBallistic", "ballistic": "ballistic", "hypersonic": "hypersonic", "nuke": "icbm", "df17": "hypersonic", "brahmos": "supersonic",
 	"tacticalNuke": "shortBallistic", "hydrogenBomb": "icbm", "tsarBomba": "icbm", "neutronBomb": "ballistic", "nuclearEmp": "icbm",
-	"dirtyBomb": "shortBallistic", "chemical": "shortBallistic", "bioweapon": "shortBallistic"}
+	"mirv": "icbm", "mirvWarhead": "icbm", "nuclearGlide": "glide", "burevestnik": "cruise", "poseidon": "underwater",
+	"dirtyBomb": "shortBallistic", "chemical": "shortBallistic", "chlorine": "shortBallistic", "riotAgent": "shortBallistic",
+	"incapacitant": "shortBallistic", "anthrax": "shortBallistic", "bioweapon": "shortBallistic"}
 const INTERCEPT := {
 	# SAM site, mobile SAM, ABM battery, laser, the Verdant Union's IRIS-T SLM,
 	# and the railgun (future_weapons.gd: cheap shots, nearly half the hypersonics)
@@ -55,6 +57,9 @@ const INTERCEPT := {
 	"hypersonic":     {"samSite": 0.08, "samLauncher": 0.03, "abmLauncher": 0.3, "laserAD": 0.0, "irisT": 0.12, "railgunShip": 0.45, "aegisCruiser": 0.4},
 	# BrahMos, Mach 3: none of the 15-19 fired in May 2025 was reported intercepted.
 	"supersonic":     {"samSite": 0.25, "samLauncher": 0.15, "abmLauncher": 0.45, "laserAD": 0.1, "irisT": 0.4, "railgunShip": 0.5, "aegisCruiser": 0.55},
+	# A nuclear glider manoeuvring all the way down (Avangard), and a torpedo under the sea.
+	"glide":          {"samSite": 0.0, "samLauncher": 0.0, "abmLauncher": 0.1, "laserAD": 0.0, "irisT": 0.0, "railgunShip": 0.15, "aegisCruiser": 0.08},
+	"underwater":     {"samSite": 0.0, "samLauncher": 0.0, "abmLauncher": 0.0, "laserAD": 0.0, "irisT": 0.0, "railgunShip": 0.0, "aegisCruiser": 0.0},
 	"icbm":           {"samSite": 0.03, "samLauncher": 0.0, "abmLauncher": 0.55, "laserAD": 0.0, "irisT": 0.0, "railgunShip": 0.1, "aegisCruiser": 0.5},
 }
 ## How far each defender reaches, and how long it takes to fire again.

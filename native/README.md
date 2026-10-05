@@ -23,6 +23,46 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.69: who really has what, more unconventional weapons, and a real UN
+
+- **Who has what, corrected** (scripts/cbrn_data.gd, one table for every nation, with rules for nations
+  added later):
+  - North Korea gains the thermonuclear missile (its 2017 test).
+  - Nerve agents now belong to Russia, North Korea, Egypt and Israel (the states outside the CWC, plus
+    Russia's undeclared programme), and no longer to Iran. Iran's weapon is now the incapacitating agent the
+    US found in violation in 2024.
+  - All nine nuclear powers can burst a high-altitude EMP.
+  - A dirty bomb now needs only a Nuclear Reactor.
+- **New weapons:**
+  - MIRV missile (three warheads), nuclear glide vehicle (Russia, China; almost unstoppable), Burevestnik
+    and Poseidon (Russia; Poseidon only from a nuclear submarine at a coast);
+  - a nuclear detonation in orbit (Russia; most satellites lost, everyone's);
+  - chlorine (anyone), riot agents (Russia; they drive troops out of bunkers), incapacitants (Iran,
+    Russia), anthrax (Russia, North Korea);
+  - destroying a Nuclear Reactor spreads its core over the land around it, and the attacker is blamed;
+  - Nuclear Breakout lets Iran build the bomb (and Saudi Arabia after it), and the IAEA reports it.
+- **Investigations:** chemical and biological attacks are attributed only after 60 s (OPCW, the UN
+  Secretary-General's Mechanism).
+- **The United Nations, rebuilt** (scripts/un_data.gd, scripts/un.gd; the UN window has five tabs):
+  - **Seats and presidency:** permanent seats with vetoes, and elected seats by region (3:2:2:2:1) won in
+    General Assembly elections; you can campaign for one. The presidency rotates.
+  - **Drafts:** each is negotiated in consultations with a live whip count. Sponsors weaken drafts to
+    escape vetoes, or force a vote to expose one. You can amend your own draft and lobby members with aid.
+    A permanent member shields its clients.
+  - **Measures:** presidential statements (consensus), condemnations, ceasefires (the parties abstain,
+    Art. 27(3)), demands to withdraw, peacekeepers, targeted sanctions, arms embargoes (military production
+    -40%), comprehensive sanctions (the world market shut), ICC referrals, and authorisation of force
+    (joining the coalition is no aggression).
+  - **The General Assembly:** it meets on every veto and condemns. Under Uniting for Peace its yes-voters
+    cut trade.
+  - **Dues:** withhold them and you lose your Assembly vote (Art. 19).
+  - **The Secretary-General** brings long wars to the Council (Art. 99).
+  - **Sanctions already in force in 2026** (Iran's snapback, North Korea, the Taliban) apply from the
+    start.
+- Research and sources: native/CBRN-UN-RESEARCH-2026-10-05.md.
+
+Checks: tools/wmd-un-check.gd (56).
+
 ## Version 0.9.68: weapons of mass destruction, and the United Nations
 
 - **The EMP missile, rethought** (scripts/wmd.gd): now the HPM Cruise Missile, as tested in the US

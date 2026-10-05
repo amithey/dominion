@@ -181,6 +181,8 @@ func cap_of(res: String) -> float:
 
 func sell(res: String, qty: int) -> String:
 	if qty <= 0 or not cfg.price.has(res): return "Choose a positive quantity of a traded commodity."
+	if world.get("un") != null and world.un != null and world.un.market_closed(0):
+		return "UN comprehensive sanctions: the world market is closed to you."
 	if not has_market():
 		return "Instant market deals require a Market."
 	var eco: Node = world.economy
@@ -195,6 +197,8 @@ func sell(res: String, qty: int) -> String:
 
 func buy(res: String, qty: int) -> String:
 	if qty <= 0 or not cfg.price.has(res): return "Choose a positive quantity of a traded commodity."
+	if world.get("un") != null and world.un != null and world.un.market_closed(0):
+		return "UN comprehensive sanctions: the world market is closed to you."
 	if not has_market():
 		return "Instant market deals require a Market."
 	var eco: Node = world.economy

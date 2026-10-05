@@ -34,6 +34,7 @@ func load_match(cfg: Dictionary, difficulty := "easy") -> void:
 	if w.menu.get("_root") == null: w.menu.setup(w)
 	w.start_match(difficulty)
 	w.menu._root.hide()
+	w.un = null   # (the UN's standing sanctions, North Korea's arms embargo among them, would slow its factory: wmd-un-check tests those)
 	for i in range(8): await physics_frame
 	w.set_physics_process(false)
 	w.effects.set_physics_process(false)

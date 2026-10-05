@@ -107,7 +107,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	var cyber: bool = spies != null and spies.production_down(n.id) or preload("res://scripts/faction_powers.gd").production_blocked(world, n.id)
 	n.age = float(n.get("age", 0.0)) + delta   # (its own clock, for the buildings set aside)
 	n.next_build -= delta * (1.0 + preload("res://scripts/additional_powers.gd").bonus(world, n.id, "buildPct"))
-	n.next_train -= delta * maxf(0.1, 1.0 + float(preload("res://scripts/additional_factions.gd").profile(world, n.id).get("bonus", {}).get("prodPct", 0.0)) + preload("res://scripts/additional_powers.gd").bonus(world, n.id, "prodPct"))
+	n.next_train -= delta * (world.un.production_mult(n.id) if world.get("un") != null and world.un != null else 1.0) * maxf(0.1, 1.0 + float(preload("res://scripts/additional_factions.gd").profile(world, n.id).get("bonus", {}).get("prodPct", 0.0)) + preload("res://scripts/additional_powers.gd").bonus(world, n.id, "prodPct"))
 	n.next_attack -= delta
 	n.next_defend -= delta
 

@@ -54,9 +54,18 @@ func queued() -> int:
 
 ## "" when the player may build this type, otherwise the discovery it needs.
 func locked(key: String) -> String:
-	var only: String = preload("res://scripts/national_arsenal.gd").foreign(world, def_of(key).get("nation", ""))
-	if only != "":
-		return only   # e.g. nuclear weapons outside the nuclear powers
+	var wmd = world.get("wmd")
+	var cbrn: bool = preload("res://scripts/cbrn_data.gd").CAPABILITY.has(key)
+	if cbrn and wmd != null:
+		var why: String = wmd.capability_blocked(key)   # who really has it (cbrn_data.gd)
+		if why != "":
+			return why
+	else:
+		var only: String = preload("res://scripts/national_arsenal.gd").foreign(world, def_of(key).get("nation", ""))
+		if only != "":
+			return only   # e.g. nuclear weapons outside the nuclear powers
+	if wmd != null and 0 in wmd.broken_out and key in ["nuke", "tacticalNuke", "nuclearEmp"]:
+		return ""   # a nuclear breakout skips the Nuclear Program
 	var need: String = def_of(key).get("needsDiscovery", "")
 	if need != "" and world.research and not world.research.done(need):
 		return "Needs %s" % world.research.def_of(need).get("name", need)
@@ -118,6 +127,13 @@ func launch(key: String, target: Vector3, platform = null) -> String:
 	if def_of(key).get("nuclear", key == "nuke") and world.get("defcon") != null and world.defcon.release_blocked() != "":
 		return world.defcon.release_blocked()   # the escalation ladder (defcon.gd)
 	var platforms: Array = silos() + launch_ships()
+	if def_of(key).get("sub_only", false):
+		# A torpedo: from a nuclear submarine, at a coast (wmd.gd: Poseidon).
+		platforms = launch_ships().filter(func(u): return u.key == "nuclearSub")
+		if platforms.is_empty():
+			return "%s is fired only from a nuclear submarine." % def_of(key).name
+		if world.water_near(target, 40) == null:
+			return "%s needs a target on or near the sea." % def_of(key).name
 	if platforms.is_empty():
 		return "Missiles launch from a Missile Silo, a strategic submarine or a destroyer."
 	if platform == null or platform.dead:

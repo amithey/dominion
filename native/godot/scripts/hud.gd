@@ -1000,7 +1000,10 @@ func _action_bars(b: Dictionary) -> void:
 		_section("Build missiles  (%d/%d stored)" % [ms.stored(), ms.capacity()])
 		for m in ms.types():
 			var mdef: Dictionary = ms.def_of(m)
-			if preload("res://scripts/national_arsenal.gd").foreign(world, mdef.get("nation", "")) != "":
+			if mdef.get("hidden", false):
+				continue
+			var lock: String = ms.locked(m)
+			if lock.begins_with("Not fielded") or preload("res://scripts/national_arsenal.gd").foreign(world, mdef.get("nation", "")) != "" and not lock == "":
 				continue   # another nation's weapon: not listed
 			_bar("missileSilo", mdef.name, "%s Damage %d, blast %d m." % [mdef.desc, int(mdef.dmg), int(mdef.radius)], mdef.cost, float(mdef.buildTime), ms.locked(m), func(): _say(ms.produce(_selected, m)))
 		return

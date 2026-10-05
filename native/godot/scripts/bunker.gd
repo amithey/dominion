@@ -47,6 +47,8 @@ static func cover(w: Node, target: Dictionary, source: Dictionary) -> float:
 		return 0.33 if target.key == "bunker" else 1.0
 	if target.get("fly", false) or target.get("naval", false):
 		return 1.0
+	if w.get("wmd") != null and w.wmd != null and w.wmd.flushed(target):
+		return 1.0   # riot agents drive troops out of their shelters (wmd.gd)
 	for b in w.buildings:
 		if b.key == "bunker" and b.built and not b.dead and b.owner == target.owner and w.flat_distance(b, target) < SHELTER:
 			return 0.5

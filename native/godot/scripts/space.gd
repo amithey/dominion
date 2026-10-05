@@ -258,6 +258,33 @@ func fire_asat(owner: int, target: int, roll := -1.0) -> String:
 	w.hud.notice(text)
 	return text
 
+const ORBITAL_NUKE_COST := 3000.0
+
+## Why the player cannot detonate a nuclear weapon in orbit, or "".
+func orbital_nuke_blocked() -> String:
+	if not preload("res://scripts/cbrn_data.gd").has(w, 0, "nuclearAsat"):
+		return "Only Russia is developing one (Cosmos 2553)."
+	if w.research == null or not w.research.done("antiSatellite") or not w.research.done("nuclearProgram"):
+		return "Research Anti-Satellite Weapons and the Nuclear Program first."
+	if w.get("defcon") != null and w.defcon != null and w.defcon.release_blocked() != "":
+		return w.defcon.release_blocked()
+	if w.economy.res.money < ORBITAL_NUKE_COST:
+		return "Costs $%d." % int(ORBITAL_NUKE_COST)
+	return ""
+
+## A nuclear weapon detonated in orbit (wmd.orbital_burst): most satellites in
+## low orbit are lost, everyone's, the debris lingers, and it breaks the Outer
+## Space Treaty of 1967.
+func orbital_nuke(owner: int) -> String:
+	if owner == 0:
+		var why := orbital_nuke_blocked()
+		if why != "":
+			return why
+		w.economy.pay({"money": ORBITAL_NUKE_COST})
+	_rocket(owner)
+	var lost: int = w.wmd.orbital_burst(owner) if w.get("wmd") != null and w.wmd != null else 0
+	return "SPACE: a nuclear detonation in orbit destroyed %d satellites, yours and everyone's." % lost
+
 ## Rivals put satellites up with their technology, and the four with
 ## anti-satellite weapons may use them on a player they are at war with.
 func _ai_space() -> void:
@@ -278,6 +305,8 @@ func _ai_space() -> void:
 				break
 		if not watch.has(owner) or w.diplomacy.defeated(int(watch[owner])):
 			watch[owner] = _default_watch(owner)
+		if preload("res://scripts/cbrn_data.gd").has(w, owner, "nuclearAsat") and w.get("defcon") != null and w.defcon != null and w.defcon.existential(owner) and w.diplomacy.at_war(owner, 0) and total(0) >= 4 and randf() < 0.01:
+			orbital_nuke(owner)
 		if preload("res://scripts/national_arsenal.gd").identity(w, owner) in ASAT and tech >= 8.0 and w.diplomacy.at_war(owner, 0) and total(0) > 0 and float(n.money) > 4000.0 and randf() < 0.02:
 			n.money -= ASAT_COST
 			fire_asat(owner, 0)

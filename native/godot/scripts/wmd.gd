@@ -1,105 +1,133 @@
 extends RefCounted
-## Weapons of mass destruction and the ground they poison.
-## Research and sources: native/WMD-RESEARCH-2026-10-05.md.
+## Weapons of mass destruction, the ground they poison, and who used what.
+## Research and sources: native/CBRN-UN-RESEARCH-2026-10-05.md. Who has which
+## weapon is cbrn_data.gd's (data for every faction, rules for new ones).
 ##
-## Nuclear warheads by yield (all need posture 2 to release: defcon.gd):
-##   Tactical Nuclear Missile  5-10 kt (US W76-2, B61 low settings; Russia's
-##                             Iskander warheads): a small blast, a small fallout
-##   Nuclear Missile           ~100-300 kt strategic warhead: the city-killer
-##   Thermonuclear Missile     ~1 Mt (US B83 1.2 Mt), after Thermonuclear Weapons:
-##                             the US, Russia, China, the UK, France
-##   Tsar Bomba                50 Mt, Russia only (30 October 1961): the largest
-##                             explosion ever made; 97% of it fusion, so cleaner
-##                             than its size
-##   Neutron Warhead           enhanced radiation (US W70-3/W79, retired 1992;
-##                             France tested one in 1980, China in 1988): kills the
-##                             crews of armour and the infantry, spares buildings
-##   High-Altitude Nuclear EMP no blast on the ground: a burst high above blacks out
-##                             everything electronic in a very wide circle and
-##                             knocks satellites out of orbit (Starfish Prime, 1962);
-##                             in Russian, Chinese and North Korean doctrine
-## Every nuclear detonation leaves FALLOUT: radioactive ground that drifts
-## downwind and decays (the 7-10 rule). Inside it, infantry dies, crews sicken,
-## buildings fall silent and crumble, no one may build, and towns empty.
+## NUCLEAR (released only at posture 2: defcon.gd)
+##   Tactical (5-10 kt) . Nuclear (strategic) . Thermonuclear (~1 Mt)
+##   Tsar Bomba (50 Mt, Russia) . Neutron (kills crews, spares buildings)
+##   High-Altitude EMP (no blast: a wide blackout; satellites lost)
+##   MIRV (one missile, three warheads that fall around the target)
+##   Nuclear Glide Vehicle (Avangard; China's orbital glider): nearly unstoppable
+##   Burevestnik (nuclear-powered cruise missile: a radioactive trail behind it)
+##   Poseidon (nuclear torpedo from a submarine: a radioactive wave on a coast)
+## Every nuclear burst leaves FALLOUT that drifts downwind and decays by the
+## 7-10 rule. A Nuclear Reactor destroyed spews its core over the land around
+## it (Chernobyl's zone is still 2,600 km2): an attack on one is a crime too
+## (Additional Protocol I, Art. 56).
 ##
-## The EMP Missile becomes the HPM Cruise Missile (CHAMP, tested 2012; HiJENKS
-## 2022): the United States, China and Russia only. It kills no one; along the
-## last stretch of its flight it fires microwave pulses that knock out the
-## electronics of vehicles, aircraft, ships and buildings, and fry drones.
+## ELECTROMAGNETIC: the HPM Cruise Missile (CHAMP/HiJENKS): three non-lethal
+## microwave pulses along its path.
 ##
-## Other weapons of mass destruction, for the nations assessed to have them:
-##   Chemical warhead  Russia (chloropicrin and riot agents in Ukraine, 13,000+
-##                     recorded uses), North Korea (2,500-5,000 t of agents),
-##                     Iran (pharmaceutical-based agents, assessed a CWC
-##                     violation in 2024): a drifting cloud that kills infantry
-##   Biological        Russia and North Korea (US-assessed offensive programmes):
-##                     an outbreak that spreads from town to town, the attacker's
-##                     own included
-##   Dirty bomb        no state has ever used one; the nuclear powers and Iran have
-##                     the material: a small blast and long-lived contamination
-## Every use is recorded for the United Nations (un.gd) and turns the world
-## against its user.
+## CHEMICAL (banned by the CWC of 1993)
+##   Nerve Agent (sarin/VX): a drifting cloud that kills infantry
+##   Chlorine: a weaker cloud, improvised by anyone
+##   Riot Agent (CS, chloropicrin): little death, but troops are driven from cover
+##   Incapacitant (fentanyl-type agents): infantry falls unconscious
+## BIOLOGICAL (banned by the BWC of 1972)
+##   Anthrax: long-lived spores, an area no one can hold; not contagious
+##   Engineered Disease: an outbreak that spreads from town to town
+## RADIOLOGICAL: the dirty bomb (any nation with a reactor).
+##
+## A threshold state (Iran; Saudi Arabia once Iran goes) may break out:
+## Nuclear Breakout gives it the bomb, and the IAEA sends it to the Council.
+## Every use is recorded. A chemical or biological attack is attributed only
+## after an investigation (the OPCW's teams, the Secretary-General's
+## Mechanism): 60 seconds. Then the world's verdict goes to the UN (un.gd).
 
-const Variants := preload("res://scripts/national_variants.gd")
-const NUKE_POWERS := ["blue", "red", "green", "russia", "india", "israel", "uk", "north_korea", "pakistan"]
-const NUCLEAR := ["tacticalNuke", "nuke", "hydrogenBomb", "tsarBomba", "neutronBomb", "nuclearEmp"]
+const Cbrn := preload("res://scripts/cbrn_data.gd")
+const NUCLEAR := ["tacticalNuke", "nuke", "hydrogenBomb", "tsarBomba", "neutronBomb", "nuclearEmp", "mirv", "mirvWarhead", "nuclearGlide", "burevestnik", "poseidon"]
 const MISSILES := {
 	"tacticalNuke": {"name": "Tactical Nuclear Missile", "icon": "TN", "buildTime": 45, "cost": {"money": 1400, "iron": 50, "silicon": 40, "uranium": 12},
-		"dmg": 2600, "radius": 18, "speed": 60, "arc": true, "nuclear": true, "needsDiscovery": "nuclearProgram", "nation": NUKE_POWERS,
-		"desc": "Low yield, 5-10 kt, like the US W76-2 or Russia's Iskander warheads: a battlefield weapon with a small fallout. Still a nuclear weapon: DEFCON 1 and the world's condemnation."},
+		"dmg": 2600, "radius": 18, "speed": 60, "arc": true, "nuclear": true, "needsDiscovery": "nuclearProgram",
+		"desc": "Low yield, 5-10 kt (the US W76-2, Russia's Iskander warheads, Pakistan's Nasr): a battlefield weapon with a small fallout. Still a nuclear weapon: DEFCON 1 and the world's condemnation."},
 	"hydrogenBomb": {"name": "Thermonuclear Missile", "icon": "H", "buildTime": 90, "cost": {"money": 3200, "iron": 100, "silicon": 80, "uranium": 45},
-		"dmg": 7000, "radius": 62, "speed": 48, "arc": true, "nuclear": true, "needsDiscovery": "thermonuclear", "nation": ["blue", "red", "green", "russia", "uk"],
+		"dmg": 7000, "radius": 62, "speed": 48, "arc": true, "nuclear": true, "needsDiscovery": "thermonuclear",
 		"desc": "A two-stage hydrogen bomb of about a megaton, like the US B83 (1.2 Mt): a blast that erases a city and its surroundings, and a wide fallout for 7 minutes."},
 	"tsarBomba": {"name": "Tsar Bomba", "icon": "TSAR", "buildTime": 150, "cost": {"money": 6000, "iron": 160, "silicon": 100, "uranium": 90},
-		"dmg": 14000, "radius": 105, "speed": 40, "arc": true, "nuclear": true, "needsDiscovery": "thermonuclear", "nation": ["russia"],
-		"desc": "50 megatons, as on 30 October 1961: the largest explosion ever made, 3,300 times Hiroshima. 97% of it came from fusion, so its fallout is smaller than its blast. Russia only."},
+		"dmg": 14000, "radius": 105, "speed": 40, "arc": true, "nuclear": true, "needsDiscovery": "thermonuclear",
+		"desc": "50 megatons, as on 30 October 1961: the largest explosion ever made, 3,300 times Hiroshima. 97% of it came from fusion, so its fallout is smaller than its blast."},
 	"neutronBomb": {"name": "Neutron Warhead", "icon": "N", "buildTime": 55, "cost": {"money": 1800, "silicon": 50, "uranium": 20},
-		"dmg": 3200, "radius": 26, "speed": 60, "arc": true, "nuclear": true, "special": "neutron", "needsDiscovery": "enhancedRadiation", "nation": ["blue", "red", "green", "russia"],
-		"desc": "Enhanced radiation, like the US W70-3 and W79 (retired 1992; France tested one in 1980, China in 1988): a small blast but a flood of neutrons that kills tank crews and infantry and spares buildings. Short-lived radiation."},
+		"dmg": 3200, "radius": 26, "speed": 60, "arc": true, "nuclear": true, "special": "neutron", "needsDiscovery": "enhancedRadiation",
+		"desc": "Enhanced radiation (the US W70-3 and W79, retired 1992; tested by the USSR, France in 1980, China in 1988): a small blast but a flood of neutrons that kills tank crews and infantry and spares buildings. Short-lived radiation."},
 	"nuclearEmp": {"name": "High-Altitude Nuclear EMP", "icon": "HEMP", "buildTime": 60, "cost": {"money": 2200, "silicon": 60, "uranium": 25},
-		"dmg": 0, "radius": 110, "speed": 55, "arc": true, "nuclear": true, "special": "hemp", "needsDiscovery": "nuclearProgram", "nation": ["blue", "red", "russia", "north_korea"],
+		"dmg": 0, "radius": 110, "speed": 55, "arc": true, "nuclear": true, "special": "hemp", "needsDiscovery": "nuclearProgram",
 		"desc": "A warhead burst high above the target: no blast on the ground, but everything electronic in a very wide circle goes dark for 90 s, aircraft in the air are crippled, drones fall, and satellites are knocked out (Starfish Prime, 1962, darkened Hawaii 1,445 km away). A nuclear detonation all the same."},
+	"mirv": {"name": "MIRV Missile", "icon": "MIRV", "buildTime": 100, "cost": {"money": 3600, "iron": 110, "silicon": 90, "uranium": 50},
+		"dmg": 0, "radius": 30, "speed": 52, "arc": true, "nuclear": true, "special": "mirv", "needsDiscovery": "ballisticTech",
+		"desc": "Multiple independently targetable re-entry vehicles: one missile, three warheads of about 100 kt that fall around the target (Trident II, Yars, DF-41, M51; tested by India with the Agni-V and by Pakistan with the Ababeel). Stop it before the warheads part, or not at all."},
+	"mirvWarhead": {"name": "MIRV warhead", "icon": "RV", "hidden": true, "dmg": 2400, "radius": 20, "speed": 60, "arc": true, "nuclear": true, "buildTime": 1, "cost": {}, "desc": ""},
+	"nuclearGlide": {"name": "Nuclear Glide Vehicle", "icon": "HGV-N", "buildTime": 80, "cost": {"money": 3000, "iron": 70, "silicon": 90, "uranium": 30},
+		"dmg": 4500, "radius": 38, "speed": 180, "arc": true, "nuclear": true, "needsDiscovery": "ballisticTech",
+		"desc": "A nuclear warhead on a hypersonic glider that manoeuvres all the way down: Russia's Avangard (in service since 2019), China's orbital glide vehicle (tested in August 2021). Missile defence almost never catches it."},
+	"burevestnik": {"name": "Burevestnik", "icon": "9M730", "buildTime": 110, "cost": {"money": 4000, "iron": 90, "silicon": 80, "uranium": 40},
+		"dmg": 4000, "radius": 34, "speed": 90, "nuclear": true, "special": "burevestnik", "needsDiscovery": "thermonuclear",
+		"desc": "A nuclear-powered cruise missile of almost unlimited range, flying low (Russia claimed a 14,000 km, 15-hour flight on 21 October 2025). Its open reactor leaves patches of radiation along its path."},
+	"poseidon": {"name": "Poseidon", "icon": "2M39", "buildTime": 140, "cost": {"money": 5500, "iron": 140, "silicon": 90, "uranium": 70},
+		"dmg": 9000, "radius": 60, "speed": 40, "nuclear": true, "special": "poseidon", "needsDiscovery": "thermonuclear", "sub_only": true,
+		"desc": "A nuclear-powered, nuclear-armed torpedo (Russia claimed its first powered test on 28 October 2025): it strikes a coast and throws a radioactive wave over it. Fired only from a nuclear submarine, at a target near the sea."},
 	"dirtyBomb": {"name": "Radiological (Dirty) Bomb", "icon": "RDD", "buildTime": 25, "cost": {"money": 500, "iron": 20, "uranium": 8},
-		"dmg": 300, "radius": 8, "speed": 70, "special": "dirty", "nation": NUKE_POWERS + ["gold"],
-		"desc": "A conventional charge wrapped round radioactive material. No state has ever used one (Chechen fighters hid one in a Moscow park in 1995). It kills few, but contaminates the ground for 6 minutes: nobody builds, towns empty. A crime the world will not forgive."},
-	"chemical": {"name": "Chemical Warhead", "icon": "CW", "buildTime": 22, "cost": {"money": 450, "iron": 20, "oil": 10},
-		"dmg": 30, "radius": 4, "speed": 75, "special": "chemical", "nation": ["russia", "north_korea", "gold"],
-		"desc": "A nerve or choking agent: a cloud that drifts downwind for 90 s and kills infantry (armour crews are protected). Banned by the 1993 Chemical Weapons Convention; Russia uses chloropicrin in Ukraine, North Korea holds 2,500-5,000 tonnes, Iran develops pharmaceutical-based agents."},
-	"bioweapon": {"name": "Biological Warhead", "icon": "BW", "buildTime": 50, "cost": {"money": 900, "silicon": 20, "food": 60},
-		"dmg": 0, "radius": 4, "speed": 70, "special": "bio", "nation": ["russia", "north_korea"],
-		"desc": "An engineered disease released over a town: an outbreak that sickens its people and its soldiers and spreads to the nearest towns, whoever holds them, yours too. Banned by the 1972 Biological Weapons Convention; the United States assesses that Russia and North Korea keep offensive programmes."},
+		"dmg": 300, "radius": 8, "speed": 70, "special": "dirty",
+		"desc": "A conventional charge wrapped round radioactive material: any nation with a Nuclear Reactor. No state has ever used one (Chechen fighters hid one in a Moscow park in 1995). It kills few, but contaminates the ground for 6 minutes: nobody builds, towns empty."},
+	"chemical": {"name": "Nerve Agent Warhead", "icon": "GB", "buildTime": 22, "cost": {"money": 450, "iron": 20, "oil": 10},
+		"dmg": 30, "radius": 4, "speed": 75, "special": "chemical",
+		"desc": "Sarin or VX: a cloud that drifts downwind for 90 s and kills infantry (armour crews are protected); VX lingers on the ground. Banned by the Chemical Weapons Convention of 1993."},
+	"chlorine": {"name": "Chlorine Bombs", "icon": "Cl", "buildTime": 12, "cost": {"money": 150, "iron": 10},
+		"dmg": 20, "radius": 4, "speed": 70, "special": "chlorine",
+		"desc": "An industrial chemical any state can turn into a weapon (Syria's former government dropped it on its own towns, 2014-2018): a weaker, shorter cloud than a nerve agent. A breach of the CWC like any other."},
+	"riotAgent": {"name": "Riot Agent Munitions", "icon": "CS", "buildTime": 10, "cost": {"money": 120, "iron": 8},
+		"dmg": 10, "radius": 3, "speed": 75, "special": "riot",
+		"desc": "CS gas and chloropicrin dropped on trenches, as Russia does in Ukraine (over 13,300 recorded uses): it kills few, but troops in it lose the protection of bunkers. Legal for police, banned as a method of warfare."},
+	"incapacitant": {"name": "Incapacitating Agent", "icon": "PBA", "buildTime": 30, "cost": {"money": 600, "silicon": 20},
+		"dmg": 10, "radius": 3, "speed": 75, "special": "incapacitant",
+		"desc": "A fentanyl-type aerosol (Iran's pharmaceutical-based agents, judged a CWC violation by the US in 2024; Russia's Kolokol-1, which killed 130 hostages in Moscow in 2002): infantry in the cloud falls unconscious, and some never wake."},
+	"anthrax": {"name": "Anthrax Warhead", "icon": "BA", "buildTime": 45, "cost": {"money": 800, "silicon": 20, "food": 40},
+		"dmg": 0, "radius": 4, "speed": 70, "special": "anthrax",
+		"desc": "Anthrax spores (the Soviet Biopreparat programme; Sverdlovsk, 1979): not contagious, but the ground stays lethal for 8 minutes: an area no army can hold. Banned by the Biological Weapons Convention of 1972."},
+	"bioweapon": {"name": "Engineered Disease", "icon": "BW", "buildTime": 50, "cost": {"money": 900, "silicon": 20, "food": 60},
+		"dmg": 0, "radius": 4, "speed": 70, "special": "bio",
+		"desc": "A contagious engineered disease released over a town: an outbreak that sickens its people and soldiers and spreads to the nearest towns, whoever holds them, yours too."},
 }
 const DISCOVERIES := {
-	"thermonuclear": {"name": "Thermonuclear Weapons", "cost": 1000, "branch": "strategic", "era": 4, "nation": ["blue", "red", "green", "russia", "uk"],
+	"thermonuclear": {"name": "Thermonuclear Weapons", "cost": 1000, "branch": "strategic", "era": 4,
 		"reqDiscovery": "nuclearProgram", "reqBuilding": "nuclearReactor", "fx": {},
-		"desc": "The two-stage hydrogen bomb (the US 1952, the USSR 1955, the UK 1957, China 1967, France 1968): unlocks the Thermonuclear Missile, and for Russia the Tsar Bomba."},
-	"enhancedRadiation": {"name": "Enhanced Radiation Weapons", "cost": 800, "branch": "strategic", "era": 4, "nation": ["blue", "red", "green", "russia"],
+		"desc": "The two-stage hydrogen bomb (the US 1952, the USSR 1955, the UK 1957, China 1967, France 1968; North Korea likely 2017): unlocks the Thermonuclear Missile, and for Russia the Tsar Bomba, the Burevestnik and the Poseidon."},
+	"enhancedRadiation": {"name": "Enhanced Radiation Weapons", "cost": 800, "branch": "strategic", "era": 4,
 		"reqDiscovery": "nuclearProgram", "reqBuilding": "nuclearReactor", "fx": {},
 		"desc": "The neutron bomb: a small fusion warhead that kills by radiation rather than blast. Unlocks the Neutron Warhead."},
+	"nuclearBreakout": {"name": "Nuclear Breakout", "cost": 1400, "branch": "strategic", "era": 4,
+		"reqBuilding": "nuclearReactor", "fx": {},
+		"desc": "Enrich to weapons grade and build a device: the bomb at once (the Nuclear Missile, the Tactical Nuclear Missile and the high-altitude EMP). The IAEA will report it to the Security Council, the world will turn on you, and your neighbours may follow."},
 }
-## Each contamination: radius as a share of the blast, how long it lasts,
-## its strength (1 = a fission warhead's fallout), and how it drifts.
 const FALLOUT := {
 	"tacticalNuke": [0.8, 150.0, 0.6], "nuke": [0.8, 300.0, 1.0], "hydrogenBomb": [0.9, 420.0, 1.3],
-	"tsarBomba": [0.85, 480.0, 1.0], "neutronBomb": [0.75, 60.0, 1.6],
+	"tsarBomba": [0.85, 480.0, 1.0], "neutronBomb": [0.75, 60.0, 1.6], "mirvWarhead": [0.8, 240.0, 0.9],
+	"nuclearGlide": [0.8, 300.0, 1.0], "burevestnik": [0.8, 300.0, 1.1], "poseidon": [1.2, 600.0, 1.5],
 }
-## Damage a second at strength 1, as a share of health, by kind of zone and target.
 const HARM := {
 	"fallout": {"infantry": 0.03, "vehicle": 0.01, "naval": 0.005, "building": 0.004},
 	"chemical": {"infantry": 0.06, "vehicle": 0.004, "naval": 0.0, "building": 0.0},
+	"riot": {"infantry": 0.008, "vehicle": 0.0, "naval": 0.0, "building": 0.0},
+	"incap": {"infantry": 0.01, "vehicle": 0.001, "naval": 0.0, "building": 0.0},
+	"anthrax": {"infantry": 0.02, "vehicle": 0.003, "naval": 0.0, "building": 0.0},
 	"bio": {"infantry": 0.012, "vehicle": 0.003, "naval": 0.0, "building": 0.0},
 }
-const ZONE_COLOUR := {"fallout": Color(0.75, 0.95, 0.15), "chemical": Color(0.85, 0.85, 0.2), "bio": Color(0.75, 0.4, 0.95)}
-const CONDEMN := {"chemical": 20.0, "bio": 30.0, "dirty": 15.0}
+const ZONE_COLOUR := {"fallout": Color(0.75, 0.95, 0.15), "chemical": Color(0.85, 0.85, 0.2), "riot": Color(0.9, 0.9, 0.85),
+	"incap": Color(0.6, 0.85, 0.95), "anthrax": Color(0.85, 0.55, 0.35), "bio": Color(0.75, 0.4, 0.95)}
+const CONDEMN := {"chemical": 20.0, "bio": 30.0, "dirty": 15.0, "reactor": 15.0, "breakout": 15.0}
+const INVESTIGATION := 60.0
 const TOWNS := ["hq", "cityCenter", "villageCenter"]
 const HPM_SECONDS := 45.0
 const HEMP_SECONDS := 90.0
 const SPREAD_EVERY := 40.0
 const SPREAD_RANGE := 170.0
+const RINGS := 7
+const SEGMENTS := 36
 
 var w: Node
 var zones: Array = []        # {kind, at, radius, strength, born, until, owner, drift, town, decal}
-var incidents: Array = []    # {kind, weapon, by, victims, time}: for the United Nations
+var incidents: Array = []    # {kind, weapon, by, victims, time, attributed}
+var broken_out: Array = []   # nations that broke out to the bomb
 var wind := Vector2.RIGHT
 var _tick := 0.0
 var _ai_tick := 0.0
@@ -108,11 +136,16 @@ func _init(world: Node) -> void:
 	w = world
 	wind = Vector2.RIGHT.rotated(randf() * TAU) * 0.25
 
-## Registers the weapons and the discoveries (modern_warfare.apply).
+## Registers the weapons and the discoveries (modern_warfare.apply), with each
+## weapon's nations from cbrn_data.gd (rule-based ones: missiles.locked asks
+## capability_blocked).
 static func apply(world: Node) -> void:
 	var types: Dictionary = world.map.missiles.get("types", {})
 	for key in MISSILES:
 		types[key] = MISSILES[key].duplicate(true)
+	for key in Cbrn.CAPABILITY:
+		if types.has(key) and Cbrn.CAPABILITY[key].has("ids"):
+			types[key].nation = Cbrn.arsenal_ids(Cbrn.CAPABILITY[key].ids)
 	if types.has("nuke"):
 		types.nuke.nuclear = true
 		types.nuke.desc = "A strategic warhead of a few hundred kilotons: the city-killer. Its fallout poisons the ground for 5 minutes. Released only at posture 2; the whole world will condemn it."
@@ -120,14 +153,27 @@ static func apply(world: Node) -> void:
 		types.emp.name = "HPM Cruise Missile"
 		types.emp.dmg = 0
 		types.emp.radius = 15
-		types.emp.nation = ["blue", "red", "russia"]
-		types.emp.desc = "A high-power microwave cruise missile (CHAMP, tested 2012; HiJENKS, 2022): no blast and no deaths. Over the last stretch of its flight it fires three microwave pulses that knock out the electronics of vehicles, aircraft, ships and buildings for 45 s and bring drones down. The United States, China and Russia only."
+		types.emp.desc = "A high-power microwave cruise missile (CHAMP, tested 2012; HiJENKS, 2022): no blast and no deaths. Over the last stretch of its flight it fires three microwave pulses that knock out the electronics of vehicles, aircraft, ships and buildings for 45 s and bring drones down."
 	var discoveries: Dictionary = world.map.research.discoveries
 	for key in DISCOVERIES:
 		discoveries[key] = DISCOVERIES[key].duplicate(true)
+	discoveries.thermonuclear.nation = Cbrn.arsenal_ids(Cbrn.ids_for("hydrogenBomb"))
+	discoveries.enhancedRadiation.nation = Cbrn.arsenal_ids(Cbrn.ids_for("neutronBomb"))
+	discoveries.nuclearBreakout.nation = Cbrn.arsenal_ids(Cbrn.THRESHOLD.keys().filter(func(id): return Cbrn.THRESHOLD[id].after == ""))
 
 static func is_nuclear(key: String) -> bool:
 	return key in NUCLEAR
+
+## Why the player may not build or fire weapon `key` for want of the capability
+## (cbrn_data.gd), or "" (missiles.locked).
+func capability_blocked(key: String) -> String:
+	if not Cbrn.CAPABILITY.has(key):
+		return ""
+	if Cbrn.has(w, 0, key):
+		return ""
+	if str(Cbrn.CAPABILITY[key].get("rule", "")) == "reactor":
+		return "Needs a Nuclear Reactor (radioactive material)"
+	return "Not fielded by %s" % str(w.map.nations[0].get("name", "your nation")).split(" · ")[0]
 
 # ---------------------------------------------------------------- impacts
 
@@ -140,13 +186,38 @@ func after_impact(key: String, at: Vector3, owner: int, from: Vector3, struck: A
 			_hpm(at, from, radius, owner)
 			return
 		"hemp":
-			_hemp(at, radius, owner)
+			_blackout(at, radius, HEMP_SECONDS, owner, true)
+			w.effects.emp_flash(at + Vector3.UP * 60.0, radius)
+			_satellites(0.3, "the high-altitude burst")
+		"mirv":
+			# The bus releases three warheads that fall around the target.
+			for i in range(3):
+				var p: Vector3 = at + Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)).normalized() * randf_range(10.0, radius)
+				p.y = maxf(w.height_at(p.x, p.z), float(w.map.seaLevel))
+				w.missiles.impact("mirvWarhead", p, owner)
+		"burevestnik":
+			var start: Vector3 = from if from != Vector3.INF else at
+			for f in [0.3, 0.55, 0.8]:
+				_zone("fallout", start.lerp(at, f), 9.0, 150.0, 0.35, owner, 0.0)   # the open reactor's exhaust
 		"dirty":
 			_zone("fallout", at, 26.0, 360.0, 0.45, owner, 0.15)
 			_incident("dirty", key, owner, struck)
 		"chemical":
 			_zone("chemical", at, 22.0, 90.0, 1.0, owner, 0.5)
+			_zone("chemical", at, 10.0, 240.0, 0.5, owner, 0.0)   # VX lingers on the ground
 			_incident("chemical", key, owner, struck + _owners_near(at, 22.0, owner))
+		"chlorine":
+			_zone("chemical", at, 18.0, 60.0, 0.6, owner, 0.6)
+			_incident("chemical", key, owner, struck + _owners_near(at, 18.0, owner))
+		"riot":
+			_zone("riot", at, 16.0, 45.0, 1.0, owner, 0.4)
+			_incident("chemical", key, owner, struck + _owners_near(at, 16.0, owner))
+		"incapacitant":
+			_zone("incap", at, 18.0, 50.0, 1.0, owner, 0.4)
+			_incident("chemical", key, owner, struck + _owners_near(at, 18.0, owner))
+		"anthrax":
+			_zone("anthrax", at, 26.0, 480.0, 1.0, owner, 0.0)
+			_incident("bio", key, owner, struck + _owners_near(at, 26.0, owner))
 		"bio":
 			var town = _town_near(at, 60.0)
 			if town != null:
@@ -157,7 +228,7 @@ func after_impact(key: String, at: Vector3, owner: int, from: Vector3, struck: A
 	if FALLOUT.has(key):
 		var f: Array = FALLOUT[key]
 		_zone("fallout", at, radius * float(f[0]), float(f[1]), float(f[2]), owner, 0.25)
-	if is_nuclear(key):
+	if is_nuclear(key) and key != "mirvWarhead":
 		_incident("nuclear", key, owner, struck)
 
 func _owners_near(at: Vector3, r: float, except: int) -> Array:
@@ -165,6 +236,9 @@ func _owners_near(at: Vector3, r: float, except: int) -> Array:
 	for b in w.buildings:
 		if not b.dead and int(b.owner) != except and not int(b.owner) in out and b.root.position.distance_to(at) <= r + 10.0:
 			out.append(int(b.owner))
+	for u in w.units:
+		if not u.dead and int(u.owner) != except and not int(u.owner) in out and u.node.position.distance_to(at) <= r:
+			out.append(int(u.owner))
 	return out
 
 ## The HPM missile's three pulses over the last stretch of its flight.
@@ -176,23 +250,22 @@ func _hpm(at: Vector3, from: Vector3, radius: float, owner: int) -> void:
 		_blackout(p, radius, HPM_SECONDS, owner, false)
 		w.effects.emp_flash(p, radius)
 
-## A burst high above: everything electronic dark in a very wide circle.
-func _hemp(at: Vector3, radius: float, owner: int) -> void:
-	_blackout(at, radius, HEMP_SECONDS, owner, true)
-	w.effects.emp_flash(at + Vector3.UP * 60.0, radius)
-	# Satellites caught by the burst (Starfish Prime crippled a third of those in low orbit).
+## Satellites lost to a nuclear burst at altitude: each with chance `share`.
+func _satellites(share: float, what: String) -> int:
 	var s = w.get("space")
-	if s != null:
-		var lost := 0
-		for o in s.sats:
-			for kind in s.KINDS:
-				for i in range(s.count(o, kind)):
-					if randf() < 0.3:
-						s.sats[o][kind] = s.count(o, kind) - 1
-						lost += 1
-		if lost > 0:
-			w.hud.notice("SPACE: the high-altitude burst knocked %d satellites out of orbit." % lost)
-			if w.research != null: w.research._recompute()
+	if s == null:
+		return 0
+	var lost := 0
+	for o in s.sats:
+		for kind in s.KINDS:
+			for i in range(s.count(o, kind)):
+				if randf() < share:
+					s.sats[o][kind] = s.count(o, kind) - 1
+					lost += 1
+	if lost > 0:
+		w.hud.notice("SPACE: %s knocked %d satellites out of orbit." % [what, lost])
+		if w.research != null: w.research._recompute()
+	return lost
 
 ## Knocks out electronics; drones fall; with `airburst`, aircraft aloft are crippled.
 func _blackout(at: Vector3, radius: float, seconds: float, owner: int, airburst: bool) -> void:
@@ -216,6 +289,24 @@ func _blackout(at: Vector3, radius: float, seconds: float, owner: int, airburst:
 		if Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length() <= radius:
 			b.disabled_until = maxf(float(b.get("disabled_until", 0.0)), w.game_time + seconds)
 
+## A Nuclear Reactor destroyed (world.destroy_building): its core spreads.
+func reactor_destroyed(b: Dictionary) -> void:
+	var by := int(b.get("last_by", -1))
+	_zone("fallout", b.root.position, 48.0, 600.0, 1.2, by, 0.3)
+	w.hud.notice("REACTOR DESTROYED: %s Nuclear Reactor has burst open; a radioactive plume spreads downwind." % ("your" if int(b.owner) == 0 else w.diplomacy.name_of(int(b.owner)) + "'s"))
+	if by >= 0 and by != int(b.owner):
+		_incident("reactor", "nuclearReactor", by, [int(b.owner)])
+
+## A nuclear weapon detonated in orbit (space.gd): most satellites, everyone's.
+func orbital_burst(owner: int) -> int:
+	var lost := _satellites(0.7, "a nuclear detonation in orbit")
+	if w.get("space") != null and w.space != null:
+		w.space.debris = minf(100.0, w.space.debris + 40.0)
+	if w.get("defcon") != null and w.defcon != null:
+		w.defcon.nuclear_used(owner, [])
+	_incident("space", "nuclearAsat", owner, [])
+	return lost
+
 # ---------------------------------------------------------------- zones
 
 func _zone(kind: String, at: Vector3, radius: float, seconds: float, strength: float, owner: int, drift: float, town = null) -> Dictionary:
@@ -228,9 +319,6 @@ func _zone(kind: String, at: Vector3, radius: float, seconds: float, strength: f
 ## The poisoned ground drawn on the terrain: a disc of rings that follows the
 ## ground, in the zone's colour, thickest at the centre and fading to its edge
 ## (a projected decal broke up on the terrain's own shader).
-const RINGS := 7
-const SEGMENTS := 36
-
 func _dress(z: Dictionary) -> void:
 	if w.effects == null:
 		return
@@ -240,7 +328,6 @@ func _dress(z: Dictionary) -> void:
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.vertex_color_use_as_albedo = true
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.no_depth_test = false
 	mat.render_priority = 1
 	mi.material_override = mat
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -256,7 +343,6 @@ func _shape(z: Dictionary) -> void:
 	var r: float = float(z.radius)
 	var centre: Vector3 = z.at
 	var sea: float = float(w.map.seaLevel)
-	var ground := func(x: float, zz: float) -> float: return maxf(w.height_at(x, zz), sea) + 0.6
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var ring_pts := []
@@ -267,17 +353,15 @@ func _shape(z: Dictionary) -> void:
 			var a := TAU * k / SEGMENTS
 			var x: float = centre.x + cos(a) * r * f
 			var zz: float = centre.z + sin(a) * r * f
-			pts.append(Vector3(x - centre.x, ground.call(x, zz), zz - centre.z))
+			pts.append(Vector3(x - centre.x, maxf(w.height_at(x, zz), sea) + 0.6, zz - centre.z))
 		ring_pts.append(pts)
-	var alpha := func(ring: int) -> float: return 0.5 * (1.0 - pow(float(ring) / RINGS, 1.6))
 	for ring in range(RINGS):
+		var a0 := Color(c, 0.5 * (1.0 - pow(float(ring) / RINGS, 1.6)))
+		var a1 := Color(c, 0.5 * (1.0 - pow(float(ring + 1) / RINGS, 1.6)))
 		for k in range(SEGMENTS):
 			var k2 := (k + 1) % SEGMENTS
-			var a0: Color = Color(c, alpha.call(ring))
-			var a1: Color = Color(c, alpha.call(ring + 1))
-			var quad := [[ring_pts[ring][k], a0], [ring_pts[ring + 1][k], a1], [ring_pts[ring + 1][k2], a1],
-				[ring_pts[ring][k], a0], [ring_pts[ring + 1][k2], a1], [ring_pts[ring][k2], a0]]
-			for v in quad:
+			for v in [[ring_pts[ring][k], a0], [ring_pts[ring + 1][k], a1], [ring_pts[ring + 1][k2], a1],
+					[ring_pts[ring][k], a0], [ring_pts[ring + 1][k2], a1], [ring_pts[ring][k2], a0]]:
 				st.set_color(v[1])
 				st.add_vertex(v[0])
 	mi.mesh = st.commit()
@@ -298,16 +382,19 @@ func contaminated(at: Vector3, kinds := ["fallout"]) -> bool:
 			return true
 	return false
 
+## Whether `u` stands in a riot-agent cloud: no bunker shelters it (bunker.gd).
+func flushed(u: Dictionary) -> bool:
+	return not zones.is_empty() and u.has("node") and contaminated(u.node.position, ["riot"])
+
 func update(delta: float) -> void:
 	_tick += delta
 	_ai_tick += delta
-	# Drift and glow every frame (cheap: a handful of zones).
 	for z in zones:
 		if float(z.drift) > 0.0 and w.game_time - float(z.born) < 120.0:
 			z.at += Vector3(wind.x, 0, wind.y) * float(z.drift) * delta * 4.0
 		if is_instance_valid(z.decal):
 			if z.at.distance_to(z.get("drawn_at", z.at)) > 2.0:
-				_shape(z)   # it has drifted: lay it over the new ground
+				_shape(z)
 			z.decal.transparency = 1.0 - clampf(0.45 + 0.6 * strength_of(z), 0.3, 1.0) * (0.85 + 0.15 * sin(w.game_time * 2.0))
 	if _tick < 1.0:
 		return
@@ -321,6 +408,13 @@ func update(delta: float) -> void:
 		if z.kind == "bio" and z.town != null and w.game_time - float(z.get("spread_at", z.born)) >= SPREAD_EVERY:
 			z.spread_at = w.game_time
 			_spread(z)
+	# Investigations end: the attack is attributed, and goes to the UN.
+	for inc in incidents:
+		if not inc.get("attributed", true) and w.game_time >= float(inc.time) + INVESTIGATION:
+			inc.attributed = true
+			_verdict(inc)
+	if w.research != null and w.research.done("nuclearBreakout") and not 0 in broken_out:
+		break_out(0)
 	if _ai_tick >= 15.0:
 		_ai_tick = 0.0
 		_ai_use()
@@ -342,6 +436,8 @@ func _harm(z: Dictionary, dt: float) -> void:
 		if Vector2(u.node.position.x - z.at.x, u.node.position.z - z.at.z).length() > r:
 			continue
 		var cls := "naval" if u.get("naval", false) else ("infantry" if u.key in w.infantry_keys else "vehicle")
+		if z.kind == "incap" and cls == "infantry":
+			u.disabled_until = maxf(float(u.get("disabled_until", 0.0)), w.game_time + 3.0)   # unconscious
 		var amount: float = float(u.max_hp) * float(table[cls]) * s * dt
 		if amount <= 0.0:
 			continue
@@ -358,8 +454,7 @@ func _harm(z: Dictionary, dt: float) -> void:
 			if b.hp <= 0.0:
 				w.destroy_building(b)
 				continue
-		# Towns empty: people flee, fall sick, die.
-		if b.key in TOWNS and int(b.owner) == 0 and w.economy != null:
+		if b.key in TOWNS and int(b.owner) == 0 and w.economy != null and z.kind in ["fallout", "chemical", "anthrax", "bio"]:
 			w.economy.civilians = maxf(0.0, w.economy.civilians - 0.6 * s * dt)
 
 ## An outbreak at a town.
@@ -369,7 +464,7 @@ func _infect(town: Dictionary, owner: int) -> void:
 	_zone("bio", town.root.position, 34.0, 300.0, 1.0, owner, 0.0, town)
 	var d: Node = w.diplomacy
 	if int(town.owner) == 0:
-		w.hud.notice("OUTBREAK in your %s: an engineered disease spreads among its people and soldiers." % town.def.name)
+		w.hud.notice("OUTBREAK in your %s: a disease spreads among its people and soldiers." % town.def.name)
 	elif int(town.owner) == owner and owner == 0:
 		w.hud.notice("BLOWBACK: the disease has reached your own %s." % town.def.name)
 	elif d.at_war(0, int(town.owner)) or owner == 0:
@@ -382,7 +477,6 @@ func _town_near(at: Vector3, r: float):
 			best = b
 	return best
 
-## The disease jumps to the nearest town not yet infected, whoever holds it.
 func _spread(z: Dictionary) -> void:
 	if randf() > 0.4:
 		return
@@ -396,11 +490,10 @@ func _spread(z: Dictionary) -> void:
 	if best != null:
 		_infect(best, int(z.owner))
 
-## The player's towns poisoned or sick: unhappiness and lost income (research._recompute).
 func bonuses() -> Dictionary:
 	var hit := 0
 	for b in w.buildings:
-		if not b.dead and int(b.owner) == 0 and b.key in TOWNS and zones.any(func(z): return Vector2(b.root.position.x - z.at.x, b.root.position.z - z.at.z).length() <= float(z.radius)):
+		if not b.dead and int(b.owner) == 0 and b.key in TOWNS and zones.any(func(z): return z.kind != "riot" and Vector2(b.root.position.x - z.at.x, b.root.position.z - z.at.z).length() <= float(z.radius)):
 			hit += 1
 	if hit == 0:
 		return {}
@@ -413,6 +506,27 @@ func ai_income_mult(owner: int) -> float:
 			hit += 1
 	return maxf(0.6, 1.0 - 0.06 * hit)
 
+# ---------------------------------------------------------------- breakout
+
+## A threshold state builds the bomb.
+func break_out(owner: int) -> void:
+	if owner in broken_out:
+		return
+	broken_out.append(owner)
+	var d: Node = w.diplomacy
+	var who := "You have" if owner == 0 else "%s has" % d.name_of(owner)
+	w.hud.notice("NUCLEAR BREAKOUT: %s built a nuclear weapon%s. The IAEA reports it to the Security Council." % [who, " and left the NPT" if str(Cbrn.treaty(w, owner, "npt")) == "party" else ""])
+	if w.get("defcon") != null and w.defcon != null:
+		w.defcon.tension = minf(79.0, w.defcon.tension + 15.0)
+	# Its neighbours may follow (cbrn_data.THRESHOLD "after").
+	var discoveries: Dictionary = w.map.research.discoveries
+	for id in Cbrn.THRESHOLD:
+		if Cbrn.THRESHOLD[id].after == Cbrn.ident(w, owner) and discoveries.has("nuclearBreakout"):
+			var arsenal: String = Cbrn.arsenal_ids([id])[0]
+			if not arsenal in discoveries.nuclearBreakout.nation:
+				discoveries.nuclearBreakout.nation.append(arsenal)
+	_incident("breakout", "nuke", owner, [])
+
 # ---------------------------------------------------------------- the world's answer
 
 func _incident(kind: String, weapon: String, by: int, victims: Array) -> void:
@@ -420,22 +534,33 @@ func _incident(kind: String, weapon: String, by: int, victims: Array) -> void:
 	for v in victims:
 		if int(v) != by and not int(v) in clean:
 			clean.append(int(v))
-	incidents.append({"kind": kind, "weapon": weapon, "by": by, "victims": clean, "time": w.game_time})
+	var inc := {"kind": kind, "weapon": weapon, "by": by, "victims": clean, "time": w.game_time, "attributed": not kind in ["chemical", "bio"]}
+	incidents.append(inc)
+	if inc.attributed:
+		_verdict(inc)
+	elif w.hud != null:
+		w.hud.notice("A %s attack is reported; %s investigators are on their way (attribution in %ds)." % ["chemical" if kind == "chemical" else "biological", "OPCW" if kind == "chemical" else "UN", int(INVESTIGATION)])
+
+func _verdict(inc: Dictionary) -> void:
+	var kind: String = inc.kind
+	var by: int = int(inc.by)
 	var d: Node = w.diplomacy
 	if CONDEMN.has(kind):
 		for i in range(d.n):
 			if i != by and not d.defeated(i):
 				d.change(by, i, -float(CONDEMN[kind]))
 		d.changed.emit()
-		var what: String = {"chemical": "chemical weapons", "bio": "a biological weapon", "dirty": "a radiological bomb"}[kind]
-		w.hud.notice("The world condemns %s for using %s. Relations with every nation fall by %d." % ["you" if by == 0 else d.name_of(by), what, int(CONDEMN[kind])])
-		if w.get("defcon") != null and w.defcon != null:
+		var what: String = {"chemical": "using chemical weapons", "bio": "using biological weapons", "dirty": "using a radiological bomb",
+			"reactor": "destroying a nuclear reactor", "breakout": "building a nuclear weapon"}[kind]
+		var source: String = {"chemical": "The OPCW attributes the attack: ", "bio": "UN investigators attribute it: "}.get(kind, "")
+		w.hud.notice("%sthe world condemns %s for %s. Relations with every nation fall by %d." % [source, "you" if by == 0 else d.name_of(by), what, int(CONDEMN[kind])])
+		if w.get("defcon") != null and w.defcon != null and kind != "breakout":
 			w.defcon.tension = minf(79.0, w.defcon.tension + 10.0)
 	if w.get("un") != null and w.un != null:
-		w.un.wmd_used(kind, weapon, by, clean)
+		w.un.wmd_used(kind, str(inc.weapon), by, inc.victims)
 
-## Rivals that have them use chemical weapons at the front; a biological
-## weapon only when fighting for survival.
+## Rivals use what they have: riot and nerve agents at the front, an
+## incapacitant; anthrax, disease or chlorine only when fighting for survival.
 func _ai_use() -> void:
 	if w.ai == null or w.missiles == null:
 		return
@@ -446,13 +571,22 @@ func _ai_use() -> void:
 			continue
 		if w.game_time - float(n.get("wmd_at", -1000.0)) < 180.0:
 			continue
-		var me: String = preload("res://scripts/national_arsenal.gd").identity(w, owner)
-		var key := ""
 		var desperate: bool = w.get("defcon") != null and w.defcon != null and w.defcon.existential(owner)
-		if Variants.admits(MISSILES.bioweapon.nation, me) and desperate and float(n.get("tech", 0.0)) >= 6.0 and randf() < 0.05:
-			key = "bioweapon"
-		elif Variants.admits(MISSILES.chemical.nation, me) and randf() < 0.06:
-			key = "chemical"
+		var democracy: bool = w.get("support") != null and w.support != null and w.support.regime(owner) == "democracy"
+		var options := []   # [key, chance a check]
+		if Cbrn.has(w, owner, "riotAgent"): options.append(["riotAgent", 0.08])
+		if Cbrn.has(w, owner, "chemical") and not democracy: options.append(["chemical", 0.12 if desperate else 0.05])
+		if Cbrn.has(w, owner, "incapacitant"): options.append(["incapacitant", 0.05])
+		if desperate and float(n.get("tech", 0.0)) >= 6.0:
+			if Cbrn.has(w, owner, "anthrax"): options.append(["anthrax", 0.04])
+			if Cbrn.has(w, owner, "bioweapon"): options.append(["bioweapon", 0.03])
+		if desperate and not democracy and options.is_empty():
+			options.append(["chlorine", 0.05])
+		var key := ""
+		for o in options:
+			if randf() < float(o[1]):
+				key = o[0]
+				break
 		if key == "":
 			continue
 		var target := _ai_target(owner, key == "bioweapon")
@@ -464,9 +598,19 @@ func _ai_use() -> void:
 			continue
 		n.wmd_at = w.game_time
 		w.missiles.fly(key, home.root.position + Vector3.UP * 3.0, target, owner)
-		w.hud.notice("%s has fired a %s at your %s!" % [d.name_of(owner), MISSILES[key].name.to_lower(), "town" if key == "bioweapon" else "troops"])
+		w.hud.notice("%s has fired %s at your %s!" % [d.name_of(owner), MISSILES[key].name.to_lower(), "town" if key == "bioweapon" else "troops"])
+	# A threshold state at war may break out (cbrn_data.THRESHOLD).
+	for n in w.ai.nations:
+		var owner: int = int(n.id)
+		var id := Cbrn.ident(w, owner)
+		if n.defeated or owner in broken_out or not Cbrn.THRESHOLD.has(id):
+			continue
+		var after: String = Cbrn.THRESHOLD[id].after
+		if after != "" and not broken_out.any(func(o): return Cbrn.ident(w, o) == after):
+			continue
+		if float(n.get("tech", 0.0)) >= 7.0 and not d.enemies_of(owner).is_empty() and randf() < 0.01:
+			break_out(owner)
 
-## Where a rival aims: the player's infantry nearest it, or a town for a disease.
 func _ai_target(owner: int, town: bool) -> Vector3:
 	var home := Vector3.ZERO
 	for b in w.buildings:
@@ -488,7 +632,7 @@ func capture() -> Dictionary:
 	for z in zones:
 		out.append({"kind": z.kind, "at": [z.at.x, z.at.y, z.at.z], "radius": z.radius, "strength": z.strength, "born": z.born, "until": z.until,
 			"owner": z.owner, "drift": z.drift, "town": [z.town.root.position.x, z.town.root.position.z] if z.town != null else null})
-	return {"zones": out, "incidents": incidents, "wind": [wind.x, wind.y]}
+	return {"zones": out, "incidents": incidents, "wind": [wind.x, wind.y], "broken_out": broken_out}
 
 func restore(data: Dictionary) -> void:
 	for z in zones:
@@ -497,13 +641,17 @@ func restore(data: Dictionary) -> void:
 	for s in data.get("zones", []):
 		var town = null
 		if s.get("town") != null:
-			var at := Vector3(float(s.town[0]), 0, float(s.town[1]))
-			town = _town_near(at, 6.0)
+			town = _town_near(Vector3(float(s.town[0]), 0, float(s.town[1])), 6.0)
 		var z := {"kind": str(s.kind), "at": Vector3(float(s.at[0]), float(s.at[1]), float(s.at[2])), "radius": float(s.radius), "strength": float(s.strength),
 			"born": float(s.born), "until": float(s.until), "owner": int(s.owner), "drift": float(s.drift), "town": town, "decal": null}
 		_dress(z)
 		zones.append(z)
-	incidents = Array(data.get("incidents", []))
+	incidents = Array(data.get("incidents", [])).map(func(i):
+		var c: Dictionary = i.duplicate(true)
+		c.by = int(c.by)
+		c.victims = Array(c.get("victims", [])).map(func(v): return int(v))
+		return c)
+	broken_out = Array(data.get("broken_out", [])).map(func(v): return int(v))
 	if data.has("wind"):
 		wind = Vector2(float(data.wind[0]), float(data.wind[1]))
 	if w.research != null:
