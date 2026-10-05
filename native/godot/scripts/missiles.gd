@@ -115,6 +115,8 @@ func build_time(key: String) -> float:
 func launch(key: String, target: Vector3, platform = null) -> String:
 	if int(stock.get(key, 0)) <= 0:
 		return "No %s in storage." % def_of(key).get("name", key)
+	if key == "nuke" and world.get("defcon") != null and world.defcon.release_blocked() != "":
+		return world.defcon.release_blocked()   # the escalation ladder (defcon.gd)
 	var platforms: Array = silos() + launch_ships()
 	if platforms.is_empty():
 		return "Missiles launch from a Missile Silo, a strategic submarine or a destroyer."
@@ -235,6 +237,16 @@ func impact(key: String, at: Vector3, owner: int) -> void:
 		world.damage(ent, dmg * mult * (1.0 - 0.5 * d / radius), source)
 	if special == "emp":
 		world.effects.emp_flash(at, radius)
+	# The escalation ladder (defcon.gd): who was struck, and with what.
+	if world.get("defcon") != null and world.defcon != null:
+		var struck := []
+		for ent in hit:
+			if int(ent.owner) != owner and not int(ent.owner) in struck:
+				struck.append(int(ent.owner))
+		if nuclear:
+			world.defcon.nuclear_used(owner, struck)
+		else:
+			world.defcon.struck(key, struck)
 	if nuclear and owner == 0:
 		for i in range(1, world.diplomacy.n):
 			if not world.diplomacy.defeated(i):

@@ -27,7 +27,7 @@ const KEY_LOW := Color("142b42")
 ## Navigation shares the atlas accent; icons and names identify each ministry.
 const MINISTRY := {
 	"economy": GOLD, "market": GOLD, "research": GOLD,
-	"diplomacy": GOLD, "intel": GOLD, "territory": GOLD,
+	"diplomacy": GOLD, "intel": GOLD, "territory": GOLD, "defence": GOLD,
 	"land": GOLD, "military": GOLD, "build": GOLD,
 	"people": GOLD, "cabinet": GOLD, "menu": GOLD,
 }
@@ -109,7 +109,9 @@ static func font(weight := 400) -> SystemFont:
 	var f := SystemFont.new()
 	f.font_names = PackedStringArray(["Segoe UI", "Arial"])
 	f.font_weight = weight
-	f.antialiasing = TextServer.FONT_ANTIALIASING_LCD
+	# Grayscale: with LCD antialiasing and hinting, a hyphen or minus sign
+	# vanished at 12-13 px ("income -10%" read "income  10%").
+	f.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
 	f.hinting = TextServer.HINTING_LIGHT
 	return f
 
@@ -118,7 +120,7 @@ static func serif(weight := 600) -> SystemFont:
 	var f := SystemFont.new()
 	f.font_names = PackedStringArray(["Georgia", "Cambria", "Times New Roman"])
 	f.font_weight = weight
-	f.antialiasing = TextServer.FONT_ANTIALIASING_LCD
+	f.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
 	return f
 
 ## Keep titles readable as written; letterspaced() is available for short marks.

@@ -12,6 +12,7 @@ const OFFICES := {
 	"market": ["Treasury · World Market", "president"],
 	"intel": ["Intelligence Directorate", "spymaster"],
 	"territory": ["Ministry of the Interior", "president"],
+	"defence": ["Ministry of Defence · General Staff", "general"],
 }
 
 static func subtitle(mode: String) -> String:
@@ -36,6 +37,7 @@ static func fill(hud: Node, box: VBoxContainer, mode: String) -> void:
 		"market": _market(hud, box, accent)
 		"intel": _intel(hud, box, accent)
 		"territory": _territory(hud, box, accent)
+		"defence": _defence(hud, box, accent)
 
 static func _label(parent: Control, text: String, size := 14, colour := UI.TEXT, serif := false) -> Label:
 	var l := Label.new()
@@ -124,6 +126,17 @@ static func _intel(hud: Node, box: VBoxContainer, accent: Color) -> void:
 			deepest = [d.name_of(int(k)).split(" · ")[0], float(e.network[k])]
 	_figure(box, deepest[0] if deepest[0] != "" else "None yet", "the deepest network (%d)" % int(maxf(deepest[1], 0.0)), accent)
 	_figure(box, str(e.reports.size()), "reports on file", accent)
+
+static func _defence(hud: Node, box: VBoxContainer, accent: Color) -> void:
+	var w: Node = hud.world
+	if w.defcon != null:
+		var lvl: int = w.defcon.level()
+		_figure(box, "DEFCON %d" % lvl, "the world's nuclear alert", accent, UI.BAD if lvl <= 2 else Color(0, 0, 0, 0))
+		_figure(box, str(int(w.defcon.posture[0])), "your posture", accent)
+	if w.generals != null:
+		_figure(box, "%d / %d" % [w.generals.of(0).size(), w.generals.MAX_PLAYER], "generals on your staff", accent)
+	var c: Array = preload("res://scripts/veterancy.gd").census(w)
+	_figure(box, str(c[1] + c[2] + c[3]), "veteran units (%d elite, %d heroic)" % [c[2], c[3]], accent)
 
 static func _territory(hud: Node, box: VBoxContainer, accent: Color) -> void:
 	var w: Node = hud.world

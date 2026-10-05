@@ -243,6 +243,11 @@ func _recompute() -> void:
 		var news: Dictionary = world.events.bonuses()
 		for stat in news:
 			_add(stat, float(news[stat]))
+	# The nuclear alert posture (defcon.gd).
+	if world != null and world.get("defcon") != null:
+		var alert: Dictionary = world.defcon.bonuses()
+		for stat in alert:
+			_add(stat, float(alert[stat]))
 	# Early-warning satellites (space.gd).
 	if world != null and world.get("space") != null:
 		var orbit: Dictionary = world.space.bonuses()

@@ -709,3 +709,21 @@ UI files listed above.
   - New discovery antiSatellite (era 4, nation blue/red/russia/india), registered by space.apply from
     modern_warfare.apply.
   - New Intel tab "space" in side_panels.
+- 2026-10-05 Claude, 0.9.67 (stage 5):
+  - New scripts:
+    - veterancy.gd (static; unit.xp / unit.rank; saved per unit as "xp");
+    - generals.gd (world.generals; unit.general = general id; saved by alive-unit index);
+    - defcon.gd (world.defcon; posture per nation, tension, second strikes).
+  - Hooks:
+    - world.damage multiplies by Vet and generals and credits experience;
+    - world.kill calls generals.unit_lost;
+    - scatter/astray add Vet.aim;
+    - missiles.launch blocks "nuke" unless posture 2;
+    - missiles.impact reports to defcon (struck / nuclear_used);
+    - research adds defcon.bonuses();
+    - the espionage general assassination calls generals.assassinated;
+    - world_events has a new "nuclear" event (and a "*" key in happiness tables).
+  - UI:
+    - side mode "defence" (side_panels.defence, tabs generals/veterans/nuclear), K;
+    - top-bar chip "defcon";
+    - unit_overlay draws chevrons and a general's star.

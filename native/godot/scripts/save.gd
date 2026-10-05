@@ -89,6 +89,7 @@ func capture() -> Dictionary:
 			"ground_attack": _v(u.ground_attack) if u.has("ground_attack") else null,
 			"repairing":u.get("repairing",false), "last_hit":u.get("last_hit",-100.0),
 			"disabled_until": u.get("disabled_until", 0.0), "intercept_ready": u.get("intercept_ready", 0.0),
+			"xp": u.get("xp", 0.0),
 		})
 	var edges := []
 	for e in world.logistics.edges.values():
@@ -122,6 +123,8 @@ func capture() -> Dictionary:
 		"events": world.events.capture() if world.events != null else {},
 		"victory": world.victory.capture() if world.victory != null else {},
 		"space": world.space.capture() if world.space != null else {},
+		"generals": world.generals.capture() if world.generals != null else {},
+		"defcon": world.defcon.capture() if world.defcon != null else {},
 	}
 
 func save(slot: String) -> bool:
@@ -222,6 +225,8 @@ func restore(data: Dictionary) -> void:
 				u[stat] = float(s.equipment[stat])
 		u.heading = float(s.heading)
 		u.hp = float(s.hp)
+		if float(s.get("xp", 0.0)) > 0.0:
+			world.Vet.set_xp(u, float(s.xp))
 		u.repairing = s.get("repairing",false)
 		u.last_hit = float(s.get("last_hit",-100.0))
 		for timer in ["disabled_until", "intercept_ready"]:
@@ -287,6 +292,12 @@ func restore(data: Dictionary) -> void:
 	if world.space == null:
 		world.space = preload("res://scripts/space.gd").new(world)
 	world.space.restore(data.get("space", {}))
+	if world.generals == null:
+		world.generals = preload("res://scripts/generals.gd").new(world)
+	world.generals.restore(data.get("generals", {}))
+	if world.defcon == null:
+		world.defcon = preload("res://scripts/defcon.gd").new(world)
+	world.defcon.restore(data.get("defcon", {}))
 	if world.passage:
 		world.passage.restore(data.get("passage", {}))
 	if world.occupation:

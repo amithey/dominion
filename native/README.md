@@ -23,6 +23,45 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.67: veterans, generals, and the nuclear ladder
+
+- **Veterancy** (scripts/veterancy.gd): units earn experience from the damage they deal and the kills they
+  make, and rise from Regular to Veteran (+10% damage, -7% damage taken), Elite (+20%, -14%, steadier aim)
+  and Heroic (+30%, -20%; repairs itself out of combat). Rivals' units do the same.
+  - Gold chevrons over the unit show its rank, and its card shows its experience.
+  - A promotion is announced.
+  - Experience is saved.
+- **Generals** (scripts/generals.gd; the new Defence window, K, Generals tab): appoint up to three from
+  three candidates, each with two traits, such as Armoured Spearhead, Master Gunner, Defensive Genius,
+  Air Power, Infantry Commander, Logistician, Inspiring, Reckless, Cautious, Drone Warfare and Admiral.
+  - A general commands from a ground or naval unit (a star over it). Your units within 50 m fight under
+    their traits; Air Power covers the whole air force.
+  - Generals rise with the kills made under their command: level 2 at 8 kills, level 3 at 20.
+  - If their unit is destroyed, a general is killed or wounded, and a death costs war support.
+  - Every rival keeps two generals with its doctrine's traits. A CIA assassination of a rival's general
+    now kills its most senior one.
+- **DEFCON** (scripts/defcon.gd; the DEFCON chip on the top bar and the Nuclear alert tab): the world's
+  nuclear alert follows its wars:
+  - a nuclear power at war: DEFCON 4;
+  - two at war with each other: 3;
+  - one fighting for its survival: 2;
+  - a nuclear weapon used: 1.
+- **Your posture:**
+  - Raise it for production (and, at 2, damage), at the cost of income and relations.
+  - Only at posture 2 may a nuclear missile be released.
+- **DEFCON 2 and 1** bring the Nuclear crisis world event.
+- **Rival nuclear powers:**
+  - They mobilise as their wars grow.
+  - One fighting for its survival may use a nuclear weapon (Russia most readily, all of them less readily
+    when you can strike back).
+  - A nuclear power you strike with nuclear weapons strikes back most of the time.
+- **Fix**: minus signs and hyphens were invisible in small interface text (LCD antialiasing with hinting
+  dropped them at 12-13 px, so "income -10%" read "income  10%"); the interface fonts now use grayscale
+  antialiasing.
+- Research and sources: native/STAGE5-RESEARCH-2026-10-05.md.
+
+Checks: tools/stage5-check.gd (37).
+
 ## Version 0.9.66: space
 
 - **Satellites** (scripts/space.gd, the new Space tab in the Intel window): once Satellite Recon is researched,

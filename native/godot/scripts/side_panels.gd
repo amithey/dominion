@@ -39,6 +39,7 @@ const OP_GROUPS := [
 var hud: Node
 var diplomacy_tab := "nations"
 var intel_tab := "operations"
+var defence_tab := "generals"
 
 func _init(owner: Node) -> void:
 	hud = owner
@@ -948,3 +949,143 @@ func _territory_yours() -> void:
 	pl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	pl.custom_minimum_size.x = 460
 	pick.add_child(pl)
+
+# ---------------------------------------------------------------- defence
+
+## The Defence window: the general staff, the units' ranks, and the nuclear
+## alert (generals.gd, veterancy.gd, defcon.gd).
+func defence() -> void:
+	_tabs([["Generals", "generals"], ["Veterans", "veterans"], ["Nuclear alert", "nuclear"]], defence_tab, func(v): defence_tab = v)
+	match defence_tab:
+		"veterans":
+			_veterans()
+		"nuclear":
+			_nuclear()
+		_:
+			_generals()
+
+func _generals() -> void:
+	var g = hud.world.generals
+	if g == null:
+		return
+	var picked: Array = hud._selected_units().filter(func(u): return u.owner == 0 and not u.dead)
+	var target = picked[0] if picked.size() == 1 else null
+	var head: Label = hud._text("Your general staff: %d of %d. A general commands from a ground or naval unit; every unit of yours within %d m fights under their traits (Air Power: the whole air force). Select one unit, then give a general its command." % [g.of(0).size(), g.MAX_PLAYER, int(g.COMMAND_RADIUS)], 13, hud.UI.MUTED)
+	head.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	head.custom_minimum_size.x = 460
+	hud._side_rows.add_child(head)
+	for gen in g.of(0):
+		var card: VBoxContainer = hud._card(hud.UI.GOLD)
+		card.add_child(hud._text("%s  ·  level %d  ·  %d kills" % [gen.name, int(gen.level), int(gen.kills)], 16, hud.UI.CREAM, true))
+		for t in gen.traits:
+			card.add_child(hud._text("%s: %s" % [g.TRAITS[t].name, g.TRAITS[t].desc], 12, hud.UI.TEXT))
+		var where := "In reserve."
+		if float(gen.wounded_until) > hud.world.game_time:
+			where = "Wounded: back in %ds." % ceili(float(gen.wounded_until) - hud.world.game_time)
+		elif gen.unit != null:
+			where = "Commands from your %s (%d%% health)." % [hud.world.unit_defs.get(gen.unit.key, {}).get("name", gen.unit.key), roundi(100.0 * gen.unit.hp / gen.unit.max_hp)]
+		card.add_child(hud._text(where, 12, hud.UI.MUTED))
+		var row: HBoxContainer = hud._row(card)
+		var why: String = g.assign_blocked(gen, target)
+		var who: Dictionary = gen
+		var b: Button = hud._button(row, "Give command of the selected unit", func(): return g.assign(who, target), why == "", "good")
+		b.tooltip_text = why
+		if gen.unit != null:
+			hud._button(row, "Go to", func():
+				hud.world.cam_focus = who.unit.node.position
+				return "")
+		hud._button(row, "Dismiss", func(): return g.dismiss(who), true, "bad")
+	var offer: VBoxContainer = hud._card()
+	offer.add_child(hud._text("Candidates  ·  $%d an appointment  ·  new ones in %ds" % [int(g.hire_cost()), maxi(0, ceili(g._next_offer - hud.world.game_time))], 15, hud.UI.CREAM, true))
+	for i in range(g.candidates.size()):
+		var c: Dictionary = g.candidates[i]
+		var row: HBoxContainer = hud._row(offer)
+		var lab: Label = hud._text("%s: %s" % [c.name, " · ".join(PackedStringArray(c.traits.map(func(t): return g.TRAITS[t].name)))], 13, hud.UI.TEXT)
+		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lab.tooltip_text = "\n".join(PackedStringArray(c.traits.map(func(t): return "%s: %s" % [g.TRAITS[t].name, g.TRAITS[t].desc])))
+		lab.mouse_filter = Control.MOUSE_FILTER_PASS
+		row.add_child(lab)
+		var index: int = i
+		hud._button(row, "Appoint", func(): return g.hire(index), g.of(0).size() < g.MAX_PLAYER and hud.world.economy.res.money >= g.hire_cost(), "good")
+	# The rivals' generals.
+	var d: Node = hud.world.diplomacy
+	var known := PackedStringArray()
+	for i in range(1, d.n):
+		if d.defeated(i):
+			continue
+		for gen in g.of(i):
+			known.append("%s (%s): %s" % [gen.name, d.name_of(i), g.traits_text(gen)])
+	if not known.is_empty():
+		var foes: VBoxContainer = hud._card(hud.UI.BAD)
+		foes.add_child(hud._text("Rival generals", 15, hud.UI.CREAM, true))
+		for line in known:
+			foes.add_child(hud._text(line, 12, hud.UI.TEXT))
+
+func _veterans() -> void:
+	var V := preload("res://scripts/veterancy.gd")
+	var c: Array = V.census(hud.world)
+	var card: VBoxContainer = hud._card(hud.UI.GOLD)
+	card.add_child(hud._text("Your forces by rank", 16, hud.UI.CREAM, true))
+	for r in range(V.RANKS.size()):
+		var row: HBoxContainer = hud._row(card)
+		var lab: Label = hud._text("%s  %s" % [V.RANKS[r], "^".repeat(r)], 14, V.CHEVRON if r > 0 else hud.UI.TEXT)
+		lab.custom_minimum_size.x = 150
+		row.add_child(lab)
+		var fx := "as it leaves the factory" if r == 0 else "+%d%% damage, %d%% less damage taken%s" % [roundi((V.DAMAGE[r] - 1.0) * 100.0), roundi((1.0 - V.TAKEN[r]) * 100.0), ", repairs itself out of combat" if r == 3 else ""]
+		row.add_child(hud._text("%d units  ·  %s" % [c[r], fx], 13, hud.UI.MUTED))
+	var how: Label = hud._text("A unit earns experience from the damage it deals, and more for each kill. It becomes a Veteran once it has dealt its own health in damage, Elite at three times and Heroic at six. The rivals' units rank up the same way.", 12, hud.UI.MUTED)
+	how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	how.custom_minimum_size.x = 460
+	card.add_child(how)
+	var best: Array = hud.world.units.filter(func(u): return u.owner == 0 and not u.dead and float(u.get("xp", 0.0)) > 0.0)
+	best.sort_custom(func(a, b): return float(a.xp) / float(a.max_hp) > float(b.xp) / float(b.max_hp))
+	if not best.is_empty():
+		var top: VBoxContainer = hud._card()
+		top.add_child(hud._text("The most experienced", 15, hud.UI.CREAM, true))
+		for u in best.slice(0, 6):
+			var row: HBoxContainer = hud._row(top)
+			var lab: Label = hud._text("%s  ·  %s  ·  %d xp" % [hud.world.unit_defs.get(u.key, {}).get("name", u.key), V.rank_name(u), int(u.xp)], 13, hud.UI.TEXT)
+			lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(lab)
+			var unit: Dictionary = u
+			hud._button(row, "Go to", func():
+				hud.world.cam_focus = unit.node.position
+				return "")
+
+func _nuclear() -> void:
+	var dc = hud.world.defcon
+	if dc == null:
+		return
+	var lvl: int = dc.level()
+	var card: VBoxContainer = hud._card(hud.UI.BAD if lvl <= 2 else hud.UI.GOLD)
+	card.add_child(hud._text("DEFCON %d" % lvl, 22, hud.UI.CREAM, true))
+	card.add_child(hud._text(dc.DESC[lvl], 13, hud.UI.TEXT))
+	var why: String = dc.cause()
+	if why != "":
+		card.add_child(hud._text("Cause: %s." % why, 13, hud.UI.MUTED))
+	hud._meter(card, dc.tension, 100.0, hud.UI.BAD if lvl <= 2 else hud.UI.GOLD, "Nuclear tension %d  ·  DEFCON 4 at 20, 3 at 40, 2 at 60, 1 at 80" % roundi(dc.tension))
+	var mine: VBoxContainer = hud._card()
+	var p: int = int(dc.posture[0])
+	mine.add_child(hud._text("Your posture: %d" % p, 16, hud.UI.CREAM, true))
+	mine.add_child(hud._text(dc.posture_text(p), 13, hud.UI.TEXT))
+	var row: HBoxContainer = hud._row(mine)
+	var up: Button = hud._button(row, "Raise the alert", func(): return dc.raise_posture(), p > 2, "bad")
+	if p > 2:
+		up.tooltip_text = "Posture %d: %s%s" % [p - 1, dc.posture_text(p - 1), " Every nation will think less of you (-8)." if p - 1 == 2 else (" Nuclear powers -4 relations." if p - 1 == 3 else "")]
+	hud._button(row, "Stand down", func(): return dc.lower_posture(), p < 5)
+	var release: String = dc.release_blocked()
+	mine.add_child(hud._text("Nuclear release: %s" % ("authorised." if release == "" else release), 12, hud.UI.BAD if release == "" else hud.UI.MUTED))
+	if dc.nuclear(0):
+		mine.add_child(hud._text("Deterrent: %s" % ("ready (a second strike is possible)" if dc.deterrent(0) else "none: no nuclear missile stored and no nuclear submarine at sea"), 12, hud.UI.MUTED))
+	else:
+		mine.add_child(hud._text("Your nation has no nuclear weapons.", 12, hud.UI.MUTED))
+	var d: Node = hud.world.diplomacy
+	var powers: VBoxContainer = hud._card()
+	powers.add_child(hud._text("The nuclear powers", 15, hud.UI.CREAM, true))
+	for i in range(1, d.n):
+		if d.defeated(i) or not dc.nuclear(i):
+			continue
+		var state := "posture %d" % int(dc.posture[i])
+		if dc.existential(i): state += ", fighting for its survival"
+		if d.at_war(0, i): state += ", at war with you"
+		powers.add_child(hud._text("%s: %s" % [d.name_of(i), state], 13, hud._nation_colour(i).lightened(0.35)))

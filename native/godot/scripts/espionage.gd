@@ -355,6 +355,8 @@ func _succeed(op_key: String, nation: int, role: String) -> String:
 				"general":
 					_set_debuff(nation, "general", 240.0)
 					_set_debuff(nation, "paralyzed", 60.0)
+					if world.get("generals") != null and world.generals != null:
+						world.generals.assassinated(nation)   # its most senior general (generals.gd)
 					for u in world.units:
 						if u.owner == nation and not u.dead and u.attack_move:
 							u.target = null

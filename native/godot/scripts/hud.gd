@@ -228,7 +228,8 @@ func _build_top_bar() -> void:
 			["research", "research", "Research points and their rate. Press Y for the research tree."],
 			["land", "land", "Land held: territory cells. Press T for borders."],
 			["missiles", "missile", "Missiles stored against Ammo Depot capacity."],
-			["support", "support", "War support: how far your people back the war. Wars, losses and shortages wear it down; being attacked and victories raise it."]]:
+			["support", "support", "War support: how far your people back the war. Wars, losses and shortages wear it down; being attacked and victories raise it."],
+			["defcon", "defcon", "DEFCON: the world's nuclear alert, 5 (peace) to 1 (nuclear weapons used). Press K for your own posture."]]:
 		var chip := HBoxContainer.new()
 		chip.add_child(_divider())
 		chip.add_theme_constant_override("separation", 5)
@@ -239,6 +240,10 @@ func _build_top_bar() -> void:
 		chip.add_child(value)
 		row.add_child(chip)
 		_extra[extra[0]] = [value, chip]
+		if extra[0] == "defcon":
+			chip.gui_input.connect(func(e):
+				if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+					toggle_panel("defence"))
 	# The era is cut into a small brass cartouche pinned to the right end of the
 	# strip, so a nation with every store full never pushes it off the screen.
 	var cartouche := PanelContainer.new()
@@ -266,13 +271,13 @@ func _build_top_bar() -> void:
 	rack.add_child(screens)
 	row = screens
 	for b in [["cabinet", "Cabinet (Tab): the whole state at a glance", func(): toggle_cabinet()], ["research", "Research (Y)", func(): toggle_research()], ["diplomacy", "Diplomacy (G)", func(): toggle_diplomacy()],
-			["market", "World market (M)", func(): toggle_panel("market")], ["intel", "Intelligence (I)", func(): toggle_panel("intel")],
+			["market", "World market (M)", func(): toggle_panel("market")], ["intel", "Intelligence (I)", func(): toggle_panel("intel")], ["defence", "Defence (K): generals, veterans and the nuclear alert", func(): toggle_panel("defence")],
 			["land", "Territory (T)", func(): toggle_panel("territory")], ["log", "Message log (L): every message of the match", func(): toggle_log()], ["menu", "Menu (Esc)", func(): world.menu.open_pause() if world.menu and world.menu._root != null else null]]:
 		var button := Button.new()
 		button.icon = UI.icon("sovereign" if b[0] == "cabinet" else b[0])
 		button.expand_icon = true
 		button.custom_minimum_size = Vector2(104, 48)
-		button.text = {"cabinet":"Cabinet", "research":"Research", "diplomacy":"Diplomacy", "market":"Market", "intel":"Intel", "land":"Territory", "log":"Log", "menu":"Menu"}[b[0]]
+		button.text = {"cabinet":"Cabinet", "research":"Research", "diplomacy":"Diplomacy", "market":"Market", "intel":"Intel", "defence":"Defence", "land":"Territory", "log":"Log", "menu":"Menu"}[b[0]]
 		button.add_theme_font_size_override("font_size", 14)
 		button.add_theme_constant_override("icon_max_width", 22)
 		button.toggle_mode = not b[0] in ["menu", "log"]
@@ -831,6 +836,13 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 		_extra.support[0].text = "%d%%" % roundi(world.support.value(0))
 		_extra.support[0].add_theme_color_override("font_color", UI.GOOD if mood == "Rallied" else (UI.CREAM if mood == "Steady" else (Color("e8b26a") if mood == "Weary" else UI.BAD)))
 		_extra.support[1].tooltip_text = "War support %d%% · %s (%s). %s" % [roundi(world.support.value(0)), mood, world.support.regime(0), world.support.describe(mood)]
+	if world.get("defcon") != null and world.defcon != null:
+		var lvl: int = world.defcon.level()
+		_extra.defcon[0].text = "DEFCON %d" % lvl
+		_extra.defcon[0].add_theme_color_override("font_color", [Color("ff5a4a"), Color("ff5a4a"), Color("f08a4b"), Color("e8c66a"), Color("9fd0e8"), UI.CREAM][lvl])
+		var why: String = world.defcon.cause()
+		_extra.defcon[1].tooltip_text = "DEFCON %d · %s%s
+Your posture: %d (%s). Press K." % [lvl, world.defcon.DESC[lvl], (" Cause: %s." % why) if why != "" else "", int(world.defcon.posture[0]), world.defcon.posture_text(int(world.defcon.posture[0]))]
 	var silos: bool = world.missiles != null and (world.missiles.stored() > 0 or not world.missiles.silos().is_empty())
 	_extra.missiles[1].visible = silos
 	if silos:
@@ -1129,6 +1141,24 @@ func _update_selection() -> void:
 		var halted: Array = units.filter(func(u): return u.owner == 0 and str(u.get("operating_shortage", "")) != "")
 		if not halted.is_empty():
 			_sel_info.text += "\nHALTED (%d): %s. Buy it on the World market or restore your income." % [halted.size(), preload("res://scripts/unit_overlay.gd").shortage_text(str(halted[0].operating_shortage)).to_lower()]
+		# Rank and general (veterancy.gd, generals.gd).
+		if units.size() == 1:
+			var V := preload("res://scripts/veterancy.gd")
+			var one: Dictionary = units[0]
+			var next: float = V.to_next(one)
+			_sel_info.text += "
+Rank: %s%s" % [V.rank_name(one), (" · %d xp to %s" % [ceili(next), V.RANKS[V.rank(one) + 1]]) if next >= 0.0 else " · the highest rank"]
+			if world.generals != null:
+				var gen = world.generals.general_of(one)
+				if gen != null:
+					_sel_info.text += "
+General aboard: %s (level %d): %s." % [gen.name, int(gen.level), world.generals.traits_text(gen)]
+		else:
+			var V := preload("res://scripts/veterancy.gd")
+			var ranked: int = units.filter(func(u): return V.rank(u) > 0).size()
+			if ranked > 0:
+				_sel_info.text += "
+%d of them veterans or better." % ranked
 		for fighter in units.filter(func(u): return u.key == "sixthGen"):
 			var wing: int = world.Future.mates(world, fighter).size()
 			_sel_info.text += "\nBattle group: %d of %d loyal wingmen in formation; they strike its target and meet whatever attacks the group." % [wing, world.Future.WINGMEN]
@@ -1339,7 +1369,7 @@ func _fill_queue(queue: Array, progress := 0.0) -> void:
 # icon and a close button, then cards. It is only as tall as its content.
 
 const SCREENS := {"diplomacy": ["diplomacy", "Diplomacy"], "market": ["market", "World market"],
-	"intel": ["intel", "Intelligence"], "territory": ["land", "Territory"]}
+	"intel": ["intel", "Intelligence"], "territory": ["land", "Territory"], "defence": ["defence", "Defence"]}
 
 var _win: PanelContainer
 var _win_icon: TextureRect
@@ -1496,6 +1526,8 @@ func refresh_side() -> void:
 			_panels.intel()  # side_panels.gd: target tabs, grouped operations, agents, dossiers
 		"territory":
 			_panels.territory()  # side_panels.gd: your land and the nations' shares
+		"defence":
+			_panels.defence()  # side_panels.gd: generals, veterans, the nuclear alert
 	preload("res://scripts/ministry_brief.gd").fill(self, _win_brief, side_mode)
 	_dress_window()
 	_fit_window.call_deferred(keep)

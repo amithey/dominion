@@ -58,6 +58,11 @@ const EVENTS := {
 		"prices": {"oil": -0.2, "iron": -0.2, "silicon": -0.1},
 		"income": {"*": -0.06},
 		"why": "a war between two of the world's largest economies breaks the trade that binds them"},
+	"nuclear": {"name": "Nuclear crisis",
+		"prices": {"oil": 0.3, "food": 0.2, "iron": 0.1},
+		"income": {"*": -0.05},
+		"happiness": {"*": -4.0},
+		"why": "in October 1962 and again in 2022 the threat of nuclear war shook the markets; a nuclear explosion would stop the world's trade"},
 	"arms_boom": {"name": "Arms boom",
 		"prices": {"iron": 0.15},
 		"income": {"usa": 0.04, "russia": 0.03, "eu": 0.03, "israel": 0.04, "south_korea": 0.04, "turkiye": 0.04, "china": 0.02},
@@ -129,6 +134,9 @@ func cause_of(key: String) -> String:
 				for y in MAJORS:
 					if x < y and at_war_ids(x, [y]):
 						return "%s and %s are at war" % [d.name_of(owner_of(x)), d.name_of(owner_of(y))]
+		"nuclear":
+			if w.get("defcon") != null and w.defcon != null and w.defcon.level() <= 2:
+				return "the world stands at DEFCON %d: %s" % [w.defcon.level(), w.defcon.cause().to_lower()]
 		"arms_boom":
 			var wars := 0
 			for a in range(d.n):
@@ -223,7 +231,8 @@ func bonuses() -> Dictionary:
 	var happy := 0.0
 	var research := 0.0
 	for key in active:
-		happy += float(EVENTS[key].get("happiness", {}).get(id, 0.0))
+		var moods: Dictionary = EVENTS[key].get("happiness", {})
+		happy += float(moods.get(id, moods.get("*", 0.0)))
 		research += float(EVENTS[key].get("research", {}).get(id, 0.0))
 	for r in refugees:
 		if int(r.to) == 0:

@@ -126,6 +126,8 @@ var support: RefCounted = null   # war_support.gd: how far each people backs its
 var events: RefCounted = null    # world_events.gd: what the wars do to the world
 var victory: RefCounted = null   # victory.gd: dominance and technology, besides conquest
 var space: RefCounted = null   # space.gd: satellites and anti-satellite weapons
+var generals: RefCounted = null   # generals.gd: commanders with traits
+var defcon: RefCounted = null   # defcon.gd: the nuclear escalation ladder
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
 var noise_texture: NoiseTexture2D
@@ -239,6 +241,7 @@ const Tactics := preload("res://scripts/tactics.gd")
 const Modern := preload("res://scripts/modern_warfare.gd")
 const Arsenal := preload("res://scripts/national_arsenal.gd")
 const Future := preload("res://scripts/future_weapons.gd")
+const Vet := preload("res://scripts/veterancy.gd")
 const FactionArsenal := preload("res://scripts/faction_arsenal.gd")
 const FactionPowers := preload("res://scripts/faction_powers.gd")
 const SiteClearing := preload("res://scripts/site_clearing.gd")
@@ -2007,6 +2010,10 @@ func _physics_process(delta: float) -> void:
 			victory.update(delta)  # paths to victory
 		if space != null:
 			space.update(delta)  # satellites in orbit
+		if generals != null:
+			generals.update(delta)  # generals' commands (and veterans' field repairs)
+		if defcon != null:
+			defcon.update(delta)  # the nuclear escalation ladder
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
 		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
@@ -2392,6 +2399,8 @@ func start_match(difficulty: String) -> void:
 	events = preload("res://scripts/world_events.gd").new(self)
 	victory = preload("res://scripts/victory.gd").new(self)
 	space = preload("res://scripts/space.gd").new(self)
+	generals = preload("res://scripts/generals.gd").new(self)
+	defcon = preload("res://scripts/defcon.gd").new(self)
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 
 ## Walks the menu flow: main menu (paused, no AI) -> new game on normal (AI
@@ -5136,11 +5145,11 @@ func blast(shooter: Dictionary, at: Vector3, dmg: float, radius: float, size: fl
 ## How widely a unit's shots scatter from its nation's fire control (unit_quality.gd):
 ## 1 for the shared unit, more for old sights, less for the best.
 func scatter(unit: Dictionary) -> float:
-	return clampf(2.0 - float(unit.get("accuracy", 1.0)), 0.7, 1.6)
+	return clampf(2.0 - float(unit.get("accuracy", 1.0)) - Vet.aim(unit), 0.7, 1.6)
 
 ## The chance an older guided missile goes astray (60% of its accuracy shortfall, at most 35%).
 func astray(unit: Dictionary) -> bool:
-	return randf() < clampf((1.0 - float(unit.get("accuracy", 1.0)) * guidance(unit)) * 0.6, 0.0, 0.35)
+	return randf() < clampf((1.0 - (float(unit.get("accuracy", 1.0)) + Vet.aim(unit)) * guidance(unit)) * 0.6, 0.0, 0.35)
 
 ## Satellite navigation (space.gd): 1.1 with a constellation, 0.9 when GPS is denied.
 func guidance(unit: Dictionary) -> float:
@@ -5221,7 +5230,11 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	amount *= Modern.jam_mult(self, source)  # a jammed drone flies blind
 	amount *= preload("res://scripts/bunker.gd").cover(self, unit, source)  # bunkers shield from ground fire
 	amount *= preload("res://scripts/additional_factions.gd").explosive_armor(unit.key, str(source.get("key", "")))
+	amount *= Vet.damage_mult(source) * Vet.taken_mult(unit)  # veterans (veterancy.gd)
+	if generals != null:
+		amount *= generals.damage_mult(source) * generals.taken_mult(unit)  # a general's traits
 	unit.hp -= amount
+	Vet.credit(self, source, unit, amount)
 	if amount > 0:
 		unit.last_hit = game_time
 	if unit.get("is_building", false):
@@ -5263,6 +5276,8 @@ func kill(unit: Dictionary) -> void:
 	unit.killed = true
 	if support != null:
 		support.lost(unit)   # the home front mourns (war_support.gd)
+	if generals != null and unit.has("general"):
+		generals.unit_lost(unit)   # the general aboard is killed or escapes wounded
 	if is_instance_valid(unit.get("bombard_marker")):
 		unit.bombard_marker.queue_free()
 	unit.dead = true
@@ -5891,6 +5906,8 @@ func _input(event: InputEvent) -> void:
 		hud.toggle_panel("intel")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_T:
 		hud.toggle_panel("territory")
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_K:
+		hud.toggle_panel("defence")   # generals, veterans, the nuclear alert
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_O and occupation != null:
 		occupation.begin_zone()  # the next click marks an operational zone
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Y:
