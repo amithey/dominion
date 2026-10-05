@@ -115,7 +115,7 @@ func build_time(key: String) -> float:
 func launch(key: String, target: Vector3, platform = null) -> String:
 	if int(stock.get(key, 0)) <= 0:
 		return "No %s in storage." % def_of(key).get("name", key)
-	if key == "nuke" and world.get("defcon") != null and world.defcon.release_blocked() != "":
+	if def_of(key).get("nuclear", key == "nuke") and world.get("defcon") != null and world.defcon.release_blocked() != "":
 		return world.defcon.release_blocked()   # the escalation ladder (defcon.gd)
 	var platforms: Array = silos() + launch_ships()
 	if platforms.is_empty():
@@ -192,23 +192,27 @@ func _physics_process(delta: float) -> void:
 		if f >= 1.0:
 			node.queue_free()
 			flying.remove_at(i)
-			impact(m.type, m.to, m.owner)
+			impact(m.type, m.to, m.owner, m.from)
 
-func impact(key: String, at: Vector3, owner: int) -> void:
+func impact(key: String, at: Vector3, owner: int, from := Vector3.INF) -> void:
 	var def := def_of(key)
 	var radius := float(def.radius)
 	var dmg := float(def.dmg)*1.75
 	var special: String = def.get("special", "")
-	var nuclear := key == "nuke"
-	world.effects.explosion(at + Vector3.UP, radius * 0.22, true)
-	if nuclear:
-		world.effects.mushroom(at, radius)
-	elif radius > 15.0:
+	var nuclear: bool = key == "nuke" or def.get("nuclear", false)
+	# A burst high above (HEMP) or a microwave pulse (HPM) leaves the ground intact (wmd.gd).
+	var no_blast: bool = special in ["hemp", "emp"]
+	if not no_blast:
+		world.effects.explosion(at + Vector3.UP, minf(radius, 60.0) * 0.22, true)
+	if nuclear and not no_blast:
+		world.effects.mushroom(at, minf(radius, 70.0))
+	elif radius > 15.0 and not no_blast:
 		world.effects.explosion(at + Vector3.UP * 3.0, radius * 0.16, false)
-	world.logistics.damage_at(at, radius if nuclear else radius * 0.4, dmg, nuclear)
+	if not no_blast:
+		world.logistics.damage_at(at, radius if nuclear else radius * 0.4, dmg, nuclear)
 	var source := {"owner": owner, "dead": true, "key": "missile"}
 	var hit := []
-	for ent in world.units + world.buildings:
+	for ent in (world.units + world.buildings) if not no_blast else []:
 		if ent.dead:
 			continue
 		var p: Vector3 = ent.node.position
@@ -228,21 +232,26 @@ func impact(key: String, at: Vector3, owner: int) -> void:
 				mult = 2.5 if ent.get("naval", false) else 1.0
 			"brahmos":
 				mult = 2.0 if ent.get("naval", false) else 1.0
-			"emp":
-				var cls: String = world.target_class(ent)
-				if cls in ["building", "air", "naval", "armor", "light"]:
-					ent.disabled_until = maxf(ent.get("disabled_until", 0.0), world.game_time + EMP_SECONDS)
-				mult = 0.25 if building else 0.45
+			"neutron":
+				# Neutrons pass through armour and walls: crews and people die, buildings stand.
+				# Its blast is small: buildings suffer only near the burst.
+				mult = (0.2 if d < radius * 0.35 else 0.0) if building else (1.2 if ent.get("vehicle", false) else 1.0)
 		hit.append(ent)
 		world.damage(ent, dmg * mult * (1.0 - 0.5 * d / radius), source)
-	if special == "emp":
-		world.effects.emp_flash(at, radius)
+	# What lasts: fallout, a gas cloud, an outbreak, a blackout (wmd.gd).
+	var struck_by := []
+	for ent in hit:
+		if int(ent.owner) != owner and not int(ent.owner) in struck_by:
+			struck_by.append(int(ent.owner))
+	if world.get("wmd") != null and world.wmd != null:
+		if special == "hemp":
+			for b in world.buildings:
+				if not b.dead and int(b.owner) != owner and not int(b.owner) in struck_by and b.root.position.distance_to(at) <= radius:
+					struck_by.append(int(b.owner))
+		world.wmd.after_impact(key, at, owner, from, struck_by)
 	# The escalation ladder (defcon.gd): who was struck, and with what.
 	if world.get("defcon") != null and world.defcon != null:
-		var struck := []
-		for ent in hit:
-			if int(ent.owner) != owner and not int(ent.owner) in struck:
-				struck.append(int(ent.owner))
+		var struck: Array = struck_by
 		if nuclear:
 			world.defcon.nuclear_used(owner, struck)
 		else:

@@ -125,6 +125,9 @@ func capture() -> Dictionary:
 		"space": world.space.capture() if world.space != null else {},
 		"generals": world.generals.capture() if world.generals != null else {},
 		"defcon": world.defcon.capture() if world.defcon != null else {},
+		"wmd": world.wmd.capture() if world.wmd != null else {},
+		"un": world.un.capture() if world.un != null else {},
+		"power_effects": world.power_effects.duplicate(true),   # sanctions, export controls, a closed strait
 	}
 
 func save(slot: String) -> bool:
@@ -298,8 +301,23 @@ func restore(data: Dictionary) -> void:
 	if world.defcon == null:
 		world.defcon = preload("res://scripts/defcon.gd").new(world)
 	world.defcon.restore(data.get("defcon", {}))
+	if world.wmd == null:
+		world.wmd = preload("res://scripts/wmd.gd").new(world)
+	world.wmd.restore(data.get("wmd", {}))
+	if world.un == null:
+		world.un = preload("res://scripts/un.gd").new(world)
+	world.un.restore(data.get("un", {}))
+	if data.has("power_effects"):
+		world.power_effects = Array(data.power_effects).map(func(e): return _effect(e))
 	if world.passage:
 		world.passage.restore(data.get("passage", {}))
 	if world.occupation:
 		world.occupation.restore(data.get("zones", []))
 	world.diplomacy.contacts.restore(data.get("diplomatic_contacts", {}))
+
+## A saved power effect, with its ids whole numbers again.
+func _effect(e: Dictionary) -> Dictionary:
+	var c: Dictionary = e.duplicate(true)
+	for k in ["nation", "by"]:
+		if c.has(k): c[k] = int(c[k])
+	return c

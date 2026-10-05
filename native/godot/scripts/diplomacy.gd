@@ -88,6 +88,8 @@ func declare_war(a: int, b: int, reason := "") -> void:
 	set_flag(war, a, b, true)
 	if world != null and world.get("support") != null:
 		world.support.war_declared(a, b)   # the attacked rally; an unprovoked democracy pays
+	if world != null and world.get("un") != null and world.un != null:
+		world.un.war_declared(a, b, reason)   # an aggression goes before the Security Council
 	for grid in [alliance, pact, nap]:
 		set_flag(grid, a, b, false)
 	set_score(a, b, -100.0)

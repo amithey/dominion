@@ -128,6 +128,8 @@ var victory: RefCounted = null   # victory.gd: dominance and technology, besides
 var space: RefCounted = null   # space.gd: satellites and anti-satellite weapons
 var generals: RefCounted = null   # generals.gd: commanders with traits
 var defcon: RefCounted = null   # defcon.gd: the nuclear escalation ladder
+var wmd: RefCounted = null   # wmd.gd: fallout, gas, disease; who used what
+var un: RefCounted = null   # un.gd: the Security Council and the General Assembly
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
 var noise_texture: NoiseTexture2D
@@ -2014,6 +2016,10 @@ func _physics_process(delta: float) -> void:
 			generals.update(delta)  # generals' commands (and veterans' field repairs)
 		if defcon != null:
 			defcon.update(delta)  # the nuclear escalation ladder
+		if wmd != null:
+			wmd.update(delta)  # fallout, gas clouds, outbreaks
+		if un != null:
+			un.update(delta)  # the United Nations
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
 		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
@@ -2401,6 +2407,8 @@ func start_match(difficulty: String) -> void:
 	space = preload("res://scripts/space.gd").new(self)
 	generals = preload("res://scripts/generals.gd").new(self)
 	defcon = preload("res://scripts/defcon.gd").new(self)
+	wmd = preload("res://scripts/wmd.gd").new(self)
+	un = preload("res://scripts/un.gd").new(self)
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 
 ## Walks the menu flow: main menu (paused, no AI) -> new game on normal (AI
@@ -4338,6 +4346,8 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 	# to be under water).
 	if offshore and (height_at(at.x, at.z) >= float(map.seaLevel) - 0.5 or lowest >= float(map.seaLevel) - 0.5):
 		return "An offshore platform needs open water"
+	if wmd != null and wmd.contaminated(at, ["fallout", "chemical"]):
+		return "Contaminated ground: wait for the fallout to decay"
 	if not offshore and not is_district(key) and lowest < float(map.seaLevel) + 1.0:
 		return "Too close to the water"
 	if not offshore and not is_district(key) and highest - lowest > 3.5:
@@ -5908,6 +5918,8 @@ func _input(event: InputEvent) -> void:
 		hud.toggle_panel("territory")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_K:
 		hud.toggle_panel("defence")   # generals, veterans, the nuclear alert
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_U:
+		hud.toggle_panel("un")   # the United Nations
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_O and occupation != null:
 		occupation.begin_zone()  # the next click marks an operational zone
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Y:

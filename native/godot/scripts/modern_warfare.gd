@@ -40,7 +40,9 @@ const APS_RELOAD := 4.0        # an active protection system rearms between inte
 
 ## Missile classes and each defender's chance to stop one per engagement.
 const CLASS_OF := {"cruise": "cruise", "cluster": "cruise", "emp": "cruise", "antiShip": "seaSkimmer",
-	"tactical": "shortBallistic", "ballistic": "ballistic", "hypersonic": "hypersonic", "nuke": "icbm", "df17": "hypersonic", "brahmos": "supersonic"}
+	"tactical": "shortBallistic", "ballistic": "ballistic", "hypersonic": "hypersonic", "nuke": "icbm", "df17": "hypersonic", "brahmos": "supersonic",
+	"tacticalNuke": "shortBallistic", "hydrogenBomb": "icbm", "tsarBomba": "icbm", "neutronBomb": "ballistic", "nuclearEmp": "icbm",
+	"dirtyBomb": "shortBallistic", "chemical": "shortBallistic", "bioweapon": "shortBallistic"}
 const INTERCEPT := {
 	# SAM site, mobile SAM, ABM battery, laser, the Verdant Union's IRIS-T SLM,
 	# and the railgun (future_weapons.gd: cheap shots, nearly half the hypersonics)
@@ -175,6 +177,7 @@ static func apply(w: Node) -> void:
 	preload("res://scripts/unit_quality.gd").apply(w)   # the systems that replace them (the M1E3 Abrams)
 	preload("res://scripts/national_capabilities.gd").apply(w)   # Russia's from the war in Ukraine
 	preload("res://scripts/space.gd").apply(w)   # anti-satellite weapons
+	preload("res://scripts/wmd.gd").apply(w)   # nuclear yields, EMP, chemical, biological, radiological
 	var types: Dictionary = w.map.missiles.types
 	for key in types:
 		var odds: Dictionary = INTERCEPT[CLASS_OF.get(key, "cruise")]

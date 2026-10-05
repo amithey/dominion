@@ -27,7 +27,7 @@ const KEY_LOW := Color("142b42")
 ## Navigation shares the atlas accent; icons and names identify each ministry.
 const MINISTRY := {
 	"economy": GOLD, "market": GOLD, "research": GOLD,
-	"diplomacy": GOLD, "intel": GOLD, "territory": GOLD, "defence": GOLD,
+	"diplomacy": GOLD, "intel": GOLD, "territory": GOLD, "defence": GOLD, "un": GOLD,
 	"land": GOLD, "military": GOLD, "build": GOLD,
 	"people": GOLD, "cabinet": GOLD, "menu": GOLD,
 }

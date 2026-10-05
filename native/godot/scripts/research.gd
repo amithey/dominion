@@ -243,6 +243,12 @@ func _recompute() -> void:
 		var news: Dictionary = world.events.bonuses()
 		for stat in news:
 			_add(stat, float(news[stat]))
+	# Poisoned and sick towns (wmd.gd), and UN sanctions (un.gd).
+	for sys in ["wmd", "un"]:
+		if world != null and world.get(sys) != null:
+			var fx: Dictionary = world.get(sys).bonuses()
+			for stat in fx:
+				_add(stat, float(fx[stat]))
 	# The nuclear alert posture (defcon.gd).
 	if world != null and world.get("defcon") != null:
 		var alert: Dictionary = world.defcon.bonuses()

@@ -23,6 +23,58 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.68: weapons of mass destruction, and the United Nations
+
+- **The EMP missile, rethought** (scripts/wmd.gd): now the HPM Cruise Missile, as tested in the US
+  (CHAMP 2012, HiJENKS 2022), for the United States, China and Russia only.
+  - It kills no one.
+  - Three microwave pulses along the end of its flight knock out vehicles, aircraft, ships and buildings
+    for 45 s and bring drones down; your own units are spared.
+- **High-Altitude Nuclear EMP** (US, China, Russia, North Korea):
+  - no blast on the ground;
+  - a wide blackout for 90 s, crippled aircraft, falling drones;
+  - satellites knocked out of orbit (Starfish Prime, 1962).
+- **Nuclear warheads by yield:**
+  - Tactical (5-10 kt);
+  - Nuclear (strategic);
+  - Thermonuclear (about 1 Mt, the US B83; new discovery Thermonuclear Weapons);
+  - Tsar Bomba (50 Mt, Russia only);
+  - Neutron Warhead (enhanced radiation, US, Russia, China, France; new discovery Enhanced Radiation
+    Weapons): it kills crews and infantry and spares buildings beyond its small blast.
+- **Fallout:** every nuclear detonation leaves radioactive ground.
+  - It drifts downwind and decays by the 7-10 rule.
+  - Inside it infantry dies, crews sicken and buildings shut down and crumble; nothing may be built.
+  - Your towns in it empty and grieve: happiness -5 and income -5% each.
+  - It shows as a glowing stain on the ground.
+- **Chemical Warhead** (Russia, North Korea, Iran): a drifting cloud that kills infantry; tank crews are
+  protected.
+- **Biological Warhead** (Russia, North Korea): an outbreak that spreads from town to town, the
+  attacker's own included.
+- **Radiological (dirty) bomb** (the nuclear powers and Iran): a small blast and six minutes of poisoned
+  ground.
+- **Who builds what:** the silo lists only your nation's weapons.
+- **How rivals use them:** a rival with chemical weapons uses them at the front in a war; biological
+  weapons only when fighting for survival; Russia's first nuclear use is tactical.
+- **The United Nations** (scripts/un.gd; the new UN window, U):
+  - **The Security Council:** the permanent members present, each with a veto, and elected members.
+  - **Drafts before it:** every use of a weapon of mass destruction (condemnation and sanctions, income
+    -25% for 6 minutes), every war of aggression involving you (withdraw within 2 minutes or be
+    sanctioned), and your own drafts (sanctions with a cause, or a ceasefire).
+  - **Your vote:** you vote when on the Council and may veto as a permanent member.
+  - **The General Assembly:** a veto sends the matter there, as resolution 76/262 requires. Two thirds
+    condemn the target and isolate it, and the veto costs its user some standing.
+- **Saved** with the game: contamination, incidents, the UN's record, and now also every power effect
+  (sanctions, export controls, a closed strait), which used to be lost on loading.
+- Research and sources: native/WMD-RESEARCH-2026-10-05.md.
+
+- **Tests**: tools/test_kit.gd can now also switch off the UN, the WMD zones, the generals and DEFCON.
+  - weapons-live-100 picks a seeded battlefield with room for its longest ranges. Its DF-17 and stealth
+    targets stand exactly at their distances: the random field used to shift whenever a new system drew
+    a random number at start-up.
+  - faction-powers-check clears the survivors of the TOS-1A salvo before the next scenario.
+
+Checks: tools/wmd-un-check.gd (40).
+
 ## Version 0.9.67: veterans, generals, and the nuclear ladder
 
 - **Veterancy** (scripts/veterancy.gd): units earn experience from the damage they deal and the kills they

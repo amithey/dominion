@@ -271,13 +271,13 @@ func _build_top_bar() -> void:
 	rack.add_child(screens)
 	row = screens
 	for b in [["cabinet", "Cabinet (Tab): the whole state at a glance", func(): toggle_cabinet()], ["research", "Research (Y)", func(): toggle_research()], ["diplomacy", "Diplomacy (G)", func(): toggle_diplomacy()],
-			["market", "World market (M)", func(): toggle_panel("market")], ["intel", "Intelligence (I)", func(): toggle_panel("intel")], ["defence", "Defence (K): generals, veterans and the nuclear alert", func(): toggle_panel("defence")],
+			["market", "World market (M)", func(): toggle_panel("market")], ["intel", "Intelligence (I)", func(): toggle_panel("intel")], ["defence", "Defence (K): generals, veterans and the nuclear alert", func(): toggle_panel("defence")], ["un", "United Nations (U): the Security Council and the General Assembly", func(): toggle_panel("un")],
 			["land", "Territory (T)", func(): toggle_panel("territory")], ["log", "Message log (L): every message of the match", func(): toggle_log()], ["menu", "Menu (Esc)", func(): world.menu.open_pause() if world.menu and world.menu._root != null else null]]:
 		var button := Button.new()
 		button.icon = UI.icon("sovereign" if b[0] == "cabinet" else b[0])
 		button.expand_icon = true
 		button.custom_minimum_size = Vector2(104, 48)
-		button.text = {"cabinet":"Cabinet", "research":"Research", "diplomacy":"Diplomacy", "market":"Market", "intel":"Intel", "defence":"Defence", "land":"Territory", "log":"Log", "menu":"Menu"}[b[0]]
+		button.text = {"cabinet":"Cabinet", "research":"Research", "diplomacy":"Diplomacy", "market":"Market", "intel":"Intel", "defence":"Defence", "un":"UN", "land":"Territory", "log":"Log", "menu":"Menu"}[b[0]]
 		button.add_theme_font_size_override("font_size", 14)
 		button.add_theme_constant_override("icon_max_width", 22)
 		button.toggle_mode = not b[0] in ["menu", "log"]
@@ -1000,6 +1000,8 @@ func _action_bars(b: Dictionary) -> void:
 		_section("Build missiles  (%d/%d stored)" % [ms.stored(), ms.capacity()])
 		for m in ms.types():
 			var mdef: Dictionary = ms.def_of(m)
+			if preload("res://scripts/national_arsenal.gd").foreign(world, mdef.get("nation", "")) != "":
+				continue   # another nation's weapon: not listed
 			_bar("missileSilo", mdef.name, "%s Damage %d, blast %d m." % [mdef.desc, int(mdef.dmg), int(mdef.radius)], mdef.cost, float(mdef.buildTime), ms.locked(m), func(): _say(ms.produce(_selected, m)))
 		return
 	if b.key in world.research.LABS:
@@ -1369,7 +1371,7 @@ func _fill_queue(queue: Array, progress := 0.0) -> void:
 # icon and a close button, then cards. It is only as tall as its content.
 
 const SCREENS := {"diplomacy": ["diplomacy", "Diplomacy"], "market": ["market", "World market"],
-	"intel": ["intel", "Intelligence"], "territory": ["land", "Territory"], "defence": ["defence", "Defence"]}
+	"intel": ["intel", "Intelligence"], "territory": ["land", "Territory"], "defence": ["defence", "Defence"], "un": ["un", "United Nations"]}
 
 var _win: PanelContainer
 var _win_icon: TextureRect
@@ -1528,6 +1530,8 @@ func refresh_side() -> void:
 			_panels.territory()  # side_panels.gd: your land and the nations' shares
 		"defence":
 			_panels.defence()  # side_panels.gd: generals, veterans, the nuclear alert
+		"un":
+			_panels.united_nations()  # side_panels.gd: the Council, the Assembly, the record
 	preload("res://scripts/ministry_brief.gd").fill(self, _win_brief, side_mode)
 	_dress_window()
 	_fit_window.call_deferred(keep)

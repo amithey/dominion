@@ -65,6 +65,16 @@ func dry(at: Vector3) -> Vector3:
 				return p
 	return w.land_point(at, 20.0)
 
+## Dry, level ground exactly `dist` from `center` (a ring search, so a target
+## meant to be five hexes away is not nudged out of range by the shoreline).
+func ring(center: Vector3, dist: float) -> Vector3:
+	for i in range(36):
+		var p: Vector3 = center + Vector3(cos(i * TAU / 36.0), 0, sin(i * TAU / 36.0)) * dist
+		if w.height_at(p.x, p.z) > 1.5 and w.normal_at(p.x, p.z).y > 0.9:
+			p.y = w.height_at(p.x, p.z)
+			return p
+	return dry(center + Vector3(dist, 0, 0))
+
 func near(offset: Vector3) -> Vector3:
 	return dry(field + offset)
 
@@ -106,13 +116,14 @@ func run() -> void:
 	w.economy.grant_test_resources()
 	w.diplomacy.declare_war(0, 1)
 	# An open field well away from every town, and open sea.
+	seed(20261005)   # the same field every run, whatever the game's systems drew at start-up
 	var best := -1.0
 	for i in range(80):
 		var p: Vector3 = w.land_point(w.start + Vector3(randf_range(-170, 170), 0, randf_range(-170, 170)), 30.0)
 		var clear := INF
 		for b in w.buildings:
 			if not b.dead: clear = minf(clear, b.root.position.distance_to(p))
-		if clear > best and w.normal_at(p.x, p.z).y > 0.93 and w.height_at(p.x, p.z) > 2.0:
+		if clear > best and w.normal_at(p.x, p.z).y > 0.93 and w.height_at(p.x, p.z) > 2.0 and p.x < float(w.map.mapSize) * 0.5 - 160.0:   # room for a launcher 6.5 hexes east
 			best = clear
 			field = p
 	sea = w.water_near(w.start, 220)
@@ -207,7 +218,8 @@ func run() -> void:
 	check(himars.node.position.distance_to(depot.root.position) > hex * 2.0, "it fires from a distance, without closing in")
 	cleanup()
 	var df: Dictionary = mk("df17", near(Vector3.ZERO), 0)
-	var far_hq: Dictionary = building("barracks", field + Vector3(hex * 5.0, 0, 20), 1)
+	var far_hq: Dictionary = w.place_building("barracks", ring(df.node.position, hex * 5.0), 1, true)
+	placed.append(far_hq)
 	var launched0: int = w.missiles.flying.size()
 	hp0 = far_hq.hp
 	var fired_df := false
@@ -425,12 +437,12 @@ func run() -> void:
 	check(seen == null or not is_same(seen, quiet), "a destroyer cannot find an uncrewed submarine at three quarters of its range")
 	cleanup()
 	var flak: Dictionary = mk("aaVehicle", near(Vector3.ZERO), 1)
-	var leader: Dictionary = mk("sixthGen", near(Vector3(flak.range * 0.5, 0, 0)), 0)
+	var leader: Dictionary = mk("sixthGen", ring(flak.node.position, flak.range * 0.5), 0)
 	leader.air_state = "ready"
 	var pair: Array = Future.escort(w, leader)
 	w.rebuild_grid()
 	var first = w.Tactics.pick_target(w, flak, maxf(flak.aggro, flak.range))
-	check(first != null and first.key == "wingman", "enemy flak locks on to the wingmen, not the stealthy fighter")
+	check(first != null and first.key == "wingman", "enemy flak locks on to the wingmen, not the stealthy fighter (picked %s; %d wingmen, stowed %s, leader %s)" % ["nothing" if first == null else str(first.key), pair.size(), str(pair.map(func(x): return x.get("stowed", false))), str(leader.get("air_state", "?"))])
 	cleanup()
 
 	# ---------------------------------------------------------------- jamming in battle

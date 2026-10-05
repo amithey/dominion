@@ -97,6 +97,8 @@ func run() -> void:
 	settle(2.5)
 	check(squad.filter(func(s): return s.dead).size() >= 3, "a TOS-1A salvo wipes out most of a squad (%d of 5 dead)" % squad.filter(func(s): return s.dead).size())
 	check(preload("res://scripts/bunker.gd").cover(w, squad[0], tos) == 1.0, "and no bunker gives cover from it")
+	for sq in squad:
+		if not sq.dead: w.kill(sq)   # (the rockets' spread is random: survivors would stray into the next test)
 	w.kill(tos)
 	# BrahMos: a Mach 3 missile few defences stop; twice as deadly to ships.
 	var bat: Dictionary = w.spawn_unit("brahmos", field, 0)
@@ -139,7 +141,7 @@ func run() -> void:
 	check(w.effectiveness(harop, sam) >= 2.9 * w.effectiveness(harop, tank) / 0.8 * 0.8, "a Harop hits air defence three times as hard")
 	w.rebuild_grid()
 	var picked = w.Tactics.pick_target(w, harop, 90.0)
-	check(picked != null and picked.key == "samLauncher", "it picks the SAM launcher over a nearer tank")
+	check(picked != null and picked.key == "samLauncher", "it picks the SAM launcher over a nearer tank (picked %s, sam %.0f m, tank %.0f m)" % ["nothing" if picked == null else str(picked.key), harop.node.position.distance_to(sam.node.position), harop.node.position.distance_to(tank.node.position)])
 	var sam0: float = sam.hp
 	w.fire_weapon(harop, sam, "kamikaze")
 	settle(1.5)

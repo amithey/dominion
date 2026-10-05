@@ -13,6 +13,7 @@ const OFFICES := {
 	"intel": ["Intelligence Directorate", "spymaster"],
 	"territory": ["Ministry of the Interior", "president"],
 	"defence": ["Ministry of Defence · General Staff", "general"],
+	"un": ["Permanent Mission to the United Nations", "president"],
 }
 
 static func subtitle(mode: String) -> String:
@@ -38,6 +39,7 @@ static func fill(hud: Node, box: VBoxContainer, mode: String) -> void:
 		"intel": _intel(hud, box, accent)
 		"territory": _territory(hud, box, accent)
 		"defence": _defence(hud, box, accent)
+		"un": _un(hud, box, accent)
 
 static func _label(parent: Control, text: String, size := 14, colour := UI.TEXT, serif := false) -> Label:
 	var l := Label.new()
@@ -126,6 +128,14 @@ static func _intel(hud: Node, box: VBoxContainer, accent: Color) -> void:
 			deepest = [d.name_of(int(k)).split(" · ")[0], float(e.network[k])]
 	_figure(box, deepest[0] if deepest[0] != "" else "None yet", "the deepest network (%d)" % int(maxf(deepest[1], 0.0)), accent)
 	_figure(box, str(e.reports.size()), "reports on file", accent)
+
+static func _un(hud: Node, box: VBoxContainer, accent: Color) -> void:
+	var u = hud.world.un
+	if u == null:
+		return
+	_figure(box, "Permanent" if u.permanent(0) else ("Elected" if 0 in u.council() else "Not a member"), "your seat on the Security Council", accent)
+	_figure(box, str(u.record.size()), "draft resolutions voted", accent)
+	_figure(box, "Yes" if u.sanctioned(0) else "No", "UN sanctions on you", accent, UI.BAD if u.sanctioned(0) else Color(0, 0, 0, 0))
 
 static func _defence(hud: Node, box: VBoxContainer, accent: Color) -> void:
 	var w: Node = hud.world

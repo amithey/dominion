@@ -36,7 +36,7 @@ func run() -> void:
 	for i in range(5): await physics_frame
 	w.set_physics_process(false)
 	w.ai.set_physics_process(false)
-	preload("res://tools/test_kit.gd").quiet(w, ["events"])
+	preload("res://tools/test_kit.gd").quiet(w, ["events", "generals", "defcon"])
 	seed(7)
 	var V := preload("res://scripts/veterancy.gd")
 	var d: Node = w.diplomacy

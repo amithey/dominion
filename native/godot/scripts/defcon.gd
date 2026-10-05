@@ -256,16 +256,19 @@ func _ai_nuclear() -> void:
 		if Factions.identity(w, owner) == "russia": chance *= 2.0
 		if deterrent(0): chance *= 0.33
 		if randf() < chance:
-			_strike(owner, "facing defeat")
+			_strike(owner, "facing defeat", "tacticalNuke" if Factions.identity(w, owner) == "russia" else "nuke")
 
 ## The player can strike back: nuclear missiles stored or a nuclear submarine at sea.
 func deterrent(owner: int) -> bool:
 	if owner != 0 or not nuclear(0):
 		return false
-	return int(w.missiles.stock.get("nuke", 0)) > 0 or w.units.any(func(u): return u.owner == 0 and not u.dead and u.key == "nuclearSub")
+	var stored := 0
+	for key in preload("res://scripts/wmd.gd").NUCLEAR:
+		stored += int(w.missiles.stock.get(key, 0))
+	return stored > 0 or w.units.any(func(u): return u.owner == 0 and not u.dead and u.key == "nuclearSub")
 
 ## Rival `owner` fires a nuclear missile at the player's town nearest to it.
-func _strike(owner: int, why: String) -> void:
+func _strike(owner: int, why: String, key := "nuke") -> void:
 	var d: Node = w.diplomacy
 	# From a silo, else its capital, else any town it still holds.
 	var home = null
@@ -302,8 +305,8 @@ func _strike(owner: int, why: String) -> void:
 		return
 	for n in w.ai.nations:
 		if int(n.id) == owner: n.nuked_at = w.game_time
-	w.missiles.fly("nuke", from + Vector3.UP * 3.0, target.root.position, owner)
-	w.hud.notice("NUCLEAR LAUNCH DETECTED: %s has fired a nuclear missile at your %s (%s)! Air defence may stop it." % [d.name_of(owner), target.def.name, why])
+	w.missiles.fly(key, from + Vector3.UP * 3.0, target.root.position, owner)
+	w.hud.notice("NUCLEAR LAUNCH DETECTED: %s has fired a %s at your %s (%s)! Air defence may stop it." % [d.name_of(owner), w.missiles.def_of(key).get("name", "nuclear missile").to_lower(), target.def.name, why])
 
 func capture() -> Dictionary:
 	var p := {}

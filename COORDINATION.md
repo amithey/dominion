@@ -727,3 +727,20 @@ UI files listed above.
     - side mode "defence" (side_panels.defence, tabs generals/veterans/nuclear), K;
     - top-bar chip "defcon";
     - unit_overlay draws chevrons and a general's star.
+- 2026-10-05 Claude, 0.9.68 (WMD and UN):
+  - New scripts:
+    - wmd.gd (world.wmd): missile types tacticalNuke, hydrogenBomb, tsarBomba, neutronBomb, nuclearEmp,
+      dirtyBomb, chemical and bioweapon (def "nuclear": true for the nuclear ones); "emp" is now the HPM
+      (dmg 0, nation blue/red/russia); discoveries thermonuclear and enhancedRadiation; zones; incidents.
+    - un.gd (world.un): the Council, the Assembly, sanctions as power_effects kind "income", by -2.
+  - Hooks:
+    - missiles.impact(key, at, owner, from) calls wmd.after_impact; "hemp" and "emp" have no blast;
+    - the "neutron" multiplier;
+    - modern_warfare.CLASS_OF has the new keys;
+    - diplomacy.declare_war calls un.war_declared;
+    - world.site_problem refuses contaminated ground;
+    - research adds wmd.bonuses() and un.bonuses();
+    - ai income multiplies by wmd.ai_income_mult;
+    - save.gd now saves world.power_effects.
+  - The silo hides foreign missiles.
+  - Side mode "un" (side_panels.united_nations), key U.

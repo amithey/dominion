@@ -6,7 +6,10 @@ extends RefCounted
 ##     preload("res://tools/test_kit.gd").quiet(w)              # all of them off
 ##     preload("res://tools/test_kit.gd").quiet(w, ["fog"])     # all but the fog
 ## Systems: "fog" (fog_of_war.gd), "support" (war_support.gd), "events"
-## (world_events.gd), "victory" (victory.gd), "costs" (war_costs.gd: the
+## (world_events.gd), "victory" (victory.gd), "un" (un.gd), "wmd" (wmd.gd: fallout,
+## gas, outbreaks and rivals' chemical attacks), "generals" (generals.gd: rivals'
+## generals' traits), "defcon" (defcon.gd: nuclear release, rivals' nuclear use),
+## "costs" (war_costs.gd: the
 ## player and every rival funded so shots, fuel and interceptors never run dry).
 
 static func quiet(w: Node, keep := []) -> void:
@@ -22,6 +25,15 @@ static func quiet(w: Node, keep := []) -> void:
 		w.events = null
 	if not "victory" in keep:
 		w.victory = null
+	if not "un" in keep and w.get("un") != null:
+		w.un = null
+	if not "wmd" in keep and w.get("wmd") != null:
+		w.wmd = null
+	if not "generals" in keep and w.get("generals") != null:
+		for u in w.units: u.erase("general")
+		w.generals = null
+	if not "defcon" in keep and w.get("defcon") != null:
+		w.defcon = null
 	if not "costs" in keep:
 		fund(w)
 	if w.research != null:
