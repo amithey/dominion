@@ -133,6 +133,20 @@ static func has(w: Node, owner: int, key: String) -> bool:
 	# A nuclear breakout gives the basic nuclear weapons (wmd.gd).
 	return key in ["nuke", "tacticalNuke", "nuclearEmp"] and w.get("wmd") != null and w.wmd != null and owner in w.wmd.broken_out
 
+## Whether nation `owner` may build a Strategic Weapons Complex (nuclear) or a
+## Special Weapons Laboratory (chemical, biological, radiological).
+static func may_build(w: Node, owner: int, key: String) -> bool:
+	match key:
+		"strategicComplex":
+			return has(w, owner, "nuke") or has(w, owner, "tacticalNuke")
+		"specialLab":
+			for k in ["chemical", "riotAgent", "incapacitant", "anthrax", "bioweapon"]:
+				if has(w, owner, k):
+					return true
+			var n := nation_dict(w, owner)
+			return ident(w, owner) in ids_for("dirtyBomb") or (n.has("cbrn") and "dirtyBomb" in n.cbrn) or (w.get("wmd") != null and w.wmd != null and owner in w.wmd.broken_out)
+	return true
+
 ## Whether `owner` holds its tactical bombs only through nuclear sharing.
 static func shared_only(w: Node, owner: int) -> bool:
 	return SHARING.has(ident(w, owner)) and not ident(w, owner) in ids_for("tacticalNuke")

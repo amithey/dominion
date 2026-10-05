@@ -793,3 +793,11 @@ UI files listed above.
     simply adds your work.
   - One thing to keep: in side_panels, the 0.9.70 GA text had "Uniting for Peace" inside double quotes, which
     broke the parse. I changed it to single quotes in my commit; your version had rewritten that text anyway.
+- 2026-10-05 Claude, 0.9.72:
+  - missiles.gd: category(key) is "conventional", "nuclear" or "special"; facility_of(key) is missileSilo,
+    strategicComplex or specialLab. stored(cat), queued(cat), capacity(cat) and listed_at(building_key) are
+    new; produce() refuses the wrong facility.
+  - New buildingDefs strategicComplex and specialLab, added in wmd.apply. national_variants.builds asks
+    cbrn_data.may_build.
+  - hud BUILD_MENU group "Weapons of mass destruction".
+  - Codex: your UN files are still untouched and uncommitted.

@@ -1001,7 +1001,7 @@ func building_model(key: String, x: float, z: float) -> Node3D:
 		districts.arch.xf = Transform3D(Basis.from_scale(Vector3.ONE * 0.62), Vector3.ZERO)
 		districts.arch.extractor(RandomNumberGenerator.new())
 		return districts.arch.commit()
-	if key in ["missileSilo", "ammoDepot"]:
+	if key in ["missileSilo", "ammoDepot", "strategicComplex", "specialLab"]:
 		return bunker_model(key)
 	var path: String = BUILDING_MODELS.get(key, "res://assets/building-a.glb")
 	if key == "cottage":
@@ -1051,7 +1051,33 @@ func bunker_model(key: String) -> Node3D:
 	var steel := cached_material("bunker-steel", func(): return matte(Color("3b3f40"), 0.5, 0.6))
 	var earth := cached_material("bunker-earth", func(): return matte(Color("56613a"), 0.95))
 	var parts: Array
-	if key == "missileSilo":
+	var hazard := cached_material("bunker-hazard", func(): return matte(Color("c9a227"), 0.6))
+	if key == "strategicComplex":
+		# A long assembly hall, earth-banked storage bays and a vent stack.
+		parts = [
+			[Vector3(10.0, 3.6, 6.0), Vector3(0, 1.8, -1.0), concrete],
+			[Vector3(10.4, 0.4, 6.4), Vector3(0, 3.8, -1.0), concrete],
+			[Vector3(3.0, 2.0, 3.6), Vector3(-3.4, 1.0, 4.0), earth],
+			[Vector3(3.0, 2.0, 3.6), Vector3(0.0, 1.0, 4.0), earth],
+			[Vector3(3.0, 2.0, 3.6), Vector3(3.4, 1.0, 4.0), earth],
+			[Vector3(1.6, 1.4, 0.2), Vector3(-3.4, 0.7, 5.85), steel],
+			[Vector3(1.6, 1.4, 0.2), Vector3(0.0, 0.7, 5.85), steel],
+			[Vector3(1.6, 1.4, 0.2), Vector3(3.4, 0.7, 5.85), steel],
+			[Vector3(0.9, 8.0, 0.9), Vector3(4.2, 4.0, -3.0), concrete],
+			[Vector3(10.0, 0.25, 0.1), Vector3(0, 0.9, -4.1), hazard],
+		]
+	elif key == "specialLab":
+		# A sealed laboratory block with filtered vents and a hazard stripe.
+		parts = [
+			[Vector3(7.0, 3.0, 5.0), Vector3(0, 1.5, 0), concrete],
+			[Vector3(7.4, 0.3, 5.4), Vector3(0, 3.15, 0), steel],
+			[Vector3(0.6, 2.4, 0.6), Vector3(-2.4, 4.4, -1.4), steel],
+			[Vector3(0.6, 2.4, 0.6), Vector3(-1.2, 4.4, -1.4), steel],
+			[Vector3(1.4, 0.9, 1.4), Vector3(2.2, 3.75, 1.0), steel],
+			[Vector3(7.0, 0.3, 0.1), Vector3(0, 2.2, 2.55), hazard],
+			[Vector3(1.6, 2.0, 0.2), Vector3(0, 1.0, 2.6), steel],
+		]
+	elif key == "missileSilo":
 		parts = [
 			[Vector3(7.0, 2.6, 5.0), Vector3(0, 1.3, 0), concrete],
 			[Vector3(7.6, 0.4, 5.6), Vector3(0, 2.8, 0), concrete],
@@ -3663,7 +3689,7 @@ func ui_test() -> void:
 		select_building(silo[0])
 		hud._update_panel()
 		var bars: Array = hud._list.get_children().filter(func(b): return b is Button)
-		checks["the silo lists all %d missiles" % missiles.types().size()] = bars.size() >= missiles.types().size()
+		checks["the silo lists its %d missiles" % missiles.listed_at("missileSilo").size()] = bars.size() >= missiles.listed_at("missileSilo").size()
 		bars[0].pressed.emit()
 		checks["a missile bar queues a missile"] = silo[0].queue.size() == 1
 		select_building(null)

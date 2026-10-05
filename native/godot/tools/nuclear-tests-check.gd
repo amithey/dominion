@@ -89,6 +89,32 @@ func run() -> void:
 	w.game_time += s.JAM_SECONDS + 1.0
 	check(s.active(1, "recon") == 2, "then they work again")
 
+	# ---- where weapons are made: the silo, the complex, the laboratory
+	var NV := preload("res://scripts/national_variants.gd")
+	var ms: Node = w.missiles
+	check(NV.builds(w, 0, "strategicComplex") and not NV.builds(w, 0, "specialLab"), "the United States may build a Strategic Weapons Complex, and no Special Weapons Laboratory")
+	check(NV.builds(w, 3, "specialLab") and NV.builds(w, 1, "strategicComplex") and not NV.builds(w, 1, "specialLab"), "Iran a laboratory (its incapacitants); China a complex, no laboratory")
+	var silo_list: Array = ms.listed_at("missileSilo")
+	check(not silo_list.is_empty() and silo_list.all(func(k): return ms.category(k) == "conventional"), "the silo lists only conventional missiles (%d)" % silo_list.size())
+	var complex_list: Array = ms.listed_at("strategicComplex")
+	check(complex_list.has("nuke") and complex_list.has("bunkerBuster") and complex_list.all(func(k): return ms.category(k) == "nuclear") and not complex_list.has("tsarBomba"), "the complex lists your nuclear warheads only (%d)" % complex_list.size())
+	check(ms.listed_at("specialLab").is_empty(), "and the United States has nothing for a laboratory")
+	var home2: Vector3 = w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0].root.position
+	var silo_b: Array = w.buildings.filter(func(b): return b.owner == 0 and b.key == "missileSilo" and not b.dead)
+	w.research.progress["nuclearProgram"] = {"stage": 3}
+	w.economy.res.money = 100000.0
+	w.economy.res.uranium = 500.0
+	w.economy.res.silicon = 500.0
+	w.economy.res.iron = 500.0
+	var at_silo: String = ms.produce(silo_b[0], "nuke") if not silo_b.is_empty() else "made at a Strategic Weapons Complex"
+	check(at_silo.contains("Strategic Weapons Complex"), "a nuclear warhead is not made at the silo")
+	check(ms.capacity("nuclear") == 0, "without a complex there is no room for warheads")
+	var complex: Dictionary = w.place_building("strategicComplex", w.test_site("strategicComplex", home2 + Vector3(70, 0, -70)), 0, true)
+	var made: String = ms.produce(complex, "nuke")
+	check(ms.capacity("nuclear") == 2 and made == "" and complex.queue.size() == 1, "a complex holds two and assembles one (%d; %s)" % [ms.capacity("nuclear"), made])
+	ms.stock["nuke"] = 2
+	check(ms.stored("conventional") == ms.stored() and ms.stored("nuclear") == 2, "warheads do not take the conventional missiles' room")
+
 	# ---- the interface size
 	check(is_equal_approx(w.ui_scale, 0.8) and is_equal_approx(w.get_tree().root.content_scale_factor, 0.8), "the interface is 20% smaller by default")
 	w.ui_scale = 0.7

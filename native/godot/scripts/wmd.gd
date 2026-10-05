@@ -161,6 +161,18 @@ static func apply(world: Node) -> void:
 		types.emp.dmg = 0
 		types.emp.radius = 15
 		types.emp.desc = "A high-power microwave cruise missile: no blast and no deaths. Over the last stretch of its flight it fires three microwave pulses that knock out the electronics of vehicles, aircraft, ships and buildings for 45 s and bring drones down."
+	# Where they are made (missiles.gd FACILITY): two buildings of their own.
+	var defs: Dictionary = world.map.get("buildingDefs", {})
+	defs.strategicComplex = {"name": "Strategic Weapons Complex", "cat": "military", "size": 8, "hp": 1600, "cost": {"money": 2500, "iron": 150, "silicon": 80},
+		"buildTime": 45, "trains": [], "provides": {}, "onDeposit": false, "depositTypes": null, "unique": false, "unbuildable": false,
+		"buildRadius": 0, "settlement": null, "coastal": false,
+		"desc": "Assembles nuclear warheads and keeps them (2 per complex). They are launched from a Missile Silo or a nuclear submarine. Only a nuclear-armed nation can build one."}
+	defs.specialLab = {"name": "Special Weapons Laboratory", "cat": "military", "size": 6, "hp": 900, "cost": {"money": 1500, "iron": 60, "silicon": 60},
+		"buildTime": 35, "trains": [], "provides": {}, "onDeposit": false, "depositTypes": null, "unique": false, "unbuildable": false,
+		"buildRadius": 0, "settlement": null, "coastal": false,
+		"desc": "Produces chemical, biological and radiological weapons and keeps them (2 per laboratory). They are launched from a Missile Silo. Only a nation with such a programme can build one."}
+	if defs.has("missileSilo"):
+		defs.missileSilo.desc = "Produces conventional missiles (tactical, cruise, cluster, microwave, anti-ship, ballistic, hypersonic), stored in Ammo Depots, and launches every missile you hold, nuclear and special weapons included."
 	var discoveries: Dictionary = world.map.research.discoveries
 	for key in DISCOVERIES:
 		discoveries[key] = DISCOVERIES[key].duplicate(true)

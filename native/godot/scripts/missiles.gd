@@ -36,21 +36,51 @@ func types() -> Dictionary:
 func def_of(key: String) -> Dictionary:
 	return cfg.types.get(key, preload("res://scripts/national_arsenal.gd").MISSILES.get(key, preload("res://scripts/faction_arsenal.gd").MISSILES.get(key, {})))
 
-func capacity() -> int:
-	return int(cfg.baseCap) + int(cfg.capPerDepot) * world.economy.owned("ammoDepot")
+## Where each weapon is made: conventional missiles at a Missile Silo, nuclear
+## warheads at a Strategic Weapons Complex, chemical, biological and
+## radiological weapons at a Special Weapons Laboratory. Each kind has its own
+## storage; all of them launch from a silo (or a missile ship).
+const FACILITY := {"conventional": "missileSilo", "nuclear": "strategicComplex", "special": "specialLab"}
+const PER_FACILITY := 2      # nuclear or special weapons each facility can hold
 
-func stored() -> int:
+func category(key: String) -> String:
+	var def := def_of(key)
+	if def.get("nuclear", key == "nuke"):
+		return "nuclear"
+	if str(def.get("special", "")) in ["dirty", "chemical", "chlorine", "riot", "incapacitant", "anthrax", "bio"]:
+		return "special"
+	return "conventional"
+
+func facility_of(key: String) -> String:
+	return FACILITY[category(key)]
+
+func capacity(cat := "conventional") -> int:
+	if cat == "conventional":
+		return int(cfg.baseCap) + int(cfg.capPerDepot) * world.economy.owned("ammoDepot")
+	return PER_FACILITY * world.economy.owned(FACILITY[cat])
+
+func stored(cat := "conventional") -> int:
 	var n := 0
 	for key in stock:
-		n += int(stock[key])
+		if category(key) == cat:
+			n += int(stock[key])
 	return n
 
-func queued() -> int:
+func queued(cat := "conventional") -> int:
 	var n := 0
 	for b in world.buildings:
 		if b.owner == 0 and not b.dead:
-			n += b.queue.filter(func(q): return String(q).begins_with("missile:")).size()
+			n += b.queue.filter(func(q): return String(q).begins_with("missile:") and category(String(q).substr(8)) == cat).size()
 	return n
+
+## The weapons a facility lists: its own kind, not hidden, and not another
+## nation's (a weapon you could have with research or a building is listed, locked).
+func listed_at(building_key: String) -> Array:
+	return types().keys().filter(func(k):
+		if def_of(k).get("hidden", false) or facility_of(k) != building_key:
+			return false
+		var lock := locked(k)
+		return not (lock.begins_with("Not fielded") or (lock != "" and preload("res://scripts/national_arsenal.gd").foreign(world, def_of(k).get("nation", "")) != "" and not preload("res://scripts/cbrn_data.gd").CAPABILITY.has(k))))
 
 ## "" when the player may build this type, otherwise the discovery it needs.
 func locked(key: String) -> String:
@@ -92,10 +122,15 @@ func produce(silo: Dictionary, key: String) -> String:
 	var why := locked(key)
 	if why != "":
 		return "%s: %s." % [def.name, why.to_lower()]
+	if silo.key != facility_of(key):
+		return "%s is made at a %s." % [def.name, world.building_defs.get(facility_of(key), {}).get("name", facility_of(key))]
 	if silo.queue.size() >= 5:
 		return "Queue is full"
-	if stored() + queued() >= capacity():
-		return "Missile storage full (%d). Build Ammo Depots for +%d each." % [capacity(), int(cfg.capPerDepot)]
+	var cat := category(key)
+	if stored(cat) + queued(cat) >= capacity(cat):
+		if cat == "conventional":
+			return "Missile storage full (%d). Build Ammo Depots for +%d each." % [capacity(), int(cfg.capPerDepot)]
+		return "Storage full (%d): each %s holds %d." % [capacity(cat), world.building_defs.get(FACILITY[cat], {}).get("name", ""), PER_FACILITY]
 	var price := production_cost(key)
 	if not world.economy.pay(price):
 		return "Not enough %s" % world.economy.missing(price)
@@ -113,7 +148,7 @@ func production_cost(key: String) -> Dictionary:
 ## Called by world.update_training when a silo finishes one.
 func finished(key: String) -> void:
 	stock[key] = int(stock.get(key, 0)) + 1
-	world.hud.notice("%s ready (%d/%d stored)." % [def_of(key).name, stored(), capacity()])
+	world.hud.notice("%s ready (%d/%d stored)." % [def_of(key).name, stored(category(key)), capacity(category(key))])
 	changed.emit()
 
 func build_time(key: String) -> float:

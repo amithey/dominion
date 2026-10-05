@@ -23,6 +23,25 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.72: weapons of mass destruction get facilities of their own
+
+- **Where each weapon is made:** the Missile Silo had more unconventional weapons in its list than
+  conventional ones. Now:
+  - the **Missile Silo** builds only conventional missiles;
+  - a new **Strategic Weapons Complex** assembles nuclear warheads; only a nuclear-armed nation (or one
+    hosting shared bombs) sees it;
+  - a new **Special Weapons Laboratory** makes chemical, biological and radiological weapons; only a nation
+    with such a programme sees it. The US, the UK, France, China and most others never do.
+- **Storage:** each kind has its own. Two weapons per complex or laboratory, so warheads no longer take the
+  conventional missiles' room in the Ammo Depots. A large nuclear arsenal now needs several complexes: a cost
+  and a target.
+- **Launching:** everything still launches from a silo or a missile ship. The silo's launch list shows every
+  weapon you hold.
+- Both buildings have models of their own (an assembly hall with earth-banked bays and a vent stack; a sealed
+  laboratory with filtered vents).
+
+Checks: tools/nuclear-tests-check.gd (27).
+
 ## Version 0.9.71: nuclear tests, a clear nuclear release, a smaller interface, and text without dates
 
 - **Nuclear tests** (scripts/nuclear_tests.gd; the Defence window, Nuclear alert tab):

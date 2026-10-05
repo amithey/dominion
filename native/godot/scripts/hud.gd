@@ -16,7 +16,7 @@ const UI := preload("res://scripts/ui_theme.gd")
 const BUILD_MENU := {
 	"Economy": ["villageCenter", "cityCenter", "farm", "cottage", "housing", "residential", "workerHouse", "warehouse", "foodDepot", "extractor", "offshoreRig", "fishingWharf", "mountainMine", "market", "port", "bank", "oilRefinery", "powerPlant"],
 	"Civic & research": ["school", "library", "university", "techPark", "chipFab", "hospital", "cityHall", "tvStation", "policeStation", "courthouse", "intelAgency", "nuclearReactor"],
-	"Military": ["barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo", "samSite", "bunker"],
+	"Military": ["barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo", "strategicComplex", "specialLab", "samSite", "bunker"],
 }
 ## The build list in groups under each tab, in the order a city grows.
 const BUILD_GROUPS := {
@@ -26,7 +26,7 @@ const BUILD_GROUPS := {
 	"Civic & research": [["Education and science", ["school", "library", "university", "techPark", "chipFab"]],
 		["Public services", ["hospital", "cityHall", "tvStation", "policeStation", "courthouse"]], ["State", ["intelAgency", "nuclearReactor"]]],
 	"Military": [["Training", ["barracks", "tankFactory", "shipyard", "helipad", "airfield"]], ["Defence", ["bunker", "samSite"]],
-		["Strategic", ["ammoDepot", "missileSilo"]]],
+		["Strategic", ["ammoDepot", "missileSilo"]], ["Weapons of mass destruction", ["strategicComplex", "specialLab"]]],
 }
 const RESOURCES := [
 	["money", "money", "Treasury. Taxes from your citizens, markets and land; spent on everything."],
@@ -898,7 +898,7 @@ func _update_panel() -> void:
 	if mode == "":
 		return
 	var key: String = ("menu:" + build_tab) if mode == "build" else "%s:%s:%d:%d" % [_selected.key, _selected.built, _selected.queue.size(), _selected.root.get_instance_id()]
-	if _selected != null and _selected.key == "missileSilo":
+	if _selected != null and _selected.key in ["missileSilo", "strategicComplex", "specialLab"]:
 		key += ":%s" % str(world.missiles.stock)
 	if world.research:
 		key += ":%d:%s" % [world.research.era, str(world.research.completed_count())]
@@ -928,7 +928,7 @@ func _update_panel() -> void:
 	_update_enabled()
 
 func _has_actions(b: Dictionary) -> bool:
-	return not b.def.get("trains", []).is_empty() or b.key in ["missileSilo", "market", "port", "intelAgency"] or b.key in world.research.LABS
+	return not b.def.get("trains", []).is_empty() or b.key in ["missileSilo", "strategicComplex", "specialLab", "market", "port", "intelAgency"] or b.key in world.research.LABS
 
 func _building_bars() -> void:
 	# Compact rows under group headings: picture, name, one line of what it
@@ -988,24 +988,21 @@ func _action_bars(b: Dictionary) -> void:
 				if aircraft != null and world.AirOperations.order_land(world, aircraft, b):
 					recalled += 1
 			notice("%d assigned aircraft returning to base." % recalled))
-	if b.key == "missileSilo":
+	if b.key in ["missileSilo", "strategicComplex", "specialLab"]:
 		var ms: Node = world.missiles
+		var cat: String = {"missileSilo": "conventional", "strategicComplex": "nuclear", "specialLab": "special"}[b.key]
 		var armed := false
 		for m in ms.types():
-			if ms.stock[m] > 0:
+			# The silo launches everything you hold; a facility shows its own.
+			if int(ms.stock.get(m, 0)) > 0 and (b.key == "missileSilo" or ms.category(m) == cat):
 				if not armed:
 					_section("Launch")
 					armed = true
-				_bar("missileSilo", "LAUNCH %s  (%d)" % [ms.def_of(m).name, ms.stock[m]], "Arm it, then click the target on the map.", {}, 0.0, "", func(): world.begin_missile(m))
-		_section("Build missiles  (%d/%d stored)" % [ms.stored(), ms.capacity()])
-		for m in ms.types():
+				_bar(b.key, "LAUNCH %s  (%d)" % [ms.def_of(m).name, ms.stock[m]], "Arm it, then click the target on the map." + ("" if b.key == "missileSilo" else " It flies from your nearest Missile Silo or missile ship."), {}, 0.0, "", func(): world.begin_missile(m))
+		_section("%s  (%d/%d stored)" % [{"conventional": "Build missiles", "nuclear": "Assemble nuclear warheads", "special": "Produce special weapons"}[cat], ms.stored(cat), ms.capacity(cat)])
+		for m in ms.listed_at(b.key):
 			var mdef: Dictionary = ms.def_of(m)
-			if mdef.get("hidden", false):
-				continue
-			var lock: String = ms.locked(m)
-			if lock.begins_with("Not fielded") or preload("res://scripts/national_arsenal.gd").foreign(world, mdef.get("nation", "")) != "" and not lock == "":
-				continue   # another nation's weapon: not listed
-			_bar("missileSilo", mdef.name, "%s Damage %d, blast %d m." % [mdef.desc, int(mdef.dmg), int(mdef.radius)], mdef.cost, float(mdef.buildTime), ms.locked(m), func(): _say(ms.produce(_selected, m)))
+			_bar(b.key, mdef.name, "%s Damage %d, blast %d m." % [mdef.desc, int(mdef.dmg), int(mdef.radius)], mdef.cost, float(mdef.buildTime), ms.locked(m), func(): _say(ms.produce(_selected, m)))
 		return
 	if b.key in world.research.LABS:
 		_bar("university", "Open the research tree", "Research points from this building flow into the discovery at the head of the queue.", {}, 0.0, "", toggle_research)
