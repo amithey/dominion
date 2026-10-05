@@ -23,6 +23,28 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.71: nuclear tests, a clear nuclear release, a smaller interface, and text without dates
+
+- **Nuclear tests** (scripts/nuclear_tests.gd; the Defence window, Nuclear alert tab):
+  - Underground or atmospheric, on your land or the wilderness beyond it.
+  - For 15 minutes rivals believe your deterrent: those that merely dislike you will not start a war, and
+    nuclear strikes on you are weighed twice.
+  - Your scientists learn from it. The world condemns it and the Security Council takes it up.
+  - An atmospheric test leaves drifting fallout. A state that has just broken out tests its bomb.
+- **Nuclear release:** arming a nuclear weapon now asks for the order and states its price (your forces to
+  DEFCON 2, relations), then arms it. It no longer sends you to another window. Your own alert reads as a
+  DEFCON level.
+- **Satellite jammers** (the US, Russia, China): silence a nation's satellites for 2 minutes, reversibly and
+  without war.
+- **The US loyal wingman** is now the FQ-42A Dark Merlin.
+- **Interface size** (Settings, Graphics: Small / Medium / Large / Original): the panels had grown with large
+  screens. Medium, the new default, is 20% smaller than before.
+- **No dates or one-off events in the game's text:** weapon, unit and research descriptions, world events and
+  UN records now say what things do and who has them. A check enforces it.
+- Research: native/CBRN-UN-RESEARCH-2026-10-05.md, section 4.
+
+Checks: tools/nuclear-tests-check.gd (18).
+
 ## Version 0.9.70: the US arsenal as it is
 
 - **The US no longer gets chlorine bombs or a dirty bomb**, a mistake of 0.9.69's rules: it destroyed its last

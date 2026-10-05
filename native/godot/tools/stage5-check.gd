@@ -134,7 +134,7 @@ func run() -> void:
 	check(dc.level() == 3, "two nuclear powers at war: DEFCON 3 (%s)" % dc.cause())
 	w.missiles.stock["nuke"] = 1
 	var blocked: String = w.missiles.launch("nuke", home + Vector3(300, 0, 0))
-	check(blocked.contains("posture 2") and int(w.missiles.stock.nuke) == 1, "a nuclear missile cannot be released at posture 5")
+	check(blocked.contains("DEFCON 2") and int(w.missiles.stock.nuke) == 1, "a nuclear missile cannot be released at posture 5")
 	var bystander := -1
 	for i in range(1, d.n):
 		if i != nuke_rival and not d.at_war(0, i) and bystander < 0: bystander = i

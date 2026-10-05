@@ -42,9 +42,9 @@ const SHIELDS := {
 }
 ## Sanctions regimes in force when the match begins.
 const STANDING := {
-	"iran": {"res": "resolution 2231's snapback (restored 27 September 2025)", "measures": ["embargo", "targeted"]},
-	"north_korea": {"res": "resolution 1718 (2006) and its successors", "measures": ["embargo", "targeted", "economic"]},
-	"afghanistan": {"res": "resolution 1988 (2011), the Taliban sanctions", "measures": ["targeted"]},
+	"iran": {"res": "its nuclear programme", "measures": ["embargo", "targeted"]},
+	"north_korea": {"res": "its nuclear and missile programmes", "measures": ["embargo", "targeted", "economic"]},
+	"afghanistan": {"res": "its government's ties to armed groups", "measures": ["targeted"]},
 }
 
 static func ident(w: Node, i: int) -> String:

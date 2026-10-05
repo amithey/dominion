@@ -34,6 +34,8 @@ static func quiet(w: Node, keep := []) -> void:
 		w.generals = null
 	if not "defcon" in keep and w.get("defcon") != null:
 		w.defcon = null
+	if not "tests" in keep and w.get("tests") != null:
+		w.tests = null
 	if not "costs" in keep:
 		fund(w)
 	if w.research != null:

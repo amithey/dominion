@@ -229,7 +229,7 @@ func _build_top_bar() -> void:
 			["land", "land", "Land held: territory cells. Press T for borders."],
 			["missiles", "missile", "Missiles stored against Ammo Depot capacity."],
 			["support", "support", "War support: how far your people back the war. Wars, losses and shortages wear it down; being attacked and victories raise it."],
-			["defcon", "defcon", "DEFCON: the world's nuclear alert, 5 (peace) to 1 (nuclear weapons used). Press K for your own posture."]]:
+			["defcon", "defcon", "DEFCON: the world's nuclear alert, 5 (peace) to 1 (nuclear weapons used). Press K for your own forces' alert."]]:
 		var chip := HBoxContainer.new()
 		chip.add_child(_divider())
 		chip.add_theme_constant_override("separation", 5)
@@ -842,7 +842,7 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 		_extra.defcon[0].add_theme_color_override("font_color", [Color("ff5a4a"), Color("ff5a4a"), Color("f08a4b"), Color("e8c66a"), Color("9fd0e8"), UI.CREAM][lvl])
 		var why: String = world.defcon.cause()
 		_extra.defcon[1].tooltip_text = "DEFCON %d · %s%s
-Your posture: %d (%s). Press K." % [lvl, world.defcon.DESC[lvl], (" Cause: %s." % why) if why != "" else "", int(world.defcon.posture[0]), world.defcon.posture_text(int(world.defcon.posture[0]))]
+Your forces: DEFCON %d (%s). Press K." % [lvl, world.defcon.DESC[lvl], (" Cause: %s." % why) if why != "" else "", int(world.defcon.posture[0]), world.defcon.posture_text(int(world.defcon.posture[0]))]
 	var silos: bool = world.missiles != null and (world.missiles.stored() > 0 or not world.missiles.silos().is_empty())
 	_extra.missiles[1].visible = silos
 	if silos:

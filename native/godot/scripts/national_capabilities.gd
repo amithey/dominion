@@ -24,13 +24,13 @@ const RECRUIT_SECONDS := 150.0
 const DISCOVERIES := {
 	"foreignRecruitment": {"name": "Foreign Recruitment", "cost": 400, "branch": "army", "era": 2, "nation": "russia",
 		"reqDiscovery": null, "reqBuilding": "barracks", "fx": {"foreignRecruitment": 1.0},
-		"desc": "Russia only. North Korea's corps (about 11,000 troops in Kursk) and contract recruits from Nepal, Cuba, Africa and dozens of other countries: while you are at war, 4 foreign soldiers join at your capital every 2.5 minutes, $60 each."},
+		"desc": "Russia only. Allied troops and contract soldiers recruited abroad: while you are at war, 4 foreign soldiers join at your capital every 2.5 minutes, $60 each."},
 	"glideBombs": {"name": "UMPK Glide Bombs", "cost": 550, "branch": "air", "era": 3, "nation": "russia",
 		"reqDiscovery": "guidedMunitions", "reqBuilding": "airfield", "fx": {"glideBombs": 1.0},
-		"desc": "Russia only. Wings and satellite guidance on old FAB bombs (some 3,500 a month by early 2025), dropped 40-70 km from the target: every jet built afterwards is a Su-34 with glide bombs, +50% range and +20% damage."},
+		"desc": "Russia only. Wings and satellite guidance on old FAB bombs, dropped 40-70 km from the target: every jet built afterwards is a Su-34 with glide bombs, +50% range and +20% damage."},
 	"fibreOpticDrones": {"name": "Fibre-Optic Drones", "cost": 600, "branch": "hightech", "era": 4, "nation": "russia",
 		"reqDiscovery": "droneSwarms", "reqBuilding": null, "fx": {"fibreOpticDrones": 1.0},
-		"desc": "Russia only. FPV drones steered down a fibre-optic cable (the Rubikon centre; some 50,000 a month in 2025): FPV teams trained afterwards cannot be jammed and reach 30% further."},
+		"desc": "Russia only. FPV drones steered down a fibre-optic cable: FPV teams trained afterwards cannot be jammed and reach 30% further."},
 }
 
 ## Registers the discoveries (modern_warfare.apply).

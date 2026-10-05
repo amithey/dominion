@@ -126,10 +126,17 @@ var support: RefCounted = null   # war_support.gd: how far each people backs its
 var events: RefCounted = null    # world_events.gd: what the wars do to the world
 var victory: RefCounted = null   # victory.gd: dominance and technology, besides conquest
 var space: RefCounted = null   # space.gd: satellites and anti-satellite weapons
+## The interface's size: the panels are laid out for 1280x800 and stretch with
+## the screen, so on a large monitor they grow; this scales them back (menu settings).
+var ui_scale := 0.8
+
+func apply_ui_scale() -> void:
+	get_tree().root.content_scale_factor = ui_scale
 var generals: RefCounted = null   # generals.gd: commanders with traits
 var defcon: RefCounted = null   # defcon.gd: the nuclear escalation ladder
 var wmd: RefCounted = null   # wmd.gd: fallout, gas, disease; who used what
 var un: RefCounted = null   # un.gd: the Security Council and the General Assembly
+var tests: RefCounted = null   # nuclear_tests.gd: nuclear tests and the deterrent they prove
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
 var noise_texture: NoiseTexture2D
@@ -2020,6 +2027,8 @@ func _physics_process(delta: float) -> void:
 			wmd.update(delta)  # fallout, gas clouds, outbreaks
 		if un != null:
 			un.update(delta)  # the United Nations
+		if tests != null:
+			tests.update(delta)  # rivals' nuclear tests
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
 		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
@@ -2409,6 +2418,7 @@ func start_match(difficulty: String) -> void:
 	defcon = preload("res://scripts/defcon.gd").new(self)
 	wmd = preload("res://scripts/wmd.gd").new(self)
 	un = preload("res://scripts/un.gd").new(self)
+	tests = preload("res://scripts/nuclear_tests.gd").new(self)
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 
 ## Walks the menu flow: main menu (paused, no AI) -> new game on normal (AI
@@ -4222,6 +4232,17 @@ func begin_missile(key: String) -> void:
 		return
 	if missiles.silos().is_empty() and missiles.launch_ships().is_empty():
 		hud.notice("Missiles launch from a Missile Silo, a strategic submarine or a destroyer.")
+		return
+	# A nuclear weapon needs the order to release it: one decision, its price stated.
+	if missiles.def_of(key).get("nuclear", key == "nuke") and defcon != null and defcon.release_blocked() != "":
+		var steps := PackedStringArray(["your forces go to DEFCON 2: production +20%, damage +5%, income -10%", "every nation's view of you falls by 8"])
+		if int(defcon.posture[0]) > 3:
+			steps.append("the nuclear powers' by a further 4")
+		hud.choose("NUCLEAR RELEASE", "Arming the %s needs the order to release nuclear weapons. Giving it means %s. Firing it will then bring the world to DEFCON 1." % [missiles.def_of(key).name, "; ".join(steps)], [
+			["Give the order and arm it", "bad", func():
+				hud.notice(defcon.authorise_release())
+				begin_missile(key)],
+			["Not now", "", func(): pass]])
 		return
 	missile_aim = key
 	Input.set_default_cursor_shape(Input.CURSOR_CROSS)

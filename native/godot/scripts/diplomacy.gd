@@ -205,6 +205,8 @@ func ai_wants_war(id: int, other: int) -> bool:
 		return false   # a client state of `other`, or a world that fears that United States
 	if world != null and world.get("support") != null and world.support.value(id) < 35.0:
 		return false   # a weary people will not back another war (war_support.gd)
+	if world != null and world.get("tests") != null and world.tests != null and world.tests.believed(other) and rel(id, other) > -70.0:
+		return false   # a deterrent just proven by a nuclear test (nuclear_tests.gd)
 	return rel(id, other) < -35.0 or (other == 0 and rel(id, 0) < 0.0 and randf() < aggression_of(id) * 0.5)
 
 ## A rival government's aggression: its own difficulty (ai.gd), else the match's.

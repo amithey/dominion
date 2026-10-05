@@ -142,7 +142,7 @@ static func _defence(hud: Node, box: VBoxContainer, accent: Color) -> void:
 	if w.defcon != null:
 		var lvl: int = w.defcon.level()
 		_figure(box, "DEFCON %d" % lvl, "the world's nuclear alert", accent, UI.BAD if lvl <= 2 else Color(0, 0, 0, 0))
-		_figure(box, str(int(w.defcon.posture[0])), "your posture", accent)
+		_figure(box, "DEFCON %d" % int(w.defcon.posture[0]), "your forces' alert", accent)
 	if w.generals != null:
 		_figure(box, "%d / %d" % [w.generals.of(0).size(), w.generals.MAX_PLAYER], "generals on your staff", accent)
 	var c: Array = preload("res://scripts/veterancy.gd").census(w)

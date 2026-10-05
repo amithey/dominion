@@ -366,6 +366,10 @@ func _space(d: Node) -> void:
 		row.add_child(lab)
 		var why: String = s.asat_blocked(id)
 		var target: int = id
+		if s.can_jam(0):
+			var why_j: String = s.jam_blocked(id)
+			var jb: Button = hud._button(row, "Jam ($%d)" % int(s.JAM_COST), func(): return s.jam(0, target), why_j == "")
+			jb.tooltip_text = (why_j + "\n" if why_j != "" else "") + "Ground jammers silence its satellites for 2 minutes: nothing is destroyed and it is no act of war, but it is resented (-8)."
 		var b: Button = hud._button(row, "Anti-satellite missile ($%d)" % int(s.ASAT_COST), func(): return s.fire_asat(0, target), why == "", "bad")
 		b.tooltip_text = (why + "
 " if why != "" else "") + "85% to destroy one satellite. An act of war; every other nation thinks less of you, and the debris threatens everyone's satellites, yours too."
@@ -1073,12 +1077,12 @@ func _nuclear() -> void:
 	hud._meter(card, dc.tension, 100.0, hud.UI.BAD if lvl <= 2 else hud.UI.GOLD, "Nuclear tension %d  ·  DEFCON 4 at 20, 3 at 40, 2 at 60, 1 at 80" % roundi(dc.tension))
 	var mine: VBoxContainer = hud._card()
 	var p: int = int(dc.posture[0])
-	mine.add_child(hud._text("Your posture: %d" % p, 16, hud.UI.CREAM, true))
+	mine.add_child(hud._text("Your forces: DEFCON %d" % p, 16, hud.UI.CREAM, true))
 	mine.add_child(hud._text(dc.posture_text(p), 13, hud.UI.TEXT))
 	var row: HBoxContainer = hud._row(mine)
 	var up: Button = hud._button(row, "Raise the alert", func(): return dc.raise_posture(), p > 2, "bad")
 	if p > 2:
-		up.tooltip_text = "Posture %d: %s%s" % [p - 1, dc.posture_text(p - 1), " Every nation will think less of you (-8)." if p - 1 == 2 else (" Nuclear powers -4 relations." if p - 1 == 3 else "")]
+		up.tooltip_text = "DEFCON %d: %s%s" % [p - 1, dc.posture_text(p - 1), " Every nation will think less of you (-8)." if p - 1 == 2 else (" Nuclear powers -4 relations." if p - 1 == 3 else "")]
 	hud._button(row, "Stand down", func(): return dc.lower_posture(), p < 5)
 	var release: String = dc.release_blocked()
 	mine.add_child(hud._text("Nuclear release: %s" % ("authorised." if release == "" else release), 12, hud.UI.BAD if release == "" else hud.UI.MUTED))
@@ -1086,13 +1090,29 @@ func _nuclear() -> void:
 		mine.add_child(hud._text("Deterrent: %s" % ("ready (a second strike is possible)" if dc.deterrent(0) else "none: no nuclear missile stored and no nuclear submarine at sea"), 12, hud.UI.MUTED))
 	else:
 		mine.add_child(hud._text("Your nation has no nuclear weapons.", 12, hud.UI.MUTED))
+	var nt = hud.world.get("tests")
+	if nt != null and dc.nuclear(0):
+		var test: VBoxContainer = hud._card(hud.UI.BAD)
+		test.add_child(hud._text("Nuclear test", 15, hud.UI.CREAM, true))
+		var how: Label = hud._text("Proves the weapon works: for 15 minutes rivals believe your deterrent (they are far slower to start a war with you, and slower to strike you with nuclear weapons), and your scientists learn from it. The world condemns it, tension rises, and the Security Council takes it up. Underground: almost nothing escapes. In the open air: a mushroom cloud and fallout that drifts with the wind, and twice the anger.", 12, hud.UI.MUTED)
+		how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		how.custom_minimum_size.x = 460
+		test.add_child(how)
+		if nt.believed(0):
+			test.add_child(hud._text("Your deterrent is believed for %ds more (%d tests so far)." % [ceili(float(nt.deterred[0]) - hud.world.game_time), int(nt.count.get(0, 0))], 12, hud.UI.GOOD))
+		var trow: HBoxContainer = hud._row(test)
+		for kind in ["underground", "atmospheric"]:
+			var test_blocked: String = nt.blocked(kind)
+			var kk: String = kind
+			var tb: Button = hud._button(trow, "%s (%s)" % [nt.KINDS[kind].name, hud.cost_text(nt.COST)], func(): return nt.conduct(0, kk), test_blocked == "", "bad")
+			tb.tooltip_text = test_blocked
 	var d: Node = hud.world.diplomacy
 	var powers: VBoxContainer = hud._card()
 	powers.add_child(hud._text("The nuclear powers", 15, hud.UI.CREAM, true))
 	for i in range(1, d.n):
 		if d.defeated(i) or not dc.nuclear(i):
 			continue
-		var state := "posture %d" % int(dc.posture[i])
+		var state := "forces at DEFCON %d" % int(dc.posture[i])
 		if dc.existential(i): state += ", fighting for its survival"
 		if d.at_war(0, i): state += ", at war with you"
 		powers.add_child(hud._text("%s: %s" % [d.name_of(i), state], 13, hud._nation_colour(i).lightened(0.35)))
@@ -1222,7 +1242,7 @@ func _un_draft(u) -> void:
 func _assembly(u) -> void:
 	var box: VBoxContainer = hud._card(hud.UI.GOLD)
 	box.add_child(hud._text("The General Assembly: %d members" % u.members().size(), 16, hud.UI.CREAM, true))
-	_wrap(box, "Every member has a vote. It meets whenever a permanent member vetoes a draft (resolution 76/262, 2022): two thirds condemn the target, and under Uniting for Peace (377 A, 1950) the members voting yes cut their trade with it. It elects the Council's members. Its resolutions bind no one, but they isolate.")
+	_wrap(box, "Every member has a vote. It meets whenever a permanent member vetoes a draft: two thirds condemn the target, and under 'Uniting for Peace' the members voting yes cut their trade with it. It elects the Council's members. Its resolutions bind no one, but they isolate.")
 	if u.lost_vote():
 		box.add_child(hud._text("You have lost your vote here: your arrears exceed two years of dues (Art. 19).", 13, hud.UI.BAD))
 	var any := false
@@ -1257,7 +1277,7 @@ func _un_org(u) -> void:
 	_wrap(dues, "%s Arrears: $%d%s." % [first, int(u.arrears), " (vote lost, Art. 19)" if u.lost_vote() else ""], 12, hud.UI.TEXT)
 	var drow: HBoxContainer = hud._row(dues)
 	var withhold := CheckButton.new()
-	withhold.text = "Withhold your dues (as the United States did in 2025)"
+	withhold.text = "Withhold your dues (your vote in the Assembly is lost after two periods unpaid)"
 	withhold.button_pressed = u.withhold
 	withhold.focus_mode = Control.FOCUS_NONE
 	withhold.add_theme_font_size_override("font_size", 12)

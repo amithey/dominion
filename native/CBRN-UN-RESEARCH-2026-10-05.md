@@ -174,3 +174,53 @@ ever used a dirty bomb. Meanwhile real US weapons were missing.
 - **Turkey:** hosts US B61s at Incirlik (NATO sharing).
 - **Not modelled (conventional, if controversial):** depleted uranium, cluster munitions (Lithuania became the
   first state to leave the convention, in March 2025), white phosphorus.
+
+## 4. US advanced weapons in 2026, nuclear tests, and the game's text (0.9.71)
+
+**A rule from the player:** no text inside the game cites years, specific historical events or "as X did in
+YEAR". The game describes what a weapon or rule does and who has it. The evidence stays in this document and
+in code comments (cbrn_data.gd "why"). Every description of a weapon, discovery, unit, world event and UN record
+was rewritten. A regression check fails if a weapon, unit or discovery description names a year.
+
+### US advanced weapons, 2026 (official sources and foreign reports), and where they are in the game
+
+| Weapon | Status in 2026 | In the game |
+|---|---|---|
+| Dark Eagle (LRHW) hypersonic missile | First operational battery (Lewis-McChord) receiving missiles; test from Cape Canaveral in March 2026 | the US Hypersonic Missile (already in the game) |
+| Golden Dome space-based interceptors | 12 firms on prototype contracts (up to $3.2 bn), first gate passed, in-orbit tests planned before the end of 2026 | the US-only Golden Dome research (already in the game) |
+| F-47 sixth-generation fighter | In manufacturing; first flight targeted for 2028 | the US Sixth-Generation Fighter "F-47" (already) |
+| CCA drones FQ-42A "Dark Merlin" and FQ-44A "Fury" | Production order for the first 150 in June 2026 | the loyal wingman, now named **FQ-42A Dark Merlin** |
+| Leonidas high-power microwave | Fielded with the Army; downed fibre-optic FPV drones in a demonstration | the US HPM vehicle "Leonidas" (already) |
+| Lasers (DE M-SHORAD and others) | Fielded in small numbers | the US laser air defence (already) |
+| **Satellite jammers** (Counter Communications System; Meadowlands) | Operational since 2020; the first production Meadowlands delivered in December 2025. Russia and China field their own | **new:** jam a nation's satellites from the ground for 2 minutes. Reversible: nothing is destroyed, and it is no act of war (relations -8). US, Russia, China; a later nation may carry "sat_jammer". |
+| X-37B spaceplane | Eighth mission since August 2025 (laser communications, quantum navigation tests) | not modelled (a test platform) |
+| "Discombobulator" (claimed for the January 2026 raid in Venezuela) | A presidential claim. A US official suggested it conflated cyber tools that disabled defences with acoustic devices | not modelled as a weapon. One-off claims are not a basis for game rules. |
+
+The US also fields no chemical or biological weapons, and no nuclear glide vehicle (its hypersonic weapons are
+conventional), as section 3 found.
+
+### Nuclear tests (scripts/nuclear_tests.gd)
+
+Any nuclear-armed nation, including one that has broken out, may test a device at a site on its own land or in
+the empty wilderness beyond it, far from its towns:
+- **Underground test:** the shock is measured worldwide, but almost nothing escapes. Relations -6, tension +8,
+  research +250.
+- **Atmospheric test:** a mushroom cloud, and fallout that drifts with the wind. Relations -15, tension +15,
+  research +400.
+- **Both:** the Security Council takes it up. Sanctions are likelier for a state outside the nuclear-weapon
+  club of the NPT; a recognised weapon state draws words.
+- **The deterrent is believed for 15 minutes:** a rival that merely dislikes the tester will not start a war
+  with it, and a rival weighing a nuclear strike on it weighs it again (half the chance).
+- **Rivals test too:** a state that has just broken out proves its bomb, and a nuclear state outside the club
+  tests now and then when tension runs high.
+- The comprehensive test ban is treaty law (not in force, but observed by all but one state this century), and
+  atmospheric testing is banned outright. This is why the world reacts as it does.
+
+### Nuclear release
+
+Arming a nuclear weapon now asks for the order to release it and states its price:
+- your forces go to DEFCON 2 (production +20%, damage +5%, income -10%);
+- every nation's view of you falls by 8, and the nuclear powers' by a further 4.
+
+Approving arms the weapon at once. The player's own alert is shown as a DEFCON level ("Your forces: DEFCON 3")
+rather than a "posture".

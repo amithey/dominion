@@ -77,8 +77,9 @@ const LADDER := {
 	"aggression": ["withdraw", "condemn", "statement"],
 	"war": ["ceasefire", "statement"],
 	"violation": ["economic", "targeted", "condemn"],
+	"test": ["targeted", "condemn", "statement"],
 }
-const BASE := {"wmd": 0.8, "breakout": 0.7, "aggression": 0.3, "war": 0.45, "violation": 0.5, "player": 0.0}
+const BASE := {"wmd": 0.8, "breakout": 0.7, "aggression": 0.3, "war": 0.45, "violation": 0.5, "test": 0.5, "player": 0.0}
 
 var w: Node
 var elected := {}              # member -> its term's end
@@ -219,7 +220,7 @@ func _standing() -> void:
 			continue
 		for m in row.measures:
 			_apply_measure(m, i, FOREVER)
-		record.append({"number": 0, "kind": "standing", "measure": "standing", "title": "Sanctions on %s under %s" % [_name(i), row.res],
+		record.append({"number": 0, "kind": "standing", "measure": "standing", "title": "Sanctions on %s over %s" % [_name(i), row.res],
 			"target": i, "other": -1, "by": -1, "cause": row.res, "votes": {}, "lobby": {}, "result": "in force", "tally": {"yes": 0, "no": 0, "abstain": 0}, "time": 0.0})
 
 # ---------------------------------------------------------------- the clock
@@ -437,6 +438,8 @@ func _score(i: int, dr: Dictionary) -> float:
 		s -= 1.5
 	if Data.nam(w, i) and Data.nam(w, t):
 		s -= 0.1 * sev   # non-aligned solidarity
+	if dr.kind == "test" and str(preload("res://scripts/cbrn_data.gd").treaty(w, t, "npt")) == "nws":
+		s -= 0.35   # a test by a recognised nuclear-weapon state draws words, rarely sanctions
 	if Data.ident(w, i) in ["russia", "china"] and not dr.kind in ["wmd", "breakout"]:
 		s -= 0.15 * sev   # sovereignty first
 	if dr.kind == "war":

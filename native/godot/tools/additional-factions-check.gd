@@ -84,8 +84,12 @@ func run() -> void:
 			var target_key := "shahed" if key in ["type45", "interceptorDrone"] else ("corvette" if key == "kcr60" else "tank")
 			var enemy: Dictionary = w.spawn_unit(target_key, (sea if key in w.NAVAL else field) + Vector3(12, 0, 0), 1)
 			var before_hit: float = enemy.hp
-			w.fire_weapon(u, enemy, w.WEAPONS[key])
-			for frame in range(240): w.effects._physics_process(1.0 / 30.0)
+			u.accuracy = 1.0   # (the weapon working is tested here; an older seeker's chance to go astray is unit-quality-check's)
+			for shot in range(3):   # (an enemy tank's active protection may stop a shot: up to three)
+				w.fire_weapon(u, enemy, w.WEAPONS[key])
+				for frame in range(240): w.effects._physics_process(1.0 / 30.0)
+				if enemy.dead or enemy.hp < before_hit: break
+				if u.has("ammo"): u.ammo = maxi(int(u.ammo), 1)
 			check(enemy.dead or enemy.hp < before_hit, key + " projectile hits a valid target in live combat")
 			w.kill(enemy)
 		w.kill(u)

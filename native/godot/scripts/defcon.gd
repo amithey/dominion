@@ -112,7 +112,7 @@ func floor_now() -> Array:
 		var p: float = float(FLOOR[int(posture[i])])
 		if p > f and not d.defeated(i):
 			f = p
-			why = ("you have raised your nuclear alert to posture %d" % int(posture[i])) if i == 0 else ("%s has raised its nuclear alert to posture %d" % [d.name_of(i), int(posture[i])])
+			why = ("you have raised your forces' alert to DEFCON %d" % int(posture[i])) if i == 0 else ("%s has raised its forces' alert to DEFCON %d" % [d.name_of(i), int(posture[i])])
 	if w.game_time - used_at < USED_LOCK:
 		f = 90.0
 		why = "you have used a nuclear weapon" if used_by == 0 else "%s has used a nuclear weapon" % d.name_of(used_by)
@@ -182,11 +182,19 @@ func nuclear_used(owner: int, owners_hit: Array) -> void:
 				posture[victim] = 2
 	_announce()
 
+## Nuclear release for the player: the alert goes straight to DEFCON 2, with
+## every step's price paid on the way (hud: the release decision).
+func authorise_release() -> String:
+	var said := ""
+	while int(posture[0]) > 2:
+		said = raise_posture()
+	return said
+
 ## The player's alert: one step up (toward 2) or down (toward 5).
 func raise_posture() -> String:
 	var p: int = int(posture[0])
 	if p <= 2:
-		return "Your forces are already mobilised (posture 2)."
+		return "Your forces are already at DEFCON 2."
 	posture[0] = p - 1
 	var d: Node = w.diplomacy
 	for i in range(1, d.n):
@@ -201,7 +209,7 @@ func raise_posture() -> String:
 	_announce()
 	if w.research != null:
 		w.research._recompute()
-	return "Alert raised to posture %d. %s" % [posture[0], posture_text(int(posture[0]))]
+	return "Your forces' alert is raised to DEFCON %d. %s" % [posture[0], posture_text(int(posture[0]))]
 
 func lower_posture() -> String:
 	var p: int = int(posture[0])
@@ -210,7 +218,7 @@ func lower_posture() -> String:
 	posture[0] = p + 1
 	if w.research != null:
 		w.research._recompute()
-	return "Alert lowered to posture %d. %s" % [posture[0], posture_text(int(posture[0]))]
+	return "Your forces stand down to DEFCON %d. %s" % [posture[0], posture_text(int(posture[0]))]
 
 static func posture_text(p: int) -> String:
 	match p:
@@ -222,7 +230,7 @@ static func posture_text(p: int) -> String:
 ## Why the player may not release a nuclear missile, or "".
 func release_blocked() -> String:
 	if int(posture[0]) > 2:
-		return "Nuclear release needs posture 2 (mobilised): raise your alert in the Defence window."
+		return "Nuclear weapons are released only at DEFCON 2."
 	return ""
 
 ## The player's posture as research bonuses (research._recompute).
@@ -257,6 +265,7 @@ func _ai_nuclear() -> void:
 		var chance := 0.04
 		if Factions.identity(w, owner) == "russia": chance *= 2.0
 		if deterrent(0): chance *= 0.33
+		if w.get("tests") != null and w.tests != null and w.tests.believed(0): chance *= 0.5   # a tested deterrent
 		if randf() < chance:
 			_strike(owner, "facing defeat", "tacticalNuke" if Factions.identity(w, owner) == "russia" else "nuke")
 

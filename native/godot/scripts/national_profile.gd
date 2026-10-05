@@ -79,7 +79,7 @@ const PROFILES := {
 		"growth": 1.0, "resources": {}, "trade": 1.1,
 		"costs": {"drone": 0.8},
 		"strengths": ["The drone industry (Baykar): drones 20% cheaper", "The crossroads of Europe and Asia: +10% trade income", "Industry and construction +10%", "Talks with every side: mild relations with all"],
-		"weaknesses": ["Inflation (35% in 2025): -4 happiness"],
+		"weaknesses": ["High inflation: -4 happiness"],
 	},
 	"israel": {
 		"bonus": {"incomePct": 0.1, "researchPct": 0.1, "spyPct": 0.15, "counterSpy": 0.15, "civCapPct": -0.15, "happiness": -2.0},

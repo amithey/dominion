@@ -927,6 +927,9 @@ func _settings_graphics() -> void:
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if v else DisplayServer.VSYNC_DISABLED)))
 	_setting("Frame limit", "The most frames a second the game draws. A limit keeps a laptop cooler.", _segmented([["30", 30], ["60", 60], ["120", 120], ["None", 0]], Engine.max_fps, func(v): Engine.max_fps = v))
 	_setting("Frame counter", "Frames per second in the bottom-right corner.", _switch(world.show_fps, func(v): world.show_fps = v))
+	_setting("Interface size", "The size of the panels and text: smaller leaves more of the battlefield in view.", _segmented([["Small", 0.7], ["Medium", 0.8], ["Large", 0.9], ["Original", 1.0]], world.ui_scale, func(v):
+		world.ui_scale = v
+		world.apply_ui_scale()))
 
 func _settings_sound() -> void:
 	_setting("Master volume", "Everything the game plays.", _slider(_bus_volume("Master"), 0, 100, 1, func(v): return "%d%%" % v, func(v): _set_bus_volume("Master", v)))
@@ -1035,7 +1038,10 @@ func newest_save() -> String:
 func load_settings() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(SETTINGS) != OK:
+		world.apply_ui_scale()
 		return
+	world.ui_scale = float(cfg.get_value("graphics", "ui_scale", world.ui_scale))
+	world.apply_ui_scale()
 	var q: String = cfg.get_value("graphics", "quality", world.quality)
 	if q != world.quality:
 		world.quality = q
@@ -1063,6 +1069,7 @@ func save_settings() -> void:
 	cfg.set_value("graphics", "vsync", DisplayServer.window_get_vsync_mode() != DisplayServer.VSYNC_DISABLED)
 	cfg.set_value("graphics", "max_fps", Engine.max_fps)
 	cfg.set_value("graphics", "show_fps", world.show_fps)
+	cfg.set_value("graphics", "ui_scale", world.ui_scale)
 	if world.saves:
 		cfg.set_value("game", "autosave", world.saves.autosave_every)
 	cfg.save(SETTINGS)

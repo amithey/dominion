@@ -34,7 +34,7 @@ const REVEAL_RADIUS := 90.0
 const DISCOVERIES := {
 	"antiSatellite": {"name": "Anti-Satellite Weapons", "cost": 700, "branch": "strategic", "era": 4, "nation": ASAT,
 		"reqDiscovery": "satelliteRecon", "reqBuilding": "missileSilo", "fx": {"asat": 1.0},
-		"desc": "A direct-ascent missile that destroys a satellite in orbit (tested by China 2007, the United States 2008, India 2019, Russia 2021). Firing it is an act of war, and its debris threatens every nation's satellites, yours too."},
+		"desc": "A direct-ascent missile that destroys a satellite in orbit. Firing it is an act of war, and its debris threatens every nation's satellites, yours too."},
 }
 
 var w: Node
@@ -133,7 +133,7 @@ func _default_watch(owner: int) -> int:
 func nav_factor(owner: int) -> float:
 	var id := ident(owner)
 	var own_system: bool = GNSS.has(id)
-	if count(owner, "nav") >= 2:
+	if active(owner, "nav") >= 2:
 		return 1.1
 	if not own_system:
 		var us := -1
@@ -145,11 +145,11 @@ func nav_factor(owner: int) -> float:
 
 ## How likely jamming is to bring down `owner`'s drones (a factor on the roll).
 func jam_factor(owner: int) -> float:
-	return 0.5 if count(owner, "comms") >= 2 else 1.0
+	return 0.5 if active(owner, "comms") >= 2 else 1.0
 
 ## The player's satellites as research bonuses (research._recompute).
 func bonuses() -> Dictionary:
-	var n := mini(count(0, "warning"), 2)
+	var n := mini(active(0, "warning"), 2)
 	return {"interceptPct": 0.05 * n} if n > 0 else {}
 
 func update(delta: float) -> void:
@@ -157,7 +157,7 @@ func update(delta: float) -> void:
 	_ai_tick += delta
 	# Recon passes.
 	for owner in sats.keys():
-		if count(owner, "recon") <= 0 or w.diplomacy.defeated(owner) and owner > 0:
+		if active(owner, "recon") <= 0 or w.diplomacy.defeated(owner) and owner > 0:
 			continue
 		var next: float = float(_pass.get(owner, w.game_time + PASS_SECONDS / count(owner, "recon")))
 		if not _pass.has(owner):
@@ -259,11 +259,57 @@ func fire_asat(owner: int, target: int, roll := -1.0) -> String:
 	return text
 
 const ORBITAL_NUKE_COST := 3000.0
+## Ground-based satellite jammers: the target's satellites fall silent for a
+## while (reversible: nothing is destroyed, and it is no act of war, though it
+## is resented). Fielded by the United States, Russia and China; a nation added
+## later may carry "sat_jammer": true.
+const JAMMERS := ["usa", "russia", "china"]
+const JAM_COST := 600.0
+const JAM_SECONDS := 120.0
+const JAM_COOLDOWN := 180.0
+var jammed := {}        # nation -> until: its satellites silent
+var _jam_ready := {}    # jamming nation -> when it may jam again
+
+func can_jam(owner: int) -> bool:
+	var n: Dictionary = w.map.nations[owner] if owner >= 0 and owner < w.map.nations.size() else {}
+	return bool(n.get("sat_jammer", ident(owner) in JAMMERS))
+
+## Satellites of `kind` that work now (none while jammed).
+func active(owner: int, kind: String) -> int:
+	return 0 if float(jammed.get(owner, -1.0)) > w.game_time else count(owner, kind)
+
+func jam_blocked(target: int) -> String:
+	if not can_jam(0):
+		return "Your nation fields no satellite jammers."
+	if w.research == null or not w.research.done("satelliteRecon"):
+		return "Research Satellite Recon first."
+	if total(target) == 0:
+		return "%s has nothing in orbit." % w.diplomacy.name_of(target)
+	if float(_jam_ready.get(0, -1.0)) > w.game_time:
+		return "The jammers are cooling: %ds." % ceili(float(_jam_ready[0]) - w.game_time)
+	if w.economy.res.money < JAM_COST:
+		return "Costs $%d." % int(JAM_COST)
+	return ""
+
+## `owner` jams `target`'s satellites from the ground.
+func jam(owner: int, target: int) -> String:
+	if owner == 0:
+		var why := jam_blocked(target)
+		if why != "":
+			return why
+		w.economy.pay({"money": JAM_COST})
+	jammed[target] = w.game_time + JAM_SECONDS
+	_jam_ready[owner] = w.game_time + JAM_COOLDOWN
+	w.diplomacy.change(owner, target, -8.0)
+	if w.research != null: w.research._recompute()
+	var text := "SPACE: %s %s satellites for 2 minutes: no reconnaissance, navigation, communications or warning from them." % ["You jam" if owner == 0 else w.diplomacy.name_of(owner) + " jams", "your" if target == 0 else w.diplomacy.name_of(target) + "'s"]
+	w.hud.notice(text)
+	return text
 
 ## Why the player cannot detonate a nuclear weapon in orbit, or "".
 func orbital_nuke_blocked() -> String:
 	if not preload("res://scripts/cbrn_data.gd").has(w, 0, "nuclearAsat"):
-		return "Only Russia is developing one (Cosmos 2553)."
+		return "Only Russia is developing one."
 	if w.research == null or not w.research.done("antiSatellite") or not w.research.done("nuclearProgram"):
 		return "Research Anti-Satellite Weapons and the Nuclear Program first."
 	if w.get("defcon") != null and w.defcon != null and w.defcon.release_blocked() != "":
@@ -305,6 +351,8 @@ func _ai_space() -> void:
 				break
 		if not watch.has(owner) or w.diplomacy.defeated(int(watch[owner])):
 			watch[owner] = _default_watch(owner)
+		if can_jam(owner) and w.diplomacy.at_war(owner, 0) and total(0) > 0 and float(_jam_ready.get(owner, -1.0)) <= w.game_time and randf() < 0.03:
+			jam(owner, 0)
 		if preload("res://scripts/cbrn_data.gd").has(w, owner, "nuclearAsat") and w.get("defcon") != null and w.defcon != null and w.defcon.existential(owner) and w.diplomacy.at_war(owner, 0) and total(0) >= 4 and randf() < 0.01:
 			orbital_nuke(owner)
 		if preload("res://scripts/national_arsenal.gd").identity(w, owner) in ASAT and tech >= 8.0 and w.diplomacy.at_war(owner, 0) and total(0) > 0 and float(n.money) > 4000.0 and randf() < 0.02:
@@ -316,7 +364,9 @@ func capture() -> Dictionary:
 	for k in sats: s[str(k)] = sats[k]
 	var wt := {}
 	for k in watch: wt[str(k)] = watch[k]
-	return {"sats": s, "watch": wt, "debris": debris}
+	var jm := {}
+	for k in jammed: jm[str(k)] = jammed[k]
+	return {"sats": s, "watch": wt, "debris": debris, "jammed": jm}
 
 func restore(data: Dictionary) -> void:
 	for k in data.get("sats", {}):
@@ -326,5 +376,7 @@ func restore(data: Dictionary) -> void:
 	watch.clear()
 	for k in data.get("watch", {}): watch[int(k)] = int(data.watch[k])
 	debris = float(data.get("debris", 0.0))
+	jammed.clear()
+	for k in data.get("jammed", {}): jammed[int(k)] = float(data.jammed[k])
 	if w.research != null:
 		w.research._recompute()

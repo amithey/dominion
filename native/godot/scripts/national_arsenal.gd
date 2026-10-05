@@ -52,7 +52,7 @@ const UNITS := {
 	"irisT": {"name": "IRIS-T SLM", "nation": "green", "hp": 300, "dmg": 45, "range": 90, "cooldown": 2.0, "aggro": 100, "speed": 10,
 		"fly": false, "naval": false, "cost": {"money": 950, "iron": 60, "silicon": 45}, "trainTime": 26, "pop": 3,
 		"requires": "guidedMunitions",
-		"desc": "European Union only. The air defence that hit ~99% of its targets in Ukraine: shoots down aircraft and drones 90 m out, stops 95% of cruise missiles and 45% of ballistic ones."},
+		"desc": "European Union only. A highly effective air defence: shoots down aircraft and drones 90 m out, stops 95% of cruise missiles and 45% of ballistic ones."},
 }
 
 const PROFILES := {

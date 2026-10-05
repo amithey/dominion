@@ -111,7 +111,7 @@ static func apply(w: Node) -> void:
 	w.unit_defs.sixthGen.name = SIXTH_GEN_NAMES.get(me, "Sixth-Gen Fighter")
 	if me == "red":
 		discoveries.sixthGeneration.cost = int(discoveries.sixthGeneration.cost * 0.75)
-		discoveries.sixthGeneration.desc += " The Crimson Empire's J-36 has flown since 2024: this costs a quarter less."
+		discoveries.sixthGeneration.desc += " The Crimson Empire's J-36 prototype already flies: this costs a quarter less."
 
 ## Two loyal wingmen go with a new sixth-generation fighter. While it stands on
 ## its airfield they are not on the map at all (counted aboard, in
