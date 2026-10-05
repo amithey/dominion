@@ -26,14 +26,17 @@ const CAPABILITY := {
 	"hydrogenBomb": {"ids": ["usa", "russia", "china", "eu", "uk", "north_korea"],
 		"why": "two-stage weapons tested by the US (1952), USSR (1955), UK (1957), China (1967), France (1968); North Korea's 2017 test (~250 kt) is judged likely thermonuclear. India's 1998 claim is disputed (12-25 kt measured); Israel's is unproven"},
 	"tsarBomba": {"ids": ["russia"], "why": "the USSR's 50 Mt AN602, 30 October 1961"},
-	"neutronBomb": {"ids": ["usa", "russia", "china", "eu"], "why": "US W70-3/W79 (retired 1992); the USSR, France (1980) and China (1988) tested enhanced-radiation designs"},
+	"neutronBomb": {"ids": ["usa", "russia", "china", "eu"], "why": "no one fields one today: the US retired the W70-3 and W79 in 1992; the USSR, France (1980) and China (1988) tested designs. A research programme to build them again"},
+	"bunkerBuster": {"ids": ["usa"], "why": "the US B61-11 earth penetrator (~400 kt, kept in the stockpile) and the B61-13 (first unit May 2025) for hardened, deeply buried targets; Congress funded a new nuclear bunker-buster prototype in 2026"},
+	"nuclearCruise": {"ids": ["usa", "russia", "eu", "pakistan", "israel"],
+		"why": "air- and sea-launched nuclear cruise missiles: the US AGM-86B with the W80-1 (the LRSO to follow), Russia's Kh-102, France's ASMPA-R, Pakistan's Ra'ad and Babur, and the missiles Israel's Dolphin submarines are believed to carry"},
 	"nuclearEmp": {"ids": ["usa", "russia", "china", "eu", "uk", "india", "pakistan", "israel", "north_korea"],
 		"why": "any nuclear-armed state with a missile can burst a warhead at altitude; the EMP Commission named it in Russian, Chinese and North Korean doctrine"},
 	"mirv": {"ids": ["usa", "russia", "china", "eu", "uk", "india", "pakistan"],
 		"why": "deployed by the US (Trident II), Russia (Yars, Bulava, Sarmat), China (DF-41, DF-5B), the UK and France (M51); tested by India (Agni-V 'Divyastra', March 2024 and May 2026) and Pakistan (Ababeel)"},
 	"nuclearGlide": {"ids": ["russia", "china"], "why": "Russia's Avangard (in service 2019); China's orbital glide vehicle test of August 2021 (a fractional orbital bombardment system)"},
 	"burevestnik": {"ids": ["russia"], "why": "nuclear-powered cruise missile; Russia claimed a 14,000 km, 15-hour test on 21 October 2025"},
-	"poseidon": {"ids": ["russia"], "why": "nuclear-powered, nuclear-armed torpedo launched from a submarine; Russia claimed its first powered test on 28 October 2025"},
+	"poseidon": {"ids": ["russia", "north_korea"], "why": "a nuclear torpedo that strikes a coast: Russia's Poseidon (first powered test claimed 28 October 2025) and North Korea's Haeil 'tsunami' drone (tests claimed 2023-2024, readiness doubted)"},
 	"nuclearAsat": {"ids": ["russia"], "why": "US intelligence (February 2024): Russia is developing a nuclear weapon for orbit; Cosmos 2553 (2022) tested its components"},
 	# Electromagnetic.
 	"emp": {"ids": ["usa", "china", "russia"], "why": "the US CHAMP (2012) and HiJENKS (2022) microwave missiles; Chinese and Russian high-power microwave programmes"},
@@ -42,13 +45,13 @@ const CAPABILITY := {
 		"why": "Russia (Novichok against Skripal 2018 and Navalny 2020; the US assesses an undeclared programme); North Korea (2,500-5,000 t incl. sarin and VX; outside the CWC); Egypt (outside the CWC, used mustard gas in Yemen in the 1960s); Israel (signed but never ratified the CWC; suspected)"},
 	"riotAgent": {"ids": ["russia"], "why": "CS, CN and chloropicrin grenades dropped on Ukrainian trenches: more than 13,300 recorded uses by 2026; banned as a method of warfare by the CWC"},
 	"incapacitant": {"ids": ["iran", "russia"], "why": "pharmaceutical-based agents: the US found Iran in violation of the CWC for them in 2024; Russia's Kolokol-1 fentanyl aerosol killed 130 hostages in Moscow in 2002"},
-	"chlorine": {"rule": "anyone", "why": "a toxic industrial chemical any state can weaponise: Syria's former government dropped chlorine on its own towns (OPCW attributions 2014-2018); the most used chemical weapon of the past decade"},
+	"chlorine": {"rule": "chemical", "why": "a toxic industrial chemical: only a state that already breaks the chemical weapons ban (or stands outside it) turns it into a weapon, as Syria's former government did (OPCW attributions 2014-2018). A law-abiding state, the US above all (its last chemical weapon destroyed 7 July 2023), does not"},
 	# Biological. No state admits a programme; the US compliance reports assess
 	# offensive programmes in Russia and North Korea (concerns only for China and Iran).
 	"anthrax": {"ids": ["russia", "north_korea"], "why": "spores for area denial: the Soviet Biopreparat programme (the 1979 Sverdlovsk leak killed about 66); US-assessed offensive programmes"},
 	"bioweapon": {"ids": ["russia", "north_korea"], "why": "a contagious engineered disease (plague, smallpox): the same US-assessed offensive programmes"},
 	# Radiological.
-	"dirtyBomb": {"rule": "reactor", "why": "any state with radioactive material: here, any nation with a Nuclear Reactor. No state has ever used one"},
+	"dirtyBomb": {"ids": ["north_korea", "iran"], "rule": "reactor", "why": "a crude weapon no state has ever used: a nuclear power has no need of one. Only a state outside the nonproliferation regime, with a Nuclear Reactor's material, is credited with it here"},
 }
 
 ## Treaties, by faction id. npt: "nws" (a recognised weapon state), "party",
@@ -65,6 +68,11 @@ const TREATIES := {
 	"japan": {"icc": true}, "south_korea": {"icc": true}, "brazil": {"icc": true}, "australia": {"icc": true},
 	"ukraine": {"icc": true}, "afghanistan": {"icc": true},
 }
+## NATO nuclear sharing: US B61 bombs in a host's custody, released only by
+## the United States (Kleine Brogel, Büchel, Aviano, Ghedi, Volkel, Incirlik,
+## and Lakenheath/Marham again since 2025). A host may drop them while it is
+## allied with the owner. (The EU and the UK have bombs of their own here.)
+const SHARING := {"turkiye": "usa"}
 ## States that could build a bomb within a short time, and on what condition.
 const THRESHOLD := {
 	"iran": {"after": "", "why": "enriched uranium to 60% (over 400 kg before the strikes of June 2025)"},
@@ -101,15 +109,30 @@ static func arsenal_ids(ids: Array) -> Array:
 ## Whether nation `owner` has weapon `key` (data, its own fields, or a rule).
 static func has(w: Node, owner: int, key: String) -> bool:
 	var row: Dictionary = CAPABILITY.get(key, {})
-	match str(row.get("rule", "")):
-		"anyone":
-			return true
-		"reactor":
-			return w.buildings.any(func(b): return int(b.owner) == owner and not b.dead and b.key == "nuclearReactor")
 	var n := nation_dict(w, owner)
+	match str(row.get("rule", "")):
+		"chemical":
+			# Only a state already outside or in breach of the CWC improvises it.
+			return str(treaty(w, owner, "cwc")) != "party" or ["chemical", "riotAgent", "incapacitant"].any(func(k): return has(w, owner, k))
+		"reactor":
+			if not w.buildings.any(func(b): return int(b.owner) == owner and not b.dead and b.key == "nuclearReactor"):
+				return false
+			if w.get("wmd") != null and w.wmd != null and owner in w.wmd.broken_out:
+				return true
 	if n.has("cbrn"):
 		return key in n.cbrn
 	if ident(w, owner) in row.get("ids", []):
 		return true
+	# NATO nuclear sharing: the owner's bombs, while allied with it.
+	if key == "tacticalNuke" and SHARING.has(ident(w, owner)):
+		var patron: int = -1
+		for i in range(w.map.nations.size()):
+			if ident(w, i) == SHARING[ident(w, owner)]: patron = i
+		if patron >= 0 and patron != owner and not w.diplomacy.defeated(patron) and w.diplomacy.allied(owner, patron):
+			return true
 	# A nuclear breakout gives the basic nuclear weapons (wmd.gd).
 	return key in ["nuke", "tacticalNuke", "nuclearEmp"] and w.get("wmd") != null and w.wmd != null and owner in w.wmd.broken_out
+
+## Whether `owner` holds its tactical bombs only through nuclear sharing.
+static func shared_only(w: Node, owner: int) -> bool:
+	return SHARING.has(ident(w, owner)) and not ident(w, owner) in ids_for("tacticalNuke")

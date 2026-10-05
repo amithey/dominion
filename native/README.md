@@ -23,6 +23,27 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.70: the US arsenal as it is
+
+- **The US no longer gets chlorine bombs or a dirty bomb**, a mistake of 0.9.69's rules: it destroyed its last
+  chemical weapon on 7 July 2023, and no state has ever used a dirty bomb.
+  - Chlorine is now only for states already outside or in breach of the chemical weapons ban.
+  - The dirty bomb is only for North Korea and Iran (with a reactor), or for a state that has broken out.
+- **New US weapons, as fielded:**
+  - **Nuclear Bunker Buster** (the B61-11 earth penetrator; the B61-13, first built in May 2025): a small
+    surface circle, but buildings and bunkers in it take three times the damage, and a dirty ground-burst
+    fallout.
+  - **Nuclear Cruise Missile:** the AGM-86B (the LRSO to follow). It is also held by Russia (Kh-102), France
+    (ASMPA-R), Pakistan (Ra'ad, Babur) and Israel (believed).
+- **The neutron warhead** is described as what it is: no one fields one today, and researching it means
+  building one again.
+- **Nuclear torpedo:** North Korea's Haeil joins Russia's Poseidon; it can be fired from a nuclear submarine
+  or a coastal silo.
+- **NATO nuclear sharing:** Turkey may use the US B61s at Incirlik while allied with the United States.
+- **Research** (the US arsenal 2025, and a second check of all nine nuclear states): native/CBRN-UN-RESEARCH-2026-10-05.md, section 3.
+
+Checks: tools/wmd-un-check.gd (59).
+
 ## Version 0.9.69: who really has what, more unconventional weapons, and a real UN
 
 - **Who has what, corrected** (scripts/cbrn_data.gd, one table for every nation, with rules for nations

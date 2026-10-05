@@ -66,6 +66,8 @@ func locked(key: String) -> String:
 			return only   # e.g. nuclear weapons outside the nuclear powers
 	if wmd != null and 0 in wmd.broken_out and key in ["nuke", "tacticalNuke", "nuclearEmp"]:
 		return ""   # a nuclear breakout skips the Nuclear Program
+	if key == "tacticalNuke" and cbrn and preload("res://scripts/cbrn_data.gd").shared_only(world, 0):
+		return ""   # NATO nuclear sharing: the owner's bombs, no programme of one's own
 	var need: String = def_of(key).get("needsDiscovery", "")
 	if need != "" and world.research and not world.research.done(need):
 		return "Needs %s" % world.research.def_of(need).get("name", need)
@@ -131,7 +133,9 @@ func launch(key: String, target: Vector3, platform = null) -> String:
 		# A torpedo: from a nuclear submarine, at a coast (wmd.gd: Poseidon).
 		platforms = launch_ships().filter(func(u): return u.key == "nuclearSub")
 		if platforms.is_empty():
-			return "%s is fired only from a nuclear submarine." % def_of(key).name
+			platforms = silos().filter(func(s): return world.water_near(s.node.position, 40) != null)   # a coastal launch (Haeil)
+		if platforms.is_empty():
+			return "%s is fired from a nuclear submarine or a coastal Missile Silo." % def_of(key).name
 		if world.water_near(target, 40) == null:
 			return "%s needs a target on or near the sea." % def_of(key).name
 	if platforms.is_empty():
@@ -248,6 +252,9 @@ func impact(key: String, at: Vector3, owner: int, from := Vector3.INF) -> void:
 				mult = 2.5 if ent.get("naval", false) else 1.0
 			"brahmos":
 				mult = 2.0 if ent.get("naval", false) else 1.0
+			"penetrator":
+				# It bursts underground: what is built is crushed, bunkers too.
+				mult = 3.0 if building else 1.0
 			"neutron":
 				# Neutrons pass through armour and walls: crews and people die, buildings stand.
 				# Its blast is small: buildings suffer only near the burst.

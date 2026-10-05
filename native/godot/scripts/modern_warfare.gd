@@ -42,7 +42,7 @@ const APS_RELOAD := 4.0        # an active protection system rearms between inte
 const CLASS_OF := {"cruise": "cruise", "cluster": "cruise", "emp": "cruise", "antiShip": "seaSkimmer",
 	"tactical": "shortBallistic", "ballistic": "ballistic", "hypersonic": "hypersonic", "nuke": "icbm", "df17": "hypersonic", "brahmos": "supersonic",
 	"tacticalNuke": "shortBallistic", "hydrogenBomb": "icbm", "tsarBomba": "icbm", "neutronBomb": "ballistic", "nuclearEmp": "icbm",
-	"mirv": "icbm", "mirvWarhead": "icbm", "nuclearGlide": "glide", "burevestnik": "cruise", "poseidon": "underwater",
+	"mirv": "icbm", "mirvWarhead": "icbm", "nuclearGlide": "glide", "burevestnik": "cruise", "poseidon": "underwater", "bunkerBuster": "ballistic", "nuclearCruise": "cruise",
 	"dirtyBomb": "shortBallistic", "chemical": "shortBallistic", "chlorine": "shortBallistic", "riotAgent": "shortBallistic",
 	"incapacitant": "shortBallistic", "anthrax": "shortBallistic", "bioweapon": "shortBallistic"}
 const INTERCEPT := {

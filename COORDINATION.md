@@ -761,3 +761,10 @@ UI files listed above.
     Assembly, Art. 19, Art. 99, standing sanctions as power_effects with "un": measure). Hooks:
     - world.update_training and ai.gd next_train use un.production_mult;
     - market buy/sell refuse under comprehensive sanctions.
+- 2026-10-05 Claude, 0.9.70: cbrn_data.gd changes:
+  - Rule changes: chlorine's rule is now "chemical" (only CWC non-parties or holders of chemical agents); the
+    dirty bomb takes ids [north_korea, iran] plus a reactor, and a breakout allows it too.
+  - New capability keys: bunkerBuster (US) and nuclearCruise (US, Russia, EU, Pakistan, Israel); both are
+    missile types in wmd.gd, and "penetrator" is a missiles.impact multiplier. poseidon is now Russia plus
+    North Korea, with a coastal-silo launch.
+  - SHARING {"turkiye": "usa"}: tacticalNuke while allied with the US (shared_only skips the discovery).

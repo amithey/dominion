@@ -100,3 +100,77 @@ Asia-Pacific group.
 - a broken peacekeeping ceasefire;
 - a long war (Art. 99);
 - your own drafts, which need a seat on the Council and, for sanctions, a cause on record.
+
+## 3. A closer look at the United States, and a second check of everyone (0.9.70)
+
+The player said the US list did not look right, and it wasn't. Two rules from 0.9.69 had given the US (and every
+other state) chlorine bombs ("anyone can improvise it") and a dirty bomb ("any nation with a reactor"). The US
+destroyed its last chemical weapon, an M55 sarin rocket at Blue Grass, Kentucky, on 7 July 2023. No state has
+ever used a dirty bomb. Meanwhile real US weapons were missing.
+
+### The US arsenal, as it is (FAS Nuclear Notebook 2025, CRS, NNSA)
+
+- **Totals:** about 3,700 warheads in the stockpile, about 1,700 of them deployed; 5,177 including those awaiting
+  dismantlement.
+- **ICBMs:** Minuteman III, now with a single warhead each (W87, 300 kt, or W78, 335 kt) since 2014. The Sentinel
+  replacement is over budget.
+- **SLBMs:** Trident II D5 on Ohio-class submarines, MIRVed with the W76-1 (90 kt) and the W88 (475 kt). Columbia
+  class under construction.
+- **Low yield:** the W76-2 (about 8 kt) on Trident since 2019.
+- **Bombs:** the B61-12 (variable yield, 0.3-50 kt; about 100 in Europe under NATO sharing); the B61-13 (higher
+  yield, first unit May 2025, a year early); the B61-11 earth penetrator (~400 kt), which was not retired; the
+  B83-1 (1.2 Mt), which is being retired.
+- **Cruise missiles:** the AGM-86B ALCM with the W80-1 on the B-52, to be replaced by the AGM-181 LRSO with the
+  W80-4. The SLCM-N, a nuclear sea-launched cruise missile, was made a program of record by Congress and is to
+  be operational by 2034.
+- **New programmes:** a nuclear bunker-buster prototype funded by Congress (2026); the W93 for Trident; the B-21
+  bomber.
+- **Not held:** no chemical weapons (destroyed in 2023; tear gas is allowed in war only in defensive modes, under
+  Executive Order 11850 of 1975); no biological weapons; no neutron weapon (retired in 1992); no nuclear glide
+  vehicle (US hypersonic missiles, Dark Eagle and CPS, are conventional); nothing like Poseidon or Burevestnik.
+- **Conventional but controversial:** depleted-uranium rounds (M829 tank rounds and A-10 ammunition; sent to
+  Ukraine in 2023); cluster munitions (sent to Ukraine in 2023; the US is not a party to the 2008 convention);
+  white phosphorus for smoke.
+
+### What changed in the game
+
+- **US weapons now:** tactical (W76-2 / B61-12), strategic, thermonuclear (B83, retiring; B61-13), MIRV (Trident
+  II), high-altitude EMP, the HPM microwave missile, the **Nuclear Bunker Buster** (new: B61-11/-13) and the
+  **Nuclear Cruise Missile** (new: AGM-86B, then LRSO). The neutron warhead is shown as a research programme to
+  build one again, not a weapon in service anywhere.
+- **Chlorine:** now only for a state already outside or in breach of the chemical weapons ban (Egypt, North Korea,
+  Israel's unratified signature, or any state with chemical, riot or incapacitating agents). Never the US, the UK,
+  France, China, India or Japan.
+- **Dirty bomb:** only North Korea and Iran (with a reactor), or a state that has broken out of the NPT. Nuclear
+  powers have no use for one.
+- **Nuclear Cruise Missile:** the US (AGM-86B), Russia (Kh-102), France (ASMPA-R), Pakistan (Ra'ad, Babur) and
+  Israel (believed carried by its Dolphin submarines).
+- **Nuclear torpedo:** North Korea's Haeil "tsunami" drone (tests claimed 2023-2024, readiness doubted) joins
+  Russia's Poseidon. It can be fired from a nuclear submarine or a coastal silo.
+- **NATO nuclear sharing:** US B61s are hosted at Kleine Brogel, Büchel, Aviano, Ghedi, Volkel and Incirlik, and
+  again in the UK since 2025, when the UK announced 12 F-35As for the NATO mission. In the game **Turkey** may use
+  the tactical bomb only while allied with the United States.
+
+### The second check of everyone
+
+- **Russia:** about 5,459 warheads and some 1,000-2,000 non-strategic ones. Iskander, the nuclear-capable
+  Kinzhal, Kh-102, Avangard, Sarmat (at least two failed tests and a silo crater at Plesetsk in September 2024),
+  Oreshnik (an intermediate-range MIRV missile fired conventionally at Dnipro in November 2024 and deployed in
+  Belarus in December 2025), Burevestnik and Poseidon. Nuclear warheads in Belarus. Unchanged.
+- **China:** about 600 warheads. DF-41 with up to three warheads, DF-26 dual-capable (about 500 missiles), JL-3 on
+  six Type 094 submarines, the H-6N with an air-launched ballistic missile, an orbital glide vehicle (2021). No
+  publicly confirmed nuclear cruise missile, so none is given.
+- **UK:** about 225 warheads. Trident (MIRV), the sub-strategic low-yield option, the F-35A nuclear role from 2025.
+  Unchanged.
+- **France:** about 290 warheads. M51 (MIRV), ASMPA-R (nuclear cruise, now in the game). Unchanged otherwise.
+- **India:** about 180 warheads. Agni-V MIRV tests (2024, 2026), K-4 from INS Arighaat (2025). Thermonuclear
+  claim still disputed.
+- **Pakistan:** about 170 warheads. Nasr (tactical), Ra'ad and Babur (now nuclear cruise missiles), Ababeel
+  (MIRV, tested).
+- **Israel:** about 90 warheads. Jericho III, Dolphin submarines (nuclear cruise, believed), about 50 aircraft with
+  a possible nuclear role. Thermonuclear unproven.
+- **North Korea:** about 50 warheads (some estimates 150). Hwasong-19 (October 2024), the Hwasan-31 tactical
+  warhead (4-10 kt), the Haeil torpedo; a seventh test possible at any time (DIA 2025).
+- **Turkey:** hosts US B61s at Incirlik (NATO sharing).
+- **Not modelled (conventional, if controversial):** depleted uranium, cluster munitions (Lithuania became the
+  first state to leave the convention, in March 2025), white phosphorus.

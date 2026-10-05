@@ -72,10 +72,22 @@ func run() -> void:
 	check("north_korea" in C.ids_for("hydrogenBomb") and not "india" in C.ids_for("hydrogenBomb") and not "israel" in C.ids_for("hydrogenBomb"), "thermonuclear: North Korea likely (2017); India's claim disputed, Israel's unproven")
 	check("india" in C.ids_for("mirv") and "pakistan" in C.ids_for("mirv") and not "north_korea" in C.ids_for("mirv"), "MIRV: India and Pakistan have tested; North Korea's is aspirational")
 	check("egypt" in C.ids_for("chemical") and "north_korea" in C.ids_for("chemical") and not "iran" in C.ids_for("chemical"), "nerve agents: Egypt and North Korea (outside the CWC), not Iran")
-	check(C.has(w, 0, "chlorine") and C.has(w, 3, "chlorine"), "chlorine: any state can improvise it")
-	check(not C.has(w, 0, "dirtyBomb") and ms.locked("dirtyBomb").contains("Reactor"), "a dirty bomb needs a Nuclear Reactor")
+	check(C.has(w, 0, "bunkerBuster") and C.has(w, 0, "nuclearCruise") and not C.has(w, 1, "bunkerBuster") and not C.has(w, 1, "nuclearCruise"), "the US: the B61-11/-13 bunker buster and the AGM-86B nuclear cruise missile; China neither")
+	check(not C.has(w, 0, "chlorine") and C.has(w, 3, "chlorine") and not C.has(w, 1, "chlorine"), "chlorine: only a state already breaking the chemical ban (Iran), never the US or China")
 	w.place_building("nuclearReactor", w.test_site("nuclearReactor", home + Vector3(-70, 0, 60)), 0, true)
-	check(C.has(w, 0, "dirtyBomb"), "with one, any nation can build it")
+	check(not C.has(w, 0, "dirtyBomb") and ms.locked("dirtyBomb").begins_with("Not fielded"), "the US, even with a reactor, builds no dirty bomb")
+	var iran_hq: Dictionary = w.buildings.filter(func(b): return b.owner == 3 and b.key == "hq")[0]
+	var no_reactor: bool = not C.has(w, 3, "dirtyBomb")
+	w.place_building("nuclearReactor", w.test_site("nuclearReactor", iran_hq.root.position + Vector3(60, 0, -50)), 3, true)
+	check(no_reactor and C.has(w, 3, "dirtyBomb"), "Iran, outside the norm, could with a reactor's material")
+	var real_id = w.map.nations[3].get("id")
+	w.map.nations[3].id = "turkiye"
+	var apart: bool = C.has(w, 3, "tacticalNuke")
+	d.set_flag(d.alliance, 0, 3, true)
+	var shared: bool = C.has(w, 3, "tacticalNuke") and not C.has(w, 3, "nuke")
+	d.set_flag(d.alliance, 0, 3, false)
+	w.map.nations[3].id = real_id
+	check(not apart and shared, "NATO nuclear sharing: Turkey may drop the US B61s at Incirlik only while allied with the US")
 	check(ms.locked("riotAgent").begins_with("Not fielded") and ms.locked("tsarBomba").begins_with("Not fielded"), "another nation's weapon is locked as not fielded (and the silo hides it)")
 	w.map.nations[2]["cbrn"] = ["chemical"]
 	var future_ok: bool = C.has(w, 2, "chemical") and not C.has(w, 2, "mirv")
@@ -112,6 +124,18 @@ func run() -> void:
 	ms.impact("riotAgent", squad.node.position, 1)
 	var flushed: float = preload("res://scripts/bunker.gd").cover(w, squad, tank_src)
 	check(sheltered < 1.0 and flushed == 1.0, "riot agents drive troops from their bunker (cover %.2f, then %.2f)" % [sheltered, flushed])
+	var vault: Dictionary = w.place_building("bunker", ground(home + Vector3(140, 0, 140)), 1, true)
+	var vault2: Dictionary = w.place_building("bunker", ground(home + Vector3(-140, 0, -140)), 1, true)
+	for v in [vault, vault2]:
+		v.max_hp = 200000.0   # (sturdy enough to measure the blow rather than be flattened by it)
+		v.hp = 200000.0
+	var v0: float = vault.hp
+	var v1: float = vault2.hp
+	ms.impact("bunkerBuster", vault.root.position + Vector3(6, 0, 0), 0)
+	ms.impact("nuclearCruise", vault2.root.position + Vector3(6, 0, 0), 0)
+	var hit_pen: float = v0 - vault.hp
+	var hit_air: float = v1 - vault2.hp
+	check(hit_pen > hit_air * 2.0, "an earth penetrator strikes a bunker far harder than a cruise missile's airburst (%d against %d)" % [int(hit_pen), int(hit_air)])
 	var sleeper: Dictionary = w.spawn_unit("soldier", ground(home + Vector3(-90, 0, -90)), 0)
 	ms.impact("incapacitant", sleeper.node.position, 3)
 	w.game_time += 1.0

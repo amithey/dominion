@@ -36,7 +36,7 @@ extends RefCounted
 ## Mechanism): 60 seconds. Then the world's verdict goes to the UN (un.gd).
 
 const Cbrn := preload("res://scripts/cbrn_data.gd")
-const NUCLEAR := ["tacticalNuke", "nuke", "hydrogenBomb", "tsarBomba", "neutronBomb", "nuclearEmp", "mirv", "mirvWarhead", "nuclearGlide", "burevestnik", "poseidon"]
+const NUCLEAR := ["tacticalNuke", "nuke", "hydrogenBomb", "tsarBomba", "neutronBomb", "nuclearEmp", "mirv", "mirvWarhead", "nuclearGlide", "burevestnik", "poseidon", "bunkerBuster", "nuclearCruise"]
 const MISSILES := {
 	"tacticalNuke": {"name": "Tactical Nuclear Missile", "icon": "TN", "buildTime": 45, "cost": {"money": 1400, "iron": 50, "silicon": 40, "uranium": 12},
 		"dmg": 2600, "radius": 18, "speed": 60, "arc": true, "nuclear": true, "needsDiscovery": "nuclearProgram",
@@ -63,9 +63,15 @@ const MISSILES := {
 	"burevestnik": {"name": "Burevestnik", "icon": "9M730", "buildTime": 110, "cost": {"money": 4000, "iron": 90, "silicon": 80, "uranium": 40},
 		"dmg": 4000, "radius": 34, "speed": 90, "nuclear": true, "special": "burevestnik", "needsDiscovery": "thermonuclear",
 		"desc": "A nuclear-powered cruise missile of almost unlimited range, flying low (Russia claimed a 14,000 km, 15-hour flight on 21 October 2025). Its open reactor leaves patches of radiation along its path."},
-	"poseidon": {"name": "Poseidon", "icon": "2M39", "buildTime": 140, "cost": {"money": 5500, "iron": 140, "silicon": 90, "uranium": 70},
+	"bunkerBuster": {"name": "Nuclear Bunker Buster", "icon": "B61-11", "buildTime": 70, "cost": {"money": 2600, "iron": 90, "silicon": 50, "uranium": 25},
+		"dmg": 3600, "radius": 16, "speed": 55, "arc": true, "nuclear": true, "special": "penetrator", "needsDiscovery": "nuclearProgram",
+		"desc": "An earth-penetrating nuclear bomb (the US B61-11, ~400 kt, and the B61-13 first built in May 2025): it buries itself before it bursts, so a small circle on the surface but buildings, bunkers and silos in it are crushed three times over. A ground burst: a heavy, dirty fallout."},
+	"nuclearCruise": {"name": "Nuclear Cruise Missile", "icon": "ALCM", "buildTime": 60, "cost": {"money": 2200, "iron": 60, "silicon": 60, "uranium": 18},
+		"dmg": 3200, "radius": 28, "speed": 80, "nuclear": true, "needsDiscovery": "nuclearProgram",
+		"desc": "A nuclear warhead (5-150 kt) on a low-flying cruise missile: the US AGM-86B (the LRSO to follow), Russia's Kh-102, France's ASMPA-R, Pakistan's Ra'ad and Babur, and, it is believed, Israel's submarine missiles. It hugs the ground below early radar, but air defence that sees it can stop it."},
+	"poseidon": {"name": "Nuclear Torpedo", "icon": "2M39", "buildTime": 140, "cost": {"money": 5500, "iron": 140, "silicon": 90, "uranium": 70},
 		"dmg": 9000, "radius": 60, "speed": 40, "nuclear": true, "special": "poseidon", "needsDiscovery": "thermonuclear", "sub_only": true,
-		"desc": "A nuclear-powered, nuclear-armed torpedo (Russia claimed its first powered test on 28 October 2025): it strikes a coast and throws a radioactive wave over it. Fired only from a nuclear submarine, at a target near the sea."},
+		"desc": "A nuclear torpedo that strikes a coast and throws a radioactive wave over it: Russia's nuclear-powered Poseidon (first powered test claimed 28 October 2025) and North Korea's Haeil 'tsunami' drone (tests claimed 2023-2024). Fired from a nuclear submarine or from a missile silo on the coast, at a target near the sea."},
 	"dirtyBomb": {"name": "Radiological (Dirty) Bomb", "icon": "RDD", "buildTime": 25, "cost": {"money": 500, "iron": 20, "uranium": 8},
 		"dmg": 300, "radius": 8, "speed": 70, "special": "dirty",
 		"desc": "A conventional charge wrapped round radioactive material: any nation with a Nuclear Reactor. No state has ever used one (Chechen fighters hid one in a Moscow park in 1995). It kills few, but contaminates the ground for 6 minutes: nobody builds, towns empty."},
@@ -103,6 +109,7 @@ const FALLOUT := {
 	"tacticalNuke": [0.8, 150.0, 0.6], "nuke": [0.8, 300.0, 1.0], "hydrogenBomb": [0.9, 420.0, 1.3],
 	"tsarBomba": [0.85, 480.0, 1.0], "neutronBomb": [0.75, 60.0, 1.6], "mirvWarhead": [0.8, 240.0, 0.9],
 	"nuclearGlide": [0.8, 300.0, 1.0], "burevestnik": [0.8, 300.0, 1.1], "poseidon": [1.2, 600.0, 1.5],
+	"bunkerBuster": [1.2, 360.0, 1.4], "nuclearCruise": [0.8, 240.0, 0.9],
 }
 const HARM := {
 	"fallout": {"infantry": 0.03, "vehicle": 0.01, "naval": 0.005, "building": 0.004},
@@ -171,7 +178,8 @@ func capability_blocked(key: String) -> String:
 		return ""
 	if Cbrn.has(w, 0, key):
 		return ""
-	if str(Cbrn.CAPABILITY[key].get("rule", "")) == "reactor":
+	var row: Dictionary = Cbrn.CAPABILITY[key]
+	if str(row.get("rule", "")) == "reactor" and (Cbrn.ident(w, 0) in row.get("ids", []) or 0 in broken_out):
 		return "Needs a Nuclear Reactor (radioactive material)"
 	return "Not fielded by %s" % str(w.map.nations[0].get("name", "your nation")).split(" · ")[0]
 
@@ -580,7 +588,7 @@ func _ai_use() -> void:
 		if desperate and float(n.get("tech", 0.0)) >= 6.0:
 			if Cbrn.has(w, owner, "anthrax"): options.append(["anthrax", 0.04])
 			if Cbrn.has(w, owner, "bioweapon"): options.append(["bioweapon", 0.03])
-		if desperate and not democracy and options.is_empty():
+		if desperate and not democracy and options.is_empty() and Cbrn.has(w, owner, "chlorine"):
 			options.append(["chlorine", 0.05])
 		var key := ""
 		for o in options:
