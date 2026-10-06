@@ -59,11 +59,11 @@ const BUILDING_SIZE := {"hq": 10.0, "barracks": 9.0, "tankFactory": 9.5, "wareho
 # centre, which leaves at least two 4 m walk cells between any two neighbouring
 # districts (6.0 left a single cell, and armour jammed in city streets).
 const DISTRICT_NAV_SIZE := 4.5
-const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker", "fpvTeam", "atgmTeam", "manpads", "medic"]
-const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle", "tos1a", "brahmos", "k9", "saudiThaad", "heavyRocket", "bushmaster"]
-const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone", "railgunShip", "orca", "aegisCruiser", "type45", "kcr60"]
-const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17"]
-const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17"]
+const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker", "fpvTeam", "atgmTeam", "manpads", "medic", "machineGunTeam", "mortarTeam", "scoutTeam"]
+const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle", "tos1a", "brahmos", "k9", "saudiThaad", "heavyRocket", "bushmaster", "ifv", "heavyAPC", "reconVehicle", "directFire", "towedHowitzer"]
+const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone", "railgunShip", "orca", "aegisCruiser", "type45", "kcr60", "missileBoat"]
+const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17", "attackJet", "lightFighter", "scoutHelicopter"]
+const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17", "attackJet", "lightFighter"]
 const AirOperations := preload("res://scripts/air_operations.gd")
 const ALTITUDE := {"helicopter": 14.0, "gunship": 13.0, "jet": 26.0, "bomber": 30.0, "drone": 18.0, "loiterer": 16.0, "stealthFighter": 28.0, "raptor": 30.0, "raider": 34.0, "shahed": 12.0, "sixthGen": 31.0, "wingman": 28.0, "akinci": 24.0, "harop": 16.0, "superTucano": 22.0, "interceptorDrone": 18.0, "jf17": 26.0}
 const SHIP_LENGTH := {"gunboat": 7.5, "corvette": 10.5, "destroyer": 15.0, "submarine": 11.0, "nuclearSub": 14.0, "seaDrone": 4.5, "railgunShip": 16.5, "orca": 9.0, "aegisCruiser": 17.0, "type45": 15.0, "kcr60": 10.5}
@@ -1403,6 +1403,8 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	place_on_ground(unit, at)
 	if preload("res://scripts/additional_factions.gd").UNITS.has(key):
 		unit.speed *= float(preload("res://scripts/additional_factions.gd").UNITS[key].scale.get("speed", 1.0))
+	load("res://scripts/force_catalog.gd").equip(self, unit)
+	load("res://scripts/force_models.gd").infantry_prop(self, node, key, owner)
 	if research:
 		research.equip(unit)  # discoveries and rival tech set health, range and speed
 	units.append(unit)
@@ -1455,6 +1457,7 @@ func display_model(key: String) -> Node3D:
 	if model == null:
 		return null
 	holder.add_child(model)
+	load("res://scripts/force_models.gd").infantry_prop(self, holder, key, 0)
 	return holder
 
 # Uniform colours per nation: olive, desert tan, urban grey, woodland brown.
@@ -1722,7 +1725,7 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 	var node: Node3D = parts.root
 	add_child(node)
 	var naval := key in NAVAL
-	var length: float = SHIP_LENGTH.get(key, 8.0)
+	var length: float = 8.0 if key == "missileBoat" else float(SHIP_LENGTH.get(key, 8.0))
 	var ring := MeshInstance3D.new()
 	var torus := TorusMesh.new()
 	torus.inner_radius = length * 0.55 if naval else 3.0
@@ -1750,7 +1753,7 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 		"owner": owner, "speed": float(def.speed) * 0.45, "heading": 0.0, "moving": false,
 		"turret": parts.turret, "turret_yaw": 0.0, "dust": wake, "phase": at.x * 0.37 + at.z * 0.21, "meshes": [],
 		"naval": naval, "fly": key in AIR, "rotor": parts.rotor, "radar": parts.radar,
-		"altitude": ALTITUDE.get(key, 0.0), "bank": 0.0, "length": length,
+		"altitude": {"attackJet": 22.0, "lightFighter": 26.0, "scoutHelicopter": 14.0}.get(key, ALTITUDE.get(key, 0.0)), "bank": 0.0, "length": length,
 		"key": key, "hp": float(def.hp), "max_hp": float(def.hp), "dmg": float(def.dmg),
 		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
 		"reload": randf() * minf(float(def.cooldown), 3.0), "search": randf() * 0.35, "enemy": null,
@@ -1916,7 +1919,7 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 		selected[i].target = point + Vector3((i % width - (width - 1) / 2.0) * spacing, 0, (floori(float(i) / width) - (rows - 1) / 2.0) * spacing)
 
 func request_bombard(selected: Array, point: Vector3) -> void:
-	var armed := selected.filter(func(u):return not u.dead and u.vehicle and u.dmg>0 and not u.key in ["samLauncher","aaVehicle","submarine","nuclearSub"])
+	var armed := selected.filter(func(u):return can_bombard(u))
 	if armed.is_empty():
 		hud.notice("Select artillery, a ground-attack aircraft or a vehicle with a ground weapon.")
 		return
@@ -1924,7 +1927,7 @@ func request_bombard(selected: Array, point: Vector3) -> void:
 
 func order_bombard(selected: Array, point: Vector3) -> void:
 	for u in selected:
-		if u.dead or not u.vehicle or u.dmg <= 0 or u.key in ["samLauncher", "aaVehicle", "submarine", "nuclearSub"]:
+		if not can_bombard(u):
 			continue
 		if not is_instance_valid(u.get("bombard_marker")):
 			u.bombard_marker = Node3D.new()
@@ -1935,6 +1938,9 @@ func order_bombard(selected: Array, point: Vector3) -> void:
 		u.target = null
 		u.attack_move = true
 		u.path = PackedVector3Array()
+
+func can_bombard(u: Dictionary) -> bool:
+	return not u.dead and u.dmg > 0 and (u.vehicle or u.key in load("res://scripts/force_catalog.gd").INDIRECT) and not u.key in ["samLauncher", "aaVehicle", "submarine", "nuclearSub", "missileBoat"]
 
 # ---------------------------------------------------------------- profiler
 # `-- --profile` during a benchmark measures where each frame goes: every
@@ -4911,7 +4917,7 @@ func target_class(t: Dictionary) -> String:
 		return "naval"
 	if t.key in infantry_keys:
 		return "infantry"
-	if preload("res://scripts/additional_factions.gd").base(t.key) in armor_keys:
+	if t.key in armor_keys or preload("res://scripts/additional_factions.gd").base(t.key) in armor_keys:
 		return "armor"
 	return "light"
 
@@ -4929,6 +4935,7 @@ func airborne(u: Dictionary) -> bool:
 
 ## Damage multiplier of `attacker` against `target` (0 = cannot engage).
 func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
+	if not load("res://scripts/force_catalog.gd").can_target(self, attacker, target): return 0.0
 	if attacker.key == "interceptorDrone" and not (target.get("fly", false) and target.get("key", "") in ["drone", "loiterer", "shahed", "harop", "akinci", "wingman", "interceptorDrone"]): return 0.0
 	if attacker.get("key", "") in AIR_DEFENCE and target_class(target) != "air":
 		return 0.0
@@ -5053,6 +5060,7 @@ const WEAPONS := {"bomber": "bomb", "jet": "missile", "drone": "missile", "helic
 ## Fires at `enemy`; false when the weapon cannot be used yet (a bomber that
 ## is not over its target), so the reload is not spent.
 func fire(unit: Dictionary, enemy: Dictionary) -> bool:
+	if load("res://scripts/force_catalog.gd").ROLES.has(unit.key) and effectiveness(unit, enemy) <= 0.0: return false
 	if unit.get("fly", false):
 		if unit.ammo <= 0 or unit.air_state != "ready":
 			return false
@@ -5060,7 +5068,7 @@ func fire(unit: Dictionary, enemy: Dictionary) -> bool:
 			var direction: Vector3 = enemy.node.position-unit.node.position
 			if absf(angle_difference(unit.heading,atan2(direction.x,direction.z))) > 0.65:
 				return false
-	var weapon: String = WEAPONS.get(unit.key, "")
+	var weapon: String = {"mortarTeam": "mortar", "towedHowitzer": "shell_arc", "attackJet": "missile", "lightFighter": "missile", "missileBoat": "missile"}.get(unit.key, WEAPONS.get(unit.key, ""))
 	if weapon != "":
 		var fired := fire_weapon(unit, enemy, weapon)
 		if fired and unit.get("fly", false) and not unit.dead:
@@ -5188,6 +5196,9 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			var water: Vector3 = Vector3(from.x, float(map.seaLevel) - 0.3, from.z) + dir * unit.length * 0.4
 			var aim := Vector3(target.x, float(map.seaLevel) - 0.3, target.z)
 			effects.projectile("torpedo", water, aim, func(at): blast(unit, at, dmg, 3.5, 1.4))
+		"mortar":
+			var landing := target + Vector3(randf_range(-1.5, 1.5), 0, randf_range(-1.5, 1.5)) * spread
+			effects.projectile("shell_arc", unit.node.position + Vector3.UP * 1.1, landing, func(at): blast(unit, at, dmg, 3.0, 0.8))
 		"shell_arc":
 			var landing := target + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2)) * spread
 			effects.muzzle_flash(unit.turret.global_position + dir * float(unit.get("muzzle", 4.0)) if unit.turret else from, true)

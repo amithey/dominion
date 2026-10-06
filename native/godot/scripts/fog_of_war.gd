@@ -109,6 +109,9 @@ func shows(thing: Dictionary) -> bool:
 	return watches(thing.node.position)
 
 func sight_of(u: Dictionary) -> float:
+	var forces = load("res://scripts/force_catalog.gd")
+	if u.key in forces.INDIRECT: return SPOTTER_SIGHT
+	if forces.SIGHT.has(u.key): return float(forces.SIGHT[u.key])
 	if u.key in SPOTTED:
 		return SPOTTER_SIGHT
 	return maxf(float(SIGHT.get(u.key, 34)), float(u.get("aggro", 0.0)) * (1.0 if u.get("fly", false) else 1.1))

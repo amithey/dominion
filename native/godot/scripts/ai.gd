@@ -38,7 +38,7 @@ func setup(world_node: Node, ai: Dictionary, difficulty: String, speed := 1.0) -
 	build_order = ai.buildOrder
 	# Only units the native world can draw yet (no aircraft).
 	train_pool = ai.trainPool.filter(func(k): return TRAINED_AT.has(k))
-	for key in MODERN_POOL + preload("res://scripts/additional_factions.gd").BASE.keys():
+	for key in MODERN_POOL + preload("res://scripts/additional_factions.gd").BASE.keys() + load("res://scripts/force_catalog.gd").ROLES.keys():
 		if not key in train_pool and world.unit_defs.has(key):
 			train_pool.append(key)
 	for id in range(1, world.map.nations.size()):
@@ -269,10 +269,10 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 
 # Money-equivalent price (ai.js weights materials the AI does not stockpile).
 func available(u: Dictionary) -> bool:
-	return not u.dead and u.dmg>0 and not world.disabled(u) and (not u.get("fly",false) or u.get("air_state","ready")=="ready" and u.get("ammo",0)>0)
+	return not u.dead and (u.dmg>0 or u.key in load("res://scripts/force_catalog.gd").SCOUTS) and not world.disabled(u) and (not u.get("fly",false) or u.get("air_state","ready")=="ready" and u.get("ammo",0)>0)
 
 func production_sites(owner: int, key: String) -> Array:
-	var home: String = preload("res://scripts/additional_factions.gd").HOME.get(key, TRAINED_AT.get(key, ""))
+	var home: String = load("res://scripts/force_catalog.gd").HOME.get(key, preload("res://scripts/additional_factions.gd").HOME.get(key, TRAINED_AT.get(key, "")))
 	return world.buildings.filter(func(b):return b.owner==owner and b.key==home and b.built and not b.dead and b.get("supplied",true) and not world.disabled(b))
 
 func deploy(owner: int, key: String) -> bool:

@@ -76,7 +76,7 @@ static func id_of(w: Node, owner: int) -> String:
 static func profile(w: Node, owner: int) -> Dictionary:
 	return PROFILES.get(id_of(w, owner), {})
 static func base(key: String) -> String:
-	return BASE.get(key, key)
+	return str(BASE.get(key, load("res://scripts/force_catalog.gd").base(key)))
 static func apply(w: Node) -> void:
 	for key in UNITS:
 		var entry: Dictionary = UNITS[key]
@@ -111,6 +111,7 @@ static func apply(w: Node) -> void:
 		w.building_defs[key].base_cost = w.building_defs[key].cost.duplicate()
 		w.building_defs[key].cost = building_cost(w, 0, key, w.building_defs[key].cost)
 static func ai_unlocked(w: Node, owner: int, key: String) -> bool:
+	if not load("res://scripts/force_catalog.gd").ai_unlocked(w, owner, key): return false
 	if not UNITS.has(key): return true
 	var need: String = UNITS[key].requires
 	return w.research != null and w.research.ai_tech(owner) >= float(w.research.era_of(need)) * 2.0

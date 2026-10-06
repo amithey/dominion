@@ -69,7 +69,8 @@ func _render_next() -> void:
 		return
 	_busy = true
 	var key: String = _queue.pop_front()
-	var model: Node3D = world.display_model(key)
+	var munition := key.begins_with("missile:")
+	var model: Node3D = preload("res://scripts/munition_portraits.gd").build(key.substr(8), world.missiles.def_of(key.substr(8))) if munition else world.display_model(key)
 	if model == null:
 		_cache[key] = null
 		_render_next.call_deferred()
@@ -79,11 +80,11 @@ func _render_next() -> void:
 	var box: AABB = world.model_bounds(model)
 	var centre := box.get_center()  # the model stands at the stage origin
 	var radius := maxf(box.size.length() * 0.5, 0.5)
-	if world.unit_defs.has(key) and key in world.INFANTRY:
+	if world.unit_defs.has(key) and key in world.INFANTRY and not key in ["machineGunTeam", "mortarTeam", "scoutTeam"]:
 		radius = box.size.y * 0.5  # a figure's arms spread its bounds; frame it by height
 		centre.y = box.size.y * 0.5
-	var dir := Vector3(0.62, 0.48, 0.62).normalized()
-	_camera.position = centre + dir * radius / sin(deg_to_rad(_camera.fov * 0.5)) * 0.92
+	var dir := Vector3(0.95, 0.5, -0.3).normalized() if munition else Vector3(0.62, 0.48, 0.62).normalized()
+	_camera.position = centre + dir * radius / sin(deg_to_rad(_camera.fov * 0.5)) * (0.78 if munition else 0.92)
 	_camera.look_at(centre, Vector3.UP)
 	_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	await RenderingServer.frame_post_draw

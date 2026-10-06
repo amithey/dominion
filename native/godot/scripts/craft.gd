@@ -54,6 +54,8 @@ func material_for(owner: int, finish: String) -> ShaderMaterial:
 
 ## Returns {root, rotor, radar, turret}; unused parts are null.
 func build(key: String, owner: int) -> Dictionary:
+	if load("res://scripts/force_catalog.gd").ROLES.has(key):
+		return load("res://scripts/force_models.gd").craft_model(self, key, owner)
 	key = preload("res://scripts/additional_factions.gd").base(key)
 	var finish := "ship"
 	match key:

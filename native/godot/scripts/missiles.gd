@@ -109,7 +109,7 @@ func locked(key: String) -> String:
 
 ## Ships that carry and fire missiles from the nation's stockpile: the
 ## strategic submarine and the destroyer (the missile ship).
-const LAUNCH_SHIPS := ["nuclearSub", "destroyer"]
+const LAUNCH_SHIPS := ["nuclearSub", "destroyer", "missileBoat"]
 
 ## Missile ships of `owner` able to fire (alive, not disabled).
 func launch_ships(owner := 0) -> Array:
@@ -120,6 +120,15 @@ func silos(owner := 0) -> Array:
 
 ## Payload-specific launch validation, shared by human and rival attacks.
 func platforms_for(key: String, owner := 0) -> Array:
+	# Fast boats add only their conventional anti-ship capability; their
+	# presence must never become a strategic or land-attack launch platform.
+	if key == "antiShip":
+		var boats: Array = world.units.filter(func(u): return u.owner == owner and not u.dead and u.key == "missileBoat" and not world.disabled(u))
+		if not boats.is_empty():
+			return boats + _other_platforms_for(key, owner)
+	return _other_platforms_for(key, owner)
+
+func _other_platforms_for(key: String, owner: int) -> Array:
 	var kind: String = load("res://scripts/arsenal_catalog.gd").platform_kind(world, owner, key)
 	if kind == "air":
 		return world.units.filter(func(u): return u.owner == owner and not u.dead and u.key in ["jet", "bomber", "stealthFighter", "raider"] and not world.disabled(u) and u.get("air_state", "ready") == "ready")

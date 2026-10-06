@@ -14,7 +14,7 @@ extends RefCounted
 ##   takeoff   climbing out along the runway
 ## A base whose slots are all taken accepts no more aircraft, and trains none.
 
-const CAPACITY := {"jet": 4, "bomber": 3, "drone": 6, "helicopter": 8, "gunship": 8, "loiterer": 1, "stealthFighter": 4, "raptor": 4, "raider": 2, "shahed": 1, "sixthGen": 4, "wingman": 99, "akinci": 8, "harop": 1, "superTucano": 4, "interceptorDrone": 1, "jf17": 4}
+const CAPACITY := {"jet": 4, "bomber": 3, "drone": 6, "helicopter": 8, "gunship": 8, "loiterer": 1, "stealthFighter": 4, "raptor": 4, "raider": 2, "shahed": 1, "sixthGen": 4, "wingman": 99, "akinci": 8, "harop": 1, "superTucano": 4, "interceptorDrone": 1, "jf17": 4, "attackJet": 4, "lightFighter": 3, "scoutHelicopter": 1}
 const SERVICE_SECONDS := 12.0
 ## Launched from a canister beside the runway, straight into the air: they hold
 ## no parking slot (and never come back).
@@ -45,7 +45,7 @@ static func is_base(b: Dictionary) -> bool:
 
 ## Helicopters land on helipads, aircraft on airfields: a helicopter no longer
 ## takes a jet's parking slot on the apron.
-const ROTARY := ["helicopter", "gunship"]
+const ROTARY := ["helicopter", "gunship", "scoutHelicopter"]
 
 static func available(world: Node, u: Dictionary, b: Dictionary) -> bool:
 	return not b.dead and b.built and b.owner == u.owner and b.get("supplied", true) and not world.disabled(b) and ((b.key == "airfield" and not u.key in ROTARY) or (b.key == "helipad" and u.key in ROTARY))
@@ -186,7 +186,7 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 		u.service_left = 0.0
 	if base == null:
 		return false  # keep circling; no free replenishment without a working base
-	var vertical: bool = base.key == "helipad" or u.key in ["helicopter", "gunship"]
+	var vertical: bool = base.key == "helipad" or u.key in ROTARY
 	var slot := slot_point(world, base, u.slot)
 	var touchdown := slot if vertical else on_base(world, base, Vector3(RUNWAY_X, 0, TOUCHDOWN))
 	if u.air_state == "returning":
@@ -295,7 +295,7 @@ static func _taxi_out(world: Node, u: Dictionary) -> void:
 static func goal(world: Node, u: Dictionary) -> Variant:
 	if u.air_base != null:
 		var base: Dictionary = u.air_base
-		if base.key == "helipad" or u.key in ["helicopter", "gunship"]:
+		if base.key == "helipad" or u.key in ROTARY:
 			return slot_point(world, base, u.slot) + Vector3(0, 0, -30)
 		return on_base(world, base, Vector3(RUNWAY_X, 0, TOUCHDOWN)) - Vector3(0, 0, 85)
 	return null

@@ -182,6 +182,10 @@ static func admits(field, id: String) -> bool:
 static func name_for(w: Node, owner: int, key: String) -> String:
 	if w.map.nations[owner].get("unit_names", {}).has(key):
 		return str(w.map.nations[owner].unit_names[key])
+	var forces = load("res://scripts/force_catalog.gd")
+	if forces.ROLES.has(key) or forces.CORRECTIONS.has(key):
+		var force_name: String = forces.name_for(w, owner, key)
+		if force_name != "": return force_name
 	var catalog = load("res://scripts/arsenal_catalog.gd")
 	var identity_id: String = preload("res://scripts/factions.gd").identity(w, owner)
 	var id: String = preload("res://scripts/national_arsenal.gd").identity(w, owner)
@@ -221,6 +225,8 @@ static func fields(key: String, arsenal: String) -> bool:
 	# No starting army receives a prototype before the programme is researched.
 	var ix: int = preload("res://scripts/factions.gd").ARSENALS.find(arsenal)
 	var id: String = preload("res://scripts/factions.gd").IDS[ix] if ix >= 0 else arsenal
+	var forces = load("res://scripts/force_catalog.gd")
+	if forces.ROLES.has(key): return id in forces.operators(key)
 	if id in load("res://scripts/arsenal_catalog.gd").UNIT_PROGRAMS.get(key, []) or (key == "samLauncher" and id == "iraq"):
 		return false
 	if ONLY.has(key) and not arsenal in ONLY[key]:

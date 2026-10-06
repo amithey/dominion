@@ -84,10 +84,13 @@ var _fps: Label
 var _help: PanelContainer
 var _screen_buttons := {}
 var _waiting := {}        # portrait key -> [TextureRect]
+var _windows: Node
 
 func setup(world_node: Node, economy_node: Node) -> void:
 	world = world_node
 	economy = economy_node
+	_windows = preload("res://scripts/window_manager.gd").new()
+	add_child(_windows)
 	world.portraits.portrait_ready.connect(_on_portrait)
 	# Health bars over damaged units and why a unit stands idle (unit_overlay.gd), under the panels.
 	_overlay = preload("res://scripts/unit_overlay.gd").new()
@@ -349,6 +352,7 @@ func _build_production() -> void:
 		if _selected != null:
 			world.select_building(null))
 	head.add_child(hide)
+	_windows.register_window(_prod, head_band, "production")
 	# Everything under the band keeps its own margin.
 	var body := MarginContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -525,11 +529,12 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 	_list.add_child(b)
 
 func _set_portrait(pic: TextureRect, key: String) -> void:
+	pic.set_meta("portrait_key", key)
 	var tex: Texture2D = world.portraits.get_portrait(key)
 	if tex != null:
 		pic.texture = tex
 	else:
-		pic.texture = UI.icon("army" if world.unit_defs.has(key) else "build")
+		pic.texture = UI.icon("missile" if key.begins_with("missile:") else ("army" if world.unit_defs.has(key) else "build"))
 		if not _waiting.has(key):
 			_waiting[key] = []
 		_waiting[key].append(pic)
@@ -563,6 +568,7 @@ func _build_selection() -> void:
 	_sel_title = _text("", 19, UI.BRIGHT, true)
 	_sel_title.add_theme_font_size_override("font_size", 19)
 	head_band.add_child(_sel_title)
+	_windows.register_window(_sel, head_band, "selection")
 	var body := MarginContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	for side in ["left", "right", "top", "bottom"]:
@@ -675,6 +681,7 @@ func _build_selection() -> void:
 
 func _build_minimap() -> void:
 	var frame := PanelContainer.new()
+	_windows.obstacles.append(frame)
 	frame.anchor_left = 1.0
 	frame.anchor_right = 1.0
 	frame.anchor_top = 1.0
@@ -726,6 +733,7 @@ func _build_help() -> void:
 	var head := _text(UI.caps("Controls"), 19, UI.BRIGHT, true)
 	head.add_theme_font_size_override("font_size", 19)
 	head_band.add_child(head)
+	_windows.register_window(_help, head_band, "help")
 	var body := MarginContainer.new()
 	for side in ["left", "right", "top", "bottom"]:
 		body.add_theme_constant_override("margin_" + side, 14)
@@ -744,6 +752,7 @@ func _build_help() -> void:
 			["Screens", "Y research  ·  G diplomacy  ·  M market  ·  I intelligence  ·  T territory"],
 			["Game", "F5 save  ·  F9 load  ·  Esc cancel / pause menu  ·  F1 this help"],
 			["Testing", "F8: treasury and full stores, increased army capacity  ·  F10 (or the pause menu): everything, all research too"],
+			["Windows", "Drag a window by its title to move it; its contents and pending decisions stay open"],
 			["Minimap", "Click or drag on it to jump anywhere on the island"]]:
 		var row := HBoxContainer.new()
 		var k := _text(line[0], 14, GOLD)
@@ -784,17 +793,36 @@ func _process(delta: float) -> void:
 		var room_w: float = viewport_width - (_prod.size.x + 40.0 if _prod.visible else 0.0) - 12.0
 		var want_brief: bool = room_w - (_win_scroll.size.x + 260.0) >= 240.0
 		if _win_brief_panel.visible != want_brief:
+			var keep_scroll: int = _side_scroll_pending if _side_scroll_pending >= 0 else _win_scroll.scroll_vertical
 			_win_brief_panel.visible = want_brief
-			_win.reset_size()
+			_fit_window(keep_scroll)
 	# The feed runs along the bottom between the unit card and the minimap, and
 	# clear of a ministry window that reaches down that far.
 	var feed_top: float = get_viewport().get_visible_rect().size.y - 14.0 - maxf(_notices.size.y, 120.0)
-	var lane_left: float = _sel.position.x + _sel.size.x + 14.0 if _sel != null and _sel.visible else 16.0
-	if _win != null and _win.visible and _win.position.y + _win.size.y > feed_top:
-		lane_left = maxf(lane_left, _win.position.x + _win.size.x + 16.0)
-	var lane_right: float = viewport_width - MINI - 40.0
-	if _prod.visible and _prod.position.y + _prod.size.y > feed_top:
-		lane_right = minf(lane_right, _prod.position.x - 16.0)
+	# Floating windows can sit on either side. Find a free interval instead of
+	# assuming ministries always stay left and production always stays right.
+	var lanes: Array[Vector2] = [Vector2(16.0, viewport_width - 16.0)]
+	for panel in _windows.windows.values() + _windows.obstacles:
+		if not is_instance_valid(panel) or not panel.is_visible_in_tree(): continue
+		var rect: Rect2 = panel.get_global_rect().grow(14.0)
+		if rect.end.y <= feed_top: continue
+		var remaining: Array[Vector2] = []
+		for lane in lanes:
+			if rect.end.x <= lane.x or rect.position.x >= lane.y:
+				remaining.append(lane)
+			else:
+				if rect.position.x > lane.x: remaining.append(Vector2(lane.x, rect.position.x))
+				if rect.end.x < lane.y: remaining.append(Vector2(rect.end.x, lane.y))
+		lanes = remaining
+	var best_lane := Vector2(16.0, viewport_width - MINI - 40.0)
+	var widest := 0.0
+	for lane in lanes:
+		if lane.y - lane.x > widest:
+			widest = lane.y - lane.x
+			best_lane = lane
+	if widest < 160.0: best_lane = Vector2(16.0, viewport_width - MINI - 40.0)
+	var lane_left := best_lane.x
+	var lane_right := best_lane.y
 	var notice_width := minf(560.0, maxf(160.0, lane_right - lane_left))
 	var notice_left := clampf(viewport_width * 0.5 - notice_width * 0.5, lane_left, maxf(lane_left, lane_right - notice_width))
 	_notices.offset_left = notice_left - viewport_width * 0.5
@@ -1000,11 +1028,11 @@ func _action_bars(b: Dictionary) -> void:
 				if not armed:
 					_section("Launch")
 					armed = true
-				_bar(b.key, "LAUNCH %s  (%d)" % [ms.def_of(m).name, ms.stock[m]], "Arm it, then click the target on the map." + ("" if b.key == "missileSilo" else " It flies from your nearest Missile Silo or missile ship."), {}, 0.0, "", func(): world.begin_missile(m))
+				_bar("missile:" + m, "LAUNCH %s  (%d)" % [ms.def_of(m).name, ms.stock[m]], "Arm it, then click the target on the map." + ("" if b.key == "missileSilo" else " It flies from your nearest Missile Silo or missile ship."), {}, 0.0, "", func(): world.begin_missile(m))
 		_section("%s  (%d/%d stored)" % [{"conventional": "Build missiles", "nuclear": "Assemble nuclear warheads", "special": "Produce special weapons"}[cat], ms.stored(cat), ms.capacity(cat)])
 		for m in ms.listed_at(b.key):
 			var mdef: Dictionary = ms.def_of(m)
-			_bar(b.key, mdef.name, "%s Damage %d, blast %d m." % [mdef.desc, int(mdef.dmg), int(mdef.radius)], mdef.cost, float(mdef.buildTime), ms.locked(m), func(): _say(ms.produce(_selected, m)))
+			_bar("missile:" + m, mdef.name, "%s Damage %d, blast %d m." % [mdef.desc, int(mdef.dmg), int(mdef.radius)], mdef.cost, float(mdef.buildTime), ms.locked(m), func(): _say(ms.produce(_selected, m)))
 		return
 	if b.key in world.research.LABS:
 		_bar("university", "Open the research tree", "Research points from this building flow into the discovery at the head of the queue.", {}, 0.0, "", toggle_research)
@@ -1040,7 +1068,7 @@ func _update_selection() -> void:
 	var own_units: Array = units.filter(func(u):return u.owner==0 and not u.dead) if _selected==null else []
 	var assets: Array = [_selected] if _selected!=null else own_units
 	_commands["Attack-move"].disabled = own_units.is_empty() or not own_units.any(func(u):return u.dmg>0)
-	_commands["Bombard"].disabled = not own_units.any(func(u):return u.vehicle and u.dmg>0 and not u.key in ["aaVehicle","samLauncher","submarine","nuclearSub"])
+	_commands["Bombard"].disabled = not own_units.any(func(u):return world.can_bombard(u))
 	_commands["Repair"].disabled = not assets.any(func(e):return e.owner==0 and not e.dead and e.hp<e.max_hp and (e.get("is_building",false) and e.get("built",false) or e.get("vehicle",false)))
 	# Buying land happens at a settlement's town hall: the capital, a city or a village centre.
 	var hall: bool = _selected != null and _selected.owner == 0 and _selected.built and world.territory.RINGS_MAX.has(_selected.key)
@@ -1137,8 +1165,11 @@ func _update_selection() -> void:
 		_fill_launch(own_units.any(func(u): return u.key in world.missiles.LAUNCH_SHIPS))
 		if units.size() == 1 and units[0].get("fly",false):
 			var u: Dictionary = units[0]
-			_sel_info.text = "Ammunition: %d/%d salvos | %s\n%s" % [u.ammo,world.AirOperations.CAPACITY[u.key],u.air_state.capitalize(),"Rearming: %.0f s" % u.service_left if u.air_state == "rearming" else "Empty aircraft return to a supplied air base."]
-		elif units.any(func(u): return u.vehicle):
+			if u.key == "scoutHelicopter":
+				_sel_info.text = "Unarmed reconnaissance | %s\nFlight time remaining: %.0f s. Returns to a supplied helipad for fuel." % [u.air_state.capitalize(), float(u.get("sortie_left", 0.0))]
+			else:
+				_sel_info.text += "\nAmmunition: %d/%d salvos | %s\n%s" % [u.ammo,world.AirOperations.CAPACITY[u.key],u.air_state.capitalize(),"Rearming: %.0f s" % u.service_left if u.air_state == "rearming" else "Empty aircraft return to a supplied air base."]
+		elif units.any(func(u): return world.can_bombard(u)):
 			_sel_info.text += "\nAlt + right click: bombard ground / infrastructure."
 		_sel_info.text += "\nHP %d / %d%s" % [int(hp),int(max_hp)," · Repair ordered" if units.any(func(u): return u.get("repairing",false)) else ""]
 		# Why a unit stands idle: no fuel or no ammunition money (war_costs.gd).
@@ -1265,9 +1296,12 @@ func _update_roster(units: Array) -> void:
 ## missile type in the stockpile; press, then click the target.
 func _fill_launch(show: bool) -> void:
 	var ms: Node = world.missiles
-	var sig := ""
+	var chosen: Array = _selected_units().filter(func(u): return u.owner == 0 and not u.dead)
+	var boat_only: bool = not chosen.is_empty() and chosen.all(func(u): return u.key == "missileBoat")
+	var launch_types: Array = ms.types().keys().filter(func(m): return not boat_only or (m == "antiShip" and ms.available_to(0, m)))
+	var sig := "boat:" if boat_only else ""
 	if show:
-		for m in ms.types():
+		for m in launch_types:
 			if int(ms.stock[m]) > 0:
 				sig += "%s%d," % [m, ms.stock[m]]
 	_launch_row.visible = show
@@ -1278,10 +1312,10 @@ func _fill_launch(show: bool) -> void:
 		c.queue_free()
 	if not show:
 		return
-	if sig == "":
+	if sig == "" or sig == "boat:":
 		_launch_row.add_child(_text("No missiles in storage: build them at a Missile Silo.", 12, UI.MUTED))
 		return
-	for m in ms.types():
+	for m in launch_types:
 		if int(ms.stock[m]) <= 0:
 			continue
 		var b := Button.new()
@@ -1353,7 +1387,7 @@ func _fill_queue(queue: Array, progress := 0.0) -> void:
 			pic.custom_minimum_size = Vector2(56, 42)
 			pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			_set_portrait(pic, "missileSilo" if item.begins_with("missile:") else item)
+			_set_portrait(pic, item)
 			slot.tooltip_text = "%s (click to cancel and refund)" % (world.missiles.def_of(item.substr(8)).name if item.begins_with("missile:") else world.unit_defs.get(item, {}).get("name", item))
 			column.add_child(pic)
 			var bar := ProgressBar.new()
@@ -1443,6 +1477,7 @@ func _build_diplomacy_panel() -> void:
 	close.custom_minimum_size = Vector2(34, 28)
 	close.pressed.connect(func(): _show_side(""))
 	bar.add_child(close)
+	_windows.register_window(_win, head_band, "ministry")
 	var body := MarginContainer.new()
 	for side in ["left", "right", "top", "bottom"]:
 		body.add_theme_constant_override("margin_" + side, 10)
@@ -1512,10 +1547,15 @@ func _show_side(mode: String) -> void:
 		_win_brief_panel.add_theme_stylebox_override("panel", brief_style)
 	refresh_side()
 
+var _side_scroll_pending := -1
+var _side_revision := 0
+
 func refresh_side() -> void:
 	if _win == null or side_mode == "":
 		return
-	var keep := _win_scroll.scroll_vertical
+	var keep: int = _side_scroll_pending if _side_scroll_pending >= 0 else _win_scroll.scroll_vertical
+	_side_scroll_pending = keep
+	_side_revision += 1
 	for child in _side_rows.get_children():
 		_side_rows.remove_child(child)
 		child.queue_free()
@@ -1536,7 +1576,7 @@ func refresh_side() -> void:
 			_panels.united_nations()  # side_panels.gd: the Council, the Assembly, the record
 	preload("res://scripts/ministry_brief.gd").fill(self, _win_brief, side_mode)
 	_dress_window()
-	_fit_window.call_deferred(keep)
+	_fit_window.call_deferred(keep, _side_revision)
 
 ## The window's contents in its ministry's colour: the tab row along the top;
 ## and a long line wraps instead of widening the window past the screen.
@@ -1555,15 +1595,34 @@ func _dress_window() -> void:
 			break
 
 # The window is as tall as its content, up to the space above the bottom panels.
-func _fit_window(keep_scroll: int) -> void:
+func _fit_window(keep_scroll: int, revision := -1) -> void:
+	if revision < 0:
+		_side_revision += 1
+		revision = _side_revision
+		_side_scroll_pending = keep_scroll
+	if revision != _side_revision: return
 	var room := get_viewport().get_visible_rect().size.y - 104.0 - 250.0
 	_win_scroll.custom_minimum_size = Vector2(560, minf(maxf(_side_rows.get_combined_minimum_size().y, _win_brief.get_combined_minimum_size().y), maxf(room, 160.0)))
 	_win.reset_size()
 	# Never wider than the screen, whatever the contents ask for.
-	var most: float = get_viewport().get_visible_rect().size.x - _win.position.x - 12.0
+	var most: float = get_viewport().get_visible_rect().size.x - 24.0
 	if _win.size.x > most:
 		_win.size.x = most
 	_win_scroll.scroll_vertical = keep_scroll
+	# Container layout can clamp the scroll during reset_size. Restore after
+	# its queued layout update as well, when the content height is final.
+	_win_scroll.set_deferred("scroll_vertical", keep_scroll)
+	_windows.reflow(_win)
+	_settle_side_scroll(keep_scroll, revision)
+
+func _settle_side_scroll(keep_scroll: int, revision: int) -> void:
+	# Removing old rows briefly leaves an empty scroll range. Multiple live
+	# refreshes must retain the requested position until layout has settled.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if revision != _side_revision: return
+	_win_scroll.scroll_vertical = keep_scroll
+	_side_scroll_pending = -1
 
 # ---------------------------------------------------------------- widgets
 
@@ -1767,6 +1826,7 @@ func _show_letter() -> void:
 	heading.add_theme_font_size_override("font_size", 19)
 	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	head.add_child(heading)
+	_windows.register_window(_letter_box, head_band, "alert")
 	var margins := MarginContainer.new()
 	for side in ["left", "right", "top", "bottom"]:
 		margins.add_theme_constant_override("margin_" + side, 18)
@@ -1805,6 +1865,7 @@ func _show_letter() -> void:
 			refresh_diplomacy()
 			_show_letter())
 		buttons.add_child(b)
+	_windows.place_alert.call_deferred(_letter_box)
 
 ## Victory or defeat: the screen dims and a banner says how it ended.
 func show_end(title: String, subtitle: String) -> void:
@@ -2395,6 +2456,7 @@ func toggle_log() -> void:
 		shut.focus_mode = Control.FOCUS_NONE
 		shut.pressed.connect(func(): _log_box.hide())
 		head.add_child(shut)
+		_windows.register_window(_log_box, head, "log")
 		var scroll := ScrollContainer.new()
 		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED

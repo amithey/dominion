@@ -12,6 +12,8 @@ $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.e
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
+    @('22 national rosters, new combat roles, aircraft service and save round trip', @('--script', 'res://tools/force-roster-check.gd'), 'FORCE_ROSTER PASS', 240),
+    @('floating window input, queued alerts, resize, UI scaling and munition portraits', @('--script', 'res://tools/windows-portraits-check.gd'), 'WINDOWS_PORTRAITS PASS', 240),
     @('UN Council, Assembly, consent, humanitarian access, future members and saves', @('--script', 'res://tools/un-check.gd'), 'UN_CHECK PASS', 240),
     @('national arsenals, future programmes, payload launch platforms and new country metadata', @('--script', 'res://tools/arsenal-check.gd'), 'ARSENAL_CHECK PASS', 240),
     @('artificial intelligence: compute, data centres, AI levels, autonomy doctrine and incidents, seekers, fusion cell, AI cyber, rivals, saves', @('--script', 'res://tools/ai-check.gd'), 'AI_CHECK PASS', 600),

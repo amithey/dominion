@@ -10,7 +10,7 @@ const SALVO := {"bomb": 4.0, "missile": 6.0, "sam": 5.0, "atgm": 3.0,
 	"fpv": 1.5, "laser": 0.35, "railgun": 2.0, "hgv": 14.0,
 	"guided": 8.0, "thermobaric": 6.0, "brahmos": 12.0, "swarm": 7.0,
 	"rockets": 3.0, "rocket": 1.0, "torpedo": 7.0, "shell_arc": 2.0,
-	"rocket_salvo": 6.0, "kamikaze": 0.0, "detonate": 0.0}
+	"rocket_salvo": 6.0, "kamikaze": 0.0, "detonate": 0.0, "mortar": 0.65}
 static func fuel_per_metre(u: Dictionary) -> float:
 	if u.get("fly", false): return 0.0 # prepaid bounded sorties
 	if u.get("key", "") in ["nuclearSub", "orca", "seaDrone"]: return 0.0
