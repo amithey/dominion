@@ -7,8 +7,11 @@ static func update(w: Node, delta: float) -> void:
 		if b.aa_reload > 0.0: continue
 		var enemy = null
 		var nearest := 140.0
+		# AI battle management: batteries share targets, no two shots at one aircraft (ai_directorate.gd).
+		var shared: bool = w.get("directorate") != null and w.directorate != null and w.directorate.coordinated(int(b.owner))
 		for u in w.units:
 			if u.dead or not w.airborne(u) or not w.hostile(b.owner, u.owner): continue  # only aircraft in flight
+			if shared and float(u.get("aa_claimed_until", 0.0)) > w.game_time and int(u.get("aa_claimed_by", -1)) == int(b.owner): continue
 			var gap: float = w.flat_distance(b, u)
 			if preload("res://scripts/modern_warfare.gd").hidden(w, u, gap, 140.0): continue  # stealth
 			if gap < nearest:
@@ -19,6 +22,9 @@ static func update(w: Node, delta: float) -> void:
 			preload("res://scripts/war_costs.gd").blocked(w, b, "interceptor budget")
 			continue
 		b.aa_reload = 2.2
+		if shared:
+			enemy.aa_claimed_until = w.game_time + 1.5
+			enemy.aa_claimed_by = int(b.owner)
 		var target: Dictionary = enemy
 		w.effects.projectile("missile", b.root.position + Vector3.UP * 5, target.node.position, func(at):
 			w.effects.explosion(at, 0.7, false)

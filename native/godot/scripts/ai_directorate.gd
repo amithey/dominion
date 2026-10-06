@@ -33,6 +33,23 @@ extends RefCounted
 ## compute; rivals with AI run campaigns against the player too.
 ## Rivals follow the same rules: their level follows their technology and
 ## compute, their doctrine their national lean (ai_data.gd).
+##
+## The economy: AI raises research, income and production, and automates jobs:
+## without a retraining programme the people it puts out of work are unhappy.
+## Chips: the chip-supply nations (ai_data.CONTROLLERS) can put export controls
+## on a rival, halving its data centres (smuggling wins some of it back, at a
+## risk); when AI data centres buy up the world's chips, a chip shortage
+## follows (world_events.gd "chips").
+## Intelligence: AI reads satellite images and open sources: intelligence grows
+## faster, recon passes reveal more for longer, and attacks are foreseen.
+## Influence: synthetic media (deepfakes) against a rival's home front.
+## Model theft: an operation to steal a stronger rival's model weights.
+## Collaborative Combat Aircraft (research): every fighter takes off with a
+## loyal wingman (future_weapons.gd battle groups).
+## Air-defence battle management: batteries share targets (no two missiles at
+## one drone) and intercept a little more often.
+## Treaties: the Treaty on Autonomous Weapons (signatories keep a human in or
+## on the loop) and the declaration on human control of nuclear weapons.
 
 const AIData := preload("res://scripts/ai_data.gd")
 const Factions := preload("res://scripts/factions.gd")
@@ -69,6 +86,18 @@ const CYBER_COST := 120.0
 const CYBER_PREP := 20.0
 const CYBER_COOLDOWN := 120.0
 const CYBER_HOLD := 40.0   # a rival's intrusion shuts a building down this long
+const INFLUENCE_COST := 150.0
+const INFLUENCE_COOLDOWN := 180.0
+const THEFT_COST := {"money": 1200.0}
+const THEFT_COMPUTE := 100.0
+const THEFT_COOLDOWN := 300.0
+const CONTROL_SECONDS := 600.0
+const SMUGGLE_COST := 600.0
+const CCA_FIGHTERS := ["jet", "stealthFighter", "raptor", "jf17"]
+const TREATIES := {
+	"laws": {"name": "Treaty on Autonomous Weapons", "desc": "Signatories keep a human in or on the loop: no weapon chooses and strikes on its own."},
+	"nuclear": {"name": "Declaration on Human Control of Nuclear Weapons", "desc": "Signatories keep machines out of the decision to use nuclear weapons."},
+}
 
 const DISCOVERIES := {
 	"machineLearning": {"name": "Machine Learning", "cost": 500, "branch": "hightech", "era": 3, "reqDiscovery": "microchips", "reqBuilding": "techPark", "fx": {},
@@ -77,6 +106,8 @@ const DISCOVERIES := {
 		"desc": "The AI level can reach 3. Unlocks the Targeting Fusion Cell; loitering munitions and interceptor drones pick their own targets; opens the Human-out-of-the-loop doctrine. Requires an AI Data Center."},
 	"frontierModels": {"name": "Frontier Models", "cost": 1300, "branch": "hightech", "era": 5, "reqDiscovery": "militaryAI", "reqBuilding": "aiDataCenter", "fx": {},
 		"desc": "The largest models: the AI level can reach 4, and every AI effect grows with it. Requires an AI Data Center."},
+	"collaborativeCombatAircraft": {"name": "Collaborative Combat Aircraft", "cost": 750, "branch": "air", "era": 4, "reqDiscovery": "militaryAI", "reqBuilding": "airfield", "fx": {},
+		"desc": "Every fighter you train takes off with a loyal wingman: an uncrewed combat drone that flies its wing, strikes what it strikes and draws fire. A lost wingman costs no lives and is replaced while the fighter rearms."},
 }
 
 var w: Node
@@ -85,6 +116,15 @@ var alloc := {"military": 30.0, "economy": 30.0, "intel": 20.0, "frontier": 20.0
 var campaign := {}      # the player's AI cyber campaign under way: {targets, ends}
 var cyber_ready := 0.0  # when the player may launch the next
 var cyber_target := -1  # the rival chosen in the AI tab
+var ui_tab := "compute" # the AI tab's page
+var retraining := false # the player's retraining programme
+var controls := {}      # nation -> {by, until}: chip export controls on it
+var smuggling := {}     # nation -> true: it smuggles chips past the controls
+var signed := {"laws": {}, "nuclear": {}}   # treaty -> {owner: true}
+var influence_ready := 0.0
+var theft_ready := 0.0
+var _rival_ops := {}    # rival -> {"influence": t, "theft": t, "controls": t}
+var _reputation_t := 0.0
 var incidents := {}     # owner -> autonomous incidents so far
 var log: Array = []     # the player's recent AI events, newest first: {t, text}
 var _rival_cyber := {}  # rival -> when it may run its next campaign
@@ -101,6 +141,9 @@ func _init(world: Node) -> void:
 	for owner in range(w.map.nations.size()):
 		st[owner] = {"level": 0, "train": 0.0, "reserve": 0.0, "doctrine": "in", "rate": 0.0}
 		_auto[owner] = AIData.rating(w, owner, "autonomy")
+		for t in AIData.profile(w, owner).get("signs", []):
+			if signed.has(t):
+				signed[t][owner] = true   # the player's nation too: it may withdraw
 
 static func apply(world: Node) -> void:
 	var defs: Dictionary = world.map.get("buildingDefs", {})
@@ -174,6 +217,7 @@ func compute_rate(owner: int) -> float:
 			each *= 1.25
 		if owner == 0 and w.economy != null and float(w.economy.res.get("silicon", 0.0)) <= 0.5:
 			each *= 0.25   # no chips to replace the burnt-out ones
+		each *= chip_factor(owner)
 		rate += each * dc
 	return rate
 
@@ -268,16 +312,66 @@ func value_of(e: Dictionary) -> float:
 
 ## The player's research and income from the Economy pool (research._recompute).
 func bonuses() -> Dictionary:
-	var e := power(0, "economy")
-	if e <= 0.0:
-		return {}
+	var out := {}
 	var lvl := level(0)
-	return {"researchPct": 0.04 * lvl * e, "incomePct": 0.02 * lvl * e}
+	var e := power(0, "economy")
+	if e > 0.0:
+		out = {"researchPct": 0.04 * lvl * e, "incomePct": 0.02 * lvl * e, "prodPct": 0.03 * lvl * e}
+		if not retraining:
+			out.happiness = -unrest()
+	var m := power(0, "military")
+	if lvl >= 2 and m > 0.0:
+		out.interceptPct = 0.03 * lvl * m   # air-defence battle management
+	return out
+
+## The share of jobs AI has automated (the Economy pool).
+func automation(owner := 0) -> float:
+	return minf(0.25, 0.05 * level(owner) * power(owner, "economy"))
+
+## Happiness lost to automation without a retraining programme.
+func unrest() -> float:
+	return minf(10.0, automation() * 40.0)
+
+func retraining_cost() -> float:
+	return 1.0 + 1.5 * level(0)
+
+func set_retraining(on: bool) -> String:
+	retraining = on
+	if w.research != null:
+		w.research._recompute()
+	return "AI: retraining programme %s." % ("started: the people automation puts out of work learn new trades ($%.1f a second)" % retraining_cost() if on else "ended")
+
+## A rival's income from its AI economy.
+func ai_income_mult(owner: int) -> float:
+	return 1.0 + 0.03 * level(owner) * power(owner, "economy")
+
+## Interception odds a rival's batteries gain from AI battle management.
+func intercept_bonus(owner: int) -> float:
+	return 0.03 * level(owner) * military(owner) if level(owner) >= 2 else 0.0
+
+## Whether `owner`'s batteries share targets (air_defence.gd).
+func coordinated(owner: int) -> bool:
+	return level(owner) >= 2 and military(owner) > 0.2
+
+## Intelligence gained grows with AI analysis (espionage.add_report).
+func intel_mult(owner := 0) -> float:
+	return 1.0 + 0.1 * level(owner) * power(owner, "intel")
+
+## Reveal time and radius of a recon pass (space.gd).
+func recon_mult(owner: int) -> float:
+	return 1.0 + 0.08 * level(owner) * power(owner, "intel")
+
+## AI reading of open sources and imagery foresees attacks (espionage.warn_attack).
+func warns() -> bool:
+	return level(0) >= 2 and power(0, "intel") >= 0.5
 
 ## The silicon and money the player's data centres burn a second (economy.tick).
 func upkeep() -> Dictionary:
 	var n := data_centres(0)
-	return {"silicon": DC_UPKEEP.silicon * n, "money": DC_UPKEEP.money * n} if n > 0 else {}
+	var out := {"silicon": DC_UPKEEP.silicon * n, "money": DC_UPKEEP.money * n} if n > 0 else {}
+	if retraining and power(0, "economy") > 0.0:
+		out.money = float(out.get("money", 0.0)) + retraining_cost()
+	return out
 
 # ---------------------------------------------------------------- the player's orders
 
@@ -295,6 +389,8 @@ func doctrine_blocked(doc: String) -> String:
 		return "Research Machine Learning first."
 	if doc == "out" and not researched(0, "militaryAI"):
 		return "Research Military AI first."
+	if doc == "out" and signatory(0, "laws"):
+		return "You signed the Treaty on Autonomous Weapons: withdraw from it first."
 	return ""
 
 func set_doctrine(doc: String) -> String:
@@ -409,6 +505,12 @@ func update(delta: float) -> void:
 	if not campaign.is_empty() and w.game_time >= float(campaign.ends):
 		_resolve_campaign()
 	_rival_campaigns()
+	_rival_operations()
+	_lapse_controls()
+	_reputation_t += 1.0
+	if _reputation_t >= 300.0:
+		_reputation_t = 0.0
+		_reputation()
 	var econ := snappedf(power(0, "economy") * level(0), 0.05)
 	if econ != _econ_shown:
 		_econ_shown = econ
@@ -543,6 +645,12 @@ func _rival_doctrines() -> void:
 			# A nation fighting for its survival takes the human out of the loop.
 			if at_war and doc == "on" and lvl >= 3 and w.get("defcon") != null and w.defcon != null and w.defcon.existential(owner):
 				doc = "out"
+		if doc == "out" and signatory(owner, "laws"):
+			# A signatory breaks the treaty only when its survival is at stake.
+			if w.get("defcon") != null and w.defcon != null and w.defcon.existential(owner):
+				_breach(owner, "laws")
+			else:
+				doc = "on"
 		_row(owner).doctrine = doc
 
 func _rival_campaigns() -> void:
@@ -593,7 +701,17 @@ func capture() -> Dictionary:
 	for k in incidents: inc[str(k)] = incidents[k]
 	var rc := {}
 	for k in _rival_cyber: rc[str(k)] = _rival_cyber[k]
-	return {"st": rows, "alloc": alloc.duplicate(), "campaign": campaign.duplicate(true), "cyber_ready": cyber_ready, "incidents": inc, "log": log.duplicate(true), "rival_cyber": rc}
+	var ctl := {}
+	for k in controls: ctl[str(k)] = controls[k].duplicate()
+	var smg := {}
+	for k in smuggling: smg[str(k)] = true
+	var sig := {}
+	for t in signed:
+		sig[t] = signed[t].keys().map(func(o): return int(o))
+	var ops := {}
+	for k in _rival_ops: ops[str(k)] = _rival_ops[k].duplicate()
+	return {"st": rows, "alloc": alloc.duplicate(), "campaign": campaign.duplicate(true), "cyber_ready": cyber_ready, "incidents": inc, "log": log.duplicate(true), "rival_cyber": rc,
+		"retraining": retraining, "controls": ctl, "smuggling": smg, "signed": sig, "influence_ready": influence_ready, "theft_ready": theft_ready, "rival_ops": ops}
 
 func restore(data: Dictionary) -> void:
 	for k in data.get("st", {}):
@@ -610,10 +728,319 @@ func restore(data: Dictionary) -> void:
 	log = data.get("log", [])
 	_rival_cyber.clear()
 	for k in data.get("rival_cyber", {}): _rival_cyber[int(k)] = float(data.rival_cyber[k])
+	retraining = bool(data.get("retraining", false))
+	controls.clear()
+	for k in data.get("controls", {}):
+		controls[int(k)] = {"by": int(data.controls[k].get("by", -1)), "until": float(data.controls[k].get("until", 0.0))}
+	smuggling.clear()
+	for k in data.get("smuggling", {}): smuggling[int(k)] = true
+	if data.has("signed"):
+		for t in signed:
+			signed[t] = {}
+			for o in data.signed.get(t, []): signed[t][int(o)] = true
+	influence_ready = float(data.get("influence_ready", 0.0))
+	theft_ready = float(data.get("theft_ready", 0.0))
+	_rival_ops.clear()
+	for k in data.get("rival_ops", {}): _rival_ops[int(k)] = data.rival_ops[k]
 	for owner in st.keys():
 		_refresh(owner)
+	# Fighters keep their loyal wingmen (the flag is not saved with the unit).
+	for u in w.units:
+		if not u.dead and str(u.key) in CCA_FIGHTERS and has_cca(int(u.owner)):
+			u.cca = true
 	if w.research != null:
 		w.research._recompute()
+
+# ---------------------------------------------------------------- chips
+
+func can_control(owner: int) -> bool:
+	return Factions.identity(w, owner) in AIData.CONTROLLERS or bool(w.map.nations[owner].get("chip_controller", false)) if owner >= 0 and owner < w.map.nations.size() else false
+
+## Compute a data centre loses to export controls (smuggling wins some back)
+## and to a chip shortage.
+func chip_factor(owner: int) -> float:
+	var f := 1.0
+	if controlled(owner):
+		f *= 0.8 if smuggling.has(owner) else 0.5
+	if w.get("events") != null and w.events != null and w.events.active.has("chips"):
+		f *= 0.8
+	return f
+
+func controlled(owner: int) -> bool:
+	return controls.has(owner) and float(controls[owner].until) > w.game_time
+
+func control_blocked(target: int) -> String:
+	if not can_control(0):
+		return "Only the chip-supply nations can deny chips."
+	var d: Node = w.diplomacy
+	if target <= 0 or target >= d.n or d.defeated(target):
+		return "Choose a rival."
+	if controlled(target):
+		return "%s is already under export controls." % d.name_of(target)
+	if can_control(target):
+		return "%s makes its own chip tools." % d.name_of(target)
+	return ""
+
+## `by` denies advanced chips to `target` for ten minutes.
+func impose_controls(by: int, target: int) -> String:
+	if by == 0:
+		var why := control_blocked(target)
+		if why != "":
+			return why
+	var d: Node = w.diplomacy
+	controls[target] = {"by": by, "until": w.game_time + CONTROL_SECONDS}
+	smuggling.erase(target)
+	d.change(by, target, -15.0)
+	var text := "CHIPS: %s put%s export controls on %s: its data centres run at half for 10 minutes unless it smuggles chips in." % ["You" if by == 0 else d.name_of(by), "" if by == 0 else "s", "you" if target == 0 else d.name_of(target)]
+	_note(text)
+	w.hud.notice(text)
+	return text
+
+func smuggle_blocked() -> String:
+	if not controlled(0):
+		return "No export controls on you."
+	if smuggling.has(0):
+		return "Chips are already being smuggled in."
+	if w.economy.res.money < SMUGGLE_COST:
+		return "Costs $%d." % int(SMUGGLE_COST)
+	return ""
+
+## Chips smuggled past the controls through third countries.
+func smuggle() -> String:
+	var why := smuggle_blocked()
+	if why != "":
+		return why
+	w.economy.pay({"money": SMUGGLE_COST})
+	smuggling[0] = true
+	var text := "CHIPS: smugglers bring chips in through third countries: your data centres run at 80%."
+	var by: int = int(controls[0].by)
+	if randf() < 0.25:
+		w.diplomacy.change(0, by, -10.0)
+		controls[0].until = float(controls[0].until) + 300.0
+		text += " %s found out: the controls are extended by 5 minutes (-10 relations)." % w.diplomacy.name_of(by)
+	_note(text)
+	return text
+
+func _lapse_controls() -> void:
+	for t in controls.keys():
+		if float(controls[t].until) <= w.game_time:
+			controls.erase(t)
+			smuggling.erase(t)
+			if t == 0:
+				_note("CHIPS: the export controls on you have lapsed.")
+				w.hud.notice("CHIPS: the export controls on you have lapsed.")
+
+## How many AI data centres the world runs (the chip shortage's cause).
+func world_data_centres() -> int:
+	var n := 0
+	for b in w.buildings:
+		if b.key == "aiDataCenter" and b.built and not b.dead:
+			n += 1
+	return n
+
+# ---------------------------------------------------------------- influence and theft
+
+func influence_blocked(target: int) -> String:
+	if level(0) < 2:
+		return "Needs AI level 2."
+	if influence_ready > w.game_time:
+		return "Ready in %ds." % ceili(influence_ready - w.game_time)
+	var d: Node = w.diplomacy
+	if target <= 0 or target >= d.n or d.defeated(target):
+		return "Choose a rival."
+	if reserve(0) < INFLUENCE_COST:
+		return "Needs %d compute in the operations reserve." % int(INFLUENCE_COST)
+	return ""
+
+## Synthetic media aimed at `target`'s home front, by `by`.
+func influence(by: int, target: int, force := "") -> String:
+	if by == 0:
+		var why := influence_blocked(target)
+		if why != "":
+			return why
+		_row(0).reserve = reserve(0) - INFLUENCE_COST
+		influence_ready = w.game_time + INFLUENCE_COOLDOWN
+	var d: Node = w.diplomacy
+	var e = w.get("espionage")
+	var p := clampf(0.5 + 0.06 * level(by) - 0.04 * AIData.rating(w, target, "cyber") - (0.1 * level(0) * power(0, "intel") if target == 0 else 0.0), 0.1, 0.9)
+	var who: String = "you" if target == 0 else d.name_of(target)
+	var text := ""
+	if force == "works" or (force == "" and randf() < p):
+		if w.get("support") != null and w.support != null:
+			w.support.change(target, -8.0 if target > 0 else -5.0)
+		if target > 0 and e != null and e.stability.has(target):
+			e.stability[target] = maxf(20.0, float(e.stability[target]) - 10.0)
+		text = "INFLUENCE: synthetic videos and voices flood %s: %s." % ["your country" if target == 0 else d.name_of(target), "war support falls" if target == 0 else "its people turn against the war and its government (war support -8, stability -10)"]
+		if by > 0:
+			text = "INFLUENCE: %s floods your country with synthetic videos and voices: war support -5." % d.name_of(by)
+	else:
+		text = "INFLUENCE: %s saw through the fakes." % ("your people" if target == 0 else who)
+	if by == 0 and randf() < clampf(0.35 - 0.03 * level(0), 0.1, 0.35):
+		d.change(0, target, -20.0)
+		for other in range(1, d.n):
+			if other != target and not d.defeated(other):
+				d.change(0, other, -4.0)
+		if w.get("support") != null and w.support != null:
+			w.support.change(0, -4.0)
+		text += " The campaign was traced to you: a scandal at home and abroad."
+	_note(text)
+	w.hud.notice(text)
+	return text
+
+func theft_blocked(target: int) -> String:
+	var d: Node = w.diplomacy
+	if target <= 0 or target >= d.n or d.defeated(target):
+		return "Choose a rival."
+	var e = w.get("espionage")
+	if e == null or not e.has_agency():
+		return "Build an Intelligence Agency first."
+	if level(target) <= level(0):
+		return "%s's models are no better than yours." % d.name_of(target)
+	if theft_ready > w.game_time:
+		return "Ready in %ds." % ceili(theft_ready - w.game_time)
+	if reserve(0) < THEFT_COMPUTE or not w.economy.can_afford(THEFT_COST):
+		return "Costs $%d and %d compute." % [int(THEFT_COST.money), int(THEFT_COMPUTE)]
+	return ""
+
+## An operation by `by` to steal `target`'s model weights.
+func steal(by: int, target: int, force := "") -> String:
+	var d: Node = w.diplomacy
+	if by == 0:
+		var why := theft_blocked(target)
+		if why != "":
+			return why
+		w.economy.pay(THEFT_COST)
+		_row(0).reserve = reserve(0) - THEFT_COMPUTE
+		theft_ready = w.game_time + THEFT_COOLDOWN
+	var e = w.get("espionage")
+	var network: float = float(e.network.get(target, 0.0)) if e != null and by == 0 else 30.0
+	var p := clampf(0.3 + 0.05 * AIData.rating(w, by, "cyber") + network * 0.004 - cyber_defence(target), 0.05, 0.85)
+	var text := ""
+	if force == "works" or (force == "" and randf() < p):
+		var mine := level(by)
+		var theirs := level(target)
+		var gained := mini(theirs, mine + ceili((theirs - mine) / 2.0))
+		_row(by).level = gained
+		_row(by).train = 0.0
+		_refresh(by)
+		text = "MODEL THEFT: %s stole %s's model weights: %s AI is now level %d." % ["your agents" if by == 0 else d.name_of(by), "your" if target == 0 else d.name_of(target), "your" if by == 0 else "its", gained]
+		if by == 0 and w.research != null:
+			w.research._recompute()
+	else:
+		text = "MODEL THEFT: %s against %s failed." % ["your operation" if by == 0 else d.name_of(by) + "'s operation", "you" if target == 0 else d.name_of(target)]
+		if randf() < 0.4:
+			d.change(by, target, -30.0)
+			text += " It was exposed (-30 relations)."
+			if can_control(target) and not controlled(by):
+				impose_controls(target, by)
+	_note(text)
+	w.hud.notice(text)
+	return text
+
+## Rivals' influence campaigns, model thefts and export controls against the player.
+func _rival_operations() -> void:
+	if w.ai == null:
+		return
+	var d: Node = w.diplomacy
+	for n in w.ai.nations:
+		var owner := int(n.id)
+		if n.defeated:
+			continue
+		var ops: Dictionary = _rival_ops.get(owner, {})
+		_rival_ops[owner] = ops
+		# A rival under controls smuggles once it has looked for a way round.
+		if controlled(owner) and not smuggling.has(owner) and w.game_time - (float(controls[owner].until) - CONTROL_SECONDS) > 60.0:
+			smuggling[owner] = true
+		var hostile: bool = d.at_war(owner, 0) or d.rel(owner, 0) < -40.0
+		if not hostile:
+			continue
+		var now: float = w.game_time
+		# Each operation waits a while after the hostility begins, then recurs.
+		for op in ["influence", "theft", "controls"]:
+			if not ops.has(op):
+				ops[op] = now + {"influence": 240.0, "theft": 300.0, "controls": 180.0}[op] + randf() * 120.0
+		if level(owner) >= 2 and now >= float(ops.influence):
+			influence(owner, 0)
+			ops.influence = now + 300.0 + randf() * 180.0
+		if level(0) >= level(owner) + 2 and now >= float(ops.theft):
+			steal(owner, 0)
+			ops.theft = now + 420.0 + randf() * 180.0
+		if can_control(owner) and level(0) >= 2 and not controlled(0) and now >= float(ops.controls):
+			impose_controls(owner, 0)
+			ops.controls = now + 900.0
+
+# ---------------------------------------------------------------- treaties
+
+func signatory(owner: int, treaty: String) -> bool:
+	return signed.get(treaty, {}).has(owner)
+
+func signatories(treaty: String) -> Array:
+	var d: Node = w.diplomacy
+	return signed.get(treaty, {}).keys().filter(func(o): return o == 0 or not d.defeated(o))
+
+func sign_blocked(treaty: String) -> String:
+	if signatory(0, treaty):
+		return "Signed."
+	if treaty == "laws" and doctrine(0) == "out":
+		return "Bring a human back into the loop first."
+	return ""
+
+func sign(treaty: String) -> String:
+	var why := sign_blocked(treaty)
+	if why != "":
+		return why
+	signed[treaty][0] = true
+	var d: Node = w.diplomacy
+	for o in signatories(treaty):
+		if o != 0:
+			d.change(0, o, 3.0)
+	var text := "TREATY: you signed the %s. The other signatories think better of you (+3)." % TREATIES[treaty].name
+	_note(text)
+	return text
+
+func withdraw(treaty: String) -> String:
+	if not signatory(0, treaty):
+		return ""
+	signed[treaty].erase(0)
+	var d: Node = w.diplomacy
+	for o in signatories(treaty):
+		d.change(0, o, -5.0)
+	var text := "TREATY: you withdrew from the %s. Its signatories take it badly (-5)." % TREATIES[treaty].name
+	_note(text)
+	return text
+
+## A signatory breaks a treaty: the Security Council takes it up.
+func _breach(owner: int, treaty: String) -> void:
+	signed[treaty].erase(owner)
+	var d: Node = w.diplomacy
+	for o in signatories(treaty):
+		d.change(owner, o, -10.0)
+	if w.get("un") != null and w.un != null:
+		w.un.table("treaty", owner, -1, -1, "breaking the %s" % TREATIES[treaty].name)
+	w.hud.notice("TREATY: %s has broken the %s and taken the human out of the loop." % [d.name_of(owner), TREATIES[treaty].name])
+
+## Fighting without a human in the loop costs standing with the treaty's signatories.
+func _reputation() -> void:
+	var d: Node = w.diplomacy
+	for owner in st.keys():
+		if doctrine(owner) != "out" or (owner > 0 and d.defeated(owner)):
+			continue
+		for o in signatories("laws"):
+			if o != owner:
+				d.change(owner, o, -2.0)
+
+# ---------------------------------------------------------------- collaborative combat aircraft
+
+func has_cca(owner: int) -> bool:
+	if owner == 0:
+		return w.research != null and w.research.done("collaborativeCombatAircraft")
+	return level(owner) >= 3 and w.research != null and w.research.ai_tech(owner) >= 6.0 and AIData.rating(w, owner, "autonomy") >= 3
+
+## A fighter just trained takes a loyal wingman with it (world.gd, ai.gd).
+func escort_fighter(unit: Dictionary) -> void:
+	if str(unit.key) in CCA_FIGHTERS and has_cca(int(unit.owner)):
+		unit.cca = true
+		preload("res://scripts/future_weapons.gd").escort(w, unit)
 
 # ---------------------------------------------------------------- the buildings' models
 

@@ -230,11 +230,17 @@ func run() -> void:
 	# ---- the AI tab draws
 	w.hud.toggle_panel("defence", true)
 	w.hud._panels.defence_tab = "ai"
+	b.ui_tab = "compute"
 	w.hud.refresh_side()
 	var labels: Array = w.hud._side_rows.find_children("*", "Label", true, false).map(func(l): return l.text)
-	check(labels.any(func(t): return t.begins_with("AI level 3")) and labels.any(func(t): return t.contains("Compute allocation")), "the AI tab shows the level, the split and the doctrine")
+	check(labels.any(func(t): return t.begins_with("AI level 3")) and labels.any(func(t): return t.contains("Compute allocation")), "the AI tab shows the level and the split")
+	b.ui_tab = "doctrine"
+	w.hud.refresh_side()
 	var buttons: Array = w.hud._side_rows.find_children("*", "Button", true, false).map(func(x): return x.text)
-	check(buttons.has("on the loop") and buttons.any(func(t): return t.begins_with("Launch")), "with the doctrine and the campaign buttons")
+	b.ui_tab = "operations"
+	w.hud.refresh_side()
+	buttons += w.hud._side_rows.find_children("*", "Button", true, false).map(func(x): return x.text)
+	check(buttons.has("on the loop") and buttons.any(func(t): return t.begins_with("AI cyber campaign")), "with the doctrine and the campaign buttons")
 
 	print("AI_CHECK %d passed, %d failed" % [passed, errors.size()])
 	for e in errors: print("  FAILED: " + e)

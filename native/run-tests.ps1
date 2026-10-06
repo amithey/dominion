@@ -15,6 +15,7 @@ $tests = @(
     @('UN Council, Assembly, consent, humanitarian access, future members and saves', @('--script', 'res://tools/un-check.gd'), 'UN_CHECK PASS', 240),
     @('national arsenals, future programmes, payload launch platforms and new country metadata', @('--script', 'res://tools/arsenal-check.gd'), 'ARSENAL_CHECK PASS', 240),
     @('artificial intelligence: compute, data centres, AI levels, autonomy doctrine and incidents, seekers, fusion cell, AI cyber, rivals, saves', @('--script', 'res://tools/ai-check.gd'), 'AI_CHECK PASS', 600),
+    @('artificial intelligence 2: AI economy and retraining, chip controls, smuggling and the shortage, AI analysis, influence, model theft, loyal wingmen, battle management, treaties', @('--script', 'res://tools/ai2-check.gd'), 'AI2_CHECK PASS', 600),
     @('operational war costs: fuel, ammunition, interceptors, air sorties and saves', @('--script', 'res://tools/war-costs-check.gd'), 'WAR_COSTS PASS', 240),
     @('thirteen additional leader portraits: unique PNGs and face crops', @('--script', 'res://tools/additional-portraits-check.gd'), 'Additional portraits: 158 checks, 0 failures', 120),
     @('city, offshore, market and air defence upgrades', @('--script', 'res://tools/city-upgrade-check.gd'), 'CITY_UPGRADE_TEST PASS', 180),

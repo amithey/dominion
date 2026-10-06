@@ -184,10 +184,12 @@ func _recon_pass(owner: int) -> void:
 		return
 	var towns: Array = w.buildings.filter(func(b): return b.owner == target and not b.dead and b.key in ["hq", "cityCenter", "villageCenter"])
 	if owner == 0:
+		# AI image analysis sees more in each pass, for longer (ai_directorate.gd).
+		var f: float = w.directorate.recon_mult(0) if w.get("directorate") != null and w.directorate != null else 1.0
 		for t in towns:
-			reveals.append({"at": t.root.position, "radius": REVEAL_RADIUS, "until": w.game_time + REVEAL_SECONDS})
+			reveals.append({"at": t.root.position, "radius": REVEAL_RADIUS * f, "until": w.game_time + REVEAL_SECONDS * f})
 		for b in w.buildings:
-			if b.owner == target and not b.dead and towns.any(func(t): return t.root.position.distance_to(b.root.position) < REVEAL_RADIUS):
+			if b.owner == target and not b.dead and towns.any(func(t): return t.root.position.distance_to(b.root.position) < REVEAL_RADIUS * f):
 				b.seen = true
 		var e = w.get("espionage")
 		if e != null:

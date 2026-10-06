@@ -3049,6 +3049,8 @@ func update_training(delta: float) -> void:
 			order_move([unit], door + out * 8.0 + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4)))
 		if key == "sixthGen":
 			Future.escort(self, unit)   # two loyal wingmen: aboard while it is parked, launched as it takes off
+		elif directorate != null:
+			directorate.escort_fighter(unit)   # one loyal wingman with Collaborative Combat Aircraft
 		economy.recalculate()
 		if b.owner == 0:
 			hud.notice("%s ready" % def.name)

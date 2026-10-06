@@ -118,7 +118,7 @@ static func apply(w: Node) -> void:
 ## wingmen_stowed); they are launched beside it as it takes off and recovered
 ## as it lands (command), so a hangar of fighters costs the game nothing.
 static func escort(w: Node, leader: Dictionary) -> Array:
-	leader.wingmen_stowed = WINGMEN
+	leader.wingmen_stowed = wing_size(leader)
 	if leader.get("air_state", "ready") == "ready":
 		return launch_wingmen(w, leader)
 	return []
@@ -170,7 +170,7 @@ static func update(w: Node, delta: float) -> void:
 			if u.follow_tick <= 0.0:
 				u.follow_tick = 0.25
 				follow(w, u)
-		elif u.key == "sixthGen":
+		elif u.key == "sixthGen" or u.get("cca", false):
 			u.group_tick = float(u.get("group_tick", 0.0)) - delta
 			if u.group_tick <= 0.0:
 				u.group_tick = 0.5
@@ -218,13 +218,22 @@ static func covered(w: Node, at: Vector3, owner: int) -> bool:
 ##   the airfield with the fighter, and a lost wingman is replaced while the
 ##   fighter rearms ($200 each, one every 20 s).
 const SLOTS := [Vector3(-10.0, 0, -7.0), Vector3(10.0, 0, -7.0), Vector3(-20.0, 0, -14.0), Vector3(20.0, 0, -14.0)]
+
+## How many wingmen fly with `leader`: two with a sixth-generation fighter, one
+## with any other fighter of a nation with Collaborative Combat Aircraft
+## (ai_directorate.gd: its "cca" flag).
+static func wing_size(leader: Dictionary) -> int:
+	return 1 if leader.get("cca", false) and leader.key != "sixthGen" else WINGMEN
+
+static func is_leader(u: Dictionary) -> bool:
+	return u.key == "sixthGen" or u.get("cca", false)
 const GROUP_RADIUS := 80.0
 const REPLACE_COST := 200.0
 const REPLACE_SECONDS := 20.0
 
 ## The fighter and its wingmen, the fighter first ([] for any other unit).
 static func group_of(w: Node, u: Dictionary) -> Array:
-	var leader = u if u.key == "sixthGen" else (u.get("leader") if u.key == "wingman" else null)
+	var leader = u if is_leader(u) else (u.get("leader") if u.key == "wingman" else null)
 	if leader == null or leader.dead:
 		return []
 	return [leader] + mates(w, leader)
@@ -259,13 +268,13 @@ static func command(w: Node, leader: Dictionary) -> void:
 		# Just loaded from a save: its wingmen in the air join it again first, and
 		# only those missing count as aboard (else it would launch two more).
 		for o in w.units:
-			if wing.size() >= WINGMEN:
+			if wing.size() >= wing_size(leader):
 				break
 			var lead = o.get("leader")
 			if not o.dead and o.key == "wingman" and o.owner == leader.owner and (lead == null or lead.dead) and o.node.position.distance_to(leader.node.position) < 150.0:
 				o.leader = leader
 				wing.append(o)
-		leader.wingmen_stowed = maxi(0, WINGMEN - wing.size())
+		leader.wingmen_stowed = maxi(0, wing_size(leader) - wing.size())
 	# Down on the airfield, the wingmen are recovered with it; in the air again,
 	# they are launched beside it.
 	if leader.get("air_state", "ready") in ["landing", "taxi_in", "rearming", "parked", "taxi_out"]:
@@ -303,12 +312,12 @@ static func command(w: Node, leader: Dictionary) -> void:
 		elif u.enemy != null and not airborne:
 			u.enemy = null   # the fighter has gone home: so do they
 	# A wingman lost: the fighter takes on a new one while it rearms.
-	if leader.get("air_state", "") in ["rearming", "parked"] and int(leader.wingmen_stowed) < WINGMEN and w.game_time >= float(leader.get("wingman_ready", 0.0)):
+	if leader.get("air_state", "") in ["rearming", "parked"] and int(leader.wingmen_stowed) + mates(w, leader).size() < wing_size(leader) and w.game_time >= float(leader.get("wingman_ready", 0.0)):
 		if preload("res://scripts/war_costs.gd").pay(w, int(leader.owner), REPLACE_COST):
 			leader.wingman_ready = w.game_time + REPLACE_SECONDS
 			leader.wingmen_stowed = int(leader.wingmen_stowed) + 1   # (aboard, launched with it)
 			if leader.owner == 0:
-				w.hud.notice("A new loyal wingman joins your %s ($%d)." % [w.unit_defs.sixthGen.name, int(REPLACE_COST)])
+				w.hud.notice("A new loyal wingman joins your %s ($%d)." % [w.unit_defs[leader.key].name, int(REPLACE_COST)])
 
 ## A wingman keeps its place in the group (four times a second).
 static func follow(w: Node, u: Dictionary) -> void:
@@ -319,10 +328,10 @@ static func follow(w: Node, u: Dictionary) -> void:
 		leader = null
 		var best := 90.0
 		for f in w.units:
-			if f.dead or f.key != "sixthGen" or f.owner != u.owner:
+			if f.dead or not is_leader(f) or f.owner != u.owner:
 				continue
 			var d: float = f.node.position.distance_to(u.node.position)
-			if mates(w, f).size() + int(f.get("wingmen_stowed", 0)) < WINGMEN and d < best:
+			if mates(w, f).size() + int(f.get("wingmen_stowed", 0)) < wing_size(f) and d < best:
 				best = d
 				leader = f
 		u.leader = leader

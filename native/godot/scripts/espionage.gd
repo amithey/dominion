@@ -188,6 +188,8 @@ func _gain_xp(agent: Dictionary) -> void:
 		world.hud.notice("Agent \"%s\" promoted to %s (+%d%% success)." % [agent.name, rank(agent), roundi((skill - 1) * float(cfg.skillBonus) * 100.0)])
 
 func add_report(nation: int, kind: String, text: String, amount: float) -> void:
+	if amount > 0.0 and world.get("directorate") != null and world.directorate != null:
+		amount *= world.directorate.intel_mult()   # AI reads the take (ai_directorate.gd)
 	intel[nation] = clampf(intel.get(nation, 0.0) + amount, 0.0, 100.0)
 	if amount > 0.0:
 		types[nation][kind] = true
@@ -488,7 +490,8 @@ func enemy_attempt(force_outcome := "") -> String:
 
 ## Intel at 60+ (or Satellite Recon) warns of an attack wave before it sets out.
 func warn_attack(nation: int) -> void:
-	if (intel.get(nation, 0.0) >= 60.0 and dossiers.has(nation) and dossiers[nation].get("confidence", "low") != "low" and clock - float(dossiers[nation].t) <= 180.0) or (world.research and world.research.bonus("warn") >= 1.0):
+	var foreseen: bool = world.get("directorate") != null and world.directorate != null and world.directorate.warns()   # AI reads imagery and open sources
+	if (intel.get(nation, 0.0) >= 60.0 and dossiers.has(nation) and dossiers[nation].get("confidence", "low") != "low" and clock - float(dossiers[nation].t) <= 180.0) or (world.research and world.research.bonus("warn") >= 1.0) or foreseen:
 		world.hud.notice("INTELLIGENCE: %s will launch an attack within 30 seconds." % world.diplomacy.name_of(nation))
 
 # ---------------------------------------------------------------- saving

@@ -1,12 +1,15 @@
 extends RefCounted
-## The AI tab of the Defence window (ai_directorate.gd): the AI level and the
-## training run, compute and how it is split, the autonomy doctrine, AI cyber
-## campaigns and what rivals' AI is doing. Kept compact: four small cards.
+## The AI tab of the Defence window (ai_directorate.gd), in four small pages:
+##   Compute     the AI level and training run, compute and its split, the
+##               economy (automation and retraining)
+##   Doctrine    the autonomy doctrine and the AI treaties
+##   Operations  AI cyber campaigns, influence, model theft, chips
+##   Rivals      rivals' AI and what has happened
 
 const POOL_HELP := {
-	"military": "Autonomy, autonomous seekers and the fusion cell",
-	"economy": "Research and income",
-	"intel": "Operations reserve and cyber defence",
+	"military": "Autonomy, seekers, fusion cell, air defence",
+	"economy": "Research, income, production",
+	"intel": "Operations reserve, cyber defence, analysis",
 	"frontier": "Training runs: the next AI level",
 }
 
@@ -15,9 +18,20 @@ static func draw(sp) -> void:
 	var a = hud.world.get("directorate")
 	if a == null:
 		return
-	var d: Node = hud.world.diplomacy
+	sp._tabs([["Compute", "compute"], ["Doctrine", "doctrine"], ["Operations", "operations"], ["Rivals", "rivals"]], a.ui_tab, func(v): a.ui_tab = v)
+	match a.ui_tab:
+		"doctrine":
+			_doctrine(sp, a)
+		"operations":
+			_operations(sp, a)
+		"rivals":
+			_rivals(sp, a)
+		_:
+			_compute(sp, a)
+
+static func _compute(sp, a) -> void:
+	var hud = sp.hud
 	var lvl: int = a.level(0)
-	# The level and the training run.
 	var card: VBoxContainer = hud._card(hud.UI.GOLD)
 	card.add_child(hud._text("AI level %d: %s" % [lvl, a.LEVEL_NAMES[lvl]], 18, hud.UI.CREAM, true))
 	var cap: int = a.cap(0)
@@ -27,14 +41,14 @@ static func draw(sp) -> void:
 		var next := {0: "Machine Learning", 2: "Military AI", 3: "Frontier Models"}
 		sp._wrap(card, "Research %s to train further." % next.get(cap, "further") if lvl < 4 else "Your models are at the frontier.", 12)
 	var dc: int = a.data_centres(0)
-	var rate: float = float(a.st[0].rate)
 	var src := "%d data centre%s" % [dc, "" if dc == 1 else "s"]
 	if a.researched(0, "machineLearning"):
 		src += ", national industry +%.1f/s" % (a.AIData.rating(hud.world, 0, "compute") * a.NATIONAL)
-	card.add_child(hud._text("Compute %.1f/s  (%s)" % [rate, src], 13, hud.UI.TEXT))
-	if rate <= 0.0:
+	card.add_child(hud._text("Compute %.1f/s  (%s)" % [float(a.st[0].rate), src], 13, hud.UI.TEXT))
+	if a.chip_factor(0) < 1.0:
+		sp._wrap(card, "Data centres at %d%%: %s." % [roundi(a.chip_factor(0) * 100.0), "export controls on you" + (" (smuggling)" if a.smuggling.has(0) else "") if a.controlled(0) else "a global chip shortage"], 12, hud.UI.BAD)
+	if float(a.st[0].rate) <= 0.0:
 		sp._wrap(card, "No compute yet: research Machine Learning and build an AI Data Center.", 12)
-	# The split.
 	var split: VBoxContainer = hud._card()
 	split.add_child(hud._text("Compute allocation", 15, hud.UI.CREAM, true))
 	for pool in a.POOLS:
@@ -52,7 +66,20 @@ static func draw(sp) -> void:
 		help.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.add_child(help)
-	# The doctrine.
+	# The AI economy and the jobs it takes.
+	if a.automation() > 0.0:
+		var eco: VBoxContainer = hud._card()
+		eco.add_child(hud._text("Automation: %d%% of jobs" % roundi(a.automation() * 100.0), 15, hud.UI.CREAM, true))
+		if a.retraining:
+			sp._wrap(eco, "The retraining programme finds people new trades: no unrest ($%.1f a second)." % a.retraining_cost(), 12, hud.UI.GOOD)
+		else:
+			sp._wrap(eco, "People put out of work by AI are unhappy: happiness -%d." % roundi(a.unrest()), 12, hud.UI.BAD)
+		var r: HBoxContainer = hud._row(eco)
+		hud._button(r, "End retraining" if a.retraining else "Start retraining ($%.1f/s)" % a.retraining_cost(), func(): return a.set_retraining(not a.retraining), true, "" if a.retraining else "good")
+
+static func _doctrine(sp, a) -> void:
+	var hud = sp.hud
+	var lvl: int = a.level(0)
 	var doc_card: VBoxContainer = hud._card(hud.UI.BAD if a.doctrine(0) == "out" else Color(0, 0, 0, 0))
 	doc_card.add_child(hud._text("Autonomy doctrine", 15, hud.UI.CREAM, true))
 	var drow: HBoxContainer = hud._row(doc_card, 4)
@@ -60,7 +87,6 @@ static func draw(sp) -> void:
 		var dd: String = doc
 		var why: String = a.doctrine_blocked(doc)
 		var b: Button = hud._button(drow, a.DOCTRINE_NAMES[doc].replace("Human ", ""), func(): return a.set_doctrine(dd), why == "" and a.doctrine(0) != doc, "bad" if doc == "out" else ("good" if a.doctrine(0) == doc else ""))
-		b.toggle_mode = false
 		b.tooltip_text = a.DOCTRINE_DESC[doc] + ("" if why == "" else "\n" + why)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sp._wrap(doc_card, "%s: %s" % [a.DOCTRINE_NAMES[a.doctrine(0)], a.DOCTRINE_DESC[a.doctrine(0)]], 12)
@@ -69,34 +95,94 @@ static func draw(sp) -> void:
 		sp._wrap(doc_card, "At war: about %d%% chance of an incident each minute. Incidents so far: %d." % [roundi(rate_now * 100.0), int(a.incidents.get(0, 0))], 12, hud.UI.BAD)
 	if lvl >= 3 and a.doctrine(0) != "in":
 		sp._wrap(doc_card, "Loitering munitions and interceptor drones choose their own targets.", 12, hud.UI.GOOD)
-	# AI cyber campaigns.
-	var cy: VBoxContainer = hud._card()
-	cy.add_child(hud._text("AI cyber campaign", 15, hud.UI.CREAM, true))
-	hud._meter(cy, a.reserve(0), a.OPS_CAP, Color("5ab0e0"), "Operations reserve %d / %d" % [int(a.reserve(0)), int(a.OPS_CAP)])
+	if a.coordinated(0):
+		sp._wrap(doc_card, "AI battle management: your batteries share targets and intercept %d%% more often." % roundi(a.bonuses().get("interceptPct", 0.0) * 100.0), 12, hud.UI.GOOD)
+	if a.has_cca(0):
+		sp._wrap(doc_card, "Collaborative Combat Aircraft: every fighter you train takes a loyal wingman.", 12, hud.UI.GOOD)
+	var tr: VBoxContainer = hud._card()
+	tr.add_child(hud._text("AI treaties", 15, hud.UI.CREAM, true))
+	for t in a.TREATIES:
+		var tt: String = t
+		var row: HBoxContainer = hud._row(tr)
+		var lab: Label = hud._text("%s  (%d signatories)" % [a.TREATIES[t].name, a.signatories(t).size()], 13, hud.UI.TEXT)
+		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lab.tooltip_text = a.TREATIES[t].desc
+		row.add_child(lab)
+		if a.signatory(0, t):
+			hud._button(row, "Withdraw", func(): return a.withdraw(tt), true, "bad")
+		else:
+			var why: String = a.sign_blocked(t)
+			var sb: Button = hud._button(row, "Sign", func(): return a.sign(tt), why == "", "good")
+			sb.tooltip_text = why
+	sp._wrap(tr, "Signatories of the autonomous weapons treaty keep a human in or on the loop. Fighting without one costs standing with them.", 11)
+
+static func _operations(sp, a) -> void:
+	var hud = sp.hud
+	var d: Node = hud.world.diplomacy
 	var targets: Array = sp._targets(d)
-	if not targets.is_empty():
-		if not a.get("cyber_target") in targets:
-			a.cyber_target = targets[0]
-		var crow: HBoxContainer = hud._row(cy)
-		var items := []
-		for id in targets: items.append([d.name_of(id), id])
-		hud._choice(crow, items, a.cyber_target, func(v):
-			a.cyber_target = int(v)
-			hud.refresh_side())
-		var why_c: String = a.cyber_blocked(a.cyber_target)
-		var cb: Button = hud._button(crow, "Launch (%d compute each)" % int(a.CYBER_COST), func(): return a.launch_cyber(a.cyber_target), why_c == "", "bad")
-		cb.tooltip_text = (why_c + "\n" if why_c != "" else "") + "AI agents break in without an officer: factories and construction stop for a minute or more. Reaches %d nation%s (your target, then others hostile to you). It may be traced back to you." % [a.cyber_reach(0), "" if a.cyber_reach(0) == 1 else "s"]
-		if why_c != "":
-			sp._wrap(cy, why_c, 12)
+	var cy: VBoxContainer = hud._card()
+	hud._meter(cy, a.reserve(0), a.OPS_CAP, Color("5ab0e0"), "Operations reserve %d / %d compute" % [int(a.reserve(0)), int(a.OPS_CAP)])
+	if targets.is_empty():
+		return
+	if not a.get("cyber_target") in targets:
+		a.cyber_target = targets[0]
+	var trow: HBoxContainer = hud._row(cy)
+	trow.add_child(hud._text("Target", 13, hud.UI.MUTED))
+	var items := []
+	for id in targets: items.append([d.name_of(id), id])
+	hud._choice(trow, items, a.cyber_target, func(v):
+		a.cyber_target = int(v)
+		hud.refresh_side())
+	var t: int = a.cyber_target
+	var acts := [
+		["AI cyber campaign (%d each)" % int(a.CYBER_COST), a.cyber_blocked(t), func(): return a.launch_cyber(t),
+			"AI agents break in without an officer: factories and construction stop for a minute or more. Reaches %d nation%s. It may be traced back to you." % [a.cyber_reach(0), "" if a.cyber_reach(0) == 1 else "s"]],
+		["Synthetic influence (%d)" % int(a.INFLUENCE_COST), a.influence_blocked(t), func(): return a.influence(0, t),
+			"Deepfake videos and voices turn its people against the war: its war support -8, stability -10. If traced to you: a scandal at home and abroad."],
+		["Steal model weights ($%d)" % int(a.THEFT_COST.money), a.theft_blocked(t), func(): return a.steal(0, t),
+			"Your agents and AI go after a stronger rival's model: your AI level closes half the gap. If exposed: -30 relations, and a chip-supply nation puts export controls on you."],
+	]
+	if a.can_control(0):
+		acts.append(["Chip export controls", a.control_blocked(t), func(): return a.impose_controls(0, t),
+			"Deny it advanced chips: its data centres run at half for 10 minutes, unless it smuggles some in. -15 relations."])
+	for act in acts:
+		var row: HBoxContainer = hud._row(cy)
+		var why: String = act[1]
+		var b: Button = hud._button(row, act[0], act[2], why == "", "bad")
+		b.custom_minimum_size.x = 230
+		b.tooltip_text = (why + "\n" if why != "" else "") + act[3]
+		var note: Label = hud._text(why if why != "" else "Ready.", 11, hud.UI.MUTED if why != "" else hud.UI.GOOD)
+		note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.add_child(note)
 	sp._wrap(cy, "Your cyber defence stops about %d%% of rivals' AI intrusions." % roundi(clampf(0.2 + a.cyber_defence(0), 0.05, 0.85) * 100.0), 12)
-	# Rivals, and what happened.
+	if a.controlled(0):
+		var ch: VBoxContainer = hud._card(hud.UI.BAD)
+		ch.add_child(hud._text("Export controls on you: %ds left" % ceili(float(a.controls[0].until) - hud.world.game_time), 15, hud.UI.CREAM, true))
+		var why_s: String = a.smuggle_blocked()
+		var sm: Button = hud._button(ch, "Smuggle chips in ($%d)" % int(a.SMUGGLE_COST), func(): return a.smuggle(), why_s == "")
+		sm.tooltip_text = (why_s + "\n" if why_s != "" else "") + "Through third countries: data centres back to 80%. If found out, the controls run 5 minutes longer."
+
+static func _rivals(sp, a) -> void:
+	var hud = sp.hud
+	var d: Node = hud.world.diplomacy
 	var rv: VBoxContainer = hud._card()
 	rv.add_child(hud._text("Rivals' AI", 15, hud.UI.CREAM, true))
-	for id in targets:
+	var any := false
+	for id in sp._targets(d):
 		if a.level(id) <= 0:
 			continue
-		rv.add_child(hud._text("%s: level %d, %s" % [d.name_of(id), a.level(id), a.DOCTRINE_NAMES[a.doctrine(id)].to_lower()], 12, hud._nation_colour(id).lightened(0.35)))
-	if targets.all(func(id): return a.level(id) <= 0):
+		any = true
+		var extra := ""
+		if a.controlled(id): extra += ", under export controls"
+		if a.signatory(id, "laws"): extra += ", bound by the treaty"
+		rv.add_child(hud._text("%s: level %d, %s%s" % [d.name_of(id), a.level(id), a.DOCTRINE_NAMES[a.doctrine(id)].to_lower(), extra], 12, hud._nation_colour(id).lightened(0.35)))
+	if not any:
 		rv.add_child(hud._text("No rival fields AI yet.", 12, hud.UI.MUTED))
-	for entry in a.log.slice(0, 3):
-		sp._wrap(rv, "%s" % entry.text, 11)
+	var lg: VBoxContainer = hud._card()
+	lg.add_child(hud._text("Recent", 15, hud.UI.CREAM, true))
+	if a.log.is_empty():
+		lg.add_child(hud._text("Nothing yet.", 12, hud.UI.MUTED))
+	for entry in a.log.slice(0, 5):
+		sp._wrap(lg, str(entry.text), 11)

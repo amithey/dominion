@@ -23,6 +23,10 @@ extends RefCounted
 ##   Arms boom            three wars at once: the arms exporters sell more.
 ##   Refugee crisis       a town destroyed: its people flee to its nearest
 ##                        neighbours (citizens, and strain on their happiness).
+##   Chip shortage        eight or more AI data centres buy up the world's
+##                        chips, or a chip maker (South Korea, Japan) is at
+##                        war: silicon x1.6, data centres run at 80%; the
+##                        chip makers sell more (ai_directorate.gd).
 
 const Factions := preload("res://scripts/factions.gd")
 const TICK := 5.0
@@ -63,6 +67,11 @@ const EVENTS := {
 		"income": {"*": -0.05},
 		"happiness": {"*": -4.0},
 		"why": "the threat of nuclear war shakes the markets, and a nuclear explosion would stop the world's trade"},
+	"chips": {"name": "Global chip shortage",
+		"prices": {"silicon": 0.6},
+		"income": {"south_korea": 0.05, "japan": 0.03, "usa": 0.01, "eu": -0.02, "india": -0.02},
+		"research": {"usa": -0.02, "eu": -0.03, "uk": -0.03, "india": -0.03, "japan": -0.02},
+		"why": "AI data centres take most of the advanced chips the few fabs can make"},
 	"arms_boom": {"name": "Arms boom",
 		"prices": {"iron": 0.15},
 		"income": {"usa": 0.04, "russia": 0.03, "eu": 0.03, "israel": 0.04, "south_korea": 0.04, "turkiye": 0.04, "china": 0.02},
@@ -137,6 +146,13 @@ func cause_of(key: String) -> String:
 		"nuclear":
 			if w.get("defcon") != null and w.defcon != null and w.defcon.level() <= 2:
 				return "the world stands at DEFCON %d: %s" % [w.defcon.level(), w.defcon.cause().to_lower()]
+		"chips":
+			var dir = w.get("directorate")
+			if dir != null and dir.world_data_centres() >= 8:
+				return "AI data centres are buying up the world's chips"
+			for id in ["south_korea", "japan"]:
+				if owner_of(id) >= 0 and at_war_any(id):
+					return "%s, a chip maker, is at war" % d.name_of(owner_of(id))
 		"arms_boom":
 			var wars := 0
 			for a in range(d.n):

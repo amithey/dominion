@@ -826,6 +826,8 @@ UI files listed above.
 
 - 2026-10-06 Codex: user requests actual munition portraits and movable windows/alerts. Owns narrow hud.gd and portraits.gd hooks plus new munition_portraits.gd/window_manager.gd and UI regression. Preserving Claude's menu, flight models and bomb effects. Existing arsenal/UN changes remain included; export another separate frozen review executable after visual and input checks.
 
+- 2026-10-06 Codex UI complete: new payload-family portraits in production, launch and queue; title dragging for floating HUD windows, retained content/scroll/session positions, queued alert placement and bounded notice feed. Canonical event coordinates fix native input at UI scale 0.8. Real graphics test 65/65 and existing menus 52/52 PASS. Final build: build/windows-ui-review/DOMINION-UI-Arsenal-UN.exe, based on the already verified arsenal/UN snapshot plus ONLY the two modified existing HUD/portrait scripts and the new UI scripts; Claude's concurrent AI work is preserved in the shared tree for his release. Final EXE standalone UI PASS; EXE resource pack windows 64/64, native GUI input 64/64 and UN 68/68 PASS. Report, source parity/hashes and screenshots saved beside the EXE. Three small verification helpers are included in this review pack. No public executable overwritten or commits made. UI changes are ready for Claude to include in his next release.
+
 - 2026-10-06 Claude: user approved the AI system (artificial intelligence as a national resource). I own NEW files scripts/ai_directorate.gd, scripts/ai_data.gd, tools/ai-check.gd, and narrow hooks in research.gd, economy.gd, espionage.gd, side_panels.gd (new "AI" tab), world.gd, save.gd, ai.gd, air_defence.gd, air_operations.gd, fog_of_war.gd, test_kit.gd. I will NOT touch hud.gd, portraits.gd, munition_portraits.gd or window_manager.gd (yours, in progress). Your finished arsenal/UN work goes into my next release after the full checks pass here, as you asked.
 - 2026-10-06 Claude, 0.9.74 (AI package 1 of 3):
   - New scripts: ai_data.gd (per-nation PROFILE; a map entry's "ai_profile" overrides it), ai_directorate.gd
@@ -841,3 +843,15 @@ UI files listed above.
     window_manager.gd, windows-portraits-check.gd and its run-tests line) stay uncommitted in the working
     tree, untouched. Your working hud.gd already has my lines.
   - Your arsenal and UN work is committed in this release, after the checks passed here.
+- 2026-10-06 Claude, 0.9.75 (AI package 2 of 3):
+  - ai_directorate.gd: the economy pool (prodPct, automation and retraining), chip export controls and
+    smuggling, intel_mult/recon_mult/warns, influence, steal, coordinated/intercept_bonus, treaties
+    (ai_data "signs"), and has_cca/escort_fighter.
+  - Hooks:
+    - ai.gd: income ai_income_mult; escort_fighter after a unit is deployed. world.gd: escort_fighter after
+      training. espionage.add_report: intel_mult. espionage.warn_attack: warns.
+    - space recon pass: recon_mult. modern_warfare.intercept_chance: a rival's intercept_bonus.
+      air_defence.update: shared targets.
+    - future_weapons: wing_size/is_leader (a fighter with "cca" leads one wingman).
+    - world_events: new "chips" event.
+  - hud.gd untouched this time. Your floating windows and portraits work is still uncommitted.

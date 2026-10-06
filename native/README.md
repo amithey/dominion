@@ -23,6 +23,41 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.75: the AI economy, chips, deepfakes, model theft, loyal wingmen and AI treaties
+
+- **The AI economy:**
+  - Compute given to the Economy raises research, income and production.
+  - It also automates jobs. Without a **retraining programme** (Compute page, paid by the second), the
+    people put out of work are unhappy.
+  - Rivals' AI economies raise their income too.
+- **Chips:**
+  - The chip-supply nations (the United States, the European Union, Japan, South Korea and the United
+    Kingdom) can put **export controls** on a rival: its data centres run at half for 10 minutes.
+  - **Smuggling** wins most of it back, but if found out the controls run longer. Rivals impose controls on
+    you, and smuggle when you impose them.
+  - A **global chip shortage** (a world event) comes when eight AI data centres buy up the world's chips, or
+    when South Korea or Japan is at war: silicon dearer, and data centres at 80%.
+- **AI analysis:** intelligence grows faster, satellite passes reveal more for longer, and attacks are
+  foreseen.
+- **Synthetic influence:** deepfake campaigns lower a rival's war support and stability. A campaign traced to
+  you is a scandal. Rivals run them against you.
+- **Model theft:** steal a stronger rival's model weights and close half the gap. If exposed, a chip-supply
+  rival puts controls on you. Rivals steal yours.
+- **Collaborative Combat Aircraft** (research): every fighter you train takes off with a loyal wingman. A lost
+  wingman costs no lives and is replaced while the fighter rearms.
+- **AI air-defence battle management:** batteries share targets (no two missiles at one aircraft) and
+  intercept more often; rivals' batteries too.
+- **AI treaties:**
+  - The **Treaty on Autonomous Weapons**, whose signatories keep a human in or on the loop.
+  - The **Declaration on Human Control of Nuclear Weapons**.
+  - Each nation starts with its real stance; you may sign or withdraw. Fighting with no human in the loop
+    costs standing with the treaty's signatories.
+  - A rival that signed breaks the treaty only when fighting for its survival, and the Security Council
+    takes it up.
+- The AI tab now has four small pages: Compute, Doctrine, Operations and Rivals.
+
+Checks: tools/ai2-check.gd (43), tools/ai-check.gd (53).
+
 ## Version 0.9.74: artificial intelligence, and Codex's researched arsenals and UN
 
 - **AI as a national resource** (Defence window, new **AI** tab; native/AI-RESEARCH-2026-10-06.md):
