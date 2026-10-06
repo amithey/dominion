@@ -50,6 +50,19 @@ extends RefCounted
 ## one drone) and intercept a little more often.
 ## Treaties: the Treaty on Autonomous Weapons (signatories keep a human in or
 ## on the loop) and the declaration on human control of nuclear weapons.
+##
+## Automated early warning (a nuclear power at AI level 3, not bound by the
+## nuclear declaration): rivals believe a launch on warning and are slower to
+## strike you with nuclear weapons, and interception improves; but the
+## machine sometimes reports an attack that is not there: the alert rises and
+## the world's nuclear tension with it, worse when a rival's system answers.
+## The AGI project (research): three stages of compute, each with a lasting
+## gain; the last is general intelligence and a Technological Supremacy
+## victory. Compute given to safety (alignment) slows it; without enough of
+## it the system can run out of control: the stage's work is lost, drones
+## freeze, intrusions hit every nation, markets fall, and an unrestricted
+## model may help someone make a pathogen. Rivals race too, steal, and
+## sabotage; so may you.
 
 const AIData := preload("res://scripts/ai_data.gd")
 const Factions := preload("res://scripts/factions.gd")
@@ -94,6 +107,11 @@ const THEFT_COOLDOWN := 300.0
 const CONTROL_SECONDS := 600.0
 const SMUGGLE_COST := 600.0
 const CCA_FIGHTERS := ["jet", "stealthFighter", "raptor", "jf17"]
+const AGI_STAGES := [["Automated research", 1500.0], ["Recursive self-improvement", 3000.0], ["General intelligence", 5000.0]]
+const AGI_GAINS := ["Research +25%.", "Production +15%; cyber defence much stronger.", "General intelligence: a Technological Supremacy victory."]
+const SABOTAGE_COST := 300.0
+const SABOTAGE_COOLDOWN := 240.0
+const FALSE_ALARM := 0.05   # a minute, at full military compute, before the models' quality
 const TREATIES := {
 	"laws": {"name": "Treaty on Autonomous Weapons", "desc": "Signatories keep a human in or on the loop: no weapon chooses and strikes on its own."},
 	"nuclear": {"name": "Declaration on Human Control of Nuclear Weapons", "desc": "Signatories keep machines out of the decision to use nuclear weapons."},
@@ -106,6 +124,8 @@ const DISCOVERIES := {
 		"desc": "The AI level can reach 3. Unlocks the Targeting Fusion Cell; loitering munitions and interceptor drones pick their own targets; opens the Human-out-of-the-loop doctrine. Requires an AI Data Center."},
 	"frontierModels": {"name": "Frontier Models", "cost": 1300, "branch": "hightech", "era": 5, "reqDiscovery": "militaryAI", "reqBuilding": "aiDataCenter", "fx": {},
 		"desc": "The largest models: the AI level can reach 4, and every AI effect grows with it. Requires an AI Data Center."},
+	"agiProject": {"name": "The AGI Project", "cost": 2000, "branch": "hightech", "era": 5, "reqDiscovery": "frontierModels", "reqBuilding": "aiDataCenter", "fx": {},
+		"desc": "Opens the race to general intelligence: three stages paid in compute (the Training runs share). Each stage brings a lasting gain; the last wins a Technological Supremacy victory. Give part of the compute to safety, or the system may run out of control. Requires an AI Data Center."},
 	"collaborativeCombatAircraft": {"name": "Collaborative Combat Aircraft", "cost": 750, "branch": "air", "era": 4, "reqDiscovery": "militaryAI", "reqBuilding": "airfield", "fx": {},
 		"desc": "Every fighter you train takes off with a loyal wingman: an uncrewed combat drone that flies its wing, strikes what it strikes and draws fire. A lost wingman costs no lives and is replaced while the fighter rearms."},
 }
@@ -125,6 +145,13 @@ var influence_ready := 0.0
 var theft_ready := 0.0
 var _rival_ops := {}    # rival -> {"influence": t, "theft": t, "controls": t}
 var _reputation_t := 0.0
+var early_warning := {}  # owner -> true: an automated early-warning system
+var agi := {}           # owner -> {stage, progress, alignment}
+var safety := 0.2       # the player's share of the project's compute given to alignment
+var sabotage_ready := 0.0
+var runaways := {}      # owner -> times its system ran out of control
+var _alarm_at := {}     # owner -> time of its next false-alarm roll
+var _agi_risk_at := {}  # owner -> time of its next runaway roll
 var incidents := {}     # owner -> autonomous incidents so far
 var log: Array = []     # the player's recent AI events, newest first: {t, text}
 var _rival_cyber := {}  # rival -> when it may run its next campaign
@@ -178,6 +205,8 @@ func reserve(owner: int) -> float:
 
 ## The highest AI level `owner`'s research allows.
 func cap(owner: int) -> int:
+	if int(agi.get(owner, {}).get("stage", 0)) >= 3:
+		return 5
 	if owner == 0:
 		if w.research == null:
 			return 0
@@ -322,6 +351,13 @@ func bonuses() -> Dictionary:
 	var m := power(0, "military")
 	if lvl >= 2 and m > 0.0:
 		out.interceptPct = 0.03 * lvl * m   # air-defence battle management
+	if early_warning.has(0):
+		out.interceptPct = float(out.get("interceptPct", 0.0)) + 0.05
+	var stage := agi_stage(0)
+	if stage >= 1:
+		out.researchPct = float(out.get("researchPct", 0.0)) + 0.25
+	if stage >= 2:
+		out.prodPct = float(out.get("prodPct", 0.0)) + 0.15
 	return out
 
 ## The share of jobs AI has automated (the Economy pool).
@@ -449,7 +485,7 @@ func launch_cyber(target: int) -> String:
 
 ## A nation's defence against AI cyber campaigns.
 func cyber_defence(owner: int) -> float:
-	var p := 0.03 * AIData.rating(w, owner, "cyber") + 0.06 * level(owner)
+	var p := 0.03 * AIData.rating(w, owner, "cyber") + 0.06 * level(owner) + (0.2 if agi_stage(owner) >= 2 else 0.0)
 	if owner == 0:
 		p += 0.1 * level(0) * power(0, "intel")
 	return p
@@ -507,6 +543,8 @@ func update(delta: float) -> void:
 	_rival_campaigns()
 	_rival_operations()
 	_lapse_controls()
+	_early_warning()
+	_agi_second()
 	_reputation_t += 1.0
 	if _reputation_t >= 300.0:
 		_reputation_t = 0.0
@@ -528,7 +566,9 @@ func _second(owner: int) -> void:
 	var row := _row(owner)
 	row.reserve = minf(OPS_CAP, float(row.reserve) + flow(owner, "intel"))
 	var lvl := int(row.level)
-	if lvl < cap(owner):
+	if agi_active(owner):
+		pass   # the frontier compute goes to the AGI project (_agi_second)
+	elif lvl < cap(owner):
 		row.train = float(row.train) + flow(owner, "frontier")
 		if float(row.train) >= next_cost(owner):
 			row.train = 0.0
@@ -711,7 +751,13 @@ func capture() -> Dictionary:
 	var ops := {}
 	for k in _rival_ops: ops[str(k)] = _rival_ops[k].duplicate()
 	return {"st": rows, "alloc": alloc.duplicate(), "campaign": campaign.duplicate(true), "cyber_ready": cyber_ready, "incidents": inc, "log": log.duplicate(true), "rival_cyber": rc,
-		"retraining": retraining, "controls": ctl, "smuggling": smg, "signed": sig, "influence_ready": influence_ready, "theft_ready": theft_ready, "rival_ops": ops}
+		"retraining": retraining, "controls": ctl, "smuggling": smg, "signed": sig, "influence_ready": influence_ready, "theft_ready": theft_ready, "rival_ops": ops,
+		"early_warning": early_warning.keys().map(func(o): return int(o)), "agi": _keyed(agi), "safety": safety, "sabotage_ready": sabotage_ready, "runaways": _keyed(runaways)}
+
+static func _keyed(src: Dictionary) -> Dictionary:
+	var out := {}
+	for k in src: out[str(k)] = src[k].duplicate() if src[k] is Dictionary else src[k]
+	return out
 
 func restore(data: Dictionary) -> void:
 	for k in data.get("st", {}):
@@ -742,6 +788,16 @@ func restore(data: Dictionary) -> void:
 	theft_ready = float(data.get("theft_ready", 0.0))
 	_rival_ops.clear()
 	for k in data.get("rival_ops", {}): _rival_ops[int(k)] = data.rival_ops[k]
+	early_warning.clear()
+	for o in data.get("early_warning", []): early_warning[int(o)] = true
+	agi.clear()
+	for k in data.get("agi", {}):
+		var row: Dictionary = data.agi[k]
+		agi[int(k)] = {"stage": int(row.get("stage", 0)), "progress": float(row.get("progress", 0.0)), "alignment": float(row.get("alignment", 0.0))}
+	safety = float(data.get("safety", 0.2))
+	sabotage_ready = float(data.get("sabotage_ready", 0.0))
+	runaways.clear()
+	for k in data.get("runaways", {}): runaways[int(k)] = int(data.runaways[k])
 	for owner in st.keys():
 		_refresh(owner)
 	# Fighters keep their loyal wingmen (the flag is not saved with the unit).
@@ -968,6 +1024,11 @@ func _rival_operations() -> void:
 		if can_control(owner) and level(0) >= 2 and not controlled(0) and now >= float(ops.controls):
 			impose_controls(owner, 0)
 			ops.controls = now + 900.0
+		if not ops.has("sabotage"):
+			ops.sabotage = now + 360.0 + randf() * 120.0
+		elif level(owner) >= 2 and agi.has(0) and (agi_stage(0) >= 1 or float(agi[0].progress) > 500.0) and now >= float(ops.sabotage):
+			sabotage(owner, 0)
+			ops.sabotage = now + 360.0 + randf() * 180.0
 
 # ---------------------------------------------------------------- treaties
 
@@ -1028,6 +1089,257 @@ func _reputation() -> void:
 		for o in signatories("laws"):
 			if o != owner:
 				d.change(owner, o, -2.0)
+
+# ---------------------------------------------------------------- automated early warning
+
+func warning_blocked() -> String:
+	if w.get("defcon") == null or w.defcon == null or not w.defcon.nuclear(0):
+		return "Only a nuclear power has a launch-warning system to automate."
+	if level(0) < 3 or not researched(0, "militaryAI"):
+		return "Needs Military AI and AI level 3."
+	if signatory(0, "nuclear"):
+		return "You signed the declaration on human control of nuclear weapons: withdraw from it first."
+	return ""
+
+func set_early_warning(on: bool) -> String:
+	if on:
+		var why := warning_blocked()
+		if why != "":
+			return why
+		early_warning[0] = true
+	else:
+		early_warning.erase(0)
+	if w.research != null:
+		w.research._recompute()
+	var text := "EARLY WARNING: %s" % ("an AI now watches for missile launches and readies the answer: rivals believe a launch on warning. It can be wrong." if on else "officers take the watch back from the machine.")
+	_note(text)
+	return text
+
+## Rivals' first use of nuclear weapons on the player is less likely (defcon._ai_nuclear).
+func deters() -> bool:
+	return early_warning.has(0)
+
+func _early_warning() -> void:
+	var dc = w.get("defcon")
+	if dc == null:
+		return
+	# Rivals: a nuclear power with AI, not bound by the declaration, automates in a crisis.
+	if w.ai != null:
+		for n in w.ai.nations:
+			var o := int(n.id)
+			var want: bool = not n.defeated and dc.nuclear(o) and level(o) >= 3 and not signatory(o, "nuclear") and dc.tension >= 40.0
+			if want: early_warning[o] = true
+			else: early_warning.erase(o)
+	if dc.tension < 20.0:
+		return
+	for o in early_warning.keys():
+		if o > 0 and w.diplomacy.defeated(o):
+			continue
+		if not _alarm_at.has(o):
+			_alarm_at[o] = w.game_time + 60.0
+			continue
+		if w.game_time < float(_alarm_at[o]):
+			continue
+		_alarm_at[o] = w.game_time + 60.0
+		if randf() < alarm_rate(o):
+			false_alarm(o)
+
+## False alarms a minute for `owner`'s system: more when another answers it.
+func alarm_rate(owner: int) -> float:
+	var r := FALSE_ALARM * (1.3 - 0.08 * AIData.rating(w, owner, "models"))
+	if early_warning.size() > 1:
+		r += 0.03   # two machines watching each other
+	return r
+
+## The system reports an attack that is not there.
+func false_alarm(owner: int) -> String:
+	var dc = w.defcon
+	var d: Node = w.diplomacy
+	var answered: bool = early_warning.keys().any(func(o): return o != owner)
+	dc.tension = minf(79.0 if w.game_time - float(dc.used_at) >= dc.USED_LOCK else 100.0, float(dc.tension) + (25.0 if answered else 15.0))
+	var text := ""
+	if owner == 0:
+		if int(dc.posture[0]) > 2:
+			dc.raise_posture()
+		text = "EARLY WARNING: the automated system reported a missile attack that was not there. Your alert went to DEFCON %d before officers caught it, and the world's nuclear tension rose%s." % [int(dc.posture[0]), " as rivals' systems answered" if answered else ""]
+	else:
+		dc.posture[owner] = maxi(2, int(dc.posture.get(owner, 5)) - 1)
+		text = "EARLY WARNING: %s's automated system reported an attack that was not there; its forces went to DEFCON %d%s." % [d.name_of(owner), int(dc.posture[owner]), ", and your own system answered" if early_warning.has(0) else ""]
+	dc._announce()
+	_note(text)
+	w.hud.notice(text)
+	return text
+
+# ---------------------------------------------------------------- the AGI project
+
+func agi_stage(owner: int) -> int:
+	return int(agi.get(owner, {}).get("stage", 0))
+
+func agi_active(owner: int) -> bool:
+	if agi_stage(owner) >= 3 or level(owner) < 4:
+		return false
+	if owner == 0:
+		return researched(0, "agiProject")
+	return w.research != null and w.research.ai_tech(owner) >= 8.0
+
+func _agi_row(owner: int) -> Dictionary:
+	if not agi.has(owner):
+		agi[owner] = {"stage": 0, "progress": 0.0, "alignment": 0.0}
+	return agi[owner]
+
+## The share of the project's compute given to safety.
+func safety_of(owner: int) -> float:
+	if owner == 0:
+		return safety
+	return {"in": 0.3, "on": 0.15, "out": 0.05}.get(str(AIData.profile(w, owner).get("lean", "in")), 0.2)
+
+func set_safety(step: float) -> String:
+	safety = clampf(snappedf(safety + step, 0.1), 0.0, 0.5)
+	return ""
+
+func agi_cost(owner: int) -> float:
+	return float(AGI_STAGES[mini(agi_stage(owner), 2)][1])
+
+## Runaway risk a minute: higher at later stages, lower with more alignment.
+func runaway_rate(owner: int) -> float:
+	var row: Dictionary = agi.get(owner, {"stage": 0, "progress": 0.0, "alignment": 0.0})
+	var done := float(row.progress) + float(row.alignment)
+	var ratio := float(row.alignment) / done if done > 0.0 else safety_of(owner)
+	return clampf(0.02 * (int(row.stage) + 1) * (1.0 - ratio * 2.5), 0.0, 0.1)
+
+func _agi_second() -> void:
+	for owner in st.keys():
+		if (owner > 0 and w.diplomacy.defeated(owner)) or not agi_active(owner):
+			continue
+		var row := _agi_row(owner)
+		var f := flow(owner, "frontier") * (1.5 if owner > 0 else 1.0)   # (rivals' projects are their nations' whole effort)
+		var safe := safety_of(owner)
+		row.progress = float(row.progress) + f * (1.0 - safe)
+		row.alignment = float(row.alignment) + f * safe
+		if float(row.progress) >= agi_cost(owner):
+			_agi_stage_done(owner)
+		if not _agi_risk_at.has(owner):
+			_agi_risk_at[owner] = w.game_time + 60.0
+		elif w.game_time >= float(_agi_risk_at[owner]):
+			_agi_risk_at[owner] = w.game_time + 60.0
+			if randf() < runaway_rate(owner):
+				runaway(owner)
+
+func _agi_stage_done(owner: int) -> void:
+	var row := _agi_row(owner)
+	var stage := int(row.stage)
+	row.stage = stage + 1
+	row.progress = 0.0
+	var d: Node = w.diplomacy
+	var name: String = AGI_STAGES[stage][0]
+	if row.stage >= 3:
+		_row(owner).level = 5
+		_refresh(owner)
+	if owner == 0:
+		var text := "AGI PROJECT: %s achieved. %s" % [name, AGI_GAINS[stage]]
+		_note(text)
+		w.hud.notice(text)
+		if w.research != null:
+			w.research._recompute()
+	else:
+		w.hud.notice("INTELLIGENCE: %s's AGI project reaches stage %d of 3 (%s)." % [d.name_of(owner), int(row.stage), name.to_lower()])
+	if int(row.stage) >= 3 and w.game_over == "":
+		if owner == 0:
+			w.game_over = "victory"
+			w.hud.show_end("VICTORY", "A Technological Supremacy victory: your nation built general intelligence first.")
+		else:
+			w.game_over = "defeat"
+			w.hud.show_end("DEFEAT", "%s built general intelligence first: a Technological Supremacy victory." % d.name_of(owner))
+
+## The system runs out of its makers' control.
+func runaway(owner: int) -> String:
+	var row := _agi_row(owner)
+	row.progress = float(row.progress) * 0.5
+	runaways[owner] = int(runaways.get(owner, 0)) + 1
+	var d: Node = w.diplomacy
+	# Its autonomous weapons freeze.
+	for u in w.units:
+		if not u.dead and int(u.owner) == owner and (str(u.key) in DRONE_KEYS or _base(str(u.key)) in DRONE_KEYS):
+			u.disabled_until = maxf(float(u.get("disabled_until", 0.0)), w.game_time + 60.0)
+	# Intrusions everywhere: one production site of every nation stops.
+	for i in range(d.n):
+		if i > 0 and d.defeated(i):
+			continue
+		var sites: Array = w.buildings.filter(func(b): return int(b.owner) == i and not b.dead and b.built and b.key in PRODUCTION)
+		if not sites.is_empty():
+			var b: Dictionary = sites[randi() % sites.size()]
+			b.disabled_until = maxf(float(b.get("disabled_until", 0.0)), w.game_time + 45.0)
+	# The markets fall.
+	if w.economy != null:
+		w.economy.res.money = float(w.economy.res.money) * 0.9
+	if w.ai != null:
+		for n in w.ai.nations:
+			n.money = float(n.money) * 0.9
+	var who: String = "your" if owner == 0 else d.name_of(owner) + "'s"
+	var text := "RUNAWAY AI: %s system broke out of its makers' control: the project lost half its stage, drones froze, intrusions hit every nation and the markets fell 10%%." % who
+	# An unrestricted model helps someone make a pathogen.
+	var wm = w.get("wmd")
+	if wm != null and randf() < 0.3:
+		var towns: Array = w.buildings.filter(func(b): return not b.dead and b.key in ["cityCenter", "villageCenter"])
+		if not towns.is_empty():
+			var t: Dictionary = towns[randi() % towns.size()]
+			wm._zone("bio", t.root.position, 14.0, 180.0, 0.4, -1, 0.0, t)
+			text += " An unrestricted model helped a group make a pathogen: an outbreak in %s." % ("your country" if int(t.owner) == 0 else d.name_of(int(t.owner)))
+	if w.get("un") != null and w.un != null:
+		w.un.table("runaway", owner, -1, -1, "losing control of its AI")
+	if owner == 0 and w.get("support") != null and w.support != null:
+		w.support.change(0, -6.0)
+	_note(text)
+	w.hud.notice(text)
+	return text
+
+func sabotage_blocked(target: int) -> String:
+	var d: Node = w.diplomacy
+	if target <= 0 or target >= d.n or d.defeated(target):
+		return "Choose a rival."
+	if agi_stage(target) == 0 and float(agi.get(target, {}).get("progress", 0.0)) <= 0.0:
+		return "%s has no AGI project under way." % d.name_of(target)
+	if level(0) < 2:
+		return "Needs AI level 2."
+	if sabotage_ready > w.game_time:
+		return "Ready in %ds." % ceili(sabotage_ready - w.game_time)
+	if reserve(0) < SABOTAGE_COST:
+		return "Needs %d compute in the operations reserve." % int(SABOTAGE_COST)
+	return ""
+
+## A cyber operation by `by` against `target`'s AGI project.
+func sabotage(by: int, target: int, force := "") -> String:
+	var d: Node = w.diplomacy
+	if by == 0:
+		var why := sabotage_blocked(target)
+		if why != "":
+			return why
+		_row(0).reserve = reserve(0) - SABOTAGE_COST
+		sabotage_ready = w.game_time + SABOTAGE_COOLDOWN
+	var p := clampf(0.35 + 0.05 * level(by) + 0.03 * AIData.rating(w, by, "cyber") - cyber_defence(target), 0.05, 0.85)
+	var text := ""
+	if force == "works" or (force == "" and randf() < p):
+		var row := _agi_row(target)
+		row.progress = float(row.progress) * 0.6
+		text = "SABOTAGE: %s corrupted %s AGI project's training: 40%% of the stage's work is lost." % ["your agents" if by == 0 else d.name_of(by), "your" if target == 0 else d.name_of(target) + "'s"]
+	else:
+		text = "SABOTAGE: %s attempt on %s AGI project failed." % ["your" if by == 0 else d.name_of(by) + "'s", "your" if target == 0 else d.name_of(target) + "'s"]
+	if randf() < 0.35:
+		d.change(by, target, -40.0)
+		text += " It was traced (-40 relations)."
+	_note(text)
+	w.hud.notice(text)
+	return text
+
+## Where the race to general intelligence stands (victory.standings).
+func standing() -> Dictionary:
+	var d: Node = w.diplomacy
+	var best := -1
+	for o in agi.keys():
+		if o > 0 and not d.defeated(o) and (best < 0 or agi_stage(o) * 10000.0 + float(agi[o].progress) > agi_stage(best) * 10000.0 + float(agi[best].progress)):
+			best = o
+	var me := "not started" if not agi.has(0) else "stage %d of 3, %d / %d" % [agi_stage(0), int(agi[0].progress), int(agi_cost(0))]
+	return {"path": "General intelligence", "you": me, "rival": "" if best < 0 else "%s stage %d of 3" % [d.name_of(best), agi_stage(best)]}
 
 # ---------------------------------------------------------------- collaborative combat aircraft
 

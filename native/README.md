@@ -23,6 +23,29 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.76: automated early warning, and the race to general intelligence
+
+- **Automated early warning** (Defence > AI > Doctrine; for a nuclear power at AI level 3):
+  - An AI watches for launches and readies the answer. Rivals believe a launch on warning and are a third
+    less likely to strike you first; interception +5%.
+  - The machine sometimes reports an attack that is not there: your alert rises, and the world's nuclear
+    tension with it, worse when a rival's system answers yours.
+  - A nation bound by the declaration on human control of nuclear weapons (the United States at the start)
+    must withdraw from it first.
+  - Rival nuclear powers outside the declaration automate theirs in a crisis.
+- **The AGI project** (research after Frontier Models, AI level 4; Defence > AI > AGI):
+  - Three stages paid in compute: **automated research** (research +25%), **recursive
+    self-improvement** (production +15% and a far stronger cyber defence), and **general intelligence**:
+    AI level 5 and a **Technological Supremacy victory**.
+  - **Safety:** compute given to alignment slows the project. With too little, the system can run out of
+    control: the stage's work is halved, drones freeze, intrusions hit every nation, markets fall 10%, and an
+    unrestricted model may help someone make a pathogen. The Security Council takes it up.
+  - **Rivals race too**, and sabotage the leader; you can sabotage theirs (Operations page).
+  - The race appears among the Cabinet's paths to victory.
+- The AI tab has five pages: Compute, Doctrine, Operations, AGI and Rivals.
+
+Checks: tools/ai3-check.gd (28), tools/ai2-check.gd (43), tools/ai-check.gd (53).
+
 ## Version 0.9.75: the AI economy, chips, deepfakes, model theft, loyal wingmen and AI treaties
 
 - **The AI economy:**

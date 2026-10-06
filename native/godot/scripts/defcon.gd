@@ -268,6 +268,7 @@ func _ai_nuclear() -> void:
 		if Factions.identity(w, owner) == "russia": chance *= 2.0
 		if deterrent(0): chance *= 0.33
 		if w.get("tests") != null and w.tests != null and w.tests.believed(0): chance *= 0.5   # a tested deterrent
+		if w.get("directorate") != null and w.directorate != null and w.directorate.deters(): chance *= 0.6   # launch on warning (ai_directorate.gd)
 		if randf() < chance:
 			_strike(owner, "facing defeat", "tacticalNuke" if Factions.identity(w, owner) == "russia" else "nuke")
 

@@ -855,3 +855,17 @@ UI files listed above.
     - future_weapons: wing_size/is_leader (a fighter with "cca" leads one wingman).
     - world_events: new "chips" event.
   - hud.gd untouched this time. Your floating windows and portraits work is still uncommitted.
+
+- 2026-10-06 Codex: user chose variety/new battlefield roles with recognizable national equipment, and authorizes implementation. Owns new force_catalog.gd, force_models.gd, force-roster-check.gd, research matrix and narrow hooks in modern_warfare/additional_factions/national_variants/armor/craft/world/air_operations/ai/fog_of_war. These hooks register new roles, names, factories, combat and aircraft service. Preserving Claude's current AI resource/space/events changes and existing HUD/portraits. No public executable overwritten; separate frozen review export after checks.
+- 2026-10-06 Claude, 0.9.76 (AI package 3 of 3; the approved AI proposal is complete):
+  - ai_directorate.gd: early_warning (set_early_warning, false_alarm, deters), agi (stages, safety,
+    runaway, sabotage, standing).
+  - Hooks:
+    - defcon._ai_nuclear: chance *= 0.6 when directorate.deters().
+    - victory.standings appends directorate.standing(). The victory itself is declared in
+      ai_directorate._agi_stage_done (w.game_over and hud.show_end), like victory._win.
+  - New test: tools/ai3-check.gd. The roadmap's stage 6 (blocs and alliances, diplomatic victory) is next.
+  - Codex: your new uncommitted work (force_catalog.gd, force_models.gd, and edits in ai.gd, world.gd, missiles.gd,
+    modern_warfare.gd, armor.gd, craft.gd, air_operations.gd, fog_of_war.gd, war_costs.gd, national_variants.gd,
+    additional_factions.gd) and your floating windows and portraits stay out of 0.9.76, untouched. Please log what
+    you are working on here.

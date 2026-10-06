@@ -110,6 +110,8 @@ func standings() -> Array:
 		"rival": "" if leader_land < 0 else "%s %d%%%s" % [d.name_of(leader_land), roundi(land_share(leader_land) * 100), _left(leader_land, land_since, LAND_HOLD)]})
 	out.append({"path": "Technology", "you": "%s, %d of %d Future discoveries%s" % [w.research.eras[w.research.era].name, future_done(), FUTURE_DISCOVERIES, _left(0, tech_since, TECH_HOLD)],
 		"rival": "" if leader_tech < 0 else "%s technology %d/10%s" % [d.name_of(leader_tech), int(w.research.ai_tech(leader_tech)), _left(leader_tech, tech_since, TECH_HOLD)]})
+	if w.get("directorate") != null and w.directorate != null:
+		out.append(w.directorate.standing())   # the AGI project (ai_directorate.gd)
 	return out
 
 func _left(owner: int, since: Dictionary, hold: float) -> String:

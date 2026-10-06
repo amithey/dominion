@@ -59,6 +59,8 @@ The user approved the proposal at https://claude.ai/artifact/RTo2gGH4wHZfoPTXYLj
 
 ## Packages
 
+Released as 0.9.74, 0.9.75 and 0.9.76.
+
 1. **0.9.74:** F1 compute and data centres, F2 research chain and levels, F3 profiles, U1 AI tab, M1 doctrine, M2 fusion cell, M3 seekers and jam-resistant drones, I2 AI cyber.
-2. **Next:** E1 AI economy and automation, E2 chips and export controls, I1 imagery analysis, I3 synthetic influence, I4 model theft, M4 collaborative combat aircraft, M5 air-defence battle management, S2 UN AI treaties.
-3. **Then:** S1 automated early warning, S3 the AGI project with alignment and a Technological Supremacy victory.
+2. **0.9.75:** E1 AI economy and automation, E2 chips and export controls, I1 imagery analysis, I3 synthetic influence, I4 model theft, M4 collaborative combat aircraft, M5 air-defence battle management, S2 UN AI treaties.
+3. **0.9.76:** S1 automated early warning, S3 the AGI project with alignment and a Technological Supremacy victory.
