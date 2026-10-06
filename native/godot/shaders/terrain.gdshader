@@ -119,7 +119,7 @@ void fragment() {
 		vec3 rn = to_world(two_scale_normal(rock_normal, world_pos.zy, nd), n, Z, vec3(0, 1, 0)) * blend.x
 			+ to_world(two_scale_normal(rock_normal, p, nd), n, X, Z) * blend.y
 			+ to_world(two_scale_normal(rock_normal, world_pos.xy, nd), n, X, vec3(0, 1, 0)) * blend.z;
-		albedo += rock * w.w;
+		albedo += rock * vec3(1.55, 1.45, 1.3) * w.w;   // hillsides read as pale stone, not as a dark smudge from above
 		wn += rn * w.w;
 	}
 

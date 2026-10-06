@@ -713,6 +713,7 @@ func _exchange(m: Node) -> void:
 		b.button_pressed = r == res
 		b.focus_mode = Control.FOCUS_NONE
 		b.custom_minimum_size = Vector2(0, 40)
+		b.tooltip_text = "Trade %s: its price, your stock and the trend. Click to select it." % r.capitalize()
 		var row := HBoxContainer.new()
 		row.set_anchors_preset(Control.PRESET_FULL_RECT)
 		row.offset_left = 8

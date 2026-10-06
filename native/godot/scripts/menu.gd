@@ -386,6 +386,18 @@ func open_new_game() -> void:
 	_panel.remove_child(go)
 	foot.add_child(go)
 	_update_briefing()
+	_fit_wide.call_deferred()
+
+## The wide campaign sheet is cut to its contents, centred, so no empty box hangs below it.
+func _fit_wide() -> void:
+	await world.get_tree().process_frame
+	if _root == null or in_match or _card.anchor_right != 1.0 or _panel.get_child_count() == 0:
+		return
+	var tall: float = _panel.get_combined_minimum_size().y + _footer.get_combined_minimum_size().y + 110.0
+	tall = clampf(tall, 440.0, _root.size.y - 64.0)
+	var margin: float = (_root.size.y - tall) * 0.5
+	_card.offset_top = margin
+	_card.offset_bottom = -margin
 
 func _setup_select(title: String, items: Array, key: String, parent: Control) -> void:
 	var col := VBoxContainer.new()

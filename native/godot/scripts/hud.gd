@@ -1998,7 +1998,7 @@ var _log_rows: VBoxContainer
 ## three at most, each gone after 5 s.
 var _recent_notices := {}   # text -> when it last appeared (real seconds)
 
-func notice(text: String) -> void:
+func notice(text: String, at := Vector3.INF) -> void:
 	var now: float = Time.get_ticks_msec() / 1000.0
 	# The same message twice within 20 seconds is one message.
 	if now - float(_recent_notices.get(text, -100.0)) < 20.0:
@@ -2022,8 +2022,16 @@ func notice(text: String) -> void:
 	style.content_margin_bottom = 4
 	card.add_theme_stylebox_override("panel", style)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if at != Vector3.INF:
+		# A message about a place: click it to look there.
+		card.mouse_filter = Control.MOUSE_FILTER_STOP
+		card.tooltip_text = "Click to look at the place"
+		card.gui_input.connect(func(e):
+			if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+				world.cam_focus = Vector3(at.x, world.cam_focus.y, at.z)
+				world.clamp_camera())
 	var label := Label.new()
-	label.text = text
+	label.text = text + ("  (click to look)" if at != Vector3.INF else "")
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.max_lines_visible = 3
 	label.add_theme_font_size_override("font_size", 13)
@@ -2216,6 +2224,9 @@ func _build_research() -> void:
 	_rs_queue = VBoxContainer.new()
 	_rs_queue.add_theme_constant_override("separation", 6)
 	side_col.add_child(_rs_queue)
+	var tracks_hint := _text("Fields: each one raises a whole area for every unit and building, a level at a time. The tree above holds the individual discoveries.", 12, UI.MUTED)
+	tracks_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(tracks_hint)
 	_rs_tracks = HBoxContainer.new()
 	_rs_tracks.add_theme_constant_override("separation", 8)
 	column.add_child(_rs_tracks)
@@ -2442,7 +2453,7 @@ func _research_queue() -> void:
 	head.add_child(t)
 	head.add_child(_text("%d / %d" % [r.queue.size(), r.QUEUE_MAX], 13, UI.MUTED))
 	if r.queue.is_empty():
-		_rs_label(card, "Nothing in development: research points are piling up.", Color("e8a86f"), 13)
+		_rs_label(card, "Nothing in development: research points are piling up. Click a discovery in the tree, then press Develop.", Color("e8a86f"), 13)
 	for i in range(r.queue.size()):
 		var item: String = r.queue[i]
 		var track: bool = item.begins_with("track:")

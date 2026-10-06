@@ -440,6 +440,18 @@ func _standing_orders() -> void:
 			continue
 		run(op, int(nation))
 
+## "north-east of your capital, 120 m": where a place lies from your capital.
+func _bearing(at: Vector3) -> String:
+	var hq: Array = world.buildings.filter(func(b): return b.owner == 0 and b.key == "hq" and not b.dead)
+	if hq.is_empty():
+		return "in your land"
+	var d: Vector3 = at - hq[0].root.position
+	if d.length() < 25.0:
+		return "in your capital"
+	var names := ["east", "south-east", "south", "south-west", "west", "north-west", "north", "north-east"]
+	var sector: int = int(round(fposmod(atan2(d.z, d.x), TAU) / (TAU / 8.0))) % 8
+	return "%s of your capital, %d m away" % [names[sector], int(d.length())]
+
 func enemy_attempt(force_outcome := "") -> String:
 	if force_outcome == "" and clock < enemy_next:
 		return ""
@@ -456,6 +468,7 @@ func enemy_attempt(force_outcome := "") -> String:
 	# A stronger service's officers are harder to catch (a CIA officer more than most).
 	defence -= float(preload("res://scripts/national_profile.gd").bonuses(world, attacker).get("spyPct", 0.0))
 	var text := ""
+	var where := Vector3.INF
 	if force_outcome == "caught" or (force_outcome == "" and randf() < clampf(defence, 0.1, 0.9)):
 		d.change(0, attacker, -8.0)
 		add_report(attacker, "counterintel", "Enemy agent from %s captured and interrogated" % name, 8.0)
@@ -482,9 +495,10 @@ func enemy_attempt(force_outcome := "") -> String:
 			var t = _random_building(0)
 			if t != null:
 				covert_damage(t, t.max_hp * 0.4)
-				text = "SABOTAGE! %s operatives bombed your %s!" % [name, t.def.name]
+				where = t.root.position
+				text = "SABOTAGE! %s operatives bombed your %s, %s." % [name, t.def.name, _bearing(where)]
 	if text != "":
-		world.hud.notice(text)
+		world.hud.notice(text, where)
 	changed.emit()
 	return text
 

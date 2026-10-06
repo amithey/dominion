@@ -128,7 +128,7 @@ func _draw() -> void:
 		# A hairline of light along the top edge, as on every plate.
 		draw_line(r.position + Vector2(1, 1), Vector2(r.end.x - 1, r.position.y + 1), Color(1, 1, 1, 0.10), 1.0)
 		var border := Color("f2dfa9") if key == selected else (Color("7fb7e8") if queued else Color("83734f"))
-		draw_rect(r, border, false, 2.0 if key == selected or queued else 1.0)
+		draw_rect(r, border, false, 2.0 if key == selected or queued else 1.5)   # (1 px blinked out on scaled screens)
 		var locked: bool = stage == 0 and why != "" and not why.contains(" needs a ")
 		# The branch's colour down the left edge.
 		draw_rect(Rect2(r.position + Vector2(1, 1), Vector2(4, r.size.y - 2)), Color(colours.get(research.def_of(key).branch, Color("83734f")), 0.45 if locked else 1.0))

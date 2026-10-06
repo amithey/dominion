@@ -5730,6 +5730,8 @@ func capture_battle() -> void:
 # Same orbit as updateCamera() in js/main.js.
 var cam_ground := INF
 
+var view_shift := 0.0
+
 func update_camera(delta: float) -> void:
 	cam_dist += (cam_dist_target - cam_dist) * (1.0 - exp(-delta * 12.0))
 	# The camera rides the ground smoothly: panning over a hill no longer jolts
@@ -5739,6 +5741,17 @@ func update_camera(delta: float) -> void:
 	var focus := Vector3(cam_focus.x, cam_ground + cam_lift, cam_focus.z)
 	camera.global_position = focus + Vector3(sin(cam_yaw) * cam_dist * cos(cam_pitch), cam_dist * sin(cam_pitch), cos(cam_yaw) * cam_dist * cos(cam_pitch))
 	camera.look_at(focus)
+	# A window on the left or the build list on the right must not hide what it is
+	# about: the view slides so the focus stays in the middle of the free space.
+	var shift := 0.0
+	if hud != null and bench_phase < 0:
+		var vp_w: float = get_viewport().get_visible_rect().size.x
+		var left: float = hud._win.get_global_rect().end.x / vp_w if hud._win != null and hud._win.visible else 0.0
+		var right: float = (vp_w - hud._prod.get_global_rect().position.x) / vp_w if hud._prod != null and hud._prod.visible else 0.0
+		shift = (left - right) * 0.5
+	view_shift = lerpf(view_shift, shift, 1.0 - exp(-delta * 6.0))
+	var across: float = 2.0 * cam_dist * tan(deg_to_rad(camera.fov * 0.5)) * get_viewport().get_visible_rect().size.aspect()
+	camera.h_offset = -view_shift * across
 	# Sound: the listener stands at the focus; surf plays from the nearest shore.
 	if focus.distance_to(coast_focus) > 20.0:
 		coast_focus = focus
