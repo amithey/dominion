@@ -353,7 +353,7 @@ func _ai_space() -> void:
 			watch[owner] = _default_watch(owner)
 		if can_jam(owner) and w.diplomacy.at_war(owner, 0) and total(0) > 0 and float(_jam_ready.get(owner, -1.0)) <= w.game_time and randf() < 0.03:
 			jam(owner, 0)
-		if preload("res://scripts/cbrn_data.gd").has(w, owner, "nuclearAsat") and w.get("defcon") != null and w.defcon != null and w.defcon.existential(owner) and w.diplomacy.at_war(owner, 0) and total(0) >= 4 and randf() < 0.01:
+		if preload("res://scripts/cbrn_data.gd").has(w, owner, "nuclearAsat") and w.get("wmd") != null and w.wmd != null and w.wmd.armed(owner, "nuclear") and w.get("defcon") != null and w.defcon != null and w.defcon.existential(owner) and w.diplomacy.at_war(owner, 0) and total(0) >= 4 and randf() < 0.01:
 			orbital_nuke(owner)
 		if preload("res://scripts/national_arsenal.gd").identity(w, owner) in ASAT and tech >= 8.0 and w.diplomacy.at_war(owner, 0) and total(0) > 0 and float(n.money) > 4000.0 and randf() < 0.02:
 			n.money -= ASAT_COST

@@ -39,6 +39,8 @@ func _init(world: Node) -> void:
 func blocked(kind: String) -> String:
 	if not Cbrn.has(w, 0, "nuke"):
 		return "Only a nuclear-armed nation can test."
+	if w.get("wmd") != null and w.wmd != null and not w.wmd.armed(0, "nuclear"):
+		return "A device is assembled at a Strategic Weapons Complex: build one first."
 	if w.game_time - float(last.get(0, -1e9)) < COOLDOWN:
 		return "The test site is being readied: %ds." % ceili(COOLDOWN - (w.game_time - float(last[0])))
 	if _site(0) == Vector3.INF:
@@ -124,6 +126,8 @@ func update(delta: float) -> void:
 	for n in w.ai.nations:
 		var owner: int = int(n.id)
 		if n.defeated or not Cbrn.has(w, owner, "nuke") or w.game_time - float(last.get(owner, -1e9)) < 600.0:
+			continue
+		if w.get("wmd") != null and w.wmd != null and not w.wmd.armed(owner, "nuclear"):
 			continue
 		var outsider: bool = str(Cbrn.treaty(w, owner, "npt")) != "nws"
 		var fresh: bool = w.get("wmd") != null and w.wmd != null and owner in w.wmd.broken_out and int(count.get(owner, 0)) == 0

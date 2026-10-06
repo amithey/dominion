@@ -28,7 +28,7 @@ const TRAINED_AT := {"soldier": "barracks", "rocketSoldier": "barracks", "comman
 ## Modern units rival armies field alongside the export's training pool.
 const MODERN_POOL := ["fpvTeam", "atgmTeam", "manpads", "medic", "himars", "ewVehicle", "loiterer", "raptor", "df17", "shahedLauncher", "irisT", "hpmVehicle", "orca", "sixthGen", "tos1a", "brahmos", "aegisCruiser", "akinci", "harop"]
 ## Missiles a rival at war fires at the player, by its technology level.
-const STRIKE_TYPES := [[2.0, ["tactical", "cruise"]], [4.0, ["tactical", "cruise", "ballistic"]], [6.0, ["cruise", "ballistic", "hypersonic"]]]
+const STRIKE_TYPES := [[2.0, ["tactical", "cruise"]], [4.0, ["tactical", "cruise", "ballistic", "bunkerMissile", "antiRadar"]], [6.0, ["cruise", "ballistic", "hypersonic", "bunkerMissile", "antiRadar", "thermobaricMissile"]]]
 const STRIKE_TARGETS := ["hq", "cityCenter", "villageCenter", "airfield", "tankFactory", "barracks", "missileSilo", "powerPlant", "port", "samSite"]
 
 func setup(world_node: Node, ai: Dictionary, difficulty: String, speed := 1.0) -> void:
@@ -252,6 +252,13 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 		return {}
 	var target: Dictionary = targets[randi() % targets.size()]
 	var key: String = kinds[randi() % kinds.size()]
+	# The anti-radiation missile only for an air-defence site it knows of.
+	if key == "antiRadar":
+		var sams: Array = targets.filter(func(b): return b.key == "samSite")
+		if sams.is_empty():
+			key = "cruise"
+		else:
+			target = sams[randi() % sams.size()]
 	n.money -= 400.0
 	var m: Dictionary = world.missiles.fly(key, home.root.position + Vector3.UP * 3.0, target.root.position, n.id)
 	world.hud.notice("%s launched a %s at your %s!" % [n.name, world.missiles.def_of(key).get("name", "missile"), target.def.name])
@@ -318,6 +325,16 @@ func pick_building(n: Dictionary) -> String:
 		var town := "cityCenter" if cities * 2 < villages else "villageCenter"
 		if float(n.get("no_room", {}).get(town, 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, town):
 			return town
+	# Its weapons of mass destruction need their facilities (wmd.armed): a nation
+	# that has them builds a Strategic Weapons Complex once its technology
+	# allows, a second in a war, and a Special Weapons Laboratory.
+	var tech: float = float(n.get("tech", 0.0))
+	var NV := preload("res://scripts/national_variants.gd")
+	var wanted_complexes: int = 0 if tech < 5.0 else (2 if tech >= 7.0 and world.diplomacy != null and not world.diplomacy.enemies_of(n.id).is_empty() else 1)
+	for fac in [["strategicComplex", wanted_complexes], ["specialLab", 1 if tech >= 4.0 else 0]]:
+		var fkey: String = fac[0]
+		if int(counts.get(fkey, 0)) < int(fac[1]) and world.building_defs.has(fkey) and NV.builds(world, n.id, fkey) and float(n.get("no_room", {}).get(fkey, 0.0)) <= float(n.get("age", 0.0)):
+			return fkey
 	var plans := [MILITARY_PLAN, CITY_PLAN] if share < want_military else [CITY_PLAN, MILITARY_PLAN]
 	for plan in plans:
 		var short := []

@@ -309,6 +309,44 @@ func _blackout(at: Vector3, radius: float, seconds: float, owner: int, airburst:
 		if Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length() <= radius:
 			b.disabled_until = maxf(float(b.get("disabled_until", 0.0)), w.game_time + seconds)
 
+## Whether `owner` has a working facility for its `kind` of weapon ("nuclear":
+## a Strategic Weapons Complex; "special": a Special Weapons Laboratory). A
+## rival without one cannot use those weapons: destroying it disarms them.
+func armed(owner: int, kind: String) -> bool:
+	var key: String = "strategicComplex" if kind == "nuclear" else "specialLab"
+	return w.buildings.any(func(b): return int(b.owner) == owner and not b.dead and b.built and b.key == key)
+
+## A nuclear submarine at sea: a second strike survives the loss of the complexes.
+func at_sea(owner: int) -> bool:
+	return w.units.any(func(u): return int(u.owner) == owner and not u.dead and u.key == "nuclearSub")
+
+## A weapons facility destroyed (world.destroy_building): what it held is lost,
+## and a little of it spreads.
+func facility_destroyed(b: Dictionary) -> void:
+	var owner := int(b.owner)
+	var nuclear: bool = b.key == "strategicComplex"
+	if nuclear:
+		_zone("fallout", b.root.position, 18.0, 240.0, 0.5, int(b.get("last_by", -1)), 0.2)   # scattered fissile material
+	else:
+		_zone("chemical", b.root.position, 14.0, 90.0, 0.6, int(b.get("last_by", -1)), 0.3)   # agents released
+	var d: Node = w.diplomacy
+	var what := "Strategic Weapons Complex" if nuclear else "Special Weapons Laboratory"
+	if owner == 0:
+		# The weapons it held: the stock beyond what the remaining facilities hold is lost.
+		var ms: Node = w.missiles
+		var cat := "nuclear" if nuclear else "special"
+		var lost := 0
+		while ms.stored(cat) > ms.capacity(cat):
+			for k in ms.stock.keys():
+				if ms.category(k) == cat and int(ms.stock[k]) > 0:
+					ms.stock[k] = int(ms.stock[k]) - 1
+					lost += 1
+					break
+		w.hud.notice("Your %s has been destroyed%s." % [what, " with %d weapon%s in it" % [lost, "" if lost == 1 else "s"] if lost > 0 else ""])
+	else:
+		var left := armed(owner, "nuclear" if nuclear else "special")
+		w.hud.notice("%s's %s has been destroyed%s." % [d.name_of(owner), what, "" if left else (": it can no longer make or use those weapons" + (" except from its submarines" if nuclear and at_sea(owner) else ""))])
+
 ## A Nuclear Reactor destroyed (world.destroy_building): its core spreads.
 func reactor_destroyed(b: Dictionary) -> void:
 	var by := int(b.get("last_by", -1))
@@ -589,6 +627,8 @@ func _ai_use() -> void:
 		var owner: int = int(n.id)
 		if n.defeated or not d.at_war(owner, 0) or float(n.get("tech", 0.0)) < 3.0:
 			continue
+		if not armed(owner, "special"):
+			continue   # no laboratory, no chemical or biological weapons
 		if w.game_time - float(n.get("wmd_at", -1000.0)) < 180.0:
 			continue
 		var desperate: bool = w.get("defcon") != null and w.defcon != null and w.defcon.existential(owner)

@@ -257,6 +257,9 @@ func impact(key: String, at: Vector3, owner: int, from := Vector3.INF) -> void:
 	var nuclear: bool = key == "nuke" or def.get("nuclear", false)
 	# A burst high above (HEMP) or a microwave pulse (HPM) leaves the ground intact (wmd.gd).
 	var no_blast: bool = special in ["hemp", "emp"]
+	var Conv := preload("res://scripts/conventional_missiles.gd")
+	if special == "antiRadar":
+		at = Conv.home(world, at, owner)   # it rides the nearest air-defence radar's beam
 	if not no_blast:
 		world.effects.explosion(at + Vector3.UP, minf(radius, 60.0) * 0.22, true)
 	if nuclear and not no_blast:
@@ -265,7 +268,7 @@ func impact(key: String, at: Vector3, owner: int, from := Vector3.INF) -> void:
 		world.effects.explosion(at + Vector3.UP * 3.0, radius * 0.16, false)
 	if not no_blast:
 		world.logistics.damage_at(at, radius if nuclear else radius * 0.4, dmg, nuclear)
-	var source := {"owner": owner, "dead": true, "key": "missile"}
+	var source := {"owner": owner, "dead": true, "key": "missile", "pierce": special in ["penetrator", "thermobaric"]}
 	var hit := []
 	for ent in (world.units + world.buildings) if not no_blast else []:
 		if ent.dead:
@@ -288,8 +291,13 @@ func impact(key: String, at: Vector3, owner: int, from := Vector3.INF) -> void:
 			"brahmos":
 				mult = 2.0 if ent.get("naval", false) else 1.0
 			"penetrator":
-				# It bursts underground: what is built is crushed, bunkers too.
-				mult = 3.0 if building else 1.0
+				# It bursts underground: what is built is crushed, bunkers too;
+				# a conventional one does little to troops in the open.
+				mult = 3.0 if building else (1.0 if nuclear else 0.35)
+			"thermobaric", "antiRadar":
+				mult = Conv.mult(special, ent, building)
+				if special == "antiRadar" and ent.key in Conv.EMITTERS:
+					ent.disabled_until = maxf(float(ent.get("disabled_until", 0.0)), world.game_time + Conv.SILENCE)
 			"neutron":
 				# Neutrons pass through armour and walls: crews and people die, buildings stand.
 				# Its blast is small: buildings suffer only near the burst.

@@ -152,6 +152,9 @@ func run() -> void:
 	check(dc.deterrent(0), "a stored nuclear missile is a deterrent")
 	# The player's nuclear strike on a nuclear power: DEFCON 1, a second strike.
 	var their_hq: Dictionary = w.buildings.filter(func(b): return b.owner == nuke_rival and b.key == "hq")[0]
+	# Its second strike comes from a submarine at sea (wmd.at_sea), whatever happens to its complexes.
+	var boomer_at = w.water_near(their_hq.root.position, 240)
+	w.spawn_unit("nuclearSub", boomer_at if boomer_at != null else their_hq.root.position, nuke_rival)
 	w.missiles.impact("nuke", their_hq.root.position, 0)
 	check(dc.level() == 1, "a nuclear weapon used: DEFCON 1")
 	var answered: bool = dc.retaliation.has(nuke_rival)

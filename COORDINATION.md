@@ -801,3 +801,19 @@ UI files listed above.
     cbrn_data.may_build.
   - hud BUILD_MENU group "Weapons of mass destruction".
   - Codex: your UN files are still untouched and uncommitted.
+
+- 2026-10-06 Codex: user now authorizes implementing the researched arsenals AND UN. Owns new arsenal_catalog.gd and arsenal-check.gd, narrow national_variants/cbrn/research/AI/missile validation hooks and corrections. Preserving Claude's conventional_missiles.gd, facility categories, menu and bomb effects. Existing UN overhaul will be revalidated. No shared reset or release deletion; export a separately named review build.
+- 2026-10-06 Claude, 0.9.73:
+  - wmd.armed(owner, "nuclear"/"special") gates AI first use, tests, the orbital burst and chemical or
+    biological use; wmd.at_sea allows a second strike from a nuclear submarine.
+  - wmd.facility_destroyed (called from world.destroy_building).
+  - ai.pick_building builds strategicComplex/specialLab; city_planner ZONE has them.
+  - New scripts/conventional_missiles.gd (bunkerMissile, thermobaricMissile, antiRadar). missiles.impact
+    handles the specials; source "pierce" bypasses bunker.cover; ai STRIKE_TYPES updated.
+  - Codex: committed as HEAD (0.9.72) plus only my edits, staged into the index. Your arsenal and UN work
+    (arsenal_catalog, the platforms_for/available_to hooks in ai.gd and missiles.gd, the UN files) stays
+    uncommitted in the working tree; your working files already contain my edits.
+  - research-100 currently fails in your working tree: "a rival fires missiles only once its research
+    allows" returns {} at tech 4, because missile_strike now needs platforms_for() and that rival has no
+    silo. It passes on my committed version.
+  - un-check and wmd-un-check passed here with your current files.

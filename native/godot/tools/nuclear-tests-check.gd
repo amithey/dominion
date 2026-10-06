@@ -32,6 +32,9 @@ func run() -> void:
 
 	# ---- a nuclear test
 	w.economy.res.uranium = 500.0
+	check(nt.blocked("underground").contains("Strategic Weapons Complex"), "a device needs a Strategic Weapons Complex")
+	var hq0: Vector3 = w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0].root.position
+	w.place_building("strategicComplex", w.test_site("strategicComplex", hq0 + Vector3(-60, 0, 60)), 0, true)
 	var rel0: float = d.rel(0, 3)
 	var pts0: float = w.research.points
 	var q0: int = u.queue.size()
@@ -50,6 +53,11 @@ func run() -> void:
 	# A rival that has just broken out proves its bomb.
 	w.wmd.break_out(3)
 	w.ai.nations.filter(func(n): return n.id == 3)[0].defeated = false
+	nt._ai_tick = 60.0
+	nt.update(0.0)
+	check(int(nt.count.get(3, 0)) == 0, "a rival without a Strategic Weapons Complex cannot test")
+	var hq3: Vector3 = w.buildings.filter(func(b): return b.owner == 3 and b.key == "hq")[0].root.position
+	var iran_complex: Dictionary = w.place_building("strategicComplex", w.test_site("strategicComplex", hq3 + Vector3(50, 0, -50)), 3, true)
 	var tries := 0
 	while int(nt.count.get(3, 0)) == 0 and tries < 30:
 		nt._ai_tick = 60.0
@@ -108,12 +116,55 @@ func run() -> void:
 	w.economy.res.iron = 500.0
 	var at_silo: String = ms.produce(silo_b[0], "nuke") if not silo_b.is_empty() else "made at a Strategic Weapons Complex"
 	check(at_silo.contains("Strategic Weapons Complex"), "a nuclear warhead is not made at the silo")
+	for b in w.buildings.filter(func(x): return x.owner == 0 and x.key == "strategicComplex" and not x.dead): w.destroy_building(b)   # (the test site's)
 	check(ms.capacity("nuclear") == 0, "without a complex there is no room for warheads")
 	var complex: Dictionary = w.place_building("strategicComplex", w.test_site("strategicComplex", home2 + Vector3(70, 0, -70)), 0, true)
 	var made: String = ms.produce(complex, "nuke")
 	check(ms.capacity("nuclear") == 2 and made == "" and complex.queue.size() == 1, "a complex holds two and assembles one (%d; %s)" % [ms.capacity("nuclear"), made])
 	ms.stock["nuke"] = 2
 	check(ms.stored("conventional") == ms.stored() and ms.stored("nuclear") == 2, "warheads do not take the conventional missiles' room")
+
+	# ---- rivals need their facilities too
+	var china: Dictionary = w.ai.nations.filter(func(n): return n.id == 1)[0]
+	china.tech = 5.0
+	for b in w.buildings.filter(func(x): return x.owner == 1 and x.key == "strategicComplex" and not x.dead): w.destroy_building(b)
+	check(w.ai.pick_building(china) == "strategicComplex", "a nuclear rival at technology 5 builds a Strategic Weapons Complex first")
+	for sub in w.units.filter(func(x): return x.owner == 1 and x.key == "nuclearSub" and not x.dead): w.kill(sub)
+	var fly0: int = ms.flying.size()
+	w.defcon._strike(1, "test")
+	check(ms.flying.size() == fly0 and not w.wmd.armed(1, "nuclear"), "without a complex or a submarine at sea, it cannot launch a nuclear weapon")
+	var hq1: Vector3 = w.buildings.filter(func(b): return b.owner == 1 and b.key == "hq")[0].root.position
+	var cn_complex: Dictionary = w.place_building("strategicComplex", w.test_site("strategicComplex", hq1 + Vector3(-60, 0, 50)), 1, true)
+	w.defcon._strike(1, "test")
+	check(ms.flying.size() == fly0 + 1, "with one, it can")
+	cn_complex.last_by = 0
+	w.destroy_building(cn_complex)
+	check(not w.wmd.armed(1, "nuclear") and w.wmd.zones.any(func(z): return z.at.distance_to(cn_complex.root.position) < 1.0), "destroying it disarms the rival (and scatters a little fissile material)")
+	# Your own complex lost: the warheads it held go with it.
+	var mine: Dictionary = w.buildings.filter(func(b): return b.owner == 0 and b.key == "strategicComplex" and not b.dead)[0]
+	for b in w.buildings.filter(func(x): return x.owner == 0 and x.key == "strategicComplex" and not x.dead and x != mine): w.destroy_building(b)
+	ms.stock["nuke"] = 2
+	w.destroy_building(mine)
+	check(ms.stored("nuclear") == 0, "your complex destroyed: the warheads in it are lost")
+
+	# ---- the new conventional missiles
+	var silo_now: Array = ms.listed_at("missileSilo")
+	check(silo_now.has("bunkerMissile") and silo_now.has("thermobaricMissile") and silo_now.has("antiRadar") and silo_now.size() == 10, "the silo now lists ten conventional missiles")
+	var base_hq: Vector3 = w.buildings.filter(func(b): return b.owner == 2 and b.key == "hq")[0].root.position
+	var bunker_t: Dictionary = w.place_building("bunker", w.test_site("bunker", base_hq + Vector3(70, 0, 0)), 2, true)
+	bunker_t.max_hp = 100000.0
+	bunker_t.hp = 100000.0
+	ms.impact("bunkerMissile", bunker_t.root.position, 0)
+	var dug_hit: float = 100000.0 - bunker_t.hp
+	bunker_t.hp = 100000.0
+	ms.impact("tactical", bunker_t.root.position, 0)
+	var plain_hit: float = 100000.0 - bunker_t.hp
+	check(dug_hit > plain_hit * 3.0, "a bunker-buster strikes a bunker far harder than a tactical missile (%d against %d)" % [int(dug_hit), int(plain_hit)])
+	var sam: Dictionary = w.place_building("samSite", w.test_site("samSite", base_hq + Vector3(-70, 0, 30)), 2, true)
+	sam.max_hp = 100000.0
+	sam.hp = 100000.0
+	ms.impact("antiRadar", sam.root.position + Vector3(25, 0, 0), 0)
+	check(sam.hp < 100000.0 and float(sam.get("disabled_until", 0.0)) > w.game_time, "an anti-radiation missile aimed 25 m off homes on the SAM site and silences it")
 
 	# ---- the interface size
 	check(is_equal_approx(w.ui_scale, 0.8) and is_equal_approx(w.get_tree().root.content_scale_factor, 0.8), "the interface is 20% smaller by default")

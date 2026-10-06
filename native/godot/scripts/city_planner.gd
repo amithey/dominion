@@ -31,7 +31,7 @@ const ZONE := {"market": "civic", "bank": "civic", "cityHall": "civic", "school"
 	"warehouse": "industry", "foodDepot": "industry", "techPark": "industry", "chipFab": "industry", "waterTreatment": "industry", "mountainMine": "industry",
 	"powerPlant": "heavy", "nuclearReactor": "heavy", "oilRefinery": "heavy", "solarFarm": "farm", "farm": "farm", "fishingWharf": "farm",
 	"barracks": "army", "housing": "army", "tankFactory": "army", "ammoDepot": "army", "commandCenter": "civic", "samSite": "army", "bunker": "army",
-	"helipad": "army", "airfield": "airbase", "missileSilo": "airbase", "shipyard": "army", "port": "industry"}
+	"helipad": "army", "airfield": "airbase", "missileSilo": "airbase", "strategicComplex": "airbase", "specialLab": "heavy", "shipyard": "army", "port": "industry"}
 const TOWNS := ["hq", "cityCenter", "villageCenter"]
 const CHECKS := 30
 

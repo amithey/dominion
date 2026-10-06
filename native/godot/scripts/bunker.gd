@@ -39,6 +39,8 @@ static func update(w: Node, delta: float) -> void:
 
 ## Damage multiplier for `amount` from `source` hitting `target` (1 = full).
 static func cover(w: Node, target: Dictionary, source: Dictionary) -> float:
+	if source.get("pierce", false):
+		return 1.0   # a penetrating or fuel-air warhead: no shelter from it (conventional_missiles.gd)
 	if source.get("fly", false) or source.get("is_building", false) or not source.has("key"):
 		return 1.0  # aircraft, missiles and fortifications hit as hard as ever
 	if source.key in ["artillery", "mlrs", "himars", "tos1a"]:

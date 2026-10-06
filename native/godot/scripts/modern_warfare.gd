@@ -43,6 +43,7 @@ const CLASS_OF := {"cruise": "cruise", "cluster": "cruise", "emp": "cruise", "an
 	"tactical": "shortBallistic", "ballistic": "ballistic", "hypersonic": "hypersonic", "nuke": "icbm", "df17": "hypersonic", "brahmos": "supersonic",
 	"tacticalNuke": "shortBallistic", "hydrogenBomb": "icbm", "tsarBomba": "icbm", "neutronBomb": "ballistic", "nuclearEmp": "icbm",
 	"mirv": "icbm", "mirvWarhead": "icbm", "nuclearGlide": "glide", "burevestnik": "cruise", "poseidon": "underwater", "bunkerBuster": "ballistic", "nuclearCruise": "cruise",
+	"bunkerMissile": "shortBallistic", "thermobaricMissile": "cruise", "antiRadar": "supersonic",
 	"dirtyBomb": "shortBallistic", "chemical": "shortBallistic", "chlorine": "shortBallistic", "riotAgent": "shortBallistic",
 	"incapacitant": "shortBallistic", "anthrax": "shortBallistic", "bioweapon": "shortBallistic"}
 const INTERCEPT := {
@@ -183,6 +184,7 @@ static func apply(w: Node) -> void:
 	preload("res://scripts/national_capabilities.gd").apply(w)   # Russia's from the war in Ukraine
 	preload("res://scripts/space.gd").apply(w)   # anti-satellite weapons
 	preload("res://scripts/wmd.gd").apply(w)   # nuclear yields, EMP, chemical, biological, radiological
+	preload("res://scripts/conventional_missiles.gd").apply(w)   # bunker-buster, thermobaric, anti-radiation
 	var types: Dictionary = w.map.missiles.types
 	for key in types:
 		var odds: Dictionary = INTERCEPT[CLASS_OF.get(key, "cruise")]

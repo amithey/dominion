@@ -260,6 +260,8 @@ func _ai_nuclear() -> void:
 		posture[owner] = want if want < int(posture[owner]) or w.game_time - used_at > USED_LOCK else int(posture[owner])
 		if int(posture[owner]) != 2 or not d.at_war(owner, 0) or not existential(owner) or w.research.ai_tech(owner) < 6.0:
 			continue
+		if w.get("wmd") != null and w.wmd != null and not w.wmd.armed(owner, "nuclear"):
+			continue   # no Strategic Weapons Complex: no warheads to use first
 		if w.game_time - float(n.get("nuked_at", -1000.0)) < 240.0:
 			continue
 		var chance := 0.04
@@ -281,6 +283,10 @@ func deterrent(owner: int) -> bool:
 ## Rival `owner` fires a nuclear missile at the player's town nearest to it.
 func _strike(owner: int, why: String, key := "nuke") -> void:
 	var d: Node = w.diplomacy
+	# Warheads come from a Strategic Weapons Complex; a second strike may come from a submarine.
+	var wm = w.get("wmd")
+	if wm != null and not wm.armed(owner, "nuclear") and not wm.at_sea(owner):
+		return
 	# From a silo, else its capital, else any town it still holds.
 	var home = null
 	for b in w.buildings:

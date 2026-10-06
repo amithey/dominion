@@ -23,6 +23,27 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.73: rivals need their weapons facilities, and three new conventional missiles
+
+- **Rivals need the facilities too** (wmd.armed):
+  - Without a **Strategic Weapons Complex** a rival cannot use a nuclear weapon first, test one, or burst one
+    in orbit. Without a **Special Weapons Laboratory** it cannot use chemical or biological weapons.
+  - A nuclear rival builds a complex once its technology allows (a second one in a war), and a rival with
+    such programmes builds a laboratory.
+  - **Destroying the facility disarms it.** A nuclear submarine at sea still guarantees a second strike.
+  - A destroyed complex scatters a little fissile material; a destroyed laboratory releases its agents.
+  - Your own complex or laboratory destroyed takes the weapons it held with it.
+  - A nuclear test now needs a complex: the device is assembled there.
+- **Three new conventional missiles** at the silo (now ten), any nation:
+  - **Bunker-Buster Missile:** buildings, bunkers and silos take three times the damage, and bunkers shelter no
+    one.
+  - **Thermobaric Missile:** a wide fuel-air blast that kills infantry, dug in or not.
+  - **Anti-Radiation Missile:** homes on the nearest air-defence radar within 40 m of its aim; triple damage,
+    and the radar falls silent for 30 s.
+  - Rivals fire the bunker-buster at your strongholds and the anti-radiation missile at the SAM sites they
+    know of.
+Checks: tools/nuclear-tests-check.gd (37).
+
 ## Version 0.9.72: weapons of mass destruction get facilities of their own
 
 - **Where each weapon is made:** the Missile Silo had more unconventional weapons in its list than

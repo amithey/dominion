@@ -5432,6 +5432,8 @@ func destroy_building(b: Dictionary) -> void:
 	b.dead = true
 	if b.key == "nuclearReactor" and wmd != null:
 		wmd.reactor_destroyed(b)   # its core spreads downwind
+	if b.key in ["strategicComplex", "specialLab"] and wmd != null:
+		wmd.facility_destroyed(b)   # what it held is lost; a rival may be disarmed
 	if support != null:
 		support.building_lost(b)
 	if events != null:
