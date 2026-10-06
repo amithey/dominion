@@ -390,6 +390,13 @@ static func build() -> Theme:
 		t.set_stylebox("normal", kind, normal)
 		t.set_stylebox("hover", kind, hover)
 		for state in ["pressed", "hover_pressed"]:
+			if kind == "RowButton":
+				# A list row carries its own light labels: selected it turns deep blue
+				# with a gold frame, not sand (light text on sand could not be read).
+				t.set_stylebox(state, kind, box(Color("2d4863"), GOLD, 2, 2, 6.0))
+				t.set_color("font_%s_color" % state, kind, BRIGHT)
+				t.set_color("icon_%s_color" % state, kind, BRIGHT)
+				continue
 			t.set_stylebox(state, kind, selected)
 			t.set_color("font_%s_color" % state, kind, INK)
 			t.set_color("icon_%s_color" % state, kind, INK)

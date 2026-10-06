@@ -181,6 +181,8 @@ func campaign() -> String:
 	_campaign[0] = float(_campaign.get(0, 0.0)) + 120.0
 	return "Your diplomats campaign for a seat at the next election (in %ds)." % ceili(term_ends - w.game_time)
 
+var _told_presidency := false
+
 func _rotate() -> void:
 	var order: Array = council()
 	order.sort_custom(func(a, b): return w.diplomacy.name_of(a) < w.diplomacy.name_of(b))
@@ -190,7 +192,8 @@ func _rotate() -> void:
 	var at: int = order.find(president)
 	president = order[(at + 1) % order.size()]
 	presidency_ends = w.game_time + PRESIDENCY
-	if president == 0 and w.hud != null:
+	if president == 0 and w.hud != null and not _told_presidency:
+		_told_presidency = true   # once is news; every fourth minute is noise
 		w.hud.notice("UN: you hold the presidency of the Security Council this month: your drafts are taken first.")
 
 ## The Council recommends a Secretary-General by straw polls (a permanent

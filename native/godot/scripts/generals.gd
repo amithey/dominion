@@ -92,7 +92,8 @@ func ident(owner: int) -> String:
 func _name_for(owner: int) -> String:
 	var pool: Array = NAMES.get(ident(owner), NAMES["*"])
 	var taken: Array = roster.map(func(g): return g.name)
-	for i in range(20):
+	taken.append_array(candidates.map(func(c): return c.name))   # three candidates are three different people
+	for i in range(30):
 		var n := "Gen. %s" % pool[randi() % pool.size()]
 		if not n in taken:
 			return n

@@ -405,6 +405,8 @@ func _operations(e: Node, d: Node) -> void:
 		b.add_theme_font_size_override("font_size", 13)
 		b.add_theme_color_override("font_color", hud._nation_colour(id).lightened(0.35))
 		b.add_theme_color_override("font_pressed_color", hud._nation_colour(id).lightened(0.6))
+		for state in ["pressed", "hover_pressed"]:
+			b.add_theme_stylebox_override(state, hud.UI.box(Color("2d4863"), hud._nation_colour(id).lightened(0.2), 2, 2, 9.0))
 		var target: int = id
 		b.pressed.connect(func():
 			hud.spy_target = target
@@ -937,7 +939,7 @@ func _territory_yours() -> void:
 		col.add_theme_constant_override("separation", 0)
 		r.add_child(col)
 		col.add_child(hud._text("+" + (item[2] % item[1]), 15, hud.UI.CREAM, true))
-		col.add_child(hud._text("per second", 10, hud.UI.MUTED))
+		col.add_child(hud._text("per second", 12, hud.UI.MUTED))
 		yields.add_child(box)
 	# Land for sale at your town halls.
 	var sale: VBoxContainer = hud._card(hud.GOLD)

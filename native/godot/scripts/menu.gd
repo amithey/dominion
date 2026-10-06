@@ -55,6 +55,7 @@ const TIPS := [
 func setup(world_node: Node) -> void:
 	world = world_node
 	setup_options = world.match_config.duplicate()
+	setup_options.opening = "light"   # every campaign from the menu opens the same way for every nation
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 20
 	_root = Control.new()
@@ -100,6 +101,7 @@ func setup(world_node: Node) -> void:
 	emblem.texture = UI.icon("territory")
 	emblem.modulate = UI.GOLD
 	emblem.custom_minimum_size = Vector2(70, 70)
+	emblem.visible = emblem.texture != null   # no empty gap before the title when the emblem is missing
 	emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	crest.add_child(emblem)
@@ -113,7 +115,7 @@ func setup(world_node: Node) -> void:
 	_subtitle = Label.new()
 	_subtitle.text = UI.caps("A world to shape. A nation to lead.")
 	_subtitle.add_theme_color_override("font_color", UI.GOLD)
-	_subtitle.add_theme_font_size_override("font_size", 12)
+	_subtitle.add_theme_font_size_override("font_size", 14)
 	_brand.add_child(_subtitle)
 	var rule := ColorRect.new()
 	rule.color = Color(UI.GOLD, 0.6)
@@ -279,11 +281,12 @@ func open_pause() -> void:
 		close())
 	_button("Load Game", open_load)
 	_button("Settings", open_settings)
-	var cheat := _button("Testing: everything (F10)", func():
-		world.hud.notice(preload("res://scripts/cheats.gd").everything(world))
-		close())
-	cheat.name = "CheatEverything"
-	cheat.tooltip_text = "For testing the game: every era and all your nation's research, $1,000,000 more and every store filled."
+	if preload("res://scripts/cheats.gd").allowed():
+		var cheat := _button("Testing: everything (F10)", func():
+			world.hud.notice(preload("res://scripts/cheats.gd").everything(world))
+			close())
+		cheat.name = "CheatEverything"
+		cheat.tooltip_text = "For testing the game: every era and all your nation's research, $1,000,000 more and every store filled."
 	_button("Quit to Main Menu", func():
 		world.get_tree().paused = false
 		world.get_tree().reload_current_scene())
@@ -376,6 +379,9 @@ func open_new_game() -> void:
 	foot.add_child(back)
 	var go := _button("Begin campaign", func(): start(setup_difficulty))
 	go.name = "BeginCampaign"
+	go.add_theme_stylebox_override("normal", UI.box(Color("2c6a50"), UI.GOLD, 1, 6, 9.0))
+	go.add_theme_stylebox_override("hover", UI.box(Color("39866a"), UI.BRIGHT, 1, 6, 9.0))
+	go.add_theme_color_override("font_color", UI.BRIGHT)
 	go.custom_minimum_size = Vector2(250, 50)
 	_panel.remove_child(go)
 	foot.add_child(go)

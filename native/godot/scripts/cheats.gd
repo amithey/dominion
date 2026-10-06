@@ -9,6 +9,11 @@ extends RefCounted
 
 const MONEY := 1000000.0
 
+## The testing shortcuts (F8, F10 and the pause-menu button) exist only when
+## running from the editor, or with --testing; an installed game hides them.
+static func allowed() -> bool:
+	return OS.has_feature("editor") or "--testing" in OS.get_cmdline_user_args() or "--testing" in OS.get_cmdline_args()
+
 static func everything(w: Node) -> String:
 	var r: Node = w.research
 	var opened := 0

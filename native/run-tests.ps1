@@ -1,4 +1,4 @@
-# Runs every automated test of the Godot game, one after another, and prints a
+﻿# Runs every automated test of the Godot game, one after another, and prints a
 # table. A test fails if it reports FAIL, does not report PASS, times out, or
 # prints any SCRIPT ERROR along the way (an error in code it happened to pass
 # through). Also runs the browser game's tests.
@@ -12,6 +12,7 @@ $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.e
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
+    @('playtest fixes: Esc, Space pause, speed keys, the common opening, one notice per message, the beginner guide', @('--script', 'res://tools/ux-fixes-check.gd'), 'UX_FIXES PASS', 240),
     @('22 national rosters, new combat roles, aircraft service and save round trip', @('--script', 'res://tools/force-roster-check.gd'), 'FORCE_ROSTER PASS', 240),
     @('floating window input, queued alerts, resize, UI scaling and munition portraits', @('--script', 'res://tools/windows-portraits-check.gd'), 'WINDOWS_PORTRAITS PASS', 240),
     @('UN Council, Assembly, consent, humanitarian access, future members and saves', @('--script', 'res://tools/un-check.gd'), 'UN_CHECK PASS', 240),

@@ -1,4 +1,16 @@
 extends RefCounted
+
+## What no nation starts with: aircraft, ships, armour and special forces are
+## built or bought (every nation, you and the rivals alike, opens with a town,
+## three workers and a small guard).
+const OPENING_EXCLUDED := ["commando", "sniper", "tankFactory"]
+
+## Whether `key` is part of the opening: workers and plain infantry, no vehicle, ship or aircraft.
+static func in_opening(key: String) -> bool:
+	if key in OPENING_EXCLUDED:
+		return false
+	var w = load("res://scripts/world.gd")
+	return not (key in w.AIR or key in w.NAVAL or key in w.VEHICLES)
 const DEFAULT := {"map":"island","players":4,"nation":0,"style":"standard","pace":0.75}
 ## How fast the world turns: everything (movement, building, training,
 ## research, the economy, the seasons, the rivals) runs at this share of the
@@ -30,6 +42,8 @@ static func normalize(options: Dictionary) -> Dictionary:
 		"style":"sandbox" if str(options.get("style","standard"))=="sandbox" else "standard",
 		"pace":_pace(options.get("pace", 0.75))}
 	# Fog of war (fog_of_war.gd): on unless chosen off, or a sandbox match.
+	if str(options.get("opening", "")) == "light":
+		out.opening = "light"   # a campaign from the New Game screen: a town, workers and a small guard
 	out.fog = bool(options.get("fog", out.style != "sandbox")) if not (options.get("fog") is String) else str(options.fog) == "true"
 	if options.get("rivals") is Array:
 		out.rivals = []
@@ -172,6 +186,8 @@ static func apply(data: Dictionary, options: Dictionary) -> void:
 		var out := []
 		for owner in range(order.size()):
 			for entry in data[group]:
+				if str(options.get("opening", "")) == "light" and not in_opening(str(entry.key)):
+					continue   # every nation opens the same way: a town, workers and a small guard
 				if int(entry.owner) == order[owner]:
 					var copy: Dictionary = entry.duplicate(true)
 					copy.owner = owner

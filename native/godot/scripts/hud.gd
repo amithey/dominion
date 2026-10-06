@@ -20,8 +20,8 @@ const BUILD_MENU := {
 }
 ## The build list in groups under each tab, in the order a city grows.
 const BUILD_GROUPS := {
-	"Economy": [["Settlements", ["villageCenter", "cityCenter"]], ["Homes", ["cottage", "housing", "residential", "workerHouse"]],
-		["Food and resources", ["farm", "extractor", "mountainMine", "offshoreRig", "fishingWharf", "foodDepot", "warehouse"]],
+	"Economy": [["Food and resources", ["farm", "extractor", "mountainMine", "offshoreRig", "fishingWharf", "foodDepot", "warehouse"]],
+		["Homes", ["cottage", "housing", "residential", "workerHouse"]], ["Settlements", ["villageCenter", "cityCenter"]],
 		["Trade and industry", ["market", "port", "bank", "oilRefinery", "powerPlant"]]],
 	"Civic & research": [["Education and science", ["school", "library", "university", "techPark", "chipFab", "aiDataCenter"]],
 		["Public services", ["hospital", "cityHall", "tvStation", "policeStation", "courthouse"]], ["State", ["intelAgency", "nuclearReactor"]]],
@@ -186,7 +186,7 @@ func _build_top_bar() -> void:
 	# The yield strip: a lit band closed by a gold rule, as a 4X game wears it.
 	var style := UI.band(5.0, UI.PANEL_TOP, UI.PANEL_LOW, Color(UI.GOLD, 0.65), 1)
 	style.content_margin_left = 14
-	style.content_margin_right = 230 # reserve the era cartouche
+	style.content_margin_right = 400 # reserve the speed buttons and the era cartouche
 	style.content_margin_bottom = 7
 	bar.add_theme_stylebox_override("panel", style)
 	bar.anchor_right = 1.0
@@ -262,6 +262,7 @@ func _build_top_bar() -> void:
 	right_end.alignment = BoxContainer.ALIGNMENT_END
 	right_end.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(right_end)
+	right_end.add_child(_speed_controls())
 	right_end.add_child(cartouche)
 	# A shared command dock under the resource strip; the open screen stays lit.
 	var rack := PanelContainer.new()
@@ -290,6 +291,79 @@ func _build_top_bar() -> void:
 		button.focus_mode = Control.FOCUS_NONE
 		button.pressed.connect(b[2])
 		row.add_child(button)
+	# Build sits with the other screens (it used to float alone at the far right).
+	var build_button := Button.new()
+	build_button.name = "BuildDock"
+	build_button.text = "Build"
+	build_button.icon = UI.icon("build")
+	build_button.expand_icon = true
+	build_button.custom_minimum_size = Vector2(104, 48)
+	build_button.add_theme_font_size_override("font_size", 14)
+	build_button.add_theme_constant_override("icon_max_width", 22)
+	build_button.tooltip_text = "Build list (B): houses, farms, mines, factories and more"
+	build_button.focus_mode = Control.FOCUS_NONE
+	build_button.pressed.connect(func(): toggle_build())
+	row.add_child(build_button)
+	row.move_child(build_button, 0)
+	refresh_speed()
+
+var _guide: Node
+
+## The beginner's guide opens in a first campaign (until it is skipped or done).
+func start_guide() -> void:
+	if _guide != null and is_instance_valid(_guide):
+		_guide.queue_free()
+		_guide = null
+	if world.game_time > 5.0 or not preload("res://scripts/beginner_guide.gd").wanted() or "--no-guide" in OS.get_cmdline_user_args():
+		return
+	_guide = preload("res://scripts/beginner_guide.gd").new()
+	add_child(_guide)
+	move_child(_guide, 0)   # beneath every window
+	_guide.setup(world, self)
+
+## Pause and speed, beside the era: Space pauses, + and - change the speed.
+var _speed_buttons: Array = []
+var _paused_banner: PanelContainer
+
+func _speed_controls() -> Control:
+	var box := PanelContainer.new()
+	box.add_theme_stylebox_override("panel", UI.plate(UI.BAND_TOP, UI.BAND_LOW, Color(UI.TRIM, 0.8), 4.0))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 2)
+	box.add_child(row)
+	for entry in [[0.0, "II", "Pause (Space)"], [1.0, "1x", "Normal speed (-)"], [2.0, "2x", "Twice as fast (+)"], [4.0, "4x", "Four times as fast (+)"]]:
+		var b := Button.new()
+		b.text = entry[1]
+		b.toggle_mode = true
+		b.custom_minimum_size = Vector2(34, 28)
+		b.focus_mode = Control.FOCUS_NONE
+		b.tooltip_text = entry[2]
+		b.add_theme_font_size_override("font_size", 14)
+		var speed: float = entry[0]
+		b.pressed.connect(func(): world.set_speed(speed))
+		row.add_child(b)
+		_speed_buttons.append([speed, b])
+	_paused_banner = PanelContainer.new()
+	_paused_banner.add_theme_stylebox_override("panel", UI.plate(Color(UI.PANEL_TOP, 0.92), Color(UI.PANEL_LOW, 0.92), UI.GOLD, 6.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
+	_paused_banner.anchor_left = 0.5
+	_paused_banner.anchor_right = 0.5
+	_paused_banner.offset_left = -150
+	_paused_banner.offset_right = 150
+	_paused_banner.offset_top = 104
+	_paused_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var label := _text("PAUSED  ·  Space to resume", 18, UI.CREAM, true)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_paused_banner.add_child(label)
+	_paused_banner.visible = false
+	add_child(_paused_banner)
+	return box
+
+func refresh_speed() -> void:
+	var speed: float = world.game_speed
+	for pair in _speed_buttons:
+		pair[1].set_pressed_no_signal(is_equal_approx(pair[0], speed) or (pair[0] == 0.0 and speed <= 0.0))
+	if _paused_banner != null:
+		_paused_banner.visible = speed <= 0.0
 
 # ---------------------------------------------------------------- production list
 
@@ -425,7 +499,7 @@ func _build_production() -> void:
 	reopen.add_theme_constant_override("icon_max_width", 22)
 	reopen.tooltip_text = "Open the build list (B)"
 	reopen.focus_mode = Control.FOCUS_NONE
-	reopen.visible = true
+	reopen.visible = false   # the dock's Build button replaces it
 	reopen.pressed.connect(func(): set_production_open(true))
 	add_child(reopen)
 
@@ -474,7 +548,7 @@ func _section(title: String) -> void:
 func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: float, locked: String, action: Callable) -> void:
 	var b := Button.new()
 	b.theme_type_variation = "RowButton"
-	b.custom_minimum_size = Vector2(0, 76)
+	b.custom_minimum_size = Vector2(0, 92)
 	b.focus_mode = Control.FOCUS_NONE
 	b.tooltip_text = desc if locked == "" else "%s\n%s" % [locked, desc]
 	b.set_meta("cost", cost)
@@ -511,9 +585,9 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 	name.add_theme_font_size_override("font_size", 15)
 	text.add_child(name)
 	var line := _text(locked if locked != "" else desc, 12, UI.BAD if locked != "" else UI.MUTED)
-	line.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	line.max_lines_visible = 2
 	line.custom_minimum_size = Vector2(190, 0)
-	line.clip_text = true
 	text.add_child(line)
 	text.add_child(_cost_row(cost))
 	if seconds > 0.0:
@@ -615,7 +689,7 @@ func _build_selection() -> void:
 		var stack := VBoxContainer.new()
 		stack.add_theme_constant_override("separation", -2)
 		plate.add_child(stack)
-		var cap := _text(caption, 10, UI.MUTED)
+		var cap := _text(caption, 12, UI.MUTED)
 		cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		stack.add_child(cap)
 		var value := _text("", 16, UI.CREAM, true)
@@ -742,7 +816,7 @@ func _build_help() -> void:
 	col.add_theme_constant_override("separation", 5)
 	body.add_child(col)
 	for line in [["Move the camera", "W A S D or the arrow keys, the screen edge, or drag with the middle mouse button"],
-			["Turn / tilt / zoom", "Q E  ·  R F  ·  mouse wheel (zooms toward the cursor)"],
+			["Turn / tilt / zoom", "Hold the middle mouse button and drag to turn and tilt  ·  mouse wheel zooms toward the cursor"],
 			["Select", "Click a unit or building, or drag a box around units  ·  double click: every unit of its kind on screen"],
 			["Cabinet", "Tab: the whole state at a glance, every ministry in its colour"],
 			["Orders", "Right click: move or attack  ·  Ctrl + right click: attack-move"],
@@ -750,8 +824,8 @@ func _build_help() -> void:
 			["Aircraft", "Limited salvos; empty aircraft return to a supplied airfield / helipad to rearm"],
 			["Build", "Pick a building in the list on the right, click a hex in your city (Shift keeps placing)"],
 			["Screens", "Y research  ·  G diplomacy  ·  M market  ·  I intelligence  ·  T territory"],
-			["Game", "F5 save  ·  F9 load  ·  Esc cancel / pause menu  ·  F1 this help"],
-			["Testing", "F8: treasury and full stores, increased army capacity  ·  F10 (or the pause menu): everything, all research too"],
+			["Game", "F5 save  ·  F9 load  ·  Esc cancel / pause menu  ·  L message log  ·  U United Nations  ·  K defence  ·  F1 this help"],
+			["Speed", "Space: pause  ·  + and -: 1x, 2x, 4x (the buttons beside the era do the same)"],
 			["Windows", "Drag a window by its title to move it; its contents and pending decisions stay open"],
 			["Minimap", "Click or drag on it to jump anywhere on the island"]]:
 		var row := HBoxContainer.new()
@@ -922,7 +996,7 @@ func _update_panel() -> void:
 	_update_health_color()
 	var mode := _panel_mode()
 	_prod.visible = mode != ""
-	get_node("Reopen").visible = mode == ""
+	get_node("Reopen").visible = false   # the dock Build button opens the list
 	if mode == "":
 		return
 	var key: String = ("menu:" + build_tab) if mode == "build" else "%s:%s:%d:%d" % [_selected.key, _selected.built, _selected.queue.size(), _selected.root.get_instance_id()]
@@ -1244,7 +1318,7 @@ func _city_card(b: Dictionary) -> void:
 		value.add_theme_font_size_override("font_size", 17)
 		col.add_child(value)
 		col.add_child(_text(t[2], 11, UI.CREAM))
-		col.add_child(_text(t[3], 10, UI.MUTED))
+		col.add_child(_text(t[3], 12, UI.MUTED))
 		if float(t[5]) >= 0.0:
 			var bar := ProgressBar.new()
 			bar.custom_minimum_size = Vector2(80, 4)
@@ -1695,7 +1769,9 @@ func _meter(parent: Control, value: float, max_value: float, colour: Color, capt
 	l.set_anchors_preset(Control.PRESET_FULL_RECT)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	l.add_theme_constant_override("outline_size", 4)
+	l.add_theme_constant_override("outline_size", 5)
+	l.add_theme_color_override("font_outline_color", Color(0.03, 0.07, 0.12, 0.95))   # readable over a gold fill too
+	l.add_theme_color_override("font_color", UI.BRIGHT)
 	holder.add_child(l)
 	return holder
 
@@ -1920,7 +1996,14 @@ var _log_rows: VBoxContainer
 
 ## A short message in the feed along the bottom edge: a slim, see-through line,
 ## three at most, each gone after 5 s.
+var _recent_notices := {}   # text -> when it last appeared (real seconds)
+
 func notice(text: String) -> void:
+	var now: float = Time.get_ticks_msec() / 1000.0
+	# The same message twice within 20 seconds is one message.
+	if now - float(_recent_notices.get(text, -100.0)) < 20.0:
+		return
+	_recent_notices[text] = now
 	var t: int = int(world.game_time) if world != null else 0
 	notice_log.append("%02d:%02d   %s" % [t / 60, t % 60, text])
 	if notice_log.size() > 120:

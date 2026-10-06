@@ -362,9 +362,9 @@ func run() -> void:
 	e.warn_attack(2)
 	check(last_notice().begins_with("INTELLIGENCE"), "with intelligence 60 and a fresh dossier you are warned of an attack (%s)" % last_notice())
 	e.dossiers[2].t = e.clock - 400.0
-	w.hud.notice("-")
+	w.hud.notice("--")
 	e.warn_attack(2)
-	check(last_notice() == "-", "a stale dossier gives no warning")
+	check(last_notice() == "--", "a stale dossier gives no warning")
 	check(e.dossier_text(2).contains("STALE"), "and the Intel panel marks it stale")
 	check(e.dossier_text(1).contains("confidence"), "a dossier tells its confidence and age")
 

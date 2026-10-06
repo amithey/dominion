@@ -59,13 +59,13 @@ func setup(hud_node: Node) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var shade := ColorRect.new()
-	shade.color = Color(0.015, 0.035, 0.065, 0.93)
+	shade.color = Color(0.015, 0.035, 0.065, 0.985)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(shade)
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right"]:
-		margin.add_theme_constant_override("margin_" + side, 36)
+	margin.add_theme_constant_override("margin_left", 36)
+	margin.add_theme_constant_override("margin_right", 52)   # clear of the scroll bar
 	margin.add_theme_constant_override("margin_top", 64)
 	margin.add_theme_constant_override("margin_bottom", 24)
 	add_child(margin)

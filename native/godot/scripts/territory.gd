@@ -586,12 +586,13 @@ func draw_fill() -> void:
 		at.y = maxf(world.height_at(at.x, at.z), sea) + 14.0
 		var label := Label3D.new()
 		label.text = world.map.nations[o].name.to_upper()
-		label.font_size = 150
-		label.pixel_size = 0.05
+		label.font_size = 44
+		label.pixel_size = 0.0006   # fixed on screen: a name, not a billboard the size of a town
+		label.fixed_size = true
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		label.no_depth_test = true
 		label.modulate = Color(world.map.nations[o].color).lightened(0.35)
-		label.outline_size = 36
+		label.outline_size = 12
 		label.outline_modulate = Color(0.05, 0.08, 0.1, 0.85)
 		label.position = at
 		label.visible = show_borders

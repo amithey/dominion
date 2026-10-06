@@ -2433,9 +2433,35 @@ func rebuild_walk_grid() -> void:
 ## A tool driving the game from a script keeps full speed.
 func apply_pace(force := false) -> void:
 	var pace: float = float(match_config.get("pace", 1.0))
-	Engine.time_scale = 1.0 if get_tree().get_script() != null and not force else pace
+	Engine.time_scale = 1.0 if get_tree().get_script() != null and not force else pace * (SOFT_PAUSE if game_speed <= 0.0 else game_speed)
+
+## The speed the player chose (Space pauses; the buttons beside the era and the
+## + and - keys set 1x, 2x or 4x). Zero is a pause that leaves the camera and
+## every window working, unlike the pause menu.
+const SOFT_PAUSE := 0.0001
+const SPEEDS := [0.0, 1.0, 2.0, 4.0]
+var game_speed := 1.0
+var _speed_before_pause := 1.0
+var _last_real_ms := 0
+
+func set_speed(speed: float) -> void:
+	if speed <= 0.0 and game_speed > 0.0:
+		_speed_before_pause = game_speed
+	game_speed = speed
+	apply_pace(true)
+	if hud != null:
+		hud.refresh_speed()
+
+func toggle_pause() -> void:
+	set_speed(_speed_before_pause if game_speed <= 0.0 else 0.0)
+
+func change_speed(step: int) -> void:
+	var current: float = _speed_before_pause if game_speed <= 0.0 else game_speed
+	var i: int = SPEEDS.find(current)
+	set_speed(SPEEDS[clampi(i + step, 1, SPEEDS.size() - 1)])
 
 func start_match(difficulty: String) -> void:
+	game_speed = 1.0
 	apply_pace()
 	match_difficulty = difficulty
 	var row: Dictionary = map.ai.difficulty.get(difficulty, map.ai.difficulty.easy)
@@ -2458,6 +2484,7 @@ func start_match(difficulty: String) -> void:
 	tests = preload("res://scripts/nuclear_tests.gd").new(self)
 	directorate = preload("res://scripts/ai_directorate.gd").new(self)
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
+	hud.start_guide()
 
 ## Walks the menu flow: main menu (paused, no AI) -> new game on normal (AI
 ## wakes, play resumes) -> pause -> save -> load from the menu.
@@ -2465,6 +2492,7 @@ func menu_test() -> void:
 	menu.open_main()
 	var paused_at_menu: bool = get_tree().paused and ai.nations.is_empty()
 	menu.open_new_game()
+	menu.setup_options.erase("opening")   # (the light opening would reload the scene; this walk stays in one)
 	menu.start("normal")
 	var started: bool = not get_tree().paused and ai.nations.size() == 3 and match_difficulty == "normal"
 	menu.open_pause()
@@ -5726,7 +5754,9 @@ func _process(delta: float) -> void:
 	update_placement()
 	update_transport()
 	# The camera answers in real time, whatever the pace of the world.
-	var real: float = delta / maxf(Engine.time_scale, 0.05)
+	var now_ms: int = Time.get_ticks_msec()
+	var real: float = minf((now_ms - _last_real_ms) / 1000.0, 0.1) if _last_real_ms > 0 else delta
+	_last_real_ms = now_ms
 	if bench_phase >= 0:
 		benchmark_frame(delta)
 	else:
@@ -6007,10 +6037,10 @@ func _input(event: InputEvent) -> void:
 		occupation.begin_zone()  # the next click marks an operational zone
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Y:
 		hud.toggle_research()
-	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F8 and economy != null:
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F8 and economy != null and preload("res://scripts/cheats.gd").allowed():
 		economy.grant_test_resources()  # testing: plenty of everything
 		hud.notice("Testing: +$100,000, every store filled (limits 99,999), +200 army capacity.")
-	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F10 and economy != null:
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F10 and economy != null and preload("res://scripts/cheats.gd").allowed():
 		hud.notice(preload("res://scripts/cheats.gd").everything(self))  # testing: all research, money and stores
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F1:
 		hud.toggle_help()
@@ -6018,13 +6048,23 @@ func _input(event: InputEvent) -> void:
 		saves.save("quicksave")
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F9:
 		saves.load_slot("quicksave")
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_SPACE and hud != null and not (menu != null and menu._root != null and menu._root.visible):
+		toggle_pause()
+		get_viewport().set_input_as_handled()
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode in [KEY_EQUAL, KEY_KP_ADD, KEY_PLUS] and hud != null:
+		change_speed(1)
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode in [KEY_MINUS, KEY_KP_SUBTRACT] and hud != null:
+		change_speed(-1)
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:
+		if menu != null and menu._root != null and menu._root.visible:
+			return   # the menu closes itself on Esc (menu.gd); opening it again here would undo that
 		# Esc first cancels what is in progress and closes an open window; with
 		# nothing to cancel or close it pauses (it used to pause over an open window).
 		var busy: bool = placing != "" or transport_kind != "" or missile_aim != "" or selected_building != null
 		var closed: bool = false if busy else hud.close_windows()
 		if not busy and not closed and menu != null and menu._root != null:
 			menu.open_pause()
+			get_viewport().set_input_as_handled()   # the same press must not reach menu.gd and close it again
 		cancel_missile()
 		cancel_transport()
 		cancel_placement()
