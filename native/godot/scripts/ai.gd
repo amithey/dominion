@@ -243,7 +243,7 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 			kinds = row[1]
 	# Only the missiles this nation really has (national_variants.gd: hypersonic ones).
 	var me: String = preload("res://scripts/national_arsenal.gd").identity(world, n.id)
-	kinds = kinds.filter(func(k): return preload("res://scripts/national_variants.gd").admits(world.missiles.def_of(k).get("nation", ""), me))
+	kinds = kinds.filter(func(k): return world.missiles.available_to(n.id, k) and not world.missiles.platforms_for(k, n.id).is_empty())
 	if kinds.is_empty():
 		return {}
 	# Only what it has found of the player's (fog_of_war.gd: its capital is known to all).
@@ -256,12 +256,15 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 	if key == "antiRadar":
 		var sams: Array = targets.filter(func(b): return b.key == "samSite")
 		if sams.is_empty():
+			if not "cruise" in kinds: return {}
 			key = "cruise"
 		else:
 			target = sams[randi() % sams.size()]
 	n.money -= 400.0
-	var m: Dictionary = world.missiles.fly(key, home.root.position + Vector3.UP * 3.0, target.root.position, n.id)
-	world.hud.notice("%s launched a %s at your %s!" % [n.name, world.missiles.def_of(key).get("name", "missile"), target.def.name])
+	var platforms: Array = world.missiles.platforms_for(key, n.id)
+	var source: Dictionary = platforms[randi() % platforms.size()]
+	var m: Dictionary = world.missiles.fly(key, source.node.position + Vector3.UP * 3.0, target.root.position, n.id, not source.get("is_building", false))
+	world.hud.notice("%s launched a %s at your %s!" % [n.name, load("res://scripts/arsenal_catalog.gd").missile_name(world, n.id, key), target.def.name])
 	return m
 
 # Money-equivalent price (ai.js weights materials the AI does not stockpile).
@@ -331,7 +334,12 @@ func pick_building(n: Dictionary) -> String:
 	var tech: float = float(n.get("tech", 0.0))
 	var NV := preload("res://scripts/national_variants.gd")
 	var wanted_complexes: int = 0 if tech < 5.0 else (2 if tech >= 7.0 and world.diplomacy != null and not world.diplomacy.enemies_of(n.id).is_empty() else 1)
-	for fac in [["strategicComplex", wanted_complexes], ["specialLab", 1 if tech >= 4.0 else 0]]:
+	# Its AI (ai_directorate.gd): data centres as its technology and national
+	# compute allow, and a Targeting Fusion Cell once it has military AI.
+	var compute_rating: int = preload("res://scripts/ai_data.gd").rating(world, n.id, "compute")
+	var wanted_dc: int = 0 if tech < 4.0 else (2 if tech >= 6.0 and compute_rating >= 3 else 1)
+	var wanted_cell: int = 1 if tech >= 5.0 and world.get("directorate") != null and world.directorate != null and world.directorate.level(n.id) >= 3 else 0
+	for fac in [["missileSilo", 1 if tech >= 2.0 else 0], ["strategicComplex", wanted_complexes], ["specialLab", 1 if tech >= 4.0 else 0], ["aiDataCenter", wanted_dc], ["fusionCell", wanted_cell]]:
 		var fkey: String = fac[0]
 		if int(counts.get(fkey, 0)) < int(fac[1]) and world.building_defs.has(fkey) and NV.builds(world, n.id, fkey) and float(n.get("no_room", {}).get(fkey, 0.0)) <= float(n.get("age", 0.0)):
 			return fkey

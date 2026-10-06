@@ -36,6 +36,8 @@ static func quiet(w: Node, keep := []) -> void:
 		w.defcon = null
 	if not "tests" in keep and w.get("tests") != null:
 		w.tests = null
+	if not "directorate" in keep and w.get("directorate") != null:
+		w.directorate = null   # AI (ai_directorate.gd): autonomy incidents, AI cyber campaigns
 	if not "costs" in keep:
 		fund(w)
 	if w.research != null:

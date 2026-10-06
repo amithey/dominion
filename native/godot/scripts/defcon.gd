@@ -287,32 +287,11 @@ func _strike(owner: int, why: String, key := "nuke") -> void:
 	var wm = w.get("wmd")
 	if wm != null and not wm.armed(owner, "nuclear") and not wm.at_sea(owner):
 		return
-	# From a silo, else its capital, else any town it still holds.
-	var home = null
-	for b in w.buildings:
-		if int(b.owner) != owner or b.dead:
-			continue
-		var rank: int = {"missileSilo": 3, "hq": 2, "cityCenter": 1, "villageCenter": 1}.get(b.key, 0)
-		if rank > 0 and (home == null or rank > int({"missileSilo": 3, "hq": 2}.get(home.key, 1))):
-			home = b
-	var from := Vector3.ZERO
-	if home != null:
-		from = home.root.position
-	else:
-		# A second strike survives the first: a nuclear submarine or any unit
-		# still in the field, else the hardened silos under its ruined capital.
-		var carrier = null
-		for u in w.units:
-			if int(u.owner) == owner and not u.dead and (carrier == null or u.key == "nuclearSub"):
-				carrier = u
-		if carrier != null:
-			from = carrier.node.position
-		else:
-			for b in w.buildings:
-				if int(b.owner) == owner and b.key == "hq":
-					from = b.root.position
-	if from == Vector3.ZERO or d.defeated(owner):
+	if not w.missiles.available_to(owner, key): return
+	var platforms: Array = w.missiles.platforms_for(key, owner)
+	if platforms.is_empty() or d.defeated(owner):
 		return
+	var from: Vector3 = platforms[0].node.position
 	var target = null
 	for b in w.buildings:
 		if int(b.owner) == 0 and not b.dead and b.key in ["hq", "cityCenter", "villageCenter"]:

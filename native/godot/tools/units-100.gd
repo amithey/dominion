@@ -26,6 +26,11 @@ func settle(seconds: float) -> void:
 		w.missiles._physics_process(DT)
 func land(offset: Vector3) -> Vector3:
 	return w.land_point(w.start + offset, 40.0)
+## Plays as the nation with this flag (its colour and its id: identity reads the id first).
+func play_as(colour: String) -> void:
+	w.map.nations[0].color = colour
+	w.map.nations[0].id = {"#3b82f6": "usa", "#e0483e": "china", "#33b86e": "eu", "#e8a83a": "iran"}.get(colour, "usa")
+
 func complete(key: String) -> void:
 	w.research.progress[key].stage = 3
 	w.research._recompute()
@@ -94,6 +99,8 @@ func run() -> void:
 			var before: String = w.research.unit_locked(key)
 			var was_done: bool = w.research.done(need)   # an earlier unit may have needed it too
 			complete(need)
+			if w.research.unit_locked(key).contains("Future Arsenal"):
+				complete("futureArsenal")   # a trial programme (arsenal_catalog.gd)
 			check((was_done or before != "") and w.research.unit_locked(key) == "", "%s waits for %s" % [key, need])
 		elif nation == "":
 			check(w.research.unit_locked(key) == "", "%s needs no research" % key)
@@ -255,18 +262,18 @@ func run() -> void:
 	var own: Dictionary = {"blue": "raptor", "red": "df17", "green": "irisT", "gold": "shahedLauncher"}
 	var saved: String = w.map.nations[0].color
 	for nation in colours:
-		w.map.nations[0].color = colours[nation]
+		play_as(colours[nation])
 		check(Arsenal.identity(w, 0) == nation, "a nation with the %s flag is the %s" % [nation, Arsenal.NATION_NAMES[nation]])
 		var ok := true
 		for other in own:
 			if w.unit_allowed(0, own[other]) != (other == nation): ok = false
 		check(ok, "the %s fields its %s and no other nation's weapon" % [Arsenal.NATION_NAMES[nation], w.unit_defs[own[nation]].name])
-	w.map.nations[0].color = "#e0483e"
+	play_as("#e0483e")
 	var stage: int = w.research.progress.classifiedPrograms.stage
 	w.research.progress.classifiedPrograms.stage = 0
 	check(w.research.blocker("classifiedPrograms").ends_with("only"), "only the Atlantic Federation can research Classified Programs")
 	w.research.progress.classifiedPrograms.stage = stage
-	w.map.nations[0].color = saved
+	play_as(saved)
 	for n in w.ai.nations:
 		var who: String = Arsenal.identity(w, n.id)
 		# (a weapon two nations field, as the Shahed for Iran and Russia, counts for both)
@@ -287,10 +294,10 @@ func run() -> void:
 	check(not Modern.hidden(w, pair[0], 60.0, 70.0), "its wingmen are not stealthy: they draw the fire")
 	check(w.effectiveness(fighter, foe) > w.effectiveness(w.spawn_unit("raptor", land(Vector3(0, 0, 0)), 0), foe), "the sixth-generation fighter out-fights an F-22")
 	check(w.unit_defs.sixthGen.name == "F-47", "the Atlantic Federation's sixth-generation fighter is the F-47")
-	w.map.nations[0].color = "#e0483e"
+	play_as("#e0483e")
 	Future.apply(w)
 	check(w.unit_defs.sixthGen.name == "J-36" and int(w.research.discoveries.sixthGeneration.cost) == 750, "the Crimson Empire's is the J-36, a quarter cheaper to research (it flies already)")
-	w.map.nations[0].color = "#3b82f6"
+	play_as("#3b82f6")
 	Future.apply(w)
 	check(int(w.research.discoveries.sixthGeneration.cost) == 1000, "for everyone else it costs the full research")
 	w.kill(foe)
@@ -360,12 +367,12 @@ func run() -> void:
 	Modern.dome(w, poor, lonely, 0.5)
 	check(w.economy.res.money == 50.0, "an empty treasury launches no interceptors")
 	w.economy.grant_test_resources()
-	w.map.nations[0].color = "#33b86e"
+	play_as("#33b86e")
 	var st: int = w.research.progress.goldenDome.stage
 	w.research.progress.goldenDome.stage = 0
 	check(w.research.blocker("goldenDome").ends_with("only"), "only the Atlantic Federation can build Golden Dome")
 	w.research.progress.goldenDome.stage = st
-	w.map.nations[0].color = "#3b82f6"
+	play_as("#3b82f6")
 	# The uncrewed submarine.
 	var orca: Dictionary = w.spawn_unit("orca", sea, 0)
 	check(Modern.hidden(w, orca, 70.0 * 0.5 + 3.0, 70.0) and not Modern.hidden(w, orca, 70.0 * 0.5 - 3.0, 70.0), "an uncrewed submarine is found only at half the range")

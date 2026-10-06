@@ -1,17 +1,10 @@
 extends RefCounted
-## Who really has which unconventional weapon, and who is bound by which treaty.
-## Research and sources: native/CBRN-UN-RESEARCH-2026-10-05.md.
-##
-## Everything is keyed by faction id (factions.gd: "usa", "china", "eu" for
-## France's arsenal and seat, ...). A nation added later is covered by:
-##   1. an entry here (the place to say what it really has), or
-##   2. fields on its nation dictionary ("cbrn": [weapon keys], "npt", "cwc",
-##      "bwc", "icc", "un_region", "nam"), or
-##   3. the rules: a dirty bomb needs only a Nuclear Reactor; chlorine can be
-##      improvised by any state; nuclear weapons follow the nuclear-armed list
-##      (national_variants.gd) or a nuclear breakout (wmd.gd).
-## Absent all three, a new nation is assumed a party to the NPT, the CWC and the
-## BWC with no unconventional weapons, and a UN member of the Asia-Pacific group.
+## National nuclear capabilities, assessed programmes and separate treaties.
+## CAPABILITY lists eligibility; PROGRAMMES requires Future Arsenal research.
+## Explicit scenario cbrn lists override evidence defaults. A reactor or treaty
+## non-membership alone never grants a chemical/radiological arsenal. New
+## countries default to no unconventional weapons and no assigned UN region.
+## Evidence: native/ARSENAL-RESEARCH-2026-10-06.md.
 
 const Factions := preload("res://scripts/factions.gd")
 
@@ -36,22 +29,34 @@ const CAPABILITY := {
 		"why": "deployed by the US (Trident II), Russia (Yars, Bulava, Sarmat), China (DF-41, DF-5B), the UK and France (M51); tested by India (Agni-V 'Divyastra', March 2024 and May 2026) and Pakistan (Ababeel)"},
 	"nuclearGlide": {"ids": ["russia", "china"], "why": "Russia's Avangard (in service 2019); China's orbital glide vehicle test of August 2021 (a fractional orbital bombardment system)"},
 	"burevestnik": {"ids": ["russia"], "why": "nuclear-powered cruise missile; Russia claimed a 14,000 km, 15-hour test on 21 October 2025"},
-	"poseidon": {"ids": ["russia", "north_korea"], "why": "a nuclear torpedo that strikes a coast: Russia's Poseidon (first powered test claimed 28 October 2025) and North Korea's Haeil 'tsunami' drone (tests claimed 2023-2024, readiness doubted)"},
+	"poseidon": {"ids": ["russia"], "why": "Russian development programme; North Korean Haeil claims do not establish a deployed equivalent"},
 	"nuclearAsat": {"ids": ["russia"], "why": "US intelligence (February 2024): Russia is developing a nuclear weapon for orbit; Cosmos 2553 (2022) tested its components"},
 	# Electromagnetic.
 	"emp": {"ids": ["usa", "china", "russia"], "why": "the US CHAMP (2012) and HiJENKS (2022) microwave missiles; Chinese and Russian high-power microwave programmes"},
 	# Chemical. All declared stockpiles were destroyed by July 2023 (OPCW).
-	"chemical": {"ids": ["russia", "north_korea", "egypt", "israel"],
+	"chemical": {"ids": ["russia", "north_korea"],
 		"why": "Russia (Novichok against Skripal 2018 and Navalny 2020; the US assesses an undeclared programme); North Korea (2,500-5,000 t incl. sarin and VX; outside the CWC); Egypt (outside the CWC, used mustard gas in Yemen in the 1960s); Israel (signed but never ratified the CWC; suspected)"},
-	"riotAgent": {"ids": ["russia"], "why": "CS, CN and chloropicrin grenades dropped on Ukrainian trenches: more than 13,300 recorded uses by 2026; banned as a method of warfare by the CWC"},
+	"riotAgent": {"ids": ["russia"], "why": "CS and CN riot-agent munitions; chloropicrin is a chemical warfare agent, not a riot agent dropped on Ukrainian trenches: more than 13,300 recorded uses by 2026; banned as a method of warfare by the CWC"},
 	"incapacitant": {"ids": ["iran", "russia"], "why": "pharmaceutical-based agents: the US found Iran in violation of the CWC for them in 2024; Russia's Kolokol-1 fentanyl aerosol killed 130 hostages in Moscow in 2002"},
-	"chlorine": {"rule": "chemical", "why": "a toxic industrial chemical: only a state that already breaks the chemical weapons ban (or stands outside it) turns it into a weapon, as Syria's former government did (OPCW attributions 2014-2018). A law-abiding state, the US above all (its last chemical weapon destroyed 7 July 2023), does not"},
+	"chlorine": {"ids": [], "why": "No default current missile inventory established. Treaty non-membership is not evidence of possession."},
 	# Biological. No state admits a programme; the US compliance reports assess
 	# offensive programmes in Russia and North Korea (concerns only for China and Iran).
 	"anthrax": {"ids": ["russia", "north_korea"], "why": "spores for area denial: the Soviet Biopreparat programme (the 1979 Sverdlovsk leak killed about 66); US-assessed offensive programmes"},
 	"bioweapon": {"ids": ["russia", "north_korea"], "why": "a contagious engineered disease (plague, smallpox): the same US-assessed offensive programmes"},
 	# Radiological.
-	"dirtyBomb": {"ids": ["north_korea", "iran"], "rule": "reactor", "why": "a crude weapon no state has ever used: a nuclear power has no need of one. Only a state outside the nonproliferation regime, with a Nuclear Reactor's material, is credited with it here"},
+	"dirtyBomb": {"ids": [], "rule": "reactor", "why": "No verified national inventory. Explicit scenario capability and a reactor are both required."},
+}
+
+## Eligible future/historical/assessed programmes, NOT operational inventory.
+const PROGRAMMES := {
+	"tsarBomba": ["russia"], "neutronBomb": ["usa", "russia", "china", "eu"],
+	"mirv": ["pakistan"], "nuclearGlide": ["china"],
+	"nuclearCruise": ["israel"],
+	"tacticalNuke": ["china", "india", "israel"],
+	"burevestnik": ["russia"], "poseidon": ["russia"], "nuclearAsat": ["russia"],
+	"emp": ["usa", "china", "russia"],
+	"chemical": ["russia", "north_korea"], "incapacitant": ["iran", "russia"],
+	"anthrax": ["russia", "north_korea"], "bioweapon": ["russia", "north_korea"],
 }
 
 ## Treaties, by faction id. npt: "nws" (a recognised weapon state), "party",
@@ -110,28 +115,26 @@ static func arsenal_ids(ids: Array) -> Array:
 static func has(w: Node, owner: int, key: String) -> bool:
 	var row: Dictionary = CAPABILITY.get(key, {})
 	var n := nation_dict(w, owner)
-	match str(row.get("rule", "")):
-		"chemical":
-			# Only a state already outside or in breach of the CWC improvises it.
-			return str(treaty(w, owner, "cwc")) != "party" or ["chemical", "riotAgent", "incapacitant"].any(func(k): return has(w, owner, k))
-		"reactor":
-			if not w.buildings.any(func(b): return int(b.owner) == owner and not b.dead and b.key == "nuclearReactor"):
-				return false
-			if w.get("wmd") != null and w.wmd != null and owner in w.wmd.broken_out:
-				return true
+	if str(row.get("rule", "")) == "reactor" and not w.buildings.any(func(b): return int(b.owner) == owner and b.built and not b.dead and b.key == "nuclearReactor"):
+		return false
 	if n.has("cbrn"):
 		return key in n.cbrn
 	if ident(w, owner) in row.get("ids", []):
+		if ident(w, owner) in PROGRAMMES.get(key, []):
+			return load("res://scripts/arsenal_catalog.gd").programme_done(w, owner)
 		return true
-	# NATO nuclear sharing: the owner's bombs, while allied with it.
-	if key == "tacticalNuke" and SHARING.has(ident(w, owner)):
-		var patron: int = -1
-		for i in range(w.map.nations.size()):
-			if ident(w, i) == SHARING[ident(w, owner)]: patron = i
-		if patron >= 0 and patron != owner and not w.diplomacy.defeated(patron) and w.diplomacy.allied(owner, patron):
-			return true
+	# Sharing does not transfer ownership or independent production/release.
 	# A nuclear breakout gives the basic nuclear weapons (wmd.gd).
 	return key in ["nuke", "tacticalNuke", "nuclearEmp"] and w.get("wmd") != null and w.wmd != null and owner in w.wmd.broken_out
+
+static func blocked(w: Node, owner: int, key: String) -> String:
+	if has(w, owner, key): return ""
+	var n := nation_dict(w, owner)
+	if n.has("cbrn") and key in n.cbrn and key == "dirtyBomb":
+		return "Needs a Nuclear Reactor (radioactive material)"
+	if not n.has("cbrn") and ident(w, owner) in PROGRAMMES.get(key, []):
+		return "Needs Future Arsenal programme"
+	return "Not fielded by this nation"
 
 ## Whether nation `owner` may build a Strategic Weapons Complex (nuclear) or a
 ## Special Weapons Laboratory (chemical, biological, radiological).
@@ -144,7 +147,7 @@ static func may_build(w: Node, owner: int, key: String) -> bool:
 				if has(w, owner, k):
 					return true
 			var n := nation_dict(w, owner)
-			return ident(w, owner) in ids_for("dirtyBomb") or (n.has("cbrn") and "dirtyBomb" in n.cbrn) or (w.get("wmd") != null and w.wmd != null and owner in w.wmd.broken_out)
+			return (n.has("cbrn") and "dirtyBomb" in n.cbrn) or ident(w, owner) in PROGRAMMES.get("chemical", []) or ident(w, owner) in PROGRAMMES.get("incapacitant", [])
 	return true
 
 ## Whether `owner` holds its tactical bombs only through nuclear sharing.

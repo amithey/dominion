@@ -478,6 +478,11 @@ func run() -> void:
 	hard.tech = 1.0
 	var none_strike: Dictionary = w.ai.missile_strike(hard, w.ai.hq(hard.id), 1.0)
 	hard.tech = 4.0
+	var without_platform: Dictionary = w.ai.missile_strike(hard, w.ai.hq(hard.id), 4.0)
+	check(without_platform.is_empty(), "rival research does not conjure a missile launch platform")
+	var rival_home: Vector3 = w.ai.hq(hard.id).root.position
+	var rival_site = w.test_site("missileSilo", rival_home + Vector3(45, 0, 45))
+	w.place_building("missileSilo", rival_site, hard.id, true)
 	var strike: Dictionary = w.ai.missile_strike(hard, w.ai.hq(hard.id), 4.0)
 	check(none_strike.is_empty() and not strike.is_empty(), "a rival fires missiles only once its research allows (level 2 and up)")
 	w.diplomacy.make_peace(hard.id, 0)

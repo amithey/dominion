@@ -37,6 +37,10 @@ func finish() -> void:
 		w.game_time = float(u.current.closes) + 0.1
 		u.update(0.0)
 
+func ballot(choice: String) -> void:
+	if u.current != null and u.current.phase == "consult": u._to_vote()
+	u.cast(choice)
+
 func run() -> void:
 	set_meta("match_config", {"map": "island", "players": 4, "nation": 0, "style": "standard"})
 	change_scene_to_file("res://world.tscn")
@@ -65,29 +69,29 @@ func run() -> void:
 	print("nations: ", ids)
 
 	# ---- who has what (cbrn_data.gd)
-	check(C.has(w, 0, "nuke") and C.has(w, 0, "mirv") and C.has(w, 0, "emp") and not C.has(w, 0, "chemical") and not C.has(w, 0, "riotAgent"), "the United States: nuclear, MIRV and microwave weapons; no chemical weapons")
-	check(C.has(w, 1, "hydrogenBomb") and C.has(w, 1, "nuclearGlide") and not C.has(w, 1, "tsarBomba") and not C.has(w, 1, "chemical"), "China: thermonuclear and a nuclear glider; no Tsar Bomba, no chemical weapons")
-	check(C.has(w, 2, "mirv") and C.has(w, 2, "neutronBomb") and C.has(w, 2, "hydrogenBomb"), "France (the European Union): MIRV, neutron and thermonuclear warheads")
-	check(C.has(w, 3, "incapacitant") and not C.has(w, 3, "chemical") and not C.has(w, 3, "nuke"), "Iran: incapacitating agents only; no nerve agents, no bomb")
+	check(C.has(w, 0, "nuke") and C.has(w, 0, "mirv") and not C.has(w, 0, "emp") and not C.has(w, 0, "chemical") and not C.has(w, 0, "riotAgent"), "the United States: nuclear/MIRV current; microwave trial gated; no chemical inventory")
+	check(C.has(w, 1, "hydrogenBomb") and not C.has(w, 1, "nuclearGlide") and not C.has(w, 1, "tsarBomba") and not C.has(w, 1, "chemical"), "China: thermonuclear current; nuclear glide unconfirmed/future; no Tsar Bomba, no chemical weapons")
+	check(C.has(w, 2, "mirv") and not C.has(w, 2, "neutronBomb") and C.has(w, 2, "hydrogenBomb"), "France (the European Union): MIRV and thermonuclear current; historical neutron programme gated")
+	check(not C.has(w, 3, "incapacitant") and not C.has(w, 3, "chemical") and not C.has(w, 3, "nuke"), "Iran: assessed incapacitant programme is gated; no verified nerve-agent inventory or bomb")
 	check("north_korea" in C.ids_for("hydrogenBomb") and not "india" in C.ids_for("hydrogenBomb") and not "israel" in C.ids_for("hydrogenBomb"), "thermonuclear: North Korea likely (2017); India's claim disputed, Israel's unproven")
 	check("india" in C.ids_for("mirv") and "pakistan" in C.ids_for("mirv") and not "north_korea" in C.ids_for("mirv"), "MIRV: India and Pakistan have tested; North Korea's is aspirational")
-	check("egypt" in C.ids_for("chemical") and "north_korea" in C.ids_for("chemical") and not "iran" in C.ids_for("chemical"), "nerve agents: Egypt and North Korea (outside the CWC), not Iran")
+	check(not "egypt" in C.ids_for("chemical") and "north_korea" in C.ids_for("chemical") and not "iran" in C.ids_for("chemical"), "Egypt treaty status does not establish nerve-agent possession")
 	check(C.has(w, 0, "bunkerBuster") and C.has(w, 0, "nuclearCruise") and not C.has(w, 1, "bunkerBuster") and not C.has(w, 1, "nuclearCruise"), "the US: the B61-11/-13 bunker buster and the AGM-86B nuclear cruise missile; China neither")
-	check(not C.has(w, 0, "chlorine") and C.has(w, 3, "chlorine") and not C.has(w, 1, "chlorine"), "chlorine: only a state already breaking the chemical ban (Iran), never the US or China")
+	check(not C.has(w, 0, "chlorine") and not C.has(w, 3, "chlorine") and not C.has(w, 1, "chlorine"), "chlorine has no default current national missile inventory")
 	w.place_building("nuclearReactor", w.test_site("nuclearReactor", home + Vector3(-70, 0, 60)), 0, true)
 	check(not C.has(w, 0, "dirtyBomb") and ms.locked("dirtyBomb").begins_with("Not fielded"), "the US, even with a reactor, builds no dirty bomb")
 	var iran_hq: Dictionary = w.buildings.filter(func(b): return b.owner == 3 and b.key == "hq")[0]
 	var no_reactor: bool = not C.has(w, 3, "dirtyBomb")
 	w.place_building("nuclearReactor", w.test_site("nuclearReactor", iran_hq.root.position + Vector3(60, 0, -50)), 3, true)
-	check(no_reactor and C.has(w, 3, "dirtyBomb"), "Iran, outside the norm, could with a reactor's material")
+	check(no_reactor and not C.has(w, 3, "dirtyBomb"), "Iran reactor does not establish dirty-bomb possession")
 	var real_id = w.map.nations[3].get("id")
 	w.map.nations[3].id = "turkiye"
 	var apart: bool = C.has(w, 3, "tacticalNuke")
 	d.set_flag(d.alliance, 0, 3, true)
-	var shared: bool = C.has(w, 3, "tacticalNuke") and not C.has(w, 3, "nuke")
+	var shared: bool = not C.has(w, 3, "tacticalNuke") and not C.has(w, 3, "nuke")
 	d.set_flag(d.alliance, 0, 3, false)
 	w.map.nations[3].id = real_id
-	check(not apart and shared, "NATO nuclear sharing: Turkey may drop the US B61s at Incirlik only while allied with the US")
+	check(not apart and shared, "NATO sharing grants no independent Turkish nuclear arsenal")
 	check(ms.locked("riotAgent").begins_with("Not fielded") and ms.locked("tsarBomba").begins_with("Not fielded"), "another nation's weapon is locked as not fielded (and the silo hides it)")
 	w.map.nations[2]["cbrn"] = ["chemical"]
 	var future_ok: bool = C.has(w, 2, "chemical") and not C.has(w, 2, "mirv")
@@ -106,12 +110,16 @@ func run() -> void:
 	ms.impact("mirv", their_hq.root.position + Vector3(40, 0, 40), 0)
 	check(W.zones.size() - before_zones == 3 and W.incidents.size() - before_inc == 1, "a MIRV missile: three warheads, three fallout zones, one incident")
 	check(float(preload("res://scripts/modern_warfare.gd").INTERCEPT.glide.abmLauncher) <= 0.1 and preload("res://scripts/modern_warfare.gd").CLASS_OF.nuclearGlide == "glide", "a nuclear glide vehicle: missile defence stops 10% at most")
+	w.map.nations[0].cbrn = ["poseidon"]
+	w.research.progress.nuclearProgram = {"stage": 3, "work": 0, "paid": false}
+	w.research.progress.thermonuclear = {"stage": 3, "work": 0, "paid": false}
 	ms.stock["poseidon"] = 1
 	w.defcon.posture[0] = 2
 	var inland: String = ms.launch("poseidon", home + Vector3(0, 0, 10))
 	for sub in w.units.filter(func(x): return x.owner == 0 and x.key == "nuclearSub" and not x.dead): w.kill(sub)
 	var no_sub: String = ms.launch("poseidon", w.water_near(home, 200) if w.water_near(home, 200) != null else home)
 	check((inland.contains("sea") or inland.contains("submarine")) and no_sub.contains("submarine") and int(ms.stock.poseidon) == 1, "Poseidon: only from a nuclear submarine, only at a coast (%s / %s)" % [inland, no_sub])
+	w.map.nations[0].erase("cbrn")
 	var react: Dictionary = w.place_building("nuclearReactor", w.test_site("nuclearReactor", their_hq.root.position + Vector3(-50, 0, -40)), rival, true)
 	react.last_by = 0
 	var nz: int = W.zones.size()
@@ -159,7 +167,7 @@ func run() -> void:
 	W.break_out(3)
 	check(w.defcon.nuclear(3) and C.has(w, 3, "nuke") and "saudi" in w.map.research.discoveries.nuclearBreakout.nation, "Iran breaks out: it has the bomb, and Saudi Arabia may follow")
 	check(u.queue.any(func(q): return q.kind == "breakout" and int(q.target) == 3), "the IAEA sends it to the Council")
-	check(w.space.orbital_nuke_blocked().contains("Russia"), "only Russia can detonate a nuclear weapon in orbit")
+	check(w.space.orbital_nuke_blocked().begins_with("Not fielded"), "only Russia can detonate a nuclear weapon in orbit")
 	w.space.sats[1].recon = 10
 	W.orbital_burst(1)
 	check(w.space.count(1, "recon") <= 6, "one such burst wipes out most satellites (%d of 10 left)" % w.space.count(1, "recon"))
@@ -186,9 +194,9 @@ func run() -> void:
 	var cf: Dictionary = u.table("player", 1, 2, 0, "their war", "ceasefire")
 	check(u.vote_of(1, cf) == "abstain" and u.vote_of(2, cf) == "abstain", "on a ceasefire the parties abstain (Art. 27(3)): no veto")
 	reach(func(x): return x == cf)
-	u.cast("yes")
+	ballot("yes")
 	finish()
-	check(u.record[-1].result == "adopted" and not d.at_war(1, 2), "the ceasefire passes and the war ends (%s)" % u.record[-1].result)
+	check(u.record[-1].result == "failed" and d.at_war(1, 2), "a small Council's parties abstain without reducing the threshold or forcing peace")
 	# Your draft: consultations, amendments, lobbying.
 	u.next_draft = 0.0
 	for i in range(d.n):
@@ -204,13 +212,13 @@ func run() -> void:
 	var lean1: String = u.vote_of(2, u.current)
 	check(lean0 != lean1, "lobbying moves a member's vote (%s to %s)" % [lean0, lean1])
 	u.lobby(2, 1)
-	u.cast("yes")
+	ballot("yes")
 	finish()
 	check(u.record[-1].measure == "targeted", "the draft is voted as amended (%s)" % u.record[-1].result)
 	# A statement needs consensus.
 	var st: Dictionary = u.table("war", 1, 2, -1, "their war", "statement")
 	reach(func(x): return x == st)
-	u.cast("no")
+	ballot("no")
 	finish()
 	check(u.record[-1].result == "failed", "one objection sinks a presidential statement")
 	# Sanctions bite: the market, production.
@@ -226,9 +234,10 @@ func run() -> void:
 	d.declare_war(0, 3)
 	check(u.authorised.has(3) and u.queue.filter(func(q): return q.kind == "aggression").size() == q0, "force authorised: joining the war on Iran is no aggression")
 	u._enforce({"measure": "icc", "target": 3, "other": -1, "votes": {}})
-	check(u.indicted.has(3), "an ICC referral indicts Iran's leaders")
+	check(u.indicted.has(3), "an ICC referral records a situation for investigation")
 	d.make_peace(1, 2)
 	u._enforce({"measure": "peacekeeping", "target": 1, "other": 2, "votes": {}})
+	u._update_compliance()
 	d.declare_war(1, 2)
 	u.update(0.0)
 	check(u.queue.any(func(q): return q.kind == "violation" and int(q.target) == 1), "a ceasefire broken under the peacekeepers' eyes goes back to the Council")

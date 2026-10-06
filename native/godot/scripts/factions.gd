@@ -91,6 +91,9 @@ static func for_unit(w: Node, unit: Dictionary) -> Dictionary:
 	return m
 
 static func equip(w: Node, unit: Dictionary) -> void:
+	# Apply the payload correction to legacy saved ISR aircraft as well.
+	if unit.key == "drone" and identity(w, int(unit.owner)) in load("res://scripts/arsenal_catalog.gd").ISR:
+		unit.dmg = 0.0
 	if unit.get("faction_equipped", false):
 		return
 	var m := for_unit(w, unit)

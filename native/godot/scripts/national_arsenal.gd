@@ -107,10 +107,18 @@ static func apply(w: Node) -> void:
 static func identity(w: Node, owner: int) -> String:
 	if owner < 0 or owner >= w.map.nations.size():
 		return ""
+	if w.map.nations[owner].has("id"):
+		var id: String = str(w.map.nations[owner].id)
+		return {"usa": "blue", "china": "red", "eu": "green", "iran": "gold"}.get(id, id)
 	return str(NATION_OF_COLOUR.get(str(w.map.nations[owner].get("color", "")).to_lower(), w.map.nations[owner].get("arsenal", "")))
 
 ## True when `owner` may field `key` (every nation fields the common units).
 static func allowed(w: Node, owner: int, key: String) -> bool:
+	var n: Dictionary = w.map.nations[owner]
+	if n.has("units"):
+		return key in n.units and load("res://scripts/arsenal_catalog.gd").unit_blocked(w, owner, key) == ""
+	if load("res://scripts/arsenal_catalog.gd").unit_blocked(w, owner, key) != "":
+		return false
 	return preload("res://scripts/national_variants.gd").admits(w.unit_defs.get(key, {}).get("nation", ""), identity(w, owner))
 
 ## Why the player may not field `key` or research `discovery`, or "".

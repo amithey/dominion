@@ -165,6 +165,10 @@ func tick() -> void:
 	var chip_use := maxf(civilians - 400.0, 0.0) * CHIPS_PER_PERSON
 	rates.oil = rates.get("oil", 0.0) - oil_use
 	rates.silicon = rates.get("silicon", 0.0) - chip_use
+	# AI Data Centers burn chips and money (ai_directorate.gd).
+	var dc_use: Dictionary = world.directorate.upkeep() if world.get("directorate") != null and world.directorate != null else {}
+	rates.silicon -= float(dc_use.get("silicon", 0.0))
+	rates.money -= float(dc_use.get("money", 0.0))
 	shortages.clear()
 	# Four 180-second seasons; the final quarter needs household heating.
 	var heating := civilians * 0.006 if fmod(world.game_time, 720.0) >= 540.0 else 0.0

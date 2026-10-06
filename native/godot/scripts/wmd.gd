@@ -188,12 +188,7 @@ static func is_nuclear(key: String) -> bool:
 func capability_blocked(key: String) -> String:
 	if not Cbrn.CAPABILITY.has(key):
 		return ""
-	if Cbrn.has(w, 0, key):
-		return ""
-	var row: Dictionary = Cbrn.CAPABILITY[key]
-	if str(row.get("rule", "")) == "reactor" and (Cbrn.ident(w, 0) in row.get("ids", []) or 0 in broken_out):
-		return "Needs a Nuclear Reactor (radioactive material)"
-	return "Not fielded by %s" % str(w.map.nations[0].get("name", "your nation")).split(" · ")[0]
+	return Cbrn.blocked(w, 0, key)
 
 # ---------------------------------------------------------------- impacts
 
@@ -650,14 +645,11 @@ func _ai_use() -> void:
 		if key == "":
 			continue
 		var target := _ai_target(owner, key == "bioweapon")
-		var home = null
-		for b in w.buildings:
-			if int(b.owner) == owner and not b.dead and b.key in ["missileSilo", "hq"]:
-				home = b
-		if home == null or target == Vector3.INF:
+		var platforms: Array = w.missiles.platforms_for(key, owner)
+		if platforms.is_empty() or target == Vector3.INF:
 			continue
 		n.wmd_at = w.game_time
-		w.missiles.fly(key, home.root.position + Vector3.UP * 3.0, target, owner)
+		w.missiles.fly(key, platforms[0].node.position + Vector3.UP * 3.0, target, owner)
 		w.hud.notice("%s has fired %s at your %s!" % [d.name_of(owner), MISSILES[key].name.to_lower(), "town" if key == "bioweapon" else "troops"])
 	# A threshold state at war may break out (cbrn_data.THRESHOLD).
 	for n in w.ai.nations:

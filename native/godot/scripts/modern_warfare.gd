@@ -185,6 +185,8 @@ static func apply(w: Node) -> void:
 	preload("res://scripts/space.gd").apply(w)   # anti-satellite weapons
 	preload("res://scripts/wmd.gd").apply(w)   # nuclear yields, EMP, chemical, biological, radiological
 	preload("res://scripts/conventional_missiles.gd").apply(w)   # bunker-buster, thermobaric, anti-radiation
+	preload("res://scripts/ai_directorate.gd").apply(w)   # AI Data Center, Targeting Fusion Cell, the AI research chain
+	preload("res://scripts/arsenal_catalog.gd").apply(w)   # verified operators, platforms and future programmes
 	var types: Dictionary = w.map.missiles.types
 	for key in types:
 		var odds: Dictionary = INTERCEPT[CLASS_OF.get(key, "cruise")]

@@ -137,6 +137,7 @@ var defcon: RefCounted = null   # defcon.gd: the nuclear escalation ladder
 var wmd: RefCounted = null   # wmd.gd: fallout, gas, disease; who used what
 var un: RefCounted = null   # un.gd: the Security Council and the General Assembly
 var tests: RefCounted = null   # nuclear_tests.gd: nuclear tests and the deterrent they prove
+var directorate: RefCounted = null   # ai_directorate.gd: artificial intelligence, compute and autonomy
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
 var noise_texture: NoiseTexture2D
@@ -1003,6 +1004,8 @@ func building_model(key: String, x: float, z: float) -> Node3D:
 		return districts.arch.commit()
 	if key in ["missileSilo", "ammoDepot", "strategicComplex", "specialLab"]:
 		return bunker_model(key)
+	if key in ["aiDataCenter", "fusionCell"]:
+		return preload("res://scripts/ai_directorate.gd").model(self, key)
 	var path: String = BUILDING_MODELS.get(key, "res://assets/building-a.glb")
 	if key == "cottage":
 		path = ["res://assets/House_A.glb", "res://assets/House_B.glb", "res://assets/House_C.glb"][absi(int(x * 7.0 + z * 3.0)) % 3]
@@ -2055,6 +2058,8 @@ func _physics_process(delta: float) -> void:
 			un.update(delta)  # the United Nations
 		if tests != null:
 			tests.update(delta)  # rivals' nuclear tests
+		if directorate != null:
+			directorate.update(delta)  # compute, AI levels, autonomy incidents, AI cyber campaigns
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
 		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
@@ -2445,6 +2450,7 @@ func start_match(difficulty: String) -> void:
 	wmd = preload("res://scripts/wmd.gd").new(self)
 	un = preload("res://scripts/un.gd").new(self)
 	tests = preload("res://scripts/nuclear_tests.gd").new(self)
+	directorate = preload("res://scripts/ai_directorate.gd").new(self)
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 
 ## Walks the menu flow: main menu (paused, no AI) -> new game on normal (AI
@@ -3658,7 +3664,7 @@ func ui_test() -> void:
 		hud._shown_key = ""
 		hud._update_panel()
 		var bars: Array = hud._list.find_children("*", "Button", true, false)
-		checks["%s tab lists %d buildings" % [tab, bars.size()]] = bars.size() >= hud.BUILD_MENU[tab].filter(func(k): return building_defs.has(k)).size()
+		checks["%s tab lists %d buildings" % [tab, bars.size()]] = bars.size() >= hud.BUILD_MENU[tab].filter(func(k): return building_defs.has(k) and preload("res://scripts/national_variants.gd").builds(self, 0, k)).size()
 	hud.build_tab = "Economy"
 	hud._shown_key = ""
 	hud._update_panel()
@@ -4256,8 +4262,12 @@ func begin_missile(key: String) -> void:
 	if int(missiles.stock.get(key, 0)) <= 0:
 		hud.notice("No %s in storage." % missiles.def_of(key).name)
 		return
-	if missiles.silos().is_empty() and missiles.launch_ships().is_empty():
-		hud.notice("Missiles launch from a Missile Silo, a strategic submarine or a destroyer.")
+	var blocked: String = missiles.locked(key)
+	if blocked != "":
+		hud.notice(blocked)
+		return
+	if missiles.platforms_for(key).is_empty():
+		hud.notice("Needs a compatible %s launch platform." % load("res://scripts/arsenal_catalog.gd").platform_kind(self, 0, key))
 		return
 	# A nuclear weapon needs the order to release it: one decision, its price stated.
 	if missiles.def_of(key).get("nuclear", key == "nuke") and defcon != null and defcon.release_blocked() != "":
@@ -4944,6 +4954,8 @@ func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
 func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
 	var best = null
 	var best_d := radius
+	# An autonomous seeker weighs targets by their value (ai_directorate.gd).
+	var seek: bool = directorate != null and directorate.seeks(unit)
 	# Ground units scan the buckets around them; aircraft and ships, which are
 	# few and range far, still scan everyone.
 	var candidates: Array = units
@@ -4963,8 +4975,9 @@ func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
 		var d: float = flat_distance(unit, other)
 		if Modern.hidden(self, other, d, radius):
 			continue
-		if d < best_d:
-			best_d = d
+		var score: float = d / directorate.value_of(other) if seek else d
+		if d < radius and score < best_d:
+			best_d = score
 			best = other
 	if best != null:
 		return best
@@ -5204,7 +5217,7 @@ func blast(shooter: Dictionary, at: Vector3, dmg: float, radius: float, size: fl
 ## How widely a unit's shots scatter from its nation's fire control (unit_quality.gd):
 ## 1 for the shared unit, more for old sights, less for the best.
 func scatter(unit: Dictionary) -> float:
-	return clampf(2.0 - float(unit.get("accuracy", 1.0)) - Vet.aim(unit), 0.7, 1.6)
+	return clampf(2.0 - float(unit.get("accuracy", 1.0)) - Vet.aim(unit) - (directorate.aim(int(unit.owner)) if directorate != null else 0.0), 0.7, 1.6)
 
 ## The chance an older guided missile goes astray (60% of its accuracy shortfall, at most 35%).
 func astray(unit: Dictionary) -> bool:
@@ -5212,11 +5225,11 @@ func astray(unit: Dictionary) -> bool:
 
 ## Satellite navigation (space.gd): 1.1 with a constellation, 0.9 when GPS is denied.
 func guidance(unit: Dictionary) -> float:
-	return space.nav_factor(int(unit.owner)) if space != null else 1.0
+	return (space.nav_factor(int(unit.owner)) if space != null else 1.0) * (directorate.guidance(int(unit.owner)) if directorate != null else 1.0)
 
 ## Satellite communications (space.gd): halves the chance jamming downs a drone.
 func jam_factor(unit: Dictionary) -> float:
-	return space.jam_factor(int(unit.owner)) if space != null else 1.0
+	return (space.jam_factor(int(unit.owner)) if space != null else 1.0) * (directorate.jam_factor(int(unit.owner)) if directorate != null else 1.0)
 
 func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 	var aim: Vector3 = enemy.node.position + Vector3.UP * (3.0 if enemy.get("is_building", false) else (1.3 if enemy.vehicle else 1.2))
@@ -5294,6 +5307,8 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 		unit.last_by = int(source.owner)   # who struck last (a reactor's ruin is laid at their door: wmd.gd)
 	if generals != null:
 		amount *= generals.damage_mult(source) * generals.taken_mult(unit)  # a general's traits
+	if directorate != null:
+		amount *= directorate.damage_mult(source)  # AI: autonomy and the fusion cell
 	unit.hp -= amount
 	Vet.credit(self, source, unit, amount)
 	if amount > 0:
@@ -5793,7 +5808,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					# A selected missile ship fires it; otherwise the nearest silo or ship.
 					var ship = null
 					for u in units:
-						if u.selected and not u.dead and u.owner == 0 and u.key in missiles.LAUNCH_SHIPS:
+						if u.selected and u in missiles.platforms_for(key):
 							ship = u
 							break
 					engagement.authorize_area(point,float(missiles.def_of(key).radius),func():hud.notice(missiles.launch(key,point,ship)))

@@ -37,6 +37,9 @@ func run() -> void:
 	w.set_physics_process(false)
 	w.ai.set_physics_process(false)
 	preload("res://tools/test_kit.gd").quiet(w, ["events", "generals", "defcon"])
+	# Nuclear payloads are built once the Nuclear Program is researched (arsenal_catalog.gd).
+	w.research.progress["nuclearProgram"].stage = 3
+	w.research._recompute()
 	seed(7)
 	var V := preload("res://scripts/veterancy.gd")
 	var d: Node = w.diplomacy

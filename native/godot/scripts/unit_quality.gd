@@ -271,6 +271,7 @@ const QUALITY := {
 		"iraq": [0.7, 0.78, 0.68, 0.95, 0.89],   # Musa Ben Nussair-class
 	},
 	"destroyer": {
+		"north_korea": [0.85, 0.9, 0.85, 1.0, 1.0],   # initial Choe Hyon class; game balance
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.04],   # Arleigh Burke-class
 		"china": [1.12, 1.08, 1.12, 1.0, 1.04],   # Type 055
 		"eu": [1.06, 1.04, 1.06, 1.0, 1.02],   # Horizon-class
@@ -406,9 +407,11 @@ static func of(id: String, key: String) -> Dictionary:
 ## range, +20% damage) and fibre-optic FPV drones (no jammer stops them, +30%
 ## range). "flags" are set on each unit built.
 const UPGRADES := {
-	"tank": {"usa": {"research": "nextGenAbrams", "name": "M1E3 Abrams", "figures": [1.3, 1.15, 1.2, 1.06, 1.0], "cooldown": 0.8, "flags": {"aps_builtin": true}}},
+	"tank": {"usa": {"research": "nextGenAbrams", "name": "M1E3 Abrams", "figures": [1.3, 1.15, 1.2, 1.06, 1.0], "cooldown": 0.8, "flags": {"aps_builtin": true}}, "eu": {"research": "futureArsenal", "name": "Leopard 2A8 (future programme)", "figures": [1.15, 1.1, 1.1, 1.0, 1.0]}, "india": {"research": "futureArsenal", "name": "Arjun Mk1A (procurement programme)", "figures": [1.1, 1.1, 1.05, 1.0, 1.0]}},
 	"jet": {"russia": {"research": "glideBombs", "name": "Su-34 (UMPK glide bombs)", "figures": [1.06, 1.2, 1.06, 0.95, 1.5]}},
-	"fpvTeam": {"russia": {"research": "fibreOpticDrones", "name": "Fibre-optic FPV team", "figures": [1.0, 1.0, 1.05, 1.0, 1.3], "flags": {"fibre_optic": true}}},
+	"submarine": {"eu": {"research": "futureArsenal", "name": "Type 212CD (future programme)", "figures": [1.2, 1.1, 1.15, 1.0, 1.05]}},
+	"samLauncher": {"india": {"research": "futureArsenal", "name": "Akash-NG (future programme)", "figures": [1.1, 1.1, 1.1, 1.0, 1.1]}},
+	"fpvTeam": {"russia": {"research": "fibreOpticDrones", "name": "Fibre-optic FPV team", "figures": [1.0, 1.0, 1.05, 1.0, 1.3], "flags": {"fibre_optic": true}}, "ukraine": {"research": "fibreOpticDrones", "name": "Fibre-optic FPV team", "figures": [1.0, 1.0, 1.05, 1.0, 1.3], "flags": {"fibre_optic": true}}},
 }
 const DISCOVERIES := {
 	"nextGenAbrams": {"name": "M1E3 Abrams", "cost": 750, "branch": "army", "era": 4, "nation": "blue",

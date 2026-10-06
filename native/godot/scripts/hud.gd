@@ -15,18 +15,18 @@ extends CanvasLayer
 const UI := preload("res://scripts/ui_theme.gd")
 const BUILD_MENU := {
 	"Economy": ["villageCenter", "cityCenter", "farm", "cottage", "housing", "residential", "workerHouse", "warehouse", "foodDepot", "extractor", "offshoreRig", "fishingWharf", "mountainMine", "market", "port", "bank", "oilRefinery", "powerPlant"],
-	"Civic & research": ["school", "library", "university", "techPark", "chipFab", "hospital", "cityHall", "tvStation", "policeStation", "courthouse", "intelAgency", "nuclearReactor"],
-	"Military": ["barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo", "strategicComplex", "specialLab", "samSite", "bunker"],
+	"Civic & research": ["school", "library", "university", "techPark", "chipFab", "aiDataCenter", "hospital", "cityHall", "tvStation", "policeStation", "courthouse", "intelAgency", "nuclearReactor"],
+	"Military": ["barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo", "fusionCell", "strategicComplex", "specialLab", "samSite", "bunker"],
 }
 ## The build list in groups under each tab, in the order a city grows.
 const BUILD_GROUPS := {
 	"Economy": [["Settlements", ["villageCenter", "cityCenter"]], ["Homes", ["cottage", "housing", "residential", "workerHouse"]],
 		["Food and resources", ["farm", "extractor", "mountainMine", "offshoreRig", "fishingWharf", "foodDepot", "warehouse"]],
 		["Trade and industry", ["market", "port", "bank", "oilRefinery", "powerPlant"]]],
-	"Civic & research": [["Education and science", ["school", "library", "university", "techPark", "chipFab"]],
+	"Civic & research": [["Education and science", ["school", "library", "university", "techPark", "chipFab", "aiDataCenter"]],
 		["Public services", ["hospital", "cityHall", "tvStation", "policeStation", "courthouse"]], ["State", ["intelAgency", "nuclearReactor"]]],
 	"Military": [["Training", ["barracks", "tankFactory", "shipyard", "helipad", "airfield"]], ["Defence", ["bunker", "samSite"]],
-		["Strategic", ["ammoDepot", "missileSilo"]], ["Weapons of mass destruction", ["strategicComplex", "specialLab"]]],
+		["Strategic", ["ammoDepot", "missileSilo", "fusionCell"]], ["Weapons of mass destruction", ["strategicComplex", "specialLab"]]],
 }
 const RESOURCES := [
 	["money", "money", "Treasury. Taxes from your citizens, markets and land; spent on everything."],
@@ -969,6 +969,8 @@ func _build_row(b: String) -> void:
 	var why := ""
 	if def.get("unique", false) and world.buildings.any(func(x): return x.owner == 0 and x.key == b and not x.dead):
 		why = "Built (one per nation)"
+	elif def.get("reqDiscovery") != null and world.research != null and not world.research.done(str(def.reqDiscovery)):
+		why = "Needs %s" % world.research.def_of(str(def.reqDiscovery)).get("name", def.reqDiscovery)
 	var desc := str(def.desc)
 	var first := desc.split(". ")[0].strip_edges()
 	var row_desc := first if first.ends_with(".") else first + "."

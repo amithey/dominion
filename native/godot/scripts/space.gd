@@ -309,7 +309,7 @@ func jam(owner: int, target: int) -> String:
 ## Why the player cannot detonate a nuclear weapon in orbit, or "".
 func orbital_nuke_blocked() -> String:
 	if not preload("res://scripts/cbrn_data.gd").has(w, 0, "nuclearAsat"):
-		return "Only Russia is developing one."
+		return preload("res://scripts/cbrn_data.gd").blocked(w, 0, "nuclearAsat")
 	if w.research == null or not w.research.done("antiSatellite") or not w.research.done("nuclearProgram"):
 		return "Research Anti-Satellite Weapons and the Nuclear Program first."
 	if w.get("defcon") != null and w.defcon != null and w.defcon.release_blocked() != "":

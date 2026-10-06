@@ -181,7 +181,7 @@ func cap_of(res: String) -> float:
 
 func sell(res: String, qty: int) -> String:
 	if qty <= 0 or not cfg.price.has(res): return "Choose a positive quantity of a traded commodity."
-	if world.get("un") != null and world.un != null and world.un.market_closed(0):
+	if world.get("un") != null and world.un != null and world.un.market_closed(0, res):
 		return "UN comprehensive sanctions: the world market is closed to you."
 	if not has_market():
 		return "Instant market deals require a Market."
@@ -197,7 +197,7 @@ func sell(res: String, qty: int) -> String:
 
 func buy(res: String, qty: int) -> String:
 	if qty <= 0 or not cfg.price.has(res): return "Choose a positive quantity of a traded commodity."
-	if world.get("un") != null and world.un != null and world.un.market_closed(0):
+	if world.get("un") != null and world.un != null and world.un.market_closed(0, res):
 		return "UN comprehensive sanctions: the world market is closed to you."
 	if not has_market():
 		return "Instant market deals require a Market."
@@ -217,6 +217,8 @@ func buy(res: String, qty: int) -> String:
 
 func open_route(nation: int, res: String, dir: String, qty: int) -> String:
 	var d: Node = world.diplomacy
+	if world.get("un") != null and world.un != null and world.un.trade_blocked(0, nation, res):
+		return "UN restrictions block this trade; humanitarian food is exempt."
 	var overland := land_link(nation)
 	if ports() == 0 and overland == "":
 		return "Trade needs a Commercial Port, or a road or railway to one of %s's towns." % world.diplomacy.name_of(nation)
@@ -282,6 +284,9 @@ func tick() -> void:
 			world.hud.notice("Trade route with %s collapsed%s." % [d.name_of(r.nation), " — the cargo at sea was lost" if r.shipment != null else ""])
 			continue
 		var partner = ai_nation(r.nation)
+		if world.get("un") != null and world.un != null and world.un.trade_blocked(0, int(r.nation), str(r.res)):
+			r.status = "UN restrictions: cargo held pending review"
+			continue
 		if r.shipment != null and not r.get("overland", false) and preload("res://scripts/faction_powers.gd").sea_closed(world, 0):
 			r.status = "Strait closed: the cargo waits"
 			continue

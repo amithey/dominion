@@ -84,6 +84,10 @@ func listed_at(building_key: String) -> Array:
 
 ## "" when the player may build this type, otherwise the discovery it needs.
 func locked(key: String) -> String:
+	if not types().has(key) or def_of(key).get("hidden", false):
+		return "Unavailable payload"
+	var national: String = load("res://scripts/arsenal_catalog.gd").missile_blocked(world, 0, key)
+	if national != "": return national
 	var wmd = world.get("wmd")
 	var cbrn: bool = preload("res://scripts/cbrn_data.gd").CAPABILITY.has(key)
 	if cbrn and wmd != null:
@@ -91,13 +95,13 @@ func locked(key: String) -> String:
 		if why != "":
 			return why
 	else:
-		var only: String = preload("res://scripts/national_arsenal.gd").foreign(world, def_of(key).get("nation", ""))
+		var only: String = "" if world.map.nations[0].has("missiles") and key in world.map.nations[0].missiles else preload("res://scripts/national_arsenal.gd").foreign(world, def_of(key).get("nation", ""))
 		if only != "":
 			return only   # e.g. nuclear weapons outside the nuclear powers
 	if wmd != null and 0 in wmd.broken_out and key in ["nuke", "tacticalNuke", "nuclearEmp"]:
 		return ""   # a nuclear breakout skips the Nuclear Program
-	if key == "tacticalNuke" and cbrn and preload("res://scripts/cbrn_data.gd").shared_only(world, 0):
-		return ""   # NATO nuclear sharing: the owner's bombs, no programme of one's own
+	if category(key) == "nuclear" and world.research != null and not world.research.done("nuclearProgram"):
+		return "Needs Nuclear Program"
 	var need: String = def_of(key).get("needsDiscovery", "")
 	if need != "" and world.research and not world.research.done(need):
 		return "Needs %s" % world.research.def_of(need).get("name", need)
@@ -114,9 +118,36 @@ func launch_ships(owner := 0) -> Array:
 func silos(owner := 0) -> Array:
 	return world.buildings.filter(func(b): return b.owner == owner and b.key == "missileSilo" and b.built and not b.dead)
 
+## Payload-specific launch validation, shared by human and rival attacks.
+func platforms_for(key: String, owner := 0) -> Array:
+	var kind: String = load("res://scripts/arsenal_catalog.gd").platform_kind(world, owner, key)
+	if kind == "air":
+		return world.units.filter(func(u): return u.owner == owner and not u.dead and u.key in ["jet", "bomber", "stealthFighter", "raider"] and not world.disabled(u) and u.get("air_state", "ready") == "ready")
+	if kind == "drone":
+		return world.units.filter(func(u): return u.owner == owner and not u.dead and u.key in ["drone", "fpvTeam"] and not world.disabled(u) and u.get("air_state", "ready") == "ready")
+	if kind == "air_or_sea":
+		return world.units.filter(func(u): return u.owner == owner and not u.dead and not world.disabled(u) and (u.key in ["submarine", "nuclearSub", "destroyer", "corvette", "aegisCruiser"] or (u.key in ["jet", "bomber", "stealthFighter", "raider"] and u.get("air_state", "ready") == "ready")))
+	if kind in ["sea", "sub"]:
+		return world.units.filter(func(u): return u.owner == owner and not u.dead and not world.disabled(u) and u.key in (["nuclearSub"] if kind == "sub" or category(key) == "nuclear" else ["submarine", "nuclearSub", "destroyer", "corvette", "aegisCruiser"]))
+	if kind in ["strategic", "ground_or_sea"]:
+		var ships: Array = world.units.filter(func(u): return u.owner == owner and not u.dead and not world.disabled(u) and u.key in (["nuclearSub"] if kind == "strategic" else ["submarine", "nuclearSub", "destroyer", "corvette", "aegisCruiser"]))
+		return silos(owner).filter(func(b): return not world.disabled(b)) + ships
+	return silos(owner).filter(func(b): return not world.disabled(b))
+
+func available_to(owner: int, key: String) -> bool:
+	if not types().has(key) or def_of(key).get("hidden", false): return false
+	if load("res://scripts/arsenal_catalog.gd").missile_blocked(world, owner, key) != "": return false
+	if preload("res://scripts/cbrn_data.gd").CAPABILITY.has(key):
+		return preload("res://scripts/cbrn_data.gd").has(world, owner, key)
+	if world.map.nations[owner].has("missiles"):
+		return key in world.map.nations[owner].missiles
+	return preload("res://scripts/national_variants.gd").admits(def_of(key).get("nation", ""), preload("res://scripts/national_arsenal.gd").identity(world, owner))
+
 ## Queues a missile at `silo`. Returns an error or "".
 func produce(silo: Dictionary, key: String) -> String:
 	var def := def_of(key)
+	if int(silo.get("owner", -1)) != 0:
+		return "Cannot produce at another nation's facility."
 	if def.is_empty() or not silo.built or silo.dead:
 		return ""
 	var why := locked(key)
@@ -159,23 +190,24 @@ func build_time(key: String) -> float:
 ## Fires `key` at `target` from `platform` (a silo or a missile ship), or
 ## from the platform nearest the target when none is given.
 func launch(key: String, target: Vector3, platform = null) -> String:
+	var blocked := locked(key)
+	if blocked != "": return blocked
 	if int(stock.get(key, 0)) <= 0:
 		return "No %s in storage." % def_of(key).get("name", key)
 	if def_of(key).get("nuclear", key == "nuke") and world.get("defcon") != null and world.defcon.release_blocked() != "":
 		return world.defcon.release_blocked()   # the escalation ladder (defcon.gd)
-	var platforms: Array = silos() + launch_ships()
+	var platforms: Array = platforms_for(key)
 	if def_of(key).get("sub_only", false):
 		# A torpedo: from a nuclear submarine, at a coast (wmd.gd: Poseidon).
-		platforms = launch_ships().filter(func(u): return u.key == "nuclearSub")
 		if platforms.is_empty():
-			platforms = silos().filter(func(s): return world.water_near(s.node.position, 40) != null)   # a coastal launch (Haeil)
-		if platforms.is_empty():
-			return "%s is fired from a nuclear submarine or a coastal Missile Silo." % def_of(key).name
+			return "%s requires a strategic submarine." % def_of(key).name
 		if world.water_near(target, 40) == null:
 			return "%s needs a target on or near the sea." % def_of(key).name
 	if platforms.is_empty():
-		return "Missiles launch from a Missile Silo, a strategic submarine or a destroyer."
-	if platform == null or platform.dead:
+		return "Needs a compatible %s launch platform." % load("res://scripts/arsenal_catalog.gd").platform_kind(world, 0, key)
+	if platform != null and not platform in platforms:
+		return "This platform cannot launch that national payload."
+	if platform == null:
 		platform = platforms[0]
 		for s in platforms:
 			if s.node.position.distance_to(target) < platform.node.position.distance_to(target):

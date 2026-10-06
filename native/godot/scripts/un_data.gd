@@ -6,8 +6,8 @@ extends RefCounted
 ##
 ## A nation added later needs nothing here to take its seat in the General
 ## Assembly: it may carry "un_region", "nam" or "un" ("member" / "observer")
-## on its nation dictionary, and otherwise is a member of the Asia-Pacific
-## group (non-aligned unless it is a Western ally).
+## on its nation dictionary. Otherwise it is a member with an unassigned region,
+## with no assumed Non-Aligned Movement affiliation.
 
 const Factions := preload("res://scripts/factions.gd")
 
@@ -43,7 +43,7 @@ const SHIELDS := {
 ## Sanctions regimes in force when the match begins.
 const STANDING := {
 	"iran": {"res": "its nuclear programme", "measures": ["embargo", "targeted"]},
-	"north_korea": {"res": "its nuclear and missile programmes", "measures": ["embargo", "targeted", "economic"]},
+	"north_korea": {"res": "its nuclear and missile programmes (sectoral restrictions)", "measures": ["embargo", "targeted"]},
 	"afghanistan": {"res": "its government's ties to armed groups", "measures": ["targeted"]},
 }
 
@@ -54,11 +54,14 @@ static func seat_of(id: String) -> String:
 	return PROXY.get(id, id)
 
 static func permanent(w: Node, i: int) -> bool:
-	return seat_of(ident(w, i)) in PERMANENT
+	var n: Dictionary = w.map.nations[i] if i >= 0 and i < w.map.nations.size() else {}
+	# A seat override represents an existing P5, never creates a sixth veto.
+	return str(n.get("un_seat", seat_of(ident(w, i)))) in PERMANENT
 
 static func region(w: Node, i: int) -> String:
 	var n: Dictionary = w.map.nations[i] if i >= 0 and i < w.map.nations.size() else {}
-	return str(n.get("un_region", REGION.get(ident(w, i), "Asia-Pacific")))
+	var r := str(n.get("un_region", REGION.get(ident(w, i), "Unassigned")))
+	return r if SEATS.has(r) else "Unassigned"
 
 static func nam(w: Node, i: int) -> bool:
 	var n: Dictionary = w.map.nations[i] if i >= 0 and i < w.map.nations.size() else {}
@@ -67,7 +70,7 @@ static func nam(w: Node, i: int) -> bool:
 	var id := ident(w, i)
 	if id in NAM: return true
 	if id in WESTERN or id in PERMANENT or PROXY.has(id) or REGION.has(id): return false
-	return true   # a new nation from the global south, by default
+	return false   # unknown identity does not imply a political affiliation
 
 static func status(w: Node, i: int) -> String:
 	var n: Dictionary = w.map.nations[i] if i >= 0 and i < w.map.nations.size() else {}

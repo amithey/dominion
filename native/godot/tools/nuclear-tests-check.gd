@@ -25,6 +25,9 @@ func run() -> void:
 	w.set_physics_process(false)
 	w.ai.set_physics_process(false)
 	preload("res://tools/test_kit.gd").quiet(w, ["wmd", "un", "defcon", "tests"])
+	# Nuclear payloads are built once the Nuclear Program is researched (arsenal_catalog.gd).
+	w.research.progress["nuclearProgram"].stage = 3
+	w.research._recompute()
 	seed(5)
 	var d: Node = w.diplomacy
 	var nt = w.tests
@@ -128,7 +131,9 @@ func run() -> void:
 	var china: Dictionary = w.ai.nations.filter(func(n): return n.id == 1)[0]
 	china.tech = 5.0
 	for b in w.buildings.filter(func(x): return x.owner == 1 and x.key == "strategicComplex" and not x.dead): w.destroy_building(b)
-	check(w.ai.pick_building(china) == "strategicComplex", "a nuclear rival at technology 5 builds a Strategic Weapons Complex first")
+	# (its Missile Silo first: the launch platform, ai.pick_building)
+	w.place_building("missileSilo", w.test_site("missileSilo", w.buildings.filter(func(b): return b.owner == 1 and b.key == "hq")[0].root.position + Vector3(55, 0, -45)), 1, true)
+	check(w.ai.pick_building(china) == "strategicComplex", "a nuclear rival at technology 5 with a silo builds a Strategic Weapons Complex next")
 	for sub in w.units.filter(func(x): return x.owner == 1 and x.key == "nuclearSub" and not x.dead): w.kill(sub)
 	var fly0: int = ms.flying.size()
 	w.defcon._strike(1, "test")
@@ -149,7 +154,7 @@ func run() -> void:
 
 	# ---- the new conventional missiles
 	var silo_now: Array = ms.listed_at("missileSilo")
-	check(silo_now.has("bunkerMissile") and silo_now.has("thermobaricMissile") and silo_now.has("antiRadar") and silo_now.size() == 10, "the silo now lists ten conventional missiles")
+	check(silo_now.has("bunkerMissile") and silo_now.has("antiRadar") and not silo_now.has("thermobaricMissile") and silo_now.size() == 9, "the US silo lists the bunker-buster and anti-radiation missiles (the thermobaric one is Russia's): %d" % silo_now.size())
 	var base_hq: Vector3 = w.buildings.filter(func(b): return b.owner == 2 and b.key == "hq")[0].root.position
 	var bunker_t: Dictionary = w.place_building("bunker", w.test_site("bunker", base_hq + Vector3(70, 0, 0)), 2, true)
 	bunker_t.max_hp = 100000.0

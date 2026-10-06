@@ -71,6 +71,8 @@ func run() -> void:
 		for key in menu[tab]:
 			if not w.building_defs.has(key):
 				continue
+			if not preload("res://scripts/national_variants.gd").builds(w, 0, key):
+				continue   # not in this nation's build list (a Special Weapons Laboratory without such a programme)
 			var at = null
 			if key == "extractor" or key == "mountainMine":
 				for d in w.deposits:

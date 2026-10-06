@@ -23,6 +23,39 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.74: artificial intelligence, and Codex's researched arsenals and UN
+
+- **AI as a national resource** (Defence window, new **AI** tab; native/AI-RESEARCH-2026-10-06.md):
+  - **Compute** comes from your industry once you research **Machine Learning**, and from the new
+    **AI Data Center**. A data centre burns silicon and money, runs better beside a power plant or reactor,
+    and is a target.
+  - Split the compute four ways: **Military AI**, **Economy** (research and income), **Intelligence**
+    (the operations reserve and cyber defence) and **Training runs**.
+  - Training runs raise your **AI level** from 0 to 4, as far as research allows: Machine Learning, then
+    **Military AI**, then **Frontier Models**.
+  - Every nation has a real AI profile: compute, models, autonomy and cyber. The United States leads,
+    China is close, Russia and Ukraine field autonomy beyond their compute, and Saudi Arabia buys compute.
+- **Autonomy doctrine:**
+  - **Human in the loop:** safe.
+  - **On the loop:** drones a third harder to jam and stronger with each level.
+  - **Out of the loop:** drones almost unjammable and every unit deadlier. In exchange, incidents: your own
+    units struck, or civilians, which costs war support and goes to the Security Council.
+  - At AI level 3, loitering munitions and interceptor drones pick their own targets: air defences first,
+    then artillery, then armour.
+- **Targeting Fusion Cell** (Military AI): artillery hits harder and closer, and guided weapons stray less.
+- **AI cyber campaigns:**
+  - They need no agent, only compute, and reach several hostile nations at once, stopping their production.
+  - They can be traced back to you.
+  - Rivals with AI run campaigns against your factories; your cyber defence stops some.
+- **Rivals play by the same rules:** they build data centres and a fusion cell, train their AI with their
+  technology, and choose a doctrine by their nation's lean (and out of the loop when fighting for survival).
+- **Included from Codex:**
+  - The researched national arsenals: arsenal_catalog.gd, native/ARSENAL-RESEARCH-2026-10-06.md.
+  - The reworked UN: un_activity.gd, native/UN-RESEARCH-2026-10-05.md.
+- A building that needs research now says so in the build list.
+
+Checks: tools/ai-check.gd (53), tools/un-check.gd and tools/arsenal-check.gd (Codex).
+
 ## Version 0.9.73: rivals need their weapons facilities, and three new conventional missiles
 
 - **Rivals need the facilities too** (wmd.armed):

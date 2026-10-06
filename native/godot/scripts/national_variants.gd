@@ -1,22 +1,7 @@
 extends RefCounted
-## Which nations really field each weapon, and what each calls its own (2025-26).
-## The shared units keep their rules; a nation sees its own system's name
-## (China's stealth fighter is the J-20, Russia's the Su-57), and a weapon no
-## nation of that kind has is not open to it: no heavy bomber outside the three
-## nations that fly them, no stealth fighter for Iran, no sixth-generation
-## fighter outside the two nations flying one (the F-47 and the J-36; Europe's
-## FCAS and the GCAP of Japan, Britain and Italy are left out as programmes
-## that have collapsed), nuclear weapons only for the nuclear
-## powers (and Israel, undeclared), missile defence and lasers not for Iran.
-##
-## Arsenal keys (national_arsenal.identity): blue United States, red China,
-## green European Union, gold Iran, russia, india, japan, turkiye, israel.
-##
-## Sources, in brief: IISS Military Balance 2025; SIPRI nuclear forces 2025;
-## the F-47 (USAF, March 2025) and J-36 (first flight December 2024); KAAN first flight
-## February 2024; AMCA in development; Iron Beam operational 2025; DRDO's laser
-## test April 2025; Japan's ship railgun trials (JS Asuka, 2023-25); Epirus
-## Leonidas; China's railgun and XLUUV trials.
+## National operators and names. Future programmes are gated separately by
+## arsenal_catalog.gd; existing keys stay compatible with saved games.
+## Evidence and dates: native/ARSENAL-RESEARCH-2026-10-06.md.
 
 const ALL := ["blue", "red", "green", "gold", "russia", "india", "japan", "turkiye", "israel"]
 
@@ -24,12 +9,12 @@ const ALL := ["blue", "red", "green", "gold", "russia", "india", "japan", "turki
 const ONLY := {
 	"bomber": ["blue", "red", "russia"],
 	"stealthFighter": ["blue", "red", "green", "russia", "india", "japan", "turkiye", "israel", "uk", "south_korea", "australia"],
-	"sixthGen": ["blue", "red"],
-	"wingman": ["blue", "red"],
+	"sixthGen": ["blue", "red", "green", "uk", "japan"],
+	"wingman": ["blue", "red", "australia"],
 	"nuclearSub": ["blue", "red", "green", "russia", "india", "uk"],
-	"destroyer": ["blue", "red", "green", "gold", "russia", "india", "japan", "turkiye", "uk", "south_korea", "australia"],
+	"destroyer": ["blue", "red", "green", "gold", "russia", "india", "japan", "turkiye", "uk", "south_korea", "australia", "north_korea"],
 	"laserAD": ["blue", "red", "green", "russia", "india", "japan", "turkiye", "israel"],
-	"abmLauncher": ["blue", "red", "green", "russia", "india", "japan", "turkiye", "israel", "uk", "south_korea", "saudi"],
+	"abmLauncher": ["blue", "red", "green", "russia", "india", "japan", "israel", "uk", "south_korea", "saudi"],
 	"hpmVehicle": ["blue", "red", "japan"],
 	"railgunShip": ["red", "japan"],
 	"orca": ["blue", "red"],
@@ -37,14 +22,14 @@ const ONLY := {
 
 ## Who may research a discovery (absent: every nation).
 const RESEARCH_ONLY := {
-	"sixthGeneration": ["blue", "red"],
+	"sixthGeneration": ["blue", "red", "green", "uk", "japan"],
 	"nuclearProgram": ["blue", "red", "green", "russia", "india", "israel", "uk", "north_korea", "pakistan"],
 	"railguns": ["red", "japan"],
 	"unmannedSubmarines": ["blue", "red"],
 	"highPowerMicrowave": ["blue", "red", "japan"],
 	"glidePhaseInterceptor": ["blue", "japan"],
 	"directedEnergy": ["blue", "red", "green", "russia", "india", "japan", "turkiye", "israel"],
-	"missileDefence": ["blue", "red", "green", "russia", "india", "japan", "turkiye", "israel", "uk", "south_korea", "saudi"],
+	"missileDefence": ["blue", "red", "green", "russia", "india", "japan", "israel", "uk", "south_korea", "saudi"],
 	"activeProtection": ["blue", "red", "green", "russia", "turkiye", "israel"],
 }
 
@@ -64,9 +49,10 @@ const MISSILE_ONLY := {
 ## (native/UNIT-QUALITY-RESEARCH-2026-10-03.md).
 const EXCEPT := {
 	"jet": ["syria", "afghanistan"],
-	"gunship": ["syria", "afghanistan"],
+	"gunship": ["syria", "afghanistan", "brazil"],
+	"drone": ["australia"],
 	"gunboat": ["afghanistan"],
-	"corvette": ["syria", "afghanistan"],
+	"corvette": ["syria", "afghanistan", "iraq", "ukraine"],
 	"submarine": ["iraq", "syria", "afghanistan", "saudi", "ukraine"],
 	"samLauncher": ["syria", "afghanistan"],
 	"himars": ["iraq", "syria", "afghanistan"],
@@ -90,27 +76,27 @@ const BUILD_EXCEPT := {
 
 ## Each nation's own system for a shared unit.
 const NAMES := {
-	"tank": {"iraq": "M1A1M Abrams", "syria": "T-72", "afghanistan": "T-62 (captured)", "blue": "M1A2 SEPv3 Abrams", "red": "Type 99A", "green": "Leopard 2A8", "gold": "Karrar", "russia": "T-90M Proryv", "india": "Arjun Mk1A", "japan": "Type 10", "turkiye": "Altay", "israel": "Merkava Mk 4", "uk": "Challenger 2", "south_korea": "K2 Black Panther", "saudi": "M1A2S Abrams", "brazil": "Leopard 1A5BR", "indonesia": "Leopard 2A4", "ukraine": "T-64BV", "north_korea": "Chonma-216", "egypt": "M1A1 Abrams", "australia": "M1A2 SEPv3 Abrams", "pakistan": "VT-4 Haider"},
+	"tank": {"iraq": "M1A1M Abrams", "syria": "T-72", "afghanistan": "T-62 (captured)", "blue": "M1A2 SEPv3 Abrams", "red": "Type 99A", "green": "Leopard 2A7V", "gold": "Karrar", "russia": "T-90M Proryv", "india": "Arjun Mk1", "japan": "Type 10", "turkiye": "Altay", "israel": "Merkava Mk 4", "uk": "Challenger 2", "south_korea": "K2 Black Panther", "saudi": "M1A2S Abrams", "brazil": "Leopard 1A5BR", "indonesia": "Leopard 2A4", "ukraine": "T-64BV", "north_korea": "Chonma-216", "egypt": "M1A1 Abrams", "australia": "M1A2 SEPv3 Abrams", "pakistan": "VT-4 Haider"},
 	"apc": {"afghanistan": "Humvee (captured)", "blue": "Stryker", "red": "ZBL-08", "green": "Boxer", "gold": "Rakhsh", "russia": "BTR-82A", "india": "WhAP", "japan": "Type 96 APC", "turkiye": "Pars", "israel": "Eitan", "uk": "Boxer", "south_korea": "K21", "saudi": "LAV 700", "brazil": "VBTP Guarani", "indonesia": "Anoa", "ukraine": "BTR-4", "north_korea": "M-2010", "egypt": "M113 / Fahd", "australia": "Boxer CRV", "pakistan": "Saad / M113", "iraq": "BTR-4 / M113", "syria": "BMP-1"},
 	"artillery": {"blue": "M109A7 Paladin", "red": "PLZ-05", "green": "PzH 2000", "gold": "Raad-2", "russia": "2S19 Msta-S", "india": "K9 Vajra-T", "japan": "Type 99 SPH", "turkiye": "T-155 Firtina", "israel": "Roem", "uk": "AS-90 / Archer", "south_korea": "K9A1 Thunder", "saudi": "CAESAR", "brazil": "M109A5+ BR", "indonesia": "CAESAR", "ukraine": "2S3 / PzH 2000 / Krab", "north_korea": "M1989 Koksan", "egypt": "M109A5", "australia": "AS9 Huntsman", "pakistan": "M109A5 / SH-15", "iraq": "M109A5", "syria": "2S1 Gvozdika / D-30", "afghanistan": "D-30 (towed)"},
 	"mlrs": {"iraq": "BM-21 Grad", "syria": "BM-21 Grad", "afghanistan": "BM-21 Grad", "blue": "M270 MLRS", "red": "PHL-03", "green": "MARS II", "gold": "Fajr-5", "russia": "BM-30 Smerch", "india": "Pinaka", "japan": "M270 (JGSDF)", "turkiye": "T-122 Sakarya", "israel": "Lynx", "uk": "M270A2 MLRS", "south_korea": "K239 Chunmoo", "saudi": "ASTROS II", "brazil": "ASTROS II Mk6", "indonesia": "ASTROS II / RM-70", "ukraine": "BM-27 / HIMARS", "north_korea": "KN-25 / M1991", "egypt": "BM-21 Sakr", "australia": "M142 HIMARS", "pakistan": "A-100 / Fatah-1"},
 	"himars": {"blue": "HIMARS", "red": "PCH-191", "green": "EuroPULS", "gold": "Fath-360 launcher", "russia": "Tornado-S", "india": "Guided Pinaka", "japan": "M270 GMLRS", "turkiye": "TRLG-230", "israel": "PULS"},
 	"aaVehicle": {"iraq": "Pantsir-S1", "syria": "35 mm air defence gun", "afghanistan": "ZU-23-2", "blue": "M-SHORAD", "red": "PGZ-09", "green": "Skyranger 30", "gold": "ZSU-23-4 Shilka", "russia": "Pantsir-S1", "india": "2K22 Tunguska", "japan": "Type 87 SPAAG", "turkiye": "Korkut", "israel": "Iron Dome battery", "uk": "Stormer HVM", "south_korea": "K30 Biho II", "saudi": "Avenger / Shahine", "brazil": "Gepard 1A2", "indonesia": "Skyshield / RBS 70", "ukraine": "Gepard / Strela-10", "north_korea": "M1992 30 mm", "egypt": "Avenger / Sinai-23", "australia": "RBS 70 (vehicle)", "pakistan": "LY-80 / Oerlikon"},
-	"samLauncher": {"iraq": "Cheongung II (KM-SAM)", "blue": "Patriot PAC-3", "red": "HQ-9B", "green": "SAMP/T NG", "gold": "Bavar-373", "russia": "S-400", "india": "Akash-NG", "japan": "Type 03 Chu-SAM", "turkiye": "Hisar-O", "israel": "David's Sling", "uk": "Sky Sabre (CAMM)", "south_korea": "Cheongung II", "saudi": "Patriot PAC-3", "brazil": "RBS 70 NG battery", "indonesia": "NASAMS", "ukraine": "Patriot / IRIS-T / NASAMS", "north_korea": "KN-06 (Pongae-5)", "egypt": "S-300VM / IRIS-T SLM", "australia": "NASAMS", "pakistan": "HQ-9/P"},
+	"samLauncher": {"iraq": "Cheongung II (KM-SAM)", "blue": "Patriot PAC-3", "red": "HQ-9B", "green": "SAMP/T NG", "gold": "Bavar-373", "russia": "S-400", "india": "Akash", "japan": "Type 03 Chu-SAM", "turkiye": "Hisar-O", "israel": "David's Sling", "uk": "Sky Sabre (CAMM)", "south_korea": "Cheongung II", "saudi": "Patriot PAC-3", "brazil": "RBS 70 NG battery", "indonesia": "NASAMS", "ukraine": "Patriot / IRIS-T / NASAMS", "north_korea": "KN-06 (Pongae-5)", "egypt": "S-300VM / IRIS-T SLM", "australia": "NASAMS", "pakistan": "HQ-9/P"},
 	"helicopter": {"iraq": "Mi-17", "syria": "Mi-17", "afghanistan": "UH-60 (captured)", "blue": "UH-60M Black Hawk", "red": "Z-20", "green": "NH90", "gold": "Shabaviz 2-75", "russia": "Mi-8AMTSh", "india": "Dhruv ALH", "japan": "UH-60JA", "turkiye": "T70 Black Hawk", "israel": "UH-60 Yanshuf", "uk": "Merlin HC4", "south_korea": "KUH-1 Surion", "saudi": "UH-60M", "brazil": "H225M", "indonesia": "Bell 412EPI", "ukraine": "Mi-8", "north_korea": "Mi-8", "egypt": "UH-60 / Mi-17", "australia": "UH-60M", "pakistan": "Mi-17"},
-	"gunship": {"iraq": "Mi-28NE", "blue": "AH-64E Apache", "red": "Z-10ME", "green": "Tiger", "gold": "Toufan", "russia": "Ka-52M", "india": "LCH Prachand", "japan": "AH-64DJP", "turkiye": "T129 ATAK", "israel": "AH-64 Saraf", "uk": "AH-64E Apache", "south_korea": "AH-64E Apache", "saudi": "AH-64E Apache", "brazil": "AH-2 Sabre (Mi-35)", "indonesia": "AH-64E Apache", "ukraine": "Mi-24", "north_korea": "Mi-24", "egypt": "AH-64D / Ka-52", "australia": "AH-64E Apache", "pakistan": "AH-1F Cobra / Z-10ME"},
-	"jet": {"iraq": "F-16IQ Fighting Falcon", "blue": "F-15EX Eagle II", "red": "J-16", "green": "Rafale / Typhoon", "gold": "MiG-29", "russia": "Su-35S", "india": "Su-30MKI", "japan": "F-15J", "turkiye": "F-16 Block 50", "israel": "F-15I Ra'am", "uk": "Typhoon FGR4", "south_korea": "KF-21 Boramae / F-15K", "saudi": "F-15SA", "brazil": "Gripen E", "indonesia": "F-16 Block 52ID", "ukraine": "F-16 / MiG-29", "north_korea": "MiG-29 / MiG-21", "egypt": "Rafale / F-16", "australia": "F/A-18F Super Hornet", "pakistan": "JF-17 Block III / F-16"},
+	"gunship": {"iraq": "Mi-28NE", "blue": "AH-64E Apache", "red": "Z-10", "green": "Tiger", "gold": "Toufan", "russia": "Ka-52M", "india": "LCH Prachand", "japan": "AH-64DJP", "turkiye": "T129 ATAK", "israel": "AH-64 Saraf", "uk": "AH-64E Apache", "south_korea": "AH-64E Apache", "saudi": "AH-64E Apache", "brazil": "AH-2 Sabre (Mi-35)", "indonesia": "AH-64E Apache", "ukraine": "Mi-24", "north_korea": "Mi-24", "egypt": "AH-64D / Ka-52", "australia": "AH-64E Apache", "pakistan": "AH-1F Cobra / Z-10ME"},
+	"jet": {"iraq": "F-16IQ Fighting Falcon", "blue": "F-15EX Eagle II", "red": "J-16", "green": "Rafale / Typhoon", "gold": "MiG-29", "russia": "Su-35S", "india": "Su-30MKI", "japan": "F-15J", "turkiye": "F-16 Block 50", "israel": "F-15I Ra'am", "uk": "Typhoon FGR4", "south_korea": "KF-21 Boramae / F-15K", "saudi": "F-15SA", "brazil": "Gripen E", "indonesia": "Rafale / F-16", "ukraine": "F-16 / MiG-29", "north_korea": "MiG-29 / MiG-21", "egypt": "Rafale / F-16", "australia": "F/A-18F Super Hornet", "pakistan": "J-10C / JF-17 / F-16"},
 	"bomber": {"blue": "B-52H Stratofortress", "red": "H-6K", "russia": "Tu-160M"},
-	"drone": {"iraq": "CH-4B", "blue": "MQ-9 Reaper", "red": "Wing Loong II", "green": "Heron TP", "gold": "Mohajer-6", "russia": "Orion", "india": "TAPAS-BH", "japan": "MQ-9B SeaGuardian", "turkiye": "Bayraktar TB2", "israel": "Hermes 900", "uk": "MQ-9B Protector", "south_korea": "KUS-FS", "saudi": "Wing Loong II / Akinci", "brazil": "Hermes 900", "indonesia": "CH-4B / Anka", "ukraine": "Bayraktar TB2 / domestic", "north_korea": "Saetbyol-4/9", "egypt": "Wing Loong I / CH-4", "australia": "MQ-9B", "pakistan": "Shahpar III / Burraq", "syria": "Shaheen", "afghanistan": "Taliban-built drone"},
-	"corvette": {"blue": "Freedom-class LCS", "red": "Type 056A", "green": "K130 Braunschweig", "gold": "Shahid Soleimani-class", "russia": "Karakurt-class", "india": "Kamorta-class", "japan": "Mogami-class", "turkiye": "Ada-class", "israel": "Sa'ar 6", "uk": "Type 31 / River OPV", "south_korea": "Daegu-class", "saudi": "Al Jubail-class", "brazil": "Tamandare-class", "indonesia": "Martadinata-class", "ukraine": "Island-class patrol boat", "north_korea": "Amnok-class", "egypt": "Gowind 2500", "australia": "Anzac-class", "pakistan": "Babur-class (MILGEM)", "iraq": "Musa Ben Nussair-class"},
-	"destroyer": {"uk": "Type 45", "south_korea": "Sejong the Great-class", "australia": "Hobart-class", "blue": "Arleigh Burke-class", "red": "Type 055", "green": "Horizon-class", "gold": "Moudge-class", "russia": "Admiral Gorshkov-class", "india": "Visakhapatnam-class", "japan": "Maya-class", "turkiye": "Istanbul-class"},
-	"submarine": {"blue": "Virginia-class", "red": "Type 039C", "green": "Type 212CD", "gold": "Fateh-class", "russia": "Improved Kilo", "india": "Kalvari-class", "japan": "Taigei-class", "turkiye": "Reis-class", "israel": "Dolphin II", "uk": "Astute-class", "south_korea": "Dosan Ahn Changho-class", "brazil": "Riachuelo-class", "indonesia": "Nagapasa-class", "north_korea": "Romeo-class", "egypt": "Type 209/1400", "australia": "Collins-class", "pakistan": "Agosta 90B"},
+	"drone": {"iraq": "CH-4B", "blue": "MQ-9 Reaper", "red": "Wing Loong II", "green": "Heron TP", "gold": "Mohajer-6", "russia": "Orion", "india": "TAPAS-BH", "japan": "MQ-9B SeaGuardian", "turkiye": "Bayraktar TB2", "israel": "Hermes 900", "uk": "MQ-9B Protector", "south_korea": "KUS-FS", "saudi": "Wing Loong II / Akinci", "brazil": "Hermes 900", "indonesia": "CH-4B / Anka", "ukraine": "Bayraktar TB2 / domestic", "north_korea": "Saetbyol-4/9", "egypt": "Wing Loong I / CH-4", "australia": "MQ-9B", "pakistan": "Shahpar II / Burraq", "syria": "Shaheen", "afghanistan": "Taliban-built drone"},
+	"corvette": {"blue": "Freedom-class LCS", "red": "Type 056A", "green": "K130 Braunschweig", "gold": "Shahid Soleimani-class", "russia": "Karakurt-class", "india": "Kamorta-class", "japan": "Mogami-class", "turkiye": "Ada-class", "israel": "Sa'ar 6", "uk": "Type 23 frigate", "south_korea": "Daegu-class", "saudi": "Al Jubail-class", "brazil": "Tamandare-class", "indonesia": "Martadinata-class", "ukraine": "Island-class patrol boat", "north_korea": "Amnok-class", "egypt": "Gowind 2500", "australia": "Anzac-class", "pakistan": "Babur-class (MILGEM)", "iraq": "Musa Ben Nussair-class"},
+	"destroyer": {"uk": "Type 45", "south_korea": "Sejong the Great-class", "australia": "Hobart-class", "blue": "Arleigh Burke-class", "red": "Type 055", "green": "Horizon-class", "gold": "Moudge-class", "russia": "Udaloy-class", "india": "Visakhapatnam-class", "japan": "Maya-class", "turkiye": "Istanbul-class", "north_korea": "Choe Hyon-class"},
+	"submarine": {"blue": "Virginia-class", "red": "Type 039C", "green": "Type 212A", "gold": "Fateh-class", "russia": "Improved Kilo", "india": "Kalvari-class", "japan": "Taigei-class", "turkiye": "Reis-class", "israel": "Dolphin II", "uk": "Astute-class", "south_korea": "Dosan Ahn Changho-class", "brazil": "Riachuelo-class", "indonesia": "Nagapasa-class", "north_korea": "Romeo-class", "egypt": "Type 209/1400", "australia": "Collins-class", "pakistan": "Agosta 90B"},
 	"nuclearSub": {"uk": "Vanguard-class", "blue": "Ohio-class", "red": "Type 094", "green": "Triomphant-class", "russia": "Borei-A", "india": "Arihant-class"},
 	"stealthFighter": {"uk": "F-35B Lightning", "south_korea": "F-35A", "australia": "F-35A", "blue": "F-35A Lightning II", "red": "J-20", "green": "F-35A", "russia": "Su-57", "india": "AMCA", "japan": "F-35A", "turkiye": "KAAN", "israel": "F-35I Adir"},
 	"sixthGen": {"blue": "F-47", "red": "J-36"},
-	"wingman": {"blue": "FQ-42A Dark Merlin", "red": "FH-97A"},
-	"atgmTeam": {"blue": "Javelin team", "red": "HJ-12 team", "green": "MMP team", "gold": "Dehlavieh team", "russia": "Kornet team", "india": "MPATGM team", "japan": "Type 01 LMAT team", "turkiye": "OMTAS team", "israel": "Spike team", "uk": "Javelin / NLAW team", "south_korea": "Raybolt team", "saudi": "TOW-2 / Javelin team", "brazil": "MSS-1.2 team", "indonesia": "Javelin team", "ukraine": "Stugna-P / Javelin team", "north_korea": "Bulsae-4 team", "egypt": "TOW / Kornet team", "australia": "Javelin team", "pakistan": "Baktar-Shikan team", "iraq": "Kornet team", "syria": "Kornet team", "afghanistan": "RPG-29 team"},
-	"manpads": {"blue": "Stinger team", "red": "FN-16 team", "green": "Mistral 3 team", "gold": "Misagh-3 team", "russia": "Verba team", "india": "VSHORADS team", "japan": "Type 91 Kin-SAM team", "turkiye": "Sungur team", "israel": "Stinger team", "uk": "Starstreak / Martlet team", "south_korea": "Chiron team", "saudi": "Stinger / Mistral team", "brazil": "RBS 70 NG / Igla-S team", "indonesia": "QW-3 / Mistral team", "ukraine": "Stinger / Piorun team", "north_korea": "HT-16PGJ team", "egypt": "Ain Sakr / Stinger team", "australia": "RBS 70 team", "pakistan": "Anza Mk-III team", "iraq": "Igla team", "syria": "Igla / Strela team", "afghanistan": "Strela-2 team"},
+	"wingman": {"blue": "FQ-42 Vengeance", "red": "FH-97A"},
+	"atgmTeam": {"blue": "Javelin team", "red": "HJ-12 team", "green": "MMP team", "gold": "Dehlavieh team", "russia": "Kornet team", "india": "MILAN / Konkurs team", "japan": "Type 01 LMAT team", "turkiye": "OMTAS team", "israel": "Spike team", "uk": "Javelin / NLAW team", "south_korea": "Raybolt team", "saudi": "TOW-2 / Javelin team", "brazil": "MSS-1.2 team", "indonesia": "Javelin team", "ukraine": "Stugna-P / Javelin team", "north_korea": "Bulsae-4 team", "egypt": "TOW / Kornet team", "australia": "Javelin team", "pakistan": "Baktar-Shikan team", "iraq": "Kornet team", "syria": "Kornet team", "afghanistan": "Anti-armour rocket team"},
+	"manpads": {"blue": "Stinger team", "red": "FN-16 team", "green": "Mistral 3 team", "gold": "Misagh-3 team", "russia": "Verba team", "india": "Igla-S team", "japan": "Type 91 Kin-SAM team", "turkiye": "Sungur team", "israel": "Stinger team", "uk": "Starstreak / Martlet team", "south_korea": "Chiron team", "saudi": "Stinger / Mistral team", "brazil": "RBS 70 NG / Igla-S team", "indonesia": "QW-3 / Mistral team", "ukraine": "Stinger / Piorun team", "north_korea": "HT-16PGJ team", "egypt": "Ain Sakr / Stinger team", "australia": "RBS 70 team", "pakistan": "Anza Mk-III team", "iraq": "Igla team", "syria": "Igla / Strela team", "afghanistan": "Strela-2 team"},
 	"loiterer": {"blue": "Switchblade 600", "red": "CH-901", "green": "HX-2", "gold": "Arash", "russia": "Lancet-3", "india": "Nagastra-1", "japan": "Loitering munition", "turkiye": "Kargu-2", "israel": "Hero-120"},
 	"ewVehicle": {"russia": "Krasukha-4", "red": "Type 2 EW truck", "turkiye": "KORAL", "israel": "Elbit EW truck"},
 	"laserAD": {"blue": "DE M-SHORAD", "red": "Silent Hunter", "green": "Rheinmetall HEL", "russia": "Zadira", "india": "DRDO Mk-II(A) laser", "japan": "ATLA high-energy laser", "turkiye": "ALKA", "israel": "Iron Beam"},
@@ -194,17 +180,23 @@ static func admits(field, id: String) -> bool:
 
 ## Unit `key` as nation `owner` calls it.
 static func name_for(w: Node, owner: int, key: String) -> String:
+	if w.map.nations[owner].get("unit_names", {}).has(key):
+		return str(w.map.nations[owner].unit_names[key])
+	var catalog = load("res://scripts/arsenal_catalog.gd")
+	var identity_id: String = preload("res://scripts/factions.gd").identity(w, owner)
 	var id: String = preload("res://scripts/national_arsenal.gd").identity(w, owner)
 	var up: Dictionary = preload("res://scripts/unit_quality.gd").upgrade(w, owner, preload("res://scripts/factions.gd").identity(w, owner), key)
 	if not up.is_empty():
 		return str(up.name)   # its successor, once researched (the M1E3 Abrams)
+	if catalog.UNIT_NAMES.get(key, {}).has(identity_id):
+		return str(catalog.UNIT_NAMES[key][identity_id])
 	if NAMES.has(key) and NAMES[key].has(id):
 		return NAMES[key][id]
 	var def: Dictionary = w.unit_defs.get(key, {})
 	return str(def.get("generic", def.get("name", key)))
 
 ## Stand-ins in a starting army for units the chosen nation does not field.
-const STAND_IN := {"bomber": "jet", "nuclearSub": "submarine", "destroyer": "corvette", "stealthFighter": "jet", "sixthGen": "jet"}
+const STAND_IN := {"bomber": "jet", "raider": "bomber", "nuclearSub": "submarine", "destroyer": "corvette", "stealthFighter": "jet", "sixthGen": "jet", "samLauncher": "aaVehicle", "corvette": "gunboat", "gunship": "helicopter", "drone": "helicopter"}
 
 ## Swaps the player's starting units its nation does not have (match_setup):
 ## a stand-in it does field, else a drone for an aircraft and nothing for a
@@ -226,6 +218,11 @@ static func fix_start(data: Dictionary, arsenal: String) -> void:
 
 ## Whether nation `arsenal` fields shared unit `key` (ONLY and EXCEPT).
 static func fields(key: String, arsenal: String) -> bool:
+	# No starting army receives a prototype before the programme is researched.
+	var ix: int = preload("res://scripts/factions.gd").ARSENALS.find(arsenal)
+	var id: String = preload("res://scripts/factions.gd").IDS[ix] if ix >= 0 else arsenal
+	if id in load("res://scripts/arsenal_catalog.gd").UNIT_PROGRAMS.get(key, []) or (key == "samLauncher" and id == "iraq"):
+		return false
 	if ONLY.has(key) and not arsenal in ONLY[key]:
 		return false
 	return not arsenal in EXCEPT.get(key, [])

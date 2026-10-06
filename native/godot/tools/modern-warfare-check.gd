@@ -178,6 +178,9 @@ func run() -> void:
 	var nation: Dictionary = w.ai.nations[0]
 	var home: Dictionary = w.ai.hq(nation.id)
 	nation.money = 5000.0
+	# A rival fires from a Missile Silo of its own (arsenal_catalog.gd platforms_for).
+	if not w.buildings.any(func(x): return x.owner == nation.id and x.key == "missileSilo" and not x.dead):
+		w.place_building("missileSilo", w.test_site("missileSilo", home.root.position + Vector3(50, 0, -50)), nation.id, true)
 	var m: Dictionary = w.ai.missile_strike(nation, home, 3.0)
 	check(not m.is_empty() and int(m.owner) == nation.id and m.type in ["tactical", "cruise"], "a rival at war fires a %s at you" % str(m.get("type", "nothing")))
 	var hq: Dictionary = w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0]

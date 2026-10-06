@@ -53,7 +53,7 @@ static func run(w: Node) -> void:
 		for b in w.missiles.silos():
 			b.dead = true
 		var sub: Dictionary = w.spawn_unit("nuclearSub", sea, 0)
-		var first: String = w.missiles.types().keys()[0]
+		var first: String = "cruise"   # a compatible national naval payload, not an arbitrary ground missile
 		w.missiles.stock[first] = 2
 		var said: String = w.missiles.launch(first, sea + Vector3(60, 0, 60), sub)
 		print("STATE submarine launch: " + said)

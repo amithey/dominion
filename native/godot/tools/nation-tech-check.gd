@@ -50,7 +50,7 @@ const LACKS := {
 }
 const EXPECT_NAMES := {"china": {"stealthFighter": "J-20", "sixthGen": "J-36", "tank": "Type 99A"}, "russia": {"stealthFighter": "Su-57", "tank": "T-90M Proryv"},
 	"usa": {"stealthFighter": "F-35A Lightning II", "sixthGen": "F-47"}, "iran": {"jet": "MiG-29", "tank": "Karrar"}, "israel": {"stealthFighter": "F-35I Adir", "laserAD": "Iron Beam"},
-	"turkiye": {"stealthFighter": "KAAN", "drone": "Bayraktar TB2"}, "japan": {"stealthFighter": "F-35A", "tank": "Type 10"}, "india": {"stealthFighter": "AMCA", "jet": "Su-30MKI"}, "eu": {"tank": "Leopard 2A8"},
+	"turkiye": {"stealthFighter": "KAAN", "drone": "Bayraktar TB2"}, "japan": {"stealthFighter": "F-35A", "tank": "Type 10"}, "india": {"stealthFighter": "AMCA", "jet": "Su-30MKI"}, "eu": {"tank": "Leopard 2A7V"},
 	"iraq": {"jet": "F-16IQ Fighting Falcon", "tank": "M1A1M Abrams"}, "syria": {"tank": "T-72"}, "afghanistan": {"helicopter": "UH-60 (captured)"}}
 func _initialize() -> void: call_deferred("run")
 func check(ok: bool, label: String) -> void:
@@ -113,7 +113,7 @@ func run() -> void:
 		check(wrong.is_empty(), "%s: its systems by their own names %s" % [id, str(EXPECT_NAMES.get(id, {}).values()) if wrong.is_empty() else str(wrong)])
 		# 4: nuclear weapons and hypersonic missiles.
 		var nuclear: bool = id in ["usa", "china", "eu", "russia", "india", "israel", "uk", "north_korea", "pakistan"]
-		var hyper: bool = id in ["usa", "china", "russia", "india", "iran", "japan", "turkiye"]
+		var hyper: bool = id in ["usa", "china", "russia", "india", "iran", "japan"]
 		var nuke_open: bool = not w.missiles.locked("nuke").ends_with("only") and not w.missiles.locked("nuke").begins_with("Not fielded")
 		var hyper_open: bool = not w.missiles.locked("hypersonic").begins_with("Not fielded")
 		var program_open: bool = not w.research.blocker("nuclearProgram").begins_with("Not fielded")

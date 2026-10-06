@@ -62,8 +62,8 @@ const NATIVE := {
 	"satelliteRecon": [{"warn": 1.0}, "Every attack on you is reported 30 seconds before it sets out."],
 	"microchips": [{"chips": 1.0}, "Chip Fabs turn silicon into money and research. Requires a Tech Park."],
 	"navalEngineering": [{}, "Unlocks the Destroyer and the Submarine, and the Anti-Ship Missile. Requires a Shipyard."],
-	"ballisticTech": [{}, "Unlocks Ballistic and Hypersonic Missiles. Requires a Missile Silo."],
-	"nuclearProgram": [{}, "Unlocks the Nuclear Missile and the Nuclear Submarine. Requires a Nuclear Reactor. The world will fear, and hate, you."],
+	"ballisticTech": [{}, "Unlocks your nation's eligible ballistic families. Hypersonic trial programmes also require Future Arsenal. Requires a Missile Silo."],
+	"nuclearProgram": [{}, "Unlocks eligible national nuclear payloads and strategic submarines. Requires a Nuclear Reactor; payloads use their appropriate ground, aircraft or submarine platforms."],
 	"fusionPower": [{"incomePct": 0.15, "prodPct": 0.1}, "+15% income and +10% production: energy too cheap to meter."],
 	"massMedia": [{"happiness": 4}, "+4 happiness. Requires a TV Station."],
 	"secretPolice": [{"counterSpy": 0.2, "happiness": -3}, "+20% chance to catch enemy agents, -3 happiness. Requires a Police Station."],
@@ -244,7 +244,7 @@ func _recompute() -> void:
 		for stat in news:
 			_add(stat, float(news[stat]))
 	# Poisoned and sick towns (wmd.gd), and UN sanctions (un.gd).
-	for sys in ["wmd", "un"]:
+	for sys in ["wmd", "un", "directorate"]:   # (directorate: the AI economy pool, ai_directorate.gd)
 		if world != null and world.get(sys) != null:
 			var fx: Dictionary = world.get(sys).bonuses()
 			for stat in fx:
@@ -265,6 +265,12 @@ func _add(stat: String, v: float) -> void:
 
 ## "" when the player may train `unit`, otherwise what it needs.
 func unit_locked(unit: String) -> String:
+	var programme: String = load("res://scripts/arsenal_catalog.gd").unit_blocked(world, 0, unit)
+	if programme != "": return programme
+	if world.map.nations[0].has("units"):
+		if not unit in world.map.nations[0].units: return "Not fielded by this nation"
+		var custom_need: String = str(world.unit_defs.get(unit, {}).get("requires", ""))
+		return "" if custom_need == "" or done(custom_need) else "Needs %s" % def_of(custom_need).get("name", custom_need)
 	var only: String = preload("res://scripts/national_arsenal.gd").foreign(world, world.unit_defs.get(unit, {}).get("nation", ""))
 	if only != "":
 		return only

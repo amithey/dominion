@@ -131,10 +131,10 @@ func run() -> void:
 		if n.id == 2: rival_us = n
 	rival_us.tech = 4.0
 	var old_rival: Dictionary = w.spawn_unit("tank", flat(spot + Vector3(-40, 0, 0)), 2)
-	rival_us.tech = 8.0
+	rival_us.tech = 10.0
 	var new_rival: Dictionary = w.spawn_unit("tank", flat(spot + Vector3(-50, 0, 0)), 2)
 	check(not old_rival.get("aps_builtin", false) and new_rival.get("aps_builtin", false) and V.name_for(w, 2, "tank") == "M1E3 Abrams",
-		"a rival United States fields the M1E3 once its technology reaches era 4")
+		"a rival United States fields the future M1E3 once its technology reaches era 5")
 	rival_us.tech = 0.0
 	w.research.progress["nextGenAbrams"].stage = 0
 	w.map.nations[0].id = "israel"

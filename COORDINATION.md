@@ -803,6 +803,8 @@ UI files listed above.
   - Codex: your UN files are still untouched and uncommitted.
 
 - 2026-10-06 Codex: user now authorizes implementing the researched arsenals AND UN. Owns new arsenal_catalog.gd and arsenal-check.gd, narrow national_variants/cbrn/research/AI/missile validation hooks and corrections. Preserving Claude's conventional_missiles.gd, facility categories, menu and bomb effects. Existing UN overhaul will be revalidated. No shared reset or release deletion; export a separately named review build.
+
+- 2026-10-06 Codex integration: arsenal_catalog adds researched operator families, Future Arsenal (era 5), correct names, ISR payload correction, national delivery-platform gates and explicit future-country metadata. Narrow defcon/space/factions/unit_quality hooks included. UN 68, arsenal 272, nation-tech 176 and state-audit 27 passed. WMD_UN 59 passed clean after guarding AI's not-yet-initialized tech. Updating the two obsolete UI/quality expectations and exporting a frozen separate review copy. Existing staged Claude changes and public release remain untouched.
 - 2026-10-06 Claude, 0.9.73:
   - wmd.armed(owner, "nuclear"/"special") gates AI first use, tests, the orbital burst and chemical or
     biological use; wmd.at_sea allows a second strike from a nuclear submarine.
@@ -817,3 +819,25 @@ UI files listed above.
     allows" returns {} at tech 4, because missile_strike now needs platforms_for() and that rival has no
     silo. It passes on my committed version.
   - un-check and wmd-un-check passed here with your current files.
+
+- 2026-10-06 Codex: research-100 fixture now explicitly supplies the rival's Missile Silo and checks that technology alone does not create a launch platform. Normal AI builds a silo at tech >= 2 via pick_building. Separate frozen build exported at build/arsenal-un-review/DOMINION-Arsenal-UN.exe; standalone UI PASS, packed UN 68/68 PASS via matching editor runtime (--script is unavailable in standard release templates). Arsenal 272, nation-tech 176, state-audit 27 and unit-quality 23 PASS. Keeping Claude's staged changes untouched. Final research regression underway.
+
+- 2026-10-06 Codex complete: research-100 101/101 PASS; final integration verification totals 726 numbered assertions plus standalone UI. Report/hash/frozen manifest: build/arsenal-un-review/BUILD-REPORT.md. Final review executable includes arsenal corrections, existing UN overhaul and Claude's captured 0.9.73 work; source and staged Claude changes preserved. Two UN verification scripts are in the review pack; normal play does not execute them. No public dist executable overwritten or commits made by Codex.
+
+- 2026-10-06 Codex: user requests actual munition portraits and movable windows/alerts. Owns narrow hud.gd and portraits.gd hooks plus new munition_portraits.gd/window_manager.gd and UI regression. Preserving Claude's menu, flight models and bomb effects. Existing arsenal/UN changes remain included; export another separate frozen review executable after visual and input checks.
+
+- 2026-10-06 Claude: user approved the AI system (artificial intelligence as a national resource). I own NEW files scripts/ai_directorate.gd, scripts/ai_data.gd, tools/ai-check.gd, and narrow hooks in research.gd, economy.gd, espionage.gd, side_panels.gd (new "AI" tab), world.gd, save.gd, ai.gd, air_defence.gd, air_operations.gd, fog_of_war.gd, test_kit.gd. I will NOT touch hud.gd, portraits.gd, munition_portraits.gd or window_manager.gd (yours, in progress). Your finished arsenal/UN work goes into my next release after the full checks pass here, as you asked.
+- 2026-10-06 Claude, 0.9.74 (AI package 1 of 3):
+  - New scripts: ai_data.gd (per-nation PROFILE; a map entry's "ai_profile" overrides it), ai_directorate.gd
+    (w.directorate) and ai_panel.gd (Defence > AI tab). Test: tools/ai-check.gd.
+  - Hooks:
+    - world.damage multiplies directorate.damage_mult. world.scatter, guidance and jam_factor ask the
+      directorate. world.nearest_enemy weighs targets by value_of for seekers. building_model draws
+      aiDataCenter and fusionCell.
+    - economy.tick charges directorate.upkeep(). research._recompute adds directorate.bonuses().
+    - save, ai.pick_building, city_planner ZONE and test_kit quiet("directorate").
+  - hud.gd: I committed only BUILD_MENU/BUILD_GROUPS entries and a reqDiscovery lock in _build_row, on top of
+    HEAD. Your floating windows and munition portraits (hud.gd, portraits.gd, munition_portraits.gd,
+    window_manager.gd, windows-portraits-check.gd and its run-tests line) stay uncommitted in the working
+    tree, untouched. Your working hud.gd already has my lines.
+  - Your arsenal and UN work is committed in this release, after the checks passed here.

@@ -1,46 +1,13 @@
 extends RefCounted
-## The United Nations. Research and sources: native/CBRN-UN-RESEARCH-2026-10-05.md.
-## Its facts (seats, regions, shields, standing sanctions) are un_data.gd's;
-## every nation in the match is a member, whatever nations are added later.
-##
-## THE SECURITY COUNCIL
-## - Its members: the permanent members present, each with a veto, and elected
-##   members by region (3 African, 2 Asia-Pacific, 2 Latin American, 2 Western,
-##   1 Eastern European; here half the other nations, at most 10). The General
-##   Assembly elects them for two-year terms (here 10 minutes), half of them at
-##   each election, and none may stand again at once.
-## - The presidency rotates every month (here every minute) in English
-##   alphabetical order; the president's drafts are taken first.
-## - A draft passes with three-fifths voting yes (9 of 15) and no permanent
-##   member voting no. An abstention is not a veto. In measures for the peaceful
-##   settlement of a dispute (a statement, a ceasefire, peacekeepers) the parties
-##   to it abstain (Art. 27(3)).
-## - A presidential statement needs no vote but every member's consent.
-## - A draft is negotiated before it is put to the vote ("consultations", 15 s):
-##   its sponsor watches the count and may weaken it to escape a veto. You may
-##   lobby a member with aid to move its vote one step.
-## - The measures (Chapter VI, VII):
-##     statement     a presidential statement (consensus)
-##     condemn       a resolution condemning the target
-##     ceasefire     demands a ceasefire; adopted, the war ends
-##     withdraw      demands the aggressor stop within 2 minutes, or sanctions
-##     peacekeeping  a ceasefire with peacekeepers: whoever breaks it is sanctioned
-##     targeted      asset freezes and travel bans: income -10%
-##     embargo       an arms embargo: military production -40%
-##     economic      comprehensive sanctions: income -30%, the world market shut
-##     icc           a referral to the International Criminal Court
-##     force         authorises "all necessary means": members may join a war
-##     nonproliferation  sanctions after a nuclear breakout (embargo + economic)
-##     lift          ends a sanctions regime
-## THE GENERAL ASSEMBLY (every member a vote; two thirds on important questions)
-## - meets on every veto (resolution 76/262, 2022) and may condemn; under
-##   "Uniting for Peace" (377 A, 1950) it recommends voluntary measures: each
-##   member voting yes cuts its trade with the target (income -1.5% each);
-## - elects the Council; a member two years in arrears loses its vote (Art. 19).
-## THE SECRETARY-GENERAL brings any long war to the Council (Art. 99).
-## Sanctions regimes in force in 2026 (Iran's restored snapback, North Korea's
-## 1718 regime, the Taliban's) are in force from the start.
-
+## United Nations gameplay; research: native/UN-RESEARCH-2026-10-05.md.
+## A scaled Council uses permanent seats, rotating elected regional seats,
+## consultations, affirmative thresholds and vetoes. Assembly recommendations
+## have separate ballots and voluntary national implementation. Chapter VI
+## proposals and peace observation await consent; Chapter VII restrictions
+## affect economy/production/trade with a civilian food exemption. The
+## Secretary-General offers mediation and raises prolonged wars. All active
+## processes persist through JSON saves. Time scales and economic percentages
+## are game balance, not claims about the real organisation.
 const Data := preload("res://scripts/un_data.gd")
 const TERM := 600.0
 const PRESIDENCY := 60.0
@@ -54,13 +21,13 @@ const DRAFT_COOLDOWN := 90.0
 const LOBBY_COST := 400.0
 const DUES_PERIOD := 240.0
 const ART99_AFTER := 300.0
-const FIRST_NUMBER := 2801     # the Council's resolutions had passed 2,790 by 2025
+const FIRST_NUMBER := 1        # campaign-local draft numbering
 const FOREVER := 1.0e9
 const MEASURES := {
 	"statement": {"name": "Presidential statement", "severity": 0, "chapter": 6},
 	"condemn": {"name": "Condemnation", "severity": 1, "chapter": 7},
-	"ceasefire": {"name": "Ceasefire demand", "severity": 1, "chapter": 6},
-	"peacekeeping": {"name": "Ceasefire and peacekeepers", "severity": 1, "chapter": 6},
+	"ceasefire": {"name": "Ceasefire proposal", "severity": 1, "chapter": 6},
+	"peacekeeping": {"name": "Consented peace observation", "severity": 1, "chapter": 6},
 	"withdraw": {"name": "Demand to withdraw", "severity": 1, "chapter": 7},
 	"targeted": {"name": "Targeted sanctions", "severity": 2, "chapter": 7},
 	"embargo": {"name": "Arms embargo", "severity": 2, "chapter": 7},
@@ -106,6 +73,13 @@ var _number := FIRST_NUMBER
 var _seen := {}
 var _war_since := {}
 var _campaign := {}
+var assembly_queue: Array = []
+var assembly_current = null
+var assembly_record: Array = []
+var compliance: Array = []       # demands await compliance, never magically end wars
+var aid_next := 0.0
+var _case_id := 1
+var _dues_history: Array = []
 
 func _init(world: Node) -> void:
 	w = world
@@ -135,7 +109,18 @@ func members() -> Array:
 	return out
 
 func council() -> Array:
-	return members().filter(func(i): return permanent(i) or elected.has(i))
+	var out := []
+	var occupied := []
+	for i in members():
+		if permanent(i):
+			var nation: Dictionary = w.map.nations[i]
+			var seat := str(nation.get("un_seat", Data.seat_of(Data.ident(w, i))))
+			if not seat in occupied:
+				occupied.append(seat)
+				out.append(i)
+		elif elected.has(i):
+			out.append(i)
+	return out
 
 func seats() -> int:
 	return mini(10, ceili(members().filter(func(i): return not permanent(i)).size() / 2.0))
@@ -159,8 +144,6 @@ func _elect(first := false) -> void:
 	var won := []
 	while elected.size() < want:
 		var pool: Array = members().filter(func(i): return not permanent(i) and not elected.has(i) and (first or not i in just_left))
-		if pool.is_empty():
-			pool = members().filter(func(i): return not permanent(i) and not elected.has(i))
 		if pool.is_empty():
 			break
 		# The region furthest below its share of the seats.
@@ -187,6 +170,10 @@ func _elect(first := false) -> void:
 
 ## Your campaign for a seat: aid and visits, $1,500 a time.
 func campaign() -> String:
+	if not 0 in members():
+		return "Observers cannot seek a Council seat."
+	if 0 in just_left:
+		return "A departing Council member cannot be immediately re-elected."
 	if permanent(0) or elected.has(0):
 		return "You already sit on the Council."
 	if not w.economy.pay({"money": 1500.0}):
@@ -209,8 +196,8 @@ func _rotate() -> void:
 ## The Council recommends a Secretary-General by straw polls (a permanent
 ## member's "discourage" is a veto); the Assembly appoints. Latin America's turn.
 func _choose_sg() -> void:
-	sg_region = "Latin America & Caribbean"
-	sg_votes = maxi(1, ceili(council().size() * 0.7))
+	sg_region = "the UN Secretariat"
+	sg_votes = 0   # no fictional appointment/straw-poll result
 
 ## Sanctions regimes already in force (un_data.STANDING).
 func _standing() -> void:
@@ -259,6 +246,8 @@ func update(_delta: float) -> void:
 		if w.game_time >= float(authorised[t]): authorised.erase(t)
 	_article_99()
 	_dues()
+	_update_assembly()
+	_update_compliance()
 
 ## The Secretary-General brings a long war to the Council.
 func _article_99() -> void:
@@ -284,6 +273,8 @@ func _dues() -> void:
 	var rates = w.economy.get("rates")
 	var rate: float = float(rates.get("money", 0.0)) if rates is Dictionary else 0.0
 	assessment = clampf(rate * 12.0, 40.0, 1500.0)
+	_dues_history.append(assessment)
+	if _dues_history.size() > 2: _dues_history.pop_front()
 	if withhold or not w.economy.pay({"money": assessment + arrears}):
 		arrears += assessment
 		if lost_vote():
@@ -292,7 +283,8 @@ func _dues() -> void:
 		arrears = 0.0
 
 func lost_vote() -> bool:
-	return assessment > 0.0 and arrears >= assessment * 2.0
+	var threshold: float = _dues_history.reduce(func(total, amount): return total + float(amount), 0.0)
+	return _dues_history.size() >= 2 and arrears >= threshold
 
 func pay_arrears() -> String:
 	if arrears <= 0.0:
@@ -311,13 +303,13 @@ func wmd_used(kind: String, weapon: String, by: int, victims: Array) -> void:
 	var sponsor: int = int(victims[0]) if not victims.is_empty() else -1
 	table("breakout" if kind == "breakout" else "wmd", by, -1, sponsor, what)
 
-## A war declared (diplomacy.declare_war): an aggression involving the player.
+## A war declared: opens a crisis case for any active pair of countries.
 func war_declared(a: int, b: int, reason: String) -> void:
 	for m in missions:
 		if (int(m.a) == a and int(m.b) == b) or (int(m.a) == b and int(m.b) == a):
 			m.breaker = a
-	if reason.contains("ally") or reason.contains("coalition") or authorised.has(b) or not (a == 0 or b == 0):
-		return   # collective self-defence, an authorised coalition, or a war far away (Art. 99 takes those)
+	if reason.contains("ally") or reason.contains("coalition") or (float(authorised.get(b, 0.0)) > w.game_time):
+		return   # collective self-defence or an authorised coalition
 	var key := "%d-%d" % [a, b]
 	if w.game_time - float(_seen.get(key, -10000.0)) < 600.0:
 		return
@@ -329,7 +321,9 @@ func war_declared(a: int, b: int, reason: String) -> void:
 func table(kind: String, target: int, other: int, by: int, cause: String, measure := "") -> Dictionary:
 	if kind in ["wmd", "breakout"]:
 		queue = queue.filter(func(q): return not (q.kind == "aggression" and int(q.target) == target))
-	var dr := {"kind": kind, "measure": measure, "target": target, "other": other, "by": by, "cause": cause, "votes": {}, "lobby": {}, "title": ""}
+	if not _alive(target) or (other >= 0 and not _alive(other)) or (measure != "" and not MEASURES.has(measure)):
+		return {}
+	var dr := {"kind": kind, "measure": measure, "target": target, "other": other, "by": by, "cause": cause, "votes": {}, "lobby": {}, "title": "", "player_choice": ""}
 	if measure == "":
 		dr.measure = _penholder(dr)
 	dr.title = _title(dr)
@@ -342,7 +336,7 @@ func _title(dr: Dictionary) -> String:
 	match str(dr.measure):
 		"statement": return "Presidential statement on %s" % ("the war between %s and %s" % [_name(t), _name(o)] if o >= 0 and dr.kind == "war" else "%s's conduct: %s" % [_cap(t), dr.cause])
 		"condemn": return "Condemns %s for %s" % [_name(t), dr.cause]
-		"ceasefire": return "Demands a ceasefire between %s and %s" % [_name(t), _name(o)]
+		"ceasefire": return "Proposes a ceasefire between %s and %s" % [_name(t), _name(o)]
 		"peacekeeping": return "A ceasefire between %s and %s, watched by UN peacekeepers" % [_name(t), _name(o)]
 		"withdraw": return "Demands that %s stop its war on %s within 2 minutes" % [_name(t), _name(o)]
 		"targeted": return "Targeted sanctions on %s for %s" % [_name(t), dr.cause]
@@ -366,9 +360,11 @@ func _with(dr: Dictionary, measure: String) -> Dictionary:
 	var c: Dictionary = dr.duplicate()
 	c.measure = measure
 	c.votes = {}
+	c.player_choice = ""
 	return c
 
 func _open(dr: Dictionary) -> void:
+	dr.electorate = council().duplicate()
 	dr.number = _number if dr.measure != "statement" else 0
 	if dr.measure != "statement":
 		_number += 1
@@ -401,7 +397,11 @@ func _to_vote() -> void:
 func amend(measure: String) -> String:
 	if current == null or int(current.by) != 0 or current.phase != "consult":
 		return "Only your own draft, during consultations."
+	var why := _measure_blocked(measure, int(current.target), int(current.other))
+	if why != "": return why
 	current.measure = measure
+	current.player_choice = ""
+	player_vote = ""
 	current.title = _title(current)
 	return "Your draft now reads: %s." % current.title
 
@@ -410,8 +410,10 @@ func lobby_cost() -> float:
 	return LOBBY_COST * (1.0 + 0.5 * float(MEASURES[current.measure].severity)) if current != null else LOBBY_COST
 
 func lobby(member: int, toward: int) -> String:
-	if current == null or member == 0:
-		return ""
+	if current == null or current.phase != "consult" or member == 0 or not member in council() or not toward in [-1, 1]:
+		return "Lobby a Council member during consultations."
+	if abs(int(current.lobby.get(member, 0)) + toward) > 2:
+		return "This delegation has already considered your full offer."
 	var cost := lobby_cost()
 	if not w.economy.pay({"money": cost}):
 		return "Lobbying %s costs $%d." % [w.diplomacy.name_of(member), int(cost)]
@@ -449,24 +451,22 @@ func _score(i: int, dr: Dictionary) -> float:
 	return s
 
 func vote_of(i: int, dr: Dictionary) -> String:
-	if i == 0 and player_vote != "":
-		return player_vote
 	var t: int = int(dr.target)
 	var o: int = int(dr.other)
-	if (i == t or i == o) and int(MEASURES[dr.measure].chapter) == 6:
+	var ga: bool = str(dr.get("chamber", "council")) == "assembly"
+	if not ga and dr.measure != "statement" and (i == t or i == o) and int(MEASURES[dr.measure].chapter) == 6:
 		return "abstain"   # a party to the dispute abstains (Art. 27(3))
+	if i == 0 and str(dr.get("player_choice", "")) in ["yes", "no", "abstain"]:
+		return str(dr.player_choice)
 	if i == t:
 		return "yes" if dr.measure == "lift" else "no"
 	if i == 0:
 		return "abstain"
-	if permanent(i) and Data.shields(w, i, t) and dr.measure != "lift":
-		return "no"   # a permanent member shields its client from everything (Russia vetoed even condemnations of Syria's chemical attacks)
 	var steps := ["no", "abstain", "yes"]
 	var s := _score(i, dr)
 	var v := 2 if s > 0.25 else (0 if s < (-0.45 if permanent(i) else -0.2) else 1)
-	var shielding: bool = permanent(i) and (Data.shields(w, i, t) or w.diplomacy.allied(i, t))
-	if not shielding:
-		v = clampi(v + int(dr.get("lobby", {}).get(i, 0)), 0, 2)
+	# Historic alignment influences the score, but current diplomacy can change it.
+	v = clampi(v + int(dr.get("lobby", {}).get(i, 0)), 0, 2)
 	return steps[v]
 
 func _patron(i: int, t: int) -> bool:
@@ -474,16 +474,19 @@ func _patron(i: int, t: int) -> bool:
 	return e != null and e.puppets.has(t) and int(e.puppets[t].get("patron", -1)) == i
 
 func cast(choice: String) -> String:
-	if current == null or not 0 in council():
-		return ""
+	if current == null or current.phase != "vote" or w.game_time >= float(current.closes) or not 0 in current.get("electorate", council()) or not choice in ["yes", "no", "abstain"]:
+		return "Vote yes, no or abstain while the Council vote is open."
+	if current.measure != "statement" and int(MEASURES[current.measure].chapter) == 6 and 0 in [int(current.target), int(current.other)]:
+		return "As a party to this Chapter VI dispute, you must abstain."
 	player_vote = choice
+	current.player_choice = choice
 	return "You vote %s on %s." % [choice.to_upper(), "the statement" if current.measure == "statement" else "draft resolution %d" % int(current.number)]
 
 ## The count: yes, no, abstain, the vetoes, and whether it passes. With
 ## `predict`, nothing is written down (the whip count).
 func tally(dr: Dictionary, predict := false) -> Dictionary:
 	var out := {"yes": 0, "no": 0, "abstain": 0, "vetoes": [], "passes": false}
-	var c := council()
+	var c: Array = dr.get("electorate", council())
 	for i in c:
 		var v := vote_of(i, dr)
 		if not predict:
@@ -492,20 +495,16 @@ func tally(dr: Dictionary, predict := false) -> Dictionary:
 		if v == "no" and permanent(i):
 			out.vetoes.append(i)
 	if dr.measure == "statement":
-		out.passes = out.no == 0   # consensus
+		out.passes = not c.is_empty() and out.no == 0   # consensus, not a formal vote
 	else:
 		out.passes = out.yes >= needed(dr) and out.vetoes.is_empty()
 	return out
 
-## Yes votes needed: three-fifths of the Council (9 of 15). In a small Council
-## the members bound to abstain (Art. 27(3)) are left out of the count, or a
-## ceasefire between two of four members could never pass.
+## Yes votes needed: 9 of 15, proportionally scaled for smaller campaigns.
 func needed(dr: Dictionary) -> int:
-	var c := council()
-	var voting: int = c.size()
-	if int(MEASURES[dr.measure].chapter) == 6 and c.size() < 15:
-		voting -= c.filter(func(i): return i == int(dr.target) or i == int(dr.other)).size()
-	return maxi(1, ceili(voting * PASS_SHARE))
+	# Nine of fifteen in a full Council; proportional in smaller campaigns.
+	# Abstention does not reduce the affirmative-vote threshold.
+	return maxi(1, ceili(dr.get("electorate", council()).size() * PASS_SHARE))
 
 func _close() -> void:
 	var dr: Dictionary = current
@@ -545,12 +544,7 @@ func _enforce(dr: Dictionary) -> void:
 				if dr.votes.get(i, "") == "yes": d.change(i, t, -6.0)
 			if w.get("support") != null and w.support != null: w.support.change(t, -3.0)
 		"ceasefire", "peacekeeping":
-			if o >= 0 and d.at_war(t, o):
-				d.make_peace(t, o)
-				w.hud.notice("UN: the ceasefire between %s and %s is in force." % [_name(t), _name(o)])
-			if dr.measure == "peacekeeping":
-				missions.append({"a": t, "b": o, "until": w.game_time + 480.0})
-				w.hud.notice("UN: blue helmets deploy between %s and %s for 8 minutes." % [_name(t), _name(o)])
+			_start_compliance(dr)
 		"withdraw":
 			demands.append({"aggressor": t, "victim": o, "until": w.game_time + WITHDRAW_SECONDS})
 			if t == 0:
@@ -565,7 +559,7 @@ func _enforce(dr: Dictionary) -> void:
 			for i in members():
 				if i != t and bool(preload("res://scripts/cbrn_data.gd").treaty(w, i, "icc")):
 					d.change(i, t, -10.0)
-			w.hud.notice("UN: %s leaders are referred to the International Criminal Court; its members will treat them as fugitives." % ("your" if t == 0 else d.name_of(t) + "'s"))
+			w.hud.notice("UN: the situation in %s is referred to the ICC for independent investigation. A referral is not an arrest warrant or conviction." % _name(t))
 		"force":
 			authorised[t] = w.game_time + 600.0
 			for i in members():
@@ -575,7 +569,7 @@ func _enforce(dr: Dictionary) -> void:
 					d.declare_war(i, t, "%s joins the UN-authorised coalition against %s." % [d.name_of(i), _name(t)])
 			w.hud.notice("UN: all necessary means are authorised against %s: joining the coalition is no aggression." % _name(t))
 		"lift":
-			w.power_effects = w.power_effects.filter(func(e): return not (int(e.nation) == t and int(e.get("by", 0)) in [-2, -3]))
+			w.power_effects = w.power_effects.filter(func(e): return not (int(e.nation) == t and int(e.get("by", 0)) == -2))
 			w.hud.notice("UN: the sanctions on %s are lifted." % _name(t))
 	d.changed.emit()
 	if w.economy != null: w.economy.recalculate()
@@ -584,6 +578,11 @@ func _enforce(dr: Dictionary) -> void:
 ## A sanctions measure in force on `t` (saved with the power effects).
 func _apply_measure(measure: String, t: int, seconds: float) -> void:
 	var until: float = w.game_time + seconds if seconds < FOREVER else FOREVER
+	# Renew a regime instead of multiplying identical penalties indefinitely.
+	for e in w.power_effects:
+		if int(e.nation) == t and int(e.get("by", 0)) == -2 and str(e.get("un", "")) == measure:
+			e.until = maxf(float(e.until), until)
+			return
 	match measure:
 		"targeted":
 			w.power_effects.append({"kind": "income", "nation": t, "value": 0.9, "until": until, "by": -2, "un": "targeted"})
@@ -592,7 +591,7 @@ func _apply_measure(measure: String, t: int, seconds: float) -> void:
 		"embargo":
 			w.power_effects.append({"kind": "un_embargo", "nation": t, "value": 0.6, "until": until, "by": -2, "un": "embargo"})
 	if seconds < FOREVER and w.hud != null:
-		w.hud.notice("UN SANCTIONS on %s: %s." % [_name(t), {"targeted": "assets frozen, leaders barred from travel (income -10%)", "economic": "comprehensive sanctions (income -30%, the world market shut)", "embargo": "an arms embargo (military production -40%)"}[measure]])
+		w.hud.notice("UN SANCTIONS on %s: %s." % [_name(t), {"targeted": "targeted restrictions (game abstraction: income -10%)", "economic": "comprehensive sanctions (income -30%; food relief exempt)", "embargo": "an arms embargo (game abstraction: military production -40%)"}[measure]])
 
 func under(i: int, measure: String) -> bool:
 	return w.power_effects.any(func(e): return int(e.nation) == i and str(e.get("un", "")) == measure and float(e.until) > w.game_time)
@@ -605,47 +604,196 @@ func production_mult(i: int) -> float:
 	return 0.6 if under(i, "embargo") else 1.0
 
 ## The world market shut to `i` by comprehensive sanctions (market.gd).
-func market_closed(i: int) -> bool:
-	return under(i, "economic")
+func market_closed(i: int, resource := "") -> bool:
+	# Game abstraction of a humanitarian exemption, not an unlimited trade licence.
+	return under(i, "economic") and resource != "food"
 
 # ---------------------------------------------------------------- the General Assembly
 
-## After a veto: the Assembly meets (76/262); two thirds condemn, and under
-## "Uniting for Peace" the yes votes cut their trade with the target.
+## After a veto: debate and a separate non-binding Assembly ballot.
 func _assembly(dr: Dictionary) -> void:
+	# 76/262 mandates a debate, not automatic adoption or trade sanctions.
+	dr.assembly = {"result": "pending", "yes": 0, "no": 0, "abstain": 0}
+	var gd: Dictionary = _with(dr, "condemn")
+	gd.chamber = "assembly"
+	gd.player_choice = ""
+	gd.source = int(dr.number)
+	gd.phase = "queued"
+	gd.lobby = {}
+	gd.title = "Non-binding recommendation following the veto: " + str(dr.title)
+	assembly_queue.append(gd)
+
+func assembly_draft(t: int) -> String:
+	if not 0 in members(): return "Observers may attend but cannot sponsor or vote."
+	if not _alive(t) or t == 0: return "Choose a nation."
+	if w.game_time < next_draft: return "Your mission is preparing another proposal."
+	if cause_against(t) == "": return "No recorded crisis to bring before the Assembly."
+	next_draft = w.game_time + DRAFT_COOLDOWN
+	assembly_queue.append({"kind": "player", "chamber": "assembly", "measure": "condemn", "target": t, "other": -1, "by": 0, "cause": cause_against(t), "title": "Assembly recommendation on %s: %s" % [_name(t), cause_against(t)], "votes": {}, "lobby": {}, "player_choice": "", "source": -1})
+	return "Your Assembly recommendation is queued; every member can vote, with no veto."
+
+func cast_assembly(choice: String) -> String:
+	if assembly_current == null or w.game_time >= float(assembly_current.closes) or not choice in ["yes", "no", "abstain"]:
+		return "No open Assembly vote."
+	if not 0 in members() or lost_vote(): return "You have no Assembly vote."
+	assembly_current.player_choice = choice
+	return "Your Assembly vote: %s." % choice.to_upper()
+
+func _update_assembly() -> void:
+	if assembly_current == null and not assembly_queue.is_empty():
+		assembly_current = assembly_queue.pop_front()
+		assembly_current.phase = "vote"
+		assembly_current.closes = w.game_time + VOTE_SECONDS
+		w.hud.notice("UN GENERAL ASSEMBLY: a separate vote opens. All members may vote in the Assembly tab (U); no veto applies.")
+	if assembly_current != null and w.game_time >= float(assembly_current.closes):
+		_finish_assembly()
+
+func _finish_assembly() -> void:
 	var d: Node = w.diplomacy
+	var dr: Dictionary = assembly_current
+	assembly_current = null
 	var t: int = int(dr.target)
 	var yes := []
 	var no := 0
 	var abstain := 0
-	var gd: Dictionary = _with(dr, "condemn")
-	gd.lobby = {}
 	for i in members():
 		if i == 0 and lost_vote():
 			continue   # Art. 19
-		var v := vote_of(i, gd)
+		var v := vote_of(i, dr)
+		dr.votes[i] = v
 		if v == "yes": yes.append(i)
 		elif v == "no": no += 1
 		else: abstain += 1
-	dr.assembly = {"yes": yes.size(), "no": no, "abstain": abstain}
+	dr.tally = {"yes": yes.size(), "no": no, "abstain": abstain}
+	dr.time = w.game_time
+	dr.participants = []
 	if yes.size() > 0 and yes.size() >= ceili((yes.size() + no) * GA_SHARE):
-		dr.assembly.result = "adopted"
+		dr.result = "adopted"
 		for i in yes:
-			d.change(i, t, -8.0)
-			for v in dr.get("vetoed_by", []):
-				if int(v) != t: d.change(i, int(v), -4.0)
+			if i != t: d.change(i, t, -8.0)
 		if w.get("support") != null and w.support != null:
 			w.support.change(t, -6.0)
 		if dr.kind in ["wmd", "breakout", "aggression", "violation"]:
-			var cut: float = minf(0.25, 0.015 * yes.size())
-			w.power_effects.append({"kind": "income", "nation": t, "value": 1.0 - cut, "until": w.game_time + SANCTION_SECONDS, "by": -3, "un": "voluntary"})
-			w.hud.notice("UN GENERAL ASSEMBLY (Uniting for Peace) condemns %s, %d-%d-%d; %d members cut their trade with it (income -%d%%)." % [_name(t), yes.size(), no, abstain, yes.size(), roundi(cut * 100.0)])
-		else:
-			w.hud.notice("UN GENERAL ASSEMBLY condemns %s, %d-%d-%d." % [_name(t), yes.size(), no, abstain])
+			# An affirmative vote does not compel national implementation.
+			for i in yes:
+				if i != 0 and i != t and d.rel(i, t) < -25.0 and not d.allied(i, t):
+					dr.participants.append(i)
+		w.hud.notice("UN GENERAL ASSEMBLY: recommendation adopted %d-%d-%d. It is non-binding; %d nations voluntarily join economic restrictions." % [yes.size(), no, abstain, dr.participants.size()])
 		d.changed.emit()
 	else:
-		dr.assembly.result = "failed"
+		dr.result = "failed"
 		w.hud.notice("UN General Assembly: no two-thirds majority (%d-%d-%d)." % [yes.size(), no, abstain])
+	dr.until = w.game_time + SANCTION_SECONDS
+	assembly_record.append(dr)
+	_refresh_voluntary(t)
+	for original in record:
+		if int(original.get("number", -2)) == int(dr.get("source", -1)):
+			original.assembly = {"result": dr.result, "yes": yes.size(), "no": no, "abstain": abstain}
+	if w.economy != null: w.economy.recalculate()
+
+func _refresh_voluntary(target: int) -> void:
+	var participants := []
+	var until: float = w.game_time
+	for dr in assembly_record:
+		if int(dr.target) != target or dr.result != "adopted" or float(dr.until) <= w.game_time: continue
+		until = maxf(until, float(dr.until))
+		for i in dr.get("participants", []):
+			if not int(i) in participants: participants.append(int(i))
+	w.power_effects = w.power_effects.filter(func(e): return not (int(e.nation) == target and int(e.get("by", 0)) == -3 and e.get("un", "") == "voluntary"))
+	if not participants.is_empty():
+		w.power_effects.append({"kind": "income", "nation": target, "value": 1.0 - minf(0.25, 0.015 * participants.size()), "until": until, "by": -3, "un": "voluntary", "participants": participants})
+
+func join_voluntary(target: int, join: bool) -> String:
+	for k in range(assembly_record.size() - 1, -1, -1):
+		var dr: Dictionary = assembly_record[k]
+		if int(dr.target) != target or dr.result != "adopted" or float(dr.until) <= w.game_time: continue
+		if target == 0 or not 0 in members(): return "You cannot join restrictions against yourself."
+		for proposal in assembly_record:
+			if int(proposal.target) == target: proposal.participants.erase(0)
+		if join: dr.participants.append(0)
+		_refresh_voluntary(target)
+		w.economy.recalculate()
+		return "You %s the voluntary restrictions on %s." % ["join" if join else "leave", _name(target)]
+	return "No active Assembly recommendation."
+
+func trade_blocked(a: int, b: int, resource: String) -> bool:
+	if resource == "food": return false
+	if market_closed(a, resource) or market_closed(b, resource): return true
+	for dr in assembly_record:
+		if dr.result == "adopted" and float(dr.until) > w.game_time:
+			if (int(dr.target) == a and b in dr.participants) or (int(dr.target) == b and a in dr.participants): return true
+	return false
+
+# ---------------------------------------------------------------- compliance, mediation and humanitarian relief
+
+func _ai_consent(i: int, other: int) -> bool:
+	if not w.diplomacy.at_war(i, other): return true
+	var popular: float = w.support.value(i) if w.get("support") != null else 50.0
+	return popular < 55.0 or w.diplomacy.army_strength(i) <= w.diplomacy.army_strength(other) * 1.25
+
+func _start_compliance(dr: Dictionary) -> void:
+	var a: int = int(dr.target)
+	var b: int = int(dr.other)
+	if not _alive(a) or not _alive(b) or a == b: return
+	var responses := {}
+	for i in [a, b]:
+		if i != 0: responses[i] = _ai_consent(i, b if i == a else a)
+	compliance.append({"id": _case_id, "a": a, "b": b, "measure": dr.measure, "responses": responses, "until": w.game_time + WITHDRAW_SECONDS})
+	_case_id += 1
+	w.hud.notice("UN: %s awaits compliance by %s and %s. The war continues until both accept; respond in the Council tab." % [MEASURES[dr.measure].name, _name(a), _name(b)])
+
+func respond(case_id: int, accept: bool) -> String:
+	for c in compliance:
+		if int(c.id) == case_id and 0 in [int(c.a), int(c.b)] and float(c.until) > w.game_time:
+			c.responses[0] = accept
+			_update_compliance()
+			return "You %s the UN proposal." % ("accept" if accept else "reject")
+	return "No active proposal addressed to you."
+
+func _update_compliance() -> void:
+	for c in compliance.duplicate():
+		var a: int = int(c.a)
+		var b: int = int(c.b)
+		if not _alive(a) or not _alive(b):
+			compliance.erase(c)
+			continue
+		if bool(c.responses.get(a, false)) and bool(c.responses.get(b, false)):
+			if w.diplomacy.at_war(a, b): w.diplomacy.make_peace(a, b)
+			if c.measure == "peacekeeping" and not missions.any(func(m): return (int(m.a) == a and int(m.b) == b) or (int(m.a) == b and int(m.b) == a)):
+				missions.append({"a": a, "b": b, "until": w.game_time + 480.0})
+			w.hud.notice("UN: both parties accept. %s" % ("Consented peace observers monitor the ceasefire for 8 minutes." if c.measure == "peacekeeping" else "The ceasefire takes effect."))
+			compliance.erase(c)
+		elif w.game_time >= float(c.until):
+			compliance.erase(c)
+			# A Chapter VI recommendation's rejection is not automatically a sanctionable violation.
+			w.hud.notice("UN: the proposal between %s and %s expired without both parties' consent." % [_name(a), _name(b)])
+
+func mediate(other: int) -> String:
+	if not _alive(other) or other == 0 or not w.diplomacy.at_war(0, other): return "Choose an opponent in an active war."
+	if compliance.any(func(c): return 0 in [int(c.a), int(c.b)] and other in [int(c.a), int(c.b)]): return "A proposal is already awaiting a response."
+	if w.game_time < next_draft: return "Your mission is preparing another proposal."
+	next_draft = w.game_time + DRAFT_COOLDOWN
+	_start_compliance({"target": 0, "other": other, "measure": "ceasefire"})
+	return "The Secretary-General offers good offices: both sides must accept."
+
+func relief(target: int) -> String:
+	if not _alive(target): return "Choose a nation."
+	if w.game_time < aid_next: return "Another relief shipment can be arranged in %ds." % ceili(aid_next - w.game_time)
+	if target == 0:
+		var room: float = float(w.economy.caps.get("food", 0.0)) - float(w.economy.res.get("food", 0.0))
+		if room <= 0.0: return "Your food stores are full."
+		if not w.economy.pay({"money": 250.0}): return "Relief logistics cost $250."
+		w.economy.res.food += minf(80.0, room)
+	else:
+		if not w.economy.pay({"money": 250.0, "food": 80.0}): return "Sending relief costs $250 and 80 food."
+		if w.market != null:
+			if not w.market.ai_stock.has(target): w.market.ai_stock[target] = {}
+			w.market.ai_stock[target].food = float(w.market.ai_stock[target].get("food", 0.0)) + 80.0
+		w.diplomacy.change(0, target, 5.0)
+	if w.get("support") != null: w.support.change(target, 2.0)
+	aid_next = w.game_time + 120.0
+	w.economy.recalculate()
+	return "Humanitarian food relief reaches %s; sanctions do not block this civilian channel." % _name(target)
 
 # ---------------------------------------------------------------- the player's drafts
 
@@ -658,7 +806,8 @@ func cause_against(t: int) -> String:
 	for dm in demands:
 		if int(dm.aggressor) == t:
 			return "its war on %s" % _name(int(dm.victim))
-	for r in record:
+	var cases: Array = record + queue + ([current] if current != null else [])
+	for r in cases:
 		if r.kind == "aggression" and int(r.target) == t and w.diplomacy.at_war(t, int(r.other)) and w.game_time - float(r.get("time", 0.0)) < 900.0:
 			return "its war on %s" % _name(int(r.other))
 	return ""
@@ -666,13 +815,17 @@ func cause_against(t: int) -> String:
 func draft_blocked(measure: String, t: int, o := -1) -> String:
 	if w.game_time < next_draft and president != 0:
 		return "Your mission can table another draft in %ds." % ceili(next_draft - w.game_time)
-	if not 0 in council():
-		return "Only members of the Council table drafts: win a seat at the next election."
+	if not 0 in members():
+		return "Observers can attend but cannot sponsor a member's proposal."
+	return _measure_blocked(measure, t, o)
+
+func _measure_blocked(measure: String, t: int, o := -1) -> String:
+	if not MEASURES.has(measure): return "Choose a recognised UN measure."
 	if not _alive(t) or t == 0:
 		return "Choose a nation."
-	if measure in ["targeted", "embargo", "economic", "icc", "force"] and cause_against(t) == "":
+	if measure in ["targeted", "embargo", "economic", "nonproliferation", "withdraw", "icc", "force"] and cause_against(t) == "":
 		return "No cause: sanctions need weapons of mass destruction, a war of aggression or a defied demand on record."
-	if measure in ["ceasefire", "peacekeeping"] and not w.diplomacy.at_war(t, o):
+	if measure in ["ceasefire", "peacekeeping", "withdraw"] and (not _alive(o) or t == o or not w.diplomacy.at_war(t, o)):
 		return "They are not at war."
 	if measure == "lift" and not sanctioned(t):
 		return "%s is under no UN sanctions." % w.diplomacy.name_of(t)
@@ -695,7 +848,7 @@ func bonuses() -> Dictionary:
 func capture() -> Dictionary:
 	var clean := func(dr):
 		var c: Dictionary = dr.duplicate(true)
-		for field in ["votes", "lobby"]:
+		for field in ["votes", "lobby", "responses"]:
 			var out := {}
 			for k in c.get(field, {}): out[str(k)] = c[field][k]
 			c[field] = out
@@ -710,7 +863,10 @@ func capture() -> Dictionary:
 		"queue": queue.map(clean), "current": clean.call(current) if current != null else null, "record": record.map(clean),
 		"demands": demands, "missions": missions, "authorised": au, "indicted": ind, "next_draft": next_draft, "number": _number,
 		"player_vote": player_vote, "arrears": arrears, "withhold": withhold, "assessment": assessment, "next_dues": next_dues,
-		"sg_region": sg_region, "sg_votes": sg_votes}
+		"sg_region": sg_region, "sg_votes": sg_votes,
+		"assembly_queue": assembly_queue.map(clean), "assembly_current": clean.call(assembly_current) if assembly_current != null else null,
+		"assembly_record": assembly_record.map(clean), "compliance": compliance.map(clean), "case_id": _case_id, "aid_next": aid_next,
+		"seen": _seen.duplicate(), "war_since": _war_since.duplicate(), "campaign": _campaign.duplicate(), "dues_history": _dues_history.duplicate()}
 
 func restore(data: Dictionary) -> void:
 	if data.is_empty():
@@ -726,6 +882,13 @@ func restore(data: Dictionary) -> void:
 		for k in c.get("lobby", {}): lob[int(k)] = int(c.lobby[k])
 		c.lobby = lob
 		if c.has("vetoed_by"): c.vetoed_by = Array(c.vetoed_by).map(func(v): return int(v))
+		for field in ["electorate", "participants"]:
+			if c.has(field): c[field] = Array(c[field]).map(func(v): return int(v))
+		var responses := {}
+		for k in c.get("responses", {}): responses[int(k)] = bool(c.responses[k])
+		c.responses = responses
+		# Older saves stored the player's Council choice outside its draft.
+		if not c.has("player_choice"): c.player_choice = ""
 		return c
 	elected.clear()
 	for k in data.get("elected", {}): elected[int(k)] = float(data.elected[k])
@@ -737,7 +900,10 @@ func restore(data: Dictionary) -> void:
 	current = fix.call(data.current) if data.get("current") != null else null
 	record = Array(data.get("record", [])).map(fix)
 	demands = Array(data.get("demands", [])).map(func(dm): return {"aggressor": int(dm.aggressor), "victim": int(dm.victim), "until": float(dm.until)})
-	missions = Array(data.get("missions", [])).map(func(m): return {"a": int(m.a), "b": int(m.b), "until": float(m.until)})
+	missions = Array(data.get("missions", [])).map(func(m):
+		var mission := {"a": int(m.a), "b": int(m.b), "until": float(m.until)}
+		if m.has("breaker"): mission.breaker = int(m.breaker)
+		return mission)
 	authorised.clear()
 	for k in data.get("authorised", {}): authorised[int(k)] = float(data.authorised[k])
 	indicted.clear()
@@ -745,9 +911,23 @@ func restore(data: Dictionary) -> void:
 	next_draft = float(data.get("next_draft", 0.0))
 	_number = int(data.get("number", FIRST_NUMBER))
 	player_vote = str(data.get("player_vote", ""))
+	if current != null and str(current.get("player_choice", "")) == "": current.player_choice = player_vote
 	arrears = float(data.get("arrears", 0.0))
 	withhold = bool(data.get("withhold", false))
 	assessment = float(data.get("assessment", 0.0))
 	next_dues = float(data.get("next_dues", w.game_time + DUES_PERIOD))
 	sg_region = str(data.get("sg_region", sg_region))
 	sg_votes = int(data.get("sg_votes", sg_votes))
+	assembly_queue = Array(data.get("assembly_queue", [])).map(fix)
+	assembly_current = fix.call(data.assembly_current) if data.get("assembly_current") != null else null
+	assembly_record = Array(data.get("assembly_record", [])).map(fix)
+	compliance = Array(data.get("compliance", [])).map(fix)
+	_case_id = int(data.get("case_id", 1))
+	aid_next = float(data.get("aid_next", 0.0))
+	_seen = data.get("seen", {}).duplicate()
+	_war_since = data.get("war_since", {}).duplicate()
+	_campaign.clear()
+	for k in data.get("campaign", {}): _campaign[int(k)] = float(data.campaign[k])
+	_dues_history = data.get("dues_history", []).duplicate()
+	if _dues_history.is_empty() and assessment > 0.0:
+		_dues_history = [assessment, assessment]   # compatibility with earlier dues model
