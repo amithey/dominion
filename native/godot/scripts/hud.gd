@@ -372,12 +372,13 @@ func _dress_face() -> void:
 	if _id_face == null or world == null or world.map == null or world.map.nations.is_empty():
 		return
 	var me: Dictionary = world.map.nations[0]
-	var leader: String = str(me.get("people", {}).get("president", ""))
+	var gallery := preload("res://scripts/leader_gallery.gd")
+	var leader: String = gallery.nation_portrait_identity(me)
 	var sig: String = leader + str(me.get("color", ""))
 	if sig == _id_sig:
 		return
 	_id_sig = sig
-	_id_face.icon = preload("res://scripts/leader_gallery.gd").face(leader, 1.0)
+	_id_face.icon = gallery.badge(leader)
 	var colour := Color(str(me.get("color", "#cdb584")))
 	for state in ["normal", "hover", "pressed"]:
 		var s := StyleBoxFlat.new()

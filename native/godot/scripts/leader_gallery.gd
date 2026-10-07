@@ -39,6 +39,30 @@ static func face(identity: String, aspect: float) -> Texture2D:
 static func available(identities: Array) -> bool:
 	return identities.all(func(identity): return portrait(str(identity)) != "")
 
+## Old campaigns keep fictional presidents. Resolve their display portrait by
+## faction identity; never by slot, because the player's chosen nation is first.
+## A successor's name is retained rather than silently displaying another leader.
+static func nation_portrait_identity(nation: Dictionary) -> String:
+	var leader := str(nation.get("people", {}).get("president", ""))
+	var legacy := leader.is_empty()
+	for key in ART:
+		if key in leader: legacy = true
+	if not legacy: return leader
+	var factions = preload("res://scripts/factions.gd")
+	var index: int = factions.IDS.find(str(nation.get("id", "")))
+	if index < 0: index = factions.ARSENALS.find(str(nation.get("arsenal", "")))
+	if index < 0: index = factions.COLOURS.find(str(nation.get("color", "")).to_lower())
+	return str(factions.LEADERS[index]) if index >= 0 else leader
+
+## A close-up for the small HUD badge, using the same artwork as New Game.
+static func badge(identity: String) -> Texture2D:
+	var texture := face(identity, 1.0)
+	if texture is AtlasTexture and portrait(identity).ends_with("-v2.png"):
+		var full: Texture2D = texture.atlas
+		var edge := minf(float(full.get_width()), float(full.get_height())) * 0.6
+		texture.region = Rect2(clampf(full.get_width() * 0.5 - edge * 0.5, 0.0, full.get_width() - edge), clampf(full.get_height() * 0.3 - edge * 0.5, 0.0, full.get_height() - edge), edge, edge)
+	return texture
+
 func setup(colours: Array, identities: Array, together: bool) -> void:
 	custom_minimum_size = Vector2(420, 300)
 	add_theme_constant_override("separation", 8)
