@@ -938,9 +938,8 @@ func _settings_graphics() -> void:
 		_segmented([["High", "high"], ["Balanced", "balanced"], ["Low", "low"]], world.quality, func(v):
 			world.quality = v
 			world.apply_quality()))
-	var full := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
-	_setting("Display", "Play in a window, or across the whole screen.", _segmented([["Window", false], ["Full screen", true]], full, func(v):
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if v else DisplayServer.WINDOW_MODE_WINDOWED)))
+	var full := is_fullscreen()
+	_setting("Display", "Fill the whole screen without borders. F11 switches between full screen and a window.", _segmented([["Window", false], ["Full screen", true]], full, set_fullscreen))
 	_setting("Vertical sync", "Matches frames to the screen: no tearing, and less heat and noise from the laptop.", _switch(DisplayServer.window_get_vsync_mode() != DisplayServer.VSYNC_DISABLED, func(v):
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if v else DisplayServer.VSYNC_DISABLED)))
 	_setting("Frame limit", "The most frames a second the game draws. A limit keeps a laptop cooler.", _segmented([["30", 30], ["60", 60], ["120", 120], ["None", 0]], Engine.max_fps, func(v): Engine.max_fps = v))
@@ -962,7 +961,7 @@ func _settings_controls() -> void:
 	keys.add_theme_constant_override("v_separation", 3)
 	for pair in [["W A S D / arrows", "Move the camera (Shift: faster)"], ["Wheel", "Zoom"], ["Middle button + drag", "Turn and tilt the view"], ["Shift + middle drag", "Drag the map"],
 			["Right click", "Move, attack; on a site with workers: build"], ["Shift + right click", "Add a site to the workers' list"], ["Ctrl + right click", "Attack-move"], ["Alt + right click", "Bombard an area"],
-			["B", "Build list"], ["G  M  I  T  Y", "Diplomacy, market, intelligence, territory, research"], ["O", "Mark an operational zone"], ["F5 / F9", "Quick save / load"], ["Esc", "Pause menu"]]:
+			["B", "Build list"], ["G  M  I  T  Y", "Diplomacy, market, intelligence, territory, research"], ["O", "Mark an operational zone"], ["F5 / F9", "Quick save / load"], ["F11", "Full screen / window"], ["Esc", "Pause menu"]]:
 		var k := Label.new()
 		k.text = pair[0]
 		k.add_theme_color_override("font_color", UI.GOLD)
@@ -994,7 +993,7 @@ func _settings_game() -> void:
 func _reset_settings() -> void:
 	world.quality = "balanced"
 	world.apply_quality()
-	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	set_fullscreen(true)
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED)
 	Engine.max_fps = 0
 	world.show_fps = true
@@ -1064,8 +1063,7 @@ func load_settings() -> void:
 	if q != world.quality:
 		world.quality = q
 		world.apply_quality()
-	if cfg.get_value("graphics", "fullscreen", false):
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	set_fullscreen(bool(cfg.get_value("graphics", "fullscreen", true)))
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(float(cfg.get_value("audio", "volume", 100.0)), 0.1) / 100.0))
 	_set_bus_volume("SFX", float(cfg.get_value("audio", "effects", 100.0)))
 	world.edge_scroll = bool(cfg.get_value("controls", "edge_scroll", true))
@@ -1079,7 +1077,7 @@ func load_settings() -> void:
 func save_settings() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("graphics", "quality", world.quality)
-	cfg.set_value("graphics", "fullscreen", DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN)
+	cfg.set_value("graphics", "fullscreen", is_fullscreen())
 	cfg.set_value("audio", "volume", roundf(db_to_linear(AudioServer.get_bus_volume_db(0)) * 100.0))
 	cfg.set_value("controls", "edge_scroll", world.edge_scroll)
 	cfg.set_value("controls", "pan_speed", world.pan_speed)
@@ -1254,6 +1252,19 @@ func _row(label_text: String, control: Control) -> void:
 	control.focus_mode = Control.FOCUS_ALL
 	row.add_child(control)
 	_panel.add_child(row)
+
+func is_fullscreen() -> bool:
+	return DisplayServer.window_get_mode() in [DisplayServer.WINDOW_MODE_FULLSCREEN, DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN]
+
+func set_fullscreen(on: bool) -> void:
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if on else DisplayServer.WINDOW_MODE_WINDOWED)
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_F11 or event.keycode == KEY_F11):
+		set_fullscreen(not is_fullscreen())
+		save_settings()
+		if _root != null and _root.visible and _title != null and _title.text == "SETTINGS": open_settings()
+		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _root != null and _root.visible and in_match and event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:

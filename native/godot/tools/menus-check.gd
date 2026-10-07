@@ -43,6 +43,9 @@ func buttons_in(c: Node) -> Array:
 	return c.find_children("*", "Button", true, false).filter(func(b): return b.is_visible_in_tree() and not b.disabled)
 
 func run() -> void:
+	# Headless has a 64x64 dummy window: keep the intended logical test viewport.
+	# Real aspect changes are exercised with a graphics display in fullscreen-check.
+	if DisplayServer.get_name() == "headless": root.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
 	set_meta("match_config", {"map": "island", "players": 4, "nation": 0})
 	change_scene_to_file("res://world.tscn")
 	for i in range(40000):
