@@ -395,7 +395,7 @@ func _presence(presence: PackedFloat32Array, at: Vector3, owner: int, weight: fl
 				_touched[i] = 1
 
 func _process(delta: float) -> void:
-	if world == null or world.economy == null or world.game_over != "":
+	if world == null or world.economy == null or world.match_stopped():
 		return
 	_tick += delta
 	if _tick >= TICK:

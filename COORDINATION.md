@@ -1,5 +1,15 @@
 # Working in parallel: Claude and Codex
 
+2026-10-08 Codex: fixing the user's post-victory freeze. Keep watching now resumes
+territory, research, diplomatic talks, market, espionage, passage and autosaves,
+while retaining the original result and suppressing repeat victory dialogs.
+Narrow changes in world/hud/save/victory and each affected process guard. Added
+tools/post-victory-check.gd and registered it in run-tests.ps1. All 30 checks pass,
+including four cities, a completed farm, victory/defeat and JSON save round trips.
+Initial delivery was dist/DOMINION-Fixed.exe. Follow-up: user explicitly requested
+normal continuation, commit and push, and the regular executable. Renamed the
+button Continue playing and publishing 0.9.78 as dist/DOMINION.exe.
+
 2026-10-03 Codex: user selected geopolitical atlas concept 2. Committed 66fea4d:
 ui_theme.gd navy/sand, serif titles, dark text on sand active navigation/tabs;
 menu.gd atlas grid/compass decoration; hud.gd only GOLD constant updated.

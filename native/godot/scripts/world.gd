@@ -178,6 +178,7 @@ var site_timer := 0.0
 var ai: Node
 var diplomacy: Node
 var game_over := ""
+var continuing_after_end := false
 var craft: RefCounted
 var armor: RefCounted     # armor.gd: ground vehicles built from code
 var saves: Node
@@ -2460,7 +2461,21 @@ func change_speed(step: int) -> void:
 	var i: int = SPEEDS.find(current)
 	set_speed(SPEEDS[clampi(i + step, 1, SPEEDS.size() - 1)])
 
+## Keep the match result, while allowing all simulation systems to run on.
+func match_stopped() -> bool:
+	return game_over != "" and not continuing_after_end
+
+func continue_after_end() -> void:
+	if game_over == "":
+		return
+	continuing_after_end = true
+	get_tree().paused = false
+	if game_speed <= 0.0:
+		set_speed(1.0)
+
 func start_match(difficulty: String) -> void:
+	game_over = ""
+	continuing_after_end = false
 	game_speed = 1.0
 	apply_pace()
 	match_difficulty = difficulty

@@ -328,7 +328,7 @@ func status_of(item: String) -> String:
 	return "%s: %d/%d" % [stage_names(item)[stage], int(progress[item].work), int(stage_points(item, stage))]
 
 func _process(delta: float) -> void:
-	if world == null or world.economy == null or world.game_over != "":
+	if world == null or world.economy == null or world.match_stopped():
 		return
 	_tick += delta
 	if _tick >= 1.0:

@@ -68,6 +68,8 @@ func update(delta: float) -> void:
 		_track(owner, tech_ready(owner), tech_since, TECH_HOLD, "technology")
 
 func _track(owner: int, holds: bool, since: Dictionary, hold: float, path: String) -> void:
+	if w.game_over != "":
+		return
 	var d: Node = w.diplomacy
 	var who: String = "You" if owner == 0 else d.name_of(owner)
 	if not holds:
@@ -84,6 +86,8 @@ func _track(owner: int, holds: bool, since: Dictionary, hold: float, path: Strin
 		_win(owner, path)
 
 func _win(owner: int, path: String) -> void:
+	if w.game_over != "":
+		return
 	var d: Node = w.diplomacy
 	if owner == 0:
 		w.game_over = "victory"

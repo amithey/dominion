@@ -390,7 +390,7 @@ func covert_damage(b: Dictionary, amount: float) -> void:
 # ---------------------------------------------------------------- hostile services
 
 func _process(delta: float) -> void:
-	if world == null or world.economy == null or world.game_over != "":
+	if world == null or world.economy == null or world.match_stopped():
 		return
 	advance(delta)
 	_tick += delta

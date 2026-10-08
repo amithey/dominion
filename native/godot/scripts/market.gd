@@ -247,7 +247,7 @@ func close_route(id: int) -> String:
 	return ""
 
 func _process(delta: float) -> void:
-	if world == null or world.economy == null or world.game_over != "":
+	if world == null or world.economy == null or world.match_stopped():
 		return
 	_step += delta
 	if _step >= STEP:

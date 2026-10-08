@@ -43,7 +43,7 @@ func path_of(slot: String) -> String:
 	return "user://saves/%s.json" % slot
 
 func _process(delta: float) -> void:
-	if world == null or world.game_over != "" or world.bench_phase >= 0:
+	if world == null or world.match_stopped() or world.bench_phase >= 0:
 		return
 	if autosave_every <= 0.0:
 		return
@@ -112,6 +112,7 @@ func capture() -> Dictionary:
 		"ai": nations,
 		"camera": {"focus": _v(world.cam_focus), "yaw": world.cam_yaw, "pitch": world.cam_pitch, "dist": world.cam_dist_target},
 		"game_over": world.game_over,
+		"continuing_after_end": world.continuing_after_end,
 		"game_time": world.game_time,
 		"national_powers": preload("res://scripts/faction_powers.gd").capture(world),
 		"market": world.market.capture(), "espionage": world.espionage.capture(),
@@ -271,6 +272,8 @@ func restore(data: Dictionary) -> void:
 	world.cam_pitch = float(data.camera.pitch)
 	world.cam_dist_target = float(data.camera.dist)
 	world.game_over = data.get("game_over", "")
+	# Legacy finished saves had no end dialog on load: resume them as continued.
+	world.continuing_after_end = bool(data.get("continuing_after_end", world.game_over != ""))
 	world.game_time = float(data.get("game_time", 0.0))
 	preload("res://scripts/faction_powers.gd").restore(world, data.get("national_powers", {}))
 	var engagement: Dictionary = data.get("engagement",{})
@@ -322,6 +325,8 @@ func restore(data: Dictionary) -> void:
 	if world.occupation:
 		world.occupation.restore(data.get("zones", []))
 	world.diplomacy.contacts.restore(data.get("diplomatic_contacts", {}))
+	if world.match_stopped():
+		world.hud.show_end(world.game_over.to_upper(), "Loaded a finished match. Continue playing to resume.")
 
 ## A saved power effect, with its ids whole numbers again.
 func _effect(e: Dictionary) -> Dictionary:

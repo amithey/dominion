@@ -1982,9 +1982,10 @@ func show_end(title: String, subtitle: String) -> void:
 		world.get_tree().reload_current_scene())
 	buttons.add_child(menu)
 	var stay := Button.new()
-	stay.text = "Keep watching"
+	stay.text = "Continue playing"
 	stay.focus_mode = Control.FOCUS_NONE
 	stay.pressed.connect(func():
+		world.continue_after_end()
 		dim.queue_free()
 		box.queue_free())
 	buttons.add_child(stay)

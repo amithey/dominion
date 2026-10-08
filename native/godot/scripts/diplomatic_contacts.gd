@@ -42,7 +42,7 @@ var history: Array = []
 var exports: Array = []
 
 func _process(delta: float) -> void:
-	if world != null and world.economy != null and world.game_over == "" and not world.ai.nations.is_empty():
+	if world != null and world.economy != null and not world.match_stopped() and not world.ai.nations.is_empty():
 		advance(delta)
 
 func leader(nation: int) -> String:

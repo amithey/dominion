@@ -140,7 +140,7 @@ func answer(label: String) -> void:
 # ---------------------------------------------------------------- the watch
 
 func _process(delta: float) -> void:
-	if world == null or world.territory == null or world.game_over != "":
+	if world == null or world.territory == null or world.match_stopped():
 		return
 	_tick += delta
 	if _tick >= WATCH:
