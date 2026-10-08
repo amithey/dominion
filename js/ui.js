@@ -814,7 +814,18 @@ function renderBuildPanel() {
     grid.appendChild(h);
     for (const key of ks) buildPanelButton(grid, key, BUILDINGS[key]);
   }
-  if (!order.length) grid.innerHTML = '<div class=build-empty>No matching structures in this category.</div>';
+  if (!order.length) {
+    const empty = document.createElement('div');
+    empty.className = 'build-empty';
+    empty.textContent = 'No matching structures in this category. Try another category or clear your search.';
+    grid.appendChild(empty);
+    if (query) {
+      const clear = document.createElement('button');
+      clear.textContent = 'Clear search';
+      clear.onclick = () => { $('#build-search').value = ''; renderBuildPanel(); };
+      empty.appendChild(clear);
+    }
+  }
   grid.scrollTop = scrollTop;
 }
 function buildPanelButton(grid, key, def) {
@@ -1071,6 +1082,7 @@ function initUI() {
   $('#btn-resume').onclick = () => togglePause(false);
   $('#btn-restart').onclick = () => location.reload();
   $('#btn-again').onclick = () => location.reload();
+  $('#btn-continue').onclick = continueAfterEnd;
 
   // menu setup
   $$('.diff-btn').forEach(b => b.onclick = () => {
@@ -1126,12 +1138,13 @@ function initUI() {
 
 function togglePause(force) {
   const want = force !== undefined ? force : !G.paused;
-  if (G.gameOver || !G.started) return;
+  if ((G.gameOver && !G.continuingAfterEnd) || !G.started) return;
   G.paused = want;
   $('#pause-overlay').classList.toggle('hidden', !want);
 }
 
 function showEnd(victory, text) {
+  if (G.gameOver) return;
   G.gameOver = true; G.paused = true;
   $('#end-title').textContent = victory ? '🏆 VICTORY' : '💀 DEFEAT';
   $('#end-title').style.color = victory ? 'var(--gold)' : 'var(--danger)';
@@ -1139,6 +1152,15 @@ function showEnd(victory, text) {
     ? 'Every rival capital lies in ruins. The world is yours — history will remember your dominion.'
     : 'Your Headquarters has fallen. Your nation dissolves into the pages of history.');
   $('#end-overlay').classList.remove('hidden');
+}
+
+function continueAfterEnd() {
+  if (!G.gameOver) return;
+  G.continuingAfterEnd = true;
+  G.paused = false;
+  $('#end-overlay').classList.add('hidden');
+  $('#pause-overlay').classList.add('hidden');
+  notify('Campaign continues. Construction, diplomacy and research remain available.', 'good', 8);
 }
 
 function onHQDestroyed(owner) {

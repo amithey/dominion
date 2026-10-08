@@ -287,7 +287,7 @@ static func build() -> Theme:
 	t.set_color("font_hover_color", "Button", Color.WHITE)
 	t.set_color("font_pressed_color", "Button", Color.WHITE)
 	t.set_color("font_hover_pressed_color", "Button", Color.WHITE)
-	t.set_color("font_disabled_color", "Button", Color("4f6476"))
+	t.set_color("font_disabled_color", "Button", Color("8d9dab"))
 	t.set_font("font", "Button", bold)
 	t.set_font_size("font_size", "Button", 14)
 	# Drop-downs follow the buttons, but an open one stays readable rather

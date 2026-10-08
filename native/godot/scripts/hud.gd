@@ -310,11 +310,11 @@ func _build_top_bar() -> void:
 var _guide: Node
 
 ## The beginner's guide opens in a first campaign (until it is skipped or done).
-func start_guide() -> void:
+func start_guide(force := false) -> void:
 	if _guide != null and is_instance_valid(_guide):
 		_guide.queue_free()
 		_guide = null
-	if world.game_time > 5.0 or not preload("res://scripts/beginner_guide.gd").wanted() or "--no-guide" in OS.get_cmdline_user_args():
+	if not force and (world.game_time > 5.0 or not preload("res://scripts/beginner_guide.gd").wanted() or "--no-guide" in OS.get_cmdline_user_args()):
 		return
 	_guide = preload("res://scripts/beginner_guide.gd").new()
 	add_child(_guide)
@@ -549,7 +549,7 @@ func _section(title: String) -> void:
 func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: float, locked: String, action: Callable) -> void:
 	var b := Button.new()
 	b.theme_type_variation = "RowButton"
-	b.custom_minimum_size = Vector2(0, 92)
+	b.custom_minimum_size = Vector2(0, 120)
 	b.focus_mode = Control.FOCUS_NONE
 	b.tooltip_text = desc if locked == "" else "%s\n%s" % [locked, desc]
 	b.set_meta("cost", cost)
@@ -585,12 +585,14 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 	var name := _text(title, 15, UI.CREAM, true)
 	name.add_theme_font_size_override("font_size", 15)
 	text.add_child(name)
-	var line := _text(locked if locked != "" else desc, 12, UI.BAD if locked != "" else UI.MUTED)
+	var line := _text(locked if locked != "" else desc, 14, UI.BAD if locked != "" else UI.MUTED)
 	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	line.max_lines_visible = 2
 	line.custom_minimum_size = Vector2(190, 0)
 	text.add_child(line)
-	text.add_child(_cost_row(cost))
+	var prices := _cost_row(cost)
+	prices.name = "ProductionCost"
+	text.add_child(prices)
 	if seconds > 0.0:
 		# The build time in a small brass tally at the end of the row.
 		var holder := CenterContainer.new()
@@ -1059,6 +1061,20 @@ func _building_bars() -> void:
 		_section("Other")
 		for b in rest:
 			_build_row(b)
+	if listed.is_empty() and rest.is_empty() and query != "":
+		var empty := _text("No buildings match \"%s\" in %s. Try another tab or clear the search." % [_build_search.text.strip_edges(), build_tab], 15, UI.TEXT)
+		empty.name = "BuildEmpty"
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		empty.custom_minimum_size.x = 280
+		_list.add_child(empty)
+		var clear := Button.new()
+		clear.text = "Clear search"
+		clear.focus_mode = Control.FOCUS_NONE
+		clear.pressed.connect(func():
+			_build_search.text = ""
+			_shown_key = ""
+			_update_panel())
+		_list.add_child(clear)
 	if build_tab == "Economy" and query == "":
 		_section("Transport")
 		for kind in ["road", "rail"]:
@@ -1079,7 +1095,7 @@ func _build_row(b: String) -> void:
 	var row_desc := first if first.ends_with(".") else first + "."
 	_bar(b, def.name, row_desc, def.cost, float(def.get("buildTime", 0)), why, func(): world.begin_placement(b))
 	var row: Control = _list.get_child(_list.get_child_count() - 1)
-	row.custom_minimum_size.y = 66  # compact: about six to a screen
+	row.custom_minimum_size.y = 120  # two description lines and the full cost row
 	var pics := row.find_children("*", "TextureRect", true, false)
 	if not pics.is_empty():
 		pics[0].custom_minimum_size = Vector2(66, 48)  # the building's picture (the others are cost icons)
@@ -1175,6 +1191,8 @@ func _update_selection() -> void:
 		_medal_owner(b.owner)
 		_sel_title.text = UI.caps(b.def.name)
 		_sel_sub.text = "Under construction" if not b.built else String(b.def.get("cat", "")).capitalize()
+		if b.built and world.territory.RINGS_MAX.has(b.key):
+			_sel_sub.text = {"hq": "Capital", "cityCenter": "City", "villageCenter": "Village"}[b.key]
 		_sel_hp.visible = true
 		if not b.built:
 			_sel_hp.max_value = 1.0
@@ -1971,6 +1989,8 @@ func show_end(title: String, subtitle: String) -> void:
 	column.add_child(big)
 	var small := _text(subtitle, 17, UI.TEXT)
 	small.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	small.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	small.custom_minimum_size.x = 540
 	column.add_child(small)
 	var buttons := _row(column, 10)
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER

@@ -1,5 +1,16 @@
 # Working in parallel: Claude and Codex
 
+2026-10-08 Codex: user requested real customer play, 100 scenarios, fixes,
+commit/push and server publication. Version 0.9.79 includes reversible quality
+presets/grass, focused-input camera guards, loading feedback, replayable guide,
+clear-search recovery, settlement labels, readable text, controls and save-error
+feedback. Narrow world/hud/menu/theme/terrain changes. Added customer-review-49
+(49 PASS), gameplay-ui-50 (51 PASS), post-victory (30 PASS), real fullscreen
+(15 PASS), browser npm (42 PASS). Web gets Continue playing and Escape closes
+ministries before pausing; cache version updated. Existing Dominion Vercel
+project published and browser UI verified. Report: native/CUSTOMER-REVIEW-2026-10-08.md.
+Unrelated untracked planning files and generated UID files remain untouched.
+
 2026-10-08 Codex: fixing the user's post-victory freeze. Keep watching now resumes
 territory, research, diplomatic talks, market, espionage, passage and autosaves,
 while retaining the original result and suppressing repeat victory dialogs.

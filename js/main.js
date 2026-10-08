@@ -5,7 +5,7 @@
 
 /* ---- global game state ---- */
 const G = {
-  started: false, paused: true, gameOver: false,
+  started: false, paused: true, gameOver: false, continuingAfterEnd: false,
   reviewMode: false,
   time: 0, speed: 1, frame: 0,
   difficulty: 'easy', gfxHigh: true, graphics: 'balanced', resolutionMode: 'native',
@@ -515,7 +515,10 @@ function initInput() {
   const canvas = document.getElementById('game-canvas');
   window.addEventListener('keydown', e => {
     const k = e.key.toLowerCase();
-    if (e.target.closest('input, select, textarea') || e.target.isContentEditable) return;
+    if (e.target.closest('input, select, textarea') || e.target.isContentEditable) {
+      if (k === 'escape') { e.preventDefault(); e.target.blur(); }
+      return;
+    }
     if (!G.started) return;
     if (handleControlGroup(e)) return;
     if (k === 'home') { e.preventDefault(); focusCapital(); return; }
@@ -528,6 +531,10 @@ function initInput() {
       if (LOGISTICS.mode) cancelTransport();
       else if (G.targeting) { G.targeting = null; notify('Launch aborted.', 'warn'); }
       else if (G.placing) cancelPlacement();
+      else if ($$('.window.open').length) {
+        $$('.window.open').forEach(win => win.classList.remove('open'));
+        setTerritoryOverlay(false);
+      }
       else togglePause();
     }
   });

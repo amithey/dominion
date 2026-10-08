@@ -47,6 +47,7 @@ $tests = @(
     @('additional nations: resource boundaries, interrupted powers, cargo and saved cooldowns', @('--script', 'res://tools/additional-factions-100.gd'), 'ADDITIONAL_FACTIONS_100 PASS', 300),
     @('about 100 checks playing on every map', @('--script', 'res://tools/gameplay-maps-100.gd'), 'GAMEPLAY_MAPS PASS', 7200),
     @('fifty checks on playing the game: placement, selection, commands, panels, workers, groups', @('--script', 'res://tools/gameplay-ui-50.gd'), 'GAMEPLAY_UI PASS', 1800),
+    @('49 customer checks: reversible graphics, input, guide, layouts, save recovery and diplomacy', @('--script', 'res://tools/customer-review-49.gd'), 'CUSTOMER_REVIEW PASS', 300),
     @('a third hundred gameplay checks: rivals on their own, match settings, missiles, spies, trade, bunkers, air bases, disk saves', @('--script', 'res://tools/gameplay-deep-100.gd'), 'GAMEPLAY_DEEP PASS', 2400),
     @('about 100 gameplay checks over time: economy, building, training, research, land, supply, war, trade, saves', @('--script', 'res://tools/gameplay-live-100.gd'), 'GAMEPLAY_LIVE PASS', 1800),
     @('about 100 gameplay checks: every building, unit, research, market, diplomacy, spies, missiles, land, roads, saves', @('--script', 'res://tools/gameplay-100.gd'), 'GAMEPLAY_100 PASS', 1500),

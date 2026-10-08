@@ -277,8 +277,10 @@ func open_pause() -> void:
 	_campaign_line()
 	_button("Resume", close)
 	_button("Save Game", func():
-		world.saves.save("quicksave")
-		close())
+		if world.saves.save("quicksave"):
+			close()
+		else:
+			_description("Save failed. Your game is still open. Check available disk space and try again."))
 	_button("Load Game", open_load)
 	_button("Settings", open_settings)
 	if preload("res://scripts/cheats.gd").allowed():
@@ -959,17 +961,19 @@ func _settings_controls() -> void:
 	keys.columns = 2
 	keys.add_theme_constant_override("h_separation", 24)
 	keys.add_theme_constant_override("v_separation", 3)
-	for pair in [["W A S D / arrows", "Move the camera (Shift: faster)"], ["Wheel", "Zoom"], ["Middle button + drag", "Turn and tilt the view"], ["Shift + middle drag", "Drag the map"],
+	for pair in [["Left click / drag", "Select one unit / select a group"], ["Shift + left click", "Add or remove a unit from the selection"], ["W A S D / arrows", "Move the camera (Shift: faster)"], ["Wheel", "Zoom"], ["Middle button + drag", "Turn and tilt the view"], ["Shift + middle drag", "Drag the map"],
 			["Right click", "Move, attack; on a site with workers: build"], ["Shift + right click", "Add a site to the workers' list"], ["Ctrl + right click", "Attack-move"], ["Alt + right click", "Bombard an area"],
-			["B", "Build list"], ["G  M  I  T  Y", "Diplomacy, market, intelligence, territory, research"], ["O", "Mark an operational zone"], ["F5 / F9", "Quick save / load"], ["F11", "Full screen / window"], ["Esc", "Pause menu"]]:
+			["B", "Build list"], ["G  M  I  T  Y", "Diplomacy, market, intelligence, territory, research"], ["Space / + / -", "Pause or resume / faster / slower"], ["Home", "Return to your capital"], ["O", "Mark an operational zone"], ["F5 / F9", "Quick save / load"], ["F11", "Full screen / window"], ["Esc", "Cancel, close a window, then pause"]]:
 		var k := Label.new()
 		k.text = pair[0]
 		k.add_theme_color_override("font_color", UI.GOLD)
-		k.add_theme_font_size_override("font_size", 13)
+		k.add_theme_font_size_override("font_size", 15)
 		keys.add_child(k)
 		var d := Label.new()
 		d.text = pair[1]
-		d.add_theme_font_size_override("font_size", 13)
+		d.add_theme_font_size_override("font_size", 15)
+		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		d.custom_minimum_size.x = 360
 		d.add_theme_color_override("font_color", UI.CREAM)
 		keys.add_child(d)
 	var card := PanelContainer.new()
@@ -989,6 +993,15 @@ func _settings_game() -> void:
 	var every: float = world.saves.autosave_every if world.saves else 180.0
 	_setting("Autosave", "Saves the match as \"Autosave\" at this interval, so a crash or a mistake costs little.", _segmented([["1 min", 60.0], ["3 min", 180.0], ["5 min", 300.0], ["Off", 0.0]], every, func(v):
 		if world.saves: world.saves.autosave_every = v))
+	var guide := Button.new()
+	guide.name = "ReplayGuide"
+	guide.text = "Show first steps"
+	guide.disabled = not in_match
+	guide.tooltip_text = "Start a campaign to open the guide." if not in_match else "Reopen the guided introduction without resetting your campaign."
+	guide.pressed.connect(func():
+		close()
+		world.hud.start_guide(true))
+	_setting("Beginner guide", "Walk through construction, housing, research, diplomacy and game speed again.", guide)
 
 func _reset_settings() -> void:
 	world.quality = "balanced"
@@ -1198,7 +1211,7 @@ func _entry(text: String, detail: String, icon_name: String, action: Callable, p
 	d.text = detail
 	d.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	d.clip_text = true
-	d.add_theme_font_size_override("font_size", 12)
+	d.add_theme_font_size_override("font_size", 14)
 	d.add_theme_color_override("font_color", UI.MUTED)
 	d.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(d)

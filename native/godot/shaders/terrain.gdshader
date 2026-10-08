@@ -83,14 +83,14 @@ void vertex() {
 // far away (the 6 m repeat of the photo turns into a speckle of dots from high
 // above; the coarse scale alone reads as smooth meadow).
 vec3 two_scale(sampler2D t, vec2 p, float near_detail) {
-	vec3 coarse = texture(t, p * far_tile).rgb;
+	vec3 coarse = texture(t, p * far_tile, 1.5 * (1.0 - near_detail)).rgb;
 	if (near_detail < 0.01) return coarse;
 	return mix(coarse, mix(texture(t, p * tile).rgb, coarse, 0.35), near_detail);
 }
 vec3 two_scale_normal(sampler2D t, vec2 p, float near_detail) {
-	vec3 coarse = texture(t, p * far_tile).rgb;
+	vec3 coarse = texture(t, p * far_tile, 1.5 * (1.0 - near_detail)).rgb;
 	vec3 n = near_detail < 0.01 ? coarse : mix(coarse, mix(texture(t, p * tile).rgb, coarse, 0.35), near_detail);
-	return mix(vec3(0.5, 0.5, 1.0), n, 0.4 + 0.6 * near_detail) * 2.0 - 1.0;
+	return mix(vec3(0.5, 0.5, 1.0), n, 0.08 + 0.72 * near_detail) * 2.0 - 1.0;
 }
 // Tangent-space normal -> world, for a surface whose texture axes are u and v.
 vec3 to_world(vec3 n_ts, vec3 n, vec3 u, vec3 v) {
@@ -101,7 +101,7 @@ vec3 to_world(vec3 n_ts, vec3 n, vec3 u, vec3 v) {
 
 void fragment() {
 	vec2 p = world_pos.xz;
-	float nd = 1.0 - smoothstep(70.0, 200.0, length(VERTEX));
+	float nd = 1.0 - smoothstep(35.0, 115.0, length(VERTEX));
 	vec3 n = normalize(world_normal);
 	vec4 w = weights / max(weights.x + weights.y + weights.z + weights.w, 0.001);
 	vec3 albedo = vec3(0.0);
@@ -124,6 +124,9 @@ void fragment() {
 	}
 
 	// Large-scale colour variation: meadows are never one flat green.
+	// Pull distant grass toward a broad meadow tone instead of magnifying
+	// photographic flecks with sharpening. Close-up ground keeps its detail.
+	albedo = mix(albedo, mix(albedo, vec3(0.32, 0.40, 0.20), 0.4), w.x * (1.0 - nd));
 	// The grass photo is a bright spring lime; pull it toward a deeper summer green.
 	albedo = mix(albedo, albedo * vec3(0.82, 0.9, 0.7), w.x);
 	albedo *= mix(0.8, 1.1, macro);
@@ -142,8 +145,8 @@ void fragment() {
 		float near;
 		vec4 own = hex_territory(world_pos.xz, near);
 		if (own.a > 0.0) {
-			float edge = 1.0 - smoothstep(0.35, 1.3, near);   // the border line
-			float band = 1.0 - smoothstep(1.3, 5.5, near);    // a soft wash of colour inside it
+			float edge = 1.0 - smoothstep(0.2, 0.75, near);   // a fine border line
+			float band = 1.0 - smoothstep(0.75, 2.0, near);
 			bool contested = own.a > 0.95;
 			if (show_territory) {
 				float strength = contested ? 0.5 : own.a;
@@ -155,9 +158,9 @@ void fragment() {
 				albedo = mix(albedo, tint * (0.4 + dot(albedo, vec3(0.3, 0.59, 0.11)) * 0.8), strength);
 			} else {
 				// Outside the territory view: a soft band of colour inside the border, as a 4X map shows it.
-				albedo = mix(albedo, own.rgb * 0.75 + albedo * 0.35, band * 0.35);
+				albedo = mix(albedo, own.rgb * 0.75 + albedo * 0.35, band * 0.22);
 			}
-			albedo = mix(albedo, own.rgb * 1.05, edge * 0.8);  // the nation's own colour, not washed pale
+			albedo = mix(albedo, own.rgb * 0.9, edge * 0.7);
 		}
 	}
 	if (show_build && world_pos.y > sea_level - 1.5) {

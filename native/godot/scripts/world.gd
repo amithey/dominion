@@ -264,6 +264,13 @@ const NAV_STEP := 4.0
 var fps_frames := 0
 
 func _ready() -> void:
+	var loading: CanvasLayer
+	if DisplayServer.get_name() != "headless":
+		set_process(false)
+		set_physics_process(false)
+		loading = preload("res://scripts/loading_screen.gd").new()
+		add_child(loading)
+		await RenderingServer.frame_post_draw
 	interactive = true
 	for a in OS.get_cmdline_user_args():
 		if not (a.begins_with("--quality") or a.begins_with("--difficulty") or a == "--no-vsync"):
@@ -442,6 +449,10 @@ func _ready() -> void:
 	add_child(selection_marker)
 
 	var args := OS.get_cmdline_user_args()
+	if loading != null:
+		loading.queue_free()
+		set_process(true)
+		set_physics_process(true)
 	if get_tree().has_meta("pending_load"):
 		var data: Dictionary = get_tree().get_meta("pending_load")
 		get_tree().remove_meta("pending_load")
@@ -600,6 +611,12 @@ func pick_quality() -> String:
 
 func apply_quality() -> void:
 	var viewport := get_viewport()
+	# Every preset is complete: changing back from Low must restore clarity.
+	viewport.msaa_3d = Viewport.MSAA_DISABLED
+	viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA
+	viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
+	viewport.scaling_3d_scale = 1.0
+	env.glow_enabled = quality != "low"
 	match quality:
 		"high":
 			env.ssao_enabled = true
@@ -624,6 +641,13 @@ func apply_quality() -> void:
 			viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED
 			viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR
 			viewport.scaling_3d_scale = 0.6
+	if quality != "low" and terrain_node != null and grass_nodes.is_empty():
+		build_grass()
+		for b in buildings:
+			if not b.dead: clear_site_grass(b.root.position, logistics.radius if is_district(b.key) else b.footprint)
+	for patch in grass_nodes:
+		patch.visible = quality != "low"
+		patch.visibility_range_end = 110.0 if quality == "high" else 75.0
 
 # ---------------------------------------------------------------- terrain
 
@@ -5808,6 +5832,10 @@ func _process(delta: float) -> void:
 # player's request, as a stray key beside W swung the view). Keys are read by their position, so
 # they work with any keyboard layout (Hebrew included).
 func pan_camera(delta: float) -> void:
+	if get_viewport().gui_get_focus_owner() is LineEdit:
+		return
+	if hud != null and hud.get("_diplomatic_contact_screen") != null and hud._diplomatic_contact_screen.visible:
+		return
 	var pan := cam_dist * 0.9 * delta * pan_speed
 	var forward := Vector3(-sin(cam_yaw), 0, -cos(cam_yaw))
 	var right := Vector3(cos(cam_yaw), 0, -sin(cam_yaw))
@@ -6037,6 +6065,10 @@ func enemy_under(screen: Vector2) -> Variant:
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and get_viewport().gui_get_focus_owner() is LineEdit:
+		if event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:
+			get_viewport().gui_get_focus_owner().release_focus()
+			hud.close_windows()
+			get_viewport().set_input_as_handled()
 		return # Typing a building name must not trigger B/M/I or army orders.
 	if event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE and order_mode!="":
 		order_mode = ""
