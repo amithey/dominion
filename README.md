@@ -16,6 +16,6 @@ Read [native/README.md](native/README.md) and [native/HANDOFF.md](native/HANDOFF
 - Prepare assets: `native/prepare-desktop.ps1`.
 - Native checks: `native/run-tests.ps1`; `-Exported` checks the built executable.
 - Release build: `native/build-windows.ps1` builds the committed source and the installer.
-- Current customer audit: [round 3 report](native/CUSTOMER-REVIEW-ROUND-3-2026-10-09.md) (earlier: [round 2](native/CUSTOMER-REVIEW-ROUND-2-2026-10-08.md)).
+- Current customer audit: [round 4 report](native/CUSTOMER-REVIEW-ROUND-4-2026-10-09.md) (earlier: [round 3](native/CUSTOMER-REVIEW-ROUND-3-2026-10-09.md), [round 2](native/CUSTOMER-REVIEW-ROUND-2-2026-10-08.md)).
 
 The older browser implementation remains in the repository as historical reference and some asset/data inputs. It is outside the active product and release scope. Steam integration and upload are separate work; this repository does not claim a published Steam release.

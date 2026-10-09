@@ -44,6 +44,7 @@ if (-not $Working) {
     Copy-Item -LiteralPath (Join-Path $stage 'dist\DOMINION.exe') -Destination $dist
     Copy-Item -LiteralPath (Join-Path $stage 'dist\DOMINION-Setup.exe') -Destination $dist
     cmd /c rmdir "$tools" | Out-Null
+    & (Join-Path $native 'verify-release.ps1') -Directory $dist -ExpectedVersion $Version
     Get-ChildItem -LiteralPath $dist -Filter 'DOMINION*.exe' | ForEach-Object { '{0}  {1:N0} MB  (commit {2})' -f $_.Name, ($_.Length / 1MB), $head }
     exit 0
 }
@@ -73,4 +74,5 @@ if (-not (Test-Path -LiteralPath $exe)) { throw 'The Godot export did not produc
 Get-ChildItem -LiteralPath $dist -Filter 'DOMINION-Setup*.exe' | Remove-Item -Force
 & $iscc "/DAppVersion=$Version" (Join-Path $native 'installer\dominion.iss')
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed ($LASTEXITCODE)" }
+& (Join-Path $native 'verify-release.ps1') -Directory $dist -ExpectedVersion $Version
 Get-ChildItem -LiteralPath $dist -Filter 'DOMINION*.exe' | ForEach-Object { '{0}  {1:N0} MB' -f $_.Name, ($_.Length / 1MB) }

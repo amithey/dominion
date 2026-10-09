@@ -552,7 +552,7 @@ func _start_picker(slot: int) -> OptionButton:
 	picker.fit_to_longest_item = false
 	picker.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	if fixed and slot == 0:
-		picker.add_item("1 · %s (your town)" % regions[0].name, 1)
+		picker.add_item("1 · %s" % regions[0].name, 1)
 		picker.disabled = true
 		picker.tooltip_text = "On the original islands you always start in your prepared town."
 		return picker
@@ -952,6 +952,8 @@ func _bus_trim(bus: String) -> float:
 
 func _bus_volume(bus: String) -> float:
 	var i := AudioServer.get_bus_index(bus)
+	if i >= 0 and AudioServer.is_bus_mute(i):
+		return 0.0
 	return roundf(db_to_linear(AudioServer.get_bus_volume_db(i) - _bus_trim(bus)) * 100.0) if i >= 0 else 100.0
 
 func _set_bus_volume(bus: String, v: float) -> void:
@@ -1031,6 +1033,8 @@ func _settings_game() -> void:
 	_setting("Beginner guide", "Walk through construction, housing, research, diplomacy and game speed again.", guide)
 
 func _reset_settings() -> void:
+	world.ui_scale = 0.8
+	world.apply_ui_scale()
 	world.quality = "balanced"
 	world.apply_quality()
 	set_fullscreen(true)
@@ -1136,7 +1140,7 @@ func load_settings() -> void:
 		world.quality = q
 		world.apply_quality()
 	set_fullscreen(bool(cfg.get_value("graphics", "fullscreen", true)))
-	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(float(cfg.get_value("audio", "volume", 100.0)), 0.1) / 100.0))
+	_set_bus_volume("Master", float(cfg.get_value("audio", "volume", 100.0)))
 	_set_bus_volume("SFX", float(cfg.get_value("audio", "effects", 100.0)))
 	_set_bus_volume("Music", float(cfg.get_value("audio", "music", 100.0)))
 	_set_bus_volume("Interface", float(cfg.get_value("audio", "clicks", 100.0)))
@@ -1153,7 +1157,7 @@ func save_settings() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("graphics", "quality", world.quality)
 	cfg.set_value("graphics", "fullscreen", is_fullscreen())
-	cfg.set_value("audio", "volume", roundf(db_to_linear(AudioServer.get_bus_volume_db(0)) * 100.0))
+	cfg.set_value("audio", "volume", _bus_volume("Master"))
 	cfg.set_value("controls", "edge_scroll", world.edge_scroll)
 	cfg.set_value("controls", "pan_speed", world.pan_speed)
 	cfg.set_value("audio", "effects", _bus_volume("SFX"))

@@ -836,7 +836,8 @@ func _build_help() -> void:
 	_help.anchor_bottom = 0.5
 	_help.offset_left = -300
 	_help.offset_right = 300
-	_help.offset_top = -210
+	_help.offset_top = -300
+	_help.offset_bottom = 300
 	_help.visible = false
 	_help.add_theme_stylebox_override("panel", UI.plate(Color("183039"), Color("0a191f"), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 9))
 	add_child(_help)
@@ -851,42 +852,64 @@ func _build_help() -> void:
 	head_band.add_child(head)
 	_windows.register_window(_help, head_band, "help")
 	var body := MarginContainer.new()
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	for side in ["left", "right", "top", "bottom"]:
 		body.add_theme_constant_override("margin_" + side, 14)
 	sheet.add_child(body)
+	var scroll := ScrollContainer.new()
+	scroll.name = "HelpScroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_child(scroll)
 	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.add_theme_constant_override("separation", 5)
-	body.add_child(col)
-	for line in [["Move the camera", "W A S D or the arrow keys, the screen edge, or drag with the middle mouse button"],
+	scroll.add_child(col)
+	for line in [["Move the camera", "W A S D or arrows, the screen edge, or Shift + middle mouse drag"],
 			["Turn / tilt / zoom", "Hold the middle mouse button and drag to turn and tilt  ·  mouse wheel zooms toward the cursor"],
-			["Select", "Click a unit or building, or drag a box around units  ·  double click: every unit of its kind on screen"],
+			["Select", "Click or drag a box  ·  Shift + click adds or removes a unit  ·  double click: every unit of its kind on screen"],
 			["Cabinet", "Tab: the whole state at a glance, every ministry in its colour"],
 			["Orders", "Right click: move or attack  ·  Ctrl + right click: attack-move"],
 			["Bombard", "Alt + right click: fire at ground or infrastructure (armed vehicles)"],
 			["Aircraft", "Limited salvos; empty aircraft return to a supplied airfield / helipad to rearm"],
-			["Build", "Pick a building in the list on the right, click a hex in your city (Shift keeps placing)"],
+			["Build", "B opens the list  ·  pick a building, then a green hex (Shift keeps placing)  ·  workers: right-click a site to build; Shift queues sites"],
 			["Screens", "Y research  ·  G diplomacy  ·  M market  ·  I intelligence  ·  T territory"],
-			["Game", "F5 save  ·  F9 load  ·  Esc cancel / pause menu  ·  L message log  ·  U United Nations  ·  K defence  ·  F1 this help"],
+			["Game", "F5 quick save  ·  F9 quick load  ·  F11 full screen  ·  Esc cancel / pause menu  ·  L message log  ·  U United Nations  ·  K defence  ·  F1 this help"],
 			["Speed", "Space: pause  ·  + and -: 1x, 2x, 4x (the buttons beside the era do the same)"],
 			["Windows", "Drag a window by its title to move it; its contents and pending decisions stay open"],
 			["Minimap", "Click or drag on it to jump anywhere on the island"]]:
 		var row := HBoxContainer.new()
 		var k := _text(line[0], 14, GOLD)
-		k.custom_minimum_size = Vector2(150, 0)
+		k.custom_minimum_size = Vector2(126, 0)
 		row.add_child(k)
 		var v := _text(line[1], 14, UI.TEXT)
 		v.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		v.custom_minimum_size = Vector2(410, 0)
+		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(v)
 		col.add_child(row)
 	var close := Button.new()
 	close.text = "Close (F1)"
 	close.focus_mode = Control.FOCUS_NONE
 	close.pressed.connect(toggle_help)
-	col.add_child(close)
+	sheet.add_child(close)
+	get_viewport().size_changed.connect(_fit_help)
+	_fit_help.call_deferred()
+
+func _fit_help() -> void:
+	if not is_instance_valid(_help):
+		return
+	var view := get_viewport().get_visible_rect().size
+	var dimensions := Vector2(minf(640.0, view.x - 24.0), minf(640.0, view.y - 84.0))
+	_help.size = dimensions
+	# Preserve a player's dragged position, while keeping the footer reachable.
+	if not _windows.positions.has("help"):
+		_windows._set_position(_help, (view - dimensions) * 0.5)
+	_windows.reflow(_help)
 
 func toggle_help() -> void:
 	_help.visible = not _help.visible
+	if _help.visible:
+		_fit_help.call_deferred()
 
 # ---------------------------------------------------------------- refresh
 
@@ -899,24 +922,14 @@ func hover_text(u: Dictionary) -> String:
 	var name: String = preload("res://scripts/national_variants.gd").name_for(world, int(u.owner), u.key)
 	return " %s  ·  %s  ·  %d / %d " % [name, who, int(maxf(u.hp, 0.0)), int(u.max_hp)]
 
-## The visible unit nearest `mouse` on screen (within 22 px), or null.
+## The visible unit under `mouse`, using the same hull and margin as clicks.
 func unit_at_screen(mouse: Vector2) -> Variant:
 	var cam: Camera3D = get_viewport().get_camera_3d()
 	if cam == null:
 		return null
-	var best = null
-	var best_d := 22.0
-	for u in world.units:
-		if u.dead or not u.node.visible or u.get("stowed", false):
-			continue
-		if cam.is_position_behind(u.node.position):
-			continue
-		var p: Vector2 = cam.unproject_position(u.node.position + Vector3.UP * (1.0 if u.get("fly", false) else 0.8))
-		var dd := p.distance_to(mouse)
-		if dd < best_d:
-			best_d = dd
-			best = u
-	return best
+	# Hover and click must recognise the same hull, including a ship's bow.
+	return world.Picking.pick(cam, world.units.filter(func(u):
+		return not u.dead and u.node.is_visible_in_tree() and not u.get("stowed", false) and (world.fog == null or world.fog.shows(u))), mouse)
 
 func idle_workers() -> Array:
 	return world.units.filter(func(u): return u.owner == 0 and not u.dead and u.key == "worker" and u.get("build_site") == null and u.get("target") == null and u.get("build_queue", []).is_empty())
@@ -1295,9 +1308,9 @@ func _update_selection() -> void:
 	_commands["Buy land"].visible = hall and transport_text==""
 	# Orders for an army only appear with an army selected: a selected barracks
 	# used to offer Attack-move and Bombard, greyed out but there.
-	_commands["Attack-move"].visible = _commands["Attack-move"].visible and not own_units.is_empty()
-	_commands["Bombard"].visible = _commands["Bombard"].visible and not own_units.is_empty()
-	_commands["Repair"].visible = _commands["Repair"].visible and (not own_units.is_empty() or not _commands["Repair"].disabled)
+	_commands["Attack-move"].visible = _commands["Attack-move"].visible and not _commands["Attack-move"].disabled
+	_commands["Bombard"].visible = _commands["Bombard"].visible and not _commands["Bombard"].disabled
+	_commands["Repair"].visible = _commands["Repair"].visible and not _commands["Repair"].disabled
 	_sel_stats.visible = false
 	_launch_row.visible = false
 	if transport_text != "":
@@ -1380,6 +1393,10 @@ func _update_selection() -> void:
 		_sel_hp.value = hp
 		var def: Dictionary = world.unit_defs.get(main, {})
 		_sel_info.text = ("%s\nRight click to move or attack; Ctrl + right click to attack-move." % def.get("desc", "")) if units.size() == 1 else "Right click to move or attack; Ctrl + right click to attack-move."
+		if units.all(func(u): return u.key == "worker"):
+			_sel_info.text = "B opens the build list. Right-click an unfinished building to construct it; Shift + right-click queues another site. Right-click open ground to move."
+		elif not own_units.any(func(u): return u.dmg > 0):
+			_sel_info.text = "%s\nRight-click to move. This selection has no weapons." % def.get("desc", "")
 		_fill_queue([])
 		_fill_launch(own_units.any(func(u): return u.key in world.missiles.LAUNCH_SHIPS))
 		if units.size() == 1 and units[0].get("fly",false):

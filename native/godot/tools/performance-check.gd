@@ -30,7 +30,10 @@ func load_match(cfg: Dictionary) -> float:
 	var seconds := (Time.get_ticks_msec() - t0) / 1000.0
 	if w.menu.get("_root") == null: w.menu.setup(w)
 	w.start_match("normal")
-	w.menu._root.hide()
+	# Hiding the menu alone leaves SceneTree paused and the camera frozen.
+	w.menu.close()
+	w.saves.autosave_every = 0
+	w.edge_scroll = false
 	for i in range(5): await physics_frame
 	return seconds
 
@@ -143,6 +146,8 @@ func run() -> void:
 		w.cam_focus = field
 		w.cam_dist_target = 90.0
 		w.cam_dist = 90.0
+		w.update_camera(1.0)
+		check(not paused and w.hud.visible and w.camera.global_position.distance_to(field) < 150.0, "rendered battle has a live simulation, HUD and camera over the battlefield")
 		for i in range(60): await process_frame
 		var frames: Array[float] = []
 		for i in range(300):

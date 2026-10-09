@@ -1974,6 +1974,10 @@ func can_bombard(u: Dictionary) -> bool:
 var profiling := false
 var prof := {}
 var prof_frames := 0
+var _wreck_elapsed := 0.0
+const WRECK_LIMIT := 48
+const WRECKS_PER_CELL := 3
+const WRECK_CELL_SIZE := 24.0
 
 func clock() -> int:
 	return Time.get_ticks_usec()
@@ -2054,6 +2058,10 @@ func update_detail_level() -> void:
 func _physics_process(delta: float) -> void:
 	if match_stopped(): return
 	sim_tick += 1
+	_wreck_elapsed += delta
+	if _wreck_elapsed >= 1.0:
+		_wreck_elapsed = 0.0
+		trim_wrecks()
 	var now := Time.get_ticks_msec() / 1000.0
 	var t0 := clock()
 	rebuild_grid()
@@ -4037,6 +4045,14 @@ func combat_test(capture := false) -> void:
 	var failures := []
 	Engine.time_scale = 3.0
 	for c in cases:
+		# Each weapon case owns its damage. A delayed bomb from the previous
+		# case must not kill the next target before its attacker can fire.
+		for projectile in effects._projectiles:
+			projectile.node.queue_free()
+		effects._projectiles.clear()
+		for shell in effects._shells:
+			shell.node.queue_free()
+		effects._shells.clear()
 		var attacker := spawn_unit(c[0], c[2], 0)
 		var target := spawn_unit(c[1], c[3], 1)
 		target.target = target.node.position  # the target holds still
@@ -5605,7 +5621,23 @@ func check_game_over() -> void:
 		game_over = "victory"
 		hud.show_end("VICTORY", "Every rival capital has fallen.")
 
-# Fallen soldiers lie for a while, then sink away; wrecks stay.
+## Decorative wrecks must not accumulate forever or bury a live battlefield.
+## Keep recent explosions intact; retain a few of the newest wrecks per area.
+func trim_wrecks() -> void:
+	var wrecks: Array = units.filter(func(u): return u.dead and u.vehicle and not u.get("fly", false) and not u.get("naval", false) and u.dead_time >= 8.0 and not u.get("wreck_retiring", false))
+	wrecks.sort_custom(func(a, b): return a.dead_time < b.dead_time)
+	var cells := {}
+	var kept := 0
+	for u in wrecks:
+		var cell := Vector2i(floori(u.node.position.x / WRECK_CELL_SIZE), floori(u.node.position.z / WRECK_CELL_SIZE))
+		if u.dead_time >= 90.0 or kept >= WRECK_LIMIT or int(cells.get(cell, 0)) >= WRECKS_PER_CELL:
+			u.wreck_retiring = true
+			u.wreck_cleanup = 0.0
+		else:
+			cells[cell] = int(cells.get(cell, 0)) + 1
+			kept += 1
+
+# Fallen soldiers and excess old wrecks sink away after their death animation.
 func update_dead(unit: Dictionary, delta: float, index: int) -> void:
 	unit.dead_time += delta
 	if unit.get("fly", false):
@@ -5634,6 +5666,15 @@ func update_dead(unit: Dictionary, delta: float, index: int) -> void:
 			units.remove_at(index)
 		return
 	if unit.vehicle:
+		if unit.get("wreck_retiring", false):
+			unit.wreck_cleanup += delta
+			unit.node.position.y -= delta * 1.5
+			if unit.has("toss") and is_instance_valid(unit.toss.node):
+				unit.toss.node.global_position.y -= delta * 1.5
+			if unit.wreck_cleanup >= 4.0:
+				unit.node.queue_free()
+				units.remove_at(index)
+			return
 		if unit.has("toss") and not unit.toss.rest:
 			var toss: Dictionary = unit.toss
 			var piece: Node3D = toss.node
@@ -5968,7 +6009,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed and event.double_click:
 				# A double click on one of your units takes every unit of its kind on screen.
-				var hit = Picking.pick(camera, units.filter(func(u): return u.owner == 0 and not u.dead), event.position)
+				var hit = Picking.pick(camera, units.filter(func(u): return u.owner == 0 and not u.dead and u.node.is_visible_in_tree() and not u.get("stowed", false)), event.position)
 				if hit != null:
 					select_same_kind(hit, event.shift_pressed)
 					dragging = false   # (the release is not a new click)
@@ -5985,17 +6026,19 @@ func _unhandled_input(event: InputEvent) -> void:
 				var click := rect.size.length() < 8
 				# A click hits a unit anywhere on its outline on screen (picking.gd),
 				# not only near its centre: a whole submarine or destroyer is clickable.
-				var own: Array = units.filter(func(u): return u.owner == 0 and not u.dead)
+				var own: Array = units.filter(func(u): return u.owner == 0 and not u.dead and u.node.is_visible_in_tree() and not u.get("stowed", false))
 				var hit = Picking.pick(camera, own, event.position) if click else null
 				var closest: Dictionary = hit if hit != null else {}
-				for unit in own:
-					if not event.shift_pressed:
+				if not event.shift_pressed:
+					for unit in units:
 						unit.selected = false
+				for unit in own:
 					if not click and rect.has_point(Picking.screen_centre(camera, unit)):
 						unit.selected = true
 				if not closest.is_empty():
-					closest.selected = true
-					Future.select_group(self, closest)   # a sixth-generation fighter and its wingmen together
+					closest.selected = not closest.selected if event.shift_pressed else true
+					if closest.selected:
+						Future.select_group(self, closest)   # a sixth-generation fighter and its wingmen together
 				# A click on empty ground or a building selects that building.
 				if click and closest.is_empty():
 					select_building(building_under(event.position))
@@ -6065,7 +6108,9 @@ func select_same_kind(unit: Dictionary, add := false) -> int:
 	var view: Rect2 = get_viewport().get_visible_rect()
 	var count := 0
 	for u in units:
-		if u.owner != 0 or u.dead:
+		if u.owner != 0 or u.dead or not u.node.is_visible_in_tree() or u.get("stowed", false):
+			u.selected = false
+			u.ring.visible = false
 			continue
 		var on_screen: bool = not camera.is_position_behind(u.node.global_position) and view.has_point(Picking.screen_centre(camera, u))
 		var take: bool = u.key == unit.key and on_screen

@@ -1,0 +1,602 @@
+[
+  {
+    "area": "Commands",
+    "id": 1,
+    "label": "An unarmed worker is not offered Attack-move",
+    "passed": true
+  },
+  {
+    "area": "Commands",
+    "id": 2,
+    "label": "An unarmed worker is not offered Bombard",
+    "passed": true
+  },
+  {
+    "area": "Commands",
+    "id": 3,
+    "label": "An unarmed worker is not offered Repair",
+    "passed": true
+  },
+  {
+    "area": "Commands",
+    "id": 4,
+    "label": "A worker explains how to begin building",
+    "passed": true
+  },
+  {
+    "area": "Commands",
+    "id": 5,
+    "label": "A worker group has no combat orders",
+    "passed": true
+  },
+  {
+    "area": "Commands",
+    "id": 6,
+    "label": "A worker group explains queued construction jobs",
+    "passed": true
+  },
+  {
+    "area": "Commands",
+    "id": 7,
+    "label": "A mixed escort group retains Attack-move",
+    "passed": true
+  },
+  {
+    "area": "Commands",
+    "id": 8,
+    "label": "An infantry escort has no unsupported Bombard",
+    "passed": true
+  },
+  {
+    "area": "Commands",
+    "id": 9,
+    "label": "Armed infantry retain Attack-move",
+    "passed": true
+  },
+  {
+    "area": "Commands",
+    "id": 10,
+    "label": "Healthy infantry are not offered vehicle repair",
+    "passed": true
+  },
+  {
+    "area": "Commands",
+    "id": 11,
+    "label": "A tank retains supported ground fire",
+    "passed": true
+  },
+  {
+    "area": "Commands",
+    "id": 12,
+    "label": "A healthy tank has no unnecessary repair order",
+    "passed": true
+  },
+  {
+    "area": "Commands",
+    "id": 13,
+    "label": "Damage makes tank repair available",
+    "passed": true
+  },
+  {
+    "area": "Commands",
+    "id": 14,
+    "label": "The displayed repair order starts a repair",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 15,
+    "label": "Plain click selects the clicked worker",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 16,
+    "label": "Shift-click removes an already selected worker",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 17,
+    "label": "Shift-click adds an unselected worker",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 18,
+    "label": "Shift-click keeps the other selected kind",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 19,
+    "label": "Removing one unit preserves its escort",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 20,
+    "label": "Plain click replaces a prior selection",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 21,
+    "label": "Drag selection still takes visible units",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 22,
+    "label": "Shift-drag adds without losing the first group",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 23,
+    "label": "Drag cannot select a hidden unit",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 24,
+    "label": "Drag cannot select a stowed unit",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 25,
+    "label": "Double-click ignores hidden units of the same kind",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 26,
+    "label": "Double-click ignores stowed units of the same kind",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 27,
+    "label": "Shift-double-click preserves a different selected kind",
+    "passed": true
+  },
+  {
+    "area": "Selection",
+    "id": 28,
+    "label": "A plain click on empty ground clears unit selection",
+    "passed": true
+  },
+  {
+    "area": "Hover",
+    "id": 29,
+    "label": "worker is recognised at its visible centre",
+    "passed": true
+  },
+  {
+    "area": "Hover",
+    "id": 30,
+    "label": "soldier is recognised at its visible centre",
+    "passed": true
+  },
+  {
+    "area": "Hover",
+    "id": 31,
+    "label": "tank is recognised at its visible centre",
+    "passed": true
+  },
+  {
+    "area": "Hover",
+    "id": 32,
+    "label": "helicopter is recognised at its visible centre",
+    "passed": true
+  },
+  {
+    "area": "Hover",
+    "id": 33,
+    "label": "jet is recognised at its visible centre",
+    "passed": true
+  },
+  {
+    "area": "Hover",
+    "id": 34,
+    "label": "destroyer is recognised at its visible centre",
+    "passed": true
+  },
+  {
+    "area": "Hover",
+    "id": 35,
+    "label": "A warship is recognised away from its centre on its hull",
+    "passed": true
+  },
+  {
+    "area": "Hover",
+    "id": 36,
+    "label": "Hiding the ship removes its hover target",
+    "passed": true
+  },
+  {
+    "area": "Hover",
+    "id": 37,
+    "label": "Stowed craft expose no hover tag",
+    "passed": true
+  },
+  {
+    "area": "Hover",
+    "id": 38,
+    "label": "Destroyed craft expose no live hover tag",
+    "passed": true
+  },
+  {
+    "area": "Hover",
+    "id": 39,
+    "label": "A live tag identifies ownership and health",
+    "passed": true
+  },
+  {
+    "area": "Hover",
+    "id": 40,
+    "label": "Empty space outside the viewport names no unit",
+    "passed": true
+  },
+  {
+    "area": "Help",
+    "id": 41,
+    "label": "Help and Close fit 1280x800 at 80%",
+    "passed": true
+  },
+  {
+    "area": "Help",
+    "id": 42,
+    "label": "Help and Close fit 1280x800 at 100%",
+    "passed": true
+  },
+  {
+    "area": "Help",
+    "id": 43,
+    "label": "Help and Close fit 1008x600 at 80%",
+    "passed": true
+  },
+  {
+    "area": "Help",
+    "id": 44,
+    "label": "Help and Close fit 1008x600 at 100%",
+    "passed": true
+  },
+  {
+    "area": "Help",
+    "id": 45,
+    "label": "Help and Close fit 1280x720 at 80%",
+    "passed": true
+  },
+  {
+    "area": "Help",
+    "id": 46,
+    "label": "Help and Close fit 1280x720 at 100%",
+    "passed": true
+  },
+  {
+    "area": "Help",
+    "id": 47,
+    "label": "Help and Close fit 1600x900 at 80%",
+    "passed": true
+  },
+  {
+    "area": "Help",
+    "id": 48,
+    "label": "Help and Close fit 1600x900 at 100%",
+    "passed": true
+  },
+  {
+    "area": "Help",
+    "id": 49,
+    "label": "Short-window help reaches its final instructions by scrolling or fitting",
+    "passed": true
+  },
+  {
+    "area": "Help",
+    "id": 50,
+    "label": "Help agrees with camera panning and selection controls",
+    "passed": true
+  },
+  {
+    "area": "Help",
+    "id": 51,
+    "label": "Help includes fullscreen and the build shortcut",
+    "passed": true
+  },
+  {
+    "area": "Help",
+    "id": 52,
+    "label": "Close remains usable after scrolling to the bottom",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 53,
+    "label": "Master zero really mutes and reads zero",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 54,
+    "label": "Master restores an audible intermediate level",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 55,
+    "label": "Master restores its designed full level",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 56,
+    "label": "Master reports mute even if stored gain is nonzero",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 57,
+    "label": "SFX zero really mutes and reads zero",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 58,
+    "label": "SFX restores an audible intermediate level",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 59,
+    "label": "SFX restores its designed full level",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 60,
+    "label": "SFX reports mute even if stored gain is nonzero",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 61,
+    "label": "Music zero really mutes and reads zero",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 62,
+    "label": "Music restores an audible intermediate level",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 63,
+    "label": "Music restores its designed full level",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 64,
+    "label": "Music reports mute even if stored gain is nonzero",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 65,
+    "label": "Interface zero really mutes and reads zero",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 66,
+    "label": "Interface restores an audible intermediate level",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 67,
+    "label": "Interface restores its designed full level",
+    "passed": true
+  },
+  {
+    "area": "Sound",
+    "id": 68,
+    "label": "Interface reports mute even if stored gain is nonzero",
+    "passed": true
+  },
+  {
+    "area": "Defaults",
+    "id": 69,
+    "label": "Defaults restores the interface size immediately",
+    "passed": true
+  },
+  {
+    "area": "Defaults",
+    "id": 70,
+    "label": "Defaults restores Balanced quality",
+    "passed": true
+  },
+  {
+    "area": "Defaults",
+    "id": 71,
+    "label": "Defaults restores camera controls",
+    "passed": true
+  },
+  {
+    "area": "Defaults",
+    "id": 72,
+    "label": "Defaults restores frame counter and limit",
+    "passed": true
+  },
+  {
+    "area": "Defaults",
+    "id": 73,
+    "label": "Defaults restores the disclosed autosave interval",
+    "passed": true
+  },
+  {
+    "area": "Defaults",
+    "id": 74,
+    "label": "Defaults unmutes every audio bus",
+    "passed": true
+  },
+  {
+    "area": "Research",
+    "id": 75,
+    "label": "Tree highlights an available first project",
+    "passed": true
+  },
+  {
+    "area": "Research",
+    "id": 76,
+    "label": "Tree highlights the next project while the first waits for funding",
+    "passed": true
+  },
+  {
+    "area": "Research",
+    "id": 77,
+    "label": "Blocked first project says Waiting",
+    "passed": true
+  },
+  {
+    "area": "Research",
+    "id": 78,
+    "label": "Funding resumes and highlights the waiting first project",
+    "passed": true
+  },
+  {
+    "area": "Research",
+    "id": 79,
+    "label": "Empty queue highlights no active project",
+    "passed": true
+  },
+  {
+    "area": "Research",
+    "id": 80,
+    "label": "Tree labels meet the increased readable font sizes",
+    "passed": true
+  },
+  {
+    "area": "Research",
+    "id": 81,
+    "label": "All discovery titles fit two lines at card width 134",
+    "passed": true
+  },
+  {
+    "area": "Research",
+    "id": 82,
+    "label": "All discovery titles fit two lines at card width 176",
+    "passed": true
+  },
+  {
+    "area": "Research",
+    "id": 83,
+    "label": "All discovery titles fit two lines at card width 210",
+    "passed": true
+  },
+  {
+    "area": "Research",
+    "id": 84,
+    "label": "Full discovery name remains available in its tooltip",
+    "passed": true
+  },
+  {
+    "area": "Ministries",
+    "id": 85,
+    "label": "diplomacy opens with content inside the viewport",
+    "passed": true
+  },
+  {
+    "area": "Ministries",
+    "id": 86,
+    "label": "market opens with content inside the viewport",
+    "passed": true
+  },
+  {
+    "area": "Ministries",
+    "id": 87,
+    "label": "intel opens with content inside the viewport",
+    "passed": true
+  },
+  {
+    "area": "Ministries",
+    "id": 88,
+    "label": "territory opens with content inside the viewport",
+    "passed": true
+  },
+  {
+    "area": "Ministries",
+    "id": 89,
+    "label": "defence opens with content inside the viewport",
+    "passed": true
+  },
+  {
+    "area": "Ministries",
+    "id": 90,
+    "label": "un opens with content inside the viewport",
+    "passed": true
+  },
+  {
+    "area": "Construction",
+    "id": 91,
+    "label": "A failed search explains that nothing matches",
+    "passed": true
+  },
+  {
+    "area": "Construction",
+    "id": 92,
+    "label": "Clear search restores the build catalog immediately",
+    "passed": true
+  },
+  {
+    "area": "Construction",
+    "id": 93,
+    "label": "Economy contains actual production choices",
+    "passed": true
+  },
+  {
+    "area": "Construction",
+    "id": 94,
+    "label": "Civic & research contains actual production choices",
+    "passed": true
+  },
+  {
+    "area": "Construction",
+    "id": 95,
+    "label": "Military contains actual production choices",
+    "passed": true
+  },
+  {
+    "area": "Construction",
+    "id": 96,
+    "label": "A production choice begins live placement",
+    "passed": true
+  },
+  {
+    "area": "Continuation",
+    "id": 97,
+    "label": "victory initially stops the match with a result",
+    "passed": true
+  },
+  {
+    "area": "Continuation",
+    "id": 98,
+    "label": "victory continuation restores normal campaign input",
+    "passed": true
+  },
+  {
+    "area": "Continuation",
+    "id": 99,
+    "label": "defeat initially stops the match with a result",
+    "passed": true
+  },
+  {
+    "area": "Continuation",
+    "id": 100,
+    "label": "defeat continuation restores normal campaign input",
+    "passed": true
+  }
+]

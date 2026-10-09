@@ -13,6 +13,8 @@ const CARD_H := 68.0
 const GAP := 8.0
 const LEFT := 116.0
 const TOP := 34.0
+const TITLE_SIZE := 14
+const STATE_SIZE := 12
 
 var research: Node
 var colours := {}   # branch -> colour (hud.gd BRANCH_COLOURS)
@@ -74,6 +76,29 @@ func _gui_input(event: InputEvent) -> void:
 				accept_event()
 				return
 
+## Keep full words on two readable lines; the tooltip retains the full title.
+func card_title(text: String, font: Font) -> String:
+	var lines := PackedStringArray([""])
+	for word in text.split(" "):
+		var candidate := (lines[-1] + " " + word).strip_edges()
+		if lines[-1] != "" and font.get_string_size(candidate, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_SIZE).x > CARD_W - 24:
+			lines.append(word)
+		else:
+			lines[-1] = candidate
+	var truncated := lines.size() > 2
+	lines.resize(mini(2, lines.size()))
+	for i in range(lines.size()):
+		var suffix := "…" if truncated and i == lines.size() - 1 else ""
+		if font.get_string_size(lines[i] + suffix, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_SIZE).x > CARD_W - 24:
+			suffix = "…"
+			while lines[i].length() > 0 and font.get_string_size(lines[i] + suffix, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_SIZE).x > CARD_W - 24:
+				lines[i] = lines[i].substr(0, lines[i].length() - 1).strip_edges()
+		lines[i] += suffix
+	return "\n".join(lines)
+
+func active_card() -> String:
+	return research.active_item()
+
 func _draw() -> void:
 	if research == null:
 		return
@@ -108,11 +133,12 @@ func _draw() -> void:
 		var mid := (from.x + to.x) * 0.5
 		var colour := Color("7fbf7a") if research.done(need) else Color(1, 1, 1, 0.22)
 		draw_polyline(PackedVector2Array([from, Vector2(mid, from.y), Vector2(mid, to.y), to]), colour, 2.0)
-	# Cards.
+	# Cards. A blocked first project must not masquerade as the active one.
+	var active_key := active_card()
 	for key in _cards:
 		var r: Rect2 = _cards[key]
 		var stage: int = research.stage_of(key)
-		var active: bool = not research.queue.is_empty() and research.queue[0] == key
+		var active: bool = active_key == key
 		var queued: bool = key in research.queue
 		var why: String = research.blocker(key)
 		var fill := Color("203348")
@@ -132,11 +158,11 @@ func _draw() -> void:
 		var locked: bool = stage == 0 and why != "" and not why.contains(" needs a ")
 		# The branch's colour down the left edge.
 		draw_rect(Rect2(r.position + Vector2(1, 1), Vector2(4, r.size.y - 2)), Color(colours.get(research.def_of(key).branch, Color("83734f")), 0.45 if locked else 1.0))
-		draw_multiline_string(font, r.position + Vector2(10, 18), research.def_of(key).name, HORIZONTAL_ALIGNMENT_LEFT, CARD_W - 24, 12, 2,
+		draw_multiline_string(font, r.position + Vector2(10, 18), card_title(research.def_of(key).name, font), HORIZONTAL_ALIGNMENT_LEFT, CARD_W - 24, TITLE_SIZE, 2,
 			Color("a1afbf") if locked else Color("eef2f3"))
 		var state: String = "Done" if stage >= 3 else ("Locked" if locked else ("%d/3" % stage if stage > 0 else ""))
 		if state != "":
-			draw_string(font, Vector2(r.end.x - 44, r.position.y + 58), state, HORIZONTAL_ALIGNMENT_RIGHT, 38, 10,
+			draw_string(font, Vector2(r.end.x - 50, r.position.y + 58), state, HORIZONTAL_ALIGNMENT_RIGHT, 46, STATE_SIZE,
 				Color("8fd18a") if stage >= 3 else (Color("a1afbf") if locked else Color("e3c15a")))
 		# Three development stages as pips, the current one filling up.
 		for s in range(3):

@@ -12,6 +12,7 @@ $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.e
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
+    @('decorative wrecks: dense piles, map limits, age, gradual cleanup and live-unit safety', @('--script', 'res://tools/wreck-cleanup-check.gd'), 'WRECK_CLEANUP PASS', 180),
     @('continue after victory or defeat: simulation, diplomacy, territory and saves', @('--script', 'res://tools/post-victory-check.gd'), 'POST_VICTORY PASS', 240),
     @('playtest fixes: Esc, Space pause, speed keys, the common opening, one notice per message, the beginner guide', @('--script', 'res://tools/ux-fixes-check.gd'), 'UX_FIXES PASS', 240),
     @('22 national rosters, new combat roles, aircraft service and save round trip', @('--script', 'res://tools/force-roster-check.gd'), 'FORCE_ROSTER PASS', 240),
@@ -50,6 +51,7 @@ $tests = @(
     @('49 customer checks: reversible graphics, input, guide, layouts, save recovery and diplomacy', @('--script', 'res://tools/customer-review-49.gd'), 'CUSTOMER_REVIEW PASS', 300),
     @('100 second-round customer checks: modal input, end screens, research feedback, logs and national panels', @('--script', 'res://tools/customer-round2-100.gd'), 'CUSTOMER_ROUND2: 100 checks, 0 failures', 300),
     @('100 third-round customer checks: lapsing letters, war and quit confirmations, music, spelling, hover names, idle workers, damage tags, seasons, saves', @('--script', 'res://tools/customer-round3-100.gd'), 'CUSTOMER_ROUND3 PASS', 600),
+    @('100 fourth-round customer checks: contextual orders, selection, hull hover, help, mute, defaults, research and campaign continuation', @('--script', 'res://tools/customer-round4-100.gd'), 'CUSTOMER_ROUND4: 100 checks, 0 failures', 600),
     @('Save Game preserves other campaigns, timestamp collisions and failed storage', @('--script', 'res://tools/campaign-save-check.gd'), 'CAMPAIGN_SAVE: 4 checks, 0 failures', 120),
     @('a third hundred gameplay checks: rivals on their own, match settings, missiles, spies, trade, bunkers, air bases, disk saves', @('--script', 'res://tools/gameplay-deep-100.gd'), 'GAMEPLAY_DEEP PASS', 2400),
     @('about 100 gameplay checks over time: economy, building, training, research, land, supply, war, trade, saves', @('--script', 'res://tools/gameplay-live-100.gd'), 'GAMEPLAY_LIVE PASS', 1800),
