@@ -1227,6 +1227,8 @@ func _build_row(b: String) -> void:
 	var why := ""
 	if def.get("unique", false) and world.buildings.any(func(x): return x.owner == 0 and x.key == b and not x.dead):
 		why = "Built (one per nation)"
+	elif preload("res://scripts/progression.gd").building_blocked(world, 0, b) != "":
+		why = preload("res://scripts/progression.gd").building_blocked(world, 0, b)
 	elif def.get("reqDiscovery") != null and world.research != null and not world.research.done(str(def.reqDiscovery)):
 		why = "Needs %s" % world.research.def_of(str(def.reqDiscovery)).get("name", def.reqDiscovery)
 	var desc := str(def.desc)

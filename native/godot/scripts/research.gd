@@ -265,6 +265,8 @@ func _add(stat: String, v: float) -> void:
 
 ## "" when the player may train `unit`, otherwise what it needs.
 func unit_locked(unit: String) -> String:
+	var ladder: String = preload("res://scripts/progression.gd").unit_blocked(world, 0, unit)
+	if ladder != "": return ladder   # the era ladder (progression.gd)
 	var programme: String = load("res://scripts/arsenal_catalog.gd").unit_blocked(world, 0, unit)
 	if programme != "": return programme
 	if world.map.nations[0].has("units"):
@@ -507,6 +509,11 @@ func _check_era() -> void:
 	points += float(reward.get("research", 0))
 	var opened := discoveries.keys().filter(func(k): return era_of(k) == era).size()
 	world.hud.notice("NEW ERA: the %s. %s +$%d, +%d research; %d discoveries open." % [eras[era].name, eras[era].desc, int(reward.get("money", 0)), int(reward.get("research", 0)), opened])
+	var Ladder := preload("res://scripts/progression.gd")
+	if Ladder.on(world):
+		var now_open: PackedStringArray = Ladder.opened_in(world, era)
+		if not now_open.is_empty():
+			world.hud.notice("NOW OPEN: %s." % ", ".join(now_open))
 	changed.emit()
 
 # ---------------------------------------------------------------- rival research

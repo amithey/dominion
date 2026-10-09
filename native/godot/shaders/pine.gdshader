@@ -22,7 +22,7 @@ void vertex() {
 
 void fragment() {
 	vec3 c = COLOR.rgb * COLOR.rgb;  // vertex colours are sRGB
-	ALBEDO = c * mix(vec3(1.0), tint * 2.0, 0.6) * (1.0 - fog_at(fog_xz));   // fog of war
+	ALBEDO = snowy(c * mix(vec3(1.0), tint * 2.0, 0.6), winter * 0.45) * (1.0 - fog_at(fog_xz));   // fog of war; snow-dusted in winter
 	BACKLIGHT = ALBEDO * 0.25;
 	ROUGHNESS = 0.85;
 	SPECULAR = 0.25;

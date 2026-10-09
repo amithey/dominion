@@ -656,6 +656,8 @@ func wake(length: float) -> GPUParticles3D:
 		_wake_process.gravity = Vector3.ZERO
 		_wake_process.scale_min = 1.0
 		_wake_process.scale_max = 1.8
+		_wake_process.angle_min = -180
+		_wake_process.angle_max = 180
 		var grow := Curve.new()
 		grow.add_point(Vector2(0, 0.6))
 		grow.add_point(Vector2(1, 1.0))
@@ -678,7 +680,7 @@ func wake(length: float) -> GPUParticles3D:
 		puff_tex.fill_to = Vector2(0.5, 0.0)
 		var m := StandardMaterial3D.new()
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		m.albedo_texture = puff_tex
+		m.albedo_texture = preload("res://scripts/effects.gd").cloud_texture()   # a torn puff, not a disc
 		m.vertex_color_use_as_albedo = true
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES

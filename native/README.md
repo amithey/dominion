@@ -23,6 +23,26 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.85: a campaign that grows, a world that lives
+
+- **The sea can be worked.** An exclusive economic zone (7 hexes of sea from your coast, scripts/territory.gd
+  zone_owner): offshore rigs on sea fields there, not only inside the 2-hex territorial waters. A field nearer a
+  rival's coast is in its waters and says so; a fish shoal points to the Fishing Wharf; an extractor on a sea field
+  tells you to build an Offshore Rig. Sea platforms are supplied while your capital stands.
+- **The era ladder** (scripts/progression.gd): a Standard campaign no longer offers a reactor, a silo and jet bombers
+  at minute one. The Founding era opens a town (farms, homes, mines and rigs, market, school, barracks and infantry);
+  each new era opens more (tank factory, port and airfield in the Regional; helicopters, fighters and missiles in
+  the Urban; bombers and destroyers in the Industrial; reactors and strategic weapons in the Global). The build
+  list shows what is closed and when it opens; a new era names what it opened. Rivals climb the same ladder by
+  their technology. The ladder never blocks a discovery's prototype or an era's goals. Sandbox opens everything.
+- **A living world** (scripts/ambience.gd): smoke from power stations and factories while they are supplied, and
+  from house chimneys in autumn and winter; snow that settles on fields, trees and towns as winter begins and melts
+  in spring; flocks of birds that scatter at an explosion; a ring and a radio click where you send units (green to
+  move, red to attack).
+- **Battles that look less cheap:** smoke, fire, dust, vehicle dust and ship wakes are torn fractal clouds instead
+  of soft discs; ribbed shipping containers with door ends; slimmer unit health bars (buildings keep theirs).
+- Checks: tools/progression-check.gd (24), tools/offshore-check.gd (8), tools/life-check.gd (21).
+
 ## Version 0.9.82: the third unhappy-customer round
 
 A playthrough from the main menu as a critical customer, 100 checks (tools/customer-round3-100.gd). Report:

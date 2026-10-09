@@ -118,6 +118,8 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 		if not preload("res://scripts/national_variants.gd").builds(world, n.id, key):
 			key = ""   # (no reactor for Afghanistan): the next in the order
 			if n.build_idx < build_order.size(): n.build_idx += 1
+		elif preload("res://scripts/progression.gd").building_blocked(world, n.id, key) != "":
+			key = pick_building(n)   # not open yet in its era: something that is, and the opening waits
 		var def: Dictionary = world.building_defs.get(key, {})
 		if not def.is_empty():
 			var cost := weighted_cost(preload("res://scripts/additional_factions.gd").building_cost(world, n.id, key, def.get("base_cost", def.cost)))
@@ -157,7 +159,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	if n.next_train <= 0.0 and not cyber:
 		var army: Array = world.units.filter(func(u): return u.owner == n.id and not u.dead)
 		if army.size() < int(row(n).maxArmy):
-			var options: Array = train_pool.filter(func(k): return world.unit_allowed(n.id, k) and preload("res://scripts/additional_factions.gd").ai_unlocked(world, n.id, k) and not production_sites(n.id,k).is_empty())
+			var options: Array = train_pool.filter(func(k): return world.unit_allowed(n.id, k) and preload("res://scripts/additional_factions.gd").ai_unlocked(world, n.id, k) and preload("res://scripts/progression.gd").unit_blocked(world, n.id, k) == "" and not production_sites(n.id,k).is_empty())
 			if not options.is_empty():
 				var key: String = options[randi() % options.size()]
 				var cost := weighted_cost(world.unit_defs[key].cost) * preload("res://scripts/national_profile.gd").cost_mult(world, n.id, key)
@@ -345,7 +347,7 @@ func pick_building(n: Dictionary) -> String:
 	var cities := int(counts.get("cityCenter", 0))
 	if villages + cities < total / 7:
 		var town := "cityCenter" if cities * 2 < villages else "villageCenter"
-		if float(n.get("no_room", {}).get(town, 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, town):
+		if float(n.get("no_room", {}).get(town, 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, town) and preload("res://scripts/progression.gd").building_blocked(world, n.id, town) == "":
 			return town
 	# Its weapons of mass destruction need their facilities (wmd.armed): a nation
 	# that has them builds a Strategic Weapons Complex once its technology
@@ -360,7 +362,7 @@ func pick_building(n: Dictionary) -> String:
 	var wanted_cell: int = 1 if tech >= 5.0 and world.get("directorate") != null and world.directorate != null and world.directorate.level(n.id) >= 3 else 0
 	for fac in [["missileSilo", 1 if tech >= 2.0 else 0], ["strategicComplex", wanted_complexes], ["specialLab", 1 if tech >= 4.0 else 0], ["aiDataCenter", wanted_dc], ["fusionCell", wanted_cell]]:
 		var fkey: String = fac[0]
-		if int(counts.get(fkey, 0)) < int(fac[1]) and world.building_defs.has(fkey) and NV.builds(world, n.id, fkey) and float(n.get("no_room", {}).get(fkey, 0.0)) <= float(n.get("age", 0.0)):
+		if int(counts.get(fkey, 0)) < int(fac[1]) and world.building_defs.has(fkey) and NV.builds(world, n.id, fkey) and preload("res://scripts/progression.gd").building_blocked(world, n.id, fkey) == "" and float(n.get("no_room", {}).get(fkey, 0.0)) <= float(n.get("age", 0.0)):
 			return fkey
 	var plans := [MILITARY_PLAN, CITY_PLAN] if share < want_military else [CITY_PLAN, MILITARY_PLAN]
 	for plan in plans:
@@ -374,7 +376,7 @@ func pick_building(n: Dictionary) -> String:
 			var def: Dictionary = world.building_defs[key]
 			if def.get("unique", false) and counts.get(key, 0) > 0:
 				continue
-			if not preload("res://scripts/national_variants.gd").builds(world, n.id, key):
+			if not preload("res://scripts/national_variants.gd").builds(world, n.id, key) or preload("res://scripts/progression.gd").building_blocked(world, n.id, key) != "":
 				continue
 			var target := maxi(1, int(ceil(total / 10.0 * float(goal[1]))))
 			if int(counts.get(key, 0)) < target:

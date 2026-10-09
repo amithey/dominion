@@ -138,6 +138,7 @@ var wmd: RefCounted = null   # wmd.gd: fallout, gas, disease; who used what
 var un: RefCounted = null   # un.gd: the Security Council and the General Assembly
 var tests: RefCounted = null   # nuclear_tests.gd: nuclear tests and the deterrent they prove
 var directorate: RefCounted = null   # ai_directorate.gd: artificial intelligence, compute and autonomy
+var ambience: Node3D = null   # ambience.gd: smoke, birds, winter, order markers
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
 var noise_texture: NoiseTexture2D
@@ -1703,6 +1704,8 @@ func make_dust() -> GPUParticles3D:
 		dust_process.damping_max = 1.2
 		dust_process.scale_min = 0.9
 		dust_process.scale_max = 1.6
+		dust_process.angle_min = -180
+		dust_process.angle_max = 180
 		var grow := Curve.new()
 		grow.add_point(Vector2(0, 0.5))
 		grow.add_point(Vector2(1, 1.0))
@@ -1725,7 +1728,7 @@ func make_dust() -> GPUParticles3D:
 		puff_tex.fill_to = Vector2(0.5, 0.0)
 		var puff_mat := StandardMaterial3D.new()
 		puff_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		puff_mat.albedo_texture = puff_tex
+		puff_mat.albedo_texture = preload("res://scripts/effects.gd").cloud_texture()   # a torn puff, not a disc
 		puff_mat.vertex_color_use_as_albedo = true
 		puff_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
 		puff_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -2100,6 +2103,8 @@ func _physics_process(delta: float) -> void:
 			tests.update(delta)  # rivals' nuclear tests
 		if directorate != null:
 			directorate.update(delta)  # compute, AI levels, autonomy incidents, AI cyber campaigns
+		if ambience != null:
+			ambience.update(delta)  # smoke, birds, winter, order markers
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
 		preload("res://scripts/bunker.gd").update(self, delta)
 	spent("build+train", t0)
@@ -2531,6 +2536,9 @@ func start_match(difficulty: String) -> void:
 	un = preload("res://scripts/un.gd").new(self)
 	tests = preload("res://scripts/nuclear_tests.gd").new(self)
 	directorate = preload("res://scripts/ai_directorate.gd").new(self)
+	if ambience == null:
+		ambience = preload("res://scripts/ambience.gd").new(self)
+		add_child(ambience)
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 	hud.start_guide()
 
@@ -4486,6 +4494,9 @@ func placement_problem(key: String, at: Vector3) -> String:
 
 func site_problem(key: String, at: Vector3, owner: int) -> String:
 	var def: Dictionary = building_defs[key]
+	var ladder: String = preload("res://scripts/progression.gd").building_blocked(self, owner, key)
+	if ladder != "":
+		return ladder   # the era ladder (progression.gd)
 	if not preload("res://scripts/national_variants.gd").builds(self, owner, key):
 		return "Not built by %s" % str(map.nations[owner].get("name", "this nation")).split(" · ")[0]
 	var footprint := footprint_of(key)
@@ -6068,6 +6079,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				return
 			var selected := units.filter(func(u): return u.selected and not u.dead)
 			var target = enemy_under(event.position)
+			# Where they were sent: a ring on the ground and a radio click (ambience.gd).
+			if ambience != null and selected.any(func(u): return u.owner == 0):
+				var mark = target.node.position if target != null else ground_point(event.position)
+				if mark != null:
+					ambience.ping(mark, target != null or event.ctrl_pressed)
 			# Workers right-clicked onto one of your unfinished buildings build it.
 			var site = building_under(event.position) if target == null and selected.any(func(u): return u.key == "worker" and u.owner == 0) else null
 			if site != null and site.owner == 0 and not site.built and not site.dead:

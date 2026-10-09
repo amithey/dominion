@@ -44,6 +44,8 @@ static func normalize(options: Dictionary) -> Dictionary:
 	# Fog of war (fog_of_war.gd): on unless chosen off, or a sandbox match.
 	if str(options.get("opening", "")) == "light":
 		out.opening = "light"   # a campaign from the New Game screen: a town, workers and a small guard
+	if bool(options.get("progression", false)) and out.style != "sandbox":
+		out.progression = true   # the era ladder (progression.gd): a campaign from the New Game screen
 	out.fog = bool(options.get("fog", out.style != "sandbox")) if not (options.get("fog") is String) else str(options.fog) == "true"
 	if options.get("rivals") is Array:
 		out.rivals = []

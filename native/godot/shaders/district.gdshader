@@ -19,6 +19,8 @@ uniform sampler2D paving_tex : source_color, filter_linear_mipmap_anisotropic, r
 uniform sampler2D grass_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D dirt_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D noise_tex : filter_linear_mipmap, repeat_enable;
+// Winter (ambience.gd): snow on gardens and pavements; the streets are cleared.
+global uniform float winter;
 uniform float hex_radius = 12.0;
 uniform float core = 5.0;            // the central building's footprint
 instance uniform int style = 0;
@@ -158,6 +160,10 @@ void fragment() {
 	}
 	// A touch of shade where the tile meets the ground (none across streets).
 	col *= mix(1.0, 0.82, (1.0 - smoothstep(0.0, 0.12, to_rim)) * (1.0 - open));
+	if (winter > 0.0) {
+		float drift = smoothstep(0.25, 0.7, grain + winter * 0.6);
+		col = mix(col, vec3(0.70, 0.74, 0.80), winter * drift * (1.0 - road * 0.8) * 0.9);
+	}
 	ALBEDO = col;
 	ROUGHNESS = rough;
 	SPECULAR = 0.35;

@@ -41,7 +41,7 @@ void fragment() {
 		c.rgb *= mix(vec3(0.82, 0.9, 0.78), vec3(1.08, 1.02, 0.86), tree_var);
 		c.rgb *= mix(0.62, 1.05, facing_up);
 	}
-	ALBEDO = c.rgb * (1.0 - fog_at(fog_xz));   // fog of war
+	ALBEDO = snowy(c.rgb, winter * (leaves ? facing_up * 0.6 : 0.25)) * (1.0 - fog_at(fog_xz));   // fog of war; snow on the crowns in winter
 	if (leaves) {
 		ALPHA = c.a;
 		ALPHA_SCISSOR_THRESHOLD = alpha_cut;

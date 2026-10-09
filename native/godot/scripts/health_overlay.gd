@@ -9,7 +9,7 @@ func _process(delta: float) -> void:
 	if elapsed > 0.1:
 		elapsed = 0
 		queue_redraw()
-func _bar(ent: Dictionary, eye: Vector3, screen_rect: Rect2, lift: float) -> void:
+func _bar(ent: Dictionary, eye: Vector3, screen_rect: Rect2, lift: float, width := 60.0, height := 8.0) -> void:
 	# Only what has been hurt carries a bar: an untouched unit shows nothing,
 	# selected or not, so a healthy army does not clutter the battlefield.
 	var selected: bool = ent.get("selected", false)
@@ -25,7 +25,7 @@ func _bar(ent: Dictionary, eye: Vector3, screen_rect: Rect2, lift: float) -> voi
 	if not screen_rect.has_point(screen):
 		return
 	var ratio := clampf(float(ent.hp) / ent.max_hp, 0, 1)
-	var rect := Rect2(screen - Vector2(30, 0), Vector2(60, 8))
+	var rect := Rect2(screen - Vector2(width * 0.5, 0), Vector2(width, height))
 	# In a melee the bars would pile into one unreadable block: each steps up
 	# above any bar it would cover (a few steps at most, then it is drawn anyway).
 	# The footprint includes the frame and the owner tab, so neighbours never touch.
@@ -45,12 +45,12 @@ func _bar(ent: Dictionary, eye: Vector3, screen_rect: Rect2, lift: float) -> voi
 	# The owner's colour on a small tab at the left, as 4X unit flags carry it.
 	var owner: int = ent.get("owner", 0)
 	if owner < world.map.nations.size():
-		draw_rect(Rect2(rect.position - Vector2(7, 2), Vector2(5, 12)), Color(world.map.nations[owner].color))
-	draw_rect(Rect2(rect.position, Vector2(60 * ratio, 8)), Color("79c98a") if ratio > 0.5 else (Color("e2bd65") if ratio > 0.25 else Color("e97465")))
+		draw_rect(Rect2(rect.position - Vector2(6, 2), Vector2(4, height + 4)), Color(world.map.nations[owner].color))
+	draw_rect(Rect2(rect.position, Vector2(width * ratio, height)), Color("79c98a") if ratio > 0.5 else (Color("e2bd65") if ratio > 0.25 else Color("e97465")))
 	draw_rect(rect, Color("d9cfb1"), false, 1)
 	if selected or not world.perf_opts:
 		for i in range(1, 5):
-			draw_line(rect.position + Vector2(i * 12, 0), rect.position + Vector2(i * 12, 8), Color(0, 0, 0, 0.45))
+			draw_line(rect.position + Vector2(i * width / 5.0, 0), rect.position + Vector2(i * width / 5.0, height), Color(0, 0, 0, 0.45))
 
 func _draw() -> void:
 	if world == null or world.camera == null:
@@ -63,7 +63,7 @@ func _draw() -> void:
 	var screen_rect := Rect2(Vector2(-40, -20), size + Vector2(80, 40))
 	_placed.clear()
 	for ent in world.units:
-		_bar(ent, eye, screen_rect, 3.0)
+		_bar(ent, eye, screen_rect, 3.0, 40.0, 5.0)   # a unit's bar is slimmer than a building's: a battle stays readable
 	for ent in world.buildings:
 		_bar(ent, eye, screen_rect, 9.0)
 	world.spent("health bars", clock)

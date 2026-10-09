@@ -57,10 +57,11 @@ func _ready() -> void:
 	_shock_mesh.size = Vector2(1, 1)
 	_shock_mesh.material = shock_mat
 	var soft := _radial([Color(1, 1, 1, 1), Color(1, 1, 1, 0.55), Color(1, 1, 1, 0)], [0.0, 0.45, 1.0])
-	_fire_mesh = _quad(2.0, _billboard(soft, true, false))
-	_smoke_mesh = _quad(2.4, _billboard(soft, false, true))
+	# Fire, smoke and dust are torn clouds, not soft discs (a disc of smoke reads as cotton wool).
+	_fire_mesh = _quad(2.0, _billboard(cloud_texture(), true, false))
+	_smoke_mesh = _quad(2.4, _billboard(cloud_texture(), false, true))
 	_spark_mesh = _quad(0.22, _billboard(soft, true, false))
-	_dirt_mesh = _quad(0.5, _billboard(soft, false, true))
+	_dirt_mesh = _quad(0.5, _billboard(cloud_texture(), false, true))
 	var flash_mat := _billboard(soft, true, false)
 	flash_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED  # a plain mesh, not a particle
 	flash_mat.albedo_color = Color(1.0, 0.78, 0.4)
@@ -108,6 +109,33 @@ func _ready() -> void:
 	_scorch = tex
 
 # ---------------------------------------------------------------- building blocks
+
+static var _cloud: Texture2D
+## A puff of cloud, 128 pixels: a soft round falloff broken up by fractal noise,
+## so smoke, dust and fire show ragged edges and inner billows; each particle
+## turns at random, so no two puffs look alike. Shared with ambience.gd's
+## chimney smoke.
+static func cloud_texture() -> Texture2D:
+	if _cloud != null:
+		return _cloud
+	var noise := FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	noise.fractal_type = FastNoiseLite.FRACTAL_FBM
+	noise.fractal_octaves = 4
+	noise.frequency = 0.045
+	noise.seed = 7
+	const N := 128
+	var img := Image.create(N, N, false, Image.FORMAT_RGBA8)
+	for y in range(N):
+		for x in range(N):
+			var d := Vector2(x - N * 0.5 + 0.5, y - N * 0.5 + 0.5).length() / (N * 0.5)
+			var n := noise.get_noise_2d(x, y) * 0.5 + 0.5   # 0..1
+			var edge := 1.0 - smoothstep(0.35 + 0.35 * n, 1.0, d)   # a ragged rim
+			var body := clampf(0.45 + n * 0.9, 0.0, 1.0)   # billows inside
+			var shade := 0.82 + 0.18 * n   # lighter crests, darker folds
+			img.set_pixel(x, y, Color(shade, shade, shade, clampf(edge * body, 0.0, 1.0)))
+	_cloud = ImageTexture.create_from_image(img)
+	return _cloud
 
 func _radial(colors: Array, offsets: Array) -> Texture2D:
 	var g := Gradient.new()

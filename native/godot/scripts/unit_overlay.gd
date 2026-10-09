@@ -148,7 +148,7 @@ func _insignia(u: Dictionary, cam: Camera3D, view: Rect2, font: Font, fog) -> vo
 	var r: int = int(u.get("rank", 0))
 	for i in range(r):
 		var y := p.y - 14.0 - i * 4.0
-		var x := p.x + 36.0
+		var x := p.x + 27.0   # just right of the 40-pixel health bar
 		draw_polyline(PackedVector2Array([Vector2(x - 5, y - 3), Vector2(x, y), Vector2(x + 5, y - 3)]), gold, 2.0)
 	if u.has("general") and world.get("generals") != null and world.generals != null:
 		var g = world.generals.general_of(u)
@@ -157,7 +157,7 @@ func _insignia(u: Dictionary, cam: Camera3D, view: Rect2, font: Font, fog) -> vo
 			for k in range(10):
 				var rad := 6.0 if k % 2 == 0 else 2.6
 				var a := -PI / 2.0 + k * PI / 5.0
-				star.append(p + Vector2(-44, -10) + Vector2(cos(a), sin(a)) * rad)
+				star.append(p + Vector2(-33, -10) + Vector2(cos(a), sin(a)) * rad)
 			draw_colored_polygon(star, gold)
 			if int(u.owner) == 0:
-				draw_string(font, p + Vector2(-36, -24), g.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, gold)
+				draw_string(font, p + Vector2(-26, -24), g.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, gold)

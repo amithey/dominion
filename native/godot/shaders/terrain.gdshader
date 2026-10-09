@@ -192,6 +192,13 @@ void fragment() {
 			albedo = mix(albedo, mark, rim * 0.85);
 		}
 	}
+	// Winter: snow on flat ground above the shore, patchy at first, then whole.
+	if (winter > 0.0) {
+		float flat_ground = smoothstep(0.80, 0.95, normalize(wn).y);
+		float patch = texture(noise_tex, p * 0.035).r;
+		float cover = winter * flat_ground * smoothstep(0.62 - winter * 0.5, 0.75 - winter * 0.4, patch) * step(sea_level + 0.6, world_pos.y);
+		albedo = snowy(albedo, cover * 0.92);
+	}
 	ALBEDO = albedo * (1.0 - fog_at(world_pos.xz));   // fog of war
 	ROUGHNESS = mix(mix(0.92, 0.82, w.w), 0.35, wet);
 	SPECULAR = mix(0.35, 0.5, wet);

@@ -27,7 +27,7 @@ void vertex() {
 
 void fragment() {
 	vec3 tip = mix(tip_color, dry_color, dryness);
-	ALBEDO = mix(root_color, tip, UV.y) * (1.0 - fog_at(fog_xz));   // fog of war
+	ALBEDO = snowy(mix(root_color, tip, UV.y), winter * 0.75) * (1.0 - fog_at(fog_xz));   // fog of war; frosted in winter
 	ROUGHNESS = 0.85;
 	SPECULAR = 0.25;
 	BACKLIGHT = ALBEDO * 0.3;

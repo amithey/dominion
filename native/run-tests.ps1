@@ -12,6 +12,9 @@ $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.e
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
+    @('the era ladder: what opens in each era, for you and rivals; research and era goals never blocked; Sandbox and old saves open', @('--script', 'res://tools/progression-check.gd'), 'PROGRESSION PASS', 600),
+    @('the sea economic zone: rigs on sea fields, rival waters, fish and extractor hints, contractors, gas output', @('--script', 'res://tools/offshore-check.gd'), 'OFFSHORE PASS', 300),
+    @('a living world: smoke, the seasons'' snow, birds, order rings, torn-cloud battle smoke, slim unit bars', @('--script', 'res://tools/life-check.gd'), 'LIFE PASS', 400),
     @('construction progress, travelling crew and waiting-worker feedback', @('--script', 'res://tools/construction-feedback-check.gd'), 'CONSTRUCTION_FEEDBACK: 22 checks, 0 failures', 300),
     @('floating resource markers, camera angles and current-click offshore placement', @('--script', 'res://tools/resource-marker-check.gd'), 'RESOURCE_MARKER: 39 checks, 0 failures', 300),
     @('report follow-up: unit roles, quieter resources, sealed pine crowns, guide actions, diplomacy feedback and adaptive music', @('--script', 'res://tools/report-polish-check.gd'), 'REPORT_POLISH PASS', 600),

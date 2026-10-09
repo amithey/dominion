@@ -7,6 +7,13 @@
 global uniform bool fog_on;
 global uniform sampler2D fog_tex;
 global uniform vec4 fog_rect;
+// Winter (ambience.gd): 0 most of the year, 1 in deep winter; snow settles on
+// what faces the sky.
+global uniform float winter;
+
+vec3 snowy(vec3 c, float amount) {
+	return mix(c, vec3(0.86, 0.89, 0.93), clamp(amount, 0.0, 1.0));
+}
 
 float fog_at(vec2 p) {
 	if (!fog_on) { return 0.0; }

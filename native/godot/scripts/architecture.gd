@@ -136,9 +136,15 @@ func _material(kind: int) -> Material:
 
 # ---------------------------------------------------------------- geometry
 
+var _smoke: Array = []   # [point, "Industry" or "Home"]: where smoke rises (ambience.gd)
+
 func begin() -> void:
 	_st.clear()
+	_smoke.clear()
 	xf = Transform3D.IDENTITY
+
+func smoke(point: Vector3, kind: String) -> void:
+	_smoke.append([xf * point, kind])
 
 func _tool(kind: int) -> SurfaceTool:
 	if not _st.has(kind):
@@ -317,6 +323,7 @@ func gable_roof(w: float, d: float, y0: float, rise: float, colour: Color, wall_
 	box(TRIM, Vector3(-x, top - 0.08, -0.12), Vector3(x, top + 0.12, 0.12), colour.darkened(0.25))  # ridge tiles
 
 func chimney(x: float, z: float, y0: float, h: float) -> void:
+	smoke(Vector3(x, y0 + h + 0.3, z), "Home")
 	box(BRICK, Vector3(x - 0.35, y0, z - 0.3), Vector3(x + 0.35, y0 + h, z + 0.3), Color("a8604a"))
 	box(TRIM, Vector3(x - 0.42, y0 + h, z - 0.37), Vector3(x + 0.42, y0 + h + 0.15, z + 0.37), Color("6a5a4c"))
 
@@ -653,6 +660,7 @@ func power_station(rng: RandomNumberGenerator, footprint: float) -> void:
 			cylinder(TRIM, c + Vector3(0, 17.0 * s * band, 0), 0.95 * s * (1.0 - band * 0.27) + 0.06, 0.25, Color("3a3230"), 14)
 		cylinder(TRIM, c + Vector3(0, 15.0 * s, 0), 0.76 * s, 1.0 * s, Color("e8e4dc"), 14)
 		cylinder(TRIM, c + Vector3(0, 16.0 * s, 0), 0.73 * s, 1.0 * s, Color("b83a2e"), 14, 0.7 * s)
+		smoke(c + Vector3(0, 17.3 * s, 0), "Industry")
 	# A heap of coal and the transformer yard with a lattice pylon.
 	cylinder(TRIM, Vector3(-w * 0.5 - 1.8 * s, 0.0, d * 0.2), 2.0 * s, 1.6 * s, Color("26272a"), 12, 0.3)
 	var yard := Vector3(w * 0.5 + 1.6 * s, 0.0, 0.8 * s)
@@ -1155,6 +1163,7 @@ func factory(rng: RandomNumberGenerator, footprint: float) -> void:
 		tri(BRICK, Vector3(x1, 5.5, -z), Vector3(x0, 5.5, -z), Vector3(x1, 7.3, -z), Color("a85a44"))
 	box(TRIM, Vector3(-w * 0.5 - 0.1, 5.3, -d * 0.5 - 0.1), Vector3(w * 0.5 + 0.1, 5.55, d * 0.5 + 0.1), Color("6a4a3a"))
 	cylinder(BRICK, Vector3(w * 0.32, 0.3, -d * 0.3), 0.7, 13.0, Color("9a5040"), 12, 0.5)
+	smoke(Vector3(w * 0.32, 13.6, -d * 0.3), "Industry")
 	box(TRIM, Vector3(w * 0.32 - 0.6, 12.4, -d * 0.3 - 0.6), Vector3(w * 0.32 + 0.6, 12.8, -d * 0.3 + 0.6), Color("3a3230"))
 
 ## Finishes the building: one MeshInstance3D per material used, under a new node.
@@ -1169,6 +1178,12 @@ func commit() -> Node3D:
 		mi.set_meta("architecture", true)
 		root.add_child(mi)
 	_st.clear()
+	for i in range(_smoke.size()):
+		var m := Marker3D.new()
+		m.name = "Smoke%s%d" % [_smoke[i][1], i]
+		m.position = _smoke[i][0]
+		root.add_child(m)
+	_smoke.clear()
 	return root
 
 ## The recipes this kit knows, by building key.

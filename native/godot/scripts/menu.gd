@@ -1064,6 +1064,7 @@ func _show(visible_now: bool) -> void:
 # ---------------------------------------------------------------- actions
 
 func start(difficulty: String) -> void:
+	setup_options.progression = preload("res://scripts/progression.gd").wanted(setup_options)   # the era ladder (progression.gd)
 	if setup_options != world.match_config:
 		world.get_tree().set_meta("match_config",setup_options.duplicate())
 		world.get_tree().set_meta("start_difficulty",difficulty)
