@@ -12,6 +12,7 @@ $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.e
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
+    @('floating resource markers, camera angles and current-click offshore placement', @('--script', 'res://tools/resource-marker-check.gd'), 'RESOURCE_MARKER: 39 checks, 0 failures', 300),
     @('report follow-up: unit roles, quieter resources, sealed pine crowns, guide actions, diplomacy feedback and adaptive music', @('--script', 'res://tools/report-polish-check.gd'), 'REPORT_POLISH PASS', 600),
     @('fourth settlement and continued play across 22 factions and all 18 maps', @('--script', 'res://tools/campaign-expansion-check.gd'), 'EXPANSION: 110 checks, 0 failures', 2400),
     @('decorative wrecks: dense piles, map limits, age, gradual cleanup and live-unit safety', @('--script', 'res://tools/wreck-cleanup-check.gd'), 'WRECK_CLEANUP PASS', 180),

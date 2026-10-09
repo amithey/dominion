@@ -1,4 +1,7 @@
 extends SceneTree
+class QuietMenu extends "res://scripts/menu.gd":
+	func load_settings() -> void: world.apply_ui_scale()
+	func save_settings() -> void: pass
 ## Performance, measured and held to budgets: how long maps take to load; the
 ## cost of a simulation step in peace with nine nations and in a battle of two
 ## hundred; the AI's thinking; long routes across the largest continent; the
@@ -28,7 +31,9 @@ func load_match(cfg: Dictionary) -> float:
 			w = current_scene
 			break
 	var seconds := (Time.get_ticks_msec() - t0) / 1000.0
-	if w.menu.get("_root") == null: w.menu.setup(w)
+	var old = w.menu
+	w.menu = QuietMenu.new(); w.add_child(w.menu); w.menu.setup(w); old.queue_free()
+	w.menu.set_fullscreen(false); root.size = Vector2i(1280, 800)
 	w.start_match("normal")
 	# Hiding the menu alone leaves SceneTree paused and the camera frozen.
 	w.menu.close()
@@ -150,9 +155,12 @@ func run() -> void:
 		check(not paused and w.hud.visible and w.camera.global_position.distance_to(field) < 150.0, "rendered battle has a live simulation, HUD and camera over the battlefield")
 		for i in range(60): await process_frame
 		var frames: Array[float] = []
+		var frame_start := Time.get_ticks_usec()
 		for i in range(300):
 			await process_frame
-			frames.append(w.get_process_delta_time() * 1000.0)
+			var now := Time.get_ticks_usec()
+			frames.append((now - frame_start) / 1000.0)
+			frame_start = now
 		frames.sort()
 		var mean := 0.0
 		for f in frames: mean += f / frames.size()

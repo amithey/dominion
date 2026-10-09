@@ -4626,18 +4626,19 @@ func coast_reach(at: Vector3, owner: int) -> bool:
 				return true
 	return false
 
-func update_placement() -> void:
+func update_placement(mouse := Vector2.INF) -> void:
 	if placing == "" or ghost == null:
 		return
-	var point = ground_point(get_viewport().get_mouse_position())
+	if mouse == Vector2.INF: mouse = get_viewport().get_mouse_position()
+	var point = ground_point(mouse)
 	if building_defs[placing].get("water", false):
-		var mouse := get_viewport().get_mouse_position()
 		point = Plane(Vector3.UP, float(map.seaLevel)).intersects_ray(camera.project_ray_origin(mouse), camera.project_ray_normal(mouse))
 	if point == null:
 		return
 	var at := snap_to_hex(point) if is_district(placing) else Vector3(snappedf(point.x, 2.0), 0, snappedf(point.z, 2.0))
 	if building_defs[placing].get("onDeposit", false):
-		var dep = deposit_near(at, 10.0)
+		var dep = preload("res://scripts/resource_picking.gd").marker_at(self, mouse)
+		if dep == null: dep = deposit_near(at, 10.0)
 		if dep != null:
 			at = Vector3(dep.pos.x, 0, dep.pos.z)
 	at.y = height_at(at.x, at.z)
@@ -5996,6 +5997,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				cancel_transport()
 		elif event.button_index == MOUSE_BUTTON_LEFT and placing != "":
 			if event.pressed:
+				update_placement(event.position)  # click coordinates can be newer than the last preview frame
 				confirm_placement(event.shift_pressed)  # Shift keeps placing
 		elif event.button_index == MOUSE_BUTTON_RIGHT and placing != "":
 			if event.pressed:

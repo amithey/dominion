@@ -1,0 +1,39 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.323 - Forward+ - Using Device #0: Intel - Intel(R) Iris(R) Xe Graphics
+
+Navigation: 18899 walkable cells, ready=true
+ok   the original island loads in 10.6 s (budget 15)
+ok   an economy tick takes 0.47 ms (budget 3)
+Navigation: 97665 walkable cells, ready=true
+ok   Pangaea with nine nations loads in 25.6 s (budget 45)
+ok   memory after loading the largest match: 372 MB (budget 2500)
+ok   a peacetime step with nine nations: 4.1 ms on average, 39.8 ms at the 99th percentile (budget 12 / 40)
+ok   eight rival governments think in 2.29 ms a step (budget 3)
+ok   a land tick takes 3.2 ms, a supply update 0.7 ms on the largest map (budget 40 each)
+ok   routes to every capital across Pangaea: 8 of 8 found, the longest in 45.2 ms (budget 120)
+BATTLE PROFILE: per frame: combat 11.64 ms,   targeting and firing 10.29 ms, move 8.76 ms, build+train 3.47 ms,   engage 2.05 ms,   standing 1.76 ms, ai 1.61 ms, effects 1.47 ms,   keeping clear 1.40 ms,     shots 1.22 ms,   placing 1.17 ms,   driving 0.59 ms,   wrecks and bodies 0.42 ms,   steering 0.30 ms,   wheels and rotors 0.29 ms, territory 0.27 ms,   engine sound 0.14 ms, hud 0.04 ms, health bars 0.03 ms
+ok   a battle of 200 (234 units on the map, 118 fell): 27.4 ms a step on average, 63.5 at the 99th percentile (budget 45 / 130)
+ok   saving the big match takes 20 ms (162 KB), restoring it 5069 ms (budget 1500 / 8000)
+ok   rendered battle has a live simulation, HUD and camera over the battlefield
+FAIL the battle on screen runs at 8 frames a second, the slowest 1% at 4 (budget 25)
+
+ok   the original island loads in 10.6 s (budget 15)
+ok   an economy tick takes 0.47 ms (budget 3)
+ok   Pangaea with nine nations loads in 25.6 s (budget 45)
+ok   memory after loading the largest match: 372 MB (budget 2500)
+ok   a peacetime step with nine nations: 4.1 ms on average, 39.8 ms at the 99th percentile (budget 12 / 40)
+ok   eight rival governments think in 2.29 ms a step (budget 3)
+ok   a land tick takes 3.2 ms, a supply update 0.7 ms on the largest map (budget 40 each)
+ok   routes to every capital across Pangaea: 8 of 8 found, the longest in 45.2 ms (budget 120)
+ok   a battle of 200 (234 units on the map, 118 fell): 27.4 ms a step on average, 63.5 at the 99th percentile (budget 45 / 130)
+ok   saving the big match takes 20 ms (162 KB), restoring it 5069 ms (budget 1500 / 8000)
+ok   rendered battle has a live simulation, HUD and camera over the battlefield
+FAIL the battle on screen runs at 8 frames a second, the slowest 1% at 4 (budget 25)
+
+PERFORMANCE: 11 passed, 1 failed
+  FAILED: the battle on screen runs at 8 frames a second, the slowest 1% at 4 (budget 25)
+PERFORMANCE FAIL
+ERROR: Pages in use exist at exit in PagedAllocator: N12VariantPools12BucketMediumE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)
+ERROR: Pages in use exist at exit in PagedAllocator: N12VariantPools11BucketSmallE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)
