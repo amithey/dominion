@@ -52,6 +52,7 @@ static func run(w: Node) -> void:
 		var a := k * TAU / 8.0
 		var from := sea_point(w, a)
 		var to := sea_point(w, a + PI)
+		w.economy.res.oil = 1.0e6   # ships burn fuel (war_costs.gd): a full bunker for each voyage
 		var ship: Dictionary = w.spawn_unit("destroyer", from, 0)
 		w.order_move([ship], to)
 		var route: PackedVector3Array = PackedVector3Array()

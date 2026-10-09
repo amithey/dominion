@@ -3619,11 +3619,16 @@ func research_test(capture: bool) -> void:
 	for t in range(80):
 		r.tick(1.0)
 	waited = waited and r.done("globalLogistics") and r.bonus("tradeRoutes") >= 1.0
+	var plain := spawn_unit("tank", land_point(home, 30.0), 0)
+	var plain_hp: float = plain.max_hp   # this nation's tank before the armour (its doctrine shades the class)
+	plain.dead = true
+	plain.node.queue_free()
+	units.erase(plain)
 	r.enqueue("compositeArmor")
 	for t in range(80):
 		r.tick(1.0)
 	var tank := spawn_unit("tank", land_point(home, 30.0), 0)
-	var armor_ok: bool = waited and r.done("compositeArmor") and absf(tank.max_hp - float(unit_defs.tank.hp) * 1.2) < 1.0
+	var armor_ok: bool = waited and r.done("compositeArmor") and absf(tank.max_hp - plain_hp * 1.2) < 1.0
 	print("prototype waited for the market %s, tank hp %d of %d base" % [waited, int(tank.max_hp), int(unit_defs.tank.hp)])
 	# Warships and missiles are locked until their discovery.
 	var ship_locked: bool = r.unit_locked("destroyer") != "" and missiles.locked("ballistic") != ""
@@ -4145,6 +4150,7 @@ func capture_ui() -> void:
 ## Moves the camera with keys (WASD and arrows) and a middle-button drag,
 ## the way a player would, and checks that the view actually moves.
 func camera_test() -> void:
+	edge_scroll = false   # a headless run has its pointer in the corner: edge scrolling would drag the view there
 	for i in range(10):
 		await get_tree().process_frame
 	var results := {}

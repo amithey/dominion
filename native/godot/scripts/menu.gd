@@ -1065,12 +1065,18 @@ func _show(visible_now: bool) -> void:
 
 func start(difficulty: String) -> void:
 	setup_options.progression = preload("res://scripts/progression.gd").wanted(setup_options)   # the era ladder (progression.gd)
-	if setup_options != world.match_config:
+	# The ladder shapes no map: it alone never calls for a reload, it is just carried into the match.
+	var shaping := setup_options.duplicate()
+	shaping.erase("progression")
+	var current: Dictionary = world.match_config.duplicate()
+	current.erase("progression")
+	if shaping != current:
 		world.get_tree().set_meta("match_config",setup_options.duplicate())
 		world.get_tree().set_meta("start_difficulty",difficulty)
 		world.get_tree().paused = false
 		world.get_tree().reload_current_scene()
 		return
+	world.match_config.progression = setup_options.progression
 	world.start_match(difficulty)
 	close()
 

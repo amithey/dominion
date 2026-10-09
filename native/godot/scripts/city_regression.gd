@@ -66,6 +66,7 @@ static func run(w: Node) -> void:
 	w.effects.set_physics_process(false)
 	await w.get_tree().physics_frame
 	var failures := PackedStringArray()
+	w.economy.res.oil = 1.0e6   # vehicles burn fuel (war_costs.gd): this test is about the streets, not the tank
 	var placed := crowd_city(w, 2)
 	await sync_nav(w)
 	var hex_w: float = w.logistics.radius * sqrt(3.0)
