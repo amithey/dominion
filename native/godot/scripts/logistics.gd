@@ -300,6 +300,10 @@ func update_supply() -> void:
 		var s = settlement_of(b)
 		var hex := world_hex(s.root.position) if s != null else Vector2i(99999, 99999)
 		var supplied: bool = s != null and reachable.get(b.owner, {}).has(hex)
+		# A platform at sea ships what it draws by tanker, not by a town's road:
+		# it is supplied while the nation has its capital.
+		if b.def.get("water", false):
+			supplied = not reachable.get(b.owner, {}).is_empty()
 		if b.owner == 0 and b.built and b.def.get("settlement") != null and b.has("supplied") and b.supplied != supplied:
 			world.hud.notice("%s: %s" % [b.def.name, "supply restored" if supplied else "supply cut — reconnect roads or rails"])
 		b.supplied = supplied

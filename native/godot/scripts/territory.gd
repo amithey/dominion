@@ -30,6 +30,7 @@ const PURCHASES := 4       ## hexes each settlement may buy
 const RINGS_MAX := {"hq": 4, "cityCenter": 4, "villageCenter": 3}
 const PEOPLE_PER_RING := 110.0
 const WATERS := 2          ## rings of sea off a nation's coast that are its territorial waters
+const EEZ := 7             ## rings of sea a nation may drill and fish: its exclusive economic zone
 
 var world: Node
 var cell := 40.0
@@ -159,6 +160,39 @@ func neighbours(i: int) -> Array[int]:
 		if j >= 0:
 			out.append(j)
 	return out
+
+## Who may work the sea at `at` (an offshore rig on a field there): the nation
+## whose land is nearest, within EEZ rings, unless the water is another
+## nation's territorial waters. Like the real exclusive economic zone, it
+## reaches far past the narrow territorial sea: the sea fields lie off coasts
+## that no one has settled yet, and used to be out of every nation's reach.
+## -1 when no nation is near enough, or two are equally near.
+func zone_owner(at: Vector3) -> int:
+	var start := cell_of(at)
+	if start < 0 or start >= owner_of.size():
+		return -1
+	if terrain[start] == Terrain.WATER and owner_of[start] >= 0:
+		return owner_of[start]   # inside someone's territorial waters
+	var seen := {start: 0}
+	var queue: Array[int] = [start]
+	var found := -1
+	var found_ring := 99
+	while not queue.is_empty():
+		var c: int = queue.pop_front()
+		var ring: int = seen[c]
+		if ring > EEZ or ring > found_ring:
+			break
+		if terrain[c] != Terrain.WATER and owner_of[c] >= 0:
+			if found < 0:
+				found = owner_of[c]
+				found_ring = ring
+			elif owner_of[c] != found and ring == found_ring:
+				return -1   # an equal claim: no one's
+		for j in neighbours(c):
+			if not seen.has(j):
+				seen[j] = ring + 1
+				queue.append(j)
+	return found
 
 func owner_at(at: Vector3) -> int:
 	return owner_of[cell_of(at)]

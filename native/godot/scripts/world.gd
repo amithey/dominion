@@ -4506,6 +4506,9 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 	if wmd != null and wmd.contaminated(at, ["fallout", "chemical"]):
 		return "Contaminated ground: wait for the fallout to decay"
 	if not offshore and not is_district(key) and lowest < float(map.seaLevel) + 1.0:
+		var sea_field = deposit_near(at, 6.0) if def.get("onDeposit", false) else null
+		if sea_field != null and sea_field.get("water", false):
+			return "Fish are caught from a Fishing Wharf on the coast nearby" if sea_field.type == "fish" else "A sea field: build an Offshore Rig on it"
 		return "Too close to the water"
 	if not offshore and not is_district(key) and highest - lowest > 3.5:
 		return "Ground too steep"
@@ -4553,10 +4556,14 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 	# Land you hold is land you may build on, anywhere in it (territory.gd, hex
 	# by hex, sea hexes off your coast included); another nation's land is not.
 	var land_owner: int = territory.owner_at(at) if territory != null else -1
+	# An offshore platform may stand anywhere in the nation's economic zone, not
+	# only in its narrow territorial waters (territory.zone_owner).
+	if def.get("water", false) and land_owner < 0 and territory != null:
+		land_owner = territory.zone_owner(at)
 	if land_owner == owner:
 		in_district = true
 	elif land_owner >= 0 and land_owner != owner:
-		return "Inside %s's land" % ("your" if land_owner == 0 else diplomacy.name_of(land_owner))
+		return "Inside %s's %s" % ["your" if land_owner == 0 else diplomacy.name_of(land_owner), "waters" if def.get("water", false) else "land"]
 	if def.get("unique", false) and buildings.any(func(b): return b.owner == owner and b.key == key and not b.dead):
 		return "Only one %s per nation" % def.name
 	if def.get("settlement") != null:
@@ -4577,7 +4584,10 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 			return "Build on a free resource deposit"
 		var kinds = def.get("depositTypes")
 		if kinds != null and not dep.type in kinds:
-			return "Needs a %s" % " or ".join(PackedStringArray(kinds.map(func(k): return map.depositTypes[k].name)))
+			if dep.type == "fish":
+				return "Fish are caught from a Fishing Wharf on the coast nearby"
+			var wanted: String = " or ".join(PackedStringArray(kinds.map(func(k): return map.depositTypes[k].name)))
+			return "Needs %s %s" % ["an" if wanted.left(1).to_lower() in ["a", "e", "i", "o", "u"] else "a", wanted]
 		if kinds == null and dep.get("water", false):
 			return "Offshore deposits need an Offshore Rig"
 	for u in units:
