@@ -2052,6 +2052,7 @@ func update_detail_level() -> void:
 				mesh.cast_shadow = mode
 
 func _physics_process(delta: float) -> void:
+	if match_stopped(): return
 	sim_tick += 1
 	var now := Time.get_ticks_msec() / 1000.0
 	var t0 := clock()
@@ -2572,6 +2573,8 @@ func capture_menu() -> void:
 
 ## Removes every building, unit and road, before a saved game is restored.
 func clear_match() -> void:
+	if hud != null:
+		hud.close_end()
 	cancel_placement()
 	cancel_transport()
 	select_building(null)
@@ -2702,6 +2705,10 @@ var _path_result: NavigationPathQueryResult3D
 func path_between(from: Vector3, to: Vector3) -> PackedVector3Array:
 	if not nav_ready:
 		return PackedVector3Array()
+	# Open terrain needs one leg. The same walkability test already validates
+	# simplified routes; avoid a full-map polygon search for every short chase.
+	if open_ground(from) and open_ground(to) and clear_line(from, to):
+		return PackedVector3Array([to])
 	# The engine's default search gives up after 4096 polygons and returns a
 	# route to the nearest point it reached: on the 4 m walk grid that cut
 	# every march longer than about 300 m short, and the army stopped halfway
@@ -5002,29 +5009,30 @@ func airborne(u: Dictionary) -> bool:
 
 ## Damage multiplier of `attacker` against `target` (0 = cannot engage).
 func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
-	if not load("res://scripts/force_catalog.gd").can_target(self, attacker, target): return 0.0
+	if not preload("res://scripts/force_catalog.gd").can_target(self, attacker, target): return 0.0
 	if attacker.key == "interceptorDrone" and not (target.get("fly", false) and target.get("key", "") in ["drone", "loiterer", "shahed", "harop", "akinci", "wingman", "interceptorDrone"]): return 0.0
-	if attacker.get("key", "") in AIR_DEFENCE and target_class(target) != "air":
+	var target_kind: String = target_class(target)
+	if attacker.get("key", "") in AIR_DEFENCE and target_kind != "air":
 		return 0.0
 	# Small arms cannot penetrate heavy armour; dedicated anti-tank infantry can.
-	if attacker.key in ["soldier","sniper","commando","worker","medic"] and target_class(target) in ["armor","air","naval"]:
+	if attacker.key in ["soldier","sniper","commando","worker","medic"] and target_kind in ["armor","air","naval"]:
 		return 0.0
 	# Sea drones ram ships and harbours; nothing else.
 	if attacker.key == "seaDrone" and not (target.get("naval", false) or target.get("is_building", false)):
 		return 0.0
 	# The Raptor's special mission: suppressing air defences.
 	if attacker.key == "raptor" and (target.get("key", "") in AIR_DEFENCE or target.get("key", "") == "abmLauncher"):
-		return float(damage_profile.raptor.get(target_class(target), 1.0)) * Arsenal.SEAD
+		return float(damage_profile.raptor.get(target_kind, 1.0)) * Arsenal.SEAD
 	# The Harop hunts radars: air defence takes triple damage.
 	if attacker.key == "harop":
-		return float(damage_profile.harop.get(target_class(target), 0.0)) * FactionArsenal.harop_factor(target)
+		return float(damage_profile.harop.get(target_kind, 0.0)) * FactionArsenal.harop_factor(target)
 	# A laser burns small drones out of the sky in a second or two.
-	if attacker.key == "laserAD" and target.get("key", "") in Modern.DRONES and target_class(target) == "air":
+	if attacker.key == "laserAD" and target.get("key", "") in Modern.DRONES and target_kind == "air":
 		return 6.0
 	var profile: Dictionary = damage_profile.get(attacker.key, {})
 	if profile.is_empty():
 		return 0.0 if target.get("fly", false) else 1.0
-	return float(profile.get(target_class(target), 0.0))
+	return float(profile.get(target_kind, 0.0))
 
 ## Nearest hostile unit in range; buildings only when no unit is near.
 func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
@@ -5046,9 +5054,12 @@ func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
 				if bucket != null:
 					candidates.append_array(bucket)
 	for other in candidates:
-		if other.dead or not hostile(unit.owner, other.owner) or effectiveness(unit, other) <= 0.01:
+		if other.dead or other.owner == unit.owner:
 			continue
 		var d: float = flat_distance(unit, other)
+		# Range is cheap; most nearby buckets still contain targets outside it.
+		if d >= radius or not hostile(unit.owner, other.owner) or effectiveness(unit, other) <= 0.01:
+			continue
 		if Modern.hidden(self, other, d, radius):
 			continue
 		var score: float = d / directorate.value_of(other) if seek else d
@@ -5058,9 +5069,11 @@ func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
 	if best != null:
 		return best
 	for b in buildings:
-		if b.dead or not hostile(unit.owner, b.owner) or effectiveness(unit, b) <= 0.01:
+		if b.dead or b.owner == unit.owner:
 			continue
 		var d := gap_to(unit, b)
+		if d >= best_d or not hostile(unit.owner, b.owner) or effectiveness(unit, b) <= 0.01:
+			continue
 		if d < best_d:
 			best_d = d
 			best = b
@@ -5832,6 +5845,8 @@ func _process(delta: float) -> void:
 # player's request, as a stray key beside W swung the view). Keys are read by their position, so
 # they work with any keyboard layout (Hebrew included).
 func pan_camera(delta: float) -> void:
+	if hud != null and hud.modal_input_active():
+		return
 	if get_viewport().gui_get_focus_owner() is LineEdit:
 		return
 	if hud != null and hud.get("_diplomatic_contact_screen") != null and hud._diplomatic_contact_screen.visible:
@@ -5877,6 +5892,8 @@ func ground_point(screen: Vector2) -> Variant:
 	return null
 
 func _unhandled_input(event: InputEvent) -> void:
+	if hud != null and hud.modal_input_active():
+		return
 	if bench_phase >= 0:
 		return
 	if event is InputEventMouseButton:
@@ -6064,6 +6081,9 @@ func enemy_under(screen: Vector2) -> Variant:
 	return best
 
 func _input(event: InputEvent) -> void:
+	# Modal buttons keep keyboard navigation; campaign shortcuts wait until closed.
+	if hud != null and hud.modal_input_active():
+		return
 	if event is InputEventKey and get_viewport().gui_get_focus_owner() is LineEdit:
 		if event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:
 			get_viewport().gui_get_focus_owner().release_focus()

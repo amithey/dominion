@@ -196,14 +196,7 @@ func _build_top_bar() -> void:
 	row.add_theme_constant_override("separation", 8)
 	bar.add_child(row)
 	# The nation at the head of the strip: its leader in its colour; a click opens the Cabinet.
-	_id_face = Button.new()
-	_id_face.name = "LeaderFace"
-	_id_face.custom_minimum_size = Vector2(40, 40)
-	_id_face.expand_icon = true
-	_id_face.focus_mode = Control.FOCUS_NONE
-	_id_face.pressed.connect(func(): toggle_cabinet())
-	row.add_child(_id_face)
-	_dress_face()
+	row.add_child(_make_leader_face())
 	var first := true
 	for r in RESOURCES:
 		var chip := HBoxContainer.new()
@@ -367,6 +360,30 @@ func refresh_speed() -> void:
 
 # ---------------------------------------------------------------- production list
 
+func _make_leader_face() -> Button:
+	_id_face = Button.new()
+	_id_face.name = "LeaderFace"
+	_id_face.custom_minimum_size = Vector2(40, 40)
+	_id_face.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_id_face.focus_mode = Control.FOCUS_NONE
+	_id_face.pressed.connect(func(): toggle_cabinet())
+	var disc := preload("res://scripts/portrait_disc.gd").new()
+	_id_face.add_child(disc)
+	disc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	disc.offset_left = 3
+	disc.offset_top = 3
+	disc.offset_right = -3
+	disc.offset_bottom = -3
+	_id_picture = TextureRect.new()
+	_id_picture.name = "LeaderPortrait"
+	_id_picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_id_picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_id_picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	disc.add_child(_id_picture)
+	_id_picture.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_dress_face()
+	return _id_face
+
 ## The leader's portrait in the nation's colour (again when a save brings another nation).
 func _dress_face() -> void:
 	if _id_face == null or world == null or world.map == null or world.map.nations.is_empty():
@@ -378,7 +395,7 @@ func _dress_face() -> void:
 	if sig == _id_sig:
 		return
 	_id_sig = sig
-	_id_face.icon = gallery.badge(leader)
+	_id_picture.texture = gallery.badge(leader)
 	var colour := Color(str(me.get("color", "#cdb584")))
 	for state in ["normal", "hover", "pressed"]:
 		var s := StyleBoxFlat.new()
@@ -1509,6 +1526,7 @@ var _win_sub: Label
 var _win_brief_panel: PanelContainer
 var _win_brief: VBoxContainer
 var _id_face: Button            # the leader's portrait at the start of the strip (the Cabinet)
+var _id_picture: TextureRect    # clipped to a disc, separately from the button's border
 var _id_sig := ""
 ## The state over time for the Cabinet's charts: a sample every 5 s of game time.
 var history := {"money": [], "income": [], "citizens": [], "army": [], "research": []}
@@ -1963,13 +1981,41 @@ func _show_letter() -> void:
 	_windows.place_alert.call_deferred(_letter_box)
 
 ## Victory or defeat: the screen dims and a banner says how it ended.
+var _end_dim: ColorRect
+var _end_box: PanelContainer
+
+func end_visible() -> bool:
+	return is_instance_valid(_end_box) and not _end_box.is_queued_for_deletion()
+
+func modal_input_active() -> bool:
+	return end_visible() or (is_instance_valid(_diplomatic_contact_screen) and _diplomatic_contact_screen.is_visible_in_tree())
+
+func close_end() -> void:
+	for control in [_end_box, _end_dim]:
+		if is_instance_valid(control):
+			control.hide()
+			remove_child(control)
+			control.queue_free()
+	_end_box = null
+	_end_dim = null
+
+func _focus_end(control: Button) -> void:
+	if is_instance_valid(control) and control.is_inside_tree(): control.grab_focus()
+
 func show_end(title: String, subtitle: String) -> void:
+	close_end()
 	var dim := ColorRect.new()
+	dim.name = "EndShade"
+	_end_dim = dim
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.color = Color(0, 0, 0, 0.45)
-	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	dim.z_index = 100
 	add_child(dim)
 	var box := PanelContainer.new()
+	box.name = "EndDialog"
+	_end_box = box
+	box.z_index = 101
 	box.add_theme_stylebox_override("panel", UI.plate(Color("1a343d"), Color("0a171b"), UI.GOLD if title == "VICTORY" else UI.BAD, 26.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
 	box.anchor_left = 0.5
 	box.anchor_right = 0.5
@@ -1996,19 +2042,19 @@ func show_end(title: String, subtitle: String) -> void:
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	var menu := Button.new()
 	menu.text = "Main menu"
-	menu.focus_mode = Control.FOCUS_NONE
+	menu.focus_mode = Control.FOCUS_ALL
 	menu.pressed.connect(func():
 		world.get_tree().paused = false
 		world.get_tree().reload_current_scene())
 	buttons.add_child(menu)
 	var stay := Button.new()
 	stay.text = "Continue playing"
-	stay.focus_mode = Control.FOCUS_NONE
+	stay.focus_mode = Control.FOCUS_ALL
 	stay.pressed.connect(func():
 		world.continue_after_end()
-		dim.queue_free()
-		box.queue_free())
+		close_end())
 	buttons.add_child(stay)
+	_focus_end.call_deferred(stay)
 
 ## Every message of the match, newest last (the feed shows only the latest).
 var notice_log: Array[String] = []
@@ -2022,6 +2068,9 @@ var _recent_notices := {}   # text -> when it last appeared (real seconds)
 
 func notice(text: String, at := Vector3.INF) -> void:
 	var now: float = Time.get_ticks_msec() / 1000.0
+	for previous in _recent_notices.keys():
+		if now - float(_recent_notices[previous]) >= 20.0:
+			_recent_notices.erase(previous)
 	# The same message twice within 20 seconds is one message.
 	if now - float(_recent_notices.get(text, -100.0)) < 20.0:
 		return
@@ -2429,6 +2478,9 @@ func _research_detail() -> void:
 			var why: String = r.blocker(key)
 			b.disabled = why != "" and not why.contains(" needs a ")
 			b.tooltip_text = why
+			if r.queue.size() >= r.QUEUE_MAX:
+				b.disabled = true
+				b.tooltip_text = "The research queue is full (%d projects). Remove a project first." % r.QUEUE_MAX
 			b.pressed.connect(func(): _say(r.enqueue(key)))
 		row.add_child(b)
 		if key in r.queue and r.queue[0] != key:
@@ -2447,7 +2499,8 @@ func _research_detail() -> void:
 	for s in range(3):
 		var cost: Dictionary = r.stage_cost(key, s)
 		var done: bool = s < stage
-		var now: bool = s == stage and stage < 3
+		var current: bool = s == stage and stage < 3
+		var now: bool = current and r.active_item() == key
 		var sc := PanelContainer.new()
 		sc.add_theme_stylebox_override("panel", UI.box(Color("173a2c") if done else (Color("103a4a") if now else Color("0f1c2b")), Color("5fd39a") if done else (UI.ministry("research") if now else Color("23415a")), 1, 5, 7.0))
 		card.add_child(sc)
@@ -2459,9 +2512,15 @@ func _research_detail() -> void:
 		var t := _text("%d. %s" % [s + 1, r.stage_names(key)[s]], 14, Color("b9d8b5") if done else (UI.BRIGHT if now else UI.CREAM), true)
 		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		head.add_child(t)
-		head.add_child(_text("✓ done" if done else ("in development" if now else ""), 12, Color("8fd18a") if done else UI.GOLD))
+		var state: String = "✓ done" if done else ""
+		if current:
+			state = r.stage_status(key)
+		var state_label := _text(state, 12, Color("8fd18a") if done else UI.GOLD)
+		head.add_child(state_label)
+		if current:
+			_rs_live.append([state_label, func(l): l.text = world.research.stage_status(key)])
 		col.add_child(_text("%d research%s%s" % [int(r.stage_points(key, s)), "" if cost.is_empty() else "  +  " + cost_text(cost), "   · half the effect" if s == 1 else ("   · full effect and unlocks" if s == 2 else "")], 12, UI.MUTED))
-		if now:
+		if current:
 			var bar := _rs_bar(col, r.progress[key].work, r.stage_points(key, s), UI.GOLD, 9.0)
 			_rs_live.append([bar, func(b): b.value = world.research.progress[key].work])
 
@@ -2475,7 +2534,7 @@ func _research_queue() -> void:
 	head.add_child(t)
 	head.add_child(_text("%d / %d" % [r.queue.size(), r.QUEUE_MAX], 13, UI.MUTED))
 	if r.queue.is_empty():
-		_rs_label(card, "Nothing in development: research points are piling up. Click a discovery in the tree, then press Develop.", Color("e8a86f"), 13)
+		_rs_label(card, "Nothing in development: research points are piling up. Click a discovery in the tree, then press Research now. Develop starts a field below.", Color("e8a86f"), 13)
 	for i in range(r.queue.size()):
 		var item: String = r.queue[i]
 		var track: bool = item.begins_with("track:")
@@ -2541,6 +2600,9 @@ func _research_tracks() -> void:
 		b.text = "Queued" if queued else "Develop"
 		b.focus_mode = Control.FOCUS_NONE
 		b.disabled = why != "" or queued
+		if not queued and r.queue.size() >= r.QUEUE_MAX:
+			b.disabled = true
+			b.tooltip_text = "The research queue is full (%d projects). Remove a project first." % r.QUEUE_MAX
 		b.pressed.connect(func(): _say(r.enqueue("track:" + key)))
 		row.add_child(b)
 
@@ -2587,7 +2649,10 @@ func toggle_log() -> void:
 		_fill_log()
 
 func _fill_log() -> void:
+	var scroll := _log_rows.get_parent() as ScrollContainer
+	var previous_scroll: int = scroll.scroll_vertical
 	for c in _log_rows.get_children():
+		_log_rows.remove_child(c)
 		c.queue_free()
 	if notice_log.is_empty():
 		_log_rows.add_child(_text("No messages yet.", 14, UI.MUTED))
@@ -2596,3 +2661,4 @@ func _fill_log() -> void:
 		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		line.custom_minimum_size.x = 500
 		_log_rows.add_child(line)
+	scroll.set_deferred("scroll_vertical", previous_scroll)

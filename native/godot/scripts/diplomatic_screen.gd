@@ -207,6 +207,7 @@ func _gui_input(event: InputEvent) -> void:
 
 func _input(event: InputEvent) -> void:
 	if not visible or not world.hud.visible: return
+	if world.hud.end_visible(): return
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_ESCAPE:
 			hide()

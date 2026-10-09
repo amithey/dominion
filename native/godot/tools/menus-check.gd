@@ -279,7 +279,7 @@ func run() -> void:
 	await settle()
 	var by_face: bool = cab.visible
 	hud.toggle_cabinet()
-	check(hud._id_face.icon != null and by_face, "the leader's portrait heads the strip, and opens the Cabinet")
+	check(hud._id_picture.texture != null and by_face, "the leader's portrait heads the strip, and opens the Cabinet")
 	var coloured := []
 	for s in hud._screen_buttons:
 		var style = hud._screen_buttons[s].get_theme_stylebox("normal")

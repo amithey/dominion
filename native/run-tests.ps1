@@ -1,7 +1,7 @@
 ﻿# Runs every automated test of the Godot game, one after another, and prints a
 # table. A test fails if it reports FAIL, does not report PASS, times out, or
 # prints any SCRIPT ERROR along the way (an error in code it happened to pass
-# through). Also runs the browser game's tests.
+# through). This runner tests the native Godot game.
 # Usage:  powershell -ExecutionPolicy Bypass -File native\run-tests.ps1 [-Exported] [-Quick]
 #   -Exported  runs the same tests against dist\DOMINION.exe (the built game)
 #   -Quick     skips the long ones (the 12-minute match and the AI war)
@@ -48,6 +48,8 @@ $tests = @(
     @('about 100 checks playing on every map', @('--script', 'res://tools/gameplay-maps-100.gd'), 'GAMEPLAY_MAPS PASS', 7200),
     @('fifty checks on playing the game: placement, selection, commands, panels, workers, groups', @('--script', 'res://tools/gameplay-ui-50.gd'), 'GAMEPLAY_UI PASS', 1800),
     @('49 customer checks: reversible graphics, input, guide, layouts, save recovery and diplomacy', @('--script', 'res://tools/customer-review-49.gd'), 'CUSTOMER_REVIEW PASS', 300),
+    @('100 second-round customer checks: modal input, end screens, research feedback, logs and national panels', @('--script', 'res://tools/customer-round2-100.gd'), 'CUSTOMER_ROUND2: 100 checks, 0 failures', 300),
+    @('Save Game preserves other campaigns, timestamp collisions and failed storage', @('--script', 'res://tools/campaign-save-check.gd'), 'CAMPAIGN_SAVE: 4 checks, 0 failures', 120),
     @('a third hundred gameplay checks: rivals on their own, match settings, missiles, spies, trade, bunkers, air bases, disk saves', @('--script', 'res://tools/gameplay-deep-100.gd'), 'GAMEPLAY_DEEP PASS', 2400),
     @('about 100 gameplay checks over time: economy, building, training, research, land, supply, war, trade, saves', @('--script', 'res://tools/gameplay-live-100.gd'), 'GAMEPLAY_LIVE PASS', 1800),
     @('about 100 gameplay checks: every building, unit, research, market, diplomacy, spies, missiles, land, roads, saves', @('--script', 'res://tools/gameplay-100.gd'), 'GAMEPLAY_100 PASS', 1500),
@@ -133,15 +135,6 @@ foreach ($t in $tests) {
     $seconds = [int]((Get-Date) - $start).TotalSeconds
     $results += [pscustomobject]@{ Test = $name; Result = $status; Seconds = $seconds }
     '{0,-40} {1,-22} {2,4}s' -f $name, $status, $seconds
-}
-if (-not $Exported) {
-    Push-Location $repo
-    $browser = (npm test 2>&1 | Out-String)
-    Pop-Location
-    $ok = $browser -match 'fail 0'
-    $count = if ($browser -match 'pass (\d+)') { $Matches[1] } else { '?' }
-    $results += [pscustomobject]@{ Test = "browser game ($count tests)"; Result = $(if ($ok) { 'PASS' } else { 'FAIL' }); Seconds = 0 }
-    '{0,-40} {1,-22}' -f "browser game ($count tests)", $(if ($ok) { 'PASS' } else { 'FAIL' })
 }
 $failed = @($results | Where-Object { $_.Result -ne 'PASS' })
 ''

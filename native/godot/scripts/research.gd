@@ -312,6 +312,19 @@ func dequeue(item: String) -> void:
 	changed.emit()
 
 ## What the active project is doing, for the panel.
+func active_item() -> String:
+	for item in queue:
+		if item.begins_with("track:"):
+			if track_blocker(item.substr(6)) == "": return item
+		elif blocker(item) == "":
+			var p: Dictionary = progress[item]
+			if p.paid or world.economy.can_afford(stage_cost(item, stage_of(item))): return item
+	return ""
+
+func stage_status(key: String) -> String:
+	if key not in queue: return "Not queued"
+	return "In development" if active_item() == key else "Waiting"
+
 func status_of(item: String) -> String:
 	if item.begins_with("track:"):
 		var key := item.substr(6)

@@ -54,6 +54,9 @@ func steps(count: int) -> Array:
 		for node in [w.economy, w.research, w.territory, w.market, w.diplomacy, w.espionage]:
 			node._process(DT)
 		times.append((Time.get_ticks_usec() - t0) / 1000.0)
+		# Real frames release queued bodies/effects and commit deferred navigation.
+		# Keep this outside the measured step; a tight 30-second loop cannot do so.
+		if i % 30 == 29: await process_frame
 	times.sort()
 	var total := 0.0
 	for t in times: total += t
@@ -77,7 +80,7 @@ func run() -> void:
 	freeze()
 	# 3-4: peacetime with nine nations, and the AI's share.
 	w.economy.grant_test_resources()
-	var peace: Array = steps(900)
+	var peace: Array = await steps(900)
 	check(peace[0] < 12.0 and peace[1] < 40.0, "a peacetime step with nine nations: %.1f ms on average, %.1f ms at the 99th percentile (budget 12 / 40)" % [peace[0], peace[1]])
 	var ai_ms := 0.0
 	for i in range(300):
@@ -114,7 +117,10 @@ func run() -> void:
 	w.order_move(ours, field + Vector3(15, 0, 0), true)
 	w.order_move(theirs, field + Vector3(-15, 0, 0), true)
 	var units: int = w.units.filter(func(u): return not u.dead).size()
-	var battle: Array = steps(450)
+	w.profiling = true; w.prof.clear(); w.prof_frames = 0
+	var battle: Array = await steps(450)
+	print("BATTLE PROFILE: " + w.profile_report())
+	w.profiling = false
 	var fought: int = (ours + theirs).filter(func(u): return u.dead).size()
 	# Measured at 29-41 ms on the PC the budgets were set on (it varies with the fight).
 	check(battle[0] < 45.0 and battle[1] < 130.0, "a battle of 200 (%d units on the map, %d fell): %.1f ms a step on average, %.1f at the 99th percentile (budget 45 / 130)" % [units, fought, battle[0], battle[1]])

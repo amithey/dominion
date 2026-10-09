@@ -87,6 +87,7 @@ func declare_war(id: int, provoked: bool) -> void:
 func _physics_process(delta: float) -> void:
 	if world == null or world.economy == null:
 		return
+	if world.match_stopped(): return
 	var clock: int = world.clock()
 	for n in nations:
 		if n.defeated:

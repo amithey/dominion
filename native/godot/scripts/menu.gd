@@ -276,11 +276,8 @@ func open_pause() -> void:
 	_heading("PAUSED")
 	_campaign_line()
 	_button("Resume", close)
-	_button("Save Game", func():
-		if world.saves.save("quicksave"):
-			close()
-		else:
-			_description("Save failed. Your game is still open. Check available disk space and try again."))
+	var save_button := _button("Save Game", save_campaign)
+	save_button.tooltip_text = "Create a separate campaign save. F5 replaces QuickSave."
 	_button("Load Game", open_load)
 	_button("Settings", open_settings)
 	if preload("res://scripts/cheats.gd").allowed():
@@ -293,6 +290,18 @@ func open_pause() -> void:
 		world.get_tree().paused = false
 		world.get_tree().reload_current_scene())
 	_button("Quit to Desktop", func(): world.get_tree().quit())
+
+func save_campaign() -> void:
+	var base := "Campaign " + Time.get_datetime_string_from_system().replace("T", " ").replace(":", "-")
+	var slot := base
+	var suffix := 2
+	while FileAccess.file_exists(world.saves.path_of(slot)):
+		slot = "%s (%d)" % [base, suffix]
+		suffix += 1
+	if world.saves.save(slot):
+		close()
+	else:
+		_description("Save failed. Your game is still open. Check available disk space and try again.")
 
 func open_new_game() -> void:
 	_clear()
@@ -963,7 +972,7 @@ func _settings_controls() -> void:
 	keys.add_theme_constant_override("v_separation", 3)
 	for pair in [["Left click / drag", "Select one unit / select a group"], ["Shift + left click", "Add or remove a unit from the selection"], ["W A S D / arrows", "Move the camera (Shift: faster)"], ["Wheel", "Zoom"], ["Middle button + drag", "Turn and tilt the view"], ["Shift + middle drag", "Drag the map"],
 			["Right click", "Move, attack; on a site with workers: build"], ["Shift + right click", "Add a site to the workers' list"], ["Ctrl + right click", "Attack-move"], ["Alt + right click", "Bombard an area"],
-			["B", "Build list"], ["G  M  I  T  Y", "Diplomacy, market, intelligence, territory, research"], ["Space / + / -", "Pause or resume / faster / slower"], ["Home", "Return to your capital"], ["O", "Mark an operational zone"], ["F5 / F9", "Quick save / load"], ["F11", "Full screen / window"], ["Esc", "Cancel, close a window, then pause"]]:
+			["B", "Build list"], ["G  M  I  T  Y", "Diplomacy, market, intelligence, territory, research"], ["Tab / K / U / L", "Cabinet / defence / United Nations / message log"], ["Space / + / -", "Pause or resume / faster / slower"], ["Home", "Return to your capital"], ["O", "Mark an operational zone"], ["F5 / F9", "Quick save / load"], ["F11", "Full screen / window"], ["Esc", "Cancel, close a window, then pause"]]:
 		var k := Label.new()
 		k.text = pair[0]
 		k.add_theme_color_override("font_color", UI.GOLD)
