@@ -75,12 +75,13 @@ func run() -> void:
 	w.economy.tick()
 	check(w.economy.rates.gas > winter, "gas consumption rises for winter heating")
 	var base: Dictionary = preload("res://scripts/airbase_regression.gd").setup(w)
-	var heli: Dictionary = w.spawn_unit("helicopter", base.root.position + Vector3(80, 0, -60), 0)
+	# An airfield takes fixed-wing aircraft (helicopters use helipads: air_operations.available).
+	var heli: Dictionary = w.spawn_unit("jet", base.root.position + Vector3(80, 0, -60), 0)
 	w.AirOperations.assign(w, heli, base, 0)
 	w.AirOperations.order_land(w, heli, base)
 	heli.node.position = w.AirOperations.goal(w, heli) + Vector3.UP * 10
 	w.AirOperations.update(w, heli, 0.1)
-	check(heli.air_state == "landing", "helicopter return target enters its landing corridor")
+	check(heli.air_state == "landing", "an aircraft sent home enters its landing corridor")
 	heli.air_state = "parked"
 	w.AirOperations.order_land(w, heli, base)
 	check(heli.air_state == "parked", "recall leaves already parked aircraft on their slot")
@@ -90,7 +91,8 @@ func run() -> void:
 	preload("res://scripts/air_defence.gd").update(w, 0.1)
 	check(sam.get("aa_reload", 0.0) > 0, "fixed SAM fires on a hostile aircraft at long range")
 	var artillery: Dictionary = w.spawn_unit("artillery", w.start, 0)
-	check(absf(artillery.range - 12.0 * sqrt(3.0) * 3.0) < 0.5 and w.unit_defs.samLauncher.range >= 110, "artillery reaches three hexes; the mobile SAM reaches further")
+	# The class reaches three hexes; a nation's doctrine may shade a fielded gun's range (factions.gd).
+	check(absf(float(w.unit_defs.artillery.range) - 12.0 * sqrt(3.0) * 3.0) < 0.5 and artillery.range >= w.unit_defs.artillery.range * 0.85 and w.unit_defs.samLauncher.range >= 110, "artillery reaches three hexes; the mobile SAM reaches further")
 	var saved: Dictionary = w.market.capture()
 	w.market.restore(JSON.parse_string(JSON.stringify(saved)))
 	check(w.market.volume.get("iron", 0) >= 200, "market activity survives save serialization")

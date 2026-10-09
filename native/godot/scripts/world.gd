@@ -3462,6 +3462,7 @@ func systems_test(capture: bool) -> void:
 	var hq3: Dictionary = buildings.filter(func(b): return b.owner == 3 and b.key == "hq")[0]
 	var ground_zero: Vector3 = hq3.root.position + Vector3(30, 0, 0)
 	missiles.stock.nuke = 1
+	research.progress["nuclearProgram"] = {"stage": 3, "work": 0, "paid": false}   # nuclear arms need the Nuclear Program
 	print(missiles.launch("nuke", ground_zero))
 	for i in range(300):
 		missiles._physics_process(0.05)

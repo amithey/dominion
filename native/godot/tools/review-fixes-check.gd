@@ -77,7 +77,8 @@ func run() -> void:
 	check(not fog.shows(hidden_enemy), "a damaged enemy tank under the fog gets no health bar (health_overlay checks the fog)")
 	# 5: paths to victory.
 	var v = w.victory
-	check(v != null and v.standings().size() == 3, "the Cabinet lists three paths to victory: conquest, dominance, technology")
+	var paths: Array = v.standings().map(func(s): return str(s.path)) if v != null else []
+	check(paths.size() == (4 if w.get("directorate") != null else 3) and paths.has("Dominance") and paths.has("Technology"), "the Cabinet lists the paths to victory: conquest, dominance, technology and, with the AI programme, the AGI project %s" % str(paths))
 	var t = w.territory
 	var cells: int = t.owner_of.size()
 	var mine := 0
