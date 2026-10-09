@@ -12,6 +12,8 @@ $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.e
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
+    @('report follow-up: unit roles, quieter resources, sealed pine crowns, guide actions, diplomacy feedback and adaptive music', @('--script', 'res://tools/report-polish-check.gd'), 'REPORT_POLISH PASS', 600),
+    @('fourth settlement and continued play across 22 factions and all 18 maps', @('--script', 'res://tools/campaign-expansion-check.gd'), 'EXPANSION: 110 checks, 0 failures', 2400),
     @('decorative wrecks: dense piles, map limits, age, gradual cleanup and live-unit safety', @('--script', 'res://tools/wreck-cleanup-check.gd'), 'WRECK_CLEANUP PASS', 180),
     @('continue after victory or defeat: simulation, diplomacy, territory and saves', @('--script', 'res://tools/post-victory-check.gd'), 'POST_VICTORY PASS', 240),
     @('playtest fixes: Esc, Space pause, speed keys, the common opening, one notice per message, the beginner guide', @('--script', 'res://tools/ux-fixes-check.gd'), 'UX_FIXES PASS', 240),

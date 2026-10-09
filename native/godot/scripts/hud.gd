@@ -868,6 +868,7 @@ func _build_help() -> void:
 	for line in [["Move the camera", "W A S D or arrows, the screen edge, or Shift + middle mouse drag"],
 			["Turn / tilt / zoom", "Hold the middle mouse button and drag to turn and tilt  ·  mouse wheel zooms toward the cursor"],
 			["Select", "Click or drag a box  ·  Shift + click adds or removes a unit  ·  double click: every unit of its kind on screen"],
+			["Unit badges", "At a distance: W worker · INF infantry · ARM armour · ART artillery · AA air defence · AIR aircraft · SEA ship. × counts nearby units of the same role. Gold frame: includes selected units."],
 			["Cabinet", "Tab: the whole state at a glance, every ministry in its colour"],
 			["Orders", "Right click: move or attack  ·  Ctrl + right click: attack-move"],
 			["Bombard", "Alt + right click: fire at ground or infrastructure (armed vehicles)"],
@@ -887,6 +888,11 @@ func _build_help() -> void:
 		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(v)
 		col.add_child(row)
+	var replay := Button.new()
+	replay.text = "Replay first steps"
+	replay.focus_mode = Control.FOCUS_NONE
+	replay.pressed.connect(func(): _help.hide(); start_guide(true))
+	sheet.add_child(replay)
 	var close := Button.new()
 	close.text = "Close (F1)"
 	close.focus_mode = Control.FOCUS_NONE

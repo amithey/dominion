@@ -1,4 +1,7 @@
 extends SceneTree
+class QuietMenu extends "res://scripts/menu.gd":
+	func load_settings() -> void: world.apply_ui_scale()
+	func save_settings() -> void: pass
 ## A played match on fast-forward, as a player would: a town of districts, workers
 ## and an army trained, a village founded and linked by road, research queued,
 ## a market deal and a trade route. The game runs on its own loop (time scale
@@ -41,9 +44,11 @@ func run() -> void:
 		if current_scene != null and current_scene.get("menu") != null and current_scene.get("nav_ready") == true:
 			w = current_scene
 			break
-	if w.menu.get("_root") == null: w.menu.setup(w)
+	var old = w.menu
+	w.menu = QuietMenu.new(); w.add_child(w.menu); w.menu.setup(w); old.queue_free()
 	w.start_match("normal")
 	w.menu.close()  # unpauses the game, as Begin campaign does
+	w.saves.autosave_every = 0
 	w.economy.grant_test_resources()
 	Engine.time_scale = 8.0
 	var hq: Dictionary = w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0]

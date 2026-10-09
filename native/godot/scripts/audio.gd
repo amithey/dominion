@@ -17,7 +17,13 @@ var _listener: AudioListener3D
 var _wind: AudioStreamPlayer
 var _surf: AudioStreamPlayer3D
 var _music: AudioStreamPlayer
+var _battle_music: AudioStreamPlayer
+var _battle_hold := 0.0
+var _battle_mix := 0.0
+var _focus := Vector3.ZERO
 var _click: AudioStreamPlayer
+var _feedback: AudioStreamPlayer
+var _cues := {}
 var _recent := {}  # name -> times played this frame, to cap stacked rifles
 
 func _ready() -> void:
@@ -60,6 +66,13 @@ func _ready() -> void:
 	_music.process_mode = Node.PROCESS_MODE_ALWAYS   # it keeps playing in the pause menu
 	add_child(_music)
 	_music.play()
+	_battle_music = AudioStreamPlayer.new()
+	_battle_music.stream = load("res://audio/battle_loop.wav")
+	_battle_music.bus = "Music"
+	_battle_music.volume_db = -80.0
+	_battle_music.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_battle_music)
+	_battle_music.play()
 	# A soft click on every button, wherever it is (the interface used to be silent).
 	_click = AudioStreamPlayer.new()
 	_click.stream = load("res://audio/ui_click.wav")
@@ -67,6 +80,13 @@ func _ready() -> void:
 	_click.volume_db = -14.0
 	_click.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_click)
+	_feedback = AudioStreamPlayer.new()
+	_feedback.bus = "Interface"
+	_feedback.volume_db = -14.0
+	_feedback.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_feedback)
+	for cue in ["ready", "accepted", "rejected", "counter"]:
+		_cues[cue] = _cue(cue)
 	get_tree().node_added.connect(_on_node_added)
 	for b in get_tree().root.find_children("*", "BaseButton", true, false):
 		_on_node_added(b)
@@ -106,6 +126,8 @@ func _setup_buses() -> void:
 
 ## Plays a one-shot at a world position. `size` scales how far it carries.
 func play(name: String, at: Vector3, volume_db := 0.0, size := 1.0) -> void:
+	if name in ["rifle", "cannon", "explosion"] and at.distance_to(_focus) < 240.0:
+		_battle_hold = 18.0
 	# Many rifles firing in the same frame blend into one louder report.
 	var count: int = _recent.get(name, 0)
 	if count >= 4:
@@ -145,6 +167,38 @@ func engine_update(engine: AudioStreamPlayer3D, moving: bool, delta: float) -> v
 ## Listener on the ground at the camera focus, facing the camera's way.
 ## `coast` is the nearest shoreline point, where the surf plays from.
 func follow(focus: Vector3, camera: Camera3D, coast: Vector3) -> void:
+	_focus = focus
 	_recent.clear()
 	_listener.global_transform = Transform3D(camera.global_basis, focus + Vector3.UP * 2.0)
 	_surf.global_position = coast
+
+## Real-time crossfade, independent of 1×/4× simulation speed. Music mute and
+## volume still come from the shared Music bus; no player setting is changed.
+func _process(delta: float) -> void:
+	delta /= maxf(Engine.time_scale, 0.001)
+	_battle_hold = maxf(0.0, _battle_hold - delta)
+	_battle_mix = move_toward(_battle_mix, 1.0 if _battle_hold > 0.0 else 0.0, delta / 6.0)
+	if _music != null and _battle_music != null:
+		_music.volume_db = linear_to_db(maxf(0.0001, (1.0 - _battle_mix) * db_to_linear(-9.0)))
+		_battle_music.volume_db = linear_to_db(maxf(0.0001, _battle_mix * db_to_linear(-12.0)))
+
+func diplomatic_feedback(kind: String) -> void:
+	if _feedback != null and _cues.has(kind):
+		_feedback.stream = _cues[kind]
+		_feedback.play()
+
+static func _cue(kind: String) -> AudioStreamWAV:
+	var rate := 22050
+	var data := PackedByteArray()
+	data.resize(int(rate * 0.32) * 2)
+	var pitches: Array = {"ready": [440.0, 554.37], "accepted": [523.25, 659.25], "rejected": [392.0, 293.66], "counter": [440.0, 493.88]}[kind]
+	for i in range(data.size() / 2):
+		var t := float(i) / rate
+		var age := fmod(t, 0.16)
+		var env := smoothstep(0.0, 0.008, age) * exp(-age * 24.0) * (1.0 - smoothstep(0.12, 0.16, age))
+		data.encode_s16(i * 2, int(sin(TAU * float(pitches[mini(1, int(t / 0.16))]) * age) * env * 8000.0))
+	var wav := AudioStreamWAV.new()
+	wav.format = AudioStreamWAV.FORMAT_16_BITS
+	wav.mix_rate = rate
+	wav.data = data
+	return wav

@@ -11,6 +11,7 @@ var progress: ProgressBar
 var terms := {"res": "iron", "dir": "export", "qty": 25}
 var last_tick := 0
 var channel_widgets: Array = []
+var _feedback_signature := ""
 
 func setup(w: Node) -> void:
 	world = w
@@ -38,6 +39,7 @@ func setup(w: Node) -> void:
 
 func open(target: int) -> void:
 	nation = target
+	_feedback_signature = _signature()
 	show()
 	_refresh()
 
@@ -83,6 +85,14 @@ func _refresh() -> void:
 		_button(head, "Back to contact options", func(): _run(service.back_to_channels))
 	_button(head, "Close", hide)
 	_text(column, "%s  ·  Relations %+d  ·  %s" % [service.leader(nation), world.diplomacy.rel(0, nation), "AT WAR" if world.diplomacy.at_war(0, nation) else "Diplomatic relations"], 14, UI.MUTED)
+	var feedback := preload("res://scripts/contact_feedback.gd")
+	var feedback_state: Dictionary = feedback.state(s, current)
+	var ribbon := feedback.new()
+	column.add_child(ribbon)
+	ribbon.setup(feedback_state)
+	var signature := _signature()
+	if signature != _feedback_signature and feedback_state.cue != "": world.audio.diplomatic_feedback(feedback_state.cue)
+	_feedback_signature = signature
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 22)
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -159,6 +169,10 @@ func _refresh() -> void:
 		_channels()
 	last_tick = -1
 	_process(0)
+
+func _signature() -> String:
+	var s: Dictionary = service.session
+	return "%d:%s:%s:%d:%s" % [nation, str(s.get("phase", "")), str(s.get("channel", "")), s.get("results", []).size(), str(s.get("counter", {}).get("key", ""))]
 
 func _channels() -> void:
 	var notes := {"mediator": "A discreet intermediary. Especially useful for peace talks; two agenda items. No arms licensing or defence alliance.", "phone": "Fast, direct contact. Two agenda items; useful for practical agreements and crises.", "visit": "The host must consent. Travel time depends on distance. Four agenda items, strongest influence; defence alliances can be negotiated here."}

@@ -90,7 +90,7 @@ vec3 two_scale(sampler2D t, vec2 p, float near_detail) {
 vec3 two_scale_normal(sampler2D t, vec2 p, float near_detail) {
 	vec3 coarse = texture(t, p * far_tile, 1.5 * (1.0 - near_detail)).rgb;
 	vec3 n = near_detail < 0.01 ? coarse : mix(coarse, mix(texture(t, p * tile).rgb, coarse, 0.35), near_detail);
-	return mix(vec3(0.5, 0.5, 1.0), n, 0.08 + 0.72 * near_detail) * 2.0 - 1.0;
+	return mix(vec3(0.5, 0.5, 1.0), n, 0.025 + 0.65 * near_detail) * 2.0 - 1.0;
 }
 // Tangent-space normal -> world, for a surface whose texture axes are u and v.
 vec3 to_world(vec3 n_ts, vec3 n, vec3 u, vec3 v) {
@@ -126,7 +126,7 @@ void fragment() {
 	// Large-scale colour variation: meadows are never one flat green.
 	// Pull distant grass toward a broad meadow tone instead of magnifying
 	// photographic flecks with sharpening. Close-up ground keeps its detail.
-	albedo = mix(albedo, mix(albedo, vec3(0.32, 0.40, 0.20), 0.4), w.x * (1.0 - nd));
+	albedo = mix(albedo, vec3(0.32, 0.40, 0.20), w.x * (1.0 - nd) * 0.45);
 	// The grass photo is a bright spring lime; pull it toward a deeper summer green.
 	albedo = mix(albedo, albedo * vec3(0.82, 0.9, 0.7), w.x);
 	albedo *= mix(0.8, 1.1, macro);

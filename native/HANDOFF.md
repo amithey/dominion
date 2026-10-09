@@ -179,3 +179,11 @@ about 8 runs. The battle test passed 10 of 10 after the final fixes. The install
 - `districts.gd`: `main_building()` uses the kit when `Architecture.has_recipe(key)`; `residential()`
   builds townhouses and cottages. Farms, silos, the power plant and the other industry still use the
   older models and props.
+## 0.9.84 — follow-up to the open customer-report items (2026-10-09)
+- Terrain noise was partly an import bug: all eight terrain JPEG imports lacked mipmaps. Their explicit `.import` files are tracked despite the ignored copied asset directory. Preserve these when preparing/exporting assets.
+- Role markers in unit_overlay.gd group by screen cell, owner and role; selected entries are processed first. Do not key dictionaries by unit dictionaries. Refresh uses real time, not Engine.time_scale.
+- contact_feedback.gd presents phase/outcome without changing treaties. Audio cues use Interface; the new original battle_loop.wav shares Music and crossfades over six real seconds after nearby combat.
+- beginner_guide.gd action buttons use normal HUD commands and free-worker assignment. F1 can replay the guide. No automatic grants or construction completion.
+- campaign-expansion-check.gd: 110 checks, all 22 factions / 18 maps, four settlements, farm, continuation and in-memory save restore. Brazil builds slower: wait for real progress, not nominal buildTime.
+- report-polish-check.gd: 70 graphical checks including 1008x600 at 100% UI and runtime mipmap validation. playthrough-check.gd now suppresses player settings writes/autosave.
+- Report: native/REPORT-FOLLOWUP-2026-10-09.md. Build manifest and evidence: native/review/round5.

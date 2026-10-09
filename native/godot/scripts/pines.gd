@@ -25,25 +25,28 @@ static func mesh() -> ArrayMesh:
 	crown.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 17
-	var tiers := 5
+	var tiers := 7
 	for k in range(tiers):
 		var f := float(k) / tiers
 		var y0 := 0.14 + f * 0.7
 		var r := 0.34 * (1.0 - f * 0.78)
 		var rise := 0.26 * (1.0 - f * 0.4)
-		var n := 11
-		var tip := Vector3(0, y0 + rise, 0)
+		var n := 13
+		var tip := Vector3(rng.randf_range(-0.025, 0.025), y0 + rise, rng.randf_range(-0.025, 0.025))
+		# Shared, irregular boughs: neighbouring faces meet exactly. The old
+		# independently randomised endpoints left cracks between cone slices.
+		var rim: Array[Vector3] = []
+		for j in range(n):
+			var angle := TAU * j / n + k * 0.4
+			var radius := r * rng.randf_range(0.68, 1.12)
+			rim.append(Vector3(cos(angle) * radius, y0 - rng.randf_range(0.01, 0.075), sin(angle) * radius))
 		for i in range(n):
 			# A jagged skirt: every other point pushed out and down like a bough.
-			var a0 := TAU * i / n + k * 0.4
-			var a1 := TAU * (i + 1) / n + k * 0.4
-			var r0 := r * (1.0 if i % 2 == 0 else 0.72) * rng.randf_range(0.9, 1.1)
-			var r1 := r * (1.0 if (i + 1) % 2 == 0 else 0.72) * rng.randf_range(0.9, 1.1)
-			var p0 := Vector3(cos(a0) * r0, y0 - (0.05 if i % 2 == 0 else 0.0), sin(a0) * r0)
-			var p1 := Vector3(cos(a1) * r1, y0 - (0.05 if (i + 1) % 2 == 0 else 0.0), sin(a1) * r1)
+			var p0 := rim[i]
+			var p1 := rim[(i + 1) % n]
 			var nrm := (p1 - tip).cross(p0 - tip).normalized()
-			var dark := Color("2c4a2e")
-			var light := Color("5a8a48")
+			var dark := Color("344c36")
+			var light := Color("668361").lerp(Color("4f7050"), rng.randf())
 			for v in [[tip, dark], [p1, light], [p0, light]]:
 				crown.set_normal(nrm.lerp(Vector3.UP, 0.35).normalized())
 				crown.set_color(v[1])

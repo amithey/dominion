@@ -14,6 +14,7 @@ var base := {}
 var _title: Label
 var _detail: Label
 var _count: Label
+var _action: Button
 var _finished_at := -1.0
 var _clock := 0.0
 var steps: Array = []
@@ -70,6 +71,11 @@ func setup(w: Node, h: Node) -> void:
 	_detail.add_theme_font_size_override("font_size", 14)
 	_detail.add_theme_color_override("font_color", UI.TEXT)
 	col.add_child(_detail)
+	_action = Button.new()
+	_action.custom_minimum_size.y = 34
+	_action.focus_mode = Control.FOCUS_NONE
+	_action.pressed.connect(_take_action)
+	col.add_child(_action)
 	var skip := Button.new()
 	skip.text = "Skip the guide"
 	skip.focus_mode = Control.FOCUS_NONE
@@ -89,6 +95,7 @@ func _homes() -> int:
 	return _count_of("cottage", false) + _count_of("housing", false) + _count_of("residential", false) + _count_of("villageCenter", false) + _count_of("cityCenter", false)
 
 func _show() -> void:
+	_action.visible = step < steps.size()
 	if step >= steps.size():
 		_title.text = "You are under way"
 		_detail.text = "Next: a Barracks for troops, a Market to trade, a School for research. Your rivals are watching."
@@ -97,6 +104,22 @@ func _show() -> void:
 	_title.text = steps[step][0]
 	_detail.text = steps[step][1]
 	_count.text = "%d / %d" % [step + 1, steps.size()]
+	_action.text = ["Open Build · B", "Place a Farm", "Assign workers to the Farm", "Place Cottage Row", "Open Research · Y", "Open Diplomacy · G", "Try 2× speed"][step]
+
+## These buttons use the same commands as the normal HUD. Nothing is granted
+## or completed for the player, and repeat clicks never toggle a panel shut.
+func _take_action() -> void:
+	match step:
+		0: hud.set_production_open(true)
+		1: world.begin_placement("farm")
+		2:
+			var sites: Array = world.buildings.filter(func(b): return b.owner == 0 and b.key == "farm" and not b.built and not b.dead)
+			if not sites.is_empty(): world.resume_construction(sites[-1])
+		3: world.begin_placement("cottage")
+		4:
+			if hud._rs == null or not hud._rs.visible: hud.toggle_research()
+		5: hud.toggle_panel("diplomacy", true)
+		6: world.set_speed(2.0)
 
 func close() -> void:
 	finish()

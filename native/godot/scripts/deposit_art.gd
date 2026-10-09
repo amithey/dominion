@@ -16,7 +16,7 @@ extends RefCounted
 ## Each type's mesh is built once and shared; a site is two or three draws.
 
 const UI := preload("res://scripts/ui_theme.gd")
-const ICON_PX := 0.05   ## marker size with fixed_size (a fraction of the view height, about 26 px at 800)
+const ICON_PX := 0.028  ## quiet secondary landmarks, below the unit role badges
 const ICON := {"oil": "oil", "seaOil": "oil", "seaGas": "gas", "iron": "iron", "gold": "money", "diamond": "money",
 	"silicon": "silicon", "uranium": "uranium", "fish": "food"}
 
@@ -521,7 +521,7 @@ func _school() -> Node3D:
 func _icon(type: String, height: float) -> Node3D:
 	var root := Node3D.new()
 	root.name = "Icon"  # hidden while a building stands on the deposit (world.gd)
-	root.position = Vector3(0, height, 0)
+	root.position = Vector3(0, height * 0.65, 0)
 	var back := Sprite3D.new()
 	back.texture = _disc_texture()
 	back.billboard = BaseMaterial3D.BILLBOARD_ENABLED
