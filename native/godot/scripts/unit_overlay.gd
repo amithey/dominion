@@ -74,6 +74,37 @@ func _roles(font: Font) -> void:
 static func shortage_text(reason: String) -> String:
 	return {"fuel": "NO FUEL", "aviation fuel": "NO AVIATION FUEL", "ammunition budget": "NO AMMUNITION"}.get(reason, reason.to_upper())
 
+## A full district pad appears as soon as it is ordered. Explain what is
+## still being built without requiring the player to select every site.
+func construction_markers() -> Array:
+	var out := []
+	if world == null or world.camera == null: return out
+	for b in world.buildings:
+		if b.dead or b.built or b.owner != 0 or not b.root.is_visible_in_tree(): continue
+		if world.get("fog") != null and not world.fog.shows(b): continue
+		var at: Vector3 = b.root.position + Vector3.UP * 7.0
+		if world.camera.is_position_behind(at) or world.camera.global_position.distance_to(at) > FAR: continue
+		var screen: Vector2 = world.camera.unproject_position(at)
+		if not get_viewport_rect().has_point(screen): continue
+		var status := "BUILDING"
+		if int(b.get("builders", 0)) == 0 and not b.def.get("water", false):
+			var assigned: bool = world.units.any(func(u): return not u.dead and is_same(u.get("build_site"), b))
+			status = "WORKER EN ROUTE" if assigned else "NEEDS WORKER"
+		out.append({"at":screen, "status":status, "progress":clampf(float(b.progress), 0.0, 1.0)})
+	return out
+
+func _construction(font: Font) -> void:
+	for mark in construction_markers():
+		var text := "%s · %d%%" % [mark.status, mini(99, floori(mark.progress * 100.0))]
+		var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 16.0
+		var box := Rect2(mark.at - Vector2(width * 0.5, 20), Vector2(width, 24))
+		var accent := Color("e89a78") if mark.status == "NEEDS WORKER" else Color("e8c66a")
+		draw_rect(box.grow(1), Color("0b151e"))
+		draw_rect(box, Color("162833"))
+		draw_string(font, box.position + Vector2(8, 15), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, accent)
+		draw_rect(Rect2(box.position + Vector2(0, 21), Vector2(width, 3)), Color("33414b"))
+		draw_rect(Rect2(box.position + Vector2(0, 21), Vector2(width * mark.progress, 3)), accent)
+
 func _draw() -> void:
 	if world == null or world.camera == null:
 		return
@@ -82,6 +113,7 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	var fog = world.get("fog")
 	_roles(font)
+	_construction(font)
 	for u in world.units:
 		if u.dead or u.get("stowed", false) or not u.node.is_visible_in_tree():
 			continue

@@ -1,0 +1,94 @@
+{
+	"checks": 22,
+	"failed": 0,
+	"results": [
+		{
+			"check": "an unfinished owned site has a marker",
+			"passed": true
+		},
+		{
+			"check": "no assigned crew is explicit",
+			"passed": true
+		},
+		{
+			"check": "progress uses the actual building work",
+			"passed": true
+		},
+		{
+			"check": "assigned workers travelling to the site are distinguished",
+			"passed": true
+		},
+		{
+			"check": "a dead assigned worker does not count",
+			"passed": true
+		},
+		{
+			"check": "an active crew is building",
+			"passed": true
+		},
+		{
+			"check": "marine contractors do not ask for a land worker",
+			"passed": true
+		},
+		{
+			"check": "completed buildings lose the construction marker",
+			"passed": true
+		},
+		{
+			"check": "destroyed sites lose the construction marker",
+			"passed": true
+		},
+		{
+			"check": "enemy construction details are not exposed",
+			"passed": true
+		},
+		{
+			"check": "hidden sites are ignored",
+			"passed": true
+		},
+		{
+			"check": "fogged sites are ignored",
+			"passed": true
+		},
+		{
+			"check": "sites behind the camera are ignored",
+			"passed": true
+		},
+		{
+			"check": "distant construction does not clutter the map",
+			"passed": true
+		},
+		{
+			"check": "invalid negative progress is bounded",
+			"passed": true
+		},
+		{
+			"check": "over-complete progress is bounded",
+			"passed": true
+		},
+		{
+			"check": "a real starting campaign has a legal farm site",
+			"passed": true
+		},
+		{
+			"check": "normal starting funds pay for the actual farm",
+			"passed": true
+		},
+		{
+			"check": "a newly ordered farm shows its assigned worker travelling",
+			"passed": true
+		},
+		{
+			"check": "a real unattended farm asks for a worker",
+			"passed": true
+		},
+		{
+			"check": "real construction advances the live progress marker",
+			"passed": true
+		},
+		{
+			"check": "completing the actual farm removes the marker",
+			"passed": true
+		}
+	]
+}

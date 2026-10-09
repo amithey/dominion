@@ -187,3 +187,6 @@ about 8 runs. The battle test passed 10 of 10 after the final fixes. The install
 - campaign-expansion-check.gd: 110 checks, all 22 factions / 18 maps, four settlements, farm, continuation and in-memory save restore. Brazil builds slower: wait for real progress, not nominal buildTime.
 - report-polish-check.gd: 70 graphical checks including 1008x600 at 100% UI and runtime mipmap validation. playthrough-check.gd now suppresses player settings writes/autosave.
 - Report: native/REPORT-FOLLOWUP-2026-10-09.md. Build manifest and evidence: native/review/round5.
+- Follow-up source: resource_picking.gd resolves elevated markers in screen space before normal placement validation; click events refresh the preview using their actual position. resource-marker-check.gd: 39 checks, including real placement/payment.
+- unit_overlay.gd also shows owned unfinished sites' actual work and distinguishes active builders / travelling workers / no worker, excluding fog/hidden/finished/dead/enemy sites. Construction references use is_same. construction-feedback-check.gd: 22 graphical checks with normal starting funds.
+- performance-check.gd now uses wall-clock frame intervals and a fixed 1280x800 window without writing preferences. On Iris Xe, 11/12 budgets passed but rendered large battles remain about 8 FPS (slowest 1% 4). Do not claim the performance problem is fixed.
