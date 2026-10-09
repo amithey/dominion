@@ -183,6 +183,13 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 				continue
 			if u.node.position.distance_to(centre) < 70.0:
 				var defenders: Array = world.units.filter(func(d): return d.owner == n.id and available(d) and world.effectiveness(d,u)>0)
+				if defenders.is_empty():
+					# Nothing at home can hurt it (riflemen against a tank): it raises
+					# what can, at once, rather than watching the enemy at its gates.
+					var answer := _answer_to(n, u)
+					if answer != "" and float(n.money) >= weighted_cost(world.unit_defs[answer].get("cost", {})) and deploy(n.id, answer):
+						n.money -= weighted_cost(world.unit_defs[answer].get("cost", {}))
+						defenders = world.units.filter(func(d): return d.owner == n.id and available(d) and world.effectiveness(d,u)>0)
 				if not defenders.is_empty():
 					world.order_attack(defenders, u)
 					break
@@ -222,7 +229,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 			if squad.size() >= maxi(3, int(row(n).squad) - 2) and target != null:
 				world.order_move(squad, target.root.position, true)
 				if target.owner == 0:
-					world.hud.notice("%s forces are advancing!" % n.name)
+					world.hud.notice("%s forces are advancing on you." % n.name)
 			n.next_attack = minf(n.next_attack, float(row(n).firstAttack) * 0.35 / s)
 
 	# Missile strikes: a nation at full war with the player, with the
@@ -265,7 +272,7 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 	var platforms: Array = world.missiles.platforms_for(key, n.id)
 	var source: Dictionary = platforms[randi() % platforms.size()]
 	var m: Dictionary = world.missiles.fly(key, source.node.position + Vector3.UP * 3.0, target.root.position, n.id, not source.get("is_building", false))
-	world.hud.notice("%s launched a %s at your %s!" % [n.name, load("res://scripts/arsenal_catalog.gd").missile_name(world, n.id, key), target.def.name])
+	world.hud.notice("%s launched a %s at your %s." % [n.name, load("res://scripts/arsenal_catalog.gd").missile_name(world, n.id, key), target.def.name])
 	return m
 
 # Money-equivalent price (ai.js weights materials the AI does not stockpile).
@@ -275,6 +282,15 @@ func available(u: Dictionary) -> bool:
 func production_sites(owner: int, key: String) -> Array:
 	var home: String = load("res://scripts/force_catalog.gd").HOME.get(key, preload("res://scripts/additional_factions.gd").HOME.get(key, TRAINED_AT.get(key, "")))
 	return world.buildings.filter(func(b):return b.owner==owner and b.key==home and b.built and not b.dead and b.get("supplied",true) and not world.disabled(b))
+
+## The unit rival `n` raises against a threat its army cannot hurt: anti-armour
+## infantry against vehicles, air defence against aircraft, whichever its nation fields.
+func _answer_to(n: Dictionary, threat: Dictionary) -> String:
+	var options: Array = ["samLauncher", "aaVehicle", "manpads"] if threat.get("fly", false) else ["rocketSoldier", "atgmTeam", "tank"]
+	for key in options:
+		if world.unit_defs.has(key) and world.unit_allowed(n.id, key) and not production_sites(n.id, key).is_empty():
+			return key
+	return ""
 
 func deploy(owner: int, key: String) -> bool:
 	for site in production_sites(owner,key):

@@ -16,6 +16,8 @@ var _next := 0
 var _listener: AudioListener3D
 var _wind: AudioStreamPlayer
 var _surf: AudioStreamPlayer3D
+var _music: AudioStreamPlayer
+var _click: AudioStreamPlayer
 var _recent := {}  # name -> times played this frame, to cap stacked rifles
 
 func _ready() -> void:
@@ -50,8 +52,40 @@ func _ready() -> void:
 	_surf.bus = "SFX"
 	add_child(_surf)
 	_surf.play()
+	# Music (tools/make-music.gd): a quiet theme under the whole session, on its own bus.
+	_music = AudioStreamPlayer.new()
+	_music.stream = load("res://audio/music_loop.wav")
+	_music.bus = "Music"
+	_music.volume_db = -9.0
+	_music.process_mode = Node.PROCESS_MODE_ALWAYS   # it keeps playing in the pause menu
+	add_child(_music)
+	_music.play()
+	# A soft click on every button, wherever it is (the interface used to be silent).
+	_click = AudioStreamPlayer.new()
+	_click.stream = load("res://audio/ui_click.wav")
+	_click.bus = "Interface"
+	_click.volume_db = -14.0
+	_click.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_click)
+	get_tree().node_added.connect(_on_node_added)
+	for b in get_tree().root.find_children("*", "BaseButton", true, false):
+		_on_node_added(b)
+
+func _on_node_added(node: Node) -> void:
+	if node is BaseButton and not node.has_meta("clicks"):
+		node.set_meta("clicks", true)
+		node.pressed.connect(_play_click)
+
+func _play_click() -> void:
+	if _click != null and is_instance_valid(_click):
+		_click.play()
 
 func _setup_buses() -> void:
+	for extra in ["Music", "Interface"]:
+		if AudioServer.get_bus_index(extra) == -1:
+			AudioServer.add_bus()
+			AudioServer.set_bus_name(AudioServer.bus_count - 1, extra)
+			AudioServer.set_bus_send(AudioServer.bus_count - 1, "Master")
 	if AudioServer.get_bus_index("SFX") != -1:
 		return
 	AudioServer.add_bus()

@@ -227,12 +227,12 @@ func open_main() -> void:
 	var slots := list_saves()
 	var last := "No campaign saved yet."
 	if newest != "":
-		last = "Resume \"%s\", saved %s." % [newest.capitalize(), slots[0].date]
+		last = ("%s, saved %s." % [slots[0].about, slots[0].date]) if str(slots[0].about) != "" else ("Resume \"%s\", saved %s." % [newest.capitalize(), slots[0].date])
 	var continue_button := _entry("Continue", last, "land", func(): load_game(newest))
 	continue_button.disabled = newest == ""
 	_entry("Load Game", ("%d saved campaign%s." % [slots.size(), "" if slots.size() == 1 else "s"]) if not slots.is_empty() else "Nothing saved yet: F5 saves during a match.", "research", open_load)
 	_entry("Settings", "Graphics, full screen, sound and scrolling.", "menu", open_settings)
-	_entry("Quit", "Leave for the desktop.", "", func(): world.get_tree().quit())
+	_entry("Quit", "Leave for the desktop.", "quit", func(): world.get_tree().quit())
 	_show_dispatch()
 
 ## The tip card on the opening screen.
@@ -286,10 +286,26 @@ func open_pause() -> void:
 			close())
 		cheat.name = "CheatEverything"
 		cheat.tooltip_text = "For testing the game: every era and all your nation's research, $1,000,000 more and every store filled."
-	_button("Quit to Main Menu", func():
+	var to_menu := _button("Quit to Main Menu", func(): pass)
+	to_menu.pressed.connect(func():
+		if not _confirmed(to_menu, "Quit to Main Menu"): return
 		world.get_tree().paused = false
 		world.get_tree().reload_current_scene())
-	_button("Quit to Desktop", func(): world.get_tree().quit())
+	var to_desktop := _button("Quit to Desktop", func(): pass)
+	to_desktop.pressed.connect(func():
+		if not _confirmed(to_desktop, "Quit to Desktop"): return
+		world.get_tree().quit())
+
+## A second press within four seconds confirms leaving a campaign (it used to
+## leave at once, with no word about what had not been saved).
+func _confirmed(b: Button, label: String) -> bool:
+	if b.has_meta("armed") and Time.get_ticks_msec() - int(b.get_meta("armed")) < 4000:
+		return true
+	b.set_meta("armed", Time.get_ticks_msec())
+	b.text = "  Click again: unsaved progress is lost"
+	get_tree().create_timer(4.0, true).timeout.connect(func():
+		if is_instance_valid(b): b.text = "  " + label)
+	return false
 
 func save_campaign() -> void:
 	var base := "Campaign " + Time.get_datetime_string_from_system().replace("T", " ").replace(":", "-")
@@ -447,7 +463,7 @@ func _rival_pickers(parent: Control = null) -> void:
 	you.add_child(you_label)
 	var grid := GridContainer.new()
 	grid.name = "RivalGrid"
-	grid.columns = 1 if chosen.size() <= 2 else 2
+	grid.columns = 1 if chosen.size() <= 4 else 2   # up to three rivals in one tidy column (an odd one out sat alone)
 	grid.add_theme_constant_override("h_separation", 14)
 	grid.add_theme_constant_override("v_separation", 8)
 	(parent if parent != null else _panel).add_child(grid)
@@ -532,7 +548,7 @@ func _start_picker(slot: int) -> OptionButton:
 	var fixed: bool = not preload("res://scripts/map_generator.gd").is_generated(key)
 	var picker := OptionButton.new()
 	picker.name = "StartPicker%d" % slot
-	picker.custom_minimum_size = Vector2(118, 40)
+	picker.custom_minimum_size = Vector2(176, 40)
 	picker.fit_to_longest_item = false
 	picker.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	if fixed and slot == 0:
@@ -791,7 +807,7 @@ func open_load() -> void:
 		none.text = "No saved games yet. F5 saves during a match."
 		_panel.add_child(none)
 	for s in slots:
-		_option_card(s.name.capitalize(), "Saved %s" % s.date, func(): load_game(s.name))
+		_option_card(s.name.capitalize(), ("%s  ·  saved %s" % [s.about, s.date]) if str(s.about) != "" else "Saved %s" % s.date, func(): load_game(s.name))
 	_button("Back", open_pause if in_match else open_main)
 
 var settings_tab := "graphics"
@@ -962,6 +978,8 @@ func _settings_graphics() -> void:
 func _settings_sound() -> void:
 	_setting("Master volume", "Everything the game plays.", _slider(_bus_volume("Master"), 0, 100, 1, func(v): return "%d%%" % v, func(v): _set_bus_volume("Master", v)))
 	_setting("Battle and world sounds", "Guns, engines, explosions, wind and surf.", _slider(_bus_volume("SFX"), 0, 100, 1, func(v): return "%d%%" % v, func(v): _set_bus_volume("SFX", v)))
+	_setting("Music", "The theme that plays under the campaign and the menus.", _slider(_bus_volume("Music"), 0, 100, 1, func(v): return "%d%%" % v, func(v): _set_bus_volume("Music", v)))
+	_setting("Interface clicks", "A soft click when you press a button.", _slider(_bus_volume("Interface"), 0, 100, 1, func(v): return "%d%%" % v, func(v): _set_bus_volume("Interface", v)))
 
 func _settings_controls() -> void:
 	_setting("Scroll at the screen edge", "Move the camera by touching the edge of the screen with the mouse.", _switch(world.edge_scroll, func(v): world.edge_scroll = v))
@@ -1018,9 +1036,11 @@ func _reset_settings() -> void:
 	set_fullscreen(true)
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED)
 	Engine.max_fps = 0
-	world.show_fps = true
+	world.show_fps = false
 	_set_bus_volume("Master", 100.0)
 	_set_bus_volume("SFX", 100.0)
+	_set_bus_volume("Music", 100.0)
+	_set_bus_volume("Interface", 100.0)
 	world.edge_scroll = true
 	world.pan_speed = 1.0
 	if world.saves:
@@ -1064,9 +1084,39 @@ func list_saves() -> Array:
 		if file.ends_with(".json") and file != "test.json":
 			var name := file.get_basename()
 			var modified := FileAccess.get_modified_time("user://saves/" + file)
-			out.append({"name": name, "time": modified, "date": Time.get_datetime_string_from_unix_time(modified).replace("T", " ")})
+			out.append({"name": name, "time": modified, "date": when(modified), "about": _about("user://saves/" + file)})
 	out.sort_custom(func(a, b): return a.time > b.time)
 	return out
+
+## A save's time in words: "today at 17:48", "yesterday at 09:10", "3 days ago", "6 October".
+static func when(unix: int) -> String:
+	var bias := int(Time.get_time_zone_from_system().get("bias", 0)) * 60
+	var then := Time.get_datetime_dict_from_unix_time(unix + bias)
+	var now_unix := int(Time.get_unix_time_from_system())
+	var now := Time.get_datetime_dict_from_unix_time(now_unix + bias)
+	var day := func(d: Dictionary) -> int: return int(Time.get_unix_time_from_datetime_dict({"year": d.year, "month": d.month, "day": d.day})) / 86400
+	var days: int = day.call(now) - day.call(then)
+	var clock := "%02d:%02d" % [int(then.hour), int(then.minute)]
+	if days <= 0: return "today at " + clock
+	if days == 1: return "yesterday at " + clock
+	if days < 7: return "%d days ago" % days
+	return "%d %s" % [int(then.day), ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][int(then.month) - 1]]
+
+## Whose campaign a save holds: "United States · Industrial Era · year 3 · Easy".
+static func _about(path: String) -> String:
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null or f.get_length() > 8_000_000:
+		return ""
+	var data = JSON.parse_string(f.get_as_text())
+	if not (data is Dictionary) or not data.has("summary"):
+		return ""
+	var s: Dictionary = data.summary
+	var parts := PackedStringArray()
+	for k in ["nation", "era"]:
+		if str(s.get(k, "")) != "": parts.append(str(s[k]))
+	parts.append("year %d" % int(s.get("year", 1)))
+	if str(s.get("difficulty", "")) != "": parts.append(str(s.difficulty))
+	return "  ·  ".join(parts)
 
 func newest_save() -> String:
 	var slots := list_saves()
@@ -1088,11 +1138,14 @@ func load_settings() -> void:
 	set_fullscreen(bool(cfg.get_value("graphics", "fullscreen", true)))
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(float(cfg.get_value("audio", "volume", 100.0)), 0.1) / 100.0))
 	_set_bus_volume("SFX", float(cfg.get_value("audio", "effects", 100.0)))
+	_set_bus_volume("Music", float(cfg.get_value("audio", "music", 100.0)))
+	_set_bus_volume("Interface", float(cfg.get_value("audio", "clicks", 100.0)))
 	world.edge_scroll = bool(cfg.get_value("controls", "edge_scroll", true))
 	world.pan_speed = float(cfg.get_value("controls", "pan_speed", 1.0))
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if bool(cfg.get_value("graphics", "vsync", true)) else DisplayServer.VSYNC_DISABLED)
 	Engine.max_fps = int(cfg.get_value("graphics", "max_fps", 0))
-	world.show_fps = bool(cfg.get_value("graphics", "show_fps", true))
+	# The counter used to be on for everyone; settings saved before then turn it off once.
+	world.show_fps = bool(cfg.get_value("graphics", "show_fps", false)) if cfg.has_section_key("graphics", "fps_choice") else false
 	if world.saves:
 		world.saves.autosave_every = float(cfg.get_value("game", "autosave", 180.0))
 
@@ -1104,9 +1157,12 @@ func save_settings() -> void:
 	cfg.set_value("controls", "edge_scroll", world.edge_scroll)
 	cfg.set_value("controls", "pan_speed", world.pan_speed)
 	cfg.set_value("audio", "effects", _bus_volume("SFX"))
+	cfg.set_value("audio", "music", _bus_volume("Music"))
+	cfg.set_value("audio", "clicks", _bus_volume("Interface"))
 	cfg.set_value("graphics", "vsync", DisplayServer.window_get_vsync_mode() != DisplayServer.VSYNC_DISABLED)
 	cfg.set_value("graphics", "max_fps", Engine.max_fps)
 	cfg.set_value("graphics", "show_fps", world.show_fps)
+	cfg.set_value("graphics", "fps_choice", true)
 	cfg.set_value("graphics", "ui_scale", world.ui_scale)
 	if world.saves:
 		cfg.set_value("game", "autosave", world.saves.autosave_every)

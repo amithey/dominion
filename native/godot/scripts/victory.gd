@@ -80,7 +80,7 @@ func _track(owner: int, holds: bool, since: Dictionary, hold: float, path: Strin
 	if not since.has(owner):
 		since[owner] = w.game_time
 		var what: String = ("%s %s %d%% of the land" % [who, "hold" if owner == 0 else "holds", roundi(LAND_SHARE * 100)]) if path == "dominance" else ("%s %s the summit of technology" % [who, "have reached" if owner == 0 else "has reached"])
-		w.hud.notice("%s: %s wins a %s victory in %d minutes%s" % [what.to_upper() if owner > 0 else what, "you" if owner == 0 else who, path, int(hold / 60.0), " if you hold on." if owner == 0 else " unless stopped!"])
+		w.hud.notice("%s: %s wins a %s victory in %d minutes%s" % [what.to_upper() if owner > 0 else what, "you" if owner == 0 else who, path, int(hold / 60.0), " if you hold on." if owner == 0 else " unless stopped."])
 		return
 	if w.game_time - float(since[owner]) >= hold:
 		_win(owner, path)

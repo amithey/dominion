@@ -51,7 +51,7 @@ static func _compute(sp, a) -> void:
 	if a.chip_factor(0) < 1.0:
 		sp._wrap(card, "Data centres at %d%%: %s." % [roundi(a.chip_factor(0) * 100.0), "export controls on you" + (" (smuggling)" if a.smuggling.has(0) else "") if a.controlled(0) else "a global chip shortage"], 12, hud.UI.BAD)
 	if float(a.st[0].rate) <= 0.0:
-		sp._wrap(card, "No compute yet: research Machine Learning and build an AI Data Center.", 12)
+		sp._wrap(card, "No compute yet: research Machine Learning and build an AI Data Centre.", 12)
 	var split: VBoxContainer = hud._card()
 	split.add_child(hud._text("Compute allocation", 15, hud.UI.CREAM, true))
 	for pool in a.POOLS:

@@ -239,7 +239,7 @@ var land_marks: MeshInstance3D
 var cam_lift := 0.0       # raises the camera's look-at point above the ground (captures)
 var edge_scroll := true   # pan when the mouse touches the screen edge (Settings)
 var pan_speed := 1.0      # camera pan speed multiplier (Settings)
-var show_fps := true      # the frame counter in the corner (Settings)
+var show_fps := false     # the frame counter in the corner (Settings; off for players)
 var middle_drag := false  # the middle mouse button turns the view (with Shift: drags the map)
 var order_mode := ""
 const MatchSetup := preload("res://scripts/match_setup.gd")
@@ -5421,19 +5421,23 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 
 func show_building_damage(b: Dictionary) -> void:
 	if not is_instance_valid(b.get("damage_label")):
+		# A small, calm tag over the roof (it used to be a large orange caption
+		# that covered the battle).
 		var label := Label3D.new()
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		label.no_depth_test = true
-		label.font_size = 40
-		label.pixel_size = 0.025
-		label.outline_size = 9
-		label.position = Vector3(0,10.0,0)
+		label.font_size = 34
+		label.pixel_size = 0.022
+		label.outline_size = 8
+		label.outline_modulate = Color(0.04, 0.07, 0.1, 0.9)
+		label.position = Vector3(0, 12.0, 0)
 		b.root.add_child(label)
 		b.damage_label = label
 	if b.get("damage_fade") != null and b.damage_fade.is_valid():
 		b.damage_fade.kill()
-	b.damage_label.text = "%s  %d%%" % [b.def.name,ceili(100.0*maxf(0,b.hp)/b.max_hp)]
-	b.damage_label.modulate = Color("f1b86a")
+	var share: float = maxf(0.0, b.hp) / maxf(1.0, b.max_hp)
+	b.damage_label.text = "%s  %d%%" % [b.def.name, ceili(100.0 * share)]
+	b.damage_label.modulate = Color("9fd89a") if share > 0.6 else (Color("f1c86a") if share > 0.3 else Color("f08a6e"))
 	b.damage_fade = create_tween()
 	b.damage_fade.tween_interval(3.0)
 	b.damage_fade.tween_property(b.damage_label,"modulate:a",0.0,1.0)

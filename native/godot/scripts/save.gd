@@ -104,6 +104,7 @@ func capture() -> Dictionary:
 		"match_config":world.match_config.duplicate(),
 		"engagement":{"operations":world.engagement.operations.duplicate(),"incidents":world.engagement.incidents.duplicate(),"policy":world.engagement.policy},
 		"date": Time.get_datetime_string_from_system(), "quality": world.quality,
+		"summary": {"nation": world.diplomacy.name_of(0), "era": world.research.eras[world.research.era].name if world.research else "", "year": 1 + int(world.game_time / 720.0), "difficulty": str(world.match_difficulty).capitalize()},
 		"economy": {"res": world.economy.res, "civilians": world.economy.civilians, "garrison": world.economy.garrison,
 			"military_spending": world.economy.military_spending.duplicate()},
 		"buildings": buildings, "units": units, "edges": edges,

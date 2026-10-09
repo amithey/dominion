@@ -273,7 +273,7 @@ func _build_top_bar() -> void:
 		var button := Button.new()
 		button.icon = UI.icon("sovereign" if b[0] == "cabinet" else b[0])
 		button.expand_icon = true
-		button.custom_minimum_size = Vector2(104, 48)
+		button.custom_minimum_size = Vector2({"diplomacy": 118, "territory": 112, "research": 110}.get(b[0], 104), 48)
 		button.text = {"cabinet":"Cabinet", "research":"Research", "diplomacy":"Diplomacy", "market":"Market", "intel":"Intel", "defence":"Defence", "un":"UN", "land":"Territory", "log":"Log", "menu":"Menu"}[b[0]]
 		button.add_theme_font_size_override("font_size", 14)
 		button.add_theme_constant_override("icon_max_width", 22)
@@ -805,6 +805,28 @@ func _build_minimap() -> void:
 	_fps.z_index = 1
 	_fps.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(_fps)
+	# Idle workers, above the minimap: one click selects them and brings the
+	# camera to the first (a builder standing about used to go unnoticed).
+	_idle_button = Button.new()
+	_idle_button.name = "IdleWorkers"
+	_idle_button.anchor_left = 1.0
+	_idle_button.anchor_right = 1.0
+	_idle_button.anchor_top = 1.0
+	_idle_button.anchor_bottom = 1.0
+	# Beside the minimap's foot: clear of the production list above it.
+	_idle_button.offset_left = -MINI - 24 - 196
+	_idle_button.offset_right = -MINI - 24 - 10
+	_idle_button.offset_top = -50
+	_idle_button.offset_bottom = -14
+	_idle_button.icon = UI.icon("build")
+	_idle_button.expand_icon = true
+	_idle_button.add_theme_constant_override("icon_max_width", 18)
+	_idle_button.add_theme_font_size_override("font_size", 13)
+	_idle_button.focus_mode = Control.FOCUS_NONE
+	_idle_button.tooltip_text = "Workers with nothing to do: click to select them. Then right-click a site to build."
+	_idle_button.visible = false
+	_idle_button.pressed.connect(select_idle_workers)
+	add_child(_idle_button)
 
 func _build_help() -> void:
 	_help = PanelContainer.new()
@@ -868,9 +890,90 @@ func toggle_help() -> void:
 
 # ---------------------------------------------------------------- refresh
 
+var _idle_button: Button
+var hover_probe := Vector2.INF   # tests and screenshots: a point to hover instead of the mouse
+
+## What the hover tag says about unit `u`: its name, whose it is, its health.
+func hover_text(u: Dictionary) -> String:
+	var who: String = "Yours" if int(u.owner) == 0 else world.diplomacy.name_of(int(u.owner))
+	var name: String = preload("res://scripts/national_variants.gd").name_for(world, int(u.owner), u.key)
+	return " %s  ·  %s  ·  %d / %d " % [name, who, int(maxf(u.hp, 0.0)), int(u.max_hp)]
+
+## The visible unit nearest `mouse` on screen (within 22 px), or null.
+func unit_at_screen(mouse: Vector2) -> Variant:
+	var cam: Camera3D = get_viewport().get_camera_3d()
+	if cam == null:
+		return null
+	var best = null
+	var best_d := 22.0
+	for u in world.units:
+		if u.dead or not u.node.visible or u.get("stowed", false):
+			continue
+		if cam.is_position_behind(u.node.position):
+			continue
+		var p: Vector2 = cam.unproject_position(u.node.position + Vector3.UP * (1.0 if u.get("fly", false) else 0.8))
+		var dd := p.distance_to(mouse)
+		if dd < best_d:
+			best_d = dd
+			best = u
+	return best
+
+func idle_workers() -> Array:
+	return world.units.filter(func(u): return u.owner == 0 and not u.dead and u.key == "worker" and u.get("build_site") == null and u.get("target") == null and u.get("build_queue", []).is_empty())
+
+func select_idle_workers() -> void:
+	var idle := idle_workers()
+	if idle.is_empty():
+		return
+	world.select_building(null)
+	for u in world.units:
+		u.selected = false
+	for u in idle:
+		u.selected = true
+	world.cam_focus = idle[0].node.position
+	notice("%d idle worker%s selected: right-click an unfinished building to send them." % [idle.size(), "" if idle.size() == 1 else "s"])
+
+## The unit under the mouse, named in a small tag beside the cursor (players
+## had no way to tell an enemy rifleman from an engineer without selecting it).
+var _hover_tag: Label
+var _hover_t := 0.0
+func _hover_unit(delta: float) -> void:
+	_hover_t += delta
+	if _hover_t < 0.12:
+		return
+	_hover_t = 0.0
+	if _hover_tag == null:
+		_hover_tag = _text("", 13, UI.CREAM)
+		_hover_tag.name = "HoverTag"
+		var bg := UI.box(Color(0.05, 0.09, 0.14, 0.88), Color(0.85, 0.76, 0.54, 0.6), 1, 6, 4.0)
+		_hover_tag.add_theme_stylebox_override("normal", bg)
+		_hover_tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_hover_tag.z_index = 50
+		add_child(_hover_tag)
+	var mouse: Vector2 = get_viewport().get_mouse_position() if hover_probe == Vector2.INF else hover_probe
+	var over_ui: bool = get_viewport().gui_get_hovered_control() != null and hover_probe == Vector2.INF
+	var best = null if over_ui or world.placing != "" else unit_at_screen(mouse)
+	if best == null:
+		_hover_tag.visible = false
+		return
+	_hover_tag.text = hover_text(best)
+	_hover_tag.add_theme_color_override("font_color", UI.CREAM if int(best.owner) == 0 else (UI.BAD if world.diplomacy.at_war(0, int(best.owner)) else UI.TEXT))
+	_hover_tag.reset_size()
+	var at := mouse + Vector2(16, 18)
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	at.x = minf(at.x, view.x - _hover_tag.size.x - 8.0)
+	at.y = minf(at.y, view.y - _hover_tag.size.y - 8.0)
+	_hover_tag.position = at
+	_hover_tag.visible = true
+
 func _process(delta: float) -> void:
 	if economy == null:
 		return
+	_hover_unit(delta)
+	if _idle_button != null and _refresh + delta >= 0.25:
+		var idle := idle_workers().size()
+		_idle_button.visible = idle > 0
+		_idle_button.text = "Idle workers: %d" % idle
 	_refresh += delta
 	if _refresh < 0.25:
 		return
@@ -949,7 +1052,7 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 	_extra.citizens[0].text = "%d/%d" % [int(economy.civilians), int(economy.civ_cap)]
 	if world.research:
 		_extra.research[0].text = "%d  +%.1f" % [int(world.research.points), world.research.rate]
-		_era.text = "%s  ·  YEAR %d" % [world.research.eras[world.research.era].name.to_upper(), 1 + int(world.game_time / 720.0)]
+		_era.text = "%s  ·  YEAR %d  ·  %s" % [world.research.eras[world.research.era].name.to_upper(), 1 + int(world.game_time / 720.0), ["SPRING", "SUMMER", "AUTUMN", "WINTER"][int(world.game_time / 180.0) % 4]]
 		_era.tooltip_text = "%s · each season lasts 3 minutes. Winter homes consume natural gas." % ["Spring", "Summer", "Autumn", "Winter"][int(world.game_time / 180.0) % 4]
 	if world.territory:
 		_extra.land[0].text = str(world.territory.yields(0).cells)
@@ -1190,6 +1293,11 @@ func _update_selection() -> void:
 	for button in _commands.values():
 		button.visible = transport_text==""
 	_commands["Buy land"].visible = hall and transport_text==""
+	# Orders for an army only appear with an army selected: a selected barracks
+	# used to offer Attack-move and Bombard, greyed out but there.
+	_commands["Attack-move"].visible = _commands["Attack-move"].visible and not own_units.is_empty()
+	_commands["Bombard"].visible = _commands["Bombard"].visible and not own_units.is_empty()
+	_commands["Repair"].visible = _commands["Repair"].visible and (not own_units.is_empty() or not _commands["Repair"].disabled)
 	_sel_stats.visible = false
 	_launch_row.visible = false
 	if transport_text != "":
@@ -1258,13 +1366,14 @@ func _update_selection() -> void:
 		_medal_owner(units[0].owner)
 		var lead: Dictionary = units.filter(func(u): return u.key == main)[0]
 		# Attack after research and the nation's own system; accuracy from its fire control.
-		_show_stats({"ATTACK": "%d" % int(round(float(lead.dmg) * world.research.damage_mult(lead))), "ACCURACY": "%d%%" % int(round(100.0 * float(lead.get("accuracy", 1.0)))), "RANGE": "%d m" % int(lead.range),
-			"SPEED": "%.1f" % float(lead.speed), "HEALTH": "%d%%" % int(round(100.0 * hp / maxf(max_hp, 1.0)))})
+		_show_stats({"ATTACK": "%d" % int(round(float(lead.dmg) * world.research.damage_mult(lead))), "ACCURACY": "%d%%" % mini(100, int(round(100.0 * float(lead.get("accuracy", 1.0))))), "RANGE": "%d m" % int(lead.range),
+			"SPEED": "%.1f m/s" % float(lead.speed), "HEALTH": "%d%%" % int(round(100.0 * hp / maxf(max_hp, 1.0)))})
 		var name: String = world.unit_defs.get(main, {}).get("name", main)
 		_sel_title.text = UI.caps(name if units.size() == 1 else "%d units" % units.size())
 		var parts := PackedStringArray()
 		for k in counts:
-			parts.append("%d %s" % [counts[k], world.unit_defs.get(k, {}).get("name", k)])
+			var unit_name: String = world.unit_defs.get(k, {}).get("name", k)
+			parts.append(unit_name if int(counts[k]) == 1 else "%d %s" % [counts[k], unit_name if unit_name.ends_with("s") else unit_name + "s"])
 		_sel_sub.text = ", ".join(parts)
 		_sel_hp.visible = true
 		_sel_hp.max_value = max_hp
@@ -1729,9 +1838,11 @@ func _fit_window(keep_scroll: int, revision := -1) -> void:
 func _settle_side_scroll(keep_scroll: int, revision: int) -> void:
 	# Removing old rows briefly leaves an empty scroll range. Multiple live
 	# refreshes must retain the requested position until layout has settled.
+	if not is_inside_tree(): return   # the match was closed meanwhile
 	await get_tree().process_frame
+	if not is_inside_tree(): return
 	await get_tree().process_frame
-	if revision != _side_revision: return
+	if revision != _side_revision or not is_instance_valid(_win_scroll): return
 	_win_scroll.scroll_vertical = keep_scroll
 	_side_scroll_pending = -1
 
@@ -1897,9 +2008,13 @@ func _standing_orders() -> void:
 		_label(card, "Operations under way: " + "   ".join(running), UI.BRIGHT, 13)
 
 func _declare(id: int) -> String:
-	world.diplomacy.declare_war(0, id)
+	var d: Node = world.diplomacy
+	var allies: Array = range(1, d.n).filter(func(i): return i != id and not d.defeated(i) and d.allied(i, id)) if d.has_method("allied") else []
+	choose("DECLARE WAR", "Go to war with %s?%s Relations with the world will suffer, and the Security Council may take it up." % [d.name_of(id), (" Its allies may join it: %s." % ", ".join(PackedStringArray(allies.map(func(i): return d.name_of(i))))) if not allies.is_empty() else ""],
+		[["Cancel", "", func(): pass], ["Declare war", "bad", func(): d.declare_war(0, id)]])
 	return ""
 
+const LETTER_SECONDS := 60.0
 ## A foreign government's proposal, as a letter in the middle of the screen.
 func ask(text: String, accept: Callable, decline: Callable, title := "FOREIGN OFFICE") -> void:
 	_letters.append([text, accept, decline, title, []])
@@ -1955,6 +2070,34 @@ func _show_letter() -> void:
 	buttons.alignment = BoxContainer.ALIGNMENT_END
 	var strike: bool = letter[3]=="AUTHORIZE STRIKE"
 	var answers: Array = letter[4] if letter.size() > 4 else []
+	# A letter from abroad does not wait for ever: it used to stay on the screen
+	# all game. After a minute of game time a yes-or-no letter is refused; a
+	# letter with several answers is set aside. Your own decisions (a strike to
+	# authorise, a war to declare) wait for you.
+	var own_decision: bool = strike or letter[3] in ["DECLARE WAR", "NUCLEAR RELEASE", "CLEARING THE SITE"] or str(letter[0]).begins_with("The route crosses")
+	if not own_decision:
+		var box := _letter_box
+		var several: bool = not answers.is_empty()
+		var clock := _text("Reply within 60 s: %s." % ("or it is set aside" if several else "no answer counts as a refusal"), 12, UI.MUTED)
+		column.add_child(clock)
+		column.move_child(clock, column.get_child_count() - 2)
+		var timer := Timer.new()
+		timer.wait_time = LETTER_SECONDS
+		timer.one_shot = true
+		box.add_child(timer)
+		var decline: Callable = letter[2]
+		timer.timeout.connect(func():
+			if _letter_box != box:
+				return
+			if not several:
+				decline.call()
+			_letter_box.queue_free()
+			_letter_box = null
+			notice("No answer was sent: %s" % str(letter[0]).trim_suffix(".").to_lower().left(90) + (" - set aside." if several else " - taken as a refusal."))
+			refresh_diplomacy()
+			_show_letter())
+		timer.start()
+		box.set_meta("expires", timer)
 	if answers.is_empty():
 		answers = [["Cancel" if strike else "Decline", "bad", letter[2]], ["Authorize" if strike else "Accept", "good", letter[1]]]
 	for answer in answers:
@@ -2042,6 +2185,8 @@ func show_end(title: String, subtitle: String) -> void:
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	var menu := Button.new()
 	menu.text = "Main menu"
+	menu.custom_minimum_size = Vector2(170, 44)
+	menu.add_theme_font_size_override("font_size", 16)
 	menu.focus_mode = Control.FOCUS_ALL
 	menu.pressed.connect(func():
 		world.get_tree().paused = false
@@ -2049,6 +2194,8 @@ func show_end(title: String, subtitle: String) -> void:
 	buttons.add_child(menu)
 	var stay := Button.new()
 	stay.text = "Continue playing"
+	stay.custom_minimum_size = Vector2(190, 44)
+	stay.add_theme_font_size_override("font_size", 16)
 	stay.focus_mode = Control.FOCUS_ALL
 	stay.pressed.connect(func():
 		world.continue_after_end()

@@ -487,10 +487,11 @@ func enemy_attempt(force_outcome := "") -> String:
 			world.market.sabotaged += 1
 			text = "%s saboteurs are working your shipping lanes: your next cargo will not arrive. Warships and counter-intelligence help." % name
 		elif r < 0.7:
-			world.research.add_points(-70.0)
+			var lost: float = minf(70.0, world.research.points)
+			world.research.add_points(-lost)
 			if nat:
 				nat.tech = float(nat.get("tech", 0.0)) + 0.5
-			text = "%s stole your research data (-70 research)!" % name
+			text = ("%s agents stole your research data (-%d research)." % [name, int(lost)]) if lost >= 1.0 else ("%s agents searched your laboratories: they copied your designs, but you had no research points to lose." % name)
 		else:
 			var t = _random_building(0)
 			if t != null:

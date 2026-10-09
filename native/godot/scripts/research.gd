@@ -458,10 +458,10 @@ func era_requirements(index: int) -> Array:
 		var label: String = key
 		match key:
 			"villages":
-				label = "Village Centers"
+				label = "Village Centres"
 				have = eco.standing("villageCenter")  # linked to the capital or not
 			"cities":
-				label = "City Centers"
+				label = "City Centres"
 				have = eco.standing("cityCenter")
 			"buildings":
 				label = "Buildings"

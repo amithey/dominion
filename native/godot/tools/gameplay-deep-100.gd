@@ -185,6 +185,9 @@ func run() -> void:
 	red.tech = 6.5
 	red.money = 5000.0
 	red.next_missile = 0.0
+	# A rival fires from a Missile Silo of its own (arsenal_catalog.gd platforms_for).
+	if not w.buildings.any(func(x): return x.owner == red.id and x.key == "missileSilo" and not x.dead):
+		w.place_building("missileSilo", w.test_site("missileSilo", red_hq.root.position + Vector3(50, 0, -50)), red.id, true)
 	var flying0: int = w.missiles.flying.filter(func(m): return int(m.owner) == red.id).size()
 	sim(1.0)
 	check(w.missiles.flying.filter(func(m): return int(m.owner) == red.id).size() > flying0, "at war and with the technology, a rival fires missiles at you")
@@ -509,13 +512,20 @@ func run() -> void:
 	var border := -1
 	var home1: Vector3 = hq(1).root.position
 	for i in range(t.owner_of.size()):
-		if t.owner_of[i] == 1 and t.center(i).distance_to(home1) > 60.0 and t.center(i).distance_to(home1) < 140.0:
+		# (land out of town: inside it, the nation's buildings rightly outweigh eight tanks)
+		if t.owner_of[i] == 1 and t.center(i).distance_to(home1) > 35.0 and t.center(i).distance_to(home1) < 160.0 and not w.buildings.any(func(b): return b.owner == 1 and not b.dead and b.root.position.distance_to(t.center(i)) < 25.0) and w.height_at(t.center(i).x, t.center(i).z) > 1.5 and w.normal_at(t.center(i).x, t.center(i).z).y > 0.9:
 			border = i
 			break
+	check(border >= 0, "the rival holds open land to contest (cell %d)" % border)
 	if border >= 0:
 		var c0: float = float(t.control[border])
 		var army := []
 		for k in range(8): army.append(w.spawn_unit("tank", dry(t.center(border) + Vector3((k % 4) * 3.0, 0, (k / 4) * 3.0)), 0))
+		# (the tanks may stand one cell over, where the ground is drivable: watch that cell)
+		var stood: int = t.cell_of(army[0].node.position)
+		if t.owner_of[stood] == 1:
+			border = stood
+			c0 = float(t.control[border])
 		# (armed: only a force that can fight holds ground; no battle runs here, only the land's tick)
 		for i in range(40): t.tick()
 		check(t.owner_of[border] == 0 or float(t.control[border]) < c0, "an army standing in a rival's land wears its hold down (%d -> %d%s)" % [int(c0), int(t.control[border]), ", taken" if t.owner_of[border] == 0 else ""])

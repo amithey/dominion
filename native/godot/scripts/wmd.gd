@@ -650,7 +650,7 @@ func _ai_use() -> void:
 			continue
 		n.wmd_at = w.game_time
 		w.missiles.fly(key, platforms[0].node.position + Vector3.UP * 3.0, target, owner)
-		w.hud.notice("%s has fired %s at your %s!" % [d.name_of(owner), MISSILES[key].name.to_lower(), "town" if key == "bioweapon" else "troops"])
+		w.hud.notice("%s has fired %s at your %s." % [d.name_of(owner), MISSILES[key].name.to_lower(), "town" if key == "bioweapon" else "troops"])
 	# A threshold state at war may break out (cbrn_data.THRESHOLD).
 	for n in w.ai.nations:
 		var owner: int = int(n.id)

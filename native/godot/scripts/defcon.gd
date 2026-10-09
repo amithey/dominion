@@ -303,7 +303,7 @@ func _strike(owner: int, why: String, key := "nuke") -> void:
 	for n in w.ai.nations:
 		if int(n.id) == owner: n.nuked_at = w.game_time
 	w.missiles.fly(key, from + Vector3.UP * 3.0, target.root.position, owner)
-	w.hud.notice("NUCLEAR LAUNCH DETECTED: %s has fired a %s at your %s (%s)! Air defence may stop it." % [d.name_of(owner), w.missiles.def_of(key).get("name", "nuclear missile").to_lower(), target.def.name, why])
+	w.hud.notice("NUCLEAR LAUNCH DETECTED: %s has fired a %s at your %s (%s). Air defence may stop it." % [d.name_of(owner), w.missiles.def_of(key).get("name", "nuclear missile").to_lower(), target.def.name, why])
 
 func capture() -> Dictionary:
 	var p := {}

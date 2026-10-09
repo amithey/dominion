@@ -217,7 +217,7 @@ func run() -> void:
 	r.era = 0
 	check(r.eras[0].name == "Founding Era", "the nation starts in the Founding Era")
 	var req1: Array = r.era_requirements(1)
-	check(req1.size() == 2 and req1.any(func(x): return x[0] == "Village Centers"), "the Regional Era asks for a village and buildings (%s)" % str(req1.map(func(x): return x[0])))
+	check(req1.size() == 2 and req1.any(func(x): return x[0] == "Village Centres"), "the Regional Era asks for a village and buildings (%s)" % str(req1.map(func(x): return x[0])))
 	put("villageCenter")
 	for i in range(8): put("cottage")
 	var money1: float = eco.res.money
@@ -228,7 +228,7 @@ func run() -> void:
 	var opened: int = r.discoveries.keys().filter(func(k): return r.era_of(k) == 1).size()
 	check(opened >= 5 and r.blocker("irrigation") != "Needs the Regional Era", "and opens its discoveries (%d)" % opened)
 	var req2: Array = r.era_requirements(2)
-	check(req2.map(func(x): return x[0].split(" (")[0]).has("Citizens") and req2.any(func(x): return x[0] == "City Centers") and req2.any(func(x): return x[0] == "Discoveries"), "the Urban Era asks for a city, citizens and discoveries")
+	check(req2.map(func(x): return x[0].split(" (")[0]).has("Citizens") and req2.any(func(x): return x[0] == "City Centres") and req2.any(func(x): return x[0] == "Discoveries"), "the Urban Era asks for a city, citizens and discoveries")
 	eco.civ_cap = 100.0
 	check(r.era_requirements(2).any(func(x): return x[0].contains("homes for")), "short of homes, the goal says what to build")
 	r.era = 1

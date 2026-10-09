@@ -905,3 +905,15 @@ UI files listed above.
 - 2026-10-09 Claude, round 3 setup: to avoid your staged 0.9.80, I fix in a separate worktree C:\Users\heyma\STgame-r3 (branch r3-customer) based on a snapshot of your staged index (commit 2002727, not on main). Nothing in this folder or the index is touched. When you commit 0.9.80, I rebase my fixes onto it and release 0.9.81.
 
 - 2026-10-09 Codex final 0.9.81: user confirmed the square leader photo above its round ring. HUD now clips the portrait to a disc, keeps the national ring and Cabinet click. Verified actual EXE visually; leader identity 57, menus 52, customer round 2 graphical 100, save recovery 49, separate campaign saves 4 and packed EXE UI 32 passed. Save Game creates a new timestamped campaign slot; F5 retains QuickSave. Both dist executable and installer rebuilt at 0.9.81. Browser edits remain outside this native commit.
+- 2026-10-09 Claude, 0.9.82 (customer round 3, on top of your 0.9.81):
+  - hud.gd: letters lapse after LETTER_SECONDS (your strike, war, nuclear release, site clearing and passage
+    letters exempt). _declare asks via choose("DECLARE WAR"). Hover tag: unit_at_screen/hover_text/hover_probe.
+    Idle workers button: idle_workers/select_idle_workers. Season in _era. Command visibility for buildings,
+    plural names. A guard in _settle_side_scroll.
+  - menu.gd: when()/_about() for saves, _confirmed() for quitting, Music/Interface sliders, fps_choice
+    migration, quit icon.
+  - New files: audio.gd buses "Music" and "Interface"; scripts/house_style.gd (British spelling, applied from
+    modern_warfare.apply); tools/make-music.gd (audio/music_loop.wav, ui_click.wav); tools/customer-round3-100.gd.
+  - ai.gd: _answer_to raises an anti-armour or air-defence unit when nothing at home can hurt a threat.
+  - gameplay-deep-100: three stale fixture assumptions fixed (a rival's silo, land outside town, the cell the
+    tanks stand in); it now passes 104/104.

@@ -119,13 +119,13 @@ const TREATIES := {
 
 const DISCOVERIES := {
 	"machineLearning": {"name": "Machine Learning", "cost": 500, "branch": "hightech", "era": 3, "reqDiscovery": "microchips", "reqBuilding": "techPark", "fx": {},
-		"desc": "Models trained on your nation's data. Your industry starts producing compute, the AI level can reach 2, and you can build AI Data Centers. Opens the Human-on-the-loop doctrine and AI cyber campaigns (with Cyber Warfare)."},
+		"desc": "Models trained on your nation's data. Your industry starts producing compute, the AI level can reach 2, and you can build AI Data Centres. Opens the Human-on-the-loop doctrine and AI cyber campaigns (with Cyber Warfare)."},
 	"militaryAI": {"name": "Military AI", "cost": 800, "branch": "hightech", "era": 4, "reqDiscovery": "machineLearning", "reqBuilding": "aiDataCenter", "fx": {},
-		"desc": "The AI level can reach 3. Unlocks the Targeting Fusion Cell; loitering munitions and interceptor drones pick their own targets; opens the Human-out-of-the-loop doctrine. Requires an AI Data Center."},
+		"desc": "The AI level can reach 3. Unlocks the Targeting Fusion Cell; loitering munitions and interceptor drones pick their own targets; opens the Human-out-of-the-loop doctrine. Requires an AI Data Centre."},
 	"frontierModels": {"name": "Frontier Models", "cost": 1300, "branch": "hightech", "era": 5, "reqDiscovery": "militaryAI", "reqBuilding": "aiDataCenter", "fx": {},
-		"desc": "The largest models: the AI level can reach 4, and every AI effect grows with it. Requires an AI Data Center."},
+		"desc": "The largest models: the AI level can reach 4, and every AI effect grows with it. Requires an AI Data Centre."},
 	"agiProject": {"name": "The AGI Project", "cost": 2000, "branch": "hightech", "era": 5, "reqDiscovery": "frontierModels", "reqBuilding": "aiDataCenter", "fx": {},
-		"desc": "Opens the race to general intelligence: three stages paid in compute (the Training runs share). Each stage brings a lasting gain; the last wins a Technological Supremacy victory. Give part of the compute to safety, or the system may run out of control. Requires an AI Data Center."},
+		"desc": "The race to general intelligence: three stages paid in compute, each with a lasting gain; the last wins a Technological Supremacy victory. Without enough compute for safety, the system may run out of control."},
 	"collaborativeCombatAircraft": {"name": "Collaborative Combat Aircraft", "cost": 750, "branch": "air", "era": 4, "reqDiscovery": "militaryAI", "reqBuilding": "airfield", "fx": {},
 		"desc": "Every fighter you train takes off with a loyal wingman: an uncrewed combat drone that flies its wing, strikes what it strikes and draws fire. A lost wingman costs no lives and is replaced while the fighter rearms."},
 }
@@ -177,11 +177,11 @@ static func apply(world: Node) -> void:
 	defs.aiDataCenter = {"name": "AI Data Center", "cat": "economy", "size": 7, "hp": 900, "cost": {"money": 1800, "iron": 60, "silicon": 120},
 		"buildTime": 40, "trains": [], "provides": {}, "onDeposit": false, "depositTypes": null, "unique": false, "unbuildable": false,
 		"buildRadius": 0, "settlement": null, "coastal": false, "reqDiscovery": "machineLearning",
-		"desc": "Produces 1 compute a second for your AI (a quarter more with a Power Plant or a Nuclear Reactor). Burns 0.12 silicon and $1.5 a second; without silicon it runs at a quarter. Split the compute in the Defence window, AI tab. A target for enemy missiles. Requires Machine Learning."}
+		"desc": "1 compute a second for your AI, a quarter more beside a Power Plant or Reactor. Burns 0.12 silicon and $1.5 a second. Split its compute in Defence, AI tab. Requires Machine Learning."}
 	defs.fusionCell = {"name": "Targeting Fusion Cell", "cat": "military", "size": 6, "hp": 800, "cost": {"money": 1600, "iron": 40, "silicon": 80},
 		"buildTime": 35, "trains": [], "provides": {}, "onDeposit": false, "depositTypes": null, "unique": true, "unbuildable": false,
 		"buildRadius": 0, "settlement": null, "coastal": false, "reqDiscovery": "militaryAI",
-		"desc": "Every target any of your units sees goes at once to every gun: artillery and rocket artillery hit harder and closer, missiles and guided rockets stray less. Its strength follows the compute you give Military AI. With the doctrine out of the loop it sometimes marks a civilian building. Requires Military AI. One per nation."}
+		"desc": "Every target your units see goes to every gun: artillery hits harder and closer, missiles stray less. Out of the loop, it sometimes marks a civilian building. Requires Military AI. One per nation."}
 	var discoveries: Dictionary = world.map.research.discoveries
 	for key in DISCOVERIES:
 		discoveries[key] = DISCOVERIES[key].duplicate(true)

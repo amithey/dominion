@@ -186,6 +186,7 @@ static func apply(w: Node) -> void:
 	preload("res://scripts/wmd.gd").apply(w)   # nuclear yields, EMP, chemical, biological, radiological
 	preload("res://scripts/conventional_missiles.gd").apply(w)   # bunker-buster, thermobaric, anti-radiation
 	preload("res://scripts/ai_directorate.gd").apply(w)   # AI Data Center, Targeting Fusion Cell, the AI research chain
+	preload("res://scripts/house_style.gd").apply(w)   # one spelling in every name and description
 	preload("res://scripts/arsenal_catalog.gd").apply(w)   # verified operators, platforms and future programmes
 	preload("res://scripts/force_catalog.gd").apply(w)   # additional battlefield roles and operator rosters
 	var types: Dictionary = w.map.missiles.types
@@ -371,4 +372,4 @@ static func _report(w: Node, m: Dictionary, d: Dictionary, hit: bool) -> void:
 	if int(m.owner) == 0:
 		w.hud.notice(("Your %s was shot down by %s." if hit else "Your %s slipped past %s.") % [name, by])
 	elif d.owner == 0:
-		w.hud.notice(("Incoming %s intercepted by %s." if hit else "Incoming %s evaded %s!") % [name, by])
+		w.hud.notice(("Incoming %s intercepted by %s." if hit else "Incoming %s evaded %s.") % [name, by])

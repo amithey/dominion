@@ -23,6 +23,28 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.82: the third unhappy-customer round
+
+A playthrough from the main menu as a critical customer, 100 checks (tools/customer-round3-100.gd). Report:
+native/CUSTOMER-REVIEW-ROUND-3-2026-10-09.md.
+
+- **Letters from abroad lapse** after 60 s of game time instead of covering the battlefield all game. A yes-or-no
+  letter is refused; a letter with several answers is set aside. Your own decisions wait for you.
+- **Declare war asks first**, naming the nation and its allies.
+- **Quitting a campaign asks for a second click**, because unsaved progress is lost.
+- **Music and interface sound:**
+  - A quiet theme generated in code (tools/make-music.gd), and a soft click on every button.
+  - Music and Interface clicks sliders.
+- **Frame counter** off by default.
+- **One British spelling** everywhere (Centre, Armour, Defence): scripts/house_style.gd.
+- **Smaller damage tags** coloured by health.
+- **Unit names on hover:** the unit, whose it is, and its health.
+- **Idle workers button** beside the minimap.
+- **The season in the era cartouche.**
+- **Friendlier menus:** save times in words, saves that say whose campaign they hold, and an icon for Quit.
+- **Rivals defend their capital:** when nothing at home can hurt the threat, they raise an anti-armour unit.
+- **Selection panel:** army orders only for an army, "2 Soldiers", accuracy at most 100%, and speed in m/s.
+
 ## Version 0.9.76: automated early warning, and the race to general intelligence
 
 - **Automated early warning** (Defence > AI > Doctrine; for a nuclear power at AI level 3):
