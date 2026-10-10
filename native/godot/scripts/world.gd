@@ -3651,6 +3651,7 @@ func research_test(capture: bool) -> void:
 	r.points = 0.0
 	espionage.network[rival.id] = 25.0
 	espionage.intel[rival.id] = 25.0
+	seed(11)   # an operation's odds are the espionage tests' business: here only that stolen research moves points
 	print("research spy assignment: ", espionage.run("stealTech", rival.id, "", -1, 0.0))
 	espionage.advance(90.0)
 	var stolen_ok: bool = r.points >= 119.0
