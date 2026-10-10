@@ -1086,7 +1086,7 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 		_extra.defcon[0].add_theme_color_override("font_color", [Color("ff5a4a"), Color("ff5a4a"), Color("f08a4b"), Color("e8c66a"), Color("9fd0e8"), UI.CREAM][lvl])
 		var why: String = world.defcon.cause()
 		_extra.defcon[1].tooltip_text = "DEFCON %d · %s%s
-Your forces: DEFCON %d (%s). Press K." % [lvl, world.defcon.DESC[lvl], (" Cause: %s." % why) if why != "" else "", int(world.defcon.posture[0]), world.defcon.posture_text(int(world.defcon.posture[0]))]
+Your forces: DEFCON %d (%s). Press K." % [lvl, world.defcon.DESC[lvl], (" Cause: %s." % why) if why != "" else "", int(world.defcon.posture[0]), world.defcon.posture_text(int(world.defcon.posture[0]), world.defcon.nuclear(0))]
 	var silos: bool = world.missiles != null and (world.missiles.stored() > 0 or not world.missiles.silos().is_empty())
 	_extra.missiles[1].visible = silos
 	if silos:

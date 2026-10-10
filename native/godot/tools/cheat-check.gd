@@ -58,7 +58,7 @@ func run() -> void:
 	var units: Array = w.unit_defs.keys().filter(func(k): return Arsenal.foreign(w, w.unit_defs[k].get("nation", "")) == "")
 	var still: Array = units.filter(func(k): return r.unit_locked(k) != "")
 	check(still.is_empty(), "F10: every unit your nation fields unlocked (%d)%s" % [units.size(), "" if still.is_empty() else ": not " + str(still)])
-	var missiles: Array = w.missiles.types().keys().filter(func(k): return Arsenal.foreign(w, w.missiles.def_of(k).get("nation", "")) == "")
+	var missiles: Array = w.missiles.types().keys().filter(func(k): return Arsenal.foreign(w, w.missiles.def_of(k).get("nation", "")) == "" and not w.missiles.def_of(k).get("hidden", false))   # (a MIRV's warheads ride its missile)
 	var shut: Array = missiles.filter(func(k): return w.missiles.locked(k) != "")
 	check(shut.is_empty(), "F10: every missile your nation fields unlocked (%d)%s" % [missiles.size(), "" if shut.is_empty() else ": not " + str(shut)])
 	var tank: Dictionary = w.spawn_unit("tank", w.land_point(w.start, 30.0), 0)

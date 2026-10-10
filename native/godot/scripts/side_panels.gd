@@ -1083,18 +1083,22 @@ func _nuclear() -> void:
 	var mine: VBoxContainer = hud._card()
 	var p: int = int(dc.posture[0])
 	mine.add_child(hud._text("Your forces: DEFCON %d" % p, 16, hud.UI.CREAM, true))
-	mine.add_child(hud._text(dc.posture_text(p), 13, hud.UI.TEXT))
+	var armed: bool = dc.nuclear(0)
+	mine.add_child(hud._text(dc.posture_text(p, armed), 13, hud.UI.TEXT))
 	var row: HBoxContainer = hud._row(mine)
 	var up: Button = hud._button(row, "Raise the alert", func(): return dc.raise_posture(), p > 2, "bad")
 	if p > 2:
-		up.tooltip_text = "DEFCON %d: %s%s" % [p - 1, dc.posture_text(p - 1), " Every nation will think less of you (-8)." if p - 1 == 2 else (" Nuclear powers -4 relations." if p - 1 == 3 else "")]
+		up.tooltip_text = "DEFCON %d: %s%s" % [p - 1, dc.posture_text(p - 1, armed), (" Every nation will think less of you (%d)." % (-8 if armed else -4)) if p - 1 == 2 else (" Nuclear powers -4 relations." if p - 1 == 3 else "")]
 	hud._button(row, "Stand down", func(): return dc.lower_posture(), p < 5)
 	var release: String = dc.release_blocked()
-	mine.add_child(hud._text("Nuclear release: %s" % ("authorised." if release == "" else release), 12, hud.UI.BAD if release == "" else hud.UI.MUTED))
-	if dc.nuclear(0):
-		mine.add_child(hud._text("Deterrent: %s" % ("ready (a second strike is possible)" if dc.deterrent(0) else "none: no nuclear missile stored and no nuclear submarine at sea"), 12, hud.UI.MUTED))
+	if armed:
+		mine.add_child(hud._text("Nuclear release: %s" % ("authorised." if release == "" else release), 12, hud.UI.BAD if release == "" else hud.UI.MUTED))
 	else:
-		mine.add_child(hud._text("Your nation has no nuclear weapons.", 12, hud.UI.MUTED))
+		# No bomb, no release: a threshold state may still break out (wmd.gd).
+		var threshold: bool = preload("res://scripts/cbrn_data.gd").THRESHOLD.has(preload("res://scripts/cbrn_data.gd").ident(hud.world, 0))
+		_wrap(mine, "Nuclear weapons: none.%s Your alert is a conventional mobilisation and does not raise the world's nuclear tension." % (" A Nuclear Breakout could build them." if threshold else ""), 12, hud.UI.MUTED)
+	if armed:
+		mine.add_child(hud._text("Deterrent: %s" % ("ready (a second strike is possible)" if dc.deterrent(0) else "none: no nuclear missile stored and no nuclear submarine at sea"), 12, hud.UI.MUTED))
 	var nt = hud.world.get("tests")
 	if nt != null and dc.nuclear(0):
 		var test: VBoxContainer = hud._card(hud.UI.BAD)

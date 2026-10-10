@@ -178,6 +178,9 @@ func blocker(key: String) -> String:
 	var only: String = preload("res://scripts/national_arsenal.gd").foreign(world, def_of(key).get("nation", ""))
 	if only != "":
 		return only
+	var beyond: String = preload("res://scripts/ai_data.gd").beyond(world, 0, key)
+	if beyond != "":
+		return beyond   # the nation's AI ceiling (ai_data.gd)
 	if era_of(key) > era:
 		return "Needs the %s" % eras[era_of(key)].name
 	var need = def_of(key).get("reqDiscovery")

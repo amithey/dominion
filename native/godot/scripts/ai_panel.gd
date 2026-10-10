@@ -38,11 +38,16 @@ static func _compute(sp, a) -> void:
 	var card: VBoxContainer = hud._card(hud.UI.GOLD)
 	card.add_child(hud._text("AI level %d: %s" % [lvl, a.LEVEL_NAMES[lvl]], 18, hud.UI.CREAM, true))
 	var cap: int = a.cap(0)
+	var ceiling: int = a.AIData.ceiling(hud.world, 0)
 	if lvl < 5 and lvl < cap:
 		hud._meter(card, float(a.st[0].train), a.next_cost(0), hud.UI.GOLD, "Training run to level %d: %d / %d compute" % [lvl + 1, int(a.st[0].train), int(a.next_cost(0))])
+	elif lvl >= ceiling and lvl < 4:
+		sp._wrap(card, "As far as your nation can go." if ceiling > 0 else "Your nation cannot field AI.", 12)
 	else:
 		var next := {0: "Machine Learning", 2: "Military AI", 3: "Frontier Models"}
 		sp._wrap(card, "Research %s to train further." % next.get(cap, "further") if lvl < 4 else "Your models are at the frontier.", 12)
+	# The nation's own limit, and why (ai_data.gd).
+	sp._wrap(card, "National ceiling: level %d (%s). %s" % [ceiling, a.LEVEL_NAMES[ceiling], str(a.AIData.profile(hud.world, 0).get("why", ""))], 12, hud.UI.MUTED)
 	var dc: int = a.data_centres(0)
 	var src := "%d data centre%s" % [dc, "" if dc == 1 else "s"]
 	if a.researched(0, "machineLearning"):
@@ -51,7 +56,9 @@ static func _compute(sp, a) -> void:
 	if a.chip_factor(0) < 1.0:
 		sp._wrap(card, "Data centres at %d%%: %s." % [roundi(a.chip_factor(0) * 100.0), "export controls on you" + (" (smuggling)" if a.smuggling.has(0) else "") if a.controlled(0) else "a global chip shortage"], 12, hud.UI.BAD)
 	if float(a.st[0].rate) <= 0.0:
-		sp._wrap(card, "No compute yet: research Machine Learning and build an AI Data Centre.", 12)
+		sp._wrap(card, "No compute yet: research Machine Learning and build an AI Data Centre." if ceiling > 0 else "No compute: your nation has no basis for AI.", 12)
+	if ceiling <= 0:
+		return   # nothing to split
 	var split: VBoxContainer = hud._card()
 	split.add_child(hud._text("Compute allocation", 15, hud.UI.CREAM, true))
 	for pool in a.POOLS:

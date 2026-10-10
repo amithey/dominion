@@ -203,10 +203,14 @@ func doctrine(owner: int) -> String:
 func reserve(owner: int) -> float:
 	return float(_row(owner).reserve)
 
-## The highest AI level `owner`'s research allows.
+## The highest AI level `owner`'s research allows, never past its nation's
+## ceiling (ai_data.gd: chips, compute, power and talent).
 func cap(owner: int) -> int:
 	if int(agi.get(owner, {}).get("stage", 0)) >= 3:
 		return 5
+	return mini(_research_cap(owner), AIData.ceiling(w, owner))
+
+func _research_cap(owner: int) -> int:
 	if owner == 0:
 		if w.research == null:
 			return 0
@@ -219,6 +223,8 @@ func cap(owner: int) -> int:
 
 ## Whether `owner` has the research behind a level (or, for a rival, the technology).
 func researched(owner: int, key: String) -> bool:
+	if AIData.beyond(w, owner, key) != "":
+		return false   # beyond the nation's AI capacity
 	if owner == 0:
 		return w.research != null and w.research.done(key)
 	var need := {"machineLearning": 3.0, "militaryAI": 5.0, "frontierModels": 7.0, "cyberWarfare": 3.0}

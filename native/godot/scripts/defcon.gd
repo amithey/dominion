@@ -104,11 +104,18 @@ func floor_now() -> Array:
 			elif (nuclear(a) or nuclear(b)) and f < 25.0:
 				f = 25.0
 				why = "%s, a nuclear power, is at war" % d.name_of(a if nuclear(a) else b)
+	# Only a nation with the bomb moves the world's nuclear tension by its own
+	# danger or its own alert: a non-nuclear state mobilising is a conventional
+	# threat, not a nuclear one.
 	for i in range(d.n):
+		if not nuclear(i):
+			continue
 		if not d.defeated(i) and existential(i) and f < 65.0:
 			f = 65.0
 			why = "your nation fights for its survival" if i == 0 else "%s, a nuclear power, fights for its survival" % d.name_of(i)
 	for i in posture:
+		if not nuclear(int(i)):
+			continue
 		var p: float = float(FLOOR[int(posture[i])])
 		if p > f and not d.defeated(i):
 			f = p
@@ -197,19 +204,21 @@ func raise_posture() -> String:
 		return "Your forces are already at DEFCON 2."
 	posture[0] = p - 1
 	var d: Node = w.diplomacy
+	var armed := nuclear(0)
 	for i in range(1, d.n):
 		if d.defeated(i):
 			continue
 		if posture[0] == 2:
-			d.change(0, i, -8.0)
+			d.change(0, i, -8.0 if armed else -4.0)   # a nuclear power mobilising alarms the world more
 		elif posture[0] == 3 and nuclear(i):
 			d.change(0, i, -4.0)
 	d.changed.emit()
-	tension = maxf(tension, float(FLOOR[int(posture[0])]))
+	if armed:
+		tension = maxf(tension, float(FLOOR[int(posture[0])]))   # a non-nuclear alert is no nuclear threat
 	_announce()
 	if w.research != null:
 		w.research._recompute()
-	return "Your forces' alert is raised to DEFCON %d. %s" % [posture[0], posture_text(int(posture[0]))]
+	return "Your forces' alert is raised to DEFCON %d. %s" % [posture[0], posture_text(int(posture[0]), armed)]
 
 func lower_posture() -> String:
 	var p: int = int(posture[0])
@@ -218,17 +227,20 @@ func lower_posture() -> String:
 	posture[0] = p + 1
 	if w.research != null:
 		w.research._recompute()
-	return "Your forces stand down to DEFCON %d. %s" % [posture[0], posture_text(int(posture[0]))]
+	return "Your forces stand down to DEFCON %d. %s" % [posture[0], posture_text(int(posture[0]), nuclear(0))]
 
-static func posture_text(p: int) -> String:
+## `armed`: the nation has nuclear weapons (only then is release authorised).
+static func posture_text(p: int, armed := true) -> String:
 	match p:
 		4: return "Watch: no cost, no effect on the forces."
 		3: return "Readiness: production +10%, income -4%."
-		2: return "Mobilised: production +20%, damage +5%, income -10%. Nuclear release authorised."
+		2: return "Mobilised: production +20%, damage +5%, income -10%." + (" Nuclear release authorised." if armed else "")
 	return "Peacetime readiness."
 
 ## Why the player may not release a nuclear missile, or "".
 func release_blocked() -> String:
+	if not nuclear(0):
+		return "Your nation has no nuclear weapons."
 	if int(posture[0]) > 2:
 		return "Nuclear weapons are released only at DEFCON 2."
 	return ""

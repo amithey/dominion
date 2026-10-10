@@ -359,6 +359,8 @@ func pick_building(n: Dictionary) -> String:
 	# compute allow, and a Targeting Fusion Cell once it has military AI.
 	var compute_rating: int = preload("res://scripts/ai_data.gd").rating(world, n.id, "compute")
 	var wanted_dc: int = 0 if tech < 4.0 else (2 if tech >= 6.0 and compute_rating >= 3 else 1)
+	if preload("res://scripts/ai_data.gd").ceiling(world, n.id) <= 0:
+		wanted_dc = 0   # no basis for AI at all (ai_data.gd ceiling)
 	var wanted_cell: int = 1 if tech >= 5.0 and world.get("directorate") != null and world.directorate != null and world.directorate.level(n.id) >= 3 else 0
 	for fac in [["missileSilo", 1 if tech >= 2.0 else 0], ["strategicComplex", wanted_complexes], ["specialLab", 1 if tech >= 4.0 else 0], ["aiDataCenter", wanted_dc], ["fusionCell", wanted_cell]]:
 		var fkey: String = fac[0]

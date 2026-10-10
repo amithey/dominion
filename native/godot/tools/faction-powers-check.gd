@@ -82,10 +82,12 @@ func run() -> void:
 		var def: Dictionary = w.unit_defs[key]
 		var u: Dictionary = w.spawn_unit(key, sea if def.naval else field, 0)
 		check(u.node.get_child_count() > 0 and key in w.building_defs[home_of[key]].trains, "%s is built with a model and trained at the %s" % [def.name, home_of[key]])
-		play_as(0, def.nation)
+		var own: String = def.nation[0] if def.nation is Array else str(def.nation)   # (the Shahed: Iran and Russia both field it)
+		play_as(0, own)
 		var mine: bool = w.unit_allowed(0, key)
-		play_as(0, "blue" if def.nation != "blue" else "red")
-		check(mine and not w.unit_allowed(0, key) and w.research.unit_locked(key).ends_with("only"), "%s is fielded only by %s" % [def.name, FA.NAMES[def.nation]])
+		play_as(0, "blue" if own != "blue" else "red")
+		var why: String = w.research.unit_locked(key)
+		check(mine and not w.unit_allowed(0, key) and (why.ends_with("only") or why.begins_with("Not fielded")), "%s is fielded only by %s" % [def.name, FA.NAMES[own]])
 		w.kill(u)
 	w.map.nations[0].color = saved_flag
 	w.map.nations[0].erase("arsenal")
@@ -258,10 +260,13 @@ func run() -> void:
 	# The Diplomacy screen.
 	w.map.nations[0].color = "#3b82f6"
 	w.map.nations[0].arsenal = "blue"
+	w.map.nations[0].id = "usa"   # (play_as above left another nation's id; the id decides the identity)
 	w.power_ready.clear()
 	w.hud._panels = w.hud._panels if w.hud._panels != null else preload("res://scripts/side_panels.gd").new(w.hud)
 	w.hud._panels.diplomacy_tab = "nations"
 	w.hud.toggle_panel("diplomacy", true)
+	w.hud.refresh_side()   # (the window draws its rows on the refresh)
+	await process_frame
 	await process_frame
 	var texts: Array = []
 	for n in w.hud._side_rows.find_children("*", "", true, false):

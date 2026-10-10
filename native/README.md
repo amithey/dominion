@@ -23,6 +23,20 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.86: who can really use AI and the bomb
+
+Researched nation by nation (native/NATIONAL-AI-NUCLEAR-RESEARCH-2026-10-10.md):
+
+- **An AI ceiling for every nation** (scripts/ai_data.gd): the highest AI level it can reach at all, with the reason
+  shown in the AI tab and the research list. The United States and China can reach the frontier; the United
+  Kingdom, the EU, Japan, South Korea, India and Israel come close; Russia, Saudi Arabia, Türkiye, Australia,
+  Ukraine and Brazil field military AI; Iran, North Korea, Pakistan, Egypt and Indonesia only applied machine
+  learning; Iraq and Syria next to nothing; Afghanistan none. Rivals never train past theirs.
+- **No nuclear threats without the bomb:** a nation without nuclear weapons no longer sees "nuclear release
+  authorised", its alert is a conventional mobilisation that does not raise the world's nuclear tension, and it
+  cannot send an escalation warning. A threshold state (Iran) can only threaten to leave the NPT.
+- Check: tools/national-realism-check.gd (51).
+
 ## Version 0.9.85: a campaign that grows, a world that lives
 
 - **The sea can be worked.** An exclusive economic zone (7 hexes of sea from your coast, scripts/territory.gd

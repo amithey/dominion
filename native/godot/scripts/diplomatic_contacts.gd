@@ -30,7 +30,7 @@ const STANCES := {
 	"hotline": ["De-escalation hotline", "Propose a crisis line and confidence-building steps: tension eases.", ["cold"]],
 	"surrender": ["Demand surrender", "With overwhelming force: they pay $600 in reparations and make peace.", ["war"]],
 	"prisoners": ["Prisoner exchange", "A humanitarian exchange in the middle of the war: relations improve a little.", ["war"]],
-	"escalation": ["Escalation warning", "Warn of escalation beyond conventional arms. Credible with nuclear missiles in store.", ["war", "cold"]],
+	"escalation": ["Escalation warning", "Warn of escalation beyond conventional arms: nuclear powers, credible with nuclear missiles in store; a threshold state can only threaten to leave the NPT.", ["war", "cold"]],
 }
 const STANCE_GROUPS := {"peace": "Peacetime", "cold": "Cold war", "war": "Wartime"}
 
@@ -205,6 +205,8 @@ func _stance_eligibility(key: String) -> String:
 	if not state in STANCES[key][2]:
 		return "Not in %s: this is for %s." % [STANCE_GROUPS[state].to_lower(), ", ".join(PackedStringArray(STANCES[key][2].map(func(g): return STANCE_GROUPS[g].to_lower())))]
 	match key:
+		"escalation":
+			if _escalation_means() == "": return "Your nation has no nuclear weapons: a warning of escalation would not be believed."
 		"sanctions":
 			if not d.pact[0][n]: return "Sanctions need a trade agreement to suspend."
 		"ultimatum":
@@ -212,6 +214,20 @@ func _stance_eligibility(key: String) -> String:
 			if not inside: return "None of their forces are in your land."
 		"surrender":
 			if d.army_strength(0) < d.army_strength(n) * 2: return "Needs an army at least twice the size of theirs."
+	return ""
+
+## What the player's nation can back a warning of escalation with: "armed"
+## (nuclear weapons), "threshold" (it could build them: a threat to leave the
+## NPT) or "" (nothing: the warning is not offered).
+func _escalation_means() -> String:
+	if world.get("defcon") != null and world.defcon != null and world.defcon.nuclear(0):
+		return "armed"
+	var Cbrn := preload("res://scripts/cbrn_data.gd")
+	var id: String = Cbrn.ident(world, 0)
+	if Cbrn.THRESHOLD.has(id):
+		var after: String = str(Cbrn.THRESHOLD[id].after)
+		if after == "" or (world.get("wmd") != null and world.wmd != null and world.wmd.broken_out.any(func(o): return Cbrn.ident(world, o) == after)):
+			return "threshold"
 	return ""
 
 ## Says `key` to the government in session: its answer and its consequences.
@@ -305,6 +321,21 @@ func state_position(key: String) -> String:
 			outcome = "Exchanged"
 			detail = "Prisoners exchanged. Relations +6, though the war goes on."
 		"escalation":
+			if _escalation_means() == "threshold":
+				# A threshold state threatens to build the bomb, not to use one (cbrn_data.THRESHOLD).
+				if ai != null and randf() < 0.35:
+					ai.next_attack = float(ai.next_attack) + 90.0
+					outcome = "Heeded"
+					detail = "They fear you will leave the NPT and build the bomb, and hold back their offensive."
+				else:
+					d.change(0, n, -6)
+					outcome = "Called your bluff"
+					detail = "A threat to leave the NPT moves no armies. Relations -6."
+				session.results.append({"key": key, "outcome": outcome, "detail": detail})
+				session.message = "%s — %s. %s" % [STANCES[key][0], outcome, detail]
+				d.changed.emit()
+				changed.emit()
+				return ""
 			var nukes: bool = world.missiles != null and int(world.missiles.stock.get("nuke", 0)) > 0
 			if ai != null and (nukes or randf() < 0.3):
 				ai.next_attack = float(ai.next_attack) + (240.0 if nukes else 90.0)
