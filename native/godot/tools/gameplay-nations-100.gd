@@ -122,34 +122,35 @@ func put(key: String, owner: int) -> Dictionary:
 ## The newer nations' powers ask for something first (additional_powers.gd): give it to them.
 func meet_needs(id: String) -> void:
 	var extra := preload("res://scripts/additional_powers.gd")
+	if id == "iran":
+		w.diplomacy.set_flag(w.diplomacy.war, 0, 1, true)   # Hormuz is closed only at war
 	if not extra.POWERS.has(id):
 		return
 	for need in extra.POWERS[id].needs:
 		if not extra.owned(w, 0, need): put(need, 0)
 	var d: Node = w.diplomacy
 	match id:
-		"uk":
-			var sea = w.water_near(hq().root.position, 300)
-			if sea != null: w.spawn_unit("corvette", sea, 0)
+		"uk", "indonesia", "north_korea":
+			d.set_flag(d.alliance, 0, 1, false)   # hostile levers: not on an ally
 		"brazil":
 			d.set_flag(d.war, 0, 1, false)
 			d.set_flag(d.pact, 0, 1, true)
 			if not extra.owned(w, 1, "port"): put("port", 1)
 		"pakistan":
 			d.set_flag(d.war, 0, 1, false)
-			d.set_flag(d.alliance, 0, 1, true)
+			d.set_flag(d.alliance, 0, 1, false)   # a friend, not yet an ally
+			d.set_score(0, 1, 40.0)
+		"south_korea", "australia":
+			d.set_flag(d.war, 0, 1, false)
+			d.set_score(0, 1, 30.0)   # a partner
 		"syria":
 			d.set_score(0, 1, 45.0)
 		"afghanistan":
 			d.set_flag(d.war, 0, 1, true)
 			put("farm", 1)
 		"ukraine":
-			hq().hp = hq().max_hp * 0.5
-		"north_korea":
-			w.spawn_unit("artillery", w.land_point(hq().root.position, 30.0), 0)
-		"australia":
-			var pit: Dictionary = put("extractor", 0)
-			if not pit.is_empty(): pit.deposit = w.deposits[0]
+			d.set_flag(d.war, 0, 1, true)   # drone strikes only at war
+			put("farm", 1)   # something besides its capital to strike
 
 func mine(key: String) -> Array:
 	return w.units.filter(func(u): return u.owner == 0 and u.key == key and not u.dead)

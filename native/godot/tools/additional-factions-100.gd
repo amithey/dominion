@@ -108,11 +108,15 @@ func run() -> void:
 			if id == "syria":
 				for o in range(4): if o != owner: w.diplomacy.set_score(owner, o, 40.0)
 			if id == "afghanistan": w.diplomacy.set_score(owner, target, -60.0)
+			if id in ["uk", "indonesia", "north_korea", "pakistan"]: w.diplomacy.set_flag(w.diplomacy.alliance, owner, target, false)   # not on an ally / not yet allied
+			if id in ["south_korea", "australia"]: w.diplomacy.set_score(owner, target, 20.0)   # a partner
+			if id == "pakistan": w.diplomacy.set_score(owner, target, 30.0)
+			if id == "ukraine": w.diplomacy.set_flag(w.diplomacy.war, owner, target, true)   # drone strikes only at war
 			if id == "iraq" and not w.buildings.any(func(x): return x.owner == owner and x.key == "barracks" and x.built and not x.dead and x.get("supplied", true)):
 				var home: Vector3 = w.buildings.filter(func(x): return x.owner == owner and x.key == "hq" and not x.dead)[0].root.position
 				w.place_building("barracks", w.test_site("barracks", home), owner, true)
 			FP.use(w, owner, target)
-			check(costs.keys().all(func(r): return is_zero_approx(P.funds(w, owner, r))) and FP.ready_in(w, owner) > 0, "%s/%d: exact balances activate without negative stocks" % [id, owner])
+			check(costs.keys().all(func(r): return is_zero_approx(P.funds(w, owner, r)) or (id == "north_korea" and r == "money")) and FP.ready_in(w, owner) > 0, "%s/%d: exact balances activate without negative stocks" % [id, owner])
 			var wait_before := FP.ready_in(w, owner)
 			var saved: Dictionary = JSON.parse_string(JSON.stringify(FP.capture(w)))
 			w.power_ready.clear()
@@ -146,23 +150,21 @@ func run() -> void:
 	check(no_side_effects(1, -1), "defeated AI cannot fund a new investment")
 	# Timed and delayed effects have observable boundaries.
 	reset("uk")
-	var risk: float = w.market.risk()
-	FP.use(w, 0)
-	check(is_equal_approx(w.market.risk(), risk * 0.5), "Trade Shield halves actual cargo risk")
-	tick(90)
-	check(is_equal_approx(w.market.risk(), risk), "Trade Shield expires at its exact boundary")
-	reset("north_korea")
-	FP.use(w, 0)
-	tick(45)
-	check(P.bonus(w, 0, "reload") == 0 and is_equal_approx(FP.income_mult(w, 0), 0.8), "readiness ends before its economic penalty")
-	tick(45)
-	check(is_equal_approx(FP.income_mult(w, 0), 1.0), "readiness penalty ends exactly at 90 seconds")
-	reset("pakistan")
+	w.diplomacy.set_flag(w.diplomacy.alliance, 0, 1, false)
 	FP.use(w, 0, 1)
-	P.use_defence_partnership(w, 2, 1)
-	check(is_equal_approx(P.bonus(w, 1, "researchPct"), 0.15), "research partnerships from two allies do not stack")
-	P.nation(w, 1).defeated = true
-	check(P.bonus(w, 0, "researchPct") == 0, "partner defeat immediately stops research")
+	check(P.sea_closed(w, 1) and FP.sea_closed(w, 1), "the insurance ban closes the rival's sea trade (both trade paths)")
+	tick(149)
+	check(P.sea_closed(w, 1), "it still holds just before 150 seconds")
+	tick(1)
+	check(not P.sea_closed(w, 1), "and lifts at exactly 150 seconds")
+	reset("pakistan")
+	w.diplomacy.set_flag(w.diplomacy.alliance, 0, 1, false)
+	w.diplomacy.set_score(0, 1, 30.0)
+	FP.use(w, 0, 1)
+	check(w.diplomacy.allied(0, 1), "a defence pact makes an alliance")
+	w.diplomacy.set_flag(w.diplomacy.war, 0, 1, true)
+	w.power_ready.clear()
+	check(FP.blocked(w, 0, 1).begins_with("Needs a friendly nation"), "and is not offered to a nation at war with you")
 	# Food delivery/loss occurs only once; interruptions cannot award goodwill.
 	for mode in ["arrival", "war", "pact", "port", "defeat"]:
 		reset("brazil")
@@ -181,10 +183,10 @@ func run() -> void:
 		if mode == "arrival":
 			tick(31)
 			check(w.diplomacy.rel(0, 1) == 18, "delivered aid cannot award relations twice")
-	# Reconstruction cannot transfer to a new structure at identical coordinates.
-	reset("ukraine")
+	# Reconstruction (Syria's donors) cannot transfer to a new structure at identical coordinates.
+	reset("syria")
+	for o in range(1, 4): w.diplomacy.set_score(0, o, 40.0)
 	var hq: Dictionary = sites(0, "hq")[0]
-	hq.hp = hq.max_hp
 	var farm: Dictionary = sites(0, "farm")[0]
 	farm.hp = farm.max_hp * 0.9
 	var at: Vector3 = farm.root.position
@@ -193,7 +195,8 @@ func run() -> void:
 	var repair_count: int = w.power_effects.filter(func(e): return e.kind == "extra_repair").size()
 	tick(60)
 	check(repair_count > 0 and is_equal_approx(farm.hp, farm.max_hp), "reconstruction heals only missing HP, never exceeds max")
-	reset("ukraine")
+	reset("syria")
+	for o in range(1, 4): w.diplomacy.set_score(0, o, 40.0)
 	farm.hp = farm.max_hp * 0.5
 	FP.use(w, 0)
 	w.destroy_building(farm)

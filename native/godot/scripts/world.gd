@@ -5430,8 +5430,9 @@ func shell_hit(shooter: Dictionary, at: Vector3) -> void:
 func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	if unit.dead:
 		return
-	# Striking a nation at peace starts a war with it.
-	if ai and source.owner == 0 and unit.owner > 0 and not (engagement != null and engagement.active(0,unit.owner)):
+	# Striking a nation at peace starts a war with it (not a deniable covert act:
+	# Mossad, sabotage, insurgents: faction_powers.gd, additional_powers.gd).
+	if ai and source.owner == 0 and unit.owner > 0 and not source.get("covert", false) and not (engagement != null and engagement.active(0,unit.owner)):
 		ai.declare_war(unit.owner, true)
 	if espionage:
 		amount *= espionage.damage_mult(source.owner)  # a dead general blunts an army

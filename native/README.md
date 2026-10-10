@@ -23,6 +23,25 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.87: every nation's real lever on another state
+
+Researched nation by nation (native/NATIONAL-POWERS-RESEARCH-2026-10-10.md). Eight national powers only buffed the
+nation itself; now every power is the lever that nation really pulls on others:
+
+- **United Kingdom: Maritime Insurance Ban** (the London market stops insuring a rival's cargo: its sea trade stops).
+- **South Korea: Arms Export Deal** (tanks and howitzers for a partner on export credit).
+- **Saudi Arabia: OPEC+ Output Cut** (the world oil price rises; Riyadh earns more; Washington frowns).
+- **Indonesia: Export Ban** (nickel and palm oil: a rival's factories stand still).
+- **Ukraine: Long-Range Drone Strikes** (refineries and plants of an enemy at war).
+- **North Korea: Crypto Heist** (a quarter of a rival's treasury, traced half the time).
+- **Egypt: Suez Canal** (priority passage for a friend, closed to an enemy at war).
+- **Australia: Critical Minerals Pact** (ore for a partner, money for Australia).
+- **Pakistan: Mutual Defence Pact** (an attack on one is an attack on both: an alliance).
+- **Russia: Hybrid Sabotage** replaces the gas cut-off (Europe has cut Russian pipeline gas to a few per cent).
+- **Iran** closes Hormuz only at war.
+- Fixed: covert operations (Mossad, sabotage, insurgents) no longer start a war by the damage they do.
+- Rivals aim hostile levers only at enemies, friendly ones at their closest partner.
+
 ## Version 0.9.86: who can really use AI and the bomb
 
 Researched nation by nation (native/NATIONAL-AI-NUCLEAR-RESEARCH-2026-10-10.md):

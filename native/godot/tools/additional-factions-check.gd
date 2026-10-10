@@ -135,64 +135,103 @@ func run() -> void:
 			if id == "afghanistan":
 				w.diplomacy.set_flag(w.diplomacy.war, owner, target, true)   # insurgent attacks only on an enemy
 				building("farm", target)
+			if id in ["uk", "indonesia", "north_korea"]: w.diplomacy.set_flag(w.diplomacy.alliance, owner, target, false)   # hostile levers: not on an ally
+			if id in ["south_korea", "australia"]: w.diplomacy.set_score(owner, target, 20.0)   # a partner
+			if id == "pakistan":
+				w.diplomacy.set_flag(w.diplomacy.alliance, owner, target, false)
+				w.diplomacy.set_score(owner, target, 30.0)
+			if id == "ukraine":
+				w.diplomacy.set_flag(w.diplomacy.war, owner, target, true)   # drone strikes only at war
+				building("farm", target)
 			var resource: String = P.POWERS[id].costs.keys()[0]
 			var balance := P.funds(w, owner, resource)
 			check(FP.blocked(w, owner, target) == "", "%s owner %d prerequisites met" % [id, owner])
 			FP.use(w, owner, target)
-			check(P.funds(w, owner, resource) == balance - float(P.POWERS[id].costs[resource]) and FP.ready_in(w, owner) > 0.0, "%s owner %d pays and enters cooldown" % [id, owner])
+			var loot := 900.0 if id == "north_korea" else 0.0   # (the heist brings the money in again)
+			check(is_equal_approx(P.funds(w, owner, resource), balance - float(P.POWERS[id].costs[resource]) + loot) and FP.ready_in(w, owner) > 0.0, "%s owner %d pays and enters cooldown" % [id, owner])
 			var after := P.funds(w, owner, resource)
 			FP.use(w, owner, target)
 			check(P.funds(w, owner, resource) == after, id + " repeated activation cannot charge twice")
-	# Effects reach live systems, then expire.
+	# Effects reach the other nation's live systems, then expire.
 	reset_power()
 	set_nation(0, "south_korea")
-	var tank_factory: Dictionary = homes.tankFactory
-	w.queue_unit(tank_factory, "tank")
-	w.update_training(1.0)
-	var first: float = tank_factory.queue_prog
-	FP.use(w, 0)
-	tank_factory.queue_prog = 0.0
-	w.update_training(1.0)
-	check(tank_factory.queue_prog > first, "industrial mobilization accelerates actual production")
-	tank_factory.supplied = false
-	var stopped: float = tank_factory.queue_prog
-	w.update_training(1.0)
-	check(tank_factory.queue_prog == stopped, "industrial bonus cannot bypass a supply cut")
-	tank_factory.supplied = true
-	tick(91)
-	check(is_equal_approx(w.research.bonus("prodPct"), 0.15), "temporary production bonus expires")
+	set_nation(1, "uk")
+	w.diplomacy.set_score(0, 1, 30.0)
+	var their_units: int = w.units.filter(func(u): return u.owner == 1 and not u.dead).size()
+	var cash0: float = w.economy.res.money
+	FP.use(w, 0, 1)
+	var bought: Array = w.units.filter(func(u): return u.owner == 1 and not u.dead and u.get("exported_by", -1) == 0)
+	check(bought.size() >= 3 and w.units.filter(func(u): return u.owner == 1 and not u.dead).size() == their_units + 3, "an arms export deal puts two tanks and an artillery piece in the buyer's army (%d bought, %d -> %d)" % [bought.size(), their_units, w.units.filter(func(u): return u.owner == 1 and not u.dead).size()])
+	check(is_equal_approx(w.economy.res.money, cash0 + 900.0), "and the seller earns $900")
+	reset_power()
+	set_nation(0, "south_korea")
+	w.diplomacy.set_flag(w.diplomacy.war, 0, 1, true)
+	check(FP.blocked(w, 0, 1).begins_with("Needs a partner"), "no arms for a nation at war with you")
+	reset_power()
+	set_nation(0, "uk")
+	check(FP.blocked(w, 0, 1) == "Not on an ally", "the insurance ban is not for an ally")
+	w.diplomacy.set_flag(w.diplomacy.alliance, 0, 1, false)
+	FP.use(w, 0, 1)
+	check(P.sea_closed(w, 1) and not P.sea_closed(w, 0) and is_equal_approx(FP.income_mult(w, 1), 0.85), "the insurance ban stops the rival's sea trade and cuts its income 15%")
+	tick(151)
+	check(not P.sea_closed(w, 1) and FP.income_mult(w, 1) == 1.0, "and lapses after 150 seconds")
 	reset_power()
 	set_nation(0, "indonesia")
-	w.economy.tick()
-	var health: float = w.economy.health
+	w.diplomacy.set_flag(w.diplomacy.alliance, 0, 1, false)
+	building("extractor", 0)
+	FP.use(w, 0, 1)
+	check(FP.production_blocked(w, 1) and not FP.production_blocked(w, 0) and is_equal_approx(FP.income_mult(w, 1), 0.9), "an export ban stops the rival's military factories and dents its income")
+	tick(46)
+	check(not FP.production_blocked(w, 1), "its factories run again after 45 seconds")
+	reset_power()
+	set_nation(0, "saudi")
 	FP.use(w, 0)
-	w.economy.tick()
-	check(w.economy.health == health + 8.0, "nutrition improves actual civilian health")
+	check(is_equal_approx(P.price_shock(w, "oil"), 0.35) and P.price_shock(w, "iron") == 0.0 and is_equal_approx(FP.income_mult(w, 0), 1.15), "an OPEC+ cut lifts the oil price and Saudi income")
+	tick(181)
+	check(P.price_shock(w, "oil") == 0.0, "the cut ends after 3 minutes")
 	reset_power()
 	set_nation(0, "pakistan")
-	FP.use(w, 0, 1)
-	check(P.bonus(w, 0, "researchPct") == 0.15 and P.bonus(w, 1, "researchPct") == 0.15, "both allies receive joint research")
 	w.diplomacy.set_flag(w.diplomacy.alliance, 0, 1, false)
-	check(P.bonus(w, 0, "researchPct") == 0.0 and P.bonus(w, 1, "researchPct") == 0.0, "breaking alliance removes both bonuses immediately")
-	tick(1.0)
-	w.diplomacy.set_flag(w.diplomacy.alliance, 0, 1, true)
-	check(P.bonus(w, 0, "researchPct") == 0.0, "renewing an alliance does not resurrect an expired partnership")
+	w.diplomacy.set_score(0, 1, 10.0)
+	check(FP.blocked(w, 0, 1).begins_with("Needs a friendly nation"), "a defence pact needs a friend")
+	w.diplomacy.set_score(0, 1, 40.0)
+	FP.use(w, 0, 1)
+	check(w.diplomacy.allied(0, 1), "a mutual defence pact makes you allies")
+	w.power_ready.clear()
+	check(FP.blocked(w, 0, 1) == "Already allied", "and is not signed twice")
 	reset_power()
 	set_nation(0, "ukraine")
-	var hq: Dictionary = w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0]
-	hq.hp = hq.max_hp * 0.5
-	FP.use(w, 0)
-	var save: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
-	w.saves.restore(save)
-	hq = w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0]
-	var hp: float = hq.hp
-	tick(30)
-	check(is_equal_approx(hq.hp - hp, hq.max_hp * 0.125), "saved reconstruction resumes at the right rate")
-	hq.owner = 1
-	var captured_hp: float = hq.hp
-	tick(10)
-	check(hq.hp == captured_hp, "reconstruction cannot heal a captured building")
-	hq.owner = 0
+	check(FP.blocked(w, 0, 1) == "Only on an enemy you are at war with", "drone strikes only on an enemy at war")
+	w.diplomacy.set_flag(w.diplomacy.war, 0, 1, true)
+	var plant: Dictionary = building("powerPlant", 1)
+	var plant_hp: float = plant.hp
+	FP.use(w, 0, 1)
+	check(plant.hp < plant_hp and is_equal_approx(FP.income_mult(w, 1), 0.88), "the drones hit its power plant first and cut its income 12%")
+	reset_power()
+	set_nation(0, "north_korea")
+	w.diplomacy.set_flag(w.diplomacy.alliance, 0, 1, false)
+	P.nation(w, 1).money = 2000.0
+	cash0 = w.economy.res.money
+	FP.use(w, 0, 1)
+	check(is_equal_approx(P.nation(w, 1).money, 1500.0) and is_equal_approx(w.economy.res.money, cash0 - 150.0 + 500.0), "a crypto heist moves a quarter of the rival's treasury to Pyongyang")
+	check(not w.diplomacy.at_war(0, 1), "and starts no war")
+	reset_power()
+	set_nation(0, "australia")
+	building("extractor", 0)
+	w.diplomacy.set_score(0, 1, 30.0)
+	var iron1: float = P.funds(w, 1, "iron")
+	cash0 = w.economy.res.money
+	FP.use(w, 0, 1)
+	check(is_equal_approx(P.funds(w, 1, "iron"), minf(500.0, iron1 + 80.0)) and is_equal_approx(w.economy.res.money, cash0 + 700.0), "a minerals pact ships the ore to the partner and pays Australia $700")
+	reset_power()
+	set_nation(0, "egypt")
+	FP.use(w, 0, 1)
+	check(is_equal_approx(P.bonus(w, 1, "voyage"), 0.3) and P.bonus(w, 0, "voyage") == 0.0, "Suez priority shortens the partner's voyages, not yours")
+	reset_power()
+	set_nation(0, "egypt")
+	w.diplomacy.set_flag(w.diplomacy.war, 0, 1, true)
+	FP.use(w, 0, 1)
+	check(P.sea_closed(w, 1) and P.bonus(w, 1, "voyage") == 0.0, "at war the canal is closed to the enemy instead")
 	reset_power()
 	set_nation(0, "brazil")
 	for b in w.buildings: b.supplied = true
@@ -212,10 +251,10 @@ func run() -> void:
 	provision(1); provision(2)
 	w.diplomacy.set_flag(w.diplomacy.war, 1, 2, false)
 	w.diplomacy.set_flag(w.diplomacy.pact, 1, 2, true)
-	P.use_logistics_hub(w, 1)
+	P.use_suez(w, 2, 1)   # (priority through the canal for nation 1)
 	preload("res://scripts/additional_trade.gd").tick(w, 1.0)
 	var cargo: Dictionary = P.nation(w, 1).get("national_cargo", {})
-	check(not cargo.is_empty() and is_equal_approx(cargo.eta, float(w.market.cfg.voyage) * 0.7), "Egypt AI sends real cargo with shorter journey")
+	check(not cargo.is_empty() and is_equal_approx(cargo.eta, float(w.market.cfg.voyage) * 0.7), "a nation granted Suez priority ships real cargo on a shorter journey")
 	var json_save: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
 	check(json_save.ai[0].has("national_cargo"), "AI cargo is included in disk-save data")
 	var generator = preload("res://scripts/map_generator.gd").new()

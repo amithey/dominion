@@ -82,6 +82,8 @@ func exchange_step() -> void:
 		var target := 1.0 + (0.25 if war and res in ["oil", "gas", "iron"] else 0.0)
 		if world != null and world.get("events") != null:
 			target += world.events.price_shock(res)   # Hormuz, grain, gas, rare earths (world_events.gd)
+		if world != null:
+			target += preload("res://scripts/additional_powers.gd").price_shock(world, res)   # an OPEC+ output cut
 		fv = clampf(fv + randfn(0.0, 0.006) + (target - fv) * 0.01, 0.6, 2.4)
 		fair[res] = fv
 		var past: Array = history.get(res, [])

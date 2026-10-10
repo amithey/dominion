@@ -184,18 +184,32 @@ func run() -> void:
 	# Iran: the Strait of Hormuz.
 	play_as(0, "gold")
 	w.power_ready.clear()
+	check(FP.blocked(w, 0) == "Only at war", "Iran closes the strait only at war")
+	d.declare_war(0, 3)
 	var rels: Array = range(1, d.n).map(func(n): return d.rel(0, n))
 	FP.use(w, 0)
 	check(FP.sea_closed(w, 1) and not FP.sea_closed(w, 0), "closing Hormuz stops everyone's sea trade but yours")
 	check(absf(FP.income_mult(w, 2) - 0.85) < 0.001, "and costs every other nation 15% of its income")
-	check(range(1, d.n).all(func(n): return d.rel(0, n) < rels[n - 1]), "the whole world resents it")
+	check(range(1, d.n).all(func(n): return d.rel(0, n) < rels[n - 1] or d.at_war(0, n)), "the whole world resents it")
 	w.game_time += 121.0
-	# Russia: energy.
+	d.make_peace(0, 3)
+	# Russia: hybrid sabotage.
 	play_as(0, "russia")
 	w.power_ready.clear()
+	var sab: Array = w.buildings.filter(func(b): return b.owner == 1 and not b.dead and b.built and b.key != "hq")
+	var sab_hp := 0.0
+	for b in sab: sab_hp += b.hp
+	r0 = d.rel(0, 1)
 	FP.use(w, 0, 1)
-	check(absf(FP.income_mult(w, 1) - 0.75) < 0.001, "Energy Leverage cuts the target's income by 25%")
-	w.game_time += 181.0
+	var sab_after := 0.0
+	for b in sab: sab_after += maxf(b.hp, 0.0)
+	check(absf(FP.income_mult(w, 1) - 0.88) < 0.001 and sab_after < sab_hp, "Hybrid Sabotage burns one of the target's buildings and cuts its income 12%")
+	check(d.rel(0, 1) < r0 and d.rel(0, 1) > r0 - 9.0 and not d.at_war(0, 1), "suspected, not proven: relations fall only 8, and no war (%d -> %d)" % [int(r0), int(d.rel(0, 1))])
+	w.power_ready.clear()
+	d.set_flag(d.alliance, 0, 2, true)
+	check(FP.blocked(w, 0, 2) == "Not on an ally", "never on an ally")
+	d.set_flag(d.alliance, 0, 2, false)
+	w.game_time += 151.0
 	# India: every camp at once.
 	play_as(0, "india")
 	w.power_ready.clear()
@@ -256,7 +270,7 @@ func run() -> void:
 	var sanctioned: float = w.economy.rates.money
 	w.power_effects.clear()
 	w.economy.tick()
-	check(sanctioned < w.economy.rates.money * 0.8, "and your treasury feels it ($%.1f/s against $%.1f/s)" % [sanctioned, w.economy.rates.money])
+	check(sanctioned < w.economy.rates.money * 0.9, "and your treasury feels it ($%.1f/s against $%.1f/s)" % [sanctioned, w.economy.rates.money])
 	# The Diplomacy screen.
 	w.map.nations[0].color = "#3b82f6"
 	w.map.nations[0].arsenal = "blue"

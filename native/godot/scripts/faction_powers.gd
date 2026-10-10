@@ -9,8 +9,12 @@ extends RefCounted
 ##                  target's factories, shipyards and airfields stop
 ##   European Union Sanctions Package (the 18th and 19th in 2025): the target
 ##                  earns less, and your partners turn against it too
-##   Iran           Close the Strait of Hormuz: every other nation's sea trade stops
-##   Russia         Energy Leverage: gas cut off, the target's economy suffers
+##   Iran           Close the Strait of Hormuz: every other nation's sea trade
+##                  stops (only at war: Iran closed it under attack)
+## Research: native/NATIONAL-POWERS-RESEARCH-2026-10-10.md.
+##   Russia         Hybrid Sabotage: cut cables, arson, rail sabotage, drones over
+##                  airports; deniable (its gas lever is mostly gone: Europe
+##                  cut Russian pipeline gas from about 40% of imports to 6%)
 ##   India          Strategic Autonomy (Quad and BRICS, Russian oil and US
 ##                  markets): warmer relations with every nation at once
 ##   Japan          Development Aid: paid goodwill and a non-aggression pact
@@ -28,9 +32,9 @@ const POWERS := {
 	"green": {"name": "Sanctions Package", "target": true, "cooldown": 300.0, "duration": 240.0,
 		"desc": "A joint package: the nation's income falls 20% for 4 minutes, and every nation you have a pact or alliance with thinks less of it too. Relations with it fall 10."},
 	"gold": {"name": "Close the Strait of Hormuz", "target": false, "cooldown": 480.0, "duration": 120.0,
-		"desc": "Every other nation's sea trade stops for 2 minutes and their income falls 15%. Everyone's relations with you fall 10."},
-	"russia": {"name": "Energy Leverage", "target": true, "cooldown": 300.0, "duration": 180.0,
-		"desc": "Cut off the gas: the nation's income falls 25% for 3 minutes. Relations with it fall 15."},
+		"desc": "Only while at war: every other nation's sea trade stops for 2 minutes and their income falls 15%. Everyone's relations with you fall 10."},
+	"russia": {"name": "Hybrid Sabotage", "target": true, "cooldown": 300.0, "duration": 150.0,
+		"desc": "Deniable sabotage in a rival: an undersea cable cut, a depot set on fire, a rail line wrecked. One of its buildings loses 30% of its health and its income falls 12% for 150 s. Suspected, never proven: relations with it fall 8. Not on an ally."},
 	"india": {"name": "Strategic Autonomy", "target": false, "cooldown": 300.0, "duration": 0.0,
 		"desc": "Deal with every camp at once: relations with every nation rise 12."},
 	"japan": {"name": "Development Aid", "target": true, "cooldown": 240.0, "duration": 0.0, "cost": 800.0,
@@ -85,6 +89,12 @@ static func blocked(w: Node, owner: int, target := -1) -> String:
 				return "Not while at war with it"
 			if owner == 0 and w.economy.res.money < float(p.cost):
 				return "Needs $%d" % int(p.cost)
+		"gold":
+			if d.enemies_of(owner).is_empty():
+				return "Only at war"
+		"russia":
+			if d.allied(owner, target):
+				return "Not on an ally"
 		"turkiye":
 			if d.at_war(owner, target):
 				if d.rel(owner, target) <= -80.0:
@@ -129,9 +139,7 @@ static func use(w: Node, owner: int, target := -1) -> String:
 					d.change(owner, other, -10.0)
 			text = "%s closed the Strait of Hormuz: all other sea trade stops for 2 minutes." % me
 		"russia":
-			_effect(w, "income", target, 0.75, until, owner)
-			d.change(owner, target, -15.0)
-			text = "%s cut off gas to %s: its income falls 25%% for 3 minutes." % [me, who]
+			text = _hybrid(w, owner, target, until)
 		"india":
 			for other in range(d.n):
 				if other != owner and not d.defeated(other):
@@ -175,13 +183,27 @@ static func _war_of(w: Node, target: int, besides: int) -> int:
 			return other
 	return -1
 
+## Russia's deniable campaign: one building burned, the income dented, and a
+## trade shipment to the player lost.
+static func _hybrid(w: Node, owner: int, target: int, until: float) -> String:
+	var d: Node = w.diplomacy
+	var theirs: Array = w.buildings.filter(func(b): return b.owner == target and not b.dead and b.built and b.key != "hq")
+	if not theirs.is_empty():
+		var b: Dictionary = theirs[randi() % theirs.size()]
+		w.damage(b, b.max_hp * 0.3, {"owner": owner, "dead": true, "key": "saboteurs", "covert": true})
+	_effect(w, "income", target, 0.88, until, owner)
+	if target == 0 and w.market != null:
+		w.market.sabotaged += 1
+	d.change(owner, target, -8.0)
+	return "Sabotage in %s: a cable cut, a depot burned, a rail line wrecked. %s suspects %s." % [d.name_of(target), d.name_of(target), "you" if owner == 0 else d.name_of(owner)]
+
 static func _mossad(w: Node, owner: int, target: int) -> String:
 	var d: Node = w.diplomacy
 	var hit := false
 	var theirs: Array = w.buildings.filter(func(b): return b.owner == target and not b.dead and b.built and b.key != "hq")
 	if not theirs.is_empty():
 		var b: Dictionary = theirs[randi() % theirs.size()]
-		w.damage(b, minf(b.max_hp * 0.5, 450.0), {"owner": owner, "dead": true, "key": "covert"})
+		w.damage(b, minf(b.max_hp * 0.5, 450.0), {"owner": owner, "dead": true, "key": "covert", "covert": true})
 		hit = true
 	if owner == 0:
 		w.research.points += 250.0
@@ -198,7 +220,7 @@ static func _mossad(w: Node, owner: int, target: int) -> String:
 static func _active(w: Node) -> Array:
 	return w.power_effects.filter(func(e): return float(e.until) > w.game_time)
 
-## Income multiplier for `nation` from sanctions, gas cut-offs and a closed strait.
+## Income multiplier for `nation` from sanctions, sabotage, bans and a closed strait.
 static func income_mult(w: Node, nation: int) -> float:
 	var m := 1.0
 	for e in _active(w):
@@ -214,7 +236,7 @@ static func production_blocked(w: Node, nation: int) -> bool:
 
 ## Sea trade of `nation` stopped by a closed strait.
 static func sea_closed(w: Node, nation: int) -> bool:
-	return _active(w).any(func(e): return e.kind == "hormuz" and int(e.by) != nation)
+	return _active(w).any(func(e): return (e.kind == "hormuz" and int(e.by) != nation) or (e.kind == "sea_ban" and int(e.nation) == nation))   # (and an insurance ban or a closed canal: additional_powers.gd)
 
 const MILITARY := ["barracks", "tankFactory", "airfield", "helipad", "shipyard", "missileSilo"]
 
