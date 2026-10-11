@@ -54,6 +54,11 @@ const DOCTRINE := {
 	"israel": ["airpower", "inspiring", "spearhead"], "uk": ["admiral", "inspiring", "infantry"],
 	"ukraine": ["drones", "inspiring", "fortress"], "north_korea": ["gunner", "reckless", "infantry"],
 	"south_korea": ["spearhead", "fortress", "gunner"], "pakistan": ["infantry", "gunner", "fortress"],
+	# The regional additions: Ethiopia and Sudan's army fought their recent wars with drones;
+	# the Houthis with drones and dug-in infantry; Nigeria with air support against insurgents.
+	"yemen": ["infantry", "fortress", "logistician"], "houthis": ["drones", "infantry", "fortress"],
+	"ethiopia": ["drones", "infantry", "airpower"], "nigeria": ["infantry", "airpower", "logistician"],
+	"sudan": ["drones", "gunner", "infantry"], "south_sudan": ["infantry", "reckless", "fortress"],
 }
 ## Surnames for the generals a nation fields (invented officers).
 const NAMES := {
@@ -69,6 +74,12 @@ const NAMES := {
 	"uk": ["Ashworth", "Pembroke", "Hollis", "Kerr", "Fairfax", "Llewellyn", "Graham", "Stirling", "Hartley", "Blake"],
 	"ukraine": ["Kovalenko", "Bondarenko", "Shevchuk", "Tkachenko", "Moroz", "Kravets", "Savchenko", "Lysenko", "Hnatiuk", "Melnyk"],
 	"*": ["Kader", "Haddad", "Santos", "Lima", "Okafor", "Nasser", "Rahman", "Pratama", "Kim", "Park", "Khan", "Farouk"],
+	"yemen": ["al-Hamdani", "al-Sanani", "Ba Salem", "al-Hadrami", "al-Awadhi", "al-Yafei", "al-Qadhi", "Bin Brik", "al-Shuaibi", "al-Maqtari"],
+	"houthis": ["al-Kibsi", "al-Mutawakkil", "al-Wazir", "al-Daylami", "al-Shami", "al-Hutami", "al-Murtada", "al-Eryani", "al-Hamzi", "al-Sharafi"],
+	"ethiopia": ["Tadesse", "Gebremariam", "Alemu", "Bekele", "Desta", "Tesfaye", "Wolde", "Abebe", "Kebede", "Girma"],
+	"nigeria": ["Okafor", "Adeyemi", "Bello", "Abubakar", "Eze", "Ogunleye", "Musa", "Nwosu", "Ibrahim", "Oladipo"],
+	"sudan": ["Osman", "Abdelrahman", "Hamid", "Babiker", "El-Tayeb", "Mahjoub", "Idris", "Fadlallah", "Suleiman", "Gaafar"],
+	"south_sudan": ["Deng", "Malual", "Lual", "Wani", "Lado", "Majok", "Akol", "Nyok", "Ajak", "Bol"],
 }
 
 var w: Node

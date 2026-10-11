@@ -12,6 +12,7 @@ $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.e
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
+    @('the six regional entities: national names, unit quality, Houthi missiles and launch sites, South Sudan helicopters, regime, plan, sanctions, treaties, generals', @('--script', 'res://tools/regional-entities-check.gd'), 'REGIONAL_ENTITIES PASS', 900),
     @('eras ask nothing abroad (no trade routes, no share of the land); the Testing tools switch, Cheats button, screen and actions', @('--script', 'res://tools/cheat-tools-check.gd'), 'CHEAT_TOOLS PASS', 600),
     @('six new regional identities, escrow contracts, national research, restricted arsenals and old indices', @('--script', 'res://tools/regional-factions-check.gd'), 'REGIONAL_FACTIONS PASS', 600),
     @('who can really use AI and the bomb: national AI ceilings, no nuclear release, tension or escalation threats without nuclear weapons', @('--script', 'res://tools/national-realism-check.gd'), 'NATIONAL_REALISM PASS', 900),

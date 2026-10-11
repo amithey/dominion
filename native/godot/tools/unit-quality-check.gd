@@ -99,7 +99,8 @@ func run() -> void:
 	w.hud._update_selection()
 	var shown: String = w.hud._stat_values["ACCURACY"][1].text
 	var attack: String = w.hud._stat_values["ATTACK"][1].text
-	check(w.hud._stat_values["ACCURACY"][0].visible and shown == "%d%%" % int(round(t.israel[2] * 100)) and int(attack) > int(def.dmg),
+	# (the card caps accuracy at 100%: hud.gd)
+	check(w.hud._stat_values["ACCURACY"][0].visible and shown == "%d%%" % mini(100, int(round(t.israel[2] * 100))) and int(attack) > int(def.dmg),
 		"the unit card shows accuracy %s and an attack of %s (the shared tank's %d)" % [shown, attack, int(def.dmg)])
 	merkava.selected = false
 	for u in [merkava, t64]: w.kill(u)

@@ -37,6 +37,12 @@ const QUALITY := {
 		"iraq": [0.82, 0.9, 0.84, 0.97, 1.0],   # M1A1M Abrams
 		"syria": [0.65, 0.78, 0.68, 0.9, 1.0],   # T-72
 		"afghanistan": [0.5, 0.62, 0.55, 0.9, 1.0],   # T-62 (captured)
+		"yemen": [0.55, 0.65, 0.55, 0.95, 1.0],   # T-55 / T-62
+		"houthis": [0.6, 0.68, 0.55, 0.95, 1.0],   # T-62 / T-72, captured, little maintenance
+		"ethiopia": [0.72, 0.78, 0.7, 0.95, 1.0],   # T-72UA1
+		"nigeria": [0.82, 0.86, 0.8, 1.0, 1.0],   # VT-4 with older Vickers Mk 3
+		"sudan": [0.7, 0.76, 0.64, 0.95, 1.0],   # T-72 / Al-Bashir (Type 85)
+		"south_sudan": [0.68, 0.76, 0.62, 0.95, 1.0],   # T-72AV
 	},
 	"apc": {
 		"usa": [1.0, 1.0, 1.0, 1.0, 1.0],   # Stryker
@@ -61,6 +67,12 @@ const QUALITY := {
 		"iraq": [0.7, 0.78, 0.68, 0.95, 1.0],   # BTR-4 / M113
 		"syria": [0.57, 0.7, 0.62, 0.92, 1.0],   # BMP-1
 		"afghanistan": [0.47, 0.62, 0.55, 0.95, 1.0],   # Humvee (captured)
+		"yemen": [0.62, 0.72, 0.6, 0.95, 1.0],   # BTR-60 / MRAP
+		"houthis": [0.62, 0.72, 0.58, 0.95, 1.0],   # captured BMP-2 / BTR-80
+		"ethiopia": [0.62, 0.72, 0.6, 0.95, 1.0],   # BTR-60 / BMP-1
+		"nigeria": [0.72, 0.78, 0.7, 0.98, 1.0],   # BTR-3UN / Ara
+		"sudan": [0.66, 0.74, 0.62, 0.95, 1.0],   # BTR-80A
+		"south_sudan": [0.64, 0.72, 0.6, 0.95, 1.0],   # BTR-80 / Typhoon
 	},
 	"artillery": {
 		"usa": [1.0, 1.0, 1.0, 1.0, 0.95],   # M109A7 Paladin
@@ -85,6 +97,12 @@ const QUALITY := {
 		"iraq": [0.78, 0.84, 0.76, 0.97, 0.92],   # M109A5
 		"syria": [0.62, 0.7, 0.62, 0.92, 0.85],   # 2S1 Gvozdika / D-30
 		"afghanistan": [0.55, 0.62, 0.55, 0.65, 0.81],   # D-30 (towed)
+		"yemen": [0.8, 0.84, 0.72, 0.95, 0.95],   # D-30 / M109A5
+		"houthis": [0.76, 0.82, 0.66, 0.92, 0.95],   # D-30 / 2S1
+		"ethiopia": [0.88, 0.92, 0.86, 1.0, 1.0],   # SH-15
+		"nigeria": [0.8, 0.84, 0.76, 0.98, 0.95],   # SH-5 / Palmaria
+		"sudan": [0.78, 0.84, 0.7, 0.95, 0.95],   # D-30 / Khalifa
+		"south_sudan": [0.74, 0.8, 0.64, 0.92, 0.95],   # D-30 / 2S1
 	},
 	"mlrs": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.04],   # M270A2 MLRS
@@ -109,6 +127,9 @@ const QUALITY := {
 		"iraq": [0.7, 0.78, 0.68, 0.95, 0.89],   # BM-21 Grad
 		"syria": [0.62, 0.7, 0.62, 0.92, 0.85],   # BM-21 Grad
 		"afghanistan": [0.55, 0.62, 0.55, 0.9, 0.81],   # BM-21 Grad
+		"houthis": [0.76, 0.86, 0.6, 0.95, 1.0],   # BM-21 / Badr
+		"ethiopia": [0.8, 0.88, 0.66, 0.95, 1.0],   # BM-21
+		"sudan": [0.78, 0.86, 0.62, 0.95, 1.0],   # BM-21 / Taka
 	},
 	"aaVehicle": {
 		"usa": [1.0, 1.0, 1.0, 1.0, 1.0],   # M-SHORAD
@@ -133,6 +154,12 @@ const QUALITY := {
 		"iraq": [0.93, 0.95, 0.92, 1.0, 1.0],   # Pantsir-S1
 		"syria": [0.62, 0.7, 0.62, 0.92, 1.0],   # 35 mm air defence gun
 		"afghanistan": [0.55, 0.62, 0.55, 0.9, 1.0],   # ZU-23-2
+		"yemen": [0.6, 0.7, 0.55, 1.0, 0.85],   # ZU-23-2 technical
+		"houthis": [0.62, 0.76, 0.62, 1.0, 0.95],   # ZU-23-2 / Saqr
+		"ethiopia": [1.0, 1.0, 0.96, 1.0, 1.0],   # Pantsir-S1
+		"nigeria": [0.7, 0.78, 0.66, 0.95, 0.9],   # ZSU-23-4
+		"sudan": [0.6, 0.7, 0.55, 1.0, 0.85],   # ZU-23-2
+		"south_sudan": [0.6, 0.7, 0.55, 1.0, 0.85],   # ZU-23-2
 	},
 	"samLauncher": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.04],   # Patriot PAC-3
@@ -155,6 +182,7 @@ const QUALITY := {
 		"australia": [1.0, 1.0, 1.0, 1.0, 0.8],   # NASAMS
 		"pakistan": [1.0, 1.0, 1.0, 1.0, 1.0],   # HQ-9/P
 		"iraq": [1.0, 1.0, 1.0, 1.0, 1.0],   # Cheongung II (KM-SAM)
+		"ethiopia": [0.84, 0.88, 0.82, 0.95, 0.9],   # Spyder / S-125
 	},
 	"helicopter": {
 		"usa": [1.0, 1.0, 1.0, 1.0, 1.0],   # UH-60M Black Hawk
@@ -179,6 +207,10 @@ const QUALITY := {
 		"iraq": [0.78, 0.84, 0.76, 0.97, 1.0],   # Mi-17
 		"syria": [0.62, 0.7, 0.62, 0.92, 1.0],   # Mi-17
 		"afghanistan": [0.57, 0.7, 0.62, 0.92, 1.0],   # UH-60 (captured)
+		"ethiopia": [0.86, 0.9, 0.84, 1.0, 1.0],   # Mi-17
+		"nigeria": [0.88, 0.9, 0.86, 1.0, 1.0],   # Mi-17 / AW109
+		"sudan": [0.84, 0.88, 0.8, 1.0, 1.0],   # Mi-17
+		"south_sudan": [0.78, 0.84, 0.74, 0.95, 1.0],   # Mi-17, little maintenance
 	},
 	"gunship": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.0],   # AH-64E Apache
@@ -201,6 +233,9 @@ const QUALITY := {
 		"australia": [1.12, 1.08, 1.12, 1.0, 1.0],   # AH-64E Apache
 		"pakistan": [0.86, 0.9, 0.84, 1.0, 1.0],   # AH-1F Cobra / Z-10ME
 		"iraq": [0.93, 0.95, 0.92, 1.0, 1.0],   # Mi-28NE
+		"nigeria": [0.9, 0.92, 0.88, 1.0, 1.0],   # T129 ATAK / Mi-35M
+		"sudan": [0.8, 0.86, 0.76, 1.0, 1.0],   # Mi-24V
+		"south_sudan": [0.74, 0.82, 0.7, 0.95, 1.0],   # Mi-24V under embargo
 	},
 	"jet": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.04],   # F-15EX Eagle II
@@ -223,6 +258,9 @@ const QUALITY := {
 		"australia": [1.06, 1.04, 1.06, 1.0, 1.02],   # F/A-18F Super Hornet
 		"pakistan": [0.93, 0.95, 0.92, 1.0, 0.97],   # JF-17 Block III / F-16
 		"iraq": [0.82, 0.9, 0.84, 1.0, 0.95],   # F-16IQ Fighting Falcon
+		"ethiopia": [0.86, 0.9, 0.86, 1.0, 1.0],   # Su-30K / Su-27
+		"nigeria": [0.66, 0.72, 0.66, 0.95, 0.85],   # F-7NI
+		"sudan": [0.72, 0.8, 0.7, 0.95, 0.9],   # Su-25 / MiG-29SE
 	},
 	"drone": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.0],   # MQ-9 Reaper
@@ -247,6 +285,10 @@ const QUALITY := {
 		"iraq": [0.86, 0.9, 0.84, 1.0, 1.0],   # CH-4B
 		"syria": [0.7, 0.78, 0.68, 0.95, 1.0],   # Shaheen
 		"afghanistan": [0.55, 0.62, 0.55, 0.9, 1.0],   # Taliban-built drone
+		"ethiopia": [0.95, 0.95, 0.95, 1.0, 1.0],   # Akinci / Wing Loong
+		"nigeria": [0.9, 0.92, 0.9, 1.0, 1.0],   # Wing Loong II
+		"sudan": [0.88, 0.9, 0.88, 1.0, 1.0],   # Bayraktar TB2 / Mohajer-6
+		"houthis": [0.7, 0.86, 0.66, 0.95, 1.0],   # Qasef / Samad
 	},
 	"corvette": {
 		"usa": [0.86, 0.82, 0.84, 1.08, 0.95],   # Freedom-class LCS
@@ -269,6 +311,7 @@ const QUALITY := {
 		"australia": [0.93, 0.95, 0.92, 1.0, 0.97],   # Anzac-class
 		"pakistan": [1.0, 1.0, 1.0, 1.0, 1.0],   # Babur-class (MILGEM)
 		"iraq": [0.7, 0.78, 0.68, 0.95, 0.89],   # Musa Ben Nussair-class
+		"nigeria": [0.66, 0.62, 0.7, 1.0, 0.8],   # OPV-76 / Aradu
 	},
 	"destroyer": {
 		"north_korea": [0.85, 0.9, 0.85, 1.0, 1.0],   # initial Choe Hyon class; game balance
@@ -339,6 +382,12 @@ const QUALITY := {
 		"iraq": [0.93, 0.95, 0.92, 1.0, 0.97],   # Kornet team
 		"syria": [0.86, 0.9, 0.84, 1.0, 0.95],   # Kornet team
 		"afghanistan": [0.7, 0.78, 0.68, 0.95, 0.89],   # RPG-29 team
+		"yemen": [0.9, 0.84, 0.8, 1.0, 0.95],   # Konkurs
+		"houthis": [0.95, 0.95, 0.92, 1.0, 1.0],   # Kornet / Dehlavieh
+		"ethiopia": [0.9, 0.84, 0.8, 1.0, 0.95],   # Konkurs
+		"nigeria": [0.9, 0.82, 0.8, 1.0, 0.9],   # Milan
+		"sudan": [0.9, 0.84, 0.8, 1.0, 0.95],   # Konkurs
+		"south_sudan": [0.9, 0.78, 0.72, 1.0, 0.6],   # RPG-29
 	},
 	"manpads": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.04],   # Stinger team
@@ -363,6 +412,12 @@ const QUALITY := {
 		"iraq": [0.86, 0.9, 0.84, 1.0, 0.95],   # Igla team
 		"syria": [0.78, 0.84, 0.76, 0.97, 0.92],   # Igla / Strela team
 		"afghanistan": [0.62, 0.7, 0.62, 0.92, 0.85],   # Strela-2 team
+		"yemen": [0.9, 0.8, 0.72, 1.0, 0.85],   # Strela-2
+		"houthis": [0.9, 0.9, 0.86, 1.0, 0.95],   # Misagh-2
+		"ethiopia": [0.9, 0.92, 0.88, 1.0, 1.0],   # Igla
+		"nigeria": [0.9, 0.86, 0.8, 1.0, 0.9],   # Blowpipe / Igla
+		"sudan": [0.9, 0.8, 0.72, 1.0, 0.85],   # Strela-2
+		"south_sudan": [0.9, 0.8, 0.72, 1.0, 0.85],   # Strela-2
 	},
 	"infantry": {
 		"usa": [1.06, 1.04, 1.06, 1.0, 1.0],   # infantry
@@ -387,6 +442,12 @@ const QUALITY := {
 		"iraq": [0.93, 0.95, 0.92, 1.0, 1.0],   # infantry
 		"syria": [1.0, 0.95, 0.92, 1.0, 1.0],   # infantry
 		"afghanistan": [1.0, 0.95, 0.92, 1.0, 1.0],   # infantry
+		"yemen": [0.93, 0.92, 0.88, 1.0, 1.0],   # infantry
+		"houthis": [1.0, 0.95, 0.9, 1.0, 1.0],   # infantry, mountain-hardened
+		"ethiopia": [0.95, 0.95, 0.92, 1.0, 1.0],   # infantry
+		"nigeria": [0.93, 0.95, 0.92, 1.0, 1.0],   # infantry
+		"sudan": [0.93, 0.92, 0.88, 1.0, 1.0],   # infantry
+		"south_sudan": [0.9, 0.9, 0.85, 1.0, 1.0],   # infantry
 	},
 }
 

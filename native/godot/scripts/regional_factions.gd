@@ -31,7 +31,7 @@ const EQUIPMENT := {
 	"ethiopia": ["helicopter", "jet", "drone", "akinci", "fpvTeam", "mlrs", "samLauncher"],
 	"nigeria": ["helicopter", "jet", "superTucano", "jf17", "gunship", "drone", "gunboat", "corvette", "fpvTeam"],
 	"sudan": ["helicopter", "jet", "gunship", "drone", "fpvTeam", "mlrs", "gunboat"],
-	"south_sudan": []
+	"south_sudan": ["helicopter", "gunship"]   # Mi-17s and Mi-24 gunships kept flying under the embargo
 }
 const DISCOVERIES := {
 	"egyptWaterWorks": {"name": "Nile Water Management", "nation": "egypt", "branch": "economy", "era": 2, "cost": 450, "reqDiscovery": null, "reqBuilding": "farm", "fx": {"foodPct": 0.15}, "desc": "Improve irrigation efficiency: farm output +15%."},
@@ -50,9 +50,15 @@ const AI_PROFILES := {
 	"sudan": {"compute": 0, "models": 0, "autonomy": 1, "cyber": 0, "lean": "in", "signs": [], "ceiling": 1, "why": "War damage and infrastructure recovery limit domestic computing capacity."},
 	"south_sudan": {"compute": 0, "models": 0, "autonomy": 0, "cyber": 0, "lean": "in", "signs": [], "ceiling": 1, "why": "Limited power and connectivity; basic imported software precedes advanced AI."}
 }
+## The Houthis' missiles, from Iranian designs (CSIS, the IISS, the DIA): short-range
+## Burkan and Zulfiqar, the long-range Toufan and Palestine-2, the Quds-4 cruise
+## missile and the Asef and Tankil anti-ship ballistic missiles (arsenal_catalog.gd names).
+const HOUTHI_MISSILES := ["tactical", "ballistic", "cruise", "antiShip"]
+
 static func fields(id: String, key: String) -> bool:
 	return key in COMMON or key in EQUIPMENT.get(id, [])
 static func builds(id: String, key: String) -> bool:
+	if key == "missileSilo" and id == "houthis": return true   # its missile tunnels and launch sites
 	if key in ["silo", "missileSilo", "nuclearReactor", "strategicComplex", "specialLab"]: return false
 	if id in ["ethiopia", "south_sudan"] and key in ["port", "shipyard"]: return false
 	return true
@@ -95,4 +101,4 @@ static func restrict(w: Node, everyone: Array) -> void:
 	for key in w.map.missiles.get("types", {}):
 		var m: Dictionary = w.map.missiles.types[key]
 		var field = m.get("nation", "")
-		m.nation = everyone.filter(func(id): return not id in IDS and ((field is Array and id in field) or (not field is Array and (str(field) == "" or str(field) == id))))
+		m.nation = everyone.filter(func(id): return (id == "houthis" and key in HOUTHI_MISSILES) or (not id in IDS and ((field is Array and id in field) or (not field is Array and (str(field) == "" or str(field) == id)))))

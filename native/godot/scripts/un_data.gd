@@ -46,6 +46,8 @@ const STANDING := {
 	"iran": {"res": "its nuclear programme", "measures": ["embargo", "targeted"]},
 	"north_korea": {"res": "its nuclear and missile programmes (sectoral restrictions)", "measures": ["embargo", "targeted"]},
 	"afghanistan": {"res": "its government's ties to armed groups", "measures": ["targeted"]},
+	"houthis": {"res": "the Yemen sanctions regime (an arms embargo on Ansar Allah)", "measures": ["embargo", "targeted"]},
+	"sudan": {"res": "the Darfur sanctions regime", "measures": ["targeted"]},
 }
 
 static func ident(w: Node, i: int) -> String:

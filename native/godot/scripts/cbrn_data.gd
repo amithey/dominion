@@ -72,6 +72,10 @@ const TREATIES := {
 	"iran": {"icc": false}, "turkiye": {"icc": false}, "saudi": {"icc": false}, "indonesia": {"icc": false}, "iraq": {"icc": false},
 	"japan": {"icc": true}, "south_korea": {"icc": true}, "brazil": {"icc": true}, "australia": {"icc": true},
 	"ukraine": {"icc": true}, "afghanistan": {"icc": true},
+	# The regional additions: Nigeria is the only ICC party among them; South Sudan
+	# joined the BWC but its CWC accession is still pending.
+	"yemen": {"icc": false}, "houthis": {"icc": false}, "ethiopia": {"icc": false}, "nigeria": {"icc": true},
+	"sudan": {"icc": false}, "south_sudan": {"cwc": "none", "icc": false},
 }
 ## NATO nuclear sharing: US B61 bombs in a host's custody, released only by
 ## the United States (Kleine Brogel, Büchel, Aviano, Ghedi, Volkel, Incirlik,

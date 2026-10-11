@@ -26,7 +26,10 @@ const REGIME := {"usa": "democracy", "eu": "democracy", "japan": "democracy", "i
 	"uk": "democracy", "south_korea": "democracy", "brazil": "democracy", "indonesia": "democracy", "australia": "democracy",
 	"ukraine": "democracy", "turkiye": "hybrid", "pakistan": "hybrid", "iraq": "hybrid",
 	"china": "autocracy", "russia": "autocracy", "iran": "autocracy", "north_korea": "autocracy", "saudi": "autocracy",
-	"egypt": "autocracy", "syria": "autocracy", "afghanistan": "autocracy"}
+	"egypt": "autocracy", "syria": "autocracy", "afghanistan": "autocracy",
+	# The regional additions: Nigeria elects its president, Ethiopia and Yemen's council
+	# rule with weak checks, the rest are military or movement rule.
+	"nigeria": "hybrid", "ethiopia": "hybrid", "yemen": "hybrid", "houthis": "autocracy", "sudan": "autocracy", "south_sudan": "autocracy"}
 const SENSITIVITY := {"democracy": 1.0, "hybrid": 0.7, "autocracy": 0.45}
 const BASELINE := {"democracy": 60.0, "hybrid": 65.0, "autocracy": 70.0}
 const TIERS := [[75.0, "Rallied"], [50.0, "Steady"], [30.0, "Weary"], [15.0, "Protests"], [0.0, "Collapse"]]

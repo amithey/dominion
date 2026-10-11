@@ -22,7 +22,9 @@ extends RefCounted
 const STYLE := {"usa": "grid", "australia": "grid", "eu": "compact", "uk": "compact", "japan": "compact", "south_korea": "compact",
 	"israel": "compact", "turkiye": "compact", "china": "axial", "russia": "axial", "north_korea": "axial", "ukraine": "axial",
 	"iran": "axial", "egypt": "axial", "saudi": "linear", "india": "organic", "pakistan": "organic", "indonesia": "organic",
-	"brazil": "organic", "iraq": "organic", "syria": "organic", "afghanistan": "organic"}
+	"brazil": "organic", "iraq": "organic", "syria": "organic", "afghanistan": "organic",
+	"yemen": "organic", "houthis": "organic", "ethiopia": "organic", "nigeria": "organic", "south_sudan": "organic",
+	"sudan": "grid"}   # (Khartoum was laid out on a planned grid)
 ## zone -> [nearest ring, farthest ring]
 const RINGS := {"civic": [1, 2], "home": [1, 3], "industry": [2, 4], "heavy": [3, 5], "farm": [3, 6], "army": [2, 6], "airbase": [4, 7]}
 const ZONE := {"market": "civic", "bank": "civic", "cityHall": "civic", "school": "civic", "library": "civic", "university": "civic",
