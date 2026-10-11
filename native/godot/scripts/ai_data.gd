@@ -102,6 +102,9 @@ static func ceiling(w: Node, owner: int) -> int:
 
 ## Why `owner` may not pursue AI discovery `key` ("" when it may).
 static func beyond(w: Node, owner: int, key: String) -> String:
-	if not NEEDS.has(key) or ceiling(w, owner) >= int(NEEDS[key]):
+	var need := int(NEEDS.get(key, preload("res://scripts/ai_applications_data.gd").needs(key)))
+	if key == "aiStrategicVerification" and (w.get("defcon") == null or w.defcon == null or not w.defcon.nuclear(owner)):
+		return "Strategic warning verification requires a nuclear arsenal."
+	if need <= 0 or ceiling(w, owner) >= need:
 		return ""
 	return "Beyond your nation's AI capacity: %s" % str(profile(w, owner).get("why", ""))

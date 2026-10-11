@@ -4,6 +4,7 @@ extends HBoxContainer
 const ART := {"E. Hale": "hale", "K. Volkov": "volkov", "L. Moreau": "moreau", "R. Qadir": "qadir"}
 
 static func portrait(identity: String) -> String:
+	identity = preload("res://scripts/regional_factions.gd").LEADER_ALIASES.get(identity, identity)
 	var factions = preload("res://scripts/factions.gd")
 	for i in range(factions.LEADERS.size()):
 		if identity == factions.LEADERS[i]:

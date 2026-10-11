@@ -4,7 +4,10 @@ extends RefCounted
 ## Append-only identities preserve the original 22 selection indices and saved arsenals.
 const IDS := ["yemen", "houthis", "ethiopia", "nigeria", "sudan", "south_sudan"]
 const NAMES := ["Yemen (Recognized Government)", "Houthis (Ansar Allah)", "Ethiopia", "Nigeria", "Sudan", "South Sudan"]
-const LEADERS := ["Presidential Leadership Council", "Ansar Allah Leadership", "Federal Government of Ethiopia", "Federal Government of Nigeria", "Sudanese Authorities", "Government of South Sudan"]
+## Verified leadership snapshot: 2026-10-11; portrait provenance is recorded beside the PNGs.
+const LEADERS := ["PLC Chairman Rashad al-Alimi", "Ansar Allah Leader Abdul-Malik al-Houthi", "Prime Minister Abiy Ahmed", "President Bola Tinubu", "Sovereign Council Chairman Abdel Fattah al-Burhan", "President Salva Kiir Mayardit"]
+## Early regional saves used authority labels; keep their portraits resolvable.
+const LEADER_ALIASES := {"Presidential Leadership Council": LEADERS[0], "Ansar Allah Leadership": LEADERS[1], "Federal Government of Ethiopia": LEADERS[2], "Federal Government of Nigeria": LEADERS[3], "Sudanese Authorities": LEADERS[4], "Government of South Sudan": LEADERS[5]}
 const COLOURS := ["#ba6557", "#748653", "#66a465", "#31967b", "#b39160", "#6285b3"]
 const PORTRAITS := ["yemen", "houthis", "ethiopia", "nigeria", "sudan", "south-sudan"]
 const SIGNATURES := ["Reconstruction Crew", "Coastal Drone Battery", "Hydropower Grid", "A-29 / JF-17", "Reconstruction Engineers", "Oil Transit Contract"]

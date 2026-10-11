@@ -7,6 +7,21 @@ or testing the native game; copied art and the engine are local-only.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
+## Practical AI applications (local development)
+
+Defence > AI > Applications offers twelve costed applications in civil economy,
+military/security and state/strategic policy. Complete their discoveries in Research,
+validate using half the Training runs compute, then commission. Operating services
+share compute and require upkeep and working facilities. Suspend or resume without
+paying capital twice. The diplomatic desk opens consultations; strategic verification
+reduces false-warning risk for nuclear powers. National ceilings remain enforced,
+with evidence and priorities for all 28 identities. Rivals develop applications too;
+saves retain projects and deployments.
+
+Research, uncertainty and balance tables:
+[AI applications research](AI-APPLICATIONS-RESEARCH-2026-10-11.md).
+Checks: `tools/ai-applications-check.gd` and existing AI and national-realism suites.
+
 ## In development: ten additional nations
 
 The native source now offers 19 factions: the existing nine plus the United Kingdom,

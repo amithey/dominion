@@ -162,9 +162,11 @@ var _auto := {}         # owner -> autonomy rating
 var _econ_shown := -1.0
 var _t := 0.0
 var _doctrine_t := 0.0
+var applications: RefCounted
 
 func _init(world: Node) -> void:
 	w = world
+	applications = preload("res://scripts/ai_applications.gd").new(self, w)
 	for owner in range(w.map.nations.size()):
 		st[owner] = {"level": 0, "train": 0.0, "reserve": 0.0, "doctrine": "in", "rate": 0.0}
 		_auto[owner] = AIData.rating(w, owner, "autonomy")
@@ -185,6 +187,7 @@ static func apply(world: Node) -> void:
 	var discoveries: Dictionary = world.map.research.discoveries
 	for key in DISCOVERIES:
 		discoveries[key] = DISCOVERIES[key].duplicate(true)
+	discoveries.merge(preload("res://scripts/ai_applications_data.gd").discoveries(), true)
 
 # ---------------------------------------------------------------- queries
 
@@ -228,12 +231,15 @@ func researched(owner: int, key: String) -> bool:
 	if owner == 0:
 		return w.research != null and w.research.done(key)
 	var need := {"machineLearning": 3.0, "militaryAI": 5.0, "frontierModels": 7.0, "cyberWarfare": 3.0}
+	var app_level := preload("res://scripts/ai_applications_data.gd").needs(key)
+	if app_level > 0:
+		return w.research != null and w.research.ai_tech(owner) >= (3.0 if app_level <= 2 else (5.0 if app_level == 3 else 7.0))
 	return w.research != null and w.research.ai_tech(owner) >= float(need.get(key, 99.0))
 
 func data_centres(owner: int) -> int:
 	var n := 0
 	for b in w.buildings:
-		if int(b.owner) == owner and b.key == "aiDataCenter" and b.built and not b.dead and b.get("supplied", true):
+		if int(b.owner) == owner and b.key == "aiDataCenter" and b.built and not b.dead and b.get("supplied", true) and float(b.get("disabled_until", 0.0)) <= w.game_time:
 			n += 1
 	return n
 
@@ -270,7 +276,8 @@ func power(owner: int, pool: String) -> float:
 	var lvl := level(owner)
 	if lvl <= 0 or not NEED.has(pool):
 		return 0.0
-	return clampf(flow(owner, pool) / (float(NEED[pool]) * lvl), 0.0, 1.0)
+	var available_flow := maxf(0.0, flow(owner, pool) - (applications.demand(owner, pool) if applications != null else 0.0))
+	return clampf(available_flow / (float(NEED[pool]) * lvl), 0.0, 1.0)
 
 func military(owner: int) -> float:
 	return float(_mil.get(owner, 0.0))
@@ -296,11 +303,13 @@ func damage_mult(source: Dictionary) -> float:
 		return 1.0
 	var o := int(source.owner)
 	var m := military(o)
-	if m <= 0.0:
+	if m <= 0.0 and applications.factor(o, "autonomy") <= 0.0:
 		return 1.0
 	var key := _base(str(source.key))
 	var doc := doctrine(o)
 	var f := 1.0
+	if key in DRONE_KEYS or str(source.key) in DRONE_KEYS:
+		f += 0.06 * applications.factor(o, "autonomy")
 	if doc != "in" and (key in DRONE_KEYS or str(source.key) in DRONE_KEYS):
 		f += 0.04 * level(o) * m * (0.6 + 0.1 * float(_auto.get(o, 1)))
 	if key in ARTY_KEYS and fusion(o):
@@ -312,10 +321,11 @@ func damage_mult(source: Dictionary) -> float:
 ## A factor on the chance jamming brings `owner`'s drones down.
 func jam_factor(owner: int) -> float:
 	var m := military(owner)
+	var integration: float = 1.0 - 0.1 * applications.factor(owner, "autonomy")
 	match doctrine(owner):
-		"on": return 1.0 - 0.3 * m
-		"out": return 1.0 - 0.85 * m
-	return 1.0
+		"on": return maxf(0.1, (1.0 - 0.3 * m) * integration)
+		"out": return maxf(0.1, (1.0 - 0.85 * m) * integration)
+	return integration
 
 ## Better aim for `owner`'s guns (less scatter) from the fusion cell.
 func aim(owner: int) -> float:
@@ -364,6 +374,9 @@ func bonuses() -> Dictionary:
 		out.researchPct = float(out.get("researchPct", 0.0)) + 0.25
 	if stage >= 2:
 		out.prodPct = float(out.get("prodPct", 0.0)) + 0.15
+	if applications != null:
+		var practical: Dictionary = applications.bonuses()
+		for stat in practical: out[stat] = float(out.get(stat, 0.0)) + float(practical[stat])
 	return out
 
 ## The share of jobs AI has automated (the Economy pool).
@@ -385,7 +398,7 @@ func set_retraining(on: bool) -> String:
 
 ## A rival's income from its AI economy.
 func ai_income_mult(owner: int) -> float:
-	return 1.0 + 0.03 * level(owner) * power(owner, "economy")
+	return 1.0 + 0.03 * level(owner) * power(owner, "economy") + float(applications.bonuses(owner).get("incomePct", 0.0))
 
 ## Interception odds a rival's batteries gain from AI battle management.
 func intercept_bonus(owner: int) -> float:
@@ -397,11 +410,11 @@ func coordinated(owner: int) -> bool:
 
 ## Intelligence gained grows with AI analysis (espionage.add_report).
 func intel_mult(owner := 0) -> float:
-	return 1.0 + 0.1 * level(owner) * power(owner, "intel")
+	return 1.0 + 0.1 * level(owner) * power(owner, "intel") + 0.2 * applications.factor(owner, "sensors")
 
 ## Reveal time and radius of a recon pass (space.gd).
 func recon_mult(owner: int) -> float:
-	return 1.0 + 0.08 * level(owner) * power(owner, "intel")
+	return 1.0 + 0.08 * level(owner) * power(owner, "intel") + 0.12 * applications.factor(owner, "sensors")
 
 ## AI reading of open sources and imagery foresees attacks (espionage.warn_attack).
 func warns() -> bool:
@@ -413,6 +426,8 @@ func upkeep() -> Dictionary:
 	var out := {"silicon": DC_UPKEEP.silicon * n, "money": DC_UPKEEP.money * n} if n > 0 else {}
 	if retraining and power(0, "economy") > 0.0:
 		out.money = float(out.get("money", 0.0)) + retraining_cost()
+	if applications != null and applications.upkeep() > 0.0:
+		out.money = float(out.get("money", 0.0)) + applications.upkeep()
 	return out
 
 # ---------------------------------------------------------------- the player's orders
@@ -492,6 +507,7 @@ func launch_cyber(target: int) -> String:
 ## A nation's defence against AI cyber campaigns.
 func cyber_defence(owner: int) -> float:
 	var p := 0.03 * AIData.rating(w, owner, "cyber") + 0.06 * level(owner) + (0.2 if agi_stage(owner) >= 2 else 0.0)
+	p += 0.12 * applications.factor(owner, "cyber")
 	if owner == 0:
 		p += 0.1 * level(0) * power(0, "intel")
 	return p
@@ -551,6 +567,7 @@ func update(delta: float) -> void:
 	_lapse_controls()
 	_early_warning()
 	_agi_second()
+	applications.update()
 	_reputation_t += 1.0
 	if _reputation_t >= 300.0:
 		_reputation_t = 0.0
@@ -575,7 +592,7 @@ func _second(owner: int) -> void:
 	if agi_active(owner):
 		pass   # the frontier compute goes to the AGI project (_agi_second)
 	elif lvl < cap(owner):
-		row.train = float(row.train) + flow(owner, "frontier")
+		row.train = float(row.train) + applications.training_flow(owner)
 		if float(row.train) >= next_cost(owner):
 			row.train = 0.0
 			row.level = lvl + 1
@@ -605,7 +622,7 @@ func _note(text: String) -> void:
 
 ## Incidents a minute for `owner` now.
 func incident_rate(owner: int) -> float:
-	return float(INCIDENT_RATE.get(doctrine(owner), 0.0)) * military(owner) * (1.2 - 0.08 * AIData.rating(w, owner, "models"))
+	return float(INCIDENT_RATE.get(doctrine(owner), 0.0)) * military(owner) * (1.2 - 0.08 * AIData.rating(w, owner, "models")) * (1.0 - 0.25 * applications.factor(owner, "assurance"))
 
 func _incidents(owner: int) -> void:
 	var rate := incident_rate(owner)
@@ -758,7 +775,7 @@ func capture() -> Dictionary:
 	for k in _rival_ops: ops[str(k)] = _rival_ops[k].duplicate()
 	return {"st": rows, "alloc": alloc.duplicate(), "campaign": campaign.duplicate(true), "cyber_ready": cyber_ready, "incidents": inc, "log": log.duplicate(true), "rival_cyber": rc,
 		"retraining": retraining, "controls": ctl, "smuggling": smg, "signed": sig, "influence_ready": influence_ready, "theft_ready": theft_ready, "rival_ops": ops,
-		"early_warning": early_warning.keys().map(func(o): return int(o)), "agi": _keyed(agi), "safety": safety, "sabotage_ready": sabotage_ready, "runaways": _keyed(runaways)}
+		"early_warning": early_warning.keys().map(func(o): return int(o)), "agi": _keyed(agi), "safety": safety, "sabotage_ready": sabotage_ready, "runaways": _keyed(runaways), "applications": applications.capture()}
 
 static func _keyed(src: Dictionary) -> Dictionary:
 	var out := {}
@@ -804,8 +821,10 @@ func restore(data: Dictionary) -> void:
 	sabotage_ready = float(data.get("sabotage_ready", 0.0))
 	runaways.clear()
 	for k in data.get("runaways", {}): runaways[int(k)] = int(data.runaways[k])
+	applications.restore(data.get("applications", {}))
 	for owner in st.keys():
 		_refresh(owner)
+	applications.refresh()
 	# Fighters keep their loyal wingmen (the flag is not saved with the unit).
 	for u in w.units:
 		if not u.dead and str(u.key) in CCA_FIGHTERS and has_cca(int(u.owner)):
@@ -1155,7 +1174,7 @@ func alarm_rate(owner: int) -> float:
 	var r := FALSE_ALARM * (1.3 - 0.08 * AIData.rating(w, owner, "models"))
 	if early_warning.size() > 1:
 		r += 0.03   # two machines watching each other
-	return r
+	return r * (1.0 - 0.4 * applications.factor(owner, "strategic"))
 
 ## The system reports an attack that is not there.
 func false_alarm(owner: int) -> String:
@@ -1211,14 +1230,14 @@ func runaway_rate(owner: int) -> float:
 	var row: Dictionary = agi.get(owner, {"stage": 0, "progress": 0.0, "alignment": 0.0})
 	var done := float(row.progress) + float(row.alignment)
 	var ratio := float(row.alignment) / done if done > 0.0 else safety_of(owner)
-	return clampf(0.02 * (int(row.stage) + 1) * (1.0 - ratio * 2.5), 0.0, 0.1)
+	return clampf(0.02 * (int(row.stage) + 1) * (1.0 - ratio * 2.5), 0.0, 0.1) * (1.0 - 0.25 * applications.factor(owner, "assurance"))
 
 func _agi_second() -> void:
 	for owner in st.keys():
 		if (owner > 0 and w.diplomacy.defeated(owner)) or not agi_active(owner):
 			continue
 		var row := _agi_row(owner)
-		var f := flow(owner, "frontier") * (1.5 if owner > 0 else 1.0)   # (rivals' projects are their nations' whole effort)
+		var f: float = applications.training_flow(owner) * (1.5 if owner > 0 else 1.0)   # (rivals' projects are their nations' whole effort)
 		var safe := safety_of(owner)
 		row.progress = float(row.progress) + f * (1.0 - safe)
 		row.alignment = float(row.alignment) + f * safe

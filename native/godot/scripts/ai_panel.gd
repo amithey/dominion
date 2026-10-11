@@ -14,13 +14,18 @@ const POOL_HELP := {
 	"frontier": "Training runs: the next AI level",
 }
 
+static func _applications(sp, a) -> void:
+	preload("res://scripts/ai_applications_panel.gd").draw(sp, a)
+
 static func draw(sp) -> void:
 	var hud = sp.hud
 	var a = hud.world.get("directorate")
 	if a == null:
 		return
-	sp._tabs([["Compute", "compute"], ["Doctrine", "doctrine"], ["Operations", "operations"], ["AGI", "agi"], ["Rivals", "rivals"]], a.ui_tab, func(v): a.ui_tab = v)
+	sp._tabs([["Compute", "compute"], ["Applications", "applications"], ["Doctrine", "doctrine"], ["Operations", "operations"], ["AGI", "agi"], ["Rivals", "rivals"]], a.ui_tab, func(v): a.ui_tab = v)
 	match a.ui_tab:
+		"applications":
+			_applications(sp, a)
 		"agi":
 			_agi(sp, a)
 		"doctrine":
@@ -53,6 +58,9 @@ static func _compute(sp, a) -> void:
 	if a.researched(0, "machineLearning"):
 		src += ", national industry +%.1f/s" % (a.AIData.rating(hud.world, 0, "compute") * a.NATIONAL)
 	card.add_child(hud._text("Compute %.1f/s  (%s)" % [float(a.st[0].rate), src], 13, hud.UI.TEXT))
+	if a.applications.projects.has(0):
+		sp._wrap(card, "Local validation receives half the Training runs allocation; the rest trains models or feeds AGI.", 12, hud.UI.GOLD)
+	sp._wrap(card, "Commissioned applications reserve compute before general pool bonuses. Running applications cost $%.1f/s." % a.applications.upkeep(), 11, hud.UI.MUTED)
 	if a.chip_factor(0) < 1.0:
 		sp._wrap(card, "Data centres at %d%%: %s." % [roundi(a.chip_factor(0) * 100.0), "export controls on you" + (" (smuggling)" if a.smuggling.has(0) else "") if a.controlled(0) else "a global chip shortage"], 12, hud.UI.BAD)
 	if float(a.st[0].rate) <= 0.0:
@@ -233,9 +241,15 @@ static func _rivals(sp, a) -> void:
 	rv.add_child(hud._text("Rivals' AI", 15, hud.UI.CREAM, true))
 	var any := false
 	for id in sp._targets(d):
+		var national: Array = a.applications.country(id)
+		sp._wrap(rv, "%s: %s. %s" % [d.name_of(id), national[0], national[1]], 11, hud.UI.MUTED)
 		if a.level(id) <= 0:
 			continue
 		any = true
+		var operational := []
+		for key in a.applications.rows.get(id, {}):
+			if a.applications.factor(id, key) > 0.0: operational.append(a.applications.Data.PROGRAMS[key].name)
+		if not operational.is_empty(): sp._wrap(rv, "In service: " + ", ".join(operational), 11, hud.UI.GOOD)
 		var extra := ""
 		if a.controlled(id): extra += ", under export controls"
 		if a.signatory(id, "laws"): extra += ", bound by the treaty"

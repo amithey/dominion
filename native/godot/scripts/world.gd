@@ -2909,6 +2909,8 @@ func update_construction(delta: float) -> void:
 		b.builders = count
 		if count > 0:
 			var skill: float = 1.0 + (research.bonus("prodPct") + research.bonus("buildPct") + economy.plant_bonus() if research and b.owner == 0 else 0.0)
+			if b.owner > 0 and directorate != null:
+				skill += float(directorate.applications.bonuses(b.owner).get("prodPct", 0.0))
 			skill *= preload("res://scripts/additional_factions.gd").construction_mult(self, b.owner)
 			b.progress = minf(1.0, b.progress + delta / maxf(float(b.def.buildTime), 1.0) * (1.0 + 0.5 * (count - 1)) * skill)
 			b.model.scale.y = b.full_scale_y * lerpf(0.06, 1.0, b.progress)
@@ -3146,7 +3148,10 @@ func update_training(delta: float) -> void:
 		if un != null and b.key in FactionPowers.MILITARY:
 			rail *= un.production_mult(b.owner)   # a UN arms embargo (un.gd)
 		if b.owner == 0 and research:
-			rail *= 1.0 + research.bonus("prodPct") + economy.plant_bonus()  # Industrialization, Fusion Power, power plants
+			rail *= 1.0 + research.bonus("prodPct") + research.bonus("trainPct") + economy.plant_bonus()  # production and commissioned AI logistics
+		elif b.owner > 0 and directorate != null:
+			var practical: Dictionary = directorate.applications.bonuses(b.owner)
+			rail *= 1.0 + float(practical.get("prodPct", 0.0)) + float(practical.get("trainPct", 0.0))
 		var first: String = b.queue[0]
 		if first.begins_with("missile:"):
 			b.queue_prog += delta * rail / maxf(missiles.build_time(first.substr(8)), 0.5)

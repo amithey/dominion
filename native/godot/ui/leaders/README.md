@@ -1,5 +1,21 @@
 # Real-leader portraits
 
+## Six regional leaders (11 October 2026)
+
+`yemen-v2.png` (Rashad al-Alimi), `houthis-v2.png` (Abdul-Malik al-Houthi),
+`ethiopia-v2.png` (Abiy Ahmed), `nigeria-v2.png` (Bola Tinubu),
+`sudan-v2.png` (Abdel Fattah al-Burhan), and `south-sudan-v2.png` (Salva Kiir)
+were generated separately with built-in ImageGen to match the existing art.
+They are interpretive game illustrations, not official photographs.
+Exact prompts and leadership-verification sources: `regional-leaders-prompts.json`.
+The six PNGs are preferred automatically over the existing country badges;
+the early regional authority labels remain portrait aliases for older saves.
+Egypt retains its existing `sisi-v2.png` artwork.
+
+Validation: `tools/regional-portraits-check.gd` checks distinct assets, crop
+geometry, HUD badges, identities and legacy aliases. `tools/regional-portrait-gallery.gd`
+renders the complete portraits and actual UI crops together for visual review.
+
 ## Three remaining leaders (3 October 2026)
 
 `zaidi-v2.png` (Iraq, Ali al-Zaidi), `sharaa-v2.png` (Syria, Ahmed al-Sharaa),
