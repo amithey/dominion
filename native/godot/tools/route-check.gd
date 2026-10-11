@@ -80,6 +80,7 @@ func run() -> void:
 		for p in planned:
 			plan_len += Vector2(p.x - prev.x, p.z - prev.z).length()
 			prev = p
+		w.economy.res.oil = 1.0e6   # vehicles burn fuel (war_costs.gd): this test is about the routes, not the tanks
 		w.order_move(group, t[2])
 		var walked := {}
 		var last := {}

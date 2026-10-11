@@ -130,6 +130,7 @@ func map_checks(index: int, key: String) -> void:
 	check(grew == w.ai.nations.size(), "%s: every rival builds up in two minutes (%d of %d)" % [name, grew, w.ai.nations.size()])
 	# 4: a warship sails.
 	var sea = w.water_near(w.start, 260)
+	if sea == null: sea = w.water_near(w.start, 900)   # a landlocked capital (Ulaanbaatar's slot): the nearest coast
 	var leg = sea_leg(sea, 90.0) if sea != null else null
 	var sailed := INF
 	if leg != null:
@@ -140,7 +141,7 @@ func map_checks(index: int, key: String) -> void:
 		check(w.is_water(ship.node.position, -0.5) and sailed < 15.0, "%s: a corvette sails 90 m at sea (%d m short)" % [name, int(sailed)])
 		w.kill(ship)
 	else:
-		check(false, "%s: open water near the capital for a corvette" % name)
+		check(false, "%s: open water within reach for a corvette" % name)
 	# 5: a save and back.
 	var capital_hp: float = hq().hp
 	var rel: float = w.diplomacy.rel(0, 1)
@@ -253,12 +254,14 @@ func systems_checks() -> void:
 	check(hq().hp < cap0, "a missile that gets through damages the capital (%d -> %d)" % [int(cap0), int(hq().hp)])
 	var silo: Dictionary = w.place_building("missileSilo", find_site("missileSilo", 2, 9), 0, true)
 	eco.recalculate()
-	var stock0: int = int(w.missiles.stock.get("tactical", 0))
-	w.missiles.produce(silo, "tactical")
+	# A missile this nation fields (the European Union has cruise missiles, no tactical ballistic ones).
+	var kind := "tactical" if w.missiles.locked("tactical") == "" else "cruise"
+	var stock0: int = int(w.missiles.stock.get(kind, 0))
+	var why_silo: String = w.missiles.produce(silo, kind)
 	w.update_training(1.0)
-	var early: int = int(w.missiles.stock.get("tactical", 0))
-	for i in range(int(w.missiles.build_time("tactical")) + 3): w.update_training(1.0)
-	check(early == stock0 and int(w.missiles.stock.get("tactical", 0)) == stock0 + 1, "a silo builds a missile in its time (%d s), not at once" % int(w.missiles.build_time("tactical")))
+	var early: int = int(w.missiles.stock.get(kind, 0))
+	for i in range(int(w.missiles.build_time(kind)) + 3): w.update_training(1.0)
+	check(early == stock0 and int(w.missiles.stock.get(kind, 0)) == stock0 + 1, "a silo builds a %s missile in its time (%d s), not at once%s" % [kind, int(w.missiles.build_time(kind)), (" (" + why_silo + ")") if why_silo != "" else ""])
 
 	# ------------------------------------------------ supply (14-17)
 	var village_at: Vector3 = Vector3.INF

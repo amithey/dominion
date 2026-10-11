@@ -23,6 +23,19 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.88: routes, armour in the streets, and the end of a match
+
+- **Navigation is ready only when all of it is:** the walk grid joins the navigation map tile by tile, and a match
+  began once the tile at your base was in. A route planned across a tile not yet joined ran straight through
+  buildings in the first seconds (the flaky navigation test).
+- **Armour in city streets:** a hull declared stuck while it already faced its route took a fresh route that began
+  behind it and turned back and forth; it now keeps its route once more. A hull waits a little over a second, not
+  two, behind a crawling one before it goes round. The longest standstill in the city test fell from up to 10.6 s
+  to about 6 s (20 runs, none failed).
+- **The end of a match:** nations whose capital fell are counted as fallen even when that fall ended the match.
+- Test fixtures brought up to date: fuel for the route marches, a launch silo for the farthest rival, the nearest
+  coast for a landlocked capital, a missile the nation really fields.
+
 ## Version 0.9.87: every nation's real lever on another state
 
 Researched nation by nation (native/NATIONAL-POWERS-RESEARCH-2026-10-10.md). Eight national powers only buffed the

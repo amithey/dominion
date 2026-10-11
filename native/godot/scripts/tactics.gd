@@ -321,7 +321,7 @@ static func traffic(w: Node, unit: Dictionary, to: Vector3, remaining := INF) ->
 	var cx := floori(at.x / w.GRID)
 	var cz := floori(at.z / w.GRID)
 	# A queue can close into a ring (each hull waiting on the next): a hull held
-	# at a standstill for two seconds stops queuing for three and edges round.
+	# at a standstill for a little over a second stops queuing for three and edges round.
 	var impatient: bool = int(unit.get("impatient_until", -1)) > w.sim_tick
 	for dz in range(-2, 3):
 		for dx in range(-2, 3):
@@ -362,7 +362,7 @@ static func traffic(w: Node, unit: Dictionary, to: Vector3, remaining := INF) ->
 	if crawling and cap < float(unit.speed) * 0.5:
 		if int(unit.get("queued_since", -1)) < 0:
 			unit.queued_since = w.sim_tick
-		elif w.sim_tick - int(unit.queued_since) > 120:
+		elif w.sim_tick - int(unit.queued_since) > 72:   # a little over a second behind a crawling hull, then round it
 			unit.impatient_until = w.sim_tick + 180
 			unit.queued_since = -1
 	elif not crawling:

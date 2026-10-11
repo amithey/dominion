@@ -219,6 +219,13 @@ func run() -> void:
 	for n in w.ai.nations:
 		if n.id == far: rival = n
 	rival.money = 5000.0
+	# A missile needs a launch platform (arsenal_catalog.gd): the silo a rival builds at technology 2.
+	if w.missiles.platforms_for("ballistic", far).is_empty():
+		for k in range(24):
+			var site = w.test_site("missileSilo", hq(far).root.position + Vector3.FORWARD.rotated(Vector3.UP, k * 0.7) * (30.0 + k * 3.0))
+			if site != null:
+				w.place_building("missileSilo", site, far, true)
+				break
 	var n_before: int = w.missiles.flying.size()
 	var strike: Dictionary = w.ai.missile_strike(rival, hq(far), 6.0)
 	check(not strike.is_empty() and w.missiles.flying.size() > n_before, "the farthest rival can strike your towns with missiles")

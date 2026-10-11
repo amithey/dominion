@@ -2254,7 +2254,7 @@ func _physics_process(delta: float) -> void:
 				# route, and only after many failures does it stop short.
 				if remaining < (8.0 if unit.vehicle else 4.5) or (unit.stuck >= 4 and remaining < 20.0) or unit.stuck >= 10:
 					remaining = 0.0
-				else:
+				elif not _keep_route(unit, waypoint, goal):
 					unit.path = PackedVector3Array()
 		if remaining < 0.35:
 			if not chasing:
@@ -2448,14 +2448,34 @@ func build_navigation() -> void:
 	# the base lands on the walk grid rather than at the empty map's origin.
 	var probe := start + Vector3(0, 0, 30)
 	probe.y = height_at(probe.x, probe.z)
-	for i in range(240):
+	# Every tile must be in the map, not only the one at the base: the tiles join
+	# over several syncs, and a route planned across a tile not yet joined ran
+	# straight through buildings (the flaky --nav-test).
+	for i in range(600):
 		await get_tree().physics_frame
 		if NavigationServer3D.map_get_iteration_id(nav_map)==0:
 			continue
-		if NavigationServer3D.map_get_closest_point(nav_map, probe).distance_to(probe) < 20.0:
+		if NavigationServer3D.map_get_closest_point(nav_map, probe).distance_to(probe) < 20.0 and nav_tiles_joined():
 			nav_ready = true
 			break
 	print("Navigation: %d walkable cells, ready=%s" % [cells, nav_ready])
+
+## Whether every walk tile with ground in it has joined the navigation map: a
+## point at the middle of one of its cells is found on the map where it is.
+func nav_tiles_joined() -> bool:
+	var nav_map := get_world_3d().navigation_map
+	for region in nav_tiles:
+		var mesh: NavigationMesh = region.navigation_mesh
+		if mesh == null or mesh.get_polygon_count() == 0:
+			continue
+		var poly: PackedInt32Array = mesh.get_polygon(mesh.get_polygon_count() / 2)
+		var mid := Vector3.ZERO
+		for v in poly:
+			mid += mesh.vertices[v]
+		mid /= float(poly.size())
+		if NavigationServer3D.map_get_closest_point(nav_map, mid).distance_to(mid) > 1.0:
+			return false
+	return true
 
 ## Recomputes every walk cell from the current buildings (after loading).
 func rebuild_walk_grid() -> void:
@@ -2763,6 +2783,27 @@ func straighten(route: PackedVector3Array) -> PackedVector3Array:
 		i += 1
 	out.append(route[route.size() - 1])
 	return out
+
+## A hull declared stuck while it already faces its route keeps that route
+## once more if a fresh one would turn it round: the stall clock runs out
+## while a tank pivots or edges past a comrade, and the fresh route often
+## began behind it, so it turned back and forth in city streets. A second
+## stall in a row takes the fresh route.
+func _keep_route(unit: Dictionary, waypoint: Vector3, goal: Vector3) -> bool:
+	if not unit.vehicle or unit.path.is_empty() or unit.get("kept_route", false):
+		unit.kept_route = false
+		return false
+	var ahead: Vector3 = waypoint - unit.node.position
+	if absf(angle_difference(float(unit.heading), atan2(ahead.x, ahead.z))) > deg_to_rad(45.0):
+		return false
+	var fresh := path_between(unit.node.position, goal)
+	if fresh.is_empty():
+		return false
+	var first: Vector3 = fresh[0] - unit.node.position
+	if absf(angle_difference(float(unit.heading), atan2(first.x, first.z))) <= deg_to_rad(90.0):
+		return false
+	unit.kept_route = true
+	return true
 
 ## Walkable ground all along the segment (sampled every 2 m on the walk grid).
 func clear_line(a: Vector3, b: Vector3) -> bool:

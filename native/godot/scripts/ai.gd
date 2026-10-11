@@ -87,6 +87,11 @@ func declare_war(id: int, provoked: bool) -> void:
 func _physics_process(delta: float) -> void:
 	if world == null or world.economy == null:
 		return
+	# A nation without its capital has fallen, even when that fall ended the
+	# match (the victory screen and the world after it must know).
+	for n in nations:
+		if not n.defeated and hq(n.id) == null:
+			n.defeated = true
 	if world.match_stopped(): return
 	var clock: int = world.clock()
 	for n in nations:
