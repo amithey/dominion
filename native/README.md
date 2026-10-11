@@ -38,6 +38,19 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.91: practical AI (Codex) and the regional entities in full
+
+- **AI applications (Codex):** Defence > AI > Applications, twelve services from research to service: validate on
+  your own data with half the Training runs compute, pay to commission, then run on shared compute and upkeep with
+  working facilities. National evidence and priorities for all 28 identities; rivals develop them too.
+  See [AI applications research](AI-APPLICATIONS-RESEARCH-2026-10-11.md).
+- **The six regional entities get everything a nation has:** their own names for their weapons, unit quality that
+  matches them (a Yemeni T-55 no longer fights like a Type 99A), the Houthis' missiles and tunnel launch sites,
+  South Sudan's helicopters, regime type, town plan, officer corps, sanctions and treaties.
+  See [the regional entities research](REGIONAL-ENTITIES-RESEARCH-2026-10-11.md).
+- **Regional leader portraits (Codex):** six new portraits with verified leader names.
+- Checks: tools/ai-applications-check.gd, tools/regional-entities-check.gd, tools/regional-portraits-check.gd.
+
 ## Version 0.9.90: eras ask nothing abroad; testing tools
 
 - **No era waits on trade or conquest:** the Global Era no longer asks for trade routes with other nations, and the
