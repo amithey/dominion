@@ -241,6 +241,7 @@ var cam_lift := 0.0       # raises the camera's look-at point above the ground (
 var edge_scroll := true   # pan when the mouse touches the screen edge (Settings)
 var pan_speed := 1.0      # camera pan speed multiplier (Settings)
 var show_fps := false     # the frame counter in the corner (Settings; off for players)
+var testing_tools := false   # Settings, Game: the Cheats button, F8 and F10 (cheats.gd)
 var middle_drag := false  # the middle mouse button turns the view (with Shift: drags the map)
 var order_mode := ""
 const MatchSetup := preload("res://scripts/match_setup.gd")
@@ -6244,10 +6245,10 @@ func _input(event: InputEvent) -> void:
 		occupation.begin_zone()  # the next click marks an operational zone
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Y:
 		hud.toggle_research()
-	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F8 and economy != null and preload("res://scripts/cheats.gd").allowed():
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F8 and economy != null and preload("res://scripts/cheats.gd").allowed(self):
 		economy.grant_test_resources()  # testing: plenty of everything
 		hud.notice("Testing: +$100,000, every store filled (limits 99,999), +200 army capacity.")
-	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F10 and economy != null and preload("res://scripts/cheats.gd").allowed():
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F10 and economy != null and preload("res://scripts/cheats.gd").allowed(self):
 		hud.notice(preload("res://scripts/cheats.gd").everything(self))  # testing: all research, money and stores
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F1:
 		hud.toggle_help()

@@ -83,6 +83,7 @@ var _notices: VBoxContainer
 var _fps: Label
 var _help: PanelContainer
 var _screen_buttons := {}
+var _cheats_button: Button = null   # the testing tools (cheats.gd)
 var _waiting := {}        # portrait key -> [TextureRect]
 var _windows: Node
 
@@ -298,6 +299,21 @@ func _build_top_bar() -> void:
 	build_button.pressed.connect(func(): toggle_build())
 	row.add_child(build_button)
 	row.move_child(build_button, 0)
+	# Testing tools (cheats.gd): shown only when switched on in Settings, Game.
+	var cheats := Button.new()
+	cheats.name = "CheatsDock"
+	cheats.text = "Cheats"
+	cheats.icon = UI.icon("research")
+	cheats.expand_icon = true
+	cheats.custom_minimum_size = Vector2(96, 48)
+	cheats.add_theme_font_size_override("font_size", 14)
+	cheats.add_theme_constant_override("icon_max_width", 22)
+	cheats.tooltip_text = "Testing tools: every era, money and stores, finish construction, lift the fog, peace"
+	cheats.focus_mode = Control.FOCUS_NONE
+	cheats.pressed.connect(func(): if world.menu != null: world.menu.open_cheats())
+	row.add_child(cheats)
+	_cheats_button = cheats   # (not a ministry screen: kept apart from _screen_buttons)
+	refresh_cheats()
 	refresh_speed()
 
 var _guide: Node
@@ -350,6 +366,11 @@ func _speed_controls() -> Control:
 	_paused_banner.visible = false
 	add_child(_paused_banner)
 	return box
+
+## The Cheats button follows the Testing tools setting.
+func refresh_cheats() -> void:
+	if _cheats_button != null:
+		_cheats_button.visible = preload("res://scripts/cheats.gd").allowed(world)
 
 func refresh_speed() -> void:
 	var speed: float = world.game_speed

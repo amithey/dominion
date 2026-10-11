@@ -280,12 +280,14 @@ func open_pause() -> void:
 	save_button.tooltip_text = "Create a separate campaign save. F5 replaces QuickSave."
 	_button("Load Game", open_load)
 	_button("Settings", open_settings)
-	if preload("res://scripts/cheats.gd").allowed():
+	if preload("res://scripts/cheats.gd").allowed(world):
 		var cheat := _button("Testing: everything (F10)", func():
 			world.hud.notice(preload("res://scripts/cheats.gd").everything(world))
 			close())
 		cheat.name = "CheatEverything"
 		cheat.tooltip_text = "For testing the game: every era and all your nation's research, $1,000,000 more and every store filled."
+		var more := _button("Testing tools...", open_cheats)
+		more.name = "CheatTools"
 	var to_menu := _button("Quit to Main Menu", func(): pass)
 	to_menu.pressed.connect(func():
 		if not _confirmed(to_menu, "Quit to Main Menu"): return
@@ -295,6 +297,25 @@ func open_pause() -> void:
 	to_desktop.pressed.connect(func():
 		if not _confirmed(to_desktop, "Quit to Desktop"): return
 		world.get_tree().quit())
+
+## The testing tools (cheats.gd), for checking the game quickly: each closes
+## the screen and says what it did.
+func open_cheats() -> void:
+	in_match = true
+	_show(true)
+	_layout(true)
+	_clear()
+	_wide(false)
+	_heading("TESTING TOOLS")
+	var C := preload("res://scripts/cheats.gd")
+	for row in [["Everything: every era, all research, $1,000,000 (F10)", C.everything], ["Money and stores: +$100,000, every store full (F8)", C.resources],
+			["Next era", C.next_era], ["Finish all construction and training", C.finish_all], ["Lift or restore the fog of war", C.toggle_fog], ["Peace with every nation", C.peace]]:
+		var act: Callable = row[1]
+		var b := _button(row[0], func():
+			world.hud.notice(act.call(world))
+			close())
+		b.name = "Cheat" + str(row[0]).get_slice(":", 0).replace(" ", "")
+	_button("Back", open_pause)
 
 ## A second press within four seconds confirms leaving a campaign (it used to
 ## leave at once, with no word about what had not been saved).
@@ -1031,6 +1052,9 @@ func _settings_game() -> void:
 		close()
 		world.hud.start_guide(true))
 	_setting("Beginner guide", "Walk through construction, housing, research, diplomacy and game speed again.", guide)
+	_setting("Testing tools", "Cheats for testing the game: a Cheats button in the top bar (and F8, F10). Not for a fair campaign.", _switch(world.testing_tools, func(v):
+		world.testing_tools = v
+		if world.hud != null and world.hud.has_method("refresh_cheats"): world.hud.refresh_cheats()))
 
 func _reset_settings() -> void:
 	world.ui_scale = 0.8
@@ -1157,6 +1181,8 @@ func load_settings() -> void:
 	Engine.max_fps = int(cfg.get_value("graphics", "max_fps", 0))
 	# The counter used to be on for everyone; settings saved before then turn it off once.
 	world.show_fps = bool(cfg.get_value("graphics", "show_fps", false)) if cfg.has_section_key("graphics", "fps_choice") else false
+	world.testing_tools = bool(cfg.get_value("game", "testing_tools", false))
+	if world.hud != null and world.hud.has_method("refresh_cheats"): world.hud.refresh_cheats()
 	if world.saves:
 		world.saves.autosave_every = float(cfg.get_value("game", "autosave", 180.0))
 
@@ -1175,6 +1201,7 @@ func save_settings() -> void:
 	cfg.set_value("graphics", "show_fps", world.show_fps)
 	cfg.set_value("graphics", "fps_choice", true)
 	cfg.set_value("graphics", "ui_scale", world.ui_scale)
+	cfg.set_value("game", "testing_tools", world.testing_tools)
 	if world.saves:
 		cfg.set_value("game", "autosave", world.saves.autosave_every)
 	cfg.save(SETTINGS)

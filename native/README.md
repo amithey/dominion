@@ -23,6 +23,17 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.90: eras ask nothing abroad; testing tools
+
+- **No era waits on trade or conquest:** the Global Era no longer asks for trade routes with other nations, and the
+  Future Era (the last step of research) no longer asks for a share of the land. The eras ask for what the nation
+  builds at home: villages and cities, citizens, discoveries, research buildings and chip fabs.
+- **Testing tools:** Settings, Game, "Testing tools" (saved; off by default) shows a Cheats button in the top bar:
+  everything (every era, all research, $1,000,000), money and stores, the next era, finish all construction and
+  training, lift or restore the fog of war, peace with every nation. F8 and F10 work while it is on.
+- Ethiopia's and Nigeria's power-grid discoveries move to the Industrial Era, where the Power Plant they need opens.
+- Check: tools/cheat-tools-check.gd (16).
+
 ## Version 0.9.89: six regional identities (Codex)
 
 Codex's regional work (native/REGIONAL-FACTIONS-IMPLEMENTATION-2026-10-11.md; research in

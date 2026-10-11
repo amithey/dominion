@@ -4,7 +4,10 @@ extends Node
 ## TECH_TRACKS, DEVELOPMENT_ERAS through the map export); this file adds how
 ## the native game develops them:
 ## - The nation advances through six eras (Founding to Future) by meeting real
-##   goals: villages and cities, citizens, discoveries, trade routes, land.
+##   goals: villages and cities, citizens, discoveries, research buildings and
+##   chip fabs: what the nation builds at home. Trade routes with other nations
+##   and a share of the land are no longer asked of any era (players found
+##   both a chore: an era should not wait on a foreign partner or a conquest).
 ##   Each discovery belongs to an era and cannot be started before it.
 ## - Every discovery is developed in three stages that suit its branch (design,
 ##   prototype, field trials for weapons; study, pilot, national rollout for
@@ -96,7 +99,10 @@ func setup(world_node: Node, cfg: Dictionary) -> void:
 	world = world_node
 	discoveries = cfg.discoveries
 	tracks_cfg = cfg.tracks
-	eras = cfg.eras
+	eras = cfg.eras.duplicate(true)
+	for e in eras:
+		e.req.erase("routes")      # (see the header: no era waits on trade or conquest)
+		e.req.erase("landShare")
 	for key in discoveries:
 		progress[key] = {"stage": 0, "work": 0.0, "paid": false}
 	for key in tracks_cfg:
