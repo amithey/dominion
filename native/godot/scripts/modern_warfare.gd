@@ -189,6 +189,7 @@ static func apply(w: Node) -> void:
 	preload("res://scripts/house_style.gd").apply(w)   # one spelling in every name and description
 	preload("res://scripts/arsenal_catalog.gd").apply(w)   # verified operators, platforms and future programmes
 	preload("res://scripts/force_catalog.gd").apply(w)   # additional battlefield roles and operator rosters
+	preload("res://scripts/regional_factions.gd").restrict(w, preload("res://scripts/factions.gd").ARSENALS)
 	var types: Dictionary = w.map.missiles.types
 	for key in types:
 		var odds: Dictionary = INTERCEPT[CLASS_OF.get(key, "cruise")]

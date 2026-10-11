@@ -47,6 +47,11 @@ const LACKS := {
 	"iraq": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "submarine", "himars", "abmLauncher", "railgunShip", "orca"],
 	"syria": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "submarine", "jet", "gunship", "corvette", "samLauncher", "himars", "abmLauncher"],
 	"afghanistan": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "submarine", "destroyer", "corvette", "gunboat", "jet", "gunship", "samLauncher", "himars", "seaDrone", "abmLauncher"],
+	# The regional additions (regional_factions.gd): none fields strategic bombers, stealth or
+	# sixth-generation fighters, or nuclear submarines.
+	"yemen": ["bomber", "stealthFighter", "sixthGen", "nuclearSub"], "houthis": ["bomber", "stealthFighter", "sixthGen", "nuclearSub"],
+	"ethiopia": ["bomber", "stealthFighter", "sixthGen", "nuclearSub"], "nigeria": ["bomber", "stealthFighter", "sixthGen", "nuclearSub"],
+	"sudan": ["bomber", "stealthFighter", "sixthGen", "nuclearSub"], "south_sudan": ["bomber", "stealthFighter", "sixthGen", "nuclearSub"],
 }
 const EXPECT_NAMES := {"china": {"stealthFighter": "J-20", "sixthGen": "J-36", "tank": "Type 99A"}, "russia": {"stealthFighter": "Su-57", "tank": "T-90M Proryv"},
 	"usa": {"stealthFighter": "F-35A Lightning II", "sixthGen": "F-47"}, "iran": {"jet": "MiG-29", "tank": "Karrar"}, "israel": {"stealthFighter": "F-35I Adir", "laserAD": "Iron Beam"},
@@ -102,7 +107,7 @@ func run() -> void:
 		check(clashes.is_empty(), "%s: no other bloc's weapons among its own%s" % [id, "" if clashes.is_empty() else " " + str(clashes)])
 		# 2: what it lacks stays shut, to it and to its rivals of the same flag.
 		var open := []
-		for key in LACKS[id]:
+		for key in LACKS.get(id, []):
 			if w.unit_defs.has(key) and w.unit_allowed(0, key): open.append(key)
 			if w.unit_defs.has(key) and w.research.unit_locked(key) == "": open.append(key + " (unlocked)")
 		check(open.is_empty(), "%s: the weapons it lacks stay shut%s" % [id, "" if open.is_empty() else " " + str(open)])

@@ -26,8 +26,10 @@ static func labels() -> Array:
 		out.append("%s · %s" % [NAMES[i], LEADERS[i]])
 	return out
 static func nation(index: int, player := false) -> Dictionary:
-	return {"id": IDS[index], "arsenal": ARSENALS[index], "name": NAMES[index], "color": COLOURS[index], "player": player,
+	var entry := {"id": IDS[index], "arsenal": ARSENALS[index], "name": NAMES[index], "color": COLOURS[index], "player": player,
 		"people": {"president": LEADERS[index], "general": "Chief of Defence", "scientist": "Chief Science Adviser", "spymaster": "Intelligence Director"}}
+	entry.merge(preload("res://scripts/regional_factions.gd").metadata(IDS[index]), true)
+	return entry
 static func identity(w: Node, owner: int) -> String:
 	if owner < 0 or owner >= w.map.nations.size():
 		return ""

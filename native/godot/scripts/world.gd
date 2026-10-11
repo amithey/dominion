@@ -5219,7 +5219,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 const WEAPONS := {"bomber": "bomb", "jet": "missile", "drone": "missile", "helicopter": "rockets", "gunship": "rockets",
 	"submarine": "torpedo", "nuclearSub": "torpedo", "artillery": "shell_arc", "mlrs": "rocket_salvo",
 	"samLauncher": "sam", "rocketSoldier": "rocket", "stealthFighter": "missile", "manpads": "sam",
-	"fpvTeam": "fpv", "atgmTeam": "atgm", "himars": "guided", "laserAD": "laser", "loiterer": "kamikaze", "seaDrone": "kamikaze",
+	"fpvTeam": "fpv", "coastalDrone": "fpv", "atgmTeam": "atgm", "himars": "guided", "laserAD": "laser", "loiterer": "kamikaze", "seaDrone": "kamikaze",
 	"raptor": "missile", "raider": "bomb", "df17": "hgv", "shahedLauncher": "swarm", "shahed": "kamikaze", "irisT": "sam",
 	"railgunShip": "railgun", "sixthGen": "missile", "wingman": "missile", "orca": "torpedo",
 	"tos1a": "thermobaric", "brahmos": "brahmos", "aegisCruiser": "missile", "akinci": "missile", "harop": "kamikaze", "type45": "sam", "k9": "shell_arc", "superTucano": "missile", "kcr60": "missile", "interceptorDrone": "kamikaze", "heavyRocket": "rocket_salvo", "jf17": "missile", "suicideSquad": "detonate"}

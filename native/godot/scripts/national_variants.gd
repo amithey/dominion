@@ -168,6 +168,8 @@ static func apply(w: Node) -> void:
 
 ## Whether nation `owner` may put up building `key`.
 static func builds(w: Node, owner: int, key: String) -> bool:
+	var id: String = preload("res://scripts/factions.gd").identity(w, owner)
+	if id in preload("res://scripts/regional_factions.gd").IDS and not preload("res://scripts/regional_factions.gd").builds(id, key): return false
 	if key in ["strategicComplex", "specialLab"] and not preload("res://scripts/cbrn_data.gd").may_build(w, owner, key):
 		return false   # only a nation with such weapons has such a facility
 	return not preload("res://scripts/national_arsenal.gd").identity(w, owner) in BUILD_EXCEPT.get(key, [])
@@ -225,6 +227,7 @@ static func fields(key: String, arsenal: String) -> bool:
 	# No starting army receives a prototype before the programme is researched.
 	var ix: int = preload("res://scripts/factions.gd").ARSENALS.find(arsenal)
 	var id: String = preload("res://scripts/factions.gd").IDS[ix] if ix >= 0 else arsenal
+	if id in preload("res://scripts/regional_factions.gd").IDS: return preload("res://scripts/regional_factions.gd").fields(id, key)
 	var forces = load("res://scripts/force_catalog.gd")
 	if forces.ROLES.has(key): return id in forces.operators(key)
 	if id in load("res://scripts/arsenal_catalog.gd").UNIT_PROGRAMS.get(key, []) or (key == "samLauncher" and id == "iraq"):

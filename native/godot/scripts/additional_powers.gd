@@ -1,10 +1,13 @@
 extends RefCounted
 ## All state uses world.power_effects / power_ready and is included by the existing save service.
+const Regional := preload("res://scripts/regional_powers.gd")
 const F := preload("res://scripts/additional_factions.gd")
 ## Each nation's lever on another state, researched nation by nation:
 ## native/NATIONAL-POWERS-RESEARCH-2026-10-10.md (sources there, never in the
 ## game's text). "hostile" levers are aimed at rivals; the others at partners.
 const POWERS := {
+	"yemen": Regional.POWERS.yemen, "houthis": Regional.POWERS.houthis, "ethiopia": Regional.POWERS.ethiopia,
+	"nigeria": Regional.POWERS.nigeria, "sudan": Regional.POWERS.sudan, "south_sudan": Regional.POWERS.south_sudan,
 	"uk": {"name": "Maritime Insurance Ban", "target": true, "hostile": true, "cooldown": 360.0, "duration": 150.0, "costs": {"money": 400}, "needs": [],
 		"desc": "$400: the London market, which insures most of the world's ships, stops covering a rival's cargo. Its sea trade stops and its income falls 15% for 150 s. Relations with it fall 12. Not on an ally."},
 	"south_korea": {"name": "Arms Export Deal", "target": true, "hostile": false, "cooldown": 360.0, "duration": 0.0, "costs": {"iron": 80}, "needs": ["tankFactory"],
@@ -67,6 +70,7 @@ static func repairs(w: Node, owner: int) -> Array:
 	return list.slice(0, 5)
 static func blocked(w: Node, owner: int, target: int) -> String:
 	var id := F.id_of(w, owner)
+	if Regional.POWERS.has(id): return Regional.blocked(w, owner, target)
 	var p: Dictionary = POWERS[id]
 	for key in p.needs:
 		if not owned(w, owner, key): return "Needs supplied " + str(w.building_defs.get(key, {}).get("name", key))
@@ -102,7 +106,7 @@ static func effect(w: Node, kind: String, owner: int, value: float, duration: fl
 	w.power_effects.append(e)
 	return e
 static func bonus(w: Node, owner: int, kind: String) -> float:
-	var value := 0.0
+	var value: float = Regional.bonus(w, owner, kind)
 	for e in w.power_effects:
 		if e.kind == "extra_" + kind and int(e.nation) == owner and float(e.until) > w.game_time:
 			if e.has("ally") and (w.diplomacy.defeated(int(e.by)) or w.diplomacy.defeated(int(e.ally)) or not w.diplomacy.allied(int(e.by), int(e.ally))): continue
@@ -259,6 +263,7 @@ static func use_insurgent_attacks(w: Node, owner: int, target: int) -> void:
 
 static func use(w: Node, owner: int, target: int) -> String:
 	var id := F.id_of(w, owner)
+	if Regional.POWERS.has(id): return Regional.use(w, owner, target)
 	if not pay(w, owner, POWERS[id].costs): return "Insufficient resources"
 	var me: String = w.diplomacy.name_of(owner)
 	var who: String = w.diplomacy.name_of(target) if target >= 0 else ""
@@ -297,6 +302,7 @@ static func use(w: Node, owner: int, target: int) -> String:
 static func sea_closed(w: Node, owner: int) -> bool:
 	return w.power_effects.any(func(e): return float(e.until) > w.game_time and ((e.kind == "hormuz" and int(e.by) != owner) or (e.kind == "sea_ban" and int(e.nation) == owner)))
 static func step(w: Node, delta: float) -> void:
+	Regional.step(w)
 	for e in w.power_effects:
 		if not str(e.kind).begins_with("extra_"): continue
 		if w.diplomacy.defeated(int(e.nation)) or w.diplomacy.defeated(int(e.by)):
@@ -352,14 +358,15 @@ static func _notice(w: Node, source: int, target: int, message: String) -> void:
 ## at -30 or worse; one at war first), a friendly one at its closest partner.
 static func ai_target(w: Node, owner: int) -> int:
 	var id := F.id_of(w, owner)
-	if not POWERS[id].target: return -1
+	var power: Dictionary = POWERS.get(id, Regional.POWERS.get(id, {}))
+	if not power.target: return -1
 	var d: Node = w.diplomacy
 	var best := -1
 	var score := -INF
 	for target in range(w.map.nations.size()):
 		if target == owner or d.defeated(target) or blocked(w, owner, target) != "": continue
 		var s: float
-		if POWERS[id].get("hostile", false):
+		if power.get("hostile", false):
 			if not d.at_war(owner, target) and d.rel(owner, target) > -30.0: continue
 			s = (1000.0 if d.at_war(owner, target) else 0.0) - d.rel(owner, target)
 		else:

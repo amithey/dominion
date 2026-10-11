@@ -293,7 +293,8 @@ func tick() -> void:
 			r.status = "Strait closed: the cargo waits"
 			continue
 		if r.shipment != null:
-			r.shipment.eta -= TICK
+			var pressure: float = 0.0 if r.get("overland", false) else preload("res://scripts/regional_powers.gd").bonus(world, 0, "shippingPressure")
+			r.shipment.eta -= TICK / (1.0 + pressure)
 			r.status = "At sea — %ds" % maxi(0, int(r.shipment.eta))
 			if r.shipment.eta > 0.0:
 				continue

@@ -12,6 +12,7 @@ $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.e
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
+    @('six new regional identities, escrow contracts, national research, restricted arsenals and old indices', @('--script', 'res://tools/regional-factions-check.gd'), 'REGIONAL_FACTIONS PASS', 600),
     @('who can really use AI and the bomb: national AI ceilings, no nuclear release, tension or escalation threats without nuclear weapons', @('--script', 'res://tools/national-realism-check.gd'), 'NATIONAL_REALISM PASS', 900),
     @('the era ladder: what opens in each era, for you and rivals; research and era goals never blocked; Sandbox and old saves open', @('--script', 'res://tools/progression-check.gd'), 'PROGRESSION PASS', 600),
     @('the sea economic zone: rigs on sea fields, rival waters, fish and extractor hints, contractors, gas output', @('--script', 'res://tools/offshore-check.gd'), 'OFFSHORE PASS', 300),

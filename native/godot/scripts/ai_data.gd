@@ -26,7 +26,10 @@ const Factions := preload("res://scripts/factions.gd")
 ## research list. 5 frontier, 4 near-frontier, 3 military AI, 2 applied
 ## machine learning, 1 little more than imported software, 0 none.
 ## Research per nation (comments only): native/NATIONAL-AI-NUCLEAR-RESEARCH-2026-10-10.md.
+const Regional := preload("res://scripts/regional_factions.gd")
 const PROFILE := {
+	"yemen": Regional.AI_PROFILES.yemen, "houthis": Regional.AI_PROFILES.houthis, "ethiopia": Regional.AI_PROFILES.ethiopia,
+	"nigeria": Regional.AI_PROFILES.nigeria, "sudan": Regional.AI_PROFILES.sudan, "south_sudan": Regional.AI_PROFILES.south_sudan,
 	"usa":         {"compute": 5, "models": 5, "autonomy": 5, "cyber": 5, "lean": "on", "signs": ["nuclear"], "ceiling": 5,
 		"why": "Most of the world's frontier compute and the leading AI laboratories."},
 	"china":       {"compute": 3, "models": 5, "autonomy": 4, "cyber": 5, "lean": "on", "signs": [], "ceiling": 5,

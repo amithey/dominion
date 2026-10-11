@@ -151,6 +151,27 @@ func meet_needs(id: String) -> void:
 		"ukraine":
 			d.set_flag(d.war, 0, 1, true)   # drone strikes only at war
 			put("farm", 1)   # something besides its capital to strike
+		# The regional additions (regional_powers.gd).
+		"yemen", "ethiopia":
+			d.set_flag(d.war, 0, 1, false)
+			d.set_score(0, 1, 40.0)   # a partner at peace that can pay
+			extra.nation(w, 1).money = maxf(float(extra.nation(w, 1).money), 2000.0)
+		"houthis":
+			d.set_flag(d.war, 0, 1, true)   # shipping pressure only at war
+			if not extra.owned(w, 1, "port"): put("port", 1)
+			var coast = w.water_near(hq().root.position, 300)
+			w.spawn_unit("coastalDrone", w.land_point(coast if coast != null else hq().root.position, 20.0), 0)
+		"sudan":
+			for b in w.buildings:
+				if b.owner == 0 and not b.dead and b.key == "hq": b.hp = b.max_hp * 0.6   # something to restore
+		"south_sudan":
+			# Its oil leaves through Sudan: the transit partner must be Sudan.
+			w.map.nations[1].id = "sudan"
+			d.set_flag(d.war, 0, 1, false)
+			d.set_score(0, 1, 40.0)
+			extra.nation(w, 1).money = maxf(float(extra.nation(w, 1).money), 2000.0)
+			if not extra.owned(w, 1, "extractor"): put("extractor", 1)
+			extra.stock(w, 1).oil = 0.0
 
 func mine(key: String) -> Array:
 	return w.units.filter(func(u): return u.owner == 0 and u.key == key and not u.dead)

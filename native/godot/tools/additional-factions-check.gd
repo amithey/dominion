@@ -94,7 +94,7 @@ func run() -> void:
 			w.kill(enemy)
 		w.kill(u)
 		set_nation(0, "usa")
-		check(w.research.unit_locked(key).ends_with("only"), key + " remains exclusive")
+		check(not w.unit_allowed(0, key), key + " unavailable to an unlisted operator")
 		set_nation(1, id)
 		var rival_factory := building(F.HOME[key], 1)
 		P.nation(w, 1).tech = 0.0
@@ -118,7 +118,7 @@ func run() -> void:
 	# (the rival's own artillery hits as hard as its system does: unit_quality.gd)
 	check(is_equal_approx(protected_hp - protected.hp, 30.0 * w.research.damage_mult(shell)), "Bushmaster reduces actual explosive damage by 25 percent")
 	for owner in [0, 1]:
-		for id in F.IDS:
+		for id in F.IDS.filter(func(id): return not id in preload("res://scripts/regional_factions.gd").IDS):
 			reset_power()
 			set_nation(owner, id)
 			var target: int = 1 if owner == 0 else 0
@@ -269,7 +269,7 @@ func run() -> void:
 			if id == "": continue
 			var positions: Array = generator._real_starts([FA.nation(FA.IDS.find(id))], 1)
 			check(positions[0] == generator.starts[slot], id + " starts at its existing capital slot in " + map_key)
-	for id in F.IDS:
+	for id in F.IDS.filter(func(id): return not id in preload("res://scripts/regional_factions.gd").IDS):
 		set_meta("match_config", {"nation": FA.IDS.find(id), "players": 2, "map": "island", "style": "sandbox"})
 		change_scene_to_file("res://world.tscn")
 		w = null

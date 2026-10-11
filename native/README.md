@@ -23,6 +23,16 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.89: six regional identities (Codex)
+
+Codex's regional work (native/REGIONAL-FACTIONS-IMPLEMENTATION-2026-10-11.md; research in
+docs/planning/SEVEN-ENTITIES-GAME-PROFILES-2026-10-10.md): 28 playable identities. New: Yemen's recognised
+government, Ansar Allah, Ethiopia, Nigeria, Sudan and South Sudan, each with its economy, research, roster
+restrictions, AI ceiling (1-2) and a national power (donor-funded reconstruction, coastal shipping pressure at war,
+hydropower export contracts, grid stabilisation, civil repairs, oil sales through Sudan). None inherits nuclear
+weapons, advanced submarines, stealth aircraft or a strategic missile programme. Egypt gains Nile water management.
+Checks: tools/regional-factions-check.gd; nation-tech-check and gameplay-nations-100 now cover the new identities.
+
 ## Version 0.9.88: routes, armour in the streets, and the end of a match
 
 - **Navigation is ready only when all of it is:** the walk grid joins the navigation map tile by tile, and a match

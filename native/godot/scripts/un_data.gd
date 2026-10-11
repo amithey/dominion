@@ -42,6 +42,7 @@ const SHIELDS := {
 }
 ## Sanctions regimes in force when the match begins.
 const STANDING := {
+	"south_sudan": {"res": "the South Sudan arms embargo (scenario snapshot: renewed through May 2027)", "measures": ["embargo"]},
 	"iran": {"res": "its nuclear programme", "measures": ["embargo", "targeted"]},
 	"north_korea": {"res": "its nuclear and missile programmes (sectoral restrictions)", "measures": ["embargo", "targeted"]},
 	"afghanistan": {"res": "its government's ties to armed groups", "measures": ["targeted"]},

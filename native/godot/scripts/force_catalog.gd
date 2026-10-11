@@ -2,7 +2,7 @@ extends RefCounted
 ## Representative operator rosters, not inventories or weapon specifications.
 ## Evidence, limitations and additions deferred for research are in
 ## native/FORCE-ROSTER-RESEARCH-2026-10-06.md. All figures below are game balance.
-const IDS := ["usa", "china", "eu", "iran", "russia", "india", "japan", "turkiye", "israel", "uk", "south_korea", "saudi", "brazil", "indonesia", "ukraine", "north_korea", "egypt", "australia", "pakistan", "iraq", "syria", "afghanistan"]
+const IDS := ["usa", "china", "eu", "iran", "russia", "india", "japan", "turkiye", "israel", "uk", "south_korea", "saudi", "brazil", "indonesia", "ukraine", "north_korea", "egypt", "australia", "pakistan", "iraq", "syria", "afghanistan"] + preload("res://scripts/regional_factions.gd").IDS
 const BASE := {"machineGunTeam": "soldier", "mortarTeam": "artillery", "scoutTeam": "commando", "ifv": "apc", "heavyAPC": "tank", "reconVehicle": "apc", "directFire": "tank", "towedHowitzer": "artillery", "attackJet": "jet", "lightFighter": "jet", "scoutHelicopter": "helicopter", "missileBoat": "corvette"}
 const HOME := {"machineGunTeam": "barracks", "mortarTeam": "barracks", "scoutTeam": "barracks", "ifv": "tankFactory", "heavyAPC": "tankFactory", "reconVehicle": "tankFactory", "directFire": "tankFactory", "towedHowitzer": "tankFactory", "attackJet": "airfield", "lightFighter": "airfield", "scoutHelicopter": "helipad", "missileBoat": "shipyard"}
 const INFANTRY := ["machineGunTeam", "mortarTeam", "scoutTeam"]

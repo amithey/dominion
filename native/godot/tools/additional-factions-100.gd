@@ -95,7 +95,7 @@ func run() -> void:
 		w.spawn_unit("heavyRocket", w.start + Vector3(15, 0, owner * 5), owner)
 	# 60 boundary checks: the last resource is short, exact balances, JSON cooldowns.
 	for owner in [0, 1]:
-		for id in Extra.IDS:
+		for id in Extra.IDS.filter(func(id): return not id in preload("res://scripts/regional_factions.gd").IDS):
 			reset(id, owner)
 			var target := 1 if owner == 0 else 0
 			var costs: Dictionary = P.POWERS[id].costs
@@ -128,7 +128,7 @@ func run() -> void:
 			FP.use(w, owner, target)
 			check(is_equal_approx(FP.ready_in(w, owner), wait_before) and P.funds(w, owner, "money") == before and w.power_uses.size() == used, "%s/%d: serialized cooldown blocks replay" % [id, owner])
 	# 21 prerequisite checks: unfinished, unpowered by EMP, and cut off.
-	for id in Extra.IDS:
+	for id in Extra.IDS.filter(func(id): return not id in preload("res://scripts/regional_factions.gd").IDS):
 		if P.POWERS[id].needs.is_empty(): continue
 		for mode in ["unfinished", "disabled", "unsupplied"]:
 			reset(id)

@@ -14,7 +14,7 @@ static func tick(w: Node, delta: float) -> void:
 				seller.erase("national_cargo")
 				continue
 			if P.sea_closed(w, owner): continue
-			cargo.eta = float(cargo.eta) - delta
+			cargo.eta = float(cargo.eta) - delta / (1.0 + preload("res://scripts/regional_powers.gd").bonus(w, owner, "shippingPressure"))
 			if cargo.eta > 0.0: continue
 			seller.erase("national_cargo")
 			var risk := clampf(0.08 - P.escorts(w, owner) * 0.015, 0.015, 0.08) * (1.0 - P.bonus(w, owner, "shipping"))
