@@ -39,10 +39,17 @@ const MAPS := {
 	"fractal": {"name": "Fractal", "size": 1280, "slots": 6, "desc": "Wild, ragged land of peninsulas, inlets and lakes, every region different; a land route still links each capital to the next."},
 	"middle_east": {"name": "Middle East", "size": 1600, "slots": 8, "real": true, "desc": "The real map, from the Aegean to Persia and from Moscow to Arabia: the Caspian, Black and Red seas, the Caucasus and the Zagros. Each nation whose capital lies here starts there."},
 	"europe": {"name": "Europe", "size": 1760, "slots": 9, "real": true, "desc": "The real map, from Iberia to the Urals and down to the Levant: the Alps, the Baltic and the Mediterranean. Each nation whose capital lies here starts there."},
+	# More maps for the sea and the land (native/MAPS-2026-10-12.md).
+	"strait": {"name": "The Strait", "size": 1400, "slots": 6, "desc": "Two coasts face each other across a wide strait dotted with islands; only narrow causeways at its far ends join them. Whoever holds the sea holds the crossing."},
+	"atolls": {"name": "Ocean Atolls", "size": 1600, "slots": 8, "desc": "Eight home islands in an open ocean full of atolls, tied by thin causeways. A war of navies, carriers and landings."},
+	"steppe": {"name": "Great Steppe", "size": 1440, "slots": 8, "ring": 0.66, "desc": "Open grassland from edge to edge, low hills and almost no water: a war of armour, artillery and speed."},
+	"rivers": {"name": "River Lands", "size": 1280, "slots": 6, "desc": "Two great rivers cut the land; the roads cross them at a few fords. Hold the crossings."},
+	"gulf": {"name": "The Gulf and Hormuz", "size": 1600, "slots": 8, "real": true, "desc": "The real map of the Gulf, from Baghdad to the Arabian Sea and from Tehran to Sanaa: the Strait of Hormuz between Iran and Arabia, with Bandar Abbas on its northern shore. Each nation whose capital lies here starts there."},
+	"red_sea": {"name": "Red Sea and the Horn", "size": 1600, "slots": 9, "real": true, "desc": "The real map from Cairo to the Horn of Africa: the Red Sea and the Bab-el-Mandeb, the Nile states and Ethiopia's highlands. Each nation whose capital lies here starts there."},
 	"east_asia": {"name": "East Asia", "size": 1760, "slots": 9, "real": true, "desc": "The real map, from India to Japan and from Mongolia to Java: the Himalaya, the Tibetan plateau and the island chains. Island nations need a navy."},
 }
 ## The real-world maps (world_geography.gd): their capitals stand where the real ones do.
-const REAL := ["middle_east", "europe", "east_asia"]
+const REAL := ["middle_east", "europe", "east_asia", "gulf", "red_sea"]
 const Geography = preload("res://scripts/world_geography.gd")
 ## Continents and Distant Lands: the islands between the homelands.
 const DISTANT := [Vector2(0.0, -0.62), Vector2(0.03, -0.25), Vector2(-0.03, 0.12), Vector2(0.04, 0.45)]
@@ -51,7 +58,11 @@ var _geo := {}
 ## "ring": how far out the capitals stand (a share of the half-width; 0.64 when
 ## unset), so that on the great continents they are near enough the coast for
 ## a harbour.
-const EXPANDED := ["frontier", "inland_sea", "crown", "highlands", "great_lakes", "pangaea", "ten_isles", "fractal"]
+const EXPANDED := ["frontier", "inland_sea", "crown", "highlands", "great_lakes", "pangaea", "ten_isles", "fractal", "atolls", "steppe", "rivers"]
+## Maps whose capitals are joined by land routes round them (EXPANDED, and the Strait's own starts).
+const ROUTED := EXPANDED + ["strait"]
+## How wide the land routes are: narrow causeways on the sea maps.
+const ROUTE_WIDTH := {"strait": 16.0, "atolls": 14.0}
 const STEP := 2.5
 const MARGIN := 32.0
 const HEX := 12.0
@@ -233,6 +244,10 @@ func _start_positions() -> Array:
 		for s in Geography.MAPS[style].starts:
 			at.append(_hex_centre(Geography.to_world(style, size, s[0], s[1])))
 		return at
+	if style == "strait":
+		# Three capitals a coast, in order round the strait: the routes cross it only at its ends.
+		at = [Vector2(-0.62, -0.55), Vector2(-0.64, 0.0), Vector2(-0.62, 0.55), Vector2(0.62, 0.55), Vector2(0.64, 0.0), Vector2(0.62, -0.55)]
+		return at.map(func(p): return _hex_centre(p * half))
 	if style == "continents_plus":
 		at = [Vector2(-0.72, -0.5), Vector2(-0.38, -0.62), Vector2(-0.72, 0.35), Vector2(-0.38, 0.5),
 			Vector2(0.72, 0.5), Vector2(0.38, 0.62), Vector2(0.72, -0.35), Vector2(0.38, -0.5)]
@@ -281,6 +296,28 @@ func _shape(p: Vector2, route := -1.0) -> float:
 	match style:
 		"frontier":
 			f = 1.0 - (u * Vector2(1.0, 1.04)).length() / 0.92
+		"strait":
+			# Land on either side of a broad strait, and an island chain down its middle.
+			f = (absf(u.x) - 0.24) * 2.6
+			for c in [Vector2(0.02, -0.62), Vector2(-0.04, -0.2), Vector2(0.05, 0.22), Vector2(-0.02, 0.62)]:
+				f = maxf(f, 1.0 - (u - c).length() / 0.07)
+		"atolls":
+			# Home islands on a ring, and atolls scattered over the open ocean.
+			f = -1.0
+			for s in starts:
+				f = maxf(f, 1.0 - p.distance_to(s) / (half * 0.14))
+			for i in range(22):
+				var c := Vector2(_hash01(i * 3 + 1) * 1.6 - 0.8, _hash01(i * 3 + 2) * 1.6 - 0.8)
+				f = maxf(f, 1.0 - (u - c).length() / (0.035 + 0.03 * _hash01(i * 3 + 3)))
+		"steppe":
+			# Grassland almost to the map's edge.
+			f = 1.0 - (u * Vector2(1.0, 1.0)).length() / 0.98 + 0.25
+		"rivers":
+			# A broad land cut by two winding rivers.
+			var land := 1.0 - (u * Vector2(1.0, 1.04)).length() / 0.95
+			var north := (absf(u.y + 0.28 - sin(u.x * 3.2) * 0.12) - 0.035) * 9.0
+			var south := (absf(u.y - 0.34 - sin(u.x * 2.6 + 1.3) * 0.1) - 0.03) * 9.0
+			f = minf(land, minf(north, south))
 		"inland_sea":
 			f = minf((u.length() - 0.32) * 2.8, (0.93 - u.length()) * 2.8)
 		"crown":
@@ -331,9 +368,9 @@ func _shape(p: Vector2, route := -1.0) -> float:
 			f = 1.0 - (u * Vector2(1.0, 1.08)).length() / 0.92
 	f += (_coast.get_noise_2d(p.x, p.y)) * 0.22
 	# Guaranteed broad land routes round the ring, with sea retained in the middle.
-	if style in EXPANDED:
-		# (on Fractal a narrower, wandering route, so the land stays ragged)
-		var wide: float = 26.0 + _hills.get_noise_2d(p.x, p.y) * 10.0 if style == "fractal" else 42.0
+	if style in ROUTED:
+		# (on Fractal a narrower, wandering route, so the land stays ragged; causeways at sea)
+		var wide: float = 26.0 + _hills.get_noise_2d(p.x, p.y) * 10.0 if style == "fractal" else float(ROUTE_WIDTH.get(style, 42.0))
 		f = maxf(f, (wide - (route if route >= 0.0 else _route_distance(p))) / 110.0)
 	# Capitals always stand well inland.
 	for s in starts:
@@ -355,6 +392,11 @@ func _geo_sample(grid: PackedFloat32Array, p: Vector2) -> float:
 	var bottom := lerpf(grid[r1 * n + c], grid[r1 * n + c1], fx)
 	return lerpf(top, bottom, fy)
 
+## A fixed pseudo-random 0..1 for `i` (atoll placement), the same each time.
+func _hash01(i: int) -> float:
+	var h := (i * 2654435761 + 12345) & 0x7fffffff
+	return float(h % 10000) / 10000.0
+
 func _route_distance(p: Vector2) -> float:
 	var nearest := INF
 	for i in range(starts.size()):
@@ -370,9 +412,9 @@ func _heights() -> void:
 	_origin = -(half + MARGIN)
 	_n = int(ceil((size + MARGIN * 2.0) / STEP)) + 1
 	_h.resize(_n * _n)
-	var mountains: float = {"small": 0.35, "twin": 0.8, "archipelago": 0.55, "continent": 1.25, "highlands": 1.9, "great_lakes": 0.6, "pangaea": 1.1, "ten_isles": 0.45, "middle_east": 0.3, "europe": 0.3, "east_asia": 0.3, "continents_plus": 0.9, "fractal": 0.7}.get(style, 0.8)
+	var mountains: float = {"steppe": 0.12, "atolls": 0.3, "strait": 0.5, "rivers": 0.45, "gulf": 0.3, "red_sea": 0.35, "small": 0.35, "twin": 0.8, "archipelago": 0.55, "continent": 1.25, "highlands": 1.9, "great_lakes": 0.6, "pangaea": 1.1, "ten_isles": 0.45, "middle_east": 0.3, "europe": 0.3, "east_asia": 0.3, "continents_plus": 0.9, "fractal": 0.7}.get(style, 0.8)
 	var lakes: float = {"continent": 0.42, "pangaea": 0.42, "great_lakes": 0.28}.get(style, 2.0)   # noise above this is a lake
-	var expanded := style in EXPANDED
+	var expanded := style in ROUTED
 	for r in range(_n):
 		for c in range(_n):
 			var p := Vector2(_origin + c * STEP, _origin + r * STEP)

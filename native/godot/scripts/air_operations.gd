@@ -14,11 +14,11 @@ extends RefCounted
 ##   takeoff   climbing out along the runway
 ## A base whose slots are all taken accepts no more aircraft, and trains none.
 
-const CAPACITY := {"jet": 4, "bomber": 3, "drone": 6, "helicopter": 8, "gunship": 8, "loiterer": 1, "stealthFighter": 4, "raptor": 4, "raider": 2, "shahed": 1, "sixthGen": 4, "wingman": 99, "akinci": 8, "harop": 1, "superTucano": 4, "interceptorDrone": 1, "jf17": 4, "attackJet": 4, "lightFighter": 3, "scoutHelicopter": 1, "aewc": 1, "ewJet": 3, "maritimePatrol": 4, "carrierJet": 2, "carrierDrone": 2, "heavyLift": 6, "navalHelicopter": 2}
+const CAPACITY := {"jet": 4, "bomber": 3, "drone": 6, "helicopter": 8, "gunship": 8, "loiterer": 1, "stealthFighter": 4, "raptor": 4, "raider": 2, "shahed": 1, "sixthGen": 4, "wingman": 99, "akinci": 8, "harop": 1, "superTucano": 4, "interceptorDrone": 1, "jf17": 4, "attackJet": 4, "lightFighter": 3, "scoutHelicopter": 1, "aewc": 1, "ewJet": 3, "maritimePatrol": 4, "carrierJet": 2, "carrierDrone": 2, "heavyLift": 6, "navalHelicopter": 2, "heavyBomberDrone": 99}
 const SERVICE_SECONDS := 12.0
 ## Launched from a canister beside the runway, straight into the air: they hold
 ## no parking slot (and never come back).
-const TUBE_LAUNCHED := ["loiterer", "shahed", "wingman", "harop", "interceptorDrone"]
+const TUBE_LAUNCHED := ["loiterer", "shahed", "wingman", "harop", "interceptorDrone", "heavyBomberDrone"]
 const SLOTS := {"airfield": 4, "helipad": 2}
 ## Where things are on an airfield, in its hex's own space (architecture.airfield draws the same).
 const RUNWAY_X := -3.2

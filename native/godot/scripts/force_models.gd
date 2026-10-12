@@ -47,6 +47,13 @@ static func ground(g: RefCounted, key: String, owner: int) -> Dictionary:
 		g._attach(parts.turret, top)
 		parts.turret.set_meta("axis", Vector3.UP)
 		return parts
+	if key in ["combatUGV", "logisticsUGV", "robotDog"]:
+		robot(g, body, top, parts, key)
+		g._attach(parts.root, body)
+		if parts.turret != null:
+			g._attach(parts.turret, top)
+			parts.turret.set_meta("axis", Vector3.UP)
+		return parts
 	if key in ["mineClearer", "recoveryVehicle"]:
 		g.tracks(body, 6.8, 1.5, 0.55, 6, 0.32)
 		g.block(body, Vector3(3.0, 1.2, 6.8), Vector3(0, 0.6, 0), g.PAINT, 0.15, 0.6, 0.15)
@@ -92,6 +99,13 @@ static func ground(g: RefCounted, key: String, owner: int) -> Dictionary:
 		parts.muzzle = 4.9
 	else:
 		var tracked: bool = key == "heavyAPC" or (key == "ifv" and id != "indonesia") or (key == "directFire" and id == "indonesia") or (key == "reconVehicle" and id == "usa") or (key == "shortRangeSAM" and id in ["uk", "turkiye"])
+		# The armoured roles have their own, detailed silhouettes.
+		if key in ["ifv", "heavyAPC", "reconVehicle", "directFire"]:
+			armour(g, body, top, parts, key, tracked, id)
+			g._attach(parts.root, body)
+			g._attach(parts.turret, top)
+			parts.turret.set_meta("axis", Vector3.UP)
+			return parts
 		var scout: bool = key == "reconVehicle" and not tracked
 		var heavy: bool = key == "heavyAPC"
 		var length := 4.5 if scout else (7.3 if heavy else 6.5)
@@ -193,6 +207,8 @@ static func craft_model(c: RefCounted, key: String, owner: int) -> Dictionary:
 		g.cyl(st, 0.3, 1.8, Vector3(0, -0.6, 0.6), "z", c.LIGHT, 12, 0.18)
 	elif key == "navalHelicopter":
 		c.utility_helicopter(st, parts, 1.0, true)
+	elif key == "heavyBomberDrone":
+		hexacopter(c, st, parts)
 	elif key == "heavyLift":
 		heavy_lift(c, st, parts, str(c.world.map.nations[owner].get("id", "")))
 	elif key == "missileBoat":
@@ -439,3 +455,195 @@ static func heavy_lift(c: RefCounted, st: SurfaceTool, parts: Dictionary, id: St
 			var xf := Transform3D(Basis(Vector3.UP, TAU * b / 3.0) * Basis(Vector3.BACK, 0.03), Vector3.ZERO)
 			g.block(r, Vector3(0.36, 0.04, 4.0), Vector3(0, 0, 2.1), c.DARK, 0.0, 0.0, 0.0, xf)
 		g._attach(hub, r)
+
+
+## Ground robots (native/DRONES-ROBOTS-RESEARCH-2026-10-12.md): a low tracked
+## chassis with a remote weapon station (THeMIS, Uran-9, Droid); a flat cargo
+## robot with a stretcher frame; a four-legged robot with a rifle on its back.
+static func robot(g: RefCounted, body: SurfaceTool, top: SurfaceTool, parts: Dictionary, key: String) -> void:
+	if key == "robotDog":
+		g.block(body, Vector3(0.7, 0.45, 1.6), Vector3(0, 0.75, 0), g.PAINT, 0.1, 0.15, 0.15)
+		g.block(body, Vector3(0.45, 0.3, 0.45), Vector3(0, 0.95, 0.85), g.DARK, 0.05, 0.1)   # the sensor head
+		g.block(body, Vector3(0.3, 0.12, 0.05), Vector3(0, 1.05, 1.08), g.GLASS)
+		for side: float in [-1.0, 1.0]:
+			for z: float in [-0.55, 0.55]:
+				g.block(body, Vector3(0.14, 0.45, 0.14), Vector3(side * 0.33, 0.35, z), g.METAL, 0, 0, 0, Transform3D(Basis(Vector3.RIGHT, 0.35 if z > 0 else -0.35), Vector3.ZERO))
+				g.block(body, Vector3(0.12, 0.42, 0.12), Vector3(side * 0.33, 0.0, z + (0.12 if z > 0 else -0.12)), g.DARK)
+		parts.turret = Node3D.new()
+		parts.turret.position = Vector3(0, 1.2, 0.0)
+		parts.root.add_child(parts.turret)
+		g.block(top, Vector3(0.18, 0.18, 0.5), Vector3(0, 0, -0.1), g.DARK)
+		g.cyl(top, 0.03, 0.9, Vector3(0, 0.1, 0.55), "z", g.METAL, 6)
+		parts.muzzle = 1.0
+		return
+	# A small tracked chassis: the THeMIS layout, tracks either side of a central module.
+	g.tracks(body, 2.6, 0.95, 0.4, 4, 0.22)
+	g.block(body, Vector3(1.1, 0.5, 2.3), Vector3(0, 0.35, 0), g.PAINT, 0.05, 0.1, 0.1)
+	g.antenna(body, Vector3(-0.4, 0.85, -0.9), 1.3)
+	g.block(body, Vector3(0.3, 0.2, 0.08), Vector3(0, 0.6, 1.15), g.GLASS)   # the driving camera
+	if key == "logisticsUGV":
+		# A cargo deck with crates and a stretcher frame.
+		g.block(body, Vector3(1.7, 0.08, 2.0), Vector3(0, 0.85, 0), g.DARK)
+		g.block(body, Vector3(0.6, 0.45, 0.6), Vector3(-0.4, 0.93, 0.4), g.PAINT)
+		g.block(body, Vector3(0.7, 0.12, 1.5), Vector3(0.45, 0.93, -0.2), g.LIGHT)
+		for x: float in [-0.8, 0.8]:
+			g.block(body, Vector3(0.05, 0.35, 0.05), Vector3(x, 0.93, 0.9), g.METAL)
+		return
+	# The remote weapon station: a sensor box and a heavy machine gun.
+	parts.turret = Node3D.new()
+	parts.turret.position = Vector3(0, 0.85, -0.1)
+	parts.root.add_child(parts.turret)
+	g.block(top, Vector3(0.6, 0.4, 0.7), Vector3.ZERO, g.DARK)
+	g.block(top, Vector3(0.25, 0.2, 0.06), Vector3(0.18, 0.25, 0.36), g.GLASS)
+	g.cyl(top, 0.05, 1.3, Vector3(-0.1, 0.22, 0.95), "z", g.METAL, 8)
+	g.block(top, Vector3(0.25, 0.25, 0.35), Vector3(0.3, 0.05, -0.2), g.PAINT)   # the ammunition box
+	parts.muzzle = 1.6
+
+## A heavy bomber hexacopter (Vampire): six rotor arms round a central body,
+## a bomb rack beneath and a sensor ball.
+static func hexacopter(c: RefCounted, st: SurfaceTool, parts: Dictionary) -> void:
+	var g: RefCounted = c.g
+	g.block(st, Vector3(0.9, 0.35, 0.9), Vector3(0, -0.15, 0), c.DARK, 0.1)
+	g.prim(st, c._sphere(0.18), Transform3D(Basis(), Vector3(0, -0.3, 0.45)), c.GLASS)
+	for i in range(6):
+		var a := TAU * i / 6.0
+		var dir := Vector3(sin(a), 0, cos(a))
+		g.block(st, Vector3(0.1, 0.08, 1.5), Vector3.ZERO, c.PAINT, 0, 0, 0, Transform3D(Basis(Vector3.UP, a), dir * 0.75))
+		g.cyl(st, 0.08, 0.2, dir * 1.45 + Vector3(0, 0.05, 0), "y", c.METAL, 8)
+		g.cyl(st, 0.55, 0.02, dir * 1.45 + Vector3(0, 0.18, 0), "y", c.DARK, 14)   # the rotor disc
+	for x: float in [-0.25, 0.25]:
+		g.cyl(st, 0.09, 0.5, Vector3(x, -0.5, 0), "z", c.METAL, 8)   # bombs on the rack
+	g.block(st, Vector3(0.06, 0.35, 0.06), Vector3(0.35, -0.55, 0.35), c.METAL)
+	g.block(st, Vector3(0.06, 0.35, 0.06), Vector3(-0.35, -0.55, -0.35), c.METAL)
+
+
+## The armoured roles, each its own silhouette (native/UNIT-LOOKS-2026-10-12.md):
+##   ifv          a sloped hull with a trim vane and a rear ramp; a two-man
+##                turret with an autocannon and a twin anti-tank missile box
+##   heavyAPC     a tank-heavy hull (Namer): thick skirts, a stepped front, a
+##                remote weapon station and a rear door
+##   reconVehicle a light 4x4 patrol vehicle with an open crew compartment, a
+##                roll cage and a machine gun on a ring (the tracked US Bradley
+##                Scout uses the IFV body with a sensor mast)
+##   directFire   a wheeled (or tracked, Harimau) hull under a big turret with a
+##                long 105 mm gun, its fume extractor and muzzle brake
+static func armour(g: RefCounted, st: SurfaceTool, top: SurfaceTool, parts: Dictionary, key: String, tracked: bool, id: String) -> void:
+	if key == "reconVehicle" and not tracked:
+		_patrol_vehicle(g, st, top, parts)
+		return
+	var heavy := key == "heavyAPC"
+	var gun := key == "directFire"
+	var length := 7.4 if heavy else (7.0 if gun else 6.4)
+	var hw := 1.55 if heavy else 1.42
+	var deck := 1.75 if heavy else 1.5   # the hull roof
+	if tracked:
+		g.tracks(st, length, hw, 0.62, 7 if heavy else 6, 0.32)
+		# Side skirts in panels over the upper run.
+		for side: float in [-1.0, 1.0]:
+			var panels := 6
+			for i in range(panels):
+				var z := -length * 0.5 + 0.55 + i * (length - 1.1) / (panels - 1)
+				g.block(st, Vector3(0.14 if heavy else 0.08, 0.7 if heavy else 0.55, (length - 0.8) / panels), Vector3(side * (hw + 0.05), 0.42, z), g.PAINT if i % 2 == 0 else g.LIGHT)
+	else:
+		var axles: Array = [-2.4, -0.8, 0.8, 2.4] if length > 6.6 else [-2.0, 0.0, 2.0]
+		for z: float in axles: g.axle(parts, z, hw, 0.56, 0.42)
+		for side: float in [-1.0, 1.0]:
+			g.block(st, Vector3(0.1, 0.12, length - 0.6), Vector3(side * (hw + 0.02), 1.05, 0), g.DARK)   # the wheel-arch line
+	# Lower and upper hull, a sloped glacis, the rear plate.
+	g.block(st, Vector3(hw * 1.5, 0.7, length - 0.4), Vector3(0, 0.35, 0), g.DARK)
+	g.block(st, Vector3(hw * 2.2, deck - 0.95, length - 0.6), Vector3(0, 0.95, -0.2), g.PAINT, 0.05, 0.0, 0.2)
+	var front := length * 0.5
+	g.hexa(st, [Vector3(-hw * 1.05, 0.45, front + 0.05), Vector3(hw * 1.05, 0.45, front + 0.05), Vector3(hw * 1.05, 0.95, front - 0.4), Vector3(-hw * 1.05, 0.95, front - 0.4),
+		Vector3(-hw * 1.05, 0.95, front + 0.0), Vector3(hw * 1.05, 0.95, front + 0.0), Vector3(hw * 1.02, deck, front - (1.2 if heavy else 1.5)), Vector3(-hw * 1.02, deck, front - (1.2 if heavy else 1.5))], g.LIGHT)
+	if heavy:
+		# A stepped, thick front and slab armour along the sides.
+		g.block(st, Vector3(hw * 2.1, 0.35, 0.8), Vector3(0, deck, front - 1.6), g.DARK, 0.1)
+		for side: float in [-1.0, 1.0]:
+			g.block(st, Vector3(0.3, 0.55, length - 1.6), Vector3(side * (hw - 0.05), deck - 0.55, -0.4), g.LIGHT)
+	elif not gun:
+		g.block(st, Vector3(hw * 1.7, 0.12, 0.35), Vector3(0, 0.9, front - 0.1), g.PAINT, 0, 0.3)   # trim vane
+	g.block(st, Vector3(hw * 1.4, deck - 0.4, 0.12), Vector3(0, 0.4, -front + 0.25), g.METAL)        # rear ramp / door
+	for side: float in [-1.0, 1.0]:
+		g.block(st, Vector3(0.2, 0.12, 0.1), Vector3(side * hw * 0.8, 0.95, front - 0.25), g.GLASS)  # headlights
+		g.block(st, Vector3(0.06, 0.36, 0.8), Vector3(side * hw * 1.1, deck - 0.5, -1.2), g.TEAM)
+		g.block(st, Vector3(0.45, 0.3, 1.2), Vector3(side * hw * 0.75, deck, -front + 1.2), g.DARK)   # stowage
+	for i in range(4):
+		g.block(st, Vector3(hw * 1.2, 0.04, 0.12), Vector3(0, deck, front - 2.2 - i * 0.25), g.METAL)   # engine grille
+	g.hatch(st, Vector3(-hw * 0.45, deck, front - 1.0), 0.28)
+	g.antenna(st, Vector3(-hw * 0.8, deck, -front + 0.6), 2.2)
+	# The turret.
+	parts.turret = Node3D.new()
+	parts.turret.position = Vector3(0, deck, -0.1 if gun else 0.1)
+	parts.root.add_child(parts.turret)
+	if heavy:
+		# A remote weapon station on a hatch ring.
+		g.cyl(top, 0.42, 0.18, Vector3(0, 0.09, 0), "y", g.DARK, 14)
+		g.block(top, Vector3(0.6, 0.45, 0.7), Vector3(0, 0.18, 0), g.PAINT)
+		g.block(top, Vector3(0.3, 0.2, 0.05), Vector3(0.15, 0.45, 0.36), g.GLASS)
+		g.cyl(top, 0.05, 1.3, Vector3(-0.15, 0.4, 0.95), "z", g.METAL, 8)
+		parts.muzzle = 1.6
+		return
+	var tw := 1.0 if gun else 0.8
+	var tl := 1.6 if gun else 1.2
+	# A faceted turret with a bustle.
+	g.hexa(top, [Vector3(-tw * 0.7, 0, tl), Vector3(tw * 0.7, 0, tl), Vector3(tw, 0, -tl * 0.9), Vector3(-tw, 0, -tl * 0.9),
+		Vector3(-tw * 0.5, 0.62, tl * 0.75), Vector3(tw * 0.5, 0.62, tl * 0.75), Vector3(tw * 0.9, 0.66, -tl * 0.85), Vector3(-tw * 0.9, 0.66, -tl * 0.85)], g.PAINT)
+	g.block(top, Vector3(tw * 1.8, 0.5, 0.7), Vector3(0, 0.05, -tl * 1.2), g.LIGHT, 0.05)   # bustle
+	g.cyl(top, 0.3, 0.22, Vector3(-tw * 0.45, 0.66, -tl * 0.3), "y", g.DARK, 12)              # commander's cupola
+	g.block(top, Vector3(0.28, 0.3, 0.28), Vector3(-tw * 0.45, 0.88, -tl * 0.05), g.DARK)
+	g.block(top, Vector3(0.22, 0.14, 0.04), Vector3(-tw * 0.45, 0.98, 0.1 - tl * 0.05), g.GLASS)
+	for side: float in [-1.0, 1.0]:
+		g.smoke_launchers(top, Vector3(side * tw * 0.75, 0.42, tl * 0.5), side, 3)
+	g.antenna(top, Vector3(tw * 0.7, 0.66, -tl * 1.1), 1.8)
+	if gun:
+		# A long 105 mm gun: mantlet, fume extractor, muzzle brake.
+		g.block(top, Vector3(0.75, 0.55, 0.45), Vector3(0, 0.08, tl - 0.1), g.DARK, 0.05)
+		g.cyl(top, 0.11, 4.6, Vector3(0, 0.36, tl + 2.3), "z", g.PAINT, 12, 0.095)
+		g.cyl(top, 0.17, 0.7, Vector3(0, 0.36, tl + 1.6), "z", g.LIGHT, 12)
+		g.cyl(top, 0.15, 0.32, Vector3(0, 0.36, tl + 4.55), "z", g.DARK, 12)
+		parts.muzzle = tl + 4.7
+		return
+	# An autocannon, a coaxial gun and the twin anti-tank missile box.
+	g.block(top, Vector3(0.45, 0.4, 0.4), Vector3(0, 0.12, tl - 0.1), g.DARK)
+	g.cyl(top, 0.065, 2.2, Vector3(0, 0.3, tl + 1.0), "z", g.METAL, 10)
+	g.cyl(top, 0.085, 0.3, Vector3(0, 0.3, tl + 2.05), "z", g.DARK, 10)
+	g.cyl(top, 0.03, 0.8, Vector3(0.25, 0.25, tl + 0.3), "z", g.METAL, 6)
+	if key == "reconVehicle":
+		# The tracked scout: a raised sensor mast in place of the missile box.
+		g.cyl(top, 0.05, 1.4, Vector3(tw * 0.6, 1.3, -tl * 0.4), "y", g.METAL, 6)
+		g.block(top, Vector3(0.5, 0.35, 0.4), Vector3(tw * 0.6, 2.0, -tl * 0.4), g.DARK)
+		g.block(top, Vector3(0.4, 0.18, 0.04), Vector3(tw * 0.6, 2.1, -tl * 0.4 + 0.2), g.GLASS)
+	else:
+		g.block(top, Vector3(0.42, 0.45, 1.1), Vector3(tw * 0.95, 0.3, -0.1), g.DARK)
+		g.block(top, Vector3(0.36, 0.16, 0.04), Vector3(tw * 0.95, 0.55, 0.46), g.METAL)
+		g.block(top, Vector3(0.36, 0.16, 0.04), Vector3(tw * 0.95, 0.35, 0.46), g.METAL)
+	parts.muzzle = tl + 2.2
+
+## A light 4x4 patrol vehicle (Jackal, Fennek, Hawkei): open crew compartment,
+## roll cage, a ring-mounted machine gun, a spare wheel and jerricans.
+static func _patrol_vehicle(g: RefCounted, st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
+	var length := 4.8
+	for z: float in [-1.5, 1.5]: g.axle(parts, z, 1.15, 0.52, 0.38)
+	g.block(st, Vector3(2.0, 0.55, length), Vector3(0, 0.55, 0), g.PAINT, 0.05, 0.25, 0.1)
+	g.block(st, Vector3(2.1, 0.08, length - 0.3), Vector3(0, 1.1, 0), g.DARK)      # the floor and sills
+	g.block(st, Vector3(1.9, 0.5, 1.3), Vector3(0, 1.1, 1.6), g.PAINT, 0.05, 0.4)  # bonnet
+	for side: float in [-1.0, 1.0]:
+		# The roll cage, door frames and a windscreen frame.
+		g.block(st, Vector3(0.08, 0.95, 0.08), Vector3(side * 0.92, 1.18, 0.75), g.METAL)
+		g.block(st, Vector3(0.08, 0.85, 0.08), Vector3(side * 0.92, 1.18, -1.2), g.METAL)
+		g.block(st, Vector3(0.08, 0.08, 2.0), Vector3(side * 0.92, 2.05, -0.22), g.METAL)
+		g.block(st, Vector3(0.06, 0.3, 1.6), Vector3(side * 1.02, 1.18, -0.3), g.TEAM if side > 0 else g.PAINT)
+		g.block(st, Vector3(0.18, 0.12, 0.1), Vector3(side * 0.7, 1.15, 2.25), g.GLASS)
+		g.block(st, Vector3(0.22, 0.45, 0.3), Vector3(side * 0.75, 1.18, -2.1), g.DARK)   # jerricans
+	g.block(st, Vector3(1.84, 0.08, 0.08), Vector3(0, 2.05, 0.75), g.METAL)
+	g.block(st, Vector3(1.7, 0.55, 0.06), Vector3(0, 1.2, 0.95), g.GLASS)
+	g.cyl(st, 0.42, 0.25, Vector3(0, 1.5, -2.45), "z", g.RUBBER, 12)                   # the spare wheel
+	g.antenna(st, Vector3(-0.8, 1.2, -1.8), 2.2)
+	parts.turret = Node3D.new()
+	parts.turret.position = Vector3(0, 2.1, -0.3)
+	parts.root.add_child(parts.turret)
+	g.cyl(top, 0.55, 0.08, Vector3.ZERO, "y", g.METAL, 16)   # the weapon ring
+	g.block(top, Vector3(0.2, 0.2, 0.7), Vector3(0, 0.1, 0.2), g.DARK)
+	g.cyl(top, 0.04, 1.2, Vector3(0, 0.22, 0.95), "z", g.METAL, 6)
+	g.block(top, Vector3(0.5, 0.35, 0.06), Vector3(0, 0.1, 0.55), g.PAINT)                # gun shield
+	parts.muzzle = 1.5

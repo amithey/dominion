@@ -38,6 +38,19 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.96: robots and drones, six new maps, and new armour models
+
+- **Robots and drones entering armies,** by the nations documented using them: armed ground robots (Ukraine's
+  Droid TW 12.7, Russia's Uran-9, THeMIS, Israel's Jaguar, China's Sharp Claw), logistics robots that bring the
+  wounded back (Termit/Gimli, Kurier, S-MET, THeMIS Cargo), China's armed robot dog, and heavy bomber drones
+  (Ukraine's Vampire "Baba Yaga", Russia's copies). A robot lost costs no war support.
+  Research: [DRONES-ROBOTS-RESEARCH-2026-10-12.md](DRONES-ROBOTS-RESEARCH-2026-10-12.md).
+- **Six new maps** (research: [MAPS-2026-10-12.md](MAPS-2026-10-12.md)): The Strait and Ocean Atolls for naval war,
+  the Great Steppe and River Lands for land war, and two real maps: the Gulf and Hormuz, and the Red Sea and the
+  Horn of Africa, where each nation starts at its own capital.
+- **New armour models:** the infantry fighting vehicle (turret, autocannon, twin missile box), the open patrol
+  vehicle (Jackal, Fennek, Hawkei), the mobile 105 mm gun and the heavy armoured carrier each have their own shape.
+
 ## Version 0.9.95: real aircraft carriers, rival navies, and helicopters that carry troops
 
 - **Carriers look like carriers,** by class: the catapult carriers (Ford, Fujian, Charles de Gaulle) with an angled

@@ -28,13 +28,13 @@ extends RefCounted
 ##   asFrigate            an escort built to hunt submarines
 ## All figures are game balance.
 
-const VEHICLES := ["mineLayer", "mineClearer", "recoveryVehicle", "decoy", "counterBatteryRadar", "coastalASM"]
-const AIR := ["aewc", "ewJet", "maritimePatrol", "carrierJet", "carrierDrone", "heavyLift", "navalHelicopter"]
+const VEHICLES := ["mineLayer", "mineClearer", "recoveryVehicle", "decoy", "counterBatteryRadar", "coastalASM", "combatUGV", "logisticsUGV", "robotDog"]
+const AIR := ["aewc", "ewJet", "maritimePatrol", "carrierJet", "carrierDrone", "heavyLift", "navalHelicopter", "heavyBomberDrone"]
 const FIXED_WING := ["aewc", "ewJet", "maritimePatrol", "carrierJet", "carrierDrone"]
 const NAVAL := ["carrier", "asFrigate"]
-const ALTITUDE := {"aewc": 32.0, "ewJet": 27.0, "maritimePatrol": 21.0, "carrierJet": 24.0, "carrierDrone": 20.0, "heavyLift": 15.0, "navalHelicopter": 13.0}
+const ALTITUDE := {"aewc": 32.0, "ewJet": 27.0, "maritimePatrol": 21.0, "carrierJet": 24.0, "carrierDrone": 20.0, "heavyLift": 15.0, "navalHelicopter": 13.0, "heavyBomberDrone": 9.0}
 const SHIP_LENGTH := {"carrier": 30.0, "asFrigate": 13.0}
-const WEAPON := {"coastalASM": "missile", "asFrigate": "missile", "maritimePatrol": "missile", "ewJet": "missile", "mineClearer": "rocket", "carrierJet": "missile", "carrierDrone": "missile", "navalHelicopter": "missile"}
+const WEAPON := {"coastalASM": "missile", "asFrigate": "missile", "maritimePatrol": "missile", "ewJet": "missile", "mineClearer": "rocket", "carrierJet": "missile", "carrierDrone": "missile", "navalHelicopter": "missile", "heavyBomberDrone": "bomb"}
 const NAVAL_ONLY := ["coastalASM", "maritimePatrol", "navalHelicopter"]
 const SUBMARINES := ["submarine", "nuclearSub", "orca"]
 const SUB_HUNTERS := ["maritimePatrol", "asFrigate", "navalHelicopter"]
@@ -59,6 +59,9 @@ const JAM_REACH := 60.0
 const JAM_FACTOR := 0.6
 const SUB_FACTOR := 1.8
 const TICK := 0.25
+const ROBOTS := ["combatUGV", "logisticsUGV", "robotDog", "heavyBomberDrone", "carrierDrone"]   # no crew: no war support lost
+const EVAC_REACH := 14.0
+const EVAC_RATE := 6.0
 # The air wing (by class: force_models.CARRIER_STYLE): aircraft aboard, and what flies from the deck.
 const WING := {"usa": 5, "china": 5, "eu": 5, "uk": 4, "india": 4, "turkiye": 4, "japan": 4, "iran": 3}
 const WING_AIRCRAFT := {"usa": "F/A-18E Super Hornet", "china": "J-15T", "eu": "Rafale M", "uk": "F-35B Lightning", "india": "MiG-29K", "japan": "F-35B Lightning", "turkiye": "Bayraktar TB3", "iran": "Shahed-129"}
@@ -107,6 +110,7 @@ static func update(w: Node, delta: float) -> void:
 			"mineLayer": _engineer(w, s, u, dt)
 			"mineClearer": _clear(w, s, u, dt)
 			"recoveryVehicle": _repair(w, u, dt)
+			"logisticsUGV": _evacuate(w, u, dt)
 	_trigger(w, s)
 	preload("res://scripts/airlift.gd").update(w)   # troops boarding helicopters
 
@@ -232,6 +236,20 @@ static func _repair(w: Node, u: Dictionary, dt: float) -> void:
 	if worst != null:
 		worst.hp = minf(float(worst.max_hp), float(worst.hp) + REPAIR_RATE * dt)
 		u.recovering = worst   # (not "repairing": that is the repair order a save keeps)
+
+## A logistics robot brings the wounded back: the worst-hurt infantry near it recovers.
+static func _evacuate(w: Node, u: Dictionary, dt: float) -> void:
+	var worst = null
+	var share := 0.999
+	for other in w.units:
+		if other == u or not _alive(other) or int(other.owner) != int(u.owner) or not other.key in w.infantry_keys or other.key == "worker":
+			continue
+		var s: float = float(other.hp) / maxf(float(other.max_hp), 1.0)
+		if s < share and other.node.position.distance_to(u.node.position) < EVAC_REACH:
+			share = s
+			worst = other
+	if worst != null:
+		worst.hp = minf(float(worst.max_hp), float(worst.hp) + EVAC_RATE * dt)
 
 # ---------------------------------------------------------------- sensors and damage
 

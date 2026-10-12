@@ -146,6 +146,16 @@ const MAPS := {
 		[4.35, 50.85, "eu", "Brussels"], [37.62, 55.75, "russia", "Moscow"], [32.86, 39.93, "turkiye", "Ankara"],
 		[35.21, 31.77, "israel", "Jerusalem"], [-3.70, 40.42, "", "Madrid"], [12.50, 41.90, "", "Rome"],
 		[18.07, 59.33, "", "Stockholm"], [21.01, 52.23, "", "Warsaw"], [30.52, 50.45, "", "Kyiv"]]},
+	# The Gulf: Hormuz between Iran and Arabia (native/MAPS-2026-10-12.md).
+	"gulf": {"window": [42.0, 66.0, 13.0, 37.0], "starts": [
+		[51.39, 35.69, "iran", "Tehran"], [46.72, 24.69, "saudi", "Riyadh"], [44.36, 33.31, "iraq", "Baghdad"],
+		[44.21, 15.35, "houthis", "Sanaa"], [54.37, 24.45, "", "Abu Dhabi"], [58.41, 23.59, "", "Muscat"],
+		[47.98, 29.37, "", "Kuwait City"], [56.27, 27.18, "", "Bandar Abbas"]]},
+	# The Red Sea and the Horn of Africa: the Bab-el-Mandeb, the Nile states, Ethiopia.
+	"red_sea": {"window": [26.0, 56.0, 2.0, 32.0], "starts": [
+		[31.24, 30.04, "egypt", "Cairo"], [37.22, 19.62, "sudan", "Port Sudan"], [31.58, 4.85, "south_sudan", "Juba"],
+		[38.74, 9.03, "ethiopia", "Addis Ababa"], [43.76, 16.94, "houthis", "Saada"], [45.03, 12.80, "yemen", "Aden"],
+		[46.72, 24.69, "saudi", "Riyadh"], [38.93, 15.32, "", "Asmara"], [36.57, 28.38, "", "Tabuk"]]},
 	"east_asia": {"window": [70.0, 150.0, -15.0, 65.0], "starts": [
 		[116.40, 39.90, "china", "Beijing"], [139.69, 35.69, "japan", "Tokyo"], [77.21, 28.61, "india", "New Delhi"],
 		[126.98, 37.57, "", "Seoul"], [106.90, 47.90, "", "Ulaanbaatar"], [105.85, 21.03, "", "Hanoi"],
