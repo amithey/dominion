@@ -32,7 +32,8 @@ const PROFILE := {
 	"nigeria": Regional.AI_PROFILES.nigeria, "sudan": Regional.AI_PROFILES.sudan, "south_sudan": Regional.AI_PROFILES.south_sudan,
 	"usa":         {"compute": 5, "models": 5, "autonomy": 5, "cyber": 5, "lean": "on", "signs": ["nuclear"], "ceiling": 5,
 		"why": "Most of the world's frontier compute and the leading AI laboratories."},
-	"china":       {"compute": 3, "models": 5, "autonomy": 4, "cyber": 5, "lean": "on", "signs": [], "ceiling": 5,
+	# China: "nuclear", its leader's statement with the American president that humans decide on nuclear use (ai_use_data.gd).
+	"china":       {"compute": 3, "models": 5, "autonomy": 4, "cyber": 5, "lean": "on", "signs": ["nuclear"], "ceiling": 5,
 		"why": "Frontier models of its own and the second-largest compute, despite chip controls."},
 	"uk":          {"compute": 2, "models": 4, "autonomy": 3, "cyber": 4, "lean": "in", "signs": ["nuclear"], "ceiling": 4,
 		"why": "World-class laboratories and research, but a fraction of the leaders' compute."},

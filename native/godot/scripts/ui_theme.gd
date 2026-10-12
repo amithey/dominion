@@ -1,6 +1,6 @@
 extends RefCounted
 ## Geopolitical atlas: deep navy, pale ink, sand selection and fine map rules.
-## Serif titles with sans-serif body text; semantic warning colours remain.
+## Sans-serif headings and body text; semantic warning colours remain.
 ## One shared theme covers the HUD, ministries, campaign and pause menus.
 
 # ---------------------------------------------------------------- palette
@@ -115,13 +115,10 @@ static func font(weight := 400) -> SystemFont:
 	f.hinting = TextServer.HINTING_LIGHT
 	return f
 
-## Atlas titles and headline figures, using installed Windows serif families.
+# Compatibility name for existing callers: all interface text uses the same
+# readable sans-serif family, with weight providing the heading hierarchy.
 static func serif(weight := 600) -> SystemFont:
-	var f := SystemFont.new()
-	f.font_names = PackedStringArray(["Georgia", "Cambria", "Times New Roman"])
-	f.font_weight = weight
-	f.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
-	return f
+	return font(weight)
 
 ## Keep titles readable as written; letterspaced() is available for short marks.
 static func caps(text: String) -> String:
@@ -343,7 +340,7 @@ static func build() -> Theme:
 		t.set_stylebox("grabber", kind, box(Color("4b6668"), Color(0, 0, 0, 0), 0, 3, 2.0))
 		t.set_stylebox("grabber_highlight", kind, box(TRIM, Color(0, 0, 0, 0), 0, 3, 2.0))
 		t.set_stylebox("grabber_pressed", kind, box(GOLD, Color(0, 0, 0, 0), 0, 3, 2.0))
-	# Headings take the serif face.
+	# Headings use the same family at a stronger weight.
 	t.add_type("HeaderLabel")
 	t.set_type_variation("HeaderLabel", "Label")
 	t.set_font("font", "HeaderLabel", heading)

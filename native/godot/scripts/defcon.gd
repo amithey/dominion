@@ -30,6 +30,7 @@ extends RefCounted
 const Variants := preload("res://scripts/national_variants.gd")
 const Arsenal := preload("res://scripts/national_arsenal.gd")
 const Factions := preload("res://scripts/factions.gd")
+const Strategic := preload("res://scripts/ai_strategic.gd")
 const TICK := 2.0
 const FLOOR := {5: 0.0, 4: 25.0, 3: 45.0, 2: 65.0}
 const BAND := [[80.0, 1], [60.0, 2], [40.0, 3], [20.0, 4]]
@@ -180,11 +181,15 @@ func nuclear_used(owner: int, owners_hit: Array) -> void:
 			if i != owner and not d.defeated(i):
 				d.change(owner, i, -30.0)
 		d.changed.emit()
+		# The player's dead hand answers a nuclear attack on its own (ai_strategic.gd).
+		if 0 in owners_hit.map(func(o): return int(o)):
+			Strategic.answer(w, owner)
 	# A nuclear power struck by the player's weapon answers in kind.
 	if owner == 0:
 		for o in owners_hit:
 			var victim := int(o)
-			if victim > 0 and nuclear(victim) and not d.defeated(victim) and not retaliation.has(victim) and randf() < SECOND_STRIKE:
+			# A dead hand always answers; undersea sensing makes a sea-based answer less certain.
+			if victim > 0 and nuclear(victim) and not d.defeated(victim) and not retaliation.has(victim) and randf() < Strategic.second_strike(w, victim, SECOND_STRIKE):
 				retaliation[victim] = w.game_time + randf_range(20.0, 40.0)
 				posture[victim] = 2
 	_announce()
@@ -281,6 +286,8 @@ func _ai_nuclear() -> void:
 		if deterrent(0): chance *= 0.33
 		if w.get("tests") != null and w.tests != null and w.tests.believed(0): chance *= 0.5   # a tested deterrent
 		if w.get("directorate") != null and w.directorate != null and w.directorate.deters(): chance *= 0.6   # launch on warning (ai_directorate.gd)
+		if Strategic.armed(w, 0): chance *= 0.5   # automated retaliation
+
 		if randf() < chance:
 			_strike(owner, "facing defeat", "tacticalNuke" if Factions.identity(w, owner) == "russia" else "nuke")
 

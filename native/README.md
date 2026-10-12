@@ -38,6 +38,34 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.92: AI in war, the state and the doomsday chain: who uses what
+
+- **Nine strategic applications** in Defence > AI > Applications, on Codex's pipeline (research, local trials,
+  commissioning, compute and upkeep):
+  - **Military:** targeting decision support (+8% for guns and strike aircraft, but strikes outrun review: civilian
+    buildings are sometimes hit even with a human approving), counter-drone battle management (interception +6%),
+    undersea sensing (submarines hit +20% harder; a nuclear rival's second strike less certain; nuclear tension rises
+    while you hunt its submarines in war).
+  - **Politics and state:** mass surveillance (agents caught more often, war-weariness turns into protest a third
+    more slowly; happiness -3 and every democracy thinks less of you; barred by law in the EU), counter-disinformation
+    (rival influence campaigns succeed less and do half the harm), AI exports (sell a package to a nation at peace:
+    money, relations +10, a window into its networks).
+  - **Economy:** tax and fraud analytics (income +5%).
+  - **Doomsday:** automated retaliation, a "dead hand" (a nuclear attack on you is answered by the machine with no
+    order given; rivals half as likely to strike you; but a false warning may fire it, rarer with strategic warning
+    verification, never zero), and biosecurity screening (epidemics barely spread between your towns; a runaway
+    model's pathogen does less harm).
+- **Who uses what:** a new tab with the public record for every nation (fielded, developing, barred by law, pledged
+  against). A nation that already fields a use runs its trials twice as fast, and rivals start with what they field:
+  Russia and North Korea automate retaliation; China, Russia and Iran run mass surveillance and influence operations
+  (and now start influence campaigns against you sooner); the United States, China, the UK and France have pledged
+  human control of nuclear use (China now signs the declaration).
+- **The next research stage:** every application in service gathers field experience; with the new discovery
+  Fielded AI: the second generation, it can be upgraded to a second generation half again as strong.
+- **A more readable interface (Codex):** the interface opens at 100% (it was 80%), with clearer typography and
+  action labels, and missile production separated from the stockpile. See [UI-READABILITY-2026-10-11.md](UI-READABILITY-2026-10-11.md).
+- Research: [AI-STRATEGIC-USE-RESEARCH-2026-10-11.md](AI-STRATEGIC-USE-RESEARCH-2026-10-11.md). Check: tools/ai-strategic-check.gd.
+
 ## Version 0.9.91: practical AI (Codex) and the regional entities in full
 
 - **AI applications (Codex):** Defence > AI > Applications, twelve services from research to service: validate on

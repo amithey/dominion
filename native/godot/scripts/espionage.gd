@@ -202,11 +202,15 @@ func add_report(nation: int, kind: String, text: String, amount: float) -> void:
 func counter_spy(nation: int) -> float:
 	if active(nation, "spymaster"):
 		return 0.02
+	# Mass surveillance catches more agents (ai_applications_data.gd).
+	var watched := 0.0
+	if world.get("directorate") != null and world.directorate != null:
+		watched = 0.1 * minf(1.0, world.directorate.applications.factor(nation, "surveillance"))
 	# That rival's own security service too (the FBI and CIA, Shin Bet, the MSS: national_profile.gd).
 	var service := float(preload("res://scripts/national_profile.gd").bonuses(world, nation).get("counterSpy", 0.0))
 	if world.ai != null and not world.ai.nations.is_empty():
-		return float(world.ai.row_of(nation).get("counterSpy", 0.0)) + service   # that rival's own difficulty
-	return float(world.map.ai.difficulty.get(world.match_difficulty, world.map.ai.difficulty.easy).get("counterSpy", 0.0))
+		return float(world.ai.row_of(nation).get("counterSpy", 0.0)) + service + watched   # that rival's own difficulty
+	return float(world.map.ai.difficulty.get(world.match_difficulty, world.map.ai.difficulty.easy).get("counterSpy", 0.0)) + watched
 
 func success_chance(op_key: String, nation: int) -> float:
 	var op: Dictionary = ops()[op_key]
@@ -465,6 +469,8 @@ func enemy_attempt(force_outcome := "") -> String:
 	var nat = world.market.ai_nation(attacker)
 	var defence: float = 0.25 + (0.18 if has_agency() else 0.0) + ready_agents().size() * 0.05 + (world.research.bonus("counterSpy") if world.research else 0.0)
 	defence += 0.25 if clock < security_until else 0.0
+	if world.get("directorate") != null and world.directorate != null:
+		defence += 0.12 * minf(1.0, world.directorate.applications.factor(0, "surveillance"))   # cameras and data (ai_applications_data.gd)
 	# A stronger service's officers are harder to catch (a CIA officer more than most).
 	defence -= float(preload("res://scripts/national_profile.gd").bonuses(world, attacker).get("spyPct", 0.0))
 	var text := ""

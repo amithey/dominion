@@ -2,6 +2,8 @@ extends RefCounted
 ## Research -> local validation -> paid commissioning -> compute-limited operation.
 const Data := preload("res://scripts/ai_applications_data.gd")
 const Factions := preload("res://scripts/factions.gd")
+const UseData := preload("res://scripts/ai_use_data.gd")
+const Strategic := preload("res://scripts/ai_strategic.gd")
 var _directorate: WeakRef
 var a: RefCounted:
 	get: return _directorate.get_ref()
@@ -12,6 +14,8 @@ var coverage := {} # rebuilt each simulation second; never persisted
 var consultation_ready := {} # global per initiating nation, not per target
 var category := "civil"
 var _rival_at := 0.0
+var export_ready := {} # owner -> when it may sell its next AI package
+var _strategic_at := 0.0
 
 func _init(directorate: RefCounted, world: Node) -> void:
 	_directorate = weakref(directorate)
@@ -35,6 +39,11 @@ func eligible(owner: int, key: String) -> String:
 	var p: Dictionary = Data.PROGRAMS[key]
 	if a.AIData.ceiling(w, owner) < int(p.level): return "Beyond national AI capacity (level %d needed)." % int(p.level)
 	if key == "strategic" and (w.get("defcon") == null or not w.defcon.nuclear(owner)): return "Only nuclear powers can commission strategic warning verification."
+	var record: Array = UseData.of(Factions.identity(w, owner), key)
+	if str(record[0]) == "barred": return "Barred by your nation's law: %s" % str(record[1])
+	if key == "deadHand":
+		if w.get("defcon") == null or not w.defcon.nuclear(owner): return "Only a nuclear power has warheads to automate."
+		if a.signatory(owner, "nuclear"): return "You are bound by the declaration on human control of nuclear weapons: withdraw from it first (Doctrine)." if owner == 0 else "Bound by the declaration on human control of nuclear weapons."
 	if a.level(owner) < int(p.level): return "Train AI to level %d first." % int(p.level)
 	if not a.researched(owner, p.research): return "Complete research: %s." % str(p.name)
 	if not facility(owner, p.facility): return "Needs a working, supplied %s." % str(w.building_defs.get(p.facility, {}).get("name", p.facility))
@@ -96,10 +105,19 @@ func commission(owner: int, key: String) -> String:
 	if not bool(r.get("commissioned", false)):
 		if not pay(owner, price(key, true)): return "Insufficient funds."
 		r.commissioned = true
+		if key == "surveillance": _surveillance_reaction(owner)
 	r.enabled = true
 	refresh()
 	if w.research != null: w.research._recompute()
 	return "%s commissioned; running costs and compute demand apply." % str(Data.PROGRAMS[key].name)
+
+## Democracies think less of a government that turns face recognition on its people.
+func _surveillance_reaction(owner: int) -> void:
+	var support = w.get("support")
+	if support == null: return
+	for other in range(w.diplomacy.n):
+		if other != owner and not w.diplomacy.defeated(other) and support.regime(other) == "democracy":
+			w.diplomacy.change(owner, other, -6.0)
 
 func suspend(owner: int, key: String) -> String:
 	row(owner, key).enabled = false
@@ -119,8 +137,50 @@ func demand(owner: int, pool: String) -> float:
 		if Data.PROGRAMS[key].pool == pool and running(owner, key): total += float(Data.PROGRAMS[key].demand)
 	return total
 
+## The share of the full effect: coverage, half again for the second generation.
 func factor(owner: int, key: String) -> float:
-	return float(coverage.get(owner, {}).get(key, 0.0))
+	var f := float(coverage.get(owner, {}).get(key, 0.0))
+	if f > 0.0 and int(rows[owner][key].get("gen", 1)) >= 2: f *= Data.GEN2
+	return f
+
+## Field experience a running application gathers: a second of full coverage
+## is a second's experience; the second generation needs twice its trials' work.
+func experience_needed(key: String) -> float:
+	return float(Data.PROGRAMS[key].work) * 2.0
+
+func upgrade_price(key: String) -> float:
+	return float(Data.PROGRAMS[key].money) * 0.5
+
+func upgrade_blocked(owner: int, key: String) -> String:
+	var r := row(owner, key)
+	if int(r.get("gen", 1)) >= 2: return "Second generation in service."
+	if not running(owner, key): return "Only an operating application can be upgraded."
+	if not a.researched(owner, Data.SECOND_GENERATION): return "Research Fielded AI: the second generation."
+	if float(r.get("exp", 0.0)) < experience_needed(key): return "Field experience %d%%: keep it running." % int(100.0 * float(r.get("exp", 0.0)) / experience_needed(key))
+	if not affordable(owner, upgrade_price(key)): return "Needs $%d." % roundi(upgrade_price(key))
+	return ""
+
+## The second generation, trained on what the first saw in service.
+func upgrade(owner: int, key: String) -> String:
+	var why := upgrade_blocked(owner, key)
+	if why != "": return why
+	if not pay(owner, upgrade_price(key)): return "Insufficient funds."
+	row(owner, key).gen = 2
+	refresh()
+	if w.research != null: w.research._recompute()
+	var text := "%s: the second generation enters service, trained on the first one's data. Its effect is half again as strong." % str(Data.PROGRAMS[key].name)
+	if owner == 0: a._note(text)
+	return text
+
+## AI exports: the player's sale of a package to `target`.
+func export_blocked(owner: int, target: int) -> String:
+	return Strategic.export_blocked(w, owner, target, float(export_ready.get(owner, 0.0)))
+
+func export_to(owner: int, target: int) -> String:
+	var why := export_blocked(owner, target)
+	if why != "": return why
+	export_ready[owner] = w.game_time + Strategic.EXPORT_COOLDOWN
+	return Strategic.export_to(w, owner, target)
 
 func upkeep(owner := 0) -> float:
 	var total := 0.0
@@ -152,7 +212,9 @@ func update() -> void:
 		var r := row(owner, key)
 		# National familiarity makes commissioning modestly easier, not a free capability.
 		var familiar: bool = key in country(owner)[2]
-		r.work = minf(float(Data.PROGRAMS[key].work), float(r.work) + a.flow(owner, "frontier") * 0.5 * (1.15 if familiar else 1.0))
+		# A nation that already fields it (ai_use_data.gd) needs half the trials, one developing it 80%.
+		var pace: float = (1.15 if familiar else 1.0) / UseData.work_factor(Factions.identity(w, owner), key)
+		r.work = minf(float(Data.PROGRAMS[key].work), float(r.work) + a.flow(owner, "frontier") * 0.5 * pace)
 		if float(r.work) >= float(Data.PROGRAMS[key].work):
 			r.validated = true
 			projects.erase(owner)
@@ -161,6 +223,13 @@ func update() -> void:
 				a._note(text)
 				w.hud.notice(text)
 	refresh()
+	for owner in coverage:
+		for key in coverage[owner]:
+			var r := row(owner, key)
+			r.exp = minf(experience_needed(key), float(r.get("exp", 0.0)) + float(coverage[owner][key]))
+	if w.game_time >= _strategic_at:
+		_strategic_at = w.game_time + 30.0
+		Strategic.undersea_tension(w)
 	# Rivals pay upkeep too; player costs are deducted by economy.tick through directorate.upkeep().
 	for owner in rows:
 		if int(owner) > 0: pay(owner, upkeep(owner))
@@ -173,8 +242,16 @@ func _rivals() -> void:
 	for n in w.ai.nations:
 		var owner := int(n.id)
 		if n.defeated: continue
-		var priorities: Array = country(owner)[2].duplicate()
+		# What the nation already fields comes first (ai_use_data.gd), then its priorities.
+		var priorities: Array = UseData.fielded(Factions.identity(w, owner)).filter(func(k): return Data.PROGRAMS.has(k))
+		for k in country(owner)[2]:
+			if not k in priorities: priorities.append(k)
 		if w.defcon != null and w.defcon.nuclear(owner): priorities.append("strategic")
+		for key in rows.get(owner, {}):
+			if upgrade_blocked(owner, key) == "": upgrade(owner, key)
+		if factor(owner, "export") >= 0.5 and w.game_time >= float(export_ready.get(owner, 0.0)):
+			var buyers: Array = range(1, w.diplomacy.n).filter(func(t): return t != owner and export_blocked(owner, t) == "" and w.diplomacy.rel(owner, t) >= 20.0)
+			if not buyers.is_empty(): export_to(owner, buyers[randi() % buyers.size()])
 		for key in priorities:
 			if eligible(owner, key) != "": continue
 			if bool(row(owner, key).validated):
@@ -205,12 +282,13 @@ func consult(owner: int, target: int) -> String:
 func capture() -> Dictionary:
 	var saved_rows := {}
 	for owner in rows: saved_rows[str(owner)] = rows[owner].duplicate(true)
-	return {"rows": saved_rows, "projects": a._keyed(projects), "consultation": a._keyed(consultation_ready)}
+	return {"rows": saved_rows, "projects": a._keyed(projects), "consultation": a._keyed(consultation_ready), "export": a._keyed(export_ready)}
 
 func restore(data: Dictionary) -> void:
 	rows.clear()
 	projects.clear()
 	consultation_ready.clear()
+	export_ready.clear()
 	for k in data.get("rows", {}):
 		var owner := int(k)
 		if owner < 0 or owner >= w.map.nations.size(): continue
@@ -223,7 +301,10 @@ func restore(data: Dictionary) -> void:
 			r.enabled = bool(saved.get("enabled", false)) and bool(r.validated)
 			r.paid = bool(saved.get("paid", false))
 			r.commissioned = bool(saved.get("commissioned", false))
+			r.exp = clampf(float(saved.get("exp", 0.0)), 0.0, experience_needed(key))
+			r.gen = clampi(int(saved.get("gen", 1)), 1, 2)
 	for k in data.get("projects", {}):
 		if int(k) >= 0 and int(k) < w.map.nations.size() and Data.PROGRAMS.has(str(data.projects[k])): projects[int(k)] = str(data.projects[k])
 	for k in data.get("consultation", {}): consultation_ready[int(k)] = float(data.consultation[k])
+	for k in data.get("export", {}): export_ready[int(k)] = float(data.export[k])
 	refresh()

@@ -128,7 +128,7 @@ var victory: RefCounted = null   # victory.gd: dominance and technology, besides
 var space: RefCounted = null   # space.gd: satellites and anti-satellite weapons
 ## The interface's size: the panels are laid out for 1280x800 and stretch with
 ## the screen, so on a large monitor they grow; this scales them back (menu settings).
-var ui_scale := 0.8
+var ui_scale := 1.0
 
 func apply_ui_scale() -> void:
 	get_tree().root.content_scale_factor = ui_scale
@@ -5495,7 +5495,7 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	if generals != null:
 		amount *= generals.damage_mult(source) * generals.taken_mult(unit)  # a general's traits
 	if directorate != null:
-		amount *= directorate.damage_mult(source)  # AI: autonomy and the fusion cell
+		amount *= directorate.damage_mult(source, unit)  # AI: autonomy, the fusion cell, targeting and undersea sensing
 	unit.hp -= amount
 	Vet.credit(self, source, unit, amount)
 	if amount > 0:

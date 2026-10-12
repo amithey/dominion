@@ -531,7 +531,11 @@ func _town_near(at: Vector3, r: float):
 	return best
 
 func _spread(z: Dictionary) -> void:
-	if randf() > 0.4:
+	# Biosecurity screening and outbreak watch keep it in one town (ai_applications_data.gd).
+	var screened := 0.0
+	if w.get("directorate") != null and w.directorate != null:
+		screened = minf(1.0, w.directorate.applications.factor(int(z.town.owner), "biosecurity"))
+	if randf() > 0.4 * (1.0 - 0.7 * screened):
 		return
 	var best = null
 	for b in w.buildings:

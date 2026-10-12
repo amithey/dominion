@@ -92,6 +92,8 @@ const OPS_CAP := 600.0
 const SEEKERS := ["loiterer", "harop", "shahed", "interceptorDrone"]
 const DRONE_KEYS := ["drone", "loiterer", "fpvTeam", "harop", "shahed", "interceptorDrone", "seaDrone", "akinci", "wingman"]
 const ARTY_KEYS := ["artillery", "mlrs", "himars", "k9", "heavyRocket", "tos1a"]
+const STRIKE_KEYS := ["bomber", "jet", "gunship", "stealthFighter", "raptor", "jf17", "stealthBomber", "drone"]   # targeting support: the shooters fed target lists
+const SUBMARINES := ["submarine", "nuclearSub"]
 const AIR_DEFENCE := ["samSite", "samLauncher", "aaVehicle", "abmLauncher", "irisT", "laserAD", "saudiThaad", "manpads", "aegisCruiser", "type45"]
 const CIVILIAN := ["cottage", "housing", "residential", "apartments", "workerHouse", "school", "hospital", "library", "market", "university"]
 const PRODUCTION := ["barracks", "tankFactory", "airfield", "shipyard", "chipFab", "techPark", "missileSilo", "helipad"]
@@ -297,17 +299,24 @@ func next_cost(owner: int) -> float:
 func _base(key: String) -> String:
 	return preload("res://scripts/additional_factions.gd").base(key)
 
-## The damage factor of `source`'s shot.
-func damage_mult(source: Dictionary) -> float:
+## The damage factor of `source`'s shot at `target`.
+func damage_mult(source: Dictionary, target := {}) -> float:
 	if not source.has("owner") or not source.has("key"):
 		return 1.0
 	var o := int(source.owner)
 	var m := military(o)
-	if m <= 0.0 and applications.factor(o, "autonomy") <= 0.0:
-		return 1.0
 	var key := _base(str(source.key))
-	var doc := doctrine(o)
 	var f := 1.0
+	# Strategic applications (ai_applications_data.gd): target lists and undersea sensing.
+	var targeting: float = applications.factor(o, "targeting")
+	if targeting > 0.0 and (key in ARTY_KEYS or key in STRIKE_KEYS):
+		f += 0.08 * targeting
+	var sonar: float = applications.factor(o, "undersea")
+	if sonar > 0.0 and str(target.get("key", "")) in SUBMARINES:
+		f += 0.2 * sonar
+	if m <= 0.0 and applications.factor(o, "autonomy") <= 0.0:
+		return f
+	var doc := doctrine(o)
 	if key in DRONE_KEYS or str(source.key) in DRONE_KEYS:
 		f += 0.06 * applications.factor(o, "autonomy")
 	if doc != "in" and (key in DRONE_KEYS or str(source.key) in DRONE_KEYS):
@@ -402,7 +411,7 @@ func ai_income_mult(owner: int) -> float:
 
 ## Interception odds a rival's batteries gain from AI battle management.
 func intercept_bonus(owner: int) -> float:
-	return 0.03 * level(owner) * military(owner) if level(owner) >= 2 else 0.0
+	return (0.03 * level(owner) * military(owner) if level(owner) >= 2 else 0.0) + 0.06 * applications.factor(owner, "counterDrone")
 
 ## Whether `owner`'s batteries share targets (air_defence.gd).
 func coordinated(owner: int) -> bool:
@@ -622,7 +631,9 @@ func _note(text: String) -> void:
 
 ## Incidents a minute for `owner` now.
 func incident_rate(owner: int) -> float:
-	return float(INCIDENT_RATE.get(doctrine(owner), 0.0)) * military(owner) * (1.2 - 0.08 * AIData.rating(w, owner, "models")) * (1.0 - 0.25 * applications.factor(owner, "assurance"))
+	# Targeting support speeds strikes past review: a human approving halves the risk, never removes it.
+	var tempo: float = 0.02 * applications.factor(owner, "targeting") * (0.5 if doctrine(owner) == "in" else 1.0)
+	return (float(INCIDENT_RATE.get(doctrine(owner), 0.0)) * military(owner) + tempo) * (1.2 - 0.08 * AIData.rating(w, owner, "models")) * (1.0 - 0.25 * applications.factor(owner, "assurance"))
 
 func _incidents(owner: int) -> void:
 	var rate := incident_rate(owner)
@@ -943,14 +954,16 @@ func influence(by: int, target: int, force := "") -> String:
 		influence_ready = w.game_time + INFLUENCE_COOLDOWN
 	var d: Node = w.diplomacy
 	var e = w.get("espionage")
-	var p := clampf(0.5 + 0.06 * level(by) - 0.04 * AIData.rating(w, target, "cyber") - (0.1 * level(0) * power(0, "intel") if target == 0 else 0.0), 0.1, 0.9)
+	var shield: float = applications.factor(target, "infoShield")   # counter-disinformation (ai_applications_data.gd)
+	var p := clampf(0.5 + 0.06 * level(by) - 0.04 * AIData.rating(w, target, "cyber") - (0.1 * level(0) * power(0, "intel") if target == 0 else 0.0) - 0.3 * shield, 0.05, 0.9)
+	var harm := 1.0 - 0.5 * minf(1.0, shield)
 	var who: String = "you" if target == 0 else d.name_of(target)
 	var text := ""
 	if force == "works" or (force == "" and randf() < p):
 		if w.get("support") != null and w.support != null:
-			w.support.change(target, -8.0 if target > 0 else -5.0)
+			w.support.change(target, (-8.0 if target > 0 else -5.0) * harm)
 		if target > 0 and e != null and e.stability.has(target):
-			e.stability[target] = maxf(20.0, float(e.stability[target]) - 10.0)
+			e.stability[target] = maxf(20.0, float(e.stability[target]) - 10.0 * harm)
 		text = "INFLUENCE: synthetic videos and voices flood %s: %s." % ["your country" if target == 0 else d.name_of(target), "war support falls" if target == 0 else "its people turn against the war and its government (war support -8, stability -10)"]
 		if by > 0:
 			text = "INFLUENCE: %s floods your country with synthetic videos and voices: war support -5." % d.name_of(by)
@@ -1032,14 +1045,22 @@ func _rival_operations() -> void:
 		# A rival under controls smuggles once it has looked for a way round.
 		if controlled(owner) and not smuggling.has(owner) and w.game_time - (float(controls[owner].until) - CONTROL_SECONDS) > 60.0:
 			smuggling[owner] = true
+		# Documented influence actors (ai_use_data.gd) start sooner and at less hostility.
+		var practised: bool = preload("res://scripts/ai_use_data.gd").status(Factions.identity(w, owner), "influence") == "fielded"
 		var hostile: bool = d.at_war(owner, 0) or d.rel(owner, 0) < -40.0
 		if not hostile:
+			# Below -20 a practised actor already runs influence campaigns, nothing else.
+			if practised and d.rel(owner, 0) < -20.0 and level(owner) >= 2:
+				if not ops.has("influence"): ops.influence = w.game_time + 120.0 + randf() * 120.0
+				elif w.game_time >= float(ops.influence):
+					influence(owner, 0)
+					ops.influence = w.game_time + 300.0 + randf() * 180.0
 			continue
 		var now: float = w.game_time
 		# Each operation waits a while after the hostility begins, then recurs.
 		for op in ["influence", "theft", "controls"]:
 			if not ops.has(op):
-				ops[op] = now + {"influence": 240.0, "theft": 300.0, "controls": 180.0}[op] + randf() * 120.0
+				ops[op] = now + {"influence": 120.0 if practised else 240.0, "theft": 300.0, "controls": 180.0}[op] + randf() * 120.0
 		if level(owner) >= 2 and now >= float(ops.influence):
 			influence(owner, 0)
 			ops.influence = now + 300.0 + randf() * 180.0
@@ -1157,7 +1178,11 @@ func _early_warning() -> void:
 			else: early_warning.erase(o)
 	if dc.tension < 20.0:
 		return
-	for o in early_warning.keys():
+	# A dead hand watches the same sensors (ai_strategic.gd): it hears their false alarms too.
+	var watching: Array = early_warning.keys()
+	for o in applications.coverage:
+		if applications.factor(o, "deadHand") > 0.0 and not o in watching: watching.append(o)
+	for o in watching:
 		if o > 0 and w.diplomacy.defeated(o):
 			continue
 		if not _alarm_at.has(o):
@@ -1193,7 +1218,9 @@ func false_alarm(owner: int) -> String:
 	dc._announce()
 	_note(text)
 	w.hud.notice(text)
-	return text
+	# An armed dead hand cannot tell the false warning from a real one (ai_strategic.gd).
+	var fired := preload("res://scripts/ai_strategic.gd").accident(w, owner)
+	return text + ((" " + fired) if fired != "" else "")
 
 # ---------------------------------------------------------------- the AGI project
 
@@ -1308,8 +1335,9 @@ func runaway(owner: int) -> String:
 		var towns: Array = w.buildings.filter(func(b): return not b.dead and b.key in ["cityCenter", "villageCenter"])
 		if not towns.is_empty():
 			var t: Dictionary = towns[randi() % towns.size()]
-			wm._zone("bio", t.root.position, 14.0, 180.0, 0.4, -1, 0.0, t)
-			text += " An unrestricted model helped a group make a pathogen: an outbreak in %s." % ("your country" if int(t.owner) == 0 else d.name_of(int(t.owner)))
+			var screened := minf(1.0, applications.factor(int(t.owner), "biosecurity"))   # biosecurity screening catches it early
+			wm._zone("bio", t.root.position, 14.0, 180.0 * (1.0 - 0.5 * screened), 0.4 * (1.0 - 0.6 * screened), -1, 0.0, t)
+			text += " An unrestricted model helped a group make a pathogen: an outbreak in %s%s." % ["your country" if int(t.owner) == 0 else d.name_of(int(t.owner)), ", which screening caught early" if screened > 0.0 else ""]
 	if w.get("un") != null and w.un != null:
 		w.un.table("runaway", owner, -1, -1, "losing control of its AI")
 	if owner == 0 and w.get("support") != null and w.support != null:

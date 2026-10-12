@@ -57,7 +57,10 @@ func run() -> void:
 	a.st[foe].level = 3
 	dc.tension = 50.0
 	a._early_warning()
-	check(a.early_warning.has(foe), "China (not bound by the declaration) automates its own in a crisis")
+	check(not a.early_warning.has(foe), "China, bound by its pledge of human control (ai_use_data.gd), does not automate")
+	a.signed.nuclear.erase(foe)
+	a._early_warning()
+	check(a.early_warning.has(foe), "China, once it sets the pledge aside, automates its own in a crisis")
 	check(a.alarm_rate(0) > lone, "two machines watching each other: more false alarms")
 	a.set_early_warning(false)
 	check(not a.early_warning.has(0), "the watch goes back to officers")

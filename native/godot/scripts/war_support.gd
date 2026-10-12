@@ -87,6 +87,10 @@ func change(owner: int, amount: float) -> void:
 		return
 	support[owner] = clampf(value(owner) + amount, 0.0, 100.0)
 
+func _surveillance(owner: int) -> float:
+	var dr = w.get("directorate")
+	return dr.applications.factor(owner, "surveillance") if dr != null and dr.applications != null else 0.0
+
 func _key(a: int, b: int) -> String:
 	return "%d:%d" % [a, b]
 
@@ -107,8 +111,10 @@ func step(dt: float) -> void:
 		if enemies.is_empty():
 			support[owner] = move_toward(value(owner), baseline(owner), RECOVERY * dt)
 		else:
+			# Mass surveillance (ai_applications_data.gd) keeps weariness from turning into protest.
+			var watched := 1.0 - 0.3 * minf(1.0, _surveillance(owner))
 			for enemy in enemies:
-				change(owner, -FATIGUE * sensitivity(owner) * dt * (0.5 if defending.has(_key(owner, enemy)) else 1.0))
+				change(owner, -FATIGUE * sensitivity(owner) * dt * (0.5 if defending.has(_key(owner, enemy)) else 1.0) * watched)
 		if owner == 0 and w.economy != null:
 			change(0, -0.01 * w.economy.shortages.size() * sensitivity(0) * dt)
 	# A democracy in Collapse for two minutes: parliament forces a ceasefire.

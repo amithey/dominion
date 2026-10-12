@@ -184,7 +184,7 @@ func run() -> void:
 	w.saves.autosave_every = 0; w.show_fps = true
 	for bus in ["Master", "SFX", "Music", "Interface"]: w.menu._set_bus_volume(bus, 0)
 	w.menu._reset_settings()
-	check(is_equal_approx(w.ui_scale, 0.8) and is_equal_approx(root.content_scale_factor, 0.8), "Defaults restores the interface size immediately", "Defaults")
+	check(is_equal_approx(w.ui_scale, 1.0) and is_equal_approx(root.content_scale_factor, 1.0), "Defaults restores the interface size immediately", "Defaults")   # 100% since the readability pass (native/UI-READABILITY-2026-10-11.md)
 	check(w.quality == "balanced", "Defaults restores Balanced quality", "Defaults")
 	check(w.edge_scroll and is_equal_approx(w.pan_speed, 1), "Defaults restores camera controls", "Defaults")
 	check(not w.show_fps and Engine.max_fps == 0, "Defaults restores frame counter and limit", "Defaults")

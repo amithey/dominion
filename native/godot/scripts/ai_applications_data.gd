@@ -32,6 +32,9 @@ const COUNTRY := {
 	"south_sudan": ["Basic digital capacity building", "Finance institutions receive ICT support; this is not evidence of a national advanced AI programme.", ["administration", "agriculture", "health", "diplomacy"]],
 }
 
+const SECOND_GENERATION := "aiSecondGeneration"
+const GEN2 := 1.5 # the second generation's effect
+
 ## research cost, compute validation work, commissioning money, running compute/s, upkeep/s are balance values.
 const PROGRAMS := {
 	"administration": {"name": "Public-service AI", "level": 1, "pool": "economy", "facility": "school", "research": "aiPublicServices", "cost": 360, "work": 60.0, "money": 450.0, "demand": 0.12, "upkeep": 0.7, "fx": {"incomePct": 0.06, "happiness": 2.0}, "desc": "Review permits, budgets and service queues. Income +6%, happiness +2 at full coverage; appeals stay with officials."},
@@ -46,6 +49,16 @@ const PROGRAMS := {
 	"assurance": {"name": "Model evaluation and audit", "level": 2, "pool": "intel", "facility": "university", "research": "aiModelEvaluation", "cost": 700, "work": 120.0, "money": 1000.0, "demand": 0.20, "upkeep": 1.2, "fx": {}, "desc": "Independent tests, operator training and model audits. Autonomous-incident and AGI-runaway rates up to 25% lower; never zero."},
 	"strategic": {"name": "Strategic warning verification", "level": 3, "pool": "intel", "facility": "fusionCell", "research": "aiStrategicVerification", "cost": 1100, "work": 190.0, "money": 1700.0, "demand": 0.35, "upkeep": 2.0, "fx": {}, "desc": "An independent review channel checks nuclear-warning alerts. False-alarm rate up to 40% lower; human release authority remains. Nuclear powers only."},
 	"science": {"name": "Validated research automation", "level": 4, "pool": "economy", "facility": "university", "research": "aiResearchAutomation", "cost": 1300, "work": 240.0, "money": 2000.0, "demand": 0.40, "upkeep": 2.4, "fx": {"researchPct": 0.15}, "desc": "Automate literature review and reproducibility checks. Research +15% at full coverage; frontier capability required."},
+	# The strategic applications: who uses them, and the record behind each, in ai_use_data.gd.
+	"revenue": {"name": "Tax and fraud analytics", "level": 1, "pool": "economy", "facility": "bank", "research": "aiRevenueAnalytics", "cost": 380, "work": 60.0, "money": 500.0, "demand": 0.12, "upkeep": 0.7, "fx": {"incomePct": 0.05}, "desc": "Match returns, invoices and customs records to find evasion and fraud. Income +5% at full coverage; inspectors still decide each case."},
+	"targeting": {"name": "Targeting decision support", "level": 3, "pool": "military", "facility": "fusionCell", "research": "aiTargetingSupport", "cost": 900, "work": 150.0, "money": 1300.0, "demand": 0.28, "upkeep": 1.5, "fx": {}, "desc": "Turn sensor feeds into ranked target lists faster than staff can. Artillery, rockets and strike aircraft +8% damage at full coverage. Speed outruns review: civilian buildings are sometimes struck even with a human approving, more often without one."},
+	"counterDrone": {"name": "Counter-drone battle management", "level": 2, "pool": "military", "facility": "samSite", "research": "aiCounterDrone", "cost": 600, "work": 100.0, "money": 850.0, "demand": 0.20, "upkeep": 1.1, "fx": {"interceptPct": 0.06}, "desc": "Acoustic, radar and camera feeds classify small drones and assign the cheapest interceptor. Interception +6% at full coverage."},
+	"undersea": {"name": "Undersea sensing", "level": 3, "pool": "intel", "facility": "shipyard", "research": "aiUnderseaSensing", "cost": 950, "work": 160.0, "money": 1400.0, "demand": 0.30, "upkeep": 1.6, "fx": {}, "desc": "Sonar processing and uncrewed sensor vessels. Your weapons hit submarines +20% harder at full coverage, and a nuclear rival's second strike is less certain. While you hunt a nuclear power's submarines in war, nuclear tension rises."},
+	"surveillance": {"name": "Mass surveillance", "level": 2, "pool": "intel", "facility": "policeStation", "research": "aiMassSurveillance", "cost": 550, "work": 90.0, "money": 800.0, "demand": 0.20, "upkeep": 1.0, "fx": {"happiness": -3.0}, "desc": "Cameras with face recognition, phone and payment data. Enemy agents are caught more often and war-weariness turns into protest a third less; happiness -3, and democracies think less of you. Barred by law in the EU."},
+	"infoShield": {"name": "Counter-disinformation", "level": 2, "pool": "intel", "facility": "tvStation", "research": "aiInfoShield", "cost": 500, "work": 85.0, "money": 700.0, "demand": 0.16, "upkeep": 0.9, "fx": {}, "desc": "Detect synthetic media and coordinated fake accounts and expose them. Rival influence campaigns succeed less often and do half the harm at full coverage."},
+	"export": {"name": "AI exports", "level": 3, "pool": "economy", "facility": "aiDataCenter", "research": "aiExports", "cost": 800, "work": 130.0, "money": 1200.0, "demand": 0.24, "upkeep": 1.2, "fx": {}, "desc": "Package compute, models and services for other governments. Opens sales to nations at peace with you: money, relations +10, and access to the buyer's networks."},
+	"deadHand": {"name": "Automated retaliation", "level": 2, "pool": "military", "facility": "missileSilo", "research": "aiAutomatedRetaliation", "cost": 1000, "work": 160.0, "money": 1600.0, "demand": 0.25, "upkeep": 1.8, "fx": {}, "desc": "A machine that answers a nuclear attack with your stored warheads even if no one is left to order it. Rivals are half as likely to use nuclear weapons on you. A false warning may fire it. Nuclear powers not bound by the declaration on human control."},
+	"biosecurity": {"name": "Biosecurity screening", "level": 2, "pool": "economy", "facility": "hospital", "research": "aiBiosecurity", "cost": 500, "work": 85.0, "money": 750.0, "demand": 0.15, "upkeep": 0.8, "fx": {"health": 2.0}, "desc": "Screen DNA-synthesis orders and watch for unusual outbreaks. Epidemics spread far less between your towns, an unrestricted model's pathogen does less harm, health +2."},
 }
 
 static func discoveries() -> Dictionary:
@@ -53,9 +66,12 @@ static func discoveries() -> Dictionary:
 	for key in PROGRAMS:
 		var p: Dictionary = PROGRAMS[key]
 		out[p.research] = {"name": p.name, "cost": p.cost, "branch": "hightech", "era": 3 if int(p.level) <= 2 else (4 if int(p.level) == 3 else 5), "reqDiscovery": "machineLearning" if int(p.level) <= 2 else ("militaryAI" if int(p.level) == 3 else "frontierModels"), "reqBuilding": p.facility, "fx": {}, "desc": p.desc + " Complete this discovery, then validate and commission it in Defence > AI > Applications."}
+	out[SECOND_GENERATION] = {"name": "Fielded AI: the second generation", "cost": 900, "branch": "hightech", "era": 4, "reqDiscovery": "machineLearning", "reqBuilding": "university", "fx": {},
+		"desc": "Systems in service collect the data that trains their successors. An application that has run long enough (its field experience is full) can be upgraded in Defence > AI > Applications: its effect is half again as strong."}
 	return out
 
 static func needs(key: String) -> int:
+	if key == SECOND_GENERATION: return 2
 	for p in PROGRAMS.values():
 		if p.research == key: return int(p.level)
 	return 0

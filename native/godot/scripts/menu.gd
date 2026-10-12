@@ -994,7 +994,7 @@ func _settings_graphics() -> void:
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if v else DisplayServer.VSYNC_DISABLED)))
 	_setting("Frame limit", "The most frames a second the game draws. A limit keeps a laptop cooler.", _segmented([["30", 30], ["60", 60], ["120", 120], ["None", 0]], Engine.max_fps, func(v): Engine.max_fps = v))
 	_setting("Frame counter", "Frames per second in the bottom-right corner.", _switch(world.show_fps, func(v): world.show_fps = v))
-	_setting("Interface size", "The size of the panels and text: smaller leaves more of the battlefield in view.", _segmented([["Small", 0.7], ["Medium", 0.8], ["Large", 0.9], ["Original", 1.0]], world.ui_scale, func(v):
+	_setting("Interface size", "Larger text makes labels easier to read. Choose 100% for the clearest interface.", _segmented([["70%", 0.7], ["80%", 0.8], ["90%", 0.9], ["100%", 1.0]], world.ui_scale, func(v):
 		world.ui_scale = v
 		world.apply_ui_scale()))
 
@@ -1057,7 +1057,7 @@ func _settings_game() -> void:
 		if world.hud != null and world.hud.has_method("refresh_cheats"): world.hud.refresh_cheats()))
 
 func _reset_settings() -> void:
-	world.ui_scale = 0.8
+	world.ui_scale = 1.0
 	world.apply_ui_scale()
 	world.quality = "balanced"
 	world.apply_quality()
