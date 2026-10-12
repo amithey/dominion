@@ -38,6 +38,13 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.97: more unit models
+
+- The wheeled self-propelled howitzer is a truck with its gun on the rear bed and a recoil spade (CAESAR, PCL-181).
+- Wheeled short-range air defence: a light vehicle with an operator's turret, two missile pods and a radar (Avenger).
+- The ground-attack aircraft has its own airframe: a long straight wing with pylons, two engines in pods high at
+  the rear and twin fins (A-10, Su-25).
+
 ## Version 0.9.96: robots and drones, six new maps, and new armour models
 
 - **Robots and drones entering armies,** by the nations documented using them: armed ground robots (Ukraine's

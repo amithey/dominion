@@ -100,6 +100,15 @@ static func ground(g: RefCounted, key: String, owner: int) -> Dictionary:
 	else:
 		var tracked: bool = key == "heavyAPC" or (key == "ifv" and id != "indonesia") or (key == "directFire" and id == "indonesia") or (key == "reconVehicle" and id == "usa") or (key == "shortRangeSAM" and id in ["uk", "turkiye"])
 		# The armoured roles have their own, detailed silhouettes.
+		if key == "wheeledHowitzer" or (key == "shortRangeSAM" and not tracked):
+			if key == "wheeledHowitzer":
+				_truck_howitzer(g, body, top, parts)
+			else:
+				_air_defence_vehicle(g, body, top, parts)
+			g._attach(parts.root, body)
+			g._attach(parts.turret, top)
+			parts.turret.set_meta("axis", Vector3.UP)
+			return parts
 		if key in ["ifv", "heavyAPC", "reconVehicle", "directFire"]:
 			armour(g, body, top, parts, key, tracked, id)
 			g._attach(parts.root, body)
@@ -232,6 +241,8 @@ static func craft_model(c: RefCounted, key: String, owner: int) -> Dictionary:
 		for i in range(4):
 			g.block(blades, Vector3(0.25, 0.04, 3.2), Vector3(0, 0, 1.5), c.DARK, 0, 0, 0, Transform3D(Basis(Vector3.UP, i * PI * 0.5), Vector3.ZERO))
 		g._attach(rotor[0], blades)
+	elif key == "attackJet":
+		attack_aircraft(c, st)
 	else:
 		var attack: bool = key == "attackJet"
 		var length := 8.5 if attack else 7.3
@@ -647,3 +658,76 @@ static func _patrol_vehicle(g: RefCounted, st: SurfaceTool, top: SurfaceTool, pa
 	g.cyl(top, 0.04, 1.2, Vector3(0, 0.22, 0.95), "z", g.METAL, 6)
 	g.block(top, Vector3(0.5, 0.35, 0.06), Vector3(0, 0.1, 0.55), g.PAINT)                # gun shield
 	parts.muzzle = 1.5
+
+
+## A wheeled self-propelled howitzer (CAESAR, PCL-181, Archer, Malva): a 6x6
+## truck with an armoured cab, the gun on the rear bed, a recoil spade lowered
+## behind it.
+static func _truck_howitzer(g: RefCounted, st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
+	var bed: float = g.truck(st, parts, 4.4)
+	g.block(st, Vector3(2.6, 0.5, 1.9), Vector3(0, 2.6, 2.35), g.PAINT, 0.1, 0.2)   # the armoured cab roof
+	g.block(st, Vector3(2.0, 0.9, 0.25), Vector3(0, 0.3, -3.25), g.METAL, 0, 0.3)   # the recoil spade
+	for side: float in [-1.0, 1.0]:
+		g.block(st, Vector3(0.25, 0.12, 1.4), Vector3(side * 1.0, 1.1, -1.6), g.DARK)   # ammunition lockers
+	parts.turret = Node3D.new()
+	parts.turret.position = Vector3(0, bed + 0.2, -1.4)
+	parts.root.add_child(parts.turret)
+	g.block(top, Vector3(1.2, 0.5, 1.4), Vector3(0, 0, 0), g.DARK)                 # the cradle
+	var elevated := Transform3D(Basis(Vector3.RIGHT, -0.38), Vector3(0, 0.55, 0.2))
+	g.cyl(top, 0.16, 7.2, Vector3(0, 0, 3.3), "z", g.LIGHT, 12, 0.13, elevated)
+	g.cyl(top, 0.22, 0.4, Vector3(0, 0, 6.8), "z", g.DARK, 12, -1.0, elevated)      # muzzle brake
+	for side: float in [-1.0, 1.0]:
+		g.cyl(top, 0.09, 1.6, Vector3(side * 0.35, 0.2, 0.6), "z", g.METAL, 8, -1.0, elevated)   # recuperators
+	parts.muzzle = 6.6
+
+## A wheeled short-range air defence (Avenger, Pantsir, Tor on wheels): a light
+## vehicle with a cab, a turret carrying two missile pods either side of the
+## operator's cabin, and a search radar.
+static func _air_defence_vehicle(g: RefCounted, st: SurfaceTool, top: SurfaceTool, parts: Dictionary) -> void:
+	var length := 5.2
+	for z: float in [-1.6, 1.6]: g.axle(parts, z, 1.15, 0.52, 0.4)
+	g.block(st, Vector3(2.2, 0.65, length), Vector3(0, 0.5, 0), g.PAINT, 0.05, 0.3, 0.1)
+	g.block(st, Vector3(2.0, 0.85, 1.6), Vector3(0, 1.15, 1.3), g.PAINT, 0.1, 0.45)   # the cab
+	g.block(st, Vector3(1.8, 0.35, 0.05), Vector3(0, 1.55, 2.05), g.GLASS, 0, 0.1)
+	for side: float in [-1.0, 1.0]:
+		g.block(st, Vector3(0.05, 0.3, 0.7), Vector3(side * 1.0, 1.5, 1.3), g.GLASS)
+		g.block(st, Vector3(0.18, 0.12, 0.1), Vector3(side * 0.75, 0.9, length * 0.5 - 0.05), g.GLASS)
+		g.block(st, Vector3(0.06, 0.35, 1.2), Vector3(side * 1.12, 0.9, -1.0), g.TEAM)
+	g.antenna(st, Vector3(-0.9, 1.15, -2.2), 2.0)
+	parts.turret = Node3D.new()
+	parts.turret.position = Vector3(0, 1.15, -0.9)
+	parts.root.add_child(parts.turret)
+	g.cyl(top, 0.75, 0.25, Vector3.ZERO, "y", g.DARK, 16)
+	g.block(top, Vector3(0.9, 0.8, 1.0), Vector3(0, 0.25, 0), g.PAINT, 0.08, 0.15)        # the operator's cabin
+	g.block(top, Vector3(0.7, 0.25, 0.05), Vector3(0, 0.75, 0.5), g.GLASS)
+	for side: float in [-1.0, 1.0]:
+		g.block(top, Vector3(0.55, 0.7, 1.3), Vector3(side * 0.85, 0.35, 0.0), g.LIGHT)    # a missile pod
+		for row in range(2):
+			for col in range(2):
+				g.cyl(top, 0.1, 0.06, Vector3(side * (0.73 + col * 0.24), 0.55 + row * 0.26, 0.66), "z", g.DARK, 8)
+	g.block(top, Vector3(0.9, 0.5, 0.08), Vector3(0, 1.2, -0.3), g.METAL, 0, 0, 0, Transform3D(Basis(Vector3.RIGHT, -0.3), Vector3.ZERO))   # the radar face
+	g.cyl(top, 0.05, 0.4, Vector3(0, 1.05, -0.3), "y", g.METAL, 6)
+	parts.muzzle = 0.8
+
+## A ground-attack aircraft (A-10, Su-25, Jaguar...): a long straight wing with
+## many pylons, two engines in pods high at the rear, twin fins, a big nose gun.
+static func attack_aircraft(c: RefCounted, st: SurfaceTool) -> void:
+	var g: RefCounted = c.g
+	var l := 8.6
+	c.fuselage(st, l, [[0.0, 0.5, 0.35], [0.15, 0.62, 0.55], [0.55, 0.55, 0.5], [0.8, 0.38, 0.35], [1.0, 0.12, 0.15]], c.PAINT)
+	g.prim(st, c._sphere(0.36), Transform3D(Basis().scaled(Vector3(0.9, 0.9, 1.9)), Vector3(0, 0.42, 2.6)), c.GLASS)
+	g.cyl(st, 0.07, 0.9, Vector3(0, -0.2, l * 0.5 + 0.3), "z", c.METAL, 8)   # the nose gun
+	for side: float in [-1.0, 1.0]:
+		# A straight, deep wing with pylons and stores.
+		c.surface(st, Vector3(side * 0.5, -0.1, 1.0), Vector3(side * 0.5, -0.1, -0.6), Vector3(side * 4.8, -0.05, 0.75), Vector3(side * 4.8, -0.05, -0.1), 0.2, 0.08, Vector3.UP, c.PAINT)
+		for x: float in [1.4, 2.4, 3.4, 4.2]:
+			g.block(st, Vector3(0.06, 0.25, 0.5), Vector3(side * x, -0.32, 0.4), c.METAL)
+			c.missile(st, Vector3(side * x, -0.55, 0.3), 1.0)
+		# An engine pod high on the rear fuselage, and the tail.
+		g.cyl(st, 0.36, 1.9, Vector3(side * 0.85, 0.65, -2.0), "z", c.LIGHT, 12, 0.3)
+		g.cyl(st, 0.26, 0.15, Vector3(side * 0.85, 0.65, -3.0), "z", c.DARK, 12)
+		g.block(st, Vector3(0.12, 0.45, 0.5), Vector3(side * 0.6, 0.35, -2.0), c.PAINT)
+		c.surface(st, Vector3(side * 0.3, 0.2, -3.2), Vector3(side * 0.3, 0.2, -4.0), Vector3(side * 1.9, 0.25, -3.5), Vector3(side * 1.9, 0.25, -4.0), 0.07, 0.04, Vector3.UP, c.PAINT)
+		c.surface(st, Vector3(side * 1.8, 0.25, -3.4), Vector3(side * 1.8, 0.25, -4.0), Vector3(side * 1.8, 1.4, -3.6), Vector3(side * 1.8, 1.4, -4.0), 0.08, 0.04, Vector3.RIGHT, c.PAINT)
+		c.roundel(st, Vector3(side * 3.0, 0.06, 0.3), 0.3)
+	g.block(st, Vector3(0.12, 0.35, 0.45), Vector3(0, 1.1, -3.8), c.TEAM)
