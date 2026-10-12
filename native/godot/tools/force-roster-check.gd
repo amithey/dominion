@@ -34,8 +34,8 @@ func run() -> void:
 			check(w.unit_allowed(0, key) == legal and N.fields(key, F.ARSENALS[index]) == legal, "%s / %s operator and starting-roster gate" % [F.IDS[index], key])
 			if legal:
 				entries += 1
-				check(N.name_for(w, 0, key) == str(C.NAMES.get(key, {}).get(F.IDS[index], C.ROLES[key].name)), "%s / %s national model name" % [F.IDS[index], key])
-	check(entries == 139, "139 operator-role choices across all 28 identities")
+				check(N.name_for(w, 0, key) == str(C.names(key).get(F.IDS[index], C.ROLES[key].name)), "%s / %s national model name" % [F.IDS[index], key])
+	check(entries == 159, "159 operator-role choices across all 28 identities")
 	w.map.nations[0].id = "future_nation"
 	check(C.ROLES.keys().all(func(key): return not w.unit_allowed(0, key)), "new country ID does not inherit an arsenal")
 	w.map.nations[0].units = ["scoutTeam", "ifv"]

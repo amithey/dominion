@@ -38,6 +38,19 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.93: weapons for every nation, researched (Codex)
+
+- **Three new roles, twenty national choices,** each backed by public evidence of the nation using it:
+  - recoilless anti-armour teams (the United States, India, Japan, Brazil, Australia);
+  - wheeled self-propelled howitzers, faster on the road than towed guns (China's PCL-181, the EU's CAESAR,
+    Russia's 2S43 Malva and others);
+  - short-range air defence that escorts the army against aircraft and drones (it does not intercept strategic missiles).
+- **Defence > Arsenal:** a dossier for each of the 28 nations in six domains (land, air, maritime, fires and air
+  defence, sustainment, the limits of the evidence), with sources, the nation's current game roster beside it, and
+  a shortcut to the facility that builds what you may build. Nations without evidence get a dossier, not an invented unit.
+- All three roles are wired into production, research, rivals' choices, models, combat and saves.
+- Research: [ARSENAL-DIVERSITY-RESEARCH-2026-10-12.md](ARSENAL-DIVERSITY-RESEARCH-2026-10-12.md). Check: tools/arsenal-diversity-check.gd.
+
 ## Version 0.9.92: AI in war, the state and the doomsday chain: who uses what
 
 - **Nine strategic applications** in Defence > AI > Applications, on Codex's pipeline (research, local trials,

@@ -40,6 +40,8 @@ var hud: Node
 var diplomacy_tab := "nations"
 var intel_tab := "operations"
 var defence_tab := "generals"
+var arsenal_country := ""
+var arsenal_domain := "land"
 var un_tab := "council"
 var un_target := 1
 
@@ -969,8 +971,10 @@ func _territory_yours() -> void:
 ## The Defence window: the general staff, the units' ranks, and the nuclear
 ## alert (generals.gd, veterancy.gd, defcon.gd).
 func defence() -> void:
-	_tabs([["Generals", "generals"], ["Veterans", "veterans"], ["Nuclear alert", "nuclear"], ["AI", "ai"]], defence_tab, func(v): defence_tab = v)
+	_tabs([["Generals", "generals"], ["Veterans", "veterans"], ["Nuclear alert", "nuclear"], ["AI", "ai"], ["Arsenal", "arsenal"]], defence_tab, func(v): defence_tab = v)
 	match defence_tab:
+		"arsenal":
+			preload("res://scripts/arsenal_diversity_panel.gd").draw(self)
 		"ai":
 			preload("res://scripts/ai_panel.gd").draw(self)
 		"veterans":

@@ -1,15 +1,19 @@
 extends RefCounted
+const Diversity := preload("res://scripts/arsenal_diversity_data.gd")
 ## Representative operator rosters, not inventories or weapon specifications.
 ## Evidence, limitations and additions deferred for research are in
 ## native/FORCE-ROSTER-RESEARCH-2026-10-06.md. All figures below are game balance.
 const IDS := ["usa", "china", "eu", "iran", "russia", "india", "japan", "turkiye", "israel", "uk", "south_korea", "saudi", "brazil", "indonesia", "ukraine", "north_korea", "egypt", "australia", "pakistan", "iraq", "syria", "afghanistan"] + preload("res://scripts/regional_factions.gd").IDS
-const BASE := {"machineGunTeam": "soldier", "mortarTeam": "artillery", "scoutTeam": "commando", "ifv": "apc", "heavyAPC": "tank", "reconVehicle": "apc", "directFire": "tank", "towedHowitzer": "artillery", "attackJet": "jet", "lightFighter": "jet", "scoutHelicopter": "helicopter", "missileBoat": "corvette"}
-const HOME := {"machineGunTeam": "barracks", "mortarTeam": "barracks", "scoutTeam": "barracks", "ifv": "tankFactory", "heavyAPC": "tankFactory", "reconVehicle": "tankFactory", "directFire": "tankFactory", "towedHowitzer": "tankFactory", "attackJet": "airfield", "lightFighter": "airfield", "scoutHelicopter": "helipad", "missileBoat": "shipyard"}
-const INFANTRY := ["machineGunTeam", "mortarTeam", "scoutTeam"]
+const BASE := {"recoillessTeam": "rocketSoldier", "wheeledHowitzer": "artillery", "shortRangeSAM": "samLauncher", "machineGunTeam": "soldier", "mortarTeam": "artillery", "scoutTeam": "commando", "ifv": "apc", "heavyAPC": "tank", "reconVehicle": "apc", "directFire": "tank", "towedHowitzer": "artillery", "attackJet": "jet", "lightFighter": "jet", "scoutHelicopter": "helicopter", "missileBoat": "corvette"}
+const HOME := {"recoillessTeam": "barracks", "wheeledHowitzer": "tankFactory", "shortRangeSAM": "tankFactory", "machineGunTeam": "barracks", "mortarTeam": "barracks", "scoutTeam": "barracks", "ifv": "tankFactory", "heavyAPC": "tankFactory", "reconVehicle": "tankFactory", "directFire": "tankFactory", "towedHowitzer": "tankFactory", "attackJet": "airfield", "lightFighter": "airfield", "scoutHelicopter": "helipad", "missileBoat": "shipyard"}
+const INFANTRY := ["machineGunTeam", "mortarTeam", "scoutTeam", "recoillessTeam"]
 const SCOUTS := ["scoutTeam", "reconVehicle", "scoutHelicopter"]
 const SIGHT := {"scoutTeam": 72.0, "reconVehicle": 84.0, "scoutHelicopter": 100.0, "ifv": 44.0, "heavyAPC": 38.0, "directFire": 52.0, "missileBoat": 52.0}
-const INDIRECT := ["mortarTeam", "towedHowitzer"]
+const INDIRECT := ["mortarTeam", "towedHowitzer", "wheeledHowitzer"]
 const ROLES := {
+	"recoillessTeam": {"name": "Recoilless Support Team", "hp": 95, "dmg": 35, "range": 24, "cooldown": 4.0, "aggro": 28, "speed": 4.0, "cost": {"money": 210, "iron": 12}, "trainTime": 12, "pop": 2, "desc": "Cheap unguided direct fire against light vehicles and fortifications. Shorter reach and less anti-tank power than an ATGM. Exposed crew; cannot engage aircraft or warships. Ammunition selection is abstracted."},
+	"wheeledHowitzer": {"name": "Wheeled Self-propelled Howitzer", "hp": 240, "dmg": 62, "range": 88, "cooldown": 6.5, "aggro": 88, "speed": 6.2, "cost": {"money": 610, "iron": 42, "oil": 24}, "trainTime": 25, "pop": 3, "requires": "advancedLogistics", "desc": "Long-range conventional gun support with fast relocation and light protection. Same reach as established artillery; costs more than a towed gun. Needs a spotter beyond its sight. Use Bombard for area fire; cannot engage aircraft."},
+	"shortRangeSAM": {"name": "Short-range Air Defence", "hp": 280, "dmg": 36, "range": 44, "cooldown": 2.8, "aggro": 52, "speed": 5.8, "cost": {"money": 570, "iron": 30, "oil": 18, "silicon": 28}, "trainTime": 23, "pop": 3, "requires": "guidedMunitions", "desc": "Mobile local air defence against aircraft and UAV units. Shorter reach and lower cost than the long-range SAM. Cannot attack ground targets, bombard or intercept strategic missile events. Gun and missile combinations are abstracted into one anti-aircraft shot."},
 	"machineGunTeam": {"name": "Machine-gun Team", "hp": 110, "dmg": 9, "range": 26, "cooldown": 0.4, "aggro": 30, "speed": 4.3, "cost": {"money": 170, "iron": 8}, "trainTime": 10, "pop": 2, "desc": "Sustained fire against infantry and exposed light vehicles. Cannot engage aircraft, warships or heavy armour. Slower than rifle infantry."},
 	"mortarTeam": {"name": "Mortar Team", "hp": 85, "dmg": 28, "range": 54, "cooldown": 4.8, "aggro": 54, "speed": 3.6, "cost": {"money": 230, "iron": 12}, "trainTime": 14, "pop": 2, "desc": "Portable indirect fire against infantry concentrations. Needs a spotter beyond its own sight; weak against armour and vulnerable in close combat. Bombard can target a location."},
 	"scoutTeam": {"name": "Reconnaissance Patrol", "hp": 80, "dmg": 6, "range": 16, "cooldown": 1.2, "aggro": 24, "speed": 6.5, "cost": {"money": 140, "iron": 4}, "trainTime": 9, "pop": 1, "desc": "Fast infantry scouts with extended vision. Reveal targets for indirect fire and warn of an advance; light weapons and little protection."},
@@ -41,6 +45,7 @@ const NAMES := {
 }
 const CORRECTIONS := {"apc": {"south_korea": "K808 APC"}}
 const PROFILES := {
+	"recoillessTeam": [0.7, 1.4, 0.55, 0.0, 0.0, 1.4], "wheeledHowitzer": [1.2, 1.0, 0.8, 0.0, 0.6, 1.4], "shortRangeSAM": [0.0, 0.0, 0.0, 1.6, 0.0, 0.0],
 	"machineGunTeam": [1.8, 0.45, 0.0, 0.0, 0.0, 0.25], "mortarTeam": [1.6, 0.8, 0.15, 0.0, 0.2, 0.75], "scoutTeam": [0.8, 0.2, 0.0, 0.0, 0.0, 0.2],
 	"ifv": [1.8, 1.4, 0.45, 0.0, 0.2, 0.65], "heavyAPC": [1.6, 0.3, 0.0, 0.0, 0.0, 0.25], "reconVehicle": [1.2, 0.6, 0.0, 0.0, 0.0, 0.25], "directFire": [0.75, 1.4, 1.15, 0.0, 0.4, 1.3],
 	"towedHowitzer": [1.2, 1.0, 0.8, 0.0, 0.6, 1.4], "attackJet": [1.5, 1.6, 1.6, 0.0, 0.6, 1.6], "lightFighter": [0.6, 0.7, 0.65, 1.8, 0.6, 0.65], "scoutHelicopter": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "missileBoat": [0.0, 0.0, 0.0, 0.0, 1.8, 0.0],
@@ -53,17 +58,24 @@ static func id_of(w: Node, owner: int) -> String:
 	return str(w.map.nations[owner].get("id", ""))
 
 static func operators(key: String) -> Array:
-	return IDS.duplicate() if key in INFANTRY else NAMES.get(key, {}).keys()
+	return IDS.duplicate() if key in ["machineGunTeam", "mortarTeam", "scoutTeam"] else names(key).keys()
+
+static func names(key: String) -> Dictionary:
+	var out: Dictionary = NAMES.get(key, {}).duplicate()
+	out.merge(Diversity.names(key), true)
+	return out
 
 static func name_for(w: Node, owner: int, key: String) -> String:
 	var id: String = id_of(w, owner)
-	return str(w.map.nations[owner].get("unit_names", {}).get(key, NAMES.get(key, CORRECTIONS.get(key, {})).get(id, ROLES.get(key, {}).get("name", ""))))
+	return str(w.map.nations[owner].get("unit_names", {}).get(key, names(key).get(id, CORRECTIONS.get(key, {}).get(id, ROLES.get(key, {}).get("name", "")))))
 
 static func apply(w: Node) -> void:
 	for key in ROLES:
 		var def: Dictionary = ROLES[key].duplicate(true)
 		def.generic = def.name
 		def.name = name_for(w, 0, key)
+		var provenance: String = Diversity.evidence(key, id_of(w, 0))
+		if provenance != "": def.desc += " " + provenance
 		if (id_of(w, 0) == "iran" and key in ["ifv", "attackJet", "lightFighter"]) or (id_of(w, 0) == "north_korea" and key == "attackJet"):
 			def.desc += " Documented legacy equipment; current readiness is unverified."
 		def.nation = operators(key).map(func(id): return {"usa": "blue", "china": "red", "eu": "green", "iran": "gold"}.get(id, id))

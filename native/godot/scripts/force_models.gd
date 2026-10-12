@@ -25,7 +25,7 @@ static func ground(g: RefCounted, key: String, owner: int) -> Dictionary:
 		g.block(top, Vector3(0.45, 0.26, 0.4), Vector3(0, 0.35, 4.9), g.METAL, 0, 0, 0, raised)
 		parts.muzzle = 4.9
 	else:
-		var tracked: bool = key == "heavyAPC" or (key == "ifv" and id != "indonesia") or (key == "directFire" and id == "indonesia") or (key == "reconVehicle" and id == "usa")
+		var tracked: bool = key == "heavyAPC" or (key == "ifv" and id != "indonesia") or (key == "directFire" and id == "indonesia") or (key == "reconVehicle" and id == "usa") or (key == "shortRangeSAM" and id in ["uk", "turkiye"])
 		var scout: bool = key == "reconVehicle" and not tracked
 		var heavy: bool = key == "heavyAPC"
 		var length := 4.5 if scout else (7.3 if heavy else 6.5)
@@ -49,10 +49,26 @@ static func ground(g: RefCounted, key: String, owner: int) -> Dictionary:
 		parts.turret = Node3D.new()
 		parts.turret.position = Vector3(0, height, 0.3)
 		parts.root.add_child(parts.turret)
-		var gun: bool = key == "directFire"
+		var gun: bool = key in ["directFire", "wheeledHowitzer"]
 		g.block(top, Vector3(1.7 if gun else 1.1, 0.55, 1.9 if gun else 1.2), Vector3.ZERO, g.PAINT, 0.1, 0.2, 0.1)
-		g.cyl(top, 0.12 if gun else (0.065 if key == "ifv" else 0.035), 4.3 if gun else 1.9, Vector3(0, 0.22, 2.7 if gun else 1.35), "z", g.METAL, 10)
+		if not key in ["wheeledHowitzer", "shortRangeSAM"]:
+			g.cyl(top, 0.12 if gun else (0.065 if key == "ifv" else 0.035), 4.3 if gun else 1.9, Vector3(0, 0.22, 2.7 if gun else 1.35), "z", g.METAL, 10)
 		parts.muzzle = 4.8 if gun else 2.3
+		if key == "wheeledHowitzer":
+			# Truck cab ahead of an exposed rear gun; distinct from tracked guns.
+			g.block(body, Vector3(2.5, 1.4, 1.6), Vector3(0, 2.0, 2.3), g.PAINT)
+			g.block(body, Vector3(2.1, 0.65, 0.06), Vector3(0, 2.3, 3.13), g.GLASS)
+			parts.turret.position.z = -1.6
+			var elevated := Transform3D(Basis(Vector3.RIGHT, -0.4), Vector3(0, 0.6, 0))
+			g.cyl(top, 0.15, 7.0, Vector3(0, 0, 3.2), "z", g.LIGHT, 12, 0.1, elevated)
+			parts.muzzle = 6.2
+		if key == "shortRangeSAM":
+			for side: float in [-1.0, 1.0]:
+				for level: float in [0.45, 0.95]:
+					g.block(top, Vector3(0.6, 0.4, 2.3), Vector3(side * 1.15, level, 0.25), g.LIGHT)
+					g.block(top, Vector3(0.53, 0.33, 0.08), Vector3(side * 1.15, level, 1.44), g.DARK)
+			g.block(top, Vector3(1.0, 0.65, 0.16), Vector3(0, 1.5, -0.5), g.GLASS)
+			parts.muzzle = 1.5
 		if scout:
 			g.block(top, Vector3(0.3, 0.4, 0.4), Vector3(0.45, 0.8, -0.2), g.DARK)
 			g.block(top, Vector3(0.26, 0.16, 0.04), Vector3(0.45, 0.85, 0.02), g.GLASS)
@@ -110,7 +126,7 @@ static func craft_model(c: RefCounted, key: String, owner: int) -> Dictionary:
 	return parts
 
 static func infantry_prop(w: Node, holder: Node3D, key: String, owner: int) -> void:
-	if not key in ["mortarTeam", "machineGunTeam", "scoutTeam"]: return
+	if not key in ["mortarTeam", "machineGunTeam", "scoutTeam", "recoillessTeam"]: return
 	var g: RefCounted = w.armor
 	g._mat = g.material_for(owner)
 	var st: SurfaceTool = g._begin()
@@ -123,6 +139,11 @@ static func infantry_prop(w: Node, holder: Node3D, key: String, owner: int) -> v
 		g.cyl(st, 0.085, 1.5, Vector3(0, 0.7, 0), "y", g.METAL, 10, 0.085, raised)
 		for side: float in [-1.0, 1.0]:
 			g.block(st, Vector3(0.06, 0.85, 0.06), Vector3(0.8 + side * 0.24, 0.48, 1.0), g.PAINT)
+	elif key == "recoillessTeam":
+		g.cyl(st, 0.12, 1.55, Vector3(0.65, 1.2, 0.5), "z", g.METAL, 12)
+		g.cyl(st, 0.19, 0.28, Vector3(0.65, 1.2, -0.35), "z", g.DARK, 12)
+		g.block(st, Vector3(0.3, 0.18, 0.25), Vector3(0.65, 1.42, 0.55), g.GLASS)
+		g.block(st, Vector3(0.45, 0.45, 0.6), Vector3(-0.6, 0.25, 0), g.PAINT)
 	elif key == "machineGunTeam":
 		g.block(st, Vector3(0.22, 0.18, 0.75), Vector3(0.65, 0.85, 0.6), g.DARK)
 		g.cyl(st, 0.045, 1.1, Vector3(0.65, 0.9, 1.35), "z", g.METAL, 8)

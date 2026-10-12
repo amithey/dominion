@@ -59,8 +59,8 @@ const BUILDING_SIZE := {"hq": 10.0, "barracks": 9.0, "tankFactory": 9.5, "wareho
 # centre, which leaves at least two 4 m walk cells between any two neighbouring
 # districts (6.0 left a single cell, and armour jammed in city streets).
 const DISTRICT_NAV_SIZE := 4.5
-const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker", "fpvTeam", "atgmTeam", "manpads", "medic", "machineGunTeam", "mortarTeam", "scoutTeam"]
-const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle", "tos1a", "brahmos", "k9", "saudiThaad", "heavyRocket", "bushmaster", "ifv", "heavyAPC", "reconVehicle", "directFire", "towedHowitzer"]
+const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker", "fpvTeam", "atgmTeam", "manpads", "medic", "machineGunTeam", "mortarTeam", "scoutTeam", "recoillessTeam"]
+const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle", "tos1a", "brahmos", "k9", "saudiThaad", "heavyRocket", "bushmaster", "ifv", "heavyAPC", "reconVehicle", "directFire", "towedHowitzer", "wheeledHowitzer", "shortRangeSAM"]
 const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone", "railgunShip", "orca", "aegisCruiser", "type45", "kcr60", "missileBoat"]
 const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17", "attackJet", "lightFighter", "scoutHelicopter"]
 const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17", "attackJet", "lightFighter"]
@@ -1969,7 +1969,7 @@ func order_bombard(selected: Array, point: Vector3) -> void:
 		u.path = PackedVector3Array()
 
 func can_bombard(u: Dictionary) -> bool:
-	return not u.dead and u.dmg > 0 and (u.vehicle or u.key in load("res://scripts/force_catalog.gd").INDIRECT) and not u.key in ["samLauncher", "aaVehicle", "submarine", "nuclearSub", "missileBoat"]
+	return not u.dead and u.dmg > 0 and (u.vehicle or u.key in load("res://scripts/force_catalog.gd").INDIRECT) and not u.key in ["samLauncher", "shortRangeSAM", "aaVehicle", "submarine", "nuclearSub", "missileBoat"]
 
 # ---------------------------------------------------------------- profiler
 # `-- --profile` during a benchmark measures where each frame goes: every
@@ -3288,6 +3288,7 @@ func save_test() -> void:
 	var soldier: Dictionary = units.filter(func(u): return u.key == "soldier" and u.owner == 0)[0]
 	soldier.hp = 37.0
 	cam_focus = start + Vector3(12, 0, 7)
+	edge_scroll = false   # headless, the pointer sits in a corner: with edge scrolling on (a saved setting) the camera drifts
 	var before: Dictionary = snapshot()
 	if not saves.save("test"):
 		get_tree().quit(1)
@@ -5241,7 +5242,7 @@ func fire(unit: Dictionary, enemy: Dictionary) -> bool:
 			var direction: Vector3 = enemy.node.position-unit.node.position
 			if absf(angle_difference(unit.heading,atan2(direction.x,direction.z))) > 0.65:
 				return false
-	var weapon: String = {"mortarTeam": "mortar", "towedHowitzer": "shell_arc", "attackJet": "missile", "lightFighter": "missile", "missileBoat": "missile"}.get(unit.key, WEAPONS.get(unit.key, ""))
+	var weapon: String = {"recoillessTeam": "rocket", "wheeledHowitzer": "shell_arc", "shortRangeSAM": "sam", "mortarTeam": "mortar", "towedHowitzer": "shell_arc", "attackJet": "missile", "lightFighter": "missile", "missileBoat": "missile"}.get(unit.key, WEAPONS.get(unit.key, ""))
 	if weapon != "":
 		var fired := fire_weapon(unit, enemy, weapon)
 		if fired and unit.get("fly", false) and not unit.dead:

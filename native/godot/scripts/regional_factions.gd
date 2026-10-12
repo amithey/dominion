@@ -59,7 +59,7 @@ const AI_PROFILES := {
 const HOUTHI_MISSILES := ["tactical", "ballistic", "cruise", "antiShip"]
 
 static func fields(id: String, key: String) -> bool:
-	return key in COMMON or key in EQUIPMENT.get(id, [])
+	return key in COMMON or key in EQUIPMENT.get(id, []) or preload("res://scripts/arsenal_diversity_data.gd").ROSTER.get(key, {}).has(id)
 static func builds(id: String, key: String) -> bool:
 	if key == "missileSilo" and id == "houthis": return true   # its missile tunnels and launch sites
 	if key in ["silo", "missileSilo", "nuclearReactor", "strategicComplex", "specialLab"]: return false
