@@ -3704,7 +3704,7 @@ func research_test(capture: bool) -> void:
 	espionage.intel[rival.id] = 25.0
 	seed(11)   # an operation's odds are the espionage tests' business: here only that stolen research moves points
 	print("research spy assignment: ", espionage.run("stealTech", rival.id, "", -1, 0.0))
-	espionage.advance(90.0)
+	espionage.advance(91.0)   # (90 one-second steps from a fractional clock can fall a hair short of the 90 s preparation)
 	var stolen_ok: bool = r.points >= 119.0
 	print("ships locked %s then open %s, economics level %d, rival tech %d, stolen %d points" % [ship_locked, ship_open, r.tracks.economy, int(r.ai_tech(rival.id)), int(r.points)])
 	if capture:
