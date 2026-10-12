@@ -131,6 +131,7 @@ func capture() -> Dictionary:
 		"un": world.un.capture() if world.un != null else {},
 		"tests": world.tests.capture() if world.tests != null else {},
 		"directorate": world.directorate.capture() if world.directorate != null else {},
+		"war_tools": preload("res://scripts/war_tools.gd").capture(world),   # minefields
 		"power_effects": world.power_effects.duplicate(true),   # sanctions, export controls, a closed strait
 	}
 
@@ -319,6 +320,7 @@ func restore(data: Dictionary) -> void:
 	if world.directorate == null:
 		world.directorate = preload("res://scripts/ai_directorate.gd").new(world)
 	world.directorate.restore(data.get("directorate", {}))
+	preload("res://scripts/war_tools.gd").restore(world, data.get("war_tools", {}))
 	if data.has("power_effects"):
 		world.power_effects = Array(data.power_effects).map(func(e): return _effect(e))
 	if world.passage:

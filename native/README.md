@@ -38,6 +38,25 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.94: the tools of war
+
+Eleven new roles, each with its own model and a national name only where the system is documented
+(research: [WAR-TOOLS-RESEARCH-2026-10-12.md](WAR-TOOLS-RESEARCH-2026-10-12.md)):
+- **Engineers and mines (every army):** a minelayer that, halted, lays an anti-vehicle minefield the enemy cannot
+  see (Russia's Zemledelie, the US Volcano); a mine-clearing vehicle whose line charge clears and reveals enemy
+  fields (the UR-77 Meteorit, the Assault Breacher); an armoured recovery vehicle that repairs damaged vehicles in
+  the field (M88A2, BREM-1, Bergepanzer 3).
+- **Deception:** decoy teams for Russia and Ukraine: copies of a tank that cost 90, have no weapon and draw fire.
+- **Sensors:** a counter-battery radar that finds enemy guns and makes your fire on them a quarter deadlier
+  (AN/TPQ-53, Zoopark-1M, COBRA, Swathi, SLC-2); an airborne early-warning aircraft that reveals aircraft and ships
+  far around it and makes your aircraft deadlier (E-3, KJ-500, A-50U, Wedgetail, Netra, Erieye, Eitam).
+- **Electronic attack:** the Growler, the J-16D and the Tornado ECR: enemy air defences near them lose much of their aim.
+- **The sea:** coastal anti-ship batteries (Bastion-P, Neptune, Type 12, NMESIS, NSM); maritime patrol aircraft that
+  find and strike submarines (P-8, P-1, Il-38N); anti-submarine frigates (FREMM, Type 054A, Type 23, Mogami...);
+  and aircraft carriers whose air wing strikes far (Ford, Fujian, Queen Elizabeth, Vikrant, Charles de Gaulle,
+  Kaga, and the Anadolu and Shahid Bagheri drone carriers).
+- Check: tools/war-tools-check.gd (146).
+
 ## Version 0.9.93: weapons for every nation, researched (Codex)
 
 - **Three new roles, twenty national choices,** each backed by public evidence of the nation using it:

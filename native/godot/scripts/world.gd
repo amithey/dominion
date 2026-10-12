@@ -60,10 +60,10 @@ const BUILDING_SIZE := {"hq": 10.0, "barracks": 9.0, "tankFactory": 9.5, "wareho
 # districts (6.0 left a single cell, and armour jammed in city streets).
 const DISTRICT_NAV_SIZE := 4.5
 const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker", "fpvTeam", "atgmTeam", "manpads", "medic", "machineGunTeam", "mortarTeam", "scoutTeam", "recoillessTeam"]
-const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle", "tos1a", "brahmos", "k9", "saudiThaad", "heavyRocket", "bushmaster", "ifv", "heavyAPC", "reconVehicle", "directFire", "towedHowitzer", "wheeledHowitzer", "shortRangeSAM"]
-const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone", "railgunShip", "orca", "aegisCruiser", "type45", "kcr60", "missileBoat"]
-const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17", "attackJet", "lightFighter", "scoutHelicopter"]
-const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17", "attackJet", "lightFighter"]
+const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle", "tos1a", "brahmos", "k9", "saudiThaad", "heavyRocket", "bushmaster", "ifv", "heavyAPC", "reconVehicle", "directFire", "towedHowitzer", "wheeledHowitzer", "shortRangeSAM"] + preload("res://scripts/war_tools.gd").VEHICLES
+const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone", "railgunShip", "orca", "aegisCruiser", "type45", "kcr60", "missileBoat"] + preload("res://scripts/war_tools.gd").NAVAL
+const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17", "attackJet", "lightFighter", "scoutHelicopter"] + preload("res://scripts/war_tools.gd").AIR
+const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17", "attackJet", "lightFighter"] + preload("res://scripts/war_tools.gd").FIXED_WING
 const AirOperations := preload("res://scripts/air_operations.gd")
 const ALTITUDE := {"helicopter": 14.0, "gunship": 13.0, "jet": 26.0, "bomber": 30.0, "drone": 18.0, "loiterer": 16.0, "stealthFighter": 28.0, "raptor": 30.0, "raider": 34.0, "shahed": 12.0, "sixthGen": 31.0, "wingman": 28.0, "akinci": 24.0, "harop": 16.0, "superTucano": 22.0, "interceptorDrone": 18.0, "jf17": 26.0}
 const SHIP_LENGTH := {"gunboat": 7.5, "corvette": 10.5, "destroyer": 15.0, "submarine": 11.0, "nuclearSub": 14.0, "seaDrone": 4.5, "railgunShip": 16.5, "orca": 9.0, "aegisCruiser": 17.0, "type45": 15.0, "kcr60": 10.5}
@@ -1754,7 +1754,7 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 	var node: Node3D = parts.root
 	add_child(node)
 	var naval := key in NAVAL
-	var length: float = 8.0 if key == "missileBoat" else float(SHIP_LENGTH.get(key, 8.0))
+	var length: float = 8.0 if key == "missileBoat" else float(SHIP_LENGTH.get(key, preload("res://scripts/war_tools.gd").SHIP_LENGTH.get(key, 8.0)))
 	var ring := MeshInstance3D.new()
 	var torus := TorusMesh.new()
 	torus.inner_radius = length * 0.55 if naval else 3.0
@@ -1782,7 +1782,7 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 		"owner": owner, "speed": float(def.speed) * 0.45, "heading": 0.0, "moving": false,
 		"turret": parts.turret, "turret_yaw": 0.0, "dust": wake, "phase": at.x * 0.37 + at.z * 0.21, "meshes": [],
 		"naval": naval, "fly": key in AIR, "rotor": parts.rotor, "radar": parts.radar,
-		"altitude": {"attackJet": 22.0, "lightFighter": 26.0, "scoutHelicopter": 14.0}.get(key, ALTITUDE.get(key, 0.0)), "bank": 0.0, "length": length,
+		"altitude": {"attackJet": 22.0, "lightFighter": 26.0, "scoutHelicopter": 14.0}.get(key, ALTITUDE.get(key, preload("res://scripts/war_tools.gd").ALTITUDE.get(key, 0.0))), "bank": 0.0, "length": length,
 		"key": key, "hp": float(def.hp), "max_hp": float(def.hp), "dmg": float(def.dmg),
 		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
 		"reload": randf() * minf(float(def.cooldown), 3.0), "search": randf() * 0.35, "enemy": null,
@@ -2080,6 +2080,7 @@ func _physics_process(delta: float) -> void:
 		update_training(delta)
 		preload("res://scripts/air_defence.gd").update(self, delta)
 		Modern.update(self, delta)  # medics
+		preload("res://scripts/war_tools.gd").update(self, delta)  # engineers, recovery, sensors (war_tools.gd)
 		Future.update(self, delta)  # microwave pulses, wingmen
 		preload("res://scripts/national_capabilities.gd").update(self, delta)  # Russia's foreign recruits
 		if fog != null:
@@ -5242,7 +5243,7 @@ func fire(unit: Dictionary, enemy: Dictionary) -> bool:
 			var direction: Vector3 = enemy.node.position-unit.node.position
 			if absf(angle_difference(unit.heading,atan2(direction.x,direction.z))) > 0.65:
 				return false
-	var weapon: String = {"recoillessTeam": "rocket", "wheeledHowitzer": "shell_arc", "shortRangeSAM": "sam", "mortarTeam": "mortar", "towedHowitzer": "shell_arc", "attackJet": "missile", "lightFighter": "missile", "missileBoat": "missile"}.get(unit.key, WEAPONS.get(unit.key, ""))
+	var weapon: String = {"recoillessTeam": "rocket", "wheeledHowitzer": "shell_arc", "shortRangeSAM": "sam", "mortarTeam": "mortar", "towedHowitzer": "shell_arc", "attackJet": "missile", "lightFighter": "missile", "missileBoat": "missile"}.get(unit.key, preload("res://scripts/war_tools.gd").WEAPON.get(unit.key, WEAPONS.get(unit.key, "")))
 	if weapon != "":
 		var fired := fire_weapon(unit, enemy, weapon)
 		if fired and unit.get("fly", false) and not unit.dead:
@@ -5499,6 +5500,7 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 		amount *= directorate.damage_mult(source, unit)  # AI: autonomy, the fusion cell, targeting and undersea sensing
 	unit.hp -= amount
 	Vet.credit(self, source, unit, amount)
+	amount *= preload("res://scripts/war_tools.gd").damage_mult(self, source, unit)  # radars, airborne warning, jamming, submarine hunters
 	if amount > 0:
 		unit.last_hit = game_time
 	if unit.get("is_building", false):

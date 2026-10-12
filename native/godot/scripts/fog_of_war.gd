@@ -106,7 +106,7 @@ func shows(thing: Dictionary) -> bool:
 		return true
 	if thing.get("is_building", false):
 		return thing.get("seen", false)
-	return watches(thing.node.position)
+	return watches(thing.node.position) or preload("res://scripts/war_tools.gd").sensed(w, 0, thing)   # radars, airborne warning, submarine hunters
 
 func sight_of(u: Dictionary) -> float:
 	var forces = load("res://scripts/force_catalog.gd")
