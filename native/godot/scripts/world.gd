@@ -1781,7 +1781,7 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 		"node": node, "ring": ring, "vehicle": true, "selected": false, "target": null, "player": null, "clip": "",
 		"owner": owner, "speed": float(def.speed) * 0.45, "heading": 0.0, "moving": false,
 		"turret": parts.turret, "turret_yaw": 0.0, "dust": wake, "phase": at.x * 0.37 + at.z * 0.21, "meshes": [],
-		"naval": naval, "fly": key in AIR, "rotor": parts.rotor, "radar": parts.radar,
+		"naval": naval, "fly": key in AIR, "rotor": parts.rotor, "rotor2": parts.get("rotor2"), "radar": parts.radar,
 		"altitude": {"attackJet": 22.0, "lightFighter": 26.0, "scoutHelicopter": 14.0}.get(key, ALTITUDE.get(key, preload("res://scripts/war_tools.gd").ALTITUDE.get(key, 0.0))), "bank": 0.0, "length": length,
 		"key": key, "hp": float(def.hp), "max_hp": float(def.hp), "dmg": float(def.dmg),
 		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
@@ -2124,6 +2124,8 @@ func _physics_process(delta: float) -> void:
 		var t_parts := clock()
 		if unit.get("rotor") != null:
 			unit.rotor.rotate_y(delta * 28.0)
+		if unit.get("rotor2") != null:
+			unit.rotor2.rotate_y(-delta * 28.0)   # a tandem helicopter's rear rotor turns the other way
 		if unit.get("radar") != null:
 			unit.radar.rotate_y(delta * 1.6)
 		if unit.moving:
@@ -5498,9 +5500,9 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 		amount *= generals.damage_mult(source) * generals.taken_mult(unit)  # a general's traits
 	if directorate != null:
 		amount *= directorate.damage_mult(source, unit)  # AI: autonomy, the fusion cell, targeting and undersea sensing
+	amount *= preload("res://scripts/war_tools.gd").damage_mult(self, source, unit)  # radars, airborne warning, jamming, submarine hunters
 	unit.hp -= amount
 	Vet.credit(self, source, unit, amount)
-	amount *= preload("res://scripts/war_tools.gd").damage_mult(self, source, unit)  # radars, airborne warning, jamming, submarine hunters
 	if amount > 0:
 		unit.last_hit = game_time
 	if unit.get("is_building", false):
@@ -6159,6 +6161,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				var point = ground_point(event.position)
 				if point != null:
 					passage.check_order(selected, point, func(): order_move(selected,point,true))
+			elif target == null and preload("res://scripts/airlift.gd").transport_under(self, selected, event.position) != null:
+				preload("res://scripts/airlift.gd").order_board(self, selected, preload("res://scripts/airlift.gd").transport_under(self, selected, event.position))   # board a helicopter
 			elif target != null:
 				selected = selected.filter(func(u):return u.dmg>0 and effectiveness(u,target)>0.01)
 				if not selected.is_empty():
@@ -6251,6 +6255,8 @@ func _input(event: InputEvent) -> void:
 		hud.toggle_panel("un")   # the United Nations
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_O and occupation != null:
 		occupation.begin_zone()  # the next click marks an operational zone
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_J:
+		preload("res://scripts/airlift.gd").unload_selected(self)   # helicopters land their troops
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Y:
 		hud.toggle_research()
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F8 and economy != null and preload("res://scripts/cheats.gd").allowed(self):

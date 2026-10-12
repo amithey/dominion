@@ -166,7 +166,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 		if army.size() < int(row(n).maxArmy):
 			var options: Array = train_pool.filter(func(k): return world.unit_allowed(n.id, k) and preload("res://scripts/additional_factions.gd").ai_unlocked(world, n.id, k) and preload("res://scripts/progression.gd").unit_blocked(world, n.id, k) == "" and not production_sites(n.id,k).is_empty())
 			if not options.is_empty():
-				var key: String = options[randi() % options.size()]
+				var key: String = preload("res://scripts/war_tools.gd").ai_pick(world, n.id, options)   # its navy keeps a fleet
 				var cost := weighted_cost(world.unit_defs[key].cost) * preload("res://scripts/national_profile.gd").cost_mult(world, n.id, key)
 				# Money for the next building is kept back, unless the nation is at
 				# war or has hardly an army: a state that only trains never grows.

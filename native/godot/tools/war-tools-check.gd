@@ -110,6 +110,19 @@ func run() -> void:
 	check(is_equal_approx(T.damage_mult(w, mine, guns), 1.0 + T.RADAR_BONUS), "guns the radar has found are hit a quarter harder")
 	check(T.sensed(w, 0, guns), "and they are revealed")
 	check(not T.sensed(w, 0, enemy_soldier) or enemy_soldier.dead, "but the radar does not see infantry")
+	# In real damage, not only in the factor: the same shell on two guns, with and without the radar.
+	var g1: Dictionary = w.spawn_unit("artillery", made.counterBatteryRadar.node.position + Vector3(50, 0, 10), 1)
+	var hp1: float = g1.hp
+	w.damage(g1, 40.0, {"owner": 0, "key": "artillery", "node": tank.node, "dead": true})
+	var with_radar: float = hp1 - g1.hp
+	var radars: Array = T.state(w).support[0].get("counterBatteryRadar", [])
+	T.state(w).support[0].erase("counterBatteryRadar")   # the radar switched off for one shot
+	var g2: Dictionary = w.spawn_unit("artillery", made.counterBatteryRadar.node.position + Vector3(50, 0, -10), 1)
+	var hp2: float = g2.hp
+	w.damage(g2, 40.0, {"owner": 0, "key": "artillery", "node": tank.node, "dead": true})
+	var without: float = hp2 - g2.hp
+	T.state(w).support[0].counterBatteryRadar = radars
+	check(without > 0.0 and absf(with_radar / without - (1.0 + T.RADAR_BONUS)) < 0.02, "the radar's bonus reaches the guns' real damage (%.1f vs %.1f)" % [with_radar, without])
 
 	# ---- airborne early warning and electronic attack
 	for key in ["aewc", "ewJet"]:
@@ -133,6 +146,44 @@ func run() -> void:
 	check(not C.can_target(w, {"key": "coastalASM"}, {"key": "tank"}) and C.can_target(w, {"key": "coastalASM"}, destroyer), "the coastal battery strikes ships only")
 	check(not C.can_target(w, {"key": "maritimePatrol"}, {"key": "tank"}) and C.can_target(w, {"key": "maritimePatrol"}, sub), "the patrol aircraft hunts at sea only")
 	check(not C.can_target(w, {"key": "carrier"}, sub) and C.can_target(w, {"key": "carrier"}, {"key": "tank"}), "the carrier's air wing does not hunt submarines")
+
+	# ---- the carrier's air wing
+	if made.has("carrier"):
+		var carrier: Dictionary = made.carrier
+		var foe: Dictionary = w.spawn_unit("destroyer", carrier.node.position + Vector3(70, 0, 0), 1)
+		if foe.is_empty() or not foe.get("naval", false):
+			foe = w.spawn_unit("tank", carrier.node.position + Vector3(70, 0, 0), 1)
+		var aboard0: int = T.wing_size(w, carrier)
+		check(aboard0 == 5, "a supercarrier carries five strike aircraft (%d)" % aboard0)
+		tick(0.5)
+		var wing: Array = w.units.filter(func(u): return not u.dead and u.key == "carrierJet" and u.get("carrier") == carrier)
+		check(wing.size() >= 1 and int(carrier.wing.aboard) == aboard0 - wing.size(), "aircraft take off from the deck against a target in reach (%d flying)" % wing.size())
+		check(wing.size() >= 1 and wing[0].enemy != null and int(wing[0].enemy.owner) == 1 and str(wing[0].air_state) == "ready", "and fly at an enemy in reach")
+		var shown: int = carrier.deck_planes.filter(func(n): return n.visible).size()
+		check(shown == int(carrier.wing.aboard), "the deck shows the aircraft still aboard (%d)" % shown)
+		check(w.unit_defs.carrierJet.name == "F/A-18E Super Hornet", "the American wing flies Super Hornets")
+		if not wing.is_empty():
+			var plane: Dictionary = wing[0]
+			plane.ammo = 0
+			plane.node.position = carrier.node.position + Vector3(30, 24, 0)
+			for i in range(200):
+				w.AirOperations.update(w, plane, 0.1)
+				if plane.dead: break
+			check(plane.dead and plane.get("stowed", false), "a spent aircraft flies home and lands aboard, without a wreck")
+			check(carrier.wing.rearming.size() >= 1, "and is rearmed below decks")
+			w.game_time += T.REARM + 1.0
+			var before_aboard: int = int(carrier.wing.aboard)
+			carrier.wing.next = 999.0
+			tick(0.5)
+			check(int(carrier.wing.aboard) == before_aboard + 1, "then it is ready to fly again")
+		check(not C.can_target(w, {"key": "carrier"}, {"key": "submarine"}), "the carrier's own guns do not hunt submarines")
+
+	# ---- rival navies
+	var naval_picks := 0
+	var options := ["tank", "soldier", "apc", "destroyer", "corvette", "artillery", "jet", "mlrs"]
+	for i in range(400):
+		if w.unit_defs.get(T.ai_pick(w, 1, options), {}).get("naval", false): naval_picks += 1
+	check(naval_picks > 400 * 2 / 8, "a rival with a navy favours its fleet while it is short (%d of 400 picks were ships)" % naval_picks)
 
 	print("WAR_TOOLS %d passed, %d failed" % [passed, errors.size()])
 	for e in errors: print("  FAILED: " + e)

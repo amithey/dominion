@@ -90,6 +90,7 @@ func capture() -> Dictionary:
 			"repairing":u.get("repairing",false), "last_hit":u.get("last_hit",-100.0),
 			"disabled_until": u.get("disabled_until", 0.0), "intercept_ready": u.get("intercept_ready", 0.0),
 			"xp": u.get("xp", 0.0),
+			"cargo": u.get("cargo", []).duplicate(true),   # troops aboard a helicopter (airlift.gd)
 		})
 	var edges := []
 	for e in world.logistics.edges.values():
@@ -235,6 +236,7 @@ func restore(data: Dictionary) -> void:
 		u.hp = float(s.hp)
 		if float(s.get("xp", 0.0)) > 0.0:
 			world.Vet.set_xp(u, float(s.xp))
+		u.cargo = Array(s.get("cargo", [])).duplicate(true)
 		u.repairing = s.get("repairing",false)
 		u.last_hit = float(s.get("last_hit",-100.0))
 		for timer in ["disabled_until", "intercept_ready"]:

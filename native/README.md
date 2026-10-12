@@ -38,6 +38,26 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.95: real aircraft carriers, rival navies, and helicopters that carry troops
+
+- **Carriers look like carriers,** by class: the catapult carriers (Ford, Fujian, Charles de Gaulle) with an angled
+  landing deck, two bow catapults, deck-edge lifts and the island to starboard; the Queen Elizabeth with a ski-jump
+  and two islands; Vikrant and Anadolu with a ski-jump; Japan's Kaga flat-decked; Iran's Shahid Bagheri a converted
+  container ship. A dark deck with white markings, and aircraft parked on it.
+- **The air wing flies:** the aircraft on deck take off against any enemy within reach, strike, fly back, land
+  aboard and are rearmed below deck. Super Hornets for the United States, J-15T for China, Rafale M for France,
+  F-35B for the UK and Japan, MiG-29K for India, TB3 drones for Turkiye, combat drones for Iran.
+- **Rivals build navies** in proportion to their real fleets: while short of one, a rival with a shipyard builds
+  warships first, capital ships half of the time.
+- Research: the carriers section of [WAR-TOOLS-RESEARCH-2026-10-12.md](WAR-TOOLS-RESEARCH-2026-10-12.md).
+- **Helicopters carry troops:** select soldiers and right-click your transport helicopter to board; select it and
+  press J to land them on dry ground. A utility helicopter takes six; a heavy-lift helicopter twelve, or light
+  vehicles and towed guns (the Mi-26 even an armoured carrier). Those aboard are lost with it.
+- **More helicopters:** heavy lift (CH-47 Chinook with its two rotors, Mi-26, Z-8L) and naval helicopters that hunt
+  submarines (MH-60R, NH90 NFH, Wildcat, SH-60K, Ka-27, Z-20F); the utility helicopter has its own airframe.
+  Research: [HELICOPTERS-RESEARCH-2026-10-12.md](HELICOPTERS-RESEARCH-2026-10-12.md).
+- Fix: the radar, airborne-warning, jamming and submarine-hunter bonuses of 0.9.94 now reach real damage.
+
 ## Version 0.9.94: the tools of war
 
 Eleven new roles, each with its own model and a national name only where the system is documented

@@ -14,7 +14,7 @@ extends RefCounted
 ##   takeoff   climbing out along the runway
 ## A base whose slots are all taken accepts no more aircraft, and trains none.
 
-const CAPACITY := {"jet": 4, "bomber": 3, "drone": 6, "helicopter": 8, "gunship": 8, "loiterer": 1, "stealthFighter": 4, "raptor": 4, "raider": 2, "shahed": 1, "sixthGen": 4, "wingman": 99, "akinci": 8, "harop": 1, "superTucano": 4, "interceptorDrone": 1, "jf17": 4, "attackJet": 4, "lightFighter": 3, "scoutHelicopter": 1, "aewc": 1, "ewJet": 3, "maritimePatrol": 4}
+const CAPACITY := {"jet": 4, "bomber": 3, "drone": 6, "helicopter": 8, "gunship": 8, "loiterer": 1, "stealthFighter": 4, "raptor": 4, "raider": 2, "shahed": 1, "sixthGen": 4, "wingman": 99, "akinci": 8, "harop": 1, "superTucano": 4, "interceptorDrone": 1, "jf17": 4, "attackJet": 4, "lightFighter": 3, "scoutHelicopter": 1, "aewc": 1, "ewJet": 3, "maritimePatrol": 4, "carrierJet": 2, "carrierDrone": 2, "heavyLift": 6, "navalHelicopter": 2}
 const SERVICE_SECONDS := 12.0
 ## Launched from a canister beside the runway, straight into the air: they hold
 ## no parking slot (and never come back).
@@ -45,7 +45,7 @@ static func is_base(b: Dictionary) -> bool:
 
 ## Helicopters land on helipads, aircraft on airfields: a helicopter no longer
 ## takes a jet's parking slot on the apron.
-const ROTARY := ["helicopter", "gunship", "scoutHelicopter"]
+const ROTARY := ["helicopter", "gunship", "scoutHelicopter", "heavyLift", "navalHelicopter"]
 
 static func available(world: Node, u: Dictionary, b: Dictionary) -> bool:
 	return not b.dead and b.built and b.owner == u.owner and b.get("supplied", true) and not world.disabled(b) and ((b.key == "airfield" and not u.key in ROTARY) or (b.key == "helipad" and u.key in ROTARY))
@@ -162,6 +162,8 @@ static func park_new(world: Node, u: Dictionary, b: Dictionary) -> bool:
 
 ## True means this update owns movement (landing, service, or takeoff).
 static func update(world: Node, u: Dictionary, delta: float) -> bool:
+	if u.get("carrier") != null:
+		return preload("res://scripts/war_tools.gd").carrier_flight(world, u, delta)   # a carrier's aircraft land aboard
 	if u.air_state == "ready":
 		if u.key not in TUBE_LAUNCHED:
 			u.sortie_left = maxf(0.0, float(u.get("sortie_left", preload("res://scripts/war_costs.gd").SORTIE_SECONDS)) - delta)

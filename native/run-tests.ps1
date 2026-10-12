@@ -13,6 +13,7 @@ $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
     @('28 arsenal dossiers, evidence-backed operators, new support / artillery / air-defence roles, production, live combat and save round trip', @('--script', 'res://tools/arsenal-diversity-check.gd'), 'ARSENAL_DIVERSITY PASS', 600),
+    @('helicopters: heavy-lift and naval roles by nation, utility and tandem-rotor models, boarding and landing troops, loads, losses, saves', @('--script', 'res://tools/helicopters-check.gd'), 'HELICOPTERS PASS', 600),
     @('tools of war: engineers and minefields, mine clearing, field recovery, decoys, counter-battery radar, coastal anti-ship, AEW, electronic attack, submarine hunters, carriers, saves', @('--script', 'res://tools/war-tools-check.gd'), 'WAR_TOOLS PASS', 600),
     @('strategic AI: who uses what, targeting, counter-drone, undersea sensing, surveillance, counter-disinformation, revenue, exports, the dead hand and its accidents, biosecurity, the second generation, saves, rivals and screens', @('--script', 'res://tools/ai-strategic-check.gd'), 'AI_STRATEGIC PASS', 600),
     @('practical AI: national evidence, research, validation, commissioning, compute budgets, live effects, diplomacy, rivals and saves', @('--script', 'res://tools/ai-applications-check.gd'), 'AI_APPLICATIONS PASS', 600),

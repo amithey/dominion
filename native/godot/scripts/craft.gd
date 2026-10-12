@@ -87,7 +87,7 @@ func build(key: String, owner: int) -> Dictionary:
 		"submarine", "nuclearSub":
 			submarine(st, 11.0 if key == "submarine" else 14.0, key == "nuclearSub")
 		"helicopter":
-			helicopter(st, parts, false)
+			utility_helicopter(st, parts, 1.0)
 		"gunship":
 			helicopter(st, parts, true)
 		"bomber":
@@ -118,6 +118,8 @@ func build(key: String, owner: int) -> Dictionary:
 			akinci(st)
 		"harop":
 			harop(st)
+		"carrierDrone":
+			akinci(st)
 		"aegisCruiser":
 			aegis_cruiser(st, parts, 17.0, 3.1)
 		_:
@@ -588,6 +590,56 @@ func sea_drone(st: SurfaceTool, length: float, beam: float) -> void:
 	g.prim(st, _sphere(0.09), Transform3D(Basis(), Vector3(0, h.call(-0.4) + 0.7, -0.4)), GLASS)
 	g.block(st, Vector3(beam * 0.5, 0.06, 0.4), Vector3(0, h.call(-length * 0.3) + 0.05, -length * 0.3), TEAM)
 	g.cyl(st, 0.12, 0.3, Vector3(0, 0.0, -length * 0.5 - 0.1), "z", METAL, 8)
+
+## Utility helicopter (Black Hawk, Mi-17, NH90...): a boxy cabin with sliding
+## doors and windows, a wide cockpit glazing, engines over the cabin, a long tail
+## boom with a stabiliser and tail rotor, a four-blade main rotor, wheels and a
+## door gun. `s` scales it (the naval and heavy versions reuse it).
+func utility_helicopter(st: SurfaceTool, parts: Dictionary, s: float, naval := false) -> void:
+	var w := 0.62 * s
+	fuselage(st, 4.6 * s, [[0.0, w * 0.55, 0.5 * s, 0.1], [0.12, w * 0.9, 0.8 * s, 0.05], [0.3, w, 0.92 * s], [0.75, w, 0.9 * s], [0.92, w * 0.7, 0.62 * s, 0.1], [1.0, w * 0.35, 0.3 * s, 0.2]], PAINT)
+	# The cockpit: a wide glazed nose.
+	g.prim(st, _sphere(0.55 * s), Transform3D(Basis().scaled(Vector3(w * 1.75, 0.9, 1.3)), Vector3(0, 0.2 * s, 1.75 * s)), GLASS)
+	for side: float in [-1.0, 1.0]:
+		# A sliding door with its window, and cabin windows behind.
+		g.block(st, Vector3(0.04, 0.7 * s, 1.1 * s), Vector3(side * w * 1.0, -0.35 * s, 0.35 * s), DARK)
+		g.block(st, Vector3(0.05, 0.28 * s, 0.4 * s), Vector3(side * w * 1.01, 0.05 * s, 0.4 * s), GLASS)
+		g.block(st, Vector3(0.05, 0.25 * s, 0.32 * s), Vector3(side * w * 1.01, 0.05 * s, -0.5 * s), GLASS)
+		# Engines over the cabin, exhausts angled out.
+		g.cyl(st, 0.22 * s, 1.4 * s, Vector3(side * 0.32 * s, 0.98 * s, -0.1 * s), "z", LIGHT, 10, 0.2 * s)
+		g.cyl(st, 0.15 * s, 0.3 * s, Vector3(side * 0.42 * s, 0.98 * s, -0.95 * s), "z", METAL, 10)
+		# Wheels: main gear on short sponsons, a tail wheel.
+		g.block(st, Vector3(0.5 * s, 0.1, 0.3 * s), Vector3(side * (w + 0.2 * s), -0.75 * s, 0.6 * s), PAINT)
+		g.cyl(st, 0.2 * s, 0.14, Vector3(side * (w + 0.4 * s), -0.95 * s, 0.6 * s), "x", RUBBER, 10)
+		# The horizontal stabiliser at the tail.
+		surface(st, Vector3(0, 0.35 * s, -5.3 * s), Vector3(0, 0.35 * s, -5.8 * s), Vector3(side * 1.1 * s, 0.35 * s, -5.4 * s), Vector3(side * 1.1 * s, 0.35 * s, -5.75 * s), 0.06, 0.03, Vector3.UP, PAINT)
+	if naval:
+		# A dipping-sonar housing under the cabin and a torpedo on a pylon.
+		g.cyl(st, 0.3 * s, 0.5 * s, Vector3(0, -0.95 * s, -0.2 * s), "y", DARK, 10)
+		g.cyl(st, 0.14 * s, 1.4 * s, Vector3(w + 0.35 * s, -0.55 * s, 0.0), "z", LIGHT, 8, 0.1 * s)
+		g.block(st, Vector3(0.6 * s, 0.08, 0.5 * s), Vector3(w + 0.1 * s, -0.4 * s, 0.0), PAINT)
+		g.prim(st, _sphere(0.3 * s), Transform3D(Basis().scaled(Vector3(1.2, 0.6, 1.2)), Vector3(0, -0.85 * s, 1.1 * s)), WHITE)   # chin radar
+	else:
+		g.cyl(st, 0.035 * s, 0.9 * s, Vector3(w + 0.1 * s, -0.25 * s, 0.6 * s), "z", METAL, 6)   # door gun
+	g.cyl(st, 0.1 * s, 0.1 * s, Vector3(0, -0.6 * s, -4.9 * s), "x", RUBBER, 8)
+	# Tail boom, a swept fin and the tail rotor.
+	var boom := []
+	for i in range(5):
+		var t := i / 4.0
+		boom.append(g.ellipse(-2.1 * s - t * 3.7 * s, lerpf(0.36, 0.13, t) * s, lerpf(0.38, 0.14, t) * s, lerpf(0.25, 0.5, t) * s, 10))
+	g.loft(st, boom, true, func(_m: Vector3) -> Color: return PAINT)
+	surface(st, Vector3(0, 0.5 * s, -5.5 * s), Vector3(0, 0.5 * s, -6.1 * s), Vector3(0, 1.65 * s, -6.0 * s), Vector3(0, 1.65 * s, -6.4 * s), 0.1, 0.05, Vector3.RIGHT, PAINT)
+	g.block(st, Vector3(0.12, 0.35, 0.4), Vector3(0, 1.05 * s, -6.0 * s), TEAM)
+	for b in range(4):
+		g.block(st, Vector3(0.03, 1.1 * s, 0.1), Vector3(0, -0.55 * s, 0), METAL, 0.0, 0.0, 0.0, Transform3D(Basis(Vector3.RIGHT, TAU * b / 4.0), Vector3(-0.16 * s, 1.35 * s, -6.1 * s)))
+	g.cyl(st, 0.1 * s, 0.45 * s, Vector3(0, 1.12 * s, 0.0), "y", METAL, 8)
+	var made := _node(parts, "rotor", Vector3(0, 1.45 * s, 0.0))
+	var r: SurfaceTool = made[1]
+	g.cyl(r, 0.22 * s, 0.22, Vector3.ZERO, "y", METAL, 10)
+	for b in range(4):
+		var xf := Transform3D(Basis(Vector3.UP, TAU * b / 4.0) * Basis(Vector3.BACK, 0.03), Vector3.ZERO)
+		g.block(r, Vector3(0.3 * s, 0.035, 3.3 * s), Vector3(0, 0, 1.75 * s), DARK, 0.0, 0.0, 0.0, xf)
+	g._attach(made[0], r)
 
 ## Attack helicopter (tandem cockpits, stub wings with rocket pods and
 ## missiles) or heavy gunship (bigger cabin, five blades, twin pods a side).

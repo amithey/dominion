@@ -97,3 +97,42 @@ Eleven roles were added (`scripts/force_catalog.gd` ROLES, logic in `scripts/war
   - airborne and amphibious landings.
 
   These are candidates for a later pass.
+
+## Carriers rebuilt, their air wings, and rival navies (0.9.95)
+
+**The question (player):** improve the aircraft carriers. They should hold aircraft that take off to strike, and they should look like carriers. Rivals should build fleets too.
+
+**What carriers look like** (official imagery and standard references):
+
+| Class | In the game | Main features drawn |
+|---|---|---|
+| Gerald R. Ford (USA), Fujian (China), Charles de Gaulle (France) | `super` | A catapult (CATOBAR) deck: an **angled landing deck** to port with arrestor wires, **two bow catapults**, the island to starboard (Ford's set well aft), deck-edge lifts, a dark non-skid deck with white lines. The Fujian has electromagnetic catapults (EMALS), commissioned November 2025. |
+| Queen Elizabeth (UK) | `twin` | A STOVL carrier with a **ski-jump bow** and **two islands**: navigation forward, flying control aft. |
+| Vikrant (India), Anadolu (Türkiye) | `ski` | A ski-jump bow and one island. The Anadolu is an amphibious assault ship with a **stern dock**, operating drones (TB3). |
+| Kaga (Japan) | `flat` | A straight flat deck (a converted helicopter destroyer) for F-35B. |
+| Shahid Bagheri (Iran) | `box` | A **converted container ship**: the bridge and funnel block aft, and a flight deck with a ramp forward (February 2025). |
+
+**The air wing.** A carrier holds its aircraft on deck. They are drawn there, and disappear as they take off.
+- When an enemy is visible within reach (125), they launch one every three seconds, strike, and fly back.
+- They land aboard with no wreck, and are rearmed below deck for 14 seconds.
+- The ship's own guns only defend it.
+- Wing sizes are game balance, by class:
+  - five aircraft for the big catapult carriers;
+  - four for the STOVL and drone carriers;
+  - three for Iran's conversion.
+- Aircraft by nation:
+  - F/A-18E Super Hornet (USA);
+  - J-15T (China);
+  - Rafale M (France);
+  - F-35B (UK, Japan);
+  - MiG-29K (India);
+  - Bayraktar TB3 (Türkiye);
+  - a Shahed-129-class combat drone (Iran).
+
+**Rival navies.** Rivals used to pick a unit at random, so warships were rare. Now a rival with a shipyard keeps a fleet proportional to its real navy (`war_tools.NAVY`):
+- blue-water navies (USA, China) ≈ 12 ships;
+- the UK, EU and Japan ≈ 9;
+- Russia, India and South Korea ≈ 8;
+- coastal forces 3–4.
+
+While it is short of that fleet, it chooses warships first, and capital ships half of the time.
