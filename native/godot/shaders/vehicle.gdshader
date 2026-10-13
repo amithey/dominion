@@ -43,15 +43,19 @@ float tri_noise(float scale) {
 }
 
 void fragment() {
-	float grime = tri_noise(0.9);
+	float grime = tri_noise(0.28);
 	float speckle = tri_noise(4.5);
 	float s = vertex_tone ? tone.r * 2.0 : shade;
 	float m = vertex_tone ? tone.g : metal;
+	bool glass = vertex_tone && tone.b > 0.4 && tone.b < 0.75;
+	float painted = (1.0 - m) * (vertex_tone ? 1.0 - step(0.15, tone.b) : 1.0);
 	vec3 base = mix(paint * s, vec3(0.13, 0.13, 0.12), m);
+	// Broad field-paint patches reuse the weathering sample: no extra reads.
+	base = mix(base, base * vec3(0.65, 0.72, 0.62), smoothstep(0.51, 0.63, grime) * painted * 0.75);
 	if (vertex_tone && tone.b > 0.75) {
 		base = team * 0.8;
 	} else if (vertex_tone && tone.b > 0.4) {
-		base = vec3(0.05, 0.07, 0.08);  // vision blocks and lenses
+		base = vec3(0.075, 0.15, 0.19);  // cool optical glass distinct from rubber and tracks
 	} else if (vertex_tone && tone.b > 0.15) {
 		base = vec3(0.32, 0.1, 0.08) * s;  // antifouling
 	}
@@ -59,9 +63,11 @@ void fragment() {
 	vec3 col = base * mix(0.8, 1.06, grime) * mix(0.94, 1.03, speckle);
 	// Road dust on the lower hull and running gear.
 	float dust = (1.0 - smoothstep(dust_height * 0.35, dust_height, above_ground)) * smoothstep(0.35, 0.65, grime + speckle * 0.3);
-	col = mix(col, dust_color, dust * 0.7);
+	dust *= glass ? 0.0 : 1.0;
+	col = mix(col, dust_color, dust * 0.48);
+	// Broad upward-facing panels catch a restrained pale edge without extra textures.
+	col *= mix(0.96, 1.08, clamp(local_normal.y, 0.0, 1.0));
 	ALBEDO = col;
-	bool glass = vertex_tone && tone.b > 0.4 && tone.b < 0.75;
 	ROUGHNESS = glass ? 0.12 : mix(mix(0.72, 0.9, grime), 0.55, m) + dust * 0.1;
 	METALLIC = glass ? 0.6 : mix(0.08, 0.55, m) * (1.0 - dust);
 	SPECULAR = 0.4;

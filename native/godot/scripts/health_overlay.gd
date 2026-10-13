@@ -41,13 +41,15 @@ func _bar(ent: Dictionary, eye: Vector3, screen_rect: Rect2, lift: float, width 
 			break
 	rect.position.y = foot.position.y + 3
 	_placed.append(foot)
+	draw_rect(rect.grow(3), Color(0, 0, 0, 0.35))
 	draw_rect(rect.grow(2), Color("101721"))
+	draw_rect(rect, Color("354353"))
 	# The owner's colour on a small tab at the left, as 4X unit flags carry it.
 	var owner: int = ent.get("owner", 0)
 	if owner < world.map.nations.size():
 		draw_rect(Rect2(rect.position - Vector2(6, 2), Vector2(4, height + 4)), Color(world.map.nations[owner].color))
 	draw_rect(Rect2(rect.position, Vector2(width * ratio, height)), Color("79c98a") if ratio > 0.5 else (Color("e2bd65") if ratio > 0.25 else Color("e97465")))
-	draw_rect(rect, Color("d9cfb1"), false, 1)
+	draw_rect(rect, Color("f4ead4") if selected else Color("8195a3"), false, 1)
 	if selected or not world.perf_opts:
 		for i in range(1, 5):
 			draw_line(rect.position + Vector2(i * width / 5.0, 0), rect.position + Vector2(i * width / 5.0, height), Color(0, 0, 0, 0.45))

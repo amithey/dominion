@@ -32,21 +32,26 @@ func setup(world_node: Node) -> void:
 	e.background_mode = Environment.BG_CLEAR_COLOR
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	e.ambient_light_color = Color("9fb4c0")
-	e.ambient_light_energy = 0.55
+	e.ambient_light_energy = 0.72
 	e.tonemap_mode = Environment.TONE_MAPPER_ACES
 	e.tonemap_exposure = 1.05
 	env.environment = e
 	_viewport.add_child(env)
 	var key := DirectionalLight3D.new()
 	key.rotation_degrees = Vector3(-42, -35, 0)
-	key.light_energy = 1.6
+	key.light_energy = 1.35
 	key.shadow_enabled = true
 	_viewport.add_child(key)
 	var fill := DirectionalLight3D.new()
 	fill.rotation_degrees = Vector3(-20, 150, 0)
-	fill.light_energy = 0.45
+	fill.light_energy = 0.65
 	fill.light_color = Color("b9d4ff")
 	_viewport.add_child(fill)
+	var rim := DirectionalLight3D.new()
+	rim.rotation_degrees = Vector3(-28, 65, 0)
+	rim.light_energy = 0.38
+	rim.light_color = Color("ffe2bb")
+	_viewport.add_child(rim)
 	_camera = Camera3D.new()
 	_camera.fov = 30
 	_viewport.add_child(_camera)
@@ -80,7 +85,7 @@ func _render_next() -> void:
 	var box: AABB = world.model_bounds(model)
 	var centre := box.get_center()  # the model stands at the stage origin
 	var radius := maxf(box.size.length() * 0.5, 0.5)
-	if world.unit_defs.has(key) and key in world.INFANTRY and not key in ["machineGunTeam", "mortarTeam", "scoutTeam"]:
+	if world.unit_defs.has(key) and key in world.INFANTRY and not key in ["machineGunTeam", "mortarTeam", "scoutTeam", "recoillessTeam"]:
 		radius = box.size.y * 0.5  # a figure's arms spread its bounds; frame it by height
 		centre.y = box.size.y * 0.5
 	var dir := Vector3(0.95, 0.5, -0.3).normalized() if munition else Vector3(0.62, 0.48, 0.62).normalized()

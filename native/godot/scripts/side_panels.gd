@@ -1,4 +1,5 @@
 extends RefCounted
+const UI := preload("res://scripts/ui_theme.gd")
 ## The side windows (hud.gd): Diplomacy, Intelligence, World market and
 ## Territory, redesigned.
 ## Each window has tabs along its top so nothing needs long scrolling:
@@ -523,7 +524,7 @@ func _agents(e: Node, d: Node) -> void:
 	var st: Label = hud._text("Field agents", 16, hud.UI.CREAM, true)
 	st.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(st)
-	hud._button(head, "Recruit ($%d)" % e.recruit_cost(), e.recruit, e.has_agency(), "good")
+	hud._button(head, "Recruit agent ($%d)" % e.recruit_cost(), e.recruit, e.has_agency(), "good")
 	if e.agents.is_empty():
 		service.add_child(hud._text("No agents yet.", 13, hud.UI.MUTED))
 	for a in e.agents:
@@ -634,6 +635,10 @@ func _chart(points: Array, colour: Color, size: Vector2) -> Control:
 	chart.draw.connect(func():
 		var w := size.x
 		var h := size.y
+		chart.draw_style_box(UI.box(Color("0b1b29"), Color("36516b"), 1, 4, 0.0), Rect2(Vector2.ZERO, size))
+		for tick in range(1, 4):
+			var y := h * float(tick) / 4.0
+			chart.draw_line(Vector2(1, y), Vector2(w - 1, y), Color(0.7, 0.8, 0.9, 0.1), 1.0)
 		if values.size() < 2:
 			chart.draw_line(Vector2(0, h * 0.5), Vector2(w, h * 0.5), Color(colour, 0.5), 1.0)
 			return
@@ -654,7 +659,8 @@ func _chart(points: Array, colour: Color, size: Vector2) -> Control:
 		for x in range(0, int(w), 8):
 			chart.draw_line(Vector2(x, start_y), Vector2(x + 4, start_y), Color(1, 1, 1, 0.18), 1.0)
 		chart.draw_polyline(line, colour, 2.0, true)
-		chart.draw_circle(line[line.size() - 1], 3.0, colour))
+		chart.draw_circle(line[line.size() - 1], 4.0, Color("0b1b29"))
+		chart.draw_circle(line[line.size() - 1], 2.5, colour))
 	return chart
 
 func _exchange(m: Node) -> void:
@@ -792,7 +798,7 @@ func _routes(m: Node) -> void:
 		var t: Label = hud._text("%s  %d %s  %s  %s  (%s)" % ["Export" if r.dir == "export" else "Import", r.qty, r.res, arrow, d.name_of(r.nation), by], 15, hud.UI.CREAM, true)
 		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		head.add_child(t)
-		hud._button(head, "Close", m.close_route.bind(r.id), true, "bad")
+		hud._button(head, "Close trade route", m.close_route.bind(r.id), true, "bad")
 		if r.shipment != null:
 			var left: float = maxf(0.0, float(r.shipment.eta) - m._tick)
 			hud._meter(card, 1.0 - left / float(m.cfg.voyage), 1.0, hud.GOLD, "%s  ·  worth $%d" % [r.status, int(r.shipment.value)])
@@ -1008,13 +1014,13 @@ func _generals() -> void:
 		var row: HBoxContainer = hud._row(card)
 		var why: String = g.assign_blocked(gen, target)
 		var who: Dictionary = gen
-		var b: Button = hud._button(row, "Give command of the selected unit", func(): return g.assign(who, target), why == "", "good")
+		var b: Button = hud._button(row, "Assign general", func(): return g.assign(who, target), why == "", "good")
 		b.tooltip_text = why
 		if gen.unit != null:
 			hud._button(row, "Go to", func():
 				hud.world.cam_focus = who.unit.node.position
 				return "")
-		hud._button(row, "Dismiss", func(): return g.dismiss(who), true, "bad")
+			hud._button(row, "Dismiss general", func(): return g.dismiss(who), true, "bad")
 	var offer: VBoxContainer = hud._card()
 	offer.add_child(hud._text("Candidates  ·  $%d an appointment  ·  new ones in %ds" % [int(g.hire_cost()), maxi(0, ceili(g._next_offer - hud.world.game_time))], 15, hud.UI.CREAM, true))
 	for i in range(g.candidates.size()):
@@ -1026,7 +1032,7 @@ func _generals() -> void:
 		lab.mouse_filter = Control.MOUSE_FILTER_PASS
 		row.add_child(lab)
 		var index: int = i
-		hud._button(row, "Appoint", func(): return g.hire(index), g.of(0).size() < g.MAX_PLAYER and hud.world.economy.res.money >= g.hire_cost(), "good")
+		hud._button(row, "Appoint general", func(): return g.hire(index), g.of(0).size() < g.MAX_PLAYER and hud.world.economy.res.money >= g.hire_cost(), "good")
 	# The rivals' generals.
 	var d: Node = hud.world.diplomacy
 	var known := PackedStringArray()
@@ -1139,6 +1145,9 @@ func united_nations() -> void:
 	var u = hud.world.un
 	if u == null:
 		return
+	var session_row: HBoxContainer = hud._row(hud._card(hud.UI.ministry("un")))
+	hud._button(session_row, "Enter Council chamber", func(): hud.open_un_session("council"); return "")
+	hud._button(session_row, "Enter Assembly chamber", func(): hud.open_un_session("assembly"); return "")
 	_tabs([["Council", "council"], ["Draft", "draft"], ["Assembly", "assembly"], ["Organisation", "org"], ["Record", "record"]], un_tab, func(v): un_tab = v)
 	match un_tab:
 		"draft":
@@ -1192,7 +1201,7 @@ func _council(u) -> void:
 			amend.add_child(hud._text("Amend:", 12, hud.UI.MUTED))
 			for m in ["economic", "embargo", "targeted", "condemn", "statement"]:
 				var mm: String = m
-				hud._button(amend, u.MEASURES[m].name, func(): return u.amend(mm), dr.measure != m)
+				hud._button(amend, u.MEASURES[m].name, func(): return u.amend(mm), dr.measure != m).set_meta("action_help", "Amend your draft during consultations. Proposed effect: " + str(preload("res://scripts/un_session_screen.gd").EFFECTS.get(m, "")))
 		# Lobbying: aid to a member moves its vote one step.
 		var lob: VBoxContainer = hud._card()
 		lob.add_child(hud._text("Lobby a member ($%d each)" % int(u.lobby_cost()), 13, hud.UI.CREAM, true))
@@ -1240,6 +1249,7 @@ func _un_draft(u) -> void:
 		var why: String = u.draft_blocked(m, target)
 		var mm: String = m
 		var b: Button = hud._button(row, u.MEASURES[m].name, func(): return u.draft(mm, target), why == "", "bad" if u.MEASURES[m].severity >= 3 else "")
+		b.set_meta("action_help", "Submit this Council draft for consultations and a vote. If adopted: " + str(preload("res://scripts/un_session_screen.gd").EFFECTS.get(m, "")))
 		b.custom_minimum_size.x = 220
 		var guess: Dictionary = u.tally({"kind": "player", "measure": m, "target": target, "other": -1, "by": 0, "cause": cause, "votes": {}, "lobby": {}}, true)
 		var note: Label = hud._text(why if why != "" else "Expected: %d-%d-%d%s" % [guess.yes, guess.no, guess.abstain, "  (vetoed)" if not guess.vetoes.is_empty() else ("  (passes)" if guess.passes else "")], 12, hud.UI.BAD if why != "" else hud.UI.MUTED)

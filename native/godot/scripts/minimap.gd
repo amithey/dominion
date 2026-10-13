@@ -49,6 +49,43 @@ func setup(world_node: Node) -> void:
 	_terrain = ImageTexture.create_from_image(img)
 	_fit = clampf(0.96 / maxf(far, 0.01), 0.68, 1.0)
 
+var _territory_mesh: ArrayMesh
+var _territory_key := 0
+
+## Every held hex as six triangles with the owner's wash as a vertex colour.
+func _build_territory(t: Node, colours: Array) -> ArrayMesh:
+	var corners := PackedVector2Array()
+	for k in range(6):
+		var a := PI / 6.0 + k * PI / 3.0
+		corners.append(Vector2(cos(a), sin(a)) * t.hex)
+	var vertices := PackedVector2Array()
+	var shades := PackedColorArray()
+	var indices := PackedInt32Array()
+	for i in range(t.owner_of.size()):
+		var o: int = t.owner_of[i]
+		if o < 0:
+			continue
+		var centre: Vector3 = t.center(i)
+		var base := vertices.size()
+		vertices.append(to_map(Vector3(centre.x, 0, centre.z)))
+		var shade := Color(1.0, 0.84, 0.42, 0.35) if t.contested[i] else Color(colours[o % colours.size()], 0.26)
+		shades.append(shade)
+		for k in range(6):
+			vertices.append(to_map(Vector3(centre.x + corners[k].x, 0, centre.z + corners[k].y)))
+			shades.append(shade)
+		for k in range(6):
+			indices.append_array(PackedInt32Array([base, base + 1 + k, base + 1 + (k + 1) % 6]))
+	if vertices.is_empty():
+		return null
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_COLOR] = shades
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
 func _process(delta: float) -> void:
 	_refresh += delta
 	if _refresh > 0.25:
@@ -75,21 +112,25 @@ func _draw() -> void:
 	var xf := view_transform()
 	draw_set_transform_matrix(xf)
 	draw_texture_rect(_terrain, Rect2(Vector2.ZERO, size), false)
+	# A quiet cartographic grid stays underneath fog and all tactical symbols.
+	for tick in range(1, 4):
+		var at := size * float(tick) / 4.0
+		draw_line(Vector2(at.x, 0), Vector2(at.x, size.y), Color(0.8, 0.9, 1.0, 0.08))
+		draw_line(Vector2(0, at.y), Vector2(size.x, at.y), Color(0.8, 0.9, 1.0, 0.08))
 	var colours := []
 	for n in world.map.nations:
 		colours.append(Color(n.color).lightened(0.2))
-	# Territory: every held cell washed in its owner's colour, fronts in gold.
+	# Territory: every held cell washed in its owner's colour, fronts in gold. One
+	# mesh, rebuilt only when ownership changes (polygon by polygon it cost
+	# 15 ms a redraw).
 	var t: Node = world.territory
 	if t != null:
-		# Land is held hex by hex (territory.cell_polygon gives each hex's corners).
-		for i in range(t.owner_of.size()):
-			var o: int = t.owner_of[i]
-			if o < 0:
-				continue
-			var poly := PackedVector2Array()
-			for corner in t.cell_polygon(i):
-				poly.append(to_map(Vector3(corner.x, 0, corner.y)))
-			draw_colored_polygon(poly, Color(1.0, 0.84, 0.42, 0.35) if t.contested[i] else Color(colours[o % colours.size()], 0.26))
+		var key: int = hash([hash(t.owner_of), hash(t.contested), size, colours.size()])
+		if _territory_mesh == null or key != _territory_key:
+			_territory_key = key
+			_territory_mesh = _build_territory(t, colours)
+		if _territory_mesh != null:
+			draw_mesh(_territory_mesh, null)
 	# Fog of war (fog_of_war.gd): land never seen dark, land not watched now grey.
 	var fog = world.get("fog")
 	if fog != null and fog.enabled:
@@ -101,13 +142,26 @@ func _draw() -> void:
 			continue
 		var p := to_map(b.root.position)
 		var s := 5.0 if b.key in ["hq", "cityCenter", "villageCenter"] else 3.5
+		draw_rect(Rect2(p - Vector2(s, s) * 0.5, Vector2(s, s)).grow(1), Color("09141c"))
 		draw_rect(Rect2(p - Vector2(s, s) * 0.5, Vector2(s, s)), colours[b.owner % colours.size()])
 		if b.key == "hq":
 			draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), Color.WHITE, false, 1.0)
 	for u in world.units:
 		if u.dead or (fog != null and not fog.shows(u)):
 			continue
-		draw_circle(to_map(u.node.position), 1.6 if not u.vehicle else 2.0, colours[u.owner % colours.size()])
+		var p := to_map(u.node.position)
+		var ink: Color = colours[u.owner % colours.size()]
+		# (rectangles and bare primitives: a circle is tessellated on every call, and
+		# a hundred units' worth cost 12 ms a redraw)
+		if u.get("selected", false): draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), Color("f4ead4"), false, 1.0)
+		draw_rect(Rect2(p - Vector2(3, 3), Vector2(6, 6)), Color("09141c"))
+		if u.get("fly", false):
+			draw_primitive(PackedVector2Array([p + Vector2(0,-3), p + Vector2(2.5,2), p + Vector2(-2.5,2)]), PackedColorArray([ink, ink, ink]), PackedVector2Array())
+		elif u.get("naval", false):
+			draw_primitive(PackedVector2Array([p + Vector2(0,-3), p + Vector2(2,0), p + Vector2(0,3), p + Vector2(-2,0)]), PackedColorArray([ink, ink, ink, ink]), PackedVector2Array())
+		else:
+			var r := 1.6 if not u.vehicle else 2.0
+			draw_rect(Rect2(p - Vector2(r, r), Vector2(r, r) * 2.0), ink)
 	# The camera: the ground it sees as a wedge, an arrow at the far edge for the
 	# direction it is looking, and a dot where the view is centred.
 	var pts := camera_outline()

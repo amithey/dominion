@@ -363,6 +363,7 @@ func _ready() -> void:
 		if u.key in INFANTRY or u.key in VEHICLES or u.key in NAVAL or u.key in AIR:
 			spawn_unit(u.key, Vector3(u.x, 0, u.z), int(u.owner))
 	camera = Camera3D.new()
+	camera.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF # camera moves every rendered frame
 	camera.fov = 48
 	camera.near = 1
 	camera.far = 2600
@@ -762,7 +763,7 @@ func build_environment() -> void:
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.8
+	env.ambient_light_energy = 0.74
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	# AgX keeps bright greens and skies from clipping to neon, like a film camera.
 	env.tonemap_mode = Environment.TONE_MAPPER_AGX
@@ -780,15 +781,15 @@ func build_environment() -> void:
 	env.fog_aerial_perspective = 0.45  # distant land takes on the sky's blue: depth
 	env.fog_sky_affect = 0.0
 	env.adjustment_enabled = true
-	env.adjustment_saturation = 1.2
-	env.adjustment_contrast = 1.06
+	env.adjustment_saturation = 1.02
+	env.adjustment_contrast = 1.04
 	var world := WorldEnvironment.new()
 	world.environment = env
 	add_child(world)
 	sun = DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-42, -38, 0)
-	sun.light_color = Color("fff1dc")
-	sun.light_energy = 1.35
+	sun.light_color = Color("fff3e2")
+	sun.light_energy = 1.24
 	sun.shadow_enabled = true
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 	sun.directional_shadow_max_distance = 320
@@ -985,6 +986,7 @@ func build_grass() -> void:
 				for i in range(transforms.size()):
 					mm.set_instance_transform(i, transforms[i])
 				var node := MultiMeshInstance3D.new()
+				node.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF # grass is static; clearing is instantaneous
 				node.multimesh = mm
 				node.set_meta("cell_center", Vector2(cx + cell * 0.5, cz + cell * 0.5))
 				node.material_override = material
@@ -1436,6 +1438,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		research.equip(unit)  # discoveries and rival tech set health, range and speed
 	units.append(unit)
 	animate(unit, false)
+	node.reset_physics_interpolation() # newly spawned units do not streak from the origin
 	return unit
 
 ## A model of `key` (unit, vehicle, ship, aircraft or building) for the
@@ -1796,6 +1799,7 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 	if research:
 		research.equip(unit)
 	units.append(unit)
+	node.reset_physics_interpolation()
 	return unit
 
 func is_water(p: Vector3, depth := DEEP) -> bool:
@@ -1885,6 +1889,7 @@ func order_attack(selected: Array, enemy: Dictionary) -> void:
 		if u.owner == 0 and enemy.owner > 0 and not hostile(u.owner, enemy.owner):
 			ai.declare_war(enemy.owner, true)
 		u.enemy = enemy
+		u.board = null  # a new combat order cancels an unfinished airlift
 		u.forced = true  # an ordered target is not swapped for a nearer one
 		u.ignore = {}
 		u.erase("ground_attack")
@@ -1894,6 +1899,7 @@ func order_attack(selected: Array, enemy: Dictionary) -> void:
 
 func order_move(selected: Array, point: Vector3, attack := false) -> void:
 	selected = selected.filter(func(u): return not u.dead)   # the fallen take no orders
+	for u in selected: u.board = null  # explicit orders replace pending boarding
 	# Aircraft sent onto one of their nation's air bases land there and stay.
 	var landed := []
 	for b in buildings:
@@ -1958,6 +1964,7 @@ func order_bombard(selected: Array, point: Vector3) -> void:
 	for u in selected:
 		if not can_bombard(u):
 			continue
+		u.board = null
 		if not is_instance_valid(u.get("bombard_marker")):
 			u.bombard_marker = Node3D.new()
 			add_child(u.bombard_marker)
@@ -4557,7 +4564,8 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 	if ladder != "":
 		return ladder   # the era ladder (progression.gd)
 	if not preload("res://scripts/national_variants.gd").builds(self, owner, key):
-		return "Not built by %s" % str(map.nations[owner].get("name", "this nation")).split(" · ")[0]
+		var industry: String = preload("res://scripts/national_industry.gd").why(self, owner, key)
+		return industry if industry != "" else "Not built by %s" % str(map.nations[owner].get("name", "this nation")).split(" · ")[0]
 	var footprint := footprint_of(key)
 	var half := footprint * 0.5
 	var lowest := INF
@@ -4631,6 +4639,8 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 	if def.get("water", false) and land_owner < 0 and territory != null:
 		land_owner = territory.zone_owner(at)
 	if land_owner == owner:
+		in_district = true
+	elif land_owner < 0 and def.get("coastal", false) and coast_reach(at, owner):
 		in_district = true
 	elif land_owner >= 0 and land_owner != owner:
 		return "Inside %s's %s" % ["your" if land_owner == 0 else diplomacy.name_of(land_owner), "waters" if def.get("water", false) else "land"]
@@ -5187,7 +5197,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 		return  # workers do not fight; EMP-struck machines are dead weight
 	unit.reload -= delta
 	unit.search -= delta
-	# Decisions run ten times a second, each unit on its own tick of six;
+	# Decisions run every six physics ticks (five times a second at 30 Hz);
 	# aiming and firing below still run every frame.
 	if unit.enemy != null and thinks(unit) and not Tactics.keep_target(self, unit, delta * THINK_EVERY):
 		set_stance(unit)
@@ -6125,7 +6135,11 @@ func _unhandled_input(event: InputEvent) -> void:
 						Future.select_group(self, closest)   # a sixth-generation fighter and its wingmen together
 				# A click on empty ground or a building selects that building.
 				if click and closest.is_empty():
-					select_building(building_under(event.position))
+					var resource = preload("res://scripts/resource_picking.gd").marker_at(self, event.position)
+					select_building(building_under(event.position) if resource == null else null)
+					if selected_building == null:
+						if resource == null: resource = preload("res://scripts/resource_picking.gd").site_at(self, event.position)
+						hud.open_resource_site(resource)
 					if hud.side_mode == "territory":
 						var point = ground_point(event.position)
 						if point != null:

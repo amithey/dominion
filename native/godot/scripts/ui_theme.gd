@@ -24,17 +24,17 @@ const BAND_LOW := Color("142b42")
 const KEY_TOP := Color("1c3850")
 const KEY_LOW := Color("142b42")
 
-## Navigation shares the atlas accent; icons and names identify each ministry.
+## Ministry accents complement icons and names; colour never carries meaning alone.
 const MINISTRY := {
-	"economy": GOLD, "market": GOLD, "research": GOLD,
-	"diplomacy": GOLD, "intel": GOLD, "territory": GOLD, "defence": GOLD, "un": GOLD,
-	"land": GOLD, "military": GOLD, "build": GOLD,
-	"people": GOLD, "cabinet": GOLD, "menu": GOLD,
+	"economy": Color("d8bd80"), "market": Color("d8bd80"), "research": Color("91baf0"),
+	"diplomacy": Color("b6a6e3"), "intel": Color("8dc8c9"), "territory": Color("a9c68f"), "defence": Color("e2a28a"), "un": Color("8ebfdc"),
+	"land": Color("a9c68f"), "military": Color("e2a28a"), "build": Color("d8bd80"),
+	"people": Color("a9c68f"), "cabinet": Color("d8bd80"), "menu": GOLD,
 }
 ## Each resource's colour on the strip.
 const RESOURCE_TINT := {
-	"money": GOLD, "food": CREAM, "iron": CREAM, "oil": GOLD,
-	"silicon": CREAM, "uranium": CREAM, "gas": CREAM,
+	"money": GOLD, "food": Color("b2d497"), "iron": Color("b2c5d8"), "oil": Color("d8b18d"),
+	"silicon": Color("8ecadf"), "uranium": Color("c2d98e"), "gas": Color("b5b6e7"),
 }
 
 static func ministry(key: String) -> Color:
@@ -48,7 +48,7 @@ static func ministry_button(b: Button, key: String) -> void:
 		s.bg_color = accent if int(state[3]) == 3 else Color(BG.lerp(accent, float(state[1])), 0.98)
 		s.border_color = Color(accent, float(state[2]))
 		s.border_width_bottom = int(state[3])
-		s.set_corner_radius_all(2)
+		s.set_corner_radius_all(5)
 		s.corner_radius_bottom_left = 0 if int(state[3]) > 0 else 2
 		s.corner_radius_bottom_right = 0 if int(state[3]) > 0 else 2
 		s.content_margin_left = 10
@@ -73,7 +73,7 @@ static func ministry_tab(b: Button, key: String) -> void:
 		s.bg_color = accent if float(state[1]) >= 0.14 else Color(BG_2.lerp(accent, float(state[1])), 0.98)
 		s.border_color = Color(accent, float(state[2]))
 		s.border_width_bottom = int(state[3])
-		s.set_corner_radius_all(2)
+		s.set_corner_radius_all(5)
 		s.corner_radius_bottom_left = 0
 		s.corner_radius_bottom_right = 0
 		s.content_margin_left = 8
@@ -213,9 +213,9 @@ static func _plate_texture(top: Color, bottom: Color, border: Color, bevel: Colo
 ## corners, a rule or an accent bar where asked, a soft shadow for a window.)
 static func plate(top: Color, bottom: Color, border := Color(0, 0, 0, 0), margin := 10.0, bevel := LIFT, rule := Color(0, 0, 0, 0), rule_px := 0, shadow := 0, accent := Color(0, 0, 0, 0), accent_px := 0) -> StyleBox:
 	var s := StyleBoxFlat.new()
-	s.bg_color = top.lerp(bottom, 0.5)
+	s.bg_color = top.lerp(bottom, 0.35)
 	s.anti_aliasing = true
-	s.set_corner_radius_all(3 if shadow > 0 else 2)
+	s.set_corner_radius_all(8 if shadow > 0 else 5)
 	if border.a > 0.0:
 		s.border_color = Color(TRIM, 0.9) if border.s < 0.35 or border.v < 0.6 else Color(border, 0.9)
 		s.set_border_width_all(1)
@@ -333,7 +333,7 @@ static func build() -> Theme:
 	# Tooltips.
 	t.set_stylebox("panel", "TooltipPanel", plate(Color("1a3036"), Color("0a171b"), GOLD, 9.0, LIFT, Color(0, 0, 0, 0), 0, 6))
 	t.set_color("font_color", "TooltipLabel", TEXT)
-	t.set_font_size("font_size", "TooltipLabel", 14)
+	t.set_font_size("font_size", "TooltipLabel", 15)
 	# Slim scroll bars.
 	for kind in ["VScrollBar", "HScrollBar"]:
 		t.set_stylebox("scroll", kind, box(Color(0, 0, 0, 0.35), Color(0, 0, 0, 0), 0, 3, 2.0))
@@ -381,23 +381,23 @@ static func build() -> Theme:
 	t.set_color("selection_color", "LineEdit", Color("365d69"))
 	# Atlas controls: sand selection has dark ink, including icons, for contrast.
 	for kind in ["Button", "TabButton", "RowButton"]:
-		var normal := box(KEY_LOW, Color(TRIM, 0.6), 1, 2, 9.0 if kind == "Button" else 6.0)
-		var hover := box(KEY_TOP, GOLD, 1, 2, 9.0 if kind == "Button" else 6.0)
-		var selected := box(GOLD, BRIGHT, 1, 2, 9.0 if kind == "Button" else 6.0)
+		var normal := box(KEY_LOW, Color(TRIM, 0.45), 1, 6, 9.0 if kind == "Button" else 6.0)
+		var hover := box(KEY_TOP.lightened(0.05), GOLD, 1, 6, 9.0 if kind == "Button" else 6.0)
+		var selected := box(GOLD, BRIGHT, 1, 6, 9.0 if kind == "Button" else 6.0)
 		t.set_stylebox("normal", kind, normal)
 		t.set_stylebox("hover", kind, hover)
 		for state in ["pressed", "hover_pressed"]:
 			if kind == "RowButton":
 				# A list row carries its own light labels: selected it turns deep blue
 				# with a gold frame, not sand (light text on sand could not be read).
-				t.set_stylebox(state, kind, box(Color("2d4863"), GOLD, 2, 2, 6.0))
+				t.set_stylebox(state, kind, box(Color("2d4863"), GOLD, 2, 6, 6.0))
 				t.set_color("font_%s_color" % state, kind, BRIGHT)
 				t.set_color("icon_%s_color" % state, kind, BRIGHT)
 				continue
 			t.set_stylebox(state, kind, selected)
 			t.set_color("font_%s_color" % state, kind, INK)
 			t.set_color("icon_%s_color" % state, kind, INK)
-		t.set_stylebox("focus", kind, box(Color.TRANSPARENT, BRIGHT, 2, 2, 0.0))
+		t.set_stylebox("focus", kind, box(Color.TRANSPARENT, BRIGHT, 2, 6, 0.0))
 		t.set_color("icon_normal_color", kind, GOLD)
 		t.set_color("font_color", kind, TEXT)
 		t.set_color("font_hover_color", kind, BRIGHT)

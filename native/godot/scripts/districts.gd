@@ -206,7 +206,21 @@ func tree(st: SurfaceTool, at: Vector3, rng: RandomNumberGenerator, scale := 1.0
 	crown.radial_segments = 8
 	crown.rings = 5
 	var green := Color("3e5a2c").lerp(Color("5f7a34"), rng.randf())
-	shape(st, crown, Transform3D(Basis(), at + Vector3(0, h * 0.62, 0)), green)
+	# An irregular, shaded canopy instead of a smooth green ball. Keep exactly
+	# the same triangle count and the single district prop material batch.
+	var arrays := crown.get_mesh_arrays()
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	for i in indices:
+		var v := verts[i]
+		var azimuth := atan2(v.z, v.x)
+		var lobes := 1.0 + sin(azimuth * 3.0 + h) * 0.13 + sin(azimuth * 5.0 - v.y * 2.0) * 0.07
+		v.x *= lobes; v.z *= lobes
+		var sunward := clampf(v.y / h + 0.4, 0.0, 1.0)
+		st.set_color(green.darkened(0.22).lerp(green.lightened(0.12), sunward))
+		st.set_normal(normals[i])
+		st.add_vertex(at + Vector3(0,h*0.62,0) + v)
 
 func lamp(st: SurfaceTool, at: Vector3) -> void:
 	cylinder(st, 0.06, 3.4, at, Color("2d3032"), 6)

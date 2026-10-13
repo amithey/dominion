@@ -55,7 +55,9 @@ func _material(kind: int) -> Material:
 	var m := StandardMaterial3D.new()
 	m.vertex_color_use_as_albedo = true
 	m.vertex_color_is_srgb = true
-	m.roughness = 0.85
+	m.roughness = 0.24 if kind == GLASS else (0.52 if kind == METAL else 0.88)
+	m.metallic = 0.45 if kind == METAL else (0.18 if kind == GLASS else 0.0)
+	m.metallic_specular = 0.55 if kind == GLASS else 0.35
 	var n := _noise(7 + kind, 0.08)
 	var tex: Array = []
 	match kind:
@@ -117,9 +119,9 @@ func _material(kind: int) -> Material:
 			m.roughness = 0.9
 		GLASS:
 			m.vertex_color_use_as_albedo = true
-			m.roughness = 0.08
-			m.metallic = 0.6
-			m.metallic_specular = 0.9
+			m.roughness = 0.22
+			m.metallic = 0.18
+			m.metallic_specular = 0.65
 		WOOD:
 			m.roughness = 0.8
 		BANNER:
@@ -129,7 +131,7 @@ func _material(kind: int) -> Material:
 		m.albedo_texture = tex[0]
 		m.normal_enabled = true
 		m.normal_texture = tex[1]
-		m.normal_scale = 1.2
+		m.normal_scale = 0.65 # mortar and tiles have relief without sparkling at strategy distance
 		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	_materials[kind] = m
 	return m
@@ -168,7 +170,13 @@ func quad(kind: int, a: Vector3, b: Vector3, c: Vector3, d: Vector3, colour: Col
 	# Godot's front faces wind clockwise; these quads are given counter-clockwise
 	# as seen from outside (the normal above points out), so they are emitted reversed.
 	for k in [0, 2, 1, 0, 3, 2]:
-		st.set_color(colour)
+		var surface_colour := colour
+		if kind in [PLASTER, BRICK, STONE, PLANK]:
+			# Baked contact weathering: the base reads as grounded even on Low.
+			# Vertex colour keeps the existing material batches and draw count.
+			var clean := smoothstep(0.25, 2.8, pts[k].y)
+			surface_colour = colour.darkened((1.0 - clean) * 0.18)
+		st.set_color(surface_colour)
 		st.set_normal(n)
 		st.set_uv(uvs[k] * uv_scale)
 		st.add_vertex(pts[k])
@@ -240,9 +248,15 @@ func walls(kind: int, w: float, d: float, y0: float, height: float, colour: Colo
 ## with a light frame, a sill, and optionally painted shutters.
 func window(centre: Vector3, w: float, h: float, frame: Color, shutters := Color(0, 0, 0, 0), lit := false) -> void:
 	var z := centre.z + 0.02
-	var glass := Color("24303a") if not lit else Color("f0c070")
-	quad(GLASS, Vector3(centre.x - w * 0.5, centre.y - h * 0.5, z), Vector3(centre.x + w * 0.5, centre.y - h * 0.5, z),
-		Vector3(centre.x + w * 0.5, centre.y + h * 0.5, z), Vector3(centre.x - w * 0.5, centre.y + h * 0.5, z), glass)
+	var glass := Color("304650") if not lit else Color("cba468")
+	# Two panes pick up different sky tones; a darker upper reveal makes the
+	# opening read as recessed without transparent glass or an extra material.
+	for pane in range(2):
+		var y0 := centre.y - h * 0.5 + h * 0.5 * pane
+		var pane_colour := glass.lightened(0.13) if pane == 1 and not lit else glass
+		quad(GLASS, Vector3(centre.x-w*0.5,y0,z),Vector3(centre.x+w*0.5,y0,z),
+			Vector3(centre.x+w*0.5,y0+h*0.5,z),Vector3(centre.x-w*0.5,y0+h*0.5,z),pane_colour)
+	box(TRIM,Vector3(centre.x-w*0.5,centre.y-0.025,z),Vector3(centre.x+w*0.5,centre.y+0.025,z+0.05),frame.darkened(0.12))
 	var t := 0.08
 	box(TRIM, Vector3(centre.x - w * 0.5 - t, centre.y + h * 0.5, z - 0.02), Vector3(centre.x + w * 0.5 + t, centre.y + h * 0.5 + t, z + 0.06), frame)
 	box(TRIM, Vector3(centre.x - w * 0.5 - t, centre.y - h * 0.5 - t * 1.5, z - 0.02), Vector3(centre.x + w * 0.5 + t, centre.y - h * 0.5, z + 0.14), frame)
@@ -279,6 +293,10 @@ func door(x: float, y0: float, z: float, colour: Color, canopy: Color) -> void:
 	box(TRIM, Vector3(x - 0.75, y0 + 2.2, z), Vector3(x + 0.75, y0 + 2.4, z + 0.12), Color("d8d0bc"))
 	box(ROOF, Vector3(x - 0.9, y0 + 2.55, z), Vector3(x + 0.9, y0 + 2.65, z + 0.9), canopy)
 	box(STONE, Vector3(x - 0.8, y0 - 0.02, z), Vector3(x + 0.8, y0 + 0.18, z + 0.6), Color("b8b0a0"))
+	# Door panels and a brass handle remain in the existing WOOD/METAL batches.
+	for side in [-1.0, 1.0]:
+		box(WOOD,Vector3(x+side*0.25-0.18,y0+0.28,z+0.085),Vector3(x+side*0.25+0.18,y0+1.9,z+0.11),colour.lightened(0.09))
+	box(METAL,Vector3(x+0.35,y0+0.95,z+0.12),Vector3(x+0.40,y0+1.2,z+0.18),Color("bfa372"))
 
 ## A cornice: a projecting band round the top of a w x d block at height y.
 func cornice(w: float, d: float, y: float, colour: Color, depth := 0.25, band := 0.3) -> void:

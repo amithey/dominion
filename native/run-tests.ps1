@@ -12,10 +12,12 @@ $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.e
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
+    @('customer playtest: replacement orders cancel boarding, water and safe unloading retain passengers', @('--script', 'res://tools/customer-airlift-check.gd'), 'CUSTOMER_AIRLIFT PASS', 180),
+    @('customer windows: navigation at three sizes, UN notices, shortcuts and live aircraft animation', @('--script', 'res://tools/customer-window-check.gd'), 'CUSTOMER_WINDOW PASS', 240),
+    @('action wording: button help across menus, weapon roles, production versus launch, blocking reasons and unchanged actions', @('--script', 'res://tools/action-copy-check.gd'), 'ACTION_COPY PASS', 180),
+    @('UN session invitations, full conference screen, live ballots, eligibility, outcomes and save restore', @('--script', 'res://tools/un-session-check.gd'), 'UN_SESSION PASS', 180),
+    @('fish and gold: clickable deposits, construction actions, coastal reach, food / treasury output and supply gating', @('--script', 'res://tools/resource-use-check.gd'), 'RESOURCE_USE PASS', 180),
     @('28 arsenal dossiers, evidence-backed operators, new support / artillery / air-defence roles, production, live combat and save round trip', @('--script', 'res://tools/arsenal-diversity-check.gd'), 'ARSENAL_DIVERSITY PASS', 600),
-    @('robots and drones: armed and logistics ground robots, robot dog, heavy bomber drone, by nation; evacuation; no war support lost', @('--script', 'res://tools/robots-check.gd'), 'ROBOTS PASS', 600),
-    @('six new maps: strait, atolls, steppe, rivers, the Gulf and the Red Sea; geography, regions, true starts', @('--script', 'res://tools/more-maps-check.gd'), 'MORE_MAPS PASS', 900),
-    @('helicopters: heavy-lift and naval roles by nation, utility and tandem-rotor models, boarding and landing troops, loads, losses, saves', @('--script', 'res://tools/helicopters-check.gd'), 'HELICOPTERS PASS', 600),
     @('tools of war: engineers and minefields, mine clearing, field recovery, decoys, counter-battery radar, coastal anti-ship, AEW, electronic attack, submarine hunters, carriers, saves', @('--script', 'res://tools/war-tools-check.gd'), 'WAR_TOOLS PASS', 600),
     @('strategic AI: who uses what, targeting, counter-drone, undersea sensing, surveillance, counter-disinformation, revenue, exports, the dead hand and its accidents, biosecurity, the second generation, saves, rivals and screens', @('--script', 'res://tools/ai-strategic-check.gd'), 'AI_STRATEGIC PASS', 600),
     @('practical AI: national evidence, research, validation, commissioning, compute budgets, live effects, diplomacy, rivals and saves', @('--script', 'res://tools/ai-applications-check.gd'), 'AI_APPLICATIONS PASS', 600),
@@ -23,6 +25,7 @@ $tests = @(
     @('regional leaders: PNG portraits, face crops, HUD badges and legacy authority labels', @('--script', 'res://tools/regional-portraits-check.gd'), 'REGIONAL_PORTRAITS PASS', 120),
     @('eras ask nothing abroad (no trade routes, no share of the land); the Testing tools switch, Cheats button, screen and actions', @('--script', 'res://tools/cheat-tools-check.gd'), 'CHEAT_TOOLS PASS', 600),
     @('six new regional identities, escrow contracts, national research, restricted arsenals and old indices', @('--script', 'res://tools/regional-factions-check.gd'), 'REGIONAL_FACTIONS PASS', 600),
+    @('what each nation really has: no chip fab, data centre or reactor without that industry, no HIMARS or submarine for militias or landlocked states, compute goal asks universities instead', @('--script', 'res://tools/national-industry-check.gd'), 'NATIONAL_INDUSTRY PASS', 600),
     @('who can really use AI and the bomb: national AI ceilings, no nuclear release, tension or escalation threats without nuclear weapons', @('--script', 'res://tools/national-realism-check.gd'), 'NATIONAL_REALISM PASS', 900),
     @('the era ladder: what opens in each era, for you and rivals; research and era goals never blocked; Sandbox and old saves open', @('--script', 'res://tools/progression-check.gd'), 'PROGRESSION PASS', 600),
     @('the sea economic zone: rigs on sea fields, rival waters, fish and extractor hints, contractors, gas output', @('--script', 'res://tools/offshore-check.gd'), 'OFFSHORE PASS', 300),
@@ -30,7 +33,7 @@ $tests = @(
     @('construction progress, travelling crew and waiting-worker feedback', @('--script', 'res://tools/construction-feedback-check.gd'), 'CONSTRUCTION_FEEDBACK: 22 checks, 0 failures', 300),
     @('floating resource markers, camera angles and current-click offshore placement', @('--script', 'res://tools/resource-marker-check.gd'), 'RESOURCE_MARKER: 39 checks, 0 failures', 300),
     @('report follow-up: unit roles, quieter resources, sealed pine crowns, guide actions, diplomacy feedback and adaptive music', @('--script', 'res://tools/report-polish-check.gd'), 'REPORT_POLISH PASS', 600),
-    @('fourth settlement and continued play across 22 factions and all 18 maps', @('--script', 'res://tools/campaign-expansion-check.gd'), 'EXPANSION: 110 checks, 0 failures', 2400),
+    @('fourth settlement and continued play across 28 factions and all 24 maps', @('--script', 'res://tools/campaign-expansion-check.gd'), 'EXPANSION: 140 checks, 0 failures', 2400),
     @('decorative wrecks: dense piles, map limits, age, gradual cleanup and live-unit safety', @('--script', 'res://tools/wreck-cleanup-check.gd'), 'WRECK_CLEANUP PASS', 180),
     @('continue after victory or defeat: simulation, diplomacy, territory and saves', @('--script', 'res://tools/post-victory-check.gd'), 'POST_VICTORY PASS', 240),
     @('playtest fixes: Esc, Space pause, speed keys, the common opening, one notice per message, the beginner guide', @('--script', 'res://tools/ux-fixes-check.gd'), 'UX_FIXES PASS', 240),

@@ -126,7 +126,7 @@ func run() -> void:
 	hud.set_production_open(true)
 	await search("")
 	var descriptions: Array = hud._list.find_children("*", "Label", true, false).filter(func(l): return l.autowrap_mode != TextServer.AUTOWRAP_OFF)
-	var prices: Array = hud._list.find_children("ProductionCost", "HBoxContainer", true, false)
+	var prices: Array = hud._list.find_children("ProductionCost", "HFlowContainer", true, false)   # the price row wraps since the readability pass
 	for c in prices:
 		var card: Control = c.get_parent().get_parent().get_parent()
 		if not card.get_global_rect().grow(1).encloses(c.get_global_rect()): print("PRICE OVERFLOW: ", card.get_meta("cost"), " card=", card.get_global_rect(), " prices=", c.get_global_rect())

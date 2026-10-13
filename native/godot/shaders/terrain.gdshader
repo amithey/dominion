@@ -126,9 +126,10 @@ void fragment() {
 	// Large-scale colour variation: meadows are never one flat green.
 	// Pull distant grass toward a broad meadow tone instead of magnifying
 	// photographic flecks with sharpening. Close-up ground keeps its detail.
-	albedo = mix(albedo, vec3(0.32, 0.40, 0.20), w.x * (1.0 - nd) * 0.45);
+	vec3 meadow = mix(vec3(0.24, 0.34, 0.18), vec3(0.38, 0.42, 0.24), smoothstep(0.32, 0.68, macro));
+	albedo = mix(albedo, meadow, w.x * (1.0 - nd) * 0.48);
 	// The grass photo is a bright spring lime; pull it toward a deeper summer green.
-	albedo = mix(albedo, albedo * vec3(0.82, 0.9, 0.7), w.x);
+	albedo = mix(albedo, albedo * vec3(0.86, 0.87, 0.76), w.x);
 	albedo *= mix(0.8, 1.1, macro);
 	albedo = mix(albedo, albedo * vec3(1.06, 1.0, 0.84), smoothstep(0.55, 0.75, noise(p * 0.0017 + 0.13)) * w.x);
 
@@ -140,6 +141,9 @@ void fragment() {
 	float h = world_pos.y - sea_level;
 	float wet = 1.0 - smoothstep(0.0, 0.7, h);
 	albedo *= mix(1.0, 0.62, wet);
+	// Restrained mineral strata on steep stone, using existing macro/noise.
+	float strata = sin(world_pos.y * 1.6 + macro * 9.0) * 0.5 + 0.5;
+	albedo *= 1.0 - w.w * (1.0 - n.y) * strata * 0.14;
 
 	if ((show_territory || show_borders) && world_pos.y > sea_level - 0.2) {
 		float near;

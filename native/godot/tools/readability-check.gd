@@ -55,7 +55,7 @@ func run() -> void:
 	await verify_cards()
 	check(cards().size() == 1, "Stockpile shows owned weapons only")
 	if not cards().is_empty():
-		check(cards()[0].find_child("ActionLabel", true, false).text == "Select target", "Targeting action is explicit")
+		check(cards()[0].find_child("ActionLabel", true, false).text.contains("Choose target") and cards()[0].find_child("ActionLabel", true, false).text.contains("1 stored weapon"), "Targeting action and inventory use are explicit")
 		cards()[0].pressed.emit()
 		check(w.missiles.stock.tactical == 2, "Selecting a target does not spend inventory")
 		w.cancel_placement()

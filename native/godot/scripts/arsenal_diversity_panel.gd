@@ -116,11 +116,4 @@ static func draw(panel: RefCounted) -> void:
 ## The game's text names no years (the source's date is in its link and the research doc):
 ## "Rostec: first Malva delivery (2023; supplier statement)" -> "... (supplier statement)".
 static func undated(text: String) -> String:
-	var re := RegEx.new()
-	re.compile("\\s*\\((?:[A-Z][a-z]+ )?(?:19|20)\\d{2}(?:;\\s*([^)]*))?\\)")
-	var out := text
-	for m in re.search_all(text):
-		out = out.replace(m.get_string(), (" (%s)" % m.get_string(1)) if m.get_string(1) != "" else "")
-	var year := RegEx.new()
-	year.compile("\\b(?:19|20)\\d{2}\\s+")
-	return year.sub(out, "", true).strip_edges()
+	return Data.undated(text)

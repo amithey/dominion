@@ -110,4 +110,16 @@ static func names(key: String) -> Dictionary:
 
 static func evidence(key: String, id: String) -> String:
 	var row: Array = ROSTER.get(key, {}).get(id, [])
-	return "" if row.is_empty() else "%s. %s. Reviewed %s; no stock or readiness count implied." % [row[2], SOURCES[row[1]][0], REVIEWED]
+	# (the game's text names no years: the dates stay in the source links and the research doc)
+	return "" if row.is_empty() else "%s. %s. Public evidence; no stock or readiness count implied." % [row[2], undated(str(SOURCES[row[1]][0]))]
+
+## "Rostec: first Malva delivery (2023; supplier statement)" -> "... (supplier statement)".
+static func undated(text: String) -> String:
+	var re := RegEx.new()
+	re.compile("\\s*\\((?:[A-Z][a-z]+ )?(?:19|20)\\d{2}(?:;\\s*([^)]*))?\\)")
+	var out := text
+	for m in re.search_all(text):
+		out = out.replace(m.get_string(), (" (%s)" % m.get_string(1)) if m.get_string(1) != "" else "")
+	var year := RegEx.new()
+	year.compile("\\b(?:19|20)\\d{2}\\s+")
+	return year.sub(out, "", true).strip_edges()

@@ -257,7 +257,7 @@ func screen_checks() -> void:
 	await reopen()
 	var mine: OptionButton = node("StartPicker0")
 	var theirs: OptionButton = node("StartPicker2")
-	check(mine.disabled and mine.get_item_text(0).contains("your town") and theirs.item_count == 4 and not theirs.disabled, "the original island: your town fixed (%s), a rival's start Auto or one of three" % mine.get_item_text(0))
+	check(mine.disabled and mine.tooltip_text.contains("prepared town") and theirs.item_count == 4 and not theirs.disabled, "the original island: your town fixed (%s), a rival's start Auto or one of three" % mine.get_item_text(0))
 	# Back to the Crown Isles: choose, swap, clear.
 	w.menu.setup_options = Setup.normalize({"map": "crown", "players": 4, "nation": 0})
 	await reopen()

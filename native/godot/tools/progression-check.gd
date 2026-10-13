@@ -46,7 +46,7 @@ func run() -> void:
 	w.hud.toggle_build()
 	await process_frame
 	await process_frame
-	var rows: Array = w.hud.find_children("*", "Label", true, false).filter(func(l): return l.is_visible_in_tree() and str(l.text).begins_with("Opens in the"))
+	var rows: Array = w.hud.find_children("*", "Label", true, false).filter(func(l): return l.is_visible_in_tree() and str(l.text).contains("Opens in the"))   # the card says "Unavailable: Opens in the ..." since the readability pass
 	check(not rows.is_empty(), "the build list shows the closed buildings, with when they open")
 	w.hud.toggle_build()
 

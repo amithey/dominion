@@ -53,7 +53,7 @@ static func transport_under(w: Node, selected: Array, screen: Vector2) -> Varian
 	if mine.is_empty():
 		return null
 	var heli = preload("res://scripts/picking.gd").pick(w.camera, mine, screen)
-	if heli == null or not selected.any(func(u): return u != heli and places(w, heli, u) > 0):
+	if heli == null or not selected.any(func(u): return not is_same(u, heli) and places(w, heli, u) > 0):
 		return null
 	return heli
 
@@ -90,7 +90,7 @@ static func update(w: Node) -> void:
 		var heli = u.get("board")
 		if heli == null:
 			continue
-		if heli.dead or places(w, heli, u) > room(heli):
+		if heli.dead or places(w, heli, u) <= 0 or places(w, heli, u) > room(heli):
 			u.board = null
 			continue
 		var a: Vector3 = u.node.position
@@ -112,12 +112,24 @@ static func embark(w: Node, heli: Dictionary, u: Dictionary) -> void:
 static func unload_blocked(w: Node, heli: Dictionary) -> String:
 	if heli.get("cargo", []).is_empty():
 		return "Nobody aboard."
-	if str(heli.get("air_state", "ready")) in ["parked", "rearming", "landing", "taxi_in", "taxi_out"]:
-		return ""
 	var p: Vector3 = heli.node.position
 	if w.height_at(p.x, p.z) <= float(w.map.seaLevel) + 0.2:
 		return "Over water: fly over dry ground to land them."
+	if landing_spot(w, p) == Vector3.INF:
+		return "No clear landing ground nearby: move away from buildings or cliffs."
 	return ""
+
+## Search actual clear ground, not land_point(), which only chooses a direction
+## and can still end in water or inside a building footprint.
+static func landing_spot(w: Node, centre: Vector3, occupied: Array = []) -> Vector3:
+	for radius in [4.5, 8.0, 12.0, 16.0]:
+		for i in range(24):
+			var angle := TAU * i / 24.0
+			var p: Vector3 = centre + Vector3(cos(angle), 0, sin(angle)) * radius
+			p.y = w.height_at(p.x, p.z)
+			if w.open_ground(p) and w.walkable(p.x, p.z) and occupied.all(func(at): return at.distance_to(p) >= 2.0):
+				return p
+	return Vector3.INF
 
 ## Lands everyone aboard around the helicopter.
 static func unload(w: Node, heli: Dictionary) -> Array:
@@ -126,20 +138,24 @@ static func unload(w: Node, heli: Dictionary) -> Array:
 		return out
 	var centre: Vector3 = heli.node.position
 	var cargo: Array = heli.cargo
+	var remaining := []
+	var occupied := []
 	for i in range(cargo.size()):
 		var c: Dictionary = cargo[i]
-		var angle := TAU * i / maxf(1.0, cargo.size())
-		var spot := Vector3(centre.x + cos(angle) * 4.5, 0.0, centre.z + sin(angle) * 4.5)
-		spot.y = w.height_at(spot.x, spot.z)
-		var land = w.land_point(spot, 12.0) if w.has_method("land_point") else spot
-		var u: Dictionary = w.spawn_unit(str(c.key), land if land != null else spot, int(heli.owner))
-		if u.is_empty():
+		var spot := landing_spot(w, centre, occupied)
+		if spot == Vector3.INF:
+			remaining.append(c)
 			continue
+		var u: Dictionary = w.spawn_unit(str(c.key), spot, int(heli.owner))
+		if u.is_empty():
+			remaining.append(c)
+			continue
+		occupied.append(spot)
 		u.hp = clampf(float(c.get("hp", u.max_hp)), 1.0, float(u.max_hp))
 		if float(c.get("xp", 0.0)) > 0.0:
 			preload("res://scripts/veterancy.gd").set_xp(u, float(c.xp))
 		out.append(u)
-	heli.cargo = []
+	heli.cargo = remaining
 	return out
 
 ## J: every selected transport of the player's lands its load.

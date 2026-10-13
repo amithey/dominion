@@ -631,6 +631,7 @@ func _nation_card(i: int) -> Button:
 	var chosen: bool = int(setup_options.nation) == i
 	var b := Button.new()
 	b.custom_minimum_size = Vector2(304, 260)
+	b.set_meta("action_help", "Choose %s as your country for the next campaign. This sets its leader, arsenal, strengths and limitations." % parts[0])
 	b.focus_mode = Control.FOCUS_ALL
 	b.toggle_mode = true
 	b.button_pressed = chosen
@@ -686,6 +687,7 @@ func _choices(items: Array, key: String, parent: Control = null) -> void:
 	for item in items:
 		var chosen: bool = (setup_difficulty == item[2]) if key == "difficulty" else (setup_options[key] == item[2])
 		var b := Button.new()
+		b.set_meta("action_help", "Set %s to %s. %s" % [key.replace("_", " "), item[0], item[1]])
 		b.toggle_mode = true
 		b.button_pressed = chosen
 		b.focus_mode = Control.FOCUS_ALL
@@ -1277,7 +1279,7 @@ func _entry(text: String, detail: String, icon_name: String, action: Callable, p
 	b.focus_mode = Control.FOCUS_ALL
 	b.tooltip_text = detail
 	var styles := _accent(4)
-	b.add_theme_stylebox_override("normal", UI.plate(Color("375265"), Color("203341"), UI.GOLD, 14.0) if primary else styles[0])
+	b.add_theme_stylebox_override("normal", UI.plate(Color("37576a"), Color("203341"), UI.GOLD, 14.0, UI.LIFT, Color.TRANSPARENT, 0, 5, UI.GOLD, 4) if primary else styles[0])
 	b.add_theme_stylebox_override("hover", styles[1])
 	b.add_theme_stylebox_override("pressed", styles[1])
 	b.add_theme_stylebox_override("focus", UI.box(Color.TRANSPARENT, UI.BRIGHT, 1, 8, 0.0))
@@ -1291,7 +1293,7 @@ func _entry(text: String, detail: String, icon_name: String, action: Callable, p
 	b.add_child(row)
 	var pic := TextureRect.new()
 	pic.texture = UI.icon(icon_name) if icon_name != "" else null
-	pic.custom_minimum_size = Vector2(30, 30)
+	pic.custom_minimum_size = Vector2(34, 34)
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	pic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -1326,6 +1328,7 @@ func _entry(text: String, detail: String, icon_name: String, action: Callable, p
 # A larger choice with a line of explanation: difficulties, saved games.
 func _option_card(title: String, detail: String, action: Callable) -> void:
 	var b := Button.new()
+	b.set_meta("action_help", "Load the saved campaign '%s'. This replaces the current campaign; save your current progress first." % title)
 	b.custom_minimum_size = Vector2(380, 72)
 	b.focus_mode = Control.FOCUS_ALL
 	b.tooltip_text = detail

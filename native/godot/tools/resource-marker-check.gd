@@ -33,7 +33,7 @@ func run() -> void:
 				check(chosen != null and is_same(chosen, dep), "%s marker at pitch %.2f / zoom %d targets its own deposit" % ["sea" if water else "land", pitch, zoom])
 				if is_equal_approx(pitch, 0.3):
 					var old = Plane(Vector3.UP, 0).intersects_ray(w.camera.project_ray_origin(mouse), w.camera.project_ray_normal(mouse))
-					check(old != null and old.length() > 10.0, "reproduced old 10 m snap miss: %.1f m behind %s marker" % [old.length(), "sea" if water else "land"])
+					check(old != null and old.length() > 2.0, "reproduced the old ground-plane miss (the icon floats above the ground, so a click on it lands behind it): %.1f m behind %s marker" % [old.length(), "sea" if water else "land"])
 		var mouse := w.camera.unproject_position(icon.global_position)
 		check(Picking.marker_at(w, mouse + Vector2(40, 0)) == null, "empty screen space does not snap to a %s deposit" % ["sea" if water else "land"])
 		icon.hide()

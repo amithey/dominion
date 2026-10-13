@@ -22,6 +22,21 @@ var selected := ""
 var _cards := {}   # key -> Rect2
 var _row_top := {}
 var _row_h := {}
+var _surfaces := {}
+
+func card_surface(fill: Color, border: Color, emphasized: bool) -> StyleBoxFlat:
+	var key := "%s:%s:%s" % [fill.to_html(), border.to_html(), emphasized]
+	if not _surfaces.has(key):
+		var surface := StyleBoxFlat.new()
+		surface.bg_color = fill
+		surface.border_color = border
+		surface.set_border_width_all(2 if emphasized else 1)
+		surface.set_corner_radius_all(6)
+		surface.shadow_color = Color(0, 0, 0, 0.28)
+		surface.shadow_size = 3
+		surface.shadow_offset = Vector2(0, 2)
+		_surfaces[key] = surface
+	return _surfaces[key]
 
 func setup(r: Node) -> void:
 	research = r
@@ -150,11 +165,10 @@ func _draw() -> void:
 			fill = Color("1e3349")
 		else:
 			fill = Color("111e2c")
-		draw_rect(r, fill)
+		var border := Color("f2dfa9") if key == selected else (Color("7fb7e8") if queued else Color("435a70"))
+		draw_style_box(card_surface(fill, border, key == selected or queued), r)
 		# A hairline of light along the top edge, as on every plate.
 		draw_line(r.position + Vector2(1, 1), Vector2(r.end.x - 1, r.position.y + 1), Color(1, 1, 1, 0.10), 1.0)
-		var border := Color("f2dfa9") if key == selected else (Color("7fb7e8") if queued else Color("83734f"))
-		draw_rect(r, border, false, 2.0 if key == selected or queued else 1.5)   # (1 px blinked out on scaled screens)
 		var locked: bool = stage == 0 and why != "" and not why.contains(" needs a ")
 		# The branch's colour down the left edge.
 		draw_rect(Rect2(r.position + Vector2(1, 1), Vector2(4, r.size.y - 2)), Color(colours.get(research.def_of(key).branch, Color("83734f")), 0.45 if locked else 1.0))

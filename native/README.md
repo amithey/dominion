@@ -38,6 +38,34 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.98: an overall improvement: speed, a finished interface, and honest tests
+
+- **Faster in big battles:** the minimap redrew every hex of territory polygon by polygon and every unit as a
+  tessellated circle (15 ms a redraw), and the unit badges stacked themselves by testing every badge against every
+  other (8 ms). The territory is now one cached mesh, units are plain marks, badges use a spatial grid and cached text.
+  Heavy-battle frame rate rose from about 15 to 20 FPS on the integrated-graphics test machine; the simulation runs at
+  30 Hz with interpolation (Codex), so ordering and rendering stay smooth.
+- **Codex's finished interface work, integrated:**
+  - the interface at 100% with clearer type, and a visual finish on every ministry screen;
+  - fish and gold usable: click a visible resource marker, see what to build, and place it (coastal reach restored);
+  - UN sessions: an invitation with a countdown, a separate chamber with explicit Yes / No / Abstain / Veto ballots;
+  - every button and weapon explained on hover (production queues one weapon, targeting launches one);
+  - the customer playtest fixes (a cancelled helicopter boarding no longer survives a new order, troops are never
+    unloaded into water, the command dock fits small screens);
+  - scene detail: windowed facades, irregular trees, softer shore foam and balanced lighting.
+- **Each nation builds and fields only what it really has:** the Houthis, Yemen, Sudan and the other war-torn or
+  newly rebuilt states no longer build a Chip Fab, AI Data Centre, Technology Park or Targeting Fusion Cell; only nine
+  nations with a wafer-fabrication industry build a Chip Fab; Australia and Indonesia (research reactors only) build no
+  Nuclear Reactor. The six regional entities no longer train HIMARS or submarines (landlocked Ethiopia and South Sudan
+  no sea drone); the Houthis gain the explosive sea drone. A nation without a fab is asked for universities instead
+  of Chip Fabs in the era goals, so no era is blocked. The build card says why. Research and sources:
+  [NATIONAL-INDUSTRY-RESEARCH-2026-10-13.md](NATIONAL-INDUSTRY-RESEARCH-2026-10-13.md); test `tools/national-industry-check.gd`.
+- **No dates in unit cards, again:** the weapon-source notes on unit cards showed a year and a review date (0.9.93);
+  they are stripped, and a test guards it.
+- **Honest tests:** seven older checks had gone stale after the redesign and the new maps (the era-ladder card text, resource
+  markers, the interface's price rows, the starting-region picker, the expansion count for 28 factions, a spent-match
+  fixture, and the year rule); they now match the game.
+
 ## Version 0.9.97: more unit models
 
 - The wheeled self-propelled howitzer is a truck with its gun on the rear bed and a recoil spade (CAESAR, PCL-181).

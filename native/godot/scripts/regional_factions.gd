@@ -30,7 +30,7 @@ const PROFILES := {
 const COMMON := ["worker", "soldier", "rocketSoldier", "machineGunTeam", "mortarTeam", "scoutTeam", "medic", "sniper", "commando", "atgmTeam", "manpads", "tank", "apc", "artillery", "aaVehicle", "transport"]
 const EQUIPMENT := {
 	"yemen": ["gunboat", "fpvTeam"],
-	"houthis": ["gunboat", "fpvTeam", "loiterer", "mlrs", "coastalDrone"],
+	"houthis": ["gunboat", "fpvTeam", "loiterer", "mlrs", "coastalDrone", "seaDrone"],   # (explosive unmanned surface boats, used against shipping in the Red Sea)
 	"ethiopia": ["helicopter", "jet", "drone", "akinci", "fpvTeam", "mlrs", "samLauncher"],
 	"nigeria": ["helicopter", "jet", "superTucano", "jf17", "gunship", "drone", "gunboat", "corvette", "fpvTeam"],
 	"sudan": ["helicopter", "jet", "gunship", "drone", "fpvTeam", "mlrs", "gunboat"],

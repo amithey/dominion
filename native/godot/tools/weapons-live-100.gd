@@ -583,6 +583,7 @@ func run() -> void:
 	var keys: Array = back.units.map(func(s): return s.key)
 	check(keys.has("sixthGen") and keys.has("hpmVehicle") and keys.has("irisT") and keys.count("wingman") >= 2, "a save keeps the new forces")
 	w.saves.restore(back)
+	w.continue_after_end()   # (the strikes on the capital above ended the match in defeat: play on, as the end screen offers)
 	var restored: Array = w.units.filter(func(u): return not u.dead and u.key == "wingman" and u.owner == 0)
 	sim(2.0)
 	check(not restored.is_empty() and restored.all(func(m): return m.get("leader") != null and not m.leader.dead), "after loading, the wingmen fly with their fighter again")

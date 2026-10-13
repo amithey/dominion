@@ -115,6 +115,13 @@ static func identity(w: Node, owner: int) -> String:
 ## True when `owner` may field `key` (every nation fields the common units).
 static func allowed(w: Node, owner: int, key: String) -> bool:
 	var n: Dictionary = w.map.nations[owner]
+	# The regional entities field only their documented rosters: a nation dictionary
+	# carries the island's default army list, which gave the Houthis HIMARS and every
+	# landlocked entity a submarine (regional_factions.fields).
+	var regional := preload("res://scripts/regional_factions.gd")
+	var id: String = preload("res://scripts/factions.gd").identity(w, owner)
+	if id in regional.IDS and not regional.fields(id, key):
+		return false
 	if n.has("units"):
 		return key in n.units and load("res://scripts/arsenal_catalog.gd").unit_blocked(w, owner, key) == ""
 	if load("res://scripts/arsenal_catalog.gd").unit_blocked(w, owner, key) != "":

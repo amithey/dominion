@@ -9,7 +9,7 @@ render_mode blend_mix, depth_draw_always, cull_back, diffuse_burley, specular_sc
 
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
 uniform sampler2D depth_tex : hint_depth_texture, filter_linear_mipmap;
-uniform vec3 shallow_color : source_color = vec3(0.10, 0.52, 0.50);
+uniform vec3 shallow_color : source_color = vec3(0.12, 0.40, 0.43);
 uniform vec3 deep_color : source_color = vec3(0.012, 0.075, 0.13);
 uniform float clarity = 0.16;          // how quickly colour saturates with depth
 uniform float swell = 0.32;            // wave height in metres
@@ -104,7 +104,9 @@ void fragment() {
 	float band = 1.0 - smoothstep(0.0, foam_width * mix(1.0, 0.35, lake), depth);
 	float lace = noise(world_pos.xz * 0.05 + vec2(TIME * 0.01, 0.0));
 	float foam = smoothstep(0.5, 0.75, lace + band * 0.45) * band;
-	foam = clamp(foam + pow(band, 6.0) * 0.8, 0.0, 1.0) * mix(0.85, 0.3, lake);
+	// Broken surf, not a solid white outline drawn around every coastline.
+	float breakup = mix(0.25, 1.0, smoothstep(0.38, 0.65, lace));
+	foam = clamp(foam + pow(band, 6.0) * 0.25, 0.0, 1.0) * breakup * mix(0.78, 0.3, lake);
 
 	float fog = fog_at(world_pos.xz);   // fog of war
 	ALBEDO = vec3(0.92, 0.95, 0.95) * foam * (1.0 - fog);

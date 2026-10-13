@@ -500,6 +500,10 @@ func era_requirements(index: int) -> Array:
 				label = "Chip Fabs"
 				need = minf(need, 2.0)
 				have = eco.owned("chipFab")
+				# A nation with no semiconductor industry (national_industry.gd) is asked for universities instead.
+				if not preload("res://scripts/national_industry.gd").allowed(world, 0, "chipFab"):
+					label = "Universities"
+					have = eco.owned("university")
 			"landShare":
 				label = "Share of the land"
 				have = float(world.territory.yields(0).cells) / maxf(world.territory.land_cells(), 1.0) if world.territory else 0.0

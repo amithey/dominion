@@ -172,6 +172,8 @@ static func builds(w: Node, owner: int, key: String) -> bool:
 	if id in preload("res://scripts/regional_factions.gd").IDS and not preload("res://scripts/regional_factions.gd").builds(id, key): return false
 	if key in ["strategicComplex", "specialLab"] and not preload("res://scripts/cbrn_data.gd").may_build(w, owner, key):
 		return false   # only a nation with such weapons has such a facility
+	if not preload("res://scripts/national_industry.gd").allowed(w, owner, key):
+		return false   # a fab, a data centre, a reactor need an industrial base (national_industry.gd)
 	return not preload("res://scripts/national_arsenal.gd").identity(w, owner) in BUILD_EXCEPT.get(key, [])
 
 ## Whether a nation field ("" / a key / a list of keys) admits nation `id`.

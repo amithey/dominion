@@ -23,6 +23,9 @@ class Sparkline extends Control:
 		var w := size.x
 		var h := size.y
 		draw_rect(Rect2(Vector2.ZERO, size), Color("0a1522"))
+		for tick in range(1, 4):
+			var y := h * float(tick) / 4.0
+			draw_line(Vector2(0, y), Vector2(w, y), Color(colour, 0.12), 1.0)
 		if points.size() < 2:
 			draw_string(ThemeDB.fallback_font, Vector2(8, h * 0.6), "Charting… a point every 5 s", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 1, 1, 0.4))
 			return

@@ -84,9 +84,15 @@ var _notices: VBoxContainer
 var _fps: Label
 var _help: PanelContainer
 var _screen_buttons := {}
+var _command_row: HBoxContainer
+var _commands_compact := false
 var _cheats_button: Button = null   # the testing tools (cheats.gd)
 var _waiting := {}        # portrait key -> [TextureRect]
 var _windows: Node
+var _un_sessions: Control
+
+func open_un_session(chamber := "council") -> void:
+	if _un_sessions != null: _un_sessions.open_session(chamber)
 
 func setup(world_node: Node, economy_node: Node) -> void:
 	world = world_node
@@ -122,6 +128,12 @@ func setup(world_node: Node, economy_node: Node) -> void:
 	_build_help()
 	show_building(null)
 	_build_diplomacy_panel()
+	_un_sessions = preload("res://scripts/un_session_screen.gd").new()
+	add_child(_un_sessions)
+	_un_sessions.setup(self)
+	var button_hints := preload("res://scripts/button_hints.gd").new()
+	button_hints.name = "ButtonHints"
+	add_child(button_hints)
 
 func _box(_at: Vector2) -> PanelContainer:
 	var box := PanelContainer.new()
@@ -265,8 +277,11 @@ func _build_top_bar() -> void:
 	rack.add_theme_stylebox_override("panel", UI.plate(UI.PANEL_TOP, UI.PANEL_LOW, Color(UI.TRIM, 0.6), 5.0, UI.LIFT, Color.TRANSPARENT, 0, 5))
 	rack.offset_left = 12
 	rack.offset_top = 54
+	rack.anchor_right = 1.0
+	rack.offset_right = -12
 	add_child(rack)
 	var screens := HBoxContainer.new()
+	_command_row = screens
 	screens.add_theme_constant_override("separation", 3)
 	rack.add_child(screens)
 	row = screens
@@ -315,8 +330,23 @@ func _build_top_bar() -> void:
 	cheats.pressed.connect(func(): if world.menu != null: world.menu.open_cheats())
 	row.add_child(cheats)
 	_cheats_button = cheats   # (not a ministry screen: kept apart from _screen_buttons)
+	for command in screens.get_children():
+		command.set_meta("dock_icon", command.icon)
+		command.set_meta("dock_width", command.custom_minimum_size.x)
 	refresh_cheats()
+	_fit_commands()
 	refresh_speed()
+
+## Keep every named action on screen at normal UI scale on smaller displays.
+## Compact mode removes redundant icons and fixed padding, never the labels.
+func _fit_commands() -> void:
+	if _command_row == null: return
+	var compact := get_viewport().get_visible_rect().size.x < 1400.0
+	if compact == _commands_compact: return
+	_commands_compact = compact
+	for command in _command_row.get_children():
+		command.icon = null if compact else command.get_meta("dock_icon")
+		command.custom_minimum_size.x = 0.0 if compact else float(command.get_meta("dock_width"))
 
 var _guide: Node
 
@@ -590,7 +620,9 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 	var b := Button.new()
 	b.theme_type_variation = "RowButton"
 	b.focus_mode = Control.FOCUS_NONE
-	b.tooltip_text = desc if locked == "" else "%s\n%s" % [locked, desc]
+	var instruction_help: String = "Choose a map site to place this building." if world.building_defs.has(key) else ""
+	if world.unit_defs.has(key): instruction_help = "Pay the listed cost to queue ONE unit. It becomes available when training finishes."
+	b.tooltip_text = "%s\n%s%s" % [instruction_help, desc, "\nUnavailable: " + locked if locked != "" else ""]
 	b.set_meta("cost", cost)
 	b.set_meta("locked", locked != "")
 	b.pressed.connect(action)
@@ -613,7 +645,11 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_set_portrait(pic, key)
-	head.add_child(pic)
+	var stage := PanelContainer.new()
+	stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stage.add_theme_stylebox_override("panel", UI.box(Color("0b1b29"), Color("36516b"), 1, 6, 4.0))
+	stage.add_child(pic)
+	head.add_child(stage)
 	var name := _text(title, 18, UI.CREAM, true)
 	name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -622,7 +658,7 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	# Missile specifications remain visible; other catalogues keep a brief
 	# description, with the full entry available on hover.
-	line.max_lines_visible = -1 if key.begins_with("missile:") else 2
+	line.max_lines_visible = -1
 	text.add_child(line)
 	if not cost.is_empty():
 		var prices := _cost_row(cost)
@@ -1010,6 +1046,7 @@ func _hover_unit(delta: float) -> void:
 func _process(delta: float) -> void:
 	if economy == null:
 		return
+	_fit_commands()
 	_hover_unit(delta)
 	if _idle_button != null and _refresh + delta >= 0.25:
 		var idle := idle_workers().size()
@@ -1113,6 +1150,15 @@ Your forces: DEFCON %d (%s). Press K." % [lvl, world.defcon.DESC[lvl], (" Cause:
 	_extra.missiles[1].visible = silos
 	if silos:
 		_extra.missiles[0].text = "%d/%d" % [world.missiles.stored(), world.missiles.capacity()]
+	# At laptop widths, stack the national figures like the resource yields.
+	# Keep every figure and its normal font size clear of the time controls.
+	if get_viewport().get_visible_rect().size.x < 1500.0:
+		_extra.army[0].text = "%d\n/ %d" % [economy.pop_used, economy.pop_cap]
+		_extra.citizens[0].text = "%d\n/ %d" % [int(economy.civilians), int(economy.civ_cap)]
+		if world.research:
+			_extra.research[0].text = "%d\n+%.1f" % [int(world.research.points), world.research.rate]
+		if world.get("defcon") != null:
+			_extra.defcon[0].text = "DEFCON\n%d" % world.defcon.level()
 	_fps.visible = world.show_fps
 	_fps.text = "%d FPS" % Engine.get_frames_per_second()
 	if _selected != null and _selected.dead:
@@ -1134,6 +1180,19 @@ func show_transport(text: String) -> void:
 
 ## null shows the build menu; a building entity shows its details and training.
 var _diplomatic_contact_screen: Control
+var _resource_site: PanelContainer
+
+func open_resource_site(dep) -> void:
+	if _resource_site == null:
+		if dep == null: return
+		_resource_site = preload("res://scripts/resource_site_panel.gd").new()
+		add_child(_resource_site)
+		_resource_site.setup(world)
+	if dep == null:
+		_resource_site.hide()
+	else:
+		_show_side("")
+		_resource_site.open(dep)
 
 func open_diplomatic_contact(nation: int) -> String:
 	if _diplomatic_contact_screen == null:
@@ -1300,7 +1359,8 @@ func _action_bars(b: Dictionary) -> void:
 				count += 1
 				var why: String = ms.locked(m)
 				if why == "" and ms.platforms_for(m).is_empty(): why = "Needs a compatible launch platform"
-				_bar("missile:" + m, "%s · %d available" % [ms.def_of(m).name, ms.stock[m]], "Click this card, then choose a target on the map. Escape cancels targeting.", {}, 0.0, why, func(): world.begin_missile(m), "Select target")
+				_bar("missile:" + m, "%s · %d available" % [preload("res://scripts/weapon_copy.gd").display_name(world, m), ms.stock[m]], preload("res://scripts/weapon_copy.gd").summary(world, m), {}, 0.0, why, func(): world.begin_missile(m), "Choose target · uses 1 stored weapon on launch")
+				_list.get_child(_list.get_child_count() - 1).tooltip_text = preload("res://scripts/weapon_copy.gd").tooltip(world, m, false) + ("\nUnavailable: " + why if why != "" else "")
 			if count == 0:
 				var empty := _text("No weapons in storage. Open Produce weapons to add an item to the production queue.", 14, UI.MUTED)
 				empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1313,8 +1373,8 @@ func _action_bars(b: Dictionary) -> void:
 			if why == "" and b.queue.size() >= 5: why = "Production queue full (5 / 5)"
 			if why == "" and ms.stored(cat) + ms.queued(cat) >= ms.capacity(cat):
 				why = "Storage full · build Ammo Depots" if cat == "conventional" else "Storage full · build another production facility"
-			_bar("missile:" + m, mdef.name, "%s\nDamage: %d  ·  Blast radius: %d m" % [_weapon_summary(mdef, str(m)), int(mdef.dmg), int(mdef.radius)], ms.production_cost(m), ms.build_time(m), why, func(): _say(ms.produce(_selected, m)))
-			_list.get_child(_list.get_child_count() - 1).tooltip_text = "%s\n%s" % [why, mdef.desc]
+			_bar("missile:" + m, preload("res://scripts/weapon_copy.gd").display_name(world, m), preload("res://scripts/weapon_copy.gd").summary(world, m), ms.production_cost(m), ms.build_time(m), why, func(): _say(ms.produce(_selected, m)), "Produce 1 weapon → storage")
+			_list.get_child(_list.get_child_count() - 1).tooltip_text = preload("res://scripts/weapon_copy.gd").tooltip(world, m, true) + ("\nUnavailable: " + why if why != "" else "")
 		return
 	if b.key in world.research.LABS:
 		_bar("university", "Open the research tree", "Research points from this building flow into the discovery at the head of the queue.", {}, 0.0, "", toggle_research)
@@ -1359,6 +1419,7 @@ func _update_enabled() -> void:
 
 ## The selection panel: a building, a group of units, or road planning.
 func _update_selection() -> void:
+	if _resource_site != null and (_selected != null or not _selected_units().is_empty()): _resource_site.hide()
 	var units := _selected_units()
 	_update_roster(units if _selected == null else [])
 	var own_units: Array = units.filter(func(u):return u.owner==0 and not u.dead) if _selected==null else []
@@ -1630,7 +1691,7 @@ func _fill_launch(show: bool) -> void:
 		b.text = "Target: %s (%d)" % [ms.def_of(m).name, ms.stock[m]]
 		b.add_theme_font_size_override("font_size", 13)
 		b.focus_mode = Control.FOCUS_NONE
-		b.tooltip_text = "Select this weapon, then click a target on the map. Escape cancels targeting."
+		b.tooltip_text = preload("res://scripts/weapon_copy.gd").tooltip(world, m, false)
 		b.pressed.connect(func(): world.begin_missile(m))
 		_launch_row.add_child(b)
 
@@ -1823,9 +1884,14 @@ func _say(message: String) -> void:
 		notice(message)
 
 func toggle_panel(mode: String, force_open := false) -> void:
+	if mode == "un" and not force_open and _un_sessions != null and not _un_sessions.pending.is_empty():
+		var message: Dictionary = _un_sessions.pending[0]
+		_un_sessions.open_proposal(message.chamber, message.draft)
+		return
 	_show_side("" if side_mode == mode and not force_open else mode)
 
 func _show_side(mode: String) -> void:
+	if mode != "" and _resource_site != null: _resource_site.hide()
 	if not _hooked and world.market != null:
 		_hooked = true
 		world.market.changed.connect(func(): if side_mode == "market": refresh_side())
@@ -1968,7 +2034,7 @@ func _heading(text: String) -> void:
 ## A card: a raised panel, with a stripe down the left in `stripe` if given.
 func _card(stripe := Color(0, 0, 0, 0)) -> VBoxContainer:
 	var card := PanelContainer.new()
-	var style := UI.box(Color("142337"), Color("2d4460"), 1, 2, 10.0)
+	var style := UI.box(Color("172c40"), Color("36516b"), 1, 6, 10.0, 3)
 	if stripe.a > 0.0:
 		style.border_color = Color(stripe, 0.95)
 		style.border_width_left = 5
@@ -2018,6 +2084,11 @@ func _row(parent: Control, gap := 8) -> HBoxContainer:
 func _button(parent: Control, text: String, action: Callable, enabled := true, tone := "") -> Button:
 	var b := Button.new()
 	b.text = text
+	if side_mode == "defence" and _panels != null and _panels.defence_tab == "ai":
+		if text == "Resume": b.set_meta("action_help", "Restart this commissioned AI application. Its compute demand and running cost resume.")
+		if text in ["+", "-"]:
+			var safety: bool = world.directorate != null and world.directorate.ui_tab == "agi"
+			b.set_meta("action_help", ("Increase" if text == "+" else "Decrease") + (" the AGI safety share by 10 percentage points. More safety slows development but reduces runaway risk." if safety else " this pool's compute allocation by 10 percentage points. Available compute remains shared between pools."))
 	b.disabled = not enabled
 	b.focus_mode = Control.FOCUS_NONE
 	if tone == "good":
@@ -2217,7 +2288,7 @@ func end_visible() -> bool:
 	return is_instance_valid(_end_box) and not _end_box.is_queued_for_deletion()
 
 func modal_input_active() -> bool:
-	return end_visible() or (is_instance_valid(_diplomatic_contact_screen) and _diplomatic_contact_screen.is_visible_in_tree())
+	return end_visible() or (_un_sessions != null and _un_sessions.screen.visible) or (is_instance_valid(_diplomatic_contact_screen) and _diplomatic_contact_screen.is_visible_in_tree())
 
 func close_end() -> void:
 	for control in [_end_box, _end_dim]:
@@ -2316,10 +2387,12 @@ func notice(text: String, at := Vector3.INF) -> void:
 		_fill_log()
 	var card := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(UI.INK, 0.78)
+	style.bg_color = Color(UI.INK, 0.94)
 	style.border_color = Color(UI.GOLD, 0.9)
 	style.border_width_left = 3
 	style.set_corner_radius_all(4)
+	style.shadow_size = 4
+	style.shadow_color = Color(0, 0, 0, 0.3)
 	style.content_margin_left = 10
 	style.content_margin_right = 10
 	style.content_margin_top = 4
@@ -2412,6 +2485,7 @@ func close_windows() -> bool:
 
 ## The Cabinet: the whole state at a glance (cabinet.gd).
 func toggle_cabinet() -> void:
+	if _resource_site != null: _resource_site.hide()
 	if _cabinet == null:
 		_cabinet = preload("res://scripts/cabinet.gd").new()
 		add_child(_cabinet)
@@ -2424,6 +2498,7 @@ func toggle_cabinet() -> void:
 		_cabinet.open()
 
 func toggle_research() -> void:
+	if _resource_site != null: _resource_site.hide()
 	if _rs == null:
 		_build_research()
 		_rs.visible = false
