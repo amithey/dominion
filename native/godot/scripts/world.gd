@@ -164,6 +164,7 @@ var worker_scene: PackedScene
 var placing := ""
 var ghost: Node3D
 var ghost_ok := ""
+var replace_target = null   # your own building that the one being placed would replace (placement_problem)
 var selected_building = null
 var selection_marker: MeshInstance3D
 var nav_region: NavigationRegion3D   # the first navigation tile
@@ -1019,6 +1020,15 @@ func footprint_of(key: String) -> float:
 # The building's model, centred and scaled to its footprint (also used for the
 # placement preview).
 func building_model(key: String, x: float, z: float) -> Node3D:
+	if key == "fishingPlatform":
+		# A smaller platform with no flare: trawlers' deck, derrick and a net winch.
+		var art_f := preload("res://scripts/deposit_art.gd").new(self)
+		var raft := Node3D.new()
+		var mesh_f := MeshInstance3D.new()
+		mesh_f.mesh = art_f._mesh_for("platform")
+		mesh_f.scale = Vector3.ONE * 0.7
+		raft.add_child(mesh_f)
+		return raft
 	if key == "offshoreRig":
 		var art := preload("res://scripts/deposit_art.gd").new(self)
 		var platform := Node3D.new()
@@ -1815,12 +1825,12 @@ func is_water(p: Vector3, depth := DEEP) -> bool:
 	return height_at(p.x, p.z) < float(map.seaLevel) + depth
 
 # Nearest point on open water to `from` (for ships leaving a shipyard).
-func water_near(from: Vector3, reach := 90):
+func water_near(from: Vector3, reach := 90, depth_factor := 1.5):
 	for r in range(6, reach, 3):
 		for i in range(16):
 			var a := i * TAU / 16.0
 			var p := from + Vector3(cos(a), 0, sin(a)) * r
-			if is_water(p, DEEP * 1.5):
+			if is_water(p, DEEP * depth_factor):
 				return p
 	return null
 
@@ -2339,7 +2349,7 @@ func _physics_process(delta: float) -> void:
 func spread_out(unit: Dictionary, slot: int, delta: float) -> void:
 	if (sim_tick + slot) % 4 != 0:
 		return
-	var push := Tactics.crowd_push(self, unit, unit.node.position)
+	var push := Tactics.crowd_push(self, unit, unit.node.position, true)   # (a unit passing by does not shove it)
 	if push.length_squared() < 0.0025:
 		return
 	var next: Vector3 = unit.node.position + push.limit_length(delta * 4.0 * 1.6)
@@ -3155,12 +3165,31 @@ func cancel_queued(b: Dictionary, index: int) -> void:
 
 func update_training(delta: float) -> void:
 	for b in buildings:
-		if b.dead or not b.built or b.queue.is_empty():
+		if b.dead or not b.built:
+			continue
+		if b.owner == 0 and is_instance_valid(b.get("supply_label")) and (b.queue.is_empty() or b.get("supplied", true)):
+			b.supply_label.visible = false   # (it is supplied again, or has nothing waiting)
+		if b.queue.is_empty():
 			continue
 		if not b.get("supplied", true) or disabled(b):
-			if b.owner == 0 and not b.get("supply_told", false) and not b.get("supplied", true):
-				b.supply_told = true
-				hud.notice("%s is out of supply: its orders wait until its town is linked to the capital by road or rail." % b.def.name)
+			if b.owner == 0 and not b.get("supplied", true):
+				if not b.get("supply_told", false):
+					b.supply_told = true
+					hud.notice("%s is out of supply: its orders wait until its town is linked to the capital by road or rail." % b.def.name, b.root.position)
+				# A sign over it, for as long as it waits: a factory that does not produce says why.
+				if not is_instance_valid(b.get("supply_label")):
+					var sign := Label3D.new()
+					sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+					sign.no_depth_test = true
+					sign.font_size = 34
+					sign.pixel_size = 0.022
+					sign.outline_size = 10
+					sign.modulate = Color("ff8a70")
+					sign.position = Vector3(0, 15.0, 0)
+					sign.text = "NO SUPPLY: link its town by road"
+					b.root.add_child(sign)
+					b.supply_label = sign
+				b.supply_label.visible = true
 			continue  # cut off (or struck by an EMP): the factory waits
 		b.supply_told = false
 		if b.owner > 0 and espionage and espionage.production_down(b.owner):
@@ -3172,6 +3201,8 @@ func update_training(delta: float) -> void:
 			rail *= un.production_mult(b.owner)   # a UN arms embargo (un.gd)
 		if b.owner == 0 and research:
 			rail *= 1.0 + research.bonus("prodPct") + research.bonus("trainPct") + economy.plant_bonus()  # production and commissioned AI logistics
+		if b.owner == 0 and economy.cold:
+			rail *= economy.COLD_SLOWDOWN   # no winter heating: the workforce is sick and cold
 		elif b.owner > 0 and directorate != null:
 			var practical: Dictionary = directorate.applications.bonuses(b.owner)
 			rail *= 1.0 + float(practical.get("prodPct", 0.0)) + float(practical.get("trainPct", 0.0))
@@ -3418,7 +3449,7 @@ func test_site(key: String, from: Vector3) -> Variant:
 					continue
 				var at: Vector3 = logistics.hex_center(origin + Vector2i(dq, dr))
 				var problem := site_problem(key, at, 0)
-				if problem == "" or problem == "Outside your territory" or problem.begins_with("Inside "):
+				if problem == "" or problem.begins_with("Outside your territory") or problem.begins_with("Inside "):
 					return at
 	return null
 
@@ -4597,7 +4628,96 @@ func set_ghost_colour(color: Color) -> void:
 
 ## "" when the building can go here, otherwise the reason it cannot.
 func placement_problem(key: String, at: Vector3) -> String:
-	return site_problem(key, at, 0)
+	replace_target = null
+	var problem := site_problem(key, at, 0)
+	# A building of yours in the way may be replaced by the new one (its cost is partly refunded).
+	if problem.begins_with("This hex already holds") or problem.begins_with("Too close to"):
+		var old = replaceable_near(key, at)
+		if old != null:
+			old.dead = true
+			var again := site_problem(key, at, 0)
+			old.dead = false
+			if again == "":
+				replace_target = old
+				return ""
+	return problem
+
+## Your own finished building that stands where `key` would go (the same hex for a district, or overlapping a
+## single building): the one a new building may replace. The capital and towns are never replaced.
+func replaceable_near(key: String, at: Vector3) -> Variant:
+	var reach := footprint_of(key)
+	var hex: Vector2i = logistics.world_hex(at)
+	for b in buildings:
+		if b.dead or b.owner != 0 or b.key == key or b.key == "hq" or b.def.get("settlement") != null:
+			continue
+		var gap := Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length()
+		var same_hex: bool = b.has("hex") and b.hex == hex and is_district(key) and is_district(b.key)
+		if same_hex or (not is_district(key) and not is_district(b.key) and gap < (reach + b.footprint) * 0.55):
+			return b
+	return null
+
+## Takes down one of your buildings: 85% of its cost back while it is only a site, half once it stands, and the
+## orders waiting in it are refunded in full. The capital and towns cannot be demolished. Returns "" or the reason.
+func demolish(b: Dictionary, quiet := false) -> String:
+	if b.dead or b.owner != 0:
+		return "Not yours to demolish."
+	if b.key == "hq" or b.def.get("settlement") != null:
+		return "A capital or a town cannot be demolished."
+	var share := 0.5 if b.built else 0.85
+	var cost: Dictionary = b.def.get("cost", {})
+	var back := {}
+	for r in cost:
+		back[r] = floorf(float(cost[r]) * share)
+	economy.refund(back)
+	var receipts: Array = b.get("queue_costs", [])
+	for i in range(b.queue.size()):
+		var receipt = receipts[i] if i < receipts.size() else null
+		if receipt is Dictionary:
+			economy.refund(receipt)
+	b.queue.clear()
+	b.queue_costs = []
+	b.dead = true
+	b.destroyed = true
+	for u in units:
+		if is_same(u.get("build_site"), b):
+			u.build_site = null
+		if not u.dead and is_same(u.get("air_base"), b):
+			u.air_base = null
+			u.slot = -1
+	if b.deposit != null:
+		b.deposit.extractor = null
+		if b.deposit.get("water", false): b.deposit.node.show()
+		deposit_marker(b.deposit, true)
+	if selected_building == b:
+		select_building(null)
+	var at: Vector3 = b.root.position
+	var footprint: float = DISTRICT_NAV_SIZE if is_district(b.key) else b.footprint
+	clear_ruins(b.key, at)
+	open_navigation(at, footprint)
+	logistics.dirty = true
+	refresh_streets()
+	economy.recalculate()
+	if not quiet:
+		hud.notice("%s demolished: %s back." % [b.def.name, hud.cost_text(back)])
+	return ""
+
+## The ground under a removed building is walkable again.
+func open_navigation(at: Vector3, footprint: float) -> void:
+	if nav_n == 0:
+		return
+	var half := float(map.mapSize) * 0.5
+	var reach := footprint * 0.62 + 3.0
+	var c0 := maxi(0, int((at.x - reach + half) / NAV_STEP))
+	var c1 := mini(nav_n - 2, int((at.x + reach + half) / NAV_STEP))
+	var r0 := maxi(0, int((at.z - reach + half) / NAV_STEP))
+	var r1 := mini(nav_n - 2, int((at.z + reach + half) / NAV_STEP))
+	for r in range(r0, r1 + 1):
+		for c in range(c0, c1 + 1):
+			var x := -half + (c + 0.5) * NAV_STEP
+			var z := -half + (r + 0.5) * NAV_STEP
+			if Vector2(x - at.x, z - at.z).length() < reach and walkable(x, z):
+				nav_open[r * (nav_n - 1) + c] = 1
+	rebuild_nav_tiles(r0, r1, c0, c1)
 
 func site_problem(key: String, at: Vector3, owner: int) -> String:
 	var def: Dictionary = building_defs[key]
@@ -4681,8 +4801,9 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 		land_owner = territory.zone_owner(at)
 	if land_owner == owner:
 		in_district = true
-	elif land_owner < 0 and def.get("coastal", false) and coast_reach(at, owner):
-		in_district = true
+	elif land_owner < 0 and def.get("coastal", false) and not def.get("water", false) and def.get("settlement") == null:
+		# A harbour is built where you are sovereign: unclaimed coast is not yours to build on.
+		return "Outside your territory"   # (buy the coast first: Buy land at a town hall)
 	elif land_owner >= 0 and land_owner != owner:
 		return "Inside %s's %s" % ["your" if land_owner == 0 else diplomacy.name_of(land_owner), "waters" if def.get("water", false) else "land"]
 	if def.get("unique", false) and buildings.any(func(b): return b.owner == owner and b.key == key and not b.dead):
@@ -4766,9 +4887,12 @@ func update_placement(mouse := Vector2.INF) -> void:
 	if building_defs[placing].get("water", false): at.y = float(map.seaLevel) + 0.5
 	ghost.position = at
 	var problem := placement_problem(placing, at)
-	if problem != ghost_ok:
-		ghost_ok = problem
-		set_ghost_colour(Color(0.4, 1.0, 0.5, 0.45) if problem == "" else Color(1.0, 0.35, 0.3, 0.45))
+	var tint_key: String = problem + ("|replace:" + str(replace_target.key) if replace_target != null else "")
+	if tint_key != ghost_ok:
+		ghost_ok = tint_key
+		set_ghost_colour((Color(1.0, 0.75, 0.25, 0.5) if replace_target != null else Color(0.4, 1.0, 0.5, 0.45)) if problem == "" else Color(1.0, 0.35, 0.3, 0.45))
+		if replace_target != null:
+			hud.notice("This replaces your %s (half of its cost comes back)." % replace_target.def.name)
 
 func confirm_placement(keep: bool) -> void:
 	var at := ghost.position
@@ -4777,6 +4901,10 @@ func confirm_placement(keep: bool) -> void:
 		hud.notice(problem)
 		return
 	var key := placing
+	if replace_target != null:
+		var old: Dictionary = replace_target
+		replace_target = null
+		demolish(old)
 	# Trees or a natural resource on the site: the player decides first (site_clearing.gd).
 	var found := SiteClearing.conflicts(self, key, at)
 	if not (found.trees.is_empty() and found.deposits.is_empty()):

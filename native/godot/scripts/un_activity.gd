@@ -63,3 +63,40 @@ static func assembly(p) -> void:
 				var row: HBoxContainer = hud._row(card)
 				hud._button(row, "Join restrictions", func(): return u.join_voluntary(target, true), not 0 in dr.participants)
 				hud._button(row, "Leave restrictions", func(): return u.join_voluntary(target, false), 0 in dr.participants)
+
+## The Agencies tab: the Secretary-General's calendar, the IAEA's findings and the humanitarian appeals.
+static func agencies(p) -> void:
+	var hud: Node = p.hud
+	var ag = hud.world.un.agencies
+	var cal: VBoxContainer = hud._card(hud.UI.GOLD)
+	cal.add_child(hud._text("The UN calendar", 16, hud.UI.CREAM, true))
+	for item in ag.calendar():
+		p._wrap(cal, "%s: in %d:%02d" % [item[0], int(item[1]) / 60, int(item[1]) % 60], 13, hud.UI.TEXT)
+	var open: Array = ag.appeals.filter(func(a): return not a.closed)
+	var aid: VBoxContainer = hud._card(hud.UI.GOOD if not open.is_empty() else Color(0, 0, 0, 0))
+	aid.add_child(hud._text("Humanitarian appeals (WFP and UNHCR)", 16, hud.UI.CREAM, true))
+	if open.is_empty():
+		p._wrap(aid, "No appeal is open. They are made for a nation at war for long, or with hungry or frozen people.", 13, hud.UI.MUTED)
+	for a in open:
+		var who: String = "your nation" if int(a.nation) == 0 else hud.world.diplomacy.name_of(int(a.nation))
+		var what: String = {"refugees": "people displaced by war", "food": "hunger", "cold": "a winter without heating"}.get(a.kind, "a crisis")
+		p._wrap(aid, "%s: %s. $%d of $%d raised; %ds left." % [who.capitalize() if int(a.nation) != 0 else "Your nation", what, int(a.raised), int(a.need), maxi(0, ceili(float(a.until) - hud.world.game_time))], 13, hud.UI.TEXT)
+		hud._meter(aid, float(a.raised), float(a.need), hud.UI.GOOD, "%d%%" % int(100.0 * float(a.raised) / maxf(float(a.need), 1.0)))
+		if int(a.nation) != 0:
+			var row: HBoxContainer = hud._row(aid)
+			var appeal_id: int = int(a.id)
+			for gift in ag.GIFTS:
+				var amount: float = gift
+				var give := func(): return ag.donate(appeal_id, amount)
+				hud._button(row, "Give $%d" % int(amount), give, hud.world.economy.res.money >= amount)
+	var iaea: VBoxContainer = hud._card()
+	iaea.add_child(hud._text("IAEA and the Secretary-General", 16, hud.UI.CREAM, true))
+	var shown := 0
+	for n in ag.news:
+		if shown >= 10:
+			break
+		shown += 1
+		var t := int(n.t)
+		p._wrap(iaea, "%02d:%02d  %s: %s" % [t / 60, t % 60, n.agency, n.text], 12, hud.UI.TEXT)
+	if shown == 0:
+		p._wrap(iaea, "Nothing reported yet.", 12, hud.UI.MUTED)

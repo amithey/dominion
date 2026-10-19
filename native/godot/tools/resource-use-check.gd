@@ -69,10 +69,10 @@ func run() -> void:
 	check(panel._action.disabled, "An occupied deposit cannot order a second extractor")
 	var fish: Dictionary = w.deposits.filter(func(d): return d.type == "fish")[0]
 	w.hud.open_resource_site(fish)
-	check(panel.building_key() == "fishingWharf" and panel._description.text.contains("FOOD"), "Fish action explains food and Fishing Wharf")
+	check(panel.building_key() == "fishingPlatform" and panel._description.text.contains("FOOD") and panel._description.text.contains("Fishing Wharf"), "Fish action explains food, the Fishing Platform and the Wharf")
 	await capture("fish", fish)
 	panel.place()
-	check(w.placing == "fishingWharf", "Fish action enters the real wharf placement flow")
+	check(w.placing == "fishingPlatform", "Fish action enters the real platform placement flow")
 	w.cancel_placement()
 	# Find a legal nearby coastal hex and test the border policy on that same site.
 	var coast = null
@@ -81,19 +81,26 @@ func run() -> void:
 	for i in range(w.territory.owner_of.size()):
 		var at: Vector3 = w.territory.center(i)
 		if w.territory.owner_of[i] != -1 or not w.coast_near(at, w.logistics.radius * 1.6): continue
-		var near: int = w.territory.neighbours(i)[0]
+		var near: int = i   # (a harbour stands only in your own land: the coast hex itself is taken as if bought)
 		var was: int = w.territory.owner_of[near]
 		w.territory.owner_of[near] = 0
 		var why: String = w.site_problem("fishingWharf", at, 0)
 		if why == "":
 			coast = at; frontier = near; frontier_was = was; break
 		w.territory.owner_of[near] = was
-	check(coast != null, "Unclaimed dry coast is usable when your land reaches within three hexes")
+	check(coast != null, "Coast you own is usable for a wharf")
+	var unowned_at: Vector3 = Vector3.INF
+	for j in range(w.territory.owner_of.size()):
+		var cj: Vector3 = w.territory.center(j)
+		if w.territory.owner_of[j] == -1 and w.coast_near(cj, w.logistics.radius * 1.6) and w.site_problem("fishingWharf", cj, 0) == "Outside your territory":
+			unowned_at = cj
+			break
+	check(unowned_at != Vector3.INF, "Unclaimed coast is refused: a wharf needs your own land")
 	if coast != null:
 		var idx: int = w.territory.cell_of(coast)
 		w.territory.owner_of[idx] = 1
 		check(w.site_problem("fishingWharf", coast, 0).contains("land"), "Rival-owned coast remains protected")
-		w.territory.owner_of[idx] = -1
+		w.territory.owner_of[idx] = 0
 		# Move the fixture shoal into range, then verify actual food production.
 		var old: Vector3 = fish.pos
 		fish.pos = coast + Vector3(15,0,0)

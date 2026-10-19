@@ -38,6 +38,20 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.100: sovereignty, fishing platforms, gas and winter, demolishing, the UN at work
+
+- **Harbours and offshore works only where you rule:** ports, shipyards and wharves no longer go on unclaimed coast; the
+  sea you may work is two rings, not seven.
+- **Fishing Platform** on a fish school (+4 food); **natural gas on land**; a **winter without gas** freezes homes and
+  slows factories.
+- **Demolish** a building (half back), and **build over** one of yours to replace it.
+- **The UN at work:** a calendar, the Secretary-General's briefings, the IAEA's inspections and breaches, WFP and UNHCR
+  appeals you can give to: every one a message. [UN-AGENCIES-2026-10-19.md](UN-AGENCIES-2026-10-19.md)
+- Real birds; the snow no longer hides your territory; a unit that stands is not shoved by one that passes; other nations'
+  research is out of your tree; badges no longer tremble; each spy can take a job of its own; the Veterans panel reads;
+  a **NO SUPPLY** sign over a factory that waits for a road; rivals no longer found strings of villages.
+  [FIXES-2026-10-19.md](FIXES-2026-10-19.md)
+
 ## Version 0.9.99: transports, rival navies, a situation report, statistics, espionage teams
 
 - **Troop transports that work:** a new **Amphibious Landing Ship** (36 places) and helicopters take troops

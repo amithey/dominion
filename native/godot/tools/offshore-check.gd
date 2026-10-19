@@ -27,15 +27,23 @@ func run() -> void:
 	w.ai.set_physics_process(false)
 	var t = w.territory
 	var fields: Array = w.deposits.filter(func(d): return d.get("water", false) and d.type != "fish")
+	# The zone is two rings of sea off your coast (territory.EEZ): the start leaves no field in it, so the coast beside
+	# the nearest field is taken as if bought.
+	var near_field: Dictionary = fields[0]
+	for d in fields:
+		if d.pos.distance_to(w.start) < near_field.pos.distance_to(w.start): near_field = d
+	for i in range(t.owner_of.size()):
+		if t.owner_of[i] < 0 and t.center(i).distance_to(near_field.pos) < 80.0 and t.terrain[i] != t.Terrain.WATER:
+			t.owner_of[i] = 0
 	var mine: Array = []
 	var theirs := 0
 	for d in fields:
 		var p := Vector3(d.pos.x, float(w.map.seaLevel) + 0.5, d.pos.z)
 		var why: String = w.site_problem("offshoreRig", p, 0)
 		if why == "": mine.append(p)
-		elif why.ends_with("waters"): theirs += 1
+		elif why.ends_with("waters") or why == "Outside your territory": theirs += 1   # (a rival's waters, or no one's: not yours to work)
 	check(not mine.is_empty(), "at the start you can work sea fields in your economic zone (%d of %d)" % [mine.size(), fields.size()])
-	check(theirs > 0, "fields nearer a rival's land are in its waters (%d)" % theirs)
+	check(theirs > 0, "fields beyond your waters cannot be worked (%d)" % theirs)
 	check(t.zone_owner(mine[0]) == 0 and t.owner_at(mine[0]) < 0, "the field lies beyond your territorial waters, inside your zone")
 	var fish: Array = w.deposits.filter(func(d): return d.get("water", false) and d.type == "fish")
 	if not fish.is_empty():

@@ -173,6 +173,8 @@ func from_notice(text: String, pos := Vector3.INF) -> void:
 	if low.begins_with("intelligence") or low.begins_with("early warning"):
 		cat = "warning"
 		sev = "crit"
+	elif low.begins_with("un ") or low.begins_with("un:") or low.begins_with("iaea:") or low.begins_with("wfp:") or low.begins_with("unhcr:"):
+		cat = "war"   # the United Nations and its agencies: diplomacy and war
 	elif low.contains("declares war") or low.contains("declared war") or low.contains("you are at war") or low.contains("treaty") or low.contains("alliance") or low.contains("ceasefire") or low.contains("peace") or low.contains("sanction") or low.contains("united nations") or low.contains("embargo"):
 		cat = "war"
 		if low.contains("on you") or low.contains("you are at war") or low.contains("attacked you"):

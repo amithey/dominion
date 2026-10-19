@@ -9,6 +9,16 @@ static func apply(w: Node) -> void:
 	w.damage_profile.samSite = {"air": 2.0}
 	w.building_defs.bunker.desc = "Hardened strongpoint: machine guns engage enemy ground forces within 2 hexes; ground fire does it a third of the damage, and friendly troops beside it take half."
 	w.building_defs.samSite.desc = "Automated anti-air battery: shoots down enemy aircraft in flight (not ground forces, not aircraft parked on a base)."
+	# A fishing platform: trawlers work the fish school under it, inside your own waters (no worker needed).
+	var platform: Dictionary = w.building_defs.offshoreRig.duplicate(true)
+	platform.name = "Fishing Platform"
+	platform.hp = 520
+	platform.cost = {"money": 260, "iron": 20}
+	platform.buildTime = 16
+	platform.depositTypes = ["fish"]
+	platform.desc = "Built at sea on a fish school inside your waters: trawlers work it for +4 food a second. Marine crews build it; no worker needed. (A Fishing Wharf on the coast also works shoals within 60 m.)"
+	platform["water"] = true
+	w.building_defs["fishingPlatform"] = platform
 	w.building_defs.offshoreRig["water"] = true
 	w.building_defs.offshoreRig.depositTypes = ["seaOil", "seaGas"]
 	w.building_defs.offshoreRig.desc = "Offshore oil or natural gas. Marine contractors build the platform; no land worker required."
@@ -19,6 +29,14 @@ static func apply(w: Node) -> void:
 		if dep.type == "seaOil":
 			index += 1
 			if index % 2 == 0: dep.type = "seaGas"
+	# Natural gas on land too: every third oil field is a gas field (an extractor works it).
+	w.map.depositTypes["gas"] = w.map.depositTypes.oil.duplicate(true)
+	w.map.depositTypes.gas.merge({"name": "Natural Gas Field", "res": "gas", "rate": 2.0, "color": "#8e96c8"}, true)
+	var land_index := 0
+	for dep in w.map.deposits:
+		if dep.type == "oil":
+			land_index += 1
+			if land_index % 3 == 0: dep.type = "gas"
 	# Building cards say what each building does in this game (the export's
 	# texts promised approval, public order, culture and education, which the
 	# native game does not have; the military and industrial ones now work).

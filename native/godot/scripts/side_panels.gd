@@ -455,6 +455,26 @@ func _operations(e: Node, d: Node) -> void:
 	brief.add_child(hud._text("$%d  ·  prepare %ds  ·  cooldown %ds  ·  needs intel %d" % [e.team_cost(hud.spy_op, team), int(e.team_duration(hud.spy_op, team)), e.PROGRAMS[hud.spy_op][1], e.PROGRAMS[hud.spy_op][3]], 13, hud.GOLD))
 	# The team: more agents on one operation raise the odds and shorten the preparation, and cost more, leave more
 	# tracks and put every one of them at risk.
+	# Each agent can take a job of its own: choose who goes (or the best one ready).
+	var pick_row: HBoxContainer = hud._row(brief, 6)
+	pick_row.add_child(hud._text("Send", 14, hud.UI.MUTED))
+	var chooser := OptionButton.new()
+	chooser.focus_mode = Control.FOCUS_NONE
+	chooser.add_theme_font_size_override("font_size", 13)
+	chooser.add_item("The best agent ready", 0)
+	var chosen_index := 0
+	for a in e.ready_agents():
+		chooser.add_item("%s  %s" % [a.name, "★".repeat(int(a.skill))], int(a.id) + 1)
+		if int(a.id) == int(hud.spy_agent):
+			chosen_index = chooser.item_count - 1
+	chooser.select(chosen_index)
+	if chosen_index == 0:
+		hud.spy_agent = -1
+	chooser.item_selected.connect(func(index: int):
+		hud.spy_agent = int(chooser.get_item_id(index)) - 1
+		hud.refresh_side())
+	chooser.tooltip_text = "Pick the agent for this job. The others stay free for jobs of their own, even against the same nation (up to three at once)."
+	pick_row.add_child(chooser)
 	var team_row: HBoxContainer = hud._row(brief, 6)
 	team_row.add_child(hud._text("Agents on it", 14, hud.UI.MUTED))
 	var on_fewer := func():
@@ -473,10 +493,10 @@ func _operations(e: Node, d: Node) -> void:
 	more.tooltip_text = "Up to %d agents. Each extra agent adds to the odds and shortens the preparation, and costs 25%% more; the exposure risk rises by about a third, and a failure can lose every one of them." % e.MAX_TEAM
 	if team > 1:
 		brief.add_child(hud._text("A team of %d: +%d points of success, %d%% shorter preparation, intelligence and network gains +%d%%, exposure risk x%.2f." % [team, roundi(e.team_bonus(team) * 100.0), roundi((1.0 - e.team_duration(hud.spy_op, team) / float(e.PROGRAMS[hud.spy_op][0])) * 100.0), roundi(e.TEAM_YIELD * (team - 1) * 100.0), 1.0 + e.TEAM_EXPOSURE * (team - 1)], 12, hud.UI.MUTED))
-	var reason: String = e.blocked_reason(hud.spy_op, hud.spy_target, hud.spy_role if needs_person else "", -1, team)
+	var reason: String = e.blocked_reason(hud.spy_op, hud.spy_target, hud.spy_role if needs_person else "", hud.spy_agent, team)
 	if reason != "":
 		brief.add_child(hud._text(reason, 13, hud.UI.BAD))
-	var go: Button = hud._button(brief, "Authorize operation" if team == 1 else "Authorize operation (team of %d)" % team, func(): return e.run(hud.spy_op, hud.spy_target, hud.spy_role if needs_person else "", -1, -1.0, team), reason == "", "good")
+	var go: Button = hud._button(brief, "Authorize operation" if team == 1 else "Authorize operation (team of %d)" % team, func(): return e.run(hud.spy_op, hud.spy_target, hud.spy_role if needs_person else "", hud.spy_agent, -1.0, team), reason == "", "good")
 	go.custom_minimum_size.y = 36
 	# Standing orders: agents keep growing the network here and refreshing its
 	# dossier on their own, one job at a time (espionage._standing_orders).
@@ -571,6 +591,12 @@ func _agents(e: Node, d: Node) -> void:
 			hud._button(row, "Ransom $%d" % int(e.cfg.ransom), e.ransom.bind(a.id))
 		elif a.status == "ready":
 			hud._pill(row, "READY", ALLY)
+			var agent_id: int = int(a.id)
+			var on_send := func():
+				var role: String = hud.spy_role if e.ops().get(hud.spy_op, {}).get("needsPerson", false) else ""
+				return e.run(hud.spy_op, hud.spy_target, role, agent_id)
+			var send: Button = hud._button(row, "Send on the chosen operation", on_send, e.blocked_reason(hud.spy_op, hud.spy_target, "", agent_id) == "")
+			send.tooltip_text = "Sends this agent alone on the operation and nation chosen in Operations (%s, %s)." % [e.ops().get(hud.spy_op, {}).get("name", hud.spy_op), hud.world.diplomacy.name_of(hud.spy_target)]
 		else:
 			hud._pill(row, ("RECOVERY %ds" % ceili(float(a.get("ready_at", e.clock)) - e.clock)) if a.status == "recovering" else str(a.status).to_upper(), hud.GOLD)
 	if not e.missions.is_empty():
@@ -1085,7 +1111,11 @@ func _veterans() -> void:
 		lab.custom_minimum_size.x = 150
 		row.add_child(lab)
 		var fx := "as it leaves the factory" if r == 0 else "+%d%% damage, %d%% less damage taken%s" % [roundi((V.DAMAGE[r] - 1.0) * 100.0), roundi((1.0 - V.TAKEN[r]) * 100.0), ", repairs itself out of combat" if r == 3 else ""]
-		row.add_child(hud._text("%d units  ·  %s" % [c[r], fx], 13, hud.UI.MUTED))
+		var effect: Label = hud._text("%d units  ·  %s" % [c[r], fx], 13, hud.UI.MUTED)
+		effect.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		effect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		effect.custom_minimum_size.x = 240   # (without a width it wrapped letter by letter)
+		row.add_child(effect)
 	var how: Label = hud._text("A unit earns experience from the damage it deals, and more for each kill. It becomes a Veteran once it has dealt its own health in damage, Elite at three times and Heroic at six. The rivals' units rank up the same way.", 12, hud.UI.MUTED)
 	how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	how.custom_minimum_size.x = 460
@@ -1175,8 +1205,10 @@ func united_nations() -> void:
 	var session_row: HBoxContainer = hud._row(hud._card(hud.UI.ministry("un")))
 	hud._button(session_row, "Enter Council chamber", func(): hud.open_un_session("council"); return "")
 	hud._button(session_row, "Enter Assembly chamber", func(): hud.open_un_session("assembly"); return "")
-	_tabs([["Council", "council"], ["Draft", "draft"], ["Assembly", "assembly"], ["Organisation", "org"], ["Record", "record"]], un_tab, func(v): un_tab = v)
+	_tabs([["Council", "council"], ["Draft", "draft"], ["Assembly", "assembly"], ["Agencies", "agencies"], ["Organisation", "org"], ["Record", "record"]], un_tab, func(v): un_tab = v)
 	match un_tab:
+		"agencies":
+			preload("res://scripts/un_activity.gd").agencies(self)
 		"draft":
 			_un_draft(u)
 		"assembly":

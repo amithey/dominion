@@ -56,7 +56,7 @@ func layout() -> void:
 		var tallest := 1
 		var per_era := {}
 		for key in research.discoveries:
-			if research.def_of(key).branch != branch:
+			if research.def_of(key).branch != branch or not research.shown(key):
 				continue
 			var e: int = research.era_of(key)
 			per_era[e] = per_era.get(e, 0) + 1

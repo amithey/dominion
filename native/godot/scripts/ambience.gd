@@ -185,30 +185,68 @@ func plumes() -> int:
 
 # ---------------------------------------------------------------- birds
 
+## One flock: gulls (white, grey wings, dark tips) or crows (black) in turn, each a real bird: a body, a head with
+## a beak, a tail, and wings of two segments that bend as they beat.
 func _flock(i: int) -> Dictionary:
 	var root := Node3D.new()
 	add_child(root)
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.12, 0.12, 0.13)
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.roughness = 1.0
+	var gull: bool = i % 2 == 0
+	var body_mat := _bird_material(Color(0.93, 0.94, 0.95) if gull else Color(0.09, 0.09, 0.1))
+	var wing_mat := _bird_material(Color(0.62, 0.66, 0.7) if gull else Color(0.13, 0.13, 0.15))
+	var tip_mat := _bird_material(Color(0.1, 0.1, 0.12))
+	var beak_mat := _bird_material(Color(0.95, 0.7, 0.18) if gull else Color(0.2, 0.18, 0.16))
 	var birds := []
 	for k in range(BIRDS):
 		var bird := Node3D.new()
-		bird.scale = Vector3.ONE * 2.2   # big enough to see from the strategic camera
+		bird.scale = Vector3.ONE * (2.6 if gull else 2.3)   # big enough to read from the strategic camera
 		root.add_child(bird)
+		_bird_part(bird, SphereMesh.new(), body_mat, Vector3(0, 0, 0), Vector3(0.34, 0.26, 0.9))
+		_bird_part(bird, SphereMesh.new(), body_mat, Vector3(0, 0.07, 0.5), Vector3(0.2, 0.2, 0.26))
+		var beak := CylinderMesh.new()
+		beak.top_radius = 0.0
+		beak.bottom_radius = 0.055
+		beak.height = 0.26
+		beak.radial_segments = 6
+		var beak_node := _bird_part(bird, beak, beak_mat, Vector3(0, 0.05, 0.8), Vector3.ONE)
+		beak_node.rotation.x = PI * 0.5
+		var tail := PrismMesh.new()
+		tail.size = Vector3(0.3, 0.04, 0.34)
+		_bird_part(bird, tail, wing_mat, Vector3(0, 0.02, -0.62), Vector3.ONE)
 		for side in [-1.0, 1.0]:
-			var wing := MeshInstance3D.new()
-			var q := PrismMesh.new()
-			q.size = Vector3(0.9, 0.06, 0.32)
-			wing.mesh = q
-			wing.material_override = mat
-			wing.position = Vector3(side * 0.45, 0, 0)
-			wing.name = "L" if side < 0 else "R"
-			bird.add_child(wing)
-		birds.append({"node": bird, "phase": randf() * TAU, "offset": Vector3(randf_range(-4, 4), randf_range(-1.5, 1.5), randf_range(-4, 4))})
+			var pivot := Node3D.new()
+			pivot.name = "L" if side < 0 else "R"
+			pivot.position = Vector3(side * 0.12, 0.08, 0.1)
+			bird.add_child(pivot)
+			var inner := BoxMesh.new()
+			inner.size = Vector3(0.62, 0.035, 0.46)
+			_bird_part(pivot, inner, wing_mat, Vector3(side * 0.31, 0, 0), Vector3.ONE)
+			var tip := Node3D.new()
+			tip.name = "Tip"
+			tip.position = Vector3(side * 0.62, 0, 0)
+			pivot.add_child(tip)
+			var outer := BoxMesh.new()
+			outer.size = Vector3(0.5, 0.03, 0.28)
+			_bird_part(tip, outer, tip_mat if gull else wing_mat, Vector3(side * 0.25, 0, -0.04), Vector3.ONE)
+		birds.append({"node": bird, "phase": randf() * TAU, "offset": Vector3(randf_range(-5, 5), randf_range(-1.5, 1.5), randf_range(-5, 5))})
 	return {"root": root, "birds": birds, "centre": Vector3.ZERO, "angle": randf() * TAU, "radius": randf_range(18.0, 34.0),
 		"height": randf_range(16.0, 26.0), "speed": randf_range(0.18, 0.3) * (1.0 if i % 2 == 0 else -1.0), "flee": 0.0, "home": false}
+
+func _bird_material(colour: Color) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = colour
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.roughness = 0.9
+	return m
+
+func _bird_part(parent: Node3D, mesh: Mesh, mat: Material, at: Vector3, size: Vector3) -> MeshInstance3D:
+	var node := MeshInstance3D.new()
+	node.mesh = mesh
+	node.material_override = mat
+	node.position = at
+	node.scale = size
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(node)
+	return node
 
 func _update_flocks(delta: float) -> void:
 	var focus: Vector3 = w.cam_focus
@@ -231,9 +269,13 @@ func _update_flocks(delta: float) -> void:
 			bird.phase += delta * (9.0 if f.flee > 0.0 else 6.0)
 			n.position = centre + bird.offset + Vector3(0, sin(bird.phase * 0.3) * 0.6, 0)
 			n.look_at(n.position + heading, Vector3.UP)
-			var flap := sin(bird.phase) * 0.55
+			var flap := sin(bird.phase) * 0.6
 			n.get_node("L").rotation.z = flap
 			n.get_node("R").rotation.z = -flap
+			# The wing tip lags the beat: the wing bends as it goes up and down.
+			var lag := sin(bird.phase - 0.9) * 0.3
+			n.get_node("L/Tip").rotation.z = lag
+			n.get_node("R/Tip").rotation.z = -lag
 
 ## An explosion near a flock: the birds scatter.
 func _scare(strength: float, at: Vector3) -> void:

@@ -841,7 +841,7 @@ func headframe(c: Vector3, h: float, steel: Color) -> void:
 ## What stands on an Extractor, by the resource under it.
 func extractor(rng: RandomNumberGenerator) -> void:
 	match extract_type:
-		"oil", "seaOil":
+		"oil", "seaOil", "gas", "seaGas":
 			# A drilling derrick, storage tanks and the separator.
 			lattice(Vector3(-3.0, 0, -2.0), 11.0, 3.0, 0.8, Color("c96a2b"))
 			box(TRIM, Vector3(-4.2, 0.0, -3.2), Vector3(-1.8, 0.6, -0.8), Color("5a5d60"))

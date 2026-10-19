@@ -176,6 +176,13 @@ func stage_cost(key: String, stage: int) -> Dictionary:
 		cost[k] = roundf(cost[k])
 	return cost
 
+## Whether the tree shows `key` to the player: another nation's own programme (an Iranian missile, a
+## Russian bomb) is not part of this nation's research and does not appear in its tree.
+func shown(key: String) -> bool:
+	if stage_of(key) > 0:
+		return true
+	return preload("res://scripts/national_arsenal.gd").foreign(world, def_of(key).get("nation", "")) == ""
+
 ## Why `key` cannot advance to its next stage now ("" when it can).
 func blocker(key: String) -> String:
 	var stage := stage_of(key)

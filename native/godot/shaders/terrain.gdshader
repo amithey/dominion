@@ -145,6 +145,14 @@ void fragment() {
 	float strata = sin(world_pos.y * 1.6 + macro * 9.0) * 0.5 + 0.5;
 	albedo *= 1.0 - w.w * (1.0 - n.y) * strata * 0.14;
 
+	// Winter: snow on flat ground above the shore, patchy at first, then whole. It lies under the territory
+	// and building overlays below, so the borders and the verdicts stay readable in snow.
+	if (winter > 0.0) {
+		float flat_ground = smoothstep(0.80, 0.95, normalize(wn).y);
+		float patch = texture(noise_tex, p * 0.035).r;
+		float cover = winter * flat_ground * smoothstep(0.62 - winter * 0.5, 0.75 - winter * 0.4, patch) * step(sea_level + 0.6, world_pos.y);
+		albedo = snowy(albedo, cover * 0.92);
+	}
 	if ((show_territory || show_borders) && world_pos.y > sea_level - 0.2) {
 		float near;
 		vec4 own = hex_territory(world_pos.xz, near);
@@ -195,13 +203,6 @@ void fragment() {
 			}
 			albedo = mix(albedo, mark, rim * 0.85);
 		}
-	}
-	// Winter: snow on flat ground above the shore, patchy at first, then whole.
-	if (winter > 0.0) {
-		float flat_ground = smoothstep(0.80, 0.95, normalize(wn).y);
-		float patch = texture(noise_tex, p * 0.035).r;
-		float cover = winter * flat_ground * smoothstep(0.62 - winter * 0.5, 0.75 - winter * 0.4, patch) * step(sea_level + 0.6, world_pos.y);
-		albedo = snowy(albedo, cover * 0.92);
 	}
 	ALBEDO = albedo * (1.0 - fog_at(world_pos.xz));   // fog of war
 	ROUGHNESS = mix(mix(0.92, 0.82, w.w), 0.35, wet);

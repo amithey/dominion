@@ -254,8 +254,9 @@ static func unjam(w: Node, unit: Dictionary, delta: float) -> void:
 		unit.bearing = float(unit.get("bearing", 0.0)) + (0.7 if fposmod(float(unit.phase), 2.0) < 1.0 else -0.7)
 		unit.path = PackedVector3Array()
 
-## Push that separates a ground unit at `at` from its neighbours.
-static func crowd_push(w: Node, unit: Dictionary, at: Vector3) -> Vector3:
+## Push that separates a ground unit at `at` from its neighbours. A unit standing still passes
+## `still`: units walking past do not shove it (they go round it instead), only others standing do.
+static func crowd_push(w: Node, unit: Dictionary, at: Vector3, still := false) -> Vector3:
 	var push := Vector3.ZERO
 	var cx := floori(at.x / w.GRID)
 	var cz := floori(at.z / w.GRID)
@@ -267,6 +268,8 @@ static func crowd_push(w: Node, unit: Dictionary, at: Vector3) -> Vector3:
 			for other in bucket:
 				if is_same(other, unit) or other.dead or other.get("fly", false) or other.get("naval", false):
 					continue
+				if still and other.get("moving", false) and other.get("target") != null:
+					continue   # a unit on its way does not push one that stands: it steers round it
 				var gap: Vector3 = at - other.node.position
 				gap.y = 0
 				# Hulls are about seven metres long: two vehicles keep 6.5 m apart.

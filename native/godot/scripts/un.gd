@@ -81,8 +81,11 @@ var aid_next := 0.0
 var _case_id := 1
 var _dues_history: Array = []
 
+var agencies: RefCounted = null   # un_agencies.gd: the Secretary-General, the IAEA, the humanitarian appeals
+
 func _init(world: Node) -> void:
 	w = world
+	agencies = preload("res://scripts/un_agencies.gd").new(world)
 	_elect(true)
 	_rotate()
 	_choose_sg()
@@ -251,6 +254,7 @@ func update(_delta: float) -> void:
 	_dues()
 	_update_assembly()
 	_update_compliance()
+	agencies.update(_delta)
 
 ## The Secretary-General brings a long war to the Council.
 func _article_99() -> void:
@@ -869,7 +873,7 @@ func capture() -> Dictionary:
 		"sg_region": sg_region, "sg_votes": sg_votes,
 		"assembly_queue": assembly_queue.map(clean), "assembly_current": clean.call(assembly_current) if assembly_current != null else null,
 		"assembly_record": assembly_record.map(clean), "compliance": compliance.map(clean), "case_id": _case_id, "aid_next": aid_next,
-		"seen": _seen.duplicate(), "war_since": _war_since.duplicate(), "campaign": _campaign.duplicate(), "dues_history": _dues_history.duplicate()}
+		"seen": _seen.duplicate(), "war_since": _war_since.duplicate(), "campaign": _campaign.duplicate(), "dues_history": _dues_history.duplicate(), "agencies": agencies.capture()}
 
 func restore(data: Dictionary) -> void:
 	if data.is_empty():
@@ -931,6 +935,9 @@ func restore(data: Dictionary) -> void:
 	_war_since = data.get("war_since", {}).duplicate()
 	_campaign.clear()
 	for k in data.get("campaign", {}): _campaign[int(k)] = float(data.campaign[k])
+	if agencies == null:
+		agencies = preload("res://scripts/un_agencies.gd").new(w)
+	agencies.restore(data.get("agencies", {}))
 	_dues_history = data.get("dues_history", []).duplicate()
 	if _dues_history.is_empty() and assessment > 0.0:
 		_dues_history = [assessment, assessment]   # compatibility with earlier dues model

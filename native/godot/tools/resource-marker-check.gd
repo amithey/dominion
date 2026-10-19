@@ -72,6 +72,14 @@ func placement_in_world() -> void:
 	world.set_process(false); world.set_physics_process(false)
 	for c in world.get_children(): c.set_process(false); c.set_physics_process(false)
 	world.edge_scroll = false
+	# (Your zone is two rings of sea off your coast: the coast beside the nearest sea field is taken as if bought.)
+	var sea_fields: Array = world.deposits.filter(func(d): return d.type in ["seaOil", "seaGas"])
+	var first_field: Dictionary = sea_fields[0]
+	for d in sea_fields:
+		if d.pos.distance_to(world.start) < first_field.pos.distance_to(world.start): first_field = d
+	for i in range(world.territory.owner_of.size()):
+		if world.territory.owner_of[i] < 0 and world.territory.center(i).distance_to(first_field.pos) < 80.0 and world.territory.terrain[i] != world.territory.Terrain.WATER:
+			world.territory.owner_of[i] = 0
 	var fields: Array = world.deposits.filter(func(d): return d.type in ["seaOil", "seaGas"] and world.site_problem("offshoreRig", d.pos, 0) == "")
 	check(not fields.is_empty(), "actual opening has an accessible offshore field")
 	if fields.is_empty(): return

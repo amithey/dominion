@@ -18,7 +18,7 @@ func _bar(ent: Dictionary, eye: Vector3, screen_rect: Rect2, lift: float, width 
 		return   # no bar over what the fog of war hides
 	if ent.dead or ent.hp >= ent.max_hp:
 		return
-	var p: Vector3 = ent.node.position + Vector3.UP * lift
+	var p: Vector3 = ent.node.get_global_transform_interpolated().origin + Vector3.UP * lift
 	if (eye.distance_to(p) > 130.0 and world.perf_opts) or world.camera.is_position_behind(p):
 		return
 	var screen: Vector2 = world.camera.unproject_position(p)

@@ -123,7 +123,7 @@ func tick() -> void:
 	# A bigger city eats more per head (it no longer grows its own food).
 	var food_out := civilians * float(cfg.foodPerCivilian) * (1.0 + civilians / 2000.0) * float(preload("res://scripts/additional_factions.gd").profile(world, 0).get("civilian_food", 1.0)) + army * float(cfg.foodPerSoldier)
 	for b in world.buildings:
-		if b.dead or not b.built or b.owner != 0 or b.key != "fishingWharf" or not b.get("supplied", true): continue
+		if b.dead or not b.built or b.owner != 0 or not b.key in ["fishingWharf", "fishingPlatform"] or not b.get("supplied", true): continue
 		var shoals := 0
 		for d in world.deposits:
 			if d.type == "fish" and d.pos.distance_to(b.root.position) <= 60: shoals += 1
@@ -133,13 +133,15 @@ func tick() -> void:
 	var starving: bool = res.food <= 0.5
 	# Citizens grow with happiness and health (the browser's 60 and 55 to start),
 	# which civic buildings and discoveries raise.
-	happiness = clampf(60.0 + provided("happiness") + (r.bonus("happiness") if r else 0.0) - SHORTAGE_UNREST * shortages.size(), 0.0, 100.0)
+	happiness = clampf(60.0 + provided("happiness") + (r.bonus("happiness") if r else 0.0) - SHORTAGE_UNREST * shortages.size() - (COLD_UNREST if cold else 0.0), 0.0, 100.0)
 	health = clampf(55.0 + provided("health") + (r.bonus("health") if r else 0.0), 0.0, 100.0)
 	var growth := civilians * ((happiness - 45.0) / 50.0) * (health / 100.0) * 0.0025
 	if growth > 0.0:
 		growth *= preload("res://scripts/national_profile.gd").growth(world, 0)   # a young or an ageing population
 	if starving:
 		growth -= civilians * 0.005
+	if cold:
+		growth -= civilians * 0.004   # the cold takes the old and the ill
 	civilians = clampf(civilians + growth, 20.0, civ_cap)
 	# Taxes reach only settlements the supply network connects (config.js
 	# supplyCoverage, weighted by how many people each settlement houses).
@@ -173,7 +175,13 @@ func tick() -> void:
 	# Four 180-second seasons; the final quarter needs household heating.
 	var heating := civilians * 0.006 if fmod(world.game_time, 720.0) >= 540.0 else 0.0
 	rates.gas -= heating
-	if heating > 0.0 and res.gas <= 0.5: shortages.append("winter heating")
+	var was_cold := cold
+	cold = heating > 0.0 and res.gas <= 0.5
+	if cold: shortages.append("winter heating")
+	if cold and not was_cold:
+		world.hud.notice("Winter and no gas: homes are unheated. People are suffering and falling ill, factories run slow. Open gas fields, build offshore rigs or buy gas on the World market.")
+	elif was_cold and not cold and heating > 0.0:
+		world.hud.notice("Gas is flowing again: the winter heating is back.")
 	if oil_use > 0.0 and res.get("oil", 0.0) <= 0.5:
 		shortages.append("oil")
 	if chip_use > 0.0 and res.get("silicon", 0.0) <= 0.5:
@@ -196,6 +204,9 @@ const OIL_PER_PERSON := 0.0012     ## oil a second for each person past 150
 const CHIPS_PER_PERSON := 0.0006   ## silicon a second for each person past 400
 const SHORTAGE_UNREST := 6.0       ## happiness lost for each shortage (oil, chips)
 var shortages: Array[String] = []
+var cold := false                  ## winter with no gas: unrest, deaths and slow factories (world.update_training)
+const COLD_UNREST := 10.0         ## happiness lost (on top of the shortage's) while the homes are unheated
+const COLD_SLOWDOWN := 0.75       ## production speed of every factory while the homes are unheated
 
 const POPULATION_WEIGHTS := {"hq": 200.0, "villageCenter": 90.0, "cityCenter": 260.0, "residential": 150.0, "cottage": 80.0, "apartments": 280.0, "luxuryVillas": 60.0}
 func supply_coverage() -> float:

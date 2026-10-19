@@ -14,13 +14,13 @@ extends CanvasLayer
 
 const UI := preload("res://scripts/ui_theme.gd")
 const BUILD_MENU := {
-	"Economy": ["villageCenter", "cityCenter", "farm", "cottage", "housing", "residential", "workerHouse", "warehouse", "foodDepot", "extractor", "offshoreRig", "fishingWharf", "mountainMine", "market", "port", "bank", "oilRefinery", "powerPlant"],
+	"Economy": ["villageCenter", "cityCenter", "farm", "cottage", "housing", "residential", "workerHouse", "warehouse", "foodDepot", "extractor", "offshoreRig", "fishingPlatform", "fishingWharf", "mountainMine", "market", "port", "bank", "oilRefinery", "powerPlant"],
 	"Civic & research": ["school", "library", "university", "techPark", "chipFab", "aiDataCenter", "hospital", "cityHall", "tvStation", "policeStation", "courthouse", "intelAgency", "nuclearReactor"],
 	"Military": ["barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo", "fusionCell", "strategicComplex", "specialLab", "samSite", "bunker"],
 }
 ## The build list in groups under each tab, in the order a city grows.
 const BUILD_GROUPS := {
-	"Economy": [["Food and resources", ["farm", "extractor", "mountainMine", "offshoreRig", "fishingWharf", "foodDepot", "warehouse"]],
+	"Economy": [["Food and resources", ["farm", "extractor", "mountainMine", "offshoreRig", "fishingPlatform", "fishingWharf", "foodDepot", "warehouse"]],
 		["Homes", ["cottage", "housing", "residential", "workerHouse"]], ["Settlements", ["villageCenter", "cityCenter"]],
 		["Trade and industry", ["market", "port", "bank", "oilRefinery", "powerPlant"]]],
 	"Civic & research": [["Education and science", ["school", "library", "university", "techPark", "chipFab", "aiDataCenter"]],
@@ -35,7 +35,7 @@ const RESOURCES := [
 	["oil", "oil", "Oil. From rigs on oil deposits; for aircraft and some buildings."],
 	["silicon", "silicon", "Silicon. From silicon deposits; for high technology and missiles."],
 	["uranium", "uranium", "Uranium. From uranium deposits; for the nuclear programme."],
-	["gas", "gas", "Natural gas. Offshore rigs and imports supply winter heating. Winter lasts from 9 to 12 minutes of each 12-minute year."],
+	["gas", "gas", "Natural gas. Gas fields on land, offshore rigs and imports supply winter heating. With none in winter, homes freeze: unrest, deaths and slow factories. Winter lasts from 9 to 12 minutes of each 12-minute year."],
 ]
 const GOLD := Color("c1af86")   ## atlas sand accent (headings, labels)
 const RIGHT_W := 392.0
@@ -787,11 +787,11 @@ func _build_selection() -> void:
 	var commands := HBoxContainer.new()
 	commands.add_theme_constant_override("separation",4)
 	col.add_child(commands)
-	for action in ["Attack-move","Bombard","Repair","Buy land"]:
+	for action in ["Attack-move","Bombard","Repair","Buy land","Demolish"]:
 		var button := Button.new()
 		button.text = action
-		button.toggle_mode = not action in ["Repair", "Buy land"]
-		button.tooltip_text = {"Attack-move":"Move to a destination and engage suitable targets along the way. Ctrl + right click.","Bombard":"Fire at a ground position or infrastructure. Alt + right click. Requires a suitable weapon.","Repair":"Repair damaged vehicles or completed buildings for $0.25 per HP. Pauses in combat.","Buy land":"Buy unclaimed land next to your own for this settlement: $1000 a hex, up to 4 hexes per settlement."}[action]
+		button.toggle_mode = not action in ["Repair", "Buy land", "Demolish"]
+		button.tooltip_text = {"Attack-move":"Move to a destination and engage suitable targets along the way. Ctrl + right click.","Bombard":"Fire at a ground position or infrastructure. Alt + right click. Requires a suitable weapon.","Repair":"Repair damaged vehicles or completed buildings for $0.25 per HP. Pauses in combat.","Buy land":"Buy unclaimed land next to your own for this settlement: $1000 a hex, up to 4 hexes per settlement.","Demolish":"Take this building down: half of its cost comes back (85% while it is still a building site). Click twice to confirm. Not for the capital or a town."}[action]
 		_commands[action] = button
 		button.add_theme_font_size_override("font_size",12)
 		button.custom_minimum_size = Vector2(0,30)
@@ -801,6 +801,17 @@ func _build_selection() -> void:
 					world.begin_land_purchase(_selected)
 			elif action=="Repair":
 				world.Repairs.request(world,[_selected] if _selected!=null else _selected_units())
+			elif action=="Demolish":
+				if _selected != null:
+					var now: float = Time.get_ticks_msec() / 1000.0
+					if now - _demolish_armed < 4.0 and is_same(_demolish_target, _selected):
+						_demolish_armed = -99.0
+						var why: String = world.demolish(_selected)
+						if why != "": notice(why)
+					else:
+						_demolish_armed = now
+						_demolish_target = _selected
+						notice("Click Demolish again to take down the %s." % _selected.def.name)
 			else:
 				world.order_mode = "bombard" if action=="Bombard" else "attack"
 				world.hud.notice("%s: click a destination on the battlefield." % action))
@@ -1457,6 +1468,7 @@ func _update_selection() -> void:
 	_commands["Attack-move"].visible = _commands["Attack-move"].visible and not _commands["Attack-move"].disabled
 	_commands["Bombard"].visible = _commands["Bombard"].visible and not _commands["Bombard"].disabled
 	_commands["Repair"].visible = _commands["Repair"].visible and not _commands["Repair"].disabled
+	_commands["Demolish"].visible = _selected != null and _selected.owner == 0 and not _selected.dead and _selected.key != "hq" and _selected.def.get("settlement") == null and transport_text == ""
 	_sel_stats.visible = false
 	_launch_row.visible = false
 	_cargo_row.visible = false
@@ -1868,7 +1880,10 @@ var _panels: RefCounted       # side_panels.gd: the Diplomacy and Intelligence w
 var spy_target := 1
 var spy_op := "buildNetwork"
 var spy_role := "president"
-var spy_team := 1   # agents sent on the chosen operation (espionage.gd teams)
+var _demolish_armed := -99.0
+var _demolish_target = null
+var spy_team := 1
+var spy_agent := -1   # the agent chosen for the operation (-1: the best one ready)   # agents sent on the chosen operation (espionage.gd teams)
 var territory_pick := "Click anywhere on the map to see who holds that land."
 
 func _build_diplomacy_panel() -> void:

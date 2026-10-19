@@ -360,7 +360,9 @@ func pick_building(n: Dictionary) -> String:
 	var villages := int(counts.get("villageCenter", 0))
 	var cities := int(counts.get("cityCenter", 0))
 	# A nation that wants a shipyard but holds no coast founds a town on the shore first.
-	if n.get("wants_coast", false) and float(n.get("no_room", {}).get("villageCenter", 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, "villageCenter") and preload("res://scripts/progression.gd").building_blocked(world, n.id, "villageCenter") == "":
+	# Only when its army must cross water (ai_navy.needs_sea), and one such town, not a string of them.
+	if n.get("wants_coast", false) and not n.get("coast_town_made", false) and preload("res://scripts/ai_navy.gd").state(n).get("needs_sea", false) and float(n.get("no_room", {}).get("villageCenter", 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, "villageCenter") and preload("res://scripts/progression.gd").building_blocked(world, n.id, "villageCenter") == "":
+		n.coast_town_made = true   # (one attempt: the next one is not founded whether or not it found the shore)
 		return "villageCenter"
 	if villages + cities < total / 11:
 		var town := "cityCenter" if cities * 2 < villages else "villageCenter"
@@ -457,7 +459,11 @@ func find_spot(n: Dictionary, home: Dictionary, key: String):
 				if coast and not world.coast_near(at, world.logistics.radius * 2.6):
 					continue
 				if world.site_problem(key, at, n.id) == "":
+					if coast:
+						n.wants_coast = false   # it has its coastal town
 					return at
+		if coast:
+			n.wants_coast = false   # no shore to be found: give up (the yard waits for land to be bought)
 		return null
 	for attempt in range(24):
 		var a := randf() * TAU

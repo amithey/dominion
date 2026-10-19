@@ -56,7 +56,7 @@ func role_markers() -> Array:
 		for u in world.units:
 			if bool(u.get("selected", false)) != selected or u.dead or u.get("stowed", false) or not u.node.visible: continue
 			if world.get("fog") != null and not world.fog.shows(u): continue
-			var at: Vector3 = u.node.position + Vector3.UP * 3.5
+			var at: Vector3 = u.node.get_global_transform_interpolated().origin + Vector3.UP * 3.5
 			var distance := cam.global_position.distance_to(at)
 			if distance > FAR or (distance < 85.0 and not selected) or cam.is_position_behind(at): continue
 			var p := cam.unproject_position(at) + Vector2(0, -20)
@@ -173,7 +173,7 @@ func _draw() -> void:
 			_insignia(u, cam, view, font, fog)
 		if not short:
 			continue
-		var top: Vector3 = u.node.position + Vector3.UP * (3.4 if u.get("vehicle", false) else 2.6)
+		var top: Vector3 = u.node.get_global_transform_interpolated().origin + Vector3.UP * (3.4 if u.get("vehicle", false) else 2.6)
 		if cam.is_position_behind(top) or cam.global_position.distance_to(top) > FAR:
 			continue
 		var p := cam.unproject_position(top)
@@ -190,7 +190,7 @@ func _draw() -> void:
 func _insignia(u: Dictionary, cam: Camera3D, view: Rect2, font: Font, fog) -> void:
 	if fog != null and not fog.shows(u):
 		return
-	var top: Vector3 = u.node.position + Vector3.UP * (3.4 if u.get("vehicle", false) else 2.6)
+	var top: Vector3 = u.node.get_global_transform_interpolated().origin + Vector3.UP * (3.4 if u.get("vehicle", false) else 2.6)
 	if cam.is_position_behind(top) or cam.global_position.distance_to(top) > FAR * 0.6:
 		return
 	var p := cam.unproject_position(top)

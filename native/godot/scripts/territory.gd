@@ -30,7 +30,7 @@ const PURCHASES := 4       ## hexes each settlement may buy
 const RINGS_MAX := {"hq": 4, "cityCenter": 4, "villageCenter": 3}
 const PEOPLE_PER_RING := 110.0
 const WATERS := 2          ## rings of sea off a nation's coast that are its territorial waters
-const EEZ := 7             ## rings of sea a nation may drill and fish: its exclusive economic zone
+const EEZ := 2             ## rings of sea a nation may drill and fish: its exclusive economic zone
 
 var world: Node
 var cell := 40.0

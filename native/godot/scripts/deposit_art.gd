@@ -17,7 +17,7 @@ extends RefCounted
 
 const UI := preload("res://scripts/ui_theme.gd")
 const ICON_PX := 0.028  ## quiet secondary landmarks, below the unit role badges
-const ICON := {"oil": "oil", "seaOil": "oil", "seaGas": "gas", "iron": "iron", "gold": "money", "diamond": "money",
+const ICON := {"oil": "oil", "gas": "gas", "seaOil": "oil", "seaGas": "gas", "iron": "iron", "gold": "money", "diamond": "money",
 	"silicon": "silicon", "uranium": "uranium", "fish": "food"}
 
 var world: Node
@@ -48,6 +48,8 @@ func build(type: String, at: Vector3, spin: float) -> Node3D:
 	body.mesh = _mesh_for(type)
 	root.add_child(body)
 	match type:
+		"gas":
+			root.add_child(_flare())   # a gas wellhead with its flare
 		"oil":
 			root.add_child(_pumpjack())
 		"platform":
@@ -184,7 +186,7 @@ func _mesh_for(type: String) -> ArrayMesh:
 	rng.seed = type.hash() + (int(_site.x * 7.0 + _site.z * 13.0) if _conform else 0)
 	var mesh: ArrayMesh = null
 	match type:
-		"oil":
+		"oil", "gas":
 			var st := _begin()
 			for i in range(4):
 				var a := rng.randf() * TAU

@@ -525,7 +525,7 @@ func run() -> void:
 		if c.get_script() == preload("res://scripts/research_tree.gd"):
 			tree = c
 			break
-	check(tree != null and tree._cards.size() == r.discoveries.size(), "the research tree shows a card for every discovery (%d)" % (tree._cards.size() if tree != null else 0))
+	check(tree != null and tree._cards.size() == r.discoveries.keys().filter(func(k): return r.shown(k)).size(), "the research tree shows a card for every discovery that is yours (%d)" % (tree._cards.size() if tree != null else 0))
 	var overlap := false
 	if tree != null:
 		var rects: Array = tree._cards.values()
