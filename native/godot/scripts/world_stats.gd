@@ -1,0 +1,237 @@
+extends RefCounted
+## National statistics over time, as a ministry of statistics would publish them
+## (native/STATISTICS-2026-10-18.md): the economy, the military, land held, technology and
+## infrastructure of every nation, sampled as the match runs and drawn as charts.
+##
+## What you see of the others is what is published, not the truth:
+##   GDP, land held and technology   public figures, a little behind (one release late) and, for GDP, a
+##                                   little rounded
+##   military strength               an estimate; the better your intelligence on that nation, the closer
+##                                   (35% off with none, 5% with a full network)
+##   infrastructure                  satellite and trade-press estimates (25% off with none, 5% with a full network)
+## Your own figures are exact. The estimate's error for one nation does not jitter from chart to chart: it is
+## a fixed draw per nation and release, scaled by how much you know.
+
+const SAMPLE := 20.0              # game seconds between releases
+const MAX_SAMPLES := 400
+const METRICS := ["gdp", "military", "land", "tech", "infra"]
+const TITLES := {"gdp": "Economy", "military": "Military", "land": "Land", "tech": "Technology", "infra": "Infrastructure"}
+const UNITS := {"gdp": "$ bn", "military": "points", "land": "hexes", "tech": "level", "infra": "buildings"}
+const NOTES := {
+	"gdp": "Gross domestic product, a public figure released with a delay.",
+	"military": "The value of the forces under arms. For other nations an estimate: the better your intelligence, the closer.",
+	"land": "Hexes of territory held; borders are public.",
+	"tech": "Technology level (0 to 10); scientific output is public.",
+	"infra": "Finished buildings. For other nations an estimate from satellites and trade papers.",
+}
+## Real-world output used as each nation's starting economy, in billions of dollars (round figures).
+const BASE_GDP := {"usa": 29000, "china": 18700, "eu": 19400, "iran": 400, "russia": 2200, "india": 3900, "japan": 4000, "turkiye": 1300, "israel": 530,
+	"uk": 3600, "south_korea": 1870, "saudi": 1100, "brazil": 2200, "indonesia": 1400, "ukraine": 190, "north_korea": 25, "egypt": 350, "australia": 1800,
+	"pakistan": 370, "iraq": 270, "syria": 12, "afghanistan": 17, "yemen": 20, "houthis": 4, "ethiopia": 150, "nigeria": 190, "south_sudan": 5, "sudan": 30}
+const CIVIC_WEIGHT := 0.6          # a civic building adds this much of an economic one to output
+const HEADLINE_EVERY := 120.0      # at most one headline in this many seconds
+const HEADLINE_MOVE := 0.12        # a published figure moved by this share since two minutes ago
+
+var w: Node
+var series := {}                   # nation -> metric -> Array of {t, real, shown}
+var _clock := 0.0
+var _samples := 0
+var _base_output := {}             # nation -> output at the first release (the index's denominator)
+var _last_headline := -999.0
+var headlines := 0                 # (tests)
+
+func _init(world: Node) -> void:
+	w = world
+
+## Every frame (world._physics_process, the economy block): a release every SAMPLE seconds.
+func update(delta: float) -> void:
+	_clock += delta
+	if _clock < SAMPLE and _samples > 0:
+		return
+	_clock = 0.0
+	release()
+
+## One release: every nation's figures now.
+func release() -> void:
+	_samples += 1
+	var now := float(w.game_time)
+	for id in range(w.map.nations.size()):
+		var truth := _truth(id)
+		if truth.is_empty():
+			continue
+		if not series.has(id):
+			series[id] = {}
+			for m in METRICS: series[id][m] = []
+		for m in METRICS:
+			var list: Array = series[id][m]
+			list.append({"t": now, "real": float(truth[m]), "shown": _shown(id, m, float(truth[m]), list)})
+			if list.size() > MAX_SAMPLES:
+				list.pop_front()
+	_headline()
+
+## The true figures of nation `id` (empty for one that does not exist).
+func _truth(id: int) -> Dictionary:
+	var d: Node = w.diplomacy
+	if id >= w.map.nations.size() or (d != null and id > 0 and d.defeated(id)):
+		return {}
+	var output := 0.0
+	var built := 0
+	var force := 0.0
+	for b in w.buildings:
+		if b.owner != id or b.dead or not b.built:
+			continue
+		built += 1
+		var cat: String = str(b.def.get("cat", ""))
+		if cat == "military":
+			continue
+		var value: float = float(b.def.get("cost", {}).get("money", 100.0)) / 100.0
+		output += value * (CIVIC_WEIGHT if cat == "civic" else 1.0)
+	for u in w.units:
+		if u.owner != id or u.dead or u.get("stowed", false) or float(u.get("dmg", 0)) <= 0.0:
+			continue
+		var cost: Dictionary = w.unit_defs.get(u.key, {}).get("cost", {})
+		var price := 0.0
+		for r in cost:
+			price += float(cost[r]) * (1.0 if r == "money" else (3.0 if r in ["iron", "oil"] else 5.0))
+		force += price * clampf(float(u.hp) / maxf(float(u.max_hp), 1.0), 0.2, 1.0) / 100.0
+	if not _base_output.has(id):
+		_base_output[id] = maxf(output, 1.0)
+	var base: float = float(BASE_GDP.get(preload("res://scripts/factions.gd").identity(w, id), 500))
+	var land := 0
+	if w.territory != null:
+		for o in w.territory.owner_of:
+			if o == id: land += 1
+	return {"gdp": base * (0.55 + 0.45 * output / float(_base_output[id])), "military": force, "land": float(land), "tech": _tech(id), "infra": float(built)}
+
+func _tech(id: int) -> float:
+	if id == 0:
+		var total := maxi(w.research.discoveries.size(), 1)
+		return 10.0 * float(w.research.completed_count()) / total
+	if w.ai == null:
+		return 0.0
+	for n in w.ai.nations:
+		if n.id == id:
+			return float(n.get("tech", 0.0))
+	return 0.0
+
+## What the player is shown for `id`'s metric: exact for oneself, public or estimated for others.
+func _shown(id: int, metric: String, truth: float, list: Array) -> float:
+	if id == 0:
+		return truth
+	match metric:
+		"land", "tech":
+			return list[list.size() - 1].real if not list.is_empty() else truth   # a release late
+		"gdp":
+			var lagged: float = list[list.size() - 1].real if not list.is_empty() else truth
+			return roundf(lagged / 10.0) * 10.0 if lagged >= 200.0 else roundf(lagged)
+		_:
+			return maxf(0.0, truth * (1.0 + error(id) * _noise(id, metric, _samples)))
+
+## The estimate's fractional error bound for `id` (military and infrastructure), from what you know of it.
+func error(id: int) -> float:
+	var level := 0.0
+	if w.espionage != null:
+		level = clampf(float(w.espionage.intel.get(id, 0.0)) / 100.0, 0.0, 1.0)
+	return lerpf(0.35, 0.05, level)
+
+## A fixed draw in [-1, 1] for (nation, metric, release): the same every time it is asked.
+func _noise(id: int, metric: String, release_no: int) -> float:
+	var h: int = hash([id, metric, release_no / 3])   # the same for three releases in a row: a real estimate drifts slowly
+	return float(absi(h) % 2001) / 1000.0 - 1.0
+
+# ---------------------------------------------------------------- reading
+
+## The shown series of `metric` for nation `id`: [{t, v}], oldest first.
+func points(id: int, metric: String) -> Array:
+	var out := []
+	for s in series.get(id, {}).get(metric, []):
+		out.append({"t": s.t, "v": s.shown})
+	return out
+
+## The latest shown value of `metric` for `id`.
+func latest(id: int, metric: String) -> float:
+	var list: Array = series.get(id, {}).get(metric, [])
+	return float(list[list.size() - 1].shown) if not list.is_empty() else 0.0
+
+## The change of the shown figure over the last `seconds`, as a fraction (0.12 = up 12%).
+func change(id: int, metric: String, seconds := 120.0) -> float:
+	var list: Array = series.get(id, {}).get(metric, [])
+	if list.size() < 2:
+		return 0.0
+	var last: Dictionary = list[list.size() - 1]
+	var then: Dictionary = list[0]
+	for i in range(list.size() - 1, -1, -1):
+		if float(last.t) - float(list[i].t) >= seconds:
+			then = list[i]
+			break
+	return (float(last.shown) - float(then.shown)) / maxf(absf(float(then.shown)), 0.0001)
+
+## Nations ranked by the shown figure, highest first: [[id, value], ...].
+func ranking(metric: String) -> Array:
+	var out := []
+	for id in series:
+		out.append([id, latest(id, metric)])
+	out.sort_custom(func(a, b): return a[1] > b[1])
+	return out
+
+## Formats a figure for the metric.
+static func format(metric: String, v: float) -> String:
+	match metric:
+		"gdp":
+			return ("$%.1f tn" % (v / 1000.0)) if v >= 10000.0 else ("$%d bn" % int(roundf(v)))
+		"tech":
+			return "%.1f" % v
+		_:
+			return str(int(roundf(v)))
+
+## A headline when a published figure of another nation has moved much.
+func _headline() -> void:
+	var now := float(w.game_time)
+	if w.hud == null or now - _last_headline < HEADLINE_EVERY or now < 240.0:
+		return
+	var best_id := -1
+	var best_metric := ""
+	var best := 0.0
+	for id in series:
+		if id == 0:
+			continue
+		for m in ["gdp", "military", "land"]:
+			var c := change(id, m, 120.0)
+			if absf(c) >= HEADLINE_MOVE and absf(c) > best:
+				best = absf(c)
+				best_id = id
+				best_metric = m
+	if best_id < 0:
+		return
+	_last_headline = now
+	headlines += 1
+	var c := change(best_id, best_metric, 120.0)
+	var noun: String = {"gdp": "output", "military": "forces", "land": "territory"}[best_metric]
+	var name: String = w.diplomacy.name_of(best_id)
+	var text := "Statistics: %s's %s %s %d%% in the last two minutes." % [name, noun, "rose" if c > 0.0 else "fell", int(roundf(absf(c) * 100.0))]
+	if best_metric == "military":
+		text += " (An estimate: %d%% either way.)" % int(roundf(error(best_id) * 100.0))
+	w.hud.notice(text)
+
+# ---------------------------------------------------------------- saves
+
+func capture() -> Dictionary:
+	var out := {}
+	for id in series:
+		out[str(id)] = series[id].duplicate(true)
+	return {"series": out, "base": _base_output.duplicate(), "samples": _samples, "clock": _clock, "headline": _last_headline}
+
+func restore(data: Dictionary) -> void:
+	series = {}
+	for key in data.get("series", {}):
+		series[int(key)] = {}
+		for m in data.series[key]:
+			series[int(key)][m] = []
+			for s in data.series[key][m]:
+				series[int(key)][m].append({"t": float(s.t), "real": float(s.real), "shown": float(s.shown)})
+	_base_output = {}
+	for key in data.get("base", {}):
+		_base_output[int(key)] = float(data.base[key])
+	_samples = int(data.get("samples", 0))
+	_clock = float(data.get("clock", 0.0))
+	_last_headline = float(data.get("headline", -999.0))

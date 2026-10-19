@@ -162,9 +162,12 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 
 	# Training.
 	if n.next_train <= 0.0 and not cyber:
-		var army: Array = world.units.filter(func(u): return u.owner == n.id and not u.dead)
-		if army.size() < int(row(n).maxArmy):
+		var army: Array = world.units.filter(func(u): return u.owner == n.id and not u.dead and not u.get("naval", false))   # (ships have their own count: ai_navy.gd)
+		var fleet_short: bool = preload("res://scripts/ai_navy.gd").fleet_short(world, self, n)
+		if army.size() < int(row(n).maxArmy) or fleet_short:
 			var options: Array = train_pool.filter(func(k): return world.unit_allowed(n.id, k) and preload("res://scripts/additional_factions.gd").ai_unlocked(world, n.id, k) and preload("res://scripts/progression.gd").unit_blocked(world, n.id, k) == "" and not production_sites(n.id,k).is_empty())
+			if army.size() >= int(row(n).maxArmy):
+				options = options.filter(func(k): return world.unit_defs[k].get("naval", false))   # only ships, while the land army is full
 			if not options.is_empty():
 				var key: String = preload("res://scripts/war_tools.gd").ai_pick(world, n.id, options)   # its navy keeps a fleet
 				var cost := weighted_cost(world.unit_defs[key].cost) * preload("res://scripts/national_profile.gd").cost_mult(world, n.id, key)
@@ -200,6 +203,9 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 				if not defenders.is_empty():
 					world.order_attack(defenders, u)
 					break
+
+	# The sea: sorties, the coast's defence and landings (ai_navy.gd).
+	preload("res://scripts/ai_navy.gd").update(world, self, n, home, delta)
 
 	# Attack waves.
 	# Agents inside the nation (intel 60+) report an attack half a minute early.
@@ -279,7 +285,10 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 	var platforms: Array = world.missiles.platforms_for(key, n.id)
 	var source: Dictionary = platforms[randi() % platforms.size()]
 	var m: Dictionary = world.missiles.fly(key, source.node.position + Vector3.UP * 3.0, target.root.position, n.id, not source.get("is_building", false))
-	world.hud.notice("%s launched a %s at your %s." % [n.name, load("res://scripts/arsenal_catalog.gd").missile_name(world, n.id, key), target.def.name])
+	# Announced only by early warning (sitrep.gd): without intelligence you learn of it when it lands.
+	var def: Dictionary = world.missiles.def_of(key)
+	var eta: float = source.node.position.distance_to(target.root.position) / maxf(float(def.get("speed", 60.0)), 1.0)
+	world.sitrep.missile_launched(n.id, load("res://scripts/arsenal_catalog.gd").missile_name(world, n.id, key), target, eta)
 	return m
 
 # Money-equivalent price (ai.js weights materials the AI does not stockpile).
@@ -346,11 +355,14 @@ func pick_building(n: Dictionary) -> String:
 	var total := maxi(mine.size(), 1)
 	var share := float(military) / total
 	var want_military: float = 0.45 if world.diplomacy != null and not world.diplomacy.enemies_of(n.id).is_empty() else 0.3
-	# A state spreads: a new town for every 7 buildings it owns, a city for every
+	# A state spreads: a new town for every 11 buildings it owns, a city for every
 	# two villages, before anything else (unless there was no room for it lately).
 	var villages := int(counts.get("villageCenter", 0))
 	var cities := int(counts.get("cityCenter", 0))
-	if villages + cities < total / 7:
+	# A nation that wants a shipyard but holds no coast founds a town on the shore first.
+	if n.get("wants_coast", false) and float(n.get("no_room", {}).get("villageCenter", 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, "villageCenter") and preload("res://scripts/progression.gd").building_blocked(world, n.id, "villageCenter") == "":
+		return "villageCenter"
+	if villages + cities < total / 11:
 		var town := "cityCenter" if cities * 2 < villages else "villageCenter"
 		if float(n.get("no_room", {}).get(town, 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, town) and preload("res://scripts/progression.gd").building_blocked(world, n.id, town) == "":
 			return town
@@ -367,7 +379,15 @@ func pick_building(n: Dictionary) -> String:
 	if preload("res://scripts/ai_data.gd").ceiling(world, n.id) <= 0:
 		wanted_dc = 0   # no basis for AI at all (ai_data.gd ceiling)
 	var wanted_cell: int = 1 if tech >= 5.0 and world.get("directorate") != null and world.directorate != null and world.directorate.level(n.id) >= 3 else 0
-	for fac in [["missileSilo", 1 if tech >= 2.0 else 0], ["strategicComplex", wanted_complexes], ["specialLab", 1 if tech >= 4.0 else 0], ["aiDataCenter", wanted_dc], ["fusionCell", wanted_cell]]:
+	# A shipyard: at once when the army must cross water, and for any nation with a real navy at war or once it is established.
+	var sea_war: bool = preload("res://scripts/ai_navy.gd").state(n).get("needs_sea", false)
+	var navy_rating: float = preload("res://scripts/war_tools.gd").navy(world, n.id)
+	var yards: int = 0
+	if sea_war:
+		yards = 1
+	elif navy_rating >= 0.25 and tech >= 1.0 and (not world.diplomacy.enemies_of(n.id).is_empty() or total >= 14):
+		yards = 1 if navy_rating < 0.7 or tech < 4.0 else 2
+	for fac in [["missileSilo", 1 if tech >= 2.0 else 0], ["strategicComplex", wanted_complexes], ["specialLab", 1 if tech >= 4.0 else 0], ["aiDataCenter", wanted_dc], ["fusionCell", wanted_cell], ["shipyard", yards]]:
 		var fkey: String = fac[0]
 		if int(counts.get(fkey, 0)) < int(fac[1]) and world.building_defs.has(fkey) and NV.builds(world, n.id, fkey) and preload("res://scripts/progression.gd").building_blocked(world, n.id, fkey) == "" and float(n.get("no_room", {}).get(fkey, 0.0)) <= float(n.get("age", 0.0)):
 			return fkey
@@ -404,6 +424,13 @@ func find_spot(n: Dictionary, home: Dictionary, key: String):
 				best_d = d.pos.distance_to(centre)
 				best = d
 		return Vector3(best.pos.x, best.pos.y, best.pos.z) if best != null else null
+	# Coastal works (shipyard, port) first look along the nation's own coast.
+	if def.get("coastal", false) and def.get("settlement") == null:
+		var shore = coastal_spot(n, home, key)
+		if shore != null:
+			n.wants_coast = false
+			return shore
+		n.wants_coast = true   # no coast held: pick_building founds a town on one
 	# A city grows hex by hex: first try free hexes touching its own districts.
 	if def.get("settlement") == null:
 		var options := []
@@ -418,20 +445,47 @@ func find_spot(n: Dictionary, home: Dictionary, key: String):
 		if planned != null:
 			return planned
 	if def.get("settlement") != null:
-		# A new town stands 75-130 m out from one of the nation's towns (the
+		# A new town stands 62-105 m out from one of the nation's towns (the
 		# capital or any village or city), so the state spreads outward.
 		var towns: Array = world.buildings.filter(func(b): return b.owner == n.id and not b.dead and b.key in ["hq", "cityCenter", "villageCenter"])
 		towns.shuffle()
-		for town in towns.slice(0, 4):
-			for attempt in range(12):
+		var coast: bool = n.get("wants_coast", false)
+		for town in towns.slice(0, 4 if not coast else 8):
+			for attempt in range(12 if not coast else 40):
 				var a := randf() * TAU
-				var at: Vector3 = world.snap_to_hex(town.root.position + Vector3(cos(a), 0, sin(a)) * randf_range(75.0, 130.0))
+				var at: Vector3 = world.snap_to_hex(town.root.position + Vector3(cos(a), 0, sin(a)) * randf_range(62.0, 105.0 if not coast else 150.0))
+				if coast and not world.coast_near(at, world.logistics.radius * 2.6):
+					continue
 				if world.site_problem(key, at, n.id) == "":
 					return at
 		return null
 	for attempt in range(24):
 		var a := randf() * TAU
 		var at: Vector3 = world.snap_to_hex(centre + Vector3(cos(a), 0, sin(a)) * randf_range(18.0, 56.0))
+		if world.site_problem(key, at, n.id) == "":
+			return at
+	return null
+
+## A shipyard or port goes on the coast, wherever the nation holds a coastal hex: nearest the capital first
+## (the capital itself often stands inland, and a state with no yard cannot field a navy).
+func coastal_spot(n: Dictionary, home: Dictionary, key: String):
+	var t: Node = world.territory
+	if t == null:
+		return null
+	var from: Vector3 = home.root.position
+	var cells := []
+	for i in range(t.owner_of.size()):
+		if t.owner_of[i] == n.id:
+			cells.append(t.center(i))
+	cells.sort_custom(func(a, b): return a.distance_squared_to(from) < b.distance_squared_to(from))
+	var checked := 0
+	for c in cells:
+		if not world.coast_near(c, world.logistics.radius * 1.6):
+			continue
+		checked += 1
+		if checked > 12:
+			break
+		var at: Vector3 = world.snap_to_hex(c)
 		if world.site_problem(key, at, n.id) == "":
 			return at
 	return null

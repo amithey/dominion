@@ -45,6 +45,7 @@ func run() -> void:
 	hud.notice("Test message one")
 	hud.notice("Test message two")
 	hud.toggle_log()
+	hud.set_log_tab("all")
 	var box: Control = hud.find_child("MessageLog", true, false)
 	var lines: Array = hud._log_rows.get_children().filter(func(c): return c is Label and not c.is_queued_for_deletion())
 	check(box != null and box.visible and lines.size() >= 2 and lines[0].text.ends_with("Test message two") and lines[0].text.contains(":"), "L opens the message log, newest first, with the time (\"%s\")" % (lines[0].text if not lines.is_empty() else ""))

@@ -82,10 +82,10 @@ static func best(w: Node, owner: int, key: String, options: Array) -> Variant:
 			"compact":
 				score -= d * 0.6
 			"axial":
-				score -= absi(dr) * 0.9   # drawn out along the avenue (the q axis)
-				if dr == 0: score += 0.8
+				score -= absi(dr) * 0.3   # drawn out along the avenue (the q axis), without becoming a line
+				if dr == 0: score += 0.6
 			"linear":
-				score -= absi(dr) * 1.8
+				score -= absi(dr) * 0.6
 			_:
 				score += randf_range(-1.2, 1.2)
 		# Towns grow touching what they have: a district beside its own kind is worth more.
@@ -95,7 +95,11 @@ static func best(w: Node, owner: int, key: String, options: Array) -> Variant:
 			if near != null and not near.dead and near.owner == owner:
 				neighbours += 1
 				if ZONE.get(near.key, "") == zone: score += 0.35
-		score += neighbours * 0.3
+		# A town is a body, not a string: dense, filling its own gaps first, never a tentacle.
+		score += neighbours * 0.8
+		if neighbours >= 4: score += 2.0     # a gap in the middle of the town
+		elif neighbours <= 1 and d > 1: score -= 1.8   # a lone arm reaching out
+		score -= d * 0.45
 		# The army faces the nearest rival.
 		if zone in ["army", "airbase"] and toward != Vector3.ZERO:
 			var at: Vector3 = w.logistics.hex_center(hex)
@@ -154,3 +158,40 @@ static func order_of(w: Node, owner: int) -> Dictionary:
 		off_axis += absi(hex.y - c.y)
 		if posmod(hex.y - c.y, 2) == 0: even_rows += 1
 	return {"districts": total, "zoned": float(inside) / maxf(total, 1), "off_axis": off_axis / maxf(total, 1), "rows": float(even_rows) / maxf(total, 1)}
+
+## How compact a nation's towns are (the test and the inspector): the average ring distance of its
+## districts from the nearest town centre, the gaps (free hexes with five or six of its districts around
+## them) and the share that are lone arms (touching one district or none, away from a town centre).
+static func compactness(w: Node, owner: int) -> Dictionary:
+	var towns: Array = w.buildings.filter(func(b): return b.owner == owner and not b.dead and b.key in TOWNS)
+	var centres: Array = towns.map(func(b): return w.logistics.world_hex(b.root.position))
+	var total := 0
+	var ring_sum := 0
+	var arms := 0
+	var free := {}
+	for hex in w.district_hex:
+		var b = w.district_hex[hex]
+		if b.dead or b.owner != owner:
+			continue
+		var n := 0
+		for step in w.logistics.DIRECTIONS:
+			var near = w.district_hex.get(hex + step)
+			if near != null and not near.dead and near.owner == owner:
+				n += 1
+			elif near == null or near.dead:
+				free[hex + step] = true
+		if b.key in TOWNS:
+			continue
+		total += 1
+		var d := 99
+		for c in centres: d = mini(d, ring(hex, c))
+		ring_sum += d
+		if n <= 1: arms += 1
+	var holes := 0
+	for hex in free:
+		var around := 0
+		for step in w.logistics.DIRECTIONS:
+			var near = w.district_hex.get(hex + step)
+			if near != null and not near.dead and near.owner == owner: around += 1
+		if around >= 5: holes += 1
+	return {"districts": total, "mean_ring": float(ring_sum) / maxf(total, 1), "holes": holes, "arms": float(arms) / maxf(total, 1)}

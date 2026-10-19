@@ -88,7 +88,8 @@ func _build_territory(t: Node, colours: Array) -> ArrayMesh:
 
 func _process(delta: float) -> void:
 	_refresh += delta
-	if _refresh > 0.25:
+	var pinging: bool = world != null and world.get("sitrep") != null and not world.sitrep.pings.is_empty()
+	if _refresh > (0.1 if pinging else 0.25):
 		_refresh = 0.0
 		queue_redraw()
 
@@ -162,6 +163,16 @@ func _draw() -> void:
 		else:
 			var r := 1.6 if not u.vehicle else 2.0
 			draw_rect(Rect2(p - Vector2(r, r), Vector2(r, r) * 2.0), ink)
+	# Where you are being hit: a ring that opens and fades (sitrep.gd), red for the serious ones.
+	var report = world.get("sitrep")
+	if report != null:
+		for ping in report.active_pings(5.0):
+			var age: float = clampf((float(world.game_time) - float(ping.born)) / 5.0, 0.0, 1.0)
+			var at := to_map(ping.pos)
+			var tint := Color("ff5a44") if ping.crit else Color("f1c86a")
+			tint.a = (1.0 - age) * 0.95
+			draw_arc(at, 4.0 + age * 15.0, 0.0, TAU, 20, tint, 2.0)
+			draw_arc(at, 2.0 + age * 7.0, 0.0, TAU, 14, tint, 1.5)
 	# The camera: the ground it sees as a wedge, an arrow at the far edge for the
 	# direction it is looking, and a dot where the view is centred.
 	var pts := camera_outline()

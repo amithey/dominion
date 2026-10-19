@@ -124,7 +124,7 @@ func run() -> void:
 	check("forestry" in w.research.queue and w.research.progress.forestry.work == 23, "Loading restores the research queue and work together", "Research")
 	h.close_windows()
 	# 53-68: a long campaign must keep the log usable and bounded.
-	h.notice_log.clear(); h._recent_notices.clear(); h.toggle_log(); await frames()
+	h.notice_log.clear(); h._recent_notices.clear(); h.toggle_log(); h.set_log_tab("all"); await frames()
 	check(labels(h._log_rows).contains("No messages yet"), "Empty message log explains its state", "Message log")
 	h.notice("Repeat test"); h.notice("Repeat test"); check(h.notice_log.size() == 1, "Repeated notices are recorded once", "Message log")
 	for i in range(130): h.notice("Review event %03d — a long campaign log entry with details about production and diplomacy." % i)

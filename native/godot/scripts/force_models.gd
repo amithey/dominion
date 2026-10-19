@@ -171,7 +171,7 @@ static func ground(g: RefCounted, key: String, owner: int) -> Dictionary:
 
 static func craft_model(c: RefCounted, key: String, owner: int) -> Dictionary:
 	var g: RefCounted = c.g
-	g._mat = c.material_for(owner, "ship" if key in ["missileBoat", "carrier", "asFrigate"] else ("heli" if key in ["scoutHelicopter", "heavyLift"] else "jet"))
+	g._mat = c.material_for(owner, "ship" if key in ["missileBoat", "carrier", "asFrigate", "landingShip"] else ("heli" if key in ["scoutHelicopter", "heavyLift"] else "jet"))
 	var st: SurfaceTool = g._begin()
 	var parts := {"root": Node3D.new(), "rotor": null, "radar": null, "turret": null}
 	parts.root.name = "Force_" + key
@@ -183,6 +183,8 @@ static func craft_model(c: RefCounted, key: String, owner: int) -> Dictionary:
 			g.cyl(st, 0.12, 1.1, Vector3(side * 0.95, 1.5, -2.6), "z", c.METAL, 8)
 	elif key == "carrier":
 		carrier(c, st, parts, str(c.world.map.nations[owner].get("id", "")))
+	elif key == "landingShip":
+		landing_ship(c, st, parts)
 	elif key in ["aewc", "maritimePatrol"]:
 		# A transport or airliner airframe: long fuselage, straight wings, two engines.
 		var l := 12.0
@@ -372,6 +374,40 @@ static func carrier(c: RefCounted, st: SurfaceTool, parts: Dictionary, id: Strin
 			g.block(st, Vector3(beam * 0.7, 0.9, 0.12), Vector3(0, hull_top - 0.1, aft - 0.02), c.DARK)
 		var drones: bool = id in DRONE_CARRIERS
 		_deck_planes(c, parts, top, [Vector3(1.7, 0, -2.0), Vector3(1.7, 0, -4.0), Vector3(1.7, 0, -6.0), Vector3(-0.8, 0, -8.0)], drones)
+
+## An amphibious landing ship: the bridge and funnels forward of amidships, a long open
+## vehicle deck and helicopter spots aft over the well dock, a stern gate, and the
+## cargo on deck (vehicles under tarpaulins, containers).
+static func landing_ship(c: RefCounted, st: SurfaceTool, parts: Dictionary) -> void:
+	var g: RefCounted = c.g
+	var length := 16.0
+	var beam := 3.1
+	var deck: Callable = c.hull(st, length, beam, 1.15, 1.0, 0.35)
+	var h := func(z: float) -> float: return deck.call(z / length + 0.5)
+	var bz := length * 0.14
+	g.block(st, Vector3(beam * 0.86, 1.9, length * 0.2), Vector3(0, h.call(bz), bz), c.LIGHT, 0.1, 0.3, 0.1)
+	g.block(st, Vector3(beam * 0.7, 0.8, length * 0.14), Vector3(0, h.call(bz) + 1.9, bz + 0.2), c.LIGHT, 0.08, 0.3)
+	g.block(st, Vector3(beam * 0.66, 0.2, 0.05), Vector3(0, h.call(bz) + 2.3, bz + length * 0.07 + 0.02), c.GLASS)
+	c.mast(st, parts, Vector3(0, h.call(bz) + 2.7, bz - 0.3), 3.4)
+	for side: float in [-1.0, 1.0]:
+		g.block(st, Vector3(beam * 0.2, 1.3, length * 0.06), Vector3(side * beam * 0.3, h.call(-length * 0.04) + 0.0, -length * 0.04), c.PAINT, 0.1, 0.2)
+		g.block(st, Vector3(beam * 0.16, 0.22, length * 0.05), Vector3(side * beam * 0.3, h.call(-length * 0.04) + 1.2, -length * 0.04 - 0.03), c.TEAM)
+	# The long flat deck aft, with two helicopter spots and the vehicles on it.
+	var aft := -length * 0.27
+	g.block(st, Vector3(beam * 0.98, 0.18, length * 0.46), Vector3(0, h.call(aft) + 0.06, aft), DECK_DARK)
+	for z: float in [aft + 1.6, aft - 2.2]:
+		g.block(st, Vector3(1.6, 0.02, 0.1), Vector3(0, h.call(z) + 0.25, z), c.WHITE)
+		g.block(st, Vector3(0.1, 0.02, 1.6), Vector3(0, h.call(z) + 0.25, z), c.WHITE)
+	for i in range(3):
+		var z: float = aft + 2.4 - i * 1.6
+		var side: float = -0.62 if i % 2 == 0 else 0.62
+		g.block(st, Vector3(0.9, 0.5, 1.3), Vector3(side, h.call(z) + 0.25, z), c.PAINT, 0.05)
+		g.block(st, Vector3(0.9, 0.08, 1.3), Vector3(side, h.call(z) + 0.75, z), c.DARK)
+	g.block(st, Vector3(beam * 0.84, 0.9, 0.14), Vector3(0, h.call(-length * 0.5 + 0.2), -length * 0.5 + 0.2), c.DARK)   # the stern gate
+	# Davits for the landing craft, and the bow gun.
+	for side: float in [-1.0, 1.0]:
+		g.block(st, Vector3(0.1, 0.9, 0.5), Vector3(side * beam * 0.5, h.call(length * 0.02) + 0.1, length * 0.02), c.METAL)
+	c.naval_gun(parts, Vector3(0, h.call(length * 0.36), length * 0.36), 0.7)
 
 ## A superstructure on the starboard edge: bridge windows, a mast, a radar.
 static func _island(c: RefCounted, st: SurfaceTool, parts: Dictionary, at: Vector3, length: float, mast := true) -> void:

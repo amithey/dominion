@@ -139,6 +139,9 @@ var un: RefCounted = null   # un.gd: the Security Council and the General Assemb
 var tests: RefCounted = null   # nuclear_tests.gd: nuclear tests and the deterrent they prove
 var directorate: RefCounted = null   # ai_directorate.gd: artificial intelligence, compute and autonomy
 var ambience: Node3D = null   # ambience.gd: smoke, birds, winter, order markers
+var order_marks: Node3D = null   # order_marks.gd: routes and flags of the selected units
+var stats: RefCounted = null     # world_stats.gd: every nation's figures over time (Diplomacy, Statistics)
+var sitrep: RefCounted = null    # sitrep.gd: what happens to you, grouped (alerts, minimap pings, the report window)
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
 var noise_texture: NoiseTexture2D
@@ -235,6 +238,7 @@ var power_think := 5.0
 var intercepts: Array = [] # every missile interception attempt: {type, by, hit, owner}
 var sim_tick := 0         # simulation steps taken (staggers per-unit work; tests step by hand)
 var missile_aim := ""     # missile type waiting for a target click
+var landing_aim := false   # the next click on the map is where a selected transport puts its load ashore
 var land_buyer = null     # the settlement whose town hall is buying land (click a highlighted hex)
 var land_marks: MeshInstance3D
 var cam_lift := 0.0       # raises the camera's look-at point above the ground (captures)
@@ -1918,6 +1922,7 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 		u.egress = null
 		u.repath = 0.0
 		u.attack_move = attack
+		u.order_goal = point   # where the player clicked (order_marks.gd draws its flag there)
 		u.path = PackedVector3Array()
 		u.build_site = null  # a new order takes a worker off its construction site
 		u.build_queue = []   # and off its list of jobs
@@ -2112,6 +2117,8 @@ func _physics_process(delta: float) -> void:
 			tests.update(delta)  # rivals' nuclear tests
 		if directorate != null:
 			directorate.update(delta)  # compute, AI levels, autonomy incidents, AI cyber campaigns
+		if stats != null:
+			stats.update(delta)  # the statistics office publishes every nation's figures
 		if ambience != null:
 			ambience.update(delta)  # smoke, birds, winter, order markers
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
@@ -2565,11 +2572,16 @@ func start_match(difficulty: String) -> void:
 	defcon = preload("res://scripts/defcon.gd").new(self)
 	wmd = preload("res://scripts/wmd.gd").new(self)
 	un = preload("res://scripts/un.gd").new(self)
+	sitrep = preload("res://scripts/sitrep.gd").new(self)
+	stats = preload("res://scripts/world_stats.gd").new(self)
 	tests = preload("res://scripts/nuclear_tests.gd").new(self)
 	directorate = preload("res://scripts/ai_directorate.gd").new(self)
 	if ambience == null:
 		ambience = preload("res://scripts/ambience.gd").new(self)
 		add_child(ambience)
+	if order_marks == null:
+		order_marks = preload("res://scripts/order_marks.gd").new(self)
+		add_child(order_marks)
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 	hud.start_guide()
 
@@ -2624,6 +2636,7 @@ func clear_match() -> void:
 		hud.close_end()
 	cancel_placement()
 	cancel_transport()
+	cancel_landing()
 	select_building(null)
 	for b in buildings:
 		b.root.queue_free()
@@ -4431,6 +4444,7 @@ func logistics_test(capture: bool) -> void:
 func begin_missile(key: String) -> void:
 	cancel_placement()
 	cancel_transport()
+	cancel_landing()
 	if int(missiles.stock.get(key, 0)) <= 0:
 		hud.notice("No %s in storage." % missiles.def_of(key).name)
 		return
@@ -4515,6 +4529,32 @@ func land_click(point: Vector3) -> void:
 	else:
 		_draw_land_marks(options)
 
+## "Land at...": the next left click on the map is the landing place of the selected transports.
+func begin_landing() -> void:
+	cancel_placement()
+	cancel_transport()
+	cancel_missile()
+	landing_aim = true
+	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
+	hud.notice("Click where to put them ashore (right click cancels). Ships stand off the nearest beach.")
+
+func cancel_landing() -> void:
+	if landing_aim:
+		landing_aim = false
+		Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+
+func landing_click(point: Vector3) -> void:
+	var Air := preload("res://scripts/airlift.gd")
+	var sent := 0
+	for t in units:
+		if t.selected and Air.is_transport(t) and int(t.owner) == 0 and Air.order_unload_at(self, t, point):
+			sent += 1
+	cancel_landing()
+	if sent > 0:
+		hud.notice("%d transport%s heading there; they unload on arrival." % [sent, "s" if sent > 1 else ""])
+	else:
+		hud.notice("No beach or clear ground within reach of that spot, or nothing aboard.")
+
 func cancel_missile() -> void:
 	missile_aim = ""
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
@@ -4522,6 +4562,7 @@ func cancel_missile() -> void:
 func begin_placement(key: String) -> void:
 	cancel_missile()
 	cancel_transport()
+	cancel_landing()
 	cancel_placement()
 	var def: Dictionary = building_defs.get(key, {})
 	if def.is_empty():
@@ -5512,6 +5553,8 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 		amount *= directorate.damage_mult(source, unit)  # AI: autonomy, the fusion cell, targeting and undersea sensing
 	amount *= preload("res://scripts/war_tools.gd").damage_mult(self, source, unit)  # radars, airborne warning, jamming, submarine hunters
 	unit.hp -= amount
+	if sitrep != null:
+		sitrep.damaged(unit, amount, source)   # the situation report (sitrep.gd)
 	Vet.credit(self, source, unit, amount)
 	if amount > 0:
 		unit.last_hit = game_time
@@ -5556,6 +5599,8 @@ func kill(unit: Dictionary) -> void:
 	if unit.get("killed", false):
 		return   # already dead: no second explosion, no second turret thrown
 	unit.killed = true
+	if sitrep != null:
+		sitrep.unit_lost(unit)
 	if support != null:
 		support.lost(unit)   # the home front mourns (war_support.gd)
 	if generals != null and unit.has("general"):
@@ -5651,6 +5696,8 @@ func destroy_building(b: Dictionary) -> void:
 		return   # already a ruin: not crushed, burnt and announced again
 	b.destroyed = true
 	b.dead = true
+	if sitrep != null:
+		sitrep.building_lost(b)
 	if b.key == "nuclearReactor" and wmd != null:
 		wmd.reactor_destroyed(b)   # its core spreads downwind
 	if b.key in ["strategicComplex", "specialLab"] and wmd != null:
@@ -6071,6 +6118,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_RIGHT and missile_aim != "":
 			if event.pressed:
 				cancel_missile()
+		elif event.button_index == MOUSE_BUTTON_LEFT and landing_aim:
+			if event.pressed:
+				var point = ground_point(event.position)
+				if point != null:
+					landing_click(point)
+		elif event.button_index == MOUSE_BUTTON_RIGHT and landing_aim:
+			if event.pressed:
+				cancel_landing()
 		elif event.button_index == MOUSE_BUTTON_LEFT and transport_kind != "":
 			if event.pressed:
 				transport_click(event.position, event.shift_pressed)
@@ -6296,12 +6351,13 @@ func _input(event: InputEvent) -> void:
 			return   # the menu closes itself on Esc (menu.gd); opening it again here would undo that
 		# Esc first cancels what is in progress and closes an open window; with
 		# nothing to cancel or close it pauses (it used to pause over an open window).
-		var busy: bool = placing != "" or transport_kind != "" or missile_aim != "" or selected_building != null
+		var busy: bool = placing != "" or transport_kind != "" or missile_aim != "" or landing_aim or selected_building != null
 		var closed: bool = false if busy else hud.close_windows()
 		if not busy and not closed and menu != null and menu._root != null:
 			menu.open_pause()
 			get_viewport().set_input_as_handled()   # the same press must not reach menu.gd and close it again
 		cancel_missile()
+		cancel_landing()
 		cancel_transport()
 		cancel_placement()
 		cancel_land_purchase()

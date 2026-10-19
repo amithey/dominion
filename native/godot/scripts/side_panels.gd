@@ -39,6 +39,8 @@ const OP_GROUPS := [
 
 var hud: Node
 var diplomacy_tab := "nations"
+var stats_metric := "gdp"
+var stats_hidden := {}
 var intel_tab := "operations"
 var defence_tab := "generals"
 var arsenal_country := ""
@@ -77,10 +79,12 @@ func diplomacy() -> void:
 	for id in range(1, d.n):
 		if not d.defeated(id) and d.at_war(0, id):
 			wars += 1
-	_tabs([["Nations", "nations"], ["World map", "world"], ["Orders", "orders"]], diplomacy_tab, func(v): diplomacy_tab = v)
+	_tabs([["Nations", "nations"], ["World map", "world"], ["Statistics", "stats"], ["Orders", "orders"]], diplomacy_tab, func(v): diplomacy_tab = v)
 	match diplomacy_tab:
 		"world":
 			_world_chart()
+		"stats":
+			preload("res://scripts/stats_view.gd").draw(self)
 		"orders":
 			hud._standing_orders()
 		_:
@@ -429,8 +433,11 @@ func _operations(e: Node, d: Node) -> void:
 	var title: Label = hud._text("%s  →  %s" % [op.name, d.name_of(hud.spy_target)], 17, hud.UI.CREAM, true)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bh.add_child(title)
-	var chance := clampf(e.success_chance(hud.spy_op, hud.spy_target) + agent_bonus, 0.05, 0.97)
-	hud._meter(brief, chance, 1.0, hud.UI.GOLD, "Success %d%%   ·   exposure risk %d%%" % [roundi(chance * 100), roundi(e.exposure_chance(hud.spy_op, hud.spy_target) * 100)])
+	var ready_n: int = e.ready_agents().size()
+	hud.spy_team = clampi(hud.spy_team, 1, maxi(1, mini(e.MAX_TEAM, ready_n)))
+	var team: int = hud.spy_team
+	var chance := clampf(e.success_chance(hud.spy_op, hud.spy_target, team) + agent_bonus, 0.05, 0.97)
+	hud._meter(brief, chance, 1.0, hud.UI.GOLD, "Success %d%%   ·   exposure risk %d%%" % [roundi(chance * 100), roundi(e.exposure_chance(hud.spy_op, hud.spy_target, team) * 100)])
 	var detail: Label = hud._text(op.desc, 13, hud.UI.TEXT)
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail.custom_minimum_size.x = 460
@@ -445,11 +452,31 @@ func _operations(e: Node, d: Node) -> void:
 			hud.spy_role = v
 			hud.refresh_side())
 		brief.add_child(hud._text(e.role_effect(hud.spy_role), 12, hud.UI.MUTED))
-	brief.add_child(hud._text("$%d  ·  prepare %ds  ·  cooldown %ds  ·  needs intel %d" % [int(op.cost), e.PROGRAMS[hud.spy_op][0], e.PROGRAMS[hud.spy_op][1], e.PROGRAMS[hud.spy_op][3]], 13, hud.GOLD))
-	var reason: String = e.blocked_reason(hud.spy_op, hud.spy_target, hud.spy_role if needs_person else "")
+	brief.add_child(hud._text("$%d  ·  prepare %ds  ·  cooldown %ds  ·  needs intel %d" % [e.team_cost(hud.spy_op, team), int(e.team_duration(hud.spy_op, team)), e.PROGRAMS[hud.spy_op][1], e.PROGRAMS[hud.spy_op][3]], 13, hud.GOLD))
+	# The team: more agents on one operation raise the odds and shorten the preparation, and cost more, leave more
+	# tracks and put every one of them at risk.
+	var team_row: HBoxContainer = hud._row(brief, 6)
+	team_row.add_child(hud._text("Agents on it", 14, hud.UI.MUTED))
+	var on_fewer := func():
+		hud.spy_team = maxi(1, hud.spy_team - 1)
+		hud.refresh_side()
+		return ""
+	var fewer: Button = hud._button(team_row, "−", on_fewer, team > 1)
+	fewer.custom_minimum_size.x = 34
+	team_row.add_child(hud._text("%d of %d ready" % [team, ready_n], 14, hud.UI.CREAM, true))
+	var on_more := func():
+		hud.spy_team = mini(e.MAX_TEAM, hud.spy_team + 1)
+		hud.refresh_side()
+		return ""
+	var more: Button = hud._button(team_row, "+", on_more, team < mini(e.MAX_TEAM, ready_n))
+	more.custom_minimum_size.x = 34
+	more.tooltip_text = "Up to %d agents. Each extra agent adds to the odds and shortens the preparation, and costs 25%% more; the exposure risk rises by about a third, and a failure can lose every one of them." % e.MAX_TEAM
+	if team > 1:
+		brief.add_child(hud._text("A team of %d: +%d points of success, %d%% shorter preparation, intelligence and network gains +%d%%, exposure risk x%.2f." % [team, roundi(e.team_bonus(team) * 100.0), roundi((1.0 - e.team_duration(hud.spy_op, team) / float(e.PROGRAMS[hud.spy_op][0])) * 100.0), roundi(e.TEAM_YIELD * (team - 1) * 100.0), 1.0 + e.TEAM_EXPOSURE * (team - 1)], 12, hud.UI.MUTED))
+	var reason: String = e.blocked_reason(hud.spy_op, hud.spy_target, hud.spy_role if needs_person else "", -1, team)
 	if reason != "":
 		brief.add_child(hud._text(reason, 13, hud.UI.BAD))
-	var go: Button = hud._button(brief, "Authorize operation", func(): return e.run(hud.spy_op, hud.spy_target, hud.spy_role if needs_person else ""), reason == "", "good")
+	var go: Button = hud._button(brief, "Authorize operation" if team == 1 else "Authorize operation (team of %d)" % team, func(): return e.run(hud.spy_op, hud.spy_target, hud.spy_role if needs_person else "", -1, -1.0, team), reason == "", "good")
 	go.custom_minimum_size.y = 36
 	# Standing orders: agents keep growing the network here and refreshing its
 	# dossier on their own, one job at a time (espionage._standing_orders).
@@ -498,17 +525,17 @@ func _op_row(e: Node, key: String, agent_bonus: float) -> void:
 	row.add_theme_constant_override("separation", 10)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(row)
-	var why: String = e.blocked_reason(key, hud.spy_target, hud.spy_role)
+	var why: String = e.blocked_reason(key, hud.spy_target, hud.spy_role, -1, hud.spy_team)
 	var name: Label = hud._text(op.name, 14, hud.UI.CREAM if why == "" else hud.UI.MUTED)
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(name)
-	var chance := clampf(e.success_chance(key, hud.spy_target) + agent_bonus, 0.05, 0.97)
+	var chance := clampf(e.success_chance(key, hud.spy_target, hud.spy_team) + agent_bonus, 0.05, 0.97)
 	var odds: Label = hud._text("%d%%" % roundi(chance * 100), 13, Color("8fd18a") if chance >= 0.6 else (hud.GOLD if chance >= 0.35 else Color("e8836f")))
 	odds.custom_minimum_size.x = 44
 	odds.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(odds)
-	var cost: Label = hud._text("$%d" % int(op.cost), 13, hud.GOLD)
+	var cost: Label = hud._text("$%d" % e.team_cost(key, hud.spy_team), 13, hud.GOLD)
 	cost.custom_minimum_size.x = 56
 	cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	cost.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -553,10 +580,10 @@ func _agents(e: Node, d: Node) -> void:
 		var remaining := maxi(0, ceili(float(mission.ends) - e.clock))
 		var duration: float = float(mission.ends) - float(mission.started)
 		var progress := 1.0 - float(remaining) / duration
-		var title: String = "%s · %s" % [e.ops()[mission.op].name, d.name_of(int(mission.nation))]
+		var title: String = "%s · %s%s" % [e.ops()[mission.op].name, d.name_of(int(mission.nation)), (" · team of %d" % e.mission_agents(mission).size()) if e.mission_agents(mission).size() > 1 else ""]
 		var meter: Control = hud._meter(card, progress, 1.0, hud.UI.GOLD, "%s · %ds" % [title, remaining])
 		hud._intel_progress.append({"bar": meter.get_child(0), "label": meter.get_child(1), "ends": mission.ends, "duration": duration, "title": title})
-		hud._button(card, "Recall the agent", e.cancel_mission.bind(int(mission.agent)), true, "bad")
+		hud._button(card, "Recall the team" if e.mission_agents(mission).size() > 1 else "Recall the agent", e.cancel_mission.bind(int(mission.agent)), true, "bad")
 	for nation in e.proxies:
 		var proxy: Dictionary = e.proxies[nation]
 		var card: VBoxContainer = hud._card(hud._nation_colour(int(nation)))

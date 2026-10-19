@@ -11,6 +11,17 @@ const TICK := 10.0
 const INTEL_TIERS := [[10, "Treasury and buildings"], [25, "Army strength"], [40, "Wars, allies and pacts"], [60, "Warning of attacks on you"]]
 const INTEL_GAIN := {"buildNetwork": 6, "reconDossier": 18, "cyberAttack": 8, "stealFunds": 5, "stealTech": 10, "sabotage": 6, "shipping": 6, "proxyCell": 8, "armRebels": 8, "falseFlag": 6, "assassinate": 12}
 
+## Teams: several agents on one operation (and several operations against one nation at once). A team
+## raises the odds and shortens the preparation, and costs more, leaves more tracks and, if it fails,
+## risks every agent in it (native/ESPIONAGE-TEAMS-2026-10-18.md).
+const MAX_TEAM := 4
+const TEAM_SUCCESS := [0.0, 0.08, 0.14, 0.18]   # added to the odds by team size 1 to 4
+const TEAM_COST := 0.25                         # of the operation's cost for each extra agent
+const TEAM_EXPOSURE := 0.35                     # of the exposure risk for each extra agent
+const TEAM_SPEED := 0.12                        # shorter preparation for each extra agent (to 55%)
+const TEAM_YIELD := 0.5                         # more intelligence and network from a team's success, per extra agent
+const MAX_PER_NATION := 3                       # operations against one nation at a time
+
 var world: Node
 var cfg: Dictionary
 var agents: Array = []        # {id, name, skill, xp, ops, status, captured_by}
@@ -212,7 +223,24 @@ func counter_spy(nation: int) -> float:
 		return float(world.ai.row_of(nation).get("counterSpy", 0.0)) + service + watched   # that rival's own difficulty
 	return float(world.map.ai.difficulty.get(world.match_difficulty, world.map.ai.difficulty.easy).get("counterSpy", 0.0)) + watched
 
-func success_chance(op_key: String, nation: int) -> float:
+## Added to the odds by a team of `size`.
+func team_bonus(size: int) -> float:
+	return float(TEAM_SUCCESS[clampi(size, 1, MAX_TEAM) - 1])
+
+func team_cost(op_key: String, size: int) -> int:
+	return int(roundf(float(ops()[op_key].cost) * (1.0 + TEAM_COST * (clampi(size, 1, MAX_TEAM) - 1))))
+
+func team_duration(op_key: String, size: int) -> float:
+	return float(PROGRAMS[op_key][0]) * maxf(0.55, 1.0 - TEAM_SPEED * (clampi(size, 1, MAX_TEAM) - 1))
+
+## The agents of a mission (older saves have one).
+func mission_agents(mission: Dictionary) -> Array:
+	var out := []
+	for id in mission.get("agents", [mission.get("agent", -1)]):
+		out.append(int(id))
+	return out
+
+func success_chance(op_key: String, nation: int, team := 1) -> float:
 	var op: Dictionary = ops()[op_key]
 	var p := float(op.base)
 	if has_agency():
@@ -224,6 +252,7 @@ func success_chance(op_key: String, nation: int) -> float:
 	if world.research:
 		p += world.research.bonus("spyPct")  # Covert Ops levels, Cyber Warfare
 	p -= 0.15 if active(nation, "alert") else 0.0
+	p += team_bonus(team)
 	return clampf(p, 0.05, 0.95)
 
 ## Resolve only a completed assignment. Submission and resolution are separate.
@@ -232,10 +261,16 @@ func _resolve(mission: Dictionary) -> String:
 	var nation: int = int(mission.nation)
 	var role: String = mission.role
 	var roll: float = float(mission.roll)
-	var agent: Dictionary = _agent(int(mission.agent))
+	var team: Array = mission_agents(mission).map(func(id): return _agent(int(id))).filter(func(a): return not a.is_empty())
+	var size: int = maxi(team.size(), 1)
+	var agent: Dictionary = _agent(int(mission.agent))   # the lead: the most skilled
+	for member in team:
+		if int(member.skill) > int(agent.get("skill", 0)):
+			agent = member
+	var extra: float = float(size - 1)
 	var op: Dictionary = ops()[op_key]
 	var d: Node = world.diplomacy
-	var p := clampf(success_chance(op_key, nation) + (int(agent.skill) - 1) * float(cfg.skillBonus), 0.05, 0.97)
+	var p := clampf(success_chance(op_key, nation, size) + (int(agent.skill) - 1) * float(cfg.skillBonus), 0.05, 0.97)
 	var r := randf() if roll < 0.0 else roll
 	var nat_name: String = d.name_of(nation)
 	if op_key == RegimeChange.KEY:
@@ -244,27 +279,34 @@ func _resolve(mission: Dictionary) -> String:
 	if r < p:
 		if op_key not in ["openSources", "counterSweep", "withdrawNetwork"]:
 			network[nation] = clampf(network[nation] + (16.0 if op_key == "buildNetwork" else 3.0), 0.0, 100.0)
-			heat[nation] = clampf(heat[nation] + (2.0 if op_key == "reconDossier" else 8.0), 0.0, 100.0)
+			heat[nation] = clampf(heat[nation] + (2.0 if op_key == "reconDossier" else 8.0) * (1.0 + TEAM_EXPOSURE * extra), 0.0, 100.0)
 		message = _succeed(op_key, nation, role)
-		_gain_xp(agent)
-		add_report(nation, op_key, "%s in %s — success (Agent \"%s\")" % [op.name, nat_name, agent.name], INTEL_GAIN.get(op_key, 12 if op_key == "openSources" else (0 if op_key in ["counterSweep", "withdrawNetwork"] else 5)))
+		for member in team: _gain_xp(member)
+		add_report(nation, op_key, "%s in %s — success (%s)" % [op.name, nat_name, ("Agent \"%s\"" % agent.name) if size == 1 else ("a team of %d led by \"%s\"" % [size, agent.name])], (1.0 + TEAM_YIELD * extra) * INTEL_GAIN.get(op_key, 12 if op_key == "openSources" else (0 if op_key in ["counterSweep", "withdrawNetwork"] else 5)))
 	else:
 		if PROGRAMS[op_key][4] > 0.0:
-			heat[nation] = clampf(heat[nation] + 14.0, 0.0, 100.0)
+			heat[nation] = clampf(heat[nation] + 14.0 * (1.0 + TEAM_EXPOSURE * extra), 0.0, 100.0)
 			network[nation] = clampf(network[nation] - 5.0, 0.0, 100.0)
-		if PROGRAMS[op_key][4] > 0.0 and randf() < clampf(0.55 - (int(agent.skill) - 1) * 0.07, 0.15, 0.6):
-			agent.status = "captured"
-			agent.captured_by = nation
-			d.change(0, nation, -25.0)
-			message = "Operation failed: Agent \"%s\" was CAPTURED by %s. Ransom: $%d in the Intel panel." % [agent.name, nat_name, int(cfg.ransom)]
+		# Every agent of the team runs the risk by itself: a larger team gets more done and loses more people.
+		var caught := []
+		if PROGRAMS[op_key][4] > 0.0:
+			for member in team:
+				if randf() < clampf(0.55 - (int(member.skill) - 1) * 0.07 + 0.03 * extra, 0.15, 0.65):
+					member.status = "captured"
+					member.captured_by = nation
+					caught.append(member)
+		if not caught.is_empty():
+			d.change(0, nation, -25.0 - 10.0 * float(caught.size() - 1))
+			var names := ", ".join(PackedStringArray(caught.map(func(m): return "\"%s\"" % m.name)))
+			message = "Operation failed: %s %s CAPTURED by %s. Ransom: $%d each in the Intel panel." % [("Agent " + names) if caught.size() == 1 else ("agents " + names), "was" if caught.size() == 1 else "were", nat_name, int(cfg.ransom)]
 			if op_key == "assassinate" and randf() < 0.35:
 				world.ai.declare_war(nation, false)
 		elif PROGRAMS[op_key][4] == 0.0:
 			message = "Assessment inconclusive; agent returns for review. No foreign exposure."
 		else:
-			message = "Operation failed, but Agent \"%s\" escaped cleanly." % agent.name
+			message = "Operation failed, but %s escaped cleanly." % (("Agent \"%s\"" % agent.name) if size == 1 else "the team")
 	# Attribution is independent of success: successful interference can be exposed.
-	if randf() < exposure_chance(op_key, nation):
+	if randf() < exposure_chance(op_key, nation, size):
 		message += _expose(nation, op_key)
 	if r >= p:
 		add_report(nation, op_key, message, 0.0)
@@ -554,6 +596,9 @@ func restore(data: Dictionary) -> void:
 	_next_id = int(data.get("next_id", agents.size() + 1))
 
 	missions = data.get("missions", []).duplicate(true)
+	for m in missions:
+		m.agents = mission_agents(m)   # (older saves: one agent)
+		m.team = int(m.get("team", m.agents.size()))
 	for field in ["cooldowns", "succession", "proxies", "stability"]:
 		var into: Dictionary = get(field)
 		into.clear()
@@ -597,19 +642,25 @@ func _agent(id: int) -> Dictionary:
 			return a
 	return {}
 
-func exposure_chance(key: String, nation: int) -> float:
+func exposure_chance(key: String, nation: int, team := 1) -> float:
 	var base: float = PROGRAMS[key][4]
-	return 0.0 if base == 0.0 else clampf(base + float(heat.get(nation, 0.0)) * 0.003, 0.0, 0.9)
+	return 0.0 if base == 0.0 else clampf((base + float(heat.get(nation, 0.0)) * 0.003) * (1.0 + TEAM_EXPOSURE * (clampi(team, 1, MAX_TEAM) - 1)), 0.0, 0.95)
 
-func blocked_reason(key: String, nation: int, role := "", agent_id := -1) -> String:
+func blocked_reason(key: String, nation: int, role := "", agent_id := -1, team := 1) -> String:
 	if not ops().has(key) or nation <= 0 or nation >= world.map.nations.size():
 		return "Choose a valid operation and foreign nation."
 	if world.diplomacy.defeated(nation): return "That nation no longer exists."
 	if not has_agency(): return "Build an Intelligence Agency first."
 	if not agents.any(func(a): return a.status == "ready" and (agent_id < 0 or int(a.id) == agent_id)):
 		return "No ready agent. Agents must finish deployment and recovery."
+	if team > 1 and ready_agents().size() < team:
+		return "A team of %d needs %d ready agents (%d ready)." % [team, team, ready_agents().size()]
+	var against := 0
 	for m in missions:
-		if int(m.nation) == nation: return "One assignment per target at a time."
+		if int(m.nation) == nation:
+			against += 1
+			if str(m.op) == key: return "That operation is already under way against this nation."
+	if against >= MAX_PER_NATION: return "At most %d operations against one nation at a time." % MAX_PER_NATION
 	var wait: float = float(cooldowns.get(nation, {}).get(key, 0.0)) - clock
 	if wait > 0: return "Security/recovery window: %ds remaining." % ceili(wait)
 	if key == "counterSweep" and security_until > clock: return "Domestic security review is already active."
@@ -626,30 +677,39 @@ func blocked_reason(key: String, nation: int, role := "", agent_id := -1) -> Str
 		if raid != "": return raid
 	if key == "falseFlag" and not range(1, world.diplomacy.n).any(func(i): return i != nation and not world.diplomacy.defeated(i)):
 		return "No other surviving rival to implicate."
-	if world.economy.res.money < float(ops()[key].cost): return "Insufficient treasury for this program."
+	if world.economy.res.money < float(team_cost(key, team)): return "Insufficient treasury for this program."
 	return ""
 
-func run(op_key: String, nation: int, role := "", agent_id := -1, roll := -1.0) -> String:
-	var reason := blocked_reason(op_key, nation, role, agent_id)
+func run(op_key: String, nation: int, role := "", agent_id := -1, roll := -1.0, team := 1) -> String:
+	team = clampi(team, 1, MAX_TEAM)
+	var reason := blocked_reason(op_key, nation, role, agent_id, team)
 	if reason != "": return reason
-	var agent: Dictionary = ready_agents().filter(func(a): return agent_id < 0 or int(a.id) == agent_id)[0]
-	var duration: float = PROGRAMS[op_key][0]
-	if not world.economy.pay({"money":float(ops()[op_key].cost)}): return "Insufficient treasury."
-	agent.status = "deployed"
-	missions.append({"op":op_key, "nation":nation, "role":role, "agent":agent.id,
+	var ready: Array = ready_agents()
+	var lead: Dictionary = ready.filter(func(a): return agent_id < 0 or int(a.id) == agent_id)[0]
+	# The rest of the team: the most skilled of the others.
+	var others: Array = ready.filter(func(a): return int(a.id) != int(lead.id))
+	others.sort_custom(func(a, b): return int(a.skill) > int(b.skill))
+	var members: Array = [lead] + others.slice(0, team - 1)
+	var duration: float = team_duration(op_key, team)
+	if not world.economy.pay({"money": float(team_cost(op_key, team))}): return "Insufficient treasury."
+	for member in members:
+		member.status = "deployed"
+	missions.append({"op":op_key, "nation":nation, "role":role, "agent":lead.id, "agents": members.map(func(m): return int(m.id)), "team": team,
 		"started":clock, "ends":clock + duration, "roll":roll})
 	# Reserve the target at submission. Failure, cancellation and save/load cannot bypass it.
 	cooldowns[nation][op_key] = clock + duration + float(PROGRAMS[op_key][1])
 	changed.emit()
-	return "%s authorized: %ds preparation, then recovery. Funds committed." % [ops()[op_key].name, int(duration)]
+	return "%s authorized%s: %ds preparation, then recovery. Funds committed." % [ops()[op_key].name, (" with a team of %d" % team) if team > 1 else "", int(duration)]
 
 func cancel_mission(agent_id: int) -> String:
 	for m in missions:
-		if int(m.agent) == agent_id:
+		if mission_agents(m).has(agent_id):
 			missions.erase(m)
-			var a := _agent(agent_id)
-			a.status = "recovering"
-			a.ready_at = clock + 30.0
+			for id in mission_agents(m):
+				var a := _agent(id)
+				if a.is_empty(): continue
+				a.status = "recovering"
+				a.ready_at = clock + 30.0
 			changed.emit()
 			return "Assignment recalled. Funds remain spent; security cooldown remains."
 	return "No assignment to recall."
@@ -683,9 +743,11 @@ func advance(delta: float) -> void:
 			result = _resolve(mission)
 		else:
 			add_report(int(mission.nation), str(mission.op), result, 0.0)
-		if a.status != "captured":
-			a.status = "recovering"
-			a.ready_at = clock + 30.0
+		for id in mission_agents(mission):
+			var member := _agent(id)
+			if not member.is_empty() and member.status != "captured":
+				member.status = "recovering"
+				member.ready_at = clock + 30.0
 		world.hud.notice(result)
 		changed.emit()
 	for nation in proxies.keys():

@@ -78,9 +78,14 @@ var _stat_values := {}    # caption -> [plate, value Label]
 var _commands := {}
 var _missile_view := "production"
 var _launch_row: HFlowContainer   # missile buttons when a missile ship is selected
+var _cargo_row: VBoxContainer     # troop transports: what is aboard, Unload / Land at; or Board for troops near one
+var _cargo_sig := ""
 var _launch_sig := ""
 var _health_color := Color.TRANSPARENT
 var _notices: VBoxContainer
+var _sitrep_view: Control        # sitrep_view.gd: the alert banner and the report window's content
+var _log_button: Button
+var _log_tabs := {}
 var _fps: Label
 var _help: PanelContainer
 var _screen_buttons := {}
@@ -125,6 +130,9 @@ func setup(world_node: Node, economy_node: Node) -> void:
 	_notices.add_theme_constant_override("separation", 6)
 	_notices.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_notices)
+	_sitrep_view = preload("res://scripts/sitrep_view.gd").new()
+	add_child(_sitrep_view)
+	_sitrep_view.setup(self)
 	_build_help()
 	show_building(null)
 	_build_diplomacy_panel()
@@ -287,7 +295,7 @@ func _build_top_bar() -> void:
 	row = screens
 	for b in [["cabinet", "Cabinet (Tab): the whole state at a glance", func(): toggle_cabinet()], ["research", "Research (Y)", func(): toggle_research()], ["diplomacy", "Diplomacy (G)", func(): toggle_diplomacy()],
 			["market", "World market (M)", func(): toggle_panel("market")], ["intel", "Intelligence (I)", func(): toggle_panel("intel")], ["defence", "Defence (K): generals, veterans and the nuclear alert", func(): toggle_panel("defence")], ["un", "United Nations (U): the Security Council and the General Assembly", func(): toggle_panel("un")],
-			["land", "Territory (T)", func(): toggle_panel("territory")], ["log", "Message log (L): every message of the match", func(): toggle_log()], ["menu", "Menu (Esc)", func(): world.menu.open_pause() if world.menu and world.menu._root != null else null]]:
+			["land", "Territory (T)", func(): toggle_panel("territory")], ["log", "Situation report (L): what is happening to you, grouped, and every message of the match", func(): toggle_log()], ["menu", "Menu (Esc)", func(): world.menu.open_pause() if world.menu and world.menu._root != null else null]]:
 		var button := Button.new()
 		button.icon = UI.icon("sovereign" if b[0] == "cabinet" else b[0])
 		button.expand_icon = true
@@ -298,6 +306,7 @@ func _build_top_bar() -> void:
 		button.toggle_mode = not b[0] in ["menu", "log"]
 		UI.ministry_button(button, b[0])   # each screen in its ministry's colour
 		_screen_buttons[b[0]] = button
+		if b[0] == "log": _log_button = button
 		button.tooltip_text = b[1]
 		button.focus_mode = Control.FOCUS_NONE
 		button.pressed.connect(b[2])
@@ -800,6 +809,10 @@ func _build_selection() -> void:
 	_launch_row.add_theme_constant_override("separation", 4)
 	_launch_row.visible = false
 	col.add_child(_launch_row)
+	_cargo_row = VBoxContainer.new()
+	_cargo_row.add_theme_constant_override("separation", 4)
+	_cargo_row.visible = false
+	col.add_child(_cargo_row)
 	var health := Control.new()
 	health.set_script(preload("res://scripts/health_overlay.gd"))
 	world.health_overlay = health  # the feature probe can hide it
@@ -1446,6 +1459,7 @@ func _update_selection() -> void:
 	_commands["Repair"].visible = _commands["Repair"].visible and not _commands["Repair"].disabled
 	_sel_stats.visible = false
 	_launch_row.visible = false
+	_cargo_row.visible = false
 	if transport_text != "":
 		_sel.visible = true
 		_sel_title.text = UI.caps("Road" if world.transport_kind == "road" else "Railway")
@@ -1532,6 +1546,7 @@ func _update_selection() -> void:
 			_sel_info.text = "%s\nRight-click to move. This selection has no weapons." % def.get("desc", "")
 		_fill_queue([])
 		_fill_launch(own_units.any(func(u): return u.key in world.missiles.LAUNCH_SHIPS))
+		_fill_cargo(own_units)
 		if units.size() == 1 and units[0].get("fly",false):
 			var u: Dictionary = units[0]
 			if u.key == "scoutHelicopter":
@@ -1695,6 +1710,52 @@ func _fill_launch(show: bool) -> void:
 		b.pressed.connect(func(): world.begin_missile(m))
 		_launch_row.add_child(b)
 
+## Troop transports (airlift.gd): what is aboard and the buttons to put it ashore, or, for troops
+## standing near one, a button that boards the nearest.
+func _fill_cargo(own: Array) -> void:
+	var Air := preload("res://scripts/airlift.gd")
+	var carriers: Array = own.filter(func(u): return Air.is_transport(u))
+	var boarders: Array = own.filter(func(u): return not Air.is_transport(u) and not u.get("fly", false) and not u.get("naval", false))
+	var nearest = Air.nearest_for(world, boarders) if carriers.is_empty() and not boarders.is_empty() else null
+	var sig := ""
+	for c in carriers:
+		sig += "%d:%d:%d:%s;" % [c.node.get_instance_id(), Air.used(c), c.get("cargo", []).size(), str(c.get("unload_go") != null)]
+	if nearest != null:
+		sig += "board:%d:%d" % [nearest.node.get_instance_id(), Air.room(nearest)]
+	_cargo_row.visible = sig != ""
+	if sig == _cargo_sig:
+		return
+	_cargo_sig = sig
+	for c in _cargo_row.get_children():
+		_cargo_row.remove_child(c)
+		c.queue_free()
+	if sig == "":
+		return
+	if not carriers.is_empty():
+		for c in carriers:
+			var label := _text("%s: %s" % [world.unit_defs.get(c.key, {}).get("name", c.key), Air.manifest(world, c)], 13, UI.CREAM)
+			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			_cargo_row.add_child(label)
+		var buttons := HFlowContainer.new()
+		buttons.add_theme_constant_override("separation", 4)
+		_cargo_row.add_child(buttons)
+		var unload := _button(buttons, "Unload (J)", func():
+			Air.unload_selected(world)
+			_cargo_sig = ""
+			return "")
+		unload.tooltip_text = "Put everything aboard ashore here. A ship out at sea sails to the nearest coast first and unloads on arrival."
+		var land := _button(buttons, "Land at...", func():
+			world.begin_landing()
+			return "")
+		land.tooltip_text = "Click a place on the map: the transport sails or flies there and puts its load ashore."
+		if carriers.any(func(c): return Air.room(c) > 0):
+			_cargo_row.add_child(_text("Select troops and right-click the transport to load them.", 12, UI.MUTED))
+	elif nearest != null:
+		var board := _button(_cargo_row, "Board the %s" % world.unit_defs.get(nearest.key, {}).get("name", nearest.key), func():
+			Air.order_board(world, world.units.filter(func(u): return u.selected and not u.dead and u.owner == 0), nearest)
+			return "")
+		board.tooltip_text = "The selected troops walk to the nearest transport and climb aboard. A ship comes alongside the nearest coast first."
+
 func _show_stats(values: Dictionary) -> void:
 	_sel_stats.visible = true
 	for caption in _stat_values:
@@ -1807,6 +1868,7 @@ var _panels: RefCounted       # side_panels.gd: the Diplomacy and Intelligence w
 var spy_target := 1
 var spy_op := "buildNetwork"
 var spy_role := "president"
+var spy_team := 1   # agents sent on the chosen operation (espionage.gd teams)
 var territory_pick := "Click anywhere on the map to see who holds that land."
 
 func _build_diplomacy_panel() -> void:
@@ -2380,6 +2442,8 @@ func notice(text: String, at := Vector3.INF) -> void:
 		return
 	_recent_notices[text] = now
 	var t: int = int(world.game_time) if world != null else 0
+	if world != null and world.get("sitrep") != null:
+		world.sitrep.from_notice(text, at)
 	notice_log.append("%02d:%02d   %s" % [t / 60, t % 60, text])
 	if notice_log.size() > 120:
 		notice_log.pop_front()
@@ -2916,7 +2980,8 @@ func _research_tracks() -> void:
 
 # ---------------------------------------------------------------- message log
 
-## Every message of the match, newest first, with the time it came (L).
+## The situation report (L): what has happened to you, grouped by kind with the live attacks first
+## (sitrep.gd), and, on the second tab, every message of the match, newest first, with its time.
 func toggle_log() -> void:
 	if _log_box == null:
 		_log_box = PanelContainer.new()
@@ -2934,7 +2999,7 @@ func toggle_log() -> void:
 		column.add_theme_constant_override("separation", 8)
 		_log_box.add_child(column)
 		var head := _row(column, 10)
-		var title := _text("Message log", 19, UI.BRIGHT, true)
+		var title := _text("Situation report", 19, UI.BRIGHT, true)
 		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		head.add_child(title)
 		var shut := Button.new()
@@ -2943,6 +3008,17 @@ func toggle_log() -> void:
 		shut.pressed.connect(func(): _log_box.hide())
 		head.add_child(shut)
 		_windows.register_window(_log_box, head, "log")
+		var tabs := _row(column, 6)
+		for t in [["summary", "Summary"], ["all", "All messages"]]:
+			var tab_button := Button.new()
+			tab_button.text = t[1]
+			tab_button.toggle_mode = true
+			tab_button.focus_mode = Control.FOCUS_NONE
+			tab_button.button_pressed = t[0] == _sitrep_view.tab
+			var which: String = t[0]
+			tab_button.pressed.connect(func(): set_log_tab(which))
+			tabs.add_child(tab_button)
+			_log_tabs[which] = tab_button
 		var scroll := ScrollContainer.new()
 		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -2951,22 +3027,20 @@ func toggle_log() -> void:
 		_log_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_log_rows.add_theme_constant_override("separation", 6)
 		scroll.add_child(_log_rows)
+		_sitrep_view.rows = _log_rows
 		_log_box.hide()
 	_log_box.visible = not _log_box.visible
 	if _log_box.visible:
+		if world != null and world.sitrep != null:
+			world.sitrep.mark_read()
 		_fill_log()
 
+func set_log_tab(tab: String) -> void:
+	_sitrep_view.tab = tab
+	for key in _log_tabs:
+		_log_tabs[key].set_pressed_no_signal(key == tab)
+	_fill_log()
+
 func _fill_log() -> void:
-	var scroll := _log_rows.get_parent() as ScrollContainer
-	var previous_scroll: int = scroll.scroll_vertical
-	for c in _log_rows.get_children():
-		_log_rows.remove_child(c)
-		c.queue_free()
-	if notice_log.is_empty():
-		_log_rows.add_child(_text("No messages yet.", 14, UI.MUTED))
-	for i in range(notice_log.size() - 1, -1, -1):
-		var line := _text(notice_log[i], 13, UI.CREAM if i == notice_log.size() - 1 else UI.TEXT)
-		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		line.custom_minimum_size.x = 500
-		_log_rows.add_child(line)
-	scroll.set_deferred("scroll_vertical", previous_scroll)
+	_sitrep_view.rows = _log_rows
+	_sitrep_view.fill()

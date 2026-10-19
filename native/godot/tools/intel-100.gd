@@ -132,7 +132,7 @@ func run() -> void:
 	e.advance(31.0)
 	check(agent.status == "ready", "and is ready again after 30 s")
 	e.run("openSources", 2, "", -1, 0.0)
-	check(e.blocked_reason("buildNetwork", 2).begins_with("One assignment per target"), "one assignment per target at a time")
+	check(e.blocked_reason("openSources", 2).begins_with("That operation is already under way"), "the same operation cannot run twice against one nation")
 	var busy: Dictionary = e.missions[0]
 	check(e.blocked_reason("buildNetwork", 3) == "", "while another agent works on another nation")
 	cash = w.economy.res.money

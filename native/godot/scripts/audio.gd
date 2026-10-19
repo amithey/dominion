@@ -85,7 +85,7 @@ func _ready() -> void:
 	_feedback.volume_db = -14.0
 	_feedback.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_feedback)
-	for cue in ["ready", "accepted", "rejected", "counter"]:
+	for cue in ["ready", "accepted", "rejected", "counter", "alert"]:
 		_cues[cue] = _cue(cue)
 	get_tree().node_added.connect(_on_node_added)
 	for b in get_tree().root.find_children("*", "BaseButton", true, false):
@@ -191,7 +191,7 @@ static func _cue(kind: String) -> AudioStreamWAV:
 	var rate := 22050
 	var data := PackedByteArray()
 	data.resize(int(rate * 0.32) * 2)
-	var pitches: Array = {"ready": [440.0, 554.37], "accepted": [523.25, 659.25], "rejected": [392.0, 293.66], "counter": [440.0, 493.88]}[kind]
+	var pitches: Array = {"ready": [440.0, 554.37], "accepted": [523.25, 659.25], "rejected": [392.0, 293.66], "counter": [440.0, 493.88], "alert": [698.46, 523.25]}[kind]
 	for i in range(data.size() / 2):
 		var t := float(i) / rate
 		var age := fmod(t, 0.16)

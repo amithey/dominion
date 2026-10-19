@@ -31,9 +31,9 @@ extends RefCounted
 const VEHICLES := ["mineLayer", "mineClearer", "recoveryVehicle", "decoy", "counterBatteryRadar", "coastalASM", "combatUGV", "logisticsUGV", "robotDog"]
 const AIR := ["aewc", "ewJet", "maritimePatrol", "carrierJet", "carrierDrone", "heavyLift", "navalHelicopter", "heavyBomberDrone"]
 const FIXED_WING := ["aewc", "ewJet", "maritimePatrol", "carrierJet", "carrierDrone"]
-const NAVAL := ["carrier", "asFrigate"]
+const NAVAL := ["carrier", "asFrigate", "landingShip"]
 const ALTITUDE := {"aewc": 32.0, "ewJet": 27.0, "maritimePatrol": 21.0, "carrierJet": 24.0, "carrierDrone": 20.0, "heavyLift": 15.0, "navalHelicopter": 13.0, "heavyBomberDrone": 9.0}
-const SHIP_LENGTH := {"carrier": 30.0, "asFrigate": 13.0}
+const SHIP_LENGTH := {"carrier": 30.0, "asFrigate": 13.0, "landingShip": 16.0}
 const WEAPON := {"coastalASM": "missile", "asFrigate": "missile", "maritimePatrol": "missile", "ewJet": "missile", "mineClearer": "rocket", "carrierJet": "missile", "carrierDrone": "missile", "navalHelicopter": "missile", "heavyBomberDrone": "bomb"}
 const NAVAL_ONLY := ["coastalASM", "maritimePatrol", "navalHelicopter"]
 const SUBMARINES := ["submarine", "nuclearSub", "orca"]
@@ -496,11 +496,15 @@ static func navy(w: Node, owner: int) -> float:
 ## A rival choosing what to train (ai.gd): a nation with a real navy keeps a fleet
 ## in proportion to it, and favours warships while it is short of one.
 static func ai_pick(w: Node, owner: int, options: Array) -> String:
+	# A rival whose army must cross water raises landing ships first (ai_navy.gd).
+	if "landingShip" in options and preload("res://scripts/ai_navy.gd").wants_transport(w, owner) and randf() < 0.6:
+		return "landingShip"
+	options = options.filter(func(k): return k != "landingShip")
 	var ships: Array = options.filter(func(k): return w.unit_defs.get(k, {}).get("naval", false))
 	if not ships.is_empty():
 		var fleet := 0
 		for u in w.units:
-			if not u.dead and int(u.owner) == owner and u.get("naval", false): fleet += 1
+			if not u.dead and int(u.owner) == owner and u.get("naval", false) and u.key != "landingShip": fleet += 1
 		var wanted := roundi(2.0 + 10.0 * navy(w, owner))
 		if fleet < wanted and randf() < 0.25 + 0.6 * navy(w, owner):
 			# The big ships too, once a nation can build them.

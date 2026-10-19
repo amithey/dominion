@@ -38,6 +38,31 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.99: transports, rival navies, a situation report, statistics, espionage teams
+
+- **Troop transports that work:** a new **Amphibious Landing Ship** (36 places) and helicopters take troops
+  aboard (right-click the transport, or the Board button) and put them ashore (Unload, J, or **Land at...** to
+  choose the beach). A ship at sea sails to the coast first; the troops wait on the shore. The unit card shows what
+  is aboard. (Before, ships could not carry anyone, and a crowd never reached a helicopter.)
+  [TRANSPORTS-RESEARCH-2026-10-18.md](TRANSPORTS-RESEARCH-2026-10-18.md)
+- **Balance:** the sea drone, APC, gunship, interceptor drone, loitering munitions, the air-defence destroyer and the
+  ballistic and tactical missiles were too strong for their price; corrected from a value-for-price measurement.
+  [BALANCE-2026-10-18.md](BALANCE-2026-10-18.md)
+- **Rivals build compact towns** (no strings of districts with gaps, no lone arms) **and use the sea:** a shipyard
+  (on a coastal town of their own if need be), a fleet that sorties and defends, and landing ships that carry an
+  invasion where the army cannot walk. [AI-NAVY-2026-10-18.md](AI-NAVY-2026-10-18.md)
+- **Order marks:** a flag where you sent your units, a dashed route per group, green to move, red to attack, amber to
+  board. [ORDER-MARKS-2026-10-18.md](ORDER-MARKS-2026-10-18.md)
+- **Situation report (L):** attacks, losses, what you destroyed, wars, shortages and finished work, merged and
+  counted, with a banner, minimap pings and a battle report. Red warnings exist only where **intelligence** (agents
+  in the enemy nation, satellites, early-warning radar) sees or foresees; without it you do not even learn of a
+  missile launch until it lands. [SITREP-2026-10-18.md](SITREP-2026-10-18.md)
+- **Statistics (Diplomacy):** charts of every nation's economy (GDP), military, land, technology and
+  infrastructure over time; published figures for others, estimates whose error shrinks with your intelligence.
+  [STATISTICS-2026-10-18.md](STATISTICS-2026-10-18.md)
+- **Espionage teams:** up to four agents on one operation (better odds, faster, dearer, more exposure and risk) and up
+  to three operations against one nation at once. [ESPIONAGE-TEAMS-2026-10-18.md](ESPIONAGE-TEAMS-2026-10-18.md)
+
 ## Version 0.9.98: an overall improvement: speed, a finished interface, and honest tests
 
 - **Faster in big battles:** the minimap redrew every hex of territory polygon by polygon and every unit as a
