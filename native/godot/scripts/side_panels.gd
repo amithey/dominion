@@ -39,7 +39,7 @@ const OP_GROUPS := [
 
 var hud: Node
 var diplomacy_tab := "nations"
-var stats_metric := "gdp"
+var stats_metric := "overview"
 var stats_hidden := {}
 var intel_tab := "operations"
 var defence_tab := "generals"
@@ -167,6 +167,18 @@ func _nation_card(id: int) -> void:
 		ties.append("Allied with " + ", ".join(friends))
 	if not ties.is_empty():
 		card.add_child(hud._text("   ·   ".join(ties), 13, hud.UI.TEXT))
+	# Sanctions and other measures in force against it, and its crises (crisis.gd): what you did shows.
+	for fx in preload("res://scripts/faction_powers.gd").effects_on(hud.world, id):
+		var line: Label = hud._text(("You: " if int(fx[1]) == 0 else "") + str(fx[0]), 13, hud.UI.BAD)
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		card.add_child(line)
+	var C: RefCounted = hud.world.get("crisis")
+	if C != null and not C.list(id).is_empty():
+		var names := PackedStringArray()
+		for k in C.list(id): names.append(str(C.KINDS[k].title))
+		var crises: Label = hud._text("In crisis: " + ", ".join(names), 13, Color(0.95, 0.72, 0.4))
+		crises.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		card.add_child(crises)
 	var actions: HBoxContainer = hud._row(card, 6)
 	var contact: Button = hud._button(actions, "Contact", hud.open_diplomatic_contact.bind(id), true, "good")
 	contact.size_flags_horizontal = Control.SIZE_EXPAND_FILL

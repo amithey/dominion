@@ -185,65 +185,116 @@ func plumes() -> int:
 
 # ---------------------------------------------------------------- birds
 
-## One flock: gulls (white, grey wings, dark tips) or crows (black) in turn, each a real bird: a body, a head with
-## a beak, a tail, and wings of two segments that bend as they beat.
+## One flock: gulls (white, pale grey wings with black tips, yellow bill) or crows (glossy black) in turn.
+## Each bird is built from shaped meshes, nose toward +Z (look_at uses the model front): a streamlined body,
+## a bill, a fanned tail, and swept wings of two panels (the outer one pointed) that bend as they beat.
+## Gulls glide between beats; crows row steadily.
+var _bird_meshes := {}
+
 func _flock(i: int) -> Dictionary:
 	var root := Node3D.new()
 	add_child(root)
 	var gull: bool = i % 2 == 0
-	var body_mat := _bird_material(Color(0.93, 0.94, 0.95) if gull else Color(0.09, 0.09, 0.1))
-	var wing_mat := _bird_material(Color(0.62, 0.66, 0.7) if gull else Color(0.13, 0.13, 0.15))
-	var tip_mat := _bird_material(Color(0.1, 0.1, 0.12))
-	var beak_mat := _bird_material(Color(0.95, 0.7, 0.18) if gull else Color(0.2, 0.18, 0.16))
+	var kind := "gull" if gull else "crow"
+	var m := _bird_kit(kind)
 	var birds := []
 	for k in range(BIRDS):
 		var bird := Node3D.new()
-		bird.scale = Vector3.ONE * (2.6 if gull else 2.3)   # big enough to read from the strategic camera
+		bird.scale = Vector3.ONE * (2.4 if gull else 2.1) * randf_range(0.92, 1.08)   # big enough to read from the strategic camera
 		root.add_child(bird)
-		_bird_part(bird, SphereMesh.new(), body_mat, Vector3(0, 0, 0), Vector3(0.34, 0.26, 0.9))
-		_bird_part(bird, SphereMesh.new(), body_mat, Vector3(0, 0.07, 0.5), Vector3(0.2, 0.2, 0.26))
-		var beak := CylinderMesh.new()
-		beak.top_radius = 0.0
-		beak.bottom_radius = 0.055
-		beak.height = 0.26
-		beak.radial_segments = 6
-		var beak_node := _bird_part(bird, beak, beak_mat, Vector3(0, 0.05, 0.8), Vector3.ONE)
-		beak_node.rotation.x = PI * 0.5
-		var tail := PrismMesh.new()
-		tail.size = Vector3(0.3, 0.04, 0.34)
-		_bird_part(bird, tail, wing_mat, Vector3(0, 0.02, -0.62), Vector3.ONE)
+		_bird_part(bird, m.body, m.body_mat, Vector3.ZERO)
+		_bird_part(bird, m.beak, m.beak_mat, Vector3.ZERO)
+		_bird_part(bird, m.tail, m.wing_mat, Vector3.ZERO)
 		for side in [-1.0, 1.0]:
 			var pivot := Node3D.new()
 			pivot.name = "L" if side < 0 else "R"
-			pivot.position = Vector3(side * 0.12, 0.08, 0.1)
+			pivot.position = Vector3(side * 0.08, 0.06, 0.06)
 			bird.add_child(pivot)
-			var inner := BoxMesh.new()
-			inner.size = Vector3(0.62, 0.035, 0.46)
-			_bird_part(pivot, inner, wing_mat, Vector3(side * 0.31, 0, 0), Vector3.ONE)
+			var inner := _bird_part(pivot, m.inner, m.wing_mat, Vector3.ZERO)
+			inner.scale = Vector3(side, 1, 1)
 			var tip := Node3D.new()
 			tip.name = "Tip"
-			tip.position = Vector3(side * 0.62, 0, 0)
+			tip.position = Vector3(side * 0.56, 0, 0)
 			pivot.add_child(tip)
-			var outer := BoxMesh.new()
-			outer.size = Vector3(0.5, 0.03, 0.28)
-			_bird_part(tip, outer, tip_mat if gull else wing_mat, Vector3(side * 0.25, 0, -0.04), Vector3.ONE)
-		birds.append({"node": bird, "phase": randf() * TAU, "offset": Vector3(randf_range(-5, 5), randf_range(-1.5, 1.5), randf_range(-5, 5))})
-	return {"root": root, "birds": birds, "centre": Vector3.ZERO, "angle": randf() * TAU, "radius": randf_range(18.0, 34.0),
+			var outer := _bird_part(tip, m.outer, m.tip_mat, Vector3.ZERO)
+			outer.scale = Vector3(side, 1, 1)
+		birds.append({"node": bird, "phase": randf() * TAU, "glide": randf() * TAU, "offset": Vector3(randf_range(-5, 5), randf_range(-1.5, 1.5), randf_range(-5, 5))})
+	return {"root": root, "birds": birds, "centre": Vector3.ZERO, "angle": randf() * TAU, "radius": randf_range(18.0, 34.0), "gull": gull,
 		"height": randf_range(16.0, 26.0), "speed": randf_range(0.18, 0.3) * (1.0 if i % 2 == 0 else -1.0), "flee": 0.0, "home": false}
 
-func _bird_material(colour: Color) -> StandardMaterial3D:
+## The shared meshes and materials of a species, built once.
+func _bird_kit(kind: String) -> Dictionary:
+	if _bird_meshes.has(kind):
+		return _bird_meshes[kind]
+	var gull := kind == "gull"
+	var kit := {
+		"body_mat": _bird_material(Color(0.95, 0.96, 0.97) if gull else Color(0.1, 0.1, 0.12), 0.6 if gull else 0.78),
+		"wing_mat": _bird_material(Color(0.66, 0.7, 0.75) if gull else Color(0.08, 0.08, 0.1), 0.7 if gull else 0.85),
+		"tip_mat": _bird_material(Color(0.08, 0.08, 0.09) if gull else Color(0.06, 0.06, 0.08), 0.85),
+		"beak_mat": _bird_material(Color(0.96, 0.76, 0.2) if gull else Color(0.12, 0.11, 0.1), 0.5),
+	}
+	# The body: a lathe along Z, tail to head, a little flattened.
+	var profile := [[-0.5, 0.025], [-0.34, 0.1], [-0.12, 0.16], [0.12, 0.165], [0.3, 0.13], [0.4, 0.1], [0.48, 0.115], [0.57, 0.1], [0.63, 0.05], [0.66, 0.0]]
+	kit.body = _lathe(profile, Vector2(1.0, 0.82), 10)
+	kit.beak = _lathe([[0.62, 0.045], [0.7, 0.032], [0.8 if gull else 0.78, 0.0]], Vector2(0.8, 1.0), 6, 0.045)
+	# The tail: a fan behind the body.
+	# (a gull's is square, a crow's rounded like a wedge)
+	if gull:
+		kit.tail = _panel([Vector2(-0.07, -0.42), Vector2(0.07, -0.42), Vector2(0.16, -0.72), Vector2(0.0, -0.74), Vector2(-0.16, -0.72)], 0.0)
+	else:
+		kit.tail = _panel([Vector2(-0.06, -0.42), Vector2(0.06, -0.42), Vector2(0.14, -0.7), Vector2(0.08, -0.8), Vector2(0.0, -0.83), Vector2(-0.08, -0.8), Vector2(-0.14, -0.7)], 0.0)
+	# The inner wing: broad, its leading edge a little curved (drawn for the right side, mirrored for the left).
+	kit.inner = _panel([Vector2(0.0, 0.16), Vector2(0.3, 0.17), Vector2(0.56, 0.12), Vector2(0.56, -0.13), Vector2(0.28, -0.2), Vector2(0.0, -0.18)], 0.0)
+	# The outer wing: swept back to a point (a gull) or fingered and blunt (a crow).
+	if gull:
+		kit.outer = _panel([Vector2(0.0, 0.12), Vector2(0.3, 0.05), Vector2(0.62, -0.12), Vector2(0.4, -0.16), Vector2(0.0, -0.13)], 0.0)
+	else:
+		kit.outer = _panel([Vector2(0.0, 0.12), Vector2(0.28, 0.1), Vector2(0.46, 0.02), Vector2(0.5, -0.06), Vector2(0.42, -0.14), Vector2(0.0, -0.13)], 0.0)
+	_bird_meshes[kind] = kit
+	return kit
+
+## A body of revolution round Z: `profile` holds [z, radius] pairs; `squash` scales x and y.
+func _lathe(profile: Array, squash: Vector2, sides: int, lift := 0.0) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for k in range(profile.size() - 1):
+		var a: Array = profile[k]
+		var b: Array = profile[k + 1]
+		for s in range(sides):
+			var t0 := TAU * s / sides
+			var t1 := TAU * (s + 1) / sides
+			var p00 := Vector3(cos(t0) * a[1] * squash.x, sin(t0) * a[1] * squash.y + lift, a[0])
+			var p01 := Vector3(cos(t1) * a[1] * squash.x, sin(t1) * a[1] * squash.y + lift, a[0])
+			var p10 := Vector3(cos(t0) * b[1] * squash.x, sin(t0) * b[1] * squash.y + lift, b[0])
+			var p11 := Vector3(cos(t1) * b[1] * squash.x, sin(t1) * b[1] * squash.y + lift, b[0])
+			for v in [p00, p10, p11, p00, p11, p01]:
+				st.set_normal(Vector3(v.x, v.y - lift, 0.0).normalized() if Vector2(v.x, v.y - lift).length() > 0.001 else Vector3.FORWARD)
+				st.add_vertex(v)
+	return st.commit()
+
+## A flat panel (wing, tail) in the XZ plane, `y` above the body's axis; drawn from both sides.
+func _panel(points: Array, y: float) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for k in range(1, points.size() - 1):
+		for v in [points[0], points[k], points[k + 1]]:
+			st.set_normal(Vector3.UP)
+			st.add_vertex(Vector3(v.x, y, v.y))
+	return st.commit()
+
+func _bird_material(colour: Color, roughness := 0.8) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = colour
 	m.cull_mode = BaseMaterial3D.CULL_DISABLED
-	m.roughness = 0.9
+	m.roughness = roughness
+	m.metallic_specular = 0.25   # feathers, not lacquer
 	return m
 
-func _bird_part(parent: Node3D, mesh: Mesh, mat: Material, at: Vector3, size: Vector3) -> MeshInstance3D:
+func _bird_part(parent: Node3D, mesh: Mesh, mat: Material, at: Vector3) -> MeshInstance3D:
 	var node := MeshInstance3D.new()
 	node.mesh = mesh
 	node.material_override = mat
 	node.position = at
-	node.scale = size
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(node)
 	return node
@@ -268,12 +319,17 @@ func _update_flocks(delta: float) -> void:
 			var n: Node3D = bird.node
 			bird.phase += delta * (9.0 if f.flee > 0.0 else 6.0)
 			n.position = centre + bird.offset + Vector3(0, sin(bird.phase * 0.3) * 0.6, 0)
-			n.look_at(n.position + heading, Vector3.UP)
-			var flap := sin(bird.phase) * 0.6
+			n.look_at(n.position + heading, Vector3.UP, true)   # (the model's nose is +Z)
+			# A gull glides for stretches between beats; a crow rows on.
+			var beat := 1.0
+			if f.get("gull", false) and f.flee <= 0.0:
+				bird.glide = float(bird.glide) + delta * 0.45
+				beat = clampf(sin(float(bird.glide)) * 1.6 + 0.4, 0.08, 1.0)
+			var flap := sin(bird.phase) * 0.6 * beat
 			n.get_node("L").rotation.z = flap
 			n.get_node("R").rotation.z = -flap
 			# The wing tip lags the beat: the wing bends as it goes up and down.
-			var lag := sin(bird.phase - 0.9) * 0.3
+			var lag := sin(bird.phase - 0.9) * 0.3 * beat
 			n.get_node("L/Tip").rotation.z = lag
 			n.get_node("R/Tip").rotation.z = -lag
 

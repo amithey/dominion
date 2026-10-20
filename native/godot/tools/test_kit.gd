@@ -9,6 +9,7 @@ extends RefCounted
 ## (world_events.gd), "victory" (victory.gd), "un" (un.gd), "wmd" (wmd.gd: fallout,
 ## gas, outbreaks and rivals' chemical attacks), "generals" (generals.gd: rivals'
 ## generals' traits), "defcon" (defcon.gd: nuclear release, rivals' nuclear use),
+## "crisis" (crisis.gd: national crises and their income, production and peace effects),
 ## "costs" (war_costs.gd: the
 ## player and every rival funded so shots, fuel and interceptors never run dry).
 
@@ -38,6 +39,8 @@ static func quiet(w: Node, keep := []) -> void:
 		w.tests = null
 	if not "directorate" in keep and w.get("directorate") != null:
 		w.directorate = null   # AI (ai_directorate.gd): autonomy incidents, AI cyber campaigns
+	if not "crisis" in keep and w.get("crisis") != null:
+		w.crisis = null   # national crises (crisis.gd)
 	if not "costs" in keep:
 		fund(w)
 	if w.research != null:

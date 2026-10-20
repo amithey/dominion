@@ -38,6 +38,27 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 0.9.101: national crises, published statistics, a carrier that stands off, clearer texts
+
+- **Crises from destroyed infrastructure:** losing power stations, farms, homes and industry throws a nation (you or a
+  rival) into a **recession** or **depression**, an **energy crisis** (blackouts), a **food crisis**, a **currency
+  crisis**, **sovereign default**, **displacement**, a **political crisis**, and at last the **fall of its government**
+  (a democracy signs a ceasefire; an autocracy cracks down). A nation that strikes homes, power and hospitals is
+  **condemned**: the others think less of it. Each costs income, production and war support.
+  [CRISES-2026-10-20.md](CRISES-2026-10-20.md)
+- **GDP follows what stands:** no more floor: a rival whose economy lies in ruins publishes a collapse.
+- **Statistics as the IMF, SIPRI and the Fragile States Index publish them:** an **overview** of every nation (GDP,
+  growth, inflation, unemployment, debt, credit rating, fragility and its crises), and charts of growth, inflation,
+  unemployment, public debt, defence spending, fragility, people displaced and energy.
+- **A carrier stands off:** ordered to attack, it holds at its jets' reach and lets them strike.
+- **Who is aboard shows:** a green badge with a figure per soldier over every loaded transport.
+- **Missiles fire from where you expect:** a submarine offers only its own missiles; the AGM-88 and other
+  air-launched weapons fire from a jet at its airfield; nuclear weapons launch from the Strategic Complex; a
+  weapon that cannot fire says what launches it.
+- **Sanctions show** on the target's card; **short texts**: a role line and two or three points instead of a
+  paragraph, the full text on hover. [FIXES-2026-10-20.md](FIXES-2026-10-20.md)
+- **Birds** fly nose first, and look like gulls and crows.
+
 ## Version 0.9.100: sovereignty, fishing platforms, gas and winter, demolishing, the UN at work
 
 - **Harbours and offshore works only where you rule:** ports, shipyards and wharves no longer go on unclaimed coast; the

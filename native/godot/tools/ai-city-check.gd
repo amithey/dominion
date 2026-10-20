@@ -27,9 +27,13 @@ func run() -> void:
 	Engine.time_scale = 8.0
 	var until: float = w.game_time + 14.0 * 60.0
 	var guard := 0
+	# The idle player's capital is kept standing: on hard a rival can take it before fourteen minutes, and a
+	# lost match stops the clock (this check measures the rivals' towns, not the player's defence).
+	var capital: Dictionary = w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0]
 	while w.game_time < until and guard < 200000:
 		await process_frame
 		guard += 1
+		capital.hp = capital.max_hp
 	Engine.time_scale = 1.0
 	w.set_physics_process(false)
 	var arms_total := 0.0

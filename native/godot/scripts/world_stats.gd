@@ -1,29 +1,53 @@
 extends RefCounted
-## National statistics over time, as a ministry of statistics would publish them
-## (native/STATISTICS-2026-10-18.md): the economy, the military, land held, technology and
-## infrastructure of every nation, sampled as the match runs and drawn as charts.
+## National statistics over time, as statistics offices, the IMF, SIPRI and the Fragile States Index
+## publish them (native/STATISTICS-2026-10-18.md, native/CRISES-2026-10-20.md): the economy (GDP, its
+## growth, inflation, unemployment, public debt), security (military strength, defence spending), society
+## (fragility, people displaced, energy) and the nation (land, technology, infrastructure), sampled as the
+## match runs and drawn as charts.
+##
+## GDP is what stands: the nation's real-world economy scaled by its standing, working economic buildings
+## against a normal size (crisis.gd development), times how hard they work (blackouts, inflation, default,
+## turmoil, war, sanctions). A nation whose industry lies in ruins publishes a collapse.
 ##
 ## What you see of the others is what is published, not the truth:
-##   GDP, land held and technology   public figures, a little behind (one release late) and, for GDP, a
-##                                   little rounded
-##   military strength               an estimate; the better your intelligence on that nation, the closer
-##                                   (35% off with none, 5% with a full network)
-##   infrastructure                  satellite and trade-press estimates (25% off with none, 5% with a full network)
+##   economic figures, fragility,      public figures, a release late (GDP a little rounded)
+##   land, technology, the displaced
+##   defence spending                  a published estimate: half the error of the military's
+##   military strength                 an estimate; the better your intelligence on that nation, the closer
+##                                     (35% off with none, 5% with a full network)
+##   infrastructure, energy            satellite and trade-press estimates (as the military's)
 ## Your own figures are exact. The estimate's error for one nation does not jitter from chart to chart: it is
 ## a fixed draw per nation and release, scaled by how much you know.
 
 const SAMPLE := 20.0              # game seconds between releases
 const MAX_SAMPLES := 400
-const METRICS := ["gdp", "military", "land", "tech", "infra"]
-const TITLES := {"gdp": "Economy", "military": "Military", "land": "Land", "tech": "Technology", "infra": "Infrastructure"}
-const UNITS := {"gdp": "$ bn", "military": "points", "land": "hexes", "tech": "level", "infra": "buildings"}
+const METRICS := ["gdp", "growth", "inflation", "unemployment", "debt", "military", "milex", "fragility", "displaced", "energy", "land", "tech", "infra"]
+const GROUPS := [["Economy", ["gdp", "growth", "inflation", "unemployment", "debt"]], ["Security", ["military", "milex"]],
+	["Society", ["fragility", "displaced", "energy"]], ["Nation", ["land", "tech", "infra"]]]
+const TITLES := {"gdp": "GDP", "growth": "Growth", "inflation": "Inflation", "unemployment": "Unemployment", "debt": "Public debt",
+	"military": "Military", "milex": "Defence spending", "fragility": "Fragility", "displaced": "Displaced", "energy": "Energy",
+	"land": "Land", "tech": "Technology", "infra": "Infrastructure"}
+const UNITS := {"gdp": "$ bn", "growth": "% over a quarter", "inflation": "% a year", "unemployment": "% of workers", "debt": "% of GDP",
+	"military": "points", "milex": "% of GDP", "fragility": "index, 0 to 120", "displaced": "thousand people", "energy": "GW",
+	"land": "hexes", "tech": "level", "infra": "buildings"}
 const NOTES := {
-	"gdp": "Gross domestic product, a public figure released with a delay.",
+	"gdp": "Gross domestic product: the economy that stands and works. A nation starts below its real-world figure and reaches it as its economy is built up; destroyed industry, blackouts, inflation, default and turmoil bring it down. A public figure released with a delay.",
+	"growth": "The change in GDP over the last quarter (three minutes). Two quarters of decline are a recession.",
+	"inflation": "Consumer prices, a year on year. Lost supply, blackouts, hunger, war spending, sanctions and default push it up; past about 30% the currency is in crisis.",
+	"unemployment": "The share of workers without a job: workplaces destroyed, factories without power, people without homes.",
+	"debt": "General government gross debt. War deficits add to it and a shrinking economy raises it at once; too high and the state defaults.",
 	"military": "The value of the forces under arms. For other nations an estimate: the better your intelligence, the closer.",
+	"milex": "Military expenditure as a share of GDP, as the peace research institutes publish it: higher at war and in a shrinking economy. Others' figures are estimates.",
+	"fragility": "How close the state is to failing, on the scale of the Fragile States Index (higher is worse): its usual level plus the pressure of its crises. Past the pressure a government can bear, it falls.",
+	"displaced": "People driven from their homes by destroyed houses and towns, as the refugee agency counts them; they find shelter over time.",
+	"energy": "Generating and fuel capacity: power stations, reactors, solar farms, refineries, rigs and wells. Others' figures are estimated from satellites (night lights).",
 	"land": "Hexes of territory held; borders are public.",
 	"tech": "Technology level (0 to 10); scientific output is public.",
 	"infra": "Finished buildings. For other nations an estimate from satellites and trade papers.",
 }
+const ESTIMATED := ["military", "infra", "energy", "milex"]
+const QUARTER := 180.0
+const GROWTH_FLOOR := 0.5          # growth is measured against at least this share of the real economy
 ## Real-world output used as each nation's starting economy, in billions of dollars (round figures).
 const BASE_GDP := {"usa": 29000, "china": 18700, "eu": 19400, "iran": 400, "russia": 2200, "india": 3900, "japan": 4000, "turkiye": 1300, "israel": 530,
 	"uk": 3600, "south_korea": 1870, "saudi": 1100, "brazil": 2200, "indonesia": 1400, "ukraine": 190, "north_korea": 25, "egypt": 350, "australia": 1800,
@@ -61,13 +85,33 @@ func release() -> void:
 			continue
 		if not series.has(id):
 			series[id] = {}
-			for m in METRICS: series[id][m] = []
+		for m in METRICS:
+			if not series[id].has(m):
+				series[id][m] = []   # (a save from before the metric)
+		var real_size: float = float(BASE_GDP.get(preload("res://scripts/factions.gd").identity(w, id), 500)) * GROWTH_FLOOR
+		truth.growth = _growth(series[id].gdp, now, float(truth.gdp), "real", 0, real_size)
 		for m in METRICS:
 			var list: Array = series[id][m]
-			list.append({"t": now, "real": float(truth[m]), "shown": _shown(id, m, float(truth[m]), list)})
+			var shown := _shown(id, m, float(truth[m]), list)
+			if m == "growth" and id != 0:
+				shown = _growth(series[id].gdp, now, float(series[id].gdp[series[id].gdp.size() - 1].shown) if not series[id].gdp.is_empty() else float(truth.gdp), "shown", 1, real_size)
+			list.append({"t": now, "real": float(truth[m]), "shown": shown})
 			if list.size() > MAX_SAMPLES:
 				list.pop_front()
 	_headline()
+
+## GDP growth (%) over the last quarter: from the gdp `list` (field `field`, the newest `skip` entries
+## excluded: the published figure is a release late) to `value`. A young economy is measured against at
+## least `floor_at` (a share of its real size), so building the first factories is not a thousandfold boom.
+func _growth(list: Array, now: float, value: float, field: String, skip := 0, floor_at := 0.0) -> float:
+	var then := -1.0
+	for i in range(list.size() - 1 - skip, -1, -1):
+		if now - float(list[i].t) >= QUARTER:
+			then = float(list[i][field])
+			break
+	if then <= 0.0:
+		return 0.0
+	return (value - then) / maxf(then, floor_at) * 100.0
 
 ## The true figures of nation `id` (empty for one that does not exist).
 func _truth(id: int) -> Dictionary:
@@ -94,14 +138,30 @@ func _truth(id: int) -> Dictionary:
 		for r in cost:
 			price += float(cost[r]) * (1.0 if r == "money" else (3.0 if r in ["iron", "oil"] else 5.0))
 		force += price * clampf(float(u.hp) / maxf(float(u.max_hp), 1.0), 0.2, 1.0) / 100.0
-	if not _base_output.has(id):
-		_base_output[id] = maxf(output, 1.0)
 	var base: float = float(BASE_GDP.get(preload("res://scripts/factions.gd").identity(w, id), 500))
 	var land := 0
 	if w.territory != null:
 		for o in w.territory.owner_of:
 			if o == id: land += 1
-	return {"gdp": base * (0.55 + 0.45 * output / float(_base_output[id])), "military": force, "land": float(land), "tech": _tech(id), "infra": float(built)}
+	var out := {"military": force, "land": float(land), "tech": _tech(id), "infra": float(built), "growth": 0.0}
+	var c: RefCounted = w.get("crisis")
+	if c != null:
+		var s: Dictionary = c.of(id)
+		if not s.get("seen", false):
+			c.step(0.0)   # (the first release comes before the first measure)
+		out.gdp = base * c.development(id) * c.activity(id)
+		out.inflation = float(s.inflation)
+		out.unemployment = float(s.unemployment)
+		out.debt = float(s.debt)
+		out.milex = float(s.milex)
+		out.fragility = c.fragility(id)
+		out.displaced = float(s.displaced)
+		out.energy = float(s.energy) * 0.2
+	else:
+		out.gdp = base * (output + 2.0) / 45.0
+		for m in ["inflation", "unemployment", "debt", "milex", "fragility", "displaced", "energy"]:
+			out[m] = 0.0
+	return out
 
 func _tech(id: int) -> float:
 	if id == 0:
@@ -119,8 +179,13 @@ func _shown(id: int, metric: String, truth: float, list: Array) -> float:
 	if id == 0:
 		return truth
 	match metric:
-		"land", "tech":
+		"land", "tech", "inflation", "unemployment", "debt", "fragility":
 			return list[list.size() - 1].real if not list.is_empty() else truth   # a release late
+		"displaced":
+			var late: float = list[list.size() - 1].real if not list.is_empty() else truth
+			return roundf(late)
+		"milex":
+			return maxf(0.0, truth * (1.0 + error(id) * 0.5 * _noise(id, metric, _samples)))
 		"gdp":
 			var lagged: float = list[list.size() - 1].real if not list.is_empty() else truth
 			return roundf(lagged / 10.0) * 10.0 if lagged >= 200.0 else roundf(lagged)
@@ -179,6 +244,16 @@ static func format(metric: String, v: float) -> String:
 	match metric:
 		"gdp":
 			return ("$%.1f tn" % (v / 1000.0)) if v >= 10000.0 else ("$%d bn" % int(roundf(v)))
+		"growth":
+			return "%+.1f%%" % v
+		"inflation", "unemployment", "milex":
+			return "%.1f%%" % v
+		"debt":
+			return "%d%%" % int(roundf(v))
+		"fragility", "energy":
+			return "%.1f" % v
+		"displaced":
+			return "%dk" % int(roundf(v))
 		"tech":
 			return "%.1f" % v
 		_:

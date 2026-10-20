@@ -166,6 +166,11 @@ func _open_appeal() -> void:
 			if appeals.any(func(a): return int(a.nation) == pick and now - float(a.until) < 600.0):
 				continue
 			candidates.append([pick, "refugees", "the people displaced by its war"])
+	# A nation whose homes are in ruins (crisis.gd): its people need shelter.
+	if w.get("crisis") != null and w.crisis != null:
+		for i in _alive_nations():
+			if w.crisis.active(i, "humanitarian") and not appeals.any(func(a): return int(a.nation) == i and now - float(a.until) < 600.0):
+				candidates.append([i, "refugees", "the people driven from their homes"])
 	if candidates.is_empty():
 		return
 	var c: Array = candidates[randi() % candidates.size()]

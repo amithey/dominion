@@ -28,7 +28,7 @@ func run() -> void:
 			w = current_scene
 			break
 	w.start_match("hard"); w.menu.close(); w.saves.autosave_every = 0
-	preload("res://tools/test_kit.gd").quiet(w, ["costs"])
+	preload("res://tools/test_kit.gd").quiet(w, ["costs", "crisis"])
 	var S: RefCounted = w.stats
 	check(S != null, "the world has a statistics office")
 	Engine.time_scale = 8.0
@@ -47,7 +47,8 @@ func run() -> void:
 	# ---- your figures are exact
 	var mine: Array = S.series[0].gdp
 	check(mine.all(func(s): return is_equal_approx(s.shown, s.real)) and S.series[0].military.all(func(s): return is_equal_approx(s.shown, s.real)), "your own figures are exact")
-	check(S.latest(0, "gdp") > 20000.0 and S.latest(0, "gdp") < 40000.0, "your economy starts from the real figure (%s)" % Stats.format("gdp", S.latest(0, "gdp")))
+	var real: float = float(Stats.BASE_GDP.get(preload("res://scripts/factions.gd").identity(w, 0), 500))
+	check(S.latest(0, "gdp") > real * 0.1 and S.latest(0, "gdp") < real * 0.6, "your economy is the real figure scaled by what stands: a capital and a few buildings (%s of %s)" % [Stats.format("gdp", S.latest(0, "gdp")), Stats.format("gdp", real)])
 	# ---- the rivals grow, and the published land and technology trail by a release
 	var rival: int = 1
 	var first: float = S.series[rival].infra[0].real
@@ -100,7 +101,7 @@ func run() -> void:
 	h.refresh_side()
 	await process_frame
 	var all := texts(h._side_rows)
-	check(all.has("Statistics") and all.has("Economy") and all.has("Military") and all.has("Technology"), "the tab offers the five metrics")
+	check(all.has("Statistics") and all.has("Overview") and all.has("Economy") and all.has("GDP") and all.has("Inflation") and all.has("Military") and all.has("Technology") and all.has("Fragility"), "the tab offers the overview and the indicators")
 	check(all.any(func(t): return str(t).contains("You")) and all.any(func(t): return str(t).contains("$")), "and lists you with your economy")
 	h._panels.stats_metric = "military"
 	h.refresh_side()

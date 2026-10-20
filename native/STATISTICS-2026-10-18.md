@@ -17,3 +17,5 @@ You see **published** figures, not the truth: land and technology a release behi
 The tab has a metric selector, a chart with a line per nation (yours thicker), and a ranking with the change over the last two minutes, the figure and its error; click *hide* to take a nation's line away. When a published figure of another nation moves by 12% or more in two minutes a headline says so (at most one in two minutes). Series are saved.
 
 Test: `tools/stats-check.gd`.
+
+**0.9.101:** GDP no longer has a floor and new indicators were added (growth, inflation, unemployment, debt, defence spending, fragility, displaced, energy, an overview with credit ratings): see CRISES-2026-10-20.md.

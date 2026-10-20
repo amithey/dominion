@@ -131,7 +131,8 @@ func platforms_for(key: String, owner := 0) -> Array:
 func _other_platforms_for(key: String, owner: int) -> Array:
 	var kind: String = load("res://scripts/arsenal_catalog.gd").platform_kind(world, owner, key)
 	if kind == "air":
-		return world.units.filter(func(u): return u.owner == owner and not u.dead and u.key in ["jet", "bomber", "stealthFighter", "raider"] and not world.disabled(u) and u.get("air_state", "ready") == "ready")
+		# In the air or waiting at its airfield (it takes off with the missile); not one being rearmed or landing.
+		return world.units.filter(func(u): return u.owner == owner and not u.dead and u.key in ["jet", "bomber", "stealthFighter", "raider"] and not world.disabled(u) and str(u.get("air_state", "ready")) in ["ready", "parked"])
 	if kind == "drone":
 		return world.units.filter(func(u): return u.owner == owner and not u.dead and u.key in ["drone", "fpvTeam"] and not world.disabled(u) and u.get("air_state", "ready") == "ready")
 	if kind == "air_or_sea":
@@ -140,8 +141,37 @@ func _other_platforms_for(key: String, owner: int) -> Array:
 		return world.units.filter(func(u): return u.owner == owner and not u.dead and not world.disabled(u) and u.key in (["nuclearSub"] if kind == "sub" or category(key) == "nuclear" else ["submarine", "nuclearSub", "destroyer", "corvette", "aegisCruiser"]))
 	if kind in ["strategic", "ground_or_sea"]:
 		var ships: Array = world.units.filter(func(u): return u.owner == owner and not u.dead and not world.disabled(u) and u.key in (["nuclearSub"] if kind == "strategic" else ["submarine", "nuclearSub", "destroyer", "corvette", "aegisCruiser"]))
-		return silos(owner).filter(func(b): return not world.disabled(b)) + ships
-	return silos(owner).filter(func(b): return not world.disabled(b))
+		return _sites(owner, key) + ships
+	return _sites(owner, key)
+
+## The buildings that launch `key`: a missile silo, and for a nuclear or special weapon also the facility
+## that holds it (a nation with a strategic complex but no silo could not fire its own bombs).
+func _sites(owner: int, key: String) -> Array:
+	var keys := ["missileSilo"]
+	if category(key) == "nuclear": keys.append("strategicComplex")
+	if category(key) == "special": keys.append("specialLab")
+	return world.buildings.filter(func(b): return b.owner == owner and b.key in keys and b.built and not b.dead and not world.disabled(b))
+
+## In plain words, what launches `key` for `owner` ("a Jet, Bomber, Stealth Fighter or Raider").
+func launchers_text(key: String, owner := 0) -> String:
+	var kind: String = load("res://scripts/arsenal_catalog.gd").platform_kind(world, owner, key)
+	var named := func(b: String) -> String: return str(world.building_defs.get(b, {}).get("name", b))
+	var site: String = "a " + named.call("missileSilo") + (" or a " + named.call("strategicComplex") if category(key) == "nuclear" else (" or a " + named.call("specialLab") if category(key) == "special" else ""))
+	match kind:
+		"air": return "an aircraft: a Jet, Bomber, Stealth Fighter or Raider (at its airfield or in the air)"
+		"drone": return "a Drone or an FPV team"
+		"air_or_sea": return "an aircraft (Jet, Bomber, Stealth Fighter, Raider) or a warship (Destroyer, Corvette, Cruiser, Submarine)"
+		"sub": return "a nuclear submarine"
+		"sea": return "a nuclear submarine" if category(key) == "nuclear" else "a warship: a Destroyer, Corvette, Cruiser or Submarine"
+		"strategic": return site + " or a nuclear submarine"
+		"ground_or_sea": return site + ", or a warship (Destroyer, Corvette, Cruiser, Submarine)"
+	return site
+
+## Why `key` cannot be launched now for want of a launcher, in words ("" when it can).
+func launcher_missing(key: String, owner := 0) -> String:
+	if not platforms_for(key, owner).is_empty():
+		return ""
+	return "%s is fired from %s. You have none ready." % [def_of(key).get("name", key), launchers_text(key, owner)]
 
 func available_to(owner: int, key: String) -> bool:
 	if not types().has(key) or def_of(key).get("hidden", false): return false
@@ -213,7 +243,7 @@ func launch(key: String, target: Vector3, platform = null) -> String:
 		if world.water_near(target, 40) == null:
 			return "%s needs a target on or near the sea." % def_of(key).name
 	if platforms.is_empty():
-		return "Needs a compatible %s launch platform." % load("res://scripts/arsenal_catalog.gd").platform_kind(world, 0, key)
+		return launcher_missing(key)
 	if platform != null and not platform in platforms:
 		return "This platform cannot launch that national payload."
 	if platform == null:

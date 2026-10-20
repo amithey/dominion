@@ -240,7 +240,7 @@ func run() -> void:
 	# ---- 2: the birds are birds
 	if w.ambience != null and not w.ambience._flocks.is_empty():
 		var bird: Node3D = w.ambience._flocks[0].birds[0].node
-		check(bird.get_node_or_null("L/Tip") != null and bird.get_node_or_null("R/Tip") != null and bird.get_child_count() >= 6, "a bird has a body, a head, a beak, a tail and wings of two parts")
+		check(bird.get_node_or_null("L/Tip") != null and bird.get_node_or_null("R/Tip") != null and bird.get_child_count() >= 5, "a bird has a body shaped to a head, a beak, a tail and wings of two parts")
 	print("FIXES_1019 %d passed, %d failed" % [passed, errors.size()])
 	for er in errors: print("  FAILED: " + er)
 	print("FIXES_1019 %s" % ("PASS" if errors.is_empty() else "FAIL"))

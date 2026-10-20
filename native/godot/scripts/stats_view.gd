@@ -1,8 +1,67 @@
 extends RefCounted
-## Diplomacy > Statistics: the published figures of every nation as a chart over time and a ranking
-## (world_stats.gd). Click a nation in the list to hide or show its line.
+## Diplomacy > Statistics: the published figures of every nation (world_stats.gd): an overview table as
+## the IMF and the statistics offices print it, with each nation's credit rating and its crises
+## (crisis.gd); and for each indicator a chart over time and a ranking. Hide or show a nation's line.
 const UI := preload("res://scripts/ui_theme.gd")
 const Stats := preload("res://scripts/world_stats.gd")
+const Crisis := preload("res://scripts/crisis.gd")
+const BAD_UP := ["inflation", "unemployment", "debt", "fragility", "displaced"]
+
+## The overview: one row a nation, its main figures as published, its rating and its crises.
+static func overview(hud: Node, S: RefCounted) -> void:
+	var w: Node = hud.world
+	var card: VBoxContainer = hud._card(UI.GOLD)
+	card.add_child(hud._text("Nations at a glance", 17, UI.CREAM, true))
+	var note: Label = hud._text("As the statistics offices and the IMF publish them: GDP, its growth over the last quarter, inflation, unemployment, public debt, the markets' credit rating and the fragility index (higher is worse). Others' figures are a release late. Below each nation, its crises.", 12, UI.MUTED)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.custom_minimum_size.x = 440
+	card.add_child(note)
+	var cols := [["", 112], ["GDP", 66], ["Growth", 52], ["Infl.", 46], ["Jobless", 46], ["Debt", 44], ["Rating", 44], ["Fragile", 44]]
+	var head: HBoxContainer = hud._row(card, 2)
+	for c in cols:
+		var l: Label = hud._text(str(c[0]), 11, UI.MUTED, true)
+		l.custom_minimum_size.x = float(c[1])
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if c[0] != "" else HORIZONTAL_ALIGNMENT_LEFT
+		head.add_child(l)
+	var crisis: RefCounted = w.get("crisis")
+	for pair in S.ranking("gdp"):
+		var id: int = pair[0]
+		var row: HBoxContainer = hud._row(card, 2)
+		var name: Label = hud._text("You" if id == 0 else w.diplomacy.name_of(id), 12, hud._nation_colour(id).lightened(0.35), id == 0)
+		name.custom_minimum_size.x = float(cols[0][1])
+		name.clip_text = true
+		row.add_child(name)
+		var growth: float = S.latest(id, "growth")
+		var cells := [[Stats.format("gdp", pair[1]), UI.CREAM], [Stats.format("growth", growth), UI.GOOD if growth > 0.05 else (UI.BAD if growth < -0.05 else UI.MUTED)],
+			[Stats.format("inflation", S.latest(id, "inflation")), UI.BAD if S.latest(id, "inflation") >= 30.0 else UI.CREAM],
+			[Stats.format("unemployment", S.latest(id, "unemployment")), UI.CREAM],
+			[Stats.format("debt", S.latest(id, "debt")), UI.BAD if S.latest(id, "debt") >= 150.0 else UI.CREAM]]
+		var letters: String = crisis.rating(id) if crisis != null else "-"
+		cells.append([letters, UI.GOOD if letters.begins_with("A") else (UI.BAD if letters.begins_with("C") or letters == "D" else UI.CREAM)])
+		cells.append(["%.0f" % S.latest(id, "fragility"), UI.BAD if S.latest(id, "fragility") >= 90.0 else UI.CREAM])
+		for i in range(cells.size()):
+			var l: Label = hud._text(str(cells[i][0]), 12, cells[i][1])
+			l.custom_minimum_size.x = float(cols[i + 1][1])
+			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			row.add_child(l)
+		if crisis != null:
+			var names := PackedStringArray()
+			for k in crisis.list(id):
+				names.append(str(Crisis.KINDS[k].title))
+			if not names.is_empty():
+				var line: Label = hud._text("   " + ", ".join(names), 11, UI.BAD if id == 0 else Color(0.95, 0.72, 0.4))
+				line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				line.custom_minimum_size.x = 440
+				card.add_child(line)
+	# Your own crises, in full.
+	if crisis != null and not crisis.list(0).is_empty():
+		var mine: VBoxContainer = hud._card(UI.BAD)
+		mine.add_child(hud._text("Your crises", 15, UI.CREAM, true))
+		for c in crisis.describe(0):
+			var l: Label = hud._text("%s: %s" % [c.title, c.text], 12, UI.CREAM)
+			l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			l.custom_minimum_size.x = 440
+			mine.add_child(l)
 
 static func draw(panel: RefCounted) -> void:
 	var hud: Node = panel.hud
@@ -13,19 +72,30 @@ static func draw(panel: RefCounted) -> void:
 	if S.series.is_empty():
 		S.release()
 	var metric: String = panel.stats_metric
-	var tabs := HFlowContainer.new()
-	tabs.add_theme_constant_override("h_separation", 4)
-	tabs.add_theme_constant_override("v_separation", 4)
-	hud._side_rows.add_child(tabs)
-	for m in Stats.METRICS:
-		var which: String = m
-		var b: Button = hud._button(tabs, Stats.TITLES[m], func():
-			panel.stats_metric = which
-			hud.refresh_side()
-			return "")
-		b.toggle_mode = true
-		b.button_pressed = m == metric
-		b.tooltip_text = Stats.NOTES[m]
+	if metric != "overview" and not Stats.METRICS.has(metric):
+		metric = "overview"
+	var groups: Array = [["", ["overview"]]] + Stats.GROUPS
+	for g in groups:
+		var tabs := HFlowContainer.new()
+		tabs.add_theme_constant_override("h_separation", 4)
+		tabs.add_theme_constant_override("v_separation", 4)
+		hud._side_rows.add_child(tabs)
+		if g[0] != "":
+			var head: Label = hud._text(str(g[0]), 12, UI.MUTED, true)
+			head.custom_minimum_size.x = 64
+			tabs.add_child(head)
+		for m in g[1]:
+			var which: String = m
+			var b: Button = hud._button(tabs, "Overview" if m == "overview" else Stats.TITLES[m], func():
+				panel.stats_metric = which
+				hud.refresh_side()
+				return "")
+			b.toggle_mode = true
+			b.button_pressed = m == metric
+			b.tooltip_text = "Every nation's main figures and its crises." if m == "overview" else Stats.NOTES[m]
+	if metric == "overview":
+		overview(hud, S)
+		return
 	var card: VBoxContainer = hud._card(UI.GOLD)
 	card.add_child(hud._text("%s  (%s)" % [Stats.TITLES[metric], Stats.UNITS[metric]], 17, UI.CREAM, true))
 	var note: Label = hud._text(Stats.NOTES[metric], 12, UI.MUTED)
@@ -53,8 +123,13 @@ static func draw(panel: RefCounted) -> void:
 		row.add_child(label)
 		var c: float = S.change(id, metric)
 		var arrow := "▲" if c > 0.005 else ("▼" if c < -0.005 else "–")
-		row.add_child(hud._text("%s %d%%" % [arrow, int(roundf(absf(c) * 100.0))], 13, UI.GOOD if c > 0.005 else (UI.BAD if c < -0.005 else UI.MUTED)))
-		var value: Label = hud._text(Stats.format(metric, pair[1]) + ("" if id == 0 or not metric in ["military", "infra"] else "  ±%d%%" % int(roundf(S.error(id) * 100.0))), 14, UI.CREAM, true)
+		var good: bool = (c > 0.0) != (metric in BAD_UP)   # (rising inflation, debt or fragility is bad news)
+		if metric in ["growth"]:
+			row.add_child(hud._text("", 13, UI.MUTED))
+		else:
+			row.add_child(hud._text("%s %d%%" % [arrow, int(roundf(minf(absf(c), 9.99) * 100.0))], 13, (UI.GOOD if good else UI.BAD) if absf(c) > 0.005 else UI.MUTED))
+		var bound: float = S.error(id) * (0.5 if metric == "milex" else 1.0)
+		var value: Label = hud._text(Stats.format(metric, pair[1]) + ("" if id == 0 or not metric in Stats.ESTIMATED else "  ±%d%%" % int(roundf(bound * 100.0))), 14, UI.CREAM, true)
 		value.custom_minimum_size.x = 120
 		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		row.add_child(value)
@@ -67,7 +142,7 @@ static func draw(panel: RefCounted) -> void:
 			panel.stats_hidden[id] = not panel.stats_hidden.get(id, false)
 			hud.refresh_side())
 		row.add_child(toggle)
-	if metric in ["military", "infra"]:
+	if metric in Stats.ESTIMATED:
 		var est: Label = hud._text("Figures for other nations are estimates. Intelligence on a nation (Intel, Dossiers) narrows the error.", 12, UI.MUTED)
 		est.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		est.custom_minimum_size.x = 440
@@ -83,6 +158,7 @@ static func chart(hud: Node, S: RefCounted, metric: String, ids: Array, size: Ve
 	var t0 := INF
 	var t1 := -INF
 	var hi := 0.0
+	var lo := 0.0
 	for id in ids:
 		var pts: Array = S.points(id, metric)
 		lines[id] = pts
@@ -90,7 +166,9 @@ static func chart(hud: Node, S: RefCounted, metric: String, ids: Array, size: Ve
 			t0 = minf(t0, float(p.t))
 			t1 = maxf(t1, float(p.t))
 			hi = maxf(hi, float(p.v))
+			lo = minf(lo, float(p.v))
 	hi = maxf(hi * 1.08, 1.0)
+	lo *= 1.08
 	var left := 52.0
 	var bottom := 22.0
 	control.draw.connect(func():
@@ -99,7 +177,10 @@ static func chart(hud: Node, S: RefCounted, metric: String, ids: Array, size: Ve
 		for tick in range(0, 5):
 			var y: float = plot.position.y + plot.size.y * float(tick) / 4.0
 			control.draw_line(Vector2(plot.position.x, y), Vector2(plot.end.x, y), Color(0.7, 0.8, 0.9, 0.12), 1.0)
-			control.draw_string(font, Vector2(4, y + 4), Stats.format(metric, hi * (1.0 - float(tick) / 4.0)), HORIZONTAL_ALIGNMENT_LEFT, left - 8, 11, Color(0.75, 0.82, 0.88, 0.8))
+			control.draw_string(font, Vector2(4, y + 4), Stats.format(metric, lerpf(hi, lo, float(tick) / 4.0)), HORIZONTAL_ALIGNMENT_LEFT, left - 8, 11, Color(0.75, 0.82, 0.88, 0.8))
+		if lo < 0.0:
+			var zero: float = plot.end.y - plot.size.y * (0.0 - lo) / (hi - lo)
+			control.draw_line(Vector2(plot.position.x, zero), Vector2(plot.end.x, zero), Color(0.9, 0.9, 0.9, 0.35), 1.0)
 		var span := maxf(t1 - t0, 1.0)
 		control.draw_string(font, Vector2(plot.position.x, size.y - 6), "%d min ago" % int(roundf(span / 60.0)) if span >= 60.0 else "start", HORIZONTAL_ALIGNMENT_LEFT, 100, 11, Color(0.75, 0.82, 0.88, 0.8))
 		control.draw_string(font, Vector2(plot.end.x - 40, size.y - 6), "now", HORIZONTAL_ALIGNMENT_RIGHT, 40, 11, Color(0.75, 0.82, 0.88, 0.8))
@@ -109,7 +190,7 @@ static func chart(hud: Node, S: RefCounted, metric: String, ids: Array, size: Ve
 				continue
 			var line := PackedVector2Array()
 			for p in pts:
-				line.append(Vector2(plot.position.x + plot.size.x * (float(p.t) - t0) / span, plot.end.y - plot.size.y * float(p.v) / hi))
+				line.append(Vector2(plot.position.x + plot.size.x * (float(p.t) - t0) / span, plot.end.y - plot.size.y * (float(p.v) - lo) / (hi - lo)))
 			var colour: Color = hud._nation_colour(id)
 			control.draw_polyline(line, Color(0, 0, 0, 0.5), 4.0 if id == 0 else 3.0, true)
 			control.draw_polyline(line, colour.lightened(0.15), 3.0 if id == 0 else 2.0, true)

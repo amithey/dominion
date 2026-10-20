@@ -149,12 +149,14 @@ static func keep_target(w: Node, unit: Dictionary, delta: float) -> bool:
 	# A jet pulls out about 80 m to turn for a new pass (world.move_craft): it
 	# keeps its target through the turn instead of forgetting it half way.
 	var leash: float = maxf(unit.aggro, unit.range) * 1.6 + (100.0 if unit.key in w.FIXED_WING else 0.0)
+	if unit.key == "carrier":
+		leash = maxf(leash, preload("res://scripts/war_tools.gd").STRIKE_REACH * 1.2)   # its aircraft reach far
 	if not unit.get("forced", false) and gap > leash:
 		drop(unit)
 		return false
 	# A chase that does not close the distance is given up for a while.
 	# Aircraft are exempt: they fly through, turn and come back by design.
-	if gap > unit.range and not unit.get("fly", false):
+	if gap > unit.range and not unit.get("fly", false) and not (unit.key == "carrier" and gap <= preload("res://scripts/war_tools.gd").STRIKE_REACH):   # (a carrier stands off on purpose)
 		if not is_same(unit.get("chase_of"), enemy) or gap < float(unit.get("chase_best", INF)) - 1.5:
 			unit.chase_of = enemy
 			unit.chase_best = gap

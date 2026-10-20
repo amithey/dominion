@@ -125,6 +125,7 @@ func capture() -> Dictionary:
 		"support": world.support.capture() if world.support != null else {},
 		"events": world.events.capture() if world.events != null else {},
 		"stats": world.stats.capture() if world.stats != null else {},
+		"crisis": world.crisis.capture() if world.crisis != null else {},
 		"victory": world.victory.capture() if world.victory != null else {},
 		"space": world.space.capture() if world.space != null else {},
 		"generals": world.generals.capture() if world.generals != null else {},
@@ -302,6 +303,9 @@ func restore(data: Dictionary) -> void:
 	if world.stats == null:
 		world.stats = preload("res://scripts/world_stats.gd").new(world)
 	world.stats.restore(data.get("stats", {}))
+	if world.crisis == null:
+		world.crisis = preload("res://scripts/crisis.gd").new(world)
+	world.crisis.restore(data.get("crisis", {}))
 	if world.victory == null:
 		world.victory = preload("res://scripts/victory.gd").new(world)
 	world.victory.restore(data.get("victory", {}))

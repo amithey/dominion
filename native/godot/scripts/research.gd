@@ -260,7 +260,7 @@ func _recompute() -> void:
 		for stat in news:
 			_add(stat, float(news[stat]))
 	# Poisoned and sick towns (wmd.gd), and UN sanctions (un.gd).
-	for sys in ["wmd", "un", "directorate"]:   # (directorate: the AI economy pool, ai_directorate.gd)
+	for sys in ["wmd", "un", "directorate", "crisis"]:   # (directorate: the AI economy pool, ai_directorate.gd)
 		if world != null and world.get(sys) != null:
 			var fx: Dictionary = world.get(sys).bonuses()
 			for stat in fx:

@@ -120,7 +120,7 @@ static func use(w: Node, owner: int, target := -1) -> String:
 		"blue":
 			_effect(w, "income", target, 0.7, until, owner)
 			d.change(owner, target, -15.0)
-			text = "%s cut %s off from the dollar: its income falls 30%% for 3 minutes." % [me, who]
+			text = "%s cut %s off from the dollar: its income falls 30%% for 3 minutes, its currency and prices with it (Diplomacy: its card and Statistics)." % [me, who]
 		"red":
 			_effect(w, "production", target, 0.0, until, owner)
 			d.change(owner, target, -15.0)
@@ -219,6 +219,25 @@ static func _mossad(w: Node, owner: int, target: int) -> String:
 
 static func _active(w: Node) -> Array:
 	return w.power_effects.filter(func(e): return float(e.until) > w.game_time)
+
+## What is being done to `nation` now, in words, for its card: [[text, by], ...] ("Dollar Sanctions: income
+## -30%, 2:31 left"). The effects themselves are public (a sanction is announced).
+static func effects_on(w: Node, nation: int) -> Array:
+	var out := []
+	for e in _active(w):
+		var left := int(ceilf(float(e.until) - w.game_time))
+		var clock := "%d:%02d left" % [left / 60, left % 60]
+		var by: int = int(e.get("by", -1))
+		var source: String = str(power_of(w, by).get("name", "Sanctions")) if by >= 0 else "Sanctions"
+		if e.kind == "income" and int(e.nation) == nation:
+			out.append(["%s: income -%d%%, %s" % [source, int(roundf((1.0 - float(e.value)) * 100.0)), clock], by])
+		elif e.kind == "production" and int(e.nation) == nation:
+			out.append(["%s: military production stopped, %s" % [source, clock], by])
+		elif e.kind == "hormuz" and int(e.by) != nation:
+			out.append(["Strait closed: income -%d%%, %s" % [int(roundf((1.0 - float(e.value)) * 100.0)), clock], by])
+		elif e.kind == "sea_ban" and int(e.nation) == nation:
+			out.append(["Sea trade banned, %s" % clock, by])
+	return out
 
 ## Income multiplier for `nation` from sanctions, sabotage, bans and a closed strait.
 static func income_mult(w: Node, nation: int) -> float:

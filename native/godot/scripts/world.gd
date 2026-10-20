@@ -141,6 +141,7 @@ var directorate: RefCounted = null   # ai_directorate.gd: artificial intelligenc
 var ambience: Node3D = null   # ambience.gd: smoke, birds, winter, order markers
 var order_marks: Node3D = null   # order_marks.gd: routes and flags of the selected units
 var stats: RefCounted = null     # world_stats.gd: every nation's figures over time (Diplomacy, Statistics)
+var crisis: RefCounted = null    # crisis.gd: what lost buildings and infrastructure do to a nation (economic, political, humanitarian, diplomatic crises)
 var sitrep: RefCounted = null    # sitrep.gd: what happens to you, grouped (alerts, minimap pings, the report window)
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
@@ -2127,6 +2128,8 @@ func _physics_process(delta: float) -> void:
 			tests.update(delta)  # rivals' nuclear tests
 		if directorate != null:
 			directorate.update(delta)  # compute, AI levels, autonomy incidents, AI cyber campaigns
+		if crisis != null:
+			crisis.update(delta)  # national crises: recession, blackouts, inflation, default, protest, condemnation
 		if stats != null:
 			stats.update(delta)  # the statistics office publishes every nation's figures
 		if ambience != null:
@@ -2583,6 +2586,7 @@ func start_match(difficulty: String) -> void:
 	wmd = preload("res://scripts/wmd.gd").new(self)
 	un = preload("res://scripts/un.gd").new(self)
 	sitrep = preload("res://scripts/sitrep.gd").new(self)
+	crisis = preload("res://scripts/crisis.gd").new(self)
 	stats = preload("res://scripts/world_stats.gd").new(self)
 	tests = preload("res://scripts/nuclear_tests.gd").new(self)
 	directorate = preload("res://scripts/ai_directorate.gd").new(self)
@@ -4484,7 +4488,7 @@ func begin_missile(key: String) -> void:
 		hud.notice(blocked)
 		return
 	if missiles.platforms_for(key).is_empty():
-		hud.notice("Needs a compatible %s launch platform." % load("res://scripts/arsenal_catalog.gd").platform_kind(self, 0, key))
+		hud.notice(missiles.launcher_missing(key))
 		return
 	# A nuclear weapon needs the order to release it: one decision, its price stated.
 	if missiles.def_of(key).get("nuclear", key == "nuke") and defcon != null and defcon.release_blocked() != "":
@@ -4669,6 +4673,8 @@ func demolish(b: Dictionary, quiet := false) -> String:
 	for r in cost:
 		back[r] = floorf(float(cost[r]) * share)
 	economy.refund(back)
+	if crisis != null:
+		crisis.demolished(b)   # a choice, not a loss (crisis.gd)
 	var receipts: Array = b.get("queue_costs", [])
 	for i in range(b.queue.size()):
 		var receipt = receipts[i] if i < receipts.size() else null
@@ -5087,7 +5093,9 @@ func move_craft(unit: Dictionary, delta: float) -> void:
 		goal = AirOperations.goal(self, unit)
 	elif unit.enemy != null and (unit.target == null or unit.attack_move):
 		var gap := flat_distance(unit, unit.enemy)
-		goal = unit.enemy.node.position if (gap > unit.range * 0.8 or fixed) else null
+		# A carrier stands off at its air wing's reach and lets its aircraft strike (war_tools.standoff).
+		var reach: float = preload("res://scripts/war_tools.gd").standoff(self, unit) if unit.key == "carrier" else unit.range * 0.8
+		goal = unit.enemy.node.position if (gap > reach or fixed) else null
 		if fixed and unit.get("egress") == null and gap < 45.0:
 			var approach: Vector3 = unit.enemy.node.position - pos
 			if absf(angle_difference(unit.heading, atan2(approach.x, approach.z))) > 1.0:
@@ -5521,9 +5529,10 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			effects.muzzle_flash(muzzle, true)
 			effects.shell(muzzle, target, func(at): blast(unit, at, dmg, 2.5, 1.2))
 		"thermobaric":
-			# A ripple of rockets, each a fuel-air blast over a wide area.
+			# A ripple of rockets, each a fuel-air blast over a wide area (they land close together: a salvo
+			# that scattered its rockets six metres either way left most of a squad standing).
 			for i in range(8):
-				var spot := target + Vector3(randf_range(-6, 6), 0, randf_range(-6, 6))
+				var spot := target + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4))
 				spot.y = maxf(height_at(spot.x, spot.z), float(map.seaLevel))
 				effects.projectile("rocket", from + Vector3.UP * 1.8, spot, func(at): blast(unit, at, dmg * 0.45, 5.5, 1.4), i * 0.1)
 		"brahmos":
@@ -5832,6 +5841,8 @@ func destroy_building(b: Dictionary) -> void:
 		wmd.facility_destroyed(b)   # what it held is lost; a rival may be disarmed
 	if support != null:
 		support.building_lost(b)
+	if crisis != null:
+		crisis.building_lost(b)   # the homeless; a striker of homes and power condemned
 	if events != null:
 		events.town_lost(b)   # refugees
 	b.queue.clear()

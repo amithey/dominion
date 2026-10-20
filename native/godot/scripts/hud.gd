@@ -663,12 +663,29 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 	name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(name)
-	var line := _text(desc, 16, UI.TEXT)
-	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	# Missile specifications remain visible; other catalogues keep a brief
-	# description, with the full entry available on hover.
-	line.max_lines_visible = -1
-	text.add_child(line)
+	# Units and buildings: a role line and two or three points (brief.gd); the full description is on hover.
+	# Missile specifications remain as they are.
+	var Brief := preload("res://scripts/brief.gd")
+	var short := {}
+	if world.unit_defs.has(key) and desc == str(world.unit_defs[key].get("desc", "")):
+		short = Brief.unit(world, key)
+	elif not key.begins_with("missile:") and desc.length() > 100:
+		short = Brief.shorten(desc)
+	if short.is_empty():
+		var line := _text(desc, 16, UI.TEXT)
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		line.max_lines_visible = -1
+		text.add_child(line)
+	else:
+		var role := _text(str(short.role), 16, UI.TEXT)
+		role.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		text.add_child(role)
+		for p in short.points:
+			var point := _text("•  " + str(p), 14, UI.CREAM)
+			point.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			text.add_child(point)
+		if str(short.get("tag", "")) != "":
+			text.add_child(_text(str(short.tag), 12, UI.MUTED))
 	if not cost.is_empty():
 		var prices := _cost_row(cost)
 		prices.name = "ProductionCost"
@@ -1382,7 +1399,7 @@ func _action_bars(b: Dictionary) -> void:
 				if int(ms.stock.get(m, 0)) <= 0 or (b.key != "missileSilo" and ms.category(m) != cat): continue
 				count += 1
 				var why: String = ms.locked(m)
-				if why == "" and ms.platforms_for(m).is_empty(): why = "Needs a compatible launch platform"
+				if why == "" and ms.platforms_for(m).is_empty(): why = "Fired from " + ms.launchers_text(m)
 				_bar("missile:" + m, "%s · %d available" % [preload("res://scripts/weapon_copy.gd").display_name(world, m), ms.stock[m]], preload("res://scripts/weapon_copy.gd").summary(world, m), {}, 0.0, why, func(): world.begin_missile(m), "Choose target · uses 1 stored weapon on launch")
 				_list.get_child(_list.get_child_count() - 1).tooltip_text = preload("res://scripts/weapon_copy.gd").tooltip(world, m, false) + ("\nUnavailable: " + why if why != "" else "")
 			if count == 0:
@@ -1551,11 +1568,13 @@ func _update_selection() -> void:
 		_sel_hp.max_value = max_hp
 		_sel_hp.value = hp
 		var def: Dictionary = world.unit_defs.get(main, {})
-		_sel_info.text = ("%s\nRight click to move or attack; Ctrl + right click to attack-move." % def.get("desc", "")) if units.size() == 1 else "Right click to move or attack; Ctrl + right click to attack-move."
+		var Brief := preload("res://scripts/brief.gd")
+		_sel_info.text = ("%s\nRight-click: move / attack  ·  Ctrl + right-click: attack-move" % Brief.text(Brief.unit(world, main))) if units.size() == 1 else "Right-click: move / attack  ·  Ctrl + right-click: attack-move"
+		_sel_info.tooltip_text = str(def.get("desc", ""))
 		if units.all(func(u): return u.key == "worker"):
 			_sel_info.text = "B opens the build list. Right-click an unfinished building to construct it; Shift + right-click queues another site. Right-click open ground to move."
 		elif not own_units.any(func(u): return u.dmg > 0):
-			_sel_info.text = "%s\nRight-click to move. This selection has no weapons." % def.get("desc", "")
+			_sel_info.text = "%s\nRight-click: move. No weapons." % Brief.text(Brief.unit(world, main))
 		_fill_queue([])
 		_fill_launch(own_units.any(func(u): return u.key in world.missiles.LAUNCH_SHIPS))
 		_fill_cargo(own_units)
@@ -1566,7 +1585,7 @@ func _update_selection() -> void:
 			else:
 				_sel_info.text += "\nAmmunition: %d/%d salvos | %s\n%s" % [u.ammo,world.AirOperations.CAPACITY[u.key],u.air_state.capitalize(),"Rearming: %.0f s" % u.service_left if u.air_state == "rearming" else "Empty aircraft return to a supplied air base."]
 		elif units.any(func(u): return world.can_bombard(u)):
-			_sel_info.text += "\nAlt + right click: bombard ground / infrastructure."
+			_sel_info.text += "  ·  Alt + right-click: bombard"
 		_sel_info.text += "\nHP %d / %d%s" % [int(hp),int(max_hp)," · Repair ordered" if units.any(func(u): return u.get("repairing",false)) else ""]
 		# Why a unit stands idle: no fuel or no ammunition money (war_costs.gd).
 		var halted: Array = units.filter(func(u): return u.owner == 0 and str(u.get("operating_shortage", "")) != "")
@@ -1695,6 +1714,13 @@ func _fill_launch(show: bool) -> void:
 	var chosen: Array = _selected_units().filter(func(u): return u.owner == 0 and not u.dead)
 	var boat_only: bool = not chosen.is_empty() and chosen.all(func(u): return u.key == "missileBoat")
 	var launch_types: Array = ms.types().keys().filter(func(m): return not boat_only or (m == "antiShip" and ms.available_to(0, m)))
+	# Only what the selected ships can fire themselves: a silo's missile is not offered on a submarine's card
+	# (it used to fly from the silo).
+	if show and not chosen.is_empty():
+		launch_types = launch_types.filter(func(m):
+			if int(ms.stock.get(m, 0)) <= 0: return true
+			var from: Array = ms.platforms_for(m)
+			return chosen.any(func(u): return u in from))
 	var sig := "boat:" if boat_only else ""
 	if show:
 		for m in launch_types:
@@ -1709,7 +1735,10 @@ func _fill_launch(show: bool) -> void:
 	if not show:
 		return
 	if sig == "" or sig == "boat:":
-		_launch_row.add_child(_text("No missiles in storage: build them at a Missile Silo.", 12, UI.MUTED))
+		var none: Label = _text("No missile this ship can fire is in storage. Missiles are made at a Missile Silo (nuclear ones at a Strategic Complex); a silo's own missiles launch from the silo.", 12, UI.MUTED)
+		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		none.custom_minimum_size.x = 320
+		_launch_row.add_child(none)
 		return
 	for m in launch_types:
 		if int(ms.stock[m]) <= 0:
@@ -1745,7 +1774,10 @@ func _fill_cargo(own: Array) -> void:
 		return
 	if not carriers.is_empty():
 		for c in carriers:
-			var label := _text("%s: %s" % [world.unit_defs.get(c.key, {}).get("name", c.key), Air.manifest(world, c)], 13, UI.CREAM)
+			var aboard: int = (c.get("cargo", []) as Array).size()
+			var head := _text(("%d ABOARD" % aboard) if aboard > 0 else "EMPTY", 17, UI.GOOD if aboard > 0 else UI.MUTED, true)
+			_cargo_row.add_child(head)
+			var label := _text("%s: %s" % [world.unit_defs.get(c.key, {}).get("name", c.key), Air.manifest(world, c)], 14, UI.CREAM)
 			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			_cargo_row.add_child(label)
 		var buttons := HFlowContainer.new()
@@ -1761,7 +1793,9 @@ func _fill_cargo(own: Array) -> void:
 			return "")
 		land.tooltip_text = "Click a place on the map: the transport sails or flies there and puts its load ashore."
 		if carriers.any(func(c): return Air.room(c) > 0):
-			_cargo_row.add_child(_text("Select troops and right-click the transport to load them.", 12, UI.MUTED))
+			var how := _text("To load: select troops, then right-click this transport.", 14, UI.CREAM)
+			how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			_cargo_row.add_child(how)
 	elif nearest != null:
 		var board := _button(_cargo_row, "Board the %s" % world.unit_defs.get(nearest.key, {}).get("name", nearest.key), func():
 			Air.order_board(world, world.units.filter(func(u): return u.selected and not u.dead and u.owner == 0), nearest)

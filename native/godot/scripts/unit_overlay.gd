@@ -1,5 +1,6 @@
 extends Control
-## Over the battlefield, under the panels: over the player's own units that
+## Over the battlefield, under the panels: over your transports, who is aboard ("6 ABOARD", a figure
+## for each soldier: a load is never invisible); over the player's own units that
 ## stand idle for want of supplies, why: "NO FUEL", "NO AMMUNITION"
 ## (war_costs.gd sets unit.operating_shortage); over any unit in sight, its
 ## rank in gold chevrons (veterancy.gd) and a star for the general aboard
@@ -167,8 +168,11 @@ func _draw() -> void:
 		# (cheap tests first: most units have neither rank nor shortage)
 		var ranked: bool = int(u.get("rank", 0)) > 0 or u.has("general")
 		var short: bool = int(u.owner) == 0 and str(u.get("operating_shortage", "")) != ""
-		if not (ranked or short) or u.dead or u.get("stowed", false) or not u.node.visible:
+		var load_shown: bool = int(u.owner) == 0 and u.has("cargo") and (not (u.cargo as Array).is_empty() or u.get("selected", false))
+		if not (ranked or short or load_shown) or u.dead or u.get("stowed", false) or not u.node.visible:
 			continue
+		if load_shown:
+			_cargo(u, cam, view, font)
 		if ranked:
 			_insignia(u, cam, view, font, fog)
 		if not short:
@@ -184,6 +188,40 @@ func _draw() -> void:
 		var box := Rect2(p + Vector2(-width * 0.5 - 4, -54), Vector2(width + 8, 14))   # above role and health
 		draw_rect(box, Color(0.35, 0.06, 0.05, 0.85))
 		draw_string(font, box.position + Vector2(4, 11), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("ffd9cf"))
+
+## Who is aboard one of your transports, large and green over it: a figure per soldier (up to eight),
+## then the count; "EMPTY" over a selected empty one with its places.
+func _cargo(u: Dictionary, cam: Camera3D, view: Rect2, font: Font) -> void:
+	var top: Vector3 = u.node.get_global_transform_interpolated().origin + Vector3.UP * 5.0
+	if cam.is_position_behind(top) or cam.global_position.distance_to(top) > FAR:
+		return
+	var p := cam.unproject_position(top) + Vector2(0, -44)
+	if not view.has_point(p):
+		return
+	var cargo: Array = u.cargo
+	var Air := preload("res://scripts/airlift.gd")
+	var people := 0
+	var vehicles := 0
+	for c in cargo:
+		if bool(world.unit_defs.get(str(c.key), {}).get("vehicle", false)) or int(c.get("places", 1)) > 1:
+			vehicles += 1
+		else:
+			people += 1
+	var text := "EMPTY · %d places" % Air.room(u) if cargo.is_empty() else ("%d ABOARD" % cargo.size() + (" · %d vehicle%s" % [vehicles, "" if vehicles == 1 else "s"] if vehicles > 0 else ""))
+	var figures := mini(people, 8)
+	var width := text_width(font, text, 14) + 14.0 + figures * 9.0 + (4.0 if figures > 0 else 0.0)
+	var box := Rect2(p - Vector2(width * 0.5, 12), Vector2(width, 24))
+	var green := Color("3f9d5a") if not cargo.is_empty() else Color("5d6d78")
+	draw_rect(box.grow(1), Color("0b151e"))
+	draw_rect(box, Color(green, 0.92))
+	var x := box.position.x + 8.0
+	for i in range(figures):
+		draw_circle(Vector2(x + 3.0, box.position.y + 7.0), 2.6, Color("f5ecd8"))
+		draw_rect(Rect2(x + 0.5, box.position.y + 10.5, 5.0, 8.0), Color("f5ecd8"))
+		x += 9.0
+	if figures > 0:
+		x += 4.0
+	draw_string(font, Vector2(x, box.position.y + 17), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("ffffff"))
 
 ## Gold chevrons for a unit's rank, beside its health bar; a star and a name
 ## for a general aboard.

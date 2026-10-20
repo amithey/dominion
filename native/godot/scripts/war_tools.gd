@@ -355,6 +355,14 @@ static func apply(w: Node) -> void:
 		if w.get("damage_profile") != null:
 			w.damage_profile[key] = {"infantry": 1.0, "light": 1.3, "armor": 1.2, "air": 0.9, "naval": 1.5, "building": 1.3}
 
+## How far off a carrier ordered to attack stands from its target: its air wing's reach, less a margin;
+## a carrier whose aircraft are all lost closes to its own guns' range.
+static func standoff(w: Node, carrier: Dictionary) -> float:
+	var wing: Dictionary = carrier.get("wing", {})
+	if not wing.is_empty() and int(wing.get("aboard", 0)) <= 0 and (wing.get("rearming", []) as Array).is_empty() 			and not w.units.any(func(u): return not u.dead and is_same(u.get("carrier"), carrier)):
+		return float(carrier.range) * 0.8
+	return STRIKE_REACH * 0.8
+
 static func wing_size(w: Node, carrier: Dictionary) -> int:
 	return int(WING.get(_id(w, int(carrier.owner)), 4))
 
