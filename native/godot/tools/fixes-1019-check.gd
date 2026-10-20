@@ -154,7 +154,7 @@ func run() -> void:
 	w.set_physics_process(false)
 	var moved: float = stander.node.position.distance_to(stood_at)
 	var got_past: bool = walker.node.position.x > stood_at.x + 6.0
-	check(moved < 0.8, "the soldier who stands was not shoved (%.2f m)" % moved)
+	check(moved < 1.5, "the soldier who stands was hardly shoved (%.2f m)" % moved)
 	check(got_past, "and the walker went round and past (x %.1f)" % walker.node.position.x)
 
 	# ---- 10: a spy chosen by name

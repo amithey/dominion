@@ -268,8 +268,9 @@ static func crowd_push(w: Node, unit: Dictionary, at: Vector3, still := false) -
 			for other in bucket:
 				if is_same(other, unit) or other.dead or other.get("fly", false) or other.get("naval", false):
 					continue
-				if still and other.get("moving", false) and other.get("target") != null:
-					continue   # a unit on its way does not push one that stands: it steers round it
+				var yield_share := 1.0
+				if still and other.owner == unit.owner and other.get("moving", false) and other.get("target") != null and other.node.position.distance_to(other.target) > 5.0:
+					yield_share = 0.2   # a friend on its way hardly shoves one that stands: it steers round it
 				var gap: Vector3 = at - other.node.position
 				gap.y = 0
 				# Hulls are about seven metres long: two vehicles keep 6.5 m apart.
@@ -282,7 +283,7 @@ static func crowd_push(w: Node, unit: Dictionary, at: Vector3, still := false) -
 						gap = Vector3(cos(a), 0, sin(a)) * 0.001
 						d2 = gap.length_squared()
 					var d := sqrt(d2)
-					push += gap / d * (clearance - d)
+					push += gap / d * (clearance - d) * yield_share
 	return push
 
 # ---------------------------------------------------------------- vehicle traffic
