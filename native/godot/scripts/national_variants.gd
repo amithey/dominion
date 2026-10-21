@@ -74,6 +74,42 @@ const BUILD_EXCEPT := {
 	"shipyard": ["afghanistan"],
 }
 
+## The nations added after the first 28 declare their capabilities in the "capabilities" of
+## scripts/nations/<id>.gd: "units" (as ONLY), "not_units" (as EXCEPT), "research", "missiles"
+## and "names". These functions add them to the tables above; the tables stay as they were.
+static var _tables := {}
+static func _declared(field: String) -> Dictionary:
+	var out := {}
+	for script in preload("res://scripts/nation_registry.gd").ORDER:
+		var rows = script.DATA.get("capabilities", {}).get(field, {} if field == "names" else [])
+		for key in rows:
+			if field == "names":
+				if not out.has(key): out[key] = {}
+				out[key][script.DATA.arsenal] = rows[key]
+			else:
+				if not out.has(key): out[key] = []
+				out[key].append(script.DATA.arsenal)
+	return out
+
+## `table` with every nation's declared `field` added; a key a nation declares that the table lacks is
+## ignored for the "only" tables (absent there means everyone), and nation-registry-check flags it.
+static func table(name: String) -> Dictionary:
+	if _tables.has(name): return _tables[name]
+	var base: Dictionary = {"only": ONLY, "except": EXCEPT, "research": RESEARCH_ONLY, "missiles": MISSILE_ONLY, "names": NAMES}[name]
+	var field: String = {"only": "units", "except": "not_units", "research": "research", "missiles": "missiles", "names": "names"}[name]
+	var out: Dictionary = base.duplicate(true)
+	var extra := _declared(field)
+	for key in extra:
+		if name == "names":
+			if not out.has(key): out[key] = {}
+			out[key].merge(extra[key], true)
+		elif out.has(key):
+			out[key].append_array(extra[key])
+		elif name == "except":
+			out[key] = extra[key]
+	_tables[name] = out
+	return out
+
 ## Each nation's own system for a shared unit.
 const NAMES := {
 	"tank": {"iraq": "M1A1M Abrams", "syria": "T-72", "afghanistan": "T-62 (captured)", "blue": "M1A2 SEPv3 Abrams", "red": "Type 99A", "green": "Leopard 2A7V", "gold": "Karrar", "russia": "T-90M Proryv", "india": "Arjun Mk1", "japan": "Type 10", "turkiye": "Altay", "israel": "Merkava Mk 4", "uk": "Challenger 2", "south_korea": "K2 Black Panther", "saudi": "M1A2S Abrams", "brazil": "Leopard 1A5BR", "indonesia": "Leopard 2A4", "ukraine": "T-64BV", "north_korea": "Chonma-216", "egypt": "M1A1 Abrams", "australia": "M1A2 SEPv3 Abrams", "pakistan": "VT-4 Haider", "yemen": "T-55 / T-62", "houthis": "T-62 / T-72 (captured)", "ethiopia": "T-72UA1 / T-72B", "nigeria": "VT-4 / Vickers Mk 3", "sudan": "T-72 / Al-Bashir", "south_sudan": "T-72AV"},
@@ -135,36 +171,36 @@ const RESEARCH_DESCS := {
 ## every arsenal is loaded, before research and missiles are set up).
 static func apply(w: Node) -> void:
 	var me: String = preload("res://scripts/national_arsenal.gd").identity(w, 0)
-	for key in ONLY:
+	for key in table("only"):
 		if w.unit_defs.has(key) and str(w.unit_defs[key].get("nation", "")) == "":
-			w.unit_defs[key].nation = ONLY[key].duplicate()
+			w.unit_defs[key].nation = table("only")[key].duplicate()
 	# A shared unit three nations lack: every other nation fields it.
 	var everyone: Array = preload("res://scripts/factions.gd").ARSENALS
-	for key in EXCEPT:
+	for key in table("except"):
 		if w.unit_defs.has(key) and str(w.unit_defs[key].get("nation", "")) == "":
-			w.unit_defs[key].nation = everyone.filter(func(id): return not id in EXCEPT[key])
+			w.unit_defs[key].nation = everyone.filter(func(id): return not id in table("except")[key])
 	for key in DESCS:
 		if w.unit_defs.has(key):
 			w.unit_defs[key].desc = DESCS[key]
-	for key in NAMES:
-		if w.unit_defs.has(key) and NAMES[key].has(me):
+	for key in table("names"):
+		if w.unit_defs.has(key) and table("names")[key].has(me):
 			w.unit_defs[key].generic = GENERIC.get(key, w.unit_defs[key].get("generic", w.unit_defs[key].name))
-			w.unit_defs[key].name = NAMES[key][me]
+			w.unit_defs[key].name = table("names")[key][me]
 			# The kind of unit stays plain: "Tank. Heavy armor, heavy punch."
 			w.unit_defs[key].desc = "%s. %s" % [w.unit_defs[key].generic, w.unit_defs[key].get("desc", "")]
 	var discoveries: Dictionary = w.map.research.discoveries
-	for key in RESEARCH_ONLY:
+	for key in table("research"):
 		if discoveries.has(key) and str(discoveries[key].get("nation", "")) == "":
-			discoveries[key].nation = RESEARCH_ONLY[key].duplicate()
+			discoveries[key].nation = table("research")[key].duplicate()
 	for key in RESEARCH_EXCEPT:
 		if discoveries.has(key) and str(discoveries[key].get("nation", "")) == "":
 			discoveries[key].nation = everyone.filter(func(id): return not id in RESEARCH_EXCEPT[key])
 	for key in RESEARCH_DESCS:
 		if discoveries.has(key):
 			discoveries[key].desc = RESEARCH_DESCS[key]
-	for key in MISSILE_ONLY:
+	for key in table("missiles"):
 		if w.map.missiles.get("types", {}).has(key):
-			w.map.missiles.types[key].nation = MISSILE_ONLY[key].duplicate()
+			w.map.missiles.types[key].nation = table("missiles")[key].duplicate()
 
 ## Whether nation `owner` may put up building `key`.
 static func builds(w: Node, owner: int, key: String) -> bool:
@@ -198,8 +234,8 @@ static func name_for(w: Node, owner: int, key: String) -> String:
 		return str(up.name)   # its successor, once researched (the M1E3 Abrams)
 	if catalog.UNIT_NAMES.get(key, {}).has(identity_id):
 		return str(catalog.UNIT_NAMES[key][identity_id])
-	if NAMES.has(key) and NAMES[key].has(id):
-		return NAMES[key][id]
+	if table("names").has(key) and table("names")[key].has(id):
+		return table("names")[key][id]
 	var def: Dictionary = w.unit_defs.get(key, {})
 	return str(def.get("generic", def.get("name", key)))
 
@@ -234,6 +270,6 @@ static func fields(key: String, arsenal: String) -> bool:
 	if forces.ROLES.has(key): return id in forces.operators(key)
 	if id in load("res://scripts/arsenal_catalog.gd").UNIT_PROGRAMS.get(key, []) or (key == "samLauncher" and id == "iraq"):
 		return false
-	if ONLY.has(key) and not arsenal in ONLY[key]:
+	if table("only").has(key) and not arsenal in table("only")[key]:
 		return false
-	return not arsenal in EXCEPT.get(key, [])
+	return not arsenal in table("except").get(key, [])

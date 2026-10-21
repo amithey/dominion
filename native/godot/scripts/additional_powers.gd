@@ -32,6 +32,15 @@ const POWERS := {
 	"syria": {"name": "Reconstruction Aid", "target": false, "hostile": false, "cooldown": 420.0, "duration": 60.0, "costs": {"money": 100}, "needs": [], "desc": "$100 to host a donors' conference: $250 pledged by every nation at +20 relations or better (up to four) arrives 30s later, and up to five damaged buildings near your capital regain 20% of their health over 60s. Needs at least one such partner."},
 	"afghanistan": {"name": "Insurgent Attacks", "target": true, "hostile": true, "cooldown": 300.0, "duration": 90.0, "costs": {"money": 300}, "needs": [], "desc": "$300: attacks deep inside an enemy country, at war with you or at -40 relations or worse. Three of its buildings (not its capital) lose 30% of their health, and its income falls 15% for 90s. Every other nation's opinion of you falls by 5, the target's by 15."}
 }
+## The national power of `id`: the table above (the regional powers included), else the "power" of
+## its own file in scripts/nations/. {} when it has none.
+static func def(id: String) -> Dictionary:
+	if POWERS.has(id): return POWERS[id]
+	return preload("res://scripts/nation_registry.gd").data(id).get("power", {})
+
+static func has_power(id: String) -> bool:
+	return not def(id).is_empty()
+
 static func nation(w: Node, owner: int):
 	if w.ai != null:
 		for n in w.ai.nations:
@@ -71,7 +80,7 @@ static func repairs(w: Node, owner: int) -> Array:
 static func blocked(w: Node, owner: int, target: int) -> String:
 	var id := F.id_of(w, owner)
 	if Regional.POWERS.has(id): return Regional.blocked(w, owner, target)
-	var p: Dictionary = POWERS[id]
+	var p: Dictionary = def(id)
 	for key in p.needs:
 		if not owned(w, owner, key): return "Needs supplied " + str(w.building_defs.get(key, {}).get("name", key))
 	for r in p.costs:
@@ -80,6 +89,9 @@ static func blocked(w: Node, owner: int, target: int) -> String:
 	match id:
 		"uk", "indonesia":
 			if w.diplomacy.allied(owner, target): return "Not on an ally"
+		"france":
+			if w.diplomacy.at_war(owner, target) or w.diplomacy.rel(owner, target) < 20.0: return "Needs a partner at peace (+20 relations or better)"
+			if bonus(w, target, "deterred") > 0.0: return "Already under a nuclear guarantee"
 		"south_korea", "australia":
 			if w.diplomacy.at_war(owner, target) or w.diplomacy.rel(owner, target) < 10.0: return "Needs a partner at peace (+10 relations or better)"
 		"brazil":
@@ -127,6 +139,16 @@ static func use_insurance_ban(w: Node, owner: int, target: int) -> void:
 	effect(w, "sea_ban", target, 1.0, 150, owner)
 	effect(w, "income", target, 0.85, 150, owner)
 	w.diplomacy.change(owner, target, -12.0)
+
+## France: nuclear-capable aircraft are stationed on a partner's soil for a while and the partner joins the
+## exercises; Paris keeps command and the partner gets no warhead. Rivals will not start a war with it
+## (diplomacy.ai_wants_war), and those hostile to it think the less of France. A war already begun goes on.
+static func use_forward_deterrence(w: Node, owner: int, target: int) -> void:
+	effect(w, "extra_deterred", target, 1.0, float(def("france").duration), owner)
+	w.diplomacy.change(owner, target, 10.0)
+	for rival in range(w.diplomacy.n):
+		if rival != owner and rival != target and not w.diplomacy.defeated(rival) and w.diplomacy.rel(rival, target) < -35.0:
+			w.diplomacy.change(rival, owner, -6.0)
 
 ## South Korea: tanks and howitzers for a partner, on export credit.
 static func use_arms_export(w: Node, owner: int, target: int) -> void:
@@ -264,13 +286,16 @@ static func use_insurgent_attacks(w: Node, owner: int, target: int) -> void:
 static func use(w: Node, owner: int, target: int) -> String:
 	var id := F.id_of(w, owner)
 	if Regional.POWERS.has(id): return Regional.use(w, owner, target)
-	if not pay(w, owner, POWERS[id].costs): return "Insufficient resources"
+	if not pay(w, owner, def(id).costs): return "Insufficient resources"
 	var me: String = w.diplomacy.name_of(owner)
 	var who: String = w.diplomacy.name_of(target) if target >= 0 else ""
 	match id:
 		"uk":
 			use_insurance_ban(w, owner, target)
 			return "%s: the London market stops insuring %s's cargo. Its sea trade stops and its income falls." % [me, who]
+		"france":
+			use_forward_deterrence(w, owner, target)
+			return "%s extends its nuclear deterrent over %s: rivals will not start a war with it." % [me, who]
 		"south_korea":
 			use_arms_export(w, owner, target)
 			return "%s sells tanks and howitzers to %s on export credit: $900 earned." % [me, who]
@@ -297,7 +322,7 @@ static func use(w: Node, owner: int, target: int) -> String:
 		"iraq": use_popular_mobilization(w, owner)
 		"syria": return "%s secured $%d in reconstruction pledges, arriving in 30 seconds." % [w.diplomacy.name_of(owner), use_reconstruction_aid(w, owner)]
 		"afghanistan": use_insurgent_attacks(w, owner, target)
-	return "%s activated %s." % [w.diplomacy.name_of(owner), POWERS[id].name]
+	return "%s activated %s." % [w.diplomacy.name_of(owner), def(id).name]
 ## A closed strait, an insurance ban or a closed canal (on this nation).
 static func sea_closed(w: Node, owner: int) -> bool:
 	return w.power_effects.any(func(e): return float(e.until) > w.game_time and ((e.kind == "hormuz" and int(e.by) != owner) or (e.kind == "sea_ban" and int(e.nation) == owner)))
@@ -358,7 +383,7 @@ static func _notice(w: Node, source: int, target: int, message: String) -> void:
 ## at -30 or worse; one at war first), a friendly one at its closest partner.
 static func ai_target(w: Node, owner: int) -> int:
 	var id := F.id_of(w, owner)
-	var power: Dictionary = POWERS.get(id, Regional.POWERS.get(id, {}))
+	var power: Dictionary = def(id)
 	if not power.target: return -1
 	var d: Node = w.diplomacy
 	var best := -1

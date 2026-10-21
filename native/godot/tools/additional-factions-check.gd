@@ -122,7 +122,7 @@ func run() -> void:
 			reset_power()
 			set_nation(owner, id)
 			var target: int = 1 if owner == 0 else 0
-			for need in P.POWERS[id].needs: building(need, owner)
+			for need in P.def(id).needs: building(need, owner)
 			if id == "uk": w.spawn_unit("type45", sea, owner)
 			if id == "north_korea": w.spawn_unit("heavyRocket", field, owner)
 			if id == "ukraine":
@@ -137,18 +137,19 @@ func run() -> void:
 				building("farm", target)
 			if id in ["uk", "indonesia", "north_korea"]: w.diplomacy.set_flag(w.diplomacy.alliance, owner, target, false)   # hostile levers: not on an ally
 			if id in ["south_korea", "australia"]: w.diplomacy.set_score(owner, target, 20.0)   # a partner
+			if id == "france": w.diplomacy.set_score(owner, target, 30.0)   # a partner to extend the guarantee to
 			if id == "pakistan":
 				w.diplomacy.set_flag(w.diplomacy.alliance, owner, target, false)
 				w.diplomacy.set_score(owner, target, 30.0)
 			if id == "ukraine":
 				w.diplomacy.set_flag(w.diplomacy.war, owner, target, true)   # drone strikes only at war
 				building("farm", target)
-			var resource: String = P.POWERS[id].costs.keys()[0]
+			var resource: String = P.def(id).costs.keys()[0]
 			var balance := P.funds(w, owner, resource)
 			check(FP.blocked(w, owner, target) == "", "%s owner %d prerequisites met" % [id, owner])
 			FP.use(w, owner, target)
 			var loot := 900.0 if id == "north_korea" else 0.0   # (the heist brings the money in again)
-			check(is_equal_approx(P.funds(w, owner, resource), balance - float(P.POWERS[id].costs[resource]) + loot) and FP.ready_in(w, owner) > 0.0, "%s owner %d pays and enters cooldown" % [id, owner])
+			check(is_equal_approx(P.funds(w, owner, resource), balance - float(P.def(id).costs[resource]) + loot) and FP.ready_in(w, owner) > 0.0, "%s owner %d pays and enters cooldown" % [id, owner])
 			var after := P.funds(w, owner, resource)
 			FP.use(w, owner, target)
 			check(P.funds(w, owner, resource) == after, id + " repeated activation cannot charge twice")
@@ -163,6 +164,26 @@ func run() -> void:
 	var bought: Array = w.units.filter(func(u): return u.owner == 1 and not u.dead and u.get("exported_by", -1) == 0)
 	check(bought.size() >= 3 and w.units.filter(func(u): return u.owner == 1 and not u.dead).size() == their_units + 3, "an arms export deal puts two tanks and an artillery piece in the buyer's army (%d bought, %d -> %d)" % [bought.size(), their_units, w.units.filter(func(u): return u.owner == 1 and not u.dead).size()])
 	check(is_equal_approx(w.economy.res.money, cash0 + 900.0), "and the seller earns $900")
+	# France: a nuclear guarantee over a partner stops rivals starting a war with it, and a war begun goes on.
+	reset_power()
+	set_nation(0, "france")
+	set_nation(1, "uk")
+	building("strategicComplex", 0)
+	w.diplomacy.set_flag(w.diplomacy.alliance, 0, 1, false)   # not allies: a rival may want war with the partner
+	w.diplomacy.set_score(0, 1, 30.0)
+	check(FP.blocked(w, 0, 1) == "" and P.bonus(w, 1, "deterred") == 0.0, "France can extend a guarantee over a partner at +30")
+	w.diplomacy.set_score(0, 1, -50.0)
+	check(w.diplomacy.ai_wants_war(0, 1), "without it a rival at -50 wants war with the partner")
+	w.diplomacy.set_score(0, 1, 30.0)
+	FP.use(w, 0, 1)
+	check(P.bonus(w, 1, "deterred") > 0.0 and w.diplomacy.rel(0, 1) >= 39.0, "the guarantee is in force and relations with the partner rise 10")
+	w.diplomacy.set_score(0, 1, -50.0)
+	check(not w.diplomacy.ai_wants_war(0, 1), "with it a rival at -50 does not start a war with the partner")
+	w.diplomacy.set_score(0, 1, -80.0)
+	check(w.diplomacy.ai_wants_war(0, 1), "but a rival at -80 is not put off")
+	w.game_time += float(P.def("france").duration) + 1.0
+	w.diplomacy.set_score(0, 1, -50.0)
+	check(P.bonus(w, 1, "deterred") == 0.0 and w.diplomacy.ai_wants_war(0, 1), "and the guarantee expires")
 	reset_power()
 	set_nation(0, "south_korea")
 	w.diplomacy.set_flag(w.diplomacy.war, 0, 1, true)

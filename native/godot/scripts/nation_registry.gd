@@ -5,7 +5,7 @@ extends RefCounted
 ## factions.gd, additional_factions.gd and regional_factions.gd read their old parallel
 ## arrays (IDS, NAMES, LEADERS...) from here.
 ## Groups: "core" (the nine first nations), "additional" (the 2026-10-02/03 nations)
-## and "regional" (the six regional entities of 2026-10-11).
+## "regional" (the six regional entities of 2026-10-11) and "expansion" (nations added after them).
 const ORDER := [
 	preload("res://scripts/nations/usa.gd"),
 	preload("res://scripts/nations/china.gd"),
@@ -34,7 +34,8 @@ const ORDER := [
 	preload("res://scripts/nations/ethiopia.gd"),
 	preload("res://scripts/nations/nigeria.gd"),
 	preload("res://scripts/nations/sudan.gd"),
-	preload("res://scripts/nations/south_sudan.gd")
+	preload("res://scripts/nations/south_sudan.gd"),
+	preload("res://scripts/nations/france.gd")
 ]
 
 ## One field of every nation in ORDER, optionally only those in `groups`. The result is

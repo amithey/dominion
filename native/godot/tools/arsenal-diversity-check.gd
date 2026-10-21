@@ -26,7 +26,7 @@ func run() -> void:
 	w.ai.set_physics_process(false)
 	preload("res://tools/test_kit.gd").quiet(w, ["fog", "un", "wmd"])
 	var original: Dictionary = w.map.nations[0].duplicate(true)
-	check(F.IDS.size() == 28 and F.IDS.all(func(id): return Data.has_profile(id)), "every playable identity has a dossier")
+	check(F.IDS.size() >= 28 and F.IDS.all(func(id): return Data.has_profile(id)), "every playable identity has a dossier")
 	for id: String in F.IDS:
 		var dossier: Dictionary = Data.profile(id)
 		check(["land", "air", "sea", "fires", "support", "limits"].all(func(k): return str(dossier.get(k, "")).length() > 35), id + " six substantive research domains")

@@ -124,9 +124,9 @@ func meet_needs(id: String) -> void:
 	var extra := preload("res://scripts/additional_powers.gd")
 	if id == "iran":
 		w.diplomacy.set_flag(w.diplomacy.war, 0, 1, true)   # Hormuz is closed only at war
-	if not extra.POWERS.has(id):
+	if not extra.has_power(id):
 		return
-	for need in extra.POWERS[id].needs:
+	for need in extra.def(id).needs:
 		if not extra.owned(w, 0, need): put(need, 0)
 	var d: Node = w.diplomacy
 	match id:

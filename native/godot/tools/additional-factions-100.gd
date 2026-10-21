@@ -98,7 +98,7 @@ func run() -> void:
 		for id in Extra.IDS.filter(func(id): return not id in preload("res://scripts/regional_factions.gd").IDS):
 			reset(id, owner)
 			var target := 1 if owner == 0 else 0
-			var costs: Dictionary = P.POWERS[id].costs
+			var costs: Dictionary = P.def(id).costs
 			var resource: String = costs.keys()[-1]
 			amount(owner, resource, float(costs[resource]) - 0.01)
 			check(no_side_effects(owner, target), "%s/%d: short by 0.01, no partial charge or cooldown" % [id, owner])
@@ -129,10 +129,10 @@ func run() -> void:
 			check(is_equal_approx(FP.ready_in(w, owner), wait_before) and P.funds(w, owner, "money") == before and w.power_uses.size() == used, "%s/%d: serialized cooldown blocks replay" % [id, owner])
 	# 21 prerequisite checks: unfinished, unpowered by EMP, and cut off.
 	for id in Extra.IDS.filter(func(id): return not id in preload("res://scripts/regional_factions.gd").IDS):
-		if P.POWERS[id].needs.is_empty(): continue
+		if P.def(id).needs.is_empty(): continue
 		for mode in ["unfinished", "disabled", "unsupplied"]:
 			reset(id)
-			for b in sites(0, P.POWERS[id].needs[0]):
+			for b in sites(0, P.def(id).needs[0]):
 				if mode == "unfinished": b.built = false
 				elif mode == "disabled": b.disabled_until = w.game_time + 10
 				else: b.supplied = false

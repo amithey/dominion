@@ -27,6 +27,8 @@ func run() -> void:
 	preload("res://tools/test_kit.gd").quiet(w, ["fog", "un", "wmd"])
 	var original: Dictionary = w.map.nations[0].duplicate(true)
 	var entries := 0
+	var later := 0   # roles of the nations added after the first 28, outside the tools of war
+	var tool_keys: Array = preload("res://scripts/war_tools.gd").VEHICLES + preload("res://scripts/war_tools.gd").AIR + preload("res://scripts/war_tools.gd").NAVAL
 	for index in range(F.IDS.size()):
 		w.map.nations[0] = F.nation(index, true)
 		for key in C.ROLES:
@@ -34,12 +36,13 @@ func run() -> void:
 			check(w.unit_allowed(0, key) == legal and N.fields(key, F.ARSENALS[index]) == legal, "%s / %s operator and starting-roster gate" % [F.IDS[index], key])
 			if legal:
 				entries += 1
+				if index >= 28 and not key in tool_keys: later += 1
 				check(N.name_for(w, 0, key) == str(C.names(key).get(F.IDS[index], C.ROLES[key].name)), "%s / %s national model name" % [F.IDS[index], key])
 	# 159 before the tools of war; those add their own documented operators (war_tools.gd).
 	var tools := 0
-	for key in preload("res://scripts/war_tools.gd").VEHICLES + preload("res://scripts/war_tools.gd").AIR + preload("res://scripts/war_tools.gd").NAVAL:
+	for key in tool_keys:
 		tools += C.operators(key).size()
-	check(entries == 159 + tools, "%d operator-role choices across all 28 identities (159 + %d tools of war)" % [entries, tools])
+	check(entries == 159 + tools + later, "%d operator-role choices across all %d identities (159 + %d tools of war + %d by later nations)" % [entries, F.IDS.size(), tools, later])
 	w.map.nations[0].id = "future_nation"
 	check(C.ROLES.keys().all(func(key): return not w.unit_allowed(0, key)), "new country ID does not inherit an arsenal")
 	w.map.nations[0].units = ["scoutTeam", "ifv"]

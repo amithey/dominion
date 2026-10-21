@@ -13,19 +13,19 @@ const CAPABILITY := {
 	# Nuclear. SIPRI 2025: Russia 5,459 warheads, US 5,177, China 600, France 290,
 	# UK 225, India 180, Pakistan 170, Israel 90, North Korea 50; all nine field
 	# weapons for battlefield or "pre-strategic" use.
-	"tacticalNuke": {"ids": ["usa", "russia", "china", "eu", "uk", "india", "pakistan", "israel", "north_korea"],
+	"tacticalNuke": {"ids": ["usa", "russia", "china", "eu", "france", "uk", "india", "pakistan", "israel", "north_korea"],
 		"why": "all nine nuclear-armed states: US B61, Russia ~2,000 non-strategic warheads, Pakistan Nasr, North Korea Hwasan-31, France ASMPA, UK low-yield Trident"},
-	"nuke": {"ids": ["usa", "russia", "china", "eu", "uk", "india", "pakistan", "israel", "north_korea"], "why": "the nine nuclear-armed states"},
-	"hydrogenBomb": {"ids": ["usa", "russia", "china", "eu", "uk", "north_korea"],
+	"nuke": {"ids": ["usa", "russia", "china", "eu", "france", "uk", "india", "pakistan", "israel", "north_korea"], "why": "the nine nuclear-armed states"},
+	"hydrogenBomb": {"ids": ["usa", "russia", "china", "eu", "france", "uk", "north_korea"],
 		"why": "two-stage weapons tested by the US (1952), USSR (1955), UK (1957), China (1967), France (1968); North Korea's 2017 test (~250 kt) is judged likely thermonuclear. India's 1998 claim is disputed (12-25 kt measured); Israel's is unproven"},
 	"tsarBomba": {"ids": ["russia"], "why": "the USSR's 50 Mt AN602, 30 October 1961"},
-	"neutronBomb": {"ids": ["usa", "russia", "china", "eu"], "why": "no one fields one today: the US retired the W70-3 and W79 in 1992; the USSR, France (1980) and China (1988) tested designs. A research programme to build them again"},
+	"neutronBomb": {"ids": ["usa", "russia", "china", "eu", "france"], "why": "no one fields one today: the US retired the W70-3 and W79 in 1992; the USSR, France (1980) and China (1988) tested designs. A research programme to build them again"},
 	"bunkerBuster": {"ids": ["usa"], "why": "the US B61-11 earth penetrator (~400 kt, kept in the stockpile) and the B61-13 (first unit May 2025) for hardened, deeply buried targets; Congress funded a new nuclear bunker-buster prototype in 2026"},
-	"nuclearCruise": {"ids": ["usa", "russia", "eu", "pakistan", "israel"],
+	"nuclearCruise": {"ids": ["usa", "russia", "eu", "france", "pakistan", "israel"],
 		"why": "air- and sea-launched nuclear cruise missiles: the US AGM-86B with the W80-1 (the LRSO to follow), Russia's Kh-102, France's ASMPA-R, Pakistan's Ra'ad and Babur, and the missiles Israel's Dolphin submarines are believed to carry"},
-	"nuclearEmp": {"ids": ["usa", "russia", "china", "eu", "uk", "india", "pakistan", "israel", "north_korea"],
+	"nuclearEmp": {"ids": ["usa", "russia", "china", "eu", "france", "uk", "india", "pakistan", "israel", "north_korea"],
 		"why": "any nuclear-armed state with a missile can burst a warhead at altitude; the EMP Commission named it in Russian, Chinese and North Korean doctrine"},
-	"mirv": {"ids": ["usa", "russia", "china", "eu", "uk", "india", "pakistan"],
+	"mirv": {"ids": ["usa", "russia", "china", "eu", "france", "uk", "india", "pakistan"],
 		"why": "deployed by the US (Trident II), Russia (Yars, Bulava, Sarmat), China (DF-41, DF-5B), the UK and France (M51); tested by India (Agni-V 'Divyastra', March 2024 and May 2026) and Pakistan (Ababeel)"},
 	"nuclearGlide": {"ids": ["russia", "china"], "why": "Russia's Avangard (in service 2019); China's orbital glide vehicle test of August 2021 (a fractional orbital bombardment system)"},
 	"burevestnik": {"ids": ["russia"], "why": "nuclear-powered cruise missile; Russia claimed a 14,000 km, 15-hour test on 21 October 2025"},
@@ -49,7 +49,7 @@ const CAPABILITY := {
 
 ## Eligible future/historical/assessed programmes, NOT operational inventory.
 const PROGRAMMES := {
-	"tsarBomba": ["russia"], "neutronBomb": ["usa", "russia", "china", "eu"],
+	"tsarBomba": ["russia"], "neutronBomb": ["usa", "russia", "china", "eu", "france"],
 	"mirv": ["pakistan"], "nuclearGlide": ["china"],
 	"nuclearCruise": ["israel"],
 	"tacticalNuke": ["china", "india", "israel"],
@@ -64,7 +64,7 @@ const PROGRAMMES := {
 ## (not ratified), "none". icc: true for parties to the Rome Statute.
 const TREATIES := {
 	"usa": {"npt": "nws", "icc": false}, "russia": {"npt": "nws", "icc": false}, "china": {"npt": "nws", "icc": false},
-	"eu": {"npt": "nws", "icc": true}, "uk": {"npt": "nws", "icc": true},
+	"eu": {"npt": "nws", "icc": true}, "france": {"npt": "nws", "icc": true}, "uk": {"npt": "nws", "icc": true},
 	"india": {"npt": "outside", "icc": false}, "pakistan": {"npt": "outside", "icc": false},
 	"israel": {"npt": "outside", "cwc": "signed", "bwc": "none", "icc": false},
 	"north_korea": {"npt": "withdrawn", "cwc": "none", "icc": false},

@@ -379,7 +379,7 @@ func open_new_game() -> void:
 	nation.add_child(_nation_card(int(setup_options.nation)))
 	var national := Label.new()
 	var arsenal: String = factions.ARSENALS[int(setup_options.nation)]
-	var power: Dictionary = preload("res://scripts/faction_powers.gd").POWERS.get(arsenal, preload("res://scripts/additional_powers.gd").POWERS.get(arsenal, {}))
+	var power: Dictionary = preload("res://scripts/faction_powers.gd").POWERS.get(arsenal, preload("res://scripts/additional_powers.gd").def(arsenal))
 	national.text = "%s\n%s" % [factions.SIGNATURES[int(setup_options.nation)], power.name]
 	national.tooltip_text = "Signature weapon & national power\n" + str(power.desc)
 	national.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
