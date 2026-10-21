@@ -75,3 +75,35 @@ loop), each cell 256 x 256, transparent background, flat lighting, with a matchi
 2. `git pull`, then commit **only** the new files under `native/godot/assets/art/` and the manifest, and push to `main`. Do not touch other files.
 3. Add one line to `COORDINATION.md` ("Codex -> Claude: art tier N is in native/godot/assets/art/, see MANIFEST.json").
 4. Tell the user which tier is ready, so they can tell Claude to wire it into the game.
+
+## Tier 6: 3D houses and buildings as glTF files (after Tiers 1 to 3, or in parallel if you have the time)
+There is no Blender on the user's machine, so build the models **with code**: a small Python script of your own (numpy, and the
+`json` and `struct` modules, or `pip install trimesh` / `pygltflib` if you prefer) that writes binary glTF 2.0 (`.glb`). Keep the
+generator script in `native/tools/models/` so the models can be rebuilt and changed (that folder is yours; it is not part of the game).
+Build real architecture, not boxes: recessed windows with frames, sills and lintels, door with step and canopy, roof with
+overhang and gutter, chimneys with caps, dormers, porches, balconies, cornices, plinth, downpipes, brick and stone detail that is geometry
+where it matters (corners, quoins, window surrounds), the rest left to the texture.
+
+**Conventions (the game depends on them):**
+- Units are metres. Origin on the ground at the centre of the footprint. **+Y up, the front of the building faces +Z.**
+- One mesh per building, with several primitives, **one per material, named by role**: `wall_brick`, `wall_plaster`, `wall_stone`, `wall_concrete`,
+  `roof_tile`, `roof_slate`, `roof_metal`, `trim` (frames, cornices), `glass`, `wood`, `metal`. The game gives each name its PBR texture (from Tier 2),
+  so **do not embed textures or colours**: give each primitive a plain white PBR material with that name, roughness 0.8, metallic 0.
+- **UV coordinates in metres** (1.0 = one metre on the wall or roof), so a tileable texture keeps its real size on every surface. Smooth normals
+  on round shapes, hard edges on corners. Triangle winding counter-clockwise seen from outside.
+- Footprint: one building fits inside a regular hexagon of 12 m radius (a 10 x 10 m square at most, centred). Height as a real building has it.
+- Two detail levels in one file as two top-level nodes: `LOD0` (up to about 6,000 triangles) and `LOD1` (up to 1,200 triangles, same silhouette, no small parts).
+- Nothing baked: no lights, no cameras, no animation, no vertex colours (apart from `glass`, which may have a darker vertex colour toward its lower edge).
+
+**Which buildings (three variants of each unless it says one):**
+`cottage` (single storey, pitched roof, chimney), `townhouse` (two or three storeys, narrow, brick or plaster), `apartment_block` (five storeys, flat roof
+with parapet and water tank, balconies), `farmhouse`, `barn` (large gambrel or gable, big doors), `grain_silo` (one), `town_hall` (portico with columns, clock or dome, steps),
+`school`, `library`, `hospital` (a long block with a canopy and a helipad mark on the roof), `police_station`, `fire_station` (big doors), `bank` (stone, columns),
+`office_tower` (glass and concrete, 12 storeys), `factory_brick` (saw-tooth roof, chimney stack), `warehouse` (corrugated metal), `power_station`
+(boiler hall and a cooling tower), `water_tower` (one), `church` (nave, tower and spire), `mosque` (dome and one minaret), `railway_station`, `market_hall`,
+`barracks` (long two-storey, plain), `command_bunker` (low, concrete, antennas), `radar_station`, `hangar` (large arched), `control_tower`, `harbour_crane` (one), `lighthouse` (one).
+Make them plain, believable and generic: no flags, no national symbols, no signs with words.
+
+**Files:** `native/godot/assets/art/buildings/<name>_<variant>.glb` (for example `cottage_1.glb`), and add each to `MANIFEST.json` with
+`{"kind": "model", "triangles": [lod0, lod1], "footprint": [w, d], "height": h, "materials": [...]}`. Check every file by loading it back
+(for example with trimesh) and confirm that it has no flipped faces, no loose pieces under the ground and no overlapping duplicate faces.
