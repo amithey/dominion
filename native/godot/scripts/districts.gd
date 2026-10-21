@@ -29,7 +29,13 @@ const Architecture := preload("res://scripts/architecture.gd")
 const BModels := preload("res://scripts/building_models.gd")   # the code-built glb buildings (assets/art/buildings)
 ## Central buildings that are a glb model when one exists: key -> model kind.
 const MODEL_KIND := {"hq": "town_hall", "cityCenter": "town_hall", "cityHall": "town_hall", "courthouse": "town_hall", "villageCenter": "town_hall",
-	"apartments": "apartment_block", "housing": "townhouse"}
+	"apartments": "apartment_block", "housing": "townhouse",
+	"bank": "bank", "school": "school", "library": "library", "university": "library", "museum": "library", "hospital": "hospital",
+	"policeStation": "police_station", "market": "market_hall", "tvStation": "office_tower", "techPark": "office_tower", "intelAgency": "office_tower",
+	"tankFactory": "factory_brick", "warehouse": "warehouse", "powerPlant": "power_station", "foodDepot": "grain_silo",
+	"waterTreatment": "water_tower", "barracks": "barracks", "commandCenter": "command_bunker"}
+## Tallest a model-built central building may stand per style (metres): a tower is narrow but not a skyscraper over the town.
+const MODEL_CAP := {0: 15.0, 1: 11.5, 2: 12.0, 3: 8.0, 4: 8.5}
 var model_seed := 0.0
 ## Buildings the kit makes as whole-hex compositions: key -> recipe.
 const RECIPES := {"extractor": "extractor", "mountainMine": "extractor", "oilRefinery": "refinery",
@@ -265,7 +271,7 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 	if MODEL_KIND.has(key) and not BModels.variants(MODEL_KIND[key]).is_empty():
 		var mrng := RandomNumberGenerator.new()
 		mrng.seed = int(model_seed * 1000.0) + key.hash()
-		place_model(container, MODEL_KIND[key], at, 0.0, footprint * 0.95, 11.5 if key in ["apartments", "housing"] else 0.0, mrng)
+		place_model(container, MODEL_KIND[key], at, 0.0, footprint * 0.95, MODEL_CAP.get(style_of(key), 12.0) * (1.0 + 0.03 * mini(city_size, 10)), mrng)
 		return
 	if Architecture.has_recipe(key):
 		# Real architecture from the kit (architecture.gd) instead of a scaled model.

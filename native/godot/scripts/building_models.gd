@@ -40,6 +40,8 @@ static func material(role: String) -> Material:
 	m.metallic = float(def[3])
 	m.uv1_scale = Vector3(1.0 / float(def[1]), 1.0 / float(def[1]), 1.0)
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	if role == "metal":
+		m.albedo_color = Color(2.4, 2.4, 2.5)   # the dark steel texture, lifted: tanks, silos and rails read as galvanised grey, not black
 	if role == "glass":
 		# Dark glass that mirrors the sky: a blue-grey body, glossy, bright at a glancing angle.
 		m.albedo_color = Color(0.55, 0.8, 1.0)
@@ -91,8 +93,18 @@ static func build(model: String, switch := 70.0) -> Node3D:
 				mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 	# The chimney's smoke (ambience.gd looks for markers named SmokeHome): the houses have their chimney toward the
 	# back left (the generator puts it at -27% of the width and -18% of the depth, on top of the roof's highest point).
+	# Codex's own smoke emitters (empty nodes Smoke_Home_N and Smoke_Industry_N at the tops of chimneys and stacks) become the
+	# markers ambience.gd looks for (Marker3D named SmokeHomeN / SmokeIndustryN), in the model's own space.
+	var own := 0
+	for node in root.find_children("Smoke_*", "Node3D", true, false):
+		var industry: bool = str(node.name).begins_with("Smoke_Industry")
+		var marker := Marker3D.new()
+		marker.name = ("SmokeIndustry%d" if industry else "SmokeHome%d") % own
+		root.add_child(marker)
+		marker.transform = root.global_transform.affine_inverse() * node.global_transform if root.is_inside_tree() else _local_transform(node, root)
+		own += 1
 	var kind := model.rsplit("_", 1)[0]
-	if kind in ["cottage", "townhouse", "farmhouse"]:
+	if own == 0 and kind in ["cottage", "townhouse", "farmhouse"]:
 		var box := AABB()
 		for lod in root.find_children("LOD0", "MeshInstance3D", true, false):
 			box = lod.get_aabb()
@@ -101,3 +113,13 @@ static func build(model: String, switch := 70.0) -> Node3D:
 		marker.position = Vector3(-box.size.x * 0.27, box.end.y + 0.15, -box.size.z * 0.18)
 		root.add_child(marker)
 	return root
+
+## A node's transform in `root`'s space (the model is not in the tree yet, so global_transform is not available).
+static func _local_transform(node: Node3D, root: Node3D) -> Transform3D:
+	var t := Transform3D.IDENTITY
+	var n: Node = node
+	while n != null and n != root:
+		if n is Node3D:
+			t = (n as Node3D).transform * t
+		n = n.get_parent()
+	return t
