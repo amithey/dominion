@@ -5,6 +5,7 @@ shader_type spatial;
 render_mode cull_disabled, diffuse_burley;
 
 varying vec3 tint;
+varying vec3 local;   // the tree's own coordinates, for the needle clumps
 
 #include "res://shaders/fog.gdshaderinc"
 varying vec2 fog_xz;
@@ -18,12 +19,17 @@ void vertex() {
 	VERTEX.x += gust * 0.035 * height * height;
 	VERTEX.z += gust * 0.02 * height * height;
 	tint = INSTANCE_CUSTOM.rgb;
+	local = VERTEX;
 }
 
 void fragment() {
 	vec3 c = COLOR.rgb * COLOR.rgb;  // vertex colours are sRGB
+	// Needle clumps: a fine speckle of lighter and darker tufts over the boughs, stronger at the tips.
+	vec3 cell = floor(local * vec3(120.0, 96.0, 120.0));
+	float clump = fract(sin(dot(cell, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+	c *= 0.92 + 0.16 * clump * (0.5 + 0.5 * UV.x);
 	ALBEDO = snowy(c * mix(vec3(1.0), tint * 2.0, 0.6), winter * 0.45) * (1.0 - fog_at(fog_xz));   // fog of war; snow-dusted in winter
-	BACKLIGHT = ALBEDO * 0.25;
+	BACKLIGHT = ALBEDO * 0.4;
 	ROUGHNESS = 0.85;
 	SPECULAR = 0.25;
 }
