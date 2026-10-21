@@ -1398,7 +1398,9 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	var vehicle := key in VEHICLES
 	var realistic := not vehicle and key != "worker" and realistic_scene != null
 	var node := Node3D.new()
-	var built: Dictionary = armor.build(key, owner) if vehicle and armor != null else {}
+	var built: Dictionary = preload("res://scripts/vehicle_models.gd").build(self, key, owner) if vehicle else {}
+	if built.is_empty() and vehicle and armor != null:
+		built = armor.build(key, owner)
 	var model: Node3D
 	if not built.is_empty():
 		model = built.root  # already in metres, facing +Z, standing on the ground
@@ -1502,7 +1504,8 @@ func display_model(key: String) -> Node3D:
 	if look in NAVAL or look in AIR:
 		model = craft.build(look, 0).root
 	elif look in VEHICLES:
-		model = armor.build(look, 0).root if armor != null else tank_scene.instantiate()
+		var from_file: Dictionary = preload("res://scripts/vehicle_models.gd").build(self, look, 0)
+		model = from_file.root if not from_file.is_empty() else (armor.build(look, 0).root if armor != null else tank_scene.instantiate())
 	elif look == "worker" or look in INFANTRY:
 		var realistic := look != "worker" and realistic_scene != null
 		model = (realistic_scene if realistic else (worker_scene if key == "worker" else soldier_scene)).instantiate()
