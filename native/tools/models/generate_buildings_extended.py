@@ -437,7 +437,7 @@ def command_bunker(variant,lod):
     m=Mesh();v=variant-1;w=8.2;d=6.2;top=2.75+v*.12
     shell(m,w,d,top,lod,'wall_concrete',1,2,doors=[(-.6,.6,.28,2.25,'door')])
     # Heavy bevelled roof cap; a low shell protected by angled concrete shoulders.
-    vertices=[(sx*w/2,top,sz*d/2) for sz in (-1,1) for sx in (-1,1)]+[(sx*(w/2-.5),top+.7,sz*(d/2-.5)) for sz in (-1,1) for sx in (-1,1)]
+    vertices=[(sx*(w/2+.22),top,sz*(d/2+.22)) for sz in (-1,1) for sx in (-1,1)]+[(sx*(w/2-.5),top+.7,sz*(d/2-.5)) for sz in (-1,1) for sx in (-1,1)]
     m.solid('wall_concrete',vertices,[(0,1,3,2),(4,6,7,5),(0,4,5,1),(2,3,7,6),(0,2,6,4),(1,5,7,3)])
     entrance(m,d/2,lod,1.9,2.45)
     aerial(m,-2.5,-1.4,top+.7,lod,3.1+v*.3);aerial(m,2.5,-1.4,top+.7,lod,1.9)
