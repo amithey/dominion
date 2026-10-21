@@ -2,6 +2,8 @@
 
 Found on 2026-10-21 by registering a trial nation (France) and running the identity,
 AI, arsenal and force suites. Each row is a test that failed until the nation had it.
+The national power and the emblem import were added on 2026-10-22, when France was built
+in full: the first trial did not reach the new-game screen, which hangs without a power.
 
 | Needs | Where it lives today | Test that fails without it |
 |---|---|---|
@@ -11,6 +13,8 @@ AI, arsenal and force suites. Each row is a test that failed until the nation ha
 | Operator choices for every role (which of 354 role slots it fields) | `force_catalog.gd` | `force-roster-check` |
 | AI evidence, ceiling and reason | `ai_data.gd`, `ai_applications_data.gd`, `ai_use_data.gd` | `ai-applications-check`, `national-realism-check`, `ai-strategic-check` |
 | An arsenal dossier: sources, uncertainty and six substantive domains | `arsenal_diversity_data.gd` | `arsenal-diversity-check` |
+| A **national power**: a name, cost, cooldown and an effect. It is code, not data: a definition in `additional_powers.gd`, a branch in `blocked()` and `use()`, and an effect function | `additional_powers.gd`, `faction_powers.gd`, `menu.gd` | `factions-check` (the new-game screen hangs on the missing power), `additional-factions-check` |
+| An imported emblem: `ui/leaders/<portrait>-emblem.svg` needs its `.svg.import` (run `godot --headless --import` once) | `ui/leaders/` | `nation-registry-check` |
 
 Tables that tolerated a missing nation (they fall back to a default): crisis, national
 industry, UN. A new nation should still get a row in each so its numbers are chosen, not
