@@ -210,7 +210,7 @@ func nation_checks(index: int) -> void:
 	var tanks: int = mine("tank").size()
 	w.queue_unit(factory, "tank")
 	for i in range(int(w.unit_defs.tank.trainTime) + 3): w.update_training(1.0)
-	var own_name: String = V.NAMES.tank.get(arsenal, "Tank")
+	var own_name: String = V.table("names").tank.get(arsenal, "Tank")
 	check(mine("tank").size() == tanks + 1 and w.unit_defs.tank.name == own_name, "%s: the tank factory turns out its own tank, the %s" % [id, w.unit_defs.tank.name])
 	# 5: research advances.
 	var r: Node = w.research

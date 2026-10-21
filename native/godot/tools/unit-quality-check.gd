@@ -41,7 +41,7 @@ func run() -> void:
 			if cls != "infantry" and not V.fields(cls, arsenal):
 				continue
 			if not Q.QUALITY[cls].has(id): missing.append("%s/%s" % [cls, id])
-			elif cls != "infantry" and not V.NAMES.get(cls, {}).has(arsenal): unnamed.append("%s/%s" % [cls, id])
+			elif cls != "infantry" and not V.table("names").get(cls, {}).has(arsenal): unnamed.append("%s/%s" % [cls, id])
 	check(missing.is_empty(), "every nation that fields a class has its figures (%d classes)%s" % [Q.QUALITY.size(), "" if missing.is_empty() else " missing " + str(missing)])
 	check(unnamed.is_empty(), "and the name of its own system%s" % ("" if unnamed.is_empty() else " unnamed " + str(unnamed)))
 	# 2: the generations, in the tank table.

@@ -54,7 +54,7 @@ const DATA := {
 		"research": ["sixthGeneration", "nuclearProgram", "directedEnergy", "missileDefence"],
 		"missiles": ["nuke"],
 		"names": {
-			"tank": "Leclerc XLR", "apc": "Griffon", "artillery": "CAESAR", "mlrs": "LRU", "samLauncher": "SAMP/T NG",
+			"tank": "Leclerc XLR", "apc": "Griffon", "artillery": "CAESAR", "mlrs": "LRU", "aaVehicle": "Crotale NG", "corvette": "La Fayette-class", "samLauncher": "SAMP/T NG",
 			"helicopter": "NH90 Caiman", "gunship": "Tiger", "jet": "Rafale", "drone": "MQ-9 Reaper", "destroyer": "Horizon-class",
 			"nuclearSub": "Triomphant-class", "atgmTeam": "MMP team", "manpads": "Mistral 3 team", "laserAD": "HELMA-P",
 			"abmLauncher": "SAMP/T NG (Aster 30 B1NT)", "sixthGen": "SCAF / FCAS programme",
