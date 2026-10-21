@@ -20,4 +20,11 @@ const DATA := {
 	"ai_evidence": ["Severe infrastructure constraints", "Connectivity and access to education constrain adoption; no national AI deployment is assumed.", ["agriculture", "health", "administration", "diplomacy"]],
 	## No public evidence of any use of AI in the strategic domains (ai_use_data.gd).
 	"ai_use": {},
+	"dossier": {
+		"profile": {"land": "Captured small arms and vehicles support a limited ground force; captured equipment is not local manufacturing capacity.", "air": "A few maintained helicopters do not establish a combat-ready modern fighter force.", "sea": "Landlocked: no port, shipyard or navy should be inferred from generic game templates.", "fires": "Basic portable support and legacy artillery differ from guided missiles and modern integrated air defence.", "support": "Parts, trained maintainers and airworthiness are the central uncertainty for captured equipment.", "limits": "SIGAR's discussion of abandoned equipment is not proof that all assets remain operational or even inside Afghanistan.", "watch": ["Captured Western platforms: present condition and support remain unverified"], "sources": ["afghanistan", "sipri"]},
+		"sources": {
+			"afghanistan": ["SIGAR: captured equipment and sustainment (April 2025)", "https://www.sigar.mil/Portals/147/Files/Reports/Quarterly-Reports/2025-04-30qr.pdf"],
+		},
+		"roster": {},
+	},
 }

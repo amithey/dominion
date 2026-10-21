@@ -32,9 +32,7 @@ const SOURCES := {
 	"pakistan": ["Janes: SH-15 delivered to Pakistan (reported)", "https://www.janes.com/defence-intelligence-insights/defence-news/defence/chinas-norinco-delivers-sh-15-howitzers-to-pakistan"],
 	"iraq": ["Aero: Iraqi L-159 delivery", "https://www.aero.cz/en/l-159/"],
 	"syria": ["UK Home Office: Syrian military reorganization (2025)", "https://assets.publishing.service.gov.uk/media/6874e05eb1b4ebc2c2e46547/SYR%2BCPIN%2BMilitary%2BService.pdf"],
-	"afghanistan": ["SIGAR: captured equipment and sustainment (April 2025)", "https://www.sigar.mil/Portals/147/Files/Reports/Quarterly-Reports/2025-04-30qr.pdf"],
 	"yemen": ["UN Panel of Experts: Yemen (2025)", "https://documents.un.org/api/symbol/access?l=en&s=S%2F2025%2F650&t=pdf"],
-	"ethiopia": ["Janes: Ethiopia displays SH-15 (reported)", "https://www.janes.com/defence-intelligence-insights/defence-news/defence/ethiopia-displays-new-sh15-howitzers"],
 	"nigeria": ["Nigerian Air Force: T129 inducted (2024)", "https://airforce.mil.ng/news/president-tinubu-reaffirms-commitment-to-ending-insecurity-inducts-new-combat-helicopters-into-naf-inventory775984965"],
 	"naf29": ["Nigerian Air Force: A-29 operational support (2023)", "https://www.airforce.mil.ng/news/a-29st-program-naf-commissions-operations-support-facilities-wings-additional-6-pilots376732102"],
 	"nafjf": ["Nigerian Air Force: JF-17 induction (2021)", "https://www.airforce.mil.ng/news/naf-day-2021-ends-with-induction-of-jf-17-multi-role-thunder-aircraft1424548808"],
@@ -60,8 +58,7 @@ const ROSTER := {
 		"uk": ["Archer", "archer", "Army firing documented"],
 		"indonesia": ["CAESAR", "indo_caesar", "Handover documented"],
 		"ukraine": ["CAESAR", "france", "Delivery documented"],
-		"pakistan": ["SH-15", "pakistan", "Reported delivery"],
-		"ethiopia": ["SH-15", "ethiopia", "Observed delivery; readiness unknown"]},
+		"pakistan": ["SH-15", "pakistan", "Reported delivery"]},
 	"shortRangeSAM": {
 		"usa": ["AN/TWQ-1 Avenger", "us_aa", "Established service"],
 		"russia": ["Pantsir-S", "pantsir", "Supplier-reported delivery"],
@@ -94,24 +91,67 @@ const PROFILES := {
 	"pakistan": {"land": "Heavy armour and MG3 support coexist; wheeled SH-15 adds a distinct artillery mobility choice.", "air": "Mirage 5 attack and F-16 / JF-17 fighter roles differ; maintenance and imported parts constrain availability.", "sea": "Azmat-class is coastal surface warfare, not a submarine hunter or strategic nuclear launcher in this expansion.", "fires": "SH-15 deliveries are reported; its game shells are conventional. Ownership does not prove a nuclear artillery role.", "support": "Multiple suppliers require spares and ammunition; mobile artillery still needs escorts and spotting.", "limits": "The new howitzer attribution is a Janes report, not an independently audited readiness count.", "watch": ["Nuclear-capable SH-15 speculation does not grant a nuclear firing mode"], "sources": ["pakistan", "sipri"]},
 	"iraq": {"land": "Mixed-origin heavy armour and infantry equipment need common training and sustainment; no unsupported new IFV is granted.", "air": "Delivered L-159 fills ground attack; T-50IQ is a separate light aircraft choice in the established roster.", "sea": "Coastal security is limited; it is not an ocean-going combat fleet.", "fires": "Conventional guns and local air defence remain distinct from future long-range air-defence procurement.", "support": "Repairs, foreign support and spare parts are essential to a mixed fleet.", "limits": "A proposed sale or a denial from 2015 cannot establish a new operational BMP-3 fleet in 2026.", "watch": ["New long-range SAM contracts need delivered-battery confirmation"], "sources": ["iraq", "sipri"]},
 	"syria": {"land": "Fragmented inherited and captured ground equipment does not establish a standardized new army inventory.", "air": "An inherited paper list does not establish an operational fighter or gunship force after the change of government.", "sea": "No new combat fleet is inferred from the former government's navy.", "fires": "Portable support, guns and drones require actor attribution; former stocks do not prove current launch capability.", "support": "Reorganization, damage, ammunition and repair infrastructure constrain the ground roster.", "limits": "The 2025 institutional assessment is not a verified 2026 inventory. No new advanced system is granted without evidence.", "watch": ["Former regime aircraft, SAMs and ships are not treated as new operational stock"], "sources": ["syria", "sipri"]},
-	"afghanistan": {"land": "Captured small arms and vehicles support a limited ground force; captured equipment is not local manufacturing capacity.", "air": "A few maintained helicopters do not establish a combat-ready modern fighter force.", "sea": "Landlocked: no port, shipyard or navy should be inferred from generic game templates.", "fires": "Basic portable support and legacy artillery differ from guided missiles and modern integrated air defence.", "support": "Parts, trained maintainers and airworthiness are the central uncertainty for captured equipment.", "limits": "SIGAR's discussion of abandoned equipment is not proof that all assets remain operational or even inside Afghanistan.", "watch": ["Captured Western platforms: present condition and support remain unverified"], "sources": ["afghanistan", "sipri"]},
 	"yemen": {"land": "The recognized government's forces are fragmented; support weapons and vehicles require specific actor attribution.", "air": "No new operational fighter fleet is inferred from the pre-war Yemeni air force.", "sea": "Limited coastal security differs from the Houthis' shore-based shipping threats.", "fires": "Conventional support and reported UAV activity do not grant Ansar Allah's missile families to the government.", "support": "Reconstruction, partner support, imported parts and divided command constrain readiness.", "limits": "Yemen is the internationally recognized state; it is not interchangeable with Ansar Allah-controlled territory.", "watch": ["Pre-war inventories and Houthi seizures cannot be assigned wholesale to the PLC"], "sources": ["yemen", "sipri"]},
 	"houthis": {"land": "Ansar Allah relies on dispersed ground forces, support weapons and captured or externally sourced materiel.", "air": "One-way attack UAVs and reconnaissance drones do not constitute a conventional fighter air force.", "sea": "Coastal missiles and drones threaten shipping; they do not imply an advanced navy or submarine fleet.", "fires": "Ballistic, cruise and anti-ship weapons are distinct; reported attacks provide stronger evidence of use than parade labels.", "support": "Imported electronics, repairs and component access constrain replenishment; the game models this through resources.", "limits": "An armed authority inside Yemen, not a separate UN member. Claimed weapon performance and stock counts are not accepted as verified.", "watch": ["Paraded new missile labels: configuration and stocks may be unverified"], "sources": ["yemen", "sipri"]},
-	"ethiopia": {"land": "A mixed imported armoured fleet gains a documented wheeled artillery option: SH-15.", "air": "Crewed combat aircraft and imported UAVs have separate support and vulnerability profiles.", "sea": "Landlocked: naval aspirations do not justify a playable port or surface fleet.", "fires": "Observed SH-15 provides mobile conventional fires; it does not grant Chinese strategic missile technology.", "support": "Foreign spares, ammunition, fuel and reconnaissance constrain the gun's usefulness.", "limits": "Janes observed delivery imagery; current readiness and precise fleet size are not established by this dossier.", "watch": ["Additional fighter or UAV reports need configuration and delivery confirmation"], "sources": ["ethiopia", "sipri"]},
 	"nigeria": {"land": "Ground forces emphasize protected mobility and counterinsurgency; an export catalogue is not proof of a delivered tank model.", "air": "NAF confirms A-29 support facilities, JF-17 induction and T129 induction: attack aircraft, fighter and attack helicopter are distinct.", "sea": "Coastal patrol and maritime security do not imply an attack-submarine capability.", "fires": "Ground artillery and local anti-aircraft weapons remain separate from strategic missile and nuclear capabilities.", "support": "Pilots, maintenance facilities, electricity and foreign parts are essential alongside aircraft procurement.", "limits": "The established A-29 / JF-17 / gunship choices already cover these roles; no duplicate attack-jet label is added just to enlarge the list.", "watch": ["New aircraft orders do not bypass research or create a ready fleet"], "sources": ["nigeria", "naf29", "nafjf"]},
 	"sudan": {"land": "The game state represents SAF-aligned Sudan, not the RSF. Mixed legacy equipment requires actor-specific attribution.", "air": "Documented use and legacy aircraft do not establish the number currently serviceable after war damage.", "sea": "Red Sea coastal access does not imply a sophisticated ocean-going combat fleet.", "fires": "Mortars, small arms and electronic equipment are documented; AH-4 / GB50 findings must be attributed to the correct actor.", "support": "Damaged bases, supply routes, maintenance and imported ammunition dominate sustainment.", "limits": "RSF weapons and isolated captured examples are not granted as a standard SAF production line.", "watch": ["AH-4 / GB50: RSF-related investigation; no automatic Sudan arsenal grant"], "sources": ["sudan", "rsf"]},
 	"south_sudan": {"land": "A limited legacy ground roster reflects weak procurement and maintenance capacity, not Sudan's inventory.", "air": "UN reporting supports Mi-24 activity; it does not establish a modern fighter force or a large ready helicopter fleet.", "sea": "Landlocked: river security is not a seagoing navy, and no naval production is granted.", "fires": "Small arms and basic support differ from advanced SAMs, precision rockets and strategic missiles.", "support": "Restricted arms access, oil revenue and transit dependence shape affordable force development.", "limits": "South Sudan is an independent state. Reported plans to obtain Stinger or Javelin are not evidence of possession.", "watch": ["Coup allegations and attempted purchases do not grant operational weapons"], "sources": ["south_sudan", "sipri"]}
 }
 
+## The three tables above hold the earlier nations. A later nation keeps its dossier, its own
+## sources and its roster rows in the "dossier" of scripts/nations/<id>.gd; these read both.
+static var _own := {}
+static var _own_loaded := false
+static var _merged := {}
+static func _dossiers() -> Dictionary:
+	if not _own_loaded:
+		_own_loaded = true
+		for script in preload("res://scripts/nation_registry.gd").ORDER:
+			if script.DATA.has("dossier"): _own[script.DATA.id] = script.DATA.dossier
+	return _own
+
+static func has_profile(id: String) -> bool:
+	return PROFILES.has(id) or _dossiers().has(id)
+
+## The six-domain dossier of nation `id`: {} if it has none.
+static func profile(id: String) -> Dictionary:
+	if PROFILES.has(id): return PROFILES[id]
+	return _dossiers().get(id, {}).get("profile", {})
+
+## Who fields role `key`: id -> [model, source, evidence status], the table and the nation files together.
+static func roster(key: String) -> Dictionary:
+	if not _merged.has(key):
+		var rows: Dictionary = ROSTER.get(key, {}).duplicate()
+		var own := _dossiers()
+		for id in own:
+			if own[id].roster.has(key): rows[id] = own[id].roster[key]
+		_merged[key] = rows
+	return _merged[key]
+
+## [label, link] of source `id`, from the table or from a nation's own sources.
+static func source(id: String) -> Array:
+	if SOURCES.has(id): return SOURCES[id]
+	var own := _dossiers()
+	for nation in own:
+		if own[nation].sources.has(id): return own[nation].sources[id]
+	return []
+
+static func source_ids() -> Array:
+	var out: Array = SOURCES.keys()
+	var own := _dossiers()
+	for nation in own: out.append_array(own[nation].sources.keys())
+	return out
+
 static func names(key: String) -> Dictionary:
 	var out := {}
-	for id in ROSTER.get(key, {}): out[id] = ROSTER[key][id][0]
+	var rows := roster(key)
+	for id in rows: out[id] = rows[id][0]
 	return out
 
 static func evidence(key: String, id: String) -> String:
-	var row: Array = ROSTER.get(key, {}).get(id, [])
+	var row: Array = roster(key).get(id, [])
 	# (the game's text names no years: the dates stay in the source links and the research doc)
-	return "" if row.is_empty() else "%s. %s. Public evidence; no stock or readiness count implied." % [row[2], undated(str(SOURCES[row[1]][0]))]
+	return "" if row.is_empty() else "%s. %s. Public evidence; no stock or readiness count implied." % [row[2], undated(str(source(row[1])[0]))]
 
 ## "Rostec: first Malva delivery (2023; supplier statement)" -> "... (supplier statement)".
 static func undated(text: String) -> String:

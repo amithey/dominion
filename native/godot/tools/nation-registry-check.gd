@@ -10,7 +10,7 @@ const FROZEN := ["usa", "china", "eu", "iran", "russia", "india", "japan", "turk
 const FIELDS := ["id", "group", "arsenal", "name", "leader", "colour", "portrait", "signature", "doctrine"]
 const GROUPS := ["core", "additional", "regional"]
 ## Data a nation may carry for the tables that read the registry (see NATION-ADDITION-CHECKLIST.md).
-const OPTIONAL := ["profile", "ai", "ai_evidence", "ai_use"]
+const OPTIONAL := ["profile", "ai", "ai_evidence", "ai_use", "dossier"]
 var checks := 0
 var failures := 0
 func check(ok: bool, label: String) -> void:
@@ -39,6 +39,11 @@ func _initialize() -> void:
 		if d.has("ai_evidence"):
 			check(d.ai_evidence.size() == 3 and d.ai_evidence[2] is Array and d.ai_evidence[2].size() == 4, id + " AI evidence is a headline, a source line and four priorities")
 			check(preload("res://scripts/ai_applications_data.gd").evidence(id) == d.ai_evidence, id + " AI evidence is the one the game reads")
+		if d.has("dossier"):
+			var Arsenal := preload("res://scripts/arsenal_diversity_data.gd")
+			check(Arsenal.profile(id) == d.dossier.profile and d.dossier.keys().size() == 3, id + " dossier is the one the game reads")
+			check(d.dossier.roster.keys().all(func(k): return Arsenal.ROSTER.has(k) and Arsenal.roster(k).get(id, []) == d.dossier.roster[k]), id + " roster rows sit under known roles and merge into them")
+			check(d.dossier.sources.keys().all(func(s): return Arsenal.source(s) == d.dossier.sources[s] and not Arsenal.SOURCES.has(s)), id + " own sources are found and not duplicated in the table")
 		if d.has("ai_use"):
 			check(d.ai_use is Dictionary and preload("res://scripts/ai_use_data.gd").record(id) == d.ai_use, id + " AI use record is the one the game reads")
 		check(script.resource_path == "res://scripts/nations/%s.gd" % id, id + " lives in a file of its own name")

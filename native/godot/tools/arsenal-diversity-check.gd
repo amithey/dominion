@@ -26,16 +26,16 @@ func run() -> void:
 	w.ai.set_physics_process(false)
 	preload("res://tools/test_kit.gd").quiet(w, ["fog", "un", "wmd"])
 	var original: Dictionary = w.map.nations[0].duplicate(true)
-	check(Data.PROFILES.size() == 28, "every playable identity has a dossier")
+	check(F.IDS.size() == 28 and F.IDS.all(func(id): return Data.has_profile(id)), "every playable identity has a dossier")
 	for id: String in F.IDS:
-		var dossier: Dictionary = Data.PROFILES.get(id, {})
+		var dossier: Dictionary = Data.profile(id)
 		check(["land", "air", "sea", "fires", "support", "limits"].all(func(k): return str(dossier.get(k, "")).length() > 35), id + " six substantive research domains")
 		check(not dossier.get("watch", []).is_empty() and not dossier.get("sources", []).is_empty(), id + " uncertainty and sources recorded")
-		check(dossier.sources.all(func(s): return Data.SOURCES.has(s) and str(Data.SOURCES[s][1]).begins_with("https://")), id + " valid source references")
+		check(dossier.sources.all(func(s): return not Data.source(s).is_empty() and str(Data.source(s)[1]).begins_with("https://")), id + " valid source references")
 	var added := 0
 	for key: String in Data.ROSTER:
 		check(C.ROLES.has(key) and key in w.ai.train_pool and key in w.building_defs[C.HOME[key]].trains, key + " live AI and production registration")
-		for id: String in Data.ROSTER[key]:
+		for id: String in Data.roster(key):
 			added += 1
 			w.map.nations[0] = F.nation(F.IDS.find(id), true)
 			check(w.unit_allowed(0, key) and not Data.evidence(key, id).is_empty(), id + " / " + key + " positively attributed production")
@@ -99,8 +99,8 @@ func run() -> void:
 	# No years in the game's text: source titles are shown undated (the dates stay in the links and the doc).
 	var year := RegEx.new()
 	year.compile("\\b(?:19|20)\\d{2}\\b")
-	for key in Data.SOURCES:
-		var shown: String = preload("res://scripts/arsenal_diversity_panel.gd").undated(str(Data.SOURCES[key][0]))
+	for key in Data.source_ids():
+		var shown: String = preload("res://scripts/arsenal_diversity_panel.gd").undated(str(Data.source(key)[0]))
 		check(year.search(shown) == null and shown.length() > 8, "source shown without a year: " + shown)
 	print("ARSENAL_DIVERSITY: %d passed, %d failed" % [passed, failed])
 	print("ARSENAL_DIVERSITY PASS" if failed == 0 else "ARSENAL_DIVERSITY FAIL")

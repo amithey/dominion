@@ -27,7 +27,7 @@ static func draw(panel: RefCounted) -> void:
 		panel.arsenal_country = Factions.IDS[index]
 		hud.refresh_side())
 	hud._side_rows.add_child(picker)
-	var dossier: Dictionary = Data.PROFILES.get(id, {})
+	var dossier: Dictionary = Data.profile(id)
 	if dossier.is_empty(): return
 	var tabs := HFlowContainer.new()
 	tabs.add_theme_constant_override("h_separation", 5)
@@ -52,12 +52,12 @@ static func draw(panel: RefCounted) -> void:
 		units.add_child(hud._text("New researched choices", 18, hud.UI.CREAM, true))
 		var count := 0
 		for key: String in Data.ROSTER:
-			if not Data.ROSTER[key].has(id): continue
+			if not Data.roster(key).has(id): continue
 			if panel.arsenal_domain == "land" and key != "recoillessTeam": continue
 			if panel.arsenal_domain == "fires" and key == "recoillessTeam": continue
 			if panel.arsenal_domain in ["air", "sea", "support", "limits"]: continue
 			count += 1
-			var row: Array = Data.ROSTER[key][id]
+			var row: Array = Data.roster(key)[id]
 			units.add_child(hud._text(str(row[0]), 17, hud.UI.GOLD, true))
 			paragraph(hud, units, str(Forces.ROLES[key].desc), hud.UI.TEXT)
 			paragraph(hud, units, Data.evidence(key, id), hud.UI.MUTED)
@@ -105,10 +105,10 @@ static func draw(panel: RefCounted) -> void:
 	sources.add_child(hud._text("Research sources", 17, hud.UI.CREAM, true))
 	for source: String in dossier.sources:
 		var link := LinkButton.new()
-		link.text = undated(str(Data.SOURCES[source][0]))   # dates stay in the research doc and the link
+		link.text = undated(str(Data.source(source)[0]))   # dates stay in the research doc and the link
 		link.add_theme_font_size_override("font_size", 14)
 		link.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		var url: String = Data.SOURCES[source][1]
+		var url: String = Data.source(source)[1]
 		link.tooltip_text = url
 		link.pressed.connect(func(): OS.shell_open(url))
 		sources.add_child(link)
