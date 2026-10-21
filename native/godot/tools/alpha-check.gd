@@ -48,18 +48,18 @@ func run() -> void:
 	preload("res://tools/test_kit.gd").quiet(w)
 
 	# ---- version
-	check(BuildInfo.version() == "1.0.1" and BuildInfo.label() == "ALPHA", "the build is 1.0.1 with the label ALPHA (%s)" % BuildInfo.full())
-	check(BuildInfo.title() == "DOMINION  1.0.1 ALPHA", "the window title says so (%s)" % BuildInfo.title())
+	check(BuildInfo.version() == "1.0.2" and BuildInfo.label() == "ALPHA", "the build is 1.0.2 with the label ALPHA (%s)" % BuildInfo.full())
+	check(BuildInfo.title() == "DOMINION  1.0.2 ALPHA", "the window title says so (%s)" % BuildInfo.title())
 	check(BuildInfo.older("0.9.101", "1.0.0") and BuildInfo.older("1.0.0", "1.0.1") and not BuildInfo.older("1.0.0", "1.0.0") and not BuildInfo.older("1.2.0", "1.0.9"), "versions compare by number, not text")
 	var preset := FileAccess.get_file_as_string("res://export_presets.cfg")
-	check(preset.contains('file_version="1.0.1.0"') and preset.contains('product_version="1.0.1.0"'), "the export preset carries 1.0.1.0")
+	check(preset.contains('file_version="1.0.2.0"') and preset.contains('product_version="1.0.2.0"'), "the export preset carries 1.0.2.0")
 	check(ProjectSettings.get_setting("debug/file_logging/enable_file_logging", false) == true, "the engine's log is written to a file for testers")
 
 	# ---- the opening screen and About
 	w.menu.open_main()
 	await process_frame
 	var main_text := texts(w.menu._root)
-	check(main_text.any(func(t): return str(t).contains("1.0.1 ALPHA")), "the opening screen shows the version and the label")
+	check(main_text.any(func(t): return str(t).contains("1.0.2 ALPHA")), "the opening screen shows the version and the label")
 	check(main_text.any(func(t): return str(t).contains("About / report a problem")), "and a link to About under the menu")
 	w.menu.open_about()
 	await process_frame
@@ -69,7 +69,7 @@ func run() -> void:
 
 	# ---- the problem report
 	var report := Diagnostics.report(w)
-	check(report.contains("Version: 1.0.1 ALPHA") and report.contains("System:") and report.contains("Video:") and report.contains("Match:") and report.contains("Your nation:"), "a report says the version, the machine and the match")
+	check(report.contains("Version: 1.0.2 ALPHA") and report.contains("System:") and report.contains("Video:") and report.contains("Match:") and report.contains("Your nation:"), "a report says the version, the machine and the match")
 	w.hud.notice("A message for the report")
 	check(Diagnostics.report(w).contains("A message for the report"), "and the last messages")
 	var folder := Diagnostics.send(w)
@@ -90,7 +90,7 @@ func run() -> void:
 	check(S.problem_with(null) != "" and S.problem_with("x") != "" and S.problem_with({}) != "" and S.problem_with({"format": "other"}) != "", "a non-save is refused")
 	var good: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
 	check(S.problem_with(good) == "", "a save made now is accepted (%s)" % S.problem_with(good))
-	check(str(good.get("game_version")) == "1.0.1", "and it records the game version")
+	check(str(good.get("game_version")) == "1.0.2", "and it records the game version")
 	for key in ["ai", "buildings", "units", "edges", "economy", "diplomacy", "camera", "game_time", "map"]:
 		var cut: Dictionary = good.duplicate()
 		cut.erase(key)

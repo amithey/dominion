@@ -1,4 +1,4 @@
-DOMINION - ALPHA 1.0.1
+DOMINION - ALPHA 1.0.2
 
 Thank you for testing DOMINION, a real-time strategy game of nations: cities, supply lines, research,
 diplomacy, espionage, the United Nations and war.
