@@ -20,12 +20,58 @@ uniform float metal = 0.0;              // 1 for tracks, wheels and fittings
 uniform bool vertex_tone = false;
 uniform vec3 team : source_color = vec3(0.2, 0.4, 0.9);
 
+// Track pads (assets/art/vehicles/*.glb, Track_*): U along the loop, 0 to 1. The game sets `track_u` (how far round the loop the
+// track has turned) and the pads travel along the loop, turning with it round the sprocket and the idler.
+instance uniform float track_on = 0.0;
+instance uniform float track_u = 0.0;
+const float T_HALF = 3.23;
+const float T_R = 0.57;
+const float T_Y = 0.65;
+
 varying vec3 local_pos;
 varying vec3 local_normal;
 varying float above_ground;
 varying vec3 tone;
 
+// A point on the loop (y, z), its normal and tangent (y, z), by U.
+void track_sample(float u, out vec2 p, out vec2 n, out vec2 t) {
+	float len = 4.0 * T_HALF + 2.0 * PI * T_R;
+	float s = fract(u) * len;
+	float straight = 2.0 * T_HALF;
+	float arc = PI * T_R;
+	if (s < straight) {
+		p = vec2(T_Y - T_R, -T_HALF + s); n = vec2(-1.0, 0.0); t = vec2(0.0, 1.0);
+	} else {
+		s -= straight;
+		if (s < arc) {
+			float a = -PI * 0.5 + s / T_R;
+			p = vec2(T_Y + T_R * sin(a), T_HALF + T_R * cos(a)); n = vec2(sin(a), cos(a)); t = vec2(cos(a), -sin(a));
+		} else {
+			s -= arc;
+			if (s < straight) {
+				p = vec2(T_Y + T_R, T_HALF - s); n = vec2(1.0, 0.0); t = vec2(0.0, -1.0);
+			} else {
+				s -= straight;
+				float a = PI * 0.5 + s / T_R;
+				p = vec2(T_Y + T_R * sin(a), -T_HALF + T_R * cos(a)); n = vec2(sin(a), cos(a)); t = vec2(cos(a), -sin(a));
+			}
+		}
+	}
+}
+
 void vertex() {
+	if (track_on > 0.5) {
+		vec2 p0, n0, t0, p1, n1, t1;
+		track_sample(UV.x, p0, n0, t0);
+		track_sample(UV.x + track_u, p1, n1, t1);
+		vec2 d = VERTEX.yz - p0;
+		float dt = dot(d, t0);
+		float dn = dot(d, n0);
+		vec2 moved = p1 + dn * n1 + dt * t1;
+		VERTEX.yz = moved;
+		vec2 nn = vec2(dot(NORMAL.yz, n0) * n1.x + dot(NORMAL.yz, t0) * t1.x, dot(NORMAL.yz, n0) * n1.y + dot(NORMAL.yz, t0) * t1.y);
+		NORMAL.yz = nn;
+	}
 	// Model units vary between assets (FBX centimetres, glTF metres): scale the
 	// pattern to metres so grime has the same size on every vehicle.
 	local_pos = VERTEX * length(MODEL_MATRIX[0].xyz);

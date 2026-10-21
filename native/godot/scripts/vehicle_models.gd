@@ -77,13 +77,14 @@ static func build(w: Node, key: String, owner: int) -> Dictionary:
 		for s in range(mesh.get_surface_count()):
 			var src: Material = mesh.surface_get_material(s)
 			mi.set_surface_override_material(s, _shader_material(w, owner, src.resource_name if src != null else "paint"))
-	# The burnt-out copy and the collision box are not part of the living tank (the game burns the tank itself and throws its
-	# turret when it dies, world.gd kill()), so they are left out.
-	for extra in ["Wreck", "Collision_Box"]:
-		var node: Node = root.get_node_or_null(extra)
-		if node != null:
-			root.remove_child(node)
-			node.queue_free()
+	# The collision box is the game's own business; the burnt-out copy stays hidden until the tank is destroyed (world.gd kill()).
+	var box: Node = root.get_node_or_null("Collision_Box")
+	if box != null:
+		root.remove_child(box)
+		box.queue_free()
+	var wreck: Node3D = root.get_node_or_null("Wreck") as Node3D
+	if wreck != null:
+		wreck.visible = false
 	# Detail by distance: LOD0 near, LOD1 beyond 60 m.
 	var lod0: Node3D = root.get_node_or_null("LOD0")
 	var lod1: Node3D = root.get_node_or_null("LOD1")
@@ -112,9 +113,14 @@ static func build(w: Node, key: String, owner: int) -> Dictionary:
 		elif n.begins_with("Roller_"): radius = 0.22
 		if radius > 0.0 and not n.ends_with("_Mesh"):
 			axles.append({"node": part, "radius": radius})
+	# The track pads: the shader moves them round the loop by `track_u` (shaders/vehicle.gdshader).
+	var tracks := []
+	for mi in root.find_children("Track_*", "MeshInstance3D", true, false):
+		mi.set_instance_shader_parameter("track_on", 1.0)
+		tracks.append(mi)
 	var muzzle_dist := 4.4
 	var gun: Node3D = base.find_child("Gun", true, false) as Node3D
 	var muzzle: Node3D = base.find_child("Muzzle", true, false) as Node3D
 	if muzzle != null and gun != null:
 		muzzle_dist = (gun.transform * muzzle.transform).origin.length()   # from the turret's pivot to the gun's tip
-	return {"root": root, "turret": turret, "radar": null, "axles": axles, "muzzle": muzzle_dist, "gun": gun, "model_file": path}
+	return {"root": root, "turret": turret, "radar": null, "axles": axles, "muzzle": muzzle_dist, "gun": gun, "tracks": tracks, "wreck": wreck, "model_file": path}

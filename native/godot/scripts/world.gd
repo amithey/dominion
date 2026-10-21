@@ -1457,6 +1457,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		"meshes": model.find_children("*", "MeshInstance3D", true, false) if vehicle else [],
 		"model": model, "clip_speed": REAL_RUN_CLIP_SPEED if realistic else RUN_CLIP_SPEED,
 		"axles": built.get("axles", []), "radar": built.get("radar"), "muzzle": built.get("muzzle", 4.2),
+		"gun": built.get("gun"), "gun_base": built.gun.position if built.get("gun") != null else Vector3.ZERO, "tracks": built.get("tracks", []), "wreck": built.get("wreck"),
 	}
 	# Combat stats come from the browser's config.js via the map export.
 	var def: Dictionary = unit_defs.get(key, {"hp": 100, "dmg": 10, "range": 13, "cooldown": 1.0, "aggro": 24})
@@ -1505,6 +1506,8 @@ func display_model(key: String) -> Node3D:
 		model = craft.build(look, 0).root
 	elif look in VEHICLES:
 		var from_file: Dictionary = preload("res://scripts/vehicle_models.gd").build(self, look, 0)
+		if not from_file.is_empty() and from_file.get("wreck") != null:
+			from_file.wreck.free()   # a portrait shows the living vehicle
 		model = from_file.root if not from_file.is_empty() else (armor.build(look, 0).root if armor != null else tank_scene.instantiate())
 	elif look == "worker" or look in INFANTRY:
 		var realistic := look != "worker" and realistic_scene != null
@@ -2196,8 +2199,14 @@ func _physics_process(delta: float) -> void:
 		if unit.get("radar") != null:
 			unit.radar.rotate_y(delta * 1.6)
 		if unit.moving:
+			var travelled: float = unit.get("cur_speed", unit.speed) * delta
 			for a in unit.get("axles", []):
-				a.node.rotate_x(unit.get("cur_speed", unit.speed) * delta / a.radius)  # wheels roll with the ground
+				a.node.rotate_x(travelled / a.radius)  # wheels roll with the ground
+			if not unit.get("tracks", []).is_empty():
+				# The track pads run back along the loop as the tank goes forward (16.5 m round).
+				unit.track_u = fposmod(float(unit.get("track_u", 0.0)) - travelled / 16.5, 1.0)
+				for tr in unit.tracks:
+					tr.set_instance_shader_parameter("track_u", unit.track_u)
 		spent("  wheels and rotors", t_parts)
 		if unit.engine:
 			var t_audio := clock()
@@ -2212,6 +2221,18 @@ func _physics_process(delta: float) -> void:
 				aim = 0.0 if unit.moving else sin(now * 0.25 + unit.phase) * 0.9
 			unit.turret_yaw = lerp_angle(unit.turret_yaw, aim, minf(1.0, delta * (2.2 if unit.enemy != null else 0.8)))
 			unit.turret.basis = Basis(unit.turret.get_meta("axis"), unit.turret_yaw)
+			if unit.get("gun") != null:
+				# The gun lifts to the target (more for the shell's drop at range) and kicks back when it fires.
+				var elev := 0.0
+				if unit.enemy != null:
+					var gap: Vector3 = unit.enemy.node.position - unit.node.position
+					var flat := Vector2(gap.x, gap.z).length()
+					elev = atan2(gap.y - 1.6, maxf(flat, 1.0)) + clampf(flat * 0.0016, 0.0, 0.12)
+				unit.gun_elev = lerpf(float(unit.get("gun_elev", 0.0)), clampf(elev, -0.14, 0.35), minf(1.0, delta * 2.5))
+				unit.gun.rotation.x = -unit.gun_elev
+				var kick: float = float(unit.get("gun_kick", 0.0))
+				unit.gun_kick = maxf(0.0, kick - delta * 2.2)
+				unit.gun.position = unit.gun_base + Vector3(0, 0, -0.45 * kick * kick)
 	spent("combat", t_units)
 	var t_move := clock()
 	var slot := 0
@@ -5667,6 +5688,7 @@ func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 		var muzzle: Vector3 = unit.turret.global_position + dir * (2.4 if unit.get("naval", false) else float(unit.get("muzzle", 4.2))) + Vector3.UP * 0.4
 		effects.muzzle_flash(muzzle, true)
 		Motion.recoil(unit, 1.4 if unit.key in ["tank", "artillery"] else 0.7)
+		unit["gun_kick"] = 1.0
 		# Long shots and moving targets miss more often; point-blank shots rarely do.
 		var miss_chance := 0.12 + 0.3 * clampf(gap_to(unit, enemy) / maxf(unit.range, 1.0), 0.0, 1.0) + (0.15 if enemy.get("moving", false) else 0.0)
 		if enemy.get("key", "") == "seaDrone":
@@ -5815,7 +5837,14 @@ func kill(unit: Dictionary) -> void:
 		# Shards of armour fly out; half the time the ammunition cooks off and
 		# throws the turret clear (it flies and tumbles under gravity in update_dead).
 		effects.debris.scatter(at + Vector3.UP * 1.2, 9, 11.0, 0.45, Color(0.11, 0.1, 0.09), 0.55)
-		if unit.turret != null and randf() < 0.5:
+		if unit.get("wreck") != null:
+			# A model with its own burnt-out copy (hull scorched, turret blown off beside it) swaps to it.
+			for lod_name in ["LOD0", "LOD1"]:
+				var lod: Node3D = unit.model.get_node_or_null(lod_name) as Node3D
+				if lod != null:
+					lod.visible = false
+			unit.wreck.visible = true
+		elif unit.turret != null and randf() < 0.5:
 			var gt: Transform3D = unit.turret.global_transform
 			unit.turret.top_level = true
 			unit.turret.global_transform = gt
