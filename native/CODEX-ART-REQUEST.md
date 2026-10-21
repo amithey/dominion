@@ -137,3 +137,6 @@ Soldiers are **not** in this tier: they need a skeleton and animation, which has
 
 **Files:** `native/godot/assets/art/vehicles/<name>.glb`, `aircraft/<name>.glb`, `ships/<name>.glb`, each with a MANIFEST.json entry
 (`"kind": "model"`, triangles, size, the list of named nodes and the pivots' positions). Check each file by loading it back and printing the node tree with every pivot.
+
+**Which vehicles, aircraft and ships exactly:** see `native/CODEX-UNIT-ROSTER.md` (and the same list as data in `native/CODEX-UNIT-ROSTER.json`): one model per real designation each nation fields,
+in seven priorities (P1 main battle tanks, P2 armoured carriers, P3 artillery and rockets, P4 air defence, P5 helicopters, P6 aircraft, P7 ships), 522 models in all. The pilot tank comes first; the rest follow in that order, only after the user approves each priority.
