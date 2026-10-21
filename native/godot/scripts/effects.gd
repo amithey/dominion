@@ -238,6 +238,73 @@ func _light(at: Vector3, energy: float, reach: float, life: float) -> void:
 	light.global_position = at
 	_live.append({"node": light, "age": 0.0, "life": life, "kind": "light", "energy": energy})
 
+# ---------------------------------------------------------------- flipbooks
+
+## Filmed-looking effects (assets/art/fx/*.png: sheets of 64 or 32 frames), drawn on camera-facing quads
+## (shaders/fx_flipbook.gdshader). Used on Balanced and High; Low keeps the cheap particle bursts.
+const BOOKS := {
+	"ground": {"file": "fx_explosion_ground_8x8", "grid": Vector2(8, 8), "frames": 64, "add": false, "yaw": true},
+	"air": {"file": "fx_explosion_air_8x8", "grid": Vector2(8, 8), "frames": 64, "add": false, "yaw": false},
+	"fireball": {"file": "fx_fireball_additive_8x8", "grid": Vector2(8, 8), "frames": 64, "add": true, "yaw": false},
+	"smoke": {"file": "fx_smoke_column_8x8", "grid": Vector2(8, 8), "frames": 64, "add": false, "yaw": true},
+	"puff": {"file": "fx_smoke_light_8x8", "grid": Vector2(8, 8), "frames": 64, "add": false, "yaw": true},
+	"dust": {"file": "fx_dust_impact_8x8", "grid": Vector2(8, 8), "frames": 64, "add": false, "yaw": true},
+	"splash": {"file": "fx_water_splash_8x8", "grid": Vector2(8, 8), "frames": 64, "add": false, "yaw": true},
+	"fire": {"file": "fx_fire_loop_8x4", "grid": Vector2(8, 4), "frames": 32, "add": true, "yaw": true},
+}
+var _books := {}
+var force_books := false   # tests switch the films on in a headless run
+
+func books_on() -> bool:
+	if force_books:
+		return true   # (tests: the filmed effects in a headless run)
+	return world_ref != null and str(world_ref.get("quality")) != "low" and DisplayServer.get_name() != "headless"
+
+## Loads every sheet now, so the first blast of a battle does not stall the game while its film is read.
+func warm() -> void:
+	if books_on():
+		for kind in BOOKS:
+			_book(kind)
+
+func _book(kind: String) -> Dictionary:
+	if _books.has(kind):
+		return _books[kind]
+	var def: Dictionary = BOOKS[kind]
+	var shader := Shader.new()
+	var code: String = FileAccess.get_file_as_string("res://shaders/fx_flipbook.gdshader")
+	if def.add:
+		code = code.replace("blend_mix", "blend_add")
+	shader.code = code
+	var m := ShaderMaterial.new()
+	m.shader = shader
+	m.set_shader_parameter("sheet", load("res://assets/art/fx/%s.png" % def.file))
+	m.set_shader_parameter("grid", def.grid)
+	m.set_shader_parameter("yaw_only", def.yaw)
+	var q := QuadMesh.new()
+	q.size = Vector2.ONE
+	if def.yaw:
+		q.center_offset = Vector3(0, 0.5, 0)   # the quad stands on its anchor
+	q.material = m
+	_books[kind] = {"mesh": q, "frames": def.frames}
+	return _books[kind]
+
+## Plays a flipbook: `width` metres wide, over `seconds` (looping for that long when `loop`), after `delay`.
+func flipbook(kind: String, at: Vector3, width: float, seconds: float, delay := 0.0, tint := Color.WHITE, loop := false) -> void:
+	var book := _book(kind)
+	var node := MeshInstance3D.new()
+	node.mesh = book.mesh
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.scale = Vector3(width, width, 1.0)
+	node.visible = delay <= 0.0
+	node.set_instance_shader_parameter("frame", 0.0)
+	add_child(node)
+	node.global_position = at
+	if tint != Color.WHITE:
+		var tinted: ShaderMaterial = node.mesh.material.duplicate()
+		tinted.set_shader_parameter("tint", tint)
+		node.material_override = tinted
+	_live.append({"node": node, "age": -delay, "life": seconds, "kind": "book", "frames": book.frames, "loop": loop})
+
 # ---------------------------------------------------------------- effects
 
 ## Short bright flash at a barrel tip.
@@ -308,11 +375,34 @@ func shell(from: Vector3, to: Vector3, on_hit: Callable) -> void:
 
 ## Explosion: size 1 is a tank shell hit, 3-4 a destroyed vehicle.
 func explosion(at: Vector3, size: float, on_ground: bool) -> void:
-	_burst(_fire, _fire_mesh, at + Vector3.UP * 0.4 * size, int(14 * size), 0.9, size * 0.8)
-	_burst(_smoke, _smoke_mesh, at + Vector3.UP * 0.6 * size, int(10 * size), 5.0 + size, size * 0.9)
+	var books := books_on()
+	if books:
+		# The filmed blast: a ground burst or an air burst (a splash on the sea), a dark column after it,
+		# and an extra glow for the big ones. Width grows a little slower than the size.
+		var w := 5.5 * pow(maxf(size, 0.2), 0.85)
+		var dur := 1.7 + 0.12 * minf(size, 12.0)
+		var sea := false
+		if world_ref != null and not on_ground:
+			var ground: float = world_ref.height_at(at.x, at.z)
+			sea = ground < float(world_ref.map.seaLevel) - 0.5 and at.y < float(world_ref.map.seaLevel) + 4.0
+		if on_ground:
+			flipbook("ground", at, w, dur)
+		elif sea:
+			flipbook("splash", Vector3(at.x, float(world_ref.map.seaLevel), at.z), w * 0.9, dur)
+			flipbook("air", at, w * 0.6, dur)
+		else:
+			flipbook("air", at + Vector3.UP * w * 0.12, w * 0.9, dur)
+		if size >= 1.5:
+			flipbook("smoke", at, w * 0.85, dur * 1.7, 0.35)
+		if size >= 4.0:
+			flipbook("fireball", at + Vector3.UP * w * 0.28, w * 0.75, dur * 0.7, 0.0, Color(1, 1, 1, 0.7))
+	else:
+		_burst(_fire, _fire_mesh, at + Vector3.UP * 0.4 * size, int(14 * size), 0.9, size * 0.8)
+		_burst(_smoke, _smoke_mesh, at + Vector3.UP * 0.6 * size, int(10 * size), 5.0 + size, size * 0.9)
 	_burst(_sparks, _spark_mesh, at + Vector3.UP * 0.3, int(18 * size), 1.3, 1.0)
 	if on_ground:
-		_burst(_dirt, _dirt_mesh, at, int(10 * size), 1.4, size * 0.6)
+		if not books:
+			_burst(_dirt, _dirt_mesh, at, int(10 * size), 1.4, size * 0.6)
 		# Clods of earth thrown out of the crater fall back and bounce.
 		debris.scatter(at, int(5 + 4 * size), 6.0 + 3.0 * size, 0.28 + 0.1 * minf(size, 3.0), Color(0.27, 0.22, 0.16))
 		if size >= 0.9:
@@ -339,7 +429,10 @@ func explosion(at: Vector3, size: float, on_ground: bool) -> void:
 func impact(at: Vector3) -> void:
 	if audio:
 		audio.play("impact", at, -12.0, 0.5)
-	_burst(_puff, _smoke_mesh, at, 3, 0.8, 0.35)
+	if books_on():
+		flipbook("dust", at, 1.7, 0.7)
+	else:
+		_burst(_puff, _smoke_mesh, at, 3, 0.8, 0.35)
 
 ## Projectiles that are seen to fly: kind is "missile" (a guided missile with
 ## a smoke trail, following `track` if given), "rocket" (a small unguided
@@ -546,6 +639,8 @@ func emp_flash(at: Vector3, size: float) -> void:
 
 ## A wreck that keeps burning and smoking for a while.
 func burn(at: Vector3, seconds: float) -> void:
+	if books_on():
+		flipbook("fire", at, 2.8, seconds, 0.0, Color.WHITE, true)   # the flames of a wreck, looping while it burns
 	for i in range(int(seconds / 3.0)):
 		_live.append({"node": null, "age": -i * 3.0, "life": 0.0, "kind": "burn", "at": at, "fired": false})
 
@@ -581,6 +676,14 @@ func _physics_process(delta: float) -> void:
 				var k: float = minf(e.age / e.life, 1.0)
 				e.node.global_position = e.from.lerp(e.to, k)
 				e.node.scale = Vector3(1, 1, e.length)
+			"book":
+				if e.age < 0.0:
+					continue
+				e.node.visible = true
+				var progress: float = fposmod(e.age / maxf(e.life, 0.01), 1.0) if e.loop else minf(e.age / maxf(e.life, 0.01), 1.0)
+				if e.loop:
+					progress = fposmod(e.age * 24.0 / float(e.frames), 1.0)   # the loop runs at its own 24 frames a second
+				e.node.set_instance_shader_parameter("frame", progress * float(e.frames - 1))
 			"shock":
 				var k: float = minf(e.age / e.life, 1.0)
 				var ease := 1.0 - (1.0 - k) * (1.0 - k)
@@ -602,7 +705,8 @@ func _physics_process(delta: float) -> void:
 				if e.age >= 0.0 and not e.fired:
 					e.fired = true
 					_burst(_smoke, _smoke_mesh, e.at + Vector3.UP * 1.2, 8, 5.5, 1.1)
-					_burst(_fire, _fire_mesh, e.at + Vector3.UP * 0.8, 5, 1.2, 0.5)
+					if not books_on():
+						_burst(_fire, _fire_mesh, e.at + Vector3.UP * 0.8, 5, 1.2, 0.5)
 				if e.fired:
 					_live.remove_at(i)
 				continue

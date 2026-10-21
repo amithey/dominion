@@ -666,6 +666,8 @@ func apply_quality() -> void:
 		build_grass()
 		for b in buildings:
 			if not b.dead: clear_site_grass(b.root.position, logistics.radius if is_district(b.key) else b.footprint)
+	if effects != null:
+		effects.warm()
 	for patch in grass_nodes:
 		patch.visible = quality != "low"
 		patch.visibility_range_end = 110.0 if quality == "high" else 75.0
