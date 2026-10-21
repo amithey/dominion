@@ -32,7 +32,7 @@ const UNITS := {
 		"fly": false, "naval": false, "cost": {"money": 950, "iron": 70, "oil": 30, "silicon": 35}, "trainTime": 26, "pop": 3,
 		"requires": "guidedMunitions",
 		"desc": "Indian BrahMos coastal battery. Supersonic, not a hypersonic glide weapon. Combat range and interception chances are game balance."},
-	"aegisCruiser": {"name": "Maya-class Aegis destroyer", "nation": "japan", "hp": 1000, "dmg": 70, "range": 60, "cooldown": 3.0, "aggro": 65, "speed": 10,
+	"aegisCruiser": {"name": "Maya-class Aegis destroyer", "nation": "japan", "hp": 1000, "dmg": 70, "range": 60, "cooldown": 3.0, "aggro": 65, "speed": 13,
 		"fly": false, "naval": true, "cost": {"money": 1700, "iron": 170, "oil": 50, "silicon": 70}, "trainTime": 38, "pop": 4,
 		"requires": "missileDefence",
 		"desc": "Japan only. Missile defence at sea: SM-3 and SM-6 interceptors stop 80% of ballistic and 40% of hypersonic missiles within 250 m, and its strike missiles reach 60 m inland."},

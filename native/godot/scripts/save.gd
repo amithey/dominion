@@ -8,6 +8,7 @@ extends Node
 ## trees and deposits come from the map file named in the save.
 ## F5 quick-saves, F9 quick-loads, and the game autosaves every three minutes.
 
+const BuildInfo := preload("res://scripts/build_info.gd")
 const VERSION := 1
 const AUTOSAVE_EVERY := 180.0
 
@@ -60,6 +61,15 @@ func _p(a) -> Vector3:
 
 # ---------------------------------------------------------------- save
 
+## A carrier's air wing for the save: aircraft on deck, the times they will be rearmed (as seconds from now), the stance, the replacement clock.
+func _wing_of(u: Dictionary) -> Variant:
+	if u.key != "carrier" or not u.has("wing"):
+		return null
+	var rearm: Array = []
+	for t in u.wing.rearming:
+		rearm.append(maxf(0.0, float(t) - world.game_time))
+	return {"aboard": int(u.wing.aboard), "rearming": rearm, "auto": bool(u.wing.get("auto", true)), "replace_in": float(u.wing.get("replace_in", 45.0))}
+
 func capture() -> Dictionary:
 	var buildings := []
 	for b in world.buildings:
@@ -91,6 +101,8 @@ func capture() -> Dictionary:
 			"disabled_until": u.get("disabled_until", 0.0), "intercept_ready": u.get("intercept_ready", 0.0),
 			"xp": u.get("xp", 0.0),
 			"cargo": u.get("cargo", []).duplicate(true),   # troops aboard a helicopter (airlift.gd)
+			"wing": _wing_of(u),   # an aircraft carrier's air wing (war_tools.gd)
+			"carrier_at": _v(u.carrier.node.position) if u.get("carrier") != null and not u.carrier.dead else null,   # the carrier an aircraft of its wing flies for
 		})
 	var edges := []
 	for e in world.logistics.edges.values():
@@ -101,7 +113,7 @@ func capture() -> Dictionary:
 		var copy: Dictionary = n.duplicate()
 		nations.append(copy)
 	return {
-		"format": "dominion-save", "version": VERSION, "map": world.MAP_PATH, "difficulty": world.match_difficulty,
+		"format": "dominion-save", "version": VERSION, "game_version": BuildInfo.version(), "map": world.MAP_PATH, "difficulty": world.match_difficulty,
 		"match_config":world.match_config.duplicate(),
 		"engagement":{"operations":world.engagement.operations.duplicate(),"incidents":world.engagement.incidents.duplicate(),"policy":world.engagement.policy},
 		"date": Time.get_datetime_string_from_system(), "quality": world.quality,
@@ -156,12 +168,16 @@ func load_slot(slot: String) -> bool:
 		world.hud.notice("No saved game yet")
 		return false
 	var data = JSON.parse_string(FileAccess.get_file_as_string(path_of(slot)))
-	if not (data is Dictionary) or data.get("format") != "dominion-save":
-		world.hud.notice("The saved game is damaged")
+	var why := problem_with(data)
+	if why != "":
+		world.hud.notice("The saved game cannot be loaded: %s. The file is kept as %s.bad.json." % [why, slot])
+		_keep_bad(slot)
 		return false
 	if data.map != world.MAP_PATH:
 		world.hud.notice("This save belongs to another map")
 		return false
+	if BuildInfo.older(BuildInfo.version(), str(data.get("game_version", "0.0.0"))):
+		world.hud.notice("This save was made by a newer version (%s); loading it may not work." % str(data.get("game_version")))
 	var config: Dictionary = world.MatchSetup.normalize(data.get("match_config",world.MatchSetup.DEFAULT))
 	if config != world.match_config:
 		world.get_tree().set_meta("match_config",config)
@@ -174,6 +190,30 @@ func load_slot(slot: String) -> bool:
 	restore(data)
 	world.hud.notice("Game loaded")
 	return true
+
+## "" when `data` has everything restore() reads without a default, otherwise what is missing.
+static func problem_with(data) -> String:
+	if not (data is Dictionary):
+		return "the file is not a saved game"
+	if data.get("format") != "dominion-save":
+		return "the file is not a DOMINION save"
+	for key in ["map", "ai", "economy", "buildings", "units", "edges", "diplomacy", "camera", "game_time"]:
+		if not data.has(key):
+			return "it has no \"%s\" (the file is cut short or damaged)" % key
+	if not (data.ai is Array) or not (data.buildings is Array) or not (data.units is Array) or not (data.edges is Array):
+		return "its lists are damaged"
+	if not (data.economy is Dictionary) or not (data.economy.get("res") is Dictionary) or not data.economy.has("civilians"):
+		return "its economy is damaged"
+	for key in ["score", "war", "alliance", "pact", "nap"]:
+		if not data.diplomacy.has(key):
+			return "its diplomacy is damaged"
+	return ""
+
+## A save that cannot be read is kept beside the others as <slot>.bad.json, not overwritten by an autosave.
+func _keep_bad(slot: String) -> void:
+	var from := path_of(slot)
+	if FileAccess.file_exists(from) and not slot.ends_with(".bad"):
+		DirAccess.copy_absolute(from, "user://saves/%s.bad.json" % slot)
 
 func restore(data: Dictionary) -> void:
 	world.clear_match()
@@ -227,8 +267,10 @@ func restore(data: Dictionary) -> void:
 	world.refresh_streets()
 	world.rebuild_walk_grid()
 	# Units.
+	var restored_units: Array = []   # [saved, unit] pairs, to link a carrier's aircraft to their carrier afterwards
 	for s in data.units:
 		var u: Dictionary = world.spawn_unit(s.key, _p(s.pos), int(s.owner))
+		restored_units.append([s, u])
 		# Older units may have entered service before the latest upgrade;
 		# retain their actual equipment instead of upgrading them on every load.
 		for stat in ["max_hp", "range", "speed", "cooldown"]:
@@ -262,6 +304,11 @@ func restore(data: Dictionary) -> void:
 			u.node.position = _p(s.pos)
 		if s.get("ground_attack") != null:
 			world.order_bombard([u],_p(s.ground_attack))
+		if s.get("wing") is Dictionary:
+			var rearm_in: Array = []
+			for t in s.wing.get("rearming", []):
+				rearm_in.append(float(t))   # (seconds from now: made absolute once the game clock is restored, below)
+			u.wing = {"aboard": int(s.wing.get("aboard", 0)), "rearming": rearm_in, "next": 0.0, "auto": bool(s.wing.get("auto", true)), "replace_in": float(s.wing.get("replace_in", 45.0)), "rearming_relative": true}
 	# Diplomacy and the AI.
 	var d: Node = world.diplomacy
 	for name in ["score", "war", "alliance", "pact", "nap"]:
@@ -281,6 +328,25 @@ func restore(data: Dictionary) -> void:
 	# Legacy finished saves had no end dialog on load: resume them as continued.
 	world.continuing_after_end = bool(data.get("continuing_after_end", world.game_over != ""))
 	world.game_time = float(data.get("game_time", 0.0))
+	for pair in restored_units:
+		var su: Dictionary = pair[0]
+		var cu: Dictionary = pair[1]
+		if cu.has("wing") and cu.wing.get("rearming_relative", false):
+			cu.wing.rearming = (cu.wing.rearming as Array).map(func(t): return world.game_time + float(t))
+			cu.wing.erase("rearming_relative")
+		if su.get("carrier_at") != null:   # an aircraft of a carrier's wing: back to its carrier
+			var home: Vector3 = _p(su.carrier_at)
+			var best: Dictionary = {}
+			var best_d := 4.0
+			for other in world.units:
+				if other.dead or other.key != "carrier" or int(other.owner) != int(cu.owner):
+					continue
+				var gap: float = other.node.position.distance_to(home)
+				if gap < best_d:
+					best_d = gap
+					best = other
+			if not best.is_empty():
+				cu.carrier = best
 	preload("res://scripts/faction_powers.gd").restore(world, data.get("national_powers", {}))
 	var engagement: Dictionary = data.get("engagement",{})
 	world.engagement.operations = engagement.get("operations",{}).duplicate()

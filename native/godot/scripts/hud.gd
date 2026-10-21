@@ -80,6 +80,8 @@ var _missile_view := "production"
 var _launch_row: HFlowContainer   # missile buttons when a missile ship is selected
 var _cargo_row: VBoxContainer     # troop transports: what is aboard, Unload / Land at; or Board for troops near one
 var _cargo_sig := ""
+var _wing_row: VBoxContainer      # an aircraft carrier: its air wing (on deck, flying, rearming), its reach, and the buttons
+var _wing_sig := ""
 var _launch_sig := ""
 var _health_color := Color.TRANSPARENT
 var _notices: VBoxContainer
@@ -841,6 +843,10 @@ func _build_selection() -> void:
 	_cargo_row.add_theme_constant_override("separation", 4)
 	_cargo_row.visible = false
 	col.add_child(_cargo_row)
+	_wing_row = VBoxContainer.new()
+	_wing_row.add_theme_constant_override("separation", 4)
+	_wing_row.visible = false
+	col.add_child(_wing_row)
 	var health := Control.new()
 	health.set_script(preload("res://scripts/health_overlay.gd"))
 	world.health_overlay = health  # the feature probe can hide it
@@ -992,6 +998,14 @@ func _build_help() -> void:
 	replay.focus_mode = Control.FOCUS_NONE
 	replay.pressed.connect(func(): _help.hide(); start_guide(true))
 	sheet.add_child(replay)
+	var report := Button.new()
+	report.text = "Report a problem"
+	report.focus_mode = Control.FOCUS_NONE
+	report.tooltip_text = "Writes a report with the version, your machine and the last messages, copies it and opens the folder with the game's log."
+	report.pressed.connect(func():
+		var folder: String = preload("res://scripts/diagnostics.gd").send(world)
+		notice("A report was copied to the clipboard and saved in %s: paste it in your message and attach godot.log from the same folder." % folder))
+	sheet.add_child(report)
 	var close := Button.new()
 	close.text = "Close (F1)"
 	close.focus_mode = Control.FOCUS_NONE
@@ -1375,7 +1389,7 @@ func _action_bars(b: Dictionary) -> void:
 			for aircraft in world.AirOperations.occupants(world, b):
 				if aircraft != null and world.AirOperations.order_land(world, aircraft, b):
 					recalled += 1
-			notice("%d assigned aircraft returning to base." % recalled))
+			notice("%d assigned aircraft returning to base." % recalled if recalled > 0 else "No aircraft are assigned to this base."))
 	if b.key in ["missileSilo", "strategicComplex", "specialLab"]:
 		var ms: Node = world.missiles
 		var cat: String = {"missileSilo": "conventional", "strategicComplex": "nuclear", "specialLab": "special"}[b.key]
@@ -1555,7 +1569,10 @@ func _update_selection() -> void:
 		_medal_owner(units[0].owner)
 		var lead: Dictionary = units.filter(func(u): return u.key == main)[0]
 		# Attack after research and the nation's own system; accuracy from its fire control.
-		_show_stats({"ATTACK": "%d" % int(round(float(lead.dmg) * world.research.damage_mult(lead))), "ACCURACY": "%d%%" % mini(100, int(round(100.0 * float(lead.get("accuracy", 1.0))))), "RANGE": "%d m" % int(lead.range),
+		# A carrier's numbers are its aircraft's: what a jet of the wing hits for, and how far the wing flies (its own guns only defend it).
+		var shown_attack: float = float(world.unit_defs.get("carrierJet", {}).get("dmg", lead.dmg)) if lead.key == "carrier" else float(lead.dmg)
+		var shown_range: float = preload("res://scripts/war_tools.gd").STRIKE_REACH if lead.key == "carrier" else float(lead.range)
+		_show_stats({"ATTACK": "%d" % int(round(shown_attack * world.research.damage_mult(lead))), "ACCURACY": "%d%%" % mini(100, int(round(100.0 * float(lead.get("accuracy", 1.0))))), "RANGE": "%d m" % int(shown_range),
 			"SPEED": "%.1f m/s" % float(lead.speed), "HEALTH": "%d%%" % int(round(100.0 * hp / maxf(max_hp, 1.0)))})
 		var name: String = world.unit_defs.get(main, {}).get("name", main)
 		_sel_title.text = UI.caps(name if units.size() == 1 else "%d units" % units.size())
@@ -1578,6 +1595,7 @@ func _update_selection() -> void:
 		_fill_queue([])
 		_fill_launch(own_units.any(func(u): return u.key in world.missiles.LAUNCH_SHIPS))
 		_fill_cargo(own_units)
+		_fill_wing(own_units)
 		if units.size() == 1 and units[0].get("fly",false):
 			var u: Dictionary = units[0]
 			if u.key == "scoutHelicopter":
@@ -1585,7 +1603,7 @@ func _update_selection() -> void:
 			else:
 				_sel_info.text += "\nAmmunition: %d/%d salvos | %s\n%s" % [u.ammo,world.AirOperations.CAPACITY[u.key],u.air_state.capitalize(),"Rearming: %.0f s" % u.service_left if u.air_state == "rearming" else "Empty aircraft return to a supplied air base."]
 		elif units.any(func(u): return world.can_bombard(u)):
-			_sel_info.text += "  ·  Alt + right-click: bombard"
+			_sel_info.text += "\nAlt + right-click: bombard"
 		_sel_info.text += "\nHP %d / %d%s" % [int(hp),int(max_hp)," · Repair ordered" if units.any(func(u): return u.get("repairing",false)) else ""]
 		# Why a unit stands idle: no fuel or no ammunition money (war_costs.gd).
 		var halted: Array = units.filter(func(u): return u.owner == 0 and str(u.get("operating_shortage", "")) != "")
@@ -1801,6 +1819,48 @@ func _fill_cargo(own: Array) -> void:
 			Air.order_board(world, world.units.filter(func(u): return u.selected and not u.dead and u.owner == 0), nearest)
 			return "")
 		board.tooltip_text = "The selected troops walk to the nearest transport and climb aboard. A ship comes alongside the nearest coast first."
+
+## An aircraft carrier's air wing (war_tools.gd): what is on deck, in the air and being rearmed, how far the wing
+## flies, how to use it, and two buttons: automatic or orders only, and recall.
+func _fill_wing(own: Array) -> void:
+	var WT := preload("res://scripts/war_tools.gd")
+	var carriers: Array = own.filter(func(u): return u.key == "carrier" and not u.dead)
+	var sig := ""
+	for c in carriers:
+		sig += "%d:%s:%s;" % [c.node.get_instance_id(), WT.wing_text(world, c), str(WT.wing_info(world, c).auto)]
+	_wing_row.visible = sig != ""
+	if sig == _wing_sig:
+		return
+	_wing_sig = sig
+	for c in _wing_row.get_children():
+		_wing_row.remove_child(c)
+		c.queue_free()
+	if sig == "":
+		return
+	for c in carriers:
+		var info: Dictionary = WT.wing_info(world, c)
+		var head := _text("AIR WING  ·  strike reach %d m" % int(WT.STRIKE_REACH), 16, UI.GOOD, true)
+		head.tooltip_text = "How far from the carrier its aircraft fly to strike. The carrier's own guns (24 m) only defend it; the aircraft are its weapon."
+		_wing_row.add_child(head)
+		_wing_row.add_child(_text(WT.wing_text(world, c), 14, UI.CREAM))
+		var how := _text("Right-click an enemy within reach: the wing strikes it from where the carrier stands (the carrier moves only if the enemy is out of reach). Aircraft land back aboard to rearm.", 12, UI.MUTED)
+		how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		how.custom_minimum_size.x = 280
+		_wing_row.add_child(how)
+		var buttons := HFlowContainer.new()
+		buttons.add_theme_constant_override("separation", 4)
+		_wing_row.add_child(buttons)
+		var carrier: Dictionary = c
+		var mode := _button(buttons, "Launch: automatic" if info.auto else "Launch: orders only", func():
+			WT.set_auto(carrier, not bool(WT.wing_info(world, carrier).auto))
+			_wing_sig = ""
+			return "Air wing: " + ("automatic launches." if bool(WT.wing_info(world, carrier).auto) else "orders only."))
+		mode.tooltip_text = "Automatic: the wing takes off against the nearest enemy it can see within reach. Orders only: it takes off only against what you right-click."
+		var recall := _button(buttons, "Recall wing", func():
+			var n: int = WT.recall(world, carrier)
+			_wing_sig = ""
+			return ("%d aircraft returning to the carrier." % n) if n > 0 else "No aircraft are flying.")
+		recall.tooltip_text = "Every aircraft of the wing breaks off and returns to the deck to rearm."
 
 func _show_stats(values: Dictionary) -> void:
 	_sel_stats.visible = true

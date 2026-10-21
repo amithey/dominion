@@ -35,6 +35,17 @@ $tests = @(
     @('rivals at sea: a war across water: shipyard on the coast, a fleet, landing ships loaded and escorted, troops put ashore, sorties', @('--script', 'res://tools/ai-navy-check.gd'), 'AI_NAVY PASS', 2700),
     @('sixteen points: sovereignty over harbours and offshore works, fishing platform, land gas and the cold winter, the research tree, demolish and replace, standing units, a spy by name, the UN agencies, the Veterans text, the birds', @('--script', 'res://tools/fixes-1019-check.gd'), 'FIXES_1019 PASS', 900),
     @('the report of 2026-10-20: a carrier stands off and its jets strike, a submarine offers only its own missiles, air-launched missiles from a parked jet, nuclear launches from the strategic complex, sanctions on the card, troops aboard shown, short briefs', @('--script', 'res://tools/fixes-1020-check.gd'), 'FIXES_1020 PASS', 600),
+    @('alpha build: version and label, About, problem report, hidden testing tools, saves checked before loading, an earlier save loads', @('--script', 'res://tools/alpha-check.gd'), 'ALPHA PASS', 600),
+    @('audit of every control: 80+ surfaces and tabs, every enabled button pressed (no error, no dead button without a reason)', @('--script', 'res://tools/audit-ui.gd'), 'AUDIT_UI PASS', 1500),
+    @('audit of every unit: definition, class plausibility, training, nations, model, combat, friendly fire, orders', @('--script', 'res://tools/audit-units.gd'), 'AUDIT_UNITS PASS', 1500),
+    @('audit of every building: definition, site, finish, what it provides, what it trains, demolish, save', @('--script', 'res://tools/audit-buildings.gd'), 'AUDIT_BUILDINGS PASS', 900),
+    @('audit of every missile: launcher, launch, flight, effect, who may field it, the launcher message', @('--script', 'res://tools/audit-missiles.gd'), 'AUDIT_MISSILES PASS', 900),
+    @('audit of every discovery: definition, tree walk, stated effects, effects seen in play, researched for real', @('--script', 'res://tools/audit-research.gd'), 'AUDIT_RESEARCH PASS', 900),
+    @('audit of the world: 28 national powers, 16 espionage operations, UN measures, world events, crises, victory paths, diplomacy', @('--script', 'res://tools/audit-world.gd'), 'AUDIT_WORLD PASS', 1500),
+    @('audit of every text: no years, British spelling, no leaked placeholders, lengths; 1,100 definitions and reasons and the scripts messages', @('--script', 'res://tools/audit-text.gd'), 'AUDIT_TEXT PASS', 900),
+    @('the aircraft carrier: one reach (240 m) everywhere, the wing shown, strike in reach and not beyond, orders-only, recall, replacement for a lost aircraft, stand-off, saved wing', @('--script', 'res://tools/carrier-check.gd'), 'CARRIER PASS', 600),
+    @('what can exist: buildings train what belongs, sites refused where they cannot stand, cargo, weapons vs targets, orders of class in the real world, orders the terrain forbids, a ten-minute soak with physical invariants', @('--script', 'res://tools/audit-physics.gd'), 'AUDIT_PHYSICS PASS', 1800),
+    @('the attack order for every armed unit: it hurts the enemy in reach, and closes in or stands off by design when it is out of reach', @('--script', 'res://tools/audit-orders.gd'), 'AUDIT_ORDERS PASS', 1800),
     @('national crises: lost power, farms, homes and industry bring recession, blackouts, inflation, debt, default, protest, a fallen government, condemnation; GDP with no floor; the statistics overview', @('--script', 'res://tools/crisis-check.gd'), 'CRISIS PASS', 600),
     @('what each nation really has: no chip fab, data centre or reactor without that industry, no HIMARS or submarine for militias or landlocked states, compute goal asks universities instead', @('--script', 'res://tools/national-industry-check.gd'), 'NATIONAL_INDUSTRY PASS', 600),
     @('who can really use AI and the bomb: national AI ceilings, no nuclear release, tension or escalation threats without nuclear weapons', @('--script', 'res://tools/national-realism-check.gd'), 'NATIONAL_REALISM PASS', 900),
@@ -143,6 +154,7 @@ $tests = @(
     @('menus', @('--', '--menu-test'), 'MENU_TEST PASS', 180)
 )
 if (-not $Quick) {
+    $tests += ,@('audit of nations and maps: every nation and every map played for two minutes, saved and checked', @('--script', 'res://tools/audit-matrix.gd', '--', '--budget=3000'), 'AUDIT_MATRIX PASS', 3600)
     $tests += ,@('AI war (hard, fast)', @('--', '--ai-test'), 'AI_TEST PASS', 500)
     $tests += ,@('12-minute match (hard)', @('--', '--soak-test'), 'SOAK_TEST PASS', 600)
     $tests += ,@('12 minutes played as a player: nothing stuck', @('--script', 'res://tools/playthrough-check.gd'), 'PLAYTHROUGH PASS', 2400)

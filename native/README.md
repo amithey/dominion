@@ -38,6 +38,34 @@ Research sources and precise gameplay rules are in
 [the research and integration report](FACTIONS-RESEARCH-2026-10-02.md).
 The ten portraits are included in the subsequent 0.9.49 local release.
 
+## Version 1.0.0 ALPHA: the first build for testers
+
+Everything in the game was tried by an audit tool (a real match, every control pressed, every unit, building, weapon,
+discovery, power, operation and text) and what was found was fixed. [ALPHA-1.0-REPORT.md](ALPHA-1.0-REPORT.md) is the
+full account; [installer/ALPHA-README.txt](installer/ALPHA-README.txt) is what a tester is told.
+
+- **A tester's build:** the version (1.0.0) and the label ALPHA on the opening screen, in the window title and in every save;
+  an **About** screen; **Report a problem** (About, Esc menu, F1): writes the version, the machine, the match and the last
+  messages to a file, copies it and opens the folder with the engine's log (`%APPDATA%\DOMINION\logs`); the Testing tools switch stays in Settings, Game for the alpha's testers (off by default)
+  (off by default); a save is **checked before it is loaded**, and one that cannot be read is kept as
+  `.bad.json` and never overwritten; saves from 0.9.x load.
+- **Audits** (`tools/audit-*.gd`, in `run-tests.ps1`): [every control](tools/audit-ui.gd) (80+ surfaces, 800+ presses),
+  [every unit](tools/audit-units.gd), [every building](tools/audit-buildings.gd), [every weapon](tools/audit-missiles.gd),
+  [every discovery](tools/audit-research.gd), [the world](tools/audit-world.gd) (28 national powers, 16 espionage
+  operations, the UN, events, crises, victory), [every text](tools/audit-text.gd), [every nation on every map](tools/audit-matrix.gd);
+  and in a window: [how every surface looks](tools/audit-layout.gd) at four window sizes, [every picture](tools/audit-portraits.gd).
+- **The aircraft carrier made clear:** one reach (240 m) in the panel, a blue ring, an AIR WING row (on deck, flying,
+  rearming, lost), automatic or orders-only launching, Recall, replacement of a lost aircraft ($400), a stand-off that never
+  closes to its guns, a wing that survives a save. Reach rings for every far-shooting unit you select.
+  [FIXES-2026-10-20.md](FIXES-2026-10-20.md)
+- **What can exist:** [a physical and logical audit](tools/audit-physics.gd) (what each building trains, where it may stand,
+  what a transport can carry, what a weapon can hurt, a ten-minute soak with nothing in the wrong element or teleporting)
+  and [an audit of the attack order for every armed unit](tools/audit-orders.gd); it corrected the speeds of ships, bombers
+  and missiles and the reach of rocket launchers so that the order of classes is the real one.
+- **Fixed:** an error on every refresh while a spy mission ran; an error pressing a national power; a vehicle without a
+  turret dying; the UN screen failing on a standing sanction; four national units without a picture; a rival's crises
+  and credit rating are now published a release late like the rest of the statistics.
+
 ## Version 0.9.101: national crises, published statistics, a carrier that stands off, clearer texts
 
 - **Crises from destroyed infrastructure:** losing power stations, farms, homes and industry throws a nation (you or a
@@ -2355,7 +2383,7 @@ SSAO, grass, trees, animation, health bars) by turning them off one at a time.
 ## Testing everything
 
 `powershell -ExecutionPolicy Bypass -File native/run-tests.ps1` runs every automated test in turn
-(about 25 minutes) and prints a table; `-Quick` skips the AI war and the 12-minute match, and
+(about three hours with the matrix audit, and the 12-minute playthrough) and prints a table; `-Quick` skips the AI war, the 12-minute match, the playthrough and the nations-and-maps audit, and
 `-Exported` runs them against the built `dist/DOMINION.exe`. A test fails if it reports FAIL,
 times out, or prints any SCRIPT ERROR on the way. The suites:
 

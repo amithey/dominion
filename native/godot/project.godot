@@ -1,10 +1,17 @@
 ; DOMINION desktop engine evaluation. Open with Godot 4.7.2.
 config_version=5
 
+[debug]
+
+file_logging/enable_file_logging=true
+file_logging/log_path="user://logs/godot.log"
+file_logging/max_log_files=5
+
 [application]
 config/name="DOMINION"
 config/description="A real-time strategy game of nations, cities, supply lines, research and war."
-config/version="0.9.101"
+config/version="1.0.0"
+config/version_label="ALPHA"
 run/main_scene="res://world.tscn"
 config/icon="res://icon.png"
 config/windows_native_icon="res://icon.ico"

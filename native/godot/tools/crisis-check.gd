@@ -98,6 +98,7 @@ func run() -> void:
 	check(C.rating_score(rival) < rating0 - 10.0, "its credit rating falls (%s to %s)" % [C.rating_letters(rating0), C.rating(rival)])
 	check(C.fragility(rival) > float(C.base_of(rival)[4]) + 20.0, "the state grows fragile (%.0f, usually %.0f)" % [C.fragility(rival), float(C.base_of(rival)[4])])
 	w.stats.release()
+	check(w.stats.crises(rival).is_empty() and not w.stats.crises(0).has("x"), "a rival's crises are published a release late (none yet shown for %s)" % F.identity(w, rival))
 	var gdp1: float = w.stats.series[rival].gdp[-1].real
 	check(gdp1 < gdp0 * 0.35, "its GDP collapses with what was destroyed (%s to %s): there is no floor" % [Stats.format("gdp", gdp0), Stats.format("gdp", gdp1)])
 	var support0: float = w.support.value(rival)
@@ -134,6 +135,11 @@ func run() -> void:
 	check(C.active(0, "energy"), "your power stations destroyed: an energy crisis")
 	check(w.research.bonus("prodPct") < prod0 - 0.1, "blackouts slow your factories (production %+d%% to %+d%%)" % [int(prod0 * 100), int(w.research.bonus("prodPct") * 100)])
 	check(w.hud.notice_log.slice(notes0).any(func(t): return str(t).contains("CRISIS: Energy crisis")), "and you are told what it does")
+	w.hud.toggle_cabinet()
+	await process_frame
+	await process_frame
+	check(texts(w.hud._cabinet).any(func(t): return str(t).contains("CRISIS: Energy crisis")), "and the Cabinet lists it among the world news")
+	w.hud.toggle_cabinet()
 	for i in range(3):
 		build("powerPlant", 0, you, 26 + i)
 	pass_time(10.0)
@@ -155,6 +161,9 @@ func run() -> void:
 	w.sitrep.from_notice("CRISIS: Recession. Output has fallen.")
 	check(w.sitrep.events.any(func(e): return e.cat == "econ" and str(e.text).begins_with("CRISIS")), "the situation report files a crisis under the economy")
 
+	# ---- the rating is a published series too
+	w.stats.release()
+	check(w.stats.series[rival].has("rating") and w.stats.latest(rival, "rating") < w.stats.series[rival].rating[0].shown, "the markets' rating of the rival fell, as published (%s to %s)" % [Stats.format("rating", w.stats.series[rival].rating[0].shown), Stats.format("rating", w.stats.latest(rival, "rating"))])
 	# ---- saves
 	var snap: Dictionary = JSON.parse_string(JSON.stringify(C.capture()))
 	var fresh: RefCounted = preload("res://scripts/crisis.gd").new(w)

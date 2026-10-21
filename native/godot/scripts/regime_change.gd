@@ -34,7 +34,7 @@ extends RefCounted
 
 const KEY := "decapitationRaid"
 const OP := {"name": "Leadership raid (Absolute Resolve)", "cost": 3000, "base": 0.1,
-	"desc": "United States only. A CIA team maps the leader's life, Cyber Command blacks out the capital and blinds its air defences, airstrikes hit them, and Delta Force flies in by helicopter to take the leader. Success replaces the regime with a puppet ruler: the nation becomes your client state (it allies with you, joins your wars and pays tribute) and the world fears you. Failure costs special forces, a helicopter and a scandal."}
+	"desc": "United States only. Intelligence maps the leader's life, a cyber attack blacks out the capital and blinds its air defences, airstrikes hit them, and special forces fly in to take the leader. Success installs a puppet ruler: the nation becomes your client state (it allies with you, joins your wars, pays tribute) and the world fears you. Failure costs special forces, a helicopter and a scandal."}
 const FEAR_SECONDS := 900.0
 const FEAR_BONUS := 0.3
 const AIR_DEFENCE := ["aaVehicle", "samLauncher", "manpads", "laserAD", "abmLauncher", "irisT", "saudiThaad", "type45"]

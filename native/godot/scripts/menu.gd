@@ -23,6 +23,8 @@ var _panel: VBoxContainer
 var _title: Label
 var _subtitle: Label
 
+const BuildInfo := preload("res://scripts/build_info.gd")
+const Diagnostics := preload("res://scripts/diagnostics.gd")
 const UI := preload("res://scripts/ui_theme.gd")
 
 var _table: Control
@@ -155,9 +157,17 @@ func setup(world_node: Node) -> void:
 		_footer.add_theme_constant_override("margin_" + side, 18)
 	frame.add_child(_footer)
 	_footer.hide()
-	var credit := Label.new()
-	credit.text = "DOMINION  ·  %s" % ProjectSettings.get_setting("application/config/version", "")
-	credit.add_theme_color_override("font_color", Color(1, 1, 1, 0.35))
+	var credit := Button.new()
+	credit.name = "VersionAbout"
+	credit.flat = true
+	credit.text = "DOMINION  ·  %s  ·  early test version  ·  About / report a problem" % BuildInfo.full()
+	credit.tooltip_text = "What an alpha is, the version, and how to report a problem."
+	credit.focus_mode = Control.FOCUS_NONE
+	credit.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	credit.add_theme_font_size_override("font_size", 15)
+	credit.add_theme_color_override("font_color", Color(1, 1, 1, 0.75))
+	credit.add_theme_color_override("font_hover_color", UI.GOLD)
+	credit.pressed.connect(func(): open_about())
 	credit.anchor_top = 1.0
 	credit.anchor_bottom = 1.0
 	credit.offset_left = 64
@@ -227,7 +237,7 @@ func open_main() -> void:
 	var slots := list_saves()
 	var last := "No campaign saved yet."
 	if newest != "":
-		last = ("%s, saved %s." % [slots[0].about, slots[0].date]) if str(slots[0].about) != "" else ("Resume \"%s\", saved %s." % [newest.capitalize(), slots[0].date])
+		last = ("%s  ·  %s" % [slots[0].short, slots[0].date]) if str(slots[0].short) != "" else ("Resume \"%s\", saved %s." % [newest.capitalize(), slots[0].date])
 	var continue_button := _entry("Continue", last, "land", func(): load_game(newest))
 	continue_button.disabled = newest == ""
 	_entry("Load Game", ("%d saved campaign%s." % [slots.size(), "" if slots.size() == 1 else "s"]) if not slots.is_empty() else "Nothing saved yet: F5 saves during a match.", "research", open_load)
@@ -280,6 +290,7 @@ func open_pause() -> void:
 	save_button.tooltip_text = "Create a separate campaign save. F5 replaces QuickSave."
 	_button("Load Game", open_load)
 	_button("Settings", open_settings)
+	_button("About / Report a problem", open_about)
 	if preload("res://scripts/cheats.gd").allowed(world):
 		var cheat := _button("Testing: everything (F10)", func():
 			world.hud.notice(preload("res://scripts/cheats.gd").everything(world))
@@ -837,6 +848,34 @@ var settings_tab := "graphics"
 
 ## Settings in four tabs, each setting a card with a line saying what it does.
 ## Every change applies at once and is saved (user://settings.cfg).
+## About: the version, what an alpha is, where the files are, who made what.
+func open_about() -> void:
+	_clear()
+	_wide(true)
+	_dispatch.visible = false
+	_heading("ABOUT DOMINION")
+	var version := _description("Version %s" % BuildInfo.full())
+	version.add_theme_font_size_override("font_size", 20)
+	version.add_theme_color_override("font_color", UI.GOLD)
+	_description("DOMINION is a real-time strategy game of nations: cities, supply, research, diplomacy, espionage and war, from the first village to the United Nations Security Council.")
+	_description("This is an ALPHA: it is complete enough to play from start to finish, but it has not been tested by many people. Expect rough edges, unbalanced weapons and the occasional error. Saves from an earlier alpha should load; if one does not, the game says so and keeps the file.")
+	_section("Something went wrong?")
+	var report := _button("Report a problem", func():
+		var folder := Diagnostics.send(world)
+		if world.hud != null:
+			world.hud.notice("A report was copied to the clipboard and saved in %s. Please paste it in your message and attach godot.log from the same folder." % folder))
+	report.custom_minimum_size = Vector2(240, 46)
+	_description("Writes a report (version, your machine, the match and the last messages), copies it and opens the folder with the game's log.")
+	_section("Credits")
+	_description("Built with the Godot Engine (MIT). Art: Kenney, Quaternius and ambientCG (public domain); the infantry character is a Mixamo model. Everything else, the vehicles, ships, aircraft, effects, sounds and interface, is made in code. Full notices are installed beside the game (THIRD-PARTY-NOTICES.txt).")
+	var foot := HBoxContainer.new()
+	_footer.show()
+	_footer.add_child(foot)
+	var back := _button("Back", open_pause if in_match else open_main)
+	back.custom_minimum_size = Vector2(150, 50)
+	_panel.remove_child(back)
+	foot.add_child(back)
+
 func open_settings() -> void:
 	_clear()
 	_wide(true)
@@ -1118,10 +1157,10 @@ func list_saves() -> Array:
 	if dir == null:
 		return out
 	for file in dir.get_files():
-		if file.ends_with(".json") and file != "test.json":
+		if file.ends_with(".json") and file != "test.json" and not file.ends_with(".bad.json"):
 			var name := file.get_basename()
 			var modified := FileAccess.get_modified_time("user://saves/" + file)
-			out.append({"name": name, "time": modified, "date": when(modified), "about": _about("user://saves/" + file)})
+			out.append({"name": name, "time": modified, "date": when(modified), "about": _about("user://saves/" + file), "short": _about("user://saves/" + file, true)})
 	out.sort_custom(func(a, b): return a.time > b.time)
 	return out
 
@@ -1140,7 +1179,7 @@ static func when(unix: int) -> String:
 	return "%d %s" % [int(then.day), ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][int(then.month) - 1]]
 
 ## Whose campaign a save holds: "United States · Industrial Era · year 3 · Easy".
-static func _about(path: String) -> String:
+static func _about(path: String, short := false) -> String:
 	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null or f.get_length() > 8_000_000:
 		return ""
@@ -1149,7 +1188,7 @@ static func _about(path: String) -> String:
 		return ""
 	var s: Dictionary = data.summary
 	var parts := PackedStringArray()
-	for k in ["nation", "era"]:
+	for k in (["nation"] if short else ["nation", "era"]):
 		if str(s.get(k, "")) != "": parts.append(str(s[k]))
 	parts.append("year %d" % int(s.get("year", 1)))
 	if str(s.get("difficulty", "")) != "": parts.append(str(s.difficulty))
@@ -1203,6 +1242,7 @@ func save_settings() -> void:
 	cfg.set_value("graphics", "show_fps", world.show_fps)
 	cfg.set_value("graphics", "fps_choice", true)
 	cfg.set_value("graphics", "ui_scale", world.ui_scale)
+	cfg.set_value("meta", "version", BuildInfo.version())
 	cfg.set_value("game", "testing_tools", world.testing_tools)
 	if world.saves:
 		cfg.set_value("game", "autosave", world.saves.autosave_every)

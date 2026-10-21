@@ -1,5 +1,6 @@
 extends Control
-## Over the battlefield, under the panels: over your transports, who is aboard ("6 ABOARD", a figure
+## Over the battlefield, under the panels: a ring on the ground round each selected unit of yours that shoots far (a
+## howitzer, a rocket launcher, an air-defence battery, and for a carrier the reach of its air wing); over your transports, who is aboard ("6 ABOARD", a figure
 ## for each soldier: a load is never invisible); over the player's own units that
 ## stand idle for want of supplies, why: "NO FUEL", "NO AMMUNITION"
 ## (war_costs.gd sets unit.operating_shortage); over any unit in sight, its
@@ -155,6 +156,39 @@ func _construction(font: Font) -> void:
 		draw_rect(Rect2(box.position + Vector2(0, 21), Vector2(width, 3)), Color("33414b"))
 		draw_rect(Rect2(box.position + Vector2(0, 21), Vector2(width * mark.progress, 3)), accent)
 
+const RING_FROM := 36.0       # a unit whose weapon reaches this far (metres) shows its range when selected
+const RING_MAX := 6           # at most this many rings at once
+
+## The ground ring of one unit: `radius` metres round its position, as a polyline on the screen.
+func _ring(u: Dictionary, radius: float, colour: Color, cam: Camera3D, view: Rect2) -> void:
+	var centre: Vector3 = u.node.get_global_transform_interpolated().origin
+	var points := PackedVector2Array()
+	var steps := 72
+	for i in range(steps + 1):
+		var a := TAU * float(i) / float(steps)
+		var p := Vector3(centre.x + cos(a) * radius, float(world.map.seaLevel) if u.get("naval", false) else world.height_at(centre.x + cos(a) * radius, centre.z + sin(a) * radius) + 0.3, centre.z + sin(a) * radius)
+		if cam.is_position_behind(p):
+			if points.size() > 1: draw_polyline(points, colour, 2.0, true)
+			points = PackedVector2Array()
+			continue
+		points.append(cam.unproject_position(p))
+	if points.size() > 1:
+		draw_polyline(points, colour, 2.0, true)
+
+func _rings(cam: Camera3D, view: Rect2) -> void:
+	var drawn := 0
+	for u in world.units:
+		if drawn >= RING_MAX:
+			return
+		if u.dead or not bool(u.get("selected", false)) or int(u.owner) != 0 or u.get("stowed", false):
+			continue
+		if u.key == "carrier":
+			_ring(u, preload("res://scripts/war_tools.gd").STRIKE_REACH, Color(0.45, 0.85, 1.0, 0.75), cam, view)   # the air wing's reach
+			drawn += 1
+		elif float(u.dmg) > 0.0 and float(u.range) >= RING_FROM and not u.get("fly", false):
+			_ring(u, float(u.range), Color(0.95, 0.8, 0.4, 0.6), cam, view)
+			drawn += 1
+
 func _draw() -> void:
 	if world == null or world.camera == null:
 		return
@@ -162,6 +196,7 @@ func _draw() -> void:
 	var view := get_viewport_rect()
 	var font := ThemeDB.fallback_font
 	var fog = world.get("fog")
+	_rings(cam, view)
 	_roles(font)
 	_construction(font)
 	for u in world.units:

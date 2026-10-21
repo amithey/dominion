@@ -72,7 +72,8 @@ if (-not (Test-Path -LiteralPath $exe)) { throw 'The Godot export did not produc
 # DOMINION-Setup.exe (the one release for the public; its version is inside the
 # file, in its properties). Older numbered installers are removed.
 Get-ChildItem -LiteralPath $dist -Filter 'DOMINION-Setup*.exe' | Remove-Item -Force
-& $iscc "/DAppVersion=$Version" (Join-Path $native 'installer\dominion.iss')
+$label = (Select-String -Path (Join-Path $project 'project.godot') -Pattern '^config/version_label="(.*)"' -ErrorAction SilentlyContinue).Matches | ForEach-Object { $_.Groups[1].Value } | Select-Object -First 1
+& $iscc "/DAppVersion=$Version" "/DAppLabel=$label" (Join-Path $native 'installer\dominion.iss')
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed ($LASTEXITCODE)" }
 & (Join-Path $native 'verify-release.ps1') -Directory $dist -ExpectedVersion $Version
 Get-ChildItem -LiteralPath $dist -Filter 'DOMINION*.exe' | ForEach-Object { '{0}  {1:N0} MB' -f $_.Name, ($_.Length / 1MB) }

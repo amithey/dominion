@@ -425,9 +425,16 @@ func systems_checks() -> void:
 
 func run() -> void:
 	var only_systems := "--systems" in OS.get_cmdline_user_args()
-	for i in range(0 if only_systems else Catalogue.KEYS.size()):
+	var from := 0
+	var upto: int = Catalogue.KEYS.size()
+	for a in OS.get_cmdline_user_args():   # (--from=N --to=N: a share of the maps, to run the shares side by side)
+		if a.begins_with("--from="): from = int(a.split("=")[1])
+		if a.begins_with("--to="): upto = int(a.split("=")[1])
+	var shard := from > 0 or upto < Catalogue.KEYS.size()
+	for i in range(0 if only_systems else from, 0 if only_systems else mini(upto, Catalogue.KEYS.size())):
 		await map_checks(i, Catalogue.KEYS[i])
-	await systems_checks()
+	if not shard or only_systems:
+		await systems_checks()
 	print("\nGAMEPLAY_CAMPAIGN: %d passed, %d failed" % [passed, errors.size()])
 	for f in errors: print("  FAILED: " + f)
 	print("GAMEPLAY_CAMPAIGN PASS" if errors.is_empty() else "GAMEPLAY_CAMPAIGN FAIL")

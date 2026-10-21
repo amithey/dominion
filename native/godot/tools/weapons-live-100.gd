@@ -536,12 +536,19 @@ func run() -> void:
 	var iris2: Dictionary = mk("irisT", w.land_point(hq.root.position + Vector3(-14, 0, 0), 20.0), 0)
 	var n0: int = w.intercepts.size()
 	var landed := 0
-	for i in range(6):
+	# (the dice decide which battery meets which missile: the ABM battery often stops them all in six, so up to
+	# twelve are flown until both batteries have had a shot)
+	for i in range(12):
+		hq.hp = hq.max_hp   # (a missile that gets through must not end the match: the dice decide how many do)
 		var strike: Dictionary = w.missiles.fly(["ballistic", "cruise", "hypersonic"][i % 3], home.root.position + Vector3.UP * 3.0, hq.root.position, nation.id)
-		sim(14.0, func(): return not strike in w.missiles.flying)
+		sim(40.0, func(): return not strike in w.missiles.flying)   # (a cruise missile is subsonic now: it needs longer than 14 s)
 		sim(6.5)   # the batteries reload (an ABM takes 6 s) before the next launch
+		var so_far: Array = w.intercepts.slice(n0)
+		if i >= 5 and so_far.any(func(t): return t.by == "abmLauncher") and so_far.any(func(t): return t.by == "irisT"):
+			break
+	sim(40.0, func(): return w.missiles.flying.is_empty())   # (a cruise missile is slower now: the last ones may still be on their way)
 	var fought: Array = w.intercepts.slice(n0)
-	check(fought.size() >= 6, "every rival missile at the capital meets an interceptor (%d attempts for 6 missiles)" % fought.size())
+	check(fought.size() >= 6, "every rival missile at the capital meets an interceptor (%d attempts for at least 6 missiles)" % fought.size())
 	check(fought.any(func(t): return t.by == "abmLauncher") and fought.any(func(t): return t.by == "irisT"), "both batteries take part")
 	check(fought.any(func(t): return t.hit), "some are shot down (%d)" % fought.filter(func(t): return t.hit).size())
 	cleanup()

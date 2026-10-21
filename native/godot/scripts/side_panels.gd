@@ -173,9 +173,10 @@ func _nation_card(id: int) -> void:
 		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		card.add_child(line)
 	var C: RefCounted = hud.world.get("crisis")
-	if C != null and not C.list(id).is_empty():
+	var published: Array = hud.world.stats.crises(id) if hud.world.stats != null else []   # (a rival's crises as published: a release late)
+	if C != null and not published.is_empty():
 		var names := PackedStringArray()
-		for k in C.list(id): names.append(str(C.KINDS[k].title))
+		for k in published: names.append(str(C.KINDS[k].title))
 		var crises: Label = hud._text("In crisis: " + ", ".join(names), 13, Color(0.95, 0.72, 0.4))
 		crises.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		card.add_child(crises)
@@ -189,9 +190,10 @@ func _nation_card(id: int) -> void:
 	var power: Dictionary = P.power_of(hud.world, 0)
 	if not power.is_empty() and power.target:
 		var why: String = P.blocked(hud.world, 0, id)
-		var use: Button = hud._button(actions, str(power.name), func():
+		var use_power := func() -> String:
 			P.use(hud.world, 0, id)
-			hud.refresh_side(), why == "", "good")
+			return ""
+		var use: Button = hud._button(actions, str(power.name), use_power, why == "", "good")
 		use.tooltip_text = str(power.desc) + ("" if why == "" else "  (" + why + ")")
 	if d.allied(0, id):
 		for enemy in range(1, d.n):
@@ -620,7 +622,7 @@ func _agents(e: Node, d: Node) -> void:
 		var progress := 1.0 - float(remaining) / duration
 		var title: String = "%s · %s%s" % [e.ops()[mission.op].name, d.name_of(int(mission.nation)), (" · team of %d" % e.mission_agents(mission).size()) if e.mission_agents(mission).size() > 1 else ""]
 		var meter: Control = hud._meter(card, progress, 1.0, hud.UI.GOLD, "%s · %ds" % [title, remaining])
-		hud._intel_progress.append({"bar": meter.get_child(0), "label": meter.get_child(1), "ends": mission.ends, "duration": duration, "title": title})
+		hud._intel_progress.append({"bar": meter.get_child(1), "label": meter.get_child(0), "ends": mission.ends, "duration": duration, "title": title})
 		hud._button(card, "Recall the team" if e.mission_agents(mission).size() > 1 else "Recall the agent", e.cancel_mission.bind(int(mission.agent)), true, "bad")
 	for nation in e.proxies:
 		var proxy: Dictionary = e.proxies[nation]

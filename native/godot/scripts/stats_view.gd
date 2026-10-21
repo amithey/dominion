@@ -36,7 +36,7 @@ static func overview(hud: Node, S: RefCounted) -> void:
 			[Stats.format("inflation", S.latest(id, "inflation")), UI.BAD if S.latest(id, "inflation") >= 30.0 else UI.CREAM],
 			[Stats.format("unemployment", S.latest(id, "unemployment")), UI.CREAM],
 			[Stats.format("debt", S.latest(id, "debt")), UI.BAD if S.latest(id, "debt") >= 150.0 else UI.CREAM]]
-		var letters: String = crisis.rating(id) if crisis != null else "-"
+		var letters: String = Stats.format("rating", S.latest(id, "rating")) if S.series.get(id, {}).has("rating") and not S.series[id].rating.is_empty() else "-"
 		cells.append([letters, UI.GOOD if letters.begins_with("A") else (UI.BAD if letters.begins_with("C") or letters == "D" else UI.CREAM)])
 		cells.append(["%.0f" % S.latest(id, "fragility"), UI.BAD if S.latest(id, "fragility") >= 90.0 else UI.CREAM])
 		for i in range(cells.size()):
@@ -46,7 +46,7 @@ static func overview(hud: Node, S: RefCounted) -> void:
 			row.add_child(l)
 		if crisis != null:
 			var names := PackedStringArray()
-			for k in crisis.list(id):
+			for k in S.crises(id):
 				names.append(str(Crisis.KINDS[k].title))
 			if not names.is_empty():
 				var line: Label = hud._text("   " + ", ".join(names), 11, UI.BAD if id == 0 else Color(0.95, 0.72, 0.4))

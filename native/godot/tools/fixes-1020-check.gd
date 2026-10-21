@@ -149,7 +149,7 @@ func run() -> void:
 		var b: Dictionary = Brief.unit(w, k)
 		if str(b.role).length() > 130 or (b.points as Array).size() > 3: long += 1
 	check(long == 0, "every unit has a short role and at most three points (%d too long)" % long)
-	check(Brief.unit(w, "carrier").points.any(func(p): return str(p).contains("100 m")), "the carrier's brief says how it attacks")
+	check(Brief.unit(w, "carrier").points.any(func(p): return str(p).contains("240 m")), "the carrier's brief says how it attacks")
 	var info: String = w.hud._sel_info.text
 	check(info.contains("•") and info.length() < 420, "the selection panel shows the brief (%d characters)" % info.length())
 	check(str(w.hud._sel_info.tooltip_text).length() > 40, "the full description is on hover")

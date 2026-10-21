@@ -59,7 +59,7 @@ const BRIEFS := {
 	"submarine": ["Attack submarine", ["Torpedoes ships; hard to find", "Cannot attack land (except missiles from your stock)"]],
 	"nuclearSub": ["Strategic missile submarine", ["Select it: fire missiles from your stock from the sea", "Torpedoes ships"]],
 	"asFrigate": ["Submarine-hunting frigate", ["Escort your fleet against submarines"]],
-	"carrier": ["Aircraft carrier: launches its jets", ["Attack: right-click an enemy: it stays ~100 m back, its jets strike", "Jets land back aboard to rearm", "No defence against submarines: escort it"]],
+	"carrier": ["Aircraft carrier: its jets are its weapon", ["Blue ring = air-wing reach (240 m): right-click an enemy inside it and the jets strike", "Jets rearm aboard; a lost one is replaced ($400)", "Its guns only defend: escort it against submarines"]],
 	"landingShip": ["Landing ship: carries 36 places", ["Load: select troops, right-click the ship", "Unload: press J (nearest coast) or Land at...", "Lightly armed: escort it"]],
 	"seaDrone": ["Explosive sea drone", ["Rams a warship or harbour. One use"]],
 	"orca": ["Uncrewed submarine", ["Quiet and cheap; torpedoes ships"]],

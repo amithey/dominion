@@ -473,11 +473,16 @@ func _power() -> void:
 ## World news: each event in force (world_events.gd), why, and what it does to you.
 func _world() -> void:
 	var news = world.get("events")
-	if news == null: return
+	var crises: Array = world.crisis.describe(0) if world.get("crisis") != null and world.crisis != null else []   # your own crises (crisis.gd)
+	if news == null and crises.is_empty(): return
 	var col := _tile("world", "World News", "market", "World market", func(): hud.toggle_panel("market", true))
-	var lines: Array = news.summary()
+	var lines: Array = news.summary() if news != null else []
+	for c in crises:
+		_label(col, "CRISIS: " + str(c.title), 17, UI.BAD, true)
+		_label(col, str(c.text), 13, UI.TEXT)
 	if lines.is_empty():
-		_label(col, "Calm: no crisis moves the markets.", 15, UI.MUTED)
+		if crises.is_empty():
+			_label(col, "Calm: no crisis moves the markets.", 15, UI.MUTED)
 		return
 	for e in lines:
 		_label(col, str(e.name), 17, UI.CREAM, true)

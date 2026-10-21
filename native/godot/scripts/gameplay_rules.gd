@@ -3,7 +3,7 @@ extends RefCounted
 static func apply(w: Node) -> void:
 	# Artillery reaches three hexes (a hex is radius * sqrt 3 across).
 	var three_hexes: float = float(w.map.logistics.hexRadius) * sqrt(3.0) * 3.0
-	for entry in [["artillery", three_hexes], ["mlrs", three_hexes], ["aaVehicle", 65.0], ["samLauncher", 115.0]]:
+	for entry in [["artillery", three_hexes], ["mlrs", three_hexes * 7.0 / 6.0], ["aaVehicle", 65.0], ["samLauncher", 115.0]]:   # (a rocket launcher outreaches a howitzer: three and a half hexes against three; HIMARS four)
 		w.unit_defs[entry[0]].range = entry[1]
 		w.unit_defs[entry[0]].aggro = entry[1] * 1.15
 	w.damage_profile.samSite = {"air": 2.0}
@@ -33,8 +33,11 @@ static func apply(w: Node) -> void:
 	w.map.depositTypes["gas"] = w.map.depositTypes.oil.duplicate(true)
 	w.map.depositTypes.gas.merge({"name": "Natural Gas Field", "res": "gas", "rate": 2.0, "color": "#8e96c8"}, true)
 	var land_index := 0
+	var capitals: Array = w.map.buildings.filter(func(b): return b.key == "hq").map(func(b): return Vector2(float(b.x), float(b.z)))
 	for dep in w.map.deposits:
 		if dep.type == "oil":
+			if capitals.any(func(c): return c.distance_to(Vector2(float(dep.x), float(dep.z))) < 112.0):
+				continue   # (a capital keeps the oil field the map promised it: it never starts with gas only)
 			land_index += 1
 			if land_index % 3 == 0: dep.type = "gas"
 	# Building cards say what each building does in this game (the export's

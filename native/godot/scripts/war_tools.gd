@@ -65,10 +65,15 @@ const EVAC_RATE := 6.0
 # The air wing (by class: force_models.CARRIER_STYLE): aircraft aboard, and what flies from the deck.
 const WING := {"usa": 5, "china": 5, "eu": 5, "uk": 4, "india": 4, "turkiye": 4, "japan": 4, "iran": 3}
 const WING_AIRCRAFT := {"usa": "F/A-18E Super Hornet", "china": "J-15T", "eu": "Rafale M", "uk": "F-35B Lightning", "india": "MiG-29K", "japan": "F-35B Lightning", "turkiye": "Bayraktar TB3", "iran": "Shahed-129"}
-const STRIKE_REACH := 125.0
+## How far from the carrier its aircraft will fly to strike (a third of the island's width): far beyond the carrier's own
+## guns (24 m), which only defend it. A sortie is 45 seconds in the air at about 34 m a second.
+const STRIKE_REACH := 240.0
 const LAUNCH_EVERY := 3.0
 const SORTIE := 45.0
 const REARM := 14.0
+const REPLACE_EVERY := 45.0    ## seconds for a replacement aircraft to arrive for one lost
+const HOLD := 30.0             ## seconds an automatic wing stays down after Recall (an order sends it up at once)
+const REPLACE_COST := 400.0    ## what the player pays for it (a rival's navy is not charged)
 
 ## The state lives on the world (a match's meta), so a new match starts clean.
 static func state(w: Node) -> Dictionary:
@@ -355,21 +360,60 @@ static func apply(w: Node) -> void:
 		if w.get("damage_profile") != null:
 			w.damage_profile[key] = {"infantry": 1.0, "light": 1.3, "armor": 1.2, "air": 0.9, "naval": 1.5, "building": 1.3}
 
-## How far off a carrier ordered to attack stands from its target: its air wing's reach, less a margin;
-## a carrier whose aircraft are all lost closes to its own guns' range.
-static func standoff(w: Node, carrier: Dictionary) -> float:
-	var wing: Dictionary = carrier.get("wing", {})
-	if not wing.is_empty() and int(wing.get("aboard", 0)) <= 0 and (wing.get("rearming", []) as Array).is_empty() 			and not w.units.any(func(u): return not u.dead and is_same(u.get("carrier"), carrier)):
-		return float(carrier.range) * 0.8
-	return STRIKE_REACH * 0.8
+## How far off a carrier ordered to attack stands from its target: inside its air wing's reach, never closer. It
+## does not sail up to the enemy to use its own guns (they only defend it); with its aircraft gone it waits for
+## replacements (REPLACE_EVERY) rather than steam into range of what it cannot fight.
+static func standoff(_w: Node, _carrier: Dictionary) -> float:
+	return STRIKE_REACH * 0.85
 
 static func wing_size(w: Node, carrier: Dictionary) -> int:
 	return int(WING.get(_id(w, int(carrier.owner)), 4))
 
+## The air wing in numbers: size, aboard, flying, rearming, lost (waiting for a replacement), auto.
+static func wing_info(w: Node, carrier: Dictionary) -> Dictionary:
+	var wing := _wing(w, carrier)
+	var flying := 0
+	for u in w.units:
+		if not u.dead and is_same(u.get("carrier"), carrier):
+			flying += 1
+	var size := wing_size(w, carrier)
+	var rearming: int = (wing.rearming as Array).size()
+	return {"size": size, "aboard": int(wing.aboard), "flying": flying, "rearming": rearming,
+		"lost": maxi(0, size - int(wing.aboard) - flying - rearming), "auto": bool(wing.get("auto", true)), "replace_in": float(wing.get("replace_in", 0.0))}
+
+## Words for the selection panel: what the wing is doing and how to use it.
+static func wing_text(w: Node, carrier: Dictionary) -> String:
+	var i := wing_info(w, carrier)
+	var line := "%d on deck  ·  %d flying  ·  %d rearming" % [i.aboard, i.flying, i.rearming]
+	if i.lost > 0:
+		line += "  ·  %d lost (a replacement in %ds, $%d)" % [i.lost, ceili(float(i.replace_in)), int(REPLACE_COST)]
+	var held: float = float(_wing(w, carrier).get("hold_until", 0.0)) - float(w.game_time)
+	if held > 0.0:
+		line += "  ·  held down for %ds" % ceili(held)
+	return line
+
+## Orders-only or automatic: automatic launches at the nearest enemy in reach; orders-only only at what you point at.
+static func set_auto(carrier: Dictionary, on: bool) -> void:
+	carrier.wing = carrier.get("wing", {"aboard": 0, "rearming": [], "next": 0.0})
+	carrier.wing.auto = on
+
+## Every aircraft of the wing breaks off and returns to the deck.
+static func recall(w: Node, carrier: Dictionary) -> int:
+	var n := 0
+	carrier.enemy = null
+	_wing(w, carrier).hold_until = w.game_time + HOLD   # (in automatic mode too: nothing goes up again at once)
+	for u in w.units:
+		if not u.dead and is_same(u.get("carrier"), carrier):
+			u.sortie_left = 0.0
+			u.enemy = null
+			u.air_state = "returning"
+			n += 1
+	return n
+
 ## A carrier aboard which `n` aircraft wait; set up the first time it is seen.
 static func _wing(w: Node, carrier: Dictionary) -> Dictionary:
 	if not carrier.has("wing"):
-		carrier.wing = {"aboard": wing_size(w, carrier), "rearming": [], "next": 0.0}
+		carrier.wing = {"aboard": wing_size(w, carrier), "rearming": [], "next": 0.0, "auto": true, "replace_in": REPLACE_EVERY}
 	return carrier.wing
 
 ## What the carrier's aircraft go after: its own order, or the nearest enemy
@@ -377,7 +421,10 @@ static func _wing(w: Node, carrier: Dictionary) -> Dictionary:
 static func _strike_target(w: Node, carrier: Dictionary) -> Variant:
 	var ordered = carrier.get("enemy")
 	if ordered != null and not ordered.dead:
-		return ordered
+		var op: Vector3 = ordered.root.position if ordered.get("is_building", false) else ordered.node.position
+		return ordered if Vector2(op.x - carrier.node.position.x, op.z - carrier.node.position.z).length() <= STRIKE_REACH * 1.05 else null   # (out of reach: the carrier is closing)
+	if not bool(_wing(w, carrier).get("auto", true)):
+		return null   # orders only: nothing goes up unless you point at something
 	var o := int(carrier.owner)
 	var at: Vector3 = carrier.node.position
 	var best = null
@@ -406,9 +453,29 @@ static func _air_wing(w: Node, carrier: Dictionary, dt: float) -> void:
 		if w.game_time >= float(t):
 			wing.rearming.erase(t)
 			wing.aboard = int(wing.aboard) + 1
+	# A lost aircraft is replaced, one at a time, while the carrier lives (the player pays; a rival's navy is not charged).
+	var info := wing_info(w, carrier)
+	if int(info.lost) > 0:
+		wing.replace_in = float(wing.get("replace_in", REPLACE_EVERY)) - dt
+		if float(wing.replace_in) <= 0.0:
+			var owner := int(carrier.owner)
+			if owner != 0 or w.economy.pay({"money": REPLACE_COST}):
+				wing.aboard = int(wing.aboard) + 1
+				wing.replace_in = REPLACE_EVERY
+				if owner == 0 and w.hud != null:
+					w.hud.notice("CARRIER: a replacement aircraft has arrived ($%d). %d on deck." % [int(REPLACE_COST), int(wing.aboard)], carrier.node.position)
+			else:
+				wing.replace_in = 10.0   # no money: try again in ten seconds
+				if not carrier.get("replace_told", false):
+					carrier.replace_told = true
+					w.hud.notice("CARRIER: no money for a replacement aircraft ($%d)." % int(REPLACE_COST), carrier.node.position)
+	else:
+		wing.replace_in = REPLACE_EVERY
 	_show_deck(carrier, int(wing.aboard))
 	wing.next = float(wing.next) - dt
 	if int(wing.aboard) <= 0 or float(wing.next) > 0.0:
+		return
+	if w.game_time < float(wing.get("hold_until", 0.0)) and carrier.get("enemy") == null:
 		return
 	var target = _strike_target(w, carrier)
 	if target == null:
@@ -430,7 +497,7 @@ static func _air_wing(w: Node, carrier: Dictionary, dt: float) -> void:
 	plane.target = null
 	if int(carrier.owner) == 0 and w.hud != null and not carrier.get("wing_told", false):
 		carrier.wing_told = true
-		w.hud.notice("CARRIER: your air wing is launching against targets within reach. Aircraft land back aboard to rearm.", carrier.node.position)
+		w.hud.notice("CARRIER: your air wing is launching against targets within %d m. Aircraft land back aboard to rearm; select the carrier to see the wing, recall it or set it to orders only." % int(STRIKE_REACH), carrier.node.position)
 
 ## Deck aircraft shown while aboard (force_models._deck_planes).
 static func _show_deck(carrier: Dictionary, aboard: int) -> void:

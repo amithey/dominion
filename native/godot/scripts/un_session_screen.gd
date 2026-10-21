@@ -231,7 +231,7 @@ func open_session(chamber := "council") -> void:
 	var u = hud.world.un
 	if u == null: return
 	var dr = u.current if chamber == "council" else u.assembly_current
-	var history: Array = u.record if chamber == "council" else u.assembly_record
+	var history: Array = (u.record if chamber == "council" else u.assembly_record).filter(func(r): return u.MEASURES.has(str(r.get("measure", ""))))   # (a standing sanction is not a session)
 	open_proposal(chamber, dr if dr != null else (history.back() if not history.is_empty() else {}))
 
 func open_proposal(chamber: String, dr: Dictionary) -> void:
@@ -270,7 +270,7 @@ func blocked_reason() -> String:
 		if u.lost_vote(): return "Your Assembly vote is suspended for unpaid dues. Pay arrears in UN / Organisation."
 	else:
 		if not 0 in proposal.get("electorate", u.council()): return "You may attend, but your country holds no Council seat in this session."
-		if proposal.measure != "statement" and int(u.MEASURES[proposal.measure].chapter) == 6 and 0 in [int(proposal.target), int(proposal.other)]:
+		if proposal.measure != "statement" and int(u.MEASURES.get(proposal.measure, {}).get("chapter", 7)) == 6 and 0 in [int(proposal.target), int(proposal.other)]:
 			return "As a party to this Chapter VI dispute, your delegation must abstain."
 	if str(proposal.get("phase", "")) != "vote": return "Consultations are in progress. Ballots open when consultations end."
 	return ""
@@ -304,7 +304,7 @@ func render() -> void:
 	var choice: String = str(proposal.get("player_choice", ""))
 	choice_label.text = "Your recorded choice: " + choice.to_upper() if choice != "" else "No ballot submitted. If you do not vote, your delegation abstains."
 	if empty: choice_label.text = "Your ballot becomes available when a session opens and your delegation is eligible."
-	if not empty and not assembly and proposal.measure != "statement" and int(u.MEASURES[proposal.measure].chapter) == 6 and 0 in [int(proposal.target), int(proposal.other)]:
+	if not empty and not assembly and proposal.measure != "statement" and int(u.MEASURES.get(proposal.measure, {}).get("chapter", 7)) == 6 and 0 in [int(proposal.target), int(proposal.other)]:
 		choice_label.text = "Required ballot: ABSTAIN (party to a Chapter VI dispute)."
 	elif "observer" in reason or "no Council seat" in reason or "suspended" in reason:
 		choice_label.text = "Attendance only · no ballot available."

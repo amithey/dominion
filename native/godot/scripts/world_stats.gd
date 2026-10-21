@@ -21,13 +21,13 @@ extends RefCounted
 
 const SAMPLE := 20.0              # game seconds between releases
 const MAX_SAMPLES := 400
-const METRICS := ["gdp", "growth", "inflation", "unemployment", "debt", "military", "milex", "fragility", "displaced", "energy", "land", "tech", "infra"]
-const GROUPS := [["Economy", ["gdp", "growth", "inflation", "unemployment", "debt"]], ["Security", ["military", "milex"]],
+const METRICS := ["gdp", "growth", "inflation", "unemployment", "debt", "rating", "military", "milex", "fragility", "displaced", "energy", "land", "tech", "infra"]
+const GROUPS := [["Economy", ["gdp", "growth", "inflation", "unemployment", "debt", "rating"]], ["Security", ["military", "milex"]],
 	["Society", ["fragility", "displaced", "energy"]], ["Nation", ["land", "tech", "infra"]]]
-const TITLES := {"gdp": "GDP", "growth": "Growth", "inflation": "Inflation", "unemployment": "Unemployment", "debt": "Public debt",
+const TITLES := {"gdp": "GDP", "growth": "Growth", "inflation": "Inflation", "unemployment": "Unemployment", "debt": "Public debt", "rating": "Credit rating",
 	"military": "Military", "milex": "Defence spending", "fragility": "Fragility", "displaced": "Displaced", "energy": "Energy",
 	"land": "Land", "tech": "Technology", "infra": "Infrastructure"}
-const UNITS := {"gdp": "$ bn", "growth": "% over a quarter", "inflation": "% a year", "unemployment": "% of workers", "debt": "% of GDP",
+const UNITS := {"gdp": "$ bn", "growth": "% over a quarter", "inflation": "% a year", "unemployment": "% of workers", "debt": "% of GDP", "rating": "score, 0 to 100",
 	"military": "points", "milex": "% of GDP", "fragility": "index, 0 to 120", "displaced": "thousand people", "energy": "GW",
 	"land": "hexes", "tech": "level", "infra": "buildings"}
 const NOTES := {
@@ -36,6 +36,7 @@ const NOTES := {
 	"inflation": "Consumer prices, a year on year. Lost supply, blackouts, hunger, war spending, sanctions and default push it up; past about 30% the currency is in crisis.",
 	"unemployment": "The share of workers without a job: workplaces destroyed, factories without power, people without homes.",
 	"debt": "General government gross debt. War deficits add to it and a shrinking economy raises it at once; too high and the state defaults.",
+	"rating": "What the markets make of the state: debt, inflation, fragility, losses and war, as a score from 0 to 100 (AAA at 85 and above, D at the bottom). A published figure, a release late.",
 	"military": "The value of the forces under arms. For other nations an estimate: the better your intelligence, the closer.",
 	"milex": "Military expenditure as a share of GDP, as the peace research institutes publish it: higher at war and in a shrinking economy. Others' figures are estimates.",
 	"fragility": "How close the state is to failing, on the scale of the Fragile States Index (higher is worse): its usual level plus the pressure of its crises. Past the pressure a government can bear, it falls.",
@@ -58,6 +59,8 @@ const HEADLINE_MOVE := 0.12        # a published figure moved by this share sinc
 
 var w: Node
 var series := {}                   # nation -> metric -> Array of {t, real, shown}
+var crisis_shown := {}             # nation -> the crises it was in at the previous release (what is published)
+var _crisis_truth := {}            # nation -> the crises it is in now
 var _clock := 0.0
 var _samples := 0
 var _base_output := {}             # nation -> output at the first release (the index's denominator)
@@ -98,7 +101,17 @@ func release() -> void:
 			list.append({"t": now, "real": float(truth[m]), "shown": shown})
 			if list.size() > MAX_SAMPLES:
 				list.pop_front()
+	for id in range(w.map.nations.size()):
+		var now_list: Array = w.crisis.list(id) if w.get("crisis") != null and w.crisis != null else []
+		crisis_shown[id] = now_list if id == 0 else _crisis_truth.get(id, [])   # (yours exact, the others a release late)
+		_crisis_truth[id] = now_list
 	_headline()
+
+## The crises of `id` as published (yours now; a rival's at the last release).
+func crises(id: int) -> Array:
+	if id == 0:
+		return w.crisis.list(0) if w.get("crisis") != null and w.crisis != null else []
+	return crisis_shown.get(id, [])
 
 ## GDP growth (%) over the last quarter: from the gdp `list` (field `field`, the newest `skip` entries
 ## excluded: the published figure is a release late) to `value`. A young economy is measured against at
@@ -155,11 +168,12 @@ func _truth(id: int) -> Dictionary:
 		out.debt = float(s.debt)
 		out.milex = float(s.milex)
 		out.fragility = c.fragility(id)
+		out.rating = c.rating_score(id)
 		out.displaced = float(s.displaced)
 		out.energy = float(s.energy) * 0.2
 	else:
 		out.gdp = base * (output + 2.0) / 45.0
-		for m in ["inflation", "unemployment", "debt", "milex", "fragility", "displaced", "energy"]:
+		for m in ["inflation", "unemployment", "debt", "milex", "fragility", "displaced", "energy", "rating"]:
 			out[m] = 0.0
 	return out
 
@@ -179,7 +193,7 @@ func _shown(id: int, metric: String, truth: float, list: Array) -> float:
 	if id == 0:
 		return truth
 	match metric:
-		"land", "tech", "inflation", "unemployment", "debt", "fragility":
+		"land", "tech", "inflation", "unemployment", "debt", "fragility", "rating":
 			return list[list.size() - 1].real if not list.is_empty() else truth   # a release late
 		"displaced":
 			var late: float = list[list.size() - 1].real if not list.is_empty() else truth
@@ -250,6 +264,8 @@ static func format(metric: String, v: float) -> String:
 			return "%.1f%%" % v
 		"debt":
 			return "%d%%" % int(roundf(v))
+		"rating":
+			return preload("res://scripts/crisis.gd").rating_letters(v)
 		"fragility", "energy":
 			return "%.1f" % v
 		"displaced":
@@ -294,7 +310,8 @@ func capture() -> Dictionary:
 	var out := {}
 	for id in series:
 		out[str(id)] = series[id].duplicate(true)
-	return {"series": out, "base": _base_output.duplicate(), "samples": _samples, "clock": _clock, "headline": _last_headline}
+	return {"series": out, "base": _base_output.duplicate(), "samples": _samples, "clock": _clock, "headline": _last_headline,
+		"crises": {"shown": crisis_shown.duplicate(true), "truth": _crisis_truth.duplicate(true)}}
 
 func restore(data: Dictionary) -> void:
 	series = {}
@@ -310,3 +327,9 @@ func restore(data: Dictionary) -> void:
 	_samples = int(data.get("samples", 0))
 	_clock = float(data.get("clock", 0.0))
 	_last_headline = float(data.get("headline", -999.0))
+	crisis_shown = {}
+	_crisis_truth = {}
+	for key in data.get("crises", {}).get("shown", {}):
+		crisis_shown[int(key)] = data.crises.shown[key]
+	for key in data.get("crises", {}).get("truth", {}):
+		_crisis_truth[int(key)] = data.crises.truth[key]

@@ -280,6 +280,8 @@ func _ready() -> void:
 		add_child(loading)
 		await RenderingServer.frame_post_draw
 	interactive = true
+	if DisplayServer.get_name() != "headless":
+		get_window().title = preload("res://scripts/build_info.gd").title()
 	for a in OS.get_cmdline_user_args():
 		if not (a.begins_with("--quality") or a.begins_with("--difficulty") or a == "--no-vsync"):
 			interactive = false
@@ -1462,19 +1464,20 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 func display_model(key: String) -> Node3D:
 	var holder := Node3D.new()
 	var model: Node3D = null
-	if key in NAVAL or key in AIR:
-		model = craft.build(key, 0).root
-	elif key in VEHICLES:
-		model = armor.build(key, 0).root if armor != null else tank_scene.instantiate()
-	elif key == "worker" or key in INFANTRY:
-		var realistic := key != "worker" and realistic_scene != null
+	var look: String = key if (key in NAVAL or key in AIR or key in VEHICLES or key in INFANTRY or key == "worker" or building_defs.has(key)) else preload("res://scripts/additional_factions.gd").base(key)   # (a national variant looks like the unit it is built on)
+	if look in NAVAL or look in AIR:
+		model = craft.build(look, 0).root
+	elif look in VEHICLES:
+		model = armor.build(look, 0).root if armor != null else tank_scene.instantiate()
+	elif look == "worker" or look in INFANTRY:
+		var realistic := look != "worker" and realistic_scene != null
 		model = (realistic_scene if realistic else (worker_scene if key == "worker" else soldier_scene)).instantiate()
 		var bounds := model_bounds(model)
 		model.scale = Vector3.ONE * SOLDIER_HEIGHT / maxf(bounds.size.y, 0.01)
 		if realistic:
 			model.rotation.y = PI
-			dress_realistic(model, 0, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher", "commando": "SMG", "atgmTeam": "RocketLauncher", "manpads": "RocketLauncher", "fpvTeam": "SMG", "medic": "SMG"}.get(key, "AK"))
-		elif key == "worker":
+			dress_realistic(model, 0, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher", "commando": "SMG", "atgmTeam": "RocketLauncher", "manpads": "RocketLauncher", "fpvTeam": "SMG", "medic": "SMG"}.get(look, "AK"))
+		elif look == "worker":
 			dress_worker(model)
 		else:
 			dress_soldier(model, 0)
@@ -1992,7 +1995,7 @@ func order_bombard(selected: Array, point: Vector3) -> void:
 		u.path = PackedVector3Array()
 
 func can_bombard(u: Dictionary) -> bool:
-	return not u.dead and u.dmg > 0 and (u.vehicle or u.key in load("res://scripts/force_catalog.gd").INDIRECT) and not u.key in ["samLauncher", "shortRangeSAM", "aaVehicle", "submarine", "nuclearSub", "missileBoat"]
+	return not u.dead and u.dmg > 0 and (u.vehicle or u.key in load("res://scripts/force_catalog.gd").INDIRECT) and not u.key in ["samLauncher", "shortRangeSAM", "aaVehicle", "submarine", "nuclearSub", "missileBoat", "carrier"]   # (a carrier's guns only defend it: its wing strikes what you right-click)
 
 # ---------------------------------------------------------------- profiler
 # `-- --profile` during a benchmark measures where each frame goes: every
@@ -5781,8 +5784,8 @@ func kill(unit: Dictionary) -> void:
 			unit.turret.global_transform = gt
 			unit.toss = {"node": unit.turret, "vel": Vector3(randf_range(-3.5, 3.5), randf_range(10.0, 14.0), randf_range(-3.5, 3.5)),
 				"spin": Vector3(randf_range(-5, 5), randf_range(-3, 3), randf_range(-5, 5)), "rest": false}
-		else:
-			# The blast knocks the turret askew.
+		elif unit.turret != null:
+			# The blast knocks the turret askew (a turretless vehicle has none to knock).
 			unit.turret.basis = Basis(unit.turret.get_meta("axis"), unit.turret_yaw + randf_range(-0.6, 0.6)).rotated(Vector3.RIGHT, randf_range(-0.2, 0.2))
 	elif unit.player and unit.get("death_clip", "") != "":
 		unit.player.get_animation(unit.death_clip).loop_mode = Animation.LOOP_NONE
