@@ -16,6 +16,7 @@ uniform float swell = 0.32;            // wave height in metres
 uniform float foam_width = 0.4;
 
 varying vec3 world_pos;
+varying float crest;   // 0 in a trough .. 1 on a crest of the swell
 uniform sampler2D lake_tex : filter_linear, repeat_disable;   // 1 over lakes (topography.gd)
 uniform sampler2D depth_map : filter_linear, repeat_disable;  // 1 over land, lakes and shallows; 0 over open sea
 uniform vec4 lake_rect = vec4(-320.0, -320.0, 640.0, 640.0);   // origin x, z and size of that grid
@@ -52,6 +53,7 @@ void vertex() {
 	float calm = smoothstep(0.0, 1.0, ground);
 	VERTEX += d * (swell / 0.32) * (1.0 - calm);
 	world_pos = w + d;
+	crest = clamp(d.y / 0.30 * 0.5 + 0.5, 0.0, 1.0) * (1.0 - calm);
 }
 
 void fragment() {
@@ -60,7 +62,13 @@ void fragment() {
 	float h0 = ripples(world_pos.xz, TIME);
 	float hx = ripples(world_pos.xz + vec2(e, 0.0), TIME);
 	float hz = ripples(world_pos.xz + vec2(0.0, e), TIME);
-	vec3 wn = normalize(vec3((h0 - hx) * 1.4, e, (h0 - hz) * 1.4));
+	// A third, fine layer of chop that fades with distance (it would only shimmer from far away).
+	float near_chop = 1.0 - smoothstep(30.0, 140.0, length(VERTEX));
+	vec2 q = world_pos.xz * 0.16 + vec2(TIME * 0.05, -TIME * 0.03);
+	float c0 = noise(q);
+	float cx = noise(q + vec2(0.012, 0.0));
+	float cz = noise(q + vec2(0.0, 0.012));
+	vec3 wn = normalize(vec3((h0 - hx) * 1.4 + (c0 - cx) * 5.0 * near_chop, e, (h0 - hz) * 1.4 + (c0 - cz) * 5.0 * near_chop));
 	NORMAL = normalize((VIEW_MATRIX * vec4(wn, 0.0)).xyz);
 
 	// Vertical water depth below this pixel, from the scene depth buffer.
@@ -81,6 +89,8 @@ void fragment() {
 	float absorb = 1.0 - exp(-path * clarity);
 	vec3 water = mix(shallow_color, deep_color, smoothstep(0.0, 1.0, 1.0 - exp(-depth * 0.09)));
 	vec3 seen = mix(behind * mix(vec3(1.0), shallow_color * 1.6, 0.55), water, absorb);
+	// Light shining through the thin crest of a wave: a green-turquoise glow on the swell's tops, strongest in deep water.
+	seen += vec3(0.02, 0.10, 0.10) * smoothstep(0.55, 1.0, crest) * smoothstep(1.0, 6.0, depth) * (1.0 - smoothstep(35.0, 110.0, length(VERTEX)));   // near only: from afar the swell would draw stripes
 
 	// Territorial waters: the owner's border line along the hex edges and a
 	// soft band of colour inside it, as on land (the territory view washes more).
@@ -107,6 +117,13 @@ void fragment() {
 	// Broken surf, not a solid white outline drawn around every coastline.
 	float breakup = mix(0.25, 1.0, smoothstep(0.38, 0.65, lace));
 	foam = clamp(foam + pow(band, 6.0) * 0.25, 0.0, 1.0) * breakup * mix(0.78, 0.3, lake);
+
+	// Whitecaps: sparse broken foam on the highest crests of open water only.
+	float cap_noise = noise(world_pos.xz * 0.09 + vec2(TIME * 0.02, TIME * 0.011));
+	float cap_patch = smoothstep(0.58, 0.8, noise(world_pos.xz * 0.013 + 7.3));   // the wind raises them in places, not in rows
+	float caps = smoothstep(0.88, 1.0, crest + (cap_noise - 0.5) * 0.7) * cap_patch * smoothstep(3.0, 9.0, depth) * (1.0 - lake);
+	caps *= 1.0 - smoothstep(60.0, 220.0, length(VERTEX));   // far away they would only draw stripes
+	foam = max(foam, caps * 0.5);
 
 	float fog = fog_at(world_pos.xz);   // fog of war
 	ALBEDO = vec3(0.92, 0.95, 0.95) * foam * (1.0 - fog);

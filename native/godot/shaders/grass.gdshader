@@ -6,7 +6,7 @@ shader_type spatial;
 render_mode cull_disabled, diffuse_burley;
 
 uniform sampler2D noise_tex : filter_linear_mipmap, repeat_enable;
-uniform vec3 root_color : source_color = vec3(0.25, 0.31, 0.13);
+uniform vec3 root_color : source_color = vec3(0.30, 0.37, 0.16);
 uniform vec3 tip_color : source_color = vec3(0.47, 0.55, 0.25);
 uniform vec3 dry_color : source_color = vec3(0.58, 0.54, 0.30);
 
@@ -27,7 +27,11 @@ void vertex() {
 
 void fragment() {
 	vec3 tip = mix(tip_color, dry_color, dryness);
-	ALBEDO = snowy(mix(root_color, tip, UV.y), winter * 0.75) * (1.0 - fog_at(fog_xz));   // fog of war; frosted in winter
+	vec3 blade = mix(root_color, tip, UV.y);
+	// From far away a tuft is a speck: it takes the colour of the meadow around it, so the ground is not freckled with dark blades.
+	float far = smoothstep(25.0, 95.0, length(VERTEX));
+	blade = mix(blade, mix(vec3(0.34, 0.42, 0.20), dry_color * 0.8, dryness), far * 0.75);
+	ALBEDO = snowy(blade, winter * 0.75) * (1.0 - fog_at(fog_xz));   // fog of war; frosted in winter
 	ROUGHNESS = 0.85;
 	SPECULAR = 0.25;
 	BACKLIGHT = ALBEDO * 0.3;

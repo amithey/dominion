@@ -119,6 +119,11 @@ var drill_side := 1.0
 var drill_timer := 0.0
 var env: Environment
 var sun: DirectionalLight3D
+var sky_cloud: Sky   # shaders/sky.gdshader: gradient, sun and drifting clouds (Balanced and High)
+var sky_plain: Sky   # the plain gradient (Low)
+var cloud_sky_material: ShaderMaterial
+var sky_drift := Vector2.ZERO
+var sky_pushed := 0.0
 var terrain_node: MeshInstance3D
 var sea_node: MeshInstance3D
 var fog: RefCounted = null   # fog_of_war.gd: what the player's side sees
@@ -629,6 +634,7 @@ func apply_quality() -> void:
 	viewport.scaling_3d_scale = 1.0
 	env.glow_enabled = quality != "low"
 	env.ssil_enabled = false
+	env.sky = sky_plain if quality == "low" else sky_cloud
 	match quality:
 		"high":
 			env.ssao_enabled = true
@@ -770,11 +776,17 @@ func build_environment() -> void:
 	sky_material.sky_energy_multiplier = 1.15
 	sky_material.ground_bottom_color = Color("7d97a4")
 	sky_material.sun_angle_max = 20
-	var sky := Sky.new()
-	sky.sky_material = sky_material
+	sky_plain = Sky.new()
+	sky_plain.sky_material = sky_material
+	var cloud_shader := ShaderMaterial.new()
+	cloud_shader.shader = load("res://shaders/sky.gdshader")
+	cloud_shader.set_shader_parameter("noise_tex", noise_texture)
+	cloud_sky_material = cloud_shader
+	sky_cloud = Sky.new()
+	sky_cloud.sky_material = cloud_shader
 	env = Environment.new()
 	env.background_mode = Environment.BG_SKY
-	env.sky = sky
+	env.sky = sky_cloud
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.ambient_light_energy = 0.9
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
@@ -6152,6 +6164,11 @@ func _process(delta: float) -> void:
 		return  # still loading (_ready awaits the noise texture and navigation)
 	update_placement()
 	update_transport()
+	# The clouds drift slowly; the sky's light is only refreshed every half second.
+	sky_drift += Vector2(0.0030, 0.0011) * delta
+	if Time.get_ticks_msec() / 1000.0 - sky_pushed > 0.5:
+		sky_pushed = Time.get_ticks_msec() / 1000.0
+		cloud_sky_material.set_shader_parameter("drift", sky_drift)
 	# The camera answers in real time, whatever the pace of the world.
 	var now_ms: int = Time.get_ticks_msec()
 	var real: float = minf((now_ms - _last_real_ms) / 1000.0, 0.1) if _last_real_ms > 0 else delta
