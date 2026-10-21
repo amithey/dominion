@@ -8673,5 +8673,736 @@
     "smoke_emitters": {},
     "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
     "sha256": "9cc8560126fd41e6fe2b1542bcfbafa181588d1d4b4ac1924e0f27f969208720"
+  },
+  {
+    "file": "buildings/bank_1.glb",
+    "kind": "model",
+    "triangles": [
+      3058,
+      602
+    ],
+    "footprint": [
+      8.93,
+      7.3
+    ],
+    "height": 8.99,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_slate",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.93,
+      8.99,
+      7.3
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1",
+      "Smoke_Home_0"
+    ],
+    "smoke_emitters": {
+      "Smoke_Home_0": [
+        -2.4599999999999995,
+        8.989999999999998,
+        -1.4149999999999996
+      ]
+    },
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "8ae8fb8acb82c0a8dcea26b561a225b62ede4fa0a056c4e46fec9a4b037d36d9"
+  },
+  {
+    "file": "buildings/bank_2.glb",
+    "kind": "model",
+    "triangles": [
+      3058,
+      602
+    ],
+    "footprint": [
+      9.05,
+      7.18
+    ],
+    "height": 9.15,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_slate",
+      "roof_tile",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      9.05,
+      9.15,
+      7.18
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1",
+      "Smoke_Home_0"
+    ],
+    "smoke_emitters": {
+      "Smoke_Home_0": [
+        -2.4959999999999996,
+        9.149999999999999,
+        -1.3946000000000003
+      ]
+    },
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "f68a7a2190e4c0a1af89ba704569671d599b775506695cd5aaf49a45102125c2"
+  },
+  {
+    "file": "buildings/bank_3.glb",
+    "kind": "model",
+    "triangles": [
+      3008,
+      588
+    ],
+    "footprint": [
+      8.88,
+      6.86
+    ],
+    "height": 7.47,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_slate",
+      "trim",
+      "wall_concrete",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.88,
+      7.47,
+      6.86
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "smoke_emitters": {},
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "4a16e2210a2deba5785de1e25d0bd5684055c52dcac024b36d814b2dc46e6566"
+  },
+  {
+    "file": "buildings/office_tower_1.glb",
+    "kind": "model",
+    "triangles": [
+      1108,
+      780
+    ],
+    "footprint": [
+      6.95,
+      7.635
+    ],
+    "height": 39.62,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "wall_concrete",
+      "wall_stone"
+    ],
+    "size": [
+      6.95,
+      39.62,
+      7.635
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "smoke_emitters": {},
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "ad0fc625bdc6ae43243686277da7ef39f5ead4352c11f0a8a25a539dc8f5a293"
+  },
+  {
+    "file": "buildings/office_tower_2.glb",
+    "kind": "model",
+    "triangles": [
+      1128,
+      800
+    ],
+    "footprint": [
+      7.45,
+      7.285
+    ],
+    "height": 42.1,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "wall_concrete",
+      "wall_stone"
+    ],
+    "size": [
+      7.45,
+      42.1,
+      7.285
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "smoke_emitters": {},
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "702fad9a41ec7aa1226d69e5bae6fee048fefea415e2e3b4ff2c89f9a93f4e79"
+  },
+  {
+    "file": "buildings/office_tower_3.glb",
+    "kind": "model",
+    "triangles": [
+      1108,
+      780
+    ],
+    "footprint": [
+      7.95,
+      6.935
+    ],
+    "height": 39.62,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "wall_concrete",
+      "wall_stone"
+    ],
+    "size": [
+      7.95,
+      39.62,
+      6.935
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "smoke_emitters": {},
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "f997a23f0c52d9fb75b1522073cebe9479dc2b1b24465db2f80357c4b664c2ac"
+  },
+  {
+    "file": "buildings/factory_brick_1.glb",
+    "kind": "model",
+    "triangles": [
+      3010,
+      410
+    ],
+    "footprint": [
+      8.17,
+      8.56
+    ],
+    "height": 12.5,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.17,
+      12.5,
+      8.56
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1",
+      "Smoke_Industry_0",
+      "Smoke_Industry_1"
+    ],
+    "smoke_emitters": {
+      "Smoke_Industry_0": [
+        -2.2,
+        12.5,
+        -3.58
+      ],
+      "Smoke_Industry_1": [
+        0.4,
+        10.8,
+        -3.58
+      ]
+    },
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "be6582c20ab137b9e53ad2054dceecfc7bc9defdd59b7d7a420e277cecb3019f"
+  },
+  {
+    "file": "buildings/factory_brick_2.glb",
+    "kind": "model",
+    "triangles": [
+      3126,
+      430
+    ],
+    "footprint": [
+      8.17,
+      8.56
+    ],
+    "height": 13.5,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.17,
+      13.5,
+      8.56
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1",
+      "Smoke_Industry_0",
+      "Smoke_Industry_1"
+    ],
+    "smoke_emitters": {
+      "Smoke_Industry_0": [
+        -2.2,
+        13.5,
+        -3.58
+      ],
+      "Smoke_Industry_1": [
+        0.4,
+        11.600000000000001,
+        -3.58
+      ]
+    },
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "bcff0de0750f52de4d7fd5c5a4ac93c026b075d29fccd89e38be2fd64bc043ce"
+  },
+  {
+    "file": "buildings/factory_brick_3.glb",
+    "kind": "model",
+    "triangles": [
+      3134,
+      410
+    ],
+    "footprint": [
+      8.17,
+      8.56
+    ],
+    "height": 14.5,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.17,
+      14.5,
+      8.56
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1",
+      "Smoke_Industry_0",
+      "Smoke_Industry_1"
+    ],
+    "smoke_emitters": {
+      "Smoke_Industry_0": [
+        -2.2,
+        14.5,
+        -3.58
+      ],
+      "Smoke_Industry_1": [
+        0.4,
+        12.4,
+        -3.58
+      ]
+    },
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "5302ce621d8d34a142e8735877eebf6fb8b5b8c6380bffe9d4208a1dac314e0c"
+  },
+  {
+    "file": "buildings/warehouse_1.glb",
+    "kind": "model",
+    "triangles": [
+      1168,
+      196
+    ],
+    "footprint": [
+      9.06,
+      8.15
+    ],
+    "height": 5.96,
+    "materials": [
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_concrete",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      9.06,
+      5.96,
+      8.15
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "smoke_emitters": {},
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "10ea5a0d34ac08ce7b4668fa00274d596b653d057ee31208c40a545b1aff90e2"
+  },
+  {
+    "file": "buildings/warehouse_2.glb",
+    "kind": "model",
+    "triangles": [
+      1168,
+      196
+    ],
+    "footprint": [
+      9.06,
+      8.15
+    ],
+    "height": 6.36,
+    "materials": [
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_concrete",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      9.06,
+      6.36,
+      8.15
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "smoke_emitters": {},
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "c6afc0b53e37e88998b87ba391b1c10ad666ccadc81691bb1e5f3f41dd831a96"
+  },
+  {
+    "file": "buildings/warehouse_3.glb",
+    "kind": "model",
+    "triangles": [
+      1216,
+      196
+    ],
+    "footprint": [
+      9.06,
+      8.15
+    ],
+    "height": 6.76,
+    "materials": [
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_concrete",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      9.06,
+      6.76,
+      8.15
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "smoke_emitters": {},
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "b2612ce3ac3c9ed4dcd639176ddf77d67e7a39b129c2c0b5f3eb9f5979e9af50"
+  },
+  {
+    "file": "buildings/power_station_1.glb",
+    "kind": "model",
+    "triangles": [
+      3158,
+      542
+    ],
+    "footprint": [
+      9.3,
+      8.6
+    ],
+    "height": 13.0,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_concrete",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      9.3,
+      13.0,
+      8.6
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1",
+      "Smoke_Industry_0",
+      "Smoke_Industry_1"
+    ],
+    "smoke_emitters": {
+      "Smoke_Industry_0": [
+        -2.2,
+        13.0,
+        -3.6
+      ],
+      "Smoke_Industry_1": [
+        2.4,
+        8.8,
+        -1.25
+      ]
+    },
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "fe6f27843cd72e2308496660132d91c35dc2530b5ec6253f0ad155f0d343da16"
+  },
+  {
+    "file": "buildings/power_station_2.glb",
+    "kind": "model",
+    "triangles": [
+      3282,
+      542
+    ],
+    "footprint": [
+      9.3,
+      8.6
+    ],
+    "height": 14.0,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_concrete",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      9.3,
+      14.0,
+      8.6
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1",
+      "Smoke_Industry_0",
+      "Smoke_Industry_1"
+    ],
+    "smoke_emitters": {
+      "Smoke_Industry_0": [
+        -2.2,
+        14.0,
+        -3.6
+      ],
+      "Smoke_Industry_1": [
+        2.4,
+        8.8,
+        -1.25
+      ]
+    },
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "1a99cbe95d99d8b63147328fd71ec7edf78e2aa7e774e630a492a5becde56c72"
+  },
+  {
+    "file": "buildings/power_station_3.glb",
+    "kind": "model",
+    "triangles": [
+      3282,
+      542
+    ],
+    "footprint": [
+      9.3,
+      8.6
+    ],
+    "height": 15.0,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_concrete",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      9.3,
+      15.0,
+      8.6
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1",
+      "Smoke_Industry_0",
+      "Smoke_Industry_1"
+    ],
+    "smoke_emitters": {
+      "Smoke_Industry_0": [
+        -2.2,
+        15.0,
+        -3.6
+      ],
+      "Smoke_Industry_1": [
+        2.4,
+        8.8,
+        -1.25
+      ]
+    },
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "b9c14a99d2398b26f4063a579faf1329ec10af0cb18400ca58c7ca0885c9561c"
+  },
+  {
+    "file": "buildings/water_tower_1.glb",
+    "kind": "model",
+    "triangles": [
+      1432,
+      340
+    ],
+    "footprint": [
+      5.8,
+      5.8
+    ],
+    "height": 13.0,
+    "materials": [
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_concrete"
+    ],
+    "size": [
+      5.8,
+      13.0,
+      5.8
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "smoke_emitters": {},
+    "notes": "Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "69bf2c657677a308925962d9014d2ba4573558c1d53b7a86fa0ea0a03f198b87"
   }
 ]

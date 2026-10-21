@@ -281,12 +281,15 @@ def cooling_tower(m,x,z,lod):
             ns=[unit([math.cos(t),-(r1-r0)/(y1-y0),math.sin(t)]) for t in (a,b,b,a)]
             m.face('wall_concrete',[p(y0,r0,a),p(y0,r0,b),p(y1,r1,b),p(y1,r1,a)],[math.cos(mid),0,math.sin(mid)],ns,
                    [[a*(r0+r1)/2,y0],[b*(r0+r1)/2,y0],[b*(r0+r1)/2,y1],[a*(r0+r1)/2,y1]])
+            m.face('wall_concrete',[p(y0,r0-.14,a),p(y0,r0-.14,b),p(y1,r1-.14,b),p(y1,r1-.14,a)],[-math.cos(mid),0,-math.sin(mid)],[-v for v in ns],
+                   [[a*(r0+r1-.28)/2,y0],[b*(r0+r1-.28)/2,y0],[b*(r0+r1-.28)/2,y1],[a*(r0+r1-.28)/2,y1]])
     y,r=profile[-1]
     for i in range(n):
         a=2*math.pi*i/n;b=2*math.pi*(i+1)/n
         def p(t,rr,yy):return (x+rr*math.cos(t),yy,z+rr*math.sin(t))
         m.face('trim',[p(a,r,y),p(b,r,y),p(b,r-.14,y),p(a,r-.14,y)],[0,1,0])
-        m.face('wall_concrete',[p(a,r-.14,y),p(b,r-.14,y),p(b,r-.2,y-.7),p(a,r-.2,y-.7)],[-math.cos((a+b)/2),0,-math.sin((a+b)/2)])
+        bottom_y,bottom_r=profile[0]
+        m.face('wall_concrete',[p(a,bottom_r,bottom_y),p(b,bottom_r,bottom_y),p(b,bottom_r-.14,bottom_y),p(a,bottom_r-.14,bottom_y)],[0,-1,0])
     for i in range(6 if not lod else 4):
         t=i*2*math.pi/(6 if not lod else 4)
         beam(m,'wall_concrete',(x+1.3*math.cos(t),.15,z+1.3*math.sin(t)),(x+1.8*math.cos(t),1.2,z+1.8*math.sin(t)),.22)
@@ -445,7 +448,163 @@ def command_bunker(variant,lod):
     return m
 
 
-BUILDERS={f.__name__:f for f in (grain_silo,school,library,hospital,police_station,fire_station,bank,office_tower,factory_brick,warehouse,power_station,water_tower,church,mosque,railway_station,market_hall,barracks,command_bunker)}
+def dish(m,center,r,lod):
+    c=np.asarray(center);n=24 if not lod else 10;rings=6 if not lod else 3;focal=1.2
+    def point(rr,t,back=False):return c+np.array([rr*math.cos(t),rr*math.sin(t),rr*rr/(4*focal)-(.08 if back else 0)])
+    for back in (False,True):
+        sign=-1 if back else 1
+        for j in range(rings):
+            r0=r*j/rings;r1=r*(j+1)/rings
+            for i in range(n):
+                a=2*math.pi*i/n;b=2*math.pi*(i+1)/n
+                specs=[(r0,a),(r1,a),(r1,b)] if j==0 else [(r0,a),(r1,a),(r1,b),(r0,b)]
+                ps=[point(rr,t,back) for rr,t in specs]
+                ns=[unit([-rr/(2*focal)*math.cos(t),-rr/(2*focal)*math.sin(t),1])*sign for rr,t in specs]
+                # Planar metre projection; normals describe the shallow paraboloid.
+                m.face('metal',ps,[0,0,sign],ns)
+        for i in range(n):
+            a=2*math.pi*i/n;b=2*math.pi*(i+1)/n
+            if not back:m.face('trim',[point(r,a),point(r,b),point(r,b,True),point(r,a,True)],[math.cos((a+b)/2),math.sin((a+b)/2),0])
+    # Feed horn and three support struts, genuinely attached to the bowl rim.
+    feed=c+np.array([0,0,focal]);m.tube('metal',feed,feed+[0,0,.28],.12,8 if not lod else 6)
+    for t in (math.pi/2,7*math.pi/6,11*math.pi/6):beam(m,'metal',point(r*.93,t),feed,.045 if not lod else .06)
+
+
+def radar_station(variant,lod):
+    m=Mesh();v=variant-1;top=2.9
+    shell(m,6.4,5.2,top,lod,'wall_concrete',1,2)
+    flat_roof(m,6.4,5.2,top,lod)
+    m.tube('wall_concrete',(0,top+.2,0),(0,6.0+v*.3,0),.58,16 if not lod else 8)
+    m.box('metal',(0,6.15+v*.3,0),(1.2,.3,1.25))
+    beam(m,'metal',(0,6.3+v*.3,0),(0,7.5+v*.3,.4),.30)
+    dish(m,(0,7.5+v*.3,.5),1.85+v*.15,lod)
+    aerial(m,-2.5,-1.8,top+.2,lod,3.5)
+    entrance(m,2.6,lod,1.9,2.6)
+    return m
+
+
+def arch_roof(m,w,d,y,rise,lod):
+    n=28 if not lod else 10;rx=w/2+.18;rz=rise
+    for i in range(n):
+        a=math.pi*i/n;b=math.pi*(i+1)/n
+        def p(t,z,inner=False):return ((rx-(.14 if inner else 0))*math.cos(t),y+(rz-(.14 if inner else 0))*math.sin(t),z)
+        for inner in (False,True):
+            sign=-1 if inner else 1;ps=[p(a,-d/2-.18,inner),p(a,d/2+.18,inner),p(b,d/2+.18,inner),p(b,-d/2-.18,inner)]
+            ns=[unit([math.cos(t)/rx,math.sin(t)/rz,0])*sign for t in (a,a,b,b)]
+            length=(b-a)*math.sqrt((rx*math.sin((a+b)/2))**2+(rz*math.cos((a+b)/2))**2)
+            m.face('roof_metal',ps,[math.cos((a+b)/2)*sign,math.sin((a+b)/2)*sign,0],ns,[[0,0],[d+.36,0],[d+.36,length],[0,length]])
+        for z,sign in ((-d/2-.18,-1),(d/2+.18,1)):
+            m.face('trim',[p(a,z),p(b,z),p(b,z,True),p(a,z,True)],[0,0,sign])
+    for t in (0,math.pi):
+        m.face('roof_metal',[p(t,-d/2-.18),p(t,d/2+.18),p(t,d/2+.18,True),p(t,-d/2-.18,True)],[0,-1,0])
+    # End gables fill the space above the door wall, inside the curved roof.
+    for z,sign in ((-d/2,-1),(d/2,1)):
+        ps=[((rx-.13)*math.cos(t),y+(rz-.13)*math.sin(t),z) for t in np.linspace(0,math.pi,n+1)]
+        m.face('metal',ps,[0,0,sign])
+    if not lod:
+        for z in np.linspace(-d/2,d/2,7):
+            for i in range(n):
+                a=math.pi*i/n;b=math.pi*(i+1)/n
+                beam(m,'metal',((rx+.025)*math.cos(a),y+(rz+.025)*math.sin(a),z),((rx+.025)*math.cos(b),y+(rz+.025)*math.sin(b),z),.035)
+
+
+def hangar(variant,lod):
+    m=Mesh();v=variant-1;w=8.4+v*.15;d=6.6-v*.1;top=3.3
+    shell(m,w,d,top,lod,'metal',1,0,doors=[(-3.2,3.2,.28,3.12,'door')])
+    arch_roof(m,w,d,top,3.1+v*.25,lod)
+    m.box('wall_concrete',(0,.11,d/2+.65),(w+.2,.22,1.7))
+    m.box('metal',(0,3.22,d/2+.12),(7.1,.13,.20))
+    if not lod:
+        for x in np.linspace(-3.1,3.1,9):m.box('metal',(x,1.7,d/2+.025),(.045,2.8,.065))
+        for x in (-3.38,3.38):m.box('metal',(x,1.75,d/2+.04),(.12,3.0,.16))
+        for x in (-2,0,2):m.box('glass',(x,top+.6,d/2+.025),(.9,.45,.04))
+    return m
+
+
+def control_tower(variant,lod):
+    m=Mesh();v=variant-1;h=10.8+v*1.2;n=8
+    shell(m,3.0,3.2,h,lod,'wall_concrete',3,2)
+    # Splayed panoramic cab, wraparound windows, gallery and broad overhanging roof.
+    m.tube('wall_concrete',(0,h,0),(0,h+.85,0),1.65,n,r_top=2.45)
+    m.tube('glass',(0,h+.85,0),(0,h+3.0,0),2.45,n,r_top=2.7)
+    m.tube('roof_metal',(0,h+3.0,0),(0,h+3.24,0),2.95,n)
+    for i in range(n):
+        t=2*math.pi*i/n
+        beam(m,'metal',(2.45*math.cos(t),h+.85,2.45*math.sin(t)),(2.7*math.cos(t),h+3,2.7*math.sin(t)),.085)
+    aerial(m,.6,-.5,h+3.24,lod,1.9)
+    entrance(m,1.6,lod,1.8,2.6)
+    if not lod:
+        m.box('wood',(0,1.4,1.62),(.8,2.1,.04))
+        for yy in np.arange(.9,h-.5,.6):m.box('metal',(1.56,yy,-.45),(.06,.04,.55))
+    return m
+
+
+def harbour_crane(variant,lod):
+    m=Mesh();n=12 if not lod else 6
+    # Four bogies on rails and an open portal frame, all built at real crane scale.
+    for x in (-2.8,2.8):
+        m.box('metal',(x,.08,0),(.22,.16,7.4))
+        for z in (-2.5,2.5):
+            m.box('metal',(x,.55,z),(1.0,.55,1.2))
+            for dz in (-.33,.33):m.tube('metal',(x-.55,.31,z+dz),(x+.55,.31,z+dz),.25,n)
+            beam(m,'metal',(x,.8,z),(x*.70,8.5,z*.60),.34)
+    for z in (-1.5,1.5):beam(m,'metal',(-2.0,8.5,z),(2.0,8.5,z),.5)
+    for x in (-2.0,2.0):beam(m,'metal',(x,8.5,-1.5),(x,8.5,1.5),.5)
+    m.tube('metal',(0,8.5,0),(0,9.3,0),1.25,16 if not lod else 8)
+    m.box('metal',(0,10.2,-.45),(2.6,1.8,3.1))
+    m.box('glass',(1.6,10.0,.85),(1.3,1.8,1.6));m.box('roof_metal',(1.6,10.98,.85),(1.5,.16,1.8))
+    m.box('wall_concrete',(0,11,-3.0),(2.3,1.5,1.5))
+    a=np.array([0,11,-.4]);b=np.array([0,17,4.25])
+    # Twin boom chords with a spatial web; reduced LOD retains the same open silhouette.
+    for x in (-.48,.48):
+        for dy in (-.3,.3):beam(m,'metal',a+[x,dy,0],b+[x,dy,0],.12)
+    divisions=9 if not lod else 4
+    for i in range(divisions):
+        p=a+(b-a)*i/divisions;q=a+(b-a)*(i+1)/divisions
+        for x in (-.48,.48):beam(m,'metal',p+[x,-.3,0],q+[x,.3,0],.065)
+        beam(m,'metal',p+[-.48,.3,0],q+[.48,.3,0],.065)
+    beam(m,'metal',(0,10.9,-1.5),(0,16,-1.5),.25)
+    beam(m,'metal',(0,16,-1.5),b+[0,.3,0],.045)
+    beam(m,'metal',(0,16,-1.5),(0,11.8,-3.0),.045)
+    for x in (-.18,.18):beam(m,'metal',b+[x,0,0],(x,8.6,4.25),.035)
+    m.box('metal',(0,8.35,4.25),(.65,.5,.45))
+    # Open J-shaped hook.
+    ps=[(0,8.1,4.25),(0,7.6,4.25),(.25,7.4,4.25),(.48,7.65,4.25)]
+    for p,q in zip(ps,ps[1:]):beam(m,'metal',p,q,.12)
+    if not lod:
+        for y in np.arange(1.1,8.4,.33):beam(m,'metal',(-2.05,y,-1.65),(-1.65,y,-1.65),.03)
+    return m
+
+
+def lighthouse(variant,lod):
+    m=Mesh();n=32 if not lod else 12
+    m.tube('wall_stone',(0,0,0),(0,.55,0),2.45,n)
+    m.tube('wall_plaster',(0,.55,0),(0,15.8,0),1.65,n,r_top=1.0)
+    m.tube('wall_stone',(0,15.8,0),(0,16.15,0),1.05,n,r_top=2.05)
+    m.tube('metal',(0,16.15,0),(0,16.32,0),2.05,n)
+    m.tube('glass',(0,16.32,0),(0,18.35,0),1.27,n)
+    m.tube('roof_metal',(0,18.35,0),(0,19.55,0),1.52,n,r_top=.06)
+    # Rail gallery outside the lantern, deliberately open rather than a solid drum.
+    ring=16 if not lod else 8
+    for i in range(ring):
+        a=i*2*math.pi/ring;b=(i+1)*2*math.pi/ring
+        beam(m,'metal',(1.95*math.cos(a),16.32,1.95*math.sin(a)),(1.95*math.cos(a),17.25,1.95*math.sin(a)),.045)
+        beam(m,'metal',(1.95*math.cos(a),17.25,1.95*math.sin(a)),(1.95*math.cos(b),17.25,1.95*math.sin(b)),.045)
+        if i%(2 if not lod else 1)==0:
+            beam(m,'metal',(1.28*math.cos(a),16.32,1.28*math.sin(a)),(1.28*math.cos(a),18.35,1.28*math.sin(a)),.06)
+    m.box('wood',(0,1.55,1.63),(.9,2.0,.10))
+    for x in (-.53,.53):m.box('trim',(x,1.55,1.64),(.16,2.25,.24))
+    m.box('trim',(0,2.7,1.64),(1.22,.18,.25))
+    for i in range(3):m.box('wall_stone',(0,.15+i*.12,2.08-i*.15),(1.4,.3+i*.24,1.2-i*.3))
+    if not lod:
+        for y in (4.5,7.5,10.5,13.5):
+            radius=1.65-(y-.55)/15.25*.65
+            m.box('glass',(0,y,radius+.015),(.4,.75,.06))
+            m.box('trim',(0,y+.42,radius+.04),(.55,.08,.13))
+    return m
+
+
+BUILDERS={f.__name__:f for f in (grain_silo,school,library,hospital,police_station,fire_station,bank,office_tower,factory_brick,warehouse,power_station,water_tower,church,mosque,railway_station,market_hall,barracks,command_bunker,radar_station,hangar,control_tower,harbour_crane,lighthouse)}
 SINGLETONS={'grain_silo','water_tower','harbour_crane','lighthouse'}
 
 
