@@ -38,7 +38,7 @@ var world: Node
 var arch: RefCounted       # architecture.gd: the buildings, made from code
 var radius := 12.0
 var ground: ShaderMaterial
-var props_material: StandardMaterial3D
+var props_material: ShaderMaterial   # shaders/props.gdshader
 var _house_scenes := {}
 var _tinted := {}          # [source material, owner] -> toned copy
 var owner := 0             # nation of the district being built
@@ -57,10 +57,9 @@ func setup(world_node: Node) -> void:
 	ground.set_shader_parameter("dirt_tex", load("res://assets/terrain/dirt_color.jpg"))
 	ground.set_shader_parameter("noise_tex", world.noise_texture)
 	ground.set_shader_parameter("hex_radius", radius)
-	props_material = StandardMaterial3D.new()
-	props_material.vertex_color_use_as_albedo = true
-	props_material.vertex_color_is_srgb = true
-	props_material.roughness = 0.85
+	props_material = ShaderMaterial.new()
+	props_material.shader = load("res://shaders/props.gdshader")
+	props_material.set_shader_parameter("noise_tex", world.noise_texture)
 
 func style_of(key: String) -> int:
 	return STYLE.get(key, 2)

@@ -158,6 +158,9 @@ void fragment() {
 		float hedge = (1.0 - smoothstep(0.6, 0.75, to_rim)) * (1.0 - open);
 		col = mix(col, srgb(vec3(0.16, 0.27, 0.11)) * mix(0.8, 1.2, grain), hedge);
 	}
+	// Contact shadow: the ground darkens close round the central building (where the walls meet it), none on streets.
+	float footprint = max(abs(p.x), abs(p.y));
+	col *= mix(1.0, 0.72, (1.0 - smoothstep(core * 0.5, core * 0.5 + 2.4, footprint)) * (1.0 - open));
 	// A touch of shade where the tile meets the ground (none across streets).
 	col *= mix(1.0, 0.82, (1.0 - smoothstep(0.0, 0.12, to_rim)) * (1.0 - open));
 	if (winter > 0.0) {

@@ -118,10 +118,14 @@ func _material(kind: int) -> Material:
 				return [0.78 + tone * 0.14 + grain, 0.8])
 			m.roughness = 0.9
 		GLASS:
+			# Glass reflects the sky (and its clouds): glossy, a little metallic, bright at a glancing angle.
 			m.vertex_color_use_as_albedo = true
-			m.roughness = 0.22
-			m.metallic = 0.18
-			m.metallic_specular = 0.65
+			m.roughness = 0.07
+			m.metallic = 0.32
+			m.metallic_specular = 0.9
+			m.rim_enabled = true
+			m.rim = 0.15
+			m.rim_tint = 0.5
 		WOOD:
 			m.roughness = 0.8
 		BANNER:
@@ -248,12 +252,12 @@ func walls(kind: int, w: float, d: float, y0: float, height: float, colour: Colo
 ## with a light frame, a sill, and optionally painted shutters.
 func window(centre: Vector3, w: float, h: float, frame: Color, shutters := Color(0, 0, 0, 0), lit := false) -> void:
 	var z := centre.z + 0.02
-	var glass := Color("304650") if not lit else Color("cba468")
+	var glass := Color("1c2d36") if not lit else Color("cba468")
 	# Two panes pick up different sky tones; a darker upper reveal makes the
 	# opening read as recessed without transparent glass or an extra material.
 	for pane in range(2):
 		var y0 := centre.y - h * 0.5 + h * 0.5 * pane
-		var pane_colour := glass.lightened(0.13) if pane == 1 and not lit else glass
+		var pane_colour := glass.lightened(0.3) if pane == 1 and not lit else glass
 		quad(GLASS, Vector3(centre.x-w*0.5,y0,z),Vector3(centre.x+w*0.5,y0,z),
 			Vector3(centre.x+w*0.5,y0+h*0.5,z),Vector3(centre.x-w*0.5,y0+h*0.5,z),pane_colour)
 	box(TRIM,Vector3(centre.x-w*0.5,centre.y-0.025,z),Vector3(centre.x+w*0.5,centre.y+0.025,z+0.05),frame.darkened(0.12))
