@@ -32,18 +32,27 @@ file's comments or the dossier; figures are game balance.
 | Roster: Gripen C | `force_catalog.gd` | Sweden. |
 | Roster: CH-47F Chinook | `force_catalog.gd` | Germany (an order); France does not operate it. |
 
-### Still to do for France (next steps)
+### Done for France (commit edb71d4)
 
-- Capability lists in `national_variants.gd`: nuclear submarine, sixth-generation fighter,
-  destroyer, missile defence, laser, active protection, nuclear programme, nuclear weapons.
-- Unit names (`national_variants.NAMES`, `arsenal_catalog.UNIT_NAMES`): Leclerc, Rafale, Triomphant.
-- Nuclear: `cbrn_data.gd` (the nine nuclear-armed states hold `eu` today; France is the Union's
-  nuclear power), `un_agencies.NUCLEAR_STATES`.
-- UN: `un_data.PROXY` maps `eu` to `france`; the real `france` nation makes the proxy unnecessary
-  at the cut-over.
-- Tables keyed by nation with a default today: crisis, GDP, regime, generals, unit quality,
-  space (launchers), chip fabs, carrier air wing and style, missile tables (SCALP/MdCN, Exocet).
-- A portrait: `macron-emblem.svg` stands in until an illustration exists.
+- Capabilities (`national_variants.table()`): sixth-generation fighter, nuclear submarine, destroyer, laser,
+  missile defence; research (sixth generation, nuclear programme, directed energy, missile defence); the
+  nuclear weapon; no diesel `submarine` (all hers are nuclear); sixteen unit names (Leclerc XLR, Rafale...).
+- Nuclear and missile rows the Union held for her: `cbrn_data` (all `eu` lists and the treaty row),
+  `arsenal_catalog` (SCALP / MdCN, Exocet, SCALP penetrator, ASMP-A, sea-launched nuke, M51, laser, FCAS,
+  wingman, Leclerc), `un_agencies.NUCLEAR_STATES`, `un_data` (region, western group).
+- National power: Forward Deterrence (see the research in the conversation: the March speech at Ile Longue).
+- Left with the Union on purpose: `antiRadar` (the HARM is German and Italian), `stealthFighter` and
+  `activeProtection` (German orders), the German and Dutch roster rows.
+
+### Still to do for France (stage 3)
+
+- Rows in tables that fall back to a default today: crisis, GDP (`world_stats.BASE_GDP`), regime
+  (`war_support.REGIME`), generals (style and names), unit quality (SAMP/T NG, NH90, Tiger, Rafale,
+  Horizon, MMP, Mistral 3), space (`LAUNCHERS`: Ariane), chip fabs (`national_industry.CHIP_FAB`),
+  carrier style and air wing (`force_models`, `war_tools`), city style, world-event deltas, diplomacy ties
+  (`TIES`), `ai_data.CONTROLLERS`.
+- A portrait illustration: `macron-emblem.svg` stands in.
+- `un_data.PROXY` maps `eu` to `france`: remove it at the cut-over, when `eu` goes.
 
 ## Open questions to verify before release
 
