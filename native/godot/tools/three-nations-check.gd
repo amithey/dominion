@@ -84,7 +84,7 @@ func run() -> void:
 	var leaders := {"iraq": "Prime Minister Ali al-Zaidi", "syria": "President Ahmed al-Sharaa", "afghanistan": "Supreme Leader Hibatullah Akhundzada"}
 	check(ids.all(func(id): return idx(id) >= 0 and Factions.LEADERS[idx(id)] == leaders[id] and Factions.NAMES.size() == Factions.IDS.size() and Factions.PORTRAITS.size() == Factions.IDS.size() and Factions.COLOURS.size() == Factions.IDS.size() and Factions.DOCTRINES.size() == Factions.IDS.size() and Factions.SIGNATURES.size() == Factions.IDS.size()), "Iraq, Syria and Afghanistan are in the roster of %d nations, each with its leader, colour, doctrine and signature" % Factions.IDS.size())
 	check(ids.all(func(id): return Gallery.portrait(leaders[id]).ends_with("-emblem.svg") or Gallery.portrait(leaders[id]).ends_with("-v2.png")), "each leader has a picture (%s)" % ", ".join(PackedStringArray(ids.map(func(id): return Gallery.portrait(leaders[id]).get_file()))))
-	check(ids.all(func(id): return P.POWERS.has(id) and F.PROFILES[id].strengths.size() >= 3 and F.PROFILES[id].weaknesses.size() >= 3), "each has a national power and its strengths and weaknesses")
+	check(ids.all(func(id): return P.POWERS.has(id) and preload("res://scripts/national_profile.gd").of_id(id).strengths.size() >= 3 and preload("res://scripts/national_profile.gd").of_id(id).weaknesses.size() >= 3), "each has a national power and its strengths and weaknesses")
 
 	# ---- Iraq, at Baghdad on the Middle East.
 	await begin({"map": "middle_east", "players": 4, "nation": idx("iraq"), "rivals": [0, 3, idx("afghanistan")]})
@@ -164,7 +164,7 @@ func run() -> void:
 	sim(25.0)
 	check(squad.dead and depot.hp <= depot_hp - 100.0 and (guard.dead or guard.hp < guard_hp), "the suicide squad closes in and detonates: the depot loses %d health, the guard is hit, the squad is gone" % int(depot_hp - depot.hp))
 	check(is_equal_approx(float(w.unit_defs.suicideSquad.dmg), float(w.unit_defs.rocketSoldier.dmg) * 3.9) and float(w.damage_profile.suicideSquad.armor) < 1.0, "the squad's blast: 3.9 rocket shots (a suicide attack's toll over other attacks), less against armour (%d)" % int(w.unit_defs.suicideSquad.dmg))
-	var calibrated: Dictionary = F.PROFILES.afghanistan
+	var calibrated: Dictionary = preload("res://scripts/national_profile.gd").of_id("afghanistan")
 	check(is_equal_approx(float(calibrated.bonus.incomePct), -0.25) and is_equal_approx(float(calibrated.bonus.researchPct), -0.5) and is_equal_approx(float(calibrated.trade), 0.6) and int(calibrated.bonus.happiness) == -8, "Afghanistan as calibrated: income -25%, research -50%, trade -40%, happiness -8")
 	var syr: Dictionary = F.PROFILES.syria.bonus
 	var irq_p: Dictionary = F.PROFILES.iraq.bonus

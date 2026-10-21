@@ -27,7 +27,10 @@ func _initialize() -> void:
 		var id := str(d.get("id", ""))
 		for field in FIELDS:
 			check(d.has(field) and str(d[field]).strip_edges() != "", "%s has %s" % [id, field])
-		check(d.keys().size() == FIELDS.size(), id + " has no stray field")
+		check(d.keys().size() == FIELDS.size() + (1 if d.has("profile") else 0), id + " has no stray field")
+		if d.has("profile"):
+			check(d.profile.get("strengths", []).size() >= 1 and d.profile.get("weaknesses", []).size() >= 1, id + " profile states strengths and weaknesses")
+			check(preload("res://scripts/national_profile.gd").of_id(id) == d.profile, id + " profile is the one the game reads")
 		check(script.resource_path == "res://scripts/nations/%s.gd" % id, id + " lives in a file of its own name")
 		check(str(d.get("group", "")) in GROUPS, id + " has a known group")
 		check(str(d.get("colour", "")).is_valid_html_color(), id + " colour is a valid colour")

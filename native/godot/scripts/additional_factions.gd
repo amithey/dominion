@@ -32,11 +32,6 @@ const PROFILES := {
 	"iraq": {"bonus": {"incomePct": -0.1, "foodPct": -0.2}, "resources": {"oil": 1.5, "gas": 0.75}, "costs": {"air": 1.1}, "strengths": ["Oil output +50%", "Popular Mobilization raises six militia fighters at a call", "Golden Division counter-terrorism troops"], "weaknesses": ["Income -10% outside its oil, farm output -20% (drought)", "Gas output -25%; crewed aircraft cost +10%", "No submarines, missile silo or nuclear reactor"]},
 	# Syria: $1,057 a head: -15%; 26 articles a million: -20%; wheat -40% in 2025 (FAO): farms -20%.
 	"syria": {"bonus": {"incomePct": -0.15, "researchPct": -0.2, "foodPct": -0.2, "hpInfantry": 0.1}, "resources": {"oil": 0.7}, "train": {"drone": 1.25, "infantry": 1.15}, "costs": {"infantry": 0.9}, "strengths": ["Infantry +10% health, -10% cost, recruited 15% faster", "Drones produced 25% faster; Shaheen drone teams", "Reconstruction aid from its partners"], "weaknesses": ["Income -15%, research -20%, oil -30%; farm output -20% (drought)", "No jets, attack helicopters, warships or strategic air defence", "No missile silo or nuclear reactor"]},
-	# Afghanistan: $417 a head: -25%; 4 articles a million: -30%, times the 72% of students left after the
-	# ban on women: -50%. Trade -40%: trade with Pakistan fell 40% in 2025, the border shut since October
-	# 2025. Happiness -8: the world's least happy nation (World Happiness Report, last six years running)
-	# takes the game's largest single effect.
-	"afghanistan": {"bonus": {"incomePct": -0.25, "researchPct": -0.5, "hpInfantry": 0.15, "happiness": -8}, "resources": {"iron": 1.2}, "trade": 0.6, "train": {"infantry": 1.3}, "costs": {"infantry": 0.8, "armor": 1.25}, "strengths": ["Infantry +15% health, -20% cost, recruited 30% faster", "Suicide attack squads; insurgent attacks deep in an enemy country", "Iron output +20% (mines)"], "weaknesses": ["Income -25%, research -50% (women barred from study), trade -40% (borders shut, sanctions)", "No air force, navy, strategic air defence, missiles or nuclear reactor", "Armour costs +25%; happiness -8"]}
 }
 const TIES := [["uk", "usa", 25.0], ["uk", "eu", 20.0], ["uk", "ukraine", 30.0], ["uk", "russia", -30.0], ["south_korea", "usa", 25.0], ["south_korea", "japan", 10.0], ["south_korea", "north_korea", -65.0], ["saudi", "usa", 15.0], ["saudi", "pakistan", 20.0], ["saudi", "iran", -20.0], ["brazil", "india", 10.0], ["brazil", "china", 15.0], ["indonesia", "japan", 10.0], ["ukraine", "eu", 30.0], ["ukraine", "russia", -75.0], ["north_korea", "russia", 25.0], ["north_korea", "china", 20.0], ["north_korea", "usa", -50.0], ["egypt", "saudi", 15.0], ["australia", "uk", 25.0], ["australia", "usa", 30.0], ["australia", "japan", 20.0], ["pakistan", "china", 30.0], ["pakistan", "india", -45.0],
 	["iraq", "iran", 35.0], ["iraq", "usa", 5.0], ["iraq", "turkiye", -10.0], ["iraq", "saudi", 10.0], ["iraq", "china", 15.0], ["iraq", "israel", -45.0], ["iraq", "syria", 5.0],
@@ -64,7 +59,7 @@ const UNITS := {
 static func id_of(w: Node, owner: int) -> String:
 	return str(w.map.nations[owner].get("id", "")) if owner >= 0 and owner < w.map.nations.size() else ""
 static func profile(w: Node, owner: int) -> Dictionary:
-	return PROFILES.get(id_of(w, owner), {})
+	return load("res://scripts/national_profile.gd").of_id(id_of(w, owner))
 static func base(key: String) -> String:
 	return str(BASE.get(key, load("res://scripts/force_catalog.gd").base(key)))
 static func apply(w: Node) -> void:

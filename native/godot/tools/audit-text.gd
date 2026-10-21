@@ -128,7 +128,7 @@ func run() -> void:
 	for n in w.map.nations:
 		check("nation-name", str(n.get("name", "?")), str(n.get("name", "")), 60)
 	for id in idents:
-		var profile: Dictionary = preload("res://scripts/national_profile.gd").PROFILES.get(id, {})
+		var profile: Dictionary = preload("res://scripts/national_profile.gd").of_id(id)
 		for field in ["strengths", "weaknesses"]:
 			for line in profile.get(field, []):
 				check("nation-" + field, id, str(line), 200)

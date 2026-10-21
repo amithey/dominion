@@ -120,8 +120,16 @@ static func id_of(w: Node, owner: int) -> String:
 	# The original four nations, known by flag, when no faction id is given.
 	return {"#3b82f6": "usa", "#e0483e": "china", "#33b86e": "eu", "#e8a83a": "iran"}.get(str(n.get("color", "")).to_lower(), "")
 
+## The profile of nation `id`: the first nations here, the next ones in additional_factions.gd,
+## and any later nation from the "profile" of its own file in scripts/nations/.
+static func of_id(id: String) -> Dictionary:
+	if PROFILES.has(id): return PROFILES[id]
+	var extra: Dictionary = preload("res://scripts/additional_factions.gd").PROFILES
+	if extra.has(id): return extra[id]
+	return preload("res://scripts/nation_registry.gd").data(id).get("profile", {})
+
 static func of(w: Node, owner: int) -> Dictionary:
-	return PROFILES.get(id_of(w, owner), preload("res://scripts/additional_factions.gd").PROFILES.get(id_of(w, owner), {}))
+	return of_id(id_of(w, owner))
 
 ## Research bonus stats for the player's nation (research._recompute adds them).
 static func bonuses(w: Node, owner := 0) -> Dictionary:
@@ -192,5 +200,5 @@ static func tie_between(x: String, y: String) -> float:
 
 ## Strengths and weaknesses of `id`, for the interface.
 static func summary(id: String) -> Dictionary:
-	var p: Dictionary = PROFILES.get(id, preload("res://scripts/additional_factions.gd").PROFILES.get(id, {}))
+	var p: Dictionary = of_id(id)
 	return {"strengths": p.get("strengths", []), "weaknesses": p.get("weaknesses", [])}

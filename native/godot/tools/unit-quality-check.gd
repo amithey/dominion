@@ -151,7 +151,7 @@ func run() -> void:
 	var best := ""
 	var best_spy := -1.0
 	for id in Factions.IDS:
-		var p: Dictionary = Profile.PROFILES.get(id, preload("res://scripts/additional_factions.gd").PROFILES.get(id, {}))
+		var p: Dictionary = Profile.of_id(id)
 		var spy := float(p.get("bonus", {}).get("spyPct", 0.0))
 		if spy > best_spy:
 			best_spy = spy
