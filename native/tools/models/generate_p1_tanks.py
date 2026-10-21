@@ -31,6 +31,7 @@ SOURCES={
  'type99':'https://eng.mod.gov.cn/xb/News_213114/Photos/16300465_2.html',
  'haider':'https://hit.gov.pk/defence-tab.php',
  'abrams':'https://www.gdls.com/abrams/',
+ 'leopard1':'https://eblog.eb.mil.br/fi/w/o-projeto-de-revitaliza%C3%A7%C3%A3o-dos-carros-de-combate-leopard-1-a5-br-e-a-manuten%C3%A7%C3%A3o-do-poder-de-combate-da-6%C2%AA-brigada-de-infantaria-blindada',
 }
 
 
@@ -41,6 +42,7 @@ class Spec:
     shape:str;features:list[str];source:str
     caliber:float=.12;era:str='';front_engine:bool=False;approximate:bool=False
     representative:str='';wheel_z:list=field(default_factory=list);skirts:int=6
+    pivot_overrides:dict=field(default_factory=dict)
 
 
 def beam(m,role,a,b,w=.035):
@@ -116,7 +118,7 @@ def hull(s,lod):
     # Separate engine grille, driver hatch, tow points and exhaust location.
     if not lod:
         for z in np.linspace(engine_z-.55,engine_z+.55,10):m.box('metal_dark',(.25 if s.front_engine else 0,y+.025,z),(1.65,.035,.055))
-    driver_x=-.55 if s.front_engine else (-.48 if s.shape=='leopard' else 0)
+    driver_x=-.55 if s.front_engine else (-.48 if s.shape in ('leopard','leopard1','t55','t62','chonma') else 0)
     m.box('paint',(driver_x,y+.045,h*.35),(.58,.085,.65))
     m.box('glass',(driver_x,y+.10,h*.35+.23),(.31,.045,.09))
     m.box('metal_dark',(0,y*.75,-h-.025),(1.45,.35,.07))
@@ -184,12 +186,16 @@ def armour_tiles(m,hull,s,lod,style):
 
 def optics_and_hatches(rig,s,lod):
     z=s.turret_z;y=s.roof;n=6 if lod else 12
+    cast=s.shape in ('t55','t62','t64','t72','chonma','leopard1')
     # All hatches pivot on their rear edge, not at the centre of their lid.
     for name,x,zz,r in [('Hatch_Commander',.58,z-.32,.29),('Hatch_Loader',-.55,z-.55,.26)]:
+        if s.shape in ('t55','t62','chonma'):x=-x
         m=Mesh();m.tube('paint',(x,y+.01,zz),(x,y+.10,zz),r,n)
+        if cast:m.tube('paint',(x,y-.22,zz),(x,y+.012,zz),r*.96,n)
         if not lod:m.box('metal_dark',(x,y+.12,zz),(.21,.04,.04))
         rig.add(name,'Turret',(x,y+.04,zz-r),m,'X',open_degrees=[0,-95])
     m=Mesh();m.box('paint',(-.65,y+.17,z+.35),(.43,.32,.43));m.box('glass',(-.65,y+.18,z+.58),(.28,.19,.025))
+    if cast:m.box('paint',(-.65,y-.10,z+.35),(.32,.28,.32))
     rig.add('Gunner_Sight','Turret',(-.65,y+.02,z+.35),m)
     if s.shape not in ('t55','t62','t72','t64','chonma','leopard1','type85'):
         m=Mesh();m.tube('paint',(.60,y+.1,z-.05),(.60,y+.42,z-.05),.18,n)
@@ -203,12 +209,16 @@ def optics_and_hatches(rig,s,lod):
     rig.add('CROWS' if s.shape in ('t90','karrar','altay','vt4') else 'Commander_MG','Turret',(x,y+.26,zz),mg,'Y')
     for label,side in (('L',-1),('R',1)):
         p=np.array([side*1.18,y-.18,z+.35]);m=Mesh();m.box('paint',p,(.16,.22,.43))
+        if cast:beam(m,'paint',(side*.70,y-.24,z+.35),p,.09)
         if not lod:
             for j in range(6):
                 a=p+[side*.06,(j//3)*.10-.05,(j%3)*.12-.13]
                 m.tube('metal_dark',a,a+unit([side*.7,.45,.65])*.19,.037,6)
         rig.add('Smoke_Launcher_'+label,'Turret',p,m)
     p=np.array([-.82,y+.02,z-.98]);m=Mesh()
+    if cast:
+        rx=1.21 if s.shape=='leopard1' else 1.36;rz=1.48 if s.shape=='t62' else 1.35
+        p=np.array([-.82,s.deck+.12+(s.roof-s.deck-.12)*math.sqrt(1-(.82/rx)**2-(.65/rz)**2)-.015,z-.65])
     m.tube('metal_dark',p,p+[0,.12,0],.043,6)
     m.tube('metal_dark',p+[0,.12,0],p+[0,1.25,-.03],.009,4 if lod else 6,r_top=.003)
     rig.add('Antenna_1','Turret',p,m,'Y')
@@ -369,7 +379,7 @@ def arjun_mk1(lod=0):
 
 def leopard_1a5br(lod=0):
     s=Spec('leopard_1a5br','Leopard 1A5BR',7.09,3.37,1.40,2.30,7,.33,.89,.10,1.88,1.1,9.54,'leopard1',
-      ['Seven road wheels','rounded cast turret under spaced side armour','105 mm L7-family gun with thermal sleeve','EMES 18 optical housing','thin hull and high side stowage boxes'],SOURCES['soviet'],caliber=.105,skirts=5)
+      ['Seven road wheels','rounded cast turret under spaced side armour','105 mm L7-family gun with thermal sleeve','EMES 18 optical housing','thin hull and high side stowage boxes'],SOURCES['leopard1'],caliber=.105,skirts=5)
     b=[(-.3,1.3),(.3,1.3),(1.3,.6),(1.3,-1.1),(1,-1.5),(-1,-1.5),(-1.3,-1.1),(-1.3,.6)];t=b
     def detail(h,m,s,l):
         for side in (-1,1):
@@ -422,6 +432,7 @@ def fuel_drums(h,s,lod):
     z=-s.length/2-.22
     for x in (-.69,.69):
         h.tube('paint',(x-.48,1.02,z),(x+.48,1.02,z),.26,8 if lod else 14)
+        beam(h,'paint',(x,s.deck-.15,-s.length/2+.25),(x,1.02,z+.02),.07)
         if not lod:
             for dx in (-.33,.33):h.tube('metal_dark',(x+dx-.025,1.02,z),(x+dx+.025,1.02,z),.268,12)
     h.tube('metal_dark',(-1.15,.59,-s.length/2-.10),(1.15,.59,-s.length/2-.10),.095,8 if lod else 12)
@@ -435,6 +446,7 @@ def legacy_details(h,m,s,lod):
     x=.63;y=s.roof-.18;z=s.turret_z+1.02
     m.tube('paint',(x,y,z),(x,y,z+.28),.21,8 if lod else 14)
     m.tube('glass',(x,y,z+.28),(x,y,z+.30),.175,8 if lod else 14)
+    beam(m,'paint',(x,y,z-.70),(x,y,z+.04),.085)
     if not lod:
         for side in (-1,1):
             beam(h,'metal_dark',(side*1.1,.80,s.length/2),(side*.9,.80,s.length/2+.08),.06)
@@ -470,8 +482,8 @@ def chonma_216(lod=0):
         for side in (-1,1):
             m.box('paint',(side*.88,1.86,.94),(.67,.46,.32),rotation([0,1,0],side*.35))
             m.tube('metal_dark',(side*.90,2.59,-.9),(side*.90,2.59,.30),.095,6 if l else 12)
-            beam(m,'paint',(side*.90,2.31,-.55),(side*.90,2.52,-.55),.09)
-        m.tube('metal_dark',(0,2.3,-.95),(0,3.08,-.95),.023,6)
+            beam(m,'paint',(side*.90,1.95,-.55),(side*.90,2.52,-.55),.09)
+        m.tube('metal_dark',(0,2.02,-.95),(0,3.08,-.95),.023,6)
         m.box('metal_dark',(0,3.05,-.95),(.22,.055,.13))
     return rounded(s,lod,detail)
 
@@ -569,12 +581,56 @@ def t_72ua1_t_72b(lod=0):
     return rounded(s,lod,detail)
 
 
-BUILDERS={f.__name__:f for f in (leopard_2a7v,challenger_2,merkava_mk_4,k2_black_panther,altay,t_90m_proryv,arjun_mk1,leopard_1a5br,leopard_2a4,type_10,type_99a,karrar,chonma_216,vt_4_vickers_mk_3,vt_4_haider,t_64bv,t_55_t_62,t_62_captured,t_62_t_72_captured,t_72,t_72av,t_72_al_bashir,t_72ua1_t_72b)}
+def abrams_variant(slug,name,lod,configuration):
+    """Reuse approved hull/gun/running gear; model the actual variant roof fit."""
+    rig=m1a2_sepv3_abrams(lod)
+    omit={'CROWS','CROWS_Gun'}
+    if configuration!='saudi':omit.add('CITV')
+    rig.parts=[p for p in rig.parts if p['name'] not in omit]
+    for name_ in omit:rig.pivots.pop(name_,None)
+    # Older Abrams commander cupola weapon mount, rather than SEPv3 CROWS-LP.
+    m=Mesh();n=6 if lod else 12;p=np.array([.62,2.44,-.13])
+    m.tube('paint',(.62,2.40,-.13),(.62,2.60,-.13),.32,n)
+    m.box('metal_dark',(.62,2.74,.08),(.15,.16,.45))
+    m.box('metal_dark',(.84,2.70,.05),(.23,.28,.30))
+    m.tube('metal_dark',(.62,2.76,.30),(.62,2.76,1.02),.024,n)
+    if configuration=='iraqi':
+        m.box('paint',(.40,2.73,.13),(.20,.23,.30));m.box('glass',(.40,2.74,.292),(.13,.14,.025))
+    rig.add('Commander_Weapon_Station','Turret',p,m,'Y')
+    if configuration=='saudi':
+        # Plain slatted equipment carrier on the rear bustle; no national marks.
+        m=Mesh();m.box('paint',(-1.03,2.15,-2.12),(.50,.40,.55))
+        if not lod:
+            for yy in (2.05,2.16,2.27):m.box('metal_dark',(-1.03,yy,-2.405),(.39,.045,.035))
+        rig.add('Auxiliary_Equipment','Turret',(-1.03,2.15,-2.12),m)
+    source='https://odin.t2com.army.mil/WEG/Asset/M1A1_Abrams_American_Main_Battle_Tank' if configuration!='saudi' else 'https://odin.t2com.army.mil/WEG/Asset/M1A2S_Saudi_Arabian_Main_Battle_Tank_%28MBT%29'
+    features=['Seven road wheels','approved Abrams hull, angular cheeks, turbine exhaust and L/44 gun','earlier commander cupola gun mount instead of SEPv3 CROWS-LP',
+              'CITV retained' if configuration=='saudi' else 'no M1A2 CITV',
+              'commander thermal sight housing' if configuration=='iraqi' else ('M1A2S rear equipment carrier' if configuration=='saudi' else 'baseline M1A1 roof equipment')]
+    s=Spec(slug,name,7.92,3.70,1.50,2.30,7,.33,1.0,.15,1.96,1.35,9.70,'abrams',features,source,
+           wheel_z=np.linspace(-2.4,2.4,7).tolist(),pivot_overrides={'wheel_x':1.46,'wheel_y':.50,'turret':[0,1.50,.15]})
+    return rig,s
+
+
+def m1a1_abrams(lod=0):
+    return abrams_variant('m1a1_abrams','M1A1 Abrams',lod,'baseline')
+
+
+def m1a1m_abrams(lod=0):
+    return abrams_variant('m1a1m_abrams','M1A1M Abrams',lod,'iraqi')
+
+
+def m1a2s_abrams(lod=0):
+    return abrams_variant('m1a2s_abrams','M1A2S Abrams',lod,'saudi')
+
+
+BUILDERS={f.__name__:f for f in (leopard_2a7v,challenger_2,merkava_mk_4,k2_black_panther,altay,t_90m_proryv,arjun_mk1,leopard_1a5br,leopard_2a4,type_10,type_99a,karrar,chonma_216,vt_4_vickers_mk_3,vt_4_haider,t_64bv,t_55_t_62,t_62_captured,t_62_t_72_captured,t_72,t_72av,t_72_al_bashir,t_72ua1_t_72b,m1a1_abrams,m1a1m_abrams,m1a2s_abrams)}
 BATCHES={1:list(BUILDERS)[:6],2:list(BUILDERS)[6:11],3:list(BUILDERS)[11:16],4:list(BUILDERS)[16:21],5:list(BUILDERS)[21:]}
 
 
 def make_wreck(rig,s):
     """Bake a burnt hull with a genuinely detached, tilted and grounded turret."""
+    if s.shape=='abrams':return abrams_wreck(rig)
     body=Mesh();detached=Mesh();parts={p['name']:p for p in rig.parts}
     def on_turret(part):
         name=part['name']

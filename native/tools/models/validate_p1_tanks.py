@@ -52,7 +52,7 @@ def validate(path):
                 lod=int(state[-1]);_tracks.setdefault(lod,track(lod,0));ref=_tracks[lod].groups[g['role']]
                 assert np.allclose(p,np.array(ref[0]),atol=2e-6),'shader requires unmodified canonical TrackPath vertices'
                 assert np.allclose(uv,ref[2],atol=2e-7)
-                assert np.allclose(node.get('scale'),[1,s['track_scale'],s['track_scale']])
+                assert np.allclose(node.get('scale',[1,1,1]),[1,s['track_scale'],s['track_scale']])
                 # CPU emulation of the game's actual shader at four moving phases.
                 pathcurve=TrackPath()
                 for idx in np.linspace(0,len(p)-1,min(80,len(p)),dtype=int):
@@ -73,21 +73,22 @@ def validate(path):
     for state,(low,high) in bounds.items():assert low[1]>=-2e-5,(state,'below ground',low)
     assert np.allclose(bounds['LOD0'],bounds['LOD1'],atol=.055),('LOD silhouette',bounds['LOD0'],bounds['LOD1'])
     for lod in (0,1):
-        prefix=f'LOD{lod}/Hull';k=s['track_scale'];x=s['width']/2-.35
+        prefix=f'LOD{lod}/Hull';k=s['track_scale'];overrides=s.get('pivot_overrides',{});x=overrides.get('wheel_x',s['width']/2-.35)
+        wheel_y=overrides.get('wheel_y',s['wheel_radius']+.13*k)
         zs=np.array(s['wheel_z'] if s['wheel_z'] else np.linspace(-2.43,2.43,s['wheels']))*k
         for label,side in (('L',-1),('R',1)):
             wheels=[p for p in by if p.startswith(prefix+'/Wheel_'+label) and not p.endswith('_Mesh')]
             assert len(wheels)==s['wheels']
             for i,z in enumerate(zs):
                 node,M,_=by[prefix+f'/Wheel_{label}{i}'];assert 'mesh' not in node and node['extras']['rotation_axis']=='X'
-                assert np.allclose(M[:3,3],[side*x,s['wheel_radius']+.13*k,z])
+                assert np.allclose(M[:3,3],[side*x,wheel_y,z])
             for part,z in [('Sprocket',3.23 if s['front_engine'] else -3.23),('Idler',-3.23 if s['front_engine'] else 3.23)]:
                 assert np.allclose(by[prefix+'/'+part+'_'+label][1][:3,3],[side*x,.65*k,z*k])
         for part in ('Turret','Turret/Gun','Turret/Gun/Muzzle','Turret/Hatch_Commander','Engine_Deck','Exhaust','Track_L','Track_R'):
             assert prefix+'/'+part in by
         turret=prefix+'/Turret';gun=turret+'/Gun';muzzle=gun+'/Muzzle'
         tp=by[turret][1][:3,3];gp=by[gun][1][:3,3];mp=by[muzzle][1][:3,3]
-        assert np.allclose(tp,[0,s['deck']+.10,s['turret_z']]) and np.allclose(gp,[0,s['gun_y'],s['gun_z']])
+        assert np.allclose(tp,overrides.get('turret',[0,s['deck']+.10,s['turret_z']])) and np.allclose(gp,[0,s['gun_y'],s['gun_z']])
         assert np.allclose(mp,[0,s['gun_y'],s['overall_length']-s['length']/2])
         turn={p:M for p,n,M,v in walk_nodes(doc,{turret:matrix([0,1,0],90)},canonical=True)}
         assert np.allclose(turn[muzzle][:3,3],tp+rotation([0,1,0],math.pi/2)@(mp-tp),atol=1e-5)
@@ -111,6 +112,7 @@ def validate(path):
            'nodes':nodes,'grid':None,'tileable':False,'frames':None,
            'notes':'Original Python-authored visual exterior by generate_p1_tanks.py using shared vehicle_parts.py, no Blender or external mesh. Model-specific armour silhouettes, running gear, gun and recognition details; small fittings simplified, not an engineering reconstruction. Five plain white PBR roles, no embedded textures, colours, flags or markings. UVs in metres except longitudinal Track U (0..1). Ground-centred hull, +Y up/+Z front; actual muzzle, axle and hinge pivots; positive gun elevation uses negative X. Rear-to-front wheel numbering. Hidden static dark-role wreck with physically detached/grounded turret; hidden hull collision proxy. KHR_node_visibility hides LOD1, Wreck and collision. LOD1 parts append _LOD1 with extras.canonical_part for the same bindings as the approved pilot.',
            'track_shader_contract':{'canonical_path':doc['extras']['canonical_track_path'],'mesh_child_scale':[1,s['track_scale'],s['track_scale']],
+               'world_loop_length_metres':round(TrackPath.length*s['track_scale'],6),
                'description':'The shader sees unchanged pilot-space vertices and U before glTF mesh-child scale. Parent pivots and non-track geometry are in actual metres. World track V remains metre-scale (X is not scaled).'},
            'sources':[{'url':s['source'],'use':'Exterior identification and size class; original geometry reconstructed from public visual/reference data. No photograph or source mesh embedded.'}],
            'validation':{'readback':True,'node_tree_printed':True,'ccw_normals':True,'duplicate_faces':0,'below_ground_vertices':0,'track_uv_seams':4,'canonical_track_vertices':True,
