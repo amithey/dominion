@@ -168,5 +168,3175 @@
     "notes": "Original imagery generated with built-in image_gen, no downloaded imagery or reference likeness. Source 1774x887, 32 extracted source frames; repacked to 32 cells at 256x256 with uniform global scale, fixed trail anchor and Lanczos resampling. Premultiplied intermediates used only for resampling; exported straight alpha. RGBA, transparent background with soft alpha. Continuous trail variations; horizontal edges matched per frame (tileable on X only, not Y). Suggested 16 fps. ",
     "generation_prompt": "Original realistic photographic missile smoke exhaust TRAIL SEGMENT VFX atlas, no missile. 8 columns x4 rows, 32 equal square cells, 2048x1024 landscape. Genuine transparent background with straight fractional alpha. Each cell contains a thin horizontal ribbon of turbulent pale grey exhaust smoke along its horizontal center, evenly sized and positioned, no fireball. Ribbon extends exactly from left edge to right edge, and both ends have matching width opacity and turbulence so the segment tiles seamlessly horizontally along missile path. Leave top and bottom halves transparent. Show 32 small chronological variations of the same exhaust segment, no large changes of framing or width. Flat diffuse neutral daylight, original high speed film detail, white/light grey smoke, no glow, no black matte, no checkerboard, no drawn grid, no text, no scenery, no cast shadows.",
     "sha256": "cb704ccfd50491d2fa2a606afde622e319999ac821b7b553098e0af102e19a75"
+  },
+  {
+    "file": "materials/grass_green_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "grass_green",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "a953516d2d52f53e65b1822302fc3e5d705056f99ece7298ad988881d118d6fa",
+    "generation_prompt": "Use case: photorealistic-natural. Original game PBR ALBEDO texture, grass_green. Dense closely packed healthy temperate meadow grass, muted varied medium and dark green narrow blades, no bare soil. Top down 2 metre square patch. Seamless periodic tile on all four edges: texture flows continuously when repeated in a 3x3 grid. Square 2048x2048 RGB, edge-to-edge texture only, no borders, no margins, no text, no logos or objects. Orthographic surface scan appearance with photographic microdetail and muted realistic colours. Strict flat diffuse evenly illuminated base colour: remove all directional lighting, cast shadows, highlights, reflections, ambient occlusion and vignette. No perspective. No painterly or cartoon style. Deliver ONLY the colour/albedo image, not a preview sphere or map montage.",
+    "source_sha256": "941847bcc077f1430aaa6fc3eb04ae70d04441ee6d45ac8a2ac976149a601042"
+  },
+  {
+    "file": "materials/grass_green_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.012 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "grass_green",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "e467be5a1a9f86cc37d92d751f36f1d6fc5906e9905a25eeaef28538bf1913b5"
+  },
+  {
+    "file": "materials/grass_green_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "grass_green",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "e2879ddc13cd16de8fd9bd8a7d7aa2bc3f8b242ce78f28ed9f7e016eecb91977"
+  },
+  {
+    "file": "materials/grass_green_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "grass_green",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "f92ab7cacf5ede210f1ffdee805c6491a858cf831815d88ac18257e9d7b0a8c5"
+  },
+  {
+    "file": "materials/grass_green_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "grass_green",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "da69079de23a14d781dbef329d684500fea0e02bdae51ad056d798e53f153cb8"
+  },
+  {
+    "file": "materials/grass_dry_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "grass_dry",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "22116d847d98bf7c96410686aa06195ae2e1b6389ee7a3686affc0f10b471fe3",
+    "generation_prompt": "Use case: photorealistic-natural. Original game PBR ALBEDO texture, grass_dry. Dense summer dry grass, muted straw yellow and ochre blades with a few grey green blades, naturally irregular coverage. Top down 2 metre square patch. Seamless periodic tile on all four edges: texture flows continuously when repeated in a 3x3 grid. Square 2048x2048 RGB, edge-to-edge texture only, no borders, no margins, no text, no logos or objects. Orthographic surface scan appearance with photographic microdetail and muted realistic colours. Strict flat diffuse evenly illuminated base colour: remove all directional lighting, cast shadows, highlights, reflections, ambient occlusion and vignette. No perspective. No painterly or cartoon style. Deliver ONLY the colour/albedo image, not a preview sphere or map montage.",
+    "source_sha256": "9c1ad210b9a16c73b3120041b6db577c9eebfe2248eb14181de975da75639881"
+  },
+  {
+    "file": "materials/grass_dry_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.012 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "grass_dry",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "3d2c838188981a0f0751fab49c061d662b48d7eec74a847e456674236f9baa37"
+  },
+  {
+    "file": "materials/grass_dry_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "grass_dry",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "6fde9515aa1206dd249642c9e3d118d6f088f3a3be59ee0e7e7554b8f853e5e6"
+  },
+  {
+    "file": "materials/grass_dry_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "grass_dry",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "713a211b18575ec3c980ac31a8d01a54850f97ebde6b947643a23c33613bc698"
+  },
+  {
+    "file": "materials/grass_dry_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "grass_dry",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "fe8984f0effde466956b7fb80237d1d1befe859286ea902cd7e5ae340b31aa77"
+  },
+  {
+    "file": "materials/meadow_mixed_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "meadow_mixed",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "0b605f133b8ebf2a2aa2f026c473b949369e78f9272dcb9ee2403acefa858052",
+    "generation_prompt": "Use case: photorealistic-natural. Original game PBR ALBEDO texture, meadow_mixed. Natural meadow grass interspersed with small clover leaves and sparse tiny white and yellow wildflowers. Muted greens, no large flowers. Top down 2 metre square patch. Seamless periodic tile on all four edges: texture flows continuously when repeated in a 3x3 grid. Square 2048x2048 RGB, edge-to-edge texture only, no borders, no margins, no text, no logos or objects. Orthographic surface scan appearance with photographic microdetail and muted realistic colours. Strict flat diffuse evenly illuminated base colour: remove all directional lighting, cast shadows, highlights, reflections, ambient occlusion and vignette. No perspective. No painterly or cartoon style. Deliver ONLY the colour/albedo image, not a preview sphere or map montage.",
+    "source_sha256": "e0b78f5ab5676342890b455e82bcccd5c703d56d66e3461e7033d86791c6ffd7"
+  },
+  {
+    "file": "materials/meadow_mixed_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.018 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "meadow_mixed",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "78765990ebd5f6b272d8d30652f2034dd7dfde341a0918b86b3516766f5ecc0a"
+  },
+  {
+    "file": "materials/meadow_mixed_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "meadow_mixed",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "c47a0daa7d900c0047ff3daf15f84da070940e0af291ab0d4a104b8f83614173"
+  },
+  {
+    "file": "materials/meadow_mixed_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "meadow_mixed",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "f68d844244231029e0aac3c79f8f2ba580911b6667838a21ea7601b042d32697"
+  },
+  {
+    "file": "materials/meadow_mixed_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "meadow_mixed",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "c5161b7874c705b3354e1576570e78b8e102bc92ee268dc23dec24ab0db9c2b5"
+  },
+  {
+    "file": "materials/dirt_dry_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "dirt_dry",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "281a2725d4a69115ef4d82b51ac6dc24ba5e00bf08abc633bc9ad672996e34df",
+    "generation_prompt": "Original photographic game PBR albedo texture: Dry compact brown earth with fine granular mineral grains, tiny pebbles and faint shallow drying fissures, no leaves. Top down 2 metre square patch. Seamlessly tileable on all four edges in a 3x3 repeat, square 2048x2048 RGB. Orthographic flat surface scan, muted natural colors, fine realistic microtexture. Strict even diffuse illumination, no baked shadows, AO, lighting gradients, specular highlights, reflections or vignette. Edge-to-edge surface only, no perspective, borders, text, logos, scenery or objects. Deliver only albedo, no map montage or material sphere.",
+    "source_sha256": "b0be53b768cfaa96f0187316f16337117ee14117a834aacb9893d970cb23abc6"
+  },
+  {
+    "file": "materials/dirt_dry_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.009 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "dirt_dry",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "f996e0343d59b729542e1cfb683aa5e37fd4c11f1dd31f4f029c36ed6a6e3e0e"
+  },
+  {
+    "file": "materials/dirt_dry_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "dirt_dry",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "eb7a3faaff4421cdd7fa8c5ba4a69cbd482cadb7387e3bbbed0aebd6652a122b"
+  },
+  {
+    "file": "materials/dirt_dry_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "dirt_dry",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "a79a9f6da77b7905842e9bcd7fe78f4d1f8d55e27503868e1193ea72f746c7f6"
+  },
+  {
+    "file": "materials/dirt_dry_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "dirt_dry",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "f319cefdf2c36cce650323261339b05aa2e92caf761e3ffe2d81283f4e72d121"
+  },
+  {
+    "file": "materials/mud_wet_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "mud_wet",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "12871c490fb9ac70db90a15515e2a829f669c9fe96d6b5849673aab1031e2a06",
+    "generation_prompt": "Original photographic game PBR albedo texture: Wet dark brown mud, soft irregular flattened clods and shallow low spots, no footprints, no puddle reflections or specular highlights. Top down 2 metre square patch. Seamlessly tileable on all four edges in a 3x3 repeat, square 2048x2048 RGB. Orthographic flat surface scan, muted natural colors, fine realistic microtexture. Strict even diffuse illumination, no baked shadows, AO, lighting gradients, specular highlights, reflections or vignette. Edge-to-edge surface only, no perspective, borders, text, logos, scenery or objects. Deliver only albedo, no map montage or material sphere.",
+    "source_sha256": "69109f378180a045a0952c5bb177d9a7a5dd35feb4f1ad9b1f40fa869e8a585f"
+  },
+  {
+    "file": "materials/mud_wet_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.018 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "mud_wet",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "db8ec012191d8f95800c52ffd696934dbb5c2a35c8801c9379d3663cdd7400e6"
+  },
+  {
+    "file": "materials/mud_wet_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "mud_wet",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "6b029b6d56981b2782ed9a5e4f95af74a5bf414a39f0b7e4ef780e09124891a8"
+  },
+  {
+    "file": "materials/mud_wet_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "mud_wet",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "9f829e7be437c1f367fb105219a87f9aa827d848a33a5d70bd645a891fe0a545"
+  },
+  {
+    "file": "materials/mud_wet_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "mud_wet",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "b59dff50d575057380acd2963e0f379ae1c2bd660ed6afa80e1d24f15e650e98"
+  },
+  {
+    "file": "materials/sand_beach_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "sand_beach",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "5dc312a7c33e9c1b3fc3702950806ba0a246fb15f87fe438a0507ad2882a611f",
+    "generation_prompt": "Original photographic game PBR albedo texture: Pale beige fine beach sand, subtle irregular fine wind ripples, tiny mineral grains, no shells or debris. Top down 2 metre square patch. Seamlessly tileable on all four edges in a 3x3 repeat, square 2048x2048 RGB. Orthographic flat surface scan, muted natural colors, fine realistic microtexture. Strict even diffuse illumination, no baked shadows, AO, lighting gradients, specular highlights, reflections or vignette. Edge-to-edge surface only, no perspective, borders, text, logos, scenery or objects. Deliver only albedo, no map montage or material sphere.",
+    "source_sha256": "901af987b80846580ccc094d78d3c29401ff4da4e5b2c6bf9e9fd3aed9b5be86"
+  },
+  {
+    "file": "materials/sand_beach_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.008 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "sand_beach",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "0e192b3a9e30066c0589005f2d59f4833be6a47c90cd7ade13c249f17cf8734b"
+  },
+  {
+    "file": "materials/sand_beach_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "sand_beach",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "880b66d886e97eea07ba829426a3164f0a7d84383f1d189213a6749e8aaa605e"
+  },
+  {
+    "file": "materials/sand_beach_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "sand_beach",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "2e7a3b1a7ef08a254dd6c2b27afcccb37aeeb465a1586393eb6e279b217f318d"
+  },
+  {
+    "file": "materials/sand_beach_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "sand_beach",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "7ed6c98243b87c909abec310d71ad8ea89632859510b36388120d58b926593b2"
+  },
+  {
+    "file": "materials/gravel_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "gravel",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "4183dd15ab6c2dd4b8c970beba468f18e25e7191145278a655d805eaecb6df9a",
+    "generation_prompt": "Original photographic PBR ALBEDO texture. Dense compact gravel, mixed angular small grey and beige aggregate stones, consistent 1-4cm pieces, no large rocks. Top down 2 metre square patch. Seamless periodic tile, matching all four edges for 3x3 repetition, square 2048x2048 RGB. Flat even diffuse base colour, NO directional lighting, shadows, AO, highlights, reflections, vignette or perspective. Realistic muted mineral colours and photographic microdetail. Edge-to-edge surface only, no borders, words, symbols, logos, map montage or preview sphere.",
+    "source_sha256": "4f4fd827823a63b81d2a16042c238f005bb4ec0846d6bceaa261531019ef5501"
+  },
+  {
+    "file": "materials/gravel_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.025 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "gravel",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "168671e93044a2c02826378e3c54bfb3ebc15a0879dc21f2918147da9c9836fc"
+  },
+  {
+    "file": "materials/gravel_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "gravel",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "a265b6626c3613fa292f820a42939ced152d923e0b6d24f7d1c08a095f8e5ab9"
+  },
+  {
+    "file": "materials/gravel_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "gravel",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "0614c876c8a25d3c3cb0e5b114aea473163c7ff4fc365ef69d0baf21d2e8ba03"
+  },
+  {
+    "file": "materials/gravel_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "gravel",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "1a2432ced473046fe11d4ae1fd2a1aa6d4c1eaa42455c04d1bab023db1d8588d"
+  },
+  {
+    "file": "materials/rock_grey_cliff_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "rock_grey_cliff",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "70b57246f9e495432b5b8d7512e10374f43d81fb031ddb5c235f13d517ed8a90",
+    "generation_prompt": "Original photographic PBR ALBEDO texture. Grey weathered natural cliff stone surface, irregular fractured strata and fine mineral texture, no protruding giant boulders. Straight on 2 metre square patch. Seamless periodic tile, matching all four edges for 3x3 repetition, square 2048x2048 RGB. Flat even diffuse base colour, NO directional lighting, shadows, AO, highlights, reflections, vignette or perspective. Realistic muted mineral colours and photographic microdetail. Edge-to-edge surface only, no borders, words, symbols, logos, map montage or preview sphere.",
+    "source_sha256": "c1b3933be2662c8a291095b049814ed1726a1f4cbf3b5156a83398b5278f0fc1"
+  },
+  {
+    "file": "materials/rock_grey_cliff_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.07 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "rock_grey_cliff",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "0d83c4a01d155007d7197a8c59a9805fb7f8a1ebfb4327e811ef4cc0693bd173"
+  },
+  {
+    "file": "materials/rock_grey_cliff_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "rock_grey_cliff",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "9435442a66544c67229998813a8c8385000f38d02d647e7cd70db7a46485b830"
+  },
+  {
+    "file": "materials/rock_grey_cliff_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "rock_grey_cliff",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "febaf0756ec298279efe3a2175a5b90039a2f7c146d2d837f5bccfda78f1f1ec"
+  },
+  {
+    "file": "materials/rock_grey_cliff_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "rock_grey_cliff",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "16d277ebd2cb6a09e9810912a7067864dc9d5162802d6d0c1d1d883b943c73eb"
+  },
+  {
+    "file": "materials/rock_limestone_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "rock_limestone",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "fd168fb78aeda6c0c2069ddaafe032a1ad43fdd43a33d1e950d04200b33005d0",
+    "generation_prompt": "Original photographic PBR ALBEDO texture. Pale warm grey limestone rock, fine pores and irregular subtle geological fractures, natural mineral mottling. Straight on 2 metre square patch. Seamless periodic tile, matching all four edges for 3x3 repetition, square 2048x2048 RGB. Flat even diffuse base colour, NO directional lighting, shadows, AO, highlights, reflections, vignette or perspective. Realistic muted mineral colours and photographic microdetail. Edge-to-edge surface only, no borders, words, symbols, logos, map montage or preview sphere.",
+    "source_sha256": "9cd717d70fe9e8d1bf8c5bf34a5244afa3525f939b18cc9618e18c5035dc6ece"
+  },
+  {
+    "file": "materials/rock_limestone_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.035 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "rock_limestone",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "f8d7cd9ccb4f90a8aa4717c67d256e18125781ee1ec8f825bc1b2864e1464c41"
+  },
+  {
+    "file": "materials/rock_limestone_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "rock_limestone",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "1867a49de10b0603783c67c304184df7ea87e92f2a55fab2c539b5774fd86422"
+  },
+  {
+    "file": "materials/rock_limestone_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "rock_limestone",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "dc1de7a8e15f34b81768d95a881d1e10469931a63e9cd4a83479e80f3dd0d93b"
+  },
+  {
+    "file": "materials/rock_limestone_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "rock_limestone",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "0c433716d475d44f6aa0938cd6ddad52ee119a6093efa283e8b80159ad804f17"
+  },
+  {
+    "file": "materials/snow_fresh_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "snow_fresh",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "c0cfd34a44893c58ab4b360076685573a58164c89a3667720fb0e61357a42cdc",
+    "generation_prompt": "Original photographic game PBR albedo texture: Fresh fine white snow, tiny irregular snow crystal grains and gentle shallow wind texture, no tracks, neutral off-white base. Top down 2 metre square patch. Seamlessly periodic on all four edges, square 2048x2048 RGB. Fine realistic surface grain, muted natural base colour. Strict flat diffuse even illumination; no baked light, shadows, ambient occlusion, highlights, blue directional shading or vignette. Orthographic top down, no perspective, no borders, words, logos, backdrop or map montage. Texture fills whole image and must repeat naturally 3x3.",
+    "source_sha256": "22587ebd733b558c6110182bc04b1595ac2c70d5384f70b07af100eb000eb41f"
+  },
+  {
+    "file": "materials/snow_fresh_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.009 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "snow_fresh",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "f6c7df8e75bc069716e254e865c14c3f94585d144fcb9619f0929bf74eeb3099"
+  },
+  {
+    "file": "materials/snow_fresh_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "snow_fresh",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "3e3312a89247c5eef18b718f15223dee8837bc4d174216f913e1d9626b828246"
+  },
+  {
+    "file": "materials/snow_fresh_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "snow_fresh",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "1f67768ef0144c02c351e0cffd19725d452fdef3ad61ba83b02c5a1032ef0221"
+  },
+  {
+    "file": "materials/snow_fresh_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "snow_fresh",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "3b638b4738ee4eedc6605fa65a04a7667f60dafcd92a48772561304f52354b10"
+  },
+  {
+    "file": "materials/snow_trampled_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "snow_trampled",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "5048eda1b5fb818f8b5ef2e920f3813c8153171646b865bf9b12d1dd54fe7ac2",
+    "generation_prompt": "Original photographic game PBR albedo texture: Compacted trampled snow with irregular shallow compressed footprints and fine broken ice grains, dirty grey-white in compressed pockets, no deep shadows. Top down 2 metre square patch. Seamlessly periodic on all four edges, square 2048x2048 RGB. Fine realistic surface grain, muted natural base colour. Strict flat diffuse even illumination; no baked light, shadows, ambient occlusion, highlights, blue directional shading or vignette. Orthographic top down, no perspective, no borders, words, logos, backdrop or map montage. Texture fills whole image and must repeat naturally 3x3.",
+    "source_sha256": "798637d072b74fec6acf4d36331e005bbc7590cc30b14334873316399b49b111"
+  },
+  {
+    "file": "materials/snow_trampled_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.025 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "snow_trampled",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "688b49f762d82abbe264a816a0d876366bb805e49001315dfd8fafc4e45dde26"
+  },
+  {
+    "file": "materials/snow_trampled_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "snow_trampled",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "16dfce4c4a1cf33c1ebd73e1a926375981b12f9b72e32808ccccdef819d8a8a2"
+  },
+  {
+    "file": "materials/snow_trampled_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "snow_trampled",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "002579e1bb8442125b26c21b465227b782b564fe1e508a7e529c2afa44170a01"
+  },
+  {
+    "file": "materials/snow_trampled_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "snow_trampled",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "f0148af48162a2e74ee3d618f64abda3606827c6a734527b743396bd95eed833"
+  },
+  {
+    "file": "materials/forest_floor_needles_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "forest_floor_needles",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "64cf15703f1b04ed5ac1aa7165a9076118cc5ae5a332c4dca747654b53593c03",
+    "generation_prompt": "Original photographic game PBR albedo texture: Temperate conifer forest floor, dense brown pine needle litter with a few small woody twigs and fine dark humus in gaps, no cones or large branches. Top down 2 metre square patch. Seamlessly periodic on all four edges, square 2048x2048 RGB. Fine realistic surface grain, muted natural base colour. Strict flat diffuse even illumination; no baked light, shadows, ambient occlusion, highlights, blue directional shading or vignette. Orthographic top down, no perspective, no borders, words, logos, backdrop or map montage. Texture fills whole image and must repeat naturally 3x3.",
+    "source_sha256": "7299ec3b30d2dec2393199d342f37a659996a9c12de651ba31b3abf0910b957c"
+  },
+  {
+    "file": "materials/forest_floor_needles_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.02 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "forest_floor_needles",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "408a2089a2909b490af3bd220476179fde8a2778e37d2980a0444e9087dcfaeb"
+  },
+  {
+    "file": "materials/forest_floor_needles_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "forest_floor_needles",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "4a41c7b7099f2b1917dfb4b3b82904c32e5dca0596eecc867465b0eb3d575c8e"
+  },
+  {
+    "file": "materials/forest_floor_needles_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "forest_floor_needles",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "f82c5f3a3dca7eac37620fe20d392c9a5a791eb499f105ab06e6de48d1ebdfad"
+  },
+  {
+    "file": "materials/forest_floor_needles_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "forest_floor_needles",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "3de91493d3566d2cf256281248ee23d68294e7d9563fe057ce077546c45178c1"
+  },
+  {
+    "file": "materials/farmland_furrows_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "farmland_furrows",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "46a64bcc0cdda547cb9bcd9428cf9e6ca08aba1225d7a0684cd56bf26adc2e05",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Brown cultivated field soil in parallel evenly spaced straight tilled furrows running vertically, 25cm spacing, granular clods, no crops. Top down 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "1aefbb350a06a69a42ec8dc927d9dc7c05418445bdb14a1f9b3357162e1b693c"
+  },
+  {
+    "file": "materials/farmland_furrows_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.06 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "farmland_furrows",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "959924bd79b6ef02407ead7de32a9cb2aa57e90e143c66e40eb20039d858f472"
+  },
+  {
+    "file": "materials/farmland_furrows_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "farmland_furrows",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "73357a37726e81ca611ff506762b39f09229d64619abdf11fa31301f60130dfd"
+  },
+  {
+    "file": "materials/farmland_furrows_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "farmland_furrows",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "05938cd3ce49855485b993b88dbb5d10d3c793145e1c8ad4bc77f48e998299c2"
+  },
+  {
+    "file": "materials/farmland_furrows_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "farmland_furrows",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "2cd4af7af7da201602751aaaf5c573ff48495d6fd765216b40c7e9d9537cf3d9"
+  },
+  {
+    "file": "materials/asphalt_worn_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "asphalt_worn",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "9af48f4c067107bb19fa0164ea90b432caf0a14ab09b4a1dfb1232c833cc0301",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Old grey asphalt road surface with fine dark aggregate and subtle wear, sparse small cracks, no road markings, no debris. Top down 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "bc1660165b58755ab9588d8c789ed5eddc2df2cbcbe4febc97b150f6e525ef1d"
+  },
+  {
+    "file": "materials/asphalt_worn_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.007 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "asphalt_worn",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "166909cb8d18869f5861c6ad766ece92f89312cf133b9b7d0e3b948623a1e353"
+  },
+  {
+    "file": "materials/asphalt_worn_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "asphalt_worn",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "56be45e422d1d90b280adc8628f9379b08d11715ceae9acfa4f2799d0479d56b"
+  },
+  {
+    "file": "materials/asphalt_worn_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "asphalt_worn",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "e189ba1096f665dc92b7551e98e0a8a2e47cf445b0f76e2e3884dbf8e896d278"
+  },
+  {
+    "file": "materials/asphalt_worn_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "asphalt_worn",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "0a3761057f86dcab7a83d75bb8d97f81fa7a1b33bd8626d6165dcfc7c8bd3f60"
+  },
+  {
+    "file": "materials/concrete_pavers_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "concrete_pavers",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "e2da00cc41fc654dea71c26c66f69ec795f1e6e4d7007be881ad122795824e16",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Grey concrete rectangular paving blocks in staggered running bond, narrow dark joints, subtly different neutral grey blocks with fine pores, no weeds. Top down 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "19287b4954c7e3d084d664f8e8bcd0782d0a3b8d051624dcc7dd54133666a59d"
+  },
+  {
+    "file": "materials/concrete_pavers_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.012 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "concrete_pavers",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "c299d74b5514371ae3253948918b75b6b3a193eb0e07e6721ef72e34cf0cfc5b"
+  },
+  {
+    "file": "materials/concrete_pavers_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "concrete_pavers",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "44956c38c665a5ffadf2c2752b6e3b2a584b863fbfb6f1a83ae3525732bce72a"
+  },
+  {
+    "file": "materials/concrete_pavers_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "concrete_pavers",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "ca3fbc8b415514bc39b87fbac88d2e8ab188e005ed0131d449720b1512d25fa0"
+  },
+  {
+    "file": "materials/concrete_pavers_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "concrete_pavers",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "ff0e1a943a1a0293b3c3b4940837e6d5443041a335d0af8d381b34034167ac30"
+  },
+  {
+    "file": "materials/brick_red_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "brick_red",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "7f7a32c4cced5e1a795a32ecff3ece0d636fc9ed8d0242ca2aa2b066f9e621cc",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Muted red brown clay brick wall in precise repeating running bond, real 25x7cm bricks and narrow grey mortar joints. Weathered fine pores, no chips casting shadows. Straight on 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "1817c87082e63d50d977536aa870055b6b48fd9b74377f6066d847d8bdf876b5"
+  },
+  {
+    "file": "materials/brick_red_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.014 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "brick_red",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "8425eee81c1d8f7009f84a8b7681cf841270889bdb3545a9ff1c2a3002ce6937"
+  },
+  {
+    "file": "materials/brick_red_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "brick_red",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "49fdfaab88ffcb4773c613af9b079e3265335b48b0c7333f335cb49244ec929f"
+  },
+  {
+    "file": "materials/brick_red_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "brick_red",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "7b3701d8ffd50b85675a479794bfaf1a9d665624de0e899bbdb36df87f266426"
+  },
+  {
+    "file": "materials/brick_red_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "brick_red",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "0038c56a3355f044b5ddb9941f075bb6e473a272332ecff65ed95bf5b53938d3"
+  },
+  {
+    "file": "materials/brick_weathered_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "brick_weathered",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "6fa4f9233d72084831777b963eef53bab28aaca2da89a0a96a60552c2b7d4afd",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Old faded red and brown brick wall in repeating running bond, worn edges and mineral mottling, pale grey mortar joints. No graffiti or large stains. Straight on 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "11089675e65b1491215430fa5453683c136fa6984b57807993d616ffb0275b83"
+  },
+  {
+    "file": "materials/brick_weathered_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.02 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "brick_weathered",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "7aaee99dda808719478cf04249ad0a44ac32dbc889272197d9d2e8e6257c38cc"
+  },
+  {
+    "file": "materials/brick_weathered_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "brick_weathered",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "90afc2eecc5f428cf55d412f5652e9342a808e5e0379f687a53b0b8e01b139a2"
+  },
+  {
+    "file": "materials/brick_weathered_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "brick_weathered",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "90e854d4f4f72a58d74f2078a1c91fe324106e224d968207631e0dac19292485"
+  },
+  {
+    "file": "materials/brick_weathered_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "brick_weathered",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "3519beea575f9c02d62157748cbf2cb754c159d9f53d92f3b6d93b8b2eb5c0ca"
+  },
+  {
+    "file": "materials/concrete_smooth_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "concrete_smooth",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "07e498f7ddefda2eb67c4692c255726a51c3bbefde7cbf09bd2a00c44e4745c1",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Smooth neutral light grey poured concrete with fine pores and very subtle aggregate mottling, no seams, no formwork impressions. Straight on 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "a2d1bf58a76304cbb7d3ab3d4c86b32dab62c18980bbb4f3b0a063ceca1e8232"
+  },
+  {
+    "file": "materials/concrete_smooth_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.004 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "concrete_smooth",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "66495da078d677053c93ddd487bcab3c8204d7eb04caf76fa465aba1f09177e0"
+  },
+  {
+    "file": "materials/concrete_smooth_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "concrete_smooth",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "888c89e871fdfd159aac1e9242d7c4da40908279b67c7b718346c85b141f38f0"
+  },
+  {
+    "file": "materials/concrete_smooth_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "concrete_smooth",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "9f5683bd879d2fbf5d2581c14bc13ba5eac2c6bfa83f15402ed6ad14c0883674"
+  },
+  {
+    "file": "materials/concrete_smooth_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "concrete_smooth",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "19c57bd0d18265ac74251895ad90fa723fa5763fce3484550941b435307b188a"
+  },
+  {
+    "file": "materials/concrete_panel_soviet_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "concrete_panel_soviet",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "cb4b3fbe8322c7c056fcaabf49494dba638dd5eebc63dc86778200f325357859",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Generic ageing grey precast concrete facade panels, regular rectangular slab grid and narrow recessed seams, fine porous concrete and subtle weathering, no windows. Straight on 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "3f404e347453169caf8a7ccdb1c473e37c19d5e0bf79f14995993ca84bcfb29f"
+  },
+  {
+    "file": "materials/concrete_panel_soviet_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.018 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "concrete_panel_soviet",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "4ed59d8e1afdbbd1c452ab724671d22d316b28efa0a8b3356f43fe4dcee6d066"
+  },
+  {
+    "file": "materials/concrete_panel_soviet_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "concrete_panel_soviet",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "909764b328f5efaf3a9032b713856b4bf4006915bcf7dc5c51e6f3e38cefd1be"
+  },
+  {
+    "file": "materials/concrete_panel_soviet_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "concrete_panel_soviet",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "4dff3eab9f3c4133997e45a94a810280928688141032119912801fdbbf343ae3"
+  },
+  {
+    "file": "materials/concrete_panel_soviet_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "concrete_panel_soviet",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "a4f60f8d8cfbaa1499b2ab8ddca0dcbe60516228991c80da1929d46b5a944e33"
+  },
+  {
+    "file": "materials/plaster_cream_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "plaster_cream",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "a6d8515df071005c6310e5b27036d69e4125f70aeda37a7b831b823fd88fd548",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Warm cream mineral plaster wall, subtle fine stucco sand grain and slightly irregular hand trowelled surface, uniform gentle variation, no cracks. Straight on 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "a0c45a0183809485c41f21130ceea49156d0761fb1adc79f61ca9aee658b6294"
+  },
+  {
+    "file": "materials/plaster_cream_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.004 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "plaster_cream",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "e18f8468cbd9f259bec0c0abd2adc298d20a94bcc0582db7230df61370f737c2"
+  },
+  {
+    "file": "materials/plaster_cream_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "plaster_cream",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "4923965abdaffee090da88d63d19161885a3c9454041cc23cadf358e302f1b47"
+  },
+  {
+    "file": "materials/plaster_cream_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "plaster_cream",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "e188dffedb8287f2c6824165cd26d797d5eca28c39f6824c7dec772dcf87f24b"
+  },
+  {
+    "file": "materials/plaster_cream_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "plaster_cream",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "5c7036b46e21759d369edf75cdd4e44a23c08984a1c2ade0f03a449f2078e04f"
+  },
+  {
+    "file": "materials/plaster_white_cracked_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "plaster_white_cracked",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "bc88566fced61dc2fbc464dda7459f3112c3ccd4c69d3f35bfbb231dffc802d6",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Aged off-white plaster wall with a delicate irregular network of hairline cracks, tiny chips exposing pale grey substrate, no peeling sheets. Straight on 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "de32d36a5991fbf3861e57b2ab5631c6dbfb6723344fea5940ce423459aaa139"
+  },
+  {
+    "file": "materials/plaster_white_cracked_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.007 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "plaster_white_cracked",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "59dd2f55037923337af98bacea41b34d112dc118338f29142e681252eb829817"
+  },
+  {
+    "file": "materials/plaster_white_cracked_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "plaster_white_cracked",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "5ebfd648efeb36ff1c0d5ac45679318f635a2fa7cbe8dc5ef05f71d2225ea8a6"
+  },
+  {
+    "file": "materials/plaster_white_cracked_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "plaster_white_cracked",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "5316cf6de1e94ebf8dc29444fe9cb59af2f00120c3679c0016480755548c80bf"
+  },
+  {
+    "file": "materials/plaster_white_cracked_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "plaster_white_cracked",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "f3160be246ce2e4b71c6ae4b5f3cd8a04f2b206d01b2e671e1a8991d7ad56f67"
+  },
+  {
+    "file": "materials/stone_ashlar_beige_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "stone_ashlar_beige",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "93bd8a7c9ad71020f723c897773fa449154eeda7b8ee744a2254278f7ff64569",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Beige limestone ashlar wall of rectangular cut blocks in regular courses, narrow mortar seams, subtly varied pale sandy blocks with fine pores, small dressed edge bevels. Straight on 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "a2fc0aeab55dc8fd23ac46ca83dd1a0187a18e40896761a4573c0f3ce6dcf048"
+  },
+  {
+    "file": "materials/stone_ashlar_beige_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.02 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "stone_ashlar_beige",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "98b0344ff3ba3b154c92c4cd3fb9f9625c288422d924efb56e676726389b20ea"
+  },
+  {
+    "file": "materials/stone_ashlar_beige_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "stone_ashlar_beige",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "a42afdf7a3e71742870e39510eefd488196b0fab3f2b8d5a713d3444cbfe2d0e"
+  },
+  {
+    "file": "materials/stone_ashlar_beige_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "stone_ashlar_beige",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "e3b16e3952f44ddc7ac6aaeffa2eb5f8255b051f35eb1becd90c39955000c7a4"
+  },
+  {
+    "file": "materials/stone_ashlar_beige_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "stone_ashlar_beige",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "2e4bb2a5235dc1623bbd479212231ecd7aeb5c7483bb1cd047e99179c6fd9718"
+  },
+  {
+    "file": "materials/roof_tile_clay_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "roof_tile_clay",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "cfe24c894abc5c11a618cea7dd909506eabbeb742ba65a8b2d52d9b98fa2ecd1",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Terracotta clay roofing tiles, uniform repeating overlapping curved interlocking tile rows, muted natural burnt orange and brown, fine ceramic grain, no moss. Orthographic directly perpendicular to roof surface, 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "953422bcacde85ba34cf6bb3c87b42d36060e85eadd296aa0cdee94b9869ea88"
+  },
+  {
+    "file": "materials/roof_tile_clay_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.045 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "roof_tile_clay",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "f1415d79366973e058dcce5850f00a01134b39570309bc6a23b1b11a094670e0"
+  },
+  {
+    "file": "materials/roof_tile_clay_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "roof_tile_clay",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "57789f583430f0abdd1f476de3140aa08976fc1255e1ed660c376bca6d169818"
+  },
+  {
+    "file": "materials/roof_tile_clay_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "roof_tile_clay",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "7981c523f15a142ffb46e4cebb76672f0a0e281a440c9070673beafd6c1755f1"
+  },
+  {
+    "file": "materials/roof_tile_clay_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "roof_tile_clay",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "7c7a6c90aafc46633ed9f30981edefb59a3885d5169ed849d4d81871cf893a9f"
+  },
+  {
+    "file": "materials/roof_slate_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "roof_slate",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "27f19db8612043150cacd6e9c6de8e28355ada5ff656955b950e16f7e8844474",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Natural grey slate roof, regular overlapping small slate rectangles in staggered rows, muted blue grey mineral grain and gently irregular chipped edges. Orthographic perpendicular to surface, 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "03f93a60d2ba399048ea8bf6befd0eecb7357b77a0aeaf9a6dc9c34e171fad29"
+  },
+  {
+    "file": "materials/roof_slate_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.018 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "roof_slate",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "933863fd293976177b0598ac40ac833f0fe7dfb328f90572cc35a835ca4ba3cb"
+  },
+  {
+    "file": "materials/roof_slate_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "roof_slate",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "8de85933d587a7fd799af2fedd62a72afb7a67476162b24998947c78e292ba34"
+  },
+  {
+    "file": "materials/roof_slate_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "roof_slate",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "0e6fcf1b99c9b0275a3e1dc62133adb94cb4d0ef464c1c3566014a437acd8c97"
+  },
+  {
+    "file": "materials/roof_slate_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "roof_slate",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "9538a6ccc41b5fa7c1ad83a47428fd5871f3e22de1b4f8336ac0b49349c5bb1b"
+  },
+  {
+    "file": "materials/roof_shingle_grey_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "roof_shingle_grey",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "52c48e3630fe416d8c3ce80f8fa752586cf413ccb8b098e1aca01528fe62f0ff",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Weathered neutral grey asphalt roof shingles in repeating overlapping staggered rows, fine granular mineral coating, slight tonal differences, no moss. Orthographic perpendicular to surface, 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "131dfaafbfb2e4a7fa618b879380936faff6419f58626faf5bbf33c55aec1a7f"
+  },
+  {
+    "file": "materials/roof_shingle_grey_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.012 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "roof_shingle_grey",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "6ed5be278ab73139d983663ce10ff21bfa3cde399f6d9141108ca6c2d106ca24"
+  },
+  {
+    "file": "materials/roof_shingle_grey_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "roof_shingle_grey",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "86b030aaf6d6bd53ebb329a347941c8565c295d7df7b1de46180f0ac322be47e"
+  },
+  {
+    "file": "materials/roof_shingle_grey_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "roof_shingle_grey",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "2951e51ca1ecc4bbe82e3fcf5a7f66182a086f023da1e7c79677cfa6f5276de1"
+  },
+  {
+    "file": "materials/roof_shingle_grey_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "roof_shingle_grey",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "ce7606bc5d1559fdcb3242acde475c6ab4ff0e817996ce22462dc54cd991128b"
+  },
+  {
+    "file": "materials/corrugated_metal_grey_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "corrugated_metal_grey",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "3c95952e217d98203f250d2e38137d6a38260e622f712f453d2a2534bbc45b39",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Neutral galvanized grey corrugated metal sheet, smooth continuous parallel rounded ribs running vertically at uniform pitch, subtle zinc mottling, no bolts or reflections. Straight on 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "99e4f64b453d4fe86954960b60c15a20f7429b135478c4390d3b183c87db2a98"
+  },
+  {
+    "file": "materials/corrugated_metal_grey_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.025 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "corrugated_metal_grey",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "27100344e8ae18130ce00bf13036eb80c06291e85b9ad0879d65982344aaf258"
+  },
+  {
+    "file": "materials/corrugated_metal_grey_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "corrugated_metal_grey",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "c28417ed040138279105e94d35579725ec2b1035280b0d0bbe4af2b86e6783d6"
+  },
+  {
+    "file": "materials/corrugated_metal_grey_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "corrugated_metal_grey",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "7da466a33253fe29f40a0bc8de4b583e4488454e2a90cf211e923343b2353fd3"
+  },
+  {
+    "file": "materials/corrugated_metal_grey_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "corrugated_metal_grey",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "2dc7d76ef5ec44ff1bbc2e6865e85b17ca36cb827dbf0f1da2d7704987d129e6"
+  },
+  {
+    "file": "materials/corrugated_metal_rust_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "corrugated_metal_rust",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "31413b52901d88de953e7835233fc82e7032bdb6e68fca4cac341c8dfb45fe37",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Old corrugated metal sheet with uniform parallel ribs running vertically, muted oxidized reddish brown patches and grey exposed zinc, natural fine rust texture, no holes, no bolts. Straight on 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "aeb06af30f30845f3b22fa5073712ec54e4349f7ee002805122d897d190456cd"
+  },
+  {
+    "file": "materials/corrugated_metal_rust_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.025 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "corrugated_metal_rust",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "ccfc74633d0ec4c98c02e29279c31524165caafe2af25b1641688c9e15ec6456"
+  },
+  {
+    "file": "materials/corrugated_metal_rust_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "corrugated_metal_rust",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "250a6e7a8840e9f5362e009264d8a74d1bf8d5a263e332c862dcfa85009f92a7"
+  },
+  {
+    "file": "materials/corrugated_metal_rust_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "corrugated_metal_rust",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "904ddc8fe4b7b223b535d6d10390dbfdafd434116d482c98ad16fad4c0da5c9d"
+  },
+  {
+    "file": "materials/corrugated_metal_rust_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "corrugated_metal_rust",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "0f8721d0c8f1bf96a5da7e0dd120dbf0b948d55d84e8224b0a076c1fabab6dd4"
+  },
+  {
+    "file": "materials/steel_painted_dark_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "steel_painted_dark",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "91d70067211a6151f9830046e2bb0f80030808934525e99728d2e44073d620b5",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Dark charcoal grey painted steel panel, fine matte paint grain with sparse tiny muted worn scratches, no seams, no bolts, no lighting gradients. Straight on 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "da82f8a86e5048c95bdb87799d1276b4f0989e1474e686a57fe46330c7406c05"
+  },
+  {
+    "file": "materials/steel_painted_dark_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.002 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "steel_painted_dark",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "2f0031030a66e11e940b44567cc0c43380360609c181d07cc2bc1da07a413b60"
+  },
+  {
+    "file": "materials/steel_painted_dark_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "steel_painted_dark",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "9eb118cbe7a30d4e5eb25fae73959fee6d164178f6c2b72650a99e2034e39f11"
+  },
+  {
+    "file": "materials/steel_painted_dark_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "steel_painted_dark",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "06dbbbafd25580a710e4f2ee138d15609bb1dcf7ea52a367476f3611df060bc8"
+  },
+  {
+    "file": "materials/steel_painted_dark_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "steel_painted_dark",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "dc59445af7f06e3def8d5b4d2b54d696f3826752adb9c6abc3f25e6d48a5bf99"
+  },
+  {
+    "file": "materials/wood_planks_weathered_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "wood_planks_weathered",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "1431c8c794c43f48838bc49f510951f70e77f87cd12002d05a6cca2adb30ebdb",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Weathered unpainted grey brown timber boards running vertically, realistic fine wood grain with a few small knots, narrow straight joints, consistent board width 15cm, no nails. Straight on 2 metre square patch. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "4b5fe1756aa78a519e727c441c9a4ceba959149ca419c6de1075e143c5d4640f"
+  },
+  {
+    "file": "materials/wood_planks_weathered_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.012 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "wood_planks_weathered",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "b8fe03367e2fcb048673a600c6a0135cfb80ebf5bdf6cb6de9f7bf2a9fc1f563"
+  },
+  {
+    "file": "materials/wood_planks_weathered_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "wood_planks_weathered",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "4ee2713fe8a039c54ae74f8e0f6cdadc8f4dfd02085655381095da10e52d69a8"
+  },
+  {
+    "file": "materials/wood_planks_weathered_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "wood_planks_weathered",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "6d3c694d218078b487dce5b963aa58fb845ff4a67a93c3e9648d92db02b747a9"
+  },
+  {
+    "file": "materials/wood_planks_weathered_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "wood_planks_weathered",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "4a4d820ef04866806d81746dbb44529605c75e66610705cf00b742cd2466e13e"
+  },
+  {
+    "file": "materials/glass_reflective_dark_albedo.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "glass_reflective_dark",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "5aa5845f1fcfd57d79191e502bdbfa5a33fc38af0e5117664648702dafe8eab2",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Nearly black neutral charcoal architectural glass albedo, almost perfectly uniform very dark neutral grey, minute subtle manufacturing variation only. Absolutely no reflections, highlights, gradients, objects, dirt, frames or scenery. Flat diffuse base colour texture. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 2048x2048 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "057cff7da3cfdb78b8a0ccbbd3ec203d260b718e2b47ee39b0b8c5c9b2c8d1d2"
+  },
+  {
+    "file": "materials/glass_reflective_dark_normal.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. OpenGL tangent space, +Y/green up; normal from periodic estimated height, physical relief 0.0001 m over a 2 m tile; unit normals.",
+    "map": "normal",
+    "material": "glass_reflective_dark",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "e3e151f0145b6a7d0bfa3f6da4d53563a950eea2e5244c6ef504c3864922feeb"
+  },
+  {
+    "file": "materials/glass_reflective_dark_roughness.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white rough; material-specific response, wet mud and glass smoother.",
+    "map": "roughness",
+    "material": "glass_reflective_dark",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "a65dd366ce1f1dc22c33d8d3284ebb0a1d46bb3f9590d8d3f32dcad1ece6bc67"
+  },
+  {
+    "file": "materials/glass_reflective_dark_ao.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white open; conservative local height-cavity estimate.",
+    "map": "ao",
+    "material": "glass_reflective_dark",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "12c77e4a41a055f618d9aa992c2950d8366a5b2cb554644eac215f5e814c8358"
+  },
+  {
+    "file": "materials/glass_reflective_dark_height.png",
+    "kind": "material",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Artist-authored estimated PBR map derived from the same albedo, not a measured scan. Linear greyscale, white high; estimated relief, neutral 0.5 for flat glass; red brick joints and periodic metal ribs explicitly treated.",
+    "map": "height",
+    "material": "glass_reflective_dark",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "linear",
+    "sha256": "e00c468398a043a163c39698b0314f911887bfc3e406bd493e342b51188ef92b"
+  },
+  {
+    "file": "materials/camo_woodland_albedo.png",
+    "kind": "material",
+    "size": [
+      1024,
+      1024
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "camo_woodland",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "ba019416de38a3ef3a917acde678c12b0fdb18e364361f5830d3a5c5ec2c7ee0",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Original generic military woodland camouflage textile paint pattern: irregular interlocking flat patches of muted olive green, forest green, dark brown and charcoal, varied organic lobed shapes, no national or copyrighted pattern. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 1024x1024 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "c74a0ac73c84d621ba0596d6827c17582d24aee5530c54f52ec4f7b712abda41"
+  },
+  {
+    "file": "materials/camo_desert_albedo.png",
+    "kind": "material",
+    "size": [
+      1024,
+      1024
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "camo_desert",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "b3a44739e28b40199ac3861a51ed6fefe3fd7c689f0bc3804d8ef4e8e24cdb49",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Original generic desert camouflage paint: irregular interlocking organic patches of muted sand beige, dusty tan and pale brown, medium scale, no national or copyrighted pattern. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 1024x1024 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "b892fac8170a7fa9fd159e26e8abaf543bfec7aaec6f58549b41529aad75e25a"
+  },
+  {
+    "file": "materials/camo_urban_grey_albedo.png",
+    "kind": "material",
+    "size": [
+      1024,
+      1024
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "camo_urban_grey",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "e41811c45c290932472c4330efb0edc1c180b5cd953fd87e666a820944ce5ef3",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Original generic urban camouflage paint pattern: irregular organic interlocking medium patches in neutral concrete grey, pale grey, charcoal and cool grey, no national or copyrighted pattern. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 1024x1024 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "5b1838d418b02a7b9fdd7e5210c25d6fe5944c33ac7c0d0857c2e0d777b2cdd2"
+  },
+  {
+    "file": "materials/camo_arid_two_tone_albedo.png",
+    "kind": "material",
+    "size": [
+      1024,
+      1024
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "camo_arid_two_tone",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "5232278cd0ae2e7adfc06334d94a56096d662c3e91a2a6c14a622563ca5a95f3",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Original generic two-tone arid camouflage paint: interlocking broad irregular organic muted beige and dusty brown patches, exactly two colours, no national or copyrighted pattern. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 1024x1024 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "38271d2dcbdd255fa32c1ccb60e0a2de28974cf17e135d639a9b02d91658bcbd"
+  },
+  {
+    "file": "materials/camo_snow_albedo.png",
+    "kind": "material",
+    "size": [
+      1024,
+      1024
+    ],
+    "grid": null,
+    "tileable": true,
+    "frames": null,
+    "notes": "Original albedo imagery made with built-in image_gen without external reference assets. Source 1254x1254, resized with Lanczos; periodic/smooth correction and smooth seam collar; all four exported edge texels match. Diffuse sRGB; no external scenery or cast shadows.",
+    "map": "albedo",
+    "material": "camo_snow",
+    "tile_metres": [
+      2,
+      2
+    ],
+    "color_space": "sRGB",
+    "sha256": "dcd4745c3356f6f11b58368dae8efbe7c749726920240ef674003ce486b668f3",
+    "generation_prompt": "Original photographic game PBR ALBEDO texture: Original generic snow camouflage paint: mostly off-white with sparse interconnected pale grey and charcoal irregular organic patches, no national or copyrighted pattern. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 1024x1024 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
+    "source_sha256": "9bbee2a9ffb1267dace487e0e6b956c4b25b4236c08237c61279ee9d0389cffe"
   }
 ]
