@@ -107,3 +107,33 @@ Make them plain, believable and generic: no flags, no national symbols, no signs
 **Files:** `native/godot/assets/art/buildings/<name>_<variant>.glb` (for example `cottage_1.glb`), and add each to `MANIFEST.json` with
 `{"kind": "model", "triangles": [lod0, lod1], "footprint": [w, d], "height": h, "materials": [...]}`. Check every file by loading it back
 (for example with trimesh) and confirm that it has no flipped faces, no loose pieces under the ground and no overlapping duplicate faces.
+
+## Tier 7: vehicles, aircraft and ships as glTF models with named moving parts (start with one tank as a pilot)
+Same method as Tier 6 (a code-built `.glb`, generator kept in `native/tools/models/`). **Build the tank first, alone, and tell the user**: Claude will wire it
+into the game and judge it before you build the rest. The game moves units itself (it has no rigid-body physics for vehicles): Claude drives the position, heading, pitch and roll
+over the terrain, the suspension bob, the turret turn, the gun elevation, the recoil, the track scroll, the wheel turn, the damage and the wreck. What
+you give is **the shape and the named parts, with their pivots in the right place**, so that Claude can move them.
+
+**Conventions:** metres, real size (a main battle tank is about 9.8 m long including the gun, 3.6 m wide, 2.4 m tall without the machine gun), origin on the ground
+at the centre of the hull footprint, **+Y up, the front faces +Z**. Materials by role, plain white PBR, no embedded textures, UVs in metres (as Tier 6), with these names:
+`paint` (the painted hull and turret: the game applies its own camouflage and the nation's colours), `metal_dark` (tracks, wheels, barrel, fittings),
+`rubber` (road-wheel tyres, track pads), `glass` (periscopes, sights), `markings` (a flat panel on each side and the turret that the game paints with the nation's mark).
+Two detail levels as two top-level nodes `LOD0` (up to about 15,000 triangles) and `LOD1` (up to 2,500).
+
+**Named nodes (empties with the pivot at the point they turn about; the meshes are their children):**
+- `Hull` (the root of the body), under it `Turret` (pivot on the turret ring, axis Y), under that `Gun` (pivot at the trunnion, axis X, so it can elevate -8 to +20 degrees), and a marker `Muzzle` at the end of the barrel pointing along +Z.
+- `Wheel_L0`, `Wheel_L1`, ... and `Wheel_R0`, ... (road wheels: pivot at each axle, axis X), `Sprocket_L/R`, `Idler_L/R`, `Roller_L0..` (return rollers).
+- `Track_L` and `Track_R`: one mesh each, with the **UV's U running along the track loop** from 0 to 1, so the game can scroll the track by changing the UV offset; put the track pads as real geometry.
+- Optional: `Hatch_Commander` (pivot on its hinge), `Antenna_1` (a thin whip, pivot at the base), `Smoke_Launcher_L/R`, `Exhaust` (marker), `Engine_Deck` (marker for smoke when damaged).
+- A separate mesh `Wreck` (hidden node at the top level): the same tank burnt out, turret blown off beside the hull, as a static model.
+- Add a `collision` node: a simple box (`Collision_Box`) around the hull, for the game's own use.
+
+**Then, only after the user has approved the tank:** the same for an armoured personnel carrier (`Hull`, `Turret`, `Gun`, `Muzzle`, `Wheel_L0..L3`, `Wheel_R0..R3`),
+a self-propelled howitzer, a 6x6 truck, a rocket launcher truck, an air-defence launcher (`Hull`, `Launcher` that rises about X), then aircraft: `jet_fighter`
+(`Fuselage`, `Gear_Nose`, `Gear_Left`, `Gear_Right` which retract about their hinge, `Flap_L/R`, `Rudder`, `Afterburner` marker, `Canopy`), `helicopter` (`Fuselage`, `Rotor_Main` axis Y,
+`Rotor_Tail` axis X, `Skid` or wheels), `bomber`, `transport_plane`, then ships: `destroyer` (`Hull`, `Turret_Main` axis Y with a `Gun` at its trunnion, `Radar` axis Y,
+`Wake_Bow` and `Wake_Stern` markers), `carrier` (with a flat deck and an island), `submarine` (hull, sail, `Propeller`), `landing_ship`.
+Soldiers are **not** in this tier: they need a skeleton and animation, which has to be agreed separately.
+
+**Files:** `native/godot/assets/art/vehicles/<name>.glb`, `aircraft/<name>.glb`, `ships/<name>.glb`, each with a MANIFEST.json entry
+(`"kind": "model"`, triangles, size, the list of named nodes and the pivots' positions). Check each file by loading it back and printing the node tree with every pivot.
