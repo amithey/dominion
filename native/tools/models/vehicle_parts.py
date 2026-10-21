@@ -204,6 +204,7 @@ def write_glb(path,rigs,wreck,collision,metadata):
          'nodes':[],'meshes':[],'materials':[{'name':role,'pbrMetallicRoughness':{'baseColorFactor':[1,1,1,1],'roughnessFactor':.8,'metallicFactor':0}} for role in ROLES],
          'buffers':[{'byteLength':0}],'bufferViews':[],'accessors':[],
          'extensionsUsed':['KHR_node_visibility'],'extensionsRequired':['KHR_node_visibility'],'extras':metadata}
+    doc['scenes'][0]['name']=metadata.get('scene_name',doc['scenes'][0]['name'])
     blob=bytearray()
     def acc(data,typ,target,integer=False):
         data=np.asarray(data,dtype='<u4' if integer else '<f4');offset=len(blob);blob.extend(data.tobytes())
@@ -240,10 +241,13 @@ def write_glb(path,rigs,wreck,collision,metadata):
             pivot=node(part['name']+suffix,byname[parent],local,extras=extras);byname[part['name']]=pivot
             if part['mesh'] is not None:
                 mi=mesh_index(part['mesh'],rig.root+'_'+part['name'],part['pivot'])
-                node(part['name']+'_Mesh'+suffix,pivot,mesh=mi,extras={'canonical_part':part['name']+'_Mesh'})
+                child=node(part['name']+'_Mesh'+suffix,pivot,mesh=mi,extras={'canonical_part':part['name']+'_Mesh'})
+                if 'mesh_scale' in part['extras']:
+                    doc['nodes'][child]['scale']=part['extras']['mesh_scale']
     node('Wreck',mesh=mesh_index(wreck,'Wreck'),visible=False,extras={'state':'destroyed','default_visible':False,'detached_turret':True})
     cr=node('collision',visible=False,extras={'purpose':'game collision proxy','default_visible':False})
-    node('Collision_Box',cr,mesh=mesh_index(collision,'Collision_Box',np.array([0,.75,0])),translation=[0,.75,0],extras={'shape':'box','size':[3.7,1.5,7.92]})
+    low,high=collision.bounds();center=(low+high)/2
+    node('Collision_Box',cr,mesh=mesh_index(collision,'Collision_Box',center),translation=center,extras={'shape':'box','size':(high-low).tolist()})
     doc['buffers'][0]['byteLength']=len(blob)
     js=json.dumps(doc,separators=(',',':')).encode();js+=b' '*((-len(js))%4)
     raw=struct.pack('<4sII',b'glTF',2,28+len(js)+len(blob))+struct.pack('<II',len(js),0x4E4F534A)+js+struct.pack('<II',len(blob),0x004E4942)+blob
@@ -280,6 +284,7 @@ def walk_nodes(doc,override=None,canonical=False):
     override=override or {};result=[]
     def visit(index,parent_matrix,path,parent_visible):
         node=doc['nodes'][index];local=np.eye(4);local[:3,3]=node.get('translation',[0,0,0])
+        local[:3,:3]=np.diag(node.get('scale',[1,1,1]))
         name=node.get('extras',{}).get('canonical_part',node['name']) if canonical else node['name']
         path=path+'/'+name if path else name
         if path in override:local=local@override[path]
