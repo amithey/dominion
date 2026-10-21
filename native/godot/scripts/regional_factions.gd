@@ -2,23 +2,17 @@ extends RefCounted
 ## Sources and scenario limits: docs/planning/SEVEN-ENTITIES-GAME-PROFILES-2026-10-10.md.
 ## Values below are game balance, not factual measures of national readiness.
 ## Append-only identities preserve the original 22 selection indices and saved arsenals.
-const IDS := ["yemen", "houthis", "ethiopia", "nigeria", "sudan", "south_sudan"]
-const NAMES := ["Yemen (Recognized Government)", "Houthis (Ansar Allah)", "Ethiopia", "Nigeria", "Sudan", "South Sudan"]
+const Registry := preload("res://scripts/nation_registry.gd")
+static var IDS: Array = Registry.column("id", ["regional"])
+static var NAMES: Array = Registry.column("name", ["regional"])
 ## Verified leadership snapshot: 2026-10-11; portrait provenance is recorded beside the PNGs.
-const LEADERS := ["PLC Chairman Rashad al-Alimi", "Ansar Allah Leader Abdul-Malik al-Houthi", "Prime Minister Abiy Ahmed", "President Bola Tinubu", "Sovereign Council Chairman Abdel Fattah al-Burhan", "President Salva Kiir Mayardit"]
+static var LEADERS: Array = Registry.column("leader", ["regional"])
+static var COLOURS: Array = Registry.column("colour", ["regional"])
+static var PORTRAITS: Array = Registry.column("portrait", ["regional"])
+static var SIGNATURES: Array = Registry.column("signature", ["regional"])
+static var DOCTRINES: Array = Registry.column("doctrine", ["regional"])
 ## Early regional saves used authority labels; keep their portraits resolvable.
-const LEADER_ALIASES := {"Presidential Leadership Council": LEADERS[0], "Ansar Allah Leadership": LEADERS[1], "Federal Government of Ethiopia": LEADERS[2], "Federal Government of Nigeria": LEADERS[3], "Sudanese Authorities": LEADERS[4], "Government of South Sudan": LEADERS[5]}
-const COLOURS := ["#ba6557", "#748653", "#66a465", "#31967b", "#b39160", "#6285b3"]
-const PORTRAITS := ["yemen", "houthis", "ethiopia", "nigeria", "sudan", "south-sudan"]
-const SIGNATURES := ["Reconstruction Crew", "Coastal Drone Battery", "Hydropower Grid", "A-29 / JF-17", "Reconstruction Engineers", "Oil Transit Contract"]
-const DOCTRINES := [
-	"Rebuild institutions: affordable civilian construction and partner-funded reconstruction. Limited ground forces; no assumed operational fighter fleet. Competes with Ansar Allah within Yemen.",
-	"Ansar Allah: an armed authority within Yemen, with drones and coastal pressure. A coastal battery can briefly disrupt an enemy's shipping; escorts reduce the effect. No separate UN seat or fighter fleet.",
-	"Hydropower and corridors: agricultural output supports a growing population. A supplied power plant can sell a timed grid contract to a friendly partner. Landlocked: no ports or navy.",
-	"Energy and industry: strong oil and gas output, but an unreliable grid slows production. Pay to stabilize a supplied power plant. A-29 ground support and JF-17 fighters require research.",
-	"Reconstruction: agriculture and engineering support recovery from war damage. Pay to repair damaged buildings near the capital. Sudan is distinct from South Sudan; the skirmish does not reproduce territorial control in the civil war.",
-	"Oil and transit: export actual oil stocks through a paid agreement with Sudan. Both sides need supplied extractors; war or lost infrastructure cancels the escrow and refunds it. Landlocked, with a limited ground roster."
-]
+static var LEADER_ALIASES := {"Presidential Leadership Council": LEADERS[0], "Ansar Allah Leadership": LEADERS[1], "Federal Government of Ethiopia": LEADERS[2], "Federal Government of Nigeria": LEADERS[3], "Sudanese Authorities": LEADERS[4], "Government of South Sudan": LEADERS[5]}
 const PROFILES := {
 	"yemen": {"bonus": {"incomePct": -0.2, "researchPct": -0.2}, "trade": 0.85, "build_costs": {"farm": 0.85, "school": 0.85, "villageCenter": 0.85}, "strengths": ["Farms, schools and village centres cost -15%", "Partner-funded reconstruction; workers build 15% faster"], "weaknesses": ["Income and research -20%, trade -15%", "No fighters, strategic weapons or advanced navy"]},
 	"houthis": {"bonus": {"incomePct": -0.25, "researchPct": -0.25}, "trade": 0.7, "unit_costs": {"loiterer": 0.8, "fpvTeam": 0.85}, "strengths": ["Loitering munitions cost -20%, FPV teams -15%", "Limited coastal shipping pressure"], "weaknesses": ["Income and research -25%, trade -30%", "No fighters, advanced navy or separate UN seat"]},

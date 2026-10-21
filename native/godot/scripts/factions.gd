@@ -1,25 +1,16 @@
 extends RefCounted
 ## Playable identities, independent of map slots. Real leaders are a snapshot
 ## dated 2026-09-28; military modifiers are game balance, not factual rankings.
-const Extra := preload("res://scripts/additional_factions.gd")
-const NAMES := ["United States", "China", "European Union", "Iran", "Russia", "India", "Japan", "Turkiye", "Israel"] + Extra.NAMES
-const LEADERS := ["President Donald Trump", "President Xi Jinping", "Commission President Ursula von der Leyen", "President Masoud Pezeshkian", "President Vladimir Putin", "Prime Minister Narendra Modi", "Prime Minister Sanae Takaichi", "President Recep Tayyip Erdogan", "Prime Minister Benjamin Netanyahu"] + Extra.LEADERS
-const IDS := ["usa", "china", "eu", "iran", "russia", "india", "japan", "turkiye", "israel"] + Extra.IDS
-const ARSENALS := ["blue", "red", "green", "gold", "russia", "india", "japan", "turkiye", "israel"] + Extra.IDS
-const COLOURS := ["#3b82f6", "#e0483e", "#33b86e", "#e8a83a", "#9868d9", "#ed7938", "#da79af", "#28b9ab", "#8fbce6"] + Extra.COLOURS
-const PORTRAITS := ["trump", "xi", "vonderleyen", "pezeshkian", "putin", "modi", "takaichi", "erdogan", "netanyahu"] + Extra.PORTRAITS
-const SIGNATURES := ["F-22 Raptor / B-21 Raider", "DF-17 Launcher", "IRIS-T SLM", "Shahed Launcher", "TOS-1A Solntsepyok", "BrahMos Battery", "Aegis Cruiser", "Bayraktar Akinci", "Harop"] + Extra.SIGNATURES
-const DOCTRINES := [
-	"Air superiority: exclusive F-22 and B-21, plus Golden Dome research. These capabilities require advanced research and costly aircraft.",
-	"Missile power: exclusive DF-17 hypersonic launcher, particularly effective against ships. Long reloads leave gaps between salvos.",
-	"Layered defence: exclusive IRIS-T SLM air defence. It protects an army from aircraft but cannot fight ground targets.",
-	"Drone saturation: the Shahed launcher (Russia builds it too, as the Geran-2). Five drones per salvo can overwhelm defences, but individual drones are fragile and slow.",
-	"Massed artillery: artillery, MLRS and HIMARS gain 20% damage and 10% range, but move 15% slower.",
-	"Resilient ground forces: combat infantry gain 15% health; rocket soldiers and ATGM teams deal 15% more damage. Crewed aircraft have 10% less health.",
-	"Maritime engineering: ships gain 15% range and 10% speed. Tanks have 10% less health.",
-	"Agile drones: drones, FPV teams and loitering munitions gain 20% speed and 10% damage, but have 15% less health.",
-	"Precision defence: mobile SAMs, MANPADS and lasers gain 10% range and 15% shorter reloads. Missile interception gains 5 percentage points (capped at 97%). Commandos deal 15% more damage. These specialists have 10% less health."
-] + Extra.DOCTRINES
+const Registry := preload("res://scripts/nation_registry.gd")
+## The columns below are read from the registry, one data file per nation in scripts/nations/.
+static var IDS: Array = Registry.column("id")
+static var ARSENALS: Array = Registry.column("arsenal")
+static var NAMES: Array = Registry.column("name")
+static var LEADERS: Array = Registry.column("leader")
+static var COLOURS: Array = Registry.column("colour")
+static var PORTRAITS: Array = Registry.column("portrait")
+static var SIGNATURES: Array = Registry.column("signature")
+static var DOCTRINES: Array = Registry.column("doctrine")
 static func labels() -> Array:
 	var out := []
 	for i in range(IDS.size()):

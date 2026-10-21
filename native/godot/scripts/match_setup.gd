@@ -19,7 +19,7 @@ const PACES := [0.6, 0.75, 1.0]
 ## Each nation's own flag colour, in the order of NATIONS (map.nations is
 ## reordered once a match is set up, player first).
 const Factions = preload("res://scripts/factions.gd")
-const COLOURS = Factions.COLOURS
+static var COLOURS: Array = Factions.COLOURS
 const LEVELS := ["easy", "normal", "hard"]
 static var NATIONS: Array = Factions.labels()
 

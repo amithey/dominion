@@ -3,29 +3,16 @@ extends RefCounted
 ## Iraq, Syria and Afghanistan: 2026-10-03, native/NATIONS-IRAQ-SYRIA-AFGHANISTAN-2026-10-03.md.
 ## Numerical modifiers are game balance, never claims about real effectiveness.
 const Regional := preload("res://scripts/regional_factions.gd")
-const IDS := ["uk", "south_korea", "saudi", "brazil", "indonesia", "ukraine", "north_korea", "egypt", "australia", "pakistan", "iraq", "syria", "afghanistan"] + Regional.IDS
+const Registry := preload("res://scripts/nation_registry.gd")
+static var IDS: Array = Registry.column("id", ["additional", "regional"])
 ## Claim existing capital slots without changing the parallel map work's geometry.
 const CITY_FACTIONS := {"Riyadh": "saudi", "Kyiv": "ukraine", "Seoul": "south_korea", "Jakarta": "indonesia", "Baghdad": "iraq"}
-const NAMES := ["United Kingdom", "South Korea", "Saudi Arabia", "Brazil", "Indonesia", "Ukraine", "North Korea", "Egypt", "Australia", "Pakistan", "Iraq", "Syria", "Afghanistan"] + Regional.NAMES
-const LEADERS := ["Prime Minister Andy Burnham", "President Lee Jae Myung", "Crown Prince and Prime Minister Mohammed bin Salman", "President Luiz Inacio Lula da Silva", "President Prabowo Subianto", "President Volodymyr Zelenskyy", "General Secretary Kim Jong Un", "President Abdel Fattah el-Sisi", "Prime Minister Anthony Albanese", "Prime Minister Shehbaz Sharif", "Prime Minister Ali al-Zaidi", "President Ahmed al-Sharaa", "Supreme Leader Hibatullah Akhundzada"] + Regional.LEADERS
-const COLOURS := ["#bc354b", "#6d92bf", "#368250", "#a2b83f", "#ed6550", "#e7c443", "#905059", "#c38c52", "#628a9e", "#6c9560", "#a0522d", "#5d6d7e", "#d9d4c5"] + Regional.COLOURS
-const PORTRAITS := ["burnham", "lee", "bin-salman", "lula", "prabowo", "zelenskyy", "kim", "sisi", "albanese", "sharif", "zaidi", "sharaa", "akhundzada"] + Regional.PORTRAITS
-const SIGNATURES := ["Type 45 Destroyer", "K9 Thunder", "Saudi THAAD", "A-29 Super Tucano", "KCR-60", "Interceptor Drone", "Heavy Rocket Launcher", "Engineering Corps", "Bushmaster", "JF-17 Thunder", "Golden Division (CTS)", "Shaheen Drone Team", "Suicide Attack Squad"] + Regional.SIGNATURES
-const DOCTRINES := [
-	"Maritime power: Type 45 air defence protects commerce, and the London market can deny a rival's ships their insurance. Expensive infantry and slower population growth reward a compact force.",
-	"Arsenal for partners: K9 artillery reloads and moves quickly, and tanks and howitzers are sold abroad on export credit. Strong research and production depend on imported energy.",
-	"Oil power: oil finances development, and an OPEC+ output cut lifts the world price. THAAD protects against ballistic missiles; food and aircraft are costly.",
-	"Food diplomacy: farms sustain exports and aid shipments. A-29 light aircraft support ground forces but cannot fight jets.",
-	"Commodity power: fishing and affordable ports support villages, and nickel and palm oil exports can be stopped. Fast KCR-60 boats strike ships then retreat during long reloads.",
-	"Drone war: cheaper route repairs, fast drone production and long-range strikes on an enemy's refineries. Interceptor drones engage only hostile airborne drones.",
-	"Fortified firepower: durable bunkers and heavy rocket salvos, paid for in part by hackers who rob rivals' treasuries. A weak trade economy.",
-	"The canal: cheaper routes, and the Suez Canal opened to friends or closed to enemies. Engineering Corps workers build 25% faster; civilians consume more food.",
-	"Resource frontier: iron and uranium fund a compact army and critical minerals pacts with partners. Bushmasters resist explosive attacks but lack anti-tank firepower.",
-	"Defence pacts: affordable fighters and fast infantry recruitment; a mutual defence pact makes a friend an ally.",
-	"Oil state between two patrons: oil pays for an army of Abrams and F-16IQs, and the Popular Mobilization raises militias at a call, at a price in Washington. Drought cuts the harvest; no nuclear or missile programme.",
-	"Rebuilding after the war: battle-hardened infantry and cheap Shaheen drones. No jets, no attack helicopters, no navy and no strategic air defence: partners pay for the reconstruction.",
-	"Insurgency: cheap, fast-raised, hardy infantry, suicide attack squads and attacks deep inside an enemy country. No air force, no navy, no nuclear reactor; sanctions and isolation starve its economy and research."
-] + Regional.DOCTRINES
+static var NAMES: Array = Registry.column("name", ["additional", "regional"])
+static var LEADERS: Array = Registry.column("leader", ["additional", "regional"])
+static var COLOURS: Array = Registry.column("colour", ["additional", "regional"])
+static var PORTRAITS: Array = Registry.column("portrait", ["additional", "regional"])
+static var SIGNATURES: Array = Registry.column("signature", ["additional", "regional"])
+static var DOCTRINES: Array = Registry.column("doctrine", ["additional", "regional"])
 const PROFILES := {
 	"yemen": Regional.PROFILES.yemen, "houthis": Regional.PROFILES.houthis, "ethiopia": Regional.PROFILES.ethiopia,
 	"nigeria": Regional.PROFILES.nigeria, "sudan": Regional.PROFILES.sudan, "south_sudan": Regional.PROFILES.south_sudan,
