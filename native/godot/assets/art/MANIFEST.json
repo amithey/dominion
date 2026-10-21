@@ -1,0 +1,172 @@
+[
+  {
+    "file": "fx/fx_explosion_ground_8x8.png",
+    "kind": "flipbook",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": [
+      8,
+      8
+    ],
+    "tileable": false,
+    "frames": 64,
+    "notes": "Original imagery generated with built-in image_gen, no downloaded imagery or reference likeness. Source 1254x1254, 64 extracted source frames; repacked to 64 cells at 256x256 with uniform global scale, fixed base anchor and Lanczos resampling. Premultiplied intermediates used only for resampling; exported straight alpha. RGBA, transparent background with soft alpha. One-shot, first and final frames empty; temporal fade applied. Suggested 24 fps. ",
+    "generation_prompt": "Use case: photorealistic-natural. Original production game VFX sprite atlas: ground explosion, fireball, thrown dirt, rising grey smoke, only muted grey and orange. Precisely 8 columns by 8 rows of equal 256px square cells, total 2048x2048 PNG. 64 consecutive chronological frames left to right then top to bottom of ONE filmed explosion, locked orthographic camera and fixed ground origin at bottom center of every cell. Starts empty at frame 1, tiny ignition then rapidly expands, fire dies into billowing smoke which rises and gradually dissipates to fully empty frame 64. Photographic high speed film realism, turbulent volumetric detail, no illustration. Each effect fits entirely within its own cell with transparent margin; no touching neighboring cells. Genuine transparent background with soft straight alpha, no black matte, no checkerboard baked in, no floor, no scenery, no grid lines, no text. Self luminous fire is allowed; smoke neutral diffuse daylight, no cast shadows.",
+    "sha256": "830177166d99ce279a21e95483288431451882bc389ec91c96ff12bc1917b5b9"
+  },
+  {
+    "file": "fx/fx_explosion_air_8x8.png",
+    "kind": "flipbook",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": [
+      8,
+      8
+    ],
+    "tileable": false,
+    "frames": 64,
+    "notes": "Original imagery generated with built-in image_gen, no downloaded imagery or reference likeness. Source 1254x1254, 64 extracted source frames; repacked to 64 cells at 256x256 with uniform global scale, fixed center anchor and Lanczos resampling. Premultiplied intermediates used only for resampling; exported straight alpha. RGBA, transparent background with soft alpha. One-shot, first and final frames empty; temporal fade applied. Suggested 24 fps. ",
+    "generation_prompt": "Original photographic VFX sprite atlas for a realistic RTS. Air explosion: spherical orange fireball becomes expanding toroidal grey smoke ring then disperses. EXACT 8x8 grid, 64 equal square cells, row-major time sequence, 2048x2048. Locked camera, same center every frame, effect fully fits inside each cell with at least 12% empty margin, never crosses cell boundary. First cell empty, ignition in second, maximum blast in frames 8-18, cooling grey smoke frames 19-42, progressive dissipation frames 43-63, final cell empty. Genuine transparent backdrop, soft straight alpha, no ground, no scenery, no text, no lines, no baked checkerboard. High speed film volumetric turbulence, realistic muted orange and grey, no cartoon, no painted strokes. No cast shadow or cinematic colored lighting.",
+    "sha256": "b4d35484cc601915e8b4e304e8b27066fffaa52afa1ff1c6b5575db98aae04e7"
+  },
+  {
+    "file": "fx/fx_fireball_additive_8x8.png",
+    "kind": "flipbook",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": [
+      8,
+      8
+    ],
+    "tileable": false,
+    "frames": 64,
+    "notes": "Original imagery generated with built-in image_gen, no downloaded imagery or reference likeness. Source 1254x1254, 64 extracted source frames; repacked to 64 cells at 256x256 with uniform global scale, fixed center anchor and Lanczos resampling. Premultiplied intermediates used only for resampling; exported straight alpha. RGB additive; pure black background; warm emission only; generated grid marks removed. One-shot, first and final frames empty; temporal fade applied. Suggested 24 fps. ",
+    "generation_prompt": "Original realistic filmed FIRE ONLY explosion VFX atlas. Exactly 8 columns 8 rows, 64 equal square frames chronological left-right top-bottom, canvas 2048x2048. Self luminous detailed turbulent orange amber and pale yellow fireball on perfectly pure black RGB(0,0,0) backdrop for additive blending, no alpha, no smoke, no dirt, no scenery. Starts empty first cell, small ignition second, expands through first three rows then flame curls cool and vanish gradually over later rows, last cell pure black. Fixed center and camera, same framing across all cells. Keep 15 percent black margin within EVERY cell, no crossing cells, no drawn grid borders, no text or labels. Photographic high speed pyrotechnic footage, original, no stylization, no decorative bloom or lens flare.",
+    "sha256": "6b6dc6091ec6784c58c20c417b35d3b602ae3b10383214791f26a664c9d46f1f"
+  },
+  {
+    "file": "fx/fx_smoke_column_8x8.png",
+    "kind": "flipbook",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": [
+      8,
+      8
+    ],
+    "tileable": false,
+    "frames": 64,
+    "notes": "Original imagery generated with built-in image_gen, no downloaded imagery or reference likeness. Source 1254x1254, 56 extracted source frames; repacked to 64 cells at 256x256 with uniform global scale, fixed base anchor and Lanczos resampling. Premultiplied intermediates used only for resampling; exported straight alpha. Source sequence retimed with adjacent-frame interpolation. RGBA, transparent background with soft alpha. One-shot, first and final frames empty; temporal fade applied. Suggested 24 fps. ",
+    "generation_prompt": "Create original photographic game VFX sprite atlas of DARK SMOKE COLUMN rising and spreading, neutral charcoal grey to black, no fire. Precisely 8 columns x 8 rows, 64 equal cells on 2048x2048 canvas, chronological left-right top-bottom. Locked camera and fixed origin near bottom center in every cell. First cell empty, a small dark puff grows into twisting tall turbulent smoke column, crown spreads and rises, then thins and fades until final cell empty. Leave generous 18% transparent margins within every cell and no clipping; use identical framing throughout. Genuine transparent background, straight soft alpha, no black matte, no checkerboard, no grid lines, no text, no scenery, no floor. Real filmed volumetric smoke, flat neutral daylight illumination, no cast shadows, no stylized brushwork.",
+    "sha256": "dc7511a1b8b87416a00ff6668c6952d75cc92652e1d5d0a627e0e37731dab73e"
+  },
+  {
+    "file": "fx/fx_smoke_light_8x8.png",
+    "kind": "flipbook",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": [
+      8,
+      8
+    ],
+    "tileable": false,
+    "frames": 64,
+    "notes": "Original imagery generated with built-in image_gen, no downloaded imagery or reference likeness. Source 1254x1254, 64 extracted source frames; repacked to 64 cells at 256x256 with uniform global scale, fixed center anchor and Lanczos resampling. Premultiplied intermediates used only for resampling; exported straight alpha. RGBA, transparent background with soft alpha. One-shot, first and final frames empty; temporal fade applied. Suggested 24 fps. ",
+    "generation_prompt": "Photorealistic VFX contact sheet: 64 consecutive frames of a light grey-white dust and chimney smoke puff, a single one-shot, true transparent background. Layout must be STRICT uniform 8 columns by 8 rows across square 2048x2048 atlas. Every cell 256x256, no extra borders or labels. Each puff stays inside central 70% of its cell, separated from all adjacent puffs by large clear transparent gutters. Fixed camera and origin center. Frame 1 empty, small airy puff then expansion into soft billowing pale grey smoke, delicate filament turbulence; late frames fade out smoothly, frame 64 empty. Flat neutral diffuse illumination, realistic filmed atmospheric wisps with fractional alpha, no floor, no shadows, no fire, no black matte, no checkerboard or grid lines. Original photographic game texture, no illustration.",
+    "sha256": "aeb7413e365e5b5db6f3eb2f39f70977e7dacdd16c1c4ef47f660651b837a210"
+  },
+  {
+    "file": "fx/fx_dust_impact_8x8.png",
+    "kind": "flipbook",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": [
+      8,
+      8
+    ],
+    "tileable": false,
+    "frames": 64,
+    "notes": "Original imagery generated with built-in image_gen, no downloaded imagery or reference likeness. Source 1254x1254, 64 extracted source frames; repacked to 64 cells at 256x256 with uniform global scale, fixed base anchor and Lanczos resampling. Premultiplied intermediates used only for resampling; exported straight alpha. RGBA, transparent background with soft alpha. One-shot, first and final frames empty; temporal fade applied. Suggested 24 fps. ",
+    "generation_prompt": "Create original realistic photographed dust impact animation sprite sheet. The MOST IMPORTANT requirement is exactly 64 distinct dust puffs arranged in STRICT 8 columns by 8 rows of IDENTICAL square cells. Canvas 2048x2048. Every individual puff is SMALL: it must occupy AT MOST the central 40% of cell width and 40% of cell height. Huge empty transparent gaps between every puff; absolutely no touching neighbors. No changing column counts. Chronological single brown dust impact left-right top-bottom: first frame empty, tiny brown dust ignition expands into low dust puff, peaks frames 24-34 then wisps slowly disperse to empty frame64. All same framing, base origin same position in each cell. Muted earth brown, fine irregular grit and dust, real high speed film look, soft transparent alpha. No grey smoke fireball, no backdrop, no floor, no text, no drawn grid or checkerboard. This is a functional game flipbook, prioritize uniform equal grid and empty gutters over large detail.",
+    "sha256": "de405e06335078cabf9535b7d4226c73a4301fb590aa90d906f1e8adfb60a371"
+  },
+  {
+    "file": "fx/fx_muzzle_flash_4x4.png",
+    "kind": "flipbook",
+    "size": [
+      1024,
+      1024
+    ],
+    "grid": [
+      4,
+      4
+    ],
+    "tileable": false,
+    "frames": 16,
+    "notes": "Original imagery generated with built-in image_gen, no downloaded imagery or reference likeness. Source 1254x1254, 16 extracted source frames; repacked to 16 cells at 256x256 with uniform global scale, fixed left anchor and Lanczos resampling. Premultiplied intermediates used only for resampling; exported straight alpha. RGB additive; pure black background; warm emission only; generated grid marks removed. One-shot, first and final frames empty; temporal fade applied. Suggested 32 fps. ",
+    "generation_prompt": "Generate one original realistic high speed filmed side-view gun muzzle flash sprite sheet, fire only, no gun visible. Exactly 4 columns x 4 rows of equal square cells, 16 chronological frames, 1024x1024 canvas. Pure RGB black backdrop, additive blend, no alpha. All frames same camera framing and same muzzle origin at 25% across and 55% down each cell. Short sideways jet pointing right, hot pale yellow core and orange tongues of burning gas, realistic irregular secondary spikes. Cell 1 black, cells 2-4 rapid ignition and maximum flash, cells 5-12 cool and shorten, cells 13-15 dim amber last sparks, cell16 black. Each flash entirely within its cell with 15% black margin. No text, labels, borders, smoke, scenery, floor, lens flare, decorative bloom, or stylization.",
+    "sha256": "5c7c7d41b87b20c926ce12c4221beca61d9d089aeed5c4896dc5cf20c7e7e8e5"
+  },
+  {
+    "file": "fx/fx_fire_loop_8x4.png",
+    "kind": "flipbook",
+    "size": [
+      2048,
+      1024
+    ],
+    "grid": [
+      8,
+      4
+    ],
+    "tileable": false,
+    "frames": 32,
+    "notes": "Original imagery generated with built-in image_gen, no downloaded imagery or reference likeness. Source 1774x887, 32 extracted source frames; repacked to 32 cells at 256x256 with uniform global scale, fixed base anchor and Lanczos resampling. Premultiplied intermediates used only for resampling; exported straight alpha. RGB additive; pure black background; warm emission only; generated grid marks removed. Continuous burning loop; four-frame temporal wrap blend. Suggested 24 fps. ",
+    "generation_prompt": "Original photographic game VFX atlas of burning wreck FLAMES ONLY, no wreck visible, no smoke. Exactly 8 columns x4 rows, 32 equal square cells, landscape 2048x1024. All frames show an active flickering fire, no ignition or fadeout. Seamless temporal loop: last frame progresses naturally into first with same flame mass, position, color and brightness. Two or three irregular licking orange amber yellow flame tongues rising from low center base, realistic filmed fluid turbulent flame detail. Fixed camera and origin, similar overall silhouette with smooth incremental movement across consecutive frames left to right then top to bottom. Pure black RGB(0,0,0) background, RGB additive blending, no alpha. Keep all flames within central 65 percent of each cell, ample black margins, no touching adjacent cells. No grid lines, text, labels, floor, scenery, bloom, lens flare or stylized illustration.",
+    "sha256": "3c2ca4953843a9504a50af72ee00cfc74dd38fdf158bc7d761ea76ef9cf6e064"
+  },
+  {
+    "file": "fx/fx_water_splash_8x8.png",
+    "kind": "flipbook",
+    "size": [
+      2048,
+      2048
+    ],
+    "grid": [
+      8,
+      8
+    ],
+    "tileable": false,
+    "frames": 64,
+    "notes": "Original imagery generated with built-in image_gen, no downloaded imagery or reference likeness. Source 1254x1254, 56 extracted source frames; repacked to 64 cells at 256x256 with uniform global scale, fixed base anchor and Lanczos resampling. Premultiplied intermediates used only for resampling; exported straight alpha. Source sequence retimed with adjacent-frame interpolation. RGBA, transparent background with soft alpha. One-shot, first and final frames empty; temporal fade applied. Suggested 24 fps. ",
+    "generation_prompt": "Original photorealistic high speed water splash VFX sprite atlas: shell strikes sea producing a white and pale blue water crown then vertical spray, droplets fall and fine mist dissipates. No shell, no sea plane or scenery. Genuine transparent backdrop with straight soft alpha. EXACT 8 columns 8 rows UNIFORM equal square cells on 2048x2048 canvas, 64 chronological frames read left to right then top to bottom. Each effect must fit central 65% of its own cell with transparent gutters; same fixed camera and impact origin centered near bottom. First frame empty, small crown grows through first rows, tall splash peaks in middle rows then collapses into falling droplets, final row fades away to empty final frame. Photographic fine liquid sheets and droplets, muted neutral daylight white/pale icy blue, flat diffuse light, no cast shadow, no fire. No grid lines, labels, text, black matte or checkerboard.",
+    "sha256": "b1bb73cf532d2f5f967ac3990987263baed1efcfc8401bcf20af2f3bff6c2d81"
+  },
+  {
+    "file": "fx/fx_missile_trail_8x4.png",
+    "kind": "flipbook",
+    "size": [
+      2048,
+      1024
+    ],
+    "grid": [
+      8,
+      4
+    ],
+    "tileable": true,
+    "frames": 32,
+    "notes": "Original imagery generated with built-in image_gen, no downloaded imagery or reference likeness. Source 1774x887, 32 extracted source frames; repacked to 32 cells at 256x256 with uniform global scale, fixed trail anchor and Lanczos resampling. Premultiplied intermediates used only for resampling; exported straight alpha. RGBA, transparent background with soft alpha. Continuous trail variations; horizontal edges matched per frame (tileable on X only, not Y). Suggested 16 fps. ",
+    "generation_prompt": "Original realistic photographic missile smoke exhaust TRAIL SEGMENT VFX atlas, no missile. 8 columns x4 rows, 32 equal square cells, 2048x1024 landscape. Genuine transparent background with straight fractional alpha. Each cell contains a thin horizontal ribbon of turbulent pale grey exhaust smoke along its horizontal center, evenly sized and positioned, no fireball. Ribbon extends exactly from left edge to right edge, and both ends have matching width opacity and turbulence so the segment tiles seamlessly horizontally along missile path. Leave top and bottom halves transparent. Show 32 small chronological variations of the same exhaust segment, no large changes of framing or width. Flat diffuse neutral daylight, original high speed film detail, white/light grey smoke, no glow, no black matte, no checkerboard, no drawn grid, no text, no scenery, no cast shadows.",
+    "sha256": "cb704ccfd50491d2fa2a606afde622e319999ac821b7b553098e0af102e19a75"
+  }
+]
