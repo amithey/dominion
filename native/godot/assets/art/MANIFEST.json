@@ -3338,5 +3338,747 @@
     "sha256": "dcd4745c3356f6f11b58368dae8efbe7c749726920240ef674003ce486b668f3",
     "generation_prompt": "Original photographic game PBR ALBEDO texture: Original generic snow camouflage paint: mostly off-white with sparse interconnected pale grey and charcoal irregular organic patches, no national or copyrighted pattern. Seamless periodic tile, four matching edges for natural 3x3 repetition. Square 1024x1024 RGB. Strict evenly lit diffuse base colour, no baked directional lighting, shadows, AO, highlights, reflections, gradients or vignette. Orthographic straight on surface, realistic fine microtexture and muted natural colours. Edge-to-edge surface only, no perspective, borders, words, logos, map montage or preview sphere.",
     "source_sha256": "9bbee2a9ffb1267dace487e0e6b956c4b25b4236c08237c61279ee9d0389cffe"
+  },
+  {
+    "file": "buildings/cottage_1.glb",
+    "kind": "model",
+    "triangles": [
+      1728,
+      272
+    ],
+    "footprint": [
+      7.33,
+      6.87
+    ],
+    "height": 5.99,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_tile",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      7.33,
+      5.99,
+      6.87
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "4598b34e3ccac354360447aa9071ebfb7442327a51479146215f7e6a14826d3e"
+  },
+  {
+    "file": "buildings/cottage_2.glb",
+    "kind": "model",
+    "triangles": [
+      2010,
+      384
+    ],
+    "footprint": [
+      7.83,
+      7.27
+    ],
+    "height": 6.14,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_slate",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      7.83,
+      6.14,
+      7.27
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "8b89c569f76a43a3485fa6b2632f172eed0fb3c8b5364f4866c85b978163bd35"
+  },
+  {
+    "file": "buildings/cottage_3.glb",
+    "kind": "model",
+    "triangles": [
+      1776,
+      272
+    ],
+    "footprint": [
+      6.93,
+      7.87
+    ],
+    "height": 6.04,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_tile",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      6.93,
+      6.04,
+      7.87
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "3f30305e7fd31515e649b6ab86c41920b9a4ea1ae2c5486352b0620e9410b173"
+  },
+  {
+    "file": "buildings/townhouse_1.glb",
+    "kind": "model",
+    "triangles": [
+      2876,
+      252
+    ],
+    "footprint": [
+      5.63,
+      8.11
+    ],
+    "height": 9.14,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_slate",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      5.63,
+      9.14,
+      8.11
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "08a38d809766a40b3e5fea2e22c577c0c64af59518e84cf4bf139b9088dbfdb1"
+  },
+  {
+    "file": "buildings/townhouse_2.glb",
+    "kind": "model",
+    "triangles": [
+      3988,
+      268
+    ],
+    "footprint": [
+      5.93,
+      7.71
+    ],
+    "height": 11.74,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_slate",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      5.93,
+      11.74,
+      7.71
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "8bbabbb6a4e597e2614d9ee77afdf80fdece86e658b22b071c4e83fb0b372e62"
+  },
+  {
+    "file": "buildings/townhouse_3.glb",
+    "kind": "model",
+    "triangles": [
+      2876,
+      252
+    ],
+    "footprint": [
+      6.33,
+      8.01
+    ],
+    "height": 9.34,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_slate",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      6.33,
+      9.34,
+      8.01
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "03dd70da82ec4fd6a602c4cbe0a1525468df556b90b44441f55ef9f34d2bf577"
+  },
+  {
+    "file": "buildings/apartment_block_1.glb",
+    "kind": "model",
+    "triangles": [
+      5742,
+      738
+    ],
+    "footprint": [
+      7.87,
+      7.675
+    ],
+    "height": 16.8,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_concrete",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      7.87,
+      16.8,
+      7.675
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "dffacfe33d9b2b6eaf7e38fa236f96c3db8f10928caf00d877e8fdfa9119e62e"
+  },
+  {
+    "file": "buildings/apartment_block_2.glb",
+    "kind": "model",
+    "triangles": [
+      5742,
+      738
+    ],
+    "footprint": [
+      8.27,
+      7.375
+    ],
+    "height": 17.05,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.27,
+      17.05,
+      7.375
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "e35291b1daaf6620babf5be21599dc027b5b91b3715e1ebcea76f48bf176c9b4"
+  },
+  {
+    "file": "buildings/apartment_block_3.glb",
+    "kind": "model",
+    "triangles": [
+      5742,
+      738
+    ],
+    "footprint": [
+      7.67,
+      8.075
+    ],
+    "height": 16.55,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      7.67,
+      16.55,
+      8.075
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "da185c590976e34c6f26803a1108c329e91b888c685b8d8f3b4300757d12955d"
+  },
+  {
+    "file": "buildings/farmhouse_1.glb",
+    "kind": "model",
+    "triangles": [
+      2888,
+      288
+    ],
+    "footprint": [
+      8.53,
+      7.17
+    ],
+    "height": 8.74,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_tile",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.53,
+      8.74,
+      7.17
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "ad63a094a026f33dd298ad0e6d8d253c44fe3fe4b048cc01d883579d38ba9e93"
+  },
+  {
+    "file": "buildings/farmhouse_2.glb",
+    "kind": "model",
+    "triangles": [
+      1776,
+      272
+    ],
+    "footprint": [
+      8.13,
+      7.47
+    ],
+    "height": 6.39,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_slate",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.13,
+      6.39,
+      7.47
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "fc55f2acf0ff031a154377c817c75f1b64ce2a2ba918d6b247163fa75dedb47a"
+  },
+  {
+    "file": "buildings/farmhouse_3.glb",
+    "kind": "model",
+    "triangles": [
+      2888,
+      288
+    ],
+    "footprint": [
+      8.73,
+      7.27
+    ],
+    "height": 8.64,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_tile",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.73,
+      8.64,
+      7.27
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "a4aad5b6e8b5a0a295f902c979decb0d7f434da96b9bbabf67ef5e67f07f7e2a"
+  },
+  {
+    "file": "buildings/barn_1.glb",
+    "kind": "model",
+    "triangles": [
+      1566,
+      238
+    ],
+    "footprint": [
+      8.33,
+      7.64
+    ],
+    "height": 6.34,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_tile",
+      "trim",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.33,
+      6.34,
+      7.64
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "b28e71fcd6501beb4b313b4123866fb26ce9808270cee8d40e0b0e953f8a32b5"
+  },
+  {
+    "file": "buildings/barn_2.glb",
+    "kind": "model",
+    "triangles": [
+      1594,
+      266
+    ],
+    "footprint": [
+      8.73,
+      7.54
+    ],
+    "height": 6.44,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_slate",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.73,
+      6.44,
+      7.54
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "34946e922145a69927686a4da703863bde550e5f746c903e1f54eb265310e2fd"
+  },
+  {
+    "file": "buildings/barn_3.glb",
+    "kind": "model",
+    "triangles": [
+      1566,
+      238
+    ],
+    "footprint": [
+      8.13,
+      7.84
+    ],
+    "height": 6.64,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "trim",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.13,
+      6.64,
+      7.84
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "979e34a096a6fe3626d8fc4d5fedda088acb55b1ff8f02b311bcfd1d6d42b760"
+  },
+  {
+    "file": "buildings/town_hall_1.glb",
+    "kind": "model",
+    "triangles": [
+      3394,
+      570
+    ],
+    "footprint": [
+      8.45,
+      8.3
+    ],
+    "height": 9.74,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_slate",
+      "trim",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.45,
+      9.74,
+      8.3
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "a39b6a648a5147feae876a0edab2292b3302d5391a50014a44124b75538b9fb1"
+  },
+  {
+    "file": "buildings/town_hall_2.glb",
+    "kind": "model",
+    "triangles": [
+      3332,
+      552
+    ],
+    "footprint": [
+      8.75,
+      8.1
+    ],
+    "height": 8.85,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_metal",
+      "roof_slate",
+      "trim",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.75,
+      8.85,
+      8.1
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "e44348c8952bf84fa7a44380ad0ac516bbb489118f533047dc42c2c56cc9c0c5"
+  },
+  {
+    "file": "buildings/town_hall_3.glb",
+    "kind": "model",
+    "triangles": [
+      3394,
+      570
+    ],
+    "footprint": [
+      8.55,
+      8.2
+    ],
+    "height": 9.54,
+    "materials": [
+      "glass",
+      "metal",
+      "roof_slate",
+      "trim",
+      "wall_brick",
+      "wall_concrete",
+      "wall_plaster",
+      "wall_stone",
+      "wood"
+    ],
+    "size": [
+      8.55,
+      9.54,
+      8.2
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "nodes": [
+      "LOD0",
+      "LOD1"
+    ],
+    "notes": "Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.",
+    "sha256": "a4b0cac9f34edd81d5aa7eecc44f35c45dd173771b32689d477a63a526b55b1b"
   }
 ]
