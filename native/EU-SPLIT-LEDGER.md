@@ -44,15 +44,22 @@ file's comments or the dossier; figures are game balance.
 - Left with the Union on purpose: `antiRadar` (the HARM is German and Italian), `stealthFighter` and
   `activeProtection` (German orders), the German and Dutch roster rows.
 
-### Still to do for France (stage 3)
+### Done for France, stage 3 (commit e38f5ad)
 
-- Rows in tables that fall back to a default today: crisis, GDP (`world_stats.BASE_GDP`), regime
-  (`war_support.REGIME`), generals (style and names), unit quality (SAMP/T NG, NH90, Tiger, Rafale,
-  Horizon, MMP, Mistral 3), space (`LAUNCHERS`: Ariane), chip fabs (`national_industry.CHIP_FAB`),
-  carrier style and air wing (`force_models`, `war_tools`), city style, world-event deltas, diplomacy ties
-  (`TIES`), `ai_data.CONTROLLERS`.
+GDP, crisis baselines, regime, generals, space launchers, chip fabs, city style, carrier style and air wing,
+the Union's world-event shocks (copied, to be split among members), starting ties (copied from the Union's),
+and unit-quality figures for every class she fields (judgements on the table's own scale, not measurements).
+
+### Still open for France
+
+- No "Paris" capital slot on any map (`world_geography`, `additional_factions.CITY_FACTIONS`): she starts from a free
+  slot. Adding one is map work.
+- Figures to check against sources: inflation 1.2, unemployment 7.6, debt 116, Fragile States Index 33, GDP 3,400.
+- Unit-quality judgements (Leclerc 1.06, Crotale NG older, Suffren 1.06...) and her generals' traits.
 - A portrait illustration: `macron-emblem.svg` stands in.
 - `un_data.PROXY` maps `eu` to `france`: remove it at the cut-over, when `eu` goes.
+- `unit-quality-check`, `world-events-check`, `war-support-check` and `space-check` are not in `run-tests.ps1`:
+  run them by hand until they are added.
 
 ## Open questions to verify before release
 
