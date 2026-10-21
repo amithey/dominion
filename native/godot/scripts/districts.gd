@@ -26,6 +26,11 @@ const HOUSES := ["res://assets/House_A.glb", "res://assets/House_B.glb", "res://
 const HOUSE_COUNT := {"cottage": 2, "residential": 2, "workerHouse": 2, "luxuryVillas": 2}
 
 const Architecture := preload("res://scripts/architecture.gd")
+const BModels := preload("res://scripts/building_models.gd")   # the code-built glb buildings (assets/art/buildings)
+## Central buildings that are a glb model when one exists: key -> model kind.
+const MODEL_KIND := {"hq": "town_hall", "cityCenter": "town_hall", "cityHall": "town_hall", "courthouse": "town_hall", "villageCenter": "town_hall",
+	"apartments": "apartment_block", "housing": "townhouse"}
+var model_seed := 0.0
 ## Buildings the kit makes as whole-hex compositions: key -> recipe.
 const RECIPES := {"extractor": "extractor", "mountainMine": "extractor", "oilRefinery": "refinery",
 	"chipFab": "chip_fab", "nuclearReactor": "nuclear", "solarFarm": "solar", "fishingWharf": "wharf",
@@ -70,6 +75,7 @@ func style_of(key: String) -> int:
 func build(key: String, centre: Vector3, seed: float, owner_id := 0, size := 0) -> Dictionary:
 	owner = owner_id
 	city_size = size
+	model_seed = seed
 	var floor_y := floor_height(centre)
 	var dep = world.deposit_near(centre, 10.0)
 	arch.extract_type = dep.type if dep != null else ("iron" if key == "mountainMine" else "")
@@ -250,6 +256,17 @@ func fence(st: SurfaceTool, color: Color, height := 1.1) -> void:
 			box(st, Vector3(p0.distance_to(p1), 0.08, 0.06), Vector3(mid.x, height * 0.75, mid.y), yaw, color)
 
 func main_building(key: String, container: Node3D, footprint: float, at := Vector3.ZERO) -> void:
+	if key == "farm" and not BModels.variants("farmhouse").is_empty() and not BModels.variants("barn").is_empty():
+		var frng := RandomNumberGenerator.new()
+		frng.seed = int(model_seed * 1000.0) + 17
+		place_model(container, "farmhouse", at + Vector3(-2.4, 0, 0.2), 0.0, 4.6, 0.0, frng)
+		place_model(container, "barn", at + Vector3(2.8, 0, -0.4), -0.25, 4.8, 0.0, frng)
+		return
+	if MODEL_KIND.has(key) and not BModels.variants(MODEL_KIND[key]).is_empty():
+		var mrng := RandomNumberGenerator.new()
+		mrng.seed = int(model_seed * 1000.0) + key.hash()
+		place_model(container, MODEL_KIND[key], at, 0.0, footprint * 0.95, 11.5 if key in ["apartments", "housing"] else 0.0, mrng)
+		return
 	if Architecture.has_recipe(key):
 		# Real architecture from the kit (architecture.gd) instead of a scaled model.
 		var rng := RandomNumberGenerator.new()
@@ -338,6 +355,25 @@ func house(container: Node3D, at: Vector3, face: float, size: float, rng: Random
 	holder.rotation.y = face
 	container.add_child(holder)
 
+## Puts a glb building model (assets/art/buildings) in the district: scaled so its longer side is `target` metres (and no taller
+## than `cap` when that is set), facing `yaw`.
+func place_model(container: Node3D, kind: String, at: Vector3, yaw: float, target: float, cap: float, rng: RandomNumberGenerator) -> bool:
+	var variants: Array = BModels.variants(kind)
+	if variants.is_empty():
+		return false
+	var model: Node3D = BModels.build(variants[rng.randi() % variants.size()])
+	if model == null:
+		return false
+	var bounds: AABB = world.model_bounds(model)
+	var k := target / maxf(maxf(bounds.size.x, bounds.size.z), 0.01)
+	if cap > 0.0 and bounds.size.y * k > cap:
+		k = cap / bounds.size.y
+	model.scale = Vector3.ONE * k
+	model.position = at
+	model.rotation.y = yaw
+	container.add_child(model)
+	return true
+
 # ---------------------------------------------------------------- layouts
 
 func plaza(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
@@ -383,6 +419,10 @@ func residential(key: String, container: Node3D, st: SurfaceTool, rng: RandomNum
 		var face := deg_to_rad(-(30.0 + 60.0 * k)) - PI * 0.5
 		# Each faces the middle of the block, its front (+z) toward the street square.
 		arch.xf = Transform3D(Basis(Vector3.UP, face + PI * 0.5).scaled(Vector3.ONE * 0.7), p)
+		var kind := "cottage" if key in ["cottage", "workerHouse"] else "townhouse"
+		if place_model(container, kind, p, face + PI * 0.5, 4.6 if kind == "cottage" else 4.2, 7.5, rng):
+			tree(st, slot(k, 8.6) + Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)), rng, 0.8)
+			continue
 		if key in ["cottage", "workerHouse"]:
 			arch.cottage(rng, 4.2 + rng.randf() * 0.6, 3.6)
 		else:
