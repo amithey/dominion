@@ -11,6 +11,8 @@ from pathlib import Path
 import numpy as np
 from generate_buildings import Mesh, Facade, roof, front_gable_roof, chimney, unit, ART, export_glb, validate
 
+AUTHORING_NOTES=('Original architecture authored by native/tools/models/generate_buildings_extended.py with shared generate_buildings.py, using NumPy, json and struct; no Blender, external mesh, embedded textures, vertex colours, lights, cameras or animation. One mesh per LOD, one primitive per named plain-white PBR material. LOD0 includes architectural fittings; LOD1 retains the principal silhouette. GLB independently decoded after export and checked for finite data, unit normals, CCW face agreement, degenerate/duplicate faces, welded-edge winding, metre planar UV area, ground clearance, centred footprint, matching LOD bounds and 6000/1200 triangle budgets. Smoke emitters, where present, are single shared root empties at chimney/stack openings; select one LOD root at a time.')
+
 
 def beam(m,role,a,b,width=.1,depth=None):
     a=np.asarray(a,float);b=np.asarray(b,float);axis=unit(b-a)
@@ -449,7 +451,7 @@ def command_bunker(variant,lod):
 
 
 def dish(m,center,r,lod):
-    c=np.asarray(center);n=24 if not lod else 10;rings=6 if not lod else 3;focal=1.2
+    c=np.asarray(center);n=24 if not lod else 12;rings=6 if not lod else 3;focal=1.2
     def point(rr,t,back=False):return c+np.array([rr*math.cos(t),rr*math.sin(t),rr*rr/(4*focal)-(.08 if back else 0)])
     for back in (False,True):
         sign=-1 if back else 1
@@ -622,7 +624,7 @@ def main():
                 for m in meshes:m.remove_duplicates();m.shift(shift)
                 export_glb(path,meshes,kind,variant)
             entry=validate(path)
-            entry['notes']=entry['notes'].replace('native/tools/models/generate_buildings.py','native/tools/models/generate_buildings_extended.py with shared generate_buildings.py')
+            entry['notes']=AUTHORING_NOTES
             entries.append(entry);print('PASS',path.name,entry['triangles'],entry['smoke_emitters'],flush=True)
     if not args.validate_only:
         manifest=json.loads(args.manifest.read_text(encoding='utf-8'));names={e['file'] for e in entries}
