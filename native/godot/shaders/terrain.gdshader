@@ -119,13 +119,19 @@ void fragment() {
 		vec3 rn = to_world(two_scale_normal(rock_normal, world_pos.zy, nd), n, Z, vec3(0, 1, 0)) * blend.x
 			+ to_world(two_scale_normal(rock_normal, p, nd), n, X, Z) * blend.y
 			+ to_world(two_scale_normal(rock_normal, world_pos.xy, nd), n, X, vec3(0, 1, 0)) * blend.z;
-		albedo += rock * vec3(1.55, 1.45, 1.3) * w.w;   // hillsides read as pale stone, not as a dark smudge from above
+		// Hillsides read as pale, warm stone, not as a dark smudge from above: the photograph is darkened by its
+		// own shading, so it is lifted and drawn toward a limestone tone (rock faces away from the sun stay readable).
+		vec3 stone = mix(rock * vec3(1.8, 1.65, 1.45), vec3(0.50, 0.45, 0.38), 0.38);
+		albedo += stone * w.w;
 		wn += rn * w.w;
 	}
 
 	// Large-scale colour variation: meadows are never one flat green.
 	// Pull distant grass toward a broad meadow tone instead of magnifying
 	// photographic flecks with sharpening. Close-up ground keeps its detail.
+	// Bare earth and worn ground: warmer and lighter than the grey photograph, so a hillside reads as
+	// dry soil between the grass and the stone and never as a dark smear.
+	albedo = mix(albedo, albedo * vec3(1.5, 1.32, 1.08), w.y * 0.85);
 	vec3 meadow = mix(vec3(0.24, 0.34, 0.18), vec3(0.38, 0.42, 0.24), smoothstep(0.32, 0.68, macro));
 	albedo = mix(albedo, meadow, w.x * (1.0 - nd) * 0.48);
 	// The grass photo is a bright spring lime; pull it toward a deeper summer green.
@@ -150,8 +156,13 @@ void fragment() {
 	if (winter > 0.0) {
 		float flat_ground = smoothstep(0.80, 0.95, normalize(wn).y);
 		float patch = texture(noise_tex, p * 0.035).r;
-		float cover = winter * flat_ground * smoothstep(0.62 - winter * 0.5, 0.75 - winter * 0.4, patch) * step(sea_level + 0.6, world_pos.y);
-		albedo = snowy(albedo, cover * 0.92);
+		// Not a white sheet: frost-bitten ground first (dead grass, cooler and duller), then patches of snow that
+		// keep the ground's own light and shade showing through, so relief, tracks and the territory stay readable.
+		float luma = dot(albedo, vec3(0.3, 0.59, 0.11));
+		albedo = mix(albedo, vec3(luma) * vec3(1.0, 0.98, 0.94) + vec3(0.03, 0.025, 0.02), winter * 0.4);
+		float cover = winter * flat_ground * smoothstep(0.58 - winter * 0.2, 0.78 - winter * 0.14, patch) * step(sea_level + 0.6, world_pos.y);
+		vec3 snow_tone = vec3(0.60, 0.67, 0.76) * (0.75 + 1.1 * luma);
+		albedo = mix(albedo, snow_tone, cover * 0.8);
 	}
 	if ((show_territory || show_borders) && world_pos.y > sea_level - 0.2) {
 		float near;
