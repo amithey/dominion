@@ -22,7 +22,7 @@ func _init(directorate: RefCounted, world: Node) -> void:
 	w = world
 
 func country(owner: int) -> Array:
-	return Data.COUNTRY.get(Factions.identity(w, owner), ["Limited evidence", "No verified deployment assumed.", []])
+	return Data.evidence(Factions.identity(w, owner))
 
 func row(owner: int, key: String) -> Dictionary:
 	if not rows.has(owner): rows[owner] = {}

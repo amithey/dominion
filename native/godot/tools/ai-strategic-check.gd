@@ -22,10 +22,10 @@ func check(ok: bool, label: String) -> void:
 func run() -> void:
 	# ---- the record
 	for id in F.IDS:
-		check(Use.USE.has(id), "%s: an entry in the record" % id)
-		for k in Use.USE.get(id, {}):
-			check(k in Use.DOMAINS and str(Use.USE[id][k][0]) in ["fielded", "developing", "barred", "pledged"] and str(Use.USE[id][k][1]).length() > 20, "%s/%s: a status and its evidence" % [id, k])
-			var text: String = str(Use.USE[id][k][1])
+		check(Use.has_record(id), "%s: an entry in the record" % id)
+		for k in Use.record(id):
+			check(k in Use.DOMAINS and str(Use.record(id)[k][0]) in ["fielded", "developing", "barred", "pledged"] and str(Use.record(id)[k][1]).length() > 20, "%s/%s: a status and its evidence" % [id, k])
+			var text: String = str(Use.record(id)[k][1])
 			var dated := false
 			for y in range(1950, 2040):
 				if str(y) in text: dated = true
@@ -33,7 +33,7 @@ func run() -> void:
 	check(Use.status("eu", "surveillance") == "barred", "the EU's law bars mass surveillance")
 	check(Use.status("russia", "deadHand") == "fielded" and Use.status("north_korea", "deadHand") == "fielded", "Russia and North Korea automate retaliation")
 	for id in ["usa", "china", "uk", "eu"]:
-		check(Use.status(id, "deadHand") == "pledged" and "nuclear" in AIData.PROFILE[id].signs, "%s pledged human control of nuclear use, and is bound by the declaration" % id)
+		check(Use.status(id, "deadHand") == "pledged" and "nuclear" in AIData.entry(id).signs, "%s pledged human control of nuclear use, and is bound by the declaration" % id)
 	for id in ["china", "russia", "iran"]:
 		check(Use.status(id, "surveillance") == "fielded" and Use.status(id, "influence") == "fielded", "%s fields mass surveillance and influence operations" % id)
 	check(Use.work_factor("russia", "deadHand") == 0.5 and Use.work_factor("ukraine", "revenue") == 0.8 and Use.work_factor("afghanistan", "revenue") == 1.0, "fielded halves the trials, developing 80%")

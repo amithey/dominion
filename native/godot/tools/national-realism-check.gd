@@ -53,12 +53,12 @@ func escalation(n: int) -> String:
 func run() -> void:
 	# ---- the data: every nation has a researched ceiling and a reason
 	for id in Factions.IDS:
-		var row: Dictionary = AIData.PROFILE.get(id, {})
+		var row: Dictionary = AIData.entry(id)
 		check(row.has("ceiling") and str(row.get("why", "")) != "", "%s has an AI ceiling (%s) and a reason" % [id, str(row.get("ceiling", "?"))])
 	check(int(AIData.PROFILE.usa.ceiling) == 5 and int(AIData.PROFILE.china.ceiling) == 5, "only the two frontier powers can reach general intelligence")
-	check(int(AIData.PROFILE.afghanistan.ceiling) == 0 and int(AIData.PROFILE.iraq.ceiling) <= 1 and int(AIData.PROFILE.syria.ceiling) <= 1, "Afghanistan none; Iraq and Syria next to none")
+	check(int(AIData.entry("afghanistan").ceiling) == 0 and int(AIData.PROFILE.iraq.ceiling) <= 1 and int(AIData.PROFILE.syria.ceiling) <= 1, "Afghanistan none; Iraq and Syria next to none")
 	check(int(AIData.PROFILE.iran.ceiling) == 2 and int(AIData.PROFILE.north_korea.ceiling) == 2, "Iran and North Korea: applied AI under sanctions, no military AI at scale")
-	for txt in AIData.PROFILE.values().map(func(r): return str(r.why)):
+	for txt in preload("res://scripts/factions.gd").IDS.map(func(id): return str(AIData.entry(id).why)):
 		if txt.contains("19") or txt.contains("20"):
 			check(false, "no dates in the game's text: %s" % txt)
 

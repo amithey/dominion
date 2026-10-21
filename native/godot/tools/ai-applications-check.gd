@@ -133,7 +133,7 @@ func run() -> void:
 	var original: Dictionary = w.map.nations[0].duplicate(true)
 	for i in range(F.IDS.size()):
 		w.map.nations[0] = F.nation(i, true)
-		check(Data.COUNTRY.has(F.IDS[i]) and apps.country(0)[2].size() == 4, F.IDS[i] + " explicit evidence and application priorities")
+		check(Data.has_evidence(F.IDS[i]) and apps.country(0)[2].size() == 4, F.IDS[i] + " explicit evidence and application priorities")
 		for key in Data.PROGRAMS:
 			var p: Dictionary = Data.PROGRAMS[key]
 			if National.ceiling(w, 0) < int(p.level):

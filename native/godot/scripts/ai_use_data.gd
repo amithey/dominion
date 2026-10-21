@@ -137,7 +137,6 @@ const USE := {
 		"deadHand": ["fielded", "Its nuclear law orders an automatic nuclear strike if its command and control is attacked."]},
 	"iraq": {},
 	"syria": {},
-	"afghanistan": {},
 	"yemen": {},
 	"houthis": {"counterDrone": ["developing", "Fires missiles at drones; no AI evidence."]},
 	"ethiopia": {"surveillance": ["developing", "Telecom monitoring by the state; little evidence of AI."]},
@@ -146,9 +145,17 @@ const USE := {
 	"south_sudan": {},
 }
 
+## The record of nation `id`: the table above, then the "ai_use" of its own file; {} if none.
+static func record(id: String) -> Dictionary:
+	if USE.has(id): return USE[id]
+	return preload("res://scripts/nation_registry.gd").data(id).get("ai_use", {})
+
+static func has_record(id: String) -> bool:
+	return USE.has(id) or preload("res://scripts/nation_registry.gd").data(id).has("ai_use")
+
 ## [status, evidence] for `id` and `domain`; ["", "No public evidence."] if none.
 static func of(id: String, domain: String) -> Array:
-	return USE.get(id, {}).get(domain, ["", "No public evidence."])
+	return record(id).get(domain, ["", "No public evidence."])
 
 static func status(id: String, domain: String) -> String:
 	return str(of(id, domain)[0])

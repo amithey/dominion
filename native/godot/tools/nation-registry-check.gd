@@ -9,6 +9,8 @@ const Regional := preload("res://scripts/regional_factions.gd")
 const FROZEN := ["usa", "china", "eu", "iran", "russia", "india", "japan", "turkiye", "israel", "uk", "south_korea", "saudi", "brazil", "indonesia", "ukraine", "north_korea", "egypt", "australia", "pakistan", "iraq", "syria", "afghanistan", "yemen", "houthis", "ethiopia", "nigeria", "sudan", "south_sudan"]
 const FIELDS := ["id", "group", "arsenal", "name", "leader", "colour", "portrait", "signature", "doctrine"]
 const GROUPS := ["core", "additional", "regional"]
+## Data a nation may carry for the tables that read the registry (see NATION-ADDITION-CHECKLIST.md).
+const OPTIONAL := ["profile", "ai", "ai_evidence", "ai_use"]
 var checks := 0
 var failures := 0
 func check(ok: bool, label: String) -> void:
@@ -27,10 +29,18 @@ func _initialize() -> void:
 		var id := str(d.get("id", ""))
 		for field in FIELDS:
 			check(d.has(field) and str(d[field]).strip_edges() != "", "%s has %s" % [id, field])
-		check(d.keys().size() == FIELDS.size() + (1 if d.has("profile") else 0), id + " has no stray field")
+		check(d.keys().all(func(k): return k in FIELDS or k in OPTIONAL), id + " has no stray field")
 		if d.has("profile"):
 			check(d.profile.get("strengths", []).size() >= 1 and d.profile.get("weaknesses", []).size() >= 1, id + " profile states strengths and weaknesses")
 			check(preload("res://scripts/national_profile.gd").of_id(id) == d.profile, id + " profile is the one the game reads")
+		if d.has("ai"):
+			check(int(d.ai.get("ceiling", -1)) in range(6) and str(d.ai.get("why", "")).length() > 20, id + " AI standing has a ceiling from 0 to 5 and a reason")
+			check(preload("res://scripts/ai_data.gd").entry(id) == d.ai, id + " AI standing is the one the game reads")
+		if d.has("ai_evidence"):
+			check(d.ai_evidence.size() == 3 and d.ai_evidence[2] is Array and d.ai_evidence[2].size() == 4, id + " AI evidence is a headline, a source line and four priorities")
+			check(preload("res://scripts/ai_applications_data.gd").evidence(id) == d.ai_evidence, id + " AI evidence is the one the game reads")
+		if d.has("ai_use"):
+			check(d.ai_use is Dictionary and preload("res://scripts/ai_use_data.gd").record(id) == d.ai_use, id + " AI use record is the one the game reads")
 		check(script.resource_path == "res://scripts/nations/%s.gd" % id, id + " lives in a file of its own name")
 		check(str(d.get("group", "")) in GROUPS, id + " has a known group")
 		check(str(d.get("colour", "")).is_valid_html_color(), id + " colour is a valid colour")

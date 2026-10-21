@@ -73,8 +73,6 @@ const PROFILE := {
 		"why": "Its first modern data centre is still being built, and the grid fails in the summer heat."},
 	"syria":       {"compute": 0, "models": 0, "autonomy": 0, "cyber": 1, "lean": "in", "signs": ["laws"], "ceiling": 1,
 		"why": "A power grid being rebuilt after the war; electricity for only part of the day."},
-	"afghanistan": {"compute": 0, "models": 0, "autonomy": 0, "cyber": 0, "lean": "in", "signs": ["laws"], "ceiling": 0,
-		"why": "No data centres, an internet the authorities switch off, and women barred from study."},
 }
 const DEFAULT := {"compute": 1, "models": 1, "autonomy": 1, "cyber": 1, "lean": "in", "signs": ["laws"], "ceiling": 2,
 	"why": "Imported AI services and a little compute of its own."}
@@ -87,9 +85,15 @@ const NEEDS := {"machineLearning": 1, "militaryAI": 3, "collaborativeCombatAircr
 const CONTROLLERS := ["usa", "eu", "japan", "south_korea", "uk"]
 const CHIP_MAKERS := ["south_korea", "japan", "usa", "china"]
 
+## The standing of nation `id`: the table below for the first nations, then the "ai" of its own
+## file in scripts/nations/, then DEFAULT.
+static func entry(id: String) -> Dictionary:
+	if PROFILE.has(id): return PROFILE[id]
+	return preload("res://scripts/nation_registry.gd").data(id).get("ai", DEFAULT)
+
 ## The profile of nation `owner` (a map entry's "ai_profile" overrides it).
 static func profile(w: Node, owner: int) -> Dictionary:
-	var row: Dictionary = PROFILE.get(Factions.identity(w, owner), DEFAULT).duplicate()
+	var row: Dictionary = entry(Factions.identity(w, owner)).duplicate()
 	if owner >= 0 and owner < w.map.nations.size():
 		row.merge(w.map.nations[owner].get("ai_profile", {}), true)
 	return row

@@ -23,7 +23,6 @@ const COUNTRY := {
 	"north_korea": ["Research; opaque deployment", "Published research and official claims do not establish the scale or reliability of deployed military AI.", ["cyber", "industry", "logistics", "agriculture"]],
 	"iraq": ["Limited public evidence", "Applied pilots are plausible; no independently established national military AI programme is assumed.", ["administration", "agriculture", "health", "diplomacy"]],
 	"syria": ["Reconstruction scenario", "No verified advanced national AI deployment used in this model; rebuild services and data first.", ["administration", "health", "agriculture", "diplomacy"]],
-	"afghanistan": ["Severe infrastructure constraints", "Connectivity and access to education constrain adoption; no national AI deployment is assumed.", ["agriculture", "health", "administration", "diplomacy"]],
 	"yemen": ["Reconstruction scenario", "Digital-development needs are documented; no operational national military AI is established here.", ["administration", "health", "agriculture", "diplomacy"]],
 	"houthis": ["Unverified advanced AI claims", "Missiles and drones do not by themselves prove AI; advanced autonomous targeting is not assumed.", ["logistics", "administration", "agriculture", "cyber"]],
 	"ethiopia": ["Institutions and applied development", "AI institute, policy and strategy are documented; application development is distinct from nationwide fielding.", ["agriculture", "administration", "health", "industry"]],
@@ -60,6 +59,15 @@ const PROGRAMS := {
 	"deadHand": {"name": "Automated retaliation", "level": 2, "pool": "military", "facility": "missileSilo", "research": "aiAutomatedRetaliation", "cost": 1000, "work": 160.0, "money": 1600.0, "demand": 0.25, "upkeep": 1.8, "fx": {}, "desc": "A machine that answers a nuclear attack with your stored warheads even if no one is left to order it. Rivals are half as likely to use nuclear weapons on you. A false warning may fire it. Nuclear powers not bound by the declaration on human control."},
 	"biosecurity": {"name": "Biosecurity screening", "level": 2, "pool": "economy", "facility": "hospital", "research": "aiBiosecurity", "cost": 500, "work": 85.0, "money": 750.0, "demand": 0.15, "upkeep": 0.8, "fx": {"health": 2.0}, "desc": "Screen DNA-synthesis orders and watch for unusual outbreaks. Epidemics spread far less between your towns, an unrestricted model's pathogen does less harm, health +2."},
 }
+
+## [headline, evidence, application priorities] for nation `id`: the table above, then the
+## "ai_evidence" of its own file, then an honest "limited evidence".
+static func evidence(id: String) -> Array:
+	if COUNTRY.has(id): return COUNTRY[id]
+	return preload("res://scripts/nation_registry.gd").data(id).get("ai_evidence", ["Limited evidence", "No verified deployment assumed.", []])
+
+static func has_evidence(id: String) -> bool:
+	return COUNTRY.has(id) or preload("res://scripts/nation_registry.gd").data(id).has("ai_evidence")
 
 static func discoveries() -> Dictionary:
 	var out := {}
