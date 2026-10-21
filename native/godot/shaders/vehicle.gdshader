@@ -65,8 +65,12 @@ void fragment() {
 	float dust = (1.0 - smoothstep(dust_height * 0.35, dust_height, above_ground)) * smoothstep(0.35, 0.65, grime + speckle * 0.3);
 	dust *= glass ? 0.0 : 1.0;
 	col = mix(col, dust_color, dust * 0.48);
-	// Broad upward-facing panels catch a restrained pale edge without extra textures.
+	// Broad upward-facing panels catch a restrained pale edge without extra textures; undersides sit in shade.
 	col *= mix(0.96, 1.08, clamp(local_normal.y, 0.0, 1.0));
+	col *= mix(0.78, 1.0, smoothstep(-0.5, 0.2, local_normal.y));
+	// A faint rim of sky light so a dark hull still reads against dark ground and shadow (the eye finds units first).
+	float rim = pow(1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0), 3.0);
+	EMISSION = col * rim * 0.22 * (glass ? 0.0 : 1.0);
 	ALBEDO = col;
 	ROUGHNESS = glass ? 0.12 : mix(mix(0.72, 0.9, grime), 0.55, m) + dust * 0.1;
 	METALLIC = glass ? 0.6 : mix(0.08, 0.55, m) * (1.0 - dust);

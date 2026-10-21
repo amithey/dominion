@@ -68,17 +68,17 @@ func _ready() -> void:
 	_flash_mesh = _quad(1.6, flash_mat)
 
 	_fire = _particle_material(Vector3.UP, 180.0, 2.5, 7.0, Vector3(0, 2.0, 0), 5.0,
-		[Color(1.0, 0.95, 0.7, 1), Color(1.0, 0.55, 0.12, 0.9), Color(0.45, 0.12, 0.03, 0.5), Color(0.1, 0.05, 0.03, 0)],
-		[0.0, 0.25, 0.6, 1.0], 0.9, 2.2, [0.6, 1.4, 1.0])
+		[Color(1.6, 1.4, 0.9, 1), Color(1.4, 0.62, 0.14, 0.95), Color(0.55, 0.14, 0.03, 0.55), Color(0.1, 0.05, 0.03, 0)],
+		[0.0, 0.2, 0.55, 1.0], 0.9, 2.2, [0.5, 1.4, 1.0])
 	_smoke = _particle_material(Vector3.UP, 28.0, 1.2, 3.2, Vector3(0, 0.9, 0), 1.2,
-		[Color(0.16, 0.15, 0.14, 0.0), Color(0.17, 0.16, 0.15, 0.72), Color(0.33, 0.32, 0.3, 0.4), Color(0.45, 0.44, 0.42, 0)],
-		[0.0, 0.08, 0.5, 1.0], 1.2, 2.2, [0.5, 1.6, 3.2])
+		[Color(0.09, 0.085, 0.08, 0.0), Color(0.10, 0.095, 0.09, 0.82), Color(0.26, 0.25, 0.24, 0.5), Color(0.44, 0.43, 0.41, 0)],
+		[0.0, 0.07, 0.5, 1.0], 1.2, 2.2, [0.5, 1.6, 3.2])
 	_sparks = _particle_material(Vector3.UP, 70.0, 7.0, 16.0, Vector3(0, -9.8, 0), 0.6,
 		[Color(1.0, 0.9, 0.55, 1), Color(1.0, 0.45, 0.1, 1), Color(0.3, 0.08, 0.02, 0)],
 		[0.0, 0.5, 1.0], 0.6, 1.2, [1.0, 1.0, 0.6])
 	_dirt = _particle_material(Vector3.UP, 40.0, 5.0, 11.0, Vector3(0, -9.8, 0), 0.4,
-		[Color(0.24, 0.2, 0.15, 1), Color(0.3, 0.26, 0.2, 0.85), Color(0.35, 0.31, 0.25, 0)],
-		[0.0, 0.6, 1.0], 0.6, 1.4, [1.0, 1.0, 0.8])
+		[Color(0.17, 0.13, 0.09, 1), Color(0.21, 0.17, 0.12, 0.8), Color(0.26, 0.22, 0.17, 0)],
+		[0.0, 0.55, 1.0], 0.5, 1.1, [1.0, 1.15, 0.9])
 	_puff = _particle_material(Vector3.UP, 50.0, 0.6, 1.6, Vector3(0, 0.3, 0), 2.0,
 		[Color(0.45, 0.41, 0.34, 0.55), Color(0.5, 0.46, 0.4, 0)],
 		[0.0, 1.0], 0.4, 0.9, [0.6, 1.3, 1.8])
@@ -161,6 +161,8 @@ func _billboard(texture: Texture2D, glow: bool, lit: bool) -> StandardMaterial3D
 	if glow:
 		m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	m.disable_receive_shadows = true
+	m.proximity_fade_enabled = true   # soft particles: a puff fades where it meets the ground or a wall
+	m.proximity_fade_distance = 0.9 if lit else 0.5
 	return m
 
 func _quad(size: float, material: Material) -> QuadMesh:
@@ -185,6 +187,13 @@ func _particle_material(direction: Vector3, spread: float, v_min: float, v_max: 
 	p.angle_max = 180
 	p.angular_velocity_min = -30
 	p.angular_velocity_max = 30
+	# Curling billows: the smoke and fire are pushed about by a noise field instead of drifting in straight lines.
+	p.turbulence_enabled = true
+	p.turbulence_noise_strength = 1.6
+	p.turbulence_noise_scale = 2.4
+	p.turbulence_noise_speed_random = 0.4
+	p.turbulence_influence_min = 0.03
+	p.turbulence_influence_max = 0.16
 	var ramp := Gradient.new()
 	ramp.offsets = PackedFloat32Array(offsets)
 	ramp.colors = PackedColorArray(colors)
@@ -303,7 +312,7 @@ func explosion(at: Vector3, size: float, on_ground: bool) -> void:
 	_burst(_smoke, _smoke_mesh, at + Vector3.UP * 0.6 * size, int(10 * size), 5.0 + size, size * 0.9)
 	_burst(_sparks, _spark_mesh, at + Vector3.UP * 0.3, int(18 * size), 1.3, 1.0)
 	if on_ground:
-		_burst(_dirt, _dirt_mesh, at, int(16 * size), 1.4, size * 0.7)
+		_burst(_dirt, _dirt_mesh, at, int(10 * size), 1.4, size * 0.6)
 		# Clods of earth thrown out of the crater fall back and bounce.
 		debris.scatter(at, int(5 + 4 * size), 6.0 + 3.0 * size, 0.28 + 0.1 * minf(size, 3.0), Color(0.27, 0.22, 0.16))
 		if size >= 0.9:
