@@ -670,7 +670,6 @@ func apply_quality() -> void:
 		effects.warm()
 	for patch in grass_nodes:
 		patch.visible = quality != "low"
-		patch.visibility_range_end = 110.0 if quality == "high" else 75.0
 
 # ---------------------------------------------------------------- terrain
 
@@ -996,6 +995,9 @@ func make_tuft() -> ArrayMesh:
 
 # Tufts on flat grassland in 32 m cells that are only drawn near the camera.
 func build_grass() -> void:
+	if ResourceLoader.exists("res://assets/art/foliage/grass_tufts_atlas_2048.png"):
+		build_grass_cards()
+		return
 	var density := 0.6 if quality == "high" else 0.35
 	var reach := 110.0 if quality == "high" else 75.0
 	var tuft := make_tuft()
@@ -1034,6 +1036,57 @@ func build_grass() -> void:
 				node.material_override = material
 				node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 				node.visibility_range_end = reach
+				node.visibility_range_end_margin = 12.0
+				add_child(node)
+				grass_nodes.append(node)
+			cz += cell
+		cx += cell
+
+## The meadow from atlas cards (foliage_cards.gd): grass tufts of twelve kinds, wildflowers among them, shrubs on open ground and
+## reeds along the shore, in 32 m cells drawn only near the camera.
+func build_grass_cards() -> void:
+	var Cards := preload("res://scripts/foliage_cards.gd")
+	var high: bool = quality == "high"
+	var density := 0.5 if high else 0.34
+	var reach := 110.0 if high else 75.0
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var half := float(map.mapSize) * 0.5
+	var cell := 32.0
+	var per_cell := int(cell * cell * density)
+	var sea := float(map.seaLevel)
+	var green_cells := [0, 2, 5, 7, 9, 0, 5, 7]   # the green tufts of the atlas; the tan and wheat ones are the minority
+	var cx := -half
+	while cx < half:
+		var cz := -half
+		while cz < half:
+			var spots := {"grass": [], "flowers": [], "bush": [], "reeds": []}
+			for i in range(per_cell):
+				var x := cx + rng.randf() * cell
+				var z := cz + rng.randf() * cell
+				var y := height_at(x, z)
+				var flat: bool = normal_at(x, z).y >= 0.94
+				var yaw := rng.randf() * TAU
+				if y < 1.8 or not flat:
+					if y > sea + 0.15 and y < sea + 1.1 and normal_at(x, z).y >= 0.9 and rng.randf() < 0.35:
+						spots.reeds.append({"pos": Vector3(x, y - 0.05, z), "scale": rng.randf_range(0.7, 1.2), "yaw": yaw, "cell": rng.randi() % Cards.cell_count("reeds"), "tone": rng.randf()})
+					continue
+				var r := rng.randf()
+				var dry: float = clampf(noise_texture.noise.get_noise_2d(x * 0.55, z * 0.55) * 1.6 + 0.2, 0.0, 1.0)
+				var grass_cell: int = green_cells[rng.randi() % green_cells.size()] if (dry < 0.62 or rng.randf() < 0.5) else rng.randi() % 12
+				if r < 0.06:
+					spots.flowers.append({"pos": Vector3(x, y - 0.05, z), "scale": rng.randf_range(1.0, 1.6), "yaw": yaw, "cell": rng.randi() % Cards.cell_count("flowers"), "tone": rng.randf()})
+				elif r < 0.085 and y > 3.0:
+					spots.bush.append({"pos": Vector3(x, y - 0.1, z), "scale": rng.randf_range(0.55, 1.15), "yaw": yaw, "cell": rng.randi() % Cards.cell_count("bush"), "tone": rng.randf()})
+				else:
+					spots.grass.append({"pos": Vector3(x, y - 0.05, z), "scale": rng.randf_range(1.0, 1.8), "yaw": yaw, "cell": grass_cell % Cards.cell_count("grass"), "tone": rng.randf()})
+			for kind in spots:
+				var list: Array = spots[kind]
+				if list.size() < (6 if kind == "grass" else 1):
+					continue
+				var node: MultiMeshInstance3D = Cards.patch(kind, list)
+				node.set_meta("cell_center", Vector2(cx + cell * 0.5, cz + cell * 0.5))
+				node.visibility_range_end = reach * (1.9 if kind == "bush" else (0.8 if kind == "flowers" else 1.0))
 				node.visibility_range_end_margin = 12.0
 				add_child(node)
 				grass_nodes.append(node)
@@ -2192,13 +2245,18 @@ func _physics_process(delta: float) -> void:
 		update_combat(unit, delta)
 		spent("  targeting and firing", t_fight)
 		var t_parts := clock()
+		if unit.get("model_file") == null and unit.get("tracks", []).is_empty():
+			pass
+		elif camera != null:
+			# Fine animation (wheels, track pads, the gun's lift) only where the detailed model shows (LOD0, up to 60 m).
+			unit.detail = camera.global_position.distance_squared_to(unit.node.global_position) < 4900.0
 		if unit.get("rotor") != null:
 			unit.rotor.rotate_y(delta * 28.0)
 		if unit.get("rotor2") != null:
 			unit.rotor2.rotate_y(-delta * 28.0)   # a tandem helicopter's rear rotor turns the other way
 		if unit.get("radar") != null:
 			unit.radar.rotate_y(delta * 1.6)
-		if unit.moving:
+		if unit.moving and unit.get("detail", true):
 			var travelled: float = unit.get("cur_speed", unit.speed) * delta
 			for a in unit.get("axles", []):
 				a.node.rotate_x(travelled / a.radius)  # wheels roll with the ground
@@ -2221,7 +2279,7 @@ func _physics_process(delta: float) -> void:
 				aim = 0.0 if unit.moving else sin(now * 0.25 + unit.phase) * 0.9
 			unit.turret_yaw = lerp_angle(unit.turret_yaw, aim, minf(1.0, delta * (2.2 if unit.enemy != null else 0.8)))
 			unit.turret.basis = Basis(unit.turret.get_meta("axis"), unit.turret_yaw)
-			if unit.get("gun") != null:
+			if unit.get("gun") != null and unit.get("detail", true):
 				# The gun lifts to the target (more for the shell's drop at range) and kicks back when it fires.
 				var elev := 0.0
 				if unit.enemy != null:

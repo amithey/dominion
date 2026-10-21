@@ -48,9 +48,11 @@ static func mesh() -> ArrayMesh:
 	mesh.surface_set_material(0, mat)
 	return mesh
 
-## Which of the map's trees get a bush beside them, and a few more in open meadow.
+## Which of the map's trees get a bush beside them: shrub cards (foliage_cards.gd, the atlas of leafy shrubs).
 static func build(w: Node) -> void:
-	var mesh := mesh()
+	var Cards := preload("res://scripts/foliage_cards.gd")
+	var use_cards: bool = ResourceLoader.exists(Cards.ART + "bush_leaves_atlas_2048.png")
+	var mesh := mesh() if not use_cards else null
 	var spots: Array = []
 	for t in w.map.trees:
 		var h := fposmod(sin(t.x * 4.7 + t.z * 9.1) * 43758.5453, 1.0)
@@ -71,23 +73,38 @@ static func build(w: Node) -> void:
 		cells[key].append(s)
 	for key in cells:
 		var list: Array = cells[key]
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.use_custom_data = true
-		mm.mesh = mesh
-		mm.instance_count = list.size()
+		var node: MultiMeshInstance3D
+		if use_cards:
+			var card_spots := []
+			for s in list:
+				var seed_v := fposmod(sin(s.x * 3.3 + s.z * 5.9) * 43758.5453, 1.0)
+				card_spots.append({"pos": Vector3(s.x, w.height_at(s.x, s.z) - 0.1, s.z), "scale": 0.7 + float(s.scale) * 0.8, "yaw": fmod(s.x * 12.9898 + s.z * 78.233, TAU), "cell": int(seed_v * 4.0) % 4, "tone": seed_v})
+			node = Cards.patch("bush", card_spots)
+		else:
+			node = _blob_patch(mesh, list, w)
+		var mm: MultiMesh = node.multimesh
 		for i in range(list.size()):
-			var s: Dictionary = list[i]
-			var size: float = 2.4 * float(s.scale)
-			var spin := fmod(s.x * 12.9898 + s.z * 78.233, TAU)
-			mm.set_instance_transform(i, Transform3D(Basis(Vector3.UP, spin).scaled(Vector3(size, size * 0.8, size)), Vector3(s.x, w.height_at(s.x, s.z) - 0.1, s.z)))
-			var tone := fposmod(sin(s.x * 3.3 + s.z * 5.9) * 43758.5453, 1.0)
-			mm.set_instance_custom_data(i, Color(tone, 0.0, 0.0, 1.0))
-			var spot := Vector2(s.x, s.z)
+			var spot := Vector2(list[i].x, list[i].z)
 			if not w.tree_parts.has(spot):
 				w.tree_parts[spot] = []
 			w.tree_parts[spot].append([mm, i])
-		var node := MultiMeshInstance3D.new()
-		node.multimesh = mm
+		node.visibility_range_end = 260.0
+		node.visibility_range_end_margin = 20.0
 		w.add_child(node)
 		w.tree_nodes.append(node)
+
+static func _blob_patch(mesh: ArrayMesh, list: Array, w: Node) -> MultiMeshInstance3D:
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_custom_data = true
+	mm.mesh = mesh
+	mm.instance_count = list.size()
+	for i in range(list.size()):
+		var s: Dictionary = list[i]
+		var size: float = 2.4 * float(s.scale)
+		var spin := fmod(s.x * 12.9898 + s.z * 78.233, TAU)
+		mm.set_instance_transform(i, Transform3D(Basis(Vector3.UP, spin).scaled(Vector3(size, size * 0.8, size)), Vector3(s.x, w.height_at(s.x, s.z) - 0.1, s.z)))
+		mm.set_instance_custom_data(i, Color(fposmod(sin(s.x * 3.3 + s.z * 5.9) * 43758.5453, 1.0), 0.0, 0.0, 1.0))
+	var node := MultiMeshInstance3D.new()
+	node.multimesh = mm
+	return node

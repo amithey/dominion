@@ -91,6 +91,29 @@ func _stone() -> StandardMaterial3D:
 	m.roughness = 0.88
 	return m
 
+## The ore of a deposit (assets/art/foliage/deposit_*): its own tileable rock with the ore showing, projected from every side.
+const ORE_FILE := {"iron": "deposit_iron_ore", "gold": "deposit_gold_veins", "silicon": "deposit_coal_silicon", "uranium": "deposit_uranium_yellowcake", "diamond": "deposit_diamond_kimberlite"}
+
+func _ore_stone(type: String) -> Material:
+	var file: String = ORE_FILE.get(type, "")
+	if file == "" or not ResourceLoader.exists("res://assets/art/foliage/%s_albedo.png" % file):
+		return _stone()
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load("res://assets/art/foliage/%s_albedo.png" % file)
+	m.normal_enabled = true
+	m.normal_texture = load("res://assets/art/foliage/%s_normal.png" % file)
+	m.normal_scale = 1.2
+	var rough = load("res://assets/art/foliage/%s_roughness.png" % file)
+	if rough != null:
+		m.roughness_texture = rough
+		m.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3.ONE * 0.4
+	m.albedo_color = Color(1.35, 1.35, 1.35)
+	m.roughness = 0.95
+	return m
+
 func _crystal(colour: Color, glow: float) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = colour
@@ -199,7 +222,7 @@ func _mesh_for(type: String) -> ArrayMesh:
 				var r := rng.randf_range(0.0, 4.6)
 				var s := rng.randf_range(0.9, 2.3)
 				_rock(st, rng, Vector3(cos(a) * r, 0, sin(a) * r), Vector3(s, s * rng.randf_range(0.6, 0.9), s * rng.randf_range(0.8, 1.2)), Color("e08a5a").lerp(Color("b5643c"), rng.randf()))
-			mesh = _commit(st, _mat("rock", func(): return _stone()))
+			mesh = _commit(st, _mat("rock_iron", func(): return _ore_stone("iron")))
 		"gold":
 			var st := _begin()
 			for i in range(9):
@@ -207,7 +230,7 @@ func _mesh_for(type: String) -> ArrayMesh:
 				var r := rng.randf_range(0.0, 4.4)
 				var s := rng.randf_range(1.0, 2.4)
 				_rock(st, rng, Vector3(cos(a) * r, 0, sin(a) * r), Vector3(s, s * 0.8, s), Color("e6e0d4").lerp(Color("c9bfae"), rng.randf()))
-			mesh = _commit(st, _mat("rock", func(): return _stone()))
+			mesh = _commit(st, _mat("rock_gold", func(): return _ore_stone("gold")))
 			var ore := _begin()
 			for i in range(22):
 				var a := rng.randf() * TAU
@@ -223,7 +246,7 @@ func _mesh_for(type: String) -> ArrayMesh:
 				var r := rng.randf_range(1.0, 4.8)
 				var s := rng.randf_range(0.7, 1.6)
 				_rock(st, rng, Vector3(cos(a) * r, 0, sin(a) * r), Vector3(s, s * 0.7, s), base_colour.lerp(Color.BLACK, rng.randf() * 0.3))
-			mesh = _commit(st, _mat("rock", func(): return _stone()))
+			mesh = _commit(st, _mat("rock_" + type, func(): return _ore_stone(type)))
 			var gem := _begin()
 			var clusters := 7 if type != "diamond" else 9
 			for c in range(clusters):
