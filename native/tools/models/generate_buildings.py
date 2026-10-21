@@ -36,6 +36,7 @@ def unit(a):
 class Mesh:
     def __init__(self):
         self.groups = defaultdict(lambda: [[], [], [], []])
+        self.markers = {}
 
     def face(self, role, points, outward, normals=None, uv=None):
         """Convex planar polygon, outward CCW winding and metre-based planar UVs."""
@@ -101,6 +102,7 @@ class Mesh:
 
     def shift(self,delta):
         for g in self.groups.values():g[0]=(np.array(g[0])+delta).tolist()
+        self.markers={name:(np.array(p)+delta).tolist() for name,p in self.markers.items()}
 
     def bounds(self):
         p=np.concatenate([np.array(g[0]) for g in self.groups.values()]);return p.min(0),p.max(0)
@@ -237,6 +239,7 @@ def chimney(m,x,z,y,lod):
     m.box('trim',(x,y+.43,z),(.72,.13,.80))
     m.box('metal',(x,y+.55,z),(.44,.12,.48))
     if not lod:m.box('trim',(x,y-.75,z),(.68,.10,.76))
+    m.markers['Smoke_Home_0']=[x,y+.61,z]
 
 
 def porch(m,w,depth,wallfront,y,lod):
@@ -376,6 +379,10 @@ def export_glb(path,meshes,kind,variant):
          'materials':[{'name':role,'pbrMetallicRoughness':{'baseColorFactor':[1,1,1,1],'metallicFactor':0,'roughnessFactor':.8}} for role in materials],
          'buffers':[{'byteLength':0}],'bufferViews':[],'accessors':[],
          'extras':{'units':'metres','up':'+Y','front':'+Z','uv_units':'metres','building':kind,'variant':variant,'lod_usage':'Select one root node at a time; LOD nodes intentionally share the same coordinate space.'}}
+    for name,p in sorted(meshes[0].markers.items()):
+        assert name in meshes[1].markers and np.allclose(p,meshes[1].markers[name])
+        doc['scenes'][0]['nodes'].append(len(doc['nodes']))
+        doc['nodes'].append({'name':name,'translation':[float(x) for x in p],'extras':{'purpose':'smoke_emitter','units':'metres'}})
     blob=bytearray()
     def accessor(data,component,typ,target):
         nonlocal blob
@@ -431,7 +438,13 @@ def load_glb(path):
 
 def validate(path):
     doc,lods=load_glb(path)
-    assert [n['name'] for n in doc['nodes']]==['LOD0','LOD1'] and doc['scenes'][0]['nodes']==[0,1]
+    assert [n['name'] for n in doc['nodes'][:2]]==['LOD0','LOD1']
+    assert doc['scenes'][0]['nodes']==list(range(len(doc['nodes'])))
+    markers=doc['nodes'][2:]
+    assert len({n['name'] for n in markers})==len(markers)
+    for marker in markers:
+        assert marker['name'].startswith(('Smoke_Home_','Smoke_Industry_')) and 'mesh' not in marker and 'children' not in marker
+        assert np.isfinite(marker['translation']).all() and marker['translation'][1]>0
     assert len(doc['meshes'])==2 and len(lods)==2
     assert not any(k in doc for k in ('images','textures','cameras','animations','extensions'))
     for mat in doc['materials']:
@@ -478,7 +491,8 @@ def validate(path):
     assert np.allclose(bounds[0],bounds[1],atol=.08),'LOD silhouette bounds differ'
     low,high=bounds[0]
     return {'file':'buildings/'+path.name,'kind':'model','triangles':totals,'footprint':[round(float(high[0]-low[0]),4),round(float(high[2]-low[2]),4)],'height':round(float(high[1]),4),'materials':[m['name'] for m in doc['materials']],
-            'size':[round(float(x),4) for x in high-low],'grid':None,'tileable':False,'frames':None,'units':'metres','up':'+Y','front':'+Z','nodes':['LOD0','LOD1'],
+            'size':[round(float(x),4) for x in high-low],'grid':None,'tileable':False,'frames':None,'units':'metres','up':'+Y','front':'+Z','nodes':[n['name'] for n in doc['nodes']],
+            'smoke_emitters':{n['name']:n['translation'] for n in markers},
             'notes':'Original architecture authored by native/tools/models/generate_buildings.py using NumPy, json and struct; no Blender, external mesh or embedded texture/colour. One mesh per LOD, one primitive per named material. Recessed LOD0 windows, frames, sills, lintels, entry, roof details; LOD1 retains major silhouette. Independently loaded from GLB and checked for structure, unit normals, CCW face agreement, degenerate/duplicate faces, metre planar UV area, ground clearance, centred footprint, LOD bounds and triangle budgets.',
             'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
 
