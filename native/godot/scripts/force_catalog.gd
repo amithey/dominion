@@ -76,8 +76,8 @@ const NAMES := {
 	"reconVehicle": {"usa": "M3 Bradley Scout", "eu": "Fennek", "uk": "Jackal", "australia": "Hawkei", "indonesia": "Komodo Scout"},
 	"directFire": {"japan": "Type 16 MCV", "brazil": "EE-9 Cascavel", "indonesia": "Harimau", "ukraine": "AMX-10 RC"},
 	"towedHowitzer": {"usa": "M777", "india": "M777", "uk": "L118 Light Gun", "australia": "M777", "japan": "FH70", "ukraine": "M777"},
-	"attackJet": {"usa": "A-10C Thunderbolt II", "eu": "Mirage 2000D", "iran": "Su-24MK", "russia": "Su-25", "india": "Jaguar", "saudi": "Tornado IDS", "ukraine": "Su-25", "north_korea": "Su-25", "pakistan": "Mirage 5", "iraq": "L-159 ALCA"},
-	"lightFighter": {"usa": "F-16C", "china": "J-10C", "eu": "JAS 39 Gripen C", "iran": "F-5E", "india": "Tejas Mk1", "turkiye": "F-16C", "south_korea": "FA-50", "brazil": "F-5M", "pakistan": "F-16", "iraq": "T-50IQ"},
+	"attackJet": {"usa": "A-10C Thunderbolt II", "eu": "Mirage 2000D", "iran": "Su-24MK", "russia": "Su-25", "india": "Jaguar", "saudi": "Tornado IDS", "ukraine": "Su-25", "north_korea": "Su-25", "pakistan": "Mirage 5"},
+	"lightFighter": {"usa": "F-16C", "china": "J-10C", "eu": "JAS 39 Gripen C", "iran": "F-5E", "india": "Tejas Mk1", "turkiye": "F-16C", "south_korea": "FA-50", "brazil": "F-5M", "pakistan": "F-16"},
 	"scoutHelicopter": {"japan": "OH-1", "uk": "Wildcat Mk1"},
 	"missileBoat": {"china": "Type 022", "israel": "Sa'ar 4.5", "egypt": "Ambassador Mk III", "pakistan": "Azmat-class"},
 }
@@ -104,8 +104,21 @@ static func operators(key: String) -> Array:
 		return IDS.filter(func(id): return not id in preload("res://scripts/regional_factions.gd").IDS)
 	return IDS.duplicate() if key in ["machineGunTeam", "mortarTeam", "scoutTeam"] else names(key).keys()
 
+## id -> model of role `key` for the nations that keep their names in the "force_names" of
+## scripts/nations/<id>.gd rather than in NAMES above, in registry order.
+static var _own_names := {}
+static func own_names(key: String) -> Dictionary:
+	if not _own_names.has(key):
+		var rows := {}
+		for script in preload("res://scripts/nation_registry.gd").ORDER:
+			var named: Dictionary = script.DATA.get("force_names", {})
+			if named.has(key): rows[script.DATA.id] = named[key]
+		_own_names[key] = rows
+	return _own_names[key]
+
 static func names(key: String) -> Dictionary:
 	var out: Dictionary = NAMES.get(key, {}).duplicate()
+	out.merge(own_names(key), true)
 	out.merge(Diversity.names(key), true)
 	return out
 

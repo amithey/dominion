@@ -10,4 +10,8 @@ const DATA := {
 	"portrait": "zaidi",
 	"signature": "Golden Division (CTS)",
 	"doctrine": "Oil state between two patrons: oil pays for an army of Abrams and F-16IQs, and the Popular Mobilization raises militias at a call, at a price in Washington. Drought cuts the harvest; no nuclear or missile programme.",
+	"force_names": {
+		"attackJet": "L-159 ALCA",
+		"lightFighter": "T-50IQ",
+	},
 }

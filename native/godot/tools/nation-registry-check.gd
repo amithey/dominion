@@ -10,7 +10,7 @@ const FROZEN := ["usa", "china", "eu", "iran", "russia", "india", "japan", "turk
 const FIELDS := ["id", "group", "arsenal", "name", "leader", "colour", "portrait", "signature", "doctrine"]
 const GROUPS := ["core", "additional", "regional"]
 ## Data a nation may carry for the tables that read the registry (see NATION-ADDITION-CHECKLIST.md).
-const OPTIONAL := ["profile", "ai", "ai_evidence", "ai_use", "dossier"]
+const OPTIONAL := ["profile", "ai", "ai_evidence", "ai_use", "dossier", "force_names"]
 var checks := 0
 var failures := 0
 func check(ok: bool, label: String) -> void:
@@ -44,6 +44,10 @@ func _initialize() -> void:
 			check(Arsenal.profile(id) == d.dossier.profile and d.dossier.keys().size() == 3, id + " dossier is the one the game reads")
 			check(d.dossier.roster.keys().all(func(k): return Arsenal.ROSTER.has(k) and Arsenal.roster(k).get(id, []) == d.dossier.roster[k]), id + " roster rows sit under known roles and merge into them")
 			check(d.dossier.sources.keys().all(func(s): return Arsenal.source(s) == d.dossier.sources[s] and not Arsenal.SOURCES.has(s)), id + " own sources are found and not duplicated in the table")
+		if d.has("force_names"):
+			var Forces := preload("res://scripts/force_catalog.gd")
+			check(d.force_names.keys().all(func(k): return Forces.ROLES.has(k) and str(d.force_names[k]).length() > 2 and not Forces.NAMES.get(k, {}).has(id)), id + " force names are for known roles and not also in the table")
+			check(d.force_names.keys().all(func(k): return Forces.names(k).get(id, "") == d.force_names[k] and id in Forces.operators(k)), id + " force names are the roster the game reads, and it operates the role")
 		if d.has("ai_use"):
 			check(d.ai_use is Dictionary and preload("res://scripts/ai_use_data.gd").record(id) == d.ai_use, id + " AI use record is the one the game reads")
 		check(script.resource_path == "res://scripts/nations/%s.gd" % id, id + " lives in a file of its own name")
