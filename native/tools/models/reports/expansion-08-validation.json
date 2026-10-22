@@ -1,0 +1,32 @@
+{
+  "batch": 8,
+  "files": [
+    "vehicles/wheeledHowitzer__pcl_181.glb",
+    "vehicles/wheeledHowitzer__type_19_howitzer.glb",
+    "vehicles/wheeledHowitzer__2s43_malva.glb",
+    "vehicles/wheeledHowitzer__archer.glb",
+    "vehicles/artillery__sh_15_d_30.glb"
+  ],
+  "sha256": {
+    "vehicles/wheeledHowitzer__pcl_181.glb": "7dd3d2bcb0d507b2600bc096c4818002facdb84f80cab4788600190b4d17ba09",
+    "vehicles/wheeledHowitzer__type_19_howitzer.glb": "d1d30a2a1ce15afeb4a94a03df6887ad970e7378d354f3d931c4bd124c4255f9",
+    "vehicles/wheeledHowitzer__2s43_malva.glb": "b45fdabd59cc2ead51291e9359712705e8752b46369f10809d647b20d1e83b93",
+    "vehicles/wheeledHowitzer__archer.glb": "a3ab68ca80ca95cecfa4404530b9da02fbafba3251637d369c5998ff58c6ad6e",
+    "vehicles/artillery__sh_15_d_30.glb": "3d7ff0e4491fcb932760cdb3172f6254832741783323106000c1d9e4f064098b"
+  },
+  "maximum_triangles": [
+    6582,
+    1368
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py"
+  ]
+}

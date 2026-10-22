@@ -104,6 +104,9 @@ def validate(path):
             neutral=by[mp][1][:3,3];origin=by[gp][1][:3,3]
             raised={q:T for q,n,T,v in walk_nodes(doc,{gp:matrix([1,0,0],-20)},canonical=True)}
             assert np.allclose(raised[mp][:3,3],origin+rotation([1,0,0],math.radians(-20))@(neutral-origin),atol=1e-5)
+            recoil=np.eye(4);recoil[2,3]=-.2
+            pulled={q:T for q,n,T,v in walk_nodes(doc,{gp:recoil},canonical=True)}
+            assert np.allclose(pulled[mp][:3,3],neutral-[0,0,.2],atol=1e-5)
         tubes=s.get('details',{}).get('tube_count',0)
         if tubes:
             turn=prefix+'/Turntable';launch=(turn if turn in by else prefix)+'/Launcher'
@@ -114,6 +117,11 @@ def validate(path):
             for i in range(tubes):
                 q=launch+f'/Muzzle_{i}';assert 'mesh' not in by[q][0]
                 assert np.allclose(by[q][1][:3,3],s['details']['muzzle_positions'][i],atol=1e-5)
+            for target,axis,angle in [(launch,[1,0,0],-30)]+([(turn,[0,1,0],90)] if turn in by else []):
+                pose={q:T for q,n,T,v in walk_nodes(doc,{target:matrix(axis,angle)},canonical=True)}
+                origin=by[target][1][:3,3]
+                for q in markers:
+                    assert np.allclose(pose[q][:3,3],origin+rotation(axis,math.radians(angle))@(by[q][1][:3,3]-origin),atol=1e-5)
         if armed:
             assert by[turret][0]['extras']['rotation_axis']=='Y' and by[gun][0]['extras']['rotation_axis']=='X'
             tp=by[turret][1][:3,3];gp=by[gun][1][:3,3];mp=by[muzzle][1][:3,3]
@@ -159,6 +167,9 @@ def validate(path):
             'track_uv_seams':seams,'canonical_track_vertices':tracked,'track_shader_phases':[0,.25,.5,.75,1] if tracked else [],
             'pose_checks':poses+['all named hinges propagate children','axle positions and wheel count'],'lod_limits':[15000,2500]},
         'sha256':hashlib.sha256(Path(path).read_bytes()).hexdigest()}
+    entry['has_launcher']=bool(s.get('details',{}).get('tube_count',0))
+    entry['launcher_tubes']=s.get('details',{}).get('tube_count',0)
+    if entry['has_launcher']:entry['validation']['pose_checks']+=['every tube marker elevates -30 degrees and traverses +90 degrees']
     if tracked:entry['track_shader_contract']={'canonical_path':doc['extras']['canonical_track_path'],'mesh_child_scale':[1,s['track_scale'],s['track_scale']],
         'world_loop_length_metres':round(TrackPath.length*s['track_scale'],6),'description':'Unmodified canonical TrackPath vertices and U, followed by mesh-child YZ scale, exactly as approved P1.'}
     return entry,'\n'.join(tree)+'\n'

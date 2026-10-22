@@ -308,7 +308,7 @@ BUILDERS={n:f for n,f in list(globals().items()) if n.startswith(('artillery__',
 
 def save(slug,builder=None):
     from validate_p3_artillery import validate
-    builder=builder or BUILDERS[slug]
+    launcher_builder=builder is not None;builder=builder or BUILDERS[slug]
     a,s=builder(0);b,s1=builder(1);assert asdict(s)==asdict(s1)
     spec=asdict(s);tank=isinstance(s,Spec)
     if tank:spec.update(mobility='tracked',weapon='howitzer',family=s.shape,equipment='',axle_z=[])
@@ -319,6 +319,7 @@ def save(slug,builder=None):
     write_glb(path,[a,b],burnt,c,{'scene_name':s.name,'vehicle':slug,'priority':'P3','spec':spec,
         'units':'metres','up':'+Y','front':'+Z','detached_turret':s.mobility!='towed' if not tank else True,'canonical_track_path':{'half':3.23,'radius':.57,'y':.65}})
     entry,tree=validate(path);entry['notes']=entry['notes'].replace('generate_p2_armour.py + armour_parts.py','generate_p3_artillery.py')
+    if launcher_builder:entry['notes']+=' Launcher authored by generate_p3_launchers.py + artillery_parts.py. Numbered Muzzle_N markers at every tube front in both LODs; Launcher X elevation under Turntable Y. Independent marker pose checks included.'
     (Path(__file__).parent/'reports'/f'{slug}.node-tree.txt').write_text(tree,encoding='utf-8')
     print(tree);print('PASS',slug,entry['triangles'],flush=True);return entry
 

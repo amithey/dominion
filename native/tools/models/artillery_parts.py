@@ -83,6 +83,34 @@ def truck_howitzer(slug,name,lod,L,W,H,axles,r,cal,tip,source,family='caesar',ap
        'hinged rear anchoring spade and supported work platform'],source,approximate=approximate,representative=representative,
        axle_z=list(axles),details={'cab':2.02,'hood':1.26 if family in ('caesar','archer') else 0.})
     rig,s=build(s,lod);s.weapon='truckhowitzer';bed=r*2.05+.18;z=-L*.27
+    if family=='archer':
+        # Volvo A30: offset left cabin, right engine hood and a narrow waist.
+        # The loader platform is behind the articulation, not a cargo truck bed.
+        m=Mesh();h=L/2
+        for side in (-1,1):
+            m.box('metal_dark',(side*.62,1.06,-2.35),(.20,.30,6.15))
+            m.box('metal_dark',(side*.48,1.06,3.35),(.19,.30,4.10))
+            m.box('paint',(side*1.10,1.45,3.56),(.66,.13,1.80))
+        m.box('metal_dark',(0,1.12,1.04),(.61,.48,.80))
+        m.box('metal_dark',(0,1.17,L*.20),(1.15,.12,.33))
+        m.tube('metal_dark',(0,.90,1.04),(0,1.42,1.04),.22,8 if lod else 16)
+        m.box('paint',(0,bed,-2.48),(W-.17,.18,6.18))
+        m.box('paint',(.43,1.74,4.70),(1.54,.72,1.80))
+        m.box('paint',(-.52,2.36,3.42),(1.50,1.64,1.54))
+        m.box('glass',(-.52,2.79,4.208),(1.14,.63,.035))
+        m.box('glass',(-1.287,2.77,3.42),(.025,.61,1.10))
+        m.box('paint',(-1.17,1.55,3.23),(.34,.12,.80))
+        m.box('metal_dark',(.44,1.72,5.62),(1.31,.44,.04))
+        m.box('paint',(1.03,2.10,3.37),(.29,.99,.43))
+        for side in (-1,1):m.box('glass',(side*.93,1.51,5.67),(.24,.13,.04))
+        m.box('markings',(-1.29,2.18,3.40),(.016,.24,.47))
+        for p in rig.parts:
+            if p['name']=='Hull':p['mesh']=m
+            elif p['name']=='Antenna_1':
+                a=np.array([-.90,H,3.50]);ant=Mesh();ant.tube('metal_dark',a,a+[0,1.10,0],.013,4 if lod else 6)
+                p['pivot']=a;p['mesh']=ant;rig.pivots[p['name']]=a
+            elif p['name']=='Engine_Deck':p['pivot']=np.array([.43,2.12,4.70]);rig.pivots[p['name']]=p['pivot']
+            elif p['name']=='Exhaust':p['pivot']=np.array([1.03,2.61,3.37]);rig.pivots[p['name']]=p['pivot']
     mount=Mesh();mount.tube('metal_dark',(0,bed,z),(0,bed+.35,z),.52,8 if lod else 20)
     for side in (-1,1):
         mount.box('paint',(side*.40,bed+.72,z),(.17,.94,.86))
@@ -107,9 +135,10 @@ def truck_howitzer(slug,name,lod,L,W,H,axles,r,cal,tip,source,family='caesar',ap
     for side in (-1,1):beam(spade,'paint',p+[side*.56,0,0],p+[side*.56,.44,-.21],.13)
     rig.add('Spade','Hull',p,spade,'X')
     # The gun travel rest has a physical base on the forward chassis.
-    rest=Mesh();rz=L*.20;rest.box('paint',(0,bed+.12,rz),(.34,.24,.39))
-    beam(rest,'paint',(0,bed+.20,rz),(0,gy-.18,rz),.08)
-    rest.box('metal_dark',(0,gy-.12,rz),(.37,.15,.16));rig.add('Gun_Travel_Rest','Hull',(0,bed,rz),rest,'X')
+    rest=Mesh();rz=L*.20;foot=1.23 if family=='archer' else bed
+    rest.box('paint',(0,foot+.12,rz),(.34,.24,.39))
+    beam(rest,'paint',(0,foot+.20,rz),(0,gy-.18,rz),.08)
+    rest.box('metal_dark',(0,gy-.12,rz),(.37,.15,.16));rig.add('Gun_Travel_Rest','Hull',(0,foot,rz),rest,'X')
     return rig,s
 
 def aperture(mesh,center,r,lod):
@@ -137,7 +166,7 @@ def launcher_vehicle(slug,name,lod,config,source,approximate=False,representativ
     else:
         rig=Rig(lod);m=Mesh();h=L/2;half=W/2-.38
         m.box('paint',(0,.86,0),(W-.65,.65,L-.24))
-        if family=='m270':
+        if family.startswith('m270'):
             # Distinct forward armoured control cabin, open low launcher deck.
             from vehicle_parts import profile_hull
             profile_hull(m,'paint',[(h-.08,.88,half),(h-.08,H-.37,half),(h-.38,H,half*.94),
@@ -146,6 +175,9 @@ def launcher_vehicle(slug,name,lod,config,source,approximate=False,representativ
                 m.box('glass',(side*.48,H-.62,h-.039),(.78,.47,.035))
                 m.box('glass',(side*(half+.014),H-.55,h-1.11),(.025,.44,.61))
                 m.box('markings',(side*(half+.017),H-.97,h-1.14),(.016,.24,.48))
+                if family=='m270a2':m.box('paint',(side*(half+.04),H-.53,h-1.08),(.13,.69,1.45))
+            if family=='m270a2':
+                m.box('paint',(.55,H+.12,h-1.40),(.31,.24,.34));m.box('glass',(.55,H+.13,h-1.21),(.22,.13,.025))
         else:
             # TOS-1A: low T-72 hull, no fictional crew cabin or gun turret.
             from vehicle_parts import profile_hull
