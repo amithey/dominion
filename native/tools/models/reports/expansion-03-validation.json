@@ -1,0 +1,34 @@
+{
+  "batch": 3,
+  "files": [
+    "vehicles/artillery__2s19_msta_s.glb",
+    "vehicles/artillery__2s3_pzh_2000_krab.glb",
+    "vehicles/artillery__as_90_archer.glb",
+    "vehicles/artillery__as9_huntsman.glb",
+    "vehicles/artillery__k9_vajra_t.glb",
+    "vehicles/artillery__k9a1_thunder.glb"
+  ],
+  "sha256": {
+    "vehicles/artillery__2s19_msta_s.glb": "d1651ebb9f42e0967cc67b2d3134a6d3670733585bf05171ccb95489c3912ad0",
+    "vehicles/artillery__2s3_pzh_2000_krab.glb": "c774c6a41171a7df2fe46c03eb208efe2339a04718b505d975707a47700af82f",
+    "vehicles/artillery__as_90_archer.glb": "cd88c4bd01c81c687d5b8ef5c724cf3ae2039cf1517220384dedffde3a5cc531",
+    "vehicles/artillery__as9_huntsman.glb": "1deed9929a527387a0624b4825d9890777b21c95747b8fb9b9e0d836295b0def",
+    "vehicles/artillery__k9_vajra_t.glb": "2a5cac2ac1a1e0a16bbd7f9defe2ce38b89b3769e1c630a983c69a6f2e8fdd67",
+    "vehicles/artillery__k9a1_thunder.glb": "f9edb7e66cf0b3d1daaf81f8518b2444a4786c99290894a52cb499123f38094d"
+  },
+  "maximum_triangles": [
+    11682,
+    2136
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py"
+  ]
+}
