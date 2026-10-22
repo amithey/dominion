@@ -33,7 +33,9 @@ const DATA := {
 	"dossier": {
 		"profile": {"land": "Leclerc tanks, VBCI infantry vehicles and CAESAR wheeled guns suit a compact expeditionary army; stock counts are not modelled.", "air": "Rafale is the main combat aircraft, with Mirage 2000 variants in ground attack and as a light fighter, and E-3F aircraft for airborne warning.", "sea": "Charles de Gaulle is the only carrier and cannot be everywhere; FREMM frigates, Mistral-class ships and Atlantique 2 patrol aircraft support it.", "fires": "SAMP/T NG and Aster missiles give layered air defence; CAESAR guns and the COBRA counter-battery radar support the artillery, whose stocks are limited.", "support": "Overseas bases and a long expeditionary tradition support deployment, but ammunition and spares are the central uncertainty in a long, high-intensity war.", "limits": "Public sources show the types in service, not stocks, readiness or how many ships and aircraft can deploy at once; the size of the nuclear arsenal is an estimate, not a count.", "watch": ["The carrier's successor programme and the Rafale upgrade path: timing remains uncertain"], "sources": ["france", "sipri"]},
 		"sources": {},
-		"roster": {},
+		"roster": {
+			"wheeledHowitzer": ["CAESAR", "france", "Delivered French equipment"],
+		},
 	},
 	"force_names": {
 		"carrier": "Charles de Gaulle",

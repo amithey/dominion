@@ -6,7 +6,7 @@ const F := preload("res://scripts/factions.gd")
 const Extra := preload("res://scripts/additional_factions.gd")
 const Regional := preload("res://scripts/regional_factions.gd")
 ## Saved games and arsenals store a nation by position: these never move.
-const FROZEN := ["usa", "china", "eu", "iran", "russia", "india", "japan", "turkiye", "israel", "uk", "south_korea", "saudi", "brazil", "indonesia", "ukraine", "north_korea", "egypt", "australia", "pakistan", "iraq", "syria", "afghanistan", "yemen", "houthis", "ethiopia", "nigeria", "sudan", "south_sudan"]
+const FROZEN := ["usa", "china", "germany", "iran", "russia", "india", "japan", "turkiye", "israel", "uk", "south_korea", "saudi", "brazil", "indonesia", "ukraine", "north_korea", "egypt", "australia", "pakistan", "iraq", "syria", "afghanistan", "yemen", "houthis", "ethiopia", "nigeria", "sudan", "south_sudan"]
 const FIELDS := ["id", "group", "arsenal", "name", "leader", "colour", "portrait", "signature", "doctrine"]
 const GROUPS := ["core", "additional", "regional", "expansion"]
 ## Data a nation may carry for the tables that read the registry (see NATION-ADDITION-CHECKLIST.md).
@@ -79,6 +79,7 @@ func _initialize() -> void:
 		check(F.nation(i)["id"] == ids[i] and F.nation(i)["name"] == F.NAMES[i], "nation %d builds from the registry" % i)
 		check(Registry.data(str(ids[i])).get("id", "") == ids[i], "%s found by id" % ids[i])
 	check(Registry.data("no_such_nation").is_empty(), "an unknown id finds nothing")
+	check(Registry.LEGACY_LEADERS.values().all(func(name): return name in F.LEADERS) and Registry.legacy_leader("Nobody") == "Nobody", "an old seat holder resolves to the present one")
 	check(ids.is_read_only() and F.NAMES.is_read_only() and Regional.IDS.is_read_only(), "every column is read-only, as the constants it replaced were")
 	print("NATION_REGISTRY %s: %d checks, %d failures" % ["PASS" if failures == 0 else "FAIL", checks, failures])
 	quit(0 if failures == 0 else 1)

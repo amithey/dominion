@@ -23,7 +23,7 @@ extends RefCounted
 ##                     ballistic ones
 
 const NATION_OF_COLOUR := {"#3b82f6": "blue", "#e0483e": "red", "#33b86e": "green", "#e8a83a": "gold"}
-const NATION_NAMES := {"blue": "United States", "red": "China", "green": "European Union", "gold": "Iran"}
+const NATION_NAMES := {"blue": "United States", "red": "China", "green": "Germany", "gold": "Iran"}
 const SWARM := 5            # Shaheds per salvo
 const SWARM_MAX := 15       # a nation's Shaheds in the air at once
 const SEAD := 2.5           # the Raptor against air defences
@@ -109,7 +109,7 @@ static func identity(w: Node, owner: int) -> String:
 		return ""
 	if w.map.nations[owner].has("id"):
 		var id: String = str(w.map.nations[owner].id)
-		return {"usa": "blue", "china": "red", "eu": "green", "iran": "gold"}.get(id, id)
+		return {"usa": "blue", "china": "red", "germany": "green", "iran": "gold"}.get(id, id)
 	return str(NATION_OF_COLOUR.get(str(w.map.nations[owner].get("color", "")).to_lower(), w.map.nations[owner].get("arsenal", "")))
 
 ## True when `owner` may field `key` (every nation fields the common units).

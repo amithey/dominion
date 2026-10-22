@@ -42,7 +42,7 @@ func ballot(choice: String) -> void:
 	u.cast(choice)
 
 func run() -> void:
-	set_meta("match_config", {"map": "island", "players": 4, "nation": 0, "style": "standard"})
+	set_meta("match_config", {"map": "island", "players": 4, "nation": 0, "rivals": [preload("res://scripts/factions.gd").IDS.find("china"), preload("res://scripts/factions.gd").IDS.find("france"), preload("res://scripts/factions.gd").IDS.find("iran")], "style": "standard"})
 	change_scene_to_file("res://world.tscn")
 	for i in range(40000):
 		await process_frame
@@ -71,7 +71,7 @@ func run() -> void:
 	# ---- who has what (cbrn_data.gd)
 	check(C.has(w, 0, "nuke") and C.has(w, 0, "mirv") and not C.has(w, 0, "emp") and not C.has(w, 0, "chemical") and not C.has(w, 0, "riotAgent"), "the United States: nuclear/MIRV current; microwave trial gated; no chemical inventory")
 	check(C.has(w, 1, "hydrogenBomb") and not C.has(w, 1, "nuclearGlide") and not C.has(w, 1, "tsarBomba") and not C.has(w, 1, "chemical"), "China: thermonuclear current; nuclear glide unconfirmed/future; no Tsar Bomba, no chemical weapons")
-	check(C.has(w, 2, "mirv") and not C.has(w, 2, "neutronBomb") and C.has(w, 2, "hydrogenBomb"), "France (the European Union): MIRV and thermonuclear current; historical neutron programme gated")
+	check(C.has(w, 2, "mirv") and not C.has(w, 2, "neutronBomb") and C.has(w, 2, "hydrogenBomb"), "France: MIRV and thermonuclear current; historical neutron programme gated")
 	check(not C.has(w, 3, "incapacitant") and not C.has(w, 3, "chemical") and not C.has(w, 3, "nuke"), "Iran: assessed incapacitant programme is gated; no verified nerve-agent inventory or bomb")
 	check("north_korea" in C.ids_for("hydrogenBomb") and not "india" in C.ids_for("hydrogenBomb") and not "israel" in C.ids_for("hydrogenBomb"), "thermonuclear: North Korea likely (2017); India's claim disputed, Israel's unproven")
 	check("india" in C.ids_for("mirv") and "pakistan" in C.ids_for("mirv") and not "north_korea" in C.ids_for("mirv"), "MIRV: India and Pakistan have tested; North Korea's is aspirational")
@@ -174,7 +174,7 @@ func run() -> void:
 
 	# ---- the United Nations
 	check(D.SEATS.values().reduce(func(a, b): return a + b, 0) == 10, "ten elected seats by region: 3 African, 2 Asia-Pacific, 2 Latin American, 2 Western, 1 Eastern European")
-	check(u.permanent(0) and u.permanent(1) and u.permanent(2) and not u.permanent(3), "the United States, China and France (the EU) hold permanent seats")
+	check(u.permanent(0) and u.permanent(1) and u.permanent(2) and not u.permanent(3), "the United States, China and France hold permanent seats")
 	check(u.council().size() == 4 and u.elected.has(3), "Iran is elected to the Council's one elected seat here")
 	check(u.under(3, "embargo") and u.production_mult(3) < 1.0 and u.record.any(func(r): return r.result == "in force" and int(r.target) == 3), "the snapback sanctions on Iran are in force from the start")
 	var pres: int = u.president

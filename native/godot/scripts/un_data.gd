@@ -14,14 +14,14 @@ const Factions := preload("res://scripts/factions.gd")
 ## The five permanent members (Charter Art. 23). The game's European Union
 ## holds France's seat and arsenal.
 const PERMANENT := ["usa", "russia", "china", "uk", "france"]
-const PROXY := {"eu": "france"}
+const PROXY := {}
 
 ## Elected seats by region (General Assembly resolution 1991 A (XVIII), 1963):
 ## three African, two Asia-Pacific, two Latin American and Caribbean, two
 ## Western European and Others, one Eastern European.
 const SEATS := {"Africa": 3, "Asia-Pacific": 2, "Latin America & Caribbean": 2, "Western Europe & Others": 2, "Eastern Europe": 1}
 const REGION := {
-	"usa": "Western Europe & Others", "uk": "Western Europe & Others", "eu": "Western Europe & Others", "france": "Western Europe & Others", "australia": "Western Europe & Others",
+	"usa": "Western Europe & Others", "uk": "Western Europe & Others", "germany": "Western Europe & Others", "france": "Western Europe & Others", "australia": "Western Europe & Others",
 	"turkiye": "Western Europe & Others", "israel": "Western Europe & Others",
 	"russia": "Eastern Europe", "ukraine": "Eastern Europe",
 	"china": "Asia-Pacific", "japan": "Asia-Pacific", "india": "Asia-Pacific", "iran": "Asia-Pacific", "south_korea": "Asia-Pacific",
@@ -33,7 +33,7 @@ const REGION := {
 ## Members of the Non-Aligned Movement (they guard sovereignty and shy from
 ## coercion of one another).
 const NAM := ["india", "indonesia", "iran", "egypt", "saudi", "pakistan", "iraq", "syria", "afghanistan", "north_korea"]
-const WESTERN := ["usa", "uk", "eu", "france", "australia", "japan", "south_korea", "israel", "turkiye", "ukraine"]
+const WESTERN := ["usa", "uk", "germany", "france", "australia", "japan", "south_korea", "israel", "turkiye", "ukraine"]
 ## Whom each permanent member has shielded with its veto or would.
 const SHIELDS := {
 	"usa": ["israel"],

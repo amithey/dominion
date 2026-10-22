@@ -12,7 +12,7 @@ func check(ok: bool, label: String) -> void:
 	else: errors.append(label)
 
 func run() -> void:
-	set_meta("match_config", {"map": "island", "players": 4, "nation": 0, "style": "standard"})
+	set_meta("match_config", {"map": "island", "players": 4, "nation": 0, "rivals": [preload("res://scripts/factions.gd").IDS.find("china"), preload("res://scripts/factions.gd").IDS.find("france"), preload("res://scripts/factions.gd").IDS.find("iran")], "style": "standard"})
 	change_scene_to_file("res://world.tscn")
 	for frame in range(40000):
 		await process_frame

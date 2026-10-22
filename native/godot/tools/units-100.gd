@@ -29,7 +29,7 @@ func land(offset: Vector3) -> Vector3:
 ## Plays as the nation with this flag (its colour and its id: identity reads the id first).
 func play_as(colour: String) -> void:
 	w.map.nations[0].color = colour
-	w.map.nations[0].id = {"#3b82f6": "usa", "#e0483e": "china", "#33b86e": "eu", "#e8a83a": "iran"}.get(colour, "usa")
+	w.map.nations[0].id = {"#3b82f6": "usa", "#e0483e": "china", "#33b86e": "germany", "#e8a83a": "iran"}.get(colour, "usa")
 
 func complete(key: String) -> void:
 	w.research.progress[key].stage = 3

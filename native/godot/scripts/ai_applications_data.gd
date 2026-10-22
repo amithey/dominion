@@ -4,7 +4,6 @@ extends RefCounted
 const COUNTRY := {
 	"usa": ["Operational programmes", "Maven decision support; autonomous-system procurement; industrial and public-sector AI.", ["sensors", "logistics", "cyber", "science"]],
 	"china": ["National adoption programme", "AI+ prioritises industry and public services; precise military deployment remains opaque.", ["industry", "administration", "sensors", "science"]],
-	"eu": ["Deployment and infrastructure", "AI factories and public-service adoption; NATO decision-support procurement covers participating allies, not every EU force.", ["assurance", "administration", "industry", "diplomacy"]],
 	"uk": ["Defence adoption strategy", "Defence AI strategy and public-sector experimentation; procurement does not prove universal fielding.", ["assurance", "cyber", "diplomacy", "science"]],
 	"israel": ["Applied AI and national investment", "Strong applied AI ecosystem and national infrastructure investment; targeting claims require independent scrutiny.", ["sensors", "cyber", "autonomy", "science"]],
 	"russia": ["Applied models; opaque military use", "Domestic financial-sector AI is documented; battlefield autonomy claims have uneven independent verification.", ["autonomy", "cyber", "industry", "logistics"]],

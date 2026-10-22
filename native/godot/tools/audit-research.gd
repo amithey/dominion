@@ -44,7 +44,7 @@ func nation_of(def: Dictionary) -> String:
 
 ## The national identity ("usa"...) that goes with a discovery's nation tag (the old colour names too).
 func identity_for(tag: String) -> String:
-	var legacy := {"blue": "usa", "red": "china", "green": "eu", "gold": "iran"}
+	var legacy := {"blue": "usa", "red": "china", "green": "germany", "gold": "iran"}
 	return legacy.get(tag, tag)
 
 func run() -> void:

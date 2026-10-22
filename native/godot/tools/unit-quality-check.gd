@@ -47,7 +47,7 @@ func run() -> void:
 	# 2: the generations, in the tank table.
 	var t: Dictionary = Q.QUALITY.tank
 	var order_ok := true
-	for top in ["usa", "israel", "south_korea", "eu"]:
+	for top in ["usa", "israel", "south_korea", "germany"]:
 		for stat in range(3):
 			order_ok = order_ok and t[top][stat] > t.ukraine[stat] and t.ukraine[stat] > t.afghanistan[stat]
 	check(order_ok, "Abrams SEPv3, Merkava 4, K2, Leopard 2A8 > T-64BV > T-62 in protection, firepower and accuracy")
@@ -109,7 +109,7 @@ func run() -> void:
 	# round) stands above the Leopard 2A8, K2 and Merkava 4 in protection and
 	# firepower; the M1E3 is a United States-only discovery that replaces it.
 	var top_ok := true
-	for rival in ["eu", "south_korea", "israel"]:
+	for rival in ["germany", "south_korea", "israel"]:
 		top_ok = top_ok and t.usa[0] > t[rival][0] and t.usa[1] > t[rival][1]
 	check(top_ok and t.usa[3] < 1.0, "the M1A2 SEPv3 is the best-protected and hardest-hitting tank in service (%d%% health, %d%% firepower), and slower at 78 t" % [int(round(t.usa[0] * 100)), int(round(t.usa[1] * 100))])
 	check(w.research.def_of("nextGenAbrams").get("nation", "") == "blue" and w.research.blocker("nextGenAbrams") != "" and Q.upgrade(w, 0, "israel", "tank").is_empty(),

@@ -17,7 +17,7 @@ const QUALITY := {
 	"tank": {
 		"usa": [1.24, 1.15, 1.12, 0.95, 1.0],   # M1A2 SEPv3 Abrams
 		"china": [1.0, 1.0, 1.0, 1.0, 1.0],   # Type 99A
-		"eu": [1.12, 1.08, 1.12, 1.03, 1.0],   # Leopard 2A8
+		"germany": [1.12, 1.08, 1.12, 1.03, 1.0],   # Leopard 2A8
 		"france": [1.06, 1.04, 1.06, 1.0, 1.0],   # Leclerc XLR
 		"iran": [0.76, 0.78, 0.68, 0.95, 1.0],   # Karrar
 		"russia": [1.0, 1.0, 0.96, 1.0, 1.0],   # T-90M Proryv
@@ -48,7 +48,7 @@ const QUALITY := {
 	"apc": {
 		"usa": [1.0, 1.0, 1.0, 1.0, 1.0],   # Stryker
 		"china": [0.86, 0.9, 0.84, 1.0, 1.0],   # ZBL-08
-		"eu": [1.12, 1.08, 1.12, 1.0, 1.0],   # Boxer
+		"germany": [1.12, 1.08, 1.12, 1.0, 1.0],   # Boxer
 		"france": [1.12, 1.08, 1.12, 1.0, 1.0],   # Griffon
 		"iran": [0.62, 0.7, 0.62, 0.92, 1.0],   # Rakhsh
 		"russia": [0.78, 0.84, 0.76, 0.97, 1.0],   # BTR-82A
@@ -79,7 +79,7 @@ const QUALITY := {
 	"artillery": {
 		"usa": [1.0, 1.0, 1.0, 1.0, 0.95],   # M109A7 Paladin
 		"china": [1.0, 1.0, 1.0, 1.0, 1.0],   # PLZ-05
-		"eu": [1.12, 1.08, 1.12, 1.0, 1.04],   # PzH 2000
+		"germany": [1.12, 1.08, 1.12, 1.0, 1.04],   # PzH 2000
 		"france": [1.0, 1.0, 1.04, 1.0, 1.04],   # CAESAR
 		"iran": [0.7, 0.78, 0.68, 0.95, 0.89],   # Raad-2
 		"russia": [0.93, 0.95, 0.92, 1.0, 0.97],   # 2S19M2 Msta-S
@@ -110,7 +110,7 @@ const QUALITY := {
 	"mlrs": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.04],   # M270A2 MLRS
 		"china": [0.93, 0.95, 0.92, 1.0, 0.97],   # PHL-03
-		"eu": [1.0, 1.0, 1.0, 1.0, 1.0],   # MARS II
+		"germany": [1.0, 1.0, 1.0, 1.0, 1.0],   # MARS II
 		"france": [1.12, 1.08, 1.12, 1.0, 1.04],   # LRU
 		"iran": [0.7, 0.78, 0.68, 0.95, 0.89],   # Fajr-5
 		"russia": [0.93, 0.95, 0.92, 1.0, 0.97],   # BM-30 Smerch
@@ -138,7 +138,7 @@ const QUALITY := {
 	"aaVehicle": {
 		"usa": [1.0, 1.0, 1.0, 1.0, 1.0],   # M-SHORAD
 		"china": [1.0, 1.0, 1.0, 1.0, 1.0],   # PGZ-09
-		"eu": [1.12, 1.08, 1.12, 1.0, 1.0],   # Skyranger 30
+		"germany": [1.12, 1.08, 1.12, 1.0, 1.0],   # Skyranger 30
 		"france": [0.93, 0.95, 0.92, 1.0, 1.0],   # Crotale NG
 		"iran": [0.55, 0.62, 0.55, 0.9, 1.0],   # ZSU-23-4 Shilka
 		"russia": [1.0, 1.0, 1.0, 1.0, 1.0],   # Pantsir-S1
@@ -169,7 +169,7 @@ const QUALITY := {
 	"samLauncher": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.04],   # Patriot PAC-3
 		"china": [1.06, 1.04, 1.06, 1.0, 1.02],   # HQ-9B
-		"eu": [1.12, 1.08, 1.12, 1.0, 1.04],   # SAMP/T NG
+		"germany": [1.12, 1.08, 1.12, 1.0, 1.04],   # Patriot PAC-3 MSE
 		"france": [1.12, 1.08, 1.12, 1.0, 1.04],   # SAMP/T NG
 		"iran": [0.86, 0.9, 0.84, 1.0, 0.95],   # Bavar-373
 		"russia": [1.12, 1.08, 1.12, 1.0, 1.14],   # S-400
@@ -193,7 +193,7 @@ const QUALITY := {
 	"helicopter": {
 		"usa": [1.0, 1.0, 1.0, 1.0, 1.0],   # UH-60M Black Hawk
 		"china": [1.0, 1.0, 1.0, 1.0, 1.0],   # Z-20
-		"eu": [1.0, 1.0, 1.0, 1.0, 1.0],   # NH90
+		"germany": [1.0, 1.0, 1.0, 1.0, 1.0],   # NH90
 		"france": [1.0, 1.0, 1.0, 1.0, 1.0],   # NH90
 		"iran": [0.62, 0.7, 0.62, 0.92, 1.0],   # Shabaviz 2-75
 		"russia": [0.86, 0.9, 0.84, 1.0, 1.0],   # Mi-8AMTSh
@@ -222,7 +222,7 @@ const QUALITY := {
 	"gunship": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.0],   # AH-64E Apache
 		"china": [0.93, 0.95, 0.92, 1.0, 1.0],   # Z-10ME
-		"eu": [1.0, 1.0, 1.0, 1.0, 1.0],   # Tiger
+		"germany": [1.0, 1.0, 1.0, 1.0, 1.0],   # Tiger
 		"france": [1.0, 1.0, 1.0, 1.0, 1.0],   # Tiger
 		"iran": [0.55, 0.62, 0.55, 0.9, 1.0],   # Toufan
 		"russia": [1.0, 1.0, 1.0, 1.0, 1.0],   # Ka-52M
@@ -248,7 +248,7 @@ const QUALITY := {
 	"jet": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.04],   # F-15EX Eagle II
 		"china": [1.06, 1.04, 1.06, 1.0, 1.02],   # J-16
-		"eu": [1.12, 1.08, 1.12, 1.0, 1.04],   # Rafale / Typhoon
+		"germany": [1.12, 1.08, 1.12, 1.0, 1.04],   # Eurofighter Typhoon
 		"france": [1.12, 1.08, 1.12, 1.0, 1.04],   # Rafale
 		"iran": [0.7, 0.78, 0.68, 0.95, 0.89],   # MiG-29
 		"russia": [1.06, 1.04, 1.06, 1.0, 1.02],   # Su-35S
@@ -274,7 +274,7 @@ const QUALITY := {
 	"drone": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.0],   # MQ-9 Reaper
 		"china": [1.0, 1.0, 1.0, 1.0, 1.0],   # Wing Loong II
-		"eu": [1.0, 1.0, 1.0, 1.0, 1.0],   # Heron TP
+		"germany": [1.0, 1.0, 1.0, 1.0, 1.0],   # Heron TP
 		"france": [1.12, 1.08, 1.12, 1.0, 1.0],   # MQ-9 Reaper
 		"iran": [0.86, 0.9, 0.84, 1.0, 1.0],   # Mohajer-6
 		"russia": [0.86, 0.9, 0.84, 1.0, 1.0],   # Orion
@@ -303,7 +303,7 @@ const QUALITY := {
 	"corvette": {
 		"usa": [0.86, 0.82, 0.84, 1.08, 0.95],   # Freedom-class LCS
 		"china": [0.93, 0.95, 0.92, 1.0, 0.97],   # Type 056A
-		"eu": [1.0, 1.0, 1.0, 1.0, 1.0],   # K130 Braunschweig
+		"germany": [1.0, 1.0, 1.0, 1.0, 1.0],   # K130 Braunschweig
 		"france": [0.93, 0.95, 0.92, 1.0, 0.97],   # La Fayette-class
 		"iran": [0.78, 0.84, 0.76, 0.97, 0.92],   # Shahid Soleimani-class
 		"russia": [1.0, 1.06, 1.0, 1.0, 1.0],   # Karakurt-class
@@ -328,7 +328,7 @@ const QUALITY := {
 		"north_korea": [0.85, 0.9, 0.85, 1.0, 1.0],   # initial Choe Hyon class; game balance
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.04],   # Arleigh Burke-class
 		"china": [1.12, 1.08, 1.12, 1.0, 1.04],   # Type 055
-		"eu": [1.06, 1.04, 1.06, 1.0, 1.02],   # Horizon-class
+		"germany": [1.06, 1.04, 1.06, 1.0, 1.02],   # F124 Sachsen-class
 		"france": [1.06, 1.04, 1.06, 1.0, 1.02],   # Horizon-class
 		"iran": [0.7, 0.78, 0.68, 0.95, 0.89],   # Moudge-class
 		"russia": [1.0, 1.0, 1.0, 1.0, 1.0],   # Admiral Gorshkov-class
@@ -342,7 +342,7 @@ const QUALITY := {
 	"submarine": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.04],   # Virginia-class
 		"china": [1.0, 1.0, 1.0, 1.0, 1.0],   # Type 039C
-		"eu": [1.12, 1.08, 1.12, 1.0, 1.04],   # Type 212CD
+		"germany": [1.12, 1.08, 1.12, 1.0, 1.04],   # Type 212CD
 		"france": [1.06, 1.04, 1.06, 1.0, 1.02],   # Suffren-class (Barracuda)
 		"iran": [0.7, 0.78, 0.68, 0.95, 0.89],   # Fateh-class
 		"russia": [1.0, 1.0, 1.0, 1.0, 1.0],   # Improved Kilo
@@ -362,7 +362,7 @@ const QUALITY := {
 	"stealthFighter": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.04],   # F-35A Lightning II
 		"china": [1.06, 1.04, 1.06, 1.0, 1.02],   # J-20
-		"eu": [1.12, 1.08, 1.12, 1.0, 1.04],   # F-35A
+		"germany": [1.12, 1.08, 1.12, 1.0, 1.04],   # F-35A
 		"russia": [1.0, 1.0, 1.0, 1.0, 1.0],   # Su-57
 		"india": [0.86, 0.9, 0.84, 1.0, 0.95],   # AMCA
 		"japan": [1.12, 1.08, 1.12, 1.0, 1.04],   # F-35A
@@ -375,7 +375,7 @@ const QUALITY := {
 	"atgmTeam": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.04],   # Javelin team
 		"china": [1.0, 1.0, 1.0, 1.0, 1.0],   # HJ-12 team
-		"eu": [1.12, 1.08, 1.12, 1.0, 1.04],   # MMP team
+		"germany": [1.12, 1.08, 1.12, 1.0, 1.04],   # Spike LR team
 		"france": [1.12, 1.08, 1.12, 1.0, 1.04],   # MMP team
 		"iran": [0.86, 0.9, 0.84, 1.0, 0.95],   # Dehlavieh team
 		"russia": [1.0, 1.0, 1.0, 1.0, 1.0],   # Kornet team
@@ -406,7 +406,7 @@ const QUALITY := {
 	"manpads": {
 		"usa": [1.12, 1.08, 1.12, 1.0, 1.04],   # Stinger team
 		"china": [1.0, 1.0, 1.0, 1.0, 1.0],   # FN-16 team
-		"eu": [1.12, 1.08, 1.12, 1.0, 1.04],   # Mistral 3 team
+		"germany": [1.12, 1.08, 1.12, 1.0, 1.04],   # Stinger team
 		"france": [1.12, 1.08, 1.12, 1.0, 1.04],   # Mistral 3 team
 		"iran": [0.86, 0.9, 0.84, 1.0, 0.95],   # Misagh-3 team
 		"russia": [1.06, 1.04, 1.06, 1.0, 1.02],   # Verba team
@@ -437,7 +437,7 @@ const QUALITY := {
 	"infantry": {
 		"usa": [1.06, 1.04, 1.06, 1.0, 1.0],   # infantry
 		"china": [1.0, 1.0, 1.0, 1.0, 1.0],   # infantry
-		"eu": [1.0, 1.0, 1.0, 1.0, 1.0],   # infantry
+		"germany": [1.0, 1.0, 1.0, 1.0, 1.0],   # infantry
 		"france": [1.03, 1.02, 1.03, 1.0, 1.0],   # infantry
 		"iran": [0.93, 0.95, 0.92, 1.0, 1.0],   # infantry
 		"russia": [0.97, 0.97, 0.96, 1.0, 1.0],   # infantry
@@ -484,9 +484,9 @@ static func of(id: String, key: String) -> Dictionary:
 ## range, +20% damage) and fibre-optic FPV drones (no jammer stops them, +30%
 ## range). "flags" are set on each unit built.
 const UPGRADES := {
-	"tank": {"usa": {"research": "nextGenAbrams", "name": "M1E3 Abrams", "figures": [1.3, 1.15, 1.2, 1.06, 1.0], "cooldown": 0.8, "flags": {"aps_builtin": true}}, "eu": {"research": "futureArsenal", "name": "Leopard 2A8 (future programme)", "figures": [1.15, 1.1, 1.1, 1.0, 1.0]}, "india": {"research": "futureArsenal", "name": "Arjun Mk1A (procurement programme)", "figures": [1.1, 1.1, 1.05, 1.0, 1.0]}},
+	"tank": {"usa": {"research": "nextGenAbrams", "name": "M1E3 Abrams", "figures": [1.3, 1.15, 1.2, 1.06, 1.0], "cooldown": 0.8, "flags": {"aps_builtin": true}}, "germany": {"research": "futureArsenal", "name": "Leopard 2A8 (future programme)", "figures": [1.15, 1.1, 1.1, 1.0, 1.0]}, "india": {"research": "futureArsenal", "name": "Arjun Mk1A (procurement programme)", "figures": [1.1, 1.1, 1.05, 1.0, 1.0]}},
 	"jet": {"russia": {"research": "glideBombs", "name": "Su-34 (UMPK glide bombs)", "figures": [1.06, 1.2, 1.06, 0.95, 1.5]}},
-	"submarine": {"eu": {"research": "futureArsenal", "name": "Type 212CD (future programme)", "figures": [1.2, 1.1, 1.15, 1.0, 1.05]}},
+	"submarine": {"germany": {"research": "futureArsenal", "name": "Type 212CD (future programme)", "figures": [1.2, 1.1, 1.15, 1.0, 1.05]}},
 	"samLauncher": {"india": {"research": "futureArsenal", "name": "Akash-NG (future programme)", "figures": [1.1, 1.1, 1.1, 1.0, 1.1]}},
 	"fpvTeam": {"russia": {"research": "fibreOpticDrones", "name": "Fibre-optic FPV team", "figures": [1.0, 1.0, 1.05, 1.0, 1.3], "flags": {"fibre_optic": true}}, "ukraine": {"research": "fibreOpticDrones", "name": "Fibre-optic FPV team", "figures": [1.0, 1.0, 1.05, 1.0, 1.3], "flags": {"fibre_optic": true}}},
 }

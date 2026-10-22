@@ -44,16 +44,6 @@ const USE := {
 		"export": ["fielded", "Chinese firms have sold 'safe city' surveillance in dozens of partner countries."],
 		"deadHand": ["pledged", "Its leader agreed with the American president that humans, not AI, decide on nuclear use."],
 		"biosecurity": ["developing", "Biosecurity law and research on screening; little public detail."]},
-	"eu": {
-		"targeting": ["developing", "NATO bought a commercial targeting decision-support system for allied headquarters."],
-		"counterDrone": ["developing", "National counter-drone programmes after drones crossed eastern borders."],
-		"undersea": ["developing", "Seabed infrastructure protection with uncrewed vessels and sensors."],
-		"surveillance": ["barred", "The EU AI Act forbids real-time facial recognition in public spaces, with narrow judicial exceptions."],
-		"infoShield": ["fielded", "The external action service tracks foreign manipulation; the Digital Services Act obliges platforms to act."],
-		"revenue": ["fielded", "Tax administrations use analytics against VAT fraud."],
-		"export": ["developing", "AI factories open to partners; no package export programme."],
-		"deadHand": ["pledged", "France, its nuclear power, has committed to human control of nuclear decisions."],
-		"biosecurity": ["developing", "Research and guidance on screening synthetic DNA."]},
 	"uk": {
 		"targeting": ["developing", "An army programme fuses sensors to speed up targeting; allied decision-support systems."],
 		"counterDrone": ["developing", "Directed-energy and drone-interceptor trials."],

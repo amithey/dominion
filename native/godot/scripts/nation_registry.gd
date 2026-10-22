@@ -9,7 +9,7 @@ extends RefCounted
 const ORDER := [
 	preload("res://scripts/nations/usa.gd"),
 	preload("res://scripts/nations/china.gd"),
-	preload("res://scripts/nations/eu.gd"),
+	preload("res://scripts/nations/germany.gd"),
 	preload("res://scripts/nations/iran.gd"),
 	preload("res://scripts/nations/russia.gd"),
 	preload("res://scripts/nations/india.gd"),
@@ -48,6 +48,11 @@ static func column(field: String, groups: Array = []) -> Array:
 			out.append(entry[field])
 	out.make_read_only()
 	return out
+
+## Names the Union's seat went by before Germany took it, for saves and portraits made then.
+const LEGACY_LEADERS := {"Commission President Ursula von der Leyen": "Chancellor Friedrich Merz"}
+static func legacy_leader(name: String) -> String:
+	return LEGACY_LEADERS.get(name, name)
 
 static func data(id: String) -> Dictionary:
 	for script in ORDER:

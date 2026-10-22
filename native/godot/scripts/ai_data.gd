@@ -37,8 +37,6 @@ const PROFILE := {
 		"why": "Frontier models of its own and the second-largest compute, despite chip controls."},
 	"uk":          {"compute": 2, "models": 4, "autonomy": 3, "cyber": 4, "lean": "in", "signs": ["nuclear"], "ceiling": 4,
 		"why": "World-class laboratories and research, but a fraction of the leaders' compute."},
-	"eu":          {"compute": 2, "models": 3, "autonomy": 2, "cyber": 3, "lean": "in", "signs": ["laws", "nuclear"], "ceiling": 4,
-		"why": "Strong research and new public AI factories, but few frontier laboratories."},
 	"israel":      {"compute": 1, "models": 3, "autonomy": 5, "cyber": 5, "lean": "on", "signs": [], "ceiling": 4,
 		"why": "A dense AI industry and battle-tested military AI, but little compute of its own."},
 	"russia":      {"compute": 1, "models": 2, "autonomy": 4, "cyber": 4, "lean": "out", "signs": [], "ceiling": 3,
@@ -82,7 +80,7 @@ const NEEDS := {"machineLearning": 1, "militaryAI": 3, "collaborativeCombatAircr
 ## The chip supply chain: nations that can deny advanced chips to another
 ## (export controls on AI chips and the machines that make them), and those
 ## that make the chips (they sell more in a shortage).
-const CONTROLLERS := ["usa", "eu", "japan", "south_korea", "uk"]
+const CONTROLLERS := ["usa", "japan", "south_korea", "uk"]
 const CHIP_MAKERS := ["south_korea", "japan", "usa", "china"]
 
 ## The standing of nation `id`: the table below for the first nations, then the "ai" of its own

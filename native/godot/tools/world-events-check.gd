@@ -19,7 +19,7 @@ func who(id: String) -> int:
 
 func run() -> void:
 	set_meta("match_config", {"map": "island", "players": 4, "nation": Factions.IDS.find("usa"), "style": "standard",
-		"rivals": [Factions.IDS.find("china"), Factions.IDS.find("iran"), Factions.IDS.find("eu")]})
+		"rivals": [Factions.IDS.find("china"), Factions.IDS.find("iran"), Factions.IDS.find("germany")]})
 	change_scene_to_file("res://world.tscn")
 	for i in range(40000):
 		await process_frame
@@ -36,7 +36,7 @@ func run() -> void:
 	var d: Node = w.diplomacy
 	var china := who("china")
 	var iran := who("iran")
-	var eu := who("eu")
+	var eu := who("germany")
 	check(ev != null and china > 0 and iran > 0 and eu > 0, "a match of the United States, China, Iran and Europe")
 	ev.evaluate()
 	check(ev.active.is_empty() and ev.price_shock("oil") == 0.0, "in peace the world is calm: no event, no shock")
@@ -81,7 +81,7 @@ func run() -> void:
 	w.map.nations[eu].id = "russia"
 	ev.evaluate()
 	check(ev.active.has("grain") and ev.price_shock("food") >= 0.5, "Russia at war: Black Sea grain stops, food dearer")
-	w.map.nations[eu].id = "eu"
+	w.map.nations[eu].id = "germany"
 	# 5: a town destroyed: refugees.
 	var civ0: float = w.economy.civilians
 	var town: Dictionary = w.place_building("villageCenter", w.test_site("villageCenter", w.start + Vector3(90, 0, 40)), china, true)

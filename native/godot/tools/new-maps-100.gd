@@ -20,7 +20,7 @@ const Geo := preload("res://scripts/world_geography.gd")
 const Setup := preload("res://scripts/match_setup.gd")
 const Factions := preload("res://scripts/factions.gd")
 const Catalogue := preload("res://scripts/map_catalogue.gd")
-const BASE := ["usa", "china", "eu", "iran", "russia", "india", "japan", "turkiye", "israel"]
+const BASE := ["usa", "china", "germany", "iran", "russia", "india", "japan", "turkiye", "israel"]
 ## Each map played as a different nation, at a different difficulty.
 const PLAY := [["middle_east", 8, "normal"], ["europe", 2, "hard"], ["east_asia", 6, "easy"], ["continents_plus", 0, "normal"], ["fractal", 7, "easy"]]
 var only: Array = []

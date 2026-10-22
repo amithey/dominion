@@ -48,7 +48,7 @@ const TRAITS := {
 ## The traits each nation's officer corps tends to (the rest are rarer).
 const DOCTRINE := {
 	"usa": ["airpower", "spearhead", "logistician"], "china": ["gunner", "admiral", "drones"],
-	"russia": ["gunner", "reckless", "spearhead"], "eu": ["logistician", "cautious", "fortress"], "france": ["spearhead", "admiral", "cautious"],
+	"russia": ["gunner", "reckless", "spearhead"], "germany": ["logistician", "cautious", "fortress"], "france": ["spearhead", "admiral", "cautious"],
 	"iran": ["drones", "infantry", "fortress"], "india": ["gunner", "infantry", "fortress"],
 	"japan": ["admiral", "cautious", "logistician"], "turkiye": ["drones", "spearhead", "infantry"],
 	"israel": ["airpower", "inspiring", "spearhead"], "uk": ["admiral", "inspiring", "infantry"],
@@ -65,7 +65,7 @@ const NAMES := {
 	"usa": ["Hale", "Mercer", "Brooks", "Whitaker", "Calloway", "Dunn", "Reyes", "Holt", "Garrison", "Pike"],
 	"china": ["Zhao", "Liu", "Chen", "Wang", "Sun", "Huang", "Ma", "Gao", "Lin", "Xu"],
 	"russia": ["Volkov", "Sokolov", "Orlov", "Lebedev", "Morozov", "Kozlov", "Zaitsev", "Belov", "Gromov", "Titov"],
-	"eu": ["Lefèvre", "Hoffmann", "Rossi", "Moreau", "Novak", "Jansen", "Kowalski", "Bauer", "Duval", "Ferrari"],
+	"germany": ["Hoffmann", "Bauer", "Schneider", "Fischer", "Weber", "Wagner", "Becker", "Schulz", "Keller", "Richter"],
 	"france": ["Girard", "Fontaine", "Roussel", "Lambert", "Bonnet", "Mercier", "Chevalier", "Garnier", "Perrin", "Vidal"],
 	"iran": ["Rahimi", "Karimi", "Hosseini", "Jafari", "Moradi", "Rostami", "Ahmadi", "Shirazi", "Tehrani", "Bagheri"],
 	"india": ["Sharma", "Rathore", "Menon", "Singh", "Nair", "Chauhan", "Rao", "Thapa", "Iyer", "Bhatia"],

@@ -48,7 +48,7 @@ func run() -> void:
 	w.ai.set_physics_process(false)
 	w.effects.set_physics_process(false)
 	w.missiles.set_physics_process(false)
-	check(FA.IDS.size() == 28 and FA.IDS[16] == "egypt" and FA.IDS[21] == "afghanistan", "28 identities preserve legacy indices")
+	check(FA.IDS.size() >= 28 and FA.IDS[16] == "egypt" and FA.IDS[21] == "afghanistan", "the first 28 identities keep their legacy indices")
 	check(w.map.nations.map(func(n): return n.id) == ["yemen", "houthis", "sudan", "south_sudan"], "new identities launch in selected slots")
 	check(not 1 in w.un.members() and 0 in w.un.members() and 2 in w.un.members() and 3 in w.un.members(), "Houthis excluded from UN; three sovereign states hold separate seats")
 	for id in F.IDS:

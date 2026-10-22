@@ -39,13 +39,6 @@ const PROFILES := {
 		"strengths": ["The world's factory: +15% production and construction speed", "Shipbuilding: warships 15% cheaper", "Rare earths and chips: +30% silicon", "Exports: +15% trade income", "Research +5%, cyber espionage +10%, counter-intelligence +10%"],
 		"weaknesses": ["An ageing population: 10% slower growth", "Imports its oil: -20% oil output", "Cold relations with the US, Japan and India"],
 	},
-	"eu": {
-		"bonus": {"incomePct": 0.05, "researchPct": 0.05, "happiness": 4.0, "health": 5.0, "dmgAll": -0.05},
-		"growth": 0.65, "resources": {"oil": 0.7, "gas": 0.6}, "trade": 1.15,
-		"costs": {"airDefence": 0.9},
-		"strengths": ["The single market: +5% income, +15% trade income", "Welfare and health: +4 happiness, +5 health", "Research +5%", "Air defence 10% cheaper (IRIS-T, SAMP/T)"],
-		"weaknesses": ["Dependent on imported energy: -30% oil, -40% gas output", "Low readiness after decades of peace: -5% combat damage", "An ageing population: the population grows a third slower, despite the welfare"],
-	},
 	"iran": {
 		"bonus": {"incomePct": -0.05, "researchPct": 0.05, "happiness": -6.0, "spyPct": 0.05},
 		"growth": 1.0, "resources": {"oil": 1.4, "gas": 1.4}, "trade": 0.75,
@@ -93,9 +86,9 @@ const PROFILES := {
 ## Starting relations between factions that are present in a match, added to
 ## the usual random start: alliances, partnerships and old enmities.
 const TIES := [
-	["usa", "eu", 30.0], ["usa", "japan", 35.0], ["usa", "israel", 35.0], ["usa", "india", 10.0], ["usa", "turkiye", 5.0],
+	["usa", "germany", 30.0], ["usa", "japan", 35.0], ["usa", "israel", 35.0], ["usa", "india", 10.0], ["usa", "turkiye", 5.0],
 	["usa", "china", -20.0], ["usa", "russia", -35.0], ["usa", "iran", -55.0],
-	["eu", "japan", 15.0], ["eu", "russia", -40.0], ["eu", "iran", -15.0], ["eu", "turkiye", 5.0],
+	["germany", "japan", 15.0], ["germany", "russia", -40.0], ["germany", "iran", -15.0], ["germany", "turkiye", 5.0],
 	["china", "russia", 30.0], ["china", "iran", 15.0], ["china", "japan", -25.0], ["china", "india", -20.0],
 	["russia", "iran", 25.0], ["russia", "india", 15.0], ["russia", "turkiye", 5.0],
 	["iran", "israel", -70.0], ["israel", "turkiye", -15.0], ["india", "israel", 15.0], ["japan", "india", 15.0],
@@ -118,7 +111,7 @@ static func id_of(w: Node, owner: int) -> String:
 	if n.has("id"):
 		return str(n.id)
 	# The original four nations, known by flag, when no faction id is given.
-	return {"#3b82f6": "usa", "#e0483e": "china", "#33b86e": "eu", "#e8a83a": "iran"}.get(str(n.get("color", "")).to_lower(), "")
+	return {"#3b82f6": "usa", "#e0483e": "china", "#33b86e": "germany", "#e8a83a": "iran"}.get(str(n.get("color", "")).to_lower(), "")
 
 ## The profile of nation `id`: the first nations here, the next ones in additional_factions.gd,
 ## and any later nation from the "profile" of its own file in scripts/nations/.

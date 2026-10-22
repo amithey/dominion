@@ -44,7 +44,7 @@ const CIVILIAN := ["hospital", "school", "university", "library", "waterTreatmen
 const BASE := {
 	"usa":         [3.0, 4.2, 121.0, 3.4, 46.0],
 	"china":       [0.5, 5.1, 88.0, 1.7, 69.0],
-	"eu":          [2.4, 5.9, 88.0, 1.9, 30.0],
+	"germany":     [2.2, 3.8, 63.0, 2.4, 27.0],
 	"france":      [1.2, 7.6, 116.0, 2.0, 33.0],
 	"iran":        [35.0, 8.5, 34.0, 2.0, 83.0],
 	"russia":      [8.5, 2.5, 20.0, 7.1, 74.0],

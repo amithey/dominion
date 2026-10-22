@@ -20,14 +20,14 @@ const EASTERN := ["Su-3", "Su-5", "MiG", "T-90", "Kornet", "S-400", "S-500", "La
 	"Wing Loong", "Tu-160", "H-6K", "Shahed Launcher", "TOS-1", "Krasukha", "Borei", "Karakurt", "Z-10", "Z-20", "Kilo"]
 ## Names a nation must not see on its own weapons.
 const BANNED := {
-	"usa": ["EASTERN"], "eu": ["EASTERN"], "japan": ["EASTERN"], "israel": ["EASTERN"],
+	"usa": ["EASTERN"], "germany": ["EASTERN"], "japan": ["EASTERN"], "israel": ["EASTERN"],
 	"china": ["WEST", "ISRAELI"], "iran": ["WEST", "ISRAELI"], "russia": ["WEST", "ISRAELI"],
 	"india": ["ISRAELI_NONE"], "turkiye": ["ISRAELI_NONE"],
 }
 ## What each nation lacks.
 const LACKS := {
 	"usa": ["railgunShip"], "china": ["raptor", "raider"],
-	"eu": ["bomber", "sixthGen", "hpmVehicle", "railgunShip", "orca"],
+	"germany": ["bomber", "nuclearSub", "hpmVehicle", "railgunShip", "orca"],
 	"iran": ["bomber", "stealthFighter", "sixthGen", "nuclearSub", "laserAD", "abmLauncher", "hpmVehicle", "railgunShip", "orca", "raptor", "irisT"],
 	"russia": ["sixthGen", "hpmVehicle", "railgunShip", "orca"],
 	"india": ["bomber", "sixthGen", "hpmVehicle", "railgunShip", "orca"],
@@ -55,7 +55,7 @@ const LACKS := {
 }
 const EXPECT_NAMES := {"china": {"stealthFighter": "J-20", "sixthGen": "J-36", "tank": "Type 99A"}, "russia": {"stealthFighter": "Su-57", "tank": "T-90M Proryv"},
 	"usa": {"stealthFighter": "F-35A Lightning II", "sixthGen": "F-47"}, "iran": {"jet": "MiG-29", "tank": "Karrar"}, "israel": {"stealthFighter": "F-35I Adir", "laserAD": "Iron Beam"},
-	"turkiye": {"stealthFighter": "KAAN", "drone": "Bayraktar TB2"}, "japan": {"stealthFighter": "F-35A", "tank": "Type 10"}, "india": {"stealthFighter": "AMCA", "jet": "Su-30MKI"}, "eu": {"tank": "Leopard 2A7V"},
+	"turkiye": {"stealthFighter": "KAAN", "drone": "Bayraktar TB2"}, "japan": {"stealthFighter": "F-35A", "tank": "Type 10"}, "india": {"stealthFighter": "AMCA", "jet": "Su-30MKI"}, "germany": {"tank": "Leopard 2A7V"},
 	"iraq": {"jet": "F-16IQ Fighting Falcon", "tank": "M1A1M Abrams"}, "syria": {"tank": "T-72"}, "afghanistan": {"helicopter": "UH-60 (captured)"}}
 func _initialize() -> void: call_deferred("run")
 func check(ok: bool, label: String) -> void:
@@ -117,7 +117,7 @@ func run() -> void:
 			if str(w.unit_defs[key].name) != EXPECT_NAMES[id][key]: wrong.append("%s is %s" % [key, w.unit_defs[key].name])
 		check(wrong.is_empty(), "%s: its systems by their own names %s" % [id, str(EXPECT_NAMES.get(id, {}).values()) if wrong.is_empty() else str(wrong)])
 		# 4: nuclear weapons and hypersonic missiles.
-		var nuclear: bool = id in ["usa", "china", "eu", "russia", "india", "israel", "uk", "north_korea", "pakistan"]
+		var nuclear: bool = id in ["usa", "china", "france", "russia", "india", "israel", "uk", "north_korea", "pakistan"]
 		var hyper: bool = id in ["usa", "china", "russia", "india", "iran", "japan"]
 		var nuke_open: bool = not w.missiles.locked("nuke").ends_with("only") and not w.missiles.locked("nuke").begins_with("Not fielded")
 		var hyper_open: bool = not w.missiles.locked("hypersonic").begins_with("Not fielded")

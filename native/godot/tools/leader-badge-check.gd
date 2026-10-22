@@ -10,6 +10,12 @@ func check(ok: bool, label: String) -> void:
 	print(("ok   " if ok else "FAIL ") + label)
 	if ok: passed += 1
 	else: failed += 1
+## An illustration is cropped to an AtlasTexture of its PNG; a nation with only an emblem shows the emblem itself.
+func shows(icon: Texture2D, expected: String) -> bool:
+	if icon == null: return false
+	if icon is AtlasTexture: return icon.atlas.resource_path == expected
+	return icon.resource_path == expected
+
 func run() -> void:
 	var world := NationWorld.new()
 	root.add_child(world)
@@ -24,7 +30,7 @@ func run() -> void:
 		world.map.nations = [JSON.parse_string(JSON.stringify(nation)), Factions.nation((index + 1) % Factions.IDS.size())]
 		hud._dress_face()
 		var icon: Texture2D = hud._id_picture.texture
-		check(icon != null and icon is AtlasTexture and icon.atlas.resource_path == Gallery.portrait(Factions.LEADERS[index]), "%s HUD uses its chosen leader artwork after loading" % Factions.IDS[index])
+		check(shows(icon, Gallery.portrait(Factions.LEADERS[index])), "%s HUD uses its chosen leader artwork after loading" % Factions.IDS[index])
 		check(icon != null and icon.get_width() == icon.get_height() and hud._id_face.tooltip_text.contains(Factions.LEADERS[index]), "%s has square close-up and correct identity" % Factions.IDS[index])
 	var old_names := ["President E. Hale", "Chairman K. Volkov", "President L. Moreau", "President R. Qadir"]
 	for index in range(4):
@@ -36,7 +42,7 @@ func run() -> void:
 			world.map.nations = [nation]
 			hud._dress_face()
 			var icon: Texture2D = hud._id_picture.texture
-			check(icon is AtlasTexture and icon.atlas.resource_path == Gallery.portrait(Factions.LEADERS[index]) and nation.people.president == old_names[index], "%s legacy save resolves by %s without altering game state" % [Factions.IDS[index], identifier])
+			check(shows(icon, Gallery.portrait(Factions.LEADERS[index])) and nation.people.president == old_names[index], "%s legacy save resolves by %s without altering game state" % [Factions.IDS[index], identifier])
 	var successor: Dictionary = Factions.nation(0, true)
 	successor.people.president = "President New Successor"
 	world.map.nations = [successor]

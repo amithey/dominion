@@ -140,10 +140,10 @@ const RANGES := [
 const MAPS := {
 	"middle_east": {"window": [18.0, 64.0, 12.0, 58.0], "starts": [
 		[32.86, 39.93, "turkiye", "Ankara"], [35.21, 31.77, "israel", "Jerusalem"], [51.39, 35.69, "iran", "Tehran"],
-		[37.62, 55.75, "russia", "Moscow"], [23.73, 37.98, "eu", "Athens"], [46.72, 24.69, "", "Riyadh"],
+		[37.62, 55.75, "russia", "Moscow"], [23.73, 37.98, "", "Athens"], [46.72, 24.69, "", "Riyadh"],
 		[44.36, 33.31, "", "Baghdad"], [30.52, 50.45, "", "Kyiv"]]},
 	"europe": {"window": [-12.0, 42.0, 22.0, 76.0], "starts": [
-		[4.35, 50.85, "eu", "Brussels"], [37.62, 55.75, "russia", "Moscow"], [32.86, 39.93, "turkiye", "Ankara"],
+		[4.35, 50.85, "", "Brussels"], [37.62, 55.75, "russia", "Moscow"], [32.86, 39.93, "turkiye", "Ankara"],
 		[35.21, 31.77, "israel", "Jerusalem"], [-3.70, 40.42, "", "Madrid"], [12.50, 41.90, "", "Rome"],
 		[18.07, 59.33, "", "Stockholm"], [21.01, 52.23, "", "Warsaw"], [30.52, 50.45, "", "Kyiv"]]},
 	# The Gulf: Hormuz between Iran and Arabia (native/MAPS-2026-10-12.md).

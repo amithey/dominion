@@ -30,9 +30,9 @@ func run() -> void:
 			for y in range(1950, 2040):
 				if str(y) in text: dated = true
 			check(not dated, "%s/%s: no year in the game's text" % [id, k])
-	check(Use.status("eu", "surveillance") == "barred", "the EU's law bars mass surveillance")
+	check(Use.status("germany", "surveillance") == "barred", "the EU's law bars mass surveillance")
 	check(Use.status("russia", "deadHand") == "fielded" and Use.status("north_korea", "deadHand") == "fielded", "Russia and North Korea automate retaliation")
-	for id in ["usa", "china", "uk", "eu"]:
+	for id in ["usa", "china", "uk", "france"]:
 		check(Use.status(id, "deadHand") == "pledged" and "nuclear" in AIData.entry(id).signs, "%s pledged human control of nuclear use, and is bound by the declaration" % id)
 	for id in ["china", "russia", "iran"]:
 		check(Use.status(id, "surveillance") == "fielded" and Use.status(id, "influence") == "fielded", "%s fields mass surveillance and influence operations" % id)
@@ -153,7 +153,7 @@ func run() -> void:
 
 	# ---- the law: the EU may not run mass surveillance
 	var original: Dictionary = w.map.nations[0].duplicate(true)
-	w.map.nations[0] = F.nation(F.IDS.find("eu"), true)
+	w.map.nations[0] = F.nation(F.IDS.find("germany"), true)
 	check(apps.eligible(0, "surveillance").begins_with("Barred"), "as the EU: %s" % apps.eligible(0, "surveillance").left(70))
 	w.map.nations[0] = original
 

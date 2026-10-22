@@ -50,34 +50,34 @@ const ROLES := {
 ## National models are separate options alongside the existing tank/APC/fighter.
 ## Generic infantry labels intentionally avoid guessing an undocumented model.
 const NAMES := {
-	"mineLayer": {"russia": "ISDM Zemledelie", "ukraine": "GMZ-3", "usa": "M139 Volcano", "eu": "Skorpion Mine Dispenser"},
-	"mineClearer": {"russia": "UR-77 Meteorit", "ukraine": "UR-77 Meteorit", "usa": "M1150 Assault Breacher", "uk": "Trojan AVRE", "eu": "Keiler"},
-	"recoveryVehicle": {"usa": "M88A2 Hercules", "russia": "BREM-1", "ukraine": "BREM-1", "eu": "Bergepanzer 3 Buffel", "uk": "Challenger ARRV", "india": "WZT-3", "south_korea": "K1 ARV", "japan": "Type 90 ARV"},
+	"mineLayer": {"russia": "ISDM Zemledelie", "ukraine": "GMZ-3", "usa": "M139 Volcano", "germany": "Skorpion Mine Dispenser"},
+	"mineClearer": {"russia": "UR-77 Meteorit", "ukraine": "UR-77 Meteorit", "usa": "M1150 Assault Breacher", "uk": "Trojan AVRE", "germany": "Keiler"},
+	"recoveryVehicle": {"usa": "M88A2 Hercules", "russia": "BREM-1", "ukraine": "BREM-1", "germany": "Bergepanzer 3 Buffel", "uk": "Challenger ARRV", "india": "WZT-3", "south_korea": "K1 ARV", "japan": "Type 90 ARV"},
 	"decoy": {"russia": "Inflatable Decoys", "ukraine": "Decoy HIMARS and Tanks"},
-	"counterBatteryRadar": {"usa": "AN/TPQ-53", "russia": "Zoopark-1M", "ukraine": "COBRA / AN/TPQ-37", "eu": "COBRA", "india": "Swathi WLR", "pakistan": "SLC-2", "china": "SLC-2"},
-	"coastalASM": {"russia": "K-300P Bastion-P", "ukraine": "RK-360MC Neptune", "japan": "Type 12 SSM", "usa": "NMESIS", "eu": "NSM Coastal Defence System", "china": "YJ-62 Coastal Battery", "iran": "Ghader Coastal Battery"},
-	"aewc": {"usa": "E-3G Sentry", "china": "KJ-500", "russia": "A-50U", "india": "Netra AEW&C", "japan": "E-767", "uk": "E-7 Wedgetail AEW1", "australia": "E-7A Wedgetail", "turkiye": "E-7T Peace Eagle", "south_korea": "E-7 Peace Eye", "saudi": "E-3A Sentry", "pakistan": "Saab 2000 Erieye", "eu": "E-3F Sentry", "israel": "G550 Eitam", "brazil": "E-99", "egypt": "E-2C Hawkeye"},
-	"ewJet": {"usa": "EA-18G Growler", "australia": "EA-18G Growler", "china": "J-16D", "eu": "Tornado ECR"},
-	"maritimePatrol": {"usa": "P-8A Poseidon", "uk": "Poseidon MRA1", "australia": "P-8A Poseidon", "india": "P-8I Neptune", "south_korea": "P-8A Poseidon", "japan": "Kawasaki P-1", "china": "Y-8Q", "russia": "Il-38N", "eu": "Atlantique 2", "turkiye": "P-72", "pakistan": "P-3C Orion", "brazil": "P-3AM Orion", "indonesia": "CN-235 MPA"},
-	"carrier": {"usa": "Gerald R. Ford-class", "china": "Fujian", "uk": "Queen Elizabeth-class", "india": "INS Vikrant", "eu": "Charles de Gaulle", "japan": "Kaga (F-35B)", "turkiye": "TCG Anadolu (drone carrier)", "iran": "Shahid Bagheri (drone carrier)"},
-	"combatUGV": {"ukraine": "Droid TW 12.7", "russia": "Uran-9", "eu": "THeMIS (armed)", "uk": "THeMIS", "israel": "Jaguar UGV", "china": "Sharp Claw"},
-	"logisticsUGV": {"ukraine": "Termit / Gimli", "russia": "Kurier", "usa": "S-MET", "eu": "THeMIS Cargo", "uk": "THeMIS Cargo"},
+	"counterBatteryRadar": {"usa": "AN/TPQ-53", "russia": "Zoopark-1M", "ukraine": "COBRA / AN/TPQ-37", "germany": "COBRA", "india": "Swathi WLR", "pakistan": "SLC-2", "china": "SLC-2"},
+	"coastalASM": {"russia": "K-300P Bastion-P", "ukraine": "RK-360MC Neptune", "japan": "Type 12 SSM", "usa": "NMESIS", "germany": "NSM Coastal Defence System", "china": "YJ-62 Coastal Battery", "iran": "Ghader Coastal Battery"},
+	"aewc": {"usa": "E-3G Sentry", "china": "KJ-500", "russia": "A-50U", "india": "Netra AEW&C", "japan": "E-767", "uk": "E-7 Wedgetail AEW1", "australia": "E-7A Wedgetail", "turkiye": "E-7T Peace Eagle", "south_korea": "E-7 Peace Eye", "saudi": "E-3A Sentry", "pakistan": "Saab 2000 Erieye", "israel": "G550 Eitam", "brazil": "E-99", "egypt": "E-2C Hawkeye"},
+	"ewJet": {"usa": "EA-18G Growler", "australia": "EA-18G Growler", "china": "J-16D", "germany": "Tornado ECR"},
+	"maritimePatrol": {"usa": "P-8A Poseidon", "uk": "Poseidon MRA1", "australia": "P-8A Poseidon", "india": "P-8I Neptune", "south_korea": "P-8A Poseidon", "japan": "Kawasaki P-1", "china": "Y-8Q", "russia": "Il-38N", "germany": "P-8A Poseidon", "turkiye": "P-72", "pakistan": "P-3C Orion", "brazil": "P-3AM Orion", "indonesia": "CN-235 MPA"},
+	"carrier": {"usa": "Gerald R. Ford-class", "china": "Fujian", "uk": "Queen Elizabeth-class", "india": "INS Vikrant", "japan": "Kaga (F-35B)", "turkiye": "TCG Anadolu (drone carrier)", "iran": "Shahid Bagheri (drone carrier)"},
+	"combatUGV": {"ukraine": "Droid TW 12.7", "russia": "Uran-9", "germany": "THeMIS (armed)", "uk": "THeMIS", "israel": "Jaguar UGV", "china": "Sharp Claw"},
+	"logisticsUGV": {"ukraine": "Termit / Gimli", "russia": "Kurier", "usa": "S-MET", "germany": "THeMIS Cargo", "uk": "THeMIS Cargo"},
 	"robotDog": {"china": "Armed robot dog"},
 	"heavyBomberDrone": {"ukraine": "Vampire (Baba Yaga)", "russia": "Heavy hexacopter"},
-	"heavyLift": {"usa": "CH-47F Chinook", "uk": "Chinook HC6", "india": "CH-47F(I) Chinook", "japan": "CH-47JA Chinook", "south_korea": "CH-47D Chinook", "australia": "CH-47F Chinook", "eu": "CH-47F Chinook", "turkiye": "CH-47F Chinook", "egypt": "CH-47D Chinook", "russia": "Mi-26", "china": "Z-8L"},
-	"navalHelicopter": {"usa": "MH-60R Seahawk", "australia": "MH-60R Seahawk", "india": "MH-60R Seahawk", "south_korea": "MH-60R Seahawk", "saudi": "MH-60R Seahawk", "eu": "NH90 NFH", "uk": "Wildcat HMA2", "japan": "SH-60K", "russia": "Ka-27PL", "china": "Z-20F", "turkiye": "S-70B Seahawk", "egypt": "SH-2G Super Seasprite", "indonesia": "AS565 Panther"},
-	"asFrigate": {"china": "Type 054A", "eu": "FREMM", "uk": "Type 23", "russia": "Admiral Gorshkov-class", "india": "Talwar-class", "japan": "Mogami-class", "turkiye": "Istanbul-class", "south_korea": "Daegu-class", "egypt": "FREMM (Tahya Misr)", "pakistan": "Tughril-class", "indonesia": "Martadinata-class", "australia": "Anzac-class", "brazil": "Niteroi-class", "saudi": "Al Riyadh-class", "iran": "Moudge-class"},
-	"landingShip": {"usa": "San Antonio-class", "china": "Type 071", "eu": "Mistral-class", "uk": "Albion-class", "russia": "Ivan Gren-class", "india": "INS Jalashwa", "japan": "Osumi-class", "south_korea": "Dokdo-class", "turkiye": "Bayraktar-class", "indonesia": "Makassar-class", "egypt": "Mistral-class", "australia": "Canberra-class", "brazil": "Bahia", "iran": "Hengam-class"},
-	"machineGunTeam": {"usa": "M240B Team", "eu": "MG5 Team", "uk": "L7 GPMG Team", "indonesia": "SM2 Team", "pakistan": "MG3 Team"},
+	"heavyLift": {"usa": "CH-47F Chinook", "uk": "Chinook HC6", "india": "CH-47F(I) Chinook", "japan": "CH-47JA Chinook", "south_korea": "CH-47D Chinook", "australia": "CH-47F Chinook", "germany": "CH-47F Chinook", "turkiye": "CH-47F Chinook", "egypt": "CH-47D Chinook", "russia": "Mi-26", "china": "Z-8L"},
+	"navalHelicopter": {"usa": "MH-60R Seahawk", "australia": "MH-60R Seahawk", "india": "MH-60R Seahawk", "south_korea": "MH-60R Seahawk", "saudi": "MH-60R Seahawk", "germany": "NH90 Sea Lion", "uk": "Wildcat HMA2", "japan": "SH-60K", "russia": "Ka-27PL", "china": "Z-20F", "turkiye": "S-70B Seahawk", "egypt": "SH-2G Super Seasprite", "indonesia": "AS565 Panther"},
+	"asFrigate": {"china": "Type 054A", "germany": "F125-class", "uk": "Type 23", "russia": "Admiral Gorshkov-class", "india": "Talwar-class", "japan": "Mogami-class", "turkiye": "Istanbul-class", "south_korea": "Daegu-class", "egypt": "FREMM (Tahya Misr)", "pakistan": "Tughril-class", "indonesia": "Martadinata-class", "australia": "Anzac-class", "brazil": "Niteroi-class", "saudi": "Al Riyadh-class", "iran": "Moudge-class"},
+	"landingShip": {"usa": "San Antonio-class", "china": "Type 071", "uk": "Albion-class", "russia": "Ivan Gren-class", "india": "INS Jalashwa", "japan": "Osumi-class", "south_korea": "Dokdo-class", "turkiye": "Bayraktar-class", "indonesia": "Makassar-class", "egypt": "Mistral-class", "australia": "Canberra-class", "brazil": "Bahia", "iran": "Hengam-class"},
+	"machineGunTeam": {"usa": "M240B Team", "germany": "MG5 Team", "uk": "L7 GPMG Team", "indonesia": "SM2 Team", "pakistan": "MG3 Team"},
 	"mortarTeam": {"usa": "M224A1 Mortar Team", "uk": "L16 Mortar Team", "australia": "F2 81mm Mortar Team"},
 	"scoutTeam": {},
-	"ifv": {"usa": "M2A4 Bradley", "china": "ZBD-04A", "eu": "Puma IFV", "iran": "BMP-2", "russia": "BMP-3", "india": "BMP-2 Sarath", "japan": "Type 89 IFV", "turkiye": "ACV-15", "uk": "Warrior", "south_korea": "K21 IFV", "saudi": "M2A2 Bradley", "indonesia": "Pandur II IFV", "ukraine": "M2A2 Bradley"},
+	"ifv": {"usa": "M2A4 Bradley", "china": "ZBD-04A", "germany": "Puma IFV", "iran": "BMP-2", "russia": "BMP-3", "india": "BMP-2 Sarath", "japan": "Type 89 IFV", "turkiye": "ACV-15", "uk": "Warrior", "south_korea": "K21 IFV", "saudi": "M2A2 Bradley", "indonesia": "Pandur II IFV", "ukraine": "M2A2 Bradley"},
 	"heavyAPC": {"israel": "Namer"},
-	"reconVehicle": {"usa": "M3 Bradley Scout", "eu": "Fennek", "uk": "Jackal", "australia": "Hawkei", "indonesia": "Komodo Scout"},
+	"reconVehicle": {"usa": "M3 Bradley Scout", "germany": "Fennek", "uk": "Jackal", "australia": "Hawkei", "indonesia": "Komodo Scout"},
 	"directFire": {"japan": "Type 16 MCV", "brazil": "EE-9 Cascavel", "indonesia": "Harimau", "ukraine": "AMX-10 RC"},
 	"towedHowitzer": {"usa": "M777", "india": "M777", "uk": "L118 Light Gun", "australia": "M777", "japan": "FH70", "ukraine": "M777"},
-	"attackJet": {"usa": "A-10C Thunderbolt II", "eu": "Mirage 2000D", "iran": "Su-24MK", "russia": "Su-25", "india": "Jaguar", "saudi": "Tornado IDS", "ukraine": "Su-25", "north_korea": "Su-25", "pakistan": "Mirage 5"},
-	"lightFighter": {"usa": "F-16C", "china": "J-10C", "eu": "JAS 39 Gripen C", "iran": "F-5E", "india": "Tejas Mk1", "turkiye": "F-16C", "south_korea": "FA-50", "brazil": "F-5M", "pakistan": "F-16"},
+	"attackJet": {"usa": "A-10C Thunderbolt II", "germany": "Tornado IDS", "iran": "Su-24MK", "russia": "Su-25", "india": "Jaguar", "saudi": "Tornado IDS", "ukraine": "Su-25", "north_korea": "Su-25", "pakistan": "Mirage 5"},
+	"lightFighter": {"usa": "F-16C", "china": "J-10C", "germany": "Eurofighter Typhoon", "iran": "F-5E", "india": "Tejas Mk1", "turkiye": "F-16C", "south_korea": "FA-50", "brazil": "F-5M", "pakistan": "F-16"},
 	"scoutHelicopter": {"japan": "OH-1", "uk": "Wildcat Mk1"},
 	"missileBoat": {"china": "Type 022", "israel": "Sa'ar 4.5", "egypt": "Ambassador Mk III", "pakistan": "Azmat-class"},
 }
@@ -135,12 +135,12 @@ static func apply(w: Node) -> void:
 		if provenance != "": def.desc += " " + provenance
 		if (id_of(w, 0) == "iran" and key in ["ifv", "attackJet", "lightFighter"]) or (id_of(w, 0) == "north_korea" and key == "attackJet"):
 			def.desc += " Documented legacy equipment; current readiness is unverified."
-		def.nation = operators(key).map(func(id): return {"usa": "blue", "china": "red", "eu": "green", "iran": "gold"}.get(id, id))
+		def.nation = operators(key).map(func(id): return {"usa": "blue", "china": "red", "germany": "green", "iran": "gold"}.get(id, id))
 		# An explicit roster can grant a role to a future country, but a new ID
 		# never inherits everybody's fleet through a colour or default nation.
 		for n in w.map.nations:
 			if key in n.get("units", []):
-				var arsenal: String = {"usa": "blue", "china": "red", "eu": "green", "iran": "gold"}.get(str(n.get("id", "")), str(n.get("id", "")))
+				var arsenal: String = {"usa": "blue", "china": "red", "germany": "green", "iran": "gold"}.get(str(n.get("id", "")), str(n.get("id", "")))
 				if not arsenal in def.nation: def.nation.append(arsenal)
 		# Use the established map-scaled artillery reach: a portable mortar
 		# is shorter-ranged, while the cheaper towed gun has the same reach

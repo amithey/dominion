@@ -305,7 +305,7 @@ static func infantry_prop(w: Node, holder: Node3D, key: String, owner: int) -> v
 ##          a flight deck with a ramp forward
 ## Aircraft parked on deck are separate nodes, DeckPlane0..: war_tools.gd hides
 ## them while they are flying.
-const CARRIER_STYLE := {"usa": ["super", 30.0], "china": ["super", 29.0], "eu": ["super", 25.0], "france": ["super", 25.0], "uk": ["twin", 27.5], "india": ["ski", 25.0], "turkiye": ["ski", 22.0], "japan": ["flat", 23.0], "iran": ["box", 23.0]}
+const CARRIER_STYLE := {"usa": ["super", 30.0], "china": ["super", 29.0], "france": ["super", 25.0], "uk": ["twin", 27.5], "india": ["ski", 25.0], "turkiye": ["ski", 22.0], "japan": ["flat", 23.0], "iran": ["box", 23.0]}
 const DRONE_CARRIERS := ["turkiye", "iran"]
 const DECK_DARK := Color(0.15, 0.3, 0.0)   # non-skid deck coating: charcoal, against the grey hull
 const MARK := 0.22                         # deck line width

@@ -40,7 +40,7 @@ func run() -> void:
 	studio.add_child(cam)
 	cam.current = true
 	var original: String = str(w.map.nations[0].get("id", ""))
-	var ids := ["usa", "china", "eu", "uk", "india", "japan", "turkiye", "iran"]
+	var ids := ["usa", "china", "france", "uk", "india", "japan", "turkiye", "iran"]
 	var models := []
 	for i in range(ids.size()):
 		w.map.nations[0].id = ids[i]

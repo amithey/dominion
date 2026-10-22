@@ -38,11 +38,11 @@ func run() -> void:
 				entries += 1
 				if index >= 28 and not key in tool_keys: later += 1
 				check(N.name_for(w, 0, key) == str(C.names(key).get(F.IDS[index], C.ROLES[key].name)), "%s / %s national model name" % [F.IDS[index], key])
-	# 159 before the tools of war; those add their own documented operators (war_tools.gd).
+	# 158 before the tools of war (159 until the landing ship went from the Union to France); those add their own documented operators (war_tools.gd).
 	var tools := 0
 	for key in tool_keys:
 		tools += C.operators(key).size()
-	check(entries == 159 + tools + later, "%d operator-role choices across all %d identities (159 + %d tools of war + %d by later nations)" % [entries, F.IDS.size(), tools, later])
+	check(entries == 158 + tools + later, "%d operator-role choices across all %d identities (158 + %d tools of war + %d by later nations)" % [entries, F.IDS.size(), tools, later])
 	w.map.nations[0].id = "future_nation"
 	check(C.ROLES.keys().all(func(key): return not w.unit_allowed(0, key)), "new country ID does not inherit an arsenal")
 	w.map.nations[0].units = ["scoutTeam", "ifv"]

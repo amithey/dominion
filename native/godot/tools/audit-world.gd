@@ -275,7 +275,7 @@ func run() -> void:
 		match key:
 			"hormuz": wanted = [["iran", ["usa"]]]
 			"grain": wanted = [["russia", ["ukraine"]]]
-			"gas": wanted = [["russia", ["eu"]]]
+			"gas": wanted = [["russia", ["germany"]]]
 			"rare_earths": wanted = [["china", ["usa"]]]
 			"recession": wanted = [["usa", ["china"]]]
 			"arms_boom": wanted = [["usa", ["china"]], ["russia", ["ukraine"]], ["iran", ["israel"]]]
