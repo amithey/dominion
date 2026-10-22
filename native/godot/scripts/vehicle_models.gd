@@ -66,6 +66,10 @@ static func build(w: Node, key: String, owner: int) -> Dictionary:
 	var path := path_for(w, owner, key)
 	if path == "":
 		return {}
+	return build_file(w, path, owner)
+
+## A model from its file, dressed for nation `owner` (also the way the checks go through every file).
+static func build_file(w: Node, path: String, owner: int) -> Dictionary:
 	var scene: PackedScene = load(path)
 	if scene == null:
 		return {}
@@ -106,21 +110,25 @@ static func build(w: Node, key: String, owner: int) -> Dictionary:
 	var axles := []
 	for part in base.find_children("*", "Node3D", true, false):
 		var n: String = part.name
-		var radius := 0.0
-		if n.begins_with("Wheel_"): radius = 0.5
-		elif n.begins_with("Sprocket_"): radius = 0.5
-		elif n.begins_with("Idler_"): radius = 0.5
-		elif n.begins_with("Roller_"): radius = 0.22
-		if radius > 0.0 and not n.ends_with("_Mesh"):
+		if (n.begins_with("Wheel_") or n.begins_with("Sprocket_") or n.begins_with("Idler_") or n.begins_with("Roller_")) and not n.ends_with("_Mesh"):
+			# The wheel's own radius from its mesh, so it rolls as fast as the ground goes under it.
+			var radius := 0.4
+			for child in part.get_children():
+				if child is MeshInstance3D:
+					var wb: AABB = child.get_aabb()
+					radius = maxf(maxf(wb.size.y, wb.size.z) * 0.5 * absf(child.scale.y), 0.1)
+					break
 			axles.append({"node": part, "radius": radius})
 	# The track pads: the shader moves them round the loop by `track_u` (shaders/vehicle.gdshader).
 	var tracks := []
+	var track_loop := 16.5   # metres round the loop: the canonical loop, times the scale the model gives its track meshes
 	for mi in root.find_children("Track_*", "MeshInstance3D", true, false):
 		mi.set_instance_shader_parameter("track_on", 1.0)
 		tracks.append(mi)
+		track_loop = 16.5 * absf(mi.scale.z)
 	var muzzle_dist := 4.4
 	var gun: Node3D = base.find_child("Gun", true, false) as Node3D
 	var muzzle: Node3D = base.find_child("Muzzle", true, false) as Node3D
 	if muzzle != null and gun != null:
 		muzzle_dist = (gun.transform * muzzle.transform).origin.length()   # from the turret's pivot to the gun's tip
-	return {"root": root, "turret": turret, "radar": null, "axles": axles, "muzzle": muzzle_dist, "gun": gun, "tracks": tracks, "wreck": wreck, "model_file": path}
+	return {"root": root, "turret": turret, "radar": null, "axles": axles, "muzzle": muzzle_dist, "gun": gun, "tracks": tracks, "track_loop": track_loop, "wreck": wreck, "model_file": path}

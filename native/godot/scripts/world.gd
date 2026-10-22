@@ -1510,7 +1510,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		"meshes": model.find_children("*", "MeshInstance3D", true, false) if vehicle else [],
 		"model": model, "clip_speed": REAL_RUN_CLIP_SPEED if realistic else RUN_CLIP_SPEED,
 		"axles": built.get("axles", []), "radar": built.get("radar"), "muzzle": built.get("muzzle", 4.2),
-		"gun": built.get("gun"), "gun_base": built.gun.position if built.get("gun") != null else Vector3.ZERO, "tracks": built.get("tracks", []), "wreck": built.get("wreck"),
+		"gun": built.get("gun"), "gun_base": built.gun.position if built.get("gun") != null else Vector3.ZERO, "tracks": built.get("tracks", []), "track_loop": built.get("track_loop", 16.5), "wreck": built.get("wreck"),
 	}
 	# Combat stats come from the browser's config.js via the map export.
 	var def: Dictionary = unit_defs.get(key, {"hp": 100, "dmg": 10, "range": 13, "cooldown": 1.0, "aggro": 24})
@@ -2262,7 +2262,7 @@ func _physics_process(delta: float) -> void:
 				a.node.rotate_x(travelled / a.radius)  # wheels roll with the ground
 			if not unit.get("tracks", []).is_empty():
 				# The track pads run back along the loop as the tank goes forward (16.5 m round).
-				unit.track_u = fposmod(float(unit.get("track_u", 0.0)) - travelled / 16.5, 1.0)
+				unit.track_u = fposmod(float(unit.get("track_u", 0.0)) - travelled / float(unit.get("track_loop", 16.5)), 1.0)
 				for tr in unit.tracks:
 					tr.set_instance_shader_parameter("track_u", unit.track_u)
 		spent("  wheels and rotors", t_parts)

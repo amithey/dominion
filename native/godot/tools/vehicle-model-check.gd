@@ -29,7 +29,7 @@ func run() -> void:
 	w.map.nations[0]["id"] = "usa"
 	var path: String = VM.path_for(w, 0, "tank")
 	check(path.ends_with("tank__m1a2_sepv3_abrams.glb"), "the American tank is found by its name (%s)" % path)
-	w.map.nations[1]["id"] = "russia"
+	w.map.nations[1]["id"] = "france"   # (the one nation whose tank has no model yet)
 	check(VM.path_for(w, 1, "tank") == "", "a nation whose model is not made yet has no file (%s)" % VM.path_for(w, 1, "tank"))
 	var u: Dictionary = w.spawn_unit("tank", w.land_point(w.start + Vector3(30, 0, 30), 30.0), 0)
 	var built: Dictionary = VM.build(w, "tank", 0)
@@ -47,7 +47,8 @@ func run() -> void:
 	check(u.model.get_node_or_null("LOD0") != null and u.turret != null and u.axles.size() >= 18, "a tank spawned in the game uses the model (%d moving parts)" % u.axles.size())
 	var other: Dictionary = w.spawn_unit("tank", w.land_point(w.start + Vector3(40, 0, 30), 30.0), 1)
 	check(other.model.get_node_or_null("LOD0") == null, "a nation without a model keeps the kit's tank")
-	# the turret and wheels
+	# the turret and wheels (the camera is near: the fine animation runs only within 70 m of it)
+	w.cam_focus = u.node.position; w.cam_dist = 20.0; w.cam_dist_target = 20.0; w.cam_ground = INF; w.update_camera(1.0)
 	w.set_physics_process(true)
 	var yaw0: float = u.turret_yaw
 	var wheel: Dictionary = u.axles[0]
@@ -68,6 +69,7 @@ func run() -> void:
 	for i in range(90): await physics_frame
 	check(u.gun.rotation.x < -0.01, "the gun lifts to a target 55 m away (%.3f rad)" % -u.gun.rotation.x)
 	u.gun_kick = 1.0
+	w.cam_focus = u.node.position; w.update_camera(1.0)
 	await physics_frame
 	check(u.gun.position.z < u.gun_base.z - 0.1, "and kicks back when it fires (%.2f m)" % (u.gun_base.z - u.gun.position.z))
 	w.kill(far); w.kill(d)   # (nothing left to shoot at, so it does not fire again)
