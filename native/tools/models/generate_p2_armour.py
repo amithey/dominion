@@ -318,7 +318,7 @@ def mineClearer__mine_clearing_vehicle(lod=0):
 
 def mineClearer__trojan_avre(lod=0):
     return carrier('mineClearer__trojan_avre','Trojan AVRE',lod,8.30,3.50,2.08,'engineering','',6,.36,1.02,True,source='trojan',
-        features=['Six Challenger wheels','front mine plough','articulated excavator arm','tall turretless engineer cabin'],equipment='trojan',front_engine=False)
+        features=['Six Challenger wheels','front mine plough','articulated excavator arm with dipper and bucket','tall turretless engineer cabin'],equipment='trojan',front_engine=False,crane_offset=.80)
 
 def mineClearer__ur_77_meteorit(lod=0):
     return carrier('mineClearer__ur_77_meteorit','UR-77 Meteorit',lod,7.26,2.85,1.50,'engineering','',7,.29,.82,True,source='soviet',

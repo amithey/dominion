@@ -342,6 +342,10 @@ def blade(rig,s,lod,name='Spade'):
     # Angled dozer spade, closed wedge with a sharpened but finite lower edge.
     profile_hull(m,'paint',[(h+.40,.20,w*.94),(h+.51,.80,w*.94),(h+.33,.96,w*.94),(h+.21,.26,w*.94)])
     m.box('metal_dark',(0,.22,h+.39),(s.width*.94,.11,.12))
+    if name=='Mine_Plough' or s.equipment=='trojan':
+        for x in np.linspace(-w*.87,w*.87,10):
+            beam(m,'metal_dark',[x,.27,h+.36],[x,.10,h+.86],.065)
+            m.box('metal_dark',(x,.10,h+.85),(.085,.070,.20))
     rig.add(name,'Hull',p,m,'X',hinge='transverse blade lift')
 
 
@@ -355,11 +359,11 @@ def recovery(rig,s,lod):
             beam(m,'paint',[side*.92,p[1],p[2]],end,.18)
             beam(m,'metal_dark',[side*.72,r-.50,-.48],[side*.31,r+.83,h-.92],.085)
         m.tube('metal_dark',end+[-.17,0,0],end+[.17,0,0],.18,n)
-        beam(m,'metal_dark',end,[0,r-.30,-h*.56],.018)
+        beam(m,'metal_dark',end,[0,r*.59+.16,-h*.56],.018)
         rig.add('Boom','Hull',p,m,'X',hinge='A-frame heel bearings')
     else:
         # Slewing crane carried on a starboard turntable; articulated lift arm.
-        x=w*.56*s.details.get('crane_side',1);p=np.array([x,r-.08,h*.42]);m.tube('paint',p-[0,.12,0],p+[0,.23,0],.32,n)
+        x=w*s.details.get('crane_offset',.56)*s.details.get('crane_side',1);p=np.array([x,r-.08,h*.42]);m.tube('paint',p-[0,.12,0],p+[0,.23,0],.32,n)
         rig.add('Boom','Hull',p,m,'Y',hinge='crane turntable')
         m=Mesh();a=p+[0,.27,0];b=np.array([x,r+.54,-h+.38])
         beam(m,'paint',a,b,.31);beam(m,'metal_dark',a+[0,-.12,-.18],b+[0,-.17,.40],.10)
@@ -370,7 +374,7 @@ def recovery(rig,s,lod):
     deck.tube('metal_dark',(-.45,r+.10,.14),(.45,r+.10,.14),.18,n)
     if not lod:
         for x in np.linspace(-.40,.40,7):deck.tube('metal_dark',(x,r+.10,.14),(x+.022,r+.10,.14),.196,n)
-        for side in (-1,1):beam(deck,'metal_dark',(side*w*.72,r+.25,h*.33),(side*w*.72,r+.25,-h*.55),.035)
+        for side in (-1,1):beam(deck,'metal_dark',(side*w*.72,r*.59+.25,-.85),(side*w*.72,r*.59+.25,-h*.55),.035)
     rig.add('Winch_Deck','Hull',(0,r,0),deck)
     if s.details.get('powerpack'):
         p=np.array([-.10,r*.59+.40,-h*.61]);m=Mesh()
@@ -392,6 +396,7 @@ def engineering(rig,s,lod):
     if kind in ('breacher','generic_clear'):blade(rig,s,lod,'Mine_Plough')
     if kind=='breacher':
         m=Mesh();m.box('paint',(0,r+.27,-.30),(2.15,.60,2.25))
+        m.box('paint',(s.turret_x,r+.63,s.turret_z),(.65,.24,.65))
         m.box('paint',(0,r+.50,1.0),(1.40,.33,.60));rig.add('Crew_Cupola','Hull',(0,r,0),m)
         m=Mesh()
         for side in (-1,1):m.box('paint',(side*.58,r+.66,-1.15),(.94,.46,1.30))
@@ -415,7 +420,7 @@ def engineering(rig,s,lod):
         recovery(rig,s,lod)
         # Excavator elbow, dipper and digging bucket distinguish Trojan from
         # a recovery crane. Each hydraulic articulation has its own hinge.
-        x=w*.56;a=np.array([x,r+.54,-h+.38]);b=np.array([x,r-.10,-h+1.32]);m=Mesh()
+        x=w*s.details.get('crane_offset',.56);a=np.array([x,r+.54,-h+.38]);b=np.array([x,r-.10,-h+1.32]);m=Mesh()
         beam(m,'paint',a,b,.23)
         beam(m,'metal_dark',a+[0,.08,.15],b+[0,.09,-.10],.075)
         rig.add('Dipper','Boom_Lift',a,m,'X');m=Mesh()
@@ -509,10 +514,11 @@ def build(s,lod=0):
     mobility(rig,s,lod);weapon(rig,s,lod)
     p=np.array([-.46,s.roof+.025,-.32]);m=Mesh();m.tube('paint',p+[0,-.015,.27],p+[0,.055,.27],.28,6 if lod else 12)
     if s.family not in ('jackal','truck'):rig.add('Hatch_Commander','Hull',p,m,'X')
-    a=np.array([s.width*.33,s.roof,-s.length*.32]);m=Mesh()
+    rear_deck=s.roof*.59 if s.family=='recovery' else s.roof
+    a=np.array([s.width*.33,rear_deck,-s.length*.32]);m=Mesh()
     m.tube('metal_dark',a,a+[0,.63 if s.family=='fennek' else 1.10,0],.013,4 if lod else 6)
     rig.add('Antenna_1','Hull',a,m,'Y')
-    rig.add('Engine_Deck','Hull',(s.width*.20,s.roof,s.length*.28 if s.front_engine else -s.length*.30))
+    rig.add('Engine_Deck','Hull',(s.width*.20,rear_deck if not s.front_engine else s.roof,s.length*.28 if s.front_engine else -s.length*.30))
     rig.add('Exhaust','Hull',(s.width*.40,s.roof*.72,s.length*.12 if s.front_engine else -s.length*.43))
     if s.family=='fennek':
         p=np.array([-.64,s.roof,-.45]);m=Mesh();m.tube('paint',p,p+[0,.48,0],.075,6)

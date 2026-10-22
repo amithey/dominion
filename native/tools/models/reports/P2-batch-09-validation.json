@@ -1,0 +1,35 @@
+{
+  "batch": 9,
+  "files": [
+    "vehicles/recoveryVehicle__bergepanzer_3_buffel.glb",
+    "vehicles/recoveryVehicle__brem_1.glb",
+    "vehicles/recoveryVehicle__challenger_arrv.glb",
+    "vehicles/recoveryVehicle__k1_arv.glb",
+    "vehicles/recoveryVehicle__m88a2_hercules.glb",
+    "vehicles/recoveryVehicle__type_90_arv.glb"
+  ],
+  "sha256": {
+    "vehicles/recoveryVehicle__bergepanzer_3_buffel.glb": "7414dc75fc1bd2b3f235c7dd8b886db3d5e07c72b80b1bcfa31cb709ef20cc99",
+    "vehicles/recoveryVehicle__brem_1.glb": "3457e0e7eddea039bb13fcbabbbe17a7c4ba23a57c7bbf86aa1c55e3d0ee8adf",
+    "vehicles/recoveryVehicle__challenger_arrv.glb": "862448636a3140fbf3349535abd1a00545f0da12500058b1d7fcfe2e06820ecc",
+    "vehicles/recoveryVehicle__k1_arv.glb": "5c9eb6a3c1b9a4bda97fa7e67a33f81fbff5d7b3979c3a76d481f4e1d4b21f1c",
+    "vehicles/recoveryVehicle__m88a2_hercules.glb": "62f1b1c8b81eef605eff79d942c913bf5472e2810ca1fb26472cc9026ab1476f",
+    "vehicles/recoveryVehicle__type_90_arv.glb": "ae20b0b6a0e90f20005714f0f03e1d1dd113a29696dc288d1950cc8dd4a5fb04"
+  },
+  "maximum_triangles": [
+    11816,
+    1784
+  ],
+  "checks": [
+    "saved GLB buffers/CCW/normals/UVs/bounds/duplicates",
+    "actual axle counts and positions",
+    "canonical TrackPath phases 0/.25/.5/.75/1 where tracked",
+    "hinge child propagation",
+    "optional weapon yaw/elevation/recoil",
+    "independent trimesh load",
+    "native Godot load/pivots/visibility",
+    "saved GLB LOD0/LOD1/wreck render sheet"
+  ],
+  "generator": "generate_p2_armour.py",
+  "priority_gate": "P2 only plus requested Leclerc; no P3 assets"
+}
