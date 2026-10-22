@@ -136,8 +136,11 @@ def body(rig,s,lod):
         for side in (-1,1):
             pod=Mesh();pz=L*.20 if s.family in ('mi8','mi17') else -L*.01;py=b+H*.23
             a,c,d,e=(-.36,-.32,.30,.34) if s.family=='chinook' else (-.20,-.15,.12,.17)
-            shell_surface(pod,'paint',[(pz+L*a,py,W*.12,H*.12),(pz+L*c,py,W*.19,H*.18),
-                         (pz+L*d,py,W*.19,H*.18),(pz+L*e,py,W*.10,H*.10)],lod)
+            rr=s.details.get('fuel_sponson_radius',W*.19)
+            front=rr*.63 if 'fuel_sponson_radius' in s.details else W*.12
+            rear=rr*.53 if 'fuel_sponson_radius' in s.details else W*.10
+            shell_surface(pod,'paint',[(pz+L*a,py,front,H*.12),(pz+L*c,py,rr,H*.18),
+                         (pz+L*d,py,rr,H*.18),(pz+L*e,py,rear,H*.10)],lod)
             pod.shift((side*W*.47,0,0));merge_mesh(m,pod)
     for side in (-1,1):
         # Supported blank identification panels and side access handles.

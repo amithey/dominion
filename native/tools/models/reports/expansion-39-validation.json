@@ -1,0 +1,35 @@
+{
+  "batch": 39,
+  "files": [
+    "aircraft/navalHelicopter__z_20f.glb",
+    "aircraft/heavyLift__ch_47d_chinook.glb",
+    "aircraft/heavyLift__ch_47f_chinook.glb",
+    "aircraft/heavyLift__ch_47f_i_chinook.glb",
+    "aircraft/heavyLift__ch_47ja_chinook.glb"
+  ],
+  "sha256": {
+    "aircraft/navalHelicopter__z_20f.glb": "fde9fab505cde32bf50ae5a5f6f96c9ed8bbacb06a5b8937fa916a97c879b868",
+    "aircraft/heavyLift__ch_47d_chinook.glb": "70459725bfbbc972f1f1bdb993544e2f73c0b3b7329d7106600954160f731772",
+    "aircraft/heavyLift__ch_47f_chinook.glb": "7e74597e5fbbc4ba50f52d2a20d4bf07614e5a20eb203d5b1db219da5bc1fafe",
+    "aircraft/heavyLift__ch_47f_i_chinook.glb": "88b93fcfaee2dc713ec0ad6666f944127117b99fb8c7a777dacaf3871a1e8c0a",
+    "aircraft/heavyLift__ch_47ja_chinook.glb": "a292f380ed422d6de63778afd8ab48b1d3eaec928382011a02f4880227d7cbd6"
+  },
+  "maximum_triangles": [
+    11964,
+    2180
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific rotor configuration and landing gear",
+    "local-frame hinge propagation and rotor full-revolution return",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p5_helicopters.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

@@ -130,7 +130,7 @@ def model(slug,name,lod,family,representative='',**overrides):
         if family not in ('mi24','ka52'):s.details['cross_section_power']=.80
     if family=='oh1':
         s.attack=True;s.details.update(gun=False,scout_aam=True,roof_sensor=True,wing_span=3.30,
-            stations_per_wing=1,missiles_per_bank=2,tail_gear_z=-.40,tail_gear_anchor_y=1.70)
+            stations_per_wing=1,missiles_per_bank=2,tail_gear_z=-.40,tail_gear_anchor_y=2.02)
     for key,value in overrides.items():
         if key=='details':s.details.update(value)
         else:setattr(s,key,value)
@@ -143,6 +143,7 @@ def model(slug,name,lod,family,representative='',**overrides):
         'roof observation sight and four AAMs' if not s.details.get('gun',True) else 'fixed side cannon' if s.details.get('fixed_gun') else 'chin turret with separate gun trunnion']
     if family in ('ka27','ka52'):s.features.append('two counterrotating coaxial main rotors; no tail rotor')
     if family=='chinook':s.features.append('two tandem three-blade main rotors, raised aft pylon and rear engine pods')
+    if s.details.get('fuel_sponson_radius'):s.features.append('CH-47JA enlarged long-range fuel sponsons, 4.8 m overall body width')
     if s.naval:s.features.append('naval radar/hoist and the selected real mission stores')
     return build(s,lod)
 
@@ -306,7 +307,7 @@ def heavyLift__ch_47f_i_chinook(lod=0):
     return model('heavyLift__ch_47f_i_chinook','CH-47F(I) Chinook',lod,'chinook')
 
 def heavyLift__ch_47ja_chinook(lod=0):
-    return model('heavyLift__ch_47ja_chinook','CH-47JA Chinook',lod,'chinook')
+    return model('heavyLift__ch_47ja_chinook','CH-47JA Chinook',lod,'chinook',details={'fuel_sponson_radius':1.0605})
 
 def heavyLift__chinook_hc6(lod=0):
     return model('heavyLift__chinook_hc6','Chinook HC6',lod,'chinook')
