@@ -306,9 +306,10 @@ def artillery__m1989_koksan(lod=0):
 
 BUILDERS={n:f for n,f in list(globals().items()) if n.startswith(('artillery__','k9__','towedHowitzer__','wheeledHowitzer__')) and callable(f)}
 
-def save(slug):
+def save(slug,builder=None):
     from validate_p3_artillery import validate
-    a,s=BUILDERS[slug](0);b,s1=BUILDERS[slug](1);assert asdict(s)==asdict(s1)
+    builder=builder or BUILDERS[slug]
+    a,s=builder(0);b,s1=builder(1);assert asdict(s)==asdict(s1)
     spec=asdict(s);tank=isinstance(s,Spec)
     if tank:spec.update(mobility='tracked',weapon='howitzer',family=s.shape,equipment='',axle_z=[])
     height=s.deck if tank else s.roof

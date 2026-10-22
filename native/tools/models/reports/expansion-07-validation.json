@@ -1,0 +1,34 @@
+{
+  "batch": 7,
+  "files": [
+    "vehicles/artillery__d_30_khalifa.glb",
+    "vehicles/towedHowitzer__l118_light_gun.glb",
+    "vehicles/towedHowitzer__m777.glb",
+    "vehicles/artillery__caesar.glb",
+    "vehicles/wheeledHowitzer__caesar.glb",
+    "vehicles/wheeledHowitzer__sh_15.glb"
+  ],
+  "sha256": {
+    "vehicles/artillery__d_30_khalifa.glb": "df3a1631b8eb7ce7ad101666ee587f71974a744d136de6f203bf1c229fdc0b04",
+    "vehicles/towedHowitzer__l118_light_gun.glb": "9fb8b3cd70880c6596adbbf1370735cf06a81f878aee17955595f34c4af662a7",
+    "vehicles/towedHowitzer__m777.glb": "5f99a884a06cc7e9ab3ebae80de8008bd040ad72ae3e69361bbac4abfe3e6f1e",
+    "vehicles/artillery__caesar.glb": "d95d69cc1f9ffd26b5604149d124274f5ddd151329ad926715f065276cf07ce6",
+    "vehicles/wheeledHowitzer__caesar.glb": "0b7df553820584a6ceade420da655218764228f1f72a82cfb2d122f5eec4b610",
+    "vehicles/wheeledHowitzer__sh_15.glb": "96da0b2a6cecd074a0fa72f033da77254d71cfdb69498db3dd977cea550d9f14"
+  },
+  "maximum_triangles": [
+    5262,
+    1216
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py"
+  ]
+}
