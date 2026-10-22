@@ -19,7 +19,7 @@ extends RefCounted
 ## universities instead (research.era_requirements).
 
 const Factions := preload("res://scripts/factions.gd")
-const CHIP_FAB := ["usa", "china", "germany", "france", "uk", "japan", "south_korea", "israel", "india", "russia"]
+const CHIP_FAB := ["usa", "china", "germany", "france", "italy", "uk", "japan", "south_korea", "israel", "india", "russia"]
 const NO_REACTOR := ["australia", "indonesia"]
 const DATA_CENTRE_CEILING := 2
 

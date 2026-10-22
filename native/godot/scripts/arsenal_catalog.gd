@@ -36,16 +36,16 @@ const ISR := ["germany", "india", "japan", "brazil"]
 const MISSILES := {
 	"tactical": {"usa": "PrSM", "china": "DF-15 / DF-16", "russia": "Iskander-M", "iran": "Fateh-110", "south_korea": "Hyunmoo-2", "ukraine": "ATACMS", "pakistan": "Fatah-1", "turkiye": "Bora", "israel": "LORA", "india": "Pralay", "north_korea": "KN-23", "houthis": "Burkan / Zulfiqar"},
 	"ballistic": {"usa": "PrSM", "china": "DF-21 / DF-26", "russia": "Iskander-M", "iran": "Qiam / Sejjil", "india": "Agni", "south_korea": "Hyunmoo-2", "saudi": "DF-3", "pakistan": "Shaheen", "turkiye": "Bora", "israel": "LORA", "north_korea": "Hwasong", "houthis": "Toufan / Palestine-2"},
-	"cruise": {"usa": "Tomahawk", "china": "CJ-10", "russia": "Kalibr", "iran": "Soumar / Hoveyzeh", "germany": "Taurus KEPD 350", "france": "SCALP / MdCN", "uk": "Storm Shadow / Tomahawk", "india": "BrahMos", "south_korea": "Hyunmoo-3", "pakistan": "Babur", "israel": "Delilah", "turkiye": "SOM", "ukraine": "Long Neptune", "north_korea": "Hwasal", "houthis": "Quds-4"},
-	"antiShip": {"usa": "Naval Strike Missile / Harpoon", "china": "YJ-12B / YJ-18", "russia": "Oniks", "iran": "Noor", "germany": "RBS15 Mk3", "france": "Exocet", "uk": "Naval Strike Missile", "india": "BrahMos", "japan": "Type 25 SSM", "south_korea": "Haeseong", "saudi": "Harpoon / Exocet", "brazil": "Exocet", "indonesia": "Exocet / C-705", "ukraine": "Neptune", "north_korea": "Kumsong-3", "egypt": "Harpoon / Exocet", "australia": "Naval Strike Missile", "pakistan": "Zarb / Harbah", "israel": "Gabriel", "turkiye": "Atmaca", "houthis": "Asef / Tankil"},
+	"cruise": {"usa": "Tomahawk", "china": "CJ-10", "russia": "Kalibr", "iran": "Soumar / Hoveyzeh", "germany": "Taurus KEPD 350", "italy": "Storm Shadow", "france": "SCALP / MdCN", "uk": "Storm Shadow / Tomahawk", "india": "BrahMos", "south_korea": "Hyunmoo-3", "pakistan": "Babur", "israel": "Delilah", "turkiye": "SOM", "ukraine": "Long Neptune", "north_korea": "Hwasal", "houthis": "Quds-4"},
+	"antiShip": {"usa": "Naval Strike Missile / Harpoon", "china": "YJ-12B / YJ-18", "russia": "Oniks", "iran": "Noor", "germany": "RBS15 Mk3", "italy": "Otomat / Teseo", "france": "Exocet", "uk": "Naval Strike Missile", "india": "BrahMos", "japan": "Type 25 SSM", "south_korea": "Haeseong", "saudi": "Harpoon / Exocet", "brazil": "Exocet", "indonesia": "Exocet / C-705", "ukraine": "Neptune", "north_korea": "Kumsong-3", "egypt": "Harpoon / Exocet", "australia": "Naval Strike Missile", "pakistan": "Zarb / Harbah", "israel": "Gabriel", "turkiye": "Atmaca", "houthis": "Asef / Tankil"},
 	"hypersonic": {"usa": "Dark Eagle programme", "china": "DF-17", "russia": "Kinzhal / Zircon", "india": "Long-range hypersonic programme", "iran": "Fattah (claimed capability)", "japan": "HVGP (initial deployment)"},
 	"cluster": {"usa": "ATACMS cluster variant", "russia": "Iskander cluster variant", "ukraine": "ATACMS cluster variant", "china": "Tactical cluster variant"},
-	"bunkerMissile": {"usa": "Tomahawk penetrator", "russia": "Kh-101 penetrator", "germany": "Taurus penetrator", "france": "SCALP penetrator", "uk": "Storm Shadow penetrator", "turkiye": "SOM-B2"},
-	"antiRadar": {"usa": "AGM-88 HARM", "germany": "AGM-88 HARM", "russia": "Kh-31P", "china": "YJ-91", "india": "Rudram", "israel": "AGM-88 HARM", "uk": "Anti-radiation missile programme", "ukraine": "AGM-88 HARM"},
+	"bunkerMissile": {"usa": "Tomahawk penetrator", "russia": "Kh-101 penetrator", "germany": "Taurus penetrator", "italy": "Storm Shadow penetrator", "france": "SCALP penetrator", "uk": "Storm Shadow penetrator", "turkiye": "SOM-B2"},
+	"antiRadar": {"usa": "AGM-88 HARM", "germany": "AGM-88 HARM", "italy": "AGM-88 HARM", "russia": "Kh-31P", "china": "YJ-91", "india": "Rudram", "israel": "AGM-88 HARM", "uk": "Anti-radiation missile programme", "ukraine": "AGM-88 HARM"},
 	"thermobaricMissile": {"russia": "Thermobaric rocket payload"},
 }
 const MISSILE_PROGRAMS := {"hypersonic": ["usa", "india", "iran"], "antiRadar": ["uk"]}
-const AIR := {"antiRadar": ["usa", "germany", "russia", "china", "india", "israel", "uk", "ukraine"], "bunkerMissile": ["russia", "germany", "france", "uk", "turkiye"], "cruise": ["turkiye", "israel", "germany"], "tacticalNuke": ["usa", "france"], "bunkerBuster": ["usa"], "tsarBomba": ["russia"], "nuclearCruise": ["usa", "russia", "france"]}
+const AIR := {"antiRadar": ["usa", "germany", "italy", "russia", "china", "india", "israel", "uk", "ukraine"], "bunkerMissile": ["russia", "germany", "italy", "france", "uk", "turkiye"], "cruise": ["turkiye", "israel", "germany", "italy"], "tacticalNuke": ["usa", "france"], "bunkerBuster": ["usa"], "tsarBomba": ["russia"], "nuclearCruise": ["usa", "russia", "france"]}
 const SEA := {"cruise": ["uk", "france", "russia"], "nuke": ["uk", "france"], "tacticalNuke": ["uk"], "mirv": ["uk", "france"], "hydrogenBomb": ["uk", "france"], "nuclearEmp": ["uk", "france"], "nuclearCruise": ["israel"]}
 
 static func programme_done(w: Node, owner: int) -> bool:
@@ -96,7 +96,7 @@ static func platform_kind(w: Node, owner: int, key: String) -> String:
 	if key == "poseidon": return "sub"
 	if key == "riotAgent": return "drone"
 	if (key == "cruise" and id in ["france", "uk"]) or (key == "hypersonic" and id == "russia") or (key == "antiShip" and id in ["france", "brazil", "egypt"]): return "air_or_sea"
-	if key == "antiShip" and id in ["germany", "uk", "saudi", "australia", "israel", "turkiye", "south_korea", "indonesia"]: return "sea"
+	if key == "antiShip" and id in ["germany", "italy", "uk", "saudi", "australia", "israel", "turkiye", "south_korea", "indonesia"]: return "sea"
 	if id in AIR.get(key, []): return "air"
 	if id in SEA.get(key, []): return "sea"
 	if key in ["nuke", "mirv", "hydrogenBomb", "nuclearEmp"]: return "strategic"

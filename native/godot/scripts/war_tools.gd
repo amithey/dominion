@@ -63,8 +63,8 @@ const ROBOTS := ["combatUGV", "logisticsUGV", "robotDog", "heavyBomberDrone", "c
 const EVAC_REACH := 14.0
 const EVAC_RATE := 6.0
 # The air wing (by class: force_models.CARRIER_STYLE): aircraft aboard, and what flies from the deck.
-const WING := {"usa": 5, "china": 5, "france": 5, "uk": 4, "india": 4, "turkiye": 4, "japan": 4, "iran": 3}
-const WING_AIRCRAFT := {"usa": "F/A-18E Super Hornet", "china": "J-15T", "france": "Rafale M", "uk": "F-35B Lightning", "india": "MiG-29K", "japan": "F-35B Lightning", "turkiye": "Bayraktar TB3", "iran": "Shahed-129"}
+const WING := {"usa": 5, "china": 5, "france": 5, "italy": 3, "uk": 4, "india": 4, "turkiye": 4, "japan": 4, "iran": 3}
+const WING_AIRCRAFT := {"usa": "F/A-18E Super Hornet", "china": "J-15T", "france": "Rafale M", "italy": "F-35B Lightning", "uk": "F-35B Lightning", "india": "MiG-29K", "japan": "F-35B Lightning", "turkiye": "Bayraktar TB3", "iran": "Shahed-129"}
 ## How far from the carrier its aircraft will fly to strike (a third of the island's width): far beyond the carrier's own
 ## guns (24 m), which only defend it. A sortie is 45 seconds in the air at about 34 m a second.
 const STRIKE_REACH := 240.0
@@ -561,7 +561,7 @@ static func _recover(w: Node, carrier: Dictionary, u: Dictionary) -> void:
 
 ## How much of a rival's effort goes to its fleet, by its real navy: the blue-water
 ## navies first, coastal forces least (native/WAR-TOOLS-RESEARCH-2026-10-12.md).
-const NAVY := {"usa": 1.0, "china": 1.0, "uk": 0.7, "france": 0.7, "germany": 0.4, "japan": 0.7, "russia": 0.6, "india": 0.6, "south_korea": 0.6,
+const NAVY := {"usa": 1.0, "china": 1.0, "uk": 0.7, "france": 0.7, "germany": 0.4, "italy": 0.5, "japan": 0.7, "russia": 0.6, "india": 0.6, "south_korea": 0.6,
 	"turkiye": 0.5, "iran": 0.45, "australia": 0.45, "egypt": 0.4, "indonesia": 0.4, "israel": 0.35, "pakistan": 0.35, "saudi": 0.35,
 	"brazil": 0.35, "north_korea": 0.3, "ukraine": 0.2, "houthis": 0.15, "yemen": 0.1, "nigeria": 0.2, "iraq": 0.05}
 

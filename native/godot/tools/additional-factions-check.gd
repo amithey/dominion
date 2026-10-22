@@ -136,7 +136,7 @@ func run() -> void:
 				w.diplomacy.set_flag(w.diplomacy.war, owner, target, true)   # insurgent attacks only on an enemy
 				building("farm", target)
 			if id in ["uk", "indonesia", "north_korea"]: w.diplomacy.set_flag(w.diplomacy.alliance, owner, target, false)   # hostile levers: not on an ally
-			if id in ["south_korea", "australia"]: w.diplomacy.set_score(owner, target, 20.0)   # a partner
+			if id in ["south_korea", "australia", "italy"]: w.diplomacy.set_score(owner, target, 20.0)   # a partner
 			if id == "france": w.diplomacy.set_score(owner, target, 30.0)   # a partner to extend the guarantee to
 			if id == "pakistan":
 				w.diplomacy.set_flag(w.diplomacy.alliance, owner, target, false)
@@ -184,6 +184,18 @@ func run() -> void:
 	w.game_time += float(P.def("france").duration) + 1.0
 	w.diplomacy.set_score(0, 1, -50.0)
 	check(P.bonus(w, 1, "deterred") == 0.0 and w.diplomacy.ai_wants_war(0, 1), "and the guarantee expires")
+	# Italy: an energy partnership pays the partner, brings oil and gas home and warms relations.
+	reset_power()
+	set_nation(0, "italy")
+	set_nation(1, "uk")
+	w.diplomacy.set_score(0, 1, 20.0)
+	var oil0: float = P.funds(w, 0, "oil")
+	var gas0: float = P.funds(w, 0, "gas")
+	var partner0: float = P.funds(w, 1, "money")
+	var relations0: float = w.diplomacy.rel(0, 1)
+	FP.use(w, 0, 1)
+	check(is_equal_approx(P.funds(w, 0, "oil"), minf(float(w.economy.caps.get("oil", INF)), oil0 + 150.0)) and is_equal_approx(P.funds(w, 0, "gas"), minf(float(w.economy.caps.get("gas", INF)), gas0 + 150.0)), "an energy partnership brings Italy oil and gas")
+	check(is_equal_approx(P.funds(w, 1, "money"), partner0 + 500.0) and w.diplomacy.rel(0, 1) >= relations0 + 14.0, "and the partner receives the money and relations rise 15")
 	reset_power()
 	set_nation(0, "south_korea")
 	w.diplomacy.set_flag(w.diplomacy.war, 0, 1, true)

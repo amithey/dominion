@@ -19,7 +19,7 @@ extends RefCounted
 ##   organic   grown, not drawn: zones loosely kept (South Asian, Southeast
 ##             Asian, Brazilian, Iraqi, Syrian, Afghan towns)
 
-const STYLE := {"usa": "grid", "australia": "grid", "germany": "compact", "france": "compact", "uk": "compact", "japan": "compact", "south_korea": "compact",
+const STYLE := {"usa": "grid", "australia": "grid", "germany": "compact", "france": "compact", "italy": "compact", "uk": "compact", "japan": "compact", "south_korea": "compact",
 	"israel": "compact", "turkiye": "compact", "china": "axial", "russia": "axial", "north_korea": "axial", "ukraine": "axial",
 	"iran": "axial", "egypt": "axial", "saudi": "linear", "india": "organic", "pakistan": "organic", "indonesia": "organic",
 	"brazil": "organic", "iraq": "organic", "syria": "organic", "afghanistan": "organic",

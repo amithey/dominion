@@ -92,7 +92,7 @@ static func blocked(w: Node, owner: int, target: int) -> String:
 		"france":
 			if w.diplomacy.at_war(owner, target) or w.diplomacy.rel(owner, target) < 20.0: return "Needs a partner at peace (+20 relations or better)"
 			if bonus(w, target, "deterred") > 0.0: return "Already under a nuclear guarantee"
-		"south_korea", "australia":
+		"south_korea", "australia", "italy":
 			if w.diplomacy.at_war(owner, target) or w.diplomacy.rel(owner, target) < 10.0: return "Needs a partner at peace (+10 relations or better)"
 		"brazil":
 			if w.diplomacy.at_war(owner, target) or not w.diplomacy.pact[owner][target]: return "Needs a trade partner at peace"
@@ -149,6 +149,16 @@ static func use_forward_deterrence(w: Node, owner: int, target: int) -> void:
 	for rival in range(w.diplomacy.n):
 		if rival != owner and rival != target and not w.diplomacy.defeated(rival) and w.diplomacy.rel(rival, target) < -35.0:
 			w.diplomacy.change(rival, owner, -6.0)
+
+## Italy: investment in a partner's energy sector, in the way of the Mattei Plan. The partner receives the
+## money Italy paid and relations rise; the new contracts bring Italy oil and gas.
+static func use_energy_partnership(w: Node, owner: int, target: int) -> void:
+	for r in ["oil", "gas"]:
+		var cap: float = float(w.economy.caps.get(r, INF)) if owner == 0 else 500.0
+		stock(w, owner)[r] = minf(cap, funds(w, owner, r) + 150.0)
+	if target == 0: w.economy.res.money += 500.0
+	else: nation(w, target).money += 500.0
+	w.diplomacy.change(owner, target, 15.0)
 
 ## South Korea: tanks and howitzers for a partner, on export credit.
 static func use_arms_export(w: Node, owner: int, target: int) -> void:
@@ -296,6 +306,9 @@ static func use(w: Node, owner: int, target: int) -> String:
 		"france":
 			use_forward_deterrence(w, owner, target)
 			return "%s extends its nuclear deterrent over %s: rivals will not start a war with it." % [me, who]
+		"italy":
+			use_energy_partnership(w, owner, target)
+			return "%s invests in %s's energy sector: contracts bring oil and gas home." % [me, who]
 		"south_korea":
 			use_arms_export(w, owner, target)
 			return "%s sells tanks and howitzers to %s on export credit: $900 earned." % [me, who]

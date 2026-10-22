@@ -64,7 +64,7 @@ const PROGRAMMES := {
 ## (not ratified), "none". icc: true for parties to the Rome Statute.
 const TREATIES := {
 	"usa": {"npt": "nws", "icc": false}, "russia": {"npt": "nws", "icc": false}, "china": {"npt": "nws", "icc": false},
-	"germany": {"npt": "party", "icc": true}, "france": {"npt": "nws", "icc": true}, "uk": {"npt": "nws", "icc": true},
+	"germany": {"npt": "party", "icc": true}, "italy": {"npt": "party", "icc": true}, "france": {"npt": "nws", "icc": true}, "uk": {"npt": "nws", "icc": true},
 	"india": {"npt": "outside", "icc": false}, "pakistan": {"npt": "outside", "icc": false},
 	"israel": {"npt": "outside", "cwc": "signed", "bwc": "none", "icc": false},
 	"north_korea": {"npt": "withdrawn", "cwc": "none", "icc": false},
