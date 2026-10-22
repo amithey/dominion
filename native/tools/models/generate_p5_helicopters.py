@@ -34,16 +34,16 @@ FAMILIES={
  'mi8':(18.17,2.50,3.25,.85,5.05,3.65,21.29,5,3.91,3,'tricycle','mi'),
  'bell205':(12.69,2.50,2.20,.62,3.85,2.55,14.64,2,2.60,2,'skid','mi'),
  'nh90':(16.13,2.60,2.90,.70,4.30,3.20,16.30,4,3.20,4,'tricycle','nh90'),
- 'blackhawk':(15.27,2.36,2.45,.65,3.80,3.05,16.36,4,3.35,4,'tailwheel','blackhawk'),
+ 'blackhawk':(15.27,2.36,2.45,.65,3.80,2.81,16.36,4,3.35,4,'tailwheel','blackhawk'),
  'z20':(16.00,2.40,2.55,.70,4.00,3.10,16.00,5,3.20,4,'tailwheel','z20'),
  'cobra':(13.87,1.00,2.05,.70,3.40,2.70,13.40,2,2.60,2,'skid','mi'),
  'toufan':(13.87,1.10,2.10,.70,3.45,2.70,13.40,2,2.60,2,'skid','mi'),
- 'apache':(14.68,1.70,2.45,.75,3.80,2.85,14.63,4,2.79,4,'tailwheel','apache'),
+ 'apache':(14.68,1.70,2.45,.75,3.80,2.20,14.63,4,2.79,4,'tailwheel','apache'),
  'mangusta':(12.28,1.05,2.15,.70,3.35,2.35,11.90,5,2.30,2,'tailwheel','mi'),
  'ka52':(15.85,2.20,2.45,.80,4.00,2.95,14.50,3,0,0,'tricycle','mi'),
  'lch':(12.10,1.25,2.40,.75,3.70,2.35,13.20,4,2.55,4,'skid','lch'),
- 'mi24':(17.51,1.80,2.95,1.00,4.60,3.50,17.30,5,3.90,3,'tricycle','mi'),
- 'mi28':(16.85,1.80,2.65,.95,4.35,3.20,17.20,5,3.85,4,'tailwheel','mi'),
+ 'mi24':(17.51,1.80,2.95,1.00,4.60,3.00,17.30,5,3.90,3,'tricycle','mi'),
+ 'mi28':(16.85,1.80,2.65,.95,4.35,2.80,17.20,5,3.85,4,'tailwheel','mi'),
  't129':(12.28,1.10,2.20,.70,3.40,2.35,11.90,5,2.30,2,'tailwheel','mi'),
  'tiger':(13.85,1.10,2.30,.80,3.65,2.65,13.00,4,2.70,3,'tailwheel','tiger'),
  'z10':(14.15,1.20,2.35,.75,3.70,2.70,13.00,5,2.80,4,'tailwheel','mi'),
@@ -62,6 +62,18 @@ PROFILES={
  'blackhawk':[(-.24,.10,.18,.18),(-.13,0,.43,.38),(.04,0,.50,.50),(.27,0,.50,.50),(.40,-.03,.43,.46),(.475,-.14,.22,.25),(.50,-.17,.07,.09)],
 }
 PROFILES['mi8']=PROFILES['mi17'];PROFILES['bell205']=PROFILES['bell412'];PROFILES['z20']=PROFILES['blackhawk']
+PROFILES.update({
+ 'cobra':[(-.12,.05,.20,.25),(.01,0,.43,.43),(.13,.10,.50,.53),(.22,.02,.46,.46),(.34,-.10,.40,.42),(.45,-.25,.22,.24),(.50,-.29,.045,.055)],
+ 'apache':[(-.18,.03,.23,.28),(-.03,0,.46,.44),(.12,.04,.50,.50),(.24,-.04,.44,.45),(.36,-.16,.39,.39),(.46,-.27,.27,.27),(.50,-.28,.08,.10)],
+ 'mangusta':[(-.14,0,.20,.25),(.0,0,.43,.43),(.14,.08,.50,.52),(.25,-.01,.44,.45),(.36,-.12,.38,.40),(.46,-.24,.20,.22),(.50,-.27,.045,.06)],
+ 'ka52':[(-.16,.03,.22,.25),(-.02,0,.45,.44),(.13,0,.50,.50),(.30,0,.50,.50),(.42,-.05,.43,.44),(.48,-.18,.24,.27),(.50,-.20,.075,.08)],
+ 'mi24':[(-.24,.10,.20,.24),(-.13,0,.44,.44),(.01,0,.50,.50),(.14,.08,.46,.55),(.24,0,.40,.46),(.34,-.09,.38,.48),(.45,-.22,.26,.30),(.50,-.25,.055,.07)],
+ 'mi28':[(-.20,.06,.20,.25),(-.03,0,.45,.44),(.12,.10,.49,.53),(.24,0,.43,.46),(.35,-.12,.38,.41),(.45,-.21,.27,.29),(.50,-.25,.065,.08)],
+ 'tiger':[(-.16,.05,.20,.24),(-.02,0,.42,.43),(.13,.10,.50,.53),(.25,-.02,.45,.44),(.37,-.13,.38,.40),(.46,-.26,.21,.23),(.50,-.29,.05,.055)],
+ 'lch':[(-.15,.04,.20,.23),(-.01,0,.42,.43),(.12,.08,.50,.52),(.24,-.01,.43,.45),(.36,-.12,.36,.40),(.46,-.24,.22,.24),(.50,-.27,.05,.065)],
+ 'z10':[(-.17,.05,.22,.25),(-.02,0,.43,.44),(.13,.07,.50,.52),(.24,-.02,.44,.46),(.36,-.13,.37,.41),(.46,-.25,.23,.25),(.50,-.28,.05,.07)],
+})
+PROFILES['toufan']=PROFILES['cobra'];PROFILES['t129']=PROFILES['mangusta']
 
 def model(slug,name,lod,family,representative='',**overrides):
     L,W,H,b,hy,hz,D,N,td,tn,gear,ref=FAMILIES[family]
@@ -88,6 +100,7 @@ def model(slug,name,lod,family,representative='',**overrides):
         if family=='cobra':s.engines=1
         if family in ('apache','mi28'):s.details['mast_radar']=True
         if family=='ka52':s.details.update(fixed_gun=True,gun_side=1,missiles_per_bank=6)
+        if family not in ('mi24','ka52'):s.details['cross_section_power']=.80
     for key,value in overrides.items():
         if key=='details':s.details.update(value)
         else:setattr(s,key,value)
@@ -95,6 +108,9 @@ def model(slug,name,lod,family,representative='',**overrides):
     s.features=[family+' fuselage and tail profile',str(N)+'-blade '+str(D)+' m main rotor',
         str(tn)+'-blade tail rotor',gear+' landing gear',str(s.engines)+' separate turbine nacelles',
         'published rotor size; small fittings and fuselage cross-sections approximated']
+    if s.attack:s.features += [str(s.details['wing_span'])+' m stub-wing span',
+        str(s.details['stations_per_wing'])+' weapon stations per wing',
+        'fixed side cannon' if s.details.get('fixed_gun') else 'chin turret with separate gun trunnion']
     return build(s,lod)
 
 def helicopter__bell_412epi(lod=0):
@@ -137,16 +153,16 @@ def helicopter__t70_black_hawk(lod=0):
     return model('helicopter__t70_black_hawk','T70 Black Hawk',lod,'blackhawk')
 
 def helicopter__uh_60_captured(lod=0):
-    return model('helicopter__uh_60_captured','UH-60 (captured)',lod,'blackhawk','UH-60A transport exterior')
+    return model('helicopter__uh_60_captured','UH-60 (captured)',lod,'blackhawk','UH-60A transport exterior',details={'main_blade_chord':.42})
 
 def helicopter__uh_60_mi_17(lod=0):
     return model('helicopter__uh_60_mi_17','UH-60 / Mi-17',lod,'blackhawk','UH-60M')
 
 def helicopter__uh_60_yanshuf(lod=0):
-    return model('helicopter__uh_60_yanshuf','UH-60 Yanshuf',lod,'blackhawk')
+    return model('helicopter__uh_60_yanshuf','UH-60 Yanshuf',lod,'blackhawk',details={'main_blade_chord':.42})
 
 def helicopter__uh_60ja(lod=0):
-    return model('helicopter__uh_60ja','UH-60JA',lod,'blackhawk')
+    return model('helicopter__uh_60ja','UH-60JA',lod,'blackhawk',details={'main_blade_chord':.42,'chin_sensor':True})
 
 def helicopter__uh_60m(lod=0):
     return model('helicopter__uh_60m','UH-60M',lod,'blackhawk')
@@ -156,6 +172,60 @@ def helicopter__uh_60m_black_hawk(lod=0):
 
 def helicopter__z_20(lod=0):
     return model('helicopter__z_20','Z-20',lod,'z20')
+
+def gunship__ah_1f_cobra_z_10me(lod=0):
+    return model('gunship__ah_1f_cobra_z_10me','AH-1F Cobra / Z-10ME',lod,'cobra','AH-1F Cobra')
+
+def gunship__ah_64_saraf(lod=0):
+    return model('gunship__ah_64_saraf','AH-64 Saraf',lod,'apache')
+
+def gunship__ah_64d_ka_52(lod=0):
+    return model('gunship__ah_64d_ka_52','AH-64D / Ka-52',lod,'apache','AH-64D Apache Longbow')
+
+def gunship__ah_64djp(lod=0):
+    return model('gunship__ah_64djp','AH-64DJP',lod,'apache')
+
+def gunship__ah_64e_apache(lod=0):
+    return model('gunship__ah_64e_apache','AH-64E Apache',lod,'apache')
+
+def gunship__aw129_mangusta(lod=0):
+    return model('gunship__aw129_mangusta','AW129 Mangusta',lod,'mangusta','A129 CBT upgraded five-blade gunship')
+
+def gunship__ka_52m(lod=0):
+    return model('gunship__ka_52m','Ka-52M',lod,'ka52')
+
+def gunship__lch_prachand(lod=0):
+    return model('gunship__lch_prachand','LCH Prachand',lod,'lch')
+
+def gunship__mi_24(lod=0):
+    return model('gunship__mi_24','Mi-24',lod,'mi24','Mi-24V',details={'gun_barrels':4})
+
+def gunship__mi_24v(lod=0):
+    return model('gunship__mi_24v','Mi-24V',lod,'mi24',details={'gun_barrels':4})
+
+def gunship__mi_24v_mi_35(lod=0):
+    return model('gunship__mi_24v_mi_35','Mi-24V / Mi-35',lod,'mi24','Mi-24V',details={'gun_barrels':4})
+
+def gunship__mi_28ne(lod=0):
+    return model('gunship__mi_28ne','Mi-28NE',lod,'mi28')
+
+def gunship__mi_35p(lod=0):
+    return model('gunship__mi_35p','Mi-35P',lod,'mi24',details={'fixed_gun':True,'gun_side':1,'gun_barrels':2})
+
+def gunship__t129_atak(lod=0):
+    return model('gunship__t129_atak','T129 ATAK',lod,'t129')
+
+def gunship__t129_atak_mi_35m(lod=0):
+    return model('gunship__t129_atak_mi_35m','T129 ATAK / Mi-35M',lod,'t129','T129 ATAK')
+
+def gunship__tiger(lod=0):
+    return model('gunship__tiger','Tiger',lod,'tiger','Tiger HAD gun-armed exterior')
+
+def gunship__toufan(lod=0):
+    return model('gunship__toufan','Toufan',lod,'toufan')
+
+def gunship__z_10(lod=0):
+    return model('gunship__z_10','Z-10',lod,'z10')
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and n.split('__')[0] in ('helicopter','gunship','navalHelicopter','heavyLift','scoutHelicopter') and callable(f)}
 

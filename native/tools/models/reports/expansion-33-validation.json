@@ -1,0 +1,37 @@
+{
+  "batch": 33,
+  "files": [
+    "aircraft/helicopter__t70_black_hawk.glb",
+    "aircraft/helicopter__uh_60_captured.glb",
+    "aircraft/helicopter__uh_60_mi_17.glb",
+    "aircraft/helicopter__uh_60_yanshuf.glb",
+    "aircraft/helicopter__uh_60ja.glb",
+    "aircraft/helicopter__uh_60m.glb"
+  ],
+  "sha256": {
+    "aircraft/helicopter__t70_black_hawk.glb": "a2b9a28df6822bee695ea8341abe52c95515c0f532847085bf59630396386d21",
+    "aircraft/helicopter__uh_60_captured.glb": "d70947e0c38b300f50ec59014cdbd0bee9ab67b28595257815b6afb26b063b1c",
+    "aircraft/helicopter__uh_60_mi_17.glb": "28dad654adb612ae77290322492bc2c96ea7ac00d868500e96639d17619031a5",
+    "aircraft/helicopter__uh_60_yanshuf.glb": "8ad15410df948fd74f12a076f09a1207e12d0cba436a8079551b13ca519dff3d",
+    "aircraft/helicopter__uh_60ja.glb": "5e74a215812c00ec81f03d324d788d8d243c4e3dfc2db751040097c52789b12c",
+    "aircraft/helicopter__uh_60m.glb": "de781183364ae17f4cf01524d1d98c9f66f4220abdff293c674464c9d0459330"
+  },
+  "maximum_triangles": [
+    9292,
+    1468
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific rotor configuration and landing gear",
+    "local-frame hinge propagation and rotor full-revolution return",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p5_helicopters.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

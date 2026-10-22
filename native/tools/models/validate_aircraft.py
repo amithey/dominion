@@ -1,9 +1,4 @@
-"""Read saved aircraft bytes back: buffers, geometry, metre UVs, canonical tracks and pivots.
-
-Independently checks wheel counts/positions from the published vehicle spec,
-weapon absence on unarmed vehicles, and parent propagation of moving parts.
-P3 fork: the same saved-buffer checks, with towed gun carriages and launcher markers.
-"""
+"""Validate saved aircraft geometry, metre UVs, local hinges and named rotors."""
 from collections import defaultdict
 from pathlib import Path
 import hashlib, json, math
@@ -92,6 +87,16 @@ def validate(path):
                 assert by[tail][0]['extras']['rotation_axis']=='X'
                 assert by[tail][0]['extras']['blade_count']==s['tail_blades']
             assert (prefix+'/Skid' in by)==(s['gear']=='skid')
+            if s.get('attack'):
+                markers={n['extras']['canonical_part']:M[:3,3] for p,(n,M,v) in by.items()
+                    if p.startswith(prefix+'/') and n.get('extras',{}).get('canonical_part','').startswith('Muzzle_')}
+                assert set(markers)=={'Muzzle_'+str(i) for i in range(s['details']['muzzle_count'])}
+                for name,pos in s['details']['muzzle_positions'].items():assert np.allclose(markers[name],pos,atol=1e-5)
+                if s['details'].get('gun',True):
+                    fixed=s['details'].get('fixed_gun',False)
+                    assert (prefix+'/Turret' in by)==(not fixed)
+                    gun=prefix+('/Gun' if fixed else '/Turret/Gun')
+                    assert gun in by and gun+'/Muzzle_0' in by
         for p,(node,M,v) in by.items():
             axisname=node.get('extras',{}).get('rotation_axis')
             if not axisname or not p.startswith(prefix+'/'):continue

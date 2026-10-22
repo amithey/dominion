@@ -86,7 +86,8 @@ def body(rig,s,lod):
     def windows(z,theta):
         upper=math.cos(theta)>.08
         if z>L*.30 and z<L*.455 and upper and .18<theta<math.tau-.18:return 'glass'
-        if attack and L*.10<z<L*.34 and upper and .36<theta<math.tau-.36:
+        if s.family=='ka52' and L*.18<z<L*.39 and upper and .30<theta<math.tau-.30:return 'glass'
+        if attack and s.family!='ka52' and L*.10<z<L*.34 and upper and .36<theta<math.tau-.36:
             if abs(z-L*.225)>L*.014:return 'glass'
         if not attack and s.family not in ('mi8','mi17','mi26'):
             side=abs(math.sin(theta))>.91 and math.cos(theta)>.0
@@ -146,6 +147,8 @@ def engines(rig,s,lod,cy):
         ez=-s.length*.34 if s.family=='chinook' else s.length*.04
         ey=cy+s.body_height*.48 if s.family!='chinook' else s.hub_y+.25
         length=s.length*.17;rad=s.width*.19
+        if s.attack and s.engines==2 and s.family!='mi24':
+            x=(i-.5)*s.width*1.20;ey=cy+s.body_height*.35;rad=s.width*.23;length=s.length*.15
         if s.engines==3:
             x=(-s.width*.23,s.width*.23,0)[i]
             ez=s.length*(.05 if i<2 else -.13);rad=s.width*.16
@@ -187,7 +190,7 @@ def rotors(rig,s,lod,ty,tz):
     elif s.family in ('ka27','ka52'):
         hubs.append(('Rotor_Main_Upper',(0,s.hub_y+.72,s.hub_z),math.pi/3))
     for name,p,phase in hubs:
-        m=rotor_mesh(s.rotor_diameter/2,s.blades,lod,phase=phase);m.shift(p)
+        m=rotor_mesh(s.rotor_diameter/2,s.blades,lod,chord=s.details.get('main_blade_chord'),phase=phase);m.shift(p)
         rig.add(name,'Fuselage',p,m,'Y',blade_count=s.blades,diameter_metres=s.rotor_diameter,
                 spin_sign=-1 if name in ('Rotor_Main_Aft','Rotor_Main_Upper') else 1)
         mast=Mesh();mast.tube('metal_dark',(p[0],p[1]-.62,p[2]),(p[0],p[1]-.15,p[2]),max(.10,s.width*.045),6 if lod else 16)
@@ -282,8 +285,8 @@ def armament(rig,s,lod):
                 for i in range(bank):
                     dx=(i%2-.5)*.22;dy=(i//2-(bank/2-1)/2)*.21
                     a=p+[dx,dy,-length*.41];end=a+[0,0,length]
-                    store.tube('paint',a,end,.085,6 if lod else 12)
-                    store.tube('metal_dark',end,end+[0,0,.07],.085,6 if lod else 12,r_top=.025)
+                    store.tube('paint',a,end,.085,4 if lod else 12)
+                    store.tube('metal_dark',end,end+[0,0,.07],.085,4 if lod else 12,r_top=.025)
                     if not lod:
                         store.box('paint',a+[0,0,.24],(.33,.035,.24));store.box('paint',a+[0,0,.24],(.035,.33,.24))
                 tip+=np.array([0,0,.07])
@@ -299,6 +302,7 @@ def armament(rig,s,lod):
         rad.tube('paint',p,p+[0,.24,0],.52,12 if lod else 32)
         rig.add('Mast_Radome','Fuselage',p,rad)
     s.details['muzzle_count']=muzzles
+    s.details['muzzle_positions']={p['name']:p['pivot'].tolist() for p in rig.parts if p['name'].startswith('Muzzle_')}
     return rig
 
 def build(s,lod=0):
@@ -312,6 +316,11 @@ def build(s,lod=0):
         pod=np.array([0,s.belly+.27,s.length*.455]);protection.tube('paint',pod,pod+[0,0,.30],.21,8 if lod else 20)
         protection.tube('glass',pod+[0,0,.305],pod+[0,0,.32],.16,8 if lod else 20)
         rig.add('Armour_and_Sensors','Fuselage',(0,s.belly,s.length*.34),protection)
+    if s.details.get('chin_sensor'):
+        optics=Mesh();p=np.array([0,s.belly+.22,s.length*.44])
+        optics.tube('paint',p,p+[0,0,.27],.19,8 if lod else 20)
+        optics.tube('glass',p+[0,0,.275],p+[0,0,.29],.145,8 if lod else 20)
+        rig.add('Chin_Sensor','Fuselage',p,optics,'Y')
     if s.family in ('merlin','nh90'):
         p=np.array([0,cy-s.body_height*.275,-s.length*.17-.04]);ramp=Mesh()
         ramp.box('paint',p+[0,s.body_height*.275,0],(s.width*.50,s.body_height*.55,.06))
