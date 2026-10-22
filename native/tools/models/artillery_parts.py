@@ -7,7 +7,7 @@ import math
 import numpy as np
 from dataclasses import replace
 from vehicle_parts import Mesh,Rig,loft,hollow_muzzle,merge_mesh,rotation
-from armour_parts import ArmourSpec,build,road_tyre
+from armour_parts import ArmourSpec,build,road_tyre,mobility
 from generate_p1_tanks import beam
 
 def artillery_barrel(rig,parent,p,tip,cal,lod,brake=True):
@@ -110,4 +110,86 @@ def truck_howitzer(slug,name,lod,L,W,H,axles,r,cal,tip,source,family='caesar',ap
     rest=Mesh();rz=L*.20;rest.box('paint',(0,bed+.12,rz),(.34,.24,.39))
     beam(rest,'paint',(0,bed+.20,rz),(0,gy-.18,rz),.08)
     rest.box('metal_dark',(0,gy-.12,rz),(.37,.15,.16));rig.add('Gun_Travel_Rest','Hull',(0,bed,rz),rest,'X')
+    return rig,s
+
+def aperture(mesh,center,r,lod):
+    """Low-detail recessed tube mouth, closed back, physical annular rim."""
+    x,y,z=center;n=4
+    for i in range(n):
+        a=i*math.tau/n;b=(i+1)*math.tau/n
+        def p(rad,t,zz):return (x+rad*math.cos(t),y+rad*math.sin(t),zz)
+        mesh.face('metal_dark',[p(r,a,z),p(r,b,z),p(r*.78,b,z),p(r*.78,a,z)],[0,0,1])
+    mesh.face('metal_dark',[(x+r*.78*math.cos(a),y+r*.78*math.sin(a),z-.025) for a in np.linspace(0,math.tau,n,endpoint=False)],[0,0,1])
+
+def launcher_vehicle(slug,name,lod,config,source,approximate=False,representative=''):
+    """Real carrier + modular launch rack. Config contains physical tube layout."""
+    L,W,H,axles,r,tracked,k,hood,cab,cols,rows,pods,cal,depth,boxed,jacks,family=config
+    count=cols*rows*pods
+    s=ArmourSpec(slug,name,L,W,H,'tracked' if tracked else 'wheeled',axles if tracked else len(axles),r,family,'',
+      [family+' carrier',str(axles if tracked else len(axles))+' road wheels per side' if tracked else str(len(axles)*2)+' wheel drive',
+       str(count)+' individual launch tubes; '+str(round(cal*1000))+' mm class',str(pods)+' launch module(s)',
+       'X elevation cradle on Y traversing turntable','closed modular launch containers' if boxed else 'exposed cylindrical tube rack'],
+       source,track_scale=k,front_engine=family!='tos1',approximate=approximate,representative=representative,
+       axle_z=[] if tracked else list(axles),details={'hood':hood,'cab':cab,'tube_count':count})
+    bed=r*2.05+.18 if not tracked else 1.22*k
+    if not tracked:
+        original=s.family;s.family='truck';rig,s=build(s,lod);s.family=original
+    else:
+        rig=Rig(lod);m=Mesh();h=L/2;half=W/2-.38
+        m.box('paint',(0,.86,0),(W-.65,.65,L-.24))
+        if family=='m270':
+            # Distinct forward armoured control cabin, open low launcher deck.
+            from vehicle_parts import profile_hull
+            profile_hull(m,'paint',[(h-.08,.88,half),(h-.08,H-.37,half),(h-.38,H,half*.94),
+                (h-2.22,H,half*.94),(h-2.22,.88,half)])
+            for side in (-1,1):
+                m.box('glass',(side*.48,H-.62,h-.039),(.78,.47,.035))
+                m.box('glass',(side*(half+.014),H-.55,h-1.11),(.025,.44,.61))
+                m.box('markings',(side*(half+.017),H-.97,h-1.14),(.016,.24,.48))
+        else:
+            # TOS-1A: low T-72 hull, no fictional crew cabin or gun turret.
+            from vehicle_parts import profile_hull
+            profile_hull(m,'paint',[(h-.10,.61,half*.88),(h,1.13,half),(h-1.60,1.47,half),(-h+.12,1.47,half),(-h,.66,half*.90)])
+            m.box('paint',(-.49,1.50,h*.40),(.58,.10,.61));m.box('glass',(-.49,1.58,h*.40+.21),(.34,.06,.12))
+        for side in (-1,1):m.box('paint',(side*(W/2-.31),1.18*k,0),(.64,.10,L-.20))
+        rig.add('Hull',rig.root,(0,0,0),m);mobility(rig,s,lod)
+        rig.add('Engine_Deck','Hull',(0,1.48,-L*.35 if family=='tos1' else L*.25));rig.add('Exhaust','Hull',(W/2-.2,1.0,-L*.40))
+    pitch=cal*1.18;module_width=cols*pitch+.18;module_height=rows*pitch+.18
+    total_width=pods*module_width+(pods-1)*.15
+    # Avoid the forward cabin; put pivot on the rear trunnion cross-shaft.
+    rear=-L/2+.30;front=rear+depth;pivot_y=bed+.32
+    if family=='tos1':rear=-2.02;front=rear+depth
+    turn=Mesh();turn.tube('metal_dark',(0,bed,rear+depth*.38),(0,pivot_y,rear+depth*.38),min(W*.34,.80),8 if lod else 20)
+    rig.add('Turntable','Hull',(0,bed+.12,rear+depth*.38),turn,'Y')
+    launch=Mesh();tips=[];tube_y=pivot_y+.27+module_height/2
+    for side in (-1,1):
+        beam(launch,'paint',(side*min(total_width*.37,W*.35),pivot_y,rear+.18),
+             (side*min(total_width*.37,W*.35),tube_y,rear+depth*.53),.14)
+    for pod in range(pods):
+        cx=(pod-(pods-1)/2)*(module_width+.15);cy=tube_y;mid=(rear+front)/2
+        if boxed:
+            for side in (-1,1):
+                launch.box('paint',(cx+side*(module_width/2-.035),cy,mid),(.07,module_height,depth))
+                launch.box('paint',(cx,cy+side*(module_height/2-.035),mid),(module_width-.14,.07,depth))
+            launch.box('paint',(cx,cy,rear+.035),(module_width-.14,module_height-.14,.07))
+        else:
+            for zz in (rear+.13,rear+depth*.52,front-.13):launch.box('paint',(cx,cy-module_height/2,zz),(module_width,.09,.12))
+        for row in range(rows):
+            for col in range(cols):
+                x=cx+(col-(cols-1)/2)*pitch;y=cy+(row-(rows-1)/2)*pitch
+                tip=np.array([x,y,front+.015]);tips.append(tip.tolist())
+                if lod:aperture(launch,tip,cal*.52,lod)
+                else:hollow_muzzle(launch,[x,y,rear+.06],tip,cal*.52,cal*.45,8)
+        if not boxed:
+            for side in (-1,1):beam(launch,'paint',(cx+side*module_width*.49,cy-module_height*.52,rear+.15),(cx+side*module_width*.49,cy-module_height*.52,front-.10),.08)
+    rig.add('Launcher','Turntable',(0,pivot_y,rear+.18),launch,'X',elevation_degrees=[0,60],positive_elevation_rotation_sign=-1)
+    for i,p in enumerate(tips):rig.add('Muzzle_'+str(i),'Launcher',p,forward='+Z')
+    s.details['muzzle_positions']=tips
+    if jacks:
+        for side,label in ((-1,'L'),(1,'R')):
+            p=np.array([side*(W/2-.20),bed,-L/2+.40]);jack=Mesh()
+            jack.tube('paint',p,p+[0,-.62,0],.10,6 if lod else 12);jack.box('metal_dark',p+[0,-.66,0],(.37,.09,.38))
+            rig.add('Outrigger_'+label,'Hull',p,jack,translation_axis='Y')
+    for p in rig.parts:
+        if p['mesh'] is not None:p['mesh'].remove_duplicates()
     return rig,s

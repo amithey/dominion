@@ -149824,5 +149824,6545 @@
       "world_loop_length_metres": 15.511331,
       "description": "Unmodified canonical TrackPath vertices and U, followed by mesh-child YZ scale, exactly as approved P1."
     }
+  },
+  {
+    "file": "vehicles/artillery__d_30_2s1.glb",
+    "kind": "model",
+    "name": "D-30 / 2S1",
+    "priority": "P3",
+    "pilot": false,
+    "approximate": true,
+    "representative_vehicle": "2S1 Gvozdika self-propelled howitzer",
+    "triangles": [
+      12218,
+      1908
+    ],
+    "wreck_triangles": 1852,
+    "collision_triangles": 12,
+    "size": [
+      3.0,
+      3.56007,
+      7.81
+    ],
+    "bounds": [
+      [
+        -1.5,
+        0.0,
+        -3.82
+      ],
+      [
+        1.5,
+        3.56007,
+        3.99
+      ]
+    ],
+    "hull_footprint": [
+      2.85,
+      7.26
+    ],
+    "road_wheels_per_side": 7,
+    "wheel_radius_metres": 0.29,
+    "mobility": "tracked",
+    "has_turret": true,
+    "recognition_features": [
+      "2S1 chosen from combined 2S1/D-30 row",
+      "Seven small road wheels with front sprockets",
+      "low amphibious hull",
+      "rear-mounted shallow welded turret",
+      "122 mm 2A31 howitzer with double-baffle muzzle brake",
+      "bow trim vane and rear access door"
+    ],
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "materials": [
+      "paint",
+      "metal_dark",
+      "rubber",
+      "glass",
+      "markings"
+    ],
+    "nodes": [
+      {
+        "path": "LOD0",
+        "canonical_part": "LOD0",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret_Ring",
+        "canonical_part": "Turret_Ring",
+        "pivot_local": [
+          0.0,
+          1.5,
+          -0.89
+        ],
+        "pivot_world": [
+          0.0,
+          1.5,
+          -0.89
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret",
+        "canonical_part": "Turret",
+        "pivot_local": [
+          0.0,
+          1.52,
+          -0.89
+        ],
+        "pivot_world": [
+          0.0,
+          1.52,
+          -0.89
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Gun",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          0.42,
+          0.93
+        ],
+        "pivot_world": [
+          0.0,
+          1.94,
+          0.04
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Gun/Muzzle",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          3.95
+        ],
+        "pivot_world": [
+          0.0,
+          1.94,
+          3.99
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Hatch_Commander",
+        "canonical_part": "Hatch_Commander",
+        "pivot_local": [
+          0.58,
+          0.81,
+          -0.61
+        ],
+        "pivot_world": [
+          0.58,
+          2.33,
+          -1.5
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Hatch_Loader",
+        "canonical_part": "Hatch_Loader",
+        "pivot_local": [
+          -0.55,
+          0.81,
+          -0.81
+        ],
+        "pivot_world": [
+          -0.55,
+          2.33,
+          -1.7
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Gunner_Sight",
+        "canonical_part": "Gunner_Sight",
+        "pivot_local": [
+          -0.65,
+          0.79,
+          0.35
+        ],
+        "pivot_world": [
+          -0.65,
+          2.31,
+          -0.54
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Smoke_Launcher_L",
+        "canonical_part": "Smoke_Launcher_L",
+        "pivot_local": [
+          -1.18,
+          0.59,
+          0.35
+        ],
+        "pivot_world": [
+          -1.18,
+          2.11,
+          -0.54
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Smoke_Launcher_R",
+        "canonical_part": "Smoke_Launcher_R",
+        "pivot_local": [
+          1.18,
+          0.59,
+          0.35
+        ],
+        "pivot_world": [
+          1.18,
+          2.11,
+          -0.54
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Antenna_1",
+        "canonical_part": "Antenna_1",
+        "pivot_local": [
+          -0.82,
+          0.79,
+          -0.98
+        ],
+        "pivot_world": [
+          -0.82,
+          2.31,
+          -1.87
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Markings_Turret",
+        "canonical_part": "Markings_Turret",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          1.52,
+          -0.89
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L0",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          -1.9926
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          -1.9926
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L1",
+        "canonical_part": "Wheel_L1",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          -1.3284
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          -1.3284
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L2",
+        "canonical_part": "Wheel_L2",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          -0.6642
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          -0.6642
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L3",
+        "canonical_part": "Wheel_L3",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          0.0
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L4",
+        "canonical_part": "Wheel_L4",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          0.6642
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          0.6642
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L5",
+        "canonical_part": "Wheel_L5",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          1.3284
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          1.3284
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L6",
+        "canonical_part": "Wheel_L6",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          1.9926
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          1.9926
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Sprocket_L",
+        "canonical_part": "Sprocket_L",
+        "pivot_local": [
+          -1.075,
+          0.533,
+          2.6486
+        ],
+        "pivot_world": [
+          -1.075,
+          0.533,
+          2.6486
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Idler_L",
+        "canonical_part": "Idler_L",
+        "pivot_local": [
+          -1.075,
+          0.533,
+          -2.6486
+        ],
+        "pivot_world": [
+          -1.075,
+          0.533,
+          -2.6486
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_L0",
+        "canonical_part": "Roller_L0",
+        "pivot_local": [
+          -1.075,
+          0.82,
+          -1.558
+        ],
+        "pivot_world": [
+          -1.075,
+          0.82,
+          -1.558
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_L1",
+        "canonical_part": "Roller_L1",
+        "pivot_local": [
+          -1.075,
+          0.82,
+          0.0
+        ],
+        "pivot_world": [
+          -1.075,
+          0.82,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_L2",
+        "canonical_part": "Roller_L2",
+        "pivot_local": [
+          -1.075,
+          0.82,
+          1.558
+        ],
+        "pivot_world": [
+          -1.075,
+          0.82,
+          1.558
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Track_L",
+        "canonical_part": "Track_L",
+        "pivot_local": [
+          -1.075,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          -1.075,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R0",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          -1.9926
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          -1.9926
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R1",
+        "canonical_part": "Wheel_R1",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          -1.3284
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          -1.3284
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R2",
+        "canonical_part": "Wheel_R2",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          -0.6642
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          -0.6642
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R3",
+        "canonical_part": "Wheel_R3",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          0.0
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R4",
+        "canonical_part": "Wheel_R4",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          0.6642
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          0.6642
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R5",
+        "canonical_part": "Wheel_R5",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          1.3284
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          1.3284
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R6",
+        "canonical_part": "Wheel_R6",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          1.9926
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          1.9926
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Sprocket_R",
+        "canonical_part": "Sprocket_R",
+        "pivot_local": [
+          1.075,
+          0.533,
+          2.6486
+        ],
+        "pivot_world": [
+          1.075,
+          0.533,
+          2.6486
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Idler_R",
+        "canonical_part": "Idler_R",
+        "pivot_local": [
+          1.075,
+          0.533,
+          -2.6486
+        ],
+        "pivot_world": [
+          1.075,
+          0.533,
+          -2.6486
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_R0",
+        "canonical_part": "Roller_R0",
+        "pivot_local": [
+          1.075,
+          0.82,
+          -1.558
+        ],
+        "pivot_world": [
+          1.075,
+          0.82,
+          -1.558
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_R1",
+        "canonical_part": "Roller_R1",
+        "pivot_local": [
+          1.075,
+          0.82,
+          0.0
+        ],
+        "pivot_world": [
+          1.075,
+          0.82,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_R2",
+        "canonical_part": "Roller_R2",
+        "pivot_local": [
+          1.075,
+          0.82,
+          1.558
+        ],
+        "pivot_world": [
+          1.075,
+          0.82,
+          1.558
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Track_R",
+        "canonical_part": "Track_R",
+        "pivot_local": [
+          1.075,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          1.075,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Engine_Deck",
+        "canonical_part": "Engine_Deck",
+        "pivot_local": [
+          0.0,
+          1.47,
+          1.9602
+        ],
+        "pivot_world": [
+          0.0,
+          1.47,
+          1.9602
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Exhaust",
+        "canonical_part": "Exhaust",
+        "pivot_local": [
+          1.225,
+          1.15,
+          1.8876
+        ],
+        "pivot_world": [
+          1.225,
+          1.15,
+          1.8876
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Markings_Hull",
+        "canonical_part": "Markings_Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD1",
+        "canonical_part": "LOD1",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_Ring_LOD1",
+        "canonical_part": "Turret_Ring",
+        "pivot_local": [
+          0.0,
+          1.5,
+          -0.89
+        ],
+        "pivot_world": [
+          0.0,
+          1.5,
+          -0.89
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1",
+        "canonical_part": "Turret",
+        "pivot_local": [
+          0.0,
+          1.52,
+          -0.89
+        ],
+        "pivot_world": [
+          0.0,
+          1.52,
+          -0.89
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Gun_LOD1",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          0.42,
+          0.93
+        ],
+        "pivot_world": [
+          0.0,
+          1.94,
+          0.04
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Gun_LOD1/Muzzle_LOD1",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          3.95
+        ],
+        "pivot_world": [
+          0.0,
+          1.94,
+          3.99
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Hatch_Commander_LOD1",
+        "canonical_part": "Hatch_Commander",
+        "pivot_local": [
+          0.58,
+          0.81,
+          -0.61
+        ],
+        "pivot_world": [
+          0.58,
+          2.33,
+          -1.5
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Hatch_Loader_LOD1",
+        "canonical_part": "Hatch_Loader",
+        "pivot_local": [
+          -0.55,
+          0.81,
+          -0.81
+        ],
+        "pivot_world": [
+          -0.55,
+          2.33,
+          -1.7
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Gunner_Sight_LOD1",
+        "canonical_part": "Gunner_Sight",
+        "pivot_local": [
+          -0.65,
+          0.79,
+          0.35
+        ],
+        "pivot_world": [
+          -0.65,
+          2.31,
+          -0.54
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Smoke_Launcher_L_LOD1",
+        "canonical_part": "Smoke_Launcher_L",
+        "pivot_local": [
+          -1.18,
+          0.59,
+          0.35
+        ],
+        "pivot_world": [
+          -1.18,
+          2.11,
+          -0.54
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Smoke_Launcher_R_LOD1",
+        "canonical_part": "Smoke_Launcher_R",
+        "pivot_local": [
+          1.18,
+          0.59,
+          0.35
+        ],
+        "pivot_world": [
+          1.18,
+          2.11,
+          -0.54
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Antenna_1_LOD1",
+        "canonical_part": "Antenna_1",
+        "pivot_local": [
+          -0.82,
+          0.79,
+          -0.98
+        ],
+        "pivot_world": [
+          -0.82,
+          2.31,
+          -1.87
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Markings_Turret_LOD1",
+        "canonical_part": "Markings_Turret",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          1.52,
+          -0.89
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L0_LOD1",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          -1.9926
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          -1.9926
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L1_LOD1",
+        "canonical_part": "Wheel_L1",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          -1.3284
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          -1.3284
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L2_LOD1",
+        "canonical_part": "Wheel_L2",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          -0.6642
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          -0.6642
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L3_LOD1",
+        "canonical_part": "Wheel_L3",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          0.0
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L4_LOD1",
+        "canonical_part": "Wheel_L4",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          0.6642
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          0.6642
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L5_LOD1",
+        "canonical_part": "Wheel_L5",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          1.3284
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          1.3284
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L6_LOD1",
+        "canonical_part": "Wheel_L6",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          1.9926
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          1.9926
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Sprocket_L_LOD1",
+        "canonical_part": "Sprocket_L",
+        "pivot_local": [
+          -1.075,
+          0.533,
+          2.6486
+        ],
+        "pivot_world": [
+          -1.075,
+          0.533,
+          2.6486
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Idler_L_LOD1",
+        "canonical_part": "Idler_L",
+        "pivot_local": [
+          -1.075,
+          0.533,
+          -2.6486
+        ],
+        "pivot_world": [
+          -1.075,
+          0.533,
+          -2.6486
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_L0_LOD1",
+        "canonical_part": "Roller_L0",
+        "pivot_local": [
+          -1.075,
+          0.82,
+          -1.558
+        ],
+        "pivot_world": [
+          -1.075,
+          0.82,
+          -1.558
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_L1_LOD1",
+        "canonical_part": "Roller_L1",
+        "pivot_local": [
+          -1.075,
+          0.82,
+          0.0
+        ],
+        "pivot_world": [
+          -1.075,
+          0.82,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_L2_LOD1",
+        "canonical_part": "Roller_L2",
+        "pivot_local": [
+          -1.075,
+          0.82,
+          1.558
+        ],
+        "pivot_world": [
+          -1.075,
+          0.82,
+          1.558
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Track_L_LOD1",
+        "canonical_part": "Track_L",
+        "pivot_local": [
+          -1.075,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          -1.075,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R0_LOD1",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          -1.9926
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          -1.9926
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R1_LOD1",
+        "canonical_part": "Wheel_R1",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          -1.3284
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          -1.3284
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R2_LOD1",
+        "canonical_part": "Wheel_R2",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          -0.6642
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          -0.6642
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R3_LOD1",
+        "canonical_part": "Wheel_R3",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          0.0
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R4_LOD1",
+        "canonical_part": "Wheel_R4",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          0.6642
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          0.6642
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R5_LOD1",
+        "canonical_part": "Wheel_R5",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          1.3284
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          1.3284
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R6_LOD1",
+        "canonical_part": "Wheel_R6",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          1.9926
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          1.9926
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Sprocket_R_LOD1",
+        "canonical_part": "Sprocket_R",
+        "pivot_local": [
+          1.075,
+          0.533,
+          2.6486
+        ],
+        "pivot_world": [
+          1.075,
+          0.533,
+          2.6486
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Idler_R_LOD1",
+        "canonical_part": "Idler_R",
+        "pivot_local": [
+          1.075,
+          0.533,
+          -2.6486
+        ],
+        "pivot_world": [
+          1.075,
+          0.533,
+          -2.6486
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_R0_LOD1",
+        "canonical_part": "Roller_R0",
+        "pivot_local": [
+          1.075,
+          0.82,
+          -1.558
+        ],
+        "pivot_world": [
+          1.075,
+          0.82,
+          -1.558
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_R1_LOD1",
+        "canonical_part": "Roller_R1",
+        "pivot_local": [
+          1.075,
+          0.82,
+          0.0
+        ],
+        "pivot_world": [
+          1.075,
+          0.82,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_R2_LOD1",
+        "canonical_part": "Roller_R2",
+        "pivot_local": [
+          1.075,
+          0.82,
+          1.558
+        ],
+        "pivot_world": [
+          1.075,
+          0.82,
+          1.558
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Track_R_LOD1",
+        "canonical_part": "Track_R",
+        "pivot_local": [
+          1.075,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          1.075,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Engine_Deck_LOD1",
+        "canonical_part": "Engine_Deck",
+        "pivot_local": [
+          0.0,
+          1.47,
+          1.9602
+        ],
+        "pivot_world": [
+          0.0,
+          1.47,
+          1.9602
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Exhaust_LOD1",
+        "canonical_part": "Exhaust",
+        "pivot_local": [
+          1.225,
+          1.15,
+          1.8876
+        ],
+        "pivot_world": [
+          1.225,
+          1.15,
+          1.8876
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Markings_Hull_LOD1",
+        "canonical_part": "Markings_Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "Wreck",
+        "canonical_part": "Wreck",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision",
+        "canonical_part": "collision",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision/Collision_Box",
+        "canonical_part": "Collision_Box",
+        "pivot_local": [
+          0.0,
+          0.71,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.71,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      }
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "notes": "Original Python exterior model, no Blender or source mesh. generate_p3_artillery.py + artillery_parts.py + approved vehicle_parts.py. Actual-size hull and axle layout; named empty hinges with mesh children; metre UVs except Track U (0..1). Small fittings simplified; approximate/representative fields describe ambiguous roster designations. Blank white PBR roles; hidden LOD1 and static dark-role Wreck; hidden hull Collision_Box. LOD1 parts append _LOD1 with canonical_part extras. Wheeled vehicles have axle pivots and no tracks. Turret/Gun/Muzzle exist only with a weapon mount; recovery vehicles expose Boom and Spade. No national symbols or baked colours.",
+    "sources": [
+      {
+        "url": "https://www.trngcmd.marines.mil/Portals/207/Docs/MCIS/ITEP/RITC-East/FM%20100-2-3.pdf",
+        "use": "Vehicle exterior identification and size class; original geometry, no photographs embedded."
+      }
+    ],
+    "validation": {
+      "readback": true,
+      "node_tree_printed": true,
+      "ccw_normals": true,
+      "duplicate_faces": 0,
+      "below_ground_vertices": 0,
+      "track_uv_seams": 4,
+      "canonical_track_vertices": true,
+      "track_shader_phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "pose_checks": [
+        "yaw +90",
+        "gun -8/+20",
+        "recoil .20 m",
+        "all named hinges propagate children",
+        "axle positions and wheel count"
+      ],
+      "lod_limits": [
+        15000,
+        2500
+      ],
+      "external_loaders": [
+        "trimesh 5.1.1",
+        "Godot 4.7.2 GLTFDocument"
+      ],
+      "rendered_views": [
+        "LOD0 front",
+        "LOD0 side",
+        "LOD1 front",
+        "Wreck front"
+      ]
+    },
+    "sha256": "57711fe2fad55268210759445a5b80b4a7c996660e9aa1629d3f65d22e9e58e2",
+    "track_shader_contract": {
+      "canonical_path": {
+        "half": 3.23,
+        "radius": 0.57,
+        "y": 0.65
+      },
+      "mesh_child_scale": [
+        1,
+        0.82,
+        0.82
+      ],
+      "world_loop_length_metres": 13.531161,
+      "description": "Unmodified canonical TrackPath vertices and U, followed by mesh-child YZ scale, exactly as approved P1."
+    }
+  },
+  {
+    "file": "vehicles/artillery__d_30_2s1_captured.glb",
+    "kind": "model",
+    "name": "D-30 / 2S1 (captured)",
+    "priority": "P3",
+    "pilot": false,
+    "approximate": true,
+    "representative_vehicle": "2S1 Gvozdika self-propelled howitzer",
+    "triangles": [
+      12218,
+      1908
+    ],
+    "wreck_triangles": 1852,
+    "collision_triangles": 12,
+    "size": [
+      3.0,
+      3.56007,
+      7.81
+    ],
+    "bounds": [
+      [
+        -1.5,
+        0.0,
+        -3.82
+      ],
+      [
+        1.5,
+        3.56007,
+        3.99
+      ]
+    ],
+    "hull_footprint": [
+      2.85,
+      7.26
+    ],
+    "road_wheels_per_side": 7,
+    "wheel_radius_metres": 0.29,
+    "mobility": "tracked",
+    "has_turret": true,
+    "recognition_features": [
+      "2S1 chosen from combined 2S1/D-30 row",
+      "Seven small road wheels with front sprockets",
+      "low amphibious hull",
+      "rear-mounted shallow welded turret",
+      "122 mm 2A31 howitzer with double-baffle muzzle brake",
+      "bow trim vane and rear access door"
+    ],
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "materials": [
+      "paint",
+      "metal_dark",
+      "rubber",
+      "glass",
+      "markings"
+    ],
+    "nodes": [
+      {
+        "path": "LOD0",
+        "canonical_part": "LOD0",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret_Ring",
+        "canonical_part": "Turret_Ring",
+        "pivot_local": [
+          0.0,
+          1.5,
+          -0.89
+        ],
+        "pivot_world": [
+          0.0,
+          1.5,
+          -0.89
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret",
+        "canonical_part": "Turret",
+        "pivot_local": [
+          0.0,
+          1.52,
+          -0.89
+        ],
+        "pivot_world": [
+          0.0,
+          1.52,
+          -0.89
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Gun",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          0.42,
+          0.93
+        ],
+        "pivot_world": [
+          0.0,
+          1.94,
+          0.04
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Gun/Muzzle",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          3.95
+        ],
+        "pivot_world": [
+          0.0,
+          1.94,
+          3.99
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Hatch_Commander",
+        "canonical_part": "Hatch_Commander",
+        "pivot_local": [
+          0.58,
+          0.81,
+          -0.61
+        ],
+        "pivot_world": [
+          0.58,
+          2.33,
+          -1.5
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Hatch_Loader",
+        "canonical_part": "Hatch_Loader",
+        "pivot_local": [
+          -0.55,
+          0.81,
+          -0.81
+        ],
+        "pivot_world": [
+          -0.55,
+          2.33,
+          -1.7
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Gunner_Sight",
+        "canonical_part": "Gunner_Sight",
+        "pivot_local": [
+          -0.65,
+          0.79,
+          0.35
+        ],
+        "pivot_world": [
+          -0.65,
+          2.31,
+          -0.54
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Smoke_Launcher_L",
+        "canonical_part": "Smoke_Launcher_L",
+        "pivot_local": [
+          -1.18,
+          0.59,
+          0.35
+        ],
+        "pivot_world": [
+          -1.18,
+          2.11,
+          -0.54
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Smoke_Launcher_R",
+        "canonical_part": "Smoke_Launcher_R",
+        "pivot_local": [
+          1.18,
+          0.59,
+          0.35
+        ],
+        "pivot_world": [
+          1.18,
+          2.11,
+          -0.54
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Antenna_1",
+        "canonical_part": "Antenna_1",
+        "pivot_local": [
+          -0.82,
+          0.79,
+          -0.98
+        ],
+        "pivot_world": [
+          -0.82,
+          2.31,
+          -1.87
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Markings_Turret",
+        "canonical_part": "Markings_Turret",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          1.52,
+          -0.89
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L0",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          -1.9926
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          -1.9926
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L1",
+        "canonical_part": "Wheel_L1",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          -1.3284
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          -1.3284
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L2",
+        "canonical_part": "Wheel_L2",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          -0.6642
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          -0.6642
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L3",
+        "canonical_part": "Wheel_L3",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          0.0
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L4",
+        "canonical_part": "Wheel_L4",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          0.6642
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          0.6642
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L5",
+        "canonical_part": "Wheel_L5",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          1.3284
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          1.3284
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L6",
+        "canonical_part": "Wheel_L6",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          1.9926
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          1.9926
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Sprocket_L",
+        "canonical_part": "Sprocket_L",
+        "pivot_local": [
+          -1.075,
+          0.533,
+          2.6486
+        ],
+        "pivot_world": [
+          -1.075,
+          0.533,
+          2.6486
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Idler_L",
+        "canonical_part": "Idler_L",
+        "pivot_local": [
+          -1.075,
+          0.533,
+          -2.6486
+        ],
+        "pivot_world": [
+          -1.075,
+          0.533,
+          -2.6486
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_L0",
+        "canonical_part": "Roller_L0",
+        "pivot_local": [
+          -1.075,
+          0.82,
+          -1.558
+        ],
+        "pivot_world": [
+          -1.075,
+          0.82,
+          -1.558
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_L1",
+        "canonical_part": "Roller_L1",
+        "pivot_local": [
+          -1.075,
+          0.82,
+          0.0
+        ],
+        "pivot_world": [
+          -1.075,
+          0.82,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_L2",
+        "canonical_part": "Roller_L2",
+        "pivot_local": [
+          -1.075,
+          0.82,
+          1.558
+        ],
+        "pivot_world": [
+          -1.075,
+          0.82,
+          1.558
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Track_L",
+        "canonical_part": "Track_L",
+        "pivot_local": [
+          -1.075,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          -1.075,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R0",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          -1.9926
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          -1.9926
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R1",
+        "canonical_part": "Wheel_R1",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          -1.3284
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          -1.3284
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R2",
+        "canonical_part": "Wheel_R2",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          -0.6642
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          -0.6642
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R3",
+        "canonical_part": "Wheel_R3",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          0.0
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R4",
+        "canonical_part": "Wheel_R4",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          0.6642
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          0.6642
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R5",
+        "canonical_part": "Wheel_R5",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          1.3284
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          1.3284
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R6",
+        "canonical_part": "Wheel_R6",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          1.9926
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          1.9926
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Sprocket_R",
+        "canonical_part": "Sprocket_R",
+        "pivot_local": [
+          1.075,
+          0.533,
+          2.6486
+        ],
+        "pivot_world": [
+          1.075,
+          0.533,
+          2.6486
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Idler_R",
+        "canonical_part": "Idler_R",
+        "pivot_local": [
+          1.075,
+          0.533,
+          -2.6486
+        ],
+        "pivot_world": [
+          1.075,
+          0.533,
+          -2.6486
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_R0",
+        "canonical_part": "Roller_R0",
+        "pivot_local": [
+          1.075,
+          0.82,
+          -1.558
+        ],
+        "pivot_world": [
+          1.075,
+          0.82,
+          -1.558
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_R1",
+        "canonical_part": "Roller_R1",
+        "pivot_local": [
+          1.075,
+          0.82,
+          0.0
+        ],
+        "pivot_world": [
+          1.075,
+          0.82,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_R2",
+        "canonical_part": "Roller_R2",
+        "pivot_local": [
+          1.075,
+          0.82,
+          1.558
+        ],
+        "pivot_world": [
+          1.075,
+          0.82,
+          1.558
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Track_R",
+        "canonical_part": "Track_R",
+        "pivot_local": [
+          1.075,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          1.075,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Engine_Deck",
+        "canonical_part": "Engine_Deck",
+        "pivot_local": [
+          0.0,
+          1.47,
+          1.9602
+        ],
+        "pivot_world": [
+          0.0,
+          1.47,
+          1.9602
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Exhaust",
+        "canonical_part": "Exhaust",
+        "pivot_local": [
+          1.225,
+          1.15,
+          1.8876
+        ],
+        "pivot_world": [
+          1.225,
+          1.15,
+          1.8876
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Markings_Hull",
+        "canonical_part": "Markings_Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD1",
+        "canonical_part": "LOD1",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_Ring_LOD1",
+        "canonical_part": "Turret_Ring",
+        "pivot_local": [
+          0.0,
+          1.5,
+          -0.89
+        ],
+        "pivot_world": [
+          0.0,
+          1.5,
+          -0.89
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1",
+        "canonical_part": "Turret",
+        "pivot_local": [
+          0.0,
+          1.52,
+          -0.89
+        ],
+        "pivot_world": [
+          0.0,
+          1.52,
+          -0.89
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Gun_LOD1",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          0.42,
+          0.93
+        ],
+        "pivot_world": [
+          0.0,
+          1.94,
+          0.04
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Gun_LOD1/Muzzle_LOD1",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          3.95
+        ],
+        "pivot_world": [
+          0.0,
+          1.94,
+          3.99
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Hatch_Commander_LOD1",
+        "canonical_part": "Hatch_Commander",
+        "pivot_local": [
+          0.58,
+          0.81,
+          -0.61
+        ],
+        "pivot_world": [
+          0.58,
+          2.33,
+          -1.5
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Hatch_Loader_LOD1",
+        "canonical_part": "Hatch_Loader",
+        "pivot_local": [
+          -0.55,
+          0.81,
+          -0.81
+        ],
+        "pivot_world": [
+          -0.55,
+          2.33,
+          -1.7
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Gunner_Sight_LOD1",
+        "canonical_part": "Gunner_Sight",
+        "pivot_local": [
+          -0.65,
+          0.79,
+          0.35
+        ],
+        "pivot_world": [
+          -0.65,
+          2.31,
+          -0.54
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Smoke_Launcher_L_LOD1",
+        "canonical_part": "Smoke_Launcher_L",
+        "pivot_local": [
+          -1.18,
+          0.59,
+          0.35
+        ],
+        "pivot_world": [
+          -1.18,
+          2.11,
+          -0.54
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Smoke_Launcher_R_LOD1",
+        "canonical_part": "Smoke_Launcher_R",
+        "pivot_local": [
+          1.18,
+          0.59,
+          0.35
+        ],
+        "pivot_world": [
+          1.18,
+          2.11,
+          -0.54
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Antenna_1_LOD1",
+        "canonical_part": "Antenna_1",
+        "pivot_local": [
+          -0.82,
+          0.79,
+          -0.98
+        ],
+        "pivot_world": [
+          -0.82,
+          2.31,
+          -1.87
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Markings_Turret_LOD1",
+        "canonical_part": "Markings_Turret",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          1.52,
+          -0.89
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L0_LOD1",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          -1.9926
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          -1.9926
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L1_LOD1",
+        "canonical_part": "Wheel_L1",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          -1.3284
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          -1.3284
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L2_LOD1",
+        "canonical_part": "Wheel_L2",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          -0.6642
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          -0.6642
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L3_LOD1",
+        "canonical_part": "Wheel_L3",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          0.0
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L4_LOD1",
+        "canonical_part": "Wheel_L4",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          0.6642
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          0.6642
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L5_LOD1",
+        "canonical_part": "Wheel_L5",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          1.3284
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          1.3284
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L6_LOD1",
+        "canonical_part": "Wheel_L6",
+        "pivot_local": [
+          -1.075,
+          0.3966,
+          1.9926
+        ],
+        "pivot_world": [
+          -1.075,
+          0.3966,
+          1.9926
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Sprocket_L_LOD1",
+        "canonical_part": "Sprocket_L",
+        "pivot_local": [
+          -1.075,
+          0.533,
+          2.6486
+        ],
+        "pivot_world": [
+          -1.075,
+          0.533,
+          2.6486
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Idler_L_LOD1",
+        "canonical_part": "Idler_L",
+        "pivot_local": [
+          -1.075,
+          0.533,
+          -2.6486
+        ],
+        "pivot_world": [
+          -1.075,
+          0.533,
+          -2.6486
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_L0_LOD1",
+        "canonical_part": "Roller_L0",
+        "pivot_local": [
+          -1.075,
+          0.82,
+          -1.558
+        ],
+        "pivot_world": [
+          -1.075,
+          0.82,
+          -1.558
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_L1_LOD1",
+        "canonical_part": "Roller_L1",
+        "pivot_local": [
+          -1.075,
+          0.82,
+          0.0
+        ],
+        "pivot_world": [
+          -1.075,
+          0.82,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_L2_LOD1",
+        "canonical_part": "Roller_L2",
+        "pivot_local": [
+          -1.075,
+          0.82,
+          1.558
+        ],
+        "pivot_world": [
+          -1.075,
+          0.82,
+          1.558
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Track_L_LOD1",
+        "canonical_part": "Track_L",
+        "pivot_local": [
+          -1.075,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          -1.075,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R0_LOD1",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          -1.9926
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          -1.9926
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R1_LOD1",
+        "canonical_part": "Wheel_R1",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          -1.3284
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          -1.3284
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R2_LOD1",
+        "canonical_part": "Wheel_R2",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          -0.6642
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          -0.6642
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R3_LOD1",
+        "canonical_part": "Wheel_R3",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          0.0
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R4_LOD1",
+        "canonical_part": "Wheel_R4",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          0.6642
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          0.6642
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R5_LOD1",
+        "canonical_part": "Wheel_R5",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          1.3284
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          1.3284
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R6_LOD1",
+        "canonical_part": "Wheel_R6",
+        "pivot_local": [
+          1.075,
+          0.3966,
+          1.9926
+        ],
+        "pivot_world": [
+          1.075,
+          0.3966,
+          1.9926
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Sprocket_R_LOD1",
+        "canonical_part": "Sprocket_R",
+        "pivot_local": [
+          1.075,
+          0.533,
+          2.6486
+        ],
+        "pivot_world": [
+          1.075,
+          0.533,
+          2.6486
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Idler_R_LOD1",
+        "canonical_part": "Idler_R",
+        "pivot_local": [
+          1.075,
+          0.533,
+          -2.6486
+        ],
+        "pivot_world": [
+          1.075,
+          0.533,
+          -2.6486
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_R0_LOD1",
+        "canonical_part": "Roller_R0",
+        "pivot_local": [
+          1.075,
+          0.82,
+          -1.558
+        ],
+        "pivot_world": [
+          1.075,
+          0.82,
+          -1.558
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_R1_LOD1",
+        "canonical_part": "Roller_R1",
+        "pivot_local": [
+          1.075,
+          0.82,
+          0.0
+        ],
+        "pivot_world": [
+          1.075,
+          0.82,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_R2_LOD1",
+        "canonical_part": "Roller_R2",
+        "pivot_local": [
+          1.075,
+          0.82,
+          1.558
+        ],
+        "pivot_world": [
+          1.075,
+          0.82,
+          1.558
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Track_R_LOD1",
+        "canonical_part": "Track_R",
+        "pivot_local": [
+          1.075,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          1.075,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Engine_Deck_LOD1",
+        "canonical_part": "Engine_Deck",
+        "pivot_local": [
+          0.0,
+          1.47,
+          1.9602
+        ],
+        "pivot_world": [
+          0.0,
+          1.47,
+          1.9602
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Exhaust_LOD1",
+        "canonical_part": "Exhaust",
+        "pivot_local": [
+          1.225,
+          1.15,
+          1.8876
+        ],
+        "pivot_world": [
+          1.225,
+          1.15,
+          1.8876
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Markings_Hull_LOD1",
+        "canonical_part": "Markings_Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "Wreck",
+        "canonical_part": "Wreck",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision",
+        "canonical_part": "collision",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision/Collision_Box",
+        "canonical_part": "Collision_Box",
+        "pivot_local": [
+          0.0,
+          0.71,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.71,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      }
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "notes": "Original Python exterior model, no Blender or source mesh. generate_p3_artillery.py + artillery_parts.py + approved vehicle_parts.py. Actual-size hull and axle layout; named empty hinges with mesh children; metre UVs except Track U (0..1). Small fittings simplified; approximate/representative fields describe ambiguous roster designations. Blank white PBR roles; hidden LOD1 and static dark-role Wreck; hidden hull Collision_Box. LOD1 parts append _LOD1 with canonical_part extras. Wheeled vehicles have axle pivots and no tracks. Turret/Gun/Muzzle exist only with a weapon mount; recovery vehicles expose Boom and Spade. No national symbols or baked colours.",
+    "sources": [
+      {
+        "url": "https://www.trngcmd.marines.mil/Portals/207/Docs/MCIS/ITEP/RITC-East/FM%20100-2-3.pdf",
+        "use": "Vehicle exterior identification and size class; original geometry, no photographs embedded."
+      }
+    ],
+    "validation": {
+      "readback": true,
+      "node_tree_printed": true,
+      "ccw_normals": true,
+      "duplicate_faces": 0,
+      "below_ground_vertices": 0,
+      "track_uv_seams": 4,
+      "canonical_track_vertices": true,
+      "track_shader_phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "pose_checks": [
+        "yaw +90",
+        "gun -8/+20",
+        "recoil .20 m",
+        "all named hinges propagate children",
+        "axle positions and wheel count"
+      ],
+      "lod_limits": [
+        15000,
+        2500
+      ],
+      "external_loaders": [
+        "trimesh 5.1.1",
+        "Godot 4.7.2 GLTFDocument"
+      ],
+      "rendered_views": [
+        "LOD0 front",
+        "LOD0 side",
+        "LOD1 front",
+        "Wreck front"
+      ]
+    },
+    "sha256": "9f951e24a2f5a7ba91518b45f4d60e9735f2df3b0745542dd95b6697ff1df1c2",
+    "track_shader_contract": {
+      "canonical_path": {
+        "half": 3.23,
+        "radius": 0.57,
+        "y": 0.65
+      },
+      "mesh_child_scale": [
+        1,
+        0.82,
+        0.82
+      ],
+      "world_loop_length_metres": 13.531161,
+      "description": "Unmodified canonical TrackPath vertices and U, followed by mesh-child YZ scale, exactly as approved P1."
+    }
+  },
+  {
+    "file": "vehicles/artillery__d_30_m109a5.glb",
+    "kind": "model",
+    "name": "D-30 / M109A5",
+    "priority": "P3",
+    "pilot": false,
+    "approximate": true,
+    "representative_vehicle": "M109A5",
+    "triangles": [
+      12266,
+      2172
+    ],
+    "wreck_triangles": 2076,
+    "collision_triangles": 12,
+    "size": [
+      3.216,
+      3.76011,
+      9.395
+    ],
+    "bounds": [
+      [
+        -1.608,
+        0.0,
+        -3.58
+      ],
+      [
+        1.608,
+        3.76011,
+        5.815
+      ]
+    ],
+    "hull_footprint": [
+      3.15,
+      6.61
+    ],
+    "road_wheels_per_side": 7,
+    "wheel_radius_metres": 0.31,
+    "mobility": "tracked",
+    "has_turret": true,
+    "recognition_features": [
+      "M109A5 selected from combined D-30/M109A5 roster designation",
+      "Seven small road wheels",
+      "155 mm M284 L/39 barrel",
+      "compact chamfered aluminium turret",
+      "large rear ammunition door",
+      "paired hinged rear anchoring spades"
+    ],
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "materials": [
+      "paint",
+      "metal_dark",
+      "rubber",
+      "glass",
+      "markings"
+    ],
+    "nodes": [
+      {
+        "path": "LOD0",
+        "canonical_part": "LOD0",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L0",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          -1.9926
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          -1.9926
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L1",
+        "canonical_part": "Wheel_L1",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          -1.3284
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          -1.3284
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L2",
+        "canonical_part": "Wheel_L2",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          -0.6642
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          -0.6642
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L3",
+        "canonical_part": "Wheel_L3",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          0.0
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L4",
+        "canonical_part": "Wheel_L4",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          0.6642
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          0.6642
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L5",
+        "canonical_part": "Wheel_L5",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          1.3284
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          1.3284
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L6",
+        "canonical_part": "Wheel_L6",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          1.9926
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          1.9926
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Sprocket_L",
+        "canonical_part": "Sprocket_L",
+        "pivot_local": [
+          -1.225,
+          0.533,
+          2.6486
+        ],
+        "pivot_world": [
+          -1.225,
+          0.533,
+          2.6486
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Idler_L",
+        "canonical_part": "Idler_L",
+        "pivot_local": [
+          -1.225,
+          0.533,
+          -2.6486
+        ],
+        "pivot_world": [
+          -1.225,
+          0.533,
+          -2.6486
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_L0",
+        "canonical_part": "Roller_L0",
+        "pivot_local": [
+          -1.225,
+          0.82,
+          -1.558
+        ],
+        "pivot_world": [
+          -1.225,
+          0.82,
+          -1.558
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_L1",
+        "canonical_part": "Roller_L1",
+        "pivot_local": [
+          -1.225,
+          0.82,
+          0.0
+        ],
+        "pivot_world": [
+          -1.225,
+          0.82,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_L2",
+        "canonical_part": "Roller_L2",
+        "pivot_local": [
+          -1.225,
+          0.82,
+          1.558
+        ],
+        "pivot_world": [
+          -1.225,
+          0.82,
+          1.558
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Track_L",
+        "canonical_part": "Track_L",
+        "pivot_local": [
+          -1.225,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          -1.225,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R0",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          -1.9926
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          -1.9926
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R1",
+        "canonical_part": "Wheel_R1",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          -1.3284
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          -1.3284
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R2",
+        "canonical_part": "Wheel_R2",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          -0.6642
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          -0.6642
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R3",
+        "canonical_part": "Wheel_R3",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          0.0
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R4",
+        "canonical_part": "Wheel_R4",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          0.6642
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          0.6642
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R5",
+        "canonical_part": "Wheel_R5",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          1.3284
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          1.3284
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R6",
+        "canonical_part": "Wheel_R6",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          1.9926
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          1.9926
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Sprocket_R",
+        "canonical_part": "Sprocket_R",
+        "pivot_local": [
+          1.225,
+          0.533,
+          2.6486
+        ],
+        "pivot_world": [
+          1.225,
+          0.533,
+          2.6486
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Idler_R",
+        "canonical_part": "Idler_R",
+        "pivot_local": [
+          1.225,
+          0.533,
+          -2.6486
+        ],
+        "pivot_world": [
+          1.225,
+          0.533,
+          -2.6486
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_R0",
+        "canonical_part": "Roller_R0",
+        "pivot_local": [
+          1.225,
+          0.82,
+          -1.558
+        ],
+        "pivot_world": [
+          1.225,
+          0.82,
+          -1.558
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_R1",
+        "canonical_part": "Roller_R1",
+        "pivot_local": [
+          1.225,
+          0.82,
+          0.0
+        ],
+        "pivot_world": [
+          1.225,
+          0.82,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_R2",
+        "canonical_part": "Roller_R2",
+        "pivot_local": [
+          1.225,
+          0.82,
+          1.558
+        ],
+        "pivot_world": [
+          1.225,
+          0.82,
+          1.558
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Track_R",
+        "canonical_part": "Track_R",
+        "pivot_local": [
+          1.225,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          1.225,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret",
+        "canonical_part": "Turret",
+        "pivot_local": [
+          0.0,
+          1.53,
+          -0.52
+        ],
+        "pivot_world": [
+          0.0,
+          1.53,
+          -0.52
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Hatch_Commander",
+        "canonical_part": "Hatch_Commander",
+        "pivot_local": [
+          -0.5,
+          1.13,
+          -0.56
+        ],
+        "pivot_world": [
+          -0.5,
+          2.66,
+          -1.08
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Gunner_Sight",
+        "canonical_part": "Gunner_Sight",
+        "pivot_local": [
+          -0.48,
+          1.13,
+          0.48
+        ],
+        "pivot_world": [
+          -0.48,
+          2.66,
+          -0.04
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Commander_MG",
+        "canonical_part": "Commander_MG",
+        "pivot_local": [
+          -0.04,
+          1.33,
+          -0.25
+        ],
+        "pivot_world": [
+          -0.04,
+          2.86,
+          -0.77
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Antenna_1",
+        "canonical_part": "Antenna_1",
+        "pivot_local": [
+          0.675,
+          1.13,
+          -0.987
+        ],
+        "pivot_world": [
+          0.675,
+          2.66,
+          -1.507
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Gun",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          0.54,
+          1.24
+        ],
+        "pivot_world": [
+          0.0,
+          2.07,
+          0.72
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Gun/Muzzle",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          5.095
+        ],
+        "pivot_world": [
+          0.0,
+          2.07,
+          5.815
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Spade_L",
+        "canonical_part": "Spade_L",
+        "pivot_local": [
+          -0.945,
+          1.1,
+          -3.285
+        ],
+        "pivot_world": [
+          -0.945,
+          1.1,
+          -3.285
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Spade_R",
+        "canonical_part": "Spade_R",
+        "pivot_local": [
+          0.945,
+          1.1,
+          -3.285
+        ],
+        "pivot_world": [
+          0.945,
+          1.1,
+          -3.285
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Engine_Deck",
+        "canonical_part": "Engine_Deck",
+        "pivot_local": [
+          0.48,
+          1.47,
+          1.5864
+        ],
+        "pivot_world": [
+          0.48,
+          1.47,
+          1.5864
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Exhaust",
+        "canonical_part": "Exhaust",
+        "pivot_local": [
+          1.375,
+          1.21,
+          1.5864
+        ],
+        "pivot_world": [
+          1.375,
+          1.21,
+          1.5864
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD1",
+        "canonical_part": "LOD1",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L0_LOD1",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          -1.9926
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          -1.9926
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L1_LOD1",
+        "canonical_part": "Wheel_L1",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          -1.3284
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          -1.3284
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L2_LOD1",
+        "canonical_part": "Wheel_L2",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          -0.6642
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          -0.6642
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L3_LOD1",
+        "canonical_part": "Wheel_L3",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          0.0
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L4_LOD1",
+        "canonical_part": "Wheel_L4",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          0.6642
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          0.6642
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L5_LOD1",
+        "canonical_part": "Wheel_L5",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          1.3284
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          1.3284
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L6_LOD1",
+        "canonical_part": "Wheel_L6",
+        "pivot_local": [
+          -1.225,
+          0.4166,
+          1.9926
+        ],
+        "pivot_world": [
+          -1.225,
+          0.4166,
+          1.9926
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Sprocket_L_LOD1",
+        "canonical_part": "Sprocket_L",
+        "pivot_local": [
+          -1.225,
+          0.533,
+          2.6486
+        ],
+        "pivot_world": [
+          -1.225,
+          0.533,
+          2.6486
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Idler_L_LOD1",
+        "canonical_part": "Idler_L",
+        "pivot_local": [
+          -1.225,
+          0.533,
+          -2.6486
+        ],
+        "pivot_world": [
+          -1.225,
+          0.533,
+          -2.6486
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_L0_LOD1",
+        "canonical_part": "Roller_L0",
+        "pivot_local": [
+          -1.225,
+          0.82,
+          -1.558
+        ],
+        "pivot_world": [
+          -1.225,
+          0.82,
+          -1.558
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_L1_LOD1",
+        "canonical_part": "Roller_L1",
+        "pivot_local": [
+          -1.225,
+          0.82,
+          0.0
+        ],
+        "pivot_world": [
+          -1.225,
+          0.82,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_L2_LOD1",
+        "canonical_part": "Roller_L2",
+        "pivot_local": [
+          -1.225,
+          0.82,
+          1.558
+        ],
+        "pivot_world": [
+          -1.225,
+          0.82,
+          1.558
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Track_L_LOD1",
+        "canonical_part": "Track_L",
+        "pivot_local": [
+          -1.225,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          -1.225,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R0_LOD1",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          -1.9926
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          -1.9926
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R1_LOD1",
+        "canonical_part": "Wheel_R1",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          -1.3284
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          -1.3284
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R2_LOD1",
+        "canonical_part": "Wheel_R2",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          -0.6642
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          -0.6642
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R3_LOD1",
+        "canonical_part": "Wheel_R3",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          0.0
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R4_LOD1",
+        "canonical_part": "Wheel_R4",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          0.6642
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          0.6642
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R5_LOD1",
+        "canonical_part": "Wheel_R5",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          1.3284
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          1.3284
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R6_LOD1",
+        "canonical_part": "Wheel_R6",
+        "pivot_local": [
+          1.225,
+          0.4166,
+          1.9926
+        ],
+        "pivot_world": [
+          1.225,
+          0.4166,
+          1.9926
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Sprocket_R_LOD1",
+        "canonical_part": "Sprocket_R",
+        "pivot_local": [
+          1.225,
+          0.533,
+          2.6486
+        ],
+        "pivot_world": [
+          1.225,
+          0.533,
+          2.6486
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Idler_R_LOD1",
+        "canonical_part": "Idler_R",
+        "pivot_local": [
+          1.225,
+          0.533,
+          -2.6486
+        ],
+        "pivot_world": [
+          1.225,
+          0.533,
+          -2.6486
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_R0_LOD1",
+        "canonical_part": "Roller_R0",
+        "pivot_local": [
+          1.225,
+          0.82,
+          -1.558
+        ],
+        "pivot_world": [
+          1.225,
+          0.82,
+          -1.558
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_R1_LOD1",
+        "canonical_part": "Roller_R1",
+        "pivot_local": [
+          1.225,
+          0.82,
+          0.0
+        ],
+        "pivot_world": [
+          1.225,
+          0.82,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_R2_LOD1",
+        "canonical_part": "Roller_R2",
+        "pivot_local": [
+          1.225,
+          0.82,
+          1.558
+        ],
+        "pivot_world": [
+          1.225,
+          0.82,
+          1.558
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Track_R_LOD1",
+        "canonical_part": "Track_R",
+        "pivot_local": [
+          1.225,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          1.225,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1",
+        "canonical_part": "Turret",
+        "pivot_local": [
+          0.0,
+          1.53,
+          -0.52
+        ],
+        "pivot_world": [
+          0.0,
+          1.53,
+          -0.52
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Hatch_Commander_LOD1",
+        "canonical_part": "Hatch_Commander",
+        "pivot_local": [
+          -0.5,
+          1.13,
+          -0.56
+        ],
+        "pivot_world": [
+          -0.5,
+          2.66,
+          -1.08
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Gunner_Sight_LOD1",
+        "canonical_part": "Gunner_Sight",
+        "pivot_local": [
+          -0.48,
+          1.13,
+          0.48
+        ],
+        "pivot_world": [
+          -0.48,
+          2.66,
+          -0.04
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Commander_MG_LOD1",
+        "canonical_part": "Commander_MG",
+        "pivot_local": [
+          -0.04,
+          1.33,
+          -0.25
+        ],
+        "pivot_world": [
+          -0.04,
+          2.86,
+          -0.77
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Antenna_1_LOD1",
+        "canonical_part": "Antenna_1",
+        "pivot_local": [
+          0.675,
+          1.13,
+          -0.987
+        ],
+        "pivot_world": [
+          0.675,
+          2.66,
+          -1.507
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Gun_LOD1",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          0.54,
+          1.24
+        ],
+        "pivot_world": [
+          0.0,
+          2.07,
+          0.72
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Gun_LOD1/Muzzle_LOD1",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          5.095
+        ],
+        "pivot_world": [
+          0.0,
+          2.07,
+          5.815
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Spade_L_LOD1",
+        "canonical_part": "Spade_L",
+        "pivot_local": [
+          -0.945,
+          1.1,
+          -3.285
+        ],
+        "pivot_world": [
+          -0.945,
+          1.1,
+          -3.285
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Spade_R_LOD1",
+        "canonical_part": "Spade_R",
+        "pivot_local": [
+          0.945,
+          1.1,
+          -3.285
+        ],
+        "pivot_world": [
+          0.945,
+          1.1,
+          -3.285
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Engine_Deck_LOD1",
+        "canonical_part": "Engine_Deck",
+        "pivot_local": [
+          0.48,
+          1.47,
+          1.5864
+        ],
+        "pivot_world": [
+          0.48,
+          1.47,
+          1.5864
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Exhaust_LOD1",
+        "canonical_part": "Exhaust",
+        "pivot_local": [
+          1.375,
+          1.21,
+          1.5864
+        ],
+        "pivot_world": [
+          1.375,
+          1.21,
+          1.5864
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "Wreck",
+        "canonical_part": "Wreck",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision",
+        "canonical_part": "collision",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision/Collision_Box",
+        "canonical_part": "Collision_Box",
+        "pivot_local": [
+          0.0,
+          0.715,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.715,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      }
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "notes": "Original Python exterior model, no Blender or source mesh. generate_p3_artillery.py + artillery_parts.py + approved vehicle_parts.py. Actual-size hull and axle layout; named empty hinges with mesh children; metre UVs except Track U (0..1). Small fittings simplified; approximate/representative fields describe ambiguous roster designations. Blank white PBR roles; hidden LOD1 and static dark-role Wreck; hidden hull Collision_Box. LOD1 parts append _LOD1 with canonical_part extras. Wheeled vehicles have axle pivots and no tracks. Turret/Gun/Muzzle exist only with a weapon mount; recovery vehicles expose Boom and Spade. No national symbols or baked colours.",
+    "sources": [
+      {
+        "url": "https://www.trngcmd.marines.mil/Portals/207/Docs/MCIS/ITEP/RITC-East/FM%20100-2-3.pdf",
+        "use": "Vehicle exterior identification and size class; original geometry, no photographs embedded."
+      }
+    ],
+    "validation": {
+      "readback": true,
+      "node_tree_printed": true,
+      "ccw_normals": true,
+      "duplicate_faces": 0,
+      "below_ground_vertices": 0,
+      "track_uv_seams": 4,
+      "canonical_track_vertices": true,
+      "track_shader_phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "pose_checks": [
+        "yaw +90",
+        "gun -8/+20",
+        "recoil .20 m",
+        "all named hinges propagate children",
+        "axle positions and wheel count"
+      ],
+      "lod_limits": [
+        15000,
+        2500
+      ],
+      "external_loaders": [
+        "trimesh 5.1.1",
+        "Godot 4.7.2 GLTFDocument"
+      ],
+      "rendered_views": [
+        "LOD0 front",
+        "LOD0 side",
+        "LOD1 front",
+        "Wreck front"
+      ]
+    },
+    "sha256": "52b09e78d149d07e909ab5f5bded11e21a9f3789883497aa02ae6489542b1677",
+    "track_shader_contract": {
+      "canonical_path": {
+        "half": 3.23,
+        "radius": 0.57,
+        "y": 0.65
+      },
+      "mesh_child_scale": [
+        1,
+        0.82,
+        0.82
+      ],
+      "world_loop_length_metres": 13.531161,
+      "description": "Unmodified canonical TrackPath vertices and U, followed by mesh-child YZ scale, exactly as approved P1."
+    }
+  },
+  {
+    "file": "vehicles/artillery__m1989_koksan.glb",
+    "kind": "model",
+    "name": "M1989 Koksan",
+    "priority": "P3",
+    "pilot": false,
+    "approximate": true,
+    "representative_vehicle": "M1989 Koksan; public exterior dimensions approximated",
+    "triangles": [
+      11170,
+      1840
+    ],
+    "wreck_triangles": 1792,
+    "collision_triangles": 12,
+    "size": [
+      3.23,
+      2.508,
+      12.555
+    ],
+    "bounds": [
+      [
+        -1.615,
+        0.0,
+        -4.655
+      ],
+      [
+        1.615,
+        2.508,
+        7.9
+      ]
+    ],
+    "hull_footprint": [
+      3.27,
+      9.0
+    ],
+    "road_wheels_per_side": 6,
+    "wheel_radius_metres": 0.4,
+    "mobility": "tracked",
+    "has_turret": true,
+    "recognition_features": [
+      "Six road wheels and front sprockets",
+      "170 mm long open-mounted gun",
+      "low forward crew compartment",
+      "rear trunnion support with narrow traverse",
+      "onboard ammunition side lockers",
+      "wide rear recoil spade"
+    ],
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "materials": [
+      "paint",
+      "metal_dark",
+      "rubber",
+      "glass",
+      "markings"
+    ],
+    "nodes": [
+      {
+        "path": "LOD0",
+        "canonical_part": "LOD0",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L0",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.285,
+          0.5391,
+          -2.6001
+        ],
+        "pivot_world": [
+          -1.285,
+          0.5391,
+          -2.6001
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L1",
+        "canonical_part": "Wheel_L1",
+        "pivot_local": [
+          -1.285,
+          0.5391,
+          -1.56006
+        ],
+        "pivot_world": [
+          -1.285,
+          0.5391,
+          -1.56006
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L2",
+        "canonical_part": "Wheel_L2",
+        "pivot_local": [
+          -1.285,
+          0.5391,
+          -0.52002
+        ],
+        "pivot_world": [
+          -1.285,
+          0.5391,
+          -0.52002
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L3",
+        "canonical_part": "Wheel_L3",
+        "pivot_local": [
+          -1.285,
+          0.5391,
+          0.52002
+        ],
+        "pivot_world": [
+          -1.285,
+          0.5391,
+          0.52002
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L4",
+        "canonical_part": "Wheel_L4",
+        "pivot_local": [
+          -1.285,
+          0.5391,
+          1.56006
+        ],
+        "pivot_world": [
+          -1.285,
+          0.5391,
+          1.56006
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L5",
+        "canonical_part": "Wheel_L5",
+        "pivot_local": [
+          -1.285,
+          0.5391,
+          2.6001
+        ],
+        "pivot_world": [
+          -1.285,
+          0.5391,
+          2.6001
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Sprocket_L",
+        "canonical_part": "Sprocket_L",
+        "pivot_local": [
+          -1.285,
+          0.6955,
+          3.4561
+        ],
+        "pivot_world": [
+          -1.285,
+          0.6955,
+          3.4561
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Idler_L",
+        "canonical_part": "Idler_L",
+        "pivot_local": [
+          -1.285,
+          0.6955,
+          -3.4561
+        ],
+        "pivot_world": [
+          -1.285,
+          0.6955,
+          -3.4561
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_L0",
+        "canonical_part": "Roller_L0",
+        "pivot_local": [
+          -1.285,
+          1.07,
+          -2.033
+        ],
+        "pivot_world": [
+          -1.285,
+          1.07,
+          -2.033
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_L1",
+        "canonical_part": "Roller_L1",
+        "pivot_local": [
+          -1.285,
+          1.07,
+          0.0
+        ],
+        "pivot_world": [
+          -1.285,
+          1.07,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_L2",
+        "canonical_part": "Roller_L2",
+        "pivot_local": [
+          -1.285,
+          1.07,
+          2.033
+        ],
+        "pivot_world": [
+          -1.285,
+          1.07,
+          2.033
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Track_L",
+        "canonical_part": "Track_L",
+        "pivot_local": [
+          -1.285,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          -1.285,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R0",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.285,
+          0.5391,
+          -2.6001
+        ],
+        "pivot_world": [
+          1.285,
+          0.5391,
+          -2.6001
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R1",
+        "canonical_part": "Wheel_R1",
+        "pivot_local": [
+          1.285,
+          0.5391,
+          -1.56006
+        ],
+        "pivot_world": [
+          1.285,
+          0.5391,
+          -1.56006
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R2",
+        "canonical_part": "Wheel_R2",
+        "pivot_local": [
+          1.285,
+          0.5391,
+          -0.52002
+        ],
+        "pivot_world": [
+          1.285,
+          0.5391,
+          -0.52002
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R3",
+        "canonical_part": "Wheel_R3",
+        "pivot_local": [
+          1.285,
+          0.5391,
+          0.52002
+        ],
+        "pivot_world": [
+          1.285,
+          0.5391,
+          0.52002
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R4",
+        "canonical_part": "Wheel_R4",
+        "pivot_local": [
+          1.285,
+          0.5391,
+          1.56006
+        ],
+        "pivot_world": [
+          1.285,
+          0.5391,
+          1.56006
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R5",
+        "canonical_part": "Wheel_R5",
+        "pivot_local": [
+          1.285,
+          0.5391,
+          2.6001
+        ],
+        "pivot_world": [
+          1.285,
+          0.5391,
+          2.6001
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Sprocket_R",
+        "canonical_part": "Sprocket_R",
+        "pivot_local": [
+          1.285,
+          0.6955,
+          3.4561
+        ],
+        "pivot_world": [
+          1.285,
+          0.6955,
+          3.4561
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Idler_R",
+        "canonical_part": "Idler_R",
+        "pivot_local": [
+          1.285,
+          0.6955,
+          -3.4561
+        ],
+        "pivot_world": [
+          1.285,
+          0.6955,
+          -3.4561
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_R0",
+        "canonical_part": "Roller_R0",
+        "pivot_local": [
+          1.285,
+          1.07,
+          -2.033
+        ],
+        "pivot_world": [
+          1.285,
+          1.07,
+          -2.033
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_R1",
+        "canonical_part": "Roller_R1",
+        "pivot_local": [
+          1.285,
+          1.07,
+          0.0
+        ],
+        "pivot_world": [
+          1.285,
+          1.07,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Roller_R2",
+        "canonical_part": "Roller_R2",
+        "pivot_local": [
+          1.285,
+          1.07,
+          2.033
+        ],
+        "pivot_world": [
+          1.285,
+          1.07,
+          2.033
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Track_R",
+        "canonical_part": "Track_R",
+        "pivot_local": [
+          1.285,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          1.285,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret",
+        "canonical_part": "Turret",
+        "pivot_local": [
+          0.0,
+          1.61,
+          -2.72
+        ],
+        "pivot_world": [
+          0.0,
+          1.61,
+          -2.72
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Gun",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          0.63,
+          0.54
+        ],
+        "pivot_world": [
+          0.0,
+          2.24,
+          -2.18
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Gun/Muzzle",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          10.08
+        ],
+        "pivot_world": [
+          0.0,
+          2.24,
+          7.9
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Spade",
+        "canonical_part": "Spade",
+        "pivot_local": [
+          0.0,
+          1.0,
+          -4.28
+        ],
+        "pivot_world": [
+          0.0,
+          1.0,
+          -4.28
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Engine_Deck",
+        "canonical_part": "Engine_Deck",
+        "pivot_local": [
+          0.65,
+          2.02,
+          2.92
+        ],
+        "pivot_world": [
+          0.65,
+          2.02,
+          2.92
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Exhaust",
+        "canonical_part": "Exhaust",
+        "pivot_local": [
+          1.37,
+          1.57,
+          2.56
+        ],
+        "pivot_world": [
+          1.37,
+          1.57,
+          2.56
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD1",
+        "canonical_part": "LOD1",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L0_LOD1",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.285,
+          0.5391,
+          -2.6001
+        ],
+        "pivot_world": [
+          -1.285,
+          0.5391,
+          -2.6001
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L1_LOD1",
+        "canonical_part": "Wheel_L1",
+        "pivot_local": [
+          -1.285,
+          0.5391,
+          -1.56006
+        ],
+        "pivot_world": [
+          -1.285,
+          0.5391,
+          -1.56006
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L2_LOD1",
+        "canonical_part": "Wheel_L2",
+        "pivot_local": [
+          -1.285,
+          0.5391,
+          -0.52002
+        ],
+        "pivot_world": [
+          -1.285,
+          0.5391,
+          -0.52002
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L3_LOD1",
+        "canonical_part": "Wheel_L3",
+        "pivot_local": [
+          -1.285,
+          0.5391,
+          0.52002
+        ],
+        "pivot_world": [
+          -1.285,
+          0.5391,
+          0.52002
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L4_LOD1",
+        "canonical_part": "Wheel_L4",
+        "pivot_local": [
+          -1.285,
+          0.5391,
+          1.56006
+        ],
+        "pivot_world": [
+          -1.285,
+          0.5391,
+          1.56006
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L5_LOD1",
+        "canonical_part": "Wheel_L5",
+        "pivot_local": [
+          -1.285,
+          0.5391,
+          2.6001
+        ],
+        "pivot_world": [
+          -1.285,
+          0.5391,
+          2.6001
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Sprocket_L_LOD1",
+        "canonical_part": "Sprocket_L",
+        "pivot_local": [
+          -1.285,
+          0.6955,
+          3.4561
+        ],
+        "pivot_world": [
+          -1.285,
+          0.6955,
+          3.4561
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Idler_L_LOD1",
+        "canonical_part": "Idler_L",
+        "pivot_local": [
+          -1.285,
+          0.6955,
+          -3.4561
+        ],
+        "pivot_world": [
+          -1.285,
+          0.6955,
+          -3.4561
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_L0_LOD1",
+        "canonical_part": "Roller_L0",
+        "pivot_local": [
+          -1.285,
+          1.07,
+          -2.033
+        ],
+        "pivot_world": [
+          -1.285,
+          1.07,
+          -2.033
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_L1_LOD1",
+        "canonical_part": "Roller_L1",
+        "pivot_local": [
+          -1.285,
+          1.07,
+          0.0
+        ],
+        "pivot_world": [
+          -1.285,
+          1.07,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_L2_LOD1",
+        "canonical_part": "Roller_L2",
+        "pivot_local": [
+          -1.285,
+          1.07,
+          2.033
+        ],
+        "pivot_world": [
+          -1.285,
+          1.07,
+          2.033
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Track_L_LOD1",
+        "canonical_part": "Track_L",
+        "pivot_local": [
+          -1.285,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          -1.285,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R0_LOD1",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.285,
+          0.5391,
+          -2.6001
+        ],
+        "pivot_world": [
+          1.285,
+          0.5391,
+          -2.6001
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R1_LOD1",
+        "canonical_part": "Wheel_R1",
+        "pivot_local": [
+          1.285,
+          0.5391,
+          -1.56006
+        ],
+        "pivot_world": [
+          1.285,
+          0.5391,
+          -1.56006
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R2_LOD1",
+        "canonical_part": "Wheel_R2",
+        "pivot_local": [
+          1.285,
+          0.5391,
+          -0.52002
+        ],
+        "pivot_world": [
+          1.285,
+          0.5391,
+          -0.52002
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R3_LOD1",
+        "canonical_part": "Wheel_R3",
+        "pivot_local": [
+          1.285,
+          0.5391,
+          0.52002
+        ],
+        "pivot_world": [
+          1.285,
+          0.5391,
+          0.52002
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R4_LOD1",
+        "canonical_part": "Wheel_R4",
+        "pivot_local": [
+          1.285,
+          0.5391,
+          1.56006
+        ],
+        "pivot_world": [
+          1.285,
+          0.5391,
+          1.56006
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R5_LOD1",
+        "canonical_part": "Wheel_R5",
+        "pivot_local": [
+          1.285,
+          0.5391,
+          2.6001
+        ],
+        "pivot_world": [
+          1.285,
+          0.5391,
+          2.6001
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Sprocket_R_LOD1",
+        "canonical_part": "Sprocket_R",
+        "pivot_local": [
+          1.285,
+          0.6955,
+          3.4561
+        ],
+        "pivot_world": [
+          1.285,
+          0.6955,
+          3.4561
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Idler_R_LOD1",
+        "canonical_part": "Idler_R",
+        "pivot_local": [
+          1.285,
+          0.6955,
+          -3.4561
+        ],
+        "pivot_world": [
+          1.285,
+          0.6955,
+          -3.4561
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_R0_LOD1",
+        "canonical_part": "Roller_R0",
+        "pivot_local": [
+          1.285,
+          1.07,
+          -2.033
+        ],
+        "pivot_world": [
+          1.285,
+          1.07,
+          -2.033
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_R1_LOD1",
+        "canonical_part": "Roller_R1",
+        "pivot_local": [
+          1.285,
+          1.07,
+          0.0
+        ],
+        "pivot_world": [
+          1.285,
+          1.07,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Roller_R2_LOD1",
+        "canonical_part": "Roller_R2",
+        "pivot_local": [
+          1.285,
+          1.07,
+          2.033
+        ],
+        "pivot_world": [
+          1.285,
+          1.07,
+          2.033
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Track_R_LOD1",
+        "canonical_part": "Track_R",
+        "pivot_local": [
+          1.285,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          1.285,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1",
+        "canonical_part": "Turret",
+        "pivot_local": [
+          0.0,
+          1.61,
+          -2.72
+        ],
+        "pivot_world": [
+          0.0,
+          1.61,
+          -2.72
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Gun_LOD1",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          0.63,
+          0.54
+        ],
+        "pivot_world": [
+          0.0,
+          2.24,
+          -2.18
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Gun_LOD1/Muzzle_LOD1",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          10.08
+        ],
+        "pivot_world": [
+          0.0,
+          2.24,
+          7.9
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Spade_LOD1",
+        "canonical_part": "Spade",
+        "pivot_local": [
+          0.0,
+          1.0,
+          -4.28
+        ],
+        "pivot_world": [
+          0.0,
+          1.0,
+          -4.28
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Engine_Deck_LOD1",
+        "canonical_part": "Engine_Deck",
+        "pivot_local": [
+          0.65,
+          2.02,
+          2.92
+        ],
+        "pivot_world": [
+          0.65,
+          2.02,
+          2.92
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Exhaust_LOD1",
+        "canonical_part": "Exhaust",
+        "pivot_local": [
+          1.37,
+          1.57,
+          2.56
+        ],
+        "pivot_world": [
+          1.37,
+          1.57,
+          2.56
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "Wreck",
+        "canonical_part": "Wreck",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision",
+        "canonical_part": "collision",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision/Collision_Box",
+        "canonical_part": "Collision_Box",
+        "pivot_local": [
+          0.0,
+          0.715,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.715,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      }
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "notes": "Original Python exterior model, no Blender or source mesh. generate_p3_artillery.py + artillery_parts.py + approved vehicle_parts.py. Actual-size hull and axle layout; named empty hinges with mesh children; metre UVs except Track U (0..1). Small fittings simplified; approximate/representative fields describe ambiguous roster designations. Blank white PBR roles; hidden LOD1 and static dark-role Wreck; hidden hull Collision_Box. LOD1 parts append _LOD1 with canonical_part extras. Wheeled vehicles have axle pivots and no tracks. Turret/Gun/Muzzle exist only with a weapon mount; recovery vehicles expose Boom and Spade. No national symbols or baked colours.",
+    "sources": [
+      {
+        "url": "https://cgsc.contentdm.oclc.org/digital/api/collection/p4013coll11/id/2089/download",
+        "use": "Vehicle exterior identification and size class; original geometry, no photographs embedded."
+      }
+    ],
+    "validation": {
+      "readback": true,
+      "node_tree_printed": true,
+      "ccw_normals": true,
+      "duplicate_faces": 0,
+      "below_ground_vertices": 0,
+      "track_uv_seams": 4,
+      "canonical_track_vertices": true,
+      "track_shader_phases": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "pose_checks": [
+        "yaw +90",
+        "gun -8/+20",
+        "recoil .20 m",
+        "all named hinges propagate children",
+        "axle positions and wheel count"
+      ],
+      "lod_limits": [
+        15000,
+        2500
+      ],
+      "external_loaders": [
+        "trimesh 5.1.1",
+        "Godot 4.7.2 GLTFDocument"
+      ],
+      "rendered_views": [
+        "LOD0 front",
+        "LOD0 side",
+        "LOD1 front",
+        "Wreck front"
+      ]
+    },
+    "sha256": "1ca56954e04d728906c79b6393380ff2c0ff2b47d754b164ad4a8544c8bf3b4c",
+    "track_shader_contract": {
+      "canonical_path": {
+        "half": 3.23,
+        "radius": 0.57,
+        "y": 0.65
+      },
+      "mesh_child_scale": [
+        1,
+        1.07,
+        1.07
+      ],
+      "world_loop_length_metres": 17.656515,
+      "description": "Unmodified canonical TrackPath vertices and U, followed by mesh-child YZ scale, exactly as approved P1."
+    }
+  },
+  {
+    "file": "vehicles/artillery__d_30_towed.glb",
+    "kind": "model",
+    "name": "D-30 (towed)",
+    "priority": "P3",
+    "pilot": false,
+    "approximate": false,
+    "representative_vehicle": "D-30 (towed)",
+    "triangles": [
+      2214,
+      668
+    ],
+    "wreck_triangles": 632,
+    "collision_triangles": 12,
+    "size": [
+      3.61,
+      1.79733,
+      6.468
+    ],
+    "bounds": [
+      [
+        -1.805,
+        -0.0,
+        -2.748
+      ],
+      [
+        1.805,
+        1.79733,
+        3.72
+      ]
+    ],
+    "hull_footprint": [
+      3.4,
+      5.4
+    ],
+    "road_wheels_per_side": 1,
+    "wheel_radius_metres": 0.5,
+    "mobility": "towed",
+    "has_turret": false,
+    "recognition_features": [
+      "Towed D30 in supported travel-height display pose",
+      "one main wheel axle with separate X pivots",
+      "separate splayed trail hinges",
+      "open recoil cradle and 122 mm barrel",
+      "third central trail"
+    ],
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "materials": [
+      "paint",
+      "metal_dark",
+      "rubber",
+      "glass",
+      "markings"
+    ],
+    "nodes": [
+      {
+        "path": "LOD0",
+        "canonical_part": "LOD0",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage",
+        "canonical_part": "Carriage",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Wheel_L0",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.51,
+          0.5,
+          0.0
+        ],
+        "pivot_world": [
+          -1.51,
+          0.5,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Trail_L",
+        "canonical_part": "Trail_L",
+        "pivot_local": [
+          -0.38,
+          0.49,
+          -0.3
+        ],
+        "pivot_world": [
+          -0.38,
+          0.49,
+          -0.3
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Wheel_R0",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.51,
+          0.5,
+          0.0
+        ],
+        "pivot_world": [
+          1.51,
+          0.5,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Trail_R",
+        "canonical_part": "Trail_R",
+        "pivot_local": [
+          0.38,
+          0.49,
+          -0.3
+        ],
+        "pivot_world": [
+          0.38,
+          0.49,
+          -0.3
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Trail_C",
+        "canonical_part": "Trail_C",
+        "pivot_local": [
+          0.0,
+          0.38,
+          -0.25
+        ],
+        "pivot_world": [
+          0.0,
+          0.38,
+          -0.25
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Gun",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          1.43,
+          0.12
+        ],
+        "pivot_world": [
+          0.0,
+          1.43,
+          0.12
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Gun/Muzzle",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          3.6
+        ],
+        "pivot_world": [
+          0.0,
+          1.43,
+          3.72
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Fire_Controls",
+        "canonical_part": "Fire_Controls",
+        "pivot_local": [
+          -0.53,
+          1.31,
+          -0.04
+        ],
+        "pivot_world": [
+          -0.53,
+          1.31,
+          -0.04
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD1",
+        "canonical_part": "LOD1",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1",
+        "canonical_part": "Carriage",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Wheel_L0_LOD1",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.51,
+          0.5,
+          0.0
+        ],
+        "pivot_world": [
+          -1.51,
+          0.5,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Trail_L_LOD1",
+        "canonical_part": "Trail_L",
+        "pivot_local": [
+          -0.38,
+          0.49,
+          -0.3
+        ],
+        "pivot_world": [
+          -0.38,
+          0.49,
+          -0.3
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Wheel_R0_LOD1",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.51,
+          0.5,
+          0.0
+        ],
+        "pivot_world": [
+          1.51,
+          0.5,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Trail_R_LOD1",
+        "canonical_part": "Trail_R",
+        "pivot_local": [
+          0.38,
+          0.49,
+          -0.3
+        ],
+        "pivot_world": [
+          0.38,
+          0.49,
+          -0.3
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Trail_C_LOD1",
+        "canonical_part": "Trail_C",
+        "pivot_local": [
+          0.0,
+          0.38,
+          -0.25
+        ],
+        "pivot_world": [
+          0.0,
+          0.38,
+          -0.25
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Gun_LOD1",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          1.43,
+          0.12
+        ],
+        "pivot_world": [
+          0.0,
+          1.43,
+          0.12
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Gun_LOD1/Muzzle_LOD1",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          3.6
+        ],
+        "pivot_world": [
+          0.0,
+          1.43,
+          3.72
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Fire_Controls_LOD1",
+        "canonical_part": "Fire_Controls",
+        "pivot_local": [
+          -0.53,
+          1.31,
+          -0.04
+        ],
+        "pivot_world": [
+          -0.53,
+          1.31,
+          -0.04
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "Wreck",
+        "canonical_part": "Wreck",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision",
+        "canonical_part": "collision",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision/Collision_Box",
+        "canonical_part": "Collision_Box",
+        "pivot_local": [
+          0.0,
+          0.715,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.715,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      }
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "notes": "Original Python exterior model, no Blender or source mesh. generate_p3_artillery.py + artillery_parts.py + approved vehicle_parts.py. Actual-size hull and axle layout; named empty hinges with mesh children; metre UVs except Track U (0..1). Small fittings simplified; approximate/representative fields describe ambiguous roster designations. Blank white PBR roles; hidden LOD1 and static dark-role Wreck; hidden hull Collision_Box. LOD1 parts append _LOD1 with canonical_part extras. Wheeled vehicles have axle pivots and no tracks. Turret/Gun/Muzzle exist only with a weapon mount; recovery vehicles expose Boom and Spade. No national symbols or baked colours.",
+    "sources": [
+      {
+        "url": "https://www.trngcmd.marines.mil/Portals/207/Docs/MCIS/ITEP/RITC-East/FM%20100-2-3.pdf",
+        "use": "Vehicle exterior identification and size class; original geometry, no photographs embedded."
+      }
+    ],
+    "validation": {
+      "readback": true,
+      "node_tree_printed": true,
+      "ccw_normals": true,
+      "duplicate_faces": 0,
+      "below_ground_vertices": 0,
+      "track_uv_seams": 0,
+      "canonical_track_vertices": false,
+      "track_shader_phases": [],
+      "pose_checks": [
+        "all named hinges propagate children",
+        "axle positions and wheel count"
+      ],
+      "lod_limits": [
+        15000,
+        2500
+      ],
+      "external_loaders": [
+        "trimesh 5.1.1",
+        "Godot 4.7.2 GLTFDocument"
+      ],
+      "rendered_views": [
+        "LOD0 front",
+        "LOD0 side",
+        "LOD1 front",
+        "Wreck front"
+      ]
+    },
+    "sha256": "23c3ba4bedf1c6a9ff393d940cbcf4beaf394d72a87dca4c8287221ce0a98c90"
+  },
+  {
+    "file": "vehicles/towedHowitzer__fh70.glb",
+    "kind": "model",
+    "name": "FH70",
+    "priority": "P3",
+    "pilot": false,
+    "approximate": false,
+    "representative_vehicle": "FH70",
+    "triangles": [
+      2214,
+      668
+    ],
+    "wreck_triangles": 632,
+    "collision_triangles": 12,
+    "size": [
+      4.31,
+      1.962,
+      9.981
+    ],
+    "bounds": [
+      [
+        -2.155,
+        -0.0,
+        -4.111
+      ],
+      [
+        2.155,
+        1.962,
+        5.87
+      ]
+    ],
+    "hull_footprint": [
+      4.1,
+      8.3
+    ],
+    "road_wheels_per_side": 1,
+    "wheel_radius_metres": 0.61,
+    "mobility": "towed",
+    "has_turret": false,
+    "recognition_features": [
+      "Towed FH70 in supported travel-height display pose",
+      "one main wheel axle with separate X pivots",
+      "separate splayed trail hinges",
+      "open recoil cradle and 155 mm barrel",
+      "two split trails"
+    ],
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "materials": [
+      "paint",
+      "metal_dark",
+      "rubber",
+      "glass",
+      "markings"
+    ],
+    "nodes": [
+      {
+        "path": "LOD0",
+        "canonical_part": "LOD0",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage",
+        "canonical_part": "Carriage",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Wheel_L0",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.86,
+          0.61,
+          0.0
+        ],
+        "pivot_world": [
+          -1.86,
+          0.61,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Trail_L",
+        "canonical_part": "Trail_L",
+        "pivot_local": [
+          -0.38,
+          0.49,
+          -0.3
+        ],
+        "pivot_world": [
+          -0.38,
+          0.49,
+          -0.3
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Wheel_R0",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.86,
+          0.61,
+          0.0
+        ],
+        "pivot_world": [
+          1.86,
+          0.61,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Trail_R",
+        "canonical_part": "Trail_R",
+        "pivot_local": [
+          0.38,
+          0.49,
+          -0.3
+        ],
+        "pivot_world": [
+          0.38,
+          0.49,
+          -0.3
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Gun",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          1.7,
+          0.12
+        ],
+        "pivot_world": [
+          0.0,
+          1.7,
+          0.12
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Gun/Muzzle",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          5.75
+        ],
+        "pivot_world": [
+          0.0,
+          1.7,
+          5.87
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Carriage/Fire_Controls",
+        "canonical_part": "Fire_Controls",
+        "pivot_local": [
+          -0.53,
+          1.58,
+          -0.04
+        ],
+        "pivot_world": [
+          -0.53,
+          1.58,
+          -0.04
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD1",
+        "canonical_part": "LOD1",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1",
+        "canonical_part": "Carriage",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Wheel_L0_LOD1",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.86,
+          0.61,
+          0.0
+        ],
+        "pivot_world": [
+          -1.86,
+          0.61,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Trail_L_LOD1",
+        "canonical_part": "Trail_L",
+        "pivot_local": [
+          -0.38,
+          0.49,
+          -0.3
+        ],
+        "pivot_world": [
+          -0.38,
+          0.49,
+          -0.3
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Wheel_R0_LOD1",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.86,
+          0.61,
+          0.0
+        ],
+        "pivot_world": [
+          1.86,
+          0.61,
+          0.0
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Trail_R_LOD1",
+        "canonical_part": "Trail_R",
+        "pivot_local": [
+          0.38,
+          0.49,
+          -0.3
+        ],
+        "pivot_world": [
+          0.38,
+          0.49,
+          -0.3
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Gun_LOD1",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          1.7,
+          0.12
+        ],
+        "pivot_world": [
+          0.0,
+          1.7,
+          0.12
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Gun_LOD1/Muzzle_LOD1",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          5.75
+        ],
+        "pivot_world": [
+          0.0,
+          1.7,
+          5.87
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Carriage_LOD1/Fire_Controls_LOD1",
+        "canonical_part": "Fire_Controls",
+        "pivot_local": [
+          -0.53,
+          1.58,
+          -0.04
+        ],
+        "pivot_world": [
+          -0.53,
+          1.58,
+          -0.04
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "Wreck",
+        "canonical_part": "Wreck",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision",
+        "canonical_part": "collision",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision/Collision_Box",
+        "canonical_part": "Collision_Box",
+        "pivot_local": [
+          0.0,
+          0.85,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.85,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      }
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "notes": "Original Python exterior model, no Blender or source mesh. generate_p3_artillery.py + artillery_parts.py + approved vehicle_parts.py. Actual-size hull and axle layout; named empty hinges with mesh children; metre UVs except Track U (0..1). Small fittings simplified; approximate/representative fields describe ambiguous roster designations. Blank white PBR roles; hidden LOD1 and static dark-role Wreck; hidden hull Collision_Box. LOD1 parts append _LOD1 with canonical_part extras. Wheeled vehicles have axle pivots and no tracks. Turret/Gun/Muzzle exist only with a weapon mount; recovery vehicles expose Boom and Spade. No national symbols or baked colours.",
+    "sources": [
+      {
+        "url": "https://www.esercito.difesa.it/equipaggiamenti/artiglieria/artiglieria-terrestre/index.html",
+        "use": "Vehicle exterior identification and size class; original geometry, no photographs embedded."
+      }
+    ],
+    "validation": {
+      "readback": true,
+      "node_tree_printed": true,
+      "ccw_normals": true,
+      "duplicate_faces": 0,
+      "below_ground_vertices": 0,
+      "track_uv_seams": 0,
+      "canonical_track_vertices": false,
+      "track_shader_phases": [],
+      "pose_checks": [
+        "all named hinges propagate children",
+        "axle positions and wheel count"
+      ],
+      "lod_limits": [
+        15000,
+        2500
+      ],
+      "external_loaders": [
+        "trimesh 5.1.1",
+        "Godot 4.7.2 GLTFDocument"
+      ],
+      "rendered_views": [
+        "LOD0 front",
+        "LOD0 side",
+        "LOD1 front",
+        "Wreck front"
+      ]
+    },
+    "sha256": "c83a998718c84913d4e3fcb9d7605a541b5f449e619cac7cb28c9676ca3bd99e"
   }
 ]

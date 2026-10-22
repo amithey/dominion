@@ -1,0 +1,34 @@
+{
+  "batch": 6,
+  "files": [
+    "vehicles/artillery__d_30_2s1.glb",
+    "vehicles/artillery__d_30_2s1_captured.glb",
+    "vehicles/artillery__d_30_m109a5.glb",
+    "vehicles/artillery__m1989_koksan.glb",
+    "vehicles/artillery__d_30_towed.glb",
+    "vehicles/towedHowitzer__fh70.glb"
+  ],
+  "sha256": {
+    "vehicles/artillery__d_30_2s1.glb": "57711fe2fad55268210759445a5b80b4a7c996660e9aa1629d3f65d22e9e58e2",
+    "vehicles/artillery__d_30_2s1_captured.glb": "9f951e24a2f5a7ba91518b45f4d60e9735f2df3b0745542dd95b6697ff1df1c2",
+    "vehicles/artillery__d_30_m109a5.glb": "52b09e78d149d07e909ab5f5bded11e21a9f3789883497aa02ae6489542b1677",
+    "vehicles/artillery__m1989_koksan.glb": "1ca56954e04d728906c79b6393380ff2c0ff2b47d754b164ad4a8544c8bf3b4c",
+    "vehicles/artillery__d_30_towed.glb": "23c3ba4bedf1c6a9ff393d940cbcf4beaf394d72a87dca4c8287221ce0a98c90",
+    "vehicles/towedHowitzer__fh70.glb": "c83a998718c84913d4e3fcb9d7605a541b5f449e619cac7cb28c9676ca3bd99e"
+  },
+  "maximum_triangles": [
+    12266,
+    2172
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py"
+  ]
+}
