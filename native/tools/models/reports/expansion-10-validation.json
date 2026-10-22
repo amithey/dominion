@@ -1,0 +1,36 @@
+{
+  "batch": 10,
+  "files": [
+    "vehicles/mlrs__a_100_fatah_1.glb",
+    "vehicles/mlrs__astros_ii.glb",
+    "vehicles/mlrs__astros_ii_rm_70.glb",
+    "vehicles/mlrs__astros_ii_mk6.glb",
+    "vehicles/mlrs__bm_21_badr_rockets.glb",
+    "vehicles/mlrs__bm_21_taka.glb"
+  ],
+  "sha256": {
+    "vehicles/mlrs__a_100_fatah_1.glb": "b1694741f5d27d6f71f065b636579c41e647d88084742222e93ff026de7c1281",
+    "vehicles/mlrs__astros_ii.glb": "a2c6090f509d76a33ea8d92191a8faa0860e152d29efd2f6746720778ed0bc9c",
+    "vehicles/mlrs__astros_ii_rm_70.glb": "5ba31d69ab0a9258dcefe333bad1ff9862981371aa544a4ce09f634e3336ef20",
+    "vehicles/mlrs__astros_ii_mk6.glb": "fb774dc3c25248d3e6eb215917816b4f5240d7764a21bbdac5b77175001ff343",
+    "vehicles/mlrs__bm_21_badr_rockets.glb": "e8094246c87ff8641417fcd29d637efebe75187fce903dbd3edc730e4c5ad78d",
+    "vehicles/mlrs__bm_21_taka.glb": "901bca799b78d42cf4f2007fa5eca6dc0dbe6d87148cdf065440104a1d2531d2"
+  },
+  "maximum_triangles": [
+    7360,
+    1796
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py",
+    "artillery_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}

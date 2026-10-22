@@ -5,6 +5,9 @@ tube layout. Ambiguous roster rows name a selected representative. No Blender.
 """
 from pathlib import Path
 import argparse,json
+import numpy as np
+from vehicle_parts import Mesh,loft,hollow_muzzle
+from generate_p1_tanks import beam
 from artillery_parts import launcher_vehicle
 from generate_p3_artillery import save,ART
 
@@ -44,6 +47,16 @@ CONFIGS={
  'pch191':(11.80,3.05,3.05,[-3.90,-2.12,1.98,3.77],.66,False,1,0,2.50,2,2,2,.370,5.10,True,True,'pch191'),
  'trlg230':(10.50,2.80,2.92,[-3.46,-1.81,1.71,3.35],.63,False,1,0,2.30,3,2,1,.230,4.0,True,True,'trlg230'),
  'tos1':(7.0,3.46,1.48,6,.36,True,.87,0,0,8,3,1,.220,3.60,True,False,'tos1'),
+ 'ghader':(10.20,2.55,2.90,[-3.36,-1.66,3.23],.62,False,1,0,2.28,2,2,1,.50,6.40,True,True,'ghader'),
+ 'bastion':(12.60,3.0,3.20,[-4.14,-2.27,2.16,4.03],.68,False,1,0,2.60,2,1,1,.70,8.70,False,True,'bastion'),
+ 'nmesis':(6.20,2.50,1.50,[-2.05,2.02],.50,False,1,0,1.40,2,1,1,.50,4.50,True,True,'nmesis'),
+ 'nsm':(10.40,2.55,2.95,[-3.42,-1.73,3.31],.63,False,1,0,2.35,2,2,1,.50,5.0,True,True,'nsm'),
+ 'neptune':(12.0,2.90,3.10,[-3.94,-2.16,2.02,3.81],.65,False,1,0,2.52,2,2,1,.42,5.40,True,True,'neptune'),
+ 'type12':(9.60,2.48,2.78,[-3.15,-1.53,3.04],.61,False,1,0,2.25,3,2,1,.40,5.10,True,True,'type12'),
+ 'yj62':(12.0,3.0,3.05,[-3.95,-2.15,2.01,3.81],.66,False,1,0,2.50,3,1,1,.60,7.0,False,True,'yj62'),
+ 'brahmos':(12.70,2.80,3.10,[-4.20,-2.29,2.17,4.07],.66,False,1,0,2.52,3,1,1,.80,8.40,False,True,'brahmos'),
+ 'df17':(15.0,3.20,3.10,[-5.31,-3.75,-1.80,3.05,5.16],.70,False,1,0,2.70,1,1,1,1.0,10.40,False,True,'df17'),
+ 'shahedrail':(8.10,2.50,2.80,[-2.66,-1.10,2.58],.59,False,1,0,2.15,1,1,1,.32,4.20,False,True,'shahedrail'),
 }
 
 def launch(slug,name,lod,key,source=None,representative='',approximate=False):
@@ -175,7 +188,88 @@ def heavyRocket__heavy_rocket_launcher(lod=0):
 def tos1a__tos_1a_solntsepyok(lod=0):
     return launch('tos1a__tos_1a_solntsepyok','TOS-1A Solntsepyok',lod,'tos1')
 
-BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and n.startswith(('mlrs__','himars__','heavyRocket__','tos1a__')) and callable(f)}
+def coastalASM__ghader_coastal_battery(lod=0):
+    return launch('coastalASM__ghader_coastal_battery','Ghader Coastal Battery',lod,'ghader',representative='Representative four-canister Ghader coastal truck',approximate=True)
+
+def coastalASM__k_300p_bastion_p(lod=0):
+    return launch('coastalASM__k_300p_bastion_p','K-300P Bastion-P',lod,'bastion',representative='K-340P eight-wheel TEL with two Oniks canisters')
+
+def coastalASM__nmesis(lod=0):
+    rig,s=launch('coastalASM__nmesis','NMESIS',lod,'nmesis','https://www.marines.mil/News/News-Display/Article/2745323/',representative='ROGUE-Fires unmanned carrier and paired NSM canisters')
+    # Driverless ROGUE-Fires is a low bonnet chassis, without a cab or windows.
+    m=Mesh();h=s.length/2
+    for side in (-1,1):
+        m.box('metal_dark',(side*.60,.74,0),(.17,.26,s.length-.25))
+        for z in s.axle_z:m.box('paint',(side*1.05,.99,z),(.46,.10,1.06))
+    m.box('paint',(0,.98,2.05),(2.07,.79,1.86));m.box('paint',(0,1.09,-.70),(2.28,.20,3.63))
+    m.box('metal_dark',(0,.96,3.04),(1.36,.38,.06))
+    for side in (-1,1):m.box('markings',(side*1.058,1.08,2.18),(.018,.22,.41))
+    for p in rig.parts:
+        if p['name']=='Hull':p['mesh']=m
+        elif p['name']=='Antenna_1':
+            a=np.array([.79,1.39,2.25]);ant=Mesh();ant.tube('metal_dark',a,a+[0,.67,0],.013,4 if lod else 6);p['pivot']=a;p['mesh']=ant;rig.pivots[p['name']]=a
+        elif p['name']=='Engine_Deck':p['pivot']=np.array([0,1.39,2.05]);rig.pivots[p['name']]=p['pivot']
+    return rig,s
+
+def coastalASM__nsm_coastal_defence_system(lod=0):
+    return launch('coastalASM__nsm_coastal_defence_system','NSM Coastal Defence System',lod,'nsm','https://www.kongsberg.com/kda/what-we-do/missile-systems/nsm-coastal-defence-system/')
+
+def coastalASM__rk_360mc_neptune(lod=0):
+    return launch('coastalASM__rk_360mc_neptune','RK-360MC Neptune',lod,'neptune','https://www.luch.kiev.ua/en/',approximate=True,representative='Four-canister Neptune TEL on KrAZ-7634 8x8 exterior')
+
+def coastalASM__type_12_ssm(lod=0):
+    return launch('coastalASM__type_12_ssm','Type 12 SSM',lod,'type12','https://www.mod.go.jp/gsdf/equipment/ve/')
+
+def coastalASM__yj_62_coastal_battery(lod=0):
+    return launch('coastalASM__yj_62_coastal_battery','YJ-62 Coastal Battery',lod,'yj62','https://eng.mod.gov.cn/')
+
+def brahmos__brahmos_battery(lod=0):
+    return launch('brahmos__brahmos_battery','BrahMos Battery',lod,'brahmos','https://www.brahmos.com/',representative='Three-canister mobile autonomous launcher')
+
+def df17__df_17_launcher(lod=0):
+    rig,s=launch('df17__df_17_launcher','DF-17 Launcher',lod,'df17','https://www.defense.gov/Spotlights/2024-China-Military-Power-Report/',
+       representative='DF-17 ten-wheel TEL, exposed booster and hypersonic glide vehicle; approximate public dimensions',approximate=True)
+    x,y,tip=s.details['muzzle_positions'][0];rear=-s.length/2+.30;n=8 if lod else 16;m=Mesh()
+    m.box('paint',(0,y-.64,(rear+tip)/2),(.78,.21,tip-rear-.10))
+    m.tube('paint',(0,y,rear+.14),(0,y,tip-2.20),.48,n)
+    m.tube('paint',(0,y,tip-2.20),(0,y,tip-1.73),.48,n,r_top=.25)
+    loft(m,'paint',[[(-.53,y-.13,tip-2.03),(.53,y-.13,tip-2.03),(.53,y+.13,tip-2.03),(-.53,y+.13,tip-2.03)],
+        [(-.008,y-.008,tip),(.008,y-.008,tip),(.008,y+.008,tip),(-.008,y+.008,tip)]])
+    hollow_muzzle(m,(0,y,rear+.24),(0,y,rear-.025),.32,.23,n)
+    for side in (-1,1):
+        beam(m,'paint',(side*.38,y-.60,rear+.19),(side*.38,y-.34,rear+2.10),.14)
+    for p in rig.parts:
+        if p['name']=='Launcher':p['mesh']=m
+    s.features=['Ten-wheel TEL with five axle pairs','exposed long solid-fuel booster on elevating rail','distinct pointed flattened hypersonic glide vehicle','rear stabilising jacks','single forward launch marker']
+    return rig,s
+
+def drone_rail(slug,name,lod):
+    rig,s=launch(slug,name,lod,'shahedrail',WEG,approximate=True,
+       representative='Generic single Shahed-136/Geran-2 launch rail on a 6x6 truck; no specific carrier asserted')
+    x,y,tip=s.details['muzzle_positions'][0];rear=-s.length/2+.30;n=6 if lod else 12;m=Mesh()
+    m.box('metal_dark',(0,y-.36,(rear+tip)/2),(.25,.15,tip-rear+.10))
+    for zz in (rear+.50,tip-.65):beam(m,'paint',(0,y-.32,zz),(0,y-.10,zz),.12)
+    m.tube('paint',(0,y,rear+.22),(0,y,tip-.38),.17,n)
+    m.tube('paint',(0,y,tip-.38),(0,y,tip),.17,n,r_top=.002)
+    for side in (-1,1):
+        q=[(0,y+.025,tip-1.04),(side*1.48,y+.025,rear+.80),(0,y+.025,rear+.25)]
+        m.solid('paint',q+[(a,b+.04,c) for a,b,c in q],[(0,1,2),(5,4,3),(0,3,4,1),(1,4,5,2),(2,5,3,0)])
+        fin=[(side*1.48,y+.04,rear+.68),(side*1.48,y+.04,rear+1.31),(side*1.48,y+.65,rear+.78)]
+        m.solid('paint',fin+[(a+side*.035,b,c) for a,b,c in fin],[(0,1,2),(5,4,3),(0,3,4,1),(1,4,5,2),(2,5,3,0)])
+    m.tube('metal_dark',(0,y,rear+.22),(0,y,rear-.08),.045,n);m.box('metal_dark',(0,y,rear-.10),(.77,.045,.035))
+    for p in rig.parts:
+        if p['name']=='Launcher':p['mesh']=m
+    s.features=['Original generic six-wheel mobile drone rail carrier','single delta-wing Shahed-136/Geran-2 representative',
+        'twin wingtip fins and rear pusher propeller','elevating open launch rail','carrier identity unspecified in roster']
+    return rig,s
+
+def shahedLauncher__geran_2_launcher(lod=0):
+    return drone_rail('shahedLauncher__geran_2_launcher','Geran-2 Launcher',lod)
+
+def shahedLauncher__shahed_launcher(lod=0):
+    return drone_rail('shahedLauncher__shahed_launcher','Shahed Launcher',lod)
+
+BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and n.startswith(('mlrs__','himars__','heavyRocket__','tos1a__','coastalASM__','brahmos__','df17__','shahedLauncher__')) and callable(f)}
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--types',nargs='+',choices=BUILDERS,required=True);p.add_argument('--report',type=Path,required=True)
