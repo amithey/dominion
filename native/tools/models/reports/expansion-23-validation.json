@@ -1,0 +1,36 @@
+{
+  "batch": 23,
+  "files": [
+    "vehicles/aaVehicle__zu_23_2_saqr_358.glb",
+    "vehicles/samLauncher__akash.glb",
+    "vehicles/samLauncher__bavar_373.glb",
+    "vehicles/samLauncher__cheongung_ii.glb",
+    "vehicles/samLauncher__david_s_sling.glb",
+    "vehicles/samLauncher__hisar_o.glb"
+  ],
+  "sha256": {
+    "vehicles/aaVehicle__zu_23_2_saqr_358.glb": "1ae2592f122de47c06dcfebabdd69c08c843407a6ac5359db573b897733db9b1",
+    "vehicles/samLauncher__akash.glb": "6ad099c1c4a2d9bc87f6fb7d9c1e0399d0291177e1758ac27a1677e14fb1fd7d",
+    "vehicles/samLauncher__bavar_373.glb": "4490066f60a54692141fea490a2dcf933c9f0432f95eafc55dfcd181ef63a428",
+    "vehicles/samLauncher__cheongung_ii.glb": "c51258c53d86a9a91a162330608b764801ffa74aa80f3f5b9ba63691b3fa2cfc",
+    "vehicles/samLauncher__david_s_sling.glb": "b1f889e8ab5d55c732ac2f930203953d7e5a98ecead787cbc5d5e3c58263b418",
+    "vehicles/samLauncher__hisar_o.glb": "9f97f8741d0298af96d9c8a452868250b51b07d00fe768edd08f85cd8e10d7d0"
+  },
+  "maximum_triangles": [
+    10892,
+    1796
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p4_air_defence.py",
+    "air_defence_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
