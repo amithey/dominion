@@ -3,12 +3,14 @@
 Explicit functions select a real representative for ambiguous combined rows.
 Shared wheels/tracks retain the approved pilot's contract. No Blender.
 """
-from dataclasses import asdict
+from dataclasses import asdict,replace
 from pathlib import Path
 import argparse,json,math
 import numpy as np
 from vehicle_parts import Mesh,Rig,loft,profile_hull,hollow_muzzle,write_glb,merge_mesh
 from generate_p1_tanks import Spec,finish,make_wreck,beam,running_gear
+from armour_parts import ArmourSpec,wreck as armour_wreck
+from artillery_parts import towed,truck_howitzer
 
 ROOT=Path(__file__).resolve().parents[3];ART=ROOT/'native/godot/assets/art'
 SOVIET='https://www.trngcmd.marines.mil/Portals/207/Docs/MCIS/ITEP/RITC-East/FM%20100-2-3.pdf'
@@ -220,16 +222,69 @@ def artillery__d_30_2s1_captured(lod=0):
 def artillery__d_30_m109a5(lod=0):
     rig,s=artillery__m109a5(lod);s.slug='d_30_m109a5';s.name='D-30 / M109A5';s.approximate=True;s.representative='M109A5';s.features.insert(0,'M109A5 selected from combined D-30/M109A5 roster designation');return rig,s
 
-BUILDERS={n:f for n,f in list(globals().items()) if n.startswith(('artillery__','k9__')) and callable(f)}
+def artillery__d_30_towed(lod=0):
+    return towed('artillery__d_30_towed','D-30 (towed)',lod,'d30',SOVIET)
+
+def artillery__d_30_khalifa(lod=0):
+    return towed('artillery__d_30_khalifa','D-30 / Khalifa',lod,'d30',SOVIET,True,'D-30 towed howitzer selected from combined D-30/Khalifa designation')
+
+def towedHowitzer__fh70(lod=0):
+    return towed('towedHowitzer__fh70','FH70',lod,'fh70','https://www.esercito.difesa.it/equipaggiamenti/artiglieria/artiglieria-terrestre/index.html')
+
+def towedHowitzer__l118_light_gun(lod=0):
+    return towed('towedHowitzer__l118_light_gun','L118 Light Gun',lod,'l118','https://www.army.mod.uk/learn-and-explore/equipment/artillery-and-air-defence/105mm-light-gun/')
+
+def towedHowitzer__m777(lod=0):
+    return towed('towedHowitzer__m777','M777',lod,'m777','https://www.baesystems.com/en-us/product/m777')
+
+def artillery__caesar(lod=0):
+    return truck_howitzer('artillery__caesar','CAESAR',lod,9.50,2.55,2.85,[-3.18,-1.72,3.00],.59,.155,6.35,
+       'https://knds.com/en/products/systems/caesar-6x6')
+
+def wheeledHowitzer__caesar(lod=0):
+    rig,s=artillery__caesar(lod);s.slug='wheeledHowitzer__caesar';return rig,s
+
+def wheeledHowitzer__sh_15(lod=0):
+    return truck_howitzer('wheeledHowitzer__sh_15','SH-15',lod,10.50,2.65,2.95,[-3.54,-1.91,3.30],.61,.155,6.75,
+       'https://eng.mod.gov.cn/',family='sh15')
+
+def wheeledHowitzer__pcl_181(lod=0):
+    return truck_howitzer('wheeledHowitzer__pcl_181','PCL-181',lod,10.50,2.65,2.95,[-3.54,-1.91,3.30],.61,.155,6.75,
+       'https://eng.mod.gov.cn/',family='pcl181')
+
+def artillery__sh_15_d_30(lod=0):
+    rig,s=wheeledHowitzer__sh_15(lod);s.slug='artillery__sh_15_d_30';s.name='SH-15 / D-30';s.approximate=True;s.representative='SH-15 truck-mounted howitzer';return rig,s
+
+def wheeledHowitzer__type_19_howitzer(lod=0):
+    return truck_howitzer('wheeledHowitzer__type_19_howitzer','Type 19 Howitzer',lod,11.30,2.50,2.95,[-3.84,-2.30,1.87,3.55],.59,.155,6.65,
+       'https://www.mod.go.jp/gsdf/equipment/ve/',family='type19')
+
+def wheeledHowitzer__2s43_malva(lod=0):
+    return truck_howitzer('wheeledHowitzer__2s43_malva','2S43 Malva',lod,11.80,2.75,3.0,[-3.95,-2.30,2.02,3.81],.64,.152,6.70,
+       'https://rostec.ru/',family='malva')
+
+def wheeledHowitzer__archer(lod=0):
+    return truck_howitzer('wheeledHowitzer__archer','Archer',lod,11.75,3.0,3.18,[-3.70,-1.91,3.56],.72,.155,7.04,
+       'https://www.baesystems.com/en/product/archer',family='archer',approximate=True,representative='Archer on Volvo A30 6x6 carrier; articulated chassis shown straight')
+
+def artillery__sh_5_palmaria(lod=0):
+    return spg('artillery__sh_5_palmaria','SH-5 / Palmaria',lod,7.65,3.35,1.49,2.80,7,.34,.94,-.42,2.22,.97,10.91,'palmaria',2.77,3.37,.155,
+      ['Palmaria selected from combined designation','Seven OF-40-derived road wheels','broad 155 mm L/41 turret','large rear ammunition bustle','rear engine hull'],
+      source='https://www.leonardo.com/',representative='Palmaria 155 mm self-propelled howitzer',approximate=True)
+
+BUILDERS={n:f for n,f in list(globals().items()) if n.startswith(('artillery__','k9__','towedHowitzer__','wheeledHowitzer__')) and callable(f)}
 
 def save(slug):
-    from validate_p2_armour import validate
+    from validate_p3_artillery import validate
     a,s=BUILDERS[slug](0);b,s1=BUILDERS[slug](1);assert asdict(s)==asdict(s1)
-    spec=asdict(s);spec.update(mobility='tracked',weapon='howitzer',family=s.shape,equipment='',axle_z=[])
-    c=Mesh();c.box('metal_dark',(0,s.deck/2,0),(s.width,s.deck,s.length))
+    spec=asdict(s);tank=isinstance(s,Spec)
+    if tank:spec.update(mobility='tracked',weapon='howitzer',family=s.shape,equipment='',axle_z=[])
+    height=s.deck if tank else s.roof
+    c=Mesh();c.box('metal_dark',(0,height/2,0),(s.width,height,s.length))
     path=ART/'vehicles'/f'{slug}.glb'
-    write_glb(path,[a,b],make_wreck(b,s),c,{'scene_name':s.name,'vehicle':slug,'priority':'P3','spec':spec,
-        'units':'metres','up':'+Y','front':'+Z','detached_turret':True,'canonical_track_path':{'half':3.23,'radius':.57,'y':.65}})
+    burnt=make_wreck(b,s) if tank else armour_wreck(b,replace(s,weapon='') if s.mobility=='towed' else s)
+    write_glb(path,[a,b],burnt,c,{'scene_name':s.name,'vehicle':slug,'priority':'P3','spec':spec,
+        'units':'metres','up':'+Y','front':'+Z','detached_turret':s.mobility!='towed' if not tank else True,'canonical_track_path':{'half':3.23,'radius':.57,'y':.65}})
     entry,tree=validate(path);entry['notes']=entry['notes'].replace('generate_p2_armour.py + armour_parts.py','generate_p3_artillery.py')
     (Path(__file__).parent/'reports'/f'{slug}.node-tree.txt').write_text(tree,encoding='utf-8')
     print(tree);print('PASS',slug,entry['triangles'],flush=True);return entry

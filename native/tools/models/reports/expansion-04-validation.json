@@ -1,0 +1,34 @@
+{
+  "batch": 4,
+  "files": [
+    "vehicles/artillery__m109a5.glb",
+    "vehicles/artillery__m109a5_sh_15.glb",
+    "vehicles/artillery__m109a5_br.glb",
+    "vehicles/artillery__m109a7_paladin.glb",
+    "vehicles/artillery__plz_05.glb",
+    "vehicles/artillery__pzh_2000.glb"
+  ],
+  "sha256": {
+    "vehicles/artillery__m109a5.glb": "e5e2459ba9821780d18d86eebe6c315be4c2d68259ca19a72eeb0e74a64de16d",
+    "vehicles/artillery__m109a5_sh_15.glb": "8981ca339230ef63bc9650f4a6273a3c030a15ecdd5f5ea8f1c8965d68e03f2d",
+    "vehicles/artillery__m109a5_br.glb": "4971fef9033e8043d1851a4364d402d5a72d33a2143c2db525b4bd6b39e65422",
+    "vehicles/artillery__m109a7_paladin.glb": "9c10744f799cf8126cc563ae9b8ad1c4c7d902f5f45712a0ee72b3ec1c94332e",
+    "vehicles/artillery__plz_05.glb": "eb5f06a4545797c90e142a4d02c003c70f4b22376845392510469d0bab6382f1",
+    "vehicles/artillery__pzh_2000.glb": "639dc8ae066bd48513c1ee9d4a90f5d1a5fb2f053905c4761158ce8b93cfc055"
+  },
+  "maximum_triangles": [
+    12278,
+    2184
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py"
+  ]
+}
