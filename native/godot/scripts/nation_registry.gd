@@ -36,7 +36,8 @@ const ORDER := [
 	preload("res://scripts/nations/sudan.gd"),
 	preload("res://scripts/nations/south_sudan.gd"),
 	preload("res://scripts/nations/france.gd"),
-	preload("res://scripts/nations/italy.gd")
+	preload("res://scripts/nations/italy.gd"),
+	preload("res://scripts/nations/netherlands.gd")
 ]
 
 ## One field of every nation in ORDER, optionally only those in `groups`. The result is

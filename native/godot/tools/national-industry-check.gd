@@ -37,7 +37,7 @@ func begin(id: String) -> void:
 func run() -> void:
 	# ---- the table, for every nation
 	for id in F.IDS:
-		check((id in I.CHIP_FAB) == (id in ["usa", "china", "germany", "france", "italy", "uk", "japan", "south_korea", "israel", "india", "russia"]), "%s: Chip Fab only with a semiconductor industry" % id)
+		check((id in I.CHIP_FAB) == (id in ["usa", "china", "germany", "france", "italy", "netherlands", "uk", "japan", "south_korea", "israel", "india", "russia"]), "%s: Chip Fab only with a semiconductor industry" % id)
 	check(not "houthis" in I.CHIP_FAB and not "yemen" in I.CHIP_FAB and not "iran" in I.CHIP_FAB and not "turkiye" in I.CHIP_FAB, "the Houthis, Yemen, Iran and Türkiye import their chips")
 	check(I.NO_REACTOR == ["australia", "indonesia"], "Australia and Indonesia run research reactors only")
 

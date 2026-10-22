@@ -87,7 +87,7 @@ static func blocked(w: Node, owner: int, target: int) -> String:
 		if funds(w, owner, r) < float(p.costs[r]): return "Needs %d %s" % [int(p.costs[r]), r]
 	if p.target and (target < 0 or target == owner or target >= w.diplomacy.n or w.diplomacy.defeated(target)): return "Choose a nation"
 	match id:
-		"uk", "indonesia":
+		"uk", "indonesia", "netherlands":
 			if w.diplomacy.allied(owner, target): return "Not on an ally"
 		"france":
 			if w.diplomacy.at_war(owner, target) or w.diplomacy.rel(owner, target) < 20.0: return "Needs a partner at peace (+20 relations or better)"
@@ -149,6 +149,13 @@ static func use_forward_deterrence(w: Node, owner: int, target: int) -> void:
 	for rival in range(w.diplomacy.n):
 		if rival != owner and rival != target and not w.diplomacy.defeated(rival) and w.diplomacy.rel(rival, target) < -35.0:
 			w.diplomacy.change(rival, owner, -6.0)
+
+## Netherlands: the lithography and chip tools its firms make are withheld. The target's military factories stand
+## still for a minute and its income falls a tenth for as long as the power lasts.
+static func use_chip_embargo(w: Node, owner: int, target: int) -> void:
+	effect(w, "production", target, 0.0, 60.0, owner)
+	effect(w, "income", target, 0.9, float(def("netherlands").duration), owner)
+	w.diplomacy.change(owner, target, -12.0)
 
 ## Italy: investment in a partner's energy sector, in the way of the Mattei Plan. The partner receives the
 ## money Italy paid and relations rise; the new contracts bring Italy oil and gas.
@@ -306,6 +313,9 @@ static func use(w: Node, owner: int, target: int) -> String:
 		"france":
 			use_forward_deterrence(w, owner, target)
 			return "%s extends its nuclear deterrent over %s: rivals will not start a war with it." % [me, who]
+		"netherlands":
+			use_chip_embargo(w, owner, target)
+			return "%s withholds its chip tools from %s: its factories stand still and its income falls." % [me, who]
 		"italy":
 			use_energy_partnership(w, owner, target)
 			return "%s invests in %s's energy sector: contracts bring oil and gas home." % [me, who]

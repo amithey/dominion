@@ -135,7 +135,7 @@ func run() -> void:
 			if id == "afghanistan":
 				w.diplomacy.set_flag(w.diplomacy.war, owner, target, true)   # insurgent attacks only on an enemy
 				building("farm", target)
-			if id in ["uk", "indonesia", "north_korea"]: w.diplomacy.set_flag(w.diplomacy.alliance, owner, target, false)   # hostile levers: not on an ally
+			if id in ["uk", "indonesia", "north_korea", "netherlands"]: w.diplomacy.set_flag(w.diplomacy.alliance, owner, target, false)   # hostile levers: not on an ally
 			if id in ["south_korea", "australia", "italy"]: w.diplomacy.set_score(owner, target, 20.0)   # a partner
 			if id == "france": w.diplomacy.set_score(owner, target, 30.0)   # a partner to extend the guarantee to
 			if id == "pakistan":
@@ -196,6 +196,19 @@ func run() -> void:
 	FP.use(w, 0, 1)
 	check(is_equal_approx(P.funds(w, 0, "oil"), minf(float(w.economy.caps.get("oil", INF)), oil0 + 150.0)) and is_equal_approx(P.funds(w, 0, "gas"), minf(float(w.economy.caps.get("gas", INF)), gas0 + 150.0)), "an energy partnership brings Italy oil and gas")
 	check(is_equal_approx(P.funds(w, 1, "money"), partner0 + 500.0) and w.diplomacy.rel(0, 1) >= relations0 + 14.0, "and the partner receives the money and relations rise 15")
+	# Netherlands: withheld chip tools stop the target's factories for a minute and cut its income for two.
+	reset_power()
+	set_nation(0, "netherlands")
+	set_nation(1, "uk")
+	w.diplomacy.set_flag(w.diplomacy.alliance, 0, 1, false)
+	var relations1: float = w.diplomacy.rel(0, 1)
+	check(FP.blocked(w, 0, 1) == "" and not FP.production_blocked(w, 1), "the Netherlands can withhold its chip tools from a rival that is not an ally")
+	FP.use(w, 0, 1)
+	check(FP.production_blocked(w, 1) and is_equal_approx(FP.income_mult(w, 1), 0.9) and w.diplomacy.rel(0, 1) <= relations1 - 11.0, "the target's factories stop, its income falls a tenth and relations fall 12")
+	w.game_time += 61.0
+	check(not FP.production_blocked(w, 1) and is_equal_approx(FP.income_mult(w, 1), 0.9), "after a minute the factories run again, the income cut stays")
+	w.game_time += 61.0
+	check(is_equal_approx(FP.income_mult(w, 1), 1.0), "and after two minutes the income cut ends")
 	reset_power()
 	set_nation(0, "south_korea")
 	w.diplomacy.set_flag(w.diplomacy.war, 0, 1, true)

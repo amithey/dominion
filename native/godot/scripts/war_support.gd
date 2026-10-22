@@ -22,7 +22,7 @@ extends RefCounted
 ## A weary rival will not start a new war (below 35) and makes peace sooner.
 
 const Factions := preload("res://scripts/factions.gd")
-const REGIME := {"usa": "democracy", "germany": "democracy", "france": "democracy", "italy": "democracy", "japan": "democracy", "israel": "democracy", "india": "democracy",
+const REGIME := {"usa": "democracy", "germany": "democracy", "france": "democracy", "italy": "democracy", "netherlands": "democracy", "japan": "democracy", "israel": "democracy", "india": "democracy",
 	"uk": "democracy", "south_korea": "democracy", "brazil": "democracy", "indonesia": "democracy", "australia": "democracy",
 	"ukraine": "democracy", "turkiye": "hybrid", "pakistan": "hybrid", "iraq": "hybrid",
 	"china": "autocracy", "russia": "autocracy", "iran": "autocracy", "north_korea": "autocracy", "saudi": "autocracy",

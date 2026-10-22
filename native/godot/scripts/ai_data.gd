@@ -80,7 +80,7 @@ const NEEDS := {"machineLearning": 1, "militaryAI": 3, "collaborativeCombatAircr
 ## The chip supply chain: nations that can deny advanced chips to another
 ## (export controls on AI chips and the machines that make them), and those
 ## that make the chips (they sell more in a shortage).
-const CONTROLLERS := ["usa", "japan", "south_korea", "uk"]
+const CONTROLLERS := ["usa", "japan", "south_korea", "uk", "netherlands"]
 const CHIP_MAKERS := ["south_korea", "japan", "usa", "china"]
 
 ## The standing of nation `id`: the table below for the first nations, then the "ai" of its own

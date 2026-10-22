@@ -50,7 +50,7 @@ const ESTIMATED := ["military", "infra", "energy", "milex"]
 const QUARTER := 180.0
 const GROWTH_FLOOR := 0.5          # growth is measured against at least this share of the real economy
 ## Real-world output used as each nation's starting economy, in billions of dollars (round figures).
-const BASE_GDP := {"usa": 29000, "china": 18700, "germany": 4900, "france": 3400, "italy": 2400, "iran": 400, "russia": 2200, "india": 3900, "japan": 4000, "turkiye": 1300, "israel": 530,
+const BASE_GDP := {"usa": 29000, "china": 18700, "germany": 4900, "france": 3400, "italy": 2400, "netherlands": 1350, "iran": 400, "russia": 2200, "india": 3900, "japan": 4000, "turkiye": 1300, "israel": 530,
 	"uk": 3600, "south_korea": 1870, "saudi": 1100, "brazil": 2200, "indonesia": 1400, "ukraine": 190, "north_korea": 25, "egypt": 350, "australia": 1800,
 	"pakistan": 370, "iraq": 270, "syria": 12, "afghanistan": 17, "yemen": 20, "houthis": 4, "ethiopia": 150, "nigeria": 190, "south_sudan": 5, "sudan": 30}
 const CIVIC_WEIGHT := 0.6          # a civic building adds this much of an economic one to output

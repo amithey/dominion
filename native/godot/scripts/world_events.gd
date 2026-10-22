@@ -38,25 +38,25 @@ const MAJORS := ["usa", "china", "germany", "japan", "india"]
 const EVENTS := {
 	"hormuz": {"name": "The Strait of Hormuz is closed",
 		"prices": {"oil": 0.8, "gas": 0.6},
-		"income": {"saudi": -0.25, "iraq": -0.25, "iran": -0.15, "japan": -0.12, "south_korea": -0.12, "india": -0.1, "china": -0.08, "pakistan": -0.08, "germany": -0.05, "italy": -0.05, "france": -0.05,
+		"income": {"saudi": -0.25, "iraq": -0.25, "iran": -0.15, "japan": -0.12, "south_korea": -0.12, "india": -0.1, "china": -0.08, "pakistan": -0.08, "germany": -0.05, "netherlands": -0.05, "italy": -0.05, "france": -0.05,
 			"usa": 0.04, "russia": 0.08, "brazil": 0.04, "australia": 0.03},
 		"happiness": {"japan": -3.0, "south_korea": -3.0, "india": -2.0},
 		"why": "about a fifth of the world's oil and of its LNG passes the strait; 69% of that oil goes to China, India, Japan and South Korea"},
 	"grain": {"name": "Black Sea grain stops",
 		"prices": {"food": 0.5},
 		"income": {"egypt": -0.08, "pakistan": -0.04, "indonesia": -0.03, "iraq": -0.04, "syria": -0.05, "saudi": -0.02,
-			"usa": 0.03, "brazil": 0.05, "australia": 0.04, "germany": 0.01, "italy": 0.01, "france": 0.01},
+			"usa": 0.03, "brazil": 0.05, "australia": 0.04, "germany": 0.01, "netherlands": 0.01, "italy": 0.01, "france": 0.01},
 		"happiness": {"egypt": -6.0, "syria": -5.0, "pakistan": -3.0, "iraq": -3.0, "afghanistan": -4.0, "indonesia": -2.0},
 		"why": "Russia and Ukraine grow about a third of the world's wheat"},
 	"gas": {"name": "Europe's gas crisis",
 		"prices": {"gas": 1.0},
-		"income": {"germany": -0.1, "italy": -0.1, "france": -0.1, "uk": -0.05, "turkiye": -0.03, "usa": 0.05, "australia": 0.03, "russia": -0.04},
-		"happiness": {"germany": -4.0, "italy": -4.0, "france": -4.0, "uk": -2.0},
+		"income": {"germany": -0.1, "netherlands": -0.1, "italy": -0.1, "france": -0.1, "uk": -0.05, "turkiye": -0.03, "usa": 0.05, "australia": 0.03, "russia": -0.04},
+		"happiness": {"germany": -4.0, "netherlands": -4.0, "italy": -4.0, "france": -4.0, "uk": -2.0},
 		"why": "Russia supplies much of the gas Europe burns"},
 	"rare_earths": {"name": "Rare-earth shock",
 		"prices": {"silicon": 0.7},
-		"income": {"japan": -0.04, "south_korea": -0.04, "usa": -0.03, "germany": -0.03, "italy": -0.03, "france": -0.03, "india": -0.02, "china": 0.03, "australia": 0.04},
-		"research": {"usa": -0.08, "japan": -0.1, "south_korea": -0.1, "germany": -0.08, "italy": -0.08, "france": -0.08, "india": -0.05, "uk": -0.05},
+		"income": {"japan": -0.04, "south_korea": -0.04, "usa": -0.03, "germany": -0.03, "netherlands": -0.03, "italy": -0.03, "france": -0.03, "india": -0.02, "china": 0.03, "australia": 0.04},
+		"research": {"usa": -0.08, "japan": -0.1, "south_korea": -0.1, "germany": -0.08, "netherlands": -0.08, "italy": -0.08, "france": -0.08, "india": -0.05, "uk": -0.05},
 		"why": "China mines about 70% of the world's rare earths and refines about 90%"},
 	"recession": {"name": "Global recession",
 		"prices": {"oil": -0.2, "iron": -0.2, "silicon": -0.1},
@@ -69,12 +69,12 @@ const EVENTS := {
 		"why": "the threat of nuclear war shakes the markets, and a nuclear explosion would stop the world's trade"},
 	"chips": {"name": "Global chip shortage",
 		"prices": {"silicon": 0.6},
-		"income": {"south_korea": 0.05, "japan": 0.03, "usa": 0.01, "germany": -0.02, "italy": -0.02, "france": -0.02, "india": -0.02},
-		"research": {"usa": -0.02, "germany": -0.03, "italy": -0.03, "france": -0.03, "uk": -0.03, "india": -0.03, "japan": -0.02},
+		"income": {"south_korea": 0.05, "japan": 0.03, "usa": 0.01, "germany": -0.02, "netherlands": -0.02, "italy": -0.02, "france": -0.02, "india": -0.02},
+		"research": {"usa": -0.02, "germany": -0.03, "netherlands": -0.03, "italy": -0.03, "france": -0.03, "uk": -0.03, "india": -0.03, "japan": -0.02},
 		"why": "AI data centres take most of the advanced chips the few fabs can make"},
 	"arms_boom": {"name": "Arms boom",
 		"prices": {"iron": 0.15},
-		"income": {"usa": 0.04, "russia": 0.03, "germany": 0.03, "italy": 0.03, "france": 0.03, "israel": 0.04, "south_korea": 0.04, "turkiye": 0.04, "china": 0.02},
+		"income": {"usa": 0.04, "russia": 0.03, "germany": 0.03, "netherlands": 0.03, "italy": 0.03, "france": 0.03, "israel": 0.04, "south_korea": 0.04, "turkiye": 0.04, "china": 0.02},
 		"why": "three wars at once: the arms exporters' order books fill"},
 }
 
@@ -128,13 +128,13 @@ func cause_of(key: String) -> String:
 				if at_war_any(id):
 					return "%s is at war" % d.name_of(owner_of(id))
 		"gas":
-			if at_war_ids("russia", ["germany", "france", "italy", "uk", "ukraine"]):
+			if at_war_ids("russia", ["germany", "france", "italy", "netherlands", "uk", "ukraine"]):
 				return "Russia is at war in Europe"
 			var eu := owner_of("germany")
 			if eu >= 0 and w.get("power_effects") != null and w.power_effects.any(func(e): return e.kind == "income" and int(e.nation) == eu and ident(int(e.by)) == "russia" and float(e.until) > w.game_time):
 				return "Russia has cut Europe's gas"
 		"rare_earths":
-			if at_war_ids("china", ["usa", "japan", "germany", "france", "italy", "india", "south_korea", "uk", "australia"]):
+			if at_war_ids("china", ["usa", "japan", "germany", "france", "italy", "netherlands", "india", "south_korea", "uk", "australia"]):
 				return "China is at war with an industrial power"
 			if _power("production"):
 				return "China's export controls are in force"

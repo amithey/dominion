@@ -561,7 +561,7 @@ static func _recover(w: Node, carrier: Dictionary, u: Dictionary) -> void:
 
 ## How much of a rival's effort goes to its fleet, by its real navy: the blue-water
 ## navies first, coastal forces least (native/WAR-TOOLS-RESEARCH-2026-10-12.md).
-const NAVY := {"usa": 1.0, "china": 1.0, "uk": 0.7, "france": 0.7, "germany": 0.4, "italy": 0.5, "japan": 0.7, "russia": 0.6, "india": 0.6, "south_korea": 0.6,
+const NAVY := {"usa": 1.0, "china": 1.0, "uk": 0.7, "france": 0.7, "germany": 0.4, "italy": 0.5, "netherlands": 0.35, "japan": 0.7, "russia": 0.6, "india": 0.6, "south_korea": 0.6,
 	"turkiye": 0.5, "iran": 0.45, "australia": 0.45, "egypt": 0.4, "indonesia": 0.4, "israel": 0.35, "pakistan": 0.35, "saudi": 0.35,
 	"brazil": 0.35, "north_korea": 0.3, "ukraine": 0.2, "houthis": 0.15, "yemen": 0.1, "nigeria": 0.2, "iraq": 0.05}
 
