@@ -1,0 +1,36 @@
+{
+  "batch": 25,
+  "files": [
+    "vehicles/samLauncher__patriot_pac_3_mse.glb",
+    "vehicles/samLauncher__rbs_70_ng_battery.glb",
+    "vehicles/samLauncher__s_300vm_iris_t_slm.glb",
+    "vehicles/samLauncher__s_400.glb",
+    "vehicles/samLauncher__samp_t_ng.glb",
+    "vehicles/samLauncher__sky_sabre_camm.glb"
+  ],
+  "sha256": {
+    "vehicles/samLauncher__patriot_pac_3_mse.glb": "83fb4b40f7fcb30c27385efd8506a86f5b46b1e759ee0433184f1c561a4aae1f",
+    "vehicles/samLauncher__rbs_70_ng_battery.glb": "fe1baffa37194022c8527a1b935cf57f8225803cd7df6fdee62989de6c408399",
+    "vehicles/samLauncher__s_300vm_iris_t_slm.glb": "6d2df3045124f29a7015be0fee6a921ac2f0cbe1899ac00ad5e9ca62b6ab51a6",
+    "vehicles/samLauncher__s_400.glb": "2674147a7971ee7b5063d1d225734801de9197f2a2b6e35fa419bd4d686df0cf",
+    "vehicles/samLauncher__samp_t_ng.glb": "886be0fba9eb08e28ef05193949072cca3c22727aa77c8ee5fc5e4a55eee3582",
+    "vehicles/samLauncher__sky_sabre_camm.glb": "71fabc1b4953dd7697778dd3093a10c90bc95a72965e80a0fcc741066ac1594d"
+  },
+  "maximum_triangles": [
+    6552,
+    1220
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p4_air_defence.py",
+    "air_defence_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
