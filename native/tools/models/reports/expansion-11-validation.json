@@ -1,0 +1,36 @@
+{
+  "batch": 11,
+  "files": [
+    "vehicles/mlrs__bm_21_sakr.glb",
+    "vehicles/mlrs__bm_27_himars.glb",
+    "vehicles/mlrs__fajr_5.glb",
+    "vehicles/mlrs__kn_25_m1991.glb",
+    "vehicles/mlrs__lru.glb",
+    "vehicles/mlrs__lynx.glb"
+  ],
+  "sha256": {
+    "vehicles/mlrs__bm_21_sakr.glb": "1a85c6567fe77876cf44c5d5a4830ab1105013d3c39d8b7d954a079c705931ed",
+    "vehicles/mlrs__bm_27_himars.glb": "c47927e3cc160cbd27f4f38798986f1f5799a9546a8f1bf9bb367c5f56803f59",
+    "vehicles/mlrs__fajr_5.glb": "ab801b5786b36ba34ae6abe28813e4e6ec591ce110acfcd0780982b54cbd306c",
+    "vehicles/mlrs__kn_25_m1991.glb": "b6d1c6b40fdb75890fdfaf96b4bed675157fe498ecb70a5e0ebf8c5ef50d6b56",
+    "vehicles/mlrs__lru.glb": "76cf5a9bd6d49d78873e6da4a14eaae9bec095cfd64ad33e8e181680544861e6",
+    "vehicles/mlrs__lynx.glb": "659c49f14c92b4a3d08f08b9e6d1402590982160ef9c8141b0e352e4059c61b3"
+  },
+  "maximum_triangles": [
+    11432,
+    1796
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py",
+    "artillery_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
