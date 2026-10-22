@@ -1,0 +1,36 @@
+{
+  "batch": 22,
+  "files": [
+    "vehicles/aaVehicle__skyshield_rbs_70.glb",
+    "vehicles/aaVehicle__stormer_hvm.glb",
+    "vehicles/aaVehicle__type_87_spaag.glb",
+    "vehicles/aaVehicle__zsu_23_4_shilka.glb",
+    "vehicles/aaVehicle__zu_23_2.glb",
+    "vehicles/aaVehicle__zu_23_2_technical.glb"
+  ],
+  "sha256": {
+    "vehicles/aaVehicle__skyshield_rbs_70.glb": "7b6ed27cd9f0a6f24b44e8869d70eb8522b7de5e4c9219061f836bc1de739071",
+    "vehicles/aaVehicle__stormer_hvm.glb": "23c14a6fd82832d2eb32ec4dd801418e54c1555f58f15a5aaa88bdef2a12347e",
+    "vehicles/aaVehicle__type_87_spaag.glb": "d90f781ea669109f2187a75963b756e49707675982e825f578a15e39395e458d",
+    "vehicles/aaVehicle__zsu_23_4_shilka.glb": "177e2f93793c08e5ada6385df06a03cda0b16d804aea33d2f83bcc1758560328",
+    "vehicles/aaVehicle__zu_23_2.glb": "3a365fefce89300d79225333708973730f9e4d412cc20b685b41e8b148e39c90",
+    "vehicles/aaVehicle__zu_23_2_technical.glb": "b26d7ae3b9947ae7d547aec3b286155966ef6f2eeba52ace667e6dfc3e6c6501"
+  },
+  "maximum_triangles": [
+    11540,
+    1980
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p4_air_defence.py",
+    "air_defence_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}

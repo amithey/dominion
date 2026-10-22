@@ -224,6 +224,17 @@ def gun_mount(rig,s,lod,style,has_radar=True):
                 beam(leg,'paint',(side*s.width*.28,floor,zz),p,.13)
                 leg.tube('paint',p,p+[0,-.65,0],.10,6 if lod else 12);leg.box('metal_dark',p+[0,-.70,0],(.40,.10,.43))
                 rig.add('Outrigger_'+label+str(i),'Hull',p,leg,translation_axis='Y')
+    if style=='zu23' and s.family=='truck':
+        delta=np.array([0,0,-1.85])
+        for part in rig.parts:
+            if part['name']=='Turntable' or part['parent'] in ('Turntable','Launcher'):
+                part['pivot']+=delta
+                if part['mesh'] is not None:part['mesh'].shift(delta)
+                rig.pivots[part['name']]=part['pivot']
+        for tip in s.details['muzzle_positions']:tip[2]-=1.85
+        stand=Mesh();tray=s.wheel_radius*2.05+.18
+        stand.tube('metal_dark',(0,tray,-1.85),(0,base-.08,-1.85),.43,6 if lod else 12)
+        rig.add('Launcher_Stand','Hull',(0,tray,-1.85),stand)
     if style=='rbs70' and s.mobility=='wheeled':
         # Fire unit carried on the rear tray, with sight and operator seat.
         delta=np.array([0,.45,-1.30])
