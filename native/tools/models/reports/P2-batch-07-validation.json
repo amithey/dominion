@@ -1,0 +1,35 @@
+{
+  "batch": 7,
+  "files": [
+    "vehicles/ifv__puma_ifv.glb",
+    "vehicles/ifv__type_89_ifv.glb",
+    "vehicles/ifv__warrior.glb",
+    "vehicles/ifv__zbd_04a.glb",
+    "vehicles/heavyAPC__namer.glb",
+    "vehicles/bushmaster__bushmaster.glb"
+  ],
+  "sha256": {
+    "vehicles/ifv__puma_ifv.glb": "473733c34a2ce0d5e1c8ad082e5f392a7f30c0324f3833f2b544af70bd85af82",
+    "vehicles/ifv__type_89_ifv.glb": "12b8504b76828a57f6dbb17eb018fe3db5958985703b9fa7d04eadfbf3715fcd",
+    "vehicles/ifv__warrior.glb": "c73fb591f96e9f61879907ee846cd6d7236912ba81510e7c5d05d131abfdc16a",
+    "vehicles/ifv__zbd_04a.glb": "d018eae15cc70418e7835efedbc9f94c28facdaa0fd8189d8d458012ca9d8f64",
+    "vehicles/heavyAPC__namer.glb": "76a58bab02e335b7f3d6012f7d148b4c31e145269a7b34306cfbd84842186c51",
+    "vehicles/bushmaster__bushmaster.glb": "ce5f0505137ec161d007cf8eadcc24ee4dd6d4ce366165f3e29e6a0742300378"
+  },
+  "maximum_triangles": [
+    11502,
+    1904
+  ],
+  "checks": [
+    "saved GLB buffers/CCW/normals/UVs/bounds/duplicates",
+    "actual axle counts and positions",
+    "canonical TrackPath phases 0/.25/.5/.75/1 where tracked",
+    "hinge child propagation",
+    "optional weapon yaw/elevation/recoil",
+    "independent trimesh load",
+    "native Godot load/pivots/visibility",
+    "saved GLB LOD0/LOD1/wreck render sheet"
+  ],
+  "generator": "generate_p2_armour.py",
+  "priority_gate": "P2 only plus requested Leclerc; no P3 assets"
+}
