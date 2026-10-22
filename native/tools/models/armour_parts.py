@@ -270,8 +270,12 @@ def weapon(rig,s,lod):
 def truck_body(m,s,lod):
     """Cab, exposed chassis rails, glazing, mirrors, steps and equipment deck."""
     h=s.length/2;w=s.width/2;r=s.roof;cab=s.details.get('cab',2.1);front=h-.10
-    for side in (-1,1):m.box('metal_dark',(side*w*.57,s.wheel_radius*.9,-.12),(.15,.23,s.length-.50))
-    m.box('paint',(0,s.wheel_radius*1.75,-cab*.30),(s.width-.12,.16,s.length-cab*.45))
+    rail=s.wheel_radius*1.45;bed=s.wheel_radius*2.05+.10
+    for side in (-1,1):m.box('metal_dark',(side*w*.57,rail,-.12),(.15,.23,s.length-.50))
+    m.box('paint',(0,bed,-cab*.30),(s.width-.12,.16,s.length-cab*.45))
+    for zz in s.axle_z:
+        for side in (-1,1):m.box('metal_dark',(side*w*.57,(rail+.115+bed-.08)/2,zz),(.16,bed-.08-rail-.115,.22))
+        m.box('metal_dark',(0,bed-.10,zz),(s.width*.64,.12,.16))
     # Flat-front cab-over vs bonneted Elbit/Type2 truck configurations.
     hood=s.details.get('hood',0.)
     cz=front-cab*.5-hood
@@ -437,6 +441,9 @@ def engineering(rig,s,lod):
                 m.box('paint',(side*.61,.48,-h-.73),(.36,.17,.54))
             rig.add('Mine_Chutes','Hull',(0,r-.12,-h+.05),m,'X')
         elif kind=='zemledelie':
+            floor=s.wheel_radius*2.05+.18;hinge=r-.58
+            base=Mesh();base.box('paint',(0,(floor+hinge)/2,-2.60),(1.48,hinge-floor,1.12))
+            rig.add('Launcher_Base','Hull',(0,floor,-2.60),base)
             # Two 25-tube modules (50 tubes), carried on the 8x8 KamAZ chassis.
             for side in (-1,1):
                 m.box('paint',(side*.60,r-.10,-1.30),(1.13,1.12,3.30))
@@ -447,11 +454,15 @@ def engineering(rig,s,lod):
             rig.add('Launcher','Hull',(0,r-.58,-2.60),m,'X')
         else:
             count=6 if kind=='skorpion' else 4
+            floor=s.wheel_radius*2.05+.18 if s.mobility=='wheeled' else 1.08
             for side in (-1,1):
                 for j,z in enumerate(np.linspace(-h+.50,.65,count//2)):
                     # Distinct angled dispenser banks, not a missile turret.
                     box=Mesh();box.box('paint',(0,0,0),(.59,.86,.75))
                     merge_mesh(m,box,R=rotation((0,0,1),side*.28),t=[side*.79,r+.28,z])
+                    top=r-.19
+                    m.box('paint',(side*.79,(floor+top)/2,z),(.32,top-floor,.42))
+                    m.box('metal_dark',(side*.79,floor+.025,z),(.64,.05,.62))
                     if not lod:
                         for yy in (-.22,0,.22):m.tube('metal_dark',(side*1.08,r+.28+yy,z-.24),(side*1.13,r+.28+yy,z-.24),.071,6)
             rig.add('Mine_Dispensers','Hull',(0,r,0),m)
@@ -459,12 +470,14 @@ def engineering(rig,s,lod):
 
 def ew_equipment(rig,s,lod):
     h=s.length/2;r=s.roof;n=8 if lod else 12;m=Mesh();z=-h*.35
-    m.box('paint',(0,r-.26,z),(s.width-.28,1.65,s.length*.46))
+    floor=s.wheel_radius*2.05+.18;top=r+.565;cy=(floor+top)/2
+    m.box('paint',(0,cy,z),(s.width-.28,top-floor,s.length*.46))
     if not lod:
         for side in (-1,1):
             for yy in np.linspace(r-.77,r-.30,6):m.box('metal_dark',(side*(s.width/2-.125),yy,z-.40),(.025,.035,1.1))
-    rig.add('Mission_Shelter','Hull',(0,r-.26,z),m)
+    rig.add('Mission_Shelter','Hull',(0,cy,z),m)
     mast=np.array([s.width*.27,r+.58,z-.50]);m=Mesh()
+    m.box('paint',mast-[0,.018,0],(.30,.06,.30))
     height=1.30 if s.equipment!='krasukha' else .55
     m.tube('paint',mast,mast+[0,height,0],.10,n,r_top=.065)
     if s.equipment=='koral':
@@ -506,6 +519,7 @@ def build(s,lod=0):
         mark_x=s.width*.475+.03;mark_y=s.roof-1.05
         mark_z=s.length/2-.10-s.details.get('cab',2.1)*.5-s.details.get('hood',0.)
     if s.family=='jackal':mark_x=s.width/2-.10;mark_y=1.28
+    if s.equipment in ('engineer_layer','skorpion'):mark_z=s.length/2-.75;mark_y=s.roof*.72
     for side in (-1,1):
         px=side*mark_x
         m.box('paint',(px,mark_y,mark_z),(.10,.28,.50))
@@ -513,8 +527,9 @@ def build(s,lod=0):
     m.remove_duplicates();rig.add('Hull',rig.root,(0,0,0),m)
     mobility(rig,s,lod);weapon(rig,s,lod)
     p=np.array([-.46,s.roof+.025,-.32]);m=Mesh();m.tube('paint',p+[0,-.015,.27],p+[0,.055,.27],.28,6 if lod else 12)
-    if s.family not in ('jackal','truck'):rig.add('Hatch_Commander','Hull',p,m,'X')
+    if s.family not in ('jackal','truck') and s.equipment not in ('engineer_layer','skorpion'):rig.add('Hatch_Commander','Hull',p,m,'X')
     rear_deck=s.roof*.59 if s.family=='recovery' else s.roof
+    if s.equipment in ('engineer_layer','skorpion'):rear_deck=1.08
     a=np.array([s.width*.33,rear_deck,-s.length*.32]);m=Mesh()
     m.tube('metal_dark',a,a+[0,.63 if s.family=='fennek' else 1.10,0],.013,4 if lod else 6)
     rig.add('Antenna_1','Hull',a,m,'Y')

@@ -1,0 +1,35 @@
+{
+  "batch": 10,
+  "files": [
+    "vehicles/recoveryVehicle__wzt_3.glb",
+    "vehicles/mineClearer__keiler.glb",
+    "vehicles/mineClearer__m1150_assault_breacher.glb",
+    "vehicles/mineClearer__mine_clearing_vehicle.glb",
+    "vehicles/mineClearer__trojan_avre.glb",
+    "vehicles/mineClearer__ur_77_meteorit.glb"
+  ],
+  "sha256": {
+    "vehicles/recoveryVehicle__wzt_3.glb": "48059e32c710ccd98bb2c1cc7851ee760835f3ccfa15b1756050ef4229c03b08",
+    "vehicles/mineClearer__keiler.glb": "7cf6e02730f8481a95369d4af1fbe727e26785602f31f8d5439612f0b3cdd67f",
+    "vehicles/mineClearer__m1150_assault_breacher.glb": "4144d6626104e311aedec8ce6c2b121aa5d895fe3aef14361b6ebf32b9f4ba67",
+    "vehicles/mineClearer__mine_clearing_vehicle.glb": "d826a557f2c7557447611df25f8429db004c2c428a2bc8f2d3999454d7980331",
+    "vehicles/mineClearer__trojan_avre.glb": "78cd2c8123dd853c2d3f2064f9e2fcff36ffbf63b6b26d475c44be7655222a73",
+    "vehicles/mineClearer__ur_77_meteorit.glb": "dfd35ec3381036ef4fb924b8cf3bacaef792ec96c9d732266a02920f95453cb3"
+  },
+  "maximum_triangles": [
+    12262,
+    2288
+  ],
+  "checks": [
+    "saved GLB buffers/CCW/normals/UVs/bounds/duplicates",
+    "actual axle counts and positions",
+    "canonical TrackPath phases 0/.25/.5/.75/1 where tracked",
+    "hinge child propagation",
+    "optional weapon yaw/elevation/recoil",
+    "independent trimesh load",
+    "native Godot load/pivots/visibility",
+    "saved GLB LOD0/LOD1/wreck render sheet"
+  ],
+  "generator": "generate_p2_armour.py",
+  "priority_gate": "P2 only plus requested Leclerc; no P3 assets"
+}

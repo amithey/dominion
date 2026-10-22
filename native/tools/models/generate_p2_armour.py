@@ -325,7 +325,7 @@ def mineClearer__ur_77_meteorit(lod=0):
         features=['Seven 2S1-derived road wheels','long low hull','twin line-charge rocket tubes in large roof launcher housing'],equipment='ur77',front_engine=True)
 
 def mineLayer__engineer_minelayer(lod=0):
-    return carrier('mineLayer__engineer_minelayer','Engineer Minelayer',lod,5.90,2.65,2.02,'m113','',5,.28,.68,True,source='volcano',
+    return carrier('mineLayer__engineer_minelayer','Engineer Minelayer',lod,5.90,2.65,2.60,'m113','',5,.28,.68,True,source='volcano',
         features=['M548-pattern tracked dispenser representative','five wheels','forward crew cab and rear mine racks'],equipment='engineer_layer',approx=True,representative='M548-pattern tracked minelayer',bow=.72,shoulder=.98)
 
 def mineLayer__gmz_3(lod=0):
@@ -341,7 +341,7 @@ def mineLayer__m139_volcano(lod=0):
         features=['M939-series 6x6 truck carrier selected','bonneted truck cab','four mine-dispenser racks on cargo bed','isolated front axle and rear tandem'],equipment='volcano',representative='M139 Volcano on M939-series 5-ton 6x6',axles=[-2.78,-1.28,2.85],cab=1.90,hood=1.50)
 
 def mineLayer__skorpion_mine_dispenser(lod=0):
-    return carrier('mineLayer__skorpion_mine_dispenser','Skorpion Mine Dispenser',lod,5.75,2.65,1.83,'m113','',5,.28,.67,True,source='https://www.bundeswehr.de/',
+    return carrier('mineLayer__skorpion_mine_dispenser','Skorpion Mine Dispenser',lod,5.75,2.65,2.60,'m113','',5,.28,.67,True,source='https://www.bundeswehr.de/',
         features=['M548-derived five-wheel chassis','forward low cab','six angled dispenser banks arranged in two rows','open rear equipment platform'],equipment='skorpion',bow=.72,shoulder=.98)
 
 def ewVehicle__elbit_ew_truck(lod=0):
