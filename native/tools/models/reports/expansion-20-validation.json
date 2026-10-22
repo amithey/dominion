@@ -1,0 +1,36 @@
+{
+  "batch": 20,
+  "files": [
+    "vehicles/aaVehicle__gepard_1a2.glb",
+    "vehicles/aaVehicle__iron_dome_battery.glb",
+    "vehicles/aaVehicle__k30_biho_ii.glb",
+    "vehicles/aaVehicle__korkut.glb",
+    "vehicles/aaVehicle__ly_80_oerlikon.glb",
+    "vehicles/aaVehicle__m_shorad.glb"
+  ],
+  "sha256": {
+    "vehicles/aaVehicle__gepard_1a2.glb": "6923ad7c929fe7a25e56e9ba29c006e15ee0f78a2e98b42825ed58117019947a",
+    "vehicles/aaVehicle__iron_dome_battery.glb": "2f6aecd48525c5f65d321c02d0cb1978f5c5994a668799007723102f0b32431e",
+    "vehicles/aaVehicle__k30_biho_ii.glb": "945486da70709315e82c42a256c9fe599a8937c7dedec21a2ad99b0dab23acbc",
+    "vehicles/aaVehicle__korkut.glb": "45289e25086e9663df61dbe8a16d19f19177db96e27f5a34ee45a33dd4b913a6",
+    "vehicles/aaVehicle__ly_80_oerlikon.glb": "b5abd8bdaf469e8222bc1c5af164fef22234da497bee4d188d2ee27b82ef0ce6",
+    "vehicles/aaVehicle__m_shorad.glb": "7497940824ab12df34c239cb1d4b6ea21a3a42cffe29ae0e6198a2fe266188dc"
+  },
+  "maximum_triangles": [
+    12204,
+    2076
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p4_air_defence.py",
+    "air_defence_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
