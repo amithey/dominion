@@ -359,7 +359,7 @@ def recovery(rig,s,lod):
         rig.add('Boom','Hull',p,m,'X',hinge='A-frame heel bearings')
     else:
         # Slewing crane carried on a starboard turntable; articulated lift arm.
-        x=w*.56;p=np.array([x,r-.08,-.28]);m.tube('paint',p-[0,.12,0],p+[0,.23,0],.32,n)
+        x=w*.56*s.details.get('crane_side',1);p=np.array([x,r-.08,h*.42]);m.tube('paint',p-[0,.12,0],p+[0,.23,0],.32,n)
         rig.add('Boom','Hull',p,m,'Y',hinge='crane turntable')
         m=Mesh();a=p+[0,.27,0];b=np.array([x,r+.54,-h+.38])
         beam(m,'paint',a,b,.31);beam(m,'metal_dark',a+[0,-.12,-.18],b+[0,-.17,.40],.10)
@@ -400,6 +400,16 @@ def engineering(rig,s,lod):
         rig.add('Line_Charge_Launcher','Hull',(0,r+.10,-1.25),m,'X')
     if kind=='trojan':
         recovery(rig,s,lod)
+        # Excavator elbow, dipper and digging bucket distinguish Trojan from
+        # a recovery crane. Each hydraulic articulation has its own hinge.
+        x=w*.56;a=np.array([x,r+.54,-h+.38]);b=np.array([x,r-.10,-h+1.32]);m=Mesh()
+        beam(m,'paint',a,b,.23)
+        beam(m,'metal_dark',a+[0,.08,.15],b+[0,.09,-.10],.075)
+        rig.add('Dipper','Boom_Lift',a,m,'X');m=Mesh()
+        profile_hull(m,'metal_dark',[(b[2]-.26,b[1]-.20,.37),(b[2]+.36,b[1]-.27,.37),
+             (b[2]+.31,b[1]+.16,.37),(b[2]-.20,b[1]+.12,.37)])
+        # Profile is centered on X before shifting onto the side-mounted arm.
+        m.shift([x,0,0]);rig.add('Bucket','Dipper',b,m,'X')
     if kind in ('gmz','engineer_layer','volcano','skorpion','zemledelie'):
         m=Mesh()
         if kind=='gmz':

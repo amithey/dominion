@@ -278,11 +278,11 @@ def recoveryVehicle__armoured_recovery_vehicle(lod=0):
 
 def recoveryVehicle__bergepanzer_3_buffel(lod=0):
     return arv('recoveryVehicle__bergepanzer_3_buffel','Bergepanzer 3 Buffel',lod,8.13,3.54,2.20,7,.99,'slew','puma',
-        ['Seven-wheel Leopard 2 chassis','front dozer spade','starboard slewing crane','low asymmetric recovery cabin','rear work deck'])
+        ['Seven-wheel Leopard 2 chassis','front dozer spade','front-right slewing crane','low asymmetric recovery cabin','rear work deck'])
 
 def recoveryVehicle__brem_1(lod=0):
     return arv('recoveryVehicle__brem_1','BREM-1',lod,6.98,3.46,1.68,6,.87,'slew','soviet',
-        ['Six T-72 road wheels','very low turretless hull','folded starboard crane','front anchor spade','rear cargo platform'])
+        ['Six T-72 road wheels','very low turretless hull','folded port-side crane','front anchor spade','rear cargo platform'],crane_side=-1)
 
 def recoveryVehicle__challenger_arrv(lod=0):
     return arv('recoveryVehicle__challenger_arrv','Challenger ARRV',lod,8.30,3.62,2.35,6,1.02,'slew','trojan',
@@ -302,7 +302,7 @@ def recoveryVehicle__type_90_arv(lod=0):
 
 def recoveryVehicle__wzt_3(lod=0):
     return arv('recoveryVehicle__wzt_3','WZT-3',lod,7.10,3.46,1.85,6,.88,'slew','https://bumar.gliwice.pl/',
-        ['Six T-72-derived road wheels','low armoured recovery cab','rear cargo platform','folded crane and front anchor spade'])
+        ['Six T-72-derived road wheels','low armoured recovery cab','rear cargo platform','folded port-side crane and front anchor spade'],crane_side=-1)
 
 def mineClearer__keiler(lod=0):
     return carrier('mineClearer__keiler','Keiler',lod,8.0,3.50,1.92,'engineering','',6,.38,.96,True,source='puma',

@@ -1,0 +1,35 @@
+{
+  "batch": 4,
+  "files": [
+    "vehicles/apc__m_2010.glb",
+    "vehicles/apc__m113_fahd.glb",
+    "vehicles/apc__pars.glb",
+    "vehicles/apc__rakhsh.glb",
+    "vehicles/apc__saad_m113.glb",
+    "vehicles/apc__stryker.glb"
+  ],
+  "sha256": {
+    "vehicles/apc__m_2010.glb": "a717322df770be8fa47b4992013deb7501635e2d8ff4e6629eafb7a680393c43",
+    "vehicles/apc__m113_fahd.glb": "64ba1d32e4664ae3215535965e78637493ac8fca6be3ad660ab869d73931112c",
+    "vehicles/apc__pars.glb": "5aced799c82f3f549547f1779ee32833fc0c0f6a4fb7b067f2b9298c6fb305fb",
+    "vehicles/apc__rakhsh.glb": "c0fc38010e5f3315dee9604e89bf667f60761e5c6ae0068fbb60bc65c4790ce2",
+    "vehicles/apc__saad_m113.glb": "680005f5ccda89125de3499bab429c563970f78c1a23c2dc2757af4e358423e4",
+    "vehicles/apc__stryker.glb": "2eb7d4d68d3399aa78ca4310244fd679ad353cb6a972a393d1412a6aec20dfa3"
+  },
+  "maximum_triangles": [
+    11134,
+    1808
+  ],
+  "checks": [
+    "saved GLB buffers/CCW/normals/UVs/bounds/duplicates",
+    "actual axle counts and positions",
+    "canonical TrackPath phases 0/.25/.5/.75/1 where tracked",
+    "hinge child propagation",
+    "optional weapon yaw/elevation/recoil",
+    "independent trimesh load",
+    "native Godot load/pivots/visibility",
+    "saved GLB LOD0/LOD1/wreck render sheet"
+  ],
+  "generator": "generate_p2_armour.py",
+  "priority_gate": "P2 only plus requested Leclerc; no P3 assets"
+}
