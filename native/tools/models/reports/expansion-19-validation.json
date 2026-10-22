@@ -1,0 +1,36 @@
+{
+  "batch": 19,
+  "files": [
+    "vehicles/aaVehicle__2k22_tunguska.glb",
+    "vehicles/aaVehicle__35_mm_air_defence_gun.glb",
+    "vehicles/aaVehicle__avenger_shahine.glb",
+    "vehicles/aaVehicle__avenger_sinai_23.glb",
+    "vehicles/aaVehicle__crotale_ng.glb",
+    "vehicles/aaVehicle__gepard_strela_10.glb"
+  ],
+  "sha256": {
+    "vehicles/aaVehicle__2k22_tunguska.glb": "80e14e4d103b95b4553a03ba7c15265d7f939ba22ddd2b4dc340a87a9e8d7e6f",
+    "vehicles/aaVehicle__35_mm_air_defence_gun.glb": "e7a36dc8e2000fefa4bda5b7453e3b69835b054b5a4ebc7c6aa9c8e168745657",
+    "vehicles/aaVehicle__avenger_shahine.glb": "207becd531496f7ffe98076a3b400090b2ea32a24a64df43f45b35acdcd27d8d",
+    "vehicles/aaVehicle__avenger_sinai_23.glb": "7c14e1f7af517c99d6d01ac78d4f745fa23e7e4bee8cd345ead8a5478f390420",
+    "vehicles/aaVehicle__crotale_ng.glb": "a9824e4fb723b0544a93f3b3c6c58014e8bb435443732b946e5cedabadcb0df8",
+    "vehicles/aaVehicle__gepard_strela_10.glb": "c90d75fd216ce6dd5ab083fc09b29d6b94bb1d021281b9b8ffbb718baa7f22f9"
+  },
+  "maximum_triangles": [
+    12460,
+    2328
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p4_air_defence.py",
+    "air_defence_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
