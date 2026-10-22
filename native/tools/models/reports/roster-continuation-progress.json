@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 87,
+  "ready_files": 92,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -182,6 +182,17 @@
         "vehicles/heavyRocket__heavy_rocket_launcher.glb",
         "vehicles/tos1a__tos_1a_solntsepyok.glb"
       ]
+    },
+    {
+      "batch": 16,
+      "report": "expansion-16-validation.json",
+      "files": [
+        "vehicles/directFire__amx_10_rc.glb",
+        "vehicles/directFire__ee_9_cascavel.glb",
+        "vehicles/directFire__type_16_mcv.glb",
+        "vehicles/directFire__harimau.glb",
+        "vehicles/brahmos__brahmos_battery.glb"
+      ]
     }
   ],
   "priorities": {
@@ -213,7 +224,7 @@
     "P3": {
       "requested_rows": 93,
       "unique_files": 93,
-      "ready_files": 78,
+      "ready_files": 83,
       "ready_slugs": [
         "artillery__2s19_msta_s",
         "artillery__2s1_gvozdika_d_30",
@@ -241,6 +252,11 @@
         "artillery__sh_5_palmaria",
         "artillery__t_155_firtina",
         "artillery__type_99_sph",
+        "brahmos__brahmos_battery",
+        "directFire__amx_10_rc",
+        "directFire__ee_9_cascavel",
+        "directFire__harimau",
+        "directFire__type_16_mcv",
         "heavyRocket__heavy_rocket_launcher",
         "himars__chunmoo_guided_cgr_080",
         "himars__europuls",
@@ -295,7 +311,6 @@
         "wheeledHowitzer__type_19_howitzer"
       ],
       "remaining_slugs": [
-        "brahmos__brahmos_battery",
         "coastalASM__ghader_coastal_battery",
         "coastalASM__k_300p_bastion_p",
         "coastalASM__nmesis",
@@ -304,10 +319,6 @@
         "coastalASM__type_12_ssm",
         "coastalASM__yj_62_coastal_battery",
         "df17__df_17_launcher",
-        "directFire__amx_10_rc",
-        "directFire__ee_9_cascavel",
-        "directFire__harimau",
-        "directFire__type_16_mcv",
         "shahedLauncher__geran_2_launcher",
         "shahedLauncher__shahed_launcher"
       ]

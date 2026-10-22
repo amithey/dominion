@@ -325,7 +325,9 @@ def wheeled_direct(slug,name,lod,L,W,H,axles,r,tw,th,td,barrel,cal,style,source)
     fp=[(-tw*.26,td*front),(tw*.26,td*front),(tw*.50,td*.15),(tw*.47,-td*.44),(-tw*.47,-td*.44),(-tw*.50,td*.15)]
     shrink=.74 if style=='cascavel' else .84
     loft(t,'paint',[[(x,y,z+zz) for x,zz in fp],[(x*shrink,y+th,z+zz*.86) for x,zz in fp]])
-    for side in (-1,1):t.box('markings',(side*(tw*.47+.012),y+th*.49,z-.42),(.017,.22,.40))
+    for side in (-1,1):
+        t.box('paint',(side*(tw*.47-.025),y+th*.49,z-.42),(.10,.27,.47))
+        t.box('markings',(side*(tw*.47+.031),y+th*.49,z-.42),(.017,.22,.40))
     t.tube('paint',(-tw*.18,y+th,z-.25),(-tw*.18,y+th+.07,z-.25),.29,n)
     t.box('paint',(.50,y+th+.10,z+.27),(.33,.22,.40));t.box('glass',(.50,y+th+.11,z+.484),(.22,.13,.025))
     rig.add('Turret','Hull',(0,y,z),t,'Y')

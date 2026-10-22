@@ -1,0 +1,34 @@
+{
+  "batch": 16,
+  "files": [
+    "vehicles/directFire__amx_10_rc.glb",
+    "vehicles/directFire__ee_9_cascavel.glb",
+    "vehicles/directFire__type_16_mcv.glb",
+    "vehicles/directFire__harimau.glb",
+    "vehicles/brahmos__brahmos_battery.glb"
+  ],
+  "sha256": {
+    "vehicles/directFire__amx_10_rc.glb": "7777f210319a8e4fc9b642b8f5530bdc1a2081a0d98e5bf7034175d2affde71c",
+    "vehicles/directFire__ee_9_cascavel.glb": "e6cbc341e58eaf1f7433fb52e552168fbfa8702597987e8583e1d4739cb11b60",
+    "vehicles/directFire__type_16_mcv.glb": "3c622aa23baf7bf2dba0b3186df863a0da002ec16f52f388fec35739679c98a0",
+    "vehicles/directFire__harimau.glb": "8067c02ed692769a3895a79aaa1fdd05e4b9d0593b02a0c138c83e04139669a1",
+    "vehicles/brahmos__brahmos_battery.glb": "7eab3bf11a3c9d590a4ab961362b16b29bcbe3240e69a7985fa32fc2d684891c"
+  },
+  "maximum_triangles": [
+    11986,
+    2060
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py",
+    "artillery_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
