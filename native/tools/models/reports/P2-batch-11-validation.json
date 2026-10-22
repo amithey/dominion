@@ -1,0 +1,33 @@
+{
+  "batch": 11,
+  "files": [
+    "vehicles/mineLayer__engineer_minelayer.glb",
+    "vehicles/mineLayer__gmz_3.glb",
+    "vehicles/mineLayer__isdm_zemledelie.glb",
+    "vehicles/mineLayer__m139_volcano.glb",
+    "vehicles/mineLayer__skorpion_mine_dispenser.glb"
+  ],
+  "sha256": {
+    "vehicles/mineLayer__engineer_minelayer.glb": "22c0ebec00ca52a8420d03b6266c8d1ce6e1c736c0e993149a18ef49a543d78a",
+    "vehicles/mineLayer__gmz_3.glb": "62507cd76a9480d4e1258364f2beee26e53877e279609148b60f560ad6a8dc11",
+    "vehicles/mineLayer__isdm_zemledelie.glb": "05e3e0289399d0d01371af21388abace64e5a7811e88fafadda5746bf835e65d",
+    "vehicles/mineLayer__m139_volcano.glb": "ac423bf395784ad5f60099282a24f585a80561802fe2025b34c05346dc137161",
+    "vehicles/mineLayer__skorpion_mine_dispenser.glb": "a0cfa53ac808c1ee182e68b40f5cdca9ecd018d460f067486f39d48102451cef"
+  },
+  "maximum_triangles": [
+    13032,
+    2336
+  ],
+  "checks": [
+    "saved GLB buffers/CCW/normals/UVs/bounds/duplicates",
+    "actual axle counts and positions",
+    "canonical TrackPath phases 0/.25/.5/.75/1 where tracked",
+    "hinge child propagation",
+    "optional weapon yaw/elevation/recoil",
+    "independent trimesh load",
+    "native Godot load/pivots/visibility",
+    "saved GLB LOD0/LOD1/wreck render sheet"
+  ],
+  "generator": "generate_p2_armour.py",
+  "priority_gate": "P2 only plus requested Leclerc; no P3 assets"
+}

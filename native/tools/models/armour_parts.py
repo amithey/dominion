@@ -455,16 +455,30 @@ def engineering(rig,s,lod):
         else:
             count=6 if kind=='skorpion' else 4
             floor=s.wheel_radius*2.05+.18 if s.mobility=='wheeled' else 1.08
+            is_skorpion=kind=='skorpion';depth=.99 if is_skorpion else 1.84
+            module_height=.95 if is_skorpion else .72
+            center_y=floor+(1.30 if is_skorpion else .65)
+            rear_center=-h+.15+depth/2
+            cab_rear=h-.10-s.details.get('cab',2.1)-s.details.get('hood',0.) if s.family=='truck' else h-1.65
+            front_center=cab_rear-.15-depth/2
             for side in (-1,1):
-                for j,z in enumerate(np.linspace(-h+.50,.65,count//2)):
-                    # Distinct angled dispenser banks, not a missile turret.
-                    box=Mesh();box.box('paint',(0,0,0),(.59,.86,.75))
-                    merge_mesh(m,box,R=rotation((0,0,1),side*.28),t=[side*.79,r+.28,z])
-                    top=r-.19
-                    m.box('paint',(side*.79,(floor+top)/2,z),(.32,top-floor,.42))
-                    m.box('metal_dark',(side*.79,floor+.025,z),(.64,.05,.62))
-                    if not lod:
-                        for yy in (-.22,0,.22):m.tube('metal_dark',(side*1.08,r+.28+yy,z-.24),(side*1.13,r+.28+yy,z-.24),.071,6)
+                for j,z in enumerate(np.linspace(rear_center,front_center,count//2)):
+                    box=Mesh();box.box('paint',(0,0,0),(.84,module_height,depth))
+                    # Four rows of 10 Volcano or 5 Skorpion canister mouths.
+                    # Low-detail banks retain the same exterior and sample ends.
+                    rows=2 if lod else 4;cols=(3 if lod else (5 if is_skorpion else 10))
+                    for yy in np.linspace(-module_height*.36,module_height*.36,rows):
+                        for zz in np.linspace(-depth*.43,depth*.43,cols):
+                            box.tube('metal_dark',(side*.425,yy,zz),(side*.47,yy,zz),.068,6)
+                    bank=merge_mesh(Mesh(),box,R=rotation((0,0,1),side*.38),t=[side*.79,center_y,z])
+                    rig.add('Dispenser_'+('L' if side<0 else 'R')+str(j),'Hull',
+                            (side*.79,floor+(.78 if is_skorpion else .20),z),bank,'Y' if is_skorpion else None)
+                    if is_skorpion:
+                        m.box('paint',(side*.79,floor+.39,z),(.70,.78,depth*.82))
+                    else:
+                        for zz in (z-depth*.34,z+depth*.34):
+                            m.box('metal_dark',(side*.79,floor+.14,zz),(.63,.28,.11))
+                    m.box('metal_dark',(side*.79,floor+.025,z),(.75,.05,depth))
             rig.add('Mine_Dispensers','Hull',(0,r,0),m)
 
 
@@ -531,6 +545,7 @@ def build(s,lod=0):
     rear_deck=s.roof*.59 if s.family=='recovery' else s.roof
     if s.equipment in ('engineer_layer','skorpion'):rear_deck=1.08
     a=np.array([s.width*.33,rear_deck,-s.length*.32]);m=Mesh()
+    if s.family=='truck':a[2]=s.length/2-.10-s.details.get('cab',2.1)*.5-s.details.get('hood',0.)
     m.tube('metal_dark',a,a+[0,.63 if s.family=='fennek' else 1.10,0],.013,4 if lod else 6)
     rig.add('Antenna_1','Hull',a,m,'Y')
     rig.add('Engine_Deck','Hull',(s.width*.20,rear_deck if not s.front_engine else s.roof,s.length*.28 if s.front_engine else -s.length*.30))
