@@ -1,0 +1,35 @@
+{
+  "batch": 3,
+  "files": [
+    "vehicles/apc__btr_80a_btr_70.glb",
+    "vehicles/apc__btr_82a.glb",
+    "vehicles/apc__eitan.glb",
+    "vehicles/apc__humvee_captured.glb",
+    "vehicles/apc__k808_apc.glb",
+    "vehicles/apc__lav_700.glb"
+  ],
+  "sha256": {
+    "vehicles/apc__btr_80a_btr_70.glb": "3740b466aae50ad95414ec019e4bb3ce3d99438803ef08d27e3f7b43128ab9a2",
+    "vehicles/apc__btr_82a.glb": "163a3a3aa43f9d3224543b78444a9e7a3dbcc8c5f8e5f1092fd82e33b8c62753",
+    "vehicles/apc__eitan.glb": "9cdaf5f5d7d1b40654f94569c334bf03dc71175b74c39c13c35237ff0619351d",
+    "vehicles/apc__humvee_captured.glb": "2bcbcda35f268917608be114c441d3f1fad0c9681bb8608690cbc5c8a5bc1cd6",
+    "vehicles/apc__k808_apc.glb": "0ffead2fe57790f8e6c6444867b39b2c3215b4df2b4843f679342de535efe62f",
+    "vehicles/apc__lav_700.glb": "32a290db553419d4b851542dd0cbbdd96bb307fbf764511cb82ef2edaced88dc"
+  },
+  "maximum_triangles": [
+    6530,
+    1108
+  ],
+  "checks": [
+    "saved GLB buffers/CCW/normals/UVs/bounds/duplicates",
+    "actual axle counts and positions",
+    "canonical TrackPath phases 0/.25/.5/.75/1 where tracked",
+    "hinge child propagation",
+    "optional weapon yaw/elevation/recoil",
+    "independent trimesh load",
+    "native Godot load/pivots/visibility",
+    "saved GLB LOD0/LOD1/wreck render sheet"
+  ],
+  "generator": "generate_p2_armour.py",
+  "priority_gate": "P2 only plus requested Leclerc; no P3 assets"
+}

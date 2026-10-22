@@ -162,9 +162,10 @@ def recognition(m,s,lod):
         for side in (-1,1):
             for z in np.linspace(-h+.50,h-.65,5):m.box('paint',(side*(w-.025),r*.63,z),(.065,.48,(s.length-1.1)/5-.055))
     if f.get('era'):
+        count=6 if not lod else 3;start=-h+.50;end=h-.55;cell=(end-start)/count
         for side in (-1,1):
-            for z in np.linspace(-h+.60,h-.70,6 if not lod else 3):
-                m.box('paint',(side*(w-.06),r*.73,z),(.16,.42,(s.length-1.2)/(6 if not lod else 3)-.08))
+            for z in start+(np.arange(count)+.5)*cell:
+                m.box('paint',(side*(w-.06),r*.73,z),(.16,.42,cell-.08))
     if f.get('bow_guns'):
         for side in (-1,1):m.tube('metal_dark',(side*.90,r*.52,h-.1),(side*.90,r*.52,h+.23),.026,6)
     if f.get('side_door'):
@@ -172,6 +173,7 @@ def recognition(m,s,lod):
     if f.get('spare'):
         dummy=ArmourSpec('', '',1,s.width,1,'wheeled',2,s.wheel_radius,s.family,'',[],s.source)
         tyre=road_tyre(dummy,lod,1)
+        m.box('metal_dark',(w*.45,r*.57,-h),(.22,.22,.55))
         merge_mesh(m,tyre,R=rotation((0,1,0),math.pi/2),t=[w*.45,r*.57,-h-.28])
     if f.get('m113_fuel'):
         for side in (-1,1):m.box('paint',(side*w*.76,1.13,-h+.02),(.33,.94,.34))
@@ -297,7 +299,9 @@ def scout_body(m,s,lod):
         profile_hull(m,'paint',[(h-.20,.42,w*.77),(h,r*.60,w*.90),(h*.44,r,w*.73),
              (-h*.72,r,w*.80),(-h,r*.57,w*.96),(-h+.15,.42,w*.77)])
         for side in (-1,1):
-            m.box('glass',(side*.44,r-.21,h*.45),(.63,.35,.055))
+            angle=-math.atan((h-h*.44)/(r*.40));yy=r-.21
+            zz=h*.44+(r-yy)*(h-h*.44)/(r*.40)
+            m.box('glass',(side*.44,yy+.02,zz+.025),(.63,.43,.035),rotation((1,0,0),angle))
             m.box('glass',(side*w*.82,r-.23,h*.12),(.04,.36,.62))
     else:
         # Bonneted 4x4 armoured protected patrol vehicle; Jackal is open.
@@ -319,7 +323,7 @@ def scout_body(m,s,lod):
             profile_hull(m,'paint',[(front,.93,w*.91),(front,r-.33,w*.87),(front-.22,r,w*.75),
                  (rear,r,w*.77),(rear,.93,w*.91)])
             for side in (-1,1):
-                m.box('glass',(side*.43,r-.62,front+.026),(.65,.43,.04))
+                m.box('glass',(side*.43,r-.145,front-.089),(.65,.30,.035),rotation((1,0,0),-math.atan(.22/.33)))
                 for z in np.linspace(rear+.55,front-.57,2 if s.length<6 else 3):
                     m.box('paint',(side*w*.90,r-.63,z),(.04,.82,.74))
                     m.box('glass',(side*(w*.90+.025),r-.34,z),(.025,.33,.55))
@@ -372,7 +376,7 @@ def recovery(rig,s,lod):
 
 def engineering(rig,s,lod):
     h=s.length/2;r=s.roof;w=s.width/2;n=6 if lod else 10;kind=s.equipment
-    if kind in ('breacher','trojan','generic_clear'):blade(rig,s,lod,'Mine_Plough')
+    if kind in ('breacher','generic_clear'):blade(rig,s,lod,'Mine_Plough')
     if kind=='breacher':
         m=Mesh();m.box('paint',(0,r+.27,-.30),(2.15,.60,2.25))
         m.box('paint',(0,r+.50,1.0),(1.40,.33,.60));rig.add('Crew_Cupola','Hull',(0,r,0),m)
@@ -385,7 +389,7 @@ def engineering(rig,s,lod):
         rig.add('Flail_Arm','Hull',p,m,'X');m=Mesh()
         m.tube('metal_dark',end+[-w,0,0],end+[w,0,0],.22,n)
         for x in np.linspace(-w*.9,w*.9,8 if lod else 20):
-            for angle in ((-math.pi/2,) if lod else (-math.pi/2,math.pi/5)):
+            for angle in (-math.pi/2,math.pi/5):
                 a=np.array([x,end[1]+.20*math.sin(angle),end[2]+.20*math.cos(angle)])
                 b=a+[0,.55*math.sin(angle),.55*math.cos(angle)]
                 beam(m,'metal_dark',a,b,.035);m.box('metal_dark',b,(.10,.10,.13))
@@ -426,7 +430,7 @@ def engineering(rig,s,lod):
 
 
 def ew_equipment(rig,s,lod):
-    h=s.length/2;r=s.roof;n=6 if lod else 12;m=Mesh();z=-h*.35
+    h=s.length/2;r=s.roof;n=8 if lod else 12;m=Mesh();z=-h*.35
     m.box('paint',(0,r-.26,z),(s.width-.28,1.65,s.length*.46))
     if not lod:
         for side in (-1,1):
