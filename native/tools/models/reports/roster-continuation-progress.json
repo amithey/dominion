@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 75,
+  "ready_files": 81,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -158,6 +158,18 @@
         "vehicles/himars__guided_pinaka.glb",
         "vehicles/himars__guided_rocket_launcher.glb"
       ]
+    },
+    {
+      "batch": 14,
+      "report": "expansion-14-validation.json",
+      "files": [
+        "vehicles/himars__himars.glb",
+        "vehicles/himars__kn_25_600_mm_guided.glb",
+        "vehicles/himars__lru_gmlrs.glb",
+        "vehicles/himars__m142_himars.glb",
+        "vehicles/himars__m270_gmlrs.glb",
+        "vehicles/himars__m270a2_gmlrs.glb"
+      ]
     }
   ],
   "priorities": {
@@ -189,7 +201,7 @@
     "P3": {
       "requested_rows": 93,
       "unique_files": 93,
-      "ready_files": 66,
+      "ready_files": 72,
       "ready_slugs": [
         "artillery__2s19_msta_s",
         "artillery__2s1_gvozdika_d_30",
@@ -223,6 +235,12 @@
         "himars__fath_360_launcher",
         "himars__guided_pinaka",
         "himars__guided_rocket_launcher",
+        "himars__himars",
+        "himars__kn_25_600_mm_guided",
+        "himars__lru_gmlrs",
+        "himars__m142_himars",
+        "himars__m270_gmlrs",
+        "himars__m270a2_gmlrs",
         "k9__k9_thunder",
         "mlrs__a_100_fatah_1",
         "mlrs__astros_ii",
@@ -273,12 +291,6 @@
         "directFire__harimau",
         "directFire__type_16_mcv",
         "heavyRocket__heavy_rocket_launcher",
-        "himars__himars",
-        "himars__kn_25_600_mm_guided",
-        "himars__lru_gmlrs",
-        "himars__m142_himars",
-        "himars__m270_gmlrs",
-        "himars__m270a2_gmlrs",
         "himars__pch_191",
         "himars__puls",
         "himars__tornado_s",

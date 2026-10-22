@@ -1,0 +1,36 @@
+{
+  "batch": 14,
+  "files": [
+    "vehicles/himars__himars.glb",
+    "vehicles/himars__kn_25_600_mm_guided.glb",
+    "vehicles/himars__lru_gmlrs.glb",
+    "vehicles/himars__m142_himars.glb",
+    "vehicles/himars__m270_gmlrs.glb",
+    "vehicles/himars__m270a2_gmlrs.glb"
+  ],
+  "sha256": {
+    "vehicles/himars__himars.glb": "83c52ed071a25e9678eadaebbada12b4ac11e7a4f738a4511fc068d0f613c975",
+    "vehicles/himars__kn_25_600_mm_guided.glb": "2cd260107c7b08833ffb4f23841fc4100cbf60c19d191244ea11a6121f5a511d",
+    "vehicles/himars__lru_gmlrs.glb": "9a5d5a647196f4e3c5921221524bd675615eb444473f0a8bb30e4e735e5452d3",
+    "vehicles/himars__m142_himars.glb": "e9fd41741e9e44762c30c3584341eb52af2bbedf3ff244438b779efe6ba49142",
+    "vehicles/himars__m270_gmlrs.glb": "9aab9f9c21aa17ca11d6de6faf40ed0fe5582430fa035deda020d3a3b3b1a4c5",
+    "vehicles/himars__m270a2_gmlrs.glb": "1d29d0eea2d8fa8e8583e71aa913bd7599333f0ed17ba823937ff64b83975640"
+  },
+  "maximum_triangles": [
+    11480,
+    1808
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py",
+    "artillery_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
