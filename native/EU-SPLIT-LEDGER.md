@@ -61,6 +61,35 @@ and unit-quality figures for every class she fields (judgements on the table's o
 - `unit-quality-check`, `world-events-check`, `war-support-check` and `space-check` are not in `run-tests.ps1`:
   run them by hand until they are added.
 
+## Germany takes the Union's index (commit 2c15c77)
+
+`nations/germany.gd` replaced `nations/eu.gd` at index 2 (arsenal `green`, as the colour nations keep theirs).
+A save made with the Union loads as Germany (saves hold the index); the old leader's name resolves to the
+present one. The Union is no longer a player; it returns later as a bloc.
+
+| `eu` row | Became |
+|---|---|
+| Nuclear weapons, MIRV, hydrogen bomb, EMP, nuclear cruise, tactical nuclear, neutron programme; NPT "weapon state" | **Dropped** (France holds them). Germany: NPT "party". |
+| Carrier Charles de Gaulle, E-3F Sentry, Mistral-class | **Dropped** (France). |
+| SCALP / MdCN, Exocet, SCALP penetrator | Germany: Taurus KEPD 350, RBS15 Mk3, Taurus penetrator. |
+| Rafale / Typhoon, Horizon-class, MMP, Mistral 3, SAMP/T NG, Triomphant-class | Germany: Eurofighter Typhoon, F124 Sachsen-class, Spike LR, Stinger, Patriot PAC-3 MSE; no nuclear submarine. |
+| Atlantique 2, FREMM, NH90 NFH, Mirage 2000D, Gripen C | Germany: P-8A Poseidon, F125-class, NH90 Sea Lion, Tornado IDS, Eurofighter Typhoon. (Gripen goes to Sweden later.) |
+| Puma, Fennek, Keiler, Bergepanzer, Skorpion, Tornado ECR, MG5, NSM coastal, THeMIS, CH-47F, COBRA | Germany (Fennek also Netherlands; Tornado ECR also Italy). |
+| CAESAR roster row | France's dossier. |
+| Chip-controller list (`ai_data.CONTROLLERS`) | **Dropped**: it belongs to the Netherlands (ASML) when that nation joins. |
+| Launchers (`space.LAUNCHERS`) | **Dropped**: France launches (Ariane). Galileo stays with Germany. |
+| Carrier style, air wing and navy factor | Carrier style and wing **dropped**; navy factor Germany 0.4 (a judgement, default would be 0.1). |
+| World-event shocks, ties, GDP, crisis baselines, regime, generals, city style, chip fabs | Renamed or rewritten for Germany (GDP 4,900; crisis 2.2 / 3.8 / 63 / 2.4 / 27). |
+| Capital slots Brussels and Athens (`world_geography`) | Freed to any nation; there is no Berlin slot. |
+| National power (Sanctions Package, arsenal `green`) | **Kept for Germany as a placeholder**: design a German lever (export licences) later. |
+
+Figures to check before release: Germany's GDP, inflation, unemployment, debt, spending, Fragile States Index; the
+navy factor; the Sanctions Package as a German power.
+
+Tests that were not in `run-tests.ps1` and failed after France (found only by running them by hand):
+`unit-quality-check`, `regional-factions-check` (counted exactly 28 nations) and `leader-badge-check` (wanted a PNG
+portrait for every nation). Add them to the runner with `world-events-check`, `war-support-check` and `space-check`.
+
 ## Open questions to verify before release
 
 - France's scientific articles a million people (research +5% rests on the UK tier, not on a fresh figure).
