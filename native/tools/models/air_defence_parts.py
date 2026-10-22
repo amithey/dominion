@@ -68,11 +68,12 @@ def carrier(slug,name,lod,cfg,source,approximate=False,representative=''):
     else:
         # Cross-legged deployable mount, or a one-axle towed gun carriage.
         m.box('paint',(0,H-.10,0),(W*.48,.20,L*.43))
-        for side in (-1,1):
-            for end in (-1,1):
-                p=np.array([side*W*.42,.14,end*L*.43])
-                beam(m,'paint',(side*.35,H-.18,end*.36),p,.15)
-                m.box('metal_dark',p-[0,.04,0],(.39,.20,.42))
+        if family!='gun_trailer':
+            for side in (-1,1):
+                for end in (-1,1):
+                    p=np.array([side*W*.42,.14,end*L*.43])
+                    beam(m,'paint',(side*.35,H-.18,end*.36),p,.15)
+                    m.box('metal_dark',p-[0,.04,0],(.39,.20,.42))
         m.box('markings',(W*.24+.012,H-.10,0),(.018,.18,.43))
         if family=='aa_trailer':
             m=Mesh();m.box('paint',(0,H-.10,0),(W-.12,.20,L-.30))
@@ -81,6 +82,13 @@ def carrier(slug,name,lod,cfg,source,approximate=False,representative=''):
             beam(m,'metal_dark',(0,H-.18,h-.17),(0,.72,h+.70),.16)
         rig.add('Hull',rig.root,(0,0,0),m)
         if mode=='wheeled':mobility(rig,s,lod)
+        if family=='gun_trailer':
+            for side,label in ((-1,'L'),(1,'R')):
+                for i,end in enumerate((-1,1)):
+                    hinge=np.array([side*.35,H-.18,end*.36]);foot=np.array([side*W*.42,.14,end*L*.43])
+                    leg=Mesh();beam(leg,'paint',hinge,foot,.15)
+                    leg.box('metal_dark',foot-[0,.04,0],(.39,.20,.42))
+                    rig.add('Outrigger_'+label+str(i),'Hull',hinge,leg,'Y')
         if family=='aa_trailer':
             for side,label in ((-1,'L'),(1,'R')):
                 for i,zz in enumerate((-L*.38,L*.38)):
@@ -294,6 +302,14 @@ def radar_carrier(slug,name,lod,cfg,source,width,height,style='array',approximat
             for side in (-1,1):
                 for yy in np.linspace(base+.30,base+.98,6):shelter.box('metal_dark',(side*(s.width/2-.12),yy,z-.30),(.027,.035,.80))
         rig.add('Electronics_Shelter','Hull',(0,base,z),shelter)
+        if slug.startswith('counterBatteryRadar__'):
+            for side,label in ((-1,'L'),(1,'R')):
+                for i,zz in enumerate((-s.length*.39,s.length*.05)):
+                    p=np.array([side*(s.width/2-.16),base,zz]);leg=Mesh()
+                    beam(leg,'paint',(side*s.width*.30,base,zz),p,.16)
+                    leg.tube('paint',p,(p[0],.20,p[2]),.10,6 if lod else 12)
+                    leg.box('metal_dark',(p[0],.10,p[2]),(.40,.20,.45))
+                    rig.add('Outrigger_'+label+str(i),'Hull',p,leg,translation_axis='Y')
         base+=1.32
     radar(rig,'Hull',(0,base,z),lod,style,width,height)
     s.details.update(radar=True,tube_count=0);s.features=['actual radar carrier class','rotating '+style+' with backed reflector/array','Y-axis antenna bearing','electronics enclosure']
