@@ -101,7 +101,6 @@ static func ministry_band(key: String) -> StyleBoxFlat:
 	s.content_margin_bottom = 9
 	return s
 
-static var _plates := {}
 
 # ---------------------------------------------------------------- fonts
 
@@ -135,77 +134,6 @@ static func letterspaced(text: String) -> String:
 	return out
 
 # ---------------------------------------------------------------- plates
-
-## Draws one plate: a vertical gradient body, a hairline of light just inside
-## the top edge, a double frame (near black outside, bronze inside), an
-## optional gold rule along the bottom, and an optional soft drop shadow. Each
-## distinct plate is drawn once and kept.
-static func _plate_texture(top: Color, bottom: Color, border: Color, bevel: Color, rule: Color, rule_px: int, shadow: int, accent := Color(0, 0, 0, 0), accent_px := 0) -> ImageTexture:
-	var key := "%s|%s|%s|%s|%s|%d|%d|%s|%d" % [top, bottom, border, bevel, rule, rule_px, shadow, accent, accent_px]
-	if _plates.has(key):
-		return _plates[key]
-	var size := 64
-	var pad: int = clampi(shadow, 0, 10)
-	var img := Image.create_empty(size, size, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0, 0, 0, 0))
-	var inner := size - pad * 2
-	# The soft shadow, fading outwards from the frame.
-	if pad > 0:
-		for y in range(size):
-			for x in range(size):
-				var d: int = maxi(maxi(pad - x, x - (size - pad - 1)), maxi(pad - y, y - (size - pad - 1)))
-				if d > 0:
-					var fade := 1.0 - float(d) / float(pad + 1)
-					img.set_pixel(x, y, Color(0, 0, 0, 0.42 * fade * fade))
-	# The body.
-	for y in range(inner):
-		var c: Color = top.lerp(bottom, float(y) / float(maxi(inner - 1, 1)))
-		for x in range(inner):
-			img.set_pixel(pad + x, pad + y, c)
-	# The gold rule along the bottom edge.
-	if rule_px > 0 and rule.a > 0.0:
-		for y in range(rule_px):
-			for x in range(inner):
-				img.set_pixel(pad + x, size - pad - 1 - y, rule)
-	# A band of gold down the left edge: the mark of a menu entry.
-	if accent_px > 0 and accent.a > 0.0:
-		for x in range(clampi(accent_px, 0, 6)):
-			for y in range(inner):
-				img.set_pixel(pad + x, pad + y, accent)
-	# The double frame: near black outside, bronze inside.
-	if border.a > 0.0:
-		for ring in range(2):
-			var c: Color = Color(0, 0, 0, 0.85) if ring == 0 else border
-			var lo: int = pad + ring
-			var hi: int = size - pad - 1 - ring
-			for i in range(lo, hi + 1):
-				img.set_pixel(i, lo, c)
-				img.set_pixel(i, hi, c)
-				img.set_pixel(lo, i, c)
-				img.set_pixel(hi, i, c)
-	# The hairline of light just inside the top edge.
-	if bevel.a > 0.0:
-		var y: int = pad + (2 if border.a > 0.0 else 0)
-		for x in range(pad + 2, size - pad - 2):
-			img.set_pixel(x, y, bevel)
-	# Cut corners in the source nine-patch: the cut stays the same size at any
-	# panel size. A second diagonal hairline makes this an engraved frame.
-	var cut := 4
-	for y in range(size):
-		for x in range(size):
-			var edge_x := mini(x - pad, size - pad - 1 - x)
-			var edge_y := mini(y - pad, size - pad - 1 - y)
-			if edge_x < cut and edge_y < cut:
-				var diagonal := edge_x + edge_y
-				if diagonal < cut:
-					img.set_pixel(x, y, Color.TRANSPARENT)
-				elif diagonal == cut and border.a > 0.0:
-					img.set_pixel(x, y, Color(0, 0, 0, 0.85))
-				elif diagonal == cut + 1 and border.a > 0.0:
-					img.set_pixel(x, y, border)
-	var tex := ImageTexture.create_from_image(img)
-	_plates[key] = tex
-	return tex
 
 ## A plate as a stylebox: the two body colours, the frame, and the room the
 ## content needs inside it.

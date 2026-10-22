@@ -19,7 +19,6 @@ const MAX_UNITS := 40          # lines drawn at most for this many selected unit
 const MAX_DASHES := 90         # per unit
 const CELL := 9.0              # destinations closer than this are one flag
 const LINGER := 1.2            # seconds a flag stays after the last unit arrives
-const ARRIVED := 2.5
 
 var w: Node
 var _mesh := ImmediateMesh.new()

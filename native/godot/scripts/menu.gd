@@ -690,55 +690,6 @@ func _nation_card(i: int) -> Button:
 	col.add_child(leader)
 	return b
 
-## A row of choice cards for one setting: [[title, line, value], ...].
-func _choices(items: Array, key: String, parent: Control = null) -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	(parent if parent != null else _panel).add_child(row)
-	for item in items:
-		var chosen: bool = (setup_difficulty == item[2]) if key == "difficulty" else (setup_options[key] == item[2])
-		var b := Button.new()
-		b.set_meta("action_help", "Set %s to %s. %s" % [key.replace("_", " "), item[0], item[1]])
-		b.toggle_mode = true
-		b.button_pressed = chosen
-		b.focus_mode = Control.FOCUS_ALL
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.custom_minimum_size = Vector2(0, 58)
-		b.add_theme_stylebox_override("normal", UI.box(Color(0.05, 0.1, 0.12, 0.8), Color("2d4460"), 1, 4, 8.0))
-		b.add_theme_stylebox_override("hover", UI.box(Color(0.08, 0.15, 0.17, 0.95), Color(UI.GOLD, 0.7), 1, 4, 8.0))
-		b.add_theme_stylebox_override("pressed", UI.box(Color("28443f"), UI.GOLD, 2, 4, 8.0))
-		b.add_theme_stylebox_override("hover_pressed", UI.box(Color("28443f"), UI.GOLD, 2, 4, 8.0))
-		var value = item[2]
-		b.pressed.connect(func():
-			if key == "difficulty":
-				setup_difficulty = value
-			else:
-				setup_options[key] = value
-			open_new_game())
-		var col := VBoxContainer.new()
-		col.set_anchors_preset(Control.PRESET_FULL_RECT)
-		col.offset_left = 12
-		col.offset_right = -10
-		col.alignment = BoxContainer.ALIGNMENT_CENTER
-		col.add_theme_constant_override("separation", 1)
-		col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		b.add_child(col)
-		var t := Label.new()
-		t.text = ("\u2713 " if chosen else "") + str(item[0])
-		t.theme_type_variation = "HeaderLabel"
-		t.add_theme_font_size_override("font_size", 16)
-		t.add_theme_color_override("font_color", UI.BRIGHT if chosen else UI.CREAM)
-		t.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		col.add_child(t)
-		var d := Label.new()
-		d.text = item[1]
-		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		d.add_theme_font_size_override("font_size", 12)
-		d.add_theme_color_override("font_color", UI.MUTED)
-		d.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		col.add_child(d)
-		row.add_child(b)
-
 ## Terrain previews are baked from the same seed as each campaign, so opening
 ## the picker never generates a large world or stalls the menu.
 func _map_picker(parent: Control = null) -> void:

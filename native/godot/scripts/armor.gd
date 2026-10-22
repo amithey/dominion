@@ -9,7 +9,6 @@ extends RefCounted
 ## gun) is a second one on a traverse pivot, and each axle of a wheeled vehicle
 ## is its own node so the wheels can turn. Nothing is downloaded.
 
-const TRACKED := ["tank", "artillery", "aaVehicle", "mlrs"]
 
 var world: Node
 var _materials := {}

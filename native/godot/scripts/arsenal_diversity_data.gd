@@ -1,7 +1,6 @@
 extends RefCounted
 ## Evidence snapshot 2026-10-11. These are representative systems, not stock counts.
 ## Source dates and acquisition status matter: an order never grants a playable unit.
-const REVIEWED := "2026-10-11"
 const SOURCES := {
 	"us_rr": ["US Army: M3A1 fielding completed (2024)", "https://www.army.mil/article-amp/280535/army_completes_fielding_of_the_m3a1_multi_role_anti_armor_anti_personnel_weapon_system_maaws"],
 	"us_aa": ["US Army: Avenger role", "https://www.army.mil/article/3215/avenger"],

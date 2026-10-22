@@ -16,7 +16,6 @@ extends Node3D
 
 signal changed
 
-const EMP_SECONDS := 35.0
 
 var world: Node
 var cfg: Dictionary

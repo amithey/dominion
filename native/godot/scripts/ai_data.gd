@@ -81,7 +81,6 @@ const NEEDS := {"machineLearning": 1, "militaryAI": 3, "collaborativeCombatAircr
 ## (export controls on AI chips and the machines that make them), and those
 ## that make the chips (they sell more in a shortage).
 const CONTROLLERS := ["usa", "japan", "south_korea", "uk", "netherlands"]
-const CHIP_MAKERS := ["south_korea", "japan", "usa", "china"]
 
 ## The standing of nation `id`: the table below for the first nations, then the "ai" of its own
 ## file in scripts/nations/, then DEFAULT.

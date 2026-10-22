@@ -21,7 +21,6 @@ var _sound_at := -99.0
 var _heard := {}               # event key -> true: its alarm already sounded
 var tab := "summary"           # "summary" | "all"
 var rows: VBoxContainer        # the window's content (the HUD builds the window; this fills it)
-var summary_label: Label
 var _fill_clock := 0.0
 
 func setup(hud_node: Node) -> void:

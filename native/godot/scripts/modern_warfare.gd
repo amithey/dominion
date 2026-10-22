@@ -35,7 +35,6 @@ const JAM_FAIL := 0.7          # chance a jammed drone strike is lost
 const JAM_DAMAGE := 0.4        # damage a jammed drone still does with its guns
 const HEAL_RADIUS := 11.0
 const HEAL_RATE := 6.0         # health per second, one patient at a time
-const STEALTH_SEEN := 0.4      # share of its range at which air defence sees a stealth aircraft
 const APS_RELOAD := 4.0        # an active protection system rearms between intercepts
 
 ## Missile classes and each defender's chance to stop one per engagement.

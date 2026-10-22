@@ -501,7 +501,6 @@ func _gap_ahead(c: Dictionary, at: Vector3) -> float:
 # (both per instance, in INSTANCE_CUSTOM).
 
 const LIVERY := Color(1, 1, 1, 1)
-const TINTED := 1.0
 
 var _models := {}           # model name -> {mm: MultiMesh, count}
 var _paint_shader: Shader

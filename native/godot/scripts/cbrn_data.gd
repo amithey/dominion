@@ -77,11 +77,6 @@ const TREATIES := {
 	"yemen": {"icc": false}, "houthis": {"icc": false}, "ethiopia": {"icc": false}, "nigeria": {"icc": true},
 	"sudan": {"icc": false}, "south_sudan": {"cwc": "none", "icc": false},
 }
-## NATO nuclear sharing: US B61 bombs in a host's custody, released only by
-## the United States (Kleine Brogel, Büchel, Aviano, Ghedi, Volkel, Incirlik,
-## and Lakenheath/Marham again since 2025). A host may drop them while it is
-## allied with the owner. (The EU and the UK have bombs of their own here.)
-const SHARING := {"turkiye": "usa"}
 ## States that could build a bomb within a short time, and on what condition.
 const THRESHOLD := {
 	"iran": {"after": "", "why": "enriched uranium to 60% (over 400 kg before the strikes of June 2025)"},

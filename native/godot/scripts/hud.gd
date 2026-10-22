@@ -1464,20 +1464,6 @@ func _action_bars(b: Dictionary) -> void:
 		var locked: String = world.research.unit_locked(u) if world.research else ""
 		_bar(u, def.name, def.desc, cost, float(def.get("trainTime", 10)), locked, func(): world.queue_unit(_selected, u))
 
-## Describe the payload's actual role, rather than the generic national-family
-## prefix added by the arsenal catalogue. Platform names follow its validation.
-func _weapon_summary(def: Dictionary, key: String) -> String:
-	var detail: String = str(def.get("desc", "")).trim_prefix("National missile family. ")
-	if detail.begins_with("Launch platform: "):
-		detail = ". ".join(detail.split(". ").slice(1))
-	var assessment := ""
-	if detail.begins_with("Future programme / assessed capability. "):
-		assessment = "Future programme / assessed capability.\n"
-		detail = detail.trim_prefix("Future programme / assessed capability. ")
-	var platform: String = preload("res://scripts/arsenal_catalog.gd").platform_kind(world, 0, key)
-	var label: String = {"ground": "Missile silo", "air": "Strike aircraft", "drone": "Drone", "air_or_sea": "Aircraft or warship", "sea": "Warship", "sub": "Strategic submarine", "strategic": "Silo or strategic submarine", "ground_or_sea": "Silo or warship"}.get(platform, "Missile silo")
-	return "%s%s.\nLaunch from: %s" % [assessment, detail.split(". ")[0].trim_suffix("."), label]
-
 func _update_enabled() -> void:
 	for b in _list.find_children("*", "Button", true, false):
 		if not b.has_meta("cost"):
