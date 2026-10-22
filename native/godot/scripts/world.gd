@@ -5746,7 +5746,7 @@ func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 		effects.shell(muzzle, aim + Vector3(randf_range(-0.8, 0.8), 0, randf_range(-0.8, 0.8)), func(at: Vector3): shell_hit(unit, at))
 	elif unit.vehicle:
 		var dir := Basis(Vector3.UP, unit.heading + unit.turret_yaw) * Vector3.BACK
-		var muzzle: Vector3 = unit.turret.global_position + dir * (2.4 if unit.get("naval", false) else float(unit.get("muzzle", 4.2))) + Vector3.UP * 0.4
+		var muzzle: Vector3 = (unit.turret.global_position if unit.turret != null else unit.node.global_position + Vector3.UP * 1.6) + dir * (2.4 if unit.get("naval", false) else float(unit.get("muzzle", 4.2))) + Vector3.UP * 0.4
 		effects.muzzle_flash(muzzle, true)
 		Motion.recoil(unit, 1.4 if unit.key in ["tank", "artillery"] else 0.7)
 		unit["gun_kick"] = 1.0

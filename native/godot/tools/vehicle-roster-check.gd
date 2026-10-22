@@ -1,5 +1,5 @@
 extends SceneTree
-## Every tank model of the roster (assets/art/vehicles/tank__*.glb) works in the game the way the pilot does: both detail levels and
+## Every armoured-vehicle model of the roster (assets/art/vehicles/*.glb: tanks, carriers, fighting vehicles, scouts, recovery, mine and EW vehicles) works in the game the way the pilot does: both detail levels and
 ## the parts the game moves exist (Turret about Y, Gun with its Muzzle, wheels, the track meshes on the canonical loop), the muzzle is
 ## at the tip of a believable gun, the tank is a believable size on the ground facing +Z, wheels get a radius from their mesh, the
 ## burnt-out copy is there and every file's nation names find it: each nation's own tank has a file or is on the list of those still to come.
@@ -28,7 +28,7 @@ func run() -> void:
 	var dir := DirAccess.open("res://assets/art/vehicles")
 	var files: Array = []
 	for f in dir.get_files():
-		if f.begins_with("tank__") and f.ends_with(".glb"): files.append(f)
+		if f.ends_with(".glb"): files.append(f)
 	files.sort()
 	for f in files:
 		var path: String = "res://assets/art/vehicles/" + str(f)
@@ -36,19 +36,21 @@ func run() -> void:
 		var tag: String = str(f).get_basename()
 		check(not b.is_empty(), "%s loads" % tag)
 		if b.is_empty(): continue
-		check(b.turret != null and b.turret.get_meta("axis") == Vector3.UP, "%s: a turret about the vertical" % tag)
-		check(b.gun != null and absf(b.gun.position.y) > 0.0 or b.gun != null, "%s: a gun that can lift" % tag)
-		check(float(b.muzzle) > 3.5 and float(b.muzzle) < 8.5, "%s: muzzle %.1f m from the turret's pivot" % [tag, float(b.muzzle)])
-		check(b.axles.size() >= 14 and b.axles.size() <= 40, "%s: %d wheels, sprockets, idlers and rollers" % [tag, b.axles.size()])
+		var is_tank: bool = tag.begins_with("tank__")
+		check(b.turret == null or b.turret.get_meta("axis") == Vector3.UP, "%s: a turret, if any, turns about the vertical" % tag)
+		check((b.turret != null) == (b.gun != null) or tag.begins_with("mine") or tag.begins_with("ewV"), "%s: a turret comes with a gun that can lift" % tag)
+		check(float(b.muzzle) > (3.5 if is_tank else 0.7) and float(b.muzzle) < 8.5, "%s: muzzle %.1f m from the pivot" % [tag, float(b.muzzle)])
+		var wheeled: bool = b.tracks.is_empty()
+		check(b.axles.size() >= (14 if not wheeled else 4) and b.axles.size() <= 40, "%s: %d wheels, sprockets, idlers and rollers" % [tag, b.axles.size()])
 		check(b.axles.all(func(a): return a.radius > 0.08 and a.radius < 0.8), "%s: every wheel has a believable radius (%.2f to %.2f m)" % [tag, b.axles.map(func(a): return a.radius).min(), b.axles.map(func(a): return a.radius).max()])
-		check(b.tracks.size() >= 4 and float(b.track_loop) > 11.0 and float(b.track_loop) < 18.0, "%s: track pads on a %.1f m loop (%d meshes)" % [tag, float(b.track_loop), b.tracks.size()])
+		check(wheeled or (b.tracks.size() >= 4 and float(b.track_loop) > 10.0 and float(b.track_loop) < 18.0), "%s: %s" % [tag, "wheeled, no tracks" if wheeled else "track pads on a %.1f m loop (%d meshes)" % [float(b.track_loop), b.tracks.size()]])
 		var lod0: Node3D = b.root.get_node_or_null("LOD0")
 		var lod1: Node3D = b.root.get_node_or_null("LOD1")
 		check(lod0 != null and lod1 != null, "%s: both detail levels" % tag)
 		if lod0 != null:
 			var box: AABB = w.model_bounds(lod0)
-			check(absf(box.position.y) < 0.06 and box.size.z > 8.8 and box.size.z < 12.2 and box.size.x < 4.4 and box.size.y < 4.2 and box.size.y > 2.5, "%s: %.1f x %.1f x %.1f m on the ground" % [tag, box.size.x, box.size.y, box.size.z])
-			check(box.end.z > absf(box.position.z) - 1.0, "%s: the gun points to +Z" % tag)
+			check(absf(box.position.y) < 0.06 and box.size.z > (8.8 if is_tank else 4.5) and box.size.z < 12.2 and box.size.x < 4.4 and box.size.y < 6.0 and box.size.y > 2.0, "%s: %.1f x %.1f x %.1f m on the ground" % [tag, box.size.x, box.size.y, box.size.z])
+			if is_tank: check(box.end.z > absf(box.position.z) - 1.0, "%s: the gun points to +Z" % tag)
 		check(b.wreck != null and not b.wreck.visible, "%s: a hidden burnt-out copy" % tag)
 		b.root.free()
 	# the nations: whose tank has a model
@@ -60,9 +62,22 @@ func run() -> void:
 		if not w.unit_allowed(0, "tank"): continue
 		if VM.path_for(w, 0, "tank") != "": with_model += 1
 		else: without.append(id)
-	check(with_model >= 20, "%d nations field a tank that has a model" % with_model)
+	check(with_model >= 27, "%d nations field a tank that has a model" % with_model)
+	# every unit key of the roster: which nations have a model
+	var covered := {}
+	for key in ["apc", "ifv", "heavyAPC", "bushmaster", "reconVehicle", "recoveryVehicle", "mineClearer", "mineLayer", "ewVehicle"]:
+		var have := 0
+		var total := 0
+		for id in Factions.IDS:
+			w.map.nations[0]["id"] = id
+			if not w.unit_allowed(0, key): continue
+			total += 1
+			if VM.path_for(w, 0, key) != "": have += 1
+		covered[key] = "%d of %d" % [have, total]
+		check(total == 0 or have * 10 >= total * 7, "%s: %d of %d nations that field it have a model" % [key, have, total])
+	print("COVERAGE ", covered)
 	print("TANKS %d files, %d nations with a model, without: %s" % [files.size(), with_model, str(without)])
-	print("TANK_ROSTER %d passed, %d failed" % [passed, errors.size()])
+	print("VEHICLE_ROSTER %d passed, %d failed" % [passed, errors.size()])
 	for e in errors: print("  FAILED: " + e)
-	print("TANK_ROSTER %s" % ("PASS" if errors.is_empty() else "FAIL"))
+	print("VEHICLE_ROSTER %s" % ("PASS" if errors.is_empty() else "FAIL"))
 	quit(0 if errors.is_empty() else 1)

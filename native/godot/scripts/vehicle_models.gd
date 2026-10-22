@@ -24,8 +24,15 @@ static func slug(text: String) -> String:
 
 static func path_for(w: Node, owner: int, key: String) -> String:
 	var name: String = preload("res://scripts/national_variants.gd").name_for(w, owner, key)
-	var path := DIR + "%s__%s.glb" % [key, slug(name)]
-	return path if ResourceLoader.exists(path) else ""
+	var words := slug(name)
+	# A variant name ("Leclerc XLR") finds the model of the base vehicle ("leclerc") when it has no file of its own.
+	while words != "":
+		var path := DIR + "%s__%s.glb" % [key, words]
+		if ResourceLoader.exists(path):
+			return path
+		var cut := words.rfind("_")
+		words = "" if cut < 0 else words.left(cut)
+	return ""
 
 static func _shader_material(w: Node, owner: int, role: String) -> Material:
 	var id := "%d:%s" % [owner, role]
@@ -126,7 +133,7 @@ static func build_file(w: Node, path: String, owner: int) -> Dictionary:
 		mi.set_instance_shader_parameter("track_on", 1.0)
 		tracks.append(mi)
 		track_loop = 16.5 * absf(mi.scale.z)
-	var muzzle_dist := 4.4
+	var muzzle_dist := 3.0 if turret == null else 4.4   # a hull-mounted weapon (a mine-clearing rocket line, a machine gun on a recovery vehicle) fires from the front of the hull
 	var gun: Node3D = base.find_child("Gun", true, false) as Node3D
 	var muzzle: Node3D = base.find_child("Muzzle", true, false) as Node3D
 	if muzzle != null and gun != null:

@@ -29,7 +29,7 @@ func run() -> void:
 	w.map.nations[0]["id"] = "usa"
 	var path: String = VM.path_for(w, 0, "tank")
 	check(path.ends_with("tank__m1a2_sepv3_abrams.glb"), "the American tank is found by its name (%s)" % path)
-	w.map.nations[1]["id"] = "france"   # (the one nation whose tank has no model yet)
+	w.map.nations[1]["id"] = "italy"   # (a nation whose tank has no model yet)
 	check(VM.path_for(w, 1, "tank") == "", "a nation whose model is not made yet has no file (%s)" % VM.path_for(w, 1, "tank"))
 	var u: Dictionary = w.spawn_unit("tank", w.land_point(w.start + Vector3(30, 0, 30), 30.0), 0)
 	var built: Dictionary = VM.build(w, "tank", 0)
