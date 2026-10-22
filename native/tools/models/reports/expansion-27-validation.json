@@ -1,0 +1,34 @@
+{
+  "batch": 27,
+  "files": [
+    "vehicles/abmLauncher__s_500.glb",
+    "vehicles/abmLauncher__samp_t_ng_aster_30_b1nt.glb",
+    "vehicles/abmLauncher__sm_3_pac_3_mse.glb",
+    "vehicles/abmLauncher__thaad.glb",
+    "vehicles/saudiThaad__saudi_thaad.glb"
+  ],
+  "sha256": {
+    "vehicles/abmLauncher__s_500.glb": "541fd7d9c31a400b94ba5589558eafef252094fa5439141d7221aff3136a3a19",
+    "vehicles/abmLauncher__samp_t_ng_aster_30_b1nt.glb": "14ff21b1ee14badfd23fbd0dee8640f35b583ef539e9ddf5b938edb80ee746a8",
+    "vehicles/abmLauncher__sm_3_pac_3_mse.glb": "87b664a796647d2d0e818f74cc5f23d2b2cb50215d0bb67608c4b6fb7bff221b",
+    "vehicles/abmLauncher__thaad.glb": "14e32a8ede717c408b200f6f2cad40e557c5bd0854e03c379cb2a4d29b2580d4",
+    "vehicles/saudiThaad__saudi_thaad.glb": "41bdc94583a45199f9bfb2e12aa102784cfa682f747bf425342fe409011c102b"
+  },
+  "maximum_triangles": [
+    7464,
+    1340
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p4_air_defence.py",
+    "air_defence_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
