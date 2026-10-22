@@ -1,0 +1,37 @@
+{
+  "batch": 31,
+  "files": [
+    "aircraft/helicopter__bell_412epi.glb",
+    "aircraft/helicopter__dhruv_alh.glb",
+    "aircraft/helicopter__h225m.glb",
+    "aircraft/helicopter__kuh_1_surion.glb",
+    "aircraft/helicopter__merlin_hc4.glb",
+    "aircraft/helicopter__mi_17.glb"
+  ],
+  "sha256": {
+    "aircraft/helicopter__bell_412epi.glb": "8cbe70b3be767b669635c152d070ad255418acb279b7b550969d2a08fdb4825d",
+    "aircraft/helicopter__dhruv_alh.glb": "50e1cc06c513fded5c85198f08cda90d2e3f2059630ade83bd5c243d1d2929a1",
+    "aircraft/helicopter__h225m.glb": "5f5924fa5d3b04ab1a120183b17417abd556b22d714542961d88be4671dd65b5",
+    "aircraft/helicopter__kuh_1_surion.glb": "e2a871cbfb34c5c3fc403c304420de55c3ddbd8f466bf7612714bfa47c5f2521",
+    "aircraft/helicopter__merlin_hc4.glb": "d345d9f8ee2999b79f0a7e98be501cab129179b49a0d20e536776dbbe9e817d7",
+    "aircraft/helicopter__mi_17.glb": "77c064d4cbbf9f64067d42cd23fb7b6568b80aa6f1611483a3dc856d929d1290"
+  },
+  "maximum_triangles": [
+    13148,
+    2156
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific rotor configuration and landing gear",
+    "local-frame hinge propagation and rotor full-revolution return",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p5_helicopters.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

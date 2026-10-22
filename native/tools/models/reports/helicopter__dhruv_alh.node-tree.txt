@@ -1,0 +1,37 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Fuselage local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Fuselage_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Engine_0 local=[-0.46125, 2.876, 0.5156] world=[-0.46125, 2.876, 0.5156] axis=None pivot
+      Engine_0_Mesh local=[0, 0, 0] world=[-0.46125, 2.876, 0.5156] axis=None mesh
+    Exhaust_0 local=[-0.46125, 2.876, -0.88683] world=[-0.46125, 2.876, -0.88683] axis=None pivot
+    Engine_1 local=[0.46125, 2.876, 0.5156] world=[0.46125, 2.876, 0.5156] axis=None pivot
+      Engine_1_Mesh local=[0, 0, 0] world=[0.46125, 2.876, 0.5156] axis=None mesh
+    Exhaust_1 local=[0.46125, 2.876, -0.88683] world=[0.46125, 2.876, -0.88683] axis=None pivot
+    Rotor_Main local=[0.0, 3.89, 2.72] world=[0.0, 3.89, 2.72] axis=Y pivot
+      Rotor_Main_Mesh local=[0, 0, 0] world=[0.0, 3.89, 2.72] axis=None mesh
+    Rotor_Main_Mast local=[0.0, 3.27, 2.72] world=[0.0, 3.27, 2.72] axis=None pivot
+      Rotor_Main_Mast_Mesh local=[0, 0, 0] world=[0.0, 3.27, 2.72] axis=None mesh
+    Rotor_Tail local=[0.246, 3.7, -5.99385] world=[0.246, 3.7, -5.99385] axis=X rotation=[0.0, 0.0, 0.0, 1.0] pivot
+      Rotor_Tail_Mesh local=[0, 0, 0] world=[0.246, 3.7, -5.99385] axis=None mesh
+    Skid local=[0.0, 0.72, 1.289] world=[0.0, 0.72, 1.289] axis=None pivot
+      Skid_Mesh local=[0, 0, 0] world=[0.0, 0.72, 1.289] axis=None mesh
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Fuselage_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Fuselage_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Engine_0_LOD1 local=[-0.46125, 2.876, 0.5156] world=[-0.46125, 2.876, 0.5156] axis=None pivot hidden
+      Engine_0_Mesh_LOD1 local=[0, 0, 0] world=[-0.46125, 2.876, 0.5156] axis=None mesh hidden
+    Exhaust_0_LOD1 local=[-0.46125, 2.876, -0.88683] world=[-0.46125, 2.876, -0.88683] axis=None pivot hidden
+    Engine_1_LOD1 local=[0.46125, 2.876, 0.5156] world=[0.46125, 2.876, 0.5156] axis=None pivot hidden
+      Engine_1_Mesh_LOD1 local=[0, 0, 0] world=[0.46125, 2.876, 0.5156] axis=None mesh hidden
+    Exhaust_1_LOD1 local=[0.46125, 2.876, -0.88683] world=[0.46125, 2.876, -0.88683] axis=None pivot hidden
+    Rotor_Main_LOD1 local=[0.0, 3.89, 2.72] world=[0.0, 3.89, 2.72] axis=Y pivot hidden
+      Rotor_Main_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 3.89, 2.72] axis=None mesh hidden
+    Rotor_Main_Mast_LOD1 local=[0.0, 3.27, 2.72] world=[0.0, 3.27, 2.72] axis=None pivot hidden
+      Rotor_Main_Mast_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 3.27, 2.72] axis=None mesh hidden
+    Rotor_Tail_LOD1 local=[0.246, 3.7, -5.99385] world=[0.246, 3.7, -5.99385] axis=X rotation=[0.0, 0.0, 0.0, 1.0] pivot hidden
+      Rotor_Tail_Mesh_LOD1 local=[0, 0, 0] world=[0.246, 3.7, -5.99385] axis=None mesh hidden
+    Skid_LOD1 local=[0.0, 0.72, 1.289] world=[0.0, 0.72, 1.289] axis=None pivot hidden
+      Skid_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.72, 1.289] axis=None mesh hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 1.46, 0.0] world=[0.0, 1.46, 0.0] axis=None mesh hidden

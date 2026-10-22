@@ -35,6 +35,20 @@ def rotation(axis,angle):
     return np.array([[t*x*x+c,t*x*y-s*z,t*x*z+s*y],[t*x*y+s*z,t*y*y+c,t*y*z-s*x],[t*x*z-s*y,t*y*z+s*x,t*z*z+c]])
 
 
+def quaternion_matrix(q):
+    """glTF xyzw quaternion. Used for canted rotor/propeller hinge frames."""
+    q=np.asarray(q,dtype=float);assert np.isclose(np.linalg.norm(q),1,atol=1e-6)
+    x,y,z,w=q
+    return np.array([[1-2*(y*y+z*z),2*(x*y-z*w),2*(x*z+y*w)],
+                     [2*(x*y+z*w),1-2*(x*x+z*z),2*(y*z-x*w)],
+                     [2*(x*z-y*w),2*(y*z+x*w),1-2*(x*x+y*y)]])
+
+
+def quaternion_product(a,b):
+    av=np.asarray(a[:3]);bv=np.asarray(b[:3]);aw=a[3];bw=b[3]
+    return np.r_[aw*bv+bw*av+np.cross(av,bv),aw*bw-np.dot(av,bv)]
+
+
 def merge_mesh(target,source,R=None,t=(0,0,0),roles=None):
     R=np.eye(3) if R is None else np.array(R);t=np.array(t)
     assert np.linalg.det(R)>.999
@@ -213,12 +227,14 @@ def write_glb(path,rigs,wreck,collision,metadata):
         ac={'bufferView':vi,'componentType':5125 if integer else 5126,'count':len(data),'type':typ}
         if typ=='VEC3':ac.update(min=data.min(0).tolist(),max=data.max(0).tolist())
         idx=len(doc['accessors']);doc['accessors'].append(ac);return idx
-    def mesh_index(mesh,name,origin=(0,0,0)):
+    def mesh_index(mesh,name,origin=(0,0,0),frame=None):
         primitives=[]
         for role,g in sorted(mesh.groups.items()):
             if not g[3]:continue
             p=np.array(g[0])-origin
-            primitives.append({'attributes':{'POSITION':acc(p,'VEC3',34962),'NORMAL':acc(g[1],'VEC3',34962),'TEXCOORD_0':acc(g[2],'VEC2',34962)},'indices':acc(g[3],'SCALAR',34963,True),'material':ROLES.index(role),'mode':4})
+            normal=g[1]
+            if frame is not None:p=p@frame;normal=np.asarray(normal)@frame
+            primitives.append({'attributes':{'POSITION':acc(p,'VEC3',34962),'NORMAL':acc(normal,'VEC3',34962),'TEXCOORD_0':acc(g[2],'VEC2',34962)},'indices':acc(g[3],'SCALAR',34963,True),'material':ROLES.index(role),'mode':4})
         idx=len(doc['meshes']);doc['meshes'].append({'name':name,'primitives':primitives});return idx
     def node(name,parent=None,translation=(0,0,0),mesh=None,visible=None,extras=None):
         n={'name':name,'translation':np.asarray(translation).tolist()}
@@ -231,16 +247,24 @@ def write_glb(path,rigs,wreck,collision,metadata):
         return idx
     for rig in rigs:
         root=node(rig.root,visible=(rig.lod==0),extras={'lod':rig.lod})
-        byname={rig.root:root}
+        byname={rig.root:root};frames={rig.root:None};orientations={rig.root:np.array([0.,0.,0.,1.])}
         for part in rig.parts:
             parent=part['parent'];parentpivot=rig.pivots.get(parent,np.zeros(3));local=part['pivot']-parentpivot
+            parentframe=frames[parent]
+            if parentframe is not None:local=parentframe.T@local
+            worldq=part['extras'].get('frame_rotation',orientations[parent])
+            frame=quaternion_matrix(worldq) if 'frame_rotation' in part['extras'] else parentframe
+            frames[part['name']]=frame;orientations[part['name']]=worldq
             extras=dict(part['extras'])
             extras['canonical_part']=part['name']
             if part['axis']:extras['rotation_axis']=part['axis']
             suffix='_LOD1' if rig.lod else ''
             pivot=node(part['name']+suffix,byname[parent],local,extras=extras);byname[part['name']]=pivot
+            if 'frame_rotation' in part['extras']:
+                inverse=np.array(orientations[parent])*[-1,-1,-1,1]
+                doc['nodes'][pivot]['rotation']=quaternion_product(inverse,worldq).tolist()
             if part['mesh'] is not None:
-                mi=mesh_index(part['mesh'],rig.root+'_'+part['name'],part['pivot'])
+                mi=mesh_index(part['mesh'],rig.root+'_'+part['name'],part['pivot'],frame)
                 child=node(part['name']+'_Mesh'+suffix,pivot,mesh=mi,extras={'canonical_part':part['name']+'_Mesh'})
                 if 'mesh_scale' in part['extras']:
                     doc['nodes'][child]['scale']=part['extras']['mesh_scale']
@@ -285,6 +309,7 @@ def walk_nodes(doc,override=None,canonical=False):
     def visit(index,parent_matrix,path,parent_visible):
         node=doc['nodes'][index];local=np.eye(4);local[:3,3]=node.get('translation',[0,0,0])
         local[:3,:3]=np.diag(node.get('scale',[1,1,1]))
+        if 'rotation' in node:local[:3,:3]=quaternion_matrix(node['rotation'])@local[:3,:3]
         name=node.get('extras',{}).get('canonical_part',node['name']) if canonical else node['name']
         path=path+'/'+name if path else name
         if path in override:local=local@override[path]
