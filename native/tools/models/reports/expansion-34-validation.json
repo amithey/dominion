@@ -1,0 +1,37 @@
+{
+  "batch": 34,
+  "files": [
+    "aircraft/helicopter__uh_60m_black_hawk.glb",
+    "aircraft/helicopter__z_20.glb",
+    "aircraft/gunship__ah_1f_cobra_z_10me.glb",
+    "aircraft/gunship__ah_64_saraf.glb",
+    "aircraft/gunship__ah_64d_ka_52.glb",
+    "aircraft/gunship__ah_64djp.glb"
+  ],
+  "sha256": {
+    "aircraft/helicopter__uh_60m_black_hawk.glb": "912e8f1ee103f9d8765b85e3f72f2e50a837083e2409e2f22d7d3b27155beff1",
+    "aircraft/helicopter__z_20.glb": "8ef973aa1847d4762396ea1b8cf693a241d53d5bc4fdda19808aadae214f0e07",
+    "aircraft/gunship__ah_1f_cobra_z_10me.glb": "1a255a17b9a75fb29fb80ad16eebd497f560d35ac07d28bdb4c5666515a1ef43",
+    "aircraft/gunship__ah_64_saraf.glb": "bcfdf1273237ec546f170ca43b1a13318ec918037f8348c4e6d22860dbc2b26b",
+    "aircraft/gunship__ah_64d_ka_52.glb": "07c931b6f5c0c93dd69df4a11a35acffde74a4cc2e0c79f4a3c42edcdcef5d57",
+    "aircraft/gunship__ah_64djp.glb": "e239560c353c239401963439d5f8134952012d16f8071f874df6335328595936"
+  },
+  "maximum_triangles": [
+    11504,
+    2080
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific rotor configuration and landing gear",
+    "local-frame hinge propagation and rotor full-revolution return",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p5_helicopters.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

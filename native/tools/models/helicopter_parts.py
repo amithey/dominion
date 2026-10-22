@@ -85,6 +85,8 @@ def body(rig,s,lod):
         sections=[(z*L,cy+dy*H,wx*W,hy*H) for z,dy,wx,hy in s.details['profile']]
     def windows(z,theta):
         upper=math.cos(theta)>.08
+        if s.family=='mi24' and abs(math.sin(theta))>.93 and -.05<math.cos(theta)<.50:
+            if any(abs(z-q*L)<L*.020 for q in (-.09,-.025,.045)):return 'glass'
         if z>L*.30 and z<L*.455 and upper and .18<theta<math.tau-.18:return 'glass'
         if s.family=='ka52' and L*.18<z<L*.39 and upper and .30<theta<math.tau-.30:return 'glass'
         if attack and s.family!='ka52' and L*.10<z<L*.34 and upper and .36<theta<math.tau-.36:
@@ -249,12 +251,14 @@ def armament(rig,s,lod):
     if s.details.get('gun',True):
         fixed=s.details.get('fixed_gun',False);side=s.details.get('gun_side',0)
         p=np.array([side*W*.52,b+.23,L*.365])
+        if fixed:p=np.array([side*W*.52,b+H*.43,L*(.08 if s.family=='ka52' else .315)])
         parent='Fuselage'
         if not fixed:
             mount=Mesh();mount.tube('paint',p-[0,.10,0],p+[0,.24,0],.27,8 if lod else 20)
             rig.add('Turret','Fuselage',p,mount,'Y');parent='Turret'
         gun=Mesh();gun.box('metal_dark',p,(.26,.19,.44))
-        count=s.details.get('gun_barrels',1);length=.98 if s.family not in ('cobra','toufan') else 1.14
+        count=s.details.get('gun_barrels',1);length=(1.90 if s.family=='ka52' else 2.10) if fixed else .98 if s.family not in ('cobra','toufan') else 1.14
+        if fixed:gun.box('paint',p-[side*W*.09,0,.10],(W*.30,.38,.80))
         for i in range(count):
             angle=i*math.tau/count;offset=np.array([math.cos(angle)*.045,math.sin(angle)*.045,0]) if count>1 else np.zeros(3)
             gun.tube('metal_dark',p+offset,p+offset+[0,0,length],.025 if count>1 else .043,6 if lod else 12)

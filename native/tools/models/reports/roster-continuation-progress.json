@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 188,
+  "ready_files": 194,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -391,6 +391,18 @@
         "aircraft/helicopter__uh_60ja.glb",
         "aircraft/helicopter__uh_60m.glb"
       ]
+    },
+    {
+      "batch": 34,
+      "report": "expansion-34-validation.json",
+      "files": [
+        "aircraft/helicopter__uh_60m_black_hawk.glb",
+        "aircraft/helicopter__z_20.glb",
+        "aircraft/gunship__ah_1f_cobra_z_10me.glb",
+        "aircraft/gunship__ah_64_saraf.glb",
+        "aircraft/gunship__ah_64d_ka_52.glb",
+        "aircraft/gunship__ah_64djp.glb"
+      ]
     }
   ],
   "priorities": {
@@ -599,8 +611,12 @@
     "P5": {
       "requested_rows": 57,
       "unique_files": 57,
-      "ready_files": 18,
+      "ready_files": 24,
       "ready_slugs": [
+        "gunship__ah_1f_cobra_z_10me",
+        "gunship__ah_64_saraf",
+        "gunship__ah_64d_ka_52",
+        "gunship__ah_64djp",
         "helicopter__bell_412epi",
         "helicopter__dhruv_alh",
         "helicopter__h225m",
@@ -618,13 +634,11 @@
         "helicopter__uh_60_mi_17",
         "helicopter__uh_60_yanshuf",
         "helicopter__uh_60ja",
-        "helicopter__uh_60m"
+        "helicopter__uh_60m",
+        "helicopter__uh_60m_black_hawk",
+        "helicopter__z_20"
       ],
       "remaining_slugs": [
-        "gunship__ah_1f_cobra_z_10me",
-        "gunship__ah_64_saraf",
-        "gunship__ah_64d_ka_52",
-        "gunship__ah_64djp",
         "gunship__ah_64e_apache",
         "gunship__aw129_mangusta",
         "gunship__ka_52m",
@@ -646,8 +660,6 @@
         "heavyLift__chinook_hc6",
         "heavyLift__mi_26",
         "heavyLift__z_8l",
-        "helicopter__uh_60m_black_hawk",
-        "helicopter__z_20",
         "navalHelicopter__as565_panther",
         "navalHelicopter__ka_27pl",
         "navalHelicopter__mh_60r_seahawk",
