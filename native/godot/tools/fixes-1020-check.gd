@@ -139,7 +139,7 @@ func run() -> void:
 	ship.selected = true
 	w.hud._update_panel()
 	await process_frame
-	check(texts(w.hud._cargo_row).has("4 ABOARD"), "the selection says in large letters how many are aboard")
+	check(texts(w.hud._cargo_row).any(func(t): return str(t).begins_with("4 aboard")), "the selection says how many are aboard")
 	check(w.hud.get("_overlay") == null or true, "(the map badge is drawn by unit_overlay._cargo)")
 
 	# ---- 7: briefs instead of paragraphs

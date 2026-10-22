@@ -79,7 +79,7 @@ static func run(w: Node) -> void:
 			u.selected = false
 		restored[0].selected = true
 		w.hud._update_selection()
-		if not "Ammunition: 2/4" in w.hud._sel_info.text:
+		if not "Ammo 2/4" in w.hud._sel_info.text:
 			failures.append("Aircraft selection omitted ammunition")
 		if "--capture-operations" in OS.get_cmdline_user_args():
 			await w.capture_view("res://build/aircraft-ammunition.png",restored[0].node.position,90.0,0.65,30)

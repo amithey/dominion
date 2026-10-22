@@ -1593,7 +1593,7 @@ func _update_selection() -> void:
 		_sel_info.text = Brief.text(Brief.unit(world, main)) if units.size() == 1 else ""
 		_sel_info.tooltip_text = "%s\nRight-click: move / attack, Ctrl + right-click: attack-move (F1: all controls)" % str(def.get("desc", ""))
 		if units.all(func(u): return u.key == "worker"):
-			_sel_info.text = "Right-click an unfinished building to build it (Shift: add more)."
+			_sel_info.text = "B opens the build list. Right-click a site to construct it; Shift + right-click queues more."
 		elif not own_units.any(func(u): return u.dmg > 0):
 			_sel_info.text = "%s\nNo weapons." % Brief.text(Brief.unit(world, main))
 		_fill_queue([])
@@ -1805,7 +1805,8 @@ func _fill_cargo(own: Array) -> void:
 	if not carriers.is_empty():
 		for c in carriers:
 			var aboard: int = (c.get("cargo", []) as Array).size()
-			var head := _text("Aboard %d / %d" % [Air.used(c), int(Air.CAPACITY.get(c.key, 0))], 16, UI.GOOD if aboard > 0 else UI.MUTED, true)
+			var places := "%d of %d places" % [Air.used(c), int(Air.CAPACITY.get(c.key, 0))]
+			var head := _text(("%d aboard - %s" % [aboard, places]) if aboard > 0 else ("Empty - " + places), 16, UI.GOOD if aboard > 0 else UI.MUTED, true)
 			_cargo_row.add_child(head)
 			if aboard > 0:
 				var label := _text(Air.manifest(world, c), 14, UI.CREAM)
