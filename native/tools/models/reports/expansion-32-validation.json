@@ -1,0 +1,37 @@
+{
+  "batch": 32,
+  "files": [
+    "aircraft/helicopter__mi_17_aw109.glb",
+    "aircraft/helicopter__mi_8.glb",
+    "aircraft/helicopter__mi_8amtsh.glb",
+    "aircraft/helicopter__nh90.glb",
+    "aircraft/helicopter__nh90_caiman.glb",
+    "aircraft/helicopter__shabaviz_2_75.glb"
+  ],
+  "sha256": {
+    "aircraft/helicopter__mi_17_aw109.glb": "aca75c6bfa879e41f95872938116b8e5cec2548ce3f08a7783aff58f2bf0c484",
+    "aircraft/helicopter__mi_8.glb": "c4a3ef4088b9d21157c9f6e478da9b9db9f4e4c4856edbca6655b445be01c845",
+    "aircraft/helicopter__mi_8amtsh.glb": "044573b826a9df91f1cb59da13f8683fb00959b2c7cd2e30f619e8877c71e47d",
+    "aircraft/helicopter__nh90.glb": "2328baa2de94249fff21600e6bae8465a0e14c0e72bb78a98bf34cf9e9972932",
+    "aircraft/helicopter__nh90_caiman.glb": "175178dfc98dc323f555e180ae086b651e1f6133d82ccce245da6fd6770e65ef",
+    "aircraft/helicopter__shabaviz_2_75.glb": "023027476c0732d7862394e909863f519009eb348de323cd307999cd34cbe498"
+  },
+  "maximum_triangles": [
+    13348,
+    2260
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific rotor configuration and landing gear",
+    "local-frame hinge propagation and rotor full-revolution return",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p5_helicopters.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

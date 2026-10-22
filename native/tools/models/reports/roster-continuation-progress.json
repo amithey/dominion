@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 176,
+  "ready_files": 182,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -367,6 +367,18 @@
         "aircraft/helicopter__merlin_hc4.glb",
         "aircraft/helicopter__mi_17.glb"
       ]
+    },
+    {
+      "batch": 32,
+      "report": "expansion-32-validation.json",
+      "files": [
+        "aircraft/helicopter__mi_17_aw109.glb",
+        "aircraft/helicopter__mi_8.glb",
+        "aircraft/helicopter__mi_8amtsh.glb",
+        "aircraft/helicopter__nh90.glb",
+        "aircraft/helicopter__nh90_caiman.glb",
+        "aircraft/helicopter__shabaviz_2_75.glb"
+      ]
     }
   ],
   "priorities": {
@@ -575,14 +587,20 @@
     "P5": {
       "requested_rows": 57,
       "unique_files": 57,
-      "ready_files": 6,
+      "ready_files": 12,
       "ready_slugs": [
         "helicopter__bell_412epi",
         "helicopter__dhruv_alh",
         "helicopter__h225m",
         "helicopter__kuh_1_surion",
         "helicopter__merlin_hc4",
-        "helicopter__mi_17"
+        "helicopter__mi_17",
+        "helicopter__mi_17_aw109",
+        "helicopter__mi_8",
+        "helicopter__mi_8amtsh",
+        "helicopter__nh90",
+        "helicopter__nh90_caiman",
+        "helicopter__shabaviz_2_75"
       ],
       "remaining_slugs": [
         "gunship__ah_1f_cobra_z_10me",
@@ -610,12 +628,6 @@
         "heavyLift__chinook_hc6",
         "heavyLift__mi_26",
         "heavyLift__z_8l",
-        "helicopter__mi_17_aw109",
-        "helicopter__mi_8",
-        "helicopter__mi_8amtsh",
-        "helicopter__nh90",
-        "helicopter__nh90_caiman",
-        "helicopter__shabaviz_2_75",
         "helicopter__t70_black_hawk",
         "helicopter__uh_60_captured",
         "helicopter__uh_60_mi_17",

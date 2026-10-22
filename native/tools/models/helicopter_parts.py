@@ -37,7 +37,7 @@ class HelicopterSpec:
     features:list=field(default_factory=list)
     details:dict=field(default_factory=dict)
 
-def shell_surface(m,role,sections,lod=0,window=None):
+def shell_surface(m,role,sections,lod=0,window=None,cross_power=1.):
     """Closed longitudinal elliptical shell; explicit radial face orientation.
 
     Sections are z, centre-Y, half-width, half-height. Individual planar faces
@@ -49,7 +49,8 @@ def shell_surface(m,role,sections,lod=0,window=None):
     samples.append(np.array(sections[-1]));n=12 if lod else 48
     def ring(s):
         z,y,w,h=s
-        return np.array([[w*math.sin(t),y+h*math.cos(t),z] for t in np.linspace(0,math.tau,n,endpoint=False)])
+        def signed(v):return math.copysign(abs(v)**cross_power,v)
+        return np.array([[w*signed(math.sin(t)),y+h*signed(math.cos(t)),z] for t in np.linspace(0,math.tau,n,endpoint=False)])
     rings=[ring(s) for s in samples]
     m.face(role,rings[0],[0,0,-1]);m.face(role,rings[-1],[0,0,1])
     for j,(a,b) in enumerate(zip(rings,rings[1:])):
@@ -91,12 +92,13 @@ def body(rig,s,lod):
             side=abs(math.sin(theta))>.91 and math.cos(theta)>.0
             if side and any(abs(z-q*L)<L*.028 for q in s.details.get('window_z',(-.055,.045,.14,.22))):return 'glass'
         return 'paint'
-    shell_surface(m,'paint',sections,lod,windows)
+    shell_surface(m,'paint',sections,lod,windows,s.details.get('cross_section_power',1.))
     # Tail boom is tapered separately, joined inside the upper rear cabin.
     ty=s.details.get('tail_y',s.hub_y-.35);tz=-L*.465
     if s.family!='chinook':
         start=L*s.details.get('boom_start',-.10);sy=cy+H*.23
-        shell_surface(m,'paint',[(tz,ty,W*.065,H*.07),(-L*.33,(ty+sy)/2,W*.12,H*.14),(start,sy,W*.30,H*.28)],lod)
+        by=s.details.get('boom_y',ty)
+        shell_surface(m,'paint',[(tz,by,W*.065,H*.07),(-L*.33,(by+sy)/2,W*.12,H*.14),(start,sy,W*.30,H*.28)],lod)
     if s.family in ('mi8','mi17','mi26'):
         count=5 if s.family!='mi26' else 8
         for side in (-1,1):
@@ -107,11 +109,14 @@ def body(rig,s,lod):
     # Static fins and tailplane are physical closed wedges.
     if s.family not in ('chinook','ka27','ka52'):
         finx=.06;finH=max(.70,s.tail_diameter*.50)
-        verts=[(-finx,ty-.35,tz+.85),(finx,ty-.35,tz+.85),(-finx,ty+finH,tz-.12),
+        fy=s.details.get('boom_y',ty)-.35
+        verts=[(-finx,fy,tz+.85),(finx,fy,tz+.85),(-finx,ty+finH,tz-.12),
                (finx,ty+finH,tz-.12),(-finx,ty+finH*.85,tz-.61),(finx,ty+finH*.85,tz-.61),
-               (-finx,ty-.32,tz-.54),(finx,ty-.32,tz-.54)]
+               (-finx,fy+.03,tz-.54),(finx,fy+.03,tz-.54)]
+        if s.tail_cant:
+            anchor=np.array([0,ty,tz]);verts=(np.asarray(verts)-anchor)@rotation([0,0,1],math.radians(s.tail_cant)).T+anchor
         m.solid('paint',verts,[(0,2,4,6),(1,7,5,3),(0,1,3,2),(2,3,5,4),(4,5,7,6),(6,7,1,0)])
-        m.box('paint',(0,ty-.30,tz+L*.11),(W*1.55,.09,L*.075))
+        m.box('paint',(0,s.details.get('boom_y',ty)-.30,tz+L*.11),(W*1.55,.09,L*.075))
     elif s.family in ('ka27','ka52'):
         for side in (-1,1):
             m.box('paint',(side*W*.58,ty+.25,tz+.75),(.095,1.05,1.30))
@@ -188,7 +193,8 @@ def rotors(rig,s,lod,ty,tz):
         mast=Mesh();mast.tube('metal_dark',(p[0],p[1]-.62,p[2]),(p[0],p[1]-.15,p[2]),max(.10,s.width*.045),6 if lod else 16)
         rig.add(name+'_Mast','Fuselage',(p[0],p[1]-.62,p[2]),mast)
     if s.tail_blades:
-        p=np.array([s.tail_side*s.width*.12,ty,tz]);cant=math.radians(s.tail_cant)
+        cant=math.radians(s.tail_cant);offset=s.tail_side*s.width*.12
+        p=np.array([offset*math.cos(cant),ty+offset*math.sin(cant),tz])
         m=rotor_mesh(s.tail_diameter/2,s.tail_blades,lod,chord=max(.10,s.tail_diameter*.045))
         posed=Mesh();merge_mesh(posed,m,rotation([0,0,1],cant-math.pi/2),p)
         q=[0,0,math.sin(cant/2),math.cos(cant/2)]
@@ -207,7 +213,7 @@ def landing_gear(rig,s,lod):
     radius=s.details.get('wheel_radius',.27 if L<18 else .39)
     if s.family=='mi26':radius=.66
     if s.gear=='tailwheel':
-        positions=[('Left',-W*.65,L*.12),('Right',W*.65,L*.12),('Tail',0,-L*.42)]
+        positions=[('Left',-W*.65,L*.12),('Right',W*.65,L*.12),('Tail',0,L*s.details.get('tail_gear_z',-.42))]
     elif s.gear=='four':
         positions=[('Left',-W*.56,L*.29),('Right',W*.56,L*.29),('Left_Aft',-W*.56,-L*.30),('Right_Aft',W*.56,-L*.30)]
     else:
@@ -216,6 +222,7 @@ def landing_gear(rig,s,lod):
     for label,x,z in positions:
         rr=radius*.65 if label=='Tail' else radius*.77 if label=='Nose' else radius
         p=np.array([x*.65,b+H*.22,z]);m=Mesh();axle=np.array([x,rr,z])
+        if label=='Tail':p[1]=s.details.get('tail_gear_anchor_y',p[1])
         beam(m,'paint',p,axle+[0,.09,0],max(.075,rr*.22))
         m.tube('metal_dark',p*.55+(axle+[0,.09,0])*.45,axle+[0,.09,0],max(.035,rr*.12),6 if lod else 12)
         rig.add('Gear_'+label,'Fuselage',p,m,'X' if s.family in ('nh90','h225','merlin','mi24','ka52','panther') else None)
@@ -231,15 +238,87 @@ def burnt_wreck(rig,s):
         merge_mesh(m,part['mesh'],roles={'paint':'metal_dark','glass':'metal_dark','markings':'metal_dark'})
     m.remove_duplicates();return m
 
+def armament(rig,s,lod):
+    """Gun trunnion and one numbered launch marker per real store station."""
+    H=s.body_height;L=s.length;W=s.width;b=s.belly
+    span=s.details['wing_span'];stations=s.details.get('stations_per_wing',2)
+    wing_y=b+H*.40;muzzles=0
+    if s.details.get('gun',True):
+        fixed=s.details.get('fixed_gun',False);side=s.details.get('gun_side',0)
+        p=np.array([side*W*.52,b+.23,L*.365])
+        parent='Fuselage'
+        if not fixed:
+            mount=Mesh();mount.tube('paint',p-[0,.10,0],p+[0,.24,0],.27,8 if lod else 20)
+            rig.add('Turret','Fuselage',p,mount,'Y');parent='Turret'
+        gun=Mesh();gun.box('metal_dark',p,(.26,.19,.44))
+        count=s.details.get('gun_barrels',1);length=.98 if s.family not in ('cobra','toufan') else 1.14
+        for i in range(count):
+            angle=i*math.tau/count;offset=np.array([math.cos(angle)*.045,math.sin(angle)*.045,0]) if count>1 else np.zeros(3)
+            gun.tube('metal_dark',p+offset,p+offset+[0,0,length],.025 if count>1 else .043,6 if lod else 12)
+        rig.add('Gun',parent,p,gun,None if fixed else 'X')
+        rig.add('Muzzle_0','Gun',p+[0,0,length],forward='+Z');muzzles=1
+    for side,label in ((-1,'L'),(1,'R')):
+        wing=Mesh();root=W*.34;tip=span/2;z=L*.105;drop=-.23 if s.family=='mi24' else -.03
+        upper=[(side*root,wing_y+.075,z+.50),(side*tip,wing_y+drop+.035,z-.05),
+               (side*tip,wing_y+drop+.035,z-.73),(side*root,wing_y+.075,z-.65)]
+        wing.solid('paint',upper+[(x,y-.11,zz) for x,y,zz in upper],[(0,1,2,3),(4,7,6,5),(0,4,5,1),(1,5,6,2),(2,6,7,3),(3,7,4,0)])
+        rig.add('Stub_Wing_'+label,'Fuselage',(side*root,wing_y,z),wing)
+        for j in range(stations):
+            f=(j+1)/(stations+.12);x=side*(W*.50+(span/2-W*.50)*f);y=wing_y-.36+drop*f
+            p=np.array([x,y,z-.10]);store=Mesh()
+            beam(store,'paint',(x,wing_y+drop*f,z-.10),p,.11)
+            is_rocket=j==0
+            if is_rocket:
+                length=1.45;rad=.255;tip=p+[0,0,length*.65]
+                store.tube('paint',p-[0,0,length*.35],tip,rad,8 if lod else 24)
+                rings=[(0,1),(.10,6)]+([] if lod else [(.19,12)])
+                for rr,n in rings:
+                    for i in range(n):
+                        angle=i*math.tau/n;q=tip+[rr*math.cos(angle),rr*math.sin(angle),.012]
+                        store.tube('metal_dark',q,q+[0,0,.018],.034,4 if lod else 6)
+            else:
+                bank=s.details.get('missiles_per_bank',4);length=2.70 if bank==6 else 1.63
+                tip=p+[0,0,length*.59]
+                for i in range(bank):
+                    dx=(i%2-.5)*.22;dy=(i//2-(bank/2-1)/2)*.21
+                    a=p+[dx,dy,-length*.41];end=a+[0,0,length]
+                    store.tube('paint',a,end,.085,6 if lod else 12)
+                    store.tube('metal_dark',end,end+[0,0,.07],.085,6 if lod else 12,r_top=.025)
+                    if not lod:
+                        store.box('paint',a+[0,0,.24],(.33,.035,.24));store.box('paint',a+[0,0,.24],(.035,.33,.24))
+                tip+=np.array([0,0,.07])
+            name='Store_'+label+str(j);rig.add(name,'Fuselage',p,store)
+            rig.add('Muzzle_'+str(muzzles),name,tip,forward='+Z',purpose='store launch station');muzzles+=1
+    optics=Mesh();p=np.array([0,b+H*.51,L*.46])
+    optics.tube('paint',p,p+[0,0,.28],.22,8 if lod else 20)
+    optics.tube('glass',p+[0,0,.285],p+[0,0,.30],.17,8 if lod else 20)
+    rig.add('Sight','Fuselage',p,optics,'Y')
+    if s.details.get('mast_radar'):
+        rad=Mesh();p=np.array([0,s.hub_y+.55,s.hub_z])
+        rad.tube('metal_dark',p-[0,.28,0],p,.10,6 if lod else 12)
+        rad.tube('paint',p,p+[0,.24,0],.52,12 if lod else 32)
+        rig.add('Mast_Radome','Fuselage',p,rad)
+    s.details['muzzle_count']=muzzles
+    return rig
+
 def build(s,lod=0):
     rig=Rig(lod);cy,ty,tz=body(rig,s,lod)
     engines(rig,s,lod,cy);rotors(rig,s,lod,ty,tz);landing_gear(rig,s,lod)
-    if s.family=='merlin':
+    if s.details.get('armoured_transport'):
+        protection=Mesh()
+        for side in (-1,1):
+            protection.box('paint',(side*s.width*.41,cy-.52,s.length*.34),(.12,.75,.85))
+            protection.box('metal_dark',(side*s.width*.52,cy+.18,s.length*.015),(.18,.23,.42))
+        pod=np.array([0,s.belly+.27,s.length*.455]);protection.tube('paint',pod,pod+[0,0,.30],.21,8 if lod else 20)
+        protection.tube('glass',pod+[0,0,.305],pod+[0,0,.32],.16,8 if lod else 20)
+        rig.add('Armour_and_Sensors','Fuselage',(0,s.belly,s.length*.34),protection)
+    if s.family in ('merlin','nh90'):
         p=np.array([0,cy-s.body_height*.275,-s.length*.17-.04]);ramp=Mesh()
         ramp.box('paint',p+[0,s.body_height*.275,0],(s.width*.50,s.body_height*.55,.06))
         if not lod:
             for yy in np.linspace(.10,s.body_height*.50,7):ramp.box('metal_dark',p+[0,yy,-.038],(s.width*.43,.035,.018))
         rig.add('Cargo_Ramp','Fuselage',p,ramp,'X')
+    if s.attack:armament(rig,s,lod)
     for part in rig.parts:
         if part['mesh'] is not None:part['mesh'].remove_duplicates()
     return rig,s
