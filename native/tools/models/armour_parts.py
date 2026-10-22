@@ -372,6 +372,19 @@ def recovery(rig,s,lod):
         for x in np.linspace(-.40,.40,7):deck.tube('metal_dark',(x,r+.10,.14),(x+.022,r+.10,.14),.196,n)
         for side in (-1,1):beam(deck,'metal_dark',(side*w*.72,r+.25,h*.33),(side*w*.72,r+.25,-h*.55),.035)
     rig.add('Winch_Deck','Hull',(0,r,0),deck)
+    if s.details.get('powerpack'):
+        p=np.array([-.10,r*.59+.40,-h*.61]);m=Mesh()
+        m.box('paint',p,(1.45,.72,1.30))
+        if not lod:
+            for yy in np.linspace(p[1]-.24,p[1]+.22,7):m.box('metal_dark',(p[0]-.735,yy,p[2]),(.025,.035,1.05))
+            for side in (-1,1):m.box('metal_dark',p+[side*.59,.40,0],(.11,.09,.15))
+        rig.add('Spare_Powerpack','Hull',p,m)
+    if s.details.get('spare_roadwheels'):
+        p=np.array([-.42,r*.59+.08,-h*.59]);m=Mesh()
+        for j in range(s.details['spare_roadwheels']):
+            a=p+[j*.78,0,0];m.tube('rubber',a,a+[0,.14,0],.34,n)
+            m.tube('paint',a+[0,.14,0],a+[0,.17,0],.25,n)
+        rig.add('Spare_Roadwheels','Hull',p,m)
 
 
 def engineering(rig,s,lod):

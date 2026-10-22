@@ -278,7 +278,7 @@ def recoveryVehicle__armoured_recovery_vehicle(lod=0):
 
 def recoveryVehicle__bergepanzer_3_buffel(lod=0):
     return arv('recoveryVehicle__bergepanzer_3_buffel','Bergepanzer 3 Buffel',lod,8.13,3.54,2.20,7,.99,'slew','puma',
-        ['Seven-wheel Leopard 2 chassis','front dozer spade','front-right slewing crane','low asymmetric recovery cabin','rear work deck'])
+        ['Seven-wheel Leopard 2 chassis','front dozer spade','front-right slewing crane','low asymmetric recovery cabin','rear work deck with spare wheels'],spare_roadwheels=2)
 
 def recoveryVehicle__brem_1(lod=0):
     return arv('recoveryVehicle__brem_1','BREM-1',lod,6.98,3.46,1.68,6,.87,'slew','soviet',
@@ -286,15 +286,15 @@ def recoveryVehicle__brem_1(lod=0):
 
 def recoveryVehicle__challenger_arrv(lod=0):
     return arv('recoveryVehicle__challenger_arrv','Challenger ARRV',lod,8.30,3.62,2.35,6,1.02,'slew','trojan',
-        ['Six Challenger road wheels','large slab recovery superstructure','starboard hydraulic crane','broad front spade','rear equipment deck'])
+        ['Six Challenger road wheels','large slab recovery superstructure','starboard hydraulic crane','broad front spade','rear spare powerpack'],powerpack=True)
 
 def recoveryVehicle__k1_arv(lod=0):
     return arv('recoveryVehicle__k1_arv','K1 ARV',lod,7.48,3.60,2.18,6,.95,'slew','korean',
-        ['Six K1 chassis wheels','front dozer spade','folding slewing crane','recovery superstructure with large roof boxes'])
+        ['Six K1 chassis wheels','front dozer spade','folding slewing crane','recovery superstructure with spare powerpack'],powerpack=True)
 
 def recoveryVehicle__m88a2_hercules(lod=0):
     return arv('recoveryVehicle__m88a2_hercules','M88A2 Hercules',lod,8.27,3.66,2.40,6,.96,'aframe','m88',
-        ['Six large road wheels','high forward armoured cabin','twin-leg A-frame boom','large front spade','heavy rear winch and stowage deck'])
+        ['Six large road wheels','high forward armoured cabin','twin-leg A-frame boom','large front spade','heavy rear winch and spare road wheel'],spare_roadwheels=1)
 
 def recoveryVehicle__type_90_arv(lod=0):
     return arv('recoveryVehicle__type_90_arv','Type 90 ARV',lod,7.95,3.40,2.20,6,.97,'slew','japan',

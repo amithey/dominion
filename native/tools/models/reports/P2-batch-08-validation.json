@@ -1,0 +1,35 @@
+{
+  "batch": 8,
+  "files": [
+    "vehicles/reconVehicle__fennek.glb",
+    "vehicles/reconVehicle__hawkei.glb",
+    "vehicles/reconVehicle__jackal.glb",
+    "vehicles/reconVehicle__komodo_scout.glb",
+    "vehicles/reconVehicle__m3_bradley_scout.glb",
+    "vehicles/recoveryVehicle__armoured_recovery_vehicle.glb"
+  ],
+  "sha256": {
+    "vehicles/reconVehicle__fennek.glb": "ac1cbc38723609a1462c360eedf339637cb5908e6f464b34b51ce216014da963",
+    "vehicles/reconVehicle__hawkei.glb": "84551206f1b788ce0d3c41e85ba73a6e8725ddc396ccf6e51f7809b6b9cbe951",
+    "vehicles/reconVehicle__jackal.glb": "2b91a9cecc6ef09b0b4cbcd9af9caaedac96216411ae0bf75c5acf72dd8dec86",
+    "vehicles/reconVehicle__komodo_scout.glb": "f35010f119a5c95c75e583a1784cc0dc64c13a336642d6aad36da5cd30369a1c",
+    "vehicles/reconVehicle__m3_bradley_scout.glb": "38c6cb4dd7cfd80b687014becd060243ef2e88dd5c6b6604a0ce6c7f719a3d05",
+    "vehicles/recoveryVehicle__armoured_recovery_vehicle.glb": "63ea457358c58286acbfa8a0caa27bafb69864fadc320c9f54fcd9bdbfec1250"
+  },
+  "maximum_triangles": [
+    11338,
+    1884
+  ],
+  "checks": [
+    "saved GLB buffers/CCW/normals/UVs/bounds/duplicates",
+    "actual axle counts and positions",
+    "canonical TrackPath phases 0/.25/.5/.75/1 where tracked",
+    "hinge child propagation",
+    "optional weapon yaw/elevation/recoil",
+    "independent trimesh load",
+    "native Godot load/pivots/visibility",
+    "saved GLB LOD0/LOD1/wreck render sheet"
+  ],
+  "generator": "generate_p2_armour.py",
+  "priority_gate": "P2 only plus requested Leclerc; no P3 assets"
+}
