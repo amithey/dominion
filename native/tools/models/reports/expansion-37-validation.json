@@ -1,0 +1,37 @@
+{
+  "batch": 37,
+  "files": [
+    "aircraft/gunship__toufan.glb",
+    "aircraft/gunship__z_10.glb",
+    "aircraft/navalHelicopter__as565_panther.glb",
+    "aircraft/navalHelicopter__ka_27pl.glb",
+    "aircraft/navalHelicopter__mh_60r_seahawk.glb",
+    "aircraft/navalHelicopter__nh90_nfh.glb"
+  ],
+  "sha256": {
+    "aircraft/gunship__toufan.glb": "ddd949623712f13cd9f16184f8c29bc2864f19a5f30855873ddf608ceda9d007",
+    "aircraft/gunship__z_10.glb": "80e0aba0d0933b947a822230b1f47744272dbf4fc86b363aa8105f292dddba0d",
+    "aircraft/navalHelicopter__as565_panther.glb": "0be36d01fe7b927d19d1ec965fb640e399b94ed2f61088db4b1a2b6a8dde73b6",
+    "aircraft/navalHelicopter__ka_27pl.glb": "7178bf33339d4695495f463aa2a6011f13f8fe3f67e92204d20f2a2f5528b543",
+    "aircraft/navalHelicopter__mh_60r_seahawk.glb": "db6345b35c12b00dc8743cd2a17fbc12cf634d0f1396322713e6bb022b21e1cd",
+    "aircraft/navalHelicopter__nh90_nfh.glb": "1c62ec3f1bed4544149abe0f80d88e21d270a937c72430df8c821d500bec5abb"
+  },
+  "maximum_triangles": [
+    11916,
+    2184
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific rotor configuration and landing gear",
+    "local-frame hinge propagation and rotor full-revolution return",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p5_helicopters.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

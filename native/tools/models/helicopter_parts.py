@@ -109,8 +109,9 @@ def body(rig,s,lod):
             for z in np.linspace(-L*.28 if s.family=='chinook' else L*.095,L*.29 if s.family=='chinook' else L*.34,count):
                 x=side*(W*.5+.010);rad=.20 if s.family!='mi26' else .26
                 if s.family=='chinook':x=side*(float(np.interp(z,np.asarray(sections)[:,0],np.asarray(sections)[:,2]))+.010);rad=.18
-                m.tube('metal_dark',(x-side*.025,cy+.12,z),(x+side*.035,cy+.12,z),rad+.045,8 if lod else 20)
-                m.tube('glass',(x+side*.036,cy+.12,z),(x+side*.047,cy+.12,z),rad,8 if lod else 20)
+                segments=6 if lod and s.family=='mi26' else 8 if lod else 20
+                m.tube('metal_dark',(x-side*.025,cy+.12,z),(x+side*.035,cy+.12,z),rad+.045,segments)
+                m.tube('glass',(x+side*.036,cy+.12,z),(x+side*.047,cy+.12,z),rad,segments)
     # Static fins and tailplane are physical closed wedges.
     if s.family not in ('chinook','ka27','ka52') and not s.details.get('fenestron'):
         finx=.06;finH=max(.70,s.tail_diameter*.50)
