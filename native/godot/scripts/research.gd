@@ -62,7 +62,7 @@ const NATIVE := {
 	"robotics": [{"buildPct": 0.5}, "Construction is 50% faster: the machines do the heavy work."],
 	"aiRevolution": [{"researchPct": 0.2, "incomePct": 0.1}, ""],
 	"stealthTech": [{"airArmor": 0.3}, ""],
-	"satelliteRecon": [{"warn": 1.0}, "Every attack on you is reported 30 seconds before it sets out."],
+	"satelliteRecon": [{"warn": 1.0}, "With a reconnaissance or early-warning satellite in orbit, every attack on you is reported 30 seconds before it sets out."],
 	"microchips": [{"chips": 1.0}, "Chip Fabs turn silicon into money and research. Requires a Tech Park."],
 	"navalEngineering": [{}, "Unlocks the Destroyer and the Submarine, and the Anti-Ship Missile. Requires a Shipyard."],
 	"ballisticTech": [{}, "Unlocks your nation's eligible ballistic families. Hypersonic trial programmes also require Future Arsenal. Requires a Missile Silo."],

@@ -166,8 +166,21 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 		return preload("res://scripts/war_tools.gd").carrier_flight(world, u, delta)   # a carrier's aircraft land aboard
 	if u.air_state == "ready":
 		if u.key not in TUBE_LAUNCHED:
-			u.sortie_left = maxf(0.0, float(u.get("sortie_left", preload("res://scripts/war_costs.gd").SORTIE_SECONDS)) - delta)
-			if u.sortie_left <= 0.0:
+			# A helicopter burns its flight time only while it flies a task (hovering on the spot
+			# costs little), and at a third of a jet's rate: troops are flown across the island.
+			var rotary: bool = u.key in ROTARY
+			var working: bool = not rotary or bool(u.get("moving", false)) or u.target != null or u.enemy != null
+			if working:
+				# Fuel lasts about 4 minutes in a fighter, 5 in a bomber, 4 in a helicopter at work (the 90 s
+				# of the first version sent aircraft home in the middle of a mission).
+				var burn: float = 0.35 if rotary else (0.28 if u.key in ["bomber", "raider"] else 0.4)
+				u.sortie_left = maxf(0.0, float(u.get("sortie_left", preload("res://scripts/war_costs.gd").SORTIE_SECONDS)) - delta * burn)
+				if u.sortie_left < 20.0 * burn and not u.get("fuel_warned", false) and int(u.owner) == 0 and world.hud != null:
+					u.fuel_warned = true
+					world.hud.notice("%s is low on fuel and will return to base soon." % str(world.unit_defs.get(u.key, {}).get("name", u.key)), u.node.position)
+			# With no working base to land at, it flies on (the old rule left it frozen in "no base",
+			# deaf to every order: a helicopter idle for 90 s could never be sent anywhere).
+			if u.sortie_left <= 0.0 and base_for(world, u) != null:
 				u.air_state = "returning"
 				u.egress = null
 		if u.air_state == "ready": return false
@@ -289,6 +302,7 @@ static func _taxi_out(world: Node, u: Dictionary) -> void:
 		preload("res://scripts/war_costs.gd").blocked(world, u, "aviation fuel")
 		return
 	u.sortie_left = preload("res://scripts/war_costs.gd").SORTIE_SECONDS
+	u.fuel_warned = false
 	u.operating_shortage = ""
 	u.air_state = "taxi_out"
 	u.taxi_from = u.node.position

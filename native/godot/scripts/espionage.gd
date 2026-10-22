@@ -553,8 +553,11 @@ func enemy_attempt(force_outcome := "") -> String:
 
 ## Intel at 60+ (or Satellite Recon) warns of an attack wave before it sets out.
 func warn_attack(nation: int) -> void:
-	var foreseen: bool = world.get("directorate") != null and world.directorate != null and world.directorate.warns()   # AI reads imagery and open sources
-	if (intel.get(nation, 0.0) >= 60.0 and dossiers.has(nation) and dossiers[nation].get("confidence", "low") != "low" and clock - float(dossiers[nation].t) <= 180.0) or (world.research and world.research.bonus("warn") >= 1.0) or foreseen:
+	# Without agents in that nation or a satellite overhead there is nothing to warn of: the discovery
+	# of satellite reconnaissance and the AI's analysis only work on what an agent or a satellite supplies.
+	var satellite: bool = world.get("space") != null and world.space != null and (world.space.active(0, "recon") >= 1 or world.space.active(0, "warning") >= 1)
+	var foreseen: bool = world.get("directorate") != null and world.directorate != null and world.directorate.warns() and (satellite or intel.get(nation, 0.0) >= 30.0)   # AI reads imagery and open sources
+	if (intel.get(nation, 0.0) >= 60.0 and dossiers.has(nation) and dossiers[nation].get("confidence", "low") != "low" and clock - float(dossiers[nation].t) <= 180.0) or (world.research and world.research.bonus("warn") >= 1.0 and satellite) or foreseen:
 		world.hud.notice("INTELLIGENCE: %s will launch an attack within 30 seconds." % world.diplomacy.name_of(nation))
 
 # ---------------------------------------------------------------- saving

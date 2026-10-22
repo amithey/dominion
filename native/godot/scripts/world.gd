@@ -2023,6 +2023,9 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 		if landed[0].owner == 0:
 			hud.notice("%d aircraft landing at the base." % landed.size())
 	for u in selected:
+		# A return to base is cancelled by a new order while there is flight time left.
+		if u.get("fly", false) and String(u.get("air_state", "")) in ["returning", "no base"] and float(u.get("sortie_left", 0.0)) > 0.0:
+			u.air_state = "ready"
 		if u.has("ground_attack"):
 			u.enemy = null
 		u.erase("ground_attack")

@@ -14,6 +14,7 @@ const LAKE_SLOPE := 0.6     ## metres of depth gained per 2.5 m cell from the sh
 const LAKE_DEPTH := 4.5     ## deepest a lake gets
 const OPEN_DEPTH := 1.5     ## water this deep, reached from the map's edge, is the open sea
 const COAST_CELLS := 6      ## how far (in 2.5 m cells) the sea's own shallows reach from that water
+const SEA_CELLS := 6400   ## an enclosed body of water this big (cells) is a sea
 const BANK := 0.5           ## a lake's shore rises at least this far above the water
 const SEA_SHELF := 0.45     ## metres of depth per cell off the sea's shore
 const LIFT := 0.5           ## land lower than this above the sea is raised clear of the swell
@@ -79,6 +80,34 @@ static func refine(heights: PackedFloat32Array, n: int, sea: float) -> PackedByt
 					ocean[j] = 1
 					next.append(j)
 		coast = next
+	# A big enclosed body of water is a sea, not a lake: ships sail it and a shipyard may stand on
+	# its shore (the middle sea of the Inland Sea, Crown, Archipelago and Ten Isles maps). Under about
+	# 40,000 square metres (6,400 cells of 2.5 m) it stays a lake.
+	var seen := PackedByteArray()
+	seen.resize(n * n)
+	for start in range(n * n):
+		if heights[start] >= sea or ocean[start] == 1 or seen[start] == 1:
+			continue
+		var body: Array[int] = [start]
+		var todo: Array[int] = [start]
+		seen[start] = 1
+		while not todo.is_empty():
+			var i: int = todo.pop_back()
+			var r := i / n
+			var c := i % n
+			for d in [[-1, 0], [1, 0], [0, -1], [0, 1]]:
+				var rr: int = r + d[0]
+				var cc: int = c + d[1]
+				if rr < 0 or cc < 0 or rr >= n or cc >= n:
+					continue
+				var j := rr * n + cc
+				if seen[j] == 0 and ocean[j] == 0 and heights[j] < sea:
+					seen[j] = 1
+					body.append(j)
+					todo.append(j)
+		if body.size() >= SEA_CELLS:
+			for i in body:
+				ocean[i] = 1
 	# Lakes: the rest of the wet cells. Distance to the shore, in cells, by a
 	# breadth-first sweep inward from the shoreline.
 	var lake := PackedByteArray()

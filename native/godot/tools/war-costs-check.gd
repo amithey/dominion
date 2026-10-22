@@ -135,7 +135,7 @@ func run() -> void:
 	Air.update(w, bomber, 0.1)
 	check(w.economy.res.oil == 988.0, "Taxi does not pay twice")
 	bomber.air_state = "ready"
-	bomber.sortie_left = 0.1
+	bomber.sortie_left = 0.01
 	Air.update(w, bomber, 0.2)
 	check(bomber.air_state in ["returning", "landing"], "Fuel endurance forces return")
 	funds()

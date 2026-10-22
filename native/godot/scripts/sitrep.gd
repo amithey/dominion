@@ -232,13 +232,18 @@ func update() -> void:
 
 ## ---------------------------------------------------------------- intelligence
 
+## Whether one of your reconnaissance or early-warning satellites is in orbit.
+func _satellite_up() -> bool:
+	return w.get("space") != null and w.space != null and (w.space.active(0, "recon") >= 1 or w.space.active(0, "warning") >= 1)
+
 ## How well you are warned of attacks by `nation`: {"level": 0..1, "source": text}. Level 0 means not at all.
 func early_warning(nation: int) -> Dictionary:
 	var best := {"level": 0.0, "source": ""}
 	var name: String = str(w.map.nations[nation].name) if nation < w.map.nations.size() else "the enemy"
 	if w.espionage != null and float(w.espionage.intel.get(nation, 0.0)) >= 60.0:
 		best = {"level": 1.0, "source": "your agents in %s" % name}
-	if w.research != null and w.research.bonus("warn") >= 1.0 and float(best.level) < 0.8:
+	# The discovery only teaches the method: a satellite must actually be in orbit to see anything.
+	if w.research != null and w.research.bonus("warn") >= 1.0 and float(best.level) < 0.8 and _satellite_up():
 		best = {"level": 0.8, "source": "Satellite Reconnaissance"}
 	if w.get("space") != null and w.space != null and w.space.active(0, "warning") >= 1 and float(best.level) < 0.8:
 		best = {"level": 0.8, "source": "early-warning satellites"}

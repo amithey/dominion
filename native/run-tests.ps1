@@ -12,6 +12,9 @@ $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.e
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
+    @('a big enclosed sea is a sea: coast for a shipyard on Inland Sea, Crown, Ten Isles, Archipelago', @('--script', 'res://tools/inland-sea-check.gd'), 'INLAND_SEA PASS', 600),
+    @('arsenals match reality: who fields precision rocket artillery, jammers and loitering munitions', @('--script', 'res://tools/arsenal-reality-check.gd'), 'ARSENAL_REALITY PASS', 120),
+    @('a loaded helicopter obeys its orders after idling; attack warnings need agents or a satellite', @('--script', 'res://tools/heli-order-check.gd'), 'HELI_ORDER PASS', 300),
     @('customer playtest: replacement orders cancel boarding, water and safe unloading retain passengers', @('--script', 'res://tools/customer-airlift-check.gd'), 'CUSTOMER_AIRLIFT PASS', 180),
     @('customer windows: navigation at three sizes, UN notices, shortcuts and live aircraft animation', @('--script', 'res://tools/customer-window-check.gd'), 'CUSTOMER_WINDOW PASS', 240),
     @('action wording: button help across menus, weapon roles, production versus launch, blocking reasons and unchanged actions', @('--script', 'res://tools/action-copy-check.gd'), 'ACTION_COPY PASS', 180),
