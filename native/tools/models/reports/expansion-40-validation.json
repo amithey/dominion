@@ -1,0 +1,35 @@
+{
+  "batch": 40,
+  "files": [
+    "aircraft/heavyLift__chinook_hc6.glb",
+    "aircraft/heavyLift__mi_26.glb",
+    "aircraft/heavyLift__z_8l.glb",
+    "aircraft/scoutHelicopter__oh_1.glb",
+    "aircraft/scoutHelicopter__wildcat_mk1.glb"
+  ],
+  "sha256": {
+    "aircraft/heavyLift__chinook_hc6.glb": "8e9b39f2cdc59c4c4339ad47c2cd357f9d9a66ac94112a9b8309a56b00e3f076",
+    "aircraft/heavyLift__mi_26.glb": "b7b4e5145b1c028e25e94516feb1bbf6b7aa2e09358afd8b0e8d111b4e16c713",
+    "aircraft/heavyLift__z_8l.glb": "e43b8f6fcaf9a1e5a54cc6b214fa5f2d2dd4088dc4211cf1676cbeb1989bc0cc",
+    "aircraft/scoutHelicopter__oh_1.glb": "1edb8d7617a39cc0137a8e1c1d2f0bc63196b0ae85ca5a431b932e447fc08e90",
+    "aircraft/scoutHelicopter__wildcat_mk1.glb": "8da4bbd47c09274b44f31273d04aa4bec4e307173f170373364a052acf212197"
+  },
+  "maximum_triangles": [
+    13816,
+    2344
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific rotor configuration and landing gear",
+    "local-frame hinge propagation and rotor full-revolution return",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p5_helicopters.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

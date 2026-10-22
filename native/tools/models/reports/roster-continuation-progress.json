@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 222,
+  "ready_files": 227,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -461,6 +461,17 @@
         "aircraft/heavyLift__ch_47f_i_chinook.glb",
         "aircraft/heavyLift__ch_47ja_chinook.glb"
       ]
+    },
+    {
+      "batch": 40,
+      "report": "expansion-40-validation.json",
+      "files": [
+        "aircraft/heavyLift__chinook_hc6.glb",
+        "aircraft/heavyLift__mi_26.glb",
+        "aircraft/heavyLift__z_8l.glb",
+        "aircraft/scoutHelicopter__oh_1.glb",
+        "aircraft/scoutHelicopter__wildcat_mk1.glb"
+      ]
     }
   ],
   "priorities": {
@@ -669,7 +680,7 @@
     "P5": {
       "requested_rows": 57,
       "unique_files": 57,
-      "ready_files": 52,
+      "ready_files": 57,
       "ready_slugs": [
         "gunship__ah_1f_cobra_z_10me",
         "gunship__ah_64_saraf",
@@ -693,6 +704,9 @@
         "heavyLift__ch_47f_chinook",
         "heavyLift__ch_47f_i_chinook",
         "heavyLift__ch_47ja_chinook",
+        "heavyLift__chinook_hc6",
+        "heavyLift__mi_26",
+        "heavyLift__z_8l",
         "helicopter__bell_412epi",
         "helicopter__dhruv_alh",
         "helicopter__h225m",
@@ -722,15 +736,11 @@
         "navalHelicopter__sh_2g_super_seasprite",
         "navalHelicopter__sh_60k",
         "navalHelicopter__wildcat_hma2",
-        "navalHelicopter__z_20f"
-      ],
-      "remaining_slugs": [
-        "heavyLift__chinook_hc6",
-        "heavyLift__mi_26",
-        "heavyLift__z_8l",
+        "navalHelicopter__z_20f",
         "scoutHelicopter__oh_1",
         "scoutHelicopter__wildcat_mk1"
-      ]
+      ],
+      "remaining_slugs": []
     },
     "P6": {
       "requested_rows": 128,
