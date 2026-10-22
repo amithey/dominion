@@ -1,0 +1,81 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Hull local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Hull_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Wheel_L0 local=[-1.11, 0.55, -3.0] world=[-1.11, 0.55, -3.0] axis=X pivot
+      Wheel_L0_Mesh local=[0, 0, 0] world=[-1.11, 0.55, -3.0] axis=None mesh
+    Wheel_L1 local=[-1.11, 0.55, -1.5] world=[-1.11, 0.55, -1.5] axis=X pivot
+      Wheel_L1_Mesh local=[0, 0, 0] world=[-1.11, 0.55, -1.5] axis=None mesh
+    Wheel_R0 local=[1.11, 0.55, -3.0] world=[1.11, 0.55, -3.0] axis=X pivot
+      Wheel_R0_Mesh local=[0, 0, 0] world=[1.11, 0.55, -3.0] axis=None mesh
+    Wheel_R1 local=[1.11, 0.55, -1.5] world=[1.11, 0.55, -1.5] axis=X pivot
+      Wheel_R1_Mesh local=[0, 0, 0] world=[1.11, 0.55, -1.5] axis=None mesh
+    Turntable local=[0.0, 1.4275, -1.972] world=[0.0, 1.4275, -1.972] axis=Y pivot
+      Turntable_Mesh local=[0, 0, 0] world=[0.0, 1.4275, -1.972] axis=None mesh
+      Launcher local=[0.0, 0.2, -1.948] world=[0.0, 1.6275, -3.92] axis=X pivot
+        Launcher_Mesh local=[0, 0, 0] world=[0.0, 1.6275, -3.92] axis=None mesh
+        Muzzle_0 local=[-0.4425, 0.5075, 5.435] world=[-0.4425, 2.135, 1.515] axis=None pivot
+        Muzzle_1 local=[-0.1475, 0.5075, 5.435] world=[-0.1475, 2.135, 1.515] axis=None pivot
+        Muzzle_2 local=[0.1475, 0.5075, 5.435] world=[0.1475, 2.135, 1.515] axis=None pivot
+        Muzzle_3 local=[0.4425, 0.5075, 5.435] world=[0.4425, 2.135, 1.515] axis=None pivot
+        Muzzle_4 local=[-0.4425, 0.8025, 5.435] world=[-0.4425, 2.43, 1.515] axis=None pivot
+        Muzzle_5 local=[-0.1475, 0.8025, 5.435] world=[-0.1475, 2.43, 1.515] axis=None pivot
+        Muzzle_6 local=[0.1475, 0.8025, 5.435] world=[0.1475, 2.43, 1.515] axis=None pivot
+        Muzzle_7 local=[0.4425, 0.8025, 5.435] world=[0.4425, 2.43, 1.515] axis=None pivot
+        Muzzle_8 local=[-0.4425, 1.0975, 5.435] world=[-0.4425, 2.725, 1.515] axis=None pivot
+        Muzzle_9 local=[-0.1475, 1.0975, 5.435] world=[-0.1475, 2.725, 1.515] axis=None pivot
+        Muzzle_10 local=[0.1475, 1.0975, 5.435] world=[0.1475, 2.725, 1.515] axis=None pivot
+        Muzzle_11 local=[0.4425, 1.0975, 5.435] world=[0.4425, 2.725, 1.515] axis=None pivot
+        Muzzle_12 local=[-0.4425, 1.3925, 5.435] world=[-0.4425, 3.02, 1.515] axis=None pivot
+        Muzzle_13 local=[-0.1475, 1.3925, 5.435] world=[-0.1475, 3.02, 1.515] axis=None pivot
+        Muzzle_14 local=[0.1475, 1.3925, 5.435] world=[0.1475, 3.02, 1.515] axis=None pivot
+        Muzzle_15 local=[0.4425, 1.3925, 5.435] world=[0.4425, 3.02, 1.515] axis=None pivot
+    Outrigger_L local=[-1.1, 1.3075, -4.0] world=[-1.1, 1.3075, -4.0] axis=None pivot
+      Outrigger_L_Mesh local=[0, 0, 0] world=[-1.1, 1.3075, -4.0] axis=None mesh
+    Outrigger_R local=[1.1, 1.3075, -4.0] world=[1.1, 1.3075, -4.0] axis=None pivot
+      Outrigger_R_Mesh local=[0, 0, 0] world=[1.1, 1.3075, -4.0] axis=None mesh
+    Outrigger_Front_L local=[-1.12, 1.3075, 2.992] world=[-1.12, 1.3075, 2.992] axis=None pivot
+      Outrigger_Front_L_Mesh local=[0, 0, 0] world=[-1.12, 1.3075, 2.992] axis=None mesh
+    Outrigger_Front_R local=[1.12, 1.3075, 2.992] world=[1.12, 1.3075, 2.992] axis=None pivot
+      Outrigger_Front_R_Mesh local=[0, 0, 0] world=[1.12, 1.3075, 2.992] axis=None mesh
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Hull_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Hull_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Wheel_L0_LOD1 local=[-1.11, 0.55, -3.0] world=[-1.11, 0.55, -3.0] axis=X pivot hidden
+      Wheel_L0_Mesh_LOD1 local=[0, 0, 0] world=[-1.11, 0.55, -3.0] axis=None mesh hidden
+    Wheel_L1_LOD1 local=[-1.11, 0.55, -1.5] world=[-1.11, 0.55, -1.5] axis=X pivot hidden
+      Wheel_L1_Mesh_LOD1 local=[0, 0, 0] world=[-1.11, 0.55, -1.5] axis=None mesh hidden
+    Wheel_R0_LOD1 local=[1.11, 0.55, -3.0] world=[1.11, 0.55, -3.0] axis=X pivot hidden
+      Wheel_R0_Mesh_LOD1 local=[0, 0, 0] world=[1.11, 0.55, -3.0] axis=None mesh hidden
+    Wheel_R1_LOD1 local=[1.11, 0.55, -1.5] world=[1.11, 0.55, -1.5] axis=X pivot hidden
+      Wheel_R1_Mesh_LOD1 local=[0, 0, 0] world=[1.11, 0.55, -1.5] axis=None mesh hidden
+    Turntable_LOD1 local=[0.0, 1.4275, -1.972] world=[0.0, 1.4275, -1.972] axis=Y pivot hidden
+      Turntable_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.4275, -1.972] axis=None mesh hidden
+      Launcher_LOD1 local=[0.0, 0.2, -1.948] world=[0.0, 1.6275, -3.92] axis=X pivot hidden
+        Launcher_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.6275, -3.92] axis=None mesh hidden
+        Muzzle_0_LOD1 local=[-0.4425, 0.5075, 5.435] world=[-0.4425, 2.135, 1.515] axis=None pivot hidden
+        Muzzle_1_LOD1 local=[-0.1475, 0.5075, 5.435] world=[-0.1475, 2.135, 1.515] axis=None pivot hidden
+        Muzzle_2_LOD1 local=[0.1475, 0.5075, 5.435] world=[0.1475, 2.135, 1.515] axis=None pivot hidden
+        Muzzle_3_LOD1 local=[0.4425, 0.5075, 5.435] world=[0.4425, 2.135, 1.515] axis=None pivot hidden
+        Muzzle_4_LOD1 local=[-0.4425, 0.8025, 5.435] world=[-0.4425, 2.43, 1.515] axis=None pivot hidden
+        Muzzle_5_LOD1 local=[-0.1475, 0.8025, 5.435] world=[-0.1475, 2.43, 1.515] axis=None pivot hidden
+        Muzzle_6_LOD1 local=[0.1475, 0.8025, 5.435] world=[0.1475, 2.43, 1.515] axis=None pivot hidden
+        Muzzle_7_LOD1 local=[0.4425, 0.8025, 5.435] world=[0.4425, 2.43, 1.515] axis=None pivot hidden
+        Muzzle_8_LOD1 local=[-0.4425, 1.0975, 5.435] world=[-0.4425, 2.725, 1.515] axis=None pivot hidden
+        Muzzle_9_LOD1 local=[-0.1475, 1.0975, 5.435] world=[-0.1475, 2.725, 1.515] axis=None pivot hidden
+        Muzzle_10_LOD1 local=[0.1475, 1.0975, 5.435] world=[0.1475, 2.725, 1.515] axis=None pivot hidden
+        Muzzle_11_LOD1 local=[0.4425, 1.0975, 5.435] world=[0.4425, 2.725, 1.515] axis=None pivot hidden
+        Muzzle_12_LOD1 local=[-0.4425, 1.3925, 5.435] world=[-0.4425, 3.02, 1.515] axis=None pivot hidden
+        Muzzle_13_LOD1 local=[-0.1475, 1.3925, 5.435] world=[-0.1475, 3.02, 1.515] axis=None pivot hidden
+        Muzzle_14_LOD1 local=[0.1475, 1.3925, 5.435] world=[0.1475, 3.02, 1.515] axis=None pivot hidden
+        Muzzle_15_LOD1 local=[0.4425, 1.3925, 5.435] world=[0.4425, 3.02, 1.515] axis=None pivot hidden
+    Outrigger_L_LOD1 local=[-1.1, 1.3075, -4.0] world=[-1.1, 1.3075, -4.0] axis=None pivot hidden
+      Outrigger_L_Mesh_LOD1 local=[0, 0, 0] world=[-1.1, 1.3075, -4.0] axis=None mesh hidden
+    Outrigger_R_LOD1 local=[1.1, 1.3075, -4.0] world=[1.1, 1.3075, -4.0] axis=None pivot hidden
+      Outrigger_R_Mesh_LOD1 local=[0, 0, 0] world=[1.1, 1.3075, -4.0] axis=None mesh hidden
+    Outrigger_Front_L_LOD1 local=[-1.12, 1.3075, 2.992] world=[-1.12, 1.3075, 2.992] axis=None pivot hidden
+      Outrigger_Front_L_Mesh_LOD1 local=[0, 0, 0] world=[-1.12, 1.3075, 2.992] axis=None mesh hidden
+    Outrigger_Front_R_LOD1 local=[1.12, 1.3075, 2.992] world=[1.12, 1.3075, 2.992] axis=None pivot hidden
+      Outrigger_Front_R_Mesh_LOD1 local=[0, 0, 0] world=[1.12, 1.3075, 2.992] axis=None mesh hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 0.85, 0.0] world=[0.0, 0.85, 0.0] axis=None mesh hidden

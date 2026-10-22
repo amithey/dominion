@@ -1,0 +1,36 @@
+{
+  "batch": 24,
+  "files": [
+    "vehicles/samLauncher__hq_9_p.glb",
+    "vehicles/samLauncher__hq_9b.glb",
+    "vehicles/samLauncher__kn_06_pongae_5.glb",
+    "vehicles/samLauncher__nasams.glb",
+    "vehicles/samLauncher__patriot_iris_t_nasams.glb",
+    "vehicles/samLauncher__patriot_pac_3.glb"
+  ],
+  "sha256": {
+    "vehicles/samLauncher__hq_9_p.glb": "6ccd2837fbcb6f853119ce77a66678f17280d7372963b83b3c81bdcfc76cfac6",
+    "vehicles/samLauncher__hq_9b.glb": "866034b6017a96b7f99b2e97b0d1b9df89ad95da26c3c08067fb12ad45cbfcc4",
+    "vehicles/samLauncher__kn_06_pongae_5.glb": "12379be29fa58e0a55011195f78d03c9a21f0f76884ba6cca67c79cc26f315ad",
+    "vehicles/samLauncher__nasams.glb": "eea9338a32a50a6c9ac641eb4fa86d1624b3e5ff13eb36da309439c46b8ce05c",
+    "vehicles/samLauncher__patriot_iris_t_nasams.glb": "bb78dd6b50aabe98f0cc89f12beb0b66603d8b1dc79f3e14c7d98ed4010981b2",
+    "vehicles/samLauncher__patriot_pac_3.glb": "bf473aaea780884e4ec63dea657cd1612da0e15b71cd618f3816406bf4fd0082"
+  },
+  "maximum_triangles": [
+    6272,
+    1220
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p4_air_defence.py",
+    "air_defence_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
