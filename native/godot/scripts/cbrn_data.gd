@@ -153,7 +153,3 @@ static func may_build(w: Node, owner: int, key: String) -> bool:
 			var n := nation_dict(w, owner)
 			return (n.has("cbrn") and "dirtyBomb" in n.cbrn) or ident(w, owner) in PROGRAMMES.get("chemical", []) or ident(w, owner) in PROGRAMMES.get("incapacitant", [])
 	return true
-
-## Whether `owner` holds its tactical bombs only through nuclear sharing.
-static func shared_only(w: Node, owner: int) -> bool:
-	return SHARING.has(ident(w, owner)) and not ident(w, owner) in ids_for("tacticalNuke")

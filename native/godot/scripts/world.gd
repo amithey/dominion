@@ -1168,29 +1168,6 @@ func bunker_model(key: String) -> Node3D:
 		root.add_child(part)
 	return root
 
-# A pumpjack-style extraction rig in dark steel.
-func extractor_model() -> Node3D:
-	var rig := Node3D.new()
-	var steel := matte(Color("3b3f40"), 0.5, 0.6)
-	var paint := matte(Color("8a6a2a"), 0.7)
-	var parts := [
-		[Vector3(4.2, 0.6, 3.0), Vector3(0, 0.3, 0), steel],
-		[Vector3(0.5, 4.0, 0.5), Vector3(-0.9, 2.3, 0), steel],
-		[Vector3(0.5, 4.0, 0.5), Vector3(0.9, 2.3, 0), steel],
-		[Vector3(5.2, 0.5, 0.6), Vector3(0.4, 4.4, 0), paint],
-		[Vector3(0.9, 1.8, 0.9), Vector3(-2.2, 3.6, 0), paint],
-		[Vector3(1.2, 1.4, 1.2), Vector3(2.4, 1.1, 0), steel],
-	]
-	for p in parts:
-		var mesh := BoxMesh.new()
-		mesh.size = p[0]
-		var part := MeshInstance3D.new()
-		part.mesh = mesh
-		part.position = p[1]
-		part.material_override = p[2]
-		rig.add_child(part)
-	return rig
-
 ## Creates a building entity. Unbuilt buildings are construction sites.
 func snap_to_hex(at: Vector3) -> Vector3:
 	var c: Vector3 = logistics.hex_center(logistics.world_hex(at))
@@ -2066,19 +2043,6 @@ func rebuild_grid() -> void:
 			grid[key].append(u)
 		else:
 			grid[key] = [u]
-
-## Every ground unit within `reach` metres of `at` (a few buckets wide).
-func near_units(at: Vector3, reach: float) -> Array:
-	var out := []
-	var span := ceili(reach / GRID)
-	var cx := floori(at.x / GRID)
-	var cz := floori(at.z / GRID)
-	for dz in range(-span, span + 1):
-		for dx in range(-span, span + 1):
-			var bucket = grid.get(Vector2i(cx + dx, cz + dz))
-			if bucket != null:
-				out.append_array(bucket)
-	return out
 
 ## Distance work that does not have to happen every frame: a unit far from
 ## the camera stops animating and stops casting a shadow, and picks both up
@@ -4912,17 +4876,6 @@ func lake_at(p: Vector3) -> bool:
 	var c := clampi(int(roundf((p.x - grid_origin.x) / grid_step)), 0, grid_size - 1)
 	var r := clampi(int(roundf((p.z - grid_origin.y) / grid_step)), 0, grid_size - 1)
 	return lake_mask.size() > 0 and lake_mask[r * grid_size + c] == 1
-
-func coast_reach(at: Vector3, owner: int) -> bool:
-	if territory == null:
-		return false
-	var h: Vector2i = logistics.world_hex(at)
-	for dq in range(-3, 4):
-		for dr in range(-3, 4):
-			var n := h + Vector2i(dq, dr)
-			if logistics.hex_distance(h, n) <= 3 and territory.owner_at(logistics.hex_center(n)) == owner:
-				return true
-	return false
 
 func update_placement(mouse := Vector2.INF) -> void:
 	if placing == "" or ghost == null:
