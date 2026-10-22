@@ -185,9 +185,17 @@ def launcher_vehicle(slug,name,lod,config,source,approximate=False,representativ
             m.box('paint',(-.49,1.50,h*.40),(.58,.10,.61));m.box('glass',(-.49,1.58,h*.40+.21),(.34,.06,.12))
         for side in (-1,1):m.box('paint',(side*(W/2-.31),1.18*k,0),(.64,.10,L-.20))
         rig.add('Hull',rig.root,(0,0,0),m);mobility(rig,s,lod)
+        if family.startswith('m270'):
+            zs=np.array([-2.43,-1.62,-.40,.40,1.62,2.43])*k;s.details['wheel_z']=zs.tolist()
+            for p in rig.parts:
+                if not p['name'].startswith('Wheel_'):continue
+                i=int(p['name'][7:]);delta=zs[i]-p['pivot'][2]
+                p['pivot'][2]=zs[i];rig.pivots[p['name']]=p['pivot']
+                if p['mesh'] is not None:p['mesh'].shift([0,0,delta])
         rig.add('Engine_Deck','Hull',(0,1.48,-L*.35 if family=='tos1' else L*.25));rig.add('Exhaust','Hull',(W/2-.2,1.0,-L*.40))
     pitch=cal*1.18;module_width=cols*pitch+.18;module_height=rows*pitch+.18
     total_width=pods*module_width+(pods-1)*.15
+    if family=='brahmos':module_width=1.02;module_height=1.02;total_width=2.22
     # Avoid the forward cabin; put pivot on the rear trunnion cross-shaft.
     rear=-L/2+.30;front=rear+depth;pivot_y=bed+.32
     if family=='tos1':rear=-2.02;front=rear+depth
@@ -202,6 +210,7 @@ def launcher_vehicle(slug,name,lod,config,source,approximate=False,representativ
              (side*min(total_width*.37,W*.35),tube_y,rear+depth*.53),.14)
     for pod in range(pods):
         cx=(pod-(pods-1)/2)*(module_width+.15);cy=tube_y;mid=(rear+front)/2
+        if family=='brahmos':cx,offset=[(-.57,0),(.57,0),(0,1.10)][pod];cy+=offset
         if boxed:
             for side in (-1,1):
                 launch.box('paint',(cx+side*(module_width/2-.035),cy,mid),(.07,module_height,depth))

@@ -34,8 +34,8 @@ CONFIGS={
  'fajr':(10.40,2.50,2.87,[-3.44,-1.80,3.21],.61,False,1,1.34,1.97,4,1,1,.333,5.05,False,True,'mercedes_fajr5'),
  'chunmoo':(9.0,2.90,3.0,[-2.90,-1.40,1.46,2.89],.65,False,1,0,2.38,3,2,2,.230,4.20,True,True,'chunmoo'),
  'm1991':(10.50,2.80,2.84,[-3.39,-1.62,3.32],.63,False,1,0,2.30,11,2,1,.240,4.20,False,True,'m1991'),
- 'm270':(6.97,2.97,2.48,5,.32,True,.79,0,2.22,3,2,2,.227,3.80,True,False,'m270'),
- 'm270a2':(6.97,2.97,2.76,5,.32,True,.79,0,2.22,3,2,2,.227,3.80,True,False,'m270a2'),
+ 'm270':(6.97,2.97,2.48,6,.32,True,.79,0,2.22,3,2,2,.227,3.80,True,False,'m270'),
+ 'm270a2':(6.97,2.97,2.76,6,.32,True,.79,0,2.22,3,2,2,.227,3.80,True,False,'m270a2'),
  'himars':(7.0,2.40,2.78,[-2.30,-.94,2.24],.57,False,1,0,2.24,3,2,1,.227,3.85,True,True,'fmtv_himars'),
  'phl03':(12.0,3.0,3.03,[-3.96,-2.15,1.96,3.84],.66,False,1,0,2.65,4,3,1,.300,7.60,False,True,'phl03'),
  'pinaka':(9.50,2.50,2.90,[-3.11,-1.51,1.39,3.0],.62,False,1,0,2.16,3,2,2,.214,5.10,True,True,'tatra_pinaka'),
@@ -54,7 +54,7 @@ CONFIGS={
  'neptune':(12.0,2.90,3.10,[-3.94,-2.16,2.02,3.81],.65,False,1,0,2.52,2,2,1,.42,5.40,True,True,'neptune'),
  'type12':(9.60,2.48,2.78,[-3.15,-1.53,3.04],.61,False,1,0,2.25,3,2,1,.40,5.10,True,True,'type12'),
  'yj62':(12.0,3.0,3.05,[-3.95,-2.15,2.01,3.81],.66,False,1,0,2.50,3,1,1,.60,7.0,False,True,'yj62'),
- 'brahmos':(12.70,2.80,3.10,[-4.20,-2.29,2.17,4.07],.66,False,1,0,2.52,3,1,1,.80,8.40,False,True,'brahmos'),
+ 'brahmos':(12.70,3.0,3.10,[-4.85,-3.42,-1.99,1.86,3.29,4.72],.66,False,1,0,2.52,1,1,3,.80,8.40,True,True,'brahmos'),
  'df17':(15.0,3.20,3.10,[-5.31,-3.75,-1.80,3.05,5.16],.70,False,1,0,2.70,1,1,1,1.0,10.40,False,True,'df17'),
  'shahedrail':(8.10,2.50,2.80,[-2.66,-1.10,2.58],.59,False,1,0,2.15,1,1,1,.32,4.20,False,True,'shahedrail'),
 }
@@ -224,7 +224,7 @@ def coastalASM__yj_62_coastal_battery(lod=0):
     return launch('coastalASM__yj_62_coastal_battery','YJ-62 Coastal Battery',lod,'yj62','https://eng.mod.gov.cn/')
 
 def brahmos__brahmos_battery(lod=0):
-    return launch('brahmos__brahmos_battery','BrahMos Battery',lod,'brahmos','https://www.brahmos.com/',representative='Three-canister mobile autonomous launcher')
+    return launch('brahmos__brahmos_battery','BrahMos Battery',lod,'brahmos','https://www.brahmos.com/page/land-based-system',representative='Tatra 12x12 MAL with three independent thermal containers; public exterior proportions approximated',approximate=True)
 
 def df17__df_17_launcher(lod=0):
     rig,s=launch('df17__df_17_launcher','DF-17 Launcher',lod,'df17','https://www.defense.gov/Spotlights/2024-China-Military-Power-Report/',

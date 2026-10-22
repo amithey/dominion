@@ -78,7 +78,7 @@ def validate(path):
     for lod in (0,1):
         prefix=f'LOD{lod}/{body}';k=s['track_scale'];x=s['width']/2-(.35 if tracked else .19)
         y=s['wheel_radius']+.13*k if tracked else s['wheel_radius']
-        zs=np.linspace(-2.43,2.43,s['wheels'])*k if tracked else s['axle_z']
+        zs=s.get('details',{}).get('wheel_z',np.linspace(-2.43,2.43,s['wheels'])*k) if tracked else s['axle_z']
         for label,side in (('L',-1),('R',1)):
             wheels=[p for p in by if p.startswith(prefix+'/Wheel_'+label) and not p.endswith('_Mesh')]
             assert len(wheels)==s['wheels'],(prefix,label,'wheel count')
