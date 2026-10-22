@@ -107,7 +107,10 @@ static func run(w: Node) -> void:
 		flew = maxf(flew, victim.node.position.y - ground_y)
 	if flew < 0.6 or victim.has("fling"):
 		failures.append("A soldier killed by a blast was not thrown and did not land (peak %.2f m)" % flew)
-	# A destroyed tank may throw its turret; it must come down and rest on the ground.
+	# A destroyed tank may throw its turret; it must come down and rest on the ground. (A glb model swaps to its own burnt-out copy
+	# instead, so the tank here is a kit tank: a nation whose tank has no model file.)
+	var kept_id: String = str(w.map.nations[1].get("id", ""))
+	w.map.nations[1]["id"] = "italy"
 	var tossed = null
 	for attempt in range(12):
 		var wreck: Dictionary = w.spawn_unit("tank", field + Vector3(-10 - attempt * 6, 0, 0), 1)
@@ -115,6 +118,7 @@ static func run(w: Node) -> void:
 		if wreck.has("toss"):
 			tossed = wreck
 			break
+	w.map.nations[1]["id"] = kept_id
 	if tossed == null:
 		failures.append("No destroyed tank threw its turret in 12 tries")
 	else:
