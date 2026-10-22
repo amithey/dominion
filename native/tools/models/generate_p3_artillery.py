@@ -10,7 +10,7 @@ import numpy as np
 from vehicle_parts import Mesh,Rig,loft,profile_hull,hollow_muzzle,write_glb,merge_mesh
 from generate_p1_tanks import Spec,finish,make_wreck,beam,running_gear
 from armour_parts import ArmourSpec,wreck as armour_wreck
-from artillery_parts import towed,truck_howitzer
+from artillery_parts import towed,truck_howitzer,artillery_barrel
 
 ROOT=Path(__file__).resolve().parents[3];ART=ROOT/'native/godot/assets/art'
 SOVIET='https://www.trngcmd.marines.mil/Portals/207/Docs/MCIS/ITEP/RITC-East/FM%20100-2-3.pdf'
@@ -48,7 +48,7 @@ def artillery__2s1_gvozdika_d_30(lod=0):
 def spg(slug,name,lod,L,W,deck,roof,wheels,r,k,tz,gy,gz,overall,shape,tw,td,cal,features,source=SOVIET,representative='',approximate=False):
     """Closed SPG hull, family-specific fighting compartment and artillery mount."""
     s=Spec(slug.split('__',1)[1],name,L,W,deck,roof,wheels,r,k,tz,gy,gz,overall,shape,
-           features,source,caliber=cal,front_engine=shape!='msta',approximate=approximate,representative=representative,skirts=0)
+           features,source,caliber=cal,front_engine=shape not in ('msta','palmaria'),approximate=approximate,representative=representative,skirts=0)
     rig=Rig(lod);h=L/2;half=W/2-.37;body=Mesh();n=6 if lod else 12
     profile_hull(body,'paint',[(h-.26,.43,half*.90),(h,deck*.73,half*.94),(h-1.15,deck,half),
        (-h+.10,deck,half),(-h,.62,half*.94),(-h+.15,.43,half*.90)])
@@ -198,8 +198,11 @@ def artillery__raad_2(lod=0):
        ['Six-wheel Boragh-derived chassis','M109-like turret on a distinct sloped hull','155 mm HM44 gun','front engine compartment','large rear turret door'],source='https://www.diomil.ir/',approximate=True,representative='Raad-2 exterior, approximate publicly documented proportions')
 
 def artillery__roem(lod=0):
-    return spg('artillery__roem','Roem',lod,8.0,3.80,1.57,3.20,7,.37,1.0,-.30,2.47,1.22,12.0,'roem',3.20,4.30,.155,
-       ['Seven-wheel tracked carrier','very large unmanned enclosed gunhouse','long L/52 155 mm gun','large rectangular rear turret module','forward protected driving compartment'],source='https://www.elbitsystems.com/land/artillery-and-mortars',approximate=True,representative='Roem SIGMA tracked configuration, approximate public exterior dimensions')
+    rig,s=truck_howitzer('artillery__roem','Roem',lod,12.20,3.0,3.20,[-4.25,-2.83,-1.40,2.05,3.65],.65,.155,6.90,
+       'https://www.elbitamerica.com/news/americas-most-advanced-mobile-tactical-cannon-sigma-on-display-at-ausa-global-force-in-huntsville-alabama',
+       family='roem',approximate=True,representative='SIGMA/Roem on Oshkosh 10x10; public exterior dimensions approximated')
+    s.features=['Five axle Oshkosh 10x10 truck chassis','armoured forward crew cab','large unmanned enclosed gunhouse',
+        '155 mm L/52 gun','automatic-loading bustle and rear anchoring spade'];return rig,s
 
 def artillery__t_155_firtina(lod=0):
     return spg('artillery__t_155_firtina','T-155 Firtina',lod,7.44,3.40,1.46,2.87,6,.38,.94,-.38,2.24,.98,12.0,'firtina',2.83,3.44,.155,
@@ -271,6 +274,35 @@ def artillery__sh_5_palmaria(lod=0):
     return spg('artillery__sh_5_palmaria','SH-5 / Palmaria',lod,7.65,3.35,1.49,2.80,7,.34,.94,-.42,2.22,.97,10.91,'palmaria',2.77,3.37,.155,
       ['Palmaria selected from combined designation','Seven OF-40-derived road wheels','broad 155 mm L/41 turret','large rear ammunition bustle','rear engine hull'],
       source='https://www.leonardo.com/',representative='Palmaria 155 mm self-propelled howitzer',approximate=True)
+
+def artillery__m1989_koksan(lod=0):
+    s=Spec('m1989_koksan','M1989 Koksan',9.0,3.27,1.43,2.0,6,.40,1.07,-2.72,2.24,-2.18,12.4,'koksan',
+      ['Six road wheels and front sprockets','170 mm long open-mounted gun','low forward crew compartment',
+       'rear trunnion support with narrow traverse','onboard ammunition side lockers','wide rear recoil spade'],
+      'https://cgsc.contentdm.oclc.org/digital/api/collection/p4013coll11/id/2089/download',
+      caliber=.170,front_engine=True,approximate=True,representative='M1989 Koksan; public exterior dimensions approximated',skirts=0)
+    rig=Rig(lod);m=Mesh();h=s.length/2;n=6 if lod else 12
+    profile_hull(m,'paint',[(h-.28,.50,1.10),(h,1.15,1.23),(h-1.70,1.43,1.25),(-h+.12,1.43,1.24),(-h,.65,1.14)])
+    for side in (-1,1):
+        m.box('paint',(side*1.34,1.35,0),(.52,.13,8.8))
+        m.box('paint',(side*.76,1.64,2.85),(.96,.73,2.20))
+        m.box('glass',(side*.76,1.80,3.97),(.62,.28,.035))
+        m.box('paint',(side*1.02,1.70,-.62),(.55,.54,3.03))
+        m.box('markings',(side*1.311,1.71,-.80),(.015,.25,.58))
+        if not lod:
+            for z in np.linspace(-1.74,.54,5):m.box('metal_dark',(side*1.31,1.92,z),(.025,.025,.12))
+    rig.add('Hull',rig.root,(0,0,0),m);running_gear(rig,s,lod)
+    cradle=Mesh();cradle.tube('metal_dark',(0,1.44,-2.72),(0,1.69,-2.72),.61,n)
+    for side in (-1,1):
+        beam(cradle,'paint',(side*.43,1.63,-3.05),(side*.43,2.24,-2.18),.23)
+        cradle.tube('metal_dark',(side*.30,2.24,-2.18),(side*.55,2.24,-2.18),.17,n)
+    rig.add('Turret','Hull',(0,1.61,-2.72),cradle,'Y',yaw_degrees=[-8,8])
+    artillery_barrel(rig,'Turret',(0,2.24,-2.18),s.overall_length-s.length/2,.170,lod)
+    spade=Mesh();spade.box('paint',(0,1.29,-4.57),(2.62,1.11,.17))
+    for side in (-1,1):beam(spade,'paint',(side*.70,.88,-4.28),(side*.70,1.53,-4.57),.16)
+    rig.add('Spade','Hull',(0,1.0,-4.28),spade,'X')
+    rig.add('Engine_Deck','Hull',(.65,2.02,2.92));rig.add('Exhaust','Hull',(1.37,1.57,2.56))
+    return rig,s
 
 BUILDERS={n:f for n,f in list(globals().items()) if n.startswith(('artillery__','k9__','towedHowitzer__','wheeledHowitzer__')) and callable(f)}
 

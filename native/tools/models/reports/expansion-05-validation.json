@@ -1,0 +1,34 @@
+{
+  "batch": 5,
+  "files": [
+    "vehicles/artillery__raad_2.glb",
+    "vehicles/artillery__roem.glb",
+    "vehicles/artillery__t_155_firtina.glb",
+    "vehicles/artillery__type_99_sph.glb",
+    "vehicles/k9__k9_thunder.glb",
+    "vehicles/artillery__sh_5_palmaria.glb"
+  ],
+  "sha256": {
+    "vehicles/artillery__raad_2.glb": "1bf7cc3f77fac62396666d26f25a87fadd7e351d9669df69fdea5a9a27b04c5f",
+    "vehicles/artillery__roem.glb": "1315287b71c90b1967e6b07692fc6c05b06602e8a4f679cb91e172d3f3505bb1",
+    "vehicles/artillery__t_155_firtina.glb": "7a2f4147e3c5936d9e89cbd0d19a9e932c98c74052b626644985026be1e2286c",
+    "vehicles/artillery__type_99_sph.glb": "f2712e042a73bc16f614006577d7c2ade450a7e38c378c06aa28ed5a58341ecc",
+    "vehicles/k9__k9_thunder.glb": "ab8fd08a1aaf643079ae0acc7d09405473a65e5c8285b2400e6e0e6334a9c59d",
+    "vehicles/artillery__sh_5_palmaria.glb": "a193d7c2927206cec7960b7101fa9601a515e5aa4ebd1563cf3172feb3cf9ac4"
+  },
+  "maximum_triangles": [
+    12206,
+    2112
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py"
+  ]
+}

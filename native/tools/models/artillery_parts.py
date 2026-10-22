@@ -87,9 +87,17 @@ def truck_howitzer(slug,name,lod,L,W,H,axles,r,cal,tip,source,family='caesar',ap
     for side in (-1,1):
         mount.box('paint',(side*.40,bed+.72,z),(.17,.94,.86))
         beam(mount,'paint',(side*.40,bed+.28,z-.38),(side*.40,H+.17,z+.18),.15)
-    if family=='archer':mount.box('paint',(0,H-.12,z-.44),(2.18,1.35,2.15))
+    if family in ('archer','roem'):
+        width=2.18 if family=='archer' else W-.38;depth=2.65 if family=='archer' else 3.90
+        low=bed+.35;top=H+.69
+        footprint=[(-width*.39,depth*.50),(width*.39,depth*.50),(width*.50,depth*.34),
+          (width*.50,-depth*.45),(-width*.50,-depth*.45),(-width*.50,depth*.34)]
+        loft(mount,'paint',[[(x,low,z+zz) for x,zz in footprint],[(x*.96,top,z+zz*.94) for x,zz in footprint]])
+        mount.box('paint',(0,top+.03,z-.40),(width*.68,.06,.82))
+        for side in (-1,1):mount.box('markings',(side*(width*.50+.015),H-.08,z-.51),(.018,.29,.67))
     rig.add('Turret','Hull',(0,bed+.27,z),mount,'Y',yaw_degrees=[-30,30])
-    gy=H+.16;artillery_barrel(rig,'Turret',(0,gy,z+.14),tip,cal,lod)
+    gy=H+.16;gz=z+(1.86 if family=='roem' else 1.23 if family=='archer' else .14)
+    artillery_barrel(rig,'Turret',(0,gy,gz),tip,cal,lod)
     for side,label in ((-1,'L'),(1,'R')):
         platform=Mesh();platform.box('metal_dark',(side*(W/2-.30),bed,-L*.28),(.52,.12,L*.44))
         if not lod:
