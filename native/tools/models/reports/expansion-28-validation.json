@@ -1,0 +1,34 @@
+{
+  "batch": 28,
+  "files": [
+    "vehicles/irisT__iris_t_slm.glb",
+    "vehicles/laserAD__iron_beam.glb",
+    "vehicles/shortRangeSAM__an_twq_1_avenger.glb",
+    "vehicles/shortRangeSAM__hisar_a.glb",
+    "vehicles/shortRangeSAM__iris_t_sls.glb"
+  ],
+  "sha256": {
+    "vehicles/irisT__iris_t_slm.glb": "9602ccab67e7a07088a78713bec4ac4b1a2f607c4bd11ca892aab3ed2aeed0fa",
+    "vehicles/laserAD__iron_beam.glb": "1cedee65e5b8eb326020c692e336d6cdeb8ef0eb48a53858fa9e4f20ef714389",
+    "vehicles/shortRangeSAM__an_twq_1_avenger.glb": "36203f31c6ae25db9372680d759972322599d9c5f0742d2afe13d0060d5d709c",
+    "vehicles/shortRangeSAM__hisar_a.glb": "93d3eceaae575d7c8bb466c4da7b9b1de6af47a7c2cb5a7a790f44adb247ad83",
+    "vehicles/shortRangeSAM__iris_t_sls.glb": "8f9525c43ee2658444093066a804581de203d71612fb129217107844ac0d5c35"
+  },
+  "maximum_triangles": [
+    10916,
+    1640
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p4_air_defence.py",
+    "air_defence_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
