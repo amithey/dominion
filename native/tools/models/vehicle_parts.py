@@ -244,7 +244,7 @@ def write_glb(path,rigs,wreck,collision,metadata):
                 child=node(part['name']+'_Mesh'+suffix,pivot,mesh=mi,extras={'canonical_part':part['name']+'_Mesh'})
                 if 'mesh_scale' in part['extras']:
                     doc['nodes'][child]['scale']=part['extras']['mesh_scale']
-    node('Wreck',mesh=mesh_index(wreck,'Wreck'),visible=False,extras={'state':'destroyed','default_visible':False,'detached_turret':True})
+    node('Wreck',mesh=mesh_index(wreck,'Wreck'),visible=False,extras={'state':'destroyed','default_visible':False,'detached_turret':metadata.get('detached_turret',True)})
     cr=node('collision',visible=False,extras={'purpose':'game collision proxy','default_visible':False})
     low,high=collision.bounds();center=(low+high)/2
     node('Collision_Box',cr,mesh=mesh_index(collision,'Collision_Box',center),translation=center,extras={'shape':'box','size':(high-low).tolist()})
