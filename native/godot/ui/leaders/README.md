@@ -78,3 +78,16 @@ no text, logos, watermarks or likeness of real political figures.
 - Qadir: dark beard with silver strands, charcoal jacket with restrained gold embroidery, facing left.
 
 The artworks are static illustrations, not lip-synced video or 3D meshes.
+
+## European roster portraits — 2026-10-22
+Generated separately with built-in ImageGen, matching the existing diplomatic-office style:
+- `macron-v2.png`: France — Emmanuel Macron.
+- `merz-v2.png`: Germany — Friedrich Merz.
+- `meloni-v2.png`: Italy — Giorgia Meloni.
+- `jetten-v2.png`: Netherlands — Rob Jetten.
+
+Illustrative likenesses, not official photographs. Identities follow the game roster.
+Prompts: `expansion-leaders-prompts.json`. The existing leader_gallery resolver selects
+these PNGs before emblem fallbacks. Existing art and emblems remain available.
+Validation: `tools/roster-portraits-check.gd` (374 checks, zero failures across 31 nations),
+plus `tools/expansion-portrait-gallery.gd` for full/card/badge visual review.
