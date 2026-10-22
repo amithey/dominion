@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 92,
+  "ready_files": 97,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -193,6 +193,17 @@
         "vehicles/directFire__harimau.glb",
         "vehicles/brahmos__brahmos_battery.glb"
       ]
+    },
+    {
+      "batch": 17,
+      "report": "expansion-17-validation.json",
+      "files": [
+        "vehicles/coastalASM__ghader_coastal_battery.glb",
+        "vehicles/coastalASM__k_300p_bastion_p.glb",
+        "vehicles/coastalASM__nmesis.glb",
+        "vehicles/coastalASM__nsm_coastal_defence_system.glb",
+        "vehicles/coastalASM__rk_360mc_neptune.glb"
+      ]
     }
   ],
   "priorities": {
@@ -224,7 +235,7 @@
     "P3": {
       "requested_rows": 93,
       "unique_files": 93,
-      "ready_files": 83,
+      "ready_files": 88,
       "ready_slugs": [
         "artillery__2s19_msta_s",
         "artillery__2s1_gvozdika_d_30",
@@ -253,6 +264,11 @@
         "artillery__t_155_firtina",
         "artillery__type_99_sph",
         "brahmos__brahmos_battery",
+        "coastalASM__ghader_coastal_battery",
+        "coastalASM__k_300p_bastion_p",
+        "coastalASM__nmesis",
+        "coastalASM__nsm_coastal_defence_system",
+        "coastalASM__rk_360mc_neptune",
         "directFire__amx_10_rc",
         "directFire__ee_9_cascavel",
         "directFire__harimau",
@@ -311,11 +327,6 @@
         "wheeledHowitzer__type_19_howitzer"
       ],
       "remaining_slugs": [
-        "coastalASM__ghader_coastal_battery",
-        "coastalASM__k_300p_bastion_p",
-        "coastalASM__nmesis",
-        "coastalASM__nsm_coastal_defence_system",
-        "coastalASM__rk_360mc_neptune",
         "coastalASM__type_12_ssm",
         "coastalASM__yj_62_coastal_battery",
         "df17__df_17_launcher",

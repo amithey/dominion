@@ -1,0 +1,34 @@
+{
+  "batch": 17,
+  "files": [
+    "vehicles/coastalASM__ghader_coastal_battery.glb",
+    "vehicles/coastalASM__k_300p_bastion_p.glb",
+    "vehicles/coastalASM__nmesis.glb",
+    "vehicles/coastalASM__nsm_coastal_defence_system.glb",
+    "vehicles/coastalASM__rk_360mc_neptune.glb"
+  ],
+  "sha256": {
+    "vehicles/coastalASM__ghader_coastal_battery.glb": "cae658011224d9b702fe7bf52fe196ea5ba3f3f72db63a0c08a6b829783e7f55",
+    "vehicles/coastalASM__k_300p_bastion_p.glb": "dde5f2bbfda85221086c9c35bba5416e41b2e8370d99387f552f859382f3bdfc",
+    "vehicles/coastalASM__nmesis.glb": "52a9f232bbdd400aa13af3fe07572d0ffcc7889c7ce3357419d87826dec0ea8d",
+    "vehicles/coastalASM__nsm_coastal_defence_system.glb": "8e1dc927e921d9f6cc63f26f0020d83abfc32946e82e9eb87a2f9505fdccc8ac",
+    "vehicles/coastalASM__rk_360mc_neptune.glb": "bfa6e687fea327ea38f3bda09d3a5e3eac3e7c0058cd50972adea30ec1ae0570"
+  },
+  "maximum_triangles": [
+    6272,
+    1176
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py",
+    "artillery_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
