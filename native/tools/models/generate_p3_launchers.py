@@ -1,0 +1,187 @@
+"""P3 launchers, one explicit builder per roster designation. Original geometry.
+
+Configurations retain actual chassis class, axle count, pod count, calibre and
+tube layout. Ambiguous roster rows name a selected representative. No Blender.
+"""
+from pathlib import Path
+import argparse,json
+from artillery_parts import launcher_vehicle
+from generate_p3_artillery import save,ART
+
+WEG='https://cgsc.contentdm.oclc.org/digital/api/collection/p4013coll11/id/2089/download'
+REF={
+ 'himars':'https://www.lockheedmartin.com/en-us/products/himars.html',
+ 'm270':'https://www.lockheedmartin.com/en-us/products/mlrs.html',
+ 'puls':'https://www.elbitsystems.com/land/artillery-and-mortars/puls',
+ 'pinaka':'https://www.drdo.gov.in/drdo/pinaka-multi-barrel-rocket-launch-system',
+ 'chunmoo':'https://www.hanwhaaerospace.com/eng/business/land/',
+ 'astros':'https://www.avibras.com.br/site/en/areas-de-atuacao/defesa/astros.html',
+ 'sakarya':'https://www.roketsan.com.tr/en/products/t-122300-multi-barrel-rocket-launcher',
+}
+# L, W, cab roof, axle Zs (or tracked wheel count), wheel radius, tracks,
+# canonical scale, bonnet, cab length, tube columns/rows/pods, calibre, depth,
+# closed container, jacks, family. All lengths are metres.
+CONFIGS={
+ 'grad':(7.35,2.40,2.68,[-2.47,-1.13,2.36],.61,False,1,1.35,1.74,10,4,1,.122,3.0,False,False,'ural_grad'),
+ 'a100':(11.50,3.05,2.96,[-3.80,-2.12,2.00,3.72],.65,False,1,0,2.42,5,2,1,.300,5.30,False,True,'a100'),
+ 'astros':(9.90,2.80,2.84,[-3.20,-1.52,3.14],.63,False,1,0,2.30,4,4,2,.127,3.40,True,True,'astros_ss30'),
+ 'astros6':(10.10,2.90,3.05,[-3.30,-1.64,3.21],.64,False,1,0,2.48,4,4,2,.127,3.50,True,True,'astros_mk6'),
+ 'uragan':(9.63,2.80,2.60,[-3.24,-1.61,1.60,3.21],.62,False,1,1.14,2.12,4,4,1,.220,4.10,False,True,'zil_135_uragan'),
+ 'smerch':(12.10,3.05,2.95,[-4.01,-2.25,2.05,3.94],.66,False,1,0,2.70,4,3,1,.300,7.60,False,True,'maz_smerch'),
+ 'fajr':(10.40,2.50,2.87,[-3.44,-1.80,3.21],.61,False,1,1.34,1.97,4,1,1,.333,5.05,False,True,'mercedes_fajr5'),
+ 'chunmoo':(9.0,2.90,3.0,[-2.90,-1.40,1.46,2.89],.65,False,1,0,2.38,3,2,2,.230,4.20,True,True,'chunmoo'),
+ 'm1991':(10.50,2.80,2.84,[-3.39,-1.62,3.32],.63,False,1,0,2.30,11,2,1,.240,4.20,False,True,'m1991'),
+ 'm270':(6.97,2.97,2.48,5,.32,True,.79,0,2.22,3,2,2,.227,3.80,True,False,'m270'),
+ 'm270a2':(6.97,2.97,2.76,5,.32,True,.79,0,2.22,3,2,2,.227,3.80,True,False,'m270a2'),
+ 'himars':(7.0,2.40,2.78,[-2.30,-.94,2.24],.57,False,1,0,2.24,3,2,1,.227,3.85,True,True,'fmtv_himars'),
+ 'phl03':(12.0,3.0,3.03,[-3.96,-2.15,1.96,3.84],.66,False,1,0,2.65,4,3,1,.300,7.60,False,True,'phl03'),
+ 'pinaka':(9.50,2.50,2.90,[-3.11,-1.51,1.39,3.0],.62,False,1,0,2.16,3,2,2,.214,5.10,True,True,'tatra_pinaka'),
+ 'puls':(10.20,2.80,2.98,[-3.37,-1.79,1.63,3.27],.63,False,1,0,2.30,4,5,2,.122,3.50,True,True,'puls_accular122'),
+ 'sakarya':(9.20,2.50,2.80,[-3.04,-1.48,2.95],.61,False,1,1.25,1.96,10,4,1,.122,3.08,False,True,'sakarya'),
+ 'fatah2':(11.80,2.90,3.05,[-3.92,-2.11,1.99,3.80],.65,False,1,0,2.40,2,1,1,.600,6.20,True,True,'fatah2'),
+ 'fath360':(9.60,2.55,2.90,[-3.12,-1.51,3.01],.62,False,1,0,2.20,3,2,1,.360,4.90,True,True,'fath360'),
+ 'kn25':(11.50,3.05,3.0,[-3.78,-2.05,1.91,3.64],.66,False,1,0,2.50,2,2,1,.600,7.0,False,True,'kn25_8x8'),
+ 'pch191':(11.80,3.05,3.05,[-3.90,-2.12,1.98,3.77],.66,False,1,0,2.50,2,2,2,.370,5.10,True,True,'pch191'),
+ 'trlg230':(10.50,2.80,2.92,[-3.46,-1.81,1.71,3.35],.63,False,1,0,2.30,3,2,1,.230,4.0,True,True,'trlg230'),
+ 'tos1':(7.0,3.46,1.48,6,.36,True,.87,0,0,8,3,1,.220,3.60,True,False,'tos1'),
+}
+
+def launch(slug,name,lod,key,source=None,representative='',approximate=False):
+    return launcher_vehicle(slug,name,lod,CONFIGS[key],source or REF.get(key,WEG),approximate,representative)
+
+def mlrs__a_100_fatah_1(lod=0):
+    return launch('mlrs__a_100_fatah_1','A-100 / Fatah-1',lod,'a100',representative='A-100 ten-tube 300 mm launcher',approximate=True)
+
+def mlrs__astros_ii(lod=0):
+    return launch('mlrs__astros_ii','ASTROS II',lod,'astros',representative='ASTROS II with 32 SS-30 rockets')
+
+def mlrs__astros_ii_rm_70(lod=0):
+    return launch('mlrs__astros_ii_rm_70','ASTROS II / RM-70',lod,'astros',representative='ASTROS II with 32 SS-30 rockets',approximate=True)
+
+def mlrs__astros_ii_mk6(lod=0):
+    return launch('mlrs__astros_ii_mk6','ASTROS II Mk6',lod,'astros6',REF['astros'],representative='ASTROS II Mk6 with SS-30 load')
+
+def mlrs__bm_21_badr_rockets(lod=0):
+    return launch('mlrs__bm_21_badr_rockets','BM-21 / Badr rockets',lod,'grad',representative='BM-21 Grad',approximate=True)
+
+def mlrs__bm_21_taka(lod=0):
+    return launch('mlrs__bm_21_taka','BM-21 / Taka',lod,'grad',representative='BM-21 Grad',approximate=True)
+
+def mlrs__bm_21_grad(lod=0):
+    return launch('mlrs__bm_21_grad','BM-21 Grad',lod,'grad')
+
+def mlrs__bm_21_sakr(lod=0):
+    return launch('mlrs__bm_21_sakr','BM-21 Sakr',lod,'grad',representative='BM-21 with Sakr 122 mm rockets')
+
+def mlrs__bm_27_himars(lod=0):
+    return launch('mlrs__bm_27_himars','BM-27 / HIMARS',lod,'uragan',representative='BM-27 Uragan sixteen-tube launcher',approximate=True)
+
+def mlrs__bm_30_smerch(lod=0):
+    return launch('mlrs__bm_30_smerch','BM-30 Smerch',lod,'smerch')
+
+def mlrs__fajr_5(lod=0):
+    return launch('mlrs__fajr_5','Fajr-5',lod,'fajr')
+
+def mlrs__k239_chunmoo(lod=0):
+    return launch('mlrs__k239_chunmoo','K239 Chunmoo',lod,'chunmoo')
+
+def mlrs__kn_25_m1991(lod=0):
+    return launch('mlrs__kn_25_m1991','KN-25 / M1991',lod,'m1991',representative='M1991 22-tube 240 mm launcher',approximate=True)
+
+def mlrs__lru(lod=0):
+    return launch('mlrs__lru','LRU',lod,'m270',REF['m270'])
+
+def mlrs__lynx(lod=0):
+    return launch('mlrs__lynx','Lynx',lod,'puls',REF['puls'],representative='Lynx with paired Accular-122 pods')
+
+def mlrs__m142_himars(lod=0):
+    return launch('mlrs__m142_himars','M142 HIMARS',lod,'himars')
+
+def mlrs__m270_jgsdf(lod=0):
+    return launch('mlrs__m270_jgsdf','M270 (JGSDF)',lod,'m270')
+
+def mlrs__m270_mlrs(lod=0):
+    return launch('mlrs__m270_mlrs','M270 MLRS',lod,'m270')
+
+def mlrs__m270a2_mlrs(lod=0):
+    return launch('mlrs__m270a2_mlrs','M270A2 MLRS',lod,'m270a2',REF['m270'],representative='M270A2, improved armoured cab and conventional paired six-round pods')
+
+def mlrs__mars_ii(lod=0):
+    return launch('mlrs__mars_ii','MARS II',lod,'m270',REF['m270'])
+
+def mlrs__phl_03(lod=0):
+    return launch('mlrs__phl_03','PHL-03',lod,'phl03')
+
+def mlrs__pinaka(lod=0):
+    return launch('mlrs__pinaka','Pinaka',lod,'pinaka')
+
+def mlrs__puls(lod=0):
+    return launch('mlrs__puls','PULS',lod,'puls',representative='PULS with paired Accular-122 pods')
+
+def mlrs__t_122_sakarya(lod=0):
+    return launch('mlrs__t_122_sakarya','T-122 Sakarya',lod,'sakarya')
+
+def himars__chunmoo_guided_cgr_080(lod=0):
+    return launch('himars__chunmoo_guided_cgr_080','Chunmoo (guided CGR-080)',lod,'chunmoo')
+
+def himars__europuls(lod=0):
+    return launch('himars__europuls','EuroPULS',lod,'puls',REF['puls'],representative='EuroPULS Accular-122 configuration')
+
+def himars__fatah_ii(lod=0):
+    return launch('himars__fatah_ii','Fatah-II',lod,'fatah2',representative='Fatah-II dual-canister 8x8 TEL',approximate=True)
+
+def himars__fath_360_launcher(lod=0):
+    return launch('himars__fath_360_launcher','Fath-360 launcher',lod,'fath360',approximate=True,representative='Six-canister Fath-360 truck launcher')
+
+def himars__guided_pinaka(lod=0):
+    return launch('himars__guided_pinaka','Guided Pinaka',lod,'pinaka')
+
+def himars__guided_rocket_launcher(lod=0):
+    return launch('himars__guided_rocket_launcher','Guided Rocket Launcher',lod,'himars',REF['himars'],representative='Generic guided rocket launcher, HIMARS representative',approximate=True)
+
+def himars__himars(lod=0):
+    return launch('himars__himars','HIMARS',lod,'himars')
+
+def himars__kn_25_600_mm_guided(lod=0):
+    return launch('himars__kn_25_600_mm_guided','KN-25 (600 mm guided)',lod,'kn25',representative='KN-25 four-tube 8x8 carrier',approximate=True)
+
+def himars__lru_gmlrs(lod=0):
+    return launch('himars__lru_gmlrs','LRU (GMLRS)',lod,'m270',REF['m270'])
+
+def himars__m142_himars(lod=0):
+    return launch('himars__m142_himars','M142 HIMARS',lod,'himars')
+
+def himars__m270_gmlrs(lod=0):
+    return launch('himars__m270_gmlrs','M270 GMLRS',lod,'m270')
+
+def himars__m270a2_gmlrs(lod=0):
+    return launch('himars__m270a2_gmlrs','M270A2 (GMLRS)',lod,'m270a2',REF['m270'],representative='M270A2 improved armoured cab with paired GMLRS pods')
+
+def himars__pch_191(lod=0):
+    return launch('himars__pch_191','PCH-191',lod,'pch191')
+
+def himars__puls(lod=0):
+    return launch('himars__puls','PULS',lod,'puls',representative='PULS with paired Accular-122 pods')
+
+def himars__tornado_s(lod=0):
+    return launch('himars__tornado_s','Tornado-S',lod,'smerch',representative='9A54 Tornado-S 12-tube carrier')
+
+def himars__trlg_230(lod=0):
+    return launch('himars__trlg_230','TRLG-230',lod,'trlg230',REF['sakarya'])
+
+def heavyRocket__heavy_rocket_launcher(lod=0):
+    return launch('heavyRocket__heavy_rocket_launcher','Heavy Rocket Launcher',lod,'kn25',representative='Generic heavy launcher, KN-25 four-tube 8x8 representative',approximate=True)
+
+def tos1a__tos_1a_solntsepyok(lod=0):
+    return launch('tos1a__tos_1a_solntsepyok','TOS-1A Solntsepyok',lod,'tos1')
+
+BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and n.startswith(('mlrs__','himars__','heavyRocket__','tos1a__')) and callable(f)}
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--types',nargs='+',choices=BUILDERS,required=True);p.add_argument('--report',type=Path,required=True)
+    a=p.parse_args();entries=[save(slug,BUILDERS[slug]) for slug in a.types]
+    manifest=ART/'MANIFEST.json';old=json.loads(manifest.read_text(encoding='utf-8'));updates={e['file']:e for e in entries}
+    manifest.write_text(json.dumps([updates.pop(e['file'],e) for e in old]+list(updates.values()),indent=2)+'\n',encoding='utf-8')
+    a.report.write_text(json.dumps(entries,indent=2)+'\n',encoding='utf-8')
+
+if __name__=='__main__':main()

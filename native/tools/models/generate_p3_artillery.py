@@ -9,7 +9,7 @@ import argparse,json,math
 import numpy as np
 from vehicle_parts import Mesh,Rig,loft,profile_hull,hollow_muzzle,write_glb,merge_mesh
 from generate_p1_tanks import Spec,finish,make_wreck,beam,running_gear
-from armour_parts import ArmourSpec,wreck as armour_wreck
+from armour_parts import ArmourSpec,wreck as armour_wreck,mobility
 from artillery_parts import towed,truck_howitzer,artillery_barrel
 
 ROOT=Path(__file__).resolve().parents[3];ART=ROOT/'native/godot/assets/art'
@@ -304,7 +304,58 @@ def artillery__m1989_koksan(lod=0):
     rig.add('Engine_Deck','Hull',(.65,2.02,2.92));rig.add('Exhaust','Hull',(1.37,1.57,2.56))
     return rig,s
 
-BUILDERS={n:f for n,f in list(globals().items()) if n.startswith(('artillery__','k9__','towedHowitzer__','wheeledHowitzer__')) and callable(f)}
+def wheeled_direct(slug,name,lod,L,W,H,axles,r,tw,th,td,barrel,cal,style,source):
+    s=ArmourSpec(slug,name,L,W,H,'wheeled',len(axles),r,style,'direct',
+       [str(len(axles)*2)+' wheel drive','low '+style+' hull with '+('front' if style=='type16' else 'rear')+' engine',
+        str(round(cal*1000))+' mm direct-fire gun','separate Y turret ring and X trunnion','gunner sight and commander hatch'],
+       source,front_engine=style=='type16',axle_z=axles,turret_z=-.22)
+    rig=Rig(lod);m=Mesh();h=L/2;half=W/2-.16;n=6 if lod else 12
+    profile_hull(m,'paint',[(h-.18,.47,half*.75),(h,H*.62,half*.91),(h*.38,H,half*.87),
+       (-h+.12,H,half*.91),(-h,.61,half),(-h+.18,.47,half*.84)])
+    for side in (-1,1):
+        for z in axles:m.box('paint',(side*(W/2-.20),r*1.97,z),(.48,.10,r*2.08))
+        m.box('paint',(side*(W/2-.24),H-.18,-.62),(.38,.29,.64));m.box('markings',(side*(W/2-.04),H-.18,-.62),(.018,.23,.48))
+        m.box('paint',(side*half*.78,H*.60,h-.02),(.24,.19,.20));m.box('glass',(side*half*.78,H*.60,h+.095),(.16,.12,.025))
+    m.box('paint',(-.49,H+.045,h*.37),(.57,.09,.62));m.box('glass',(-.49,H+.12,h*.37+.22),(.37,.07,.12))
+    ez=h*.34 if s.front_engine else -h+.70;ex=.55 if s.front_engine else 0
+    for z in np.linspace(ez-.40,ez+.40,3 if lod else 10):m.box('metal_dark',(ex,H+.026,z),(.69 if s.front_engine else 1.19,.035,.047))
+    rig.add('Hull',rig.root,(0,0,0),m);mobility(rig,s,lod)
+    y=H+.11;z=-.22;t=Mesh();t.tube('metal_dark',(0,H+.01,z),(0,y+.03,z),tw*.36,n)
+    front=.50 if style!='cascavel' else .42
+    fp=[(-tw*.26,td*front),(tw*.26,td*front),(tw*.50,td*.15),(tw*.47,-td*.44),(-tw*.47,-td*.44),(-tw*.50,td*.15)]
+    shrink=.74 if style=='cascavel' else .84
+    loft(t,'paint',[[(x,y,z+zz) for x,zz in fp],[(x*shrink,y+th,z+zz*.86) for x,zz in fp]])
+    for side in (-1,1):t.box('markings',(side*(tw*.47+.012),y+th*.49,z-.42),(.017,.22,.40))
+    t.tube('paint',(-tw*.18,y+th,z-.25),(-tw*.18,y+th+.07,z-.25),.29,n)
+    t.box('paint',(.50,y+th+.10,z+.27),(.33,.22,.40));t.box('glass',(.50,y+th+.11,z+.484),(.22,.13,.025))
+    rig.add('Turret','Hull',(0,y,z),t,'Y')
+    gy=y+th*.52;gz=z+td*.31;artillery_barrel(rig,'Turret',(0,gy,gz),gz+barrel,cal,lod)
+    ant=Mesh();a=np.array([-tw*.27,y+th,z-.70]);ant.tube('metal_dark',a,a+[0,1.0,0],.012,4 if lod else 6)
+    rig.add('Antenna_1','Turret',a,ant,'Y');rig.add('Engine_Deck','Hull',(ex,H+.04,ez));rig.add('Exhaust','Hull',(W/2-.17,H*.76,ez))
+    return rig,s
+
+def directFire__amx_10_rc(lod=0):
+    return wheeled_direct('directFire__amx_10_rc','AMX-10 RC',lod,6.24,2.78,1.55,[-1.91,-.12,1.94],.53,2.35,.65,2.75,3.38,.105,'amx10',
+       'https://www.defense.gouv.fr/terre/nos-materiels/nos-equipements-terre/nos-vehicules/amx-10-rc')
+
+def directFire__ee_9_cascavel(lod=0):
+    return wheeled_direct('directFire__ee_9_cascavel','EE-9 Cascavel',lod,5.20,2.60,1.47,[-1.64,-.63,1.68],.49,1.61,.59,1.77,1.88,.090,'cascavel',
+       'https://www.eb.mil.br/')
+
+def directFire__type_16_mcv(lod=0):
+    return wheeled_direct('directFire__type_16_mcv','Type 16 MCV',lod,8.45,2.98,1.65,[-2.82,-1.28,1.26,2.81],.57,2.47,.69,3.21,4.38,.105,'type16',
+       'https://www.mod.go.jp/gsdf/equipment/ve/')
+
+def directFire__harimau(lod=0):
+    s=Spec('harimau','Harimau',6.95,3.30,1.42,2.48,6,.36,.87,-.04,2.00,1.23,9.10,'harimau',
+      ['Six road wheels and rear sprockets','light Kaplan MT hull','Cockerill 3105 turret','long 105 mm gun','large angular autoloader bustle'],
+      'https://www.pindad.com/harimau',caliber=.105)
+    b=[(-.36,1.30),(.36,1.30),(1.27,.57),(1.29,-1.49),(1.03,-1.86),(-1.03,-1.86),(-1.29,-1.49),(-1.27,.57)]
+    t=[(-.34,.83),(.34,.83),(1.03,.34),(1.11,-1.46),(.92,-1.76),(-.92,-1.76),(-1.11,-1.46),(-1.03,.34)]
+    def details(h,m,s,l):m.box('paint',(0,2.16,-1.64),(2.01,.50,.54))
+    return finish(s,b,t,lod,details)
+
+BUILDERS={n:f for n,f in list(globals().items()) if n.startswith(('artillery__','k9__','towedHowitzer__','wheeledHowitzer__','directFire__')) and callable(f)}
 
 def save(slug,builder=None):
     from validate_p3_artillery import validate

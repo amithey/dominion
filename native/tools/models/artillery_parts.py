@@ -192,6 +192,9 @@ def launcher_vehicle(slug,name,lod,config,source,approximate=False,representativ
     rear=-L/2+.30;front=rear+depth;pivot_y=bed+.32
     if family=='tos1':rear=-2.02;front=rear+depth
     turn=Mesh();turn.tube('metal_dark',(0,bed,rear+depth*.38),(0,pivot_y,rear+depth*.38),min(W*.34,.80),8 if lod else 20)
+    turn.box('paint',(0,pivot_y-.075,rear+depth*.19+.09),(.92,.18,max(.40,depth*.38-.18)+.28))
+    turn.tube('metal_dark',(-min(total_width*.37,W*.35)-.10,pivot_y,rear+.18),
+        (min(total_width*.37,W*.35)+.10,pivot_y,rear+.18),.13,6 if lod else 12)
     rig.add('Turntable','Hull',(0,bed+.12,rear+depth*.38),turn,'Y')
     launch=Mesh();tips=[];tube_y=pivot_y+.27+module_height/2
     for side in (-1,1):
@@ -210,7 +213,9 @@ def launcher_vehicle(slug,name,lod,config,source,approximate=False,representativ
             for col in range(cols):
                 x=cx+(col-(cols-1)/2)*pitch;y=cy+(row-(rows-1)/2)*pitch
                 tip=np.array([x,y,front+.015]);tips.append(tip.tolist())
-                if lod:aperture(launch,tip,cal*.52,lod)
+                if lod:
+                    if not boxed:launch.tube('metal_dark',[x,y,rear+.06],[x,y,front-.025],cal*.52,4)
+                    aperture(launch,tip,cal*.52,lod)
                 else:hollow_muzzle(launch,[x,y,rear+.06],tip,cal*.52,cal*.45,8)
         if not boxed:
             for side in (-1,1):beam(launch,'paint',(cx+side*module_width*.49,cy-module_height*.52,rear+.15),(cx+side*module_width*.49,cy-module_height*.52,front-.10),.08)
