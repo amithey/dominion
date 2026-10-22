@@ -87,6 +87,23 @@ def validate(path):
                 assert by[tail][0]['extras']['rotation_axis']=='X'
                 assert by[tail][0]['extras']['blade_count']==s['tail_blades']
             assert (prefix+'/Skid' in by)==(s['gear']=='skid')
+            gear=[p for p in by if p.startswith(prefix+'/Gear_') and p.count('/')==2]
+            assert len(gear)==(0 if s['gear']=='skid' else 4 if s['gear']=='four' else 3)
+            if s['gear']!='skid':
+                assert prefix+'/Gear_Left' in by and prefix+'/Gear_Right' in by
+                assert (prefix+'/Gear_Nose' in by)==(s['gear']=='tricycle')
+                assert (prefix+'/Gear_Tail' in by)==(s['gear']=='tailwheel')
+            for rotor in main+([tail] if tail in by else []):
+                node=by[rotor][0];name=node['extras']['canonical_part']
+                child=by[rotor+'/'+name+'_Mesh'][0]
+                points=np.concatenate([g['p'] for g in meshes[child['mesh']] if g['role']=='paint'])
+                projected=points[:,[1,2] if name=='Rotor_Tail' else [0,2]]
+                radii=np.linalg.norm(projected,axis=1);radius=node['extras']['diameter_metres']/2
+                assert .98*radius<=radii.max()<=1.02*radius,(rotor,'actual blade radius')
+                tips=projected[radii>.985*radii.max()]
+                angles=np.sort(np.mod(np.arctan2(tips[:,1],tips[:,0]),math.tau))
+                gaps=np.diff(np.r_[angles,angles[0]+math.tau]);blades=node['extras']['blade_count']
+                assert np.count_nonzero(gaps>math.pi/blades*.5)==blades,(rotor,'geometric blade count')
             if s.get('attack'):
                 markers={n['extras']['canonical_part']:M[:3,3] for p,(n,M,v) in by.items()
                     if p.startswith(prefix+'/') and n.get('extras',{}).get('canonical_part','').startswith('Muzzle_')}
@@ -97,6 +114,10 @@ def validate(path):
                     assert (prefix+'/Turret' in by)==(not fixed)
                     gun=prefix+('/Gun' if fixed else '/Turret/Gun')
                     assert gun in by and gun+'/Muzzle_0' in by
+            elif s.get('naval'):
+                want=0 if s['details'].get('naval_store')=='none' else 1 if s['details'].get('naval_store')=='internal' else 2
+                actual=[p for p,(n,M,v) in by.items() if p.startswith(prefix+'/') and n.get('extras',{}).get('canonical_part','').startswith('Muzzle_')]
+                assert len(actual)==want,(prefix,'naval mission store count')
         for p,(node,M,v) in by.items():
             axisname=node.get('extras',{}).get('rotation_axis')
             if not axisname or not p.startswith(prefix+'/'):continue

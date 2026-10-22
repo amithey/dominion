@@ -1,0 +1,35 @@
+{
+  "batch": 38,
+  "files": [
+    "aircraft/navalHelicopter__nh90_sea_lion.glb",
+    "aircraft/navalHelicopter__s_70b_seahawk.glb",
+    "aircraft/navalHelicopter__sh_2g_super_seasprite.glb",
+    "aircraft/navalHelicopter__sh_60k.glb",
+    "aircraft/navalHelicopter__wildcat_hma2.glb"
+  ],
+  "sha256": {
+    "aircraft/navalHelicopter__nh90_sea_lion.glb": "2192ed42db568e797709f78b6cf6cca8a290f898166c16f80786d2c56f6d468f",
+    "aircraft/navalHelicopter__s_70b_seahawk.glb": "1a3b61ae47fa9391f24228f3821af66d7378e9626cc7912295c64c230d1fb8d9",
+    "aircraft/navalHelicopter__sh_2g_super_seasprite.glb": "6791b648930a3d1282ea041e5998295de6940e24d7a32643f5c8b9131861fdfa",
+    "aircraft/navalHelicopter__sh_60k.glb": "559c5f28595520e8b21125d76f2dbb3a5686ac57da6c77f064ab6042991c778e",
+    "aircraft/navalHelicopter__wildcat_hma2.glb": "96f8fae089019547ddd4d16a24ade748c356b8b29cbf159b2d879ec9e44c3c25"
+  },
+  "maximum_triangles": [
+    9992,
+    1752
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific rotor configuration and landing gear",
+    "local-frame hinge propagation and rotor full-revolution return",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p5_helicopters.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

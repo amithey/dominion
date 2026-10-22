@@ -135,7 +135,7 @@ def model(slug,name,lod,family,representative='',**overrides):
         if key=='details':s.details.update(value)
         else:setattr(s,key,value)
     s.representative=representative;s.approximate=True
-    s.features=[family+' fuselage and tail profile',str(N)+'-blade '+str(D)+' m main rotor',
+    s.features=[family+' fuselage and tail profile',str(s.blades)+'-blade '+str(s.rotor_diameter)+' m main rotor',
         str(tn)+'-blade tail rotor',gear+' landing gear',str(s.engines)+' separate turbine nacelles',
         'published rotor size; small fittings and fuselage cross-sections approximated']
     if s.attack:s.features += [str(s.details['wing_span'])+' m stub-wing span',
