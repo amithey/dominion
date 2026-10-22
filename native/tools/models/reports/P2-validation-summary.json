@@ -1,0 +1,56 @@
+{
+  "priority": "P2 + requested Leclerc",
+  "total_new_models": 70,
+  "P2_roster_models": 69,
+  "additional_P1": "tank__leclerc.glb",
+  "batches": 12,
+  "batch_sizes": [
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    5,
+    5
+  ],
+  "tracked": 33,
+  "wheeled": 37,
+  "maximum_triangles": [
+    13032,
+    2336
+  ],
+  "all_roster_filenames_exact": true,
+  "all_sha256_and_external_loader_evidence_match": true,
+  "previous_art_files_and_manifest_entries_unchanged": 307,
+  "no_P3_assets_added": true,
+  "approved_27_tanks_unchanged": true,
+  "all_delivery_commits_within_requested_paths": true,
+  "checks": [
+    "per-file saved-buffer validator",
+    "printed local/world pivots",
+    "canonical track shader phases or actual wheeled axle layout",
+    "all hinge children and optional turret/gun/muzzle poses",
+    "trimesh 5.1.1 independent parsing and winding",
+    "Godot 4.7.2 GLTFDocument loading, hierarchy and visibility",
+    "four rendered views per file reviewed"
+  ],
+  "reports": [
+    "P2-batch-01-validation.json",
+    "P2-batch-02-validation.json",
+    "P2-batch-03-validation.json",
+    "P2-batch-04-validation.json",
+    "P2-batch-05-validation.json",
+    "P2-batch-06-validation.json",
+    "P2-batch-07-validation.json",
+    "P2-batch-08-validation.json",
+    "P2-batch-09-validation.json",
+    "P2-batch-10-validation.json",
+    "P2-batch-11-validation.json",
+    "P2-batch-12-validation.json"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "batch": 12,
+  "files": [
+    "vehicles/ewVehicle__elbit_ew_truck.glb",
+    "vehicles/ewVehicle__ew_vehicle.glb",
+    "vehicles/ewVehicle__koral.glb",
+    "vehicles/ewVehicle__krasukha_4.glb",
+    "vehicles/ewVehicle__type_2_ew_truck.glb"
+  ],
+  "sha256": {
+    "vehicles/ewVehicle__elbit_ew_truck.glb": "ac646f627378cdcfda5220c2430a42ce728fe96456c6cc6c78a8186bb2507934",
+    "vehicles/ewVehicle__ew_vehicle.glb": "956435f4428413a028e34a66ebe3def44890d80beb06d27df7adb271b4f1a72d",
+    "vehicles/ewVehicle__koral.glb": "55db854de021f342b8fa650053b9d30861d6ce2ccf6ed96d5e00b3d040f05684",
+    "vehicles/ewVehicle__krasukha_4.glb": "00b039b8ba4032b32e347baab7d540f2a49f1795af0ba4d3958285a0f231098b",
+    "vehicles/ewVehicle__type_2_ew_truck.glb": "afe579e60bb14fbef87b5c815da7f1458ab2c717025cbbab01311c6ab275d461"
+  },
+  "maximum_triangles": [
+    6092,
+    1128
+  ],
+  "checks": [
+    "saved GLB buffers/CCW/normals/UVs/bounds/duplicates",
+    "actual axle counts and positions",
+    "canonical TrackPath phases 0/.25/.5/.75/1 where tracked",
+    "hinge child propagation",
+    "optional weapon yaw/elevation/recoil",
+    "independent trimesh load",
+    "native Godot load/pivots/visibility",
+    "saved GLB LOD0/LOD1/wreck render sheet"
+  ],
+  "generator": "generate_p2_armour.py",
+  "priority_gate": "P2 only plus requested Leclerc; no P3 assets"
+}
