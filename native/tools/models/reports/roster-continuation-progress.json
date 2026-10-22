@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 63,
+  "ready_files": 69,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -134,6 +134,18 @@
         "vehicles/mlrs__lru.glb",
         "vehicles/mlrs__lynx.glb"
       ]
+    },
+    {
+      "batch": 12,
+      "report": "expansion-12-validation.json",
+      "files": [
+        "vehicles/mlrs__m270_jgsdf.glb",
+        "vehicles/mlrs__m270a2_mlrs.glb",
+        "vehicles/mlrs__mars_ii.glb",
+        "vehicles/mlrs__phl_03.glb",
+        "vehicles/mlrs__puls.glb",
+        "vehicles/mlrs__t_122_sakarya.glb"
+      ]
     }
   ],
   "priorities": {
@@ -165,7 +177,7 @@
     "P3": {
       "requested_rows": 93,
       "unique_files": 93,
-      "ready_files": 54,
+      "ready_files": 60,
       "ready_slugs": [
         "artillery__2s19_msta_s",
         "artillery__2s1_gvozdika_d_30",
@@ -210,8 +222,14 @@
         "mlrs__lru",
         "mlrs__lynx",
         "mlrs__m142_himars",
+        "mlrs__m270_jgsdf",
         "mlrs__m270_mlrs",
+        "mlrs__m270a2_mlrs",
+        "mlrs__mars_ii",
+        "mlrs__phl_03",
         "mlrs__pinaka",
+        "mlrs__puls",
+        "mlrs__t_122_sakarya",
         "towedHowitzer__fh70",
         "towedHowitzer__l118_light_gun",
         "towedHowitzer__m777",
@@ -253,12 +271,6 @@
         "himars__puls",
         "himars__tornado_s",
         "himars__trlg_230",
-        "mlrs__m270_jgsdf",
-        "mlrs__m270a2_mlrs",
-        "mlrs__mars_ii",
-        "mlrs__phl_03",
-        "mlrs__puls",
-        "mlrs__t_122_sakarya",
         "shahedLauncher__geran_2_launcher",
         "shahedLauncher__shahed_launcher",
         "tos1a__tos_1a_solntsepyok"

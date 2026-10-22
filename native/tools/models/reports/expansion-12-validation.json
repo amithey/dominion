@@ -1,0 +1,36 @@
+{
+  "batch": 12,
+  "files": [
+    "vehicles/mlrs__m270_jgsdf.glb",
+    "vehicles/mlrs__m270a2_mlrs.glb",
+    "vehicles/mlrs__mars_ii.glb",
+    "vehicles/mlrs__phl_03.glb",
+    "vehicles/mlrs__puls.glb",
+    "vehicles/mlrs__t_122_sakarya.glb"
+  ],
+  "sha256": {
+    "vehicles/mlrs__m270_jgsdf.glb": "0b8e89c6264eb121ac8e9a1dee99f9703c185d59b3cbcd20e4410bc73e18d6af",
+    "vehicles/mlrs__m270a2_mlrs.glb": "aa03cf7bf26ba3e952bee21e6bf26a009cf7737375db673876c2b69e80299f3d",
+    "vehicles/mlrs__mars_ii.glb": "5466e6b9c04281a7b4238334b96a14a0cf950f42e8fee934389d331912c70f96",
+    "vehicles/mlrs__phl_03.glb": "4249165888a068bb08f610eb0bd903fd1e37f7027cc947b05e059c6f70cf0ec7",
+    "vehicles/mlrs__puls.glb": "ba0ecc408fa0dc8f72bbf5e03d5e79a1a6681548ee18181c7688baf10d4bded6",
+    "vehicles/mlrs__t_122_sakarya.glb": "1592e74433277f3a6df64675e103af20552192219e5c45adcfc8c691bf799da6"
+  },
+  "maximum_triangles": [
+    11480,
+    1860
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py",
+    "artillery_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
