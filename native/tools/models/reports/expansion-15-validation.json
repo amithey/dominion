@@ -1,0 +1,36 @@
+{
+  "batch": 15,
+  "files": [
+    "vehicles/himars__pch_191.glb",
+    "vehicles/himars__puls.glb",
+    "vehicles/himars__tornado_s.glb",
+    "vehicles/himars__trlg_230.glb",
+    "vehicles/heavyRocket__heavy_rocket_launcher.glb",
+    "vehicles/tos1a__tos_1a_solntsepyok.glb"
+  ],
+  "sha256": {
+    "vehicles/himars__pch_191.glb": "2da6d1dcf8a7e66bc0345e099a1379736e6317fb978a6324d65e2f664d22f841",
+    "vehicles/himars__puls.glb": "2ee736cce5d7cce532d392c3523fbc98e1cfcf7a951e649943ecb8b4f8e3b3b6",
+    "vehicles/himars__tornado_s.glb": "383e53afd972e71e0267eec8cdd055812b8c56291d96a86f46393c5e4cd26b12",
+    "vehicles/himars__trlg_230.glb": "5fd3aff29726d1a603e90c42c99e2024600815088ad613defa458f7f7d2b83f6",
+    "vehicles/heavyRocket__heavy_rocket_launcher.glb": "b0768a168a977a8d1a0633bdf9592361093bcfb685e5a1d44f204f644ebf5e20",
+    "vehicles/tos1a__tos_1a_solntsepyok.glb": "2aec5e2cd391a7d65dea4f07dea29364d886a383deceeea6ecff903a95991c46"
+  },
+  "maximum_triangles": [
+    12164,
+    1772
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py",
+    "artillery_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}

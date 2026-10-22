@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 81,
+  "ready_files": 87,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -170,6 +170,18 @@
         "vehicles/himars__m270_gmlrs.glb",
         "vehicles/himars__m270a2_gmlrs.glb"
       ]
+    },
+    {
+      "batch": 15,
+      "report": "expansion-15-validation.json",
+      "files": [
+        "vehicles/himars__pch_191.glb",
+        "vehicles/himars__puls.glb",
+        "vehicles/himars__tornado_s.glb",
+        "vehicles/himars__trlg_230.glb",
+        "vehicles/heavyRocket__heavy_rocket_launcher.glb",
+        "vehicles/tos1a__tos_1a_solntsepyok.glb"
+      ]
     }
   ],
   "priorities": {
@@ -201,7 +213,7 @@
     "P3": {
       "requested_rows": 93,
       "unique_files": 93,
-      "ready_files": 72,
+      "ready_files": 78,
       "ready_slugs": [
         "artillery__2s19_msta_s",
         "artillery__2s1_gvozdika_d_30",
@@ -229,6 +241,7 @@
         "artillery__sh_5_palmaria",
         "artillery__t_155_firtina",
         "artillery__type_99_sph",
+        "heavyRocket__heavy_rocket_launcher",
         "himars__chunmoo_guided_cgr_080",
         "himars__europuls",
         "himars__fatah_ii",
@@ -241,6 +254,10 @@
         "himars__m142_himars",
         "himars__m270_gmlrs",
         "himars__m270a2_gmlrs",
+        "himars__pch_191",
+        "himars__puls",
+        "himars__tornado_s",
+        "himars__trlg_230",
         "k9__k9_thunder",
         "mlrs__a_100_fatah_1",
         "mlrs__astros_ii",
@@ -266,6 +283,7 @@
         "mlrs__pinaka",
         "mlrs__puls",
         "mlrs__t_122_sakarya",
+        "tos1a__tos_1a_solntsepyok",
         "towedHowitzer__fh70",
         "towedHowitzer__l118_light_gun",
         "towedHowitzer__m777",
@@ -290,14 +308,8 @@
         "directFire__ee_9_cascavel",
         "directFire__harimau",
         "directFire__type_16_mcv",
-        "heavyRocket__heavy_rocket_launcher",
-        "himars__pch_191",
-        "himars__puls",
-        "himars__tornado_s",
-        "himars__trlg_230",
         "shahedLauncher__geran_2_launcher",
-        "shahedLauncher__shahed_launcher",
-        "tos1a__tos_1a_solntsepyok"
+        "shahedLauncher__shahed_launcher"
       ]
     },
     "P4": {
