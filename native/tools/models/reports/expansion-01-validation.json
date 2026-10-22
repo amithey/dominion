@@ -1,0 +1,30 @@
+{
+  "batch": 1,
+  "files": [
+    "vehicles/tank__ariete.glb",
+    "vehicles/tank__leopard_2a6.glb",
+    "vehicles/apc__griffon.glb",
+    "vehicles/apc__vbm_freccia.glb",
+    "vehicles/ifv__cv9035nl.glb"
+  ],
+  "sha256": {
+    "vehicles/tank__ariete.glb": "29ec7875f5983c9602658627a5884ad9d7f4570e6711a7ee67b523ef2df5f452",
+    "vehicles/tank__leopard_2a6.glb": "501e7a7fe7b5ea6b7802c231c158edcaa3c221442ee47e5cb5a8d5e9c63e2238",
+    "vehicles/apc__griffon.glb": "37c6736ba75575f62ebd7c9c25e0abf8dbf3d4f6634bf4dbefbe1502a0c91f53",
+    "vehicles/apc__vbm_freccia.glb": "2e55cd8de4d62b872552c2009cbc199f28417a2042c3d51f0d19e571446649dc",
+    "vehicles/ifv__cv9035nl.glb": "72c71890ad79070808f8e51919e05bbe9c3361576a9122664d5f52af6cfd7b52"
+  },
+  "maximum_triangles": [
+    12970,
+    2168
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generator": "generate_expansion_armour.py"
+}
