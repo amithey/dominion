@@ -31,7 +31,7 @@ const BRIEFS := {
 	"abmLauncher": ["Missile defence", ["Intercepts incoming ballistic missiles near it"]],
 	"ewVehicle": ["Jams drones", ["Enemy drones within 55 m mostly fail"]],
 	"hpmVehicle": ["Microwave anti-drone weapon", ["Destroys every enemy drone within 45 m"]],
-	"helicopter": ["Transport helicopter: 6 soldiers", ["Load: select troops, right-click the helicopter", "Unload: select it, press J"]],
+	"helicopter": ["Transport helicopter · 6 soldiers", ["Right-click it with troops selected to load; J unloads"]],
 	"heavyLift": ["Heavy transport helicopter: 12 places", ["Load: select troops, right-click the helicopter", "Unload: select it, press J", "Carries light vehicles and guns too"]],
 	"gunship": ["Attack helicopter", ["Heavy, sustained fire on ground units", "Rocket squads and air defence threaten it"]],
 	"scoutHelicopter": ["Unarmed scout helicopter", ["Sees far for your army", "Returns to a helipad for fuel"]],

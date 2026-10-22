@@ -18,8 +18,8 @@ const WINTER_FROM := 540.0
 const WINTER_FADE := 40.0
 const NEAR := 260.0
 const MAX_PLUMES := 36
-const FLOCKS := 4
-const BIRDS := 6
+const FLOCKS := 2   # (4 flocks of 6 weighed on the frame rate and crowded the sky)
+const BIRDS := 3
 
 var w: Node
 var _plumes := {}          # marker instance id -> GPUParticles3D

@@ -68,6 +68,7 @@ var _sel_pic: TextureRect
 var _sel_title: Label
 var _sel_sub: Label
 var _sel_hp: ProgressBar
+var _sel_fuel: ProgressBar
 var _sel_info: Label
 var _city_tiles: GridContainer   # a town hall's accounts as tiles (Civilization style)
 var _city_sig := ""
@@ -784,6 +785,22 @@ func _build_selection() -> void:
 	_sel_hp.show_percentage = true
 	_sel_hp.add_theme_stylebox_override("fill",UI.plate(Color("6fae7a"),Color("30684a"),Color(0,0,0,0),0.0,Color(1,1,1,0.25)))
 	col.add_child(_sel_hp)
+	# The aircraft's fuel, under its health: it flies home when this runs out.
+	_sel_fuel = ProgressBar.new()
+	_sel_fuel.custom_minimum_size = Vector2(0, 18)
+	_sel_fuel.show_percentage = false
+	_sel_fuel.max_value = 100.0
+	_sel_fuel.add_theme_stylebox_override("fill", UI.plate(Color("e0a94a"), Color("9a6b22"), Color(0, 0, 0, 0), 0.0, Color(1, 1, 1, 0.25)))
+	_sel_fuel.visible = false
+	var fuel_label := _text("", 12, UI.BRIGHT)
+	fuel_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fuel_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	fuel_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	fuel_label.add_theme_constant_override("outline_size", 4)
+	fuel_label.add_theme_color_override("font_outline_color", Color(0.03, 0.07, 0.12, 0.95))
+	_sel_fuel.add_child(fuel_label)
+	_sel_fuel.set_meta("label", fuel_label)
+	col.add_child(_sel_fuel)
 	# Stat plaques: a small caption over a large figure, as a 4X unit card shows them.
 	_sel_stats = HBoxContainer.new()
 	_sel_stats.add_theme_constant_override("separation", 4)
@@ -1501,6 +1518,7 @@ func _update_selection() -> void:
 	_commands["Repair"].visible = _commands["Repair"].visible and not _commands["Repair"].disabled
 	_commands["Demolish"].visible = _selected != null and _selected.owner == 0 and not _selected.dead and _selected.key != "hq" and _selected.def.get("settlement") == null and transport_text == ""
 	_sel_stats.visible = false
+	_sel_fuel.visible = false
 	_launch_row.visible = false
 	_cargo_row.visible = false
 	if transport_text != "":
@@ -1586,25 +1604,33 @@ func _update_selection() -> void:
 		_sel_hp.value = hp
 		var def: Dictionary = world.unit_defs.get(main, {})
 		var Brief := preload("res://scripts/brief.gd")
-		_sel_info.text = ("%s\nRight-click: move / attack  ·  Ctrl + right-click: attack-move" % Brief.text(Brief.unit(world, main))) if units.size() == 1 else "Right-click: move / attack  ·  Ctrl + right-click: attack-move"
-		_sel_info.tooltip_text = str(def.get("desc", ""))
+		_sel_info.text = Brief.text(Brief.unit(world, main)) if units.size() == 1 else ""
+		_sel_info.tooltip_text = "%s\nRight-click: move / attack, Ctrl + right-click: attack-move (F1: all controls)" % str(def.get("desc", ""))
 		if units.all(func(u): return u.key == "worker"):
-			_sel_info.text = "B opens the build list. Right-click an unfinished building to construct it; Shift + right-click queues another site. Right-click open ground to move."
+			_sel_info.text = "Right-click an unfinished building to build it (Shift: add more)."
 		elif not own_units.any(func(u): return u.dmg > 0):
-			_sel_info.text = "%s\nRight-click: move. No weapons." % Brief.text(Brief.unit(world, main))
+			_sel_info.text = "%s\nNo weapons." % Brief.text(Brief.unit(world, main))
 		_fill_queue([])
 		_fill_launch(own_units.any(func(u): return u.key in world.missiles.LAUNCH_SHIPS))
 		_fill_cargo(own_units)
 		_fill_wing(own_units)
 		if units.size() == 1 and units[0].get("fly",false):
 			var u: Dictionary = units[0]
+			if not u.key in world.AirOperations.TUBE_LAUNCHED:
+				var fuel: float = clampf(100.0 * float(u.get("sortie_left", 0.0)) / preload("res://scripts/war_costs.gd").SORTIE_SECONDS, 0.0, 100.0)
+				_sel_fuel.visible = true
+				_sel_fuel.value = fuel
+				(_sel_fuel.get_meta("label") as Label).text = "Fuel %d%%" % int(fuel)
+				_sel_fuel.add_theme_stylebox_override("fill", UI.plate(Color("d85a4a") if fuel < 20.0 else Color("e0a94a"), Color("8a2a22") if fuel < 20.0 else Color("9a6b22"), Color(0, 0, 0, 0), 0.0, Color(1, 1, 1, 0.25)))
+			var state: String = "rearming %.0fs" % float(u.service_left) if u.air_state == "rearming" else str(u.air_state)
 			if u.key == "scoutHelicopter":
-				_sel_info.text = "Unarmed reconnaissance | %s\nFlight time remaining: %.0f s. Returns to a supplied helipad for fuel." % [u.air_state.capitalize(), float(u.get("sortie_left", 0.0))]
-			else:
-				_sel_info.text += "\nAmmunition: %d/%d salvos | %s\n%s" % [u.ammo,world.AirOperations.CAPACITY[u.key],u.air_state.capitalize(),"Rearming: %.0f s" % u.service_left if u.air_state == "rearming" else "Empty aircraft return to a supplied air base."]
+				_sel_info.text = "Unarmed scout - %s" % state
+			elif world.AirOperations.CAPACITY.has(u.key):
+				_sel_info.text += ("\n" if _sel_info.text != "" else "") + "Ammo %d/%d - %s" % [u.ammo, world.AirOperations.CAPACITY[u.key], state]
 		elif units.any(func(u): return world.can_bombard(u)):
 			_sel_info.text += "\nAlt + right-click: bombard"
-		_sel_info.text += "\nHP %d / %d%s" % [int(hp),int(max_hp)," · Repair ordered" if units.any(func(u): return u.get("repairing",false)) else ""]
+		if units.any(func(u): return u.get("repairing", false)):
+			_sel_info.text += "\nRepair ordered"
 		# Why a unit stands idle: no fuel or no ammunition money (war_costs.gd).
 		var halted: Array = units.filter(func(u): return u.owner == 0 and str(u.get("operating_shortage", "")) != "")
 		if not halted.is_empty():
@@ -1615,7 +1641,7 @@ func _update_selection() -> void:
 			var one: Dictionary = units[0]
 			var next: float = V.to_next(one)
 			_sel_info.text += "
-Rank: %s%s" % [V.rank_name(one), (" · %d xp to %s" % [ceili(next), V.RANKS[V.rank(one) + 1]]) if next >= 0.0 else " · the highest rank"]
+%s%s" % [V.rank_name(one), (" - %d xp to %s" % [ceili(next), V.RANKS[V.rank(one) + 1]]) if next >= 0.0 else " - top rank"]
 			if world.generals != null:
 				var gen = world.generals.general_of(one)
 				if gen != null:
@@ -1793,11 +1819,12 @@ func _fill_cargo(own: Array) -> void:
 	if not carriers.is_empty():
 		for c in carriers:
 			var aboard: int = (c.get("cargo", []) as Array).size()
-			var head := _text(("%d ABOARD" % aboard) if aboard > 0 else "EMPTY", 17, UI.GOOD if aboard > 0 else UI.MUTED, true)
+			var head := _text("Aboard %d / %d" % [Air.used(c), int(Air.CAPACITY.get(c.key, 0))], 16, UI.GOOD if aboard > 0 else UI.MUTED, true)
 			_cargo_row.add_child(head)
-			var label := _text("%s: %s" % [world.unit_defs.get(c.key, {}).get("name", c.key), Air.manifest(world, c)], 14, UI.CREAM)
-			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			_cargo_row.add_child(label)
+			if aboard > 0:
+				var label := _text(Air.manifest(world, c), 14, UI.CREAM)
+				label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				_cargo_row.add_child(label)
 		var buttons := HFlowContainer.new()
 		buttons.add_theme_constant_override("separation", 4)
 		_cargo_row.add_child(buttons)
@@ -1810,10 +1837,6 @@ func _fill_cargo(own: Array) -> void:
 			world.begin_landing()
 			return "")
 		land.tooltip_text = "Click a place on the map: the transport sails or flies there and puts its load ashore."
-		if carriers.any(func(c): return Air.room(c) > 0):
-			var how := _text("To load: select troops, then right-click this transport.", 14, UI.CREAM)
-			how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			_cargo_row.add_child(how)
 	elif nearest != null:
 		var board := _button(_cargo_row, "Board the %s" % world.unit_defs.get(nearest.key, {}).get("name", nearest.key), func():
 			Air.order_board(world, world.units.filter(func(u): return u.selected and not u.dead and u.owner == 0), nearest)
