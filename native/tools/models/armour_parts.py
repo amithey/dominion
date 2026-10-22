@@ -122,7 +122,8 @@ def shell(m,s,lod):
     m.box('paint',(-.40,roof+.055,h*.33),(.55,.09,.63))
     m.box('glass',(-.40,roof+.12,h*.33+.20),(.36,.055,.09))
     if not lod:
-        for z in np.linspace(h*.24,h*.64,8):m.box('metal_dark',(.50,roof+.025,z),(.65,.032,.045))
+        engine_z=h*.44 if s.front_engine else -h*.62
+        for z in np.linspace(engine_z-.42,engine_z+.42,8):m.box('metal_dark',(.50 if s.front_engine else 0,roof+.025,z),(.65 if s.front_engine else 1.15,.032,.045))
         for side in (-1,1):
             for z in np.linspace(-h+.55,h*.25,4):
                 m.box('metal_dark',(side*(half*.95+.012),roof*.73,z),(.025,.035,.12))
@@ -132,7 +133,7 @@ def windows(m,s,lod):
     h=s.length/2;w=s.width/2;roof=s.roof
     # Windowed driving compartment is a real family distinction (BTR, Anoa,
     # Guarani, Pars), absent from periscope-only Stryker/Boxer/BMP/Namer.
-    if s.family not in ('btr','anoa','guarani','pars','fahd'):return
+    if s.family not in ('btr','btr4','anoa','guarani','pars','fahd'):return
     y=roof-.25
     t=(roof-y)/(roof-roof*.66)
     z=h*s.bow+(h-h*s.bow)*t+.035
@@ -148,8 +149,9 @@ def recognition(m,s,lod):
     h=s.length/2;w=s.width/2;r=s.roof;f=s.details
     if f.get('swim'):
         # Paired waterjet housings on amphibious families, not on dry carriers.
-        for side in (-1,1):
-            m.tube('paint',(side*w*.65,.72,-h+.05),(side*w*.65,.72,-h-.14),.18,6 if lod else 10)
+        centers=[0] if s.family=='btr' else [-w*.65,w*.65]
+        for xx in centers:
+            m.tube('paint',(xx,.72,-h+.05),(xx,.72,-h-.14),.25 if s.family=='btr' else .18,6 if lod else 10)
         m.box('paint',(0,r*.60,h+.025),(s.width*.72,.24,.055))
     if f.get('ports') and not lod:
         for side in (-1,1):
@@ -182,7 +184,8 @@ def recognition(m,s,lod):
         for side in (-1,1):
             m.tube('metal_dark',(side*.85,.66,-h-.08),(side*.85,.66,-h-.22),.19,6)
     if f.get('storage'):
-        for side in (-1,1):m.box('paint',(side*(w-(.64 if s.mobility=='tracked' else .40)),r+.08,-h*.61),(.30,.24,s.length*.25))
+        store_y=r*.59+.10 if s.family=='recovery' else r+.08
+        for side in (-1,1):m.box('paint',(side*(w-(.64 if s.mobility=='tracked' else .40)),store_y,-h*.61),(.30,.24,s.length*.25))
 
 
 WEAPONS={
@@ -359,7 +362,7 @@ def recovery(rig,s,lod):
         m.tube('metal_dark',b+[0,-.10,0],b+[0,-.38,0],.048,n)
         rig.add('Boom_Lift','Boom',a,m,'X',hinge='crane luffing trunnions')
     deck=Mesh()
-    for side in (-1,1):deck.box('paint',(side*w*.57,r+.13,-h*.62),(.50,.38,s.length*.19))
+    for side in (-1,1):deck.box('paint',(side*w*.57,r*.59+.17,-h*.62),(.50,.38,s.length*.19))
     deck.tube('metal_dark',(-.45,r+.10,.14),(.45,r+.10,.14),.18,n)
     if not lod:
         for x in np.linspace(-.40,.40,7):deck.tube('metal_dark',(x,r+.10,.14),(x+.022,r+.10,.14),.196,n)
@@ -465,11 +468,16 @@ def build(s,lod=0):
     recognition(m,s,lod)
     # Registration/flag carrier panels remain blank white material roles.
     half=s.width/2-(.46 if s.mobility=='tracked' else .10)
-    if s.family=='truck':half=s.width/2-.14
+    mark_y=s.roof*.80;mark_z=-s.length*.14;mark_x=half*.91
+    if s.family=='recovery':mark_z=s.length*.18
+    if s.family=='truck':
+        mark_x=s.width*.475+.03;mark_y=s.roof-1.05
+        mark_z=s.length/2-.10-s.details.get('cab',2.1)*.5-s.details.get('hood',0.)
+    if s.family=='jackal':mark_x=s.width/2-.10;mark_y=1.28
     for side in (-1,1):
-        px=side*half*.91
-        m.box('paint',(px,s.roof*.80,-s.length*.14),(.10,.28,.50))
-        m.box('markings',(px+side*.058,s.roof*.80,-s.length*.14),(.018,.24,.45))
+        px=side*mark_x
+        m.box('paint',(px,mark_y,mark_z),(.10,.28,.50))
+        m.box('markings',(px+side*.058,mark_y,mark_z),(.018,.24,.45))
     m.remove_duplicates();rig.add('Hull',rig.root,(0,0,0),m)
     mobility(rig,s,lod);weapon(rig,s,lod)
     p=np.array([-.46,s.roof+.025,-.32]);m=Mesh();m.tube('paint',p+[0,-.015,.27],p+[0,.055,.27],.28,6 if lod else 12)

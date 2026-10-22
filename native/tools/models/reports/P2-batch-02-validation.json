@@ -1,0 +1,35 @@
+{
+  "batch": 2,
+  "files": [
+    "vehicles/apc__btr_3un_proforce_ara.glb",
+    "vehicles/apc__btr_4.glb",
+    "vehicles/apc__btr_4_m113.glb",
+    "vehicles/apc__btr_60_bmp_1.glb",
+    "vehicles/apc__btr_60_mrap.glb",
+    "vehicles/apc__btr_80_typhoon_mrap.glb"
+  ],
+  "sha256": {
+    "vehicles/apc__btr_3un_proforce_ara.glb": "21c5b265e64f7e91a22a201e685ca444fafc1360cf9a0b1d14931255aa2a3fd8",
+    "vehicles/apc__btr_4.glb": "15ad0864f91c566114b76fc62c543ea6a3ceb3b5c23696c70b89ce927016c6f1",
+    "vehicles/apc__btr_4_m113.glb": "4f0d67c62d477eab0a242be757ceffcd00e00b0337508d4e948677ec27ae4636",
+    "vehicles/apc__btr_60_bmp_1.glb": "bb3f0215fdaca2573da31366b636958ccd93dde8fff4928e9fd7a1c0fa09515f",
+    "vehicles/apc__btr_60_mrap.glb": "5ec1ebafab975be96fc782547b3ae78ccb628ca67eb02188bade6bdbab7b0397",
+    "vehicles/apc__btr_80_typhoon_mrap.glb": "f965ac6be6c822212dda3dcc16f6154891d247ec7bad68ecc331c5a36edd4b97"
+  },
+  "maximum_triangles": [
+    6506,
+    1112
+  ],
+  "checks": [
+    "saved GLB buffers/CCW/normals/UVs/bounds/duplicates",
+    "actual axle counts and positions",
+    "canonical TrackPath phases 0/.25/.5/.75/1 where tracked",
+    "hinge child propagation",
+    "optional weapon yaw/elevation/recoil",
+    "independent trimesh load",
+    "native Godot load/pivots/visibility",
+    "saved GLB LOD0/LOD1/wreck render sheet"
+  ],
+  "generator": "generate_p2_armour.py",
+  "priority_gate": "P2 only plus requested Leclerc; no P3 assets"
+}
