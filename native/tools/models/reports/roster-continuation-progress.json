@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 194,
+  "ready_files": 200,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -403,6 +403,18 @@
         "aircraft/gunship__ah_64d_ka_52.glb",
         "aircraft/gunship__ah_64djp.glb"
       ]
+    },
+    {
+      "batch": 35,
+      "report": "expansion-35-validation.json",
+      "files": [
+        "aircraft/gunship__ah_64e_apache.glb",
+        "aircraft/gunship__aw129_mangusta.glb",
+        "aircraft/gunship__ka_52m.glb",
+        "aircraft/gunship__lch_prachand.glb",
+        "aircraft/gunship__mi_24.glb",
+        "aircraft/gunship__mi_24v.glb"
+      ]
     }
   ],
   "priorities": {
@@ -611,12 +623,18 @@
     "P5": {
       "requested_rows": 57,
       "unique_files": 57,
-      "ready_files": 24,
+      "ready_files": 30,
       "ready_slugs": [
         "gunship__ah_1f_cobra_z_10me",
         "gunship__ah_64_saraf",
         "gunship__ah_64d_ka_52",
         "gunship__ah_64djp",
+        "gunship__ah_64e_apache",
+        "gunship__aw129_mangusta",
+        "gunship__ka_52m",
+        "gunship__lch_prachand",
+        "gunship__mi_24",
+        "gunship__mi_24v",
         "helicopter__bell_412epi",
         "helicopter__dhruv_alh",
         "helicopter__h225m",
@@ -639,12 +657,6 @@
         "helicopter__z_20"
       ],
       "remaining_slugs": [
-        "gunship__ah_64e_apache",
-        "gunship__aw129_mangusta",
-        "gunship__ka_52m",
-        "gunship__lch_prachand",
-        "gunship__mi_24",
-        "gunship__mi_24v",
         "gunship__mi_24v_mi_35",
         "gunship__mi_28ne",
         "gunship__mi_35p",

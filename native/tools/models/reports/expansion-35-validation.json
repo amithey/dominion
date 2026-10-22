@@ -1,0 +1,37 @@
+{
+  "batch": 35,
+  "files": [
+    "aircraft/gunship__ah_64e_apache.glb",
+    "aircraft/gunship__aw129_mangusta.glb",
+    "aircraft/gunship__ka_52m.glb",
+    "aircraft/gunship__lch_prachand.glb",
+    "aircraft/gunship__mi_24.glb",
+    "aircraft/gunship__mi_24v.glb"
+  ],
+  "sha256": {
+    "aircraft/gunship__ah_64e_apache.glb": "42ddd62522f11de0e2e54da87b88e6ac841e411079318a3436c087c7dea4c6cf",
+    "aircraft/gunship__aw129_mangusta.glb": "b15c9c401705e76d44516ec06faf7b4dac39c477f8621474b0b2708d4f844b1d",
+    "aircraft/gunship__ka_52m.glb": "1f9d844570a2c9d8b369758f9416dca4d4c47eac4801744b4f43111fd3fb3c0b",
+    "aircraft/gunship__lch_prachand.glb": "bd13d505e7402dfa8c4db1ea7a957b5f56e7140044ef18cfcc8614184320120b",
+    "aircraft/gunship__mi_24.glb": "9fdc50826ffde1147fb40423c3513aa698149516747534b915dacd4131fda480",
+    "aircraft/gunship__mi_24v.glb": "3ec548be11ee2a999ff76d7134c5bee1978a4ace26a864c7437e26ebc2b95519"
+  },
+  "maximum_triangles": [
+    12772,
+    2328
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific rotor configuration and landing gear",
+    "local-frame hinge propagation and rotor full-revolution return",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p5_helicopters.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}
