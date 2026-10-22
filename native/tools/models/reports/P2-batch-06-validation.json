@@ -1,0 +1,35 @@
+{
+  "batch": 6,
+  "files": [
+    "vehicles/ifv__bmp_2_sarath.glb",
+    "vehicles/ifv__bmp_3.glb",
+    "vehicles/ifv__k21_ifv.glb",
+    "vehicles/ifv__m2a2_bradley.glb",
+    "vehicles/ifv__m2a4_bradley.glb",
+    "vehicles/ifv__pandur_ii_ifv.glb"
+  ],
+  "sha256": {
+    "vehicles/ifv__bmp_2_sarath.glb": "a60254d3be471f6f6e4df6243f4398530993ca4502ec3e12de77b07d48632403",
+    "vehicles/ifv__bmp_3.glb": "d2a9898259974e0d171b2e7d4edc8eaf7ba8b5580131c830ebdc1b8338bc4643",
+    "vehicles/ifv__k21_ifv.glb": "bda7d7b7a7191e2e462b805b67463f82ee014a7bf42002610b883777f47fd399",
+    "vehicles/ifv__m2a2_bradley.glb": "d60d2a27913adde18ac920bce0f19677766b85fe69feada839420c4bcffffca3",
+    "vehicles/ifv__m2a4_bradley.glb": "baef7d09bc28f61abc55fa42a179720766e03a43ac8ab8c4d39768363c624914",
+    "vehicles/ifv__pandur_ii_ifv.glb": "ab114a3400199ca47611008f2d931344452fa0fd32ae9d9ec2b6af36ec241d31"
+  },
+  "maximum_triangles": [
+    11418,
+    1924
+  ],
+  "checks": [
+    "saved GLB buffers/CCW/normals/UVs/bounds/duplicates",
+    "actual axle counts and positions",
+    "canonical TrackPath phases 0/.25/.5/.75/1 where tracked",
+    "hinge child propagation",
+    "optional weapon yaw/elevation/recoil",
+    "independent trimesh load",
+    "native Godot load/pivots/visibility",
+    "saved GLB LOD0/LOD1/wreck render sheet"
+  ],
+  "generator": "generate_p2_armour.py",
+  "priority_gate": "P2 only plus requested Leclerc; no P3 assets"
+}
