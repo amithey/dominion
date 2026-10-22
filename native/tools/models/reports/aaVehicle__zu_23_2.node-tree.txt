@@ -5,6 +5,14 @@ LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
       Wheel_L0_Mesh local=[0, 0, 0] world=[-0.96, 0.4, 0.0] axis=None mesh
     Wheel_R0 local=[0.96, 0.4, 0.0] world=[0.96, 0.4, 0.0] axis=X pivot
       Wheel_R0_Mesh local=[0, 0, 0] world=[0.96, 0.4, 0.0] axis=None mesh
+    Outrigger_L0 local=[-0.35, 0.46, -0.36] world=[-0.35, 0.46, -0.36] axis=Y pivot
+      Outrigger_L0_Mesh local=[0, 0, 0] world=[-0.35, 0.46, -0.36] axis=None mesh
+    Outrigger_L1 local=[-0.35, 0.46, 0.36] world=[-0.35, 0.46, 0.36] axis=Y pivot
+      Outrigger_L1_Mesh local=[0, 0, 0] world=[-0.35, 0.46, 0.36] axis=None mesh
+    Outrigger_R0 local=[0.35, 0.46, -0.36] world=[0.35, 0.46, -0.36] axis=Y pivot
+      Outrigger_R0_Mesh local=[0, 0, 0] world=[0.35, 0.46, -0.36] axis=None mesh
+    Outrigger_R1 local=[0.35, 0.46, 0.36] world=[0.35, 0.46, 0.36] axis=Y pivot
+      Outrigger_R1_Mesh local=[0, 0, 0] world=[0.35, 0.46, 0.36] axis=None mesh
     Turntable local=[0.0, 0.74, 0.0] world=[0.0, 0.74, 0.0] axis=Y pivot
       Turntable_Mesh local=[0, 0, 0] world=[0.0, 0.74, 0.0] axis=None mesh
       Launcher local=[0.0, 0.2166, 0.2] world=[0.0, 0.9566, 0.2] axis=X pivot
@@ -18,6 +26,14 @@ LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
       Wheel_L0_Mesh_LOD1 local=[0, 0, 0] world=[-0.96, 0.4, 0.0] axis=None mesh hidden
     Wheel_R0_LOD1 local=[0.96, 0.4, 0.0] world=[0.96, 0.4, 0.0] axis=X pivot hidden
       Wheel_R0_Mesh_LOD1 local=[0, 0, 0] world=[0.96, 0.4, 0.0] axis=None mesh hidden
+    Outrigger_L0_LOD1 local=[-0.35, 0.46, -0.36] world=[-0.35, 0.46, -0.36] axis=Y pivot hidden
+      Outrigger_L0_Mesh_LOD1 local=[0, 0, 0] world=[-0.35, 0.46, -0.36] axis=None mesh hidden
+    Outrigger_L1_LOD1 local=[-0.35, 0.46, 0.36] world=[-0.35, 0.46, 0.36] axis=Y pivot hidden
+      Outrigger_L1_Mesh_LOD1 local=[0, 0, 0] world=[-0.35, 0.46, 0.36] axis=None mesh hidden
+    Outrigger_R0_LOD1 local=[0.35, 0.46, -0.36] world=[0.35, 0.46, -0.36] axis=Y pivot hidden
+      Outrigger_R0_Mesh_LOD1 local=[0, 0, 0] world=[0.35, 0.46, -0.36] axis=None mesh hidden
+    Outrigger_R1_LOD1 local=[0.35, 0.46, 0.36] world=[0.35, 0.46, 0.36] axis=Y pivot hidden
+      Outrigger_R1_Mesh_LOD1 local=[0, 0, 0] world=[0.35, 0.46, 0.36] axis=None mesh hidden
     Turntable_LOD1 local=[0.0, 0.74, 0.0] world=[0.0, 0.74, 0.0] axis=Y pivot hidden
       Turntable_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.74, 0.0] axis=None mesh hidden
       Launcher_LOD1 local=[0.0, 0.2166, 0.2] world=[0.0, 0.9566, 0.2] axis=X pivot hidden
