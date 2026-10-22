@@ -90,6 +90,19 @@ Tests that were not in `run-tests.ps1` and failed after France (found only by ru
 `unit-quality-check`, `regional-factions-check` (counted exactly 28 nations) and `leader-badge-check` (wanted a PNG
 portrait for every nation). Add them to the runner with `world-events-check`, `war-support-check` and `space-check`.
 
+## Italy (commit 43e3175)
+
+A new nation in `nations/italy.gd`. It took the rows parked for it: Tornado ECR, FREMM and SAMP/T NG, and the roster
+Italy really fields (Cavour, G550 CAEW, San Giorgio class, NH90 NFH, CH-47F, Dardo, Centauro II). No nuclear weapons (an
+NPT party). Power: Energy Partnership (the Mattei Plan): she pays $500, the partner keeps it, relations +15, she receives
+150 oil and 150 gas. The migration half of the plan is not modelled.
+
+Figures to check before release: Prime Minister Meloni (no direct October report; a September one says she is still in
+office), GDP 2,400, inflation 1.5, unemployment 6.1, debt 137, spending 2.0, Fragile States Index 34, navy factor 0.5,
+the Cavour air wing of 3, the Tornado ECR's retirement date, and the Energy Partnership's 150 / 500 as balance.
+
+Rows still parked for members not yet added: Gripen (Sweden), chip-export control (Netherlands), Athens slot (Greece).
+
 ## Open questions to verify before release
 
 - France's scientific articles a million people (research +5% rests on the UK tier, not on a fresh figure).
