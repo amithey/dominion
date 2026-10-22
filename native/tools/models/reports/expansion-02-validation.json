@@ -1,0 +1,30 @@
+{
+  "batch": 2,
+  "files": [
+    "vehicles/ifv__dardo_ifv.glb",
+    "vehicles/ifv__vbci.glb",
+    "vehicles/reconVehicle__centauro_ii.glb",
+    "vehicles/reconVehicle__ebrc_jaguar.glb",
+    "vehicles/artillery__2s1_gvozdika_d_30.glb"
+  ],
+  "sha256": {
+    "vehicles/ifv__dardo_ifv.glb": "3b61715dd91adce5001a0599a50605166effac31cdfdcd9047c4a68e29289b24",
+    "vehicles/ifv__vbci.glb": "17d076474d2964ff2d096f5022b28952c9819c79808ec92b1eb0dc3eb22af3d9",
+    "vehicles/reconVehicle__centauro_ii.glb": "95747a78dc71f7afaefbcfe1c9d7a85d31fb2a68dcdeb46bc48322a8e05cccb0",
+    "vehicles/reconVehicle__ebrc_jaguar.glb": "25474104a7500e043fd6c4ba808703632909b6af718bb9b9f83f9189c11873ca",
+    "vehicles/artillery__2s1_gvozdika_d_30.glb": "215c5c3f3b31d0d771afa690ce7360e5d25c6a20449bce4407dbfd22d74e315f"
+  },
+  "maximum_triangles": [
+    12218,
+    2080
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generator": "generate_expansion_armour.py"
+}
