@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 144,
+  "ready_files": 150,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -299,6 +299,18 @@
         "vehicles/samLauncher__samp_t_ng.glb",
         "vehicles/samLauncher__sky_sabre_camm.glb"
       ]
+    },
+    {
+      "batch": 26,
+      "report": "expansion-26-validation.json",
+      "files": [
+        "vehicles/samLauncher__spyder_s_125.glb",
+        "vehicles/samLauncher__type_03_chu_sam.glb",
+        "vehicles/abmLauncher__arrow_3.glb",
+        "vehicles/abmLauncher__hq_19.glb",
+        "vehicles/abmLauncher__missile_defence_battery.glb",
+        "vehicles/abmLauncher__patriot_pac_3.glb"
+      ]
     }
   ],
   "priorities": {
@@ -431,7 +443,7 @@
     "P4": {
       "requested_rows": 68,
       "unique_files": 68,
-      "ready_files": 42,
+      "ready_files": 48,
       "ready_slugs": [
         "aaVehicle__2k22_tunguska",
         "aaVehicle__35_mm_air_defence_gun",
@@ -458,6 +470,10 @@
         "aaVehicle__zu_23_2",
         "aaVehicle__zu_23_2_saqr_358",
         "aaVehicle__zu_23_2_technical",
+        "abmLauncher__arrow_3",
+        "abmLauncher__hq_19",
+        "abmLauncher__missile_defence_battery",
+        "abmLauncher__patriot_pac_3",
         "samLauncher__akash",
         "samLauncher__bavar_373",
         "samLauncher__cheongung_ii",
@@ -474,13 +490,11 @@
         "samLauncher__s_300vm_iris_t_slm",
         "samLauncher__s_400",
         "samLauncher__samp_t_ng",
-        "samLauncher__sky_sabre_camm"
+        "samLauncher__sky_sabre_camm",
+        "samLauncher__spyder_s_125",
+        "samLauncher__type_03_chu_sam"
       ],
       "remaining_slugs": [
-        "abmLauncher__arrow_3",
-        "abmLauncher__hq_19",
-        "abmLauncher__missile_defence_battery",
-        "abmLauncher__patriot_pac_3",
         "abmLauncher__s_500",
         "abmLauncher__samp_t_ng_aster_30_b1nt",
         "abmLauncher__sm_3_pac_3_mse",
@@ -494,8 +508,6 @@
         "hpmVehicle__leonidas",
         "irisT__iris_t_slm",
         "laserAD__iron_beam",
-        "samLauncher__spyder_s_125",
-        "samLauncher__type_03_chu_sam",
         "saudiThaad__saudi_thaad",
         "shortRangeSAM__an_twq_1_avenger",
         "shortRangeSAM__hisar_a",

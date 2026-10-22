@@ -1,0 +1,36 @@
+{
+  "batch": 26,
+  "files": [
+    "vehicles/samLauncher__spyder_s_125.glb",
+    "vehicles/samLauncher__type_03_chu_sam.glb",
+    "vehicles/abmLauncher__arrow_3.glb",
+    "vehicles/abmLauncher__hq_19.glb",
+    "vehicles/abmLauncher__missile_defence_battery.glb",
+    "vehicles/abmLauncher__patriot_pac_3.glb"
+  ],
+  "sha256": {
+    "vehicles/samLauncher__spyder_s_125.glb": "a5fc8748af24b4ae068cd27f792e7319da904e5e00cb9f7f4cade64c68d68392",
+    "vehicles/samLauncher__type_03_chu_sam.glb": "476e419603439a852fe45b82d9aa7e34541650b918649685f3f39d3b0e029284",
+    "vehicles/abmLauncher__arrow_3.glb": "7a21bc8f2836a9de5d0f4b66ea2954762e4861a9a0c7378ec82821cb2282cae2",
+    "vehicles/abmLauncher__hq_19.glb": "16eb260ea5d7a66a822883dfe10b65f866b3a8c3f0869008e2bec994b631fdcd",
+    "vehicles/abmLauncher__missile_defence_battery.glb": "b0fae9fa295993e222c41c8b4707b5ebeffbb460d60d85526ca4ff1dd3e6e872",
+    "vehicles/abmLauncher__patriot_pac_3.glb": "a5c1fec6616bdd59921f21a8cbc8038e51c81111b7938e0ab14b3ed772db556a"
+  },
+  "maximum_triangles": [
+    7744,
+    1428
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p4_air_defence.py",
+    "air_defence_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
