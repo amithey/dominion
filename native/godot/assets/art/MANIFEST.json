@@ -220012,7 +220012,7 @@
     "size": [
       2.99,
       3.31,
-      7.1325
+      9.13
     ],
     "bounds": [
       [
@@ -220023,7 +220023,7 @@
       [
         1.495,
         3.31,
-        4.0125
+        6.01
       ]
     ],
     "hull_footprint": [
@@ -220186,12 +220186,12 @@
         "pivot_local": [
           0.0,
           1.66,
-          -0.22
+          0.7
         ],
         "pivot_world": [
           0.0,
           1.66,
-          -0.22
+          0.7
         ],
         "axis": "Y",
         "default_visible": true
@@ -220207,7 +220207,7 @@
         "pivot_world": [
           0.0,
           1.998,
-          0.6325
+          1.5525
         ],
         "axis": "X",
         "default_visible": true
@@ -220218,12 +220218,12 @@
         "pivot_local": [
           0.0,
           0.0,
-          3.38
+          4.4575
         ],
         "pivot_world": [
           0.0,
           1.998,
-          4.0125
+          6.01
         ],
         "axis": null,
         "default_visible": true
@@ -220239,7 +220239,7 @@
         "pivot_world": [
           -0.6345,
           2.31,
-          -0.92
+          0.0
         ],
         "axis": "Y",
         "default_visible": true
@@ -220410,12 +220410,12 @@
         "pivot_local": [
           0.0,
           1.66,
-          -0.22
+          0.7
         ],
         "pivot_world": [
           0.0,
           1.66,
-          -0.22
+          0.7
         ],
         "axis": "Y",
         "default_visible": false
@@ -220431,7 +220431,7 @@
         "pivot_world": [
           0.0,
           1.998,
-          0.6325
+          1.5525
         ],
         "axis": "X",
         "default_visible": false
@@ -220442,12 +220442,12 @@
         "pivot_local": [
           0.0,
           0.0,
-          3.38
+          4.4575
         ],
         "pivot_world": [
           0.0,
           1.998,
-          4.0125
+          6.01
         ],
         "axis": null,
         "default_visible": false
@@ -220463,7 +220463,7 @@
         "pivot_world": [
           -0.6345,
           2.31,
-          -0.92
+          0.0
         ],
         "axis": "Y",
         "default_visible": false
@@ -220555,7 +220555,7 @@
     "notes": "Original Python exterior model, no Blender or source mesh. generate_p3_artillery.py + artillery_parts.py + approved vehicle_parts.py. Actual-size hull and axle layout; named empty hinges with mesh children; metre UVs except Track U (0..1). Small fittings simplified; approximate/representative fields describe ambiguous roster designations. Blank white PBR roles; hidden LOD1 and static dark-role Wreck; hidden hull Collision_Box. LOD1 parts append _LOD1 with canonical_part extras. Wheeled vehicles have axle pivots and no tracks. Turret/Gun/Muzzle exist only with a weapon mount; recovery vehicles expose Boom and Spade. No national symbols or baked colours.",
     "sources": [
       {
-        "url": "https://www.defense.gouv.fr/terre/nos-materiels/nos-equipements-terre/nos-vehicules/amx-10-rc",
+        "url": "https://www.unabcc.org/app/download/8279511/AMX%2B10RC%2BFiche%2BTechnique.pdf",
         "use": "Vehicle exterior identification and size class; original geometry, no photographs embedded."
       }
     ],
@@ -220590,7 +220590,7 @@
         "Wreck front"
       ]
     },
-    "sha256": "7777f210319a8e4fc9b642b8f5530bdc1a2081a0d98e5bf7034175d2affde71c",
+    "sha256": "a7effed7dafc22373a15a44511d5d7a6f6f7c3cc5ef797ffd6619a9324b70414",
     "has_launcher": false,
     "launcher_tubes": 0
   },
@@ -220611,7 +220611,7 @@
     "size": [
       2.81,
       3.17,
-      5.3075
+      6.29
     ],
     "bounds": [
       [
@@ -220622,7 +220622,7 @@
       [
         1.405,
         3.17,
-        2.7075
+        3.69
       ]
     ],
     "hull_footprint": [
@@ -220785,12 +220785,12 @@
         "pivot_local": [
           0.0,
           1.58,
-          -0.22
+          0.35
         ],
         "pivot_world": [
           0.0,
           1.58,
-          -0.22
+          0.35
         ],
         "axis": "Y",
         "default_visible": true
@@ -220806,7 +220806,7 @@
         "pivot_world": [
           0.0,
           1.8868,
-          0.3287
+          0.8987
         ],
         "axis": "X",
         "default_visible": true
@@ -220817,12 +220817,12 @@
         "pivot_local": [
           0.0,
           0.0,
-          1.88
+          2.7913
         ],
         "pivot_world": [
           0.0,
           1.8868,
-          2.2087
+          3.69
         ],
         "axis": null,
         "default_visible": true
@@ -220838,7 +220838,7 @@
         "pivot_world": [
           -0.4347,
           2.17,
-          -0.92
+          -0.35
         ],
         "axis": "Y",
         "default_visible": true
@@ -221009,12 +221009,12 @@
         "pivot_local": [
           0.0,
           1.58,
-          -0.22
+          0.35
         ],
         "pivot_world": [
           0.0,
           1.58,
-          -0.22
+          0.35
         ],
         "axis": "Y",
         "default_visible": false
@@ -221030,7 +221030,7 @@
         "pivot_world": [
           0.0,
           1.8868,
-          0.3287
+          0.8987
         ],
         "axis": "X",
         "default_visible": false
@@ -221041,12 +221041,12 @@
         "pivot_local": [
           0.0,
           0.0,
-          1.88
+          2.7913
         ],
         "pivot_world": [
           0.0,
           1.8868,
-          2.2087
+          3.69
         ],
         "axis": null,
         "default_visible": false
@@ -221062,7 +221062,7 @@
         "pivot_world": [
           -0.4347,
           2.17,
-          -0.92
+          -0.35
         ],
         "axis": "Y",
         "default_visible": false
@@ -221189,7 +221189,7 @@
         "Wreck front"
       ]
     },
-    "sha256": "e6cbc341e58eaf1f7433fb52e552168fbfa8702597987e8583e1d4739cb11b60",
+    "sha256": "57d36538d3ea496ec5d4b22d4dd87e411742304b3c819dfccdff6d770ce72af7",
     "has_launcher": false,
     "launcher_tubes": 0
   },
@@ -221210,23 +221210,23 @@
     "size": [
       3.19,
       3.45,
-      9.3801
+      8.45
     ],
     "bounds": [
       [
         -1.595,
         0.0,
-        -4.225
+        -3.5
       ],
       [
         1.595,
         3.45,
-        5.1551
+        4.95
       ]
     ],
     "hull_footprint": [
       2.98,
-      8.45
+      7.0
     ],
     "road_wheels_per_side": 4,
     "wheel_radius_metres": 0.57,
@@ -221288,12 +221288,12 @@
         "pivot_local": [
           -1.3,
           0.57,
-          -2.82
+          -2.38
         ],
         "pivot_world": [
           -1.3,
           0.57,
-          -2.82
+          -2.38
         ],
         "axis": "X",
         "default_visible": true
@@ -221304,12 +221304,12 @@
         "pivot_local": [
           -1.3,
           0.57,
-          -1.28
+          -1.01
         ],
         "pivot_world": [
           -1.3,
           0.57,
-          -1.28
+          -1.01
         ],
         "axis": "X",
         "default_visible": true
@@ -221320,12 +221320,12 @@
         "pivot_local": [
           -1.3,
           0.57,
-          1.26
+          1.04
         ],
         "pivot_world": [
           -1.3,
           0.57,
-          1.26
+          1.04
         ],
         "axis": "X",
         "default_visible": true
@@ -221336,12 +221336,12 @@
         "pivot_local": [
           -1.3,
           0.57,
-          2.81
+          2.4
         ],
         "pivot_world": [
           -1.3,
           0.57,
-          2.81
+          2.4
         ],
         "axis": "X",
         "default_visible": true
@@ -221352,12 +221352,12 @@
         "pivot_local": [
           1.3,
           0.57,
-          -2.82
+          -2.38
         ],
         "pivot_world": [
           1.3,
           0.57,
-          -2.82
+          -2.38
         ],
         "axis": "X",
         "default_visible": true
@@ -221368,12 +221368,12 @@
         "pivot_local": [
           1.3,
           0.57,
-          -1.28
+          -1.01
         ],
         "pivot_world": [
           1.3,
           0.57,
-          -1.28
+          -1.01
         ],
         "axis": "X",
         "default_visible": true
@@ -221384,12 +221384,12 @@
         "pivot_local": [
           1.3,
           0.57,
-          1.26
+          1.04
         ],
         "pivot_world": [
           1.3,
           0.57,
-          1.26
+          1.04
         ],
         "axis": "X",
         "default_visible": true
@@ -221400,12 +221400,12 @@
         "pivot_local": [
           1.3,
           0.57,
-          2.81
+          2.4
         ],
         "pivot_world": [
           1.3,
           0.57,
-          2.81
+          2.4
         ],
         "axis": "X",
         "default_visible": true
@@ -221448,12 +221448,12 @@
         "pivot_local": [
           0.0,
           0.0,
-          4.38
+          4.1749
         ],
         "pivot_world": [
           0.0,
           2.1188,
-          5.1551
+          4.95
         ],
         "axis": null,
         "default_visible": true
@@ -221480,12 +221480,12 @@
         "pivot_local": [
           0.55,
           1.69,
-          1.4365
+          1.19
         ],
         "pivot_world": [
           0.55,
           1.69,
-          1.4365
+          1.19
         ],
         "axis": null,
         "default_visible": true
@@ -221496,12 +221496,12 @@
         "pivot_local": [
           1.32,
           1.254,
-          1.4365
+          1.19
         ],
         "pivot_world": [
           1.32,
           1.254,
-          1.4365
+          1.19
         ],
         "axis": null,
         "default_visible": true
@@ -221544,12 +221544,12 @@
         "pivot_local": [
           -1.3,
           0.57,
-          -2.82
+          -2.38
         ],
         "pivot_world": [
           -1.3,
           0.57,
-          -2.82
+          -2.38
         ],
         "axis": "X",
         "default_visible": false
@@ -221560,12 +221560,12 @@
         "pivot_local": [
           -1.3,
           0.57,
-          -1.28
+          -1.01
         ],
         "pivot_world": [
           -1.3,
           0.57,
-          -1.28
+          -1.01
         ],
         "axis": "X",
         "default_visible": false
@@ -221576,12 +221576,12 @@
         "pivot_local": [
           -1.3,
           0.57,
-          1.26
+          1.04
         ],
         "pivot_world": [
           -1.3,
           0.57,
-          1.26
+          1.04
         ],
         "axis": "X",
         "default_visible": false
@@ -221592,12 +221592,12 @@
         "pivot_local": [
           -1.3,
           0.57,
-          2.81
+          2.4
         ],
         "pivot_world": [
           -1.3,
           0.57,
-          2.81
+          2.4
         ],
         "axis": "X",
         "default_visible": false
@@ -221608,12 +221608,12 @@
         "pivot_local": [
           1.3,
           0.57,
-          -2.82
+          -2.38
         ],
         "pivot_world": [
           1.3,
           0.57,
-          -2.82
+          -2.38
         ],
         "axis": "X",
         "default_visible": false
@@ -221624,12 +221624,12 @@
         "pivot_local": [
           1.3,
           0.57,
-          -1.28
+          -1.01
         ],
         "pivot_world": [
           1.3,
           0.57,
-          -1.28
+          -1.01
         ],
         "axis": "X",
         "default_visible": false
@@ -221640,12 +221640,12 @@
         "pivot_local": [
           1.3,
           0.57,
-          1.26
+          1.04
         ],
         "pivot_world": [
           1.3,
           0.57,
-          1.26
+          1.04
         ],
         "axis": "X",
         "default_visible": false
@@ -221656,12 +221656,12 @@
         "pivot_local": [
           1.3,
           0.57,
-          2.81
+          2.4
         ],
         "pivot_world": [
           1.3,
           0.57,
-          2.81
+          2.4
         ],
         "axis": "X",
         "default_visible": false
@@ -221704,12 +221704,12 @@
         "pivot_local": [
           0.0,
           0.0,
-          4.38
+          4.1749
         ],
         "pivot_world": [
           0.0,
           2.1188,
-          5.1551
+          4.95
         ],
         "axis": null,
         "default_visible": false
@@ -221736,12 +221736,12 @@
         "pivot_local": [
           0.55,
           1.69,
-          1.4365
+          1.19
         ],
         "pivot_world": [
           0.55,
           1.69,
-          1.4365
+          1.19
         ],
         "axis": null,
         "default_visible": false
@@ -221752,12 +221752,12 @@
         "pivot_local": [
           1.32,
           1.254,
-          1.4365
+          1.19
         ],
         "pivot_world": [
           1.32,
           1.254,
-          1.4365
+          1.19
         ],
         "axis": null,
         "default_visible": false
@@ -221817,7 +221817,7 @@
     "notes": "Original Python exterior model, no Blender or source mesh. generate_p3_artillery.py + artillery_parts.py + approved vehicle_parts.py. Actual-size hull and axle layout; named empty hinges with mesh children; metre UVs except Track U (0..1). Small fittings simplified; approximate/representative fields describe ambiguous roster designations. Blank white PBR roles; hidden LOD1 and static dark-role Wreck; hidden hull Collision_Box. LOD1 parts append _LOD1 with canonical_part extras. Wheeled vehicles have axle pivots and no tracks. Turret/Gun/Muzzle exist only with a weapon mount; recovery vehicles expose Boom and Spade. No national symbols or baked colours.",
     "sources": [
       {
-        "url": "https://www.mod.go.jp/gsdf/equipment/ve/",
+        "url": "https://www.mod.go.jp/gsdf/equipment/ve/index.html",
         "use": "Vehicle exterior identification and size class; original geometry, no photographs embedded."
       }
     ],
@@ -221852,7 +221852,7 @@
         "Wreck front"
       ]
     },
-    "sha256": "3c622aa23baf7bf2dba0b3186df863a0da002ec16f52f388fec35739679c98a0",
+    "sha256": "f9a408bfe856e83659c8bbcc1d8568c0fbb23658492e6ea6a381e18fe61eb7e3",
     "has_launcher": false,
     "launcher_tubes": 0
   },

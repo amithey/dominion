@@ -56,7 +56,7 @@ CONFIGS={
  'yj62':(12.0,3.0,3.05,[-3.95,-2.15,2.01,3.81],.66,False,1,0,2.50,3,1,1,.60,7.0,False,True,'yj62'),
  'brahmos':(12.70,3.0,3.10,[-4.85,-3.42,-1.99,1.86,3.29,4.72],.66,False,1,0,2.52,1,1,3,.80,8.40,True,True,'brahmos'),
  'df17':(15.0,3.20,3.10,[-5.31,-3.75,-1.80,3.05,5.16],.70,False,1,0,2.70,1,1,1,1.0,10.40,False,True,'df17'),
- 'shahedrail':(8.10,2.50,2.80,[-2.66,-1.10,2.58],.59,False,1,0,2.15,1,1,1,.32,4.20,False,True,'shahedrail'),
+ 'shahedrail':(8.10,2.50,2.80,[-2.66,-1.10,2.58],.59,False,1,0,2.15,1,1,1,.32,3.38,False,True,'shahedrail'),
 }
 
 def launch(slug,name,lod,key,source=None,representative='',approximate=False):
@@ -252,9 +252,9 @@ def drone_rail(slug,name,lod):
     m.tube('paint',(0,y,rear+.22),(0,y,tip-.38),.17,n)
     m.tube('paint',(0,y,tip-.38),(0,y,tip),.17,n,r_top=.002)
     for side in (-1,1):
-        q=[(0,y+.025,tip-1.04),(side*1.48,y+.025,rear+.80),(0,y+.025,rear+.25)]
+        q=[(0,y+.025,tip-1.04),(side*1.25,y+.025,rear+.80),(0,y+.025,rear+.25)]
         m.solid('paint',q+[(a,b+.04,c) for a,b,c in q],[(0,1,2),(5,4,3),(0,3,4,1),(1,4,5,2),(2,5,3,0)])
-        fin=[(side*1.48,y+.04,rear+.68),(side*1.48,y+.04,rear+1.31),(side*1.48,y+.65,rear+.78)]
+        fin=[(side*1.25,y+.04,rear+.68),(side*1.25,y+.04,rear+1.31),(side*1.25,y+.54,rear+.78)]
         m.solid('paint',fin+[(a+side*.035,b,c) for a,b,c in fin],[(0,1,2),(5,4,3),(0,3,4,1),(1,4,5,2),(2,5,3,0)])
     m.tube('metal_dark',(0,y,rear+.22),(0,y,rear-.08),.045,n);m.box('metal_dark',(0,y,rear-.10),(.77,.045,.035))
     for p in rig.parts:
