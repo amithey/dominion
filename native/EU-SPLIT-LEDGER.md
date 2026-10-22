@@ -103,6 +103,20 @@ the Cavour air wing of 3, the Tornado ECR's retirement date, and the Energy Part
 
 Rows still parked for members not yet added: Gripen (Sweden), chip-export control (Netherlands), Athens slot (Greece).
 
+## The Netherlands (commit 43abced)
+
+A new nation in `nations/netherlands.gd`. It took the rows parked for it: chip-export control (`ai_data.CONTROLLERS`, the
+machines that make the chips) and the Fennek, plus frigates, assault ships, the CV90 and the NH90 NFH the Dutch field. No
+nuclear weapons (an NPT party). Power: Chip Equipment Embargo (hostile): the target's military factories stand still for a
+minute, its income falls a tenth for two, relations fall 12, not on an ally. It follows the Goods Availability Act used on a
+chipmaker and the chip tools Dutch firms make; no report of a change to licensing in 2026 was found.
+
+Figures to check before release: Prime Minister Jetten (a minority cabinet sworn in on 23 February 2026), GDP 1,350,
+inflation 3.0, unemployment 3.9, debt 44, spending 2.2, Fragile States Index 22, navy factor 0.35, research +15%, the Fennek's
+service, PULS and Skyranger deliveries, and the embargo's 400 / 60 s / 120 s as balance.
+
+Rows still parked for members not yet added: Gripen (Sweden), Athens slot (Greece).
+
 ## Open questions to verify before release
 
 - France's scientific articles a million people (research +5% rests on the UK tier, not on a fresh figure).
