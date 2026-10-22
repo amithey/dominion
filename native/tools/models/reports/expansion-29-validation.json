@@ -1,0 +1,34 @@
+{
+  "batch": 29,
+  "files": [
+    "vehicles/shortRangeSAM__pantsir_s.glb",
+    "vehicles/shortRangeSAM__stormer_hvm.glb",
+    "vehicles/shortRangeSAM__type_11_sam.glb",
+    "vehicles/hpmVehicle__leonidas.glb",
+    "vehicles/counterBatteryRadar__an_tpq_53.glb"
+  ],
+  "sha256": {
+    "vehicles/shortRangeSAM__pantsir_s.glb": "0a3fa09e9522257df6ccd9011474ec3807811a3ebbf6931fed261641215b8297",
+    "vehicles/shortRangeSAM__stormer_hvm.glb": "2f4f40f5adf4ebdaf4ce770e395973be70d6cb5a9e875e7f44f11eeeb5019e1c",
+    "vehicles/shortRangeSAM__type_11_sam.glb": "fb7f9cf7505f3ff72d12a1ea9b465bd2dc83a4dc66e870d152e9749b7cb33c43",
+    "vehicles/hpmVehicle__leonidas.glb": "ea581f9c57dfb39c7aeb4dd843d3eb4e659e44c4729e6323082796cd4540efc0",
+    "vehicles/counterBatteryRadar__an_tpq_53.glb": "09acf4936dcc76098306a92a9035064b10b2bf0ae152f5fb6bf8a7d1735e3950"
+  },
+  "maximum_triangles": [
+    11392,
+    2144
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p4_air_defence.py",
+    "air_defence_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
