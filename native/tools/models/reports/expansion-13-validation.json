@@ -1,0 +1,36 @@
+{
+  "batch": 13,
+  "files": [
+    "vehicles/himars__chunmoo_guided_cgr_080.glb",
+    "vehicles/himars__europuls.glb",
+    "vehicles/himars__fatah_ii.glb",
+    "vehicles/himars__fath_360_launcher.glb",
+    "vehicles/himars__guided_pinaka.glb",
+    "vehicles/himars__guided_rocket_launcher.glb"
+  ],
+  "sha256": {
+    "vehicles/himars__chunmoo_guided_cgr_080.glb": "3f0f6b18444bb341c95e98dde3673f5216b1bccb6cc2365ee157cca64703de8b",
+    "vehicles/himars__europuls.glb": "df542b2afb21ad41532b54e477c46935202062ce95a746956e08a7de9e672048",
+    "vehicles/himars__fatah_ii.glb": "0d6888f0ea59abf78036f664ef48de28e95e04b6ccb9a1971e2e5cff38de4fe3",
+    "vehicles/himars__fath_360_launcher.glb": "13479c9b04633df572fb80684cbd97883cc88ea273c767899546ac743f60e9d4",
+    "vehicles/himars__guided_pinaka.glb": "9bafca09a1055f00cd2365e7900afaca8b315132c93a2c56f86706051fc4ab59",
+    "vehicles/himars__guided_rocket_launcher.glb": "c7abf0659114c534494cfdf54af99495064d68dad59e87124e92daaa85b6e13c"
+  },
+  "maximum_triangles": [
+    8852,
+    1592
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py",
+    "artillery_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
