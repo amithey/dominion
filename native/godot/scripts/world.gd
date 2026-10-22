@@ -970,81 +970,9 @@ func mesh_transform(root: Node3D, node: Node3D) -> Transform3D:
 
 # ---------------------------------------------------------------- grass
 
-# One tuft of real blade triangles (no alpha texture).
-func make_tuft() -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 7
-	for i in range(14):
-		var a := rng.randf() * TAU
-		var base := Vector3(cos(a), 0, sin(a)) * rng.randf() * 0.35
-		var across := Vector3(cos(a + 1.4), 0, sin(a + 1.4))
-		var h := rng.randf_range(0.28, 0.6)
-		var w := rng.randf_range(0.05, 0.09)
-		var lean := Vector3(cos(a), 0, sin(a)) * rng.randf_range(0.05, 0.28)
-		# Normals lean up so tufts light like the ground they stand on.
-		st.set_normal(Vector3.UP.lerp(across.cross(Vector3.UP), 0.3).normalized())
-		st.set_uv(Vector2(0, 0))
-		st.add_vertex(base - across * w)
-		st.set_uv(Vector2(1, 0))
-		st.add_vertex(base + across * w)
-		st.set_uv(Vector2(0.5, 1))
-		st.add_vertex(base + lean + Vector3(0, h, 0))
-	return st.commit()
-
-# Tufts on flat grassland in 32 m cells that are only drawn near the camera.
-func build_grass() -> void:
-	if ResourceLoader.exists("res://assets/art/foliage/grass_tufts_atlas_2048.png"):
-		build_grass_cards()
-		return
-	var density := 0.6 if quality == "high" else 0.35
-	var reach := 110.0 if quality == "high" else 75.0
-	var tuft := make_tuft()
-	var material := ShaderMaterial.new()
-	material.shader = load("res://shaders/grass.gdshader")
-	material.set_shader_parameter("noise_tex", noise_texture)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 11
-	var half := float(map.mapSize) * 0.5
-	var cell := 32.0
-	var per_cell := int(cell * cell * density)
-	var cx := -half
-	while cx < half:
-		var cz := -half
-		while cz < half:
-			var transforms := []
-			for i in range(per_cell):
-				var x := cx + rng.randf() * cell
-				var z := cz + rng.randf() * cell
-				var y := height_at(x, z)
-				if y < 1.8 or normal_at(x, z).y < 0.94:
-					continue
-				var size := rng.randf_range(0.7, 1.35)
-				transforms.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(size, size * rng.randf_range(0.8, 1.2), size)), Vector3(x, y - 0.05, z)))
-			if transforms.size() > 8:
-				var mm := MultiMesh.new()
-				mm.transform_format = MultiMesh.TRANSFORM_3D
-				mm.mesh = tuft
-				mm.instance_count = transforms.size()
-				for i in range(transforms.size()):
-					mm.set_instance_transform(i, transforms[i])
-				var node := MultiMeshInstance3D.new()
-				node.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF # grass is static; clearing is instantaneous
-				node.multimesh = mm
-				node.set_meta("cell_center", Vector2(cx + cell * 0.5, cz + cell * 0.5))
-				node.material_override = material
-				node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-				node.visibility_range_end = reach
-				node.visibility_range_end_margin = 12.0
-				add_child(node)
-				grass_nodes.append(node)
-			cz += cell
-		cx += cell
-
 ## The meadow from atlas cards (foliage_cards.gd): grass tufts of twelve kinds, wildflowers among them, shrubs on open ground and
 ## reeds along the shore, in 32 m cells drawn only near the camera.
-func build_grass_cards() -> void:
+func build_grass() -> void:
 	var Cards := preload("res://scripts/foliage_cards.gd")
 	var high: bool = quality == "high"
 	var density := 0.5 if high else 0.34
