@@ -1,0 +1,36 @@
+{
+  "batch": 21,
+  "files": [
+    "vehicles/aaVehicle__m1992_30_mm.glb",
+    "vehicles/aaVehicle__pantsir_s1.glb",
+    "vehicles/aaVehicle__pgz_09.glb",
+    "vehicles/aaVehicle__rbs_70_vehicle.glb",
+    "vehicles/aaVehicle__sidam_25.glb",
+    "vehicles/aaVehicle__skyranger_30.glb"
+  ],
+  "sha256": {
+    "vehicles/aaVehicle__m1992_30_mm.glb": "3f20c9f01c0b77d5e2721613807e1ea651603ea85807806430c5ae241a2f97ac",
+    "vehicles/aaVehicle__pantsir_s1.glb": "15384f652a5c166d9ddd7f9a04bed86a45ac2989ec9b97f9862f5c485feb98f4",
+    "vehicles/aaVehicle__pgz_09.glb": "ac05cbe773f5b5ab75e3fd4b50409d966c859192b65b26cde6592fe028c87c1b",
+    "vehicles/aaVehicle__rbs_70_vehicle.glb": "e6f63eefbf850d680f99d028425942773343c12ea0a67732c8b3896a4d1aa29e",
+    "vehicles/aaVehicle__sidam_25.glb": "523a1367074083be0ef5d249abd0db60587affa935d5033641a75d9a8bb44425",
+    "vehicles/aaVehicle__skyranger_30.glb": "7c27d70bf2878652ef3d42437a8d2f37bb06ef4248f47c089638ec7105aebd4a"
+  },
+  "maximum_triangles": [
+    11044,
+    2144
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p4_air_defence.py",
+    "air_defence_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}

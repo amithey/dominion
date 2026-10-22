@@ -56,7 +56,7 @@ CARRIERS={
  'gdf':(5.30,2.70,.70,'wheeled',1,.45,1,False,'gun_trailer',[0]),
  'zu23':(4.60,2.30,.64,'wheeled',1,.40,1,False,'gun_trailer',[0]),
  'technical':(5.80,2.05,1.95,'wheeled',2,.43,1,True,'truck',[-1.70,1.60]),
- 'rbstruck':(6.90,2.40,2.60,'wheeled',2,.53,1,True,'truck',[-2.10,2.10]),
+ 'rbstruck':(6.001,2.072,2.08,'wheeled',3,.405,1,True,'truck',[-1.766,-.65,2.39]),
  'tripod':(2.40,2.0,.65,'static',0,0,1,False,'stand',[]),
  'truck6':(9.40,2.55,2.90,'wheeled',3,.60,1,True,'truck',[-3.10,-1.48,2.98]),
  'radar6':(8.50,2.50,2.78,'wheeled',3,.57,1,True,'truck',[-2.74,-1.15,2.64]),
@@ -212,7 +212,7 @@ def aaVehicle__pgz_09(lod=0):
     return aa('aaVehicle__pgz_09', 'PGZ-09', lod, 'pgz', 'korkut', True, 'china', False, '')
 
 def aaVehicle__rbs_70_vehicle(lod=0):
-    return aa('aaVehicle__rbs_70_vehicle', 'RBS 70 (vehicle)', lod, 'rbstruck', 'rbs70', False, 'rbs', True, 'RBS 70 on representative 4x4 military truck')
+    return aa('aaVehicle__rbs_70_vehicle', 'RBS 70 (vehicle)', lod, 'rbstruck', 'rbs70', False, 'https://afmsafety.com.au/wp-content/uploads/2018/03/UHB-LandRover-110-6x6-Air-Defence-FIre-Unit-Vehicle-FUV-661562529.pdf', True, 'Australian Land Rover 6x6 fire unit vehicle; rear-tray RBS 70 display, equipment stowage approximated')
 
 def aaVehicle__sidam_25(lod=0):
     return aa('aaVehicle__sidam_25', 'SIDAM 25', lod, 'sidam', 'sidam', False, 'weg', False, '')

@@ -15,6 +15,7 @@ def carrier(slug,name,lod,cfg,source,approximate=False,representative=''):
     L,W,H,mode,N,r,k,front,family,axles=cfg
     s=ArmourSpec(slug,name,L,W,H,mode,N,r,family,'',[],source,k,front,approximate,representative,list(axles))
     if family=='truck' and N==2:s.details.update(cab=1.75,hood=1.20)
+    if slug=='aaVehicle__rbs_70_vehicle':s.details.update(cab=1.32,hood=1.05)
     if mode=='wheeled' and family not in ('gun_trailer','aa_trailer'):
         rig,s=build(s,lod)
         # The rotating AA mounting occupies the hull roof commander position.
@@ -204,12 +205,43 @@ def gun_mount(rig,s,lod,style,has_radar=True):
         s.turret_z=-.91
     if style=='pantsir':
         floor=s.wheel_radius*2.05+.18
+        # Rear combat module above the equipment shelter, clear of the cab.
+        delta=np.array([0,.72,-2.05])
+        for part in rig.parts:
+            if part['name']=='Turntable' or part['parent'] in ('Turntable','Launcher'):
+                part['pivot']+=delta
+                if part['mesh'] is not None:part['mesh'].shift(delta)
+                rig.pivots[part['name']]=part['pivot']
+        for tip in s.details['muzzle_positions']:
+            for j in range(3):tip[j]+=float(delta[j])
+        shelter=Mesh();shelter.box('paint',(0,floor+.48,-.83),(2.39,.96,5.32))
+        for side in (-1,1):
+            shelter.box('metal_dark',(side*1.206,floor+.52,.32),(.025,.48,.90))
+        rig.add('Equipment_Shelter','Hull',(0,floor,-.83),shelter)
         for side,label in ((-1,'L'),(1,'R')):
             for i,zz in enumerate((-s.length*.34,s.length*.10)):
                 p=np.array([side*(s.width/2-.18),floor,zz]);leg=Mesh()
                 beam(leg,'paint',(side*s.width*.28,floor,zz),p,.13)
                 leg.tube('paint',p,p+[0,-.65,0],.10,6 if lod else 12);leg.box('metal_dark',p+[0,-.70,0],(.40,.10,.43))
                 rig.add('Outrigger_'+label+str(i),'Hull',p,leg,translation_axis='Y')
+    if style=='rbs70' and s.mobility=='wheeled':
+        # Fire unit carried on the rear tray, with sight and operator seat.
+        delta=np.array([0,.45,-1.30])
+        for part in rig.parts:
+            if part['name']=='Turntable' or part['parent'] in ('Turntable','Launcher'):
+                part['pivot']+=delta
+                if part['mesh'] is not None:part['mesh'].shift(delta)
+                rig.pivots[part['name']]=part['pivot']
+        for tip in s.details['muzzle_positions']:
+            for j in range(3):tip[j]+=float(delta[j])
+        support=Mesh();tray=s.wheel_radius*2.05+.18
+        for i in range(3):
+            angle=i*math.tau/3
+            foot=np.array([.39*math.sin(angle),tray+.02,-1.30+.39*math.cos(angle)])
+            beam(support,'paint',(0,base+.45,-1.30),foot,.075)
+        for side in (-1,1):
+            support.box('paint',(side*.72,tray+.21,-.22),(.39,.42,1.45))
+        rig.add('Launcher_Stand','Hull',(0,tray,-1.30),support)
     return rig,s
 
 def sam(slug,name,lod,config,source,approximate=False,representative=''):
