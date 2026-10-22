@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 97,
+  "ready_files": 102,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -204,6 +204,17 @@
         "vehicles/coastalASM__nsm_coastal_defence_system.glb",
         "vehicles/coastalASM__rk_360mc_neptune.glb"
       ]
+    },
+    {
+      "batch": 18,
+      "report": "expansion-18-validation.json",
+      "files": [
+        "vehicles/coastalASM__type_12_ssm.glb",
+        "vehicles/coastalASM__yj_62_coastal_battery.glb",
+        "vehicles/df17__df_17_launcher.glb",
+        "vehicles/shahedLauncher__geran_2_launcher.glb",
+        "vehicles/shahedLauncher__shahed_launcher.glb"
+      ]
     }
   ],
   "priorities": {
@@ -235,7 +246,7 @@
     "P3": {
       "requested_rows": 93,
       "unique_files": 93,
-      "ready_files": 88,
+      "ready_files": 93,
       "ready_slugs": [
         "artillery__2s19_msta_s",
         "artillery__2s1_gvozdika_d_30",
@@ -269,6 +280,9 @@
         "coastalASM__nmesis",
         "coastalASM__nsm_coastal_defence_system",
         "coastalASM__rk_360mc_neptune",
+        "coastalASM__type_12_ssm",
+        "coastalASM__yj_62_coastal_battery",
+        "df17__df_17_launcher",
         "directFire__amx_10_rc",
         "directFire__ee_9_cascavel",
         "directFire__harimau",
@@ -315,6 +329,8 @@
         "mlrs__pinaka",
         "mlrs__puls",
         "mlrs__t_122_sakarya",
+        "shahedLauncher__geran_2_launcher",
+        "shahedLauncher__shahed_launcher",
         "tos1a__tos_1a_solntsepyok",
         "towedHowitzer__fh70",
         "towedHowitzer__l118_light_gun",
@@ -326,13 +342,7 @@
         "wheeledHowitzer__sh_15",
         "wheeledHowitzer__type_19_howitzer"
       ],
-      "remaining_slugs": [
-        "coastalASM__type_12_ssm",
-        "coastalASM__yj_62_coastal_battery",
-        "df17__df_17_launcher",
-        "shahedLauncher__geran_2_launcher",
-        "shahedLauncher__shahed_launcher"
-      ]
+      "remaining_slugs": []
     },
     "P4": {
       "requested_rows": 68,

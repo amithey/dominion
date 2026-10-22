@@ -1,0 +1,34 @@
+{
+  "batch": 18,
+  "files": [
+    "vehicles/coastalASM__type_12_ssm.glb",
+    "vehicles/coastalASM__yj_62_coastal_battery.glb",
+    "vehicles/df17__df_17_launcher.glb",
+    "vehicles/shahedLauncher__geran_2_launcher.glb",
+    "vehicles/shahedLauncher__shahed_launcher.glb"
+  ],
+  "sha256": {
+    "vehicles/coastalASM__type_12_ssm.glb": "fb98ea064393bdefdf2e4941155904d2f0dc9e9f2074b56232d0f16afc04889c",
+    "vehicles/coastalASM__yj_62_coastal_battery.glb": "5a0f0813944f01b83e48073d6fde1807043b80baca577ffd0233e9dcb9892592",
+    "vehicles/df17__df_17_launcher.glb": "654332006e97eb0d8863a4f1885a887be96e1415bc3e21a3970df86ebf91e7bc",
+    "vehicles/shahedLauncher__geran_2_launcher.glb": "6b4fe0c1a1538169c7ea2a4965987ce176e8bfd12c2050a830505ecbcab9bd56",
+    "vehicles/shahedLauncher__shahed_launcher.glb": "c0b9c7370c4af0b8ddd8336ff2e05f6a309e3fe206905d40d8d070f200cdd8d3"
+  },
+  "maximum_triangles": [
+    7550,
+    1386
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, two LOD limits",
+    "canonical track coordinates, UV seams and five shader phases where tracked",
+    "real axle layout and count",
+    "all hinge children propagate; turret yaw, gun elevation and recoil",
+    "independent trimesh load and winding; native Godot load and every pivot",
+    "four saved-GLB views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p3_artillery.py",
+    "artillery_parts.py",
+    "validate_p3_artillery.py"
+  ]
+}
