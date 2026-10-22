@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 200,
+  "ready_files": 206,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -415,6 +415,18 @@
         "aircraft/gunship__mi_24.glb",
         "aircraft/gunship__mi_24v.glb"
       ]
+    },
+    {
+      "batch": 36,
+      "report": "expansion-36-validation.json",
+      "files": [
+        "aircraft/gunship__mi_24v_mi_35.glb",
+        "aircraft/gunship__mi_28ne.glb",
+        "aircraft/gunship__mi_35p.glb",
+        "aircraft/gunship__t129_atak.glb",
+        "aircraft/gunship__t129_atak_mi_35m.glb",
+        "aircraft/gunship__tiger.glb"
+      ]
     }
   ],
   "priorities": {
@@ -623,7 +635,7 @@
     "P5": {
       "requested_rows": 57,
       "unique_files": 57,
-      "ready_files": 30,
+      "ready_files": 36,
       "ready_slugs": [
         "gunship__ah_1f_cobra_z_10me",
         "gunship__ah_64_saraf",
@@ -635,6 +647,12 @@
         "gunship__lch_prachand",
         "gunship__mi_24",
         "gunship__mi_24v",
+        "gunship__mi_24v_mi_35",
+        "gunship__mi_28ne",
+        "gunship__mi_35p",
+        "gunship__t129_atak",
+        "gunship__t129_atak_mi_35m",
+        "gunship__tiger",
         "helicopter__bell_412epi",
         "helicopter__dhruv_alh",
         "helicopter__h225m",
@@ -657,12 +675,6 @@
         "helicopter__z_20"
       ],
       "remaining_slugs": [
-        "gunship__mi_24v_mi_35",
-        "gunship__mi_28ne",
-        "gunship__mi_35p",
-        "gunship__t129_atak",
-        "gunship__t129_atak_mi_35m",
-        "gunship__tiger",
         "gunship__toufan",
         "gunship__z_10",
         "heavyLift__ch_47d_chinook",

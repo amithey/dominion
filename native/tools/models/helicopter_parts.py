@@ -100,17 +100,19 @@ def body(rig,s,lod):
     ty=s.details.get('tail_y',s.hub_y-.35);tz=-L*.465
     if s.family!='chinook':
         start=L*s.details.get('boom_start',-.10);sy=cy+H*.23
-        by=s.details.get('boom_y',ty)
-        shell_surface(m,'paint',[(tz,by,W*.065,H*.07),(-L*.33,(by+sy)/2,W*.12,H*.14),(start,sy,W*.30,H*.28)],lod)
-    if s.family in ('mi8','mi17','mi26'):
-        count=5 if s.family!='mi26' else 8
+        by=s.details.get('boom_y',ty);btz=tz
+        if s.details.get('fenestron'):btz+=s.tail_diameter*.55;by=ty-s.tail_diameter*.35
+        shell_surface(m,'paint',[(btz,by,W*.065,H*.07),(-L*.33,(by+sy)/2,W*.12,H*.14),(start,sy,W*.30,H*.28)],lod)
+    if s.family in ('mi8','mi17','mi26','chinook'):
+        count=6 if s.family=='chinook' else 5 if s.family!='mi26' else 8
         for side in (-1,1):
-            for z in np.linspace(L*.095,L*.34,count):
+            for z in np.linspace(-L*.28 if s.family=='chinook' else L*.095,L*.29 if s.family=='chinook' else L*.34,count):
                 x=side*(W*.5+.010);rad=.20 if s.family!='mi26' else .26
+                if s.family=='chinook':x=side*(float(np.interp(z,np.asarray(sections)[:,0],np.asarray(sections)[:,2]))+.010);rad=.18
                 m.tube('metal_dark',(x-side*.025,cy+.12,z),(x+side*.035,cy+.12,z),rad+.045,8 if lod else 20)
                 m.tube('glass',(x+side*.036,cy+.12,z),(x+side*.047,cy+.12,z),rad,8 if lod else 20)
     # Static fins and tailplane are physical closed wedges.
-    if s.family not in ('chinook','ka27','ka52'):
+    if s.family not in ('chinook','ka27','ka52') and not s.details.get('fenestron'):
         finx=.06;finH=max(.70,s.tail_diameter*.50)
         fy=s.details.get('boom_y',ty)-.35
         verts=[(-finx,fy,tz+.85),(finx,fy,tz+.85),(-finx,ty+finH,tz-.12),
@@ -124,11 +126,17 @@ def body(rig,s,lod):
         for side in (-1,1):
             m.box('paint',(side*W*.58,ty+.25,tz+.75),(.095,1.05,1.30))
         m.box('paint',(0,ty-.20,tz+.75),(W*1.35,.095,1.20))
+    if s.family=='chinook':
+        from vehicle_parts import profile_hull
+        ay=s.details.get('aft_hub_y',s.hub_y+1.12)
+        profile_hull(m,'paint',[(-L*.47,b+H*.63,W*.30),(-L*.45,ay-.30,W*.19),
+            (-L*.29,ay-.30,W*.19),(-L*.24,b+H*.65,W*.31)])
     if s.family in ('mi8','mi17','z8','chinook'):
         for side in (-1,1):
             pod=Mesh();pz=L*.20 if s.family in ('mi8','mi17') else -L*.01;py=b+H*.23
-            shell_surface(pod,'paint',[(pz-L*.20,py,W*.12,H*.12),(pz-L*.15,py,W*.19,H*.18),
-                         (pz+L*.12,py,W*.19,H*.18),(pz+L*.17,py,W*.10,H*.10)],lod)
+            a,c,d,e=(-.36,-.32,.30,.34) if s.family=='chinook' else (-.20,-.15,.12,.17)
+            shell_surface(pod,'paint',[(pz+L*a,py,W*.12,H*.12),(pz+L*c,py,W*.19,H*.18),
+                         (pz+L*d,py,W*.19,H*.18),(pz+L*e,py,W*.10,H*.10)],lod)
             pod.shift((side*W*.47,0,0));merge_mesh(m,pod)
     for side in (-1,1):
         # Supported blank identification panels and side access handles.
@@ -149,8 +157,9 @@ def engines(rig,s,lod,cy):
         ez=-s.length*.34 if s.family=='chinook' else s.length*.04
         ey=cy+s.body_height*.48 if s.family!='chinook' else s.hub_y+.25
         length=s.length*.17;rad=s.width*.19
-        if s.attack and s.engines==2 and s.family!='mi24':
+        if (s.attack and s.engines==2 and s.family!='mi24') or s.family=='seasprite':
             x=(i-.5)*s.width*1.20;ey=cy+s.body_height*.35;rad=s.width*.23;length=s.length*.15
+        if s.family=='chinook':x=(i-.5)*s.width*.95;ey=s.details.get('aft_hub_y',s.hub_y+1.12)-1.10
         if s.engines==3:
             x=(-s.width*.23,s.width*.23,0)[i]
             ez=s.length*(.05 if i<2 else -.13);rad=s.width*.16
@@ -163,12 +172,12 @@ def engines(rig,s,lod,cy):
         rig.add('Engine_'+str(i),'Fuselage',(x,ey,ez),m)
         rig.add('Exhaust_'+str(i),'Fuselage',(x,ey,ez-length*.64))
 
-def rotor_mesh(radius,blades,lod,chord=None,phase=0):
+def rotor_mesh(radius,blades,lod,chord=None,phase=0,root_fraction=.12,asymmetric=False):
     m=Mesh();chord=chord or max(.22,radius*.059);n=8 if lod else 24
     m.tube('metal_dark',(0,-.17,0),(0,.16,0),max(.12,radius*.038),n)
     for i in range(blades):
-        R=rotation([0,1,0],i*math.tau/blades+phase);blade=Mesh();rings=[]
-        radii=np.linspace(radius*.12,radius,4 if lod else 20)
+        R=rotation([0,1,0],i*math.tau/blades+phase+(.045*math.sin(i*math.pi/2) if asymmetric else 0));blade=Mesh();rings=[]
+        radii=np.linspace(radius*root_fraction,radius,4 if lod else 20)
         for rr in radii:
             f=rr/radius;c=chord*(.95 if f<.82 else max(.42,1-(f-.82)*2.8));sweep=-radius*.045*max(0,(f-.80)/.20)
             profile=[(-.5,0),(-.32,.075),(.23,.045),(.5,0),(.20,-.032),(-.33,-.035)]
@@ -180,7 +189,7 @@ def rotor_mesh(radius,blades,lod,chord=None,phase=0):
             for j in range(6):
                 k=(j+1)%6;q=[a[j],a[k],b[k],b[j]]
                 blade.face('paint',q,np.mean(q,axis=0)-mid)
-        beam(blade,'metal_dark',(radius*.02,0,0),(radius*.16,0,0),max(.035,chord*.16))
+        beam(blade,'metal_dark',(radius*.02,0,0),(radius*max(.16,root_fraction+.03),0,0),max(.035,chord*.16))
         if not lod:
             beam(blade,'metal_dark',(radius*.045,-.14,chord*.13),(radius*.12,0,chord*.13),.028)
         merge_mesh(m,blade,R)
@@ -188,7 +197,7 @@ def rotor_mesh(radius,blades,lod,chord=None,phase=0):
 
 def rotors(rig,s,lod,ty,tz):
     hubs=[('Rotor_Main',(0,s.hub_y,s.hub_z),0)]
-    if s.family=='chinook':hubs.append(('Rotor_Main_Aft',(0,s.hub_y+1.12,-s.length*.36),math.pi/3))
+    if s.family=='chinook':hubs.append(('Rotor_Main_Aft',(0,s.details.get('aft_hub_y',s.hub_y+1.12),s.details.get('aft_hub_z',-s.length*.36)),math.pi/3))
     elif s.family in ('ka27','ka52'):
         hubs.append(('Rotor_Main_Upper',(0,s.hub_y+.72,s.hub_z),math.pi/3))
     for name,p,phase in hubs:
@@ -199,11 +208,27 @@ def rotors(rig,s,lod,ty,tz):
         rig.add(name+'_Mast','Fuselage',(p[0],p[1]-.62,p[2]),mast)
     if s.tail_blades:
         cant=math.radians(s.tail_cant);offset=s.tail_side*s.width*.12
+        if s.details.get('fenestron'):offset=0
         p=np.array([offset*math.cos(cant),ty+offset*math.sin(cant),tz])
-        m=rotor_mesh(s.tail_diameter/2,s.tail_blades,lod,chord=max(.10,s.tail_diameter*.045))
+        ducted=s.details.get('fenestron',False)
+        m=rotor_mesh(s.tail_diameter*(.495 if ducted else .5),s.tail_blades,lod,chord=max(.065 if ducted else .10,s.tail_diameter*.045),
+            root_fraction=.30 if ducted else .12,asymmetric=s.family=='oh1')
         posed=Mesh();merge_mesh(posed,m,rotation([0,0,1],cant-math.pi/2),p)
         q=[0,0,math.sin(cant/2),math.cos(cant/2)]
         rig.add('Rotor_Tail','Fuselage',p,posed,'X',frame_rotation=q,blade_count=s.tail_blades,diameter_metres=s.tail_diameter)
+        if ducted:
+            rim=Mesh();outer=s.tail_diameter*.62;inner=s.tail_diameter*.505;n=12 if lod else 32;t=.11
+            def pt(x,r,a):return np.array([x,ty+r*math.cos(a),tz+r*math.sin(a)])
+            for i in range(n):
+                a=i*math.tau/n;b=(i+1)*math.tau/n
+                for x,sign in ((-t,-1),(t,1)):
+                    rim.face('paint',[pt(x,inner,a),pt(x,outer,a),pt(x,outer,b),pt(x,inner,b)],[sign,0,0])
+                radial=np.array([0,math.cos((a+b)/2),math.sin((a+b)/2)])
+                for rr,sign in ((inner,-1),(outer,1)):
+                    rim.face('paint',[pt(-t,rr,a),pt(t,rr,a),pt(t,rr,b),pt(-t,rr,b)],radial*sign)
+            rim.box('paint',(0,ty+outer+.16,tz-.10),(.19,.38,.65))
+            rim.box('paint',(0,ty-.25,tz+s.length*.11),(s.width*1.48,.075,s.length*.075))
+            rig.add('Fenestron_Surround','Fuselage',(0,ty,tz),rim)
 
 def landing_gear(rig,s,lod):
     L=s.length;W=s.width;b=s.belly;H=s.body_height
@@ -220,17 +245,20 @@ def landing_gear(rig,s,lod):
     if s.gear=='tailwheel':
         positions=[('Left',-W*.65,L*.12),('Right',W*.65,L*.12),('Tail',0,L*s.details.get('tail_gear_z',-.42))]
     elif s.gear=='four':
-        positions=[('Left',-W*.56,L*.29),('Right',W*.56,L*.29),('Left_Aft',-W*.56,-L*.30),('Right_Aft',W*.56,-L*.30)]
+        spread=s.details.get('gear_spread',.56)
+        positions=[('Left',-W*spread,L*.29),('Right',W*spread,L*.29),('Left_Aft',-W*spread,-L*.30),('Right_Aft',W*spread,-L*.30)]
     else:
         main_z=L*s.details.get('main_gear_z',-.08)
-        positions=[('Left',-W*.63,main_z),('Right',W*.63,main_z),('Nose',0,L*.36)]
+        spread=s.details.get('gear_spread',.63)
+        positions=[('Left',-W*spread,main_z),('Right',W*spread,main_z),('Nose',0,L*.36)]
     for label,x,z in positions:
         rr=radius*.65 if label=='Tail' else radius*.77 if label=='Nose' else radius
         p=np.array([x*.65,b+H*.22,z]);m=Mesh();axle=np.array([x,rr,z])
+        if s.family=='mi26' and x:p[0]=math.copysign(W*.41,x)
         if label=='Tail':p[1]=s.details.get('tail_gear_anchor_y',p[1])
         beam(m,'paint',p,axle+[0,.09,0],max(.075,rr*.22))
         m.tube('metal_dark',p*.55+(axle+[0,.09,0])*.45,axle+[0,.09,0],max(.035,rr*.12),6 if lod else 12)
-        rig.add('Gear_'+label,'Fuselage',p,m,'X' if s.family in ('nh90','h225','merlin','mi24','ka52','panther') else None)
+        rig.add('Gear_'+label,'Fuselage',p,m,'X' if s.family in ('nh90','h225','merlin','mi24','ka52','panther','seasprite') else None)
         tyre=Mesh();half=rr*.33
         lathe_x(tyre,[(-half,0,'metal_dark'),(-half,rr*.68,'rubber'),(-half*.65,rr,'rubber'),
                    (half*.65,rr,'rubber'),(half,rr*.68,'metal_dark'),(half,0,'metal_dark')],segments=8 if lod else 20)
@@ -274,7 +302,7 @@ def armament(rig,s,lod):
             f=(j+1)/(stations+.12);x=side*(W*.50+(span/2-W*.50)*f);y=wing_y-.36+drop*f
             p=np.array([x,y,z-.10]);store=Mesh()
             beam(store,'paint',(x,wing_y+drop*f,z-.10),p,.11)
-            is_rocket=j==0
+            is_rocket=j==0 and not s.details.get('scout_aam')
             if is_rocket:
                 length=1.45;rad=.255;tip=p+[0,0,length*.65]
                 store.tube('paint',p-[0,0,length*.35],tip,rad,8 if lod else 24)
@@ -297,6 +325,7 @@ def armament(rig,s,lod):
             name='Store_'+label+str(j);rig.add(name,'Fuselage',p,store)
             rig.add('Muzzle_'+str(muzzles),name,tip,forward='+Z',purpose='store launch station');muzzles+=1
     optics=Mesh();p=np.array([0,b+H*.51,L*.46])
+    if s.details.get('roof_sensor'):p=np.array([0,b+H*1.03,L*.12])
     optics.tube('paint',p,p+[0,0,.28],.22,8 if lod else 20)
     optics.tube('glass',p+[0,0,.285],p+[0,0,.30],.17,8 if lod else 20)
     rig.add('Sight','Fuselage',p,optics,'Y')
@@ -308,6 +337,38 @@ def armament(rig,s,lod):
     s.details['muzzle_count']=muzzles
     s.details['muzzle_positions']={p['name']:p['pivot'].tolist() for p in rig.parts if p['name'].startswith('Muzzle_')}
     return rig
+
+def naval_fittings(rig,s,lod):
+    L=s.length;W=s.width;H=s.body_height;b=s.belly
+    if s.details.get('naval_radar',True):
+        m=Mesh();p=np.array([0,b+.10,L*.28]);rad=W*.24
+        m.tube('paint',p-[0,.23,0],p,rad*.80,8 if lod else 24,r_top=rad)
+        m.tube('paint',p,p+[0,.18,0],rad,8 if lod else 24,r_top=rad*.60)
+        rig.add('Radar','Fuselage',p,m,'Y',enclosed_antenna=True)
+    # Search-and-rescue winch on the starboard cabin side.
+    m=Mesh();p=np.array([W*.48,b+H*.84,L*.035])
+    beam(m,'paint',p,p+[W*.18,0,.17],.10)
+    m.tube('metal_dark',p+[W*.18,-.10,.17],p+[W*.18,.10,.17],.13,6 if lod else 12)
+    m.tube('metal_dark',p+[W*.18,-.10,.17],p+[W*.18,-H*.60,.17],.018,4 if lod else 6)
+    rig.add('Hoist','Fuselage',p,m)
+    store=s.details.get('naval_store','torpedo')
+    if store=='internal':
+        for side,label in ((-1,'L'),(1,'R')):
+            door=Mesh();p=np.array([side*W*.19,b+.05,L*.13])
+            door.box('metal_dark',p-[side*W*.095,0,0],(W*.19,.045,L*.18))
+            rig.add('Bay_Door_'+label,'Fuselage',p,door,'Z')
+        rig.add('Muzzle_0','Fuselage',(0,b+.02,L*.13),purpose='internal torpedo drop station')
+    elif store!='none':
+        for i,(side,label) in enumerate(((-1,'L'),(1,'R'))):
+            p=np.array([side*W*.68,b+H*.25,L*.12]);m=Mesh()
+            beam(m,'paint',(side*W*.42,p[1]+.25,p[2]),p,.13)
+            length=2.85 if store=='torpedo' else 2.50;radius=.162 if store=='torpedo' else .12
+            a=p-[0,0,length*.43];tip=a+[0,0,length]
+            m.tube('paint',a,tip,radius,8 if lod else 24)
+            m.tube('metal_dark',tip,tip+[0,0,.15],radius,8 if lod else 24,r_top=.045)
+            m.box('metal_dark',a+[0,0,.20],(.46,.04,.31));m.box('metal_dark',a+[0,0,.20],(.04,.46,.31))
+            rig.add('Store_'+label,'Fuselage',p,m)
+            rig.add('Muzzle_'+str(i),'Store_'+label,tip+[0,0,.15],forward='+Z',purpose=store+' station')
 
 def build(s,lod=0):
     rig=Rig(lod);cy,ty,tz=body(rig,s,lod)
@@ -332,6 +393,11 @@ def build(s,lod=0):
             for yy in np.linspace(.10,s.body_height*.50,7):ramp.box('metal_dark',p+[0,yy,-.038],(s.width*.43,.035,.018))
         rig.add('Cargo_Ramp','Fuselage',p,ramp,'X')
     if s.attack:armament(rig,s,lod)
+    if s.naval:naval_fittings(rig,s,lod)
+    if s.family in ('chinook','mi26','z8'):
+        p=np.array([0,s.belly+.10,-s.length*(.50 if s.family=='chinook' else .15)-.045]);ramp=Mesh()
+        ramp.box('paint',p+[0,s.body_height*.30,0],(s.width*.57,s.body_height*.60,.07))
+        rig.add('Cargo_Ramp','Fuselage',p,ramp,'X')
     for part in rig.parts:
         if part['mesh'] is not None:part['mesh'].remove_duplicates()
     return rig,s
