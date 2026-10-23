@@ -394,6 +394,38 @@ def aewc__e_767(lod=0):
         turbofans=[(-7.1,2.9,1.8),(7.1,2.9,1.8)],fan_radius=1.12,fan_length=4.2,engine_mount_y=4.2,
         radome=[0,11.0,-3.5,4.55,4.55,1.8],stabilator=[(.9,5.8,-13.0,-22.3),(9.5,6.4,-18.0,-21.5)],gear_layout=airliner_gear(48.51,9.3,.62,2))
 
+def aewc__e_7a_wedgetail(lod=0):return wedgetail('aewc__e_7a_wedgetail','E-7A Wedgetail',lod)
+def aewc__e_7t_peace_eagle(lod=0):return wedgetail('aewc__e_7t_peace_eagle','E-7T Peace Eagle',lod)
+
+def emb145(slug,name,lod):
+    return largeplane(slug,name,lod,'emb145',(29.87,20.04,6.76,2.1,2.2,1.3),
+        [(.75,2.3,1.9,-3.2),(10.02,3.1,-3.8,-5.5)],[(0,3.6,6.76,-7.7,-14.2,-11.7,-13.8)],
+        'https://www.embraer.com/defense-security/en-us/airborne-early-warning-control',
+        ['slender ERJ-145 airframe','two rear-mounted turbofans','T-tail','fixed dorsal Erieye radar beam','low swept wings'],
+        turbofans=[(-1.6,3.05,-9.),(1.6,3.05,-9.)],fan_radius=.55,fan_length=2.8,rear_engines=True,
+        aesa_bar={'y':5.05,'z':-.5,'length':8.6,'width':.65,'height':.85},
+        stabilator=[(.025,6.35,-11.6,-14.1),(4.1,6.35,-12.5,-13.9)],gear_layout=airliner_gear(29.87,4.3,.36))
+def aewc__e_99(lod=0):return emb145('aewc__e_99','E-99',lod)
+
+def g550(slug,name,lod):
+    return largeplane(slug,name,lod,'g550',(29.4,28.5,7.9,2.4,2.4,1.4),
+        [(.85,2.6,2.5,-3.5),(14.25,3.4,-4.8,-6.1)],[(0,3.7,7.9,-8.3,-14.2,-12.2,-13.8)],
+        'https://www.aeronautica.difesa.it/en/2024/06/19/g-550-caew/',
+        ['Gulfstream G550 airframe','conformal lateral radar fairings','two rear turbofans','T-tail','winglets','electronic radar scan without rotating disc'],
+        turbofans=[(-1.85,3.25,-9.4),(1.85,3.25,-9.4)],fan_radius=.64,fan_length=3.0,rear_engines=True,winglets=True,conformal_radar=True,
+        stabilator=[(.025,7.25,-11.8,-14.1),(4.5,7.25,-12.65,-13.85)],gear_layout=airliner_gear(29.4,4.1,.40))
+def aewc__g550_caew(lod=0):return g550('aewc__g550_caew','G550 CAEW',lod)
+def aewc__g550_eitam(lod=0):return g550('aewc__g550_eitam','G550 Eitam',lod)
+
+def aewc__kj_500(lod=0):
+    return largeplane('aewc__kj_500','KJ-500',lod,'kj500',(34.02,38.,11.3,3.5,3.7,1.7),
+        [(1.3,5.0,2.6,-3.5),(19.,5.5,-.9,-3.2)],[(0,5.2,11.3,-8.7,-15.8,-12.9,-15.3)],
+        'https://odin.t2com.army.mil/WEG/Asset/KJ-500',
+        ['Y-9 high-wing turboprop airframe','four six-blade propellers','fixed dorsal three-array AESA disc','conventional single tail'],
+        propellers=[(side*x,4.65,z) for side in (-1,1) for x,z in [(5.,4.2),(10.5,3.0)]],prop_radius=2.25,prop_blades=6,prop_nacelle=5.7,
+        radome=[0,8.45,-1.5,3.5,3.5,.80],radome_static=True,
+        stabilator=[(.6,4.8,-9.3,-15.4),(6.7,4.8,-12.0,-15.0)],gear_layout=airliner_gear(34.02,4.9,.54))
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):
     from validate_aircraft import validate

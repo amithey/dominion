@@ -1,0 +1,38 @@
+{
+  "batch": 52,
+  "files": [
+    "aircraft/aewc__e_7a_wedgetail.glb",
+    "aircraft/aewc__e_7t_peace_eagle.glb",
+    "aircraft/aewc__e_99.glb",
+    "aircraft/aewc__g550_caew.glb",
+    "aircraft/aewc__g550_eitam.glb",
+    "aircraft/aewc__kj_500.glb"
+  ],
+  "sha256": {
+    "aircraft/aewc__e_7a_wedgetail.glb": "e9ae0828564ef9b04e86c2e5c86170b2537428b6d12ffff0761fa81e9ba8a27a",
+    "aircraft/aewc__e_7t_peace_eagle.glb": "e9b82944687f619292a3be89050c52a5c22953c99b4896b83a85be96b8d6f6f5",
+    "aircraft/aewc__e_99.glb": "78a6fa65a0ffb6720d0e7272169feed6b307c01d01798995b08682622ec2d6b3",
+    "aircraft/aewc__g550_caew.glb": "59896c036d73ac843b0a6ca1c9f2bbd2cfc4b2f824a6d3b57578e1ed3d83a7f7",
+    "aircraft/aewc__g550_eitam.glb": "4332206e0c73737217097d86c6c13b8157309124ece8973322f17b0ce6292ce7",
+    "aircraft/aewc__kj_500.glb": "4144102e61b0496a9db0ad3103d006fb0bbb0521ce5bca55cffdbe5638282d32"
+  },
+  "maximum_triangles": [
+    12660,
+    2208
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}
