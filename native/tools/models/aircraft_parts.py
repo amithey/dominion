@@ -118,7 +118,7 @@ def fuselage(rig,s,lod):
              (.15,.04,.36,.43),(.30,.06,.25,.33),(.42,.03,.15,.20),(.50,0,.012,.020)]
     profile=s.details.get('profile',default)
     sections=[(z*L,cy+dy*H,rx*W,ry*H) for z,dy,rx,ry in profile]
-    curved_shell(m,'paint',sections,lod,cross_power=s.details.get('cross_power',1.),cap_start=s.engines!=1,cap_end=not s.details.get('nose_intake'))
+    curved_shell(m,'paint',sections,lod,cross_power=s.details.get('cross_power',1.),cap_start=s.engines!=1 or bool(s.details.get('propellers')),cap_end=not s.details.get('nose_intake'))
     if s.details.get('cft'):
         for side in (-1,1):
             tank=Mesh()
@@ -132,12 +132,12 @@ def fuselage(rig,s,lod):
 
 def canopy(rig,s,lod):
     L=s.length;W=s.body_width;H=s.body_height;top=s.belly+H
-    front=L*.385;rear=L*(.075 if s.seats==2 else .15);mid=(front+rear)/2
+    front=L*s.details.get('canopy_front',.385);rear=L*s.details.get('canopy_rear',.075 if s.seats==2 else .15);mid=(front+rear)/2
     m=Mesh();sections=[(rear,top-.10,W*.13,.10),(rear+(front-rear)*.18,top+.20,W*.28,.46),
         (mid,top+.22,W*.29,.51),(front-(front-rear)*.16,top+.12,W*.22,.40),(front,top-.04,W*.04,.07)]
     def glazing(z,theta):
         if abs(z-rear)<.06 or abs(z-front)<.06:return 'paint'
-        if s.seats==2 and abs(z-mid)<.05:return 'paint'
+        if s.seats==2 and not s.details.get('side_by_side') and abs(z-mid)<.05:return 'paint'
         return 'glass' if math.cos(theta)>-.18 and .15<theta<math.tau-.15 else 'paint'
     curved_shell(m,'paint',sections,lod,glazing)
     rig.add('Canopy','Fuselage',(0,top-.10,rear),m,'X',seats=s.seats)
@@ -150,11 +150,23 @@ def rectangular_duct(m,front,back,x0,x1,y0,y1,width,height,lod):
         j=(i+1)%4
         m.solid('paint',[a[i],a[j],b[j],b[i],ai[i],ai[j],bi[j],bi[i]],
             [(0,1,2,3),(4,7,6,5),(0,4,5,1),(1,5,6,2),(2,6,7,3),(3,7,4,0)])
-    m.face('metal_dark',bi,[0,0,1])
+    m.face('metal_dark',bi,[0,0,1 if front>back else -1])
     m.remove_duplicates()
 
 def engines(rig,s,lod):
     L=s.length;W=s.body_width;H=s.body_height;cy=s.belly+H/2
+    if s.details.get('propellers'):
+        for i,p in enumerate(s.details['propellers']):
+            m=Mesh();radius=s.details['prop_radius'];blades=s.details['prop_blades'];p=np.array(p)
+            for angle in np.linspace(0,math.tau,blades,endpoint=False):
+                blade=Mesh();airfoil(blade,[(radius*.12,0,.08,-.08),(radius*.35,0,.15,-.15),(radius*.80,0,.11,-.11),(radius,0,.045,-.045)],lod)
+                R=rotation([0,0,1],angle)@rotation([1,0,0],math.radians(70))
+                for g in blade.groups.values():
+                    g[0]=(np.asarray(g[0])@R.T+p).tolist();g[1]=(np.asarray(g[1])@R.T).tolist()
+                merge_mesh(m,blade)
+            m.tube('paint',p-[0,0,.20],p+[0,0,.27],radius*.14,8 if lod else 24,.012)
+            rig.add('Propeller' if i==0 else 'Propeller_'+str(i),'Fuselage',p,m,'Z',blade_count=blades,radius_metres=radius)
+        return
     if s.details.get('turbofans'):
         radius=s.details['fan_radius'];length=s.details['fan_length']
         for i,p in enumerate(s.details['turbofans']):
@@ -174,11 +186,14 @@ def engines(rig,s,lod):
     for i in range(s.engines):
         x=(i-(s.engines-1)/2)*s.details.get('engine_spacing',W*.62);m=Mesh()
         radius=s.details.get('engine_radius',.43 if s.engines==2 else .51);aft=L*(.50-s.details.get('engine_aft_fraction',.50))
-        if s.engines==2:
+        if s.engines==2 and not s.details.get('square_nozzle'):
             pod=Mesh();curved_shell(pod,'paint',[(-L*.46,cy,radius,radius),(-L*.42,cy,radius*1.13,radius*1.13),
                  (-L*.15,cy,radius*1.16,radius*1.16),(L*.03,cy,radius*.90,radius*.90)],lod,cap_start=False)
             pod.shift((x,0,aft));merge_mesh(m,pod)
-        hollow_muzzle(m,(x,cy,-L*.46+aft),(x,cy,-L*.50+aft),radius,radius*.82,8 if lod else 24)
+        if s.details.get('square_nozzle'):
+            nozzle=Mesh();rectangular_duct(nozzle,-L*.50,-L*.43,x,x,cy,cy,1.23,.48,lod)
+            merge_mesh(m,nozzle,roles={'paint':'metal_dark'})
+        else:hollow_muzzle(m,(x,cy,-L*.46+aft),(x,cy,-L*.50+aft),radius,radius*.82,8 if lod else 24)
         rig.add('Engine_'+str(i),'Fuselage',(x,cy,-L*.43 if s.details.get('vector_nozzle') else -L*.20),m,'X' if s.details.get('vector_nozzle') else None)
         rig.add('Afterburner' if i==0 else 'Afterburner_'+str(i),'Fuselage',(x,cy,-L*.50+aft),frame_rotation=quat([0,1,0],math.pi),forward='-Z')
     if s.family=='f15':
@@ -263,7 +278,7 @@ def gear(rig,s,lod):
         rig.add(name+'_Wheel',name,wheel,tyre,'X')
 
 def weapons(rig,s,lod):
-    count=0;positions={};L=s.length;y=s.belly+s.body_height*.52
+    count=0;positions={};L=s.length;y=s.details.get('gun_y',s.belly+s.body_height*.52)
     gun=s.details.get('gun',True)
     for gi in range(s.details.get('gun_count',1) if gun else 0):
         side=(-1 if gi==0 else 1) if s.details.get('gun_count',1)==2 else s.details.get('gun_side',1)
@@ -271,7 +286,12 @@ def weapons(rig,s,lod):
         if s.stealth:
             x=-abs(x);m.box('paint',(x,y,z),(.12,.13,.42))
         else:m.box('paint',(x,y,z),(.20,.20,.64))
-        hollow_muzzle(m,(x,y,z+.28),(x,y,z+.48),.049,.024,6 if lod else 12)
+        if s.details.get('gatling'):
+            m.tube('metal_dark',(x,y,z+.25),(x,y,z+.43),.16,8 if lod else 20)
+            for t in np.linspace(0,math.tau,7,endpoint=False):
+                dx=.087*math.cos(t);dy=.087*math.sin(t)
+                hollow_muzzle(m,(x+dx,y+dy,z+.40),(x+dx,y+dy,z+.48),.033,.022,4 if lod else 8)
+        else:hollow_muzzle(m,(x,y,z+.28),(x,y,z+.48),.049,.024,6 if lod else 12)
         parent='Cannon' if gi==0 else 'Cannon_'+str(gi)
         rig.add(parent,'Fuselage',(x,y,z),m);p=[x,y,z+.48]
         rig.add('Muzzle_'+str(count),parent,p);positions['Muzzle_'+str(count)]=p;count+=1
@@ -282,7 +302,7 @@ def weapons(rig,s,lod):
             p=[x,s.belly+.17,L*.07];rig.add('Muzzle_'+str(count),'Fuselage',p);positions['Muzzle_'+str(count)]=p;count+=1
     else:
         for side,label in ((-1,'L'),(1,'R')):
-            for j,f in enumerate((.40,.66,.89)):
+            for j,f in enumerate(s.details.get('stations',(.40,.66,.89))):
                 station=interpolate(s.details['wing'],s.span/2*f);x=side*station[0];yy=station[1]-.22;z=(station[2]+station[3])/2
                 m=Mesh();m.box('paint',(x,yy,z),(.10,.38,.70));rig.add('Pylon_'+label+str(j),'Wing_'+label,(x,yy+.19,z),m)
                 store=Mesh();a=(x,yy-.30,z-.95);b=(x,yy-.30,z+1.0)
@@ -336,6 +356,12 @@ def fittings(rig,s,lod):
         for side,label in ((-1,'L'),(1,'R')):
             door=Mesh();door.box('paint',(side*.38,y+.015,L*.08),(.74,.07,1.7))
             rig.add('Lift_Fan_Door_'+label,'Fuselage',(side*.76,y+.015,L*.08),door,'Z')
+    if s.details.get('ew_pods'):
+        for side,label in ((-1,'L'),(1,'R')):
+            station=interpolate(s.details['wing'],s.span*.22);x=side*station[0];yy=station[1]-.70;z=(station[2]+station[3])/2
+            pod=Mesh();pod.tube('paint',(x,yy,z-1.4),(x,yy,z+1.4),.23,8 if lod else 20,.13)
+            pod.box('paint',(x,yy+.26,z),(.11,.37,.70))
+            rig.add('Jammer_Pod_'+label,'Wing_'+label,(x,yy+.44,z),pod)
     # Dorsal blades are supported by the skin, with no free-floating fittings.
     for z,h in ((L*.04,.23),(-L*.19,.18)):
         m.box('paint',(0,y-.06+h/2,z),(.045,h,.28))

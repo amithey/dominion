@@ -1,0 +1,38 @@
+{
+  "batch": 47,
+  "files": [
+    "aircraft/stealthFighter__f_35b_lightning.glb",
+    "aircraft/stealthFighter__f_35i_adir.glb",
+    "aircraft/stealthFighter__j_20.glb",
+    "aircraft/stealthFighter__su_57.glb",
+    "aircraft/attackJet__a_10c_thunderbolt_ii.glb",
+    "aircraft/attackJet__jaguar.glb"
+  ],
+  "sha256": {
+    "aircraft/stealthFighter__f_35b_lightning.glb": "b5cd46c5a0996537b0c595be8f9550cbd01f5d52257ca979da77cf7108c37d51",
+    "aircraft/stealthFighter__f_35i_adir.glb": "10327088829258911d6292aadec42fa87a65e3eb78fc6d73dd6a3b12fb40a314",
+    "aircraft/stealthFighter__j_20.glb": "2bdb8602118de2bdf524f354b4f69213853b12f78973ac2f70f3b2faf1d50ce1",
+    "aircraft/stealthFighter__su_57.glb": "14f081ab3e56c4e7f65f1288109051c215f9125e15bda79fcd1af3abeb6aeeef",
+    "aircraft/attackJet__a_10c_thunderbolt_ii.glb": "332a592589d55e998aca914ff68f588ccb3a730cf17d998c29163e2f453fa9ac",
+    "aircraft/attackJet__jaguar.glb": "62bb063ce86d792f079a9fdc537845b660c6f4bc31dd2679459197a827aaf703"
+  },
+  "maximum_triangles": [
+    12318,
+    2370
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

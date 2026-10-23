@@ -82,7 +82,7 @@ def hornet(slug,name,lod,ew=False):
         'https://www.airforce.gov.au/aircraft/18f-super-hornet',seats=2,engines=2,
         features=['large leading-edge extensions','rectangular side intakes','outward-canted twin fins','tandem canopy','broad swept wings','twin engine nozzles'],
         fin_cant=20,intake_x=1.11,intake_width=.86,intake_height=.90,intake_z=.16,engine_spacing=1.35,engine_radius=.49,
-        stabilator=[(.8,1.95,-4.6,-8.0),(4.2,1.95,-6.8,-7.8)],lex=True,gun=not ew,
+        stabilator=[(.8,1.95,-4.6,-8.0),(4.2,1.95,-6.8,-7.8)],lex=True,gun=not ew,wingtip_pods=ew,ew_pods=ew,
         profile=[(-.455,0,.3,.35),(-.35,0,.5,.5),(-.15,0,.5,.5),(0,0,.46,.5),(.16,.06,.27,.42),(.31,.07,.23,.3),(.44,.02,.13,.15),(.50,0,.012,.02)])
 def jet__f_a_18f_super_hornet(lod=0):return hornet('jet__f_a_18f_super_hornet','F/A-18F Super Hornet',lod)
 
@@ -103,13 +103,13 @@ def j10(slug,name,lod,representative=''):
         side_intakes=False,engine_radius=.55,canard=[(.65,2.5,4.2,2.4),(2.25,2.5,3.0,2.35)])
 def jet__j_10c_jf_17_f_16(lod=0):return j10('jet__j_10c_jf_17_f_16','J-10C / JF-17 / F-16',lod,'J-10C exterior')
 
-def flanker(slug,name,lod,seats=1,canards=False,representative=''):
+def flanker(slug,name,lod,seats=1,canards=False,representative='',ew=False):
     return airframe(slug,name,lod,'flanker',(21.94,14.70,6.36,3.1,2.0,1.28),
         [(.9,2.3,-5.0),(4.0,-.3,-5.0),(7.35,-3.65,-4.9)],
         [(-1.8,2.85,6.36,-4.3,-9.0,-7.1,-8.65),(1.8,2.85,6.36,-4.3,-9.0,-7.1,-8.65)],
         'https://www.uacrussia.ru/en/aircraft/lineup/military/su-35/',seats=seats,engines=2,representative=representative,
         features=['widely separated engine nacelles','long blended leading-edge extensions','parallel twin fins','broad swept wings','central rear sting','tandem canopy' if seats==2 else 'single-seat canopy']+(['foreplane canards'] if canards else []),
-        engine_spacing=2.7,engine_radius=.65,engine_aft_fraction=.43,intake_x=1.43,intake_z=.10,intake_width=1.11,intake_height=1.03,lex=True,tail_sting=True,
+        engine_spacing=2.7,engine_radius=.65,engine_aft_fraction=.43,intake_x=1.43,intake_z=.10,intake_width=1.11,intake_height=1.03,lex=True,tail_sting=True,gun=not ew,wingtip_pods=ew,ew_pods=ew,
         stabilator=[(1.1,2.35,-5.7,-9.8),(5.0,2.35,-8.1,-9.65)],
         **({'canard':[(1.2,2.95,3.2,1.8),(2.9,2.95,2.05,1.6)]} if canards else {}),
         profile=[(-.50,-.05,.055,.07),(-.40,0,.18,.19),(-.25,0,.50,.45),(0,0,.5,.50),(.17,.04,.32,.4),(.32,.04,.22,.3),(.43,0,.12,.17),(.5,0,.008,.015)])
@@ -230,7 +230,7 @@ def attackJet__a_10c_thunderbolt_ii(lod=0):
         'https://www.af.mil/Portals/1/documents/aboutus/FactSheets/A10_Thunderbolt_II.pdf',engines=2,
         features=['straight high-aspect-ratio wings','twin high aft turbofan nacelles','twin tail fins','low blunt armoured nose','forward GAU-8 cannon'],
         turbofans=[(-1.5,3.25,-3.7),(1.5,3.25,-3.7)],fan_radius=.73,fan_length=3.2,
-        stabilator=[(.55,2.1,-5.45,-7.6),(3.35,2.1,-5.7,-7.5)],gun_fraction=.44,gun_width=.10,
+        stabilator=[(.55,2.1,-5.45,-7.6),(3.35,2.1,-5.7,-7.5)],gun_fraction=.472,gun_width=.10,gun_y=1.42,gatling=True,
         profile=[(-.50,0,.05,.08),(-.35,0,.30,.34),(-.1,0,.5,.5),(.12,0,.5,.5),(.3,-.04,.42,.38),(.45,-.12,.27,.22),(.50,-.15,.10,.10)])
 def attackJet__jaguar(lod=0):
     return airframe('attackJet__jaguar','Jaguar',lod,'jaguar',(16.83,8.68,4.89,1.3,1.6,1.15),
@@ -239,6 +239,63 @@ def attackJet__jaguar(lod=0):
         features=['narrow swept high wing','paired lateral intakes','slender twin-engine fuselage','single fin','rear stabilators'],
         engine_spacing=.82,engine_radius=.35,intake_x=.77,intake_width=.57,intake_height=.62,intake_z=.14,
         stabilator=[(.4,2.3,-4.6,-7.5),(2.65,2.3,-6.3,-7.25)],gun_count=2,gun_fraction=.25)
+
+def attackJet__l_159_alca(lod=0):
+    return airframe('attackJet__l_159_alca','L-159 ALCA',lod,'l159',(12.72,9.54,4.87,1.3,1.45,.97),
+        [(.4,.6,-2.2),(2.6,-.15,-2.15),(4.77,-1.25,-2.0)],[(0,2.3,4.87,-2.2,-5.3,-3.65,-4.9)],
+        'https://www.aero.cz/en/aircraft/l-159/',
+        features=['compact subsonic trainer-derived airframe','lateral intakes','single nozzle','swept wing','ventral cannon pod'],
+        intake_x=.72,intake_width=.50,intake_height=.52,intake_z=.13,engine_radius=.36,
+        gun_y=.84,gun_fraction=.04,gun_width=.05,canopy_rear=.10,
+        stabilator=[(.4,2.2,-3.2,-5.5),(2.4,2.2,-4.7,-5.2)])
+def attackJet__mirage_2000d(lod=0):return mirage('attackJet__mirage_2000d','Mirage 2000D',lod,2)
+def attackJet__mirage_5(lod=0):return mirage('attackJet__mirage_5','Mirage 5',lod,older=True)
+def attackJet__su_24mk(lod=0):
+    return airframe('attackJet__su_24mk','Su-24MK',lod,'su24',(24.53,17.64,6.19,2.6,2.1,1.30),
+        [(1.1,1.1,-4.9),(4.8,-1.1,-5.2),(8.82,-3.5,-5.4)],[(0,3.0,6.19,-5.7,-10.8,-8.5,-10.0)],
+        'https://www.uacrussia.ru/en/aircraft/lineup/military/su-24/',seats=2,engines=2,
+        features=['side-by-side cockpit','variable-sweep wings','two side intake boxes','twin nozzles','single large swept fin','long pointed attack nose'],
+        swing_wing=True,side_by_side=True,canopy_front=.34,canopy_rear=.20,engine_spacing=1.42,engine_radius=.59,
+        intake_x=1.4,intake_z=.12,intake_width=1.1,intake_height=1.1,
+        stabilator=[(.9,2.6,-6.5,-10.5),(4.9,2.6,-8.6,-10.3)],
+        profile=[(-.455,0,.30,.35),(-.33,0,.5,.5),(-.05,0,.5,.5),(.16,.04,.44,.46),(.30,.04,.32,.34),(.43,0,.15,.18),(.50,0,.008,.015)])
+def attackJet__su_25(lod=0):return su25('attackJet__su_25','Su-25',lod)
+def tornado(slug,name,lod,ew=False):
+    return airframe(slug,name,lod,'tornado',(16.72,13.91,5.95,2.05,1.8,1.23),
+        [(.9,1.2,-3.6),(3.7,-.5,-3.8),(6.955,-2.5,-3.9)],[(0,2.7,5.95,-2.3,-6.7,-4.5,-6.2)],
+        'https://www.bundeswehr.de/en/equipment/air/aircraft/tornado',seats=2,engines=2,
+        features=['variable-sweep wings','tandem canopy','rectangular side intakes','two close-set nozzles','large tall swept fin','electronic-combat configuration' if ew else 'strike configuration'],
+        swing_wing=True,engine_spacing=1.05,engine_radius=.45,intake_x=1.10,intake_z=.08,intake_width=.78,intake_height=.81,gun=not ew,
+        stabilator=[(.7,2.12,-4.7,-7.5),(3.65,2.12,-6.2,-7.3)])
+def attackJet__tornado_ids(lod=0):return tornado('attackJet__tornado_ids','Tornado IDS',lod)
+
+def raptor__f_22_raptor(lod=0):
+    return airframe('raptor__f_22_raptor','F-22 Raptor',lod,'f22',(18.9,13.6,5.1,2.8,1.8,1.22),
+        [(.85,2.35,-4.8),(4.,-.7,-4.65),(6.8,-3.7,-4.4)],
+        [(-1.10,2.65,5.28,-3.5,-8.1,-5.8,-7.2),(1.10,2.65,5.28,-3.5,-8.1,-5.8,-7.2)],
+        'https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104506/f-22-raptor/',engines=2,stealth=True,
+        features=['diamond wings','chined forebody','canted twin fins','two-dimensional rectangular exhaust nozzles','internal main weapon bays','no external pylons'],
+        fin_cant=25,engine_spacing=1.55,square_nozzle=True,vector_nozzle=True,intake_x=1.43,intake_z=.20,intake_width=.93,intake_height=.90,cross_power=.75,
+        stabilator=[(.9,2.25,-4.9,-8.4),(4.4,2.25,-7.0,-8.1)])
+def jf17__jf_17_thunder(lod=0):
+    return airframe('jf17__jf_17_thunder','JF-17 Thunder',lod,'jf17',(14.97,9.465,4.775,1.4,1.5,1.05),
+        [(.48,1.0,-3.1),(2.8,-.5,-3.05),(4.7325,-1.8,-2.8)],[(0,2.3,4.775,-2.8,-6.3,-4.5,-5.65)],
+        'https://info.publicintelligence.net/MCIA-PakistanHandbook.pdf',
+        features=['small swept wing','lateral diverterless intakes','single nozzle','single fin','rear stabilators'],
+        intake_x=.76,intake_width=.58,intake_height=.65,intake_z=.18,engine_radius=.46,
+        stabilator=[(.43,1.9,-3.6,-6.2),(2.5,1.9,-5.0,-5.9)])
+def superTucano__a_29_super_tucano(lod=0):
+    return airframe('superTucano__a_29_super_tucano','A-29 Super Tucano',lod,'tucano',(11.34,11.14,3.97,1.05,1.35,1.07),
+        [(.35,.7,-1.8),(3.,.15,-1.65),(5.57,-.4,-1.35)],[(0,2.0,3.97,-2.7,-5.15,-3.85,-4.8)],
+        'https://www.fab.mil.br/dimensao22/',seats=2,
+        features=['five-blade tractor propeller','tandem canopy','straight tapered low wing','single tail','two wing machine guns'],
+        propellers=[(0,1.745,5.3)],prop_radius=1.19,prop_blades=5,stations=(.42,.74),gun_count=2,gun_fraction=.02,gun_width=.62,gun_y=1.73,
+        stabilator=[(.35,1.85,-3.4,-5.1),(2.25,1.85,-4.2,-4.95)],
+        profile=[(-.5,0,.025,.04),(-.33,0,.27,.28),(-.1,0,.5,.5),(.13,0,.5,.5),(.30,-.02,.41,.39),(.46,0,.24,.24),(.49,0,.18,.18)])
+def carrierJet__carrier_fighter(lod=0):
+    rig,s=hornet('carrierJet__carrier_fighter','Carrier Fighter',lod);s.representative='Generic carrier fighter with F/A-18F exterior';return rig,s
+def ewJet__ea_18g_growler(lod=0):return hornet('ewJet__ea_18g_growler','EA-18G Growler',lod,True)
+def ewJet__j_16d(lod=0):return flanker('ewJet__j_16d','J-16D',lod,2,ew=True)
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):
