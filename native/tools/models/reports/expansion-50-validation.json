@@ -1,0 +1,38 @@
+{
+  "batch": 50,
+  "files": [
+    "aircraft/ewJet__tornado_ecr.glb",
+    "aircraft/bomber__b_52h_stratofortress.glb",
+    "aircraft/bomber__h_6k.glb",
+    "aircraft/bomber__tu_160m.glb",
+    "aircraft/aewc__a_50u.glb",
+    "aircraft/aewc__e_2c_hawkeye.glb"
+  ],
+  "sha256": {
+    "aircraft/ewJet__tornado_ecr.glb": "a90892d3b11d2732e5b4947cf46ba3a79bb21c4526ce9430ffb5c53fcce3a34f",
+    "aircraft/bomber__b_52h_stratofortress.glb": "1da52583af24be7eea9e849ef5df645a3e4520973b637f8d1b7a5e353a6df0d6",
+    "aircraft/bomber__h_6k.glb": "efc8bc5d04e3169b64c7e6e16c2f5c4ce4924ed9d5d108fdbb2b033f6184cee5",
+    "aircraft/bomber__tu_160m.glb": "c4103746a23a67daa91ad688c1b0d7b817e8cccb062fe1a92210cf773b90a474",
+    "aircraft/aewc__a_50u.glb": "f5f8bd5fbe5a4d415d32b8d1fb73a3f16bcac071114da693b9b8b171bda9c98d",
+    "aircraft/aewc__e_2c_hawkeye.glb": "80b8376da5a4afa77cc41e1816d49d76507fbbc286447a9b55ddfd2ef687306a"
+  },
+  "maximum_triangles": [
+    14848,
+    2324
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

@@ -107,10 +107,13 @@ def wings(rig,s,lod):
                     g[0]=(np.asarray(g[0])*[-1,1,1]).tolist();g[1]=(np.asarray(g[1])*[-1,1,1]).tolist()
                     g[3]=np.asarray(g[3]).reshape(-1,3)[:,::-1].reshape(-1).tolist()
             p=np.array([side*cuts[0][0],cuts[0][1],cuts[0][2]])
-            v=np.array([side*(cuts[-1][0]-cuts[0][0]),0,cuts[-1][2]-cuts[0][2]])
+            v=np.array([side*(cuts[-1][0]-cuts[0][0]),cuts[-1][1]-cuts[0][1],cuts[-1][2]-cuts[0][2]])
             if v[0]<0:v=-v
             angle=math.atan2(-v[2],v[0])
-            rig.add(name+'_'+label,'Wing_'+label,p,control,'X',frame_rotation=quat([0,1,0],angle))
+            frame=quat([0,1,0],angle)
+            if abs(v[1])>1e-8:
+                unit=v/np.linalg.norm(v);frame=quat(np.cross([1,0,0],unit),math.acos(unit[0]))
+            rig.add(name+'_'+label,'Wing_'+label,p,control,'X',frame_rotation=frame)
 
 def fuselage(rig,s,lod):
     L=s.length;W=s.body_width;H=s.body_height;b=s.belly;cy=b+H/2;m=Mesh()
@@ -120,7 +123,7 @@ def fuselage(rig,s,lod):
     sections=[(z*L,cy+dy*H,rx*W,ry*H) for z,dy,rx,ry in profile]
     def windows(z,theta):
         return 'glass' if .325*L<z<.425*L and .35<math.cos(theta)<.92 else 'paint'
-    curved_shell(m,'paint',sections,lod,windows if s.details.get('transport') else None,cross_power=s.details.get('cross_power',1.),cap_start=s.engines!=1 or bool(s.details.get('propellers')),cap_end=not s.details.get('nose_intake'))
+    curved_shell(m,'paint',sections,lod,windows if s.details.get('transport') else None,cross_power=s.details.get('cross_power',1.),cap_start=s.engines!=1 or bool(s.details.get('propellers')),cap_end=not s.details.get('nose_intake'),circumference=(12 if lod else 30) if s.details.get('transport') else None)
     if s.details.get('cft'):
         for side in (-1,1):
             tank=Mesh()
@@ -163,6 +166,11 @@ def engines(rig,s,lod):
     if s.details.get('propellers'):
         for i,p in enumerate(s.details['propellers']):
             m=Mesh();radius=s.details['prop_radius'];blades=s.details['prop_blades'];p=np.array(p)
+            parent='Fuselage'
+            if s.details.get('prop_nacelle'):
+                length=s.details['prop_nacelle'];body=Mesh();x,y,z=p;r=radius*.34
+                curved_shell(body,'paint',[(z-length,y,r*.35,r*.35),(z-length*.65,y,r,r),(z-length*.20,y,r,r),(z-.12,y,r*.46,r*.46)],lod,circumference=8 if lod else 24,longitudinal=3)
+                body.shift((x,0,0));parent='Engine_'+str(i);rig.add(parent,'Fuselage',p-[0,0,length*.40],body)
             for angle in np.linspace(0,math.tau,blades,endpoint=False):
                 blade=Mesh();airfoil(blade,[(radius*.12,0,.08,-.08),(radius*.35,0,.15,-.15),(radius*.80,0,.11,-.11),(radius,0,.045,-.045)],lod)
                 R=rotation([0,0,1],angle)@rotation([1,0,0],math.radians(70))
@@ -170,24 +178,25 @@ def engines(rig,s,lod):
                     g[0]=(np.asarray(g[0])@R.T+p).tolist();g[1]=(np.asarray(g[1])@R.T).tolist()
                 merge_mesh(m,blade)
             m.tube('paint',p-[0,0,.20],p+[0,0,.27],radius*.14,8 if lod else 24,.012)
-            rig.add('Propeller' if i==0 else 'Propeller_'+str(i),'Fuselage',p,m,'Z',blade_count=blades,radius_metres=radius)
+            rig.add('Propeller' if i==0 else 'Propeller_'+str(i),parent,p,m,'Z',blade_count=blades,radius_metres=radius)
         return
     if s.details.get('turbofans'):
         radius=s.details['fan_radius'];length=s.details['fan_length']
         for i,p in enumerate(s.details['turbofans']):
             x,y,z=p;m=Mesh()
             curved_shell(m,'paint',[(z-length/2,y,radius*.66,radius*.66),(z-length*.28,y,radius*.91,radius*.91),
-                (z+length*.25,y,radius,radius),(z+length/2,y,radius*.94,radius*.94)],lod,cap_start=False,cap_end=False,circumference=6 if lod else 24,longitudinal=3)
+                (z+length*.25,y,radius,radius),(z+length/2,y,radius*.94,radius*.94)],lod,cap_start=False,cap_end=False,circumference=6 if lod else 16,longitudinal=3)
             m.shift((x,0,0));front=np.array([x,y,z+length/2]);rear=np.array([x,y,z-length/2])
             if s.details.get('supersonic_pods'):rectangular_duct(m,front[2],front[2]-length*.6,x,x,y,y,radius*1.8,radius*1.6,lod)
             else:hollow_muzzle(m,front-[0,0,.45],front,radius*.94,radius*.83,6 if lod else 24)
             hollow_muzzle(m,rear+[0,0,.25],rear,radius*.66,radius*.48,6 if lod else 24)
-            for t in np.linspace(0,math.tau,0 if lod or s.details.get('supersonic_pods') else 18,endpoint=False):
+            for t in np.linspace(0,math.tau,0 if lod or s.details.get('supersonic_pods') else 12,endpoint=False):
                 R=rotation([0,0,1],t);c=front-[0,0,.35]+R@[0,radius*.42,0]
                 m.box('metal_dark',c,(radius*.07,radius*.70,.045),R)
             if not lod and not s.details.get('supersonic_pods'):m.tube('metal_dark',front-[0,0,.39],front-[0,0,.17],radius*.18,20,.015)
             if s.details.get('engine_mount_y'):
-                a=np.array([x,y+radius*.70,z]);b=np.array([x,s.details['engine_mount_y'],z-length*.75])
+                mount=np.interp(abs(x),np.array(s.details['wing'])[:,0],np.array(s.details['wing'])[:,1])
+                a=np.array([x,y+radius*.70,z]);b=np.array([x,mount,z-length*.75])
                 beam(m,'paint',a,b,.22)
             rig.add('Engine_'+str(i),'Fuselage',p,m)
             rig.add('Afterburner' if i==0 else 'Afterburner_'+str(i),'Engine_'+str(i),rear,frame_rotation=quat([0,1,0],math.pi),forward='-Z',afterburning=False)
@@ -267,7 +276,7 @@ def tails(rig,s,lod):
             airfoil(m,[(0,0,a,b),(y1-y0,0,c,d)],lod)
             for g in m.groups.values():
                 g[0]=(np.asarray(g[0])@R.T+[x,y0,0]).tolist();g[1]=(np.asarray(g[1])@R.T).tolist()
-            name=('Rudder' if i==0 else 'Rudder_R') if moving else 'Fin_'+str(i)
+            name=('Rudder' if i==0 else 'Rudder_R' if i==1 else 'Rudder_'+str(i)) if moving else 'Fin_'+str(i)
             angle=math.atan2(cut1-cut0,y1-y0)
             frame=quaternion_product(quat([0,0,1],-math.radians(cant)),quat([1,0,0],angle))
             rig.add(name,'Fuselage',(x,y0,cut0),m,'Y' if moving else None,
@@ -276,6 +285,21 @@ def tails(rig,s,lod):
     if 'canard' in s.details:horizontal(rig,s,lod,'Canard',s.details['canard'])
 
 def gear(rig,s,lod):
+    if s.details.get('gear_layout'):
+        for spec in s.details['gear_layout']:
+            name=spec['name'];x=spec['x'];z=spec['z'];r=spec.get('radius',.48);hy=spec.get('hinge_y',s.belly+.30)
+            hinge=np.array([x,hy,z+.25]);axle=np.array([x,r,z]);m=Mesh();m.tube('metal_dark',hinge,axle,.09,6 if lod else 16)
+            beam(m,'paint',hinge,axle+[0,0,.25],.15);rig.add(name,'Fuselage',hinge,m,'X')
+            axles=spec.get('axles',1);pairs=spec.get('pairs',2)
+            for j in range(axles):
+                for k in range(pairs):
+                    p=axle+[(k-(pairs-1)/2)*.31,0,(j-(axles-1)/2)*r*1.7];tyre=Mesh()
+                    profile=[(-.11,0,'rubber'),(-.11,r*.85,'rubber'),(-.06,r,'rubber'),(.06,r,'rubber'),(.11,r*.85,'rubber'),(.11,0,'rubber')]
+                    if lod:profile=[(-.11,0,'rubber'),(-.11,r,'rubber'),(.11,r,'rubber'),(.11,0,'rubber')]
+                    lathe_x(tyre,profile,p,6 if lod else 12)
+                    if not lod:tyre.tube('metal_dark',p+[-.115,0,0],p+[.115,0,0],r*.65,12)
+                    rig.add(name+'_Wheel_'+str(j)+'_'+str(k),name,p,tyre,'X')
+        return
     L=s.length;track=s.details.get('gear_track',s.span*.24);r=s.details.get('wheel_radius',.36)
     for name,x,z in [('Gear_Nose',0,L*.27),('Gear_Left',-track/2,-L*.075),('Gear_Right',track/2,-L*.075)]:
         rr=r*.77 if name=='Gear_Nose' else r;hinge=np.array([x*.75,s.belly+.35,z+.20]);wheel=np.array([x,rr,z])
@@ -378,7 +402,25 @@ def fittings(rig,s,lod):
 
 def build(s,lod=0):
     rig=Rig(lod);fuselage(rig,s,lod);wings(rig,s,lod);canopy(rig,s,lod);engines(rig,s,lod)
-    tails(rig,s,lod);gear(rig,s,lod);weapons(rig,s,lod);fittings(rig,s,lod)
+    tails(rig,s,lod);gear(rig,s,lod);weapons(rig,s,lod);fittings(rig,s,lod);radar(rig,s,lod)
     for part in rig.parts:
         if part['mesh'] is not None:part['mesh'].remove_duplicates()
     return rig,s
+
+def radar(rig,s,lod):
+    d=s.details.get('radome')
+    if not d:return
+    x,y,z,rx,rz,h=d;m=Mesh();rings=[];n=8 if lod else 32
+    for yy,r in [(-h*.5,.12),(-h*.35,.80),(0,1),(h*.35,.80),(h*.5,.12)]:
+        rings.append(np.array([[x+rx*r*math.cos(t),y+yy,z+rz*r*math.sin(t)] for t in np.linspace(0,math.tau,n,endpoint=False)]))
+    m.face('paint',rings[0],[0,-1,0]);m.face('paint',rings[-1],[0,1,0])
+    for a,b in zip(rings,rings[1:]):
+        for j in range(n):
+            k=(j+1)%n;q=[a[j],a[k],b[k],b[j]];m.face('paint',q,np.mean(q,axis=0)-[x,y,z])
+    support=Mesh()
+    for side in (-1,1):
+        xx=side*.60;bottom=s.belly+s.body_height-.20;top=y-h*.35;c=min(2.4,s.length*.07)
+        verts=[[xx+dx,yy,z+dz] for yy,chord in [(bottom,c),(top,c*.62)] for dx,dz in [(-.15,-chord/2),(.15,-chord/2),(.15,chord/2),(-.15,chord/2)]]
+        support.solid('paint',verts,[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)])
+    rig.add('Radar_Support','Fuselage',(0,s.belly+s.body_height,z),support)
+    rig.add('Rotodome','Fuselage',(x,y,z),m,'Y')

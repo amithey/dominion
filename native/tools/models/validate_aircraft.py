@@ -127,6 +127,22 @@ def validate(path):
                     assert by[p][0]['extras']['rotation_axis']=='X'
             for name in ('Gear_Nose','Gear_Left','Gear_Right'):
                 assert by[prefix+'/'+name][0]['extras']['rotation_axis']=='X'
+            if s['details'].get('gear_layout'):
+                for g in s['details']['gear_layout']:
+                    children=[p for p in by if p.startswith(prefix+'/'+g['name']+'/'+g['name']+'_Wheel_') and not p.endswith('_Mesh')]
+                    assert len(children)==g.get('axles',1)*g.get('pairs',2),(s['slug'],g['name'],'geometric wheel-node count')
+            props=[p for p,(n,M,v) in by.items() if p.startswith(prefix+'/') and n.get('extras',{}).get('canonical_part','').startswith('Propeller') and 'mesh' not in n]
+            assert len(props)==len(s['details'].get('propellers',[]))
+            for p in props:
+                node=by[p][0];assert node['extras']['rotation_axis']=='Z';name=node['extras']['canonical_part']
+                child=by[p+'/'+name+'_Mesh'][0];points=np.concatenate([g['p'] for g in meshes[child['mesh']] if g['role']=='paint'])
+                xy=points[:,:2];radii=np.linalg.norm(xy,axis=1);radius=s['details']['prop_radius']
+                assert .98*radius<=radii.max()<=1.02*radius
+                tips=xy[radii>.985*radii.max()];angles=np.sort(np.mod(np.arctan2(tips[:,1],tips[:,0]),math.tau))
+                gaps=np.diff(np.r_[angles,angles[0]+math.tau]);blades=s['details']['prop_blades']
+                assert np.count_nonzero(gaps>math.pi/blades*.5)==blades,(p,'actual propeller blade count')
+            assert (prefix+'/Rotodome' in by)==bool(s['details'].get('radome'))
+            if s['details'].get('radome'):assert by[prefix+'/Rotodome'][0]['extras']['rotation_axis']=='Y'
             assert by[prefix+'/Rudder'][0]['extras']['rotation_axis']=='Y'
             if s['stealth']:
                 assert not any('/Pylon_' in p for p in by if p.startswith(prefix+'/'))

@@ -1,0 +1,189 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Fuselage local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Fuselage_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Canopy local=[0.0, 4.65, 17.7042] world=[0.0, 4.65, 17.7042] axis=None pivot
+      Canopy_Mesh local=[0, 0, 0] world=[0.0, 4.65, 17.7042] axis=None mesh
+    Wing_L local=[-1.7, 6.45, -0.85] world=[-1.7, 6.45, -0.85] axis=None pivot
+      Wing_L_Mesh local=[0, 0, 0] world=[-1.7, 6.45, -0.85] axis=None mesh
+      Flap_L local=[0.0, 0.0, -2.583] world=[-1.7, 6.45, -3.433] axis=X rotation=[0.0, -0.12044600345855425, -0.0010383276160220315, 0.9927193370367194] pivot
+        Flap_L_Mesh local=[0, 0, 0] world=[-1.7, 6.45, -3.433] axis=None mesh
+      Aileron_L local=[-12.9585, 0.02751, -5.77448] world=[-14.6585, 6.47751, -6.62448] axis=X rotation=[0.0, -0.12044600345855425, -0.0010383276160219987, 0.9927193370367194] pivot
+        Aileron_L_Mesh local=[0, 0, 0] world=[-14.6585, 6.47751, -6.62448] axis=None mesh
+    Wing_R local=[1.7, 6.45, -0.85] world=[1.7, 6.45, -0.85] axis=None pivot
+      Wing_R_Mesh local=[0, 0, 0] world=[1.7, 6.45, -0.85] axis=None mesh
+      Flap_R local=[0.0, 0.0, -2.583] world=[1.7, 6.45, -3.433] axis=X rotation=[0.0, 0.12044600345855425, 0.0010383276160220315, 0.9927193370367194] pivot
+        Flap_R_Mesh local=[0, 0, 0] world=[1.7, 6.45, -3.433] axis=None mesh
+      Aileron_R local=[12.9585, 0.02751, -5.77448] world=[14.6585, 6.47751, -6.62448] axis=X rotation=[0.0, 0.12044600345855425, 0.0010383276160219987, 0.9927193370367194] pivot
+        Aileron_R_Mesh local=[0, 0, 0] world=[14.6585, 6.47751, -6.62448] axis=None mesh
+    Engine_0 local=[-7.2, 4.7, 1.0] world=[-7.2, 4.7, 1.0] axis=None pivot
+      Engine_0_Mesh local=[0, 0, 0] world=[-7.2, 4.7, 1.0] axis=None mesh
+      Afterburner local=[0.0, 0.0, -2.0] world=[-7.2, 4.7, -1.0] axis=None rotation=[0.0, 1.0, 0.0, 6.123233995736766e-17] pivot
+    Engine_1 local=[-13.6, 4.7, -2.0] world=[-13.6, 4.7, -2.0] axis=None pivot
+      Engine_1_Mesh local=[0, 0, 0] world=[-13.6, 4.7, -2.0] axis=None mesh
+      Afterburner_1 local=[0.0, 0.0, -2.0] world=[-13.6, 4.7, -4.0] axis=None rotation=[0.0, 1.0, 0.0, 6.123233995736766e-17] pivot
+    Engine_2 local=[7.2, 4.7, 1.0] world=[7.2, 4.7, 1.0] axis=None pivot
+      Engine_2_Mesh local=[0, 0, 0] world=[7.2, 4.7, 1.0] axis=None mesh
+      Afterburner_2 local=[0.0, 0.0, -2.0] world=[7.2, 4.7, -1.0] axis=None rotation=[0.0, 1.0, 0.0, 6.123233995736766e-17] pivot
+    Engine_3 local=[13.6, 4.7, -2.0] world=[13.6, 4.7, -2.0] axis=None pivot
+      Engine_3_Mesh local=[0, 0, 0] world=[13.6, 4.7, -2.0] axis=None mesh
+      Afterburner_3 local=[0.0, 0.0, -2.0] world=[13.6, 4.7, -4.0] axis=None rotation=[0.0, 1.0, 0.0, 6.123233995736766e-17] pivot
+    Fin_0 local=[0.0, 7.0, -19.3] world=[0.0, 7.0, -19.3] axis=None pivot
+      Fin_0_Mesh local=[0, 0, 0] world=[0.0, 7.0, -19.3] axis=None mesh
+    Rudder local=[0.0, 7.0, -19.3] world=[0.0, 7.0, -19.3] axis=Y rotation=[-0.06390948354224592, 0.0, 0.0, 0.9979556993741573] pivot
+      Rudder_Mesh local=[0, 0, 0] world=[0.0, 7.0, -19.3] axis=None mesh
+    Stabilator_L local=[-0.04, 14.0, -19.45] world=[-0.04, 14.0, -19.45] axis=X pivot
+      Stabilator_L_Mesh local=[0, 0, 0] world=[-0.04, 14.0, -19.45] axis=None mesh
+    Stabilator_R local=[0.04, 14.0, -19.45] world=[0.04, 14.0, -19.45] axis=X pivot
+      Stabilator_R_Mesh local=[0, 0, 0] world=[0.04, 14.0, -19.45] axis=None mesh
+    Gear_Nose local=[0.0, 2.5, 14.25] world=[0.0, 2.5, 14.25] axis=X pivot
+      Gear_Nose_Mesh local=[0, 0, 0] world=[0.0, 2.5, 14.25] axis=None mesh
+      Gear_Nose_Wheel_0_0 local=[-0.465, -2.04, -0.25] world=[-0.465, 0.46, 14.0] axis=X pivot
+        Gear_Nose_Wheel_0_0_Mesh local=[0, 0, 0] world=[-0.465, 0.46, 14.0] axis=None mesh
+      Gear_Nose_Wheel_0_1 local=[-0.155, -2.04, -0.25] world=[-0.155, 0.46, 14.0] axis=X pivot
+        Gear_Nose_Wheel_0_1_Mesh local=[0, 0, 0] world=[-0.155, 0.46, 14.0] axis=None mesh
+      Gear_Nose_Wheel_0_2 local=[0.155, -2.04, -0.25] world=[0.155, 0.46, 14.0] axis=X pivot
+        Gear_Nose_Wheel_0_2_Mesh local=[0, 0, 0] world=[0.155, 0.46, 14.0] axis=None mesh
+      Gear_Nose_Wheel_0_3 local=[0.465, -2.04, -0.25] world=[0.465, 0.46, 14.0] axis=X pivot
+        Gear_Nose_Wheel_0_3_Mesh local=[0, 0, 0] world=[0.465, 0.46, 14.0] axis=None mesh
+    Gear_Left local=[-2.5, 2.5, -3.65] world=[-2.5, 2.5, -3.65] axis=X pivot
+      Gear_Left_Mesh local=[0, 0, 0] world=[-2.5, 2.5, -3.65] axis=None mesh
+      Gear_Left_Wheel_0_0 local=[-0.155, -1.88, -0.777] world=[-2.655, 0.62, -4.427] axis=X pivot
+        Gear_Left_Wheel_0_0_Mesh local=[0, 0, 0] world=[-2.655, 0.62, -4.427] axis=None mesh
+      Gear_Left_Wheel_0_1 local=[0.155, -1.88, -0.777] world=[-2.345, 0.62, -4.427] axis=X pivot
+        Gear_Left_Wheel_0_1_Mesh local=[0, 0, 0] world=[-2.345, 0.62, -4.427] axis=None mesh
+      Gear_Left_Wheel_1_0 local=[-0.155, -1.88, 0.277] world=[-2.655, 0.62, -3.373] axis=X pivot
+        Gear_Left_Wheel_1_0_Mesh local=[0, 0, 0] world=[-2.655, 0.62, -3.373] axis=None mesh
+      Gear_Left_Wheel_1_1 local=[0.155, -1.88, 0.277] world=[-2.345, 0.62, -3.373] axis=X pivot
+        Gear_Left_Wheel_1_1_Mesh local=[0, 0, 0] world=[-2.345, 0.62, -3.373] axis=None mesh
+    Gear_Right local=[2.5, 2.5, -3.65] world=[2.5, 2.5, -3.65] axis=X pivot
+      Gear_Right_Mesh local=[0, 0, 0] world=[2.5, 2.5, -3.65] axis=None mesh
+      Gear_Right_Wheel_0_0 local=[-0.155, -1.88, -0.777] world=[2.345, 0.62, -4.427] axis=X pivot
+        Gear_Right_Wheel_0_0_Mesh local=[0, 0, 0] world=[2.345, 0.62, -4.427] axis=None mesh
+      Gear_Right_Wheel_0_1 local=[0.155, -1.88, -0.777] world=[2.655, 0.62, -4.427] axis=X pivot
+        Gear_Right_Wheel_0_1_Mesh local=[0, 0, 0] world=[2.655, 0.62, -4.427] axis=None mesh
+      Gear_Right_Wheel_1_0 local=[-0.155, -1.88, 0.277] world=[2.345, 0.62, -3.373] axis=X pivot
+        Gear_Right_Wheel_1_0_Mesh local=[0, 0, 0] world=[2.345, 0.62, -3.373] axis=None mesh
+      Gear_Right_Wheel_1_1 local=[0.155, -1.88, 0.277] world=[2.655, 0.62, -3.373] axis=X pivot
+        Gear_Right_Wheel_1_1_Mesh local=[0, 0, 0] world=[2.655, 0.62, -3.373] axis=None mesh
+    Gear_Left_Aft local=[-2.5, 2.5, -5.95] world=[-2.5, 2.5, -5.95] axis=X pivot
+      Gear_Left_Aft_Mesh local=[0, 0, 0] world=[-2.5, 2.5, -5.95] axis=None mesh
+      Gear_Left_Aft_Wheel_0_0 local=[-0.155, -1.88, -0.777] world=[-2.655, 0.62, -6.727] axis=X pivot
+        Gear_Left_Aft_Wheel_0_0_Mesh local=[0, 0, 0] world=[-2.655, 0.62, -6.727] axis=None mesh
+      Gear_Left_Aft_Wheel_0_1 local=[0.155, -1.88, -0.777] world=[-2.345, 0.62, -6.727] axis=X pivot
+        Gear_Left_Aft_Wheel_0_1_Mesh local=[0, 0, 0] world=[-2.345, 0.62, -6.727] axis=None mesh
+      Gear_Left_Aft_Wheel_1_0 local=[-0.155, -1.88, 0.277] world=[-2.655, 0.62, -5.673] axis=X pivot
+        Gear_Left_Aft_Wheel_1_0_Mesh local=[0, 0, 0] world=[-2.655, 0.62, -5.673] axis=None mesh
+      Gear_Left_Aft_Wheel_1_1 local=[0.155, -1.88, 0.277] world=[-2.345, 0.62, -5.673] axis=X pivot
+        Gear_Left_Aft_Wheel_1_1_Mesh local=[0, 0, 0] world=[-2.345, 0.62, -5.673] axis=None mesh
+    Gear_Right_Aft local=[2.5, 2.5, -5.95] world=[2.5, 2.5, -5.95] axis=X pivot
+      Gear_Right_Aft_Mesh local=[0, 0, 0] world=[2.5, 2.5, -5.95] axis=None mesh
+      Gear_Right_Aft_Wheel_0_0 local=[-0.155, -1.88, -0.777] world=[2.345, 0.62, -6.727] axis=X pivot
+        Gear_Right_Aft_Wheel_0_0_Mesh local=[0, 0, 0] world=[2.345, 0.62, -6.727] axis=None mesh
+      Gear_Right_Aft_Wheel_0_1 local=[0.155, -1.88, -0.777] world=[2.655, 0.62, -6.727] axis=X pivot
+        Gear_Right_Aft_Wheel_0_1_Mesh local=[0, 0, 0] world=[2.655, 0.62, -6.727] axis=None mesh
+      Gear_Right_Aft_Wheel_1_0 local=[-0.155, -1.88, 0.277] world=[2.345, 0.62, -5.673] axis=X pivot
+        Gear_Right_Aft_Wheel_1_0_Mesh local=[0, 0, 0] world=[2.345, 0.62, -5.673] axis=None mesh
+      Gear_Right_Aft_Wheel_1_1 local=[0.155, -1.88, 0.277] world=[2.655, 0.62, -5.673] axis=X pivot
+        Gear_Right_Aft_Wheel_1_1_Mesh local=[0, 0, 0] world=[2.655, 0.62, -5.673] axis=None mesh
+    Airframe_Fittings local=[0.0, 7.1, 0.0] world=[0.0, 7.1, 0.0] axis=None pivot
+      Airframe_Fittings_Mesh local=[0, 0, 0] world=[0.0, 7.1, 0.0] axis=None mesh
+    Radar_Support local=[0.0, 7.1, -2.7] world=[0.0, 7.1, -2.7] axis=None pivot
+      Radar_Support_Mesh local=[0, 0, 0] world=[0.0, 7.1, -2.7] axis=None mesh
+    Rotodome local=[0.0, 11.65, -2.7] world=[0.0, 11.65, -2.7] axis=Y pivot
+      Rotodome_Mesh local=[0, 0, 0] world=[0.0, 11.65, -2.7] axis=None mesh
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Fuselage_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Fuselage_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Canopy_LOD1 local=[0.0, 4.65, 17.7042] world=[0.0, 4.65, 17.7042] axis=None pivot hidden
+      Canopy_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 4.65, 17.7042] axis=None mesh hidden
+    Wing_L_LOD1 local=[-1.7, 6.45, -0.85] world=[-1.7, 6.45, -0.85] axis=None pivot hidden
+      Wing_L_Mesh_LOD1 local=[0, 0, 0] world=[-1.7, 6.45, -0.85] axis=None mesh hidden
+      Flap_L_LOD1 local=[0.0, 0.0, -2.583] world=[-1.7, 6.45, -3.433] axis=X rotation=[0.0, -0.12044600345855425, -0.0010383276160220315, 0.9927193370367194] pivot hidden
+        Flap_L_Mesh_LOD1 local=[0, 0, 0] world=[-1.7, 6.45, -3.433] axis=None mesh hidden
+      Aileron_L_LOD1 local=[-12.9585, 0.02751, -5.77448] world=[-14.6585, 6.47751, -6.62448] axis=X rotation=[0.0, -0.12044600345855425, -0.0010383276160219987, 0.9927193370367194] pivot hidden
+        Aileron_L_Mesh_LOD1 local=[0, 0, 0] world=[-14.6585, 6.47751, -6.62448] axis=None mesh hidden
+    Wing_R_LOD1 local=[1.7, 6.45, -0.85] world=[1.7, 6.45, -0.85] axis=None pivot hidden
+      Wing_R_Mesh_LOD1 local=[0, 0, 0] world=[1.7, 6.45, -0.85] axis=None mesh hidden
+      Flap_R_LOD1 local=[0.0, 0.0, -2.583] world=[1.7, 6.45, -3.433] axis=X rotation=[0.0, 0.12044600345855425, 0.0010383276160220315, 0.9927193370367194] pivot hidden
+        Flap_R_Mesh_LOD1 local=[0, 0, 0] world=[1.7, 6.45, -3.433] axis=None mesh hidden
+      Aileron_R_LOD1 local=[12.9585, 0.02751, -5.77448] world=[14.6585, 6.47751, -6.62448] axis=X rotation=[0.0, 0.12044600345855425, 0.0010383276160219987, 0.9927193370367194] pivot hidden
+        Aileron_R_Mesh_LOD1 local=[0, 0, 0] world=[14.6585, 6.47751, -6.62448] axis=None mesh hidden
+    Engine_0_LOD1 local=[-7.2, 4.7, 1.0] world=[-7.2, 4.7, 1.0] axis=None pivot hidden
+      Engine_0_Mesh_LOD1 local=[0, 0, 0] world=[-7.2, 4.7, 1.0] axis=None mesh hidden
+      Afterburner_LOD1 local=[0.0, 0.0, -2.0] world=[-7.2, 4.7, -1.0] axis=None rotation=[0.0, 1.0, 0.0, 6.123233995736766e-17] pivot hidden
+    Engine_1_LOD1 local=[-13.6, 4.7, -2.0] world=[-13.6, 4.7, -2.0] axis=None pivot hidden
+      Engine_1_Mesh_LOD1 local=[0, 0, 0] world=[-13.6, 4.7, -2.0] axis=None mesh hidden
+      Afterburner_1_LOD1 local=[0.0, 0.0, -2.0] world=[-13.6, 4.7, -4.0] axis=None rotation=[0.0, 1.0, 0.0, 6.123233995736766e-17] pivot hidden
+    Engine_2_LOD1 local=[7.2, 4.7, 1.0] world=[7.2, 4.7, 1.0] axis=None pivot hidden
+      Engine_2_Mesh_LOD1 local=[0, 0, 0] world=[7.2, 4.7, 1.0] axis=None mesh hidden
+      Afterburner_2_LOD1 local=[0.0, 0.0, -2.0] world=[7.2, 4.7, -1.0] axis=None rotation=[0.0, 1.0, 0.0, 6.123233995736766e-17] pivot hidden
+    Engine_3_LOD1 local=[13.6, 4.7, -2.0] world=[13.6, 4.7, -2.0] axis=None pivot hidden
+      Engine_3_Mesh_LOD1 local=[0, 0, 0] world=[13.6, 4.7, -2.0] axis=None mesh hidden
+      Afterburner_3_LOD1 local=[0.0, 0.0, -2.0] world=[13.6, 4.7, -4.0] axis=None rotation=[0.0, 1.0, 0.0, 6.123233995736766e-17] pivot hidden
+    Fin_0_LOD1 local=[0.0, 7.0, -19.3] world=[0.0, 7.0, -19.3] axis=None pivot hidden
+      Fin_0_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 7.0, -19.3] axis=None mesh hidden
+    Rudder_LOD1 local=[0.0, 7.0, -19.3] world=[0.0, 7.0, -19.3] axis=Y rotation=[-0.06390948354224592, 0.0, 0.0, 0.9979556993741573] pivot hidden
+      Rudder_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 7.0, -19.3] axis=None mesh hidden
+    Stabilator_L_LOD1 local=[-0.04, 14.0, -19.45] world=[-0.04, 14.0, -19.45] axis=X pivot hidden
+      Stabilator_L_Mesh_LOD1 local=[0, 0, 0] world=[-0.04, 14.0, -19.45] axis=None mesh hidden
+    Stabilator_R_LOD1 local=[0.04, 14.0, -19.45] world=[0.04, 14.0, -19.45] axis=X pivot hidden
+      Stabilator_R_Mesh_LOD1 local=[0, 0, 0] world=[0.04, 14.0, -19.45] axis=None mesh hidden
+    Gear_Nose_LOD1 local=[0.0, 2.5, 14.25] world=[0.0, 2.5, 14.25] axis=X pivot hidden
+      Gear_Nose_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 2.5, 14.25] axis=None mesh hidden
+      Gear_Nose_Wheel_0_0_LOD1 local=[-0.465, -2.04, -0.25] world=[-0.465, 0.46, 14.0] axis=X pivot hidden
+        Gear_Nose_Wheel_0_0_Mesh_LOD1 local=[0, 0, 0] world=[-0.465, 0.46, 14.0] axis=None mesh hidden
+      Gear_Nose_Wheel_0_1_LOD1 local=[-0.155, -2.04, -0.25] world=[-0.155, 0.46, 14.0] axis=X pivot hidden
+        Gear_Nose_Wheel_0_1_Mesh_LOD1 local=[0, 0, 0] world=[-0.155, 0.46, 14.0] axis=None mesh hidden
+      Gear_Nose_Wheel_0_2_LOD1 local=[0.155, -2.04, -0.25] world=[0.155, 0.46, 14.0] axis=X pivot hidden
+        Gear_Nose_Wheel_0_2_Mesh_LOD1 local=[0, 0, 0] world=[0.155, 0.46, 14.0] axis=None mesh hidden
+      Gear_Nose_Wheel_0_3_LOD1 local=[0.465, -2.04, -0.25] world=[0.465, 0.46, 14.0] axis=X pivot hidden
+        Gear_Nose_Wheel_0_3_Mesh_LOD1 local=[0, 0, 0] world=[0.465, 0.46, 14.0] axis=None mesh hidden
+    Gear_Left_LOD1 local=[-2.5, 2.5, -3.65] world=[-2.5, 2.5, -3.65] axis=X pivot hidden
+      Gear_Left_Mesh_LOD1 local=[0, 0, 0] world=[-2.5, 2.5, -3.65] axis=None mesh hidden
+      Gear_Left_Wheel_0_0_LOD1 local=[-0.155, -1.88, -0.777] world=[-2.655, 0.62, -4.427] axis=X pivot hidden
+        Gear_Left_Wheel_0_0_Mesh_LOD1 local=[0, 0, 0] world=[-2.655, 0.62, -4.427] axis=None mesh hidden
+      Gear_Left_Wheel_0_1_LOD1 local=[0.155, -1.88, -0.777] world=[-2.345, 0.62, -4.427] axis=X pivot hidden
+        Gear_Left_Wheel_0_1_Mesh_LOD1 local=[0, 0, 0] world=[-2.345, 0.62, -4.427] axis=None mesh hidden
+      Gear_Left_Wheel_1_0_LOD1 local=[-0.155, -1.88, 0.277] world=[-2.655, 0.62, -3.373] axis=X pivot hidden
+        Gear_Left_Wheel_1_0_Mesh_LOD1 local=[0, 0, 0] world=[-2.655, 0.62, -3.373] axis=None mesh hidden
+      Gear_Left_Wheel_1_1_LOD1 local=[0.155, -1.88, 0.277] world=[-2.345, 0.62, -3.373] axis=X pivot hidden
+        Gear_Left_Wheel_1_1_Mesh_LOD1 local=[0, 0, 0] world=[-2.345, 0.62, -3.373] axis=None mesh hidden
+    Gear_Right_LOD1 local=[2.5, 2.5, -3.65] world=[2.5, 2.5, -3.65] axis=X pivot hidden
+      Gear_Right_Mesh_LOD1 local=[0, 0, 0] world=[2.5, 2.5, -3.65] axis=None mesh hidden
+      Gear_Right_Wheel_0_0_LOD1 local=[-0.155, -1.88, -0.777] world=[2.345, 0.62, -4.427] axis=X pivot hidden
+        Gear_Right_Wheel_0_0_Mesh_LOD1 local=[0, 0, 0] world=[2.345, 0.62, -4.427] axis=None mesh hidden
+      Gear_Right_Wheel_0_1_LOD1 local=[0.155, -1.88, -0.777] world=[2.655, 0.62, -4.427] axis=X pivot hidden
+        Gear_Right_Wheel_0_1_Mesh_LOD1 local=[0, 0, 0] world=[2.655, 0.62, -4.427] axis=None mesh hidden
+      Gear_Right_Wheel_1_0_LOD1 local=[-0.155, -1.88, 0.277] world=[2.345, 0.62, -3.373] axis=X pivot hidden
+        Gear_Right_Wheel_1_0_Mesh_LOD1 local=[0, 0, 0] world=[2.345, 0.62, -3.373] axis=None mesh hidden
+      Gear_Right_Wheel_1_1_LOD1 local=[0.155, -1.88, 0.277] world=[2.655, 0.62, -3.373] axis=X pivot hidden
+        Gear_Right_Wheel_1_1_Mesh_LOD1 local=[0, 0, 0] world=[2.655, 0.62, -3.373] axis=None mesh hidden
+    Gear_Left_Aft_LOD1 local=[-2.5, 2.5, -5.95] world=[-2.5, 2.5, -5.95] axis=X pivot hidden
+      Gear_Left_Aft_Mesh_LOD1 local=[0, 0, 0] world=[-2.5, 2.5, -5.95] axis=None mesh hidden
+      Gear_Left_Aft_Wheel_0_0_LOD1 local=[-0.155, -1.88, -0.777] world=[-2.655, 0.62, -6.727] axis=X pivot hidden
+        Gear_Left_Aft_Wheel_0_0_Mesh_LOD1 local=[0, 0, 0] world=[-2.655, 0.62, -6.727] axis=None mesh hidden
+      Gear_Left_Aft_Wheel_0_1_LOD1 local=[0.155, -1.88, -0.777] world=[-2.345, 0.62, -6.727] axis=X pivot hidden
+        Gear_Left_Aft_Wheel_0_1_Mesh_LOD1 local=[0, 0, 0] world=[-2.345, 0.62, -6.727] axis=None mesh hidden
+      Gear_Left_Aft_Wheel_1_0_LOD1 local=[-0.155, -1.88, 0.277] world=[-2.655, 0.62, -5.673] axis=X pivot hidden
+        Gear_Left_Aft_Wheel_1_0_Mesh_LOD1 local=[0, 0, 0] world=[-2.655, 0.62, -5.673] axis=None mesh hidden
+      Gear_Left_Aft_Wheel_1_1_LOD1 local=[0.155, -1.88, 0.277] world=[-2.345, 0.62, -5.673] axis=X pivot hidden
+        Gear_Left_Aft_Wheel_1_1_Mesh_LOD1 local=[0, 0, 0] world=[-2.345, 0.62, -5.673] axis=None mesh hidden
+    Gear_Right_Aft_LOD1 local=[2.5, 2.5, -5.95] world=[2.5, 2.5, -5.95] axis=X pivot hidden
+      Gear_Right_Aft_Mesh_LOD1 local=[0, 0, 0] world=[2.5, 2.5, -5.95] axis=None mesh hidden
+      Gear_Right_Aft_Wheel_0_0_LOD1 local=[-0.155, -1.88, -0.777] world=[2.345, 0.62, -6.727] axis=X pivot hidden
+        Gear_Right_Aft_Wheel_0_0_Mesh_LOD1 local=[0, 0, 0] world=[2.345, 0.62, -6.727] axis=None mesh hidden
+      Gear_Right_Aft_Wheel_0_1_LOD1 local=[0.155, -1.88, -0.777] world=[2.655, 0.62, -6.727] axis=X pivot hidden
+        Gear_Right_Aft_Wheel_0_1_Mesh_LOD1 local=[0, 0, 0] world=[2.655, 0.62, -6.727] axis=None mesh hidden
+      Gear_Right_Aft_Wheel_1_0_LOD1 local=[-0.155, -1.88, 0.277] world=[2.345, 0.62, -5.673] axis=X pivot hidden
+        Gear_Right_Aft_Wheel_1_0_Mesh_LOD1 local=[0, 0, 0] world=[2.345, 0.62, -5.673] axis=None mesh hidden
+      Gear_Right_Aft_Wheel_1_1_LOD1 local=[0.155, -1.88, 0.277] world=[2.655, 0.62, -5.673] axis=X pivot hidden
+        Gear_Right_Aft_Wheel_1_1_Mesh_LOD1 local=[0, 0, 0] world=[2.655, 0.62, -5.673] axis=None mesh hidden
+    Airframe_Fittings_LOD1 local=[0.0, 7.1, 0.0] world=[0.0, 7.1, 0.0] axis=None pivot hidden
+      Airframe_Fittings_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 7.1, 0.0] axis=None mesh hidden
+    Radar_Support_LOD1 local=[0.0, 7.1, -2.7] world=[0.0, 7.1, -2.7] axis=None pivot hidden
+      Radar_Support_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 7.1, -2.7] axis=None mesh hidden
+    Rotodome_LOD1 local=[0.0, 11.65, -2.7] world=[0.0, 11.65, -2.7] axis=Y pivot hidden
+      Rotodome_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 11.65, -2.7] axis=None mesh hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 3.55, 0.0] world=[0.0, 3.55, 0.0] axis=None mesh hidden

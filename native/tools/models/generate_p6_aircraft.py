@@ -297,6 +297,69 @@ def carrierJet__carrier_fighter(lod=0):
 def ewJet__ea_18g_growler(lod=0):return hornet('ewJet__ea_18g_growler','EA-18G Growler',lod,True)
 def ewJet__j_16d(lod=0):return flanker('ewJet__j_16d','J-16D',lod,2,ew=True)
 
+def ewJet__tornado_ecr(lod=0):return tornado('ewJet__tornado_ecr','Tornado ECR',lod,True)
+
+def largeplane(slug,name,lod,family,dimensions,wing,fins,source,features,**details):
+    L,S,H,W,B,b=dimensions
+    profile=[(-.5,.02,.025,.04),(-.40,.02,.20,.24),(-.26,0,.5,.5),(.16,0,.5,.5),(.30,0,.47,.47),(.40,-.04,.36,.36),(.47,-.10,.19,.20),(.5,-.12,.04,.07)]
+    d={'wing':wing,'fins':fins,'transport':True,'gun':False,'stations':(), 'profile':profile,**details}
+    s=AircraftSpec(slug,name,family,L,S,H,W,B,b,len(d.get('turbofans',d.get('propellers',[]))) or 2,source,seats=2,features=features,details=d)
+    return build(s,lod)
+
+def bomber__b_52h_stratofortress(lod=0):
+    gear=[{'name':n,'x':x,'z':z,'radius':.56,'axles':2} for n,x,z in
+          [('Gear_Nose',-.8,7.8),('Gear_Front_Right',.8,7.8),('Gear_Left',-.8,-6.7),('Gear_Right',.8,-6.7)]]
+    gear +=[{'name':'Gear_Wing_'+t,'x':x,'z':-16.,'radius':.28,'hinge_y':1.7,'pairs':1} for t,x in [('L',-27.),('R',27.)]]
+    return largeplane('bomber__b_52h_stratofortress','B-52H Stratofortress',lod,'b52',(48.5,56.4,12.4,3.7,4.,3.),
+        [(1.4,5.8,6.,-5.),(28.2,1.5,-16.,-19.2)],[(0,6.0,12.4,-13.,-23.,-18.6,-21.8)],
+        'https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104465/b-52-stratofortress/',
+        ['eight engines in four paired pods','long swept drooping wings','four body-wheel bogies and wingtip outriggers','single swept fin','internal bomb bay'],
+        turbofans=[(side*x,y,z) for side in (-1,1) for x,y,z in [(7.8,3.4,1.0),(9.05,3.4,1.0),(16.2,2.1,-6.8),(17.45,2.1,-6.8)]],
+        fan_radius=.60,fan_length=3.5,engine_mount_y=5.1,gear_layout=gear,internal_bomber=True,
+        stabilator=[(.9,5.4,-14.,-22.),(9.5,5.4,-19.3,-21.8)])
+
+def bomber__h_6k(lod=0):
+    return largeplane('bomber__h_6k','H-6K',lod,'h6',(34.8,33.,10.36,2.9,3.2,2.3),
+        [(1.1,4.8,4.3,-5.1),(16.5,4.3,-7.9,-10.1)],[(0,5.0,10.36,-9.0,-16.,-12.9,-15.2)],
+        'https://odin.t2com.army.mil/WEG/Asset/H-6',
+        ['swept mid wing','two large root-mounted turbofans','solid radar nose','single swept tail','internal bomb bay'],
+        turbofans=[(-2.2,3.8,-.7),(2.2,3.8,-.7)],fan_radius=.79,fan_length=11.5,internal_bomber=True,
+        stabilator=[(.8,4.7,-10.,-15.8),(5.8,4.7,-13.2,-15.5)],
+        gear_layout=[{'name':'Gear_Nose','x':0,'z':10.,'radius':.45,'pairs':2}]+[{'name':n,'x':x,'z':-2.8,'radius':.63,'axles':2} for n,x in [('Gear_Left',-2.75),('Gear_Right',2.75)]])
+
+def bomber__tu_160m(lod=0):
+    return largeplane('bomber__tu_160m','Tu-160M',lod,'tu160',(54.1,55.7,13.1,4.1,4.5,3.1),
+        [(2.5,6.1,4.8,-9.2),(27.85,5.5,-11.,-15.)],[(0,7.,13.1,-13.,-25.5,-20.,-23.8)],
+        'https://www.uacrussia.ru/en/aircraft/lineup/special/tu-160/',
+        ['long blended pointed nose','variable-sweep wings','four engines in paired ventral groups','large swept fin','internal cruise-missile bays'],
+        turbofans=[(-4.6,4.1,-3.),(-3.15,4.1,-3.),(3.15,4.1,-3.),(4.6,4.1,-3.)],fan_radius=.90,fan_length=11.5,
+        supersonic_pods=True,internal_bomber=True,swing_wing=True,
+        stabilator=[(1.1,6.5,-15.2,-25.),(9.7,6.5,-20.8,-24.)],
+        gear_layout=[{'name':'Gear_Nose','x':0,'z':16.,'radius':.50,'pairs':2}]+[{'name':n,'x':x,'z':-3.6,'radius':.70,'axles':3} for n,x in [('Gear_Left',-2.9),('Gear_Right',2.9)]])
+
+def aewc__a_50u(lod=0):
+    gear=[{'name':'Gear_Nose','x':0,'z':14.,'radius':.46,'pairs':4}]
+    gear +=[{'name':name,'x':x,'z':z,'radius':.62,'axles':2} for name,x,z in
+            [('Gear_Left',-2.5,-3.9),('Gear_Right',2.5,-3.9),('Gear_Left_Aft',-2.5,-6.2),('Gear_Right_Aft',2.5,-6.2)]]
+    return largeplane('aewc__a_50u','A-50U',lod,'a50',(46.59,50.5,14.76,4.8,4.9,2.2),
+        [(1.7,6.45,4.3,-6.),(25.25,6.5,-6.6,-10.1)],[(0,7.,14.76,-12.,-22.,-18.4,-21.)],
+        'https://www.uacrussia.ru/en/aircraft/lineup/special/',
+        ['Il-76 high-wing airframe','four underwing turbofans','T-tail','large dorsal rotating radar disc','four main bogies'],
+        turbofans=[(side*x,4.7,z) for side in (-1,1) for x,z in [(7.2,1.),(13.6,-2.0)]],fan_radius=.88,fan_length=4.0,engine_mount_y=6.5,
+        stabilator=[(.04,14.0,-17.6,-21.3),(8.8,14.0,-19.7,-21.1)],radome=[0,11.65,-2.7,4.5,4.5,1.0],gear_layout=gear)
+
+def aewc__e_2c_hawkeye(lod=0):
+    gear=[{'name':'Gear_Nose','x':0,'z':5.0,'radius':.31,'pairs':2},
+          {'name':'Gear_Left','x':-4.05,'z':-.2,'radius':.49,'pairs':1,'hinge_y':3.3},
+          {'name':'Gear_Right','x':4.05,'z':-.2,'radius':.49,'pairs':1,'hinge_y':3.3}]
+    fins=[(x,2.3,4.8,-4.8,-7.9,-6.0,-7.5) for x in (-3.65,-1.2,1.2,3.65)]
+    return largeplane('aewc__e_2c_hawkeye','E-2C Hawkeye',lod,'e2',(17.53,24.56,5.58,2.45,2.4,1.23),
+        [(.8,3.32,1.5,-2.0),(12.28,3.5,.0,-1.5)],fins,
+        'https://www.marines.mil/Portals/1/Publications/FM%2044-80.pdf',
+        ['high straight wing','two four-blade turboprop engines','four vertical tail fins','dorsal rotating radar disc','carrier landing gear'],
+        propellers=[(-4.05,3.10,3.),(4.05,3.10,3.)],prop_radius=2.05,prop_blades=4,prop_nacelle=5.2,
+        stabilator=[(.5,2.3,-4.9,-7.8),(4.4,2.3,-5.3,-7.6)],radome=[0,5.12,-.65,3.66,3.66,.92],gear_layout=gear)
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):
     from validate_aircraft import validate
