@@ -122,10 +122,11 @@ def radars(rig,s,lod):
     D=s.draft+s.freeboard
     for i,(z,h,style,width) in enumerate(s.details['masts']):
         x=s.details.get('mast_offsets',[0]*len(s.details['masts']))[i]
-        m=Mesh();base=D+5;top=D+h
+        roofs=[a[5]+a[4] for a in s.details['houses'] if abs(x-a[0])<=a[2]/2 and abs(z-a[1])<=a[3]/2]
+        m=Mesh();base=D+min(5,max(roofs,default=.1)-.10);top=D+h
         block(m,'paint',x,base,z,width*.48,top-base,width*.6,.50)
+        for y in ((top-1,) if lod else (top-4,top-1)):beam(m,[x-width*.8,y,z],[x+width*.8,y,z],.12,lod,'paint')
         if not lod:
-            for y in (top-4,top-1):beam(m,[x-width*.8,y,z],[x+width*.8,y,z],.12,lod,'paint')
             for xx in (x-width*.75,x+width*.75):beam(m,[xx,top-4,z],[xx,top-1,z],.065,lod)
         rig.add('Mast_'+str(i),'Hull',(x,base,z),m)
         sensor=Mesh();p=np.array([x,top,z])
@@ -271,8 +272,19 @@ def fittings(rig,s,lod):
             beam(m,a+[0,1.05,0],b+[0,1.05,0],.027,lod)
             if not lod:beam(m,a+[0,.5,0],b+[0,.5,0],.022,lod)
         # Bow pennant backing panel, mooring bollards and an anchor.
-        p=[side*((B-s.details.get('demi_beam',B*.22))/2+s.details.get('demi_beam',B*.22)*.25) if s.details.get('catamaran') else side*B*.31,D*.65,L*.40]
-        m.box('markings',p,(.045,1.4,4.))
+        # The metre-UV marking patch follows the raked hull skin. A fixed box
+        # would hover off the narrowing bow, especially on small patrol boats.
+        patch=[];demi=s.details.get('demi_beam',B*.22);cat=s.details.get('catamaran')
+        for z in (.40-min(.025,2/L),.40+min(.025,2/L)):
+            w=(demi if cat else B)/2*np.interp(z,*np.array(outline).T)
+            sheer=max(0,(z-.22)/.28)*s.details.get('bow_sheer',1.7)
+            rise=s.draft*.90*(max(0,(abs(z)-.25)/.25)**2)
+            for y in (max(D*.35,D*.65-.7),min(D*.82,D*.65+.7)):
+                ratio=np.interp(y,[0,s.draft*.28,D*.72,D+sheer],[.35,.76,.97,1])
+                x=side*((B-demi)/2+w*ratio if cat else w*ratio)+side*.018
+                yy=y+rise*(1-y/(D+sheer));zz=z*L-max(0,(z-.35)/.15)*L*.05*(1-y/(D+sheer))
+                patch.append([x,yy,zz])
+        for ids in ((0,1,3),(0,3,2)):m.face('markings',[patch[i] for i in ids],[side,0,0])
         for z in (-L*.44,L*.40):
             for dz in (-.35,.35):m.tube('metal_dark',(side*B*.25,D,z+dz),(side*B*.25,D+.5,z+dz),.18,6 if lod else 12)
         beam(m,[side*B*.40,D*.7,L*.34],[side*B*.40,D*.4,L*.34],.14,lod)
