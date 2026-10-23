@@ -1,0 +1,63 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Fuselage local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Fuselage_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Wing_L local=[-0.1, 0.15, -0.65] world=[-0.1, 0.15, -0.65] axis=None pivot
+      Wing_L_Mesh local=[0, 0, 0] world=[-0.1, 0.15, -0.65] axis=None mesh
+      Flap_L local=[0.0, 0.0, -0.283] world=[-0.1, 0.15, -0.933] axis=X rotation=[0.0, -0.004098257402676553, 0.0, 0.9999916021078684] pivot
+        Flap_L_Mesh local=[0, 0, 0] world=[-0.1, 0.15, -0.933] axis=None mesh
+      Aileron_L local=[-0.84475, 0.0, -0.28992] world=[-0.94475, 0.15, -0.93992] axis=X rotation=[0.0, -0.004098257402676571, 0.0, 0.9999916021078684] pivot
+        Aileron_L_Mesh local=[0, 0, 0] world=[-0.94475, 0.15, -0.93992] axis=None mesh
+    Wing_R local=[0.1, 0.15, -0.65] world=[0.1, 0.15, -0.65] axis=None pivot
+      Wing_R_Mesh local=[0, 0, 0] world=[0.1, 0.15, -0.65] axis=None mesh
+      Flap_R local=[0.0, 0.0, -0.283] world=[0.1, 0.15, -0.933] axis=X rotation=[0.0, 0.004098257402676553, 0.0, 0.9999916021078684] pivot
+        Flap_R_Mesh local=[0, 0, 0] world=[0.1, 0.15, -0.933] axis=None mesh
+      Aileron_R local=[0.84475, 0.0, -0.28992] world=[0.94475, 0.15, -0.93992] axis=X rotation=[0.0, 0.004098257402676571, 0.0, 0.9999916021078684] pivot
+        Aileron_R_Mesh local=[0, 0, 0] world=[0.94475, 0.15, -0.93992] axis=None mesh
+    Propeller local=[0.0, 0.14, -1.32] world=[0.0, 0.14, -1.32] axis=Z pivot
+      Propeller_Mesh local=[0, 0, 0] world=[0.0, 0.14, -1.32] axis=None mesh
+    Fin_0 local=[-1.625, 0.15, -0.9245] world=[-1.625, 0.15, -0.9245] axis=None pivot
+      Fin_0_Mesh local=[0, 0, 0] world=[-1.625, 0.15, -0.9245] axis=None mesh
+    Rudder local=[-1.625, 0.15, -0.9245] world=[-1.625, 0.15, -0.9245] axis=Y rotation=[-0.0036249285502769034, 0.0, 0.0, 0.9999934299249198] pivot
+      Rudder_Mesh local=[0, 0, 0] world=[-1.625, 0.15, -0.9245] axis=None mesh
+    Fin_1 local=[1.625, 0.15, -0.9245] world=[1.625, 0.15, -0.9245] axis=None pivot
+      Fin_1_Mesh local=[0, 0, 0] world=[1.625, 0.15, -0.9245] axis=None mesh
+    Rudder_R local=[1.625, 0.15, -0.9245] world=[1.625, 0.15, -0.9245] axis=Y rotation=[-0.0036249285502769034, 0.0, 0.0, 0.9999934299249198] pivot
+      Rudder_R_Mesh local=[0, 0, 0] world=[1.625, 0.15, -0.9245] axis=None mesh
+    Canard_L local=[-0.09, 0.14, 0.725] world=[-0.09, 0.14, 0.725] axis=X pivot
+      Canard_L_Mesh local=[0, 0, 0] world=[-0.09, 0.14, 0.725] axis=None mesh
+    Canard_R local=[0.09, 0.14, 0.725] world=[0.09, 0.14, 0.725] axis=X pivot
+      Canard_R_Mesh local=[0, 0, 0] world=[0.09, 0.14, 0.725] axis=None mesh
+    Muzzle_0 local=[0.0, 0.14, 1.44] world=[0.0, 0.14, 1.44] axis=None pivot
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Fuselage_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Fuselage_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Wing_L_LOD1 local=[-0.1, 0.15, -0.65] world=[-0.1, 0.15, -0.65] axis=None pivot hidden
+      Wing_L_Mesh_LOD1 local=[0, 0, 0] world=[-0.1, 0.15, -0.65] axis=None mesh hidden
+      Flap_L_LOD1 local=[0.0, 0.0, -0.283] world=[-0.1, 0.15, -0.933] axis=X rotation=[0.0, -0.004098257402676553, 0.0, 0.9999916021078684] pivot hidden
+        Flap_L_Mesh_LOD1 local=[0, 0, 0] world=[-0.1, 0.15, -0.933] axis=None mesh hidden
+      Aileron_L_LOD1 local=[-0.84475, 0.0, -0.28992] world=[-0.94475, 0.15, -0.93992] axis=X rotation=[0.0, -0.004098257402676571, 0.0, 0.9999916021078684] pivot hidden
+        Aileron_L_Mesh_LOD1 local=[0, 0, 0] world=[-0.94475, 0.15, -0.93992] axis=None mesh hidden
+    Wing_R_LOD1 local=[0.1, 0.15, -0.65] world=[0.1, 0.15, -0.65] axis=None pivot hidden
+      Wing_R_Mesh_LOD1 local=[0, 0, 0] world=[0.1, 0.15, -0.65] axis=None mesh hidden
+      Flap_R_LOD1 local=[0.0, 0.0, -0.283] world=[0.1, 0.15, -0.933] axis=X rotation=[0.0, 0.004098257402676553, 0.0, 0.9999916021078684] pivot hidden
+        Flap_R_Mesh_LOD1 local=[0, 0, 0] world=[0.1, 0.15, -0.933] axis=None mesh hidden
+      Aileron_R_LOD1 local=[0.84475, 0.0, -0.28992] world=[0.94475, 0.15, -0.93992] axis=X rotation=[0.0, 0.004098257402676571, 0.0, 0.9999916021078684] pivot hidden
+        Aileron_R_Mesh_LOD1 local=[0, 0, 0] world=[0.94475, 0.15, -0.93992] axis=None mesh hidden
+    Propeller_LOD1 local=[0.0, 0.14, -1.32] world=[0.0, 0.14, -1.32] axis=Z pivot hidden
+      Propeller_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.14, -1.32] axis=None mesh hidden
+    Fin_0_LOD1 local=[-1.625, 0.15, -0.9245] world=[-1.625, 0.15, -0.9245] axis=None pivot hidden
+      Fin_0_Mesh_LOD1 local=[0, 0, 0] world=[-1.625, 0.15, -0.9245] axis=None mesh hidden
+    Rudder_LOD1 local=[-1.625, 0.15, -0.9245] world=[-1.625, 0.15, -0.9245] axis=Y rotation=[-0.0036249285502769034, 0.0, 0.0, 0.9999934299249198] pivot hidden
+      Rudder_Mesh_LOD1 local=[0, 0, 0] world=[-1.625, 0.15, -0.9245] axis=None mesh hidden
+    Fin_1_LOD1 local=[1.625, 0.15, -0.9245] world=[1.625, 0.15, -0.9245] axis=None pivot hidden
+      Fin_1_Mesh_LOD1 local=[0, 0, 0] world=[1.625, 0.15, -0.9245] axis=None mesh hidden
+    Rudder_R_LOD1 local=[1.625, 0.15, -0.9245] world=[1.625, 0.15, -0.9245] axis=Y rotation=[-0.0036249285502769034, 0.0, 0.0, 0.9999934299249198] pivot hidden
+      Rudder_R_Mesh_LOD1 local=[0, 0, 0] world=[1.625, 0.15, -0.9245] axis=None mesh hidden
+    Canard_L_LOD1 local=[-0.09, 0.14, 0.725] world=[-0.09, 0.14, 0.725] axis=X pivot hidden
+      Canard_L_Mesh_LOD1 local=[0, 0, 0] world=[-0.09, 0.14, 0.725] axis=None mesh hidden
+    Canard_R_LOD1 local=[0.09, 0.14, 0.725] world=[0.09, 0.14, 0.725] axis=X pivot hidden
+      Canard_R_Mesh_LOD1 local=[0, 0, 0] world=[0.09, 0.14, 0.725] axis=None mesh hidden
+    Muzzle_0_LOD1 local=[0.0, 0.14, 1.44] world=[0.0, 0.14, 1.44] axis=None pivot hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 0.14, 0.0] world=[0.0, 0.14, 0.0] axis=None mesh hidden

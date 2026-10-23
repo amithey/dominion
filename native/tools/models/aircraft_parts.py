@@ -447,6 +447,10 @@ def fittings(rig,s,lod):
             cy=s.belly+s.body_height/2
             verts=[[dx,yy,zz] for dx in (-.035,.035) for yy,zz in [(cy-.1,-L*.35),(cy-.1,-L*.465),(max(.20,cy-.95),-L*.45)]]
             m.solid('paint',verts,[(0,2,1),(3,4,5),(0,1,4,3),(1,2,5,4),(2,0,3,5)])
+    if s.details.get('forward_ventral_fin'):
+        cy=s.belly+s.body_height/2
+        verts=[[dx,yy,zz] for dx in (-.008,.008) for yy,zz in [(cy-.06,s.length*.28),(cy-.06,s.length*.22),(cy-.43,s.length*.24)]]
+        m.solid('paint',verts,[(0,2,1),(3,4,5),(0,1,4,3),(1,2,5,4),(2,0,3,5)])
     # Dorsal blades are supported by the skin, with no free-floating fittings.
     for z,h in (() if s.details.get('oneway') else ((L*.04,.23),(-L*.19,.18))):
         base=y-.06

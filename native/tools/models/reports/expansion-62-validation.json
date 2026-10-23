@@ -1,0 +1,36 @@
+{
+  "batch": 62,
+  "files": [
+    "aircraft/loiterer__loitering_munition.glb",
+    "aircraft/loiterer__nagastra_1.glb",
+    "aircraft/loiterer__qasef_2k_samad.glb",
+    "aircraft/loiterer__switchblade_600.glb",
+    "aircraft/harop__harop.glb"
+  ],
+  "sha256": {
+    "aircraft/loiterer__loitering_munition.glb": "c7f53a162e2db8b3a2010ce19aa48f70328cc7572f7ed42f833347bdded28d0b",
+    "aircraft/loiterer__nagastra_1.glb": "34921496bb3b90e3d5de602abef8228ab719278f3c72ef7e076eba06777aa7f1",
+    "aircraft/loiterer__qasef_2k_samad.glb": "c030265d7938f11f719434689268964b0e77cdc31caa4b5229b67d5cdcc989b8",
+    "aircraft/loiterer__switchblade_600.glb": "9f070a98477fc11585918aa5238cd8c6e424f8d971d44141e73337a466495397",
+    "aircraft/harop__harop.glb": "f6c9e1617c24acc1b5f73f82d8d7ee01c0304a84b2c4f7318ceebb916b8b6f3d"
+  },
+  "maximum_triangles": [
+    6780,
+    628
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

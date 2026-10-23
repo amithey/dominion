@@ -723,8 +723,14 @@ def loiterer__qasef_2k_samad(lod=0):
         propellers=[[0,.44,-1.32]],prop_radius=.24,prop_blades=2,prop_pusher=True,
         canard=[(.09,.44,.85,.60),(.55,.44,.73,.58)])
 def loiterer__switchblade_600(lod=0):
-    return cross_uav('loiterer__switchblade_600','Switchblade 600',lod,1.3,1.3,.18,'https://www.avinc.com/solution/switchblade-600/',
-        ['tube-launched electric airframe','deployable wing and aft control banks','long cylindrical body','EO/IR nose seeker','rear pusher'],front=.18,rear=.72)
+    return oneway('loiterer__switchblade_600','Switchblade 600',lod,(1.3,1.3,.72,.18,.18,.30),
+        [(.07,.39,.32,.24),(.65,.39,.27,.20)],[(0,.40,.84,-.35,-.52,-.40,-.51)],
+        'https://www.avinc.com/solution/switchblade-600/',
+        ['two tandem horizontal folding wing pairs','aft dorsal fin','forward ventral fin','cylindrical body with blunt EO/IR seeker','rear electric pusher'],
+        stabilator=[(.07,.39,-.35,-.43),(.47,.39,-.38,-.44)],
+        propellers=[[0,.39,-.61]],prop_radius=.17,prop_blades=2,prop_pusher=True,spinner_length=.055,nose_seeker=True,
+        forward_ventral_fin=True,
+        profile=[(-.48,0,.32,.32),(-.36,0,.5,.5),(.18,0,.5,.5),(.42,0,.48,.48),(.5,0,.40,.40)])
 def harop__harop(lod=0):
     return oneway('harop__harop','HAROP',lod,(2.5,3.,.80,.38,.32,.20),
         [(.13,.36,.20,-1.10),(1.5,.36,-.75,-1.15)],

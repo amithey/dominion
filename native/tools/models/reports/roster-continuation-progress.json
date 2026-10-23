@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 349,
+  "ready_files": 354,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -720,6 +720,17 @@
         "aircraft/loiterer__kargu_2.glb",
         "aircraft/loiterer__lancet_3.glb"
       ]
+    },
+    {
+      "batch": 62,
+      "report": "expansion-62-validation.json",
+      "files": [
+        "aircraft/loiterer__loitering_munition.glb",
+        "aircraft/loiterer__nagastra_1.glb",
+        "aircraft/loiterer__qasef_2k_samad.glb",
+        "aircraft/loiterer__switchblade_600.glb",
+        "aircraft/harop__harop.glb"
+      ]
     }
   ],
   "priorities": {
@@ -993,7 +1004,7 @@
     "P6": {
       "requested_rows": 128,
       "unique_files": 127,
-      "ready_files": 122,
+      "ready_files": 127,
       "ready_slugs": [
         "aewc__a_50u",
         "aewc__e_2c_hawkeye",
@@ -1051,6 +1062,7 @@
         "ewJet__ea_18g_growler",
         "ewJet__j_16d",
         "ewJet__tornado_ecr",
+        "harop__harop",
         "heavyBomberDrone__heavy_hexacopter",
         "heavyBomberDrone__vampire_baba_yaga",
         "interceptorDrone__interceptor_drone",
@@ -1095,6 +1107,10 @@
         "loiterer__hx_2",
         "loiterer__kargu_2",
         "loiterer__lancet_3",
+        "loiterer__loitering_munition",
+        "loiterer__nagastra_1",
+        "loiterer__qasef_2k_samad",
+        "loiterer__switchblade_600",
         "maritimePatrol__atlantique_2",
         "maritimePatrol__cn_235_mpa",
         "maritimePatrol__il_38n",
@@ -1118,13 +1134,7 @@
         "stealthFighter__su_57",
         "superTucano__a_29_super_tucano"
       ],
-      "remaining_slugs": [
-        "harop__harop",
-        "loiterer__loitering_munition",
-        "loiterer__nagastra_1",
-        "loiterer__qasef_2k_samad",
-        "loiterer__switchblade_600"
-      ]
+      "remaining_slugs": []
     },
     "P7": {
       "requested_rows": 113,
