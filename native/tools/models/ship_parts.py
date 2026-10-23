@@ -277,8 +277,48 @@ def fittings(rig,s,lod):
         beam(m,[side*B*.40,D*.7,L*.34],[side*B*.40,D*.4,L*.34],.14,lod)
     rig.add('Deck_Fittings','Hull',(0,D,0),m)
 
+def amphibious(rig,s,lod):
+    d=s.details;L=s.length;B=s.beam;D=s.draft+s.freeboard
+    if d.get('landing'):
+        bow=d.get('bow_ramp',False);z=L*.5+.04 if bow else -L*.5-.04
+        h=d.get('ramp_height',min(6.,s.freeboard+1));p=np.array([0,s.draft+.25,z]);m=Mesh()
+        m.box('metal_dark',p+[0,h/2,0],(B*.40,h,.22))
+        if not lod:
+            for x in np.linspace(-B*.18,B*.18,9):m.box('paint',p+[x,h/2,.14 if bow else -.14],(.08,h*.93,.08))
+        rig.add('Ramp','Hull',p,m,'X',purpose='bow vehicle ramp' if bow else 'stern well-deck closure/ramp')
+    for i,(x,z,height,length) in enumerate(d.get('cranes',[])):
+        p=np.array([x,D,z]);m=Mesh();m.tube('paint',p,p+[0,height,0],.6,6 if lod else 16)
+        rig.add('Crane_'+str(i),'Hull',p,m,'Y');q=p+[0,height,0];arm=Mesh()
+        beam(arm,q,q+[0,1,length],.35,lod,'paint');beam(arm,q+[0,1,length],q+[0,-height*.7,length],.04,lod)
+        rig.add('Crane_Boom_'+str(i),'Crane_'+str(i),q,arm,'X')
+    if not d.get('aviation_deck'):return
+    # Wide aviation deck and starboard island: authored in metres, no textures.
+    deck=Mesh();W=d.get('deck_beam',B);y=D+d.get('aviation_y',0)
+    block(deck,'paint',0,y-.65,-L*.01,W,.65,L*.96,.995)
+    rig.add('Flight_Deck','Hull',(0,y,0),deck)
+    marks=Mesh();xx=-W*.12
+    for x in (xx-W*.17,xx+W*.17):marks.box('markings',(x,y+.025,0),(.20,.025,L*.82))
+    for z in np.arange(-L*.41,L*.43,8.):marks.box('markings',(xx,y+.025,z),(.20,.025,3.8))
+    rig.add('Runway_Markings','Hull',(0,y,0),marks)
+    for i,(x,z) in enumerate(d.get('catapults',[])):
+        m=Mesh();m.box('metal_dark',(x,y+.023,z),( .18,.025,L*.20))
+        rig.add('Catapult_'+str(i),'Hull',(x,y+.04,z+L*.10),m,launch_direction='+Z')
+    for i,(x,z) in enumerate(d.get('elevators',[])):
+        m=Mesh();m.box('paint',(x,y-.10,z),(min(14,W*.28),.20,L*.075))
+        rig.add('Elevator_'+str(i),'Hull',(x,y,z),m,travel_axis='Y')
+    if d.get('ski_jump'):
+        ramp=Mesh();width=W*.46;z=L*.32;steps=4 if lod else 12
+        for j in range(steps):
+            za=z+j*(L*.16/steps);zb=z+(j+1)*(L*.16/steps);a=(j/steps)**2*3;b=((j+1)/steps)**2*3
+            verts=[[xx+dx,yy,zz] for dx in (-width/2,width/2) for yy,zz in [(y,za),(y,zb),(y+b,zb),(y+a,za)]]
+            if j==0:
+                # First segment begins flush; triangular wedge has no zero-area face.
+                ramp.solid('paint',[[xx-width/2,y,za],[xx-width/2,y,zb],[xx-width/2,y+b,zb],[xx+width/2,y,za],[xx+width/2,y,zb],[xx+width/2,y+b,zb]],[(0,2,1),(3,4,5),(0,1,4,3),(1,2,5,4),(2,0,3,5)])
+            else:ramp.solid('paint',verts,[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)])
+        ramp.remove_duplicates();rig.add('Ski_Jump','Hull',(xx,y,L*.32),ramp);rig.add('Launch_0','Hull',(xx,y+3,L*.48),method='ski jump')
+
 def build(s,lod=0):
-    rig=Rig(lod);hull(rig,s,lod);deckhouses(rig,s,lod);funnels(rig,s,lod);radars(rig,s,lod);weapons(rig,s,lod);fittings(rig,s,lod)
+    rig=Rig(lod);hull(rig,s,lod);deckhouses(rig,s,lod);funnels(rig,s,lod);radars(rig,s,lod);weapons(rig,s,lod);fittings(rig,s,lod);amphibious(rig,s,lod)
     for p in rig.parts:
         if p['mesh'] is not None:p['mesh'].remove_duplicates()
     return rig,s
