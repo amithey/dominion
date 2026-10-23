@@ -1,0 +1,35 @@
+{
+  "batch": 80,
+  "files": [
+    "ships/submarine__romeo_class.glb",
+    "ships/submarine__taigei_class.glb",
+    "ships/submarine__todaro_class_type_212a.glb",
+    "ships/submarine__type_039c.glb",
+    "ships/submarine__type_209_1400.glb"
+  ],
+  "sha256": {
+    "ships/submarine__romeo_class.glb": "e38e9205b45275fa8b8c741b1aa723db167e8831e84a928e137347e506118f14",
+    "ships/submarine__taigei_class.glb": "60ae5ade37beb13a336beaa24d942c528828f49615b4a783f807b34bb32ba2a4",
+    "ships/submarine__todaro_class_type_212a.glb": "6450069c622c320a5e93b94482ac6d6cfc74a65892700de244ad7785f522b481",
+    "ships/submarine__type_039c.glb": "f2d068243c3251a35a1c18bcb3d20efa0202e4b84705bf92f1d110b20e2cce35",
+    "ships/submarine__type_209_1400.glb": "ff0fe2242005d783ccfc59d2ff7877cbd3a95c463f3eeaec9b1e52082906e3af"
+  },
+  "maximum_triangles": [
+    11340,
+    988
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "submarine_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}
