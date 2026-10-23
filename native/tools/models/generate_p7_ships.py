@@ -293,6 +293,41 @@ def corvette__tamandare_frigate(lod=0):
         houses=[(0,8,12.3,30,6.1,0,.83),(0,-22,12,20,5.4,0,.92),(0,10,8.1,13,3.7,6.1,.72)],
         funnels=[(0,-6,4.8,7.5,6.8,3)],masts=[(8,23,'panel',4.5)],guns=[(0,37,76,4.2),(0,-23,30,1.8,5.6,True)],vls=[(25,4,3,.7,0)],canisters=[(-1,2.8,4)],ciws=[],hangar_z=-32.1)
 
+def corvette__type_056a(lod=0):
+    return combatant('corvette__type_056a','Type 056A',lod,(89.,11.14,4.,3.2),
+        'https://eng.chinamil.com.cn/OPINIONS_209196/Opinions_209197/9986542.html',
+        ['short Jiangdao ASW hull','76 mm foredeck gun','four YJ-83 canisters','eight-round HHQ-10 aft launcher','single funnel','open stern helicopter platform without a hangar','stern towed-sonar working area'],
+        houses=[(0,6,8.5,25,5.1,0,.84),(0,-17,7.8,12,3.4,0,.91),(0,8,5.8,10,2.8,5.1,.76)],
+        funnels=[(0,-6,3.6,5.5,5.6,2.3)],masts=[(6,18,'panel',3.5)],guns=[(0,30,76,4.2)],vls=[],canisters=[(-4,2.4,2)],ciws=[(0,-20,3.6)],ciws_style='ram',ciws_tubes=8,hangar=False,bow_sheer=1.1)
+
+def corvette__type_23_frigate(lod=0):
+    return combatant('corvette__type_23_frigate','Type 23 frigate',lod,(133.,16.1,5.5,4.5),
+        'https://www.royalnavy.mod.uk/equipment/ships/duke-class',
+        ['Duke-class ASW frigate','114 mm Mk8 bow gun','32-cell Sea Ceptor bank','separate bridge and tall Artisan radar mast','single large funnel','eight antiship canisters','single Merlin hangar'],
+        houses=[(0,13,11.8,31,6.5,0,.94),(0,-28,11.7,24,5.5,0,.94),(0,15,7.7,13,2.8,6.5,.94)],
+        funnels=[(0,-8,5.1,8.5,7.4,3)],masts=[(11,25,'panel',4.8),(-22,18,'bar',3.4)],guns=[(0,47,114,6.)],vls=[(32,8,4,.65,0)],canisters=[(-1,3,4)],ciws=[],hangar_z=-40.1)
+
+def asFrigate__admiral_gorshkov_class(lod=0):
+    return combatant('asFrigate__admiral_gorshkov_class','Admiral Gorshkov-class',lod,(135.,16.,4.53,5.2),
+        'https://www.mintrans.gov.ru/press-center/branch-news/8894',
+        ['Project 22350 lead-ship fit','130 mm enclosed bow turret','16 UKSK and 32 Redut foredeck cells','large fixed Polyment array tower','separate aft search radar','two Palash-type defence mounts','single helicopter hangar'],
+        houses=[(0,13,12.4,35,7.2,0,.82),(0,-28,12.2,23,5.8,0,.91),(0,15,8,15,6,7.2,.65)],
+        funnels=[(0,-7,5,8,7,3.5)],masts=[(14,27,'bar',3),(-20,23,'panel',5.8)],fixed_arrays=[15,15,7.6],
+        guns=[(0,49,130,6.8)],vls=[(36,4,4,1.05,0),(25,8,4,.65,0)],canisters=[],ciws=[(-5,-27,6),(5,-27,6)],ciws_style='kashtan',hangar_z=-39.6)
+
+def asFrigate__al_riyadh_class(lod=0):
+    return combatant('asFrigate__al_riyadh_class','Al Riyadh-class',lod,(133.,17.,4.4,5.4),
+        'native/CODEX-UNIT-ROSTER.md',
+        ['enlarged Saudi La Fayette derivative','long continuous stealth deckhouse','76 mm bow gun','16-cell Sylver/Aster foredeck bank','large Arabel radome and aft search panel','eight Exocet canisters','single helicopter hangar'],
+        houses=[(0,13,13.1,39,7.1,0,.82),(0,-28,12.8,24,5.8,0,.92),(0,15,8.5,16,4.1,7.1,.75)],
+        funnels=[(0,-4,4.9,6.6,7,3.5),(0,-18,4.8,6.2,7,3.5)],masts=[(14,25,'sphere',3.8),(-22,21,'panel',4.6)],guns=[(0,47,76,4.2)],vls=[(32,4,4,.75,0)],canisters=[(-7,3,4)],ciws=[],hangar_z=-40.1)
+
+def asFrigate__anzac_class(lod=0):
+    rig,s=corvette__anzac_class(lod);s.slug='asFrigate__anzac_class';return rig,s
+
+def asFrigate__daegu_class(lod=0):
+    rig,s=corvette__daegu_class(lod);s.slug='asFrigate__daegu_class';return rig,s
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):
