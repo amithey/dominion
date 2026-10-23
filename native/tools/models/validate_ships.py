@@ -84,7 +84,18 @@ def validate(path):
             assert np.allclose(by[marker][1][:3,3],expected,atol=2e-5)
         for i,(z,cols,rows,pitch,y) in enumerate(s['details'].get('vls',[])):
             assert by[prefix+'/VLS_'+str(i)][0]['extras']['cell_count']==cols*rows*(8 if s['details'].get('vls_carousel') else 1)
-        for i,_ in enumerate(s['details']['masts']):assert by[prefix+('/Mast_'+str(i))+('/Radar' if i==0 else '/Radar_'+str(i))][0]['extras']['rotation_axis']=='Y'
+        radar_prefix=prefix+('/Sail' if s['details'].get('submarine') else '')
+        for i,_ in enumerate(s['details']['masts']):assert by[radar_prefix+('/Mast_'+str(i))+('/Radar' if i==0 else '/Radar_'+str(i))][0]['extras']['rotation_axis']=='Y'
+        if s['details'].get('submarine'):
+            for i in range(s['details'].get('propellers',1)):
+                name='Propeller' if i==0 else 'Propeller_'+str(i);prop_path=prefix+'/'+name
+                node=by[prop_path][0];assert node['extras']['rotation_axis']=='Z'
+                child=by[prop_path+'/'+name+'_Mesh'][0];points=np.concatenate([g['p'] for g in meshes[child['mesh']]])
+                radii=np.linalg.norm(points[:,:2],axis=1);radius=node['extras']['radius_metres']
+                assert .98*radius<radii.max()<1.02*radius,(prop_path,'propeller geometric radius')
+                tips=points[radii>.985*radii.max(),:2];angles=np.sort(np.mod(np.arctan2(tips[:,1],tips[:,0]),math.tau))
+                gaps=np.diff(np.r_[angles,angles[0]+math.tau]);blades=node['extras']['blade_count']
+                assert np.count_nonzero(gaps>math.pi/blades*.5)==blades,(prop_path,'propeller geometric blade count')
         if s['details'].get('landing'):
             assert by[prefix+'/Ramp'][0]['extras']['rotation_axis']=='X'
             z=s['length']*.5+.04 if s['details'].get('bow_ramp') else -s['length']*.5-.04
@@ -99,6 +110,9 @@ def validate(path):
             assert 'mesh' not in node and node.get('children'),(p,'hinge requires mesh children')
             axis=axes[axisname];worldaxis=M[:3,:3]@axis;worldaxis/=np.linalg.norm(worldaxis)
             posed={q:T for q,n,T,v in walk_nodes(doc,{p:matrix(axis,17)},canonical=True)}
+            if node['extras']['canonical_part'].startswith('Propeller'):
+                full={q:T for q,n,T,v in walk_nodes(doc,{p:matrix(axis,360)},canonical=True)}
+                assert np.allclose(full[p],M,atol=1e-6)
             for q,(child,T,_) in by.items():
                 if not q.startswith(p+'/'):continue
                 points=np.concatenate([g['p'] for g in meshes[child['mesh']]]) if 'mesh' in child else np.zeros((1,3))

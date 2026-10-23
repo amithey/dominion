@@ -1,0 +1,34 @@
+{
+  "batch": 76,
+  "files": [
+    "ships/carrier__cavour.glb",
+    "ships/carrier__charles_de_gaulle.glb",
+    "ships/carrier__fujian.glb",
+    "ships/carrier__gerald_r_ford_class.glb",
+    "ships/carrier__ins_vikrant.glb"
+  ],
+  "sha256": {
+    "ships/carrier__cavour.glb": "cff583f330e69fbb6a272f41247fd0f55a0576d613afcb3475f800665617b559",
+    "ships/carrier__charles_de_gaulle.glb": "fedc9b23af63d04f3329360907724ebb8cc22191778040eb263163be56245596",
+    "ships/carrier__fujian.glb": "7734458f0ea6ae96b508477dc25a0f7ab154511019c24df31b796f5b0114ed10",
+    "ships/carrier__gerald_r_ford_class.glb": "ed50dc26bd4e49b2ffad203bed0c57fb96985423678801dbcd988555455bd4f7",
+    "ships/carrier__ins_vikrant.glb": "b5c144ef5da8c0bca24c7a4e247329a687a54d2ac97e0fd68f3612c8726b21a7"
+  },
+  "maximum_triangles": [
+    10804,
+    1728
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}

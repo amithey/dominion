@@ -477,7 +477,7 @@ def landingShip__bayraktar_class(lod=0):
         hull_profile=[(-.5,.72),(-.40,.93),(-.2,1),(.2,1),(.40,.85),(.50,.55)],bow_sheer=.4,cranes=[(-7,3,8,12),(7,3,8,12)])
 
 def landingShip__canberra_class(lod=0):
-    return combatant('landingShip__canberra_class','Canberra-class',lod,(230.8,32.,7.18,14.32),
+    return combatant('landingShip__canberra_class','Canberra-class',lod,(230.8,32.,7.18,20.32),
         'https://www.navy.gov.au/capabilities/ships-boats-and-submarines/hmas-canberra-iii',
         ['Juan Carlos I-derived LHD','long full-width aviation deck','port-side bow ski jump','long starboard island with two funnels','two aircraft elevators','stern well-deck ramp'],
         houses=[(10,4,9,79,9,0,.93),(10,23,7.8,24,4,9,.91)],funnels=[(10,8,5,8,6,8),(10,-20,5,7,6,8)],
@@ -607,6 +607,45 @@ def carrier__ins_vikrant(lod=0):
         hull_beam=32.,deck_beam=62.,deck_outline=CATOBAR_OUTLINE,angled_deck=-8.5,ski_jump=True,
         houses=[(19,10,12,82,12,0,.88),(19,30,9.5,24,5,12,.85)],funnels=[(19,10,6.5,9,7.5,9),(19,-16,6.5,8,7.5,9)],masts=[(27,33,'panel',4.5),(-10,29,'bar',3.6)],mast_offsets=[19,19],
         elevators=[(24,58),(24,-58)],ciws=[(-20,85,.3),(22,-85,.3)],ciws_style='gatling')
+
+def carrier__kaga_f_35b(lod=0):
+    return carrier('carrier__kaga_f_35b','Kaga (F-35B)',lod,(248.,38.,7.1,16.4),
+        'https://www.mod.go.jp/msdf/equipment/ships/ddh/izumo/',
+        ['Izumo-class converted STOVL aviation ship','squared bow flight deck','long starboard island','two aircraft elevators','no ski jump or catapults','two close-in mounts'],
+        hull_beam=28.,deck_beam=38.,houses=[(12,7,10,82,10,0,.93),(12,28,8,22,4.5,10,.91)],funnels=[(12,9,5.5,8,7,8),(12,-17,5.5,7,7,8)],
+        masts=[(23,30,'bar',4),(-12,26,'panel',3.7)],mast_offsets=[12,12],elevators=[(0,65),(13,-70)],ciws=[(-13,85,.3),(13,-85,.3)])
+
+def carrier__queen_elizabeth_class(lod=0):
+    return carrier('carrier__queen_elizabeth_class','Queen Elizabeth-class',lod,(280.,73.,11.,13.),
+        'https://www.royalnavy.mod.uk/equipment/ships/queen-elizabeth-class',
+        ['two widely separated starboard islands','large broad STOVL flight deck','port bow ski jump','two starboard aircraft elevators','separate navigation and flight-control bridges','no catapults'],
+        hull_beam=39.,deck_beam=73.,houses=[(22,43,13,47,13,0,.90),(22,-35,13,45,12,0,.90),(22,48,10,20,5,13,.85),(22,-31,10,20,5,12,.85)],
+        funnels=[(22,32,6.5,9,8,10),(22,-45,6.5,9,8,10)],masts=[(47,35,'panel',6.4),(-32,33,'sphere',4.2)],mast_offsets=[22,22],ski_jump=True,elevators=[(28,0),(28,-76)],ciws=[(-25,90,.3),(28,-100,.3),(-25,-85,.3)])
+
+def carrier__shahid_bagheri_drone_carrier(lod=0):
+    rig,s=carrier('carrier__shahid_bagheri_drone_carrier','Shahid Bagheri (drone carrier)',lod,(240.,32.2,7.8,9.7),
+        'native/CODEX-UNIT-ROSTER.md',['converted container-ship hull','large full-width aft merchant accommodation block','short angled port aviation strip','added bow ski jump','merchant funnel and radar mast','no catapults'],
+        hull_beam=32.2,deck_beam=32.2,houses=[(0,-74,25,42,13,0,.98),(0,-75,19,22,5,13,.98)],funnels=[(8,-84,5.5,8,8,10)],masts=[(-70,31,'bar',4.4)],mast_offsets=[0],ski_jump=True,angled_deck=-8,elevators=[],
+        hull_profile=[(-.5,.82),(-.43,.97),(-.2,1),(.25,1),(.4,.85),(.48,.40),(.5,.008)])
+    s.representative='Approximate public converted-merchant exterior; aviation fit estimated';return rig,s
+
+def carrier__tcg_anadolu_drone_carrier(lod=0):
+    rig,s=landingShip__canberra_class(lod);s.slug='carrier__tcg_anadolu_drone_carrier';s.name='TCG Anadolu (drone carrier)'
+    s.length=230.8;s.draft=6.8;s.freeboard=20.7;s.details['landing']=True;s.source='https://www.sedefshipyard.com/en/gemi.aspx?ID=27'
+    s.representative='Juan Carlos I-family Anadolu exterior with drone aviation role'
+    s.features=['Turkish LHD configured for drone operations','port bow ski jump','long starboard island','stern well-deck ramp','aircraft elevators','no catapults']
+    # Rebuild against the designation-specific dimensions and fittings.
+    s.details['ciws']=[(-13,78,.3),(13,-78,.3)];s.details['ciws_style']='gokdeniz';return build(s,lod)
+
+def sub(slug,name,lod,L,B,draft,source,features,**details):
+    d={'submarine':True,'guns':[],'masts':[(0,0,'bar',0)],'sail_height':B*.68,'sail_length':L*.15,'prop_blades':7,**details}
+    s=ShipSpec(slug,name,L,B,draft,B-draft,source,family='submarine',features=features,details=d)
+    return build(s,lod)
+
+def submarine__agosta_90b(lod=0):
+    return sub('submarine__agosta_90b','Agosta 90B',lod,67.6,6.8,5.4,
+        'https://www.karachishipyard.com.pk/page/smc',
+        ['slender conventional hull','rounded bow','low streamlined sail','bow diving planes','cruciform stern controls','single seven-blade propeller'],sail_z=.09,sail_height=4.5,sail_length=11.,prop_blades=7,foreplanes='bow')
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 

@@ -367,6 +367,9 @@ def amphibious(rig,s,lod):
         ramp.remove_duplicates();rig.add('Ski_Jump','Hull',(xx,y,L*.32),ramp);rig.add('Launch_0','Hull',(xx,y+3,L*.48),method='ski jump')
 
 def build(s,lod=0):
+    if s.details.get('submarine'):
+        from submarine_parts import submarine
+        return submarine(s,lod)
     rig=Rig(lod);hull(rig,s,lod);deckhouses(rig,s,lod);funnels(rig,s,lod);radars(rig,s,lod);weapons(rig,s,lod);fittings(rig,s,lod);amphibious(rig,s,lod)
     for p in rig.parts:
         if p['mesh'] is not None:p['mesh'].remove_duplicates()
