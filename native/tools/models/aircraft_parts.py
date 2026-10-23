@@ -183,8 +183,8 @@ def engines(rig,s,lod):
                 for g in blade.groups.values():
                     g[0]=(np.asarray(g[0])@R.T+p).tolist();g[1]=(np.asarray(g[1])@R.T).tolist()
                 merge_mesh(m,blade)
-            sign=-1 if s.details.get('prop_pusher') else 1
-            m.tube('paint',p-[0,0,sign*.20],p+[0,0,sign*.27],radius*.14,8 if lod else 24,.012)
+            sign=-1 if s.details.get('prop_pusher') else 1;shaft=s.details.get('spinner_length',.27)
+            m.tube('paint',p-[0,0,sign*shaft/.27*.20],p+[0,0,sign*shaft],radius*.14,8 if lod else 24,.012)
             rig.add('Propeller' if i==0 else 'Propeller_'+str(i),parent,p,m,'Z',blade_count=blades,radius_metres=radius)
         return
     if s.details.get('turbofans'):
@@ -294,6 +294,7 @@ def tails(rig,s,lod):
     if 'canard' in s.details:horizontal(rig,s,lod,'Canard',s.details['canard'])
 
 def gear(rig,s,lod):
+    if s.details.get('landing_none'):return
     if s.details.get('gear_layout'):
         for spec in s.details['gear_layout']:
             name=spec['name'];x=spec['x'];z=spec['z'];r=spec.get('radius',.48);hy=spec.get('hinge_y',s.belly+.30)
@@ -323,6 +324,8 @@ def gear(rig,s,lod):
 
 def weapons(rig,s,lod):
     count=0;positions={};L=s.length;y=s.details.get('gun_y',s.belly+s.body_height*.52)
+    if s.details.get('oneway'):
+        p=[0,s.belly+s.body_height/2,L*.5];rig.add('Muzzle_0','Fuselage',p,purpose='forward warhead/impact reference');positions['Muzzle_0']=p;count=1
     gun=s.details.get('gun',True)
     for gi in range(s.details.get('gun_count',1) if gun else 0):
         side=(-1 if gi==0 else 1) if s.details.get('gun_count',1)==2 else s.details.get('gun_side',1)
@@ -418,10 +421,11 @@ def fittings(rig,s,lod):
             hump=Mesh();cy=y-.10;W=s.body_width
             curved_shell(hump,'paint',[(L*.12,cy,W*.12,.08),(L*.20,cy+.10,W*.42,.30),(L*.31,cy+.08,W*.36,.27),(L*.39,cy-.05,W*.08,.06)],lod,circumference=8 if lod else 24,longitudinal=3)
             merge_mesh(m,hump)
-        p=np.array([0,s.belly-.12,L*.28]);optic=Mesh()
-        optic.tube('paint',p-[0,.14,0],p+[0,.14,0],min(W*.25,.23),8 if lod else 20)
-        optic.tube('glass',p+[0,0,.12],p+[0,0,.19],min(W*.17,.14),8 if lod else 20)
-        rig.add('Sensor_Turret','Fuselage',p,optic,'Y')
+        if s.details.get('sensor_turret',True):
+            p=np.array([0,s.belly-.12,L*.28]);optic=Mesh()
+            optic.tube('paint',p-[0,.14,0],p+[0,.14,0],min(W*.25,.23),8 if lod else 20)
+            optic.tube('glass',p+[0,0,.12],p+[0,0,.19],min(W*.17,.14),8 if lod else 20)
+            rig.add('Sensor_Turret','Fuselage',p,optic,'Y')
         for side,label in ((-1,'L'),(1,'R')):
             if s.details.get('twin_boom'):
                 x=side*s.details['boom_x'];yy=s.details['boom_y'];boom=Mesh()
@@ -435,7 +439,7 @@ def fittings(rig,s,lod):
             verts=[[dx,yy,zz] for dx in (-.035,.035) for yy,zz in [(cy-.1,-L*.35),(cy-.1,-L*.465),(max(.20,cy-.95),-L*.45)]]
             m.solid('paint',verts,[(0,2,1),(3,4,5),(0,1,4,3),(1,2,5,4),(2,0,3,5)])
     # Dorsal blades are supported by the skin, with no free-floating fittings.
-    for z,h in ((L*.04,.23),(-L*.19,.18)):
+    for z,h in (() if s.details.get('oneway') else ((L*.04,.23),(-L*.19,.18))):
         base=y-.06
         if s.details.get('unmanned'):
             a=np.asarray(s.details['profile']);local=s.belly+s.body_height/2+s.body_height*np.interp(z/L,a[:,0],a[:,1]+a[:,3])
@@ -449,6 +453,18 @@ def build(s,lod=0):
     tails(rig,s,lod);gear(rig,s,lod);weapons(rig,s,lod);fittings(rig,s,lod);radar(rig,s,lod)
     for part in rig.parts:
         if part['mesh'] is not None:part['mesh'].remove_duplicates()
+    if s.details.get('oneway'):
+        low=min(float(np.asarray(g[0])[:,1].min()) for p in rig.parts if p['mesh'] is not None for g in p['mesh'].groups.values() if g[0])
+        shift=math.floor(low*1000+1e-4)/1000
+        for p in rig.parts:
+            p['pivot'][1]-=shift
+            if p['mesh'] is not None:p['mesh'].shift((0,-shift,0))
+        for pivot in rig.pivots.values():pivot[1]-=shift
+        s.belly-=shift;s.details['ground_shift_metres']=shift
+        for row in s.details['wing']:row[1]-=shift
+        for row in s.details['fins']:row[1]-=shift;row[2]-=shift
+        for p in s.details.get('propellers',[]):p[1]-=shift
+        for p in s.details['muzzle_positions'].values():p[1]-=shift
     return rig,s
 
 def build_multirotor(s,lod):
@@ -480,14 +496,21 @@ def build_multirotor(s,lod):
     camera.tube('paint',p,p+[0,0,.11],s.body_width*.20,8 if lod else 20)
     camera.tube('glass',p+[0,0,.115],p+[0,0,.13],s.body_width*.15,8 if lod else 20)
     rig.add('Camera','Fuselage',p,camera,'X')
-    p=np.array([0,max(.16,s.belly-.04),0]);payload=Mesh()
-    if d.get('bomber'):
-        payload.tube('paint',p-[0,0,L*.17],p+[0,0,L*.17],s.body_width*.22,8 if lod else 20,.04)
-        rig.add('Payload_Release','Fuselage',p,payload,'X');muzzle=p+[0,-s.body_width*.22,0]
-    else:
-        p=np.array([0,cy,L*.25]);payload.tube('paint',p,p+[0,0,L*.18],s.body_width*.22,8 if lod else 20,.02)
-        rig.add('Payload','Fuselage',p,payload);muzzle=p+[0,0,L*.18]
-    rig.add('Muzzle_0','Fuselage',muzzle,**({'frame_rotation':quat([1,0,0],math.pi/2)} if d.get('bomber') else {}));d['muzzle_count']=1;d['muzzle_positions']={'Muzzle_0':muzzle.tolist()}
+    count=d.get('payload_count',1);positions={}
+    for j in range(count):
+        p=np.array([(j-(count-1)/2)*s.body_width*.28,max(.16,s.belly-.04),0]);payload=Mesh()
+        if d.get('bomber'):
+            if count>1:
+                payload.tube('paint',p+[0,.16,0],p-[0,.19,0],.067,8 if lod else 20,.02)
+                payload.box('metal_dark',p+[0,.12,0],(.20,.035,.08));muzzle=p-[0,.19,0]
+            else:
+                payload.tube('paint',p-[0,0,L*.17],p+[0,0,L*.17],s.body_width*.22,8 if lod else 20,.04);muzzle=p+[0,-s.body_width*.22,0]
+            rig.add('Payload_Release' if count==1 else 'Payload_Release_'+str(j),'Fuselage',p,payload,'X')
+        else:
+            p=np.array([0,cy,L*.25]);payload.tube('paint',p,p+[0,0,L*.18],s.body_width*.22,8 if lod else 20,.02)
+            rig.add('Payload','Fuselage',p,payload);muzzle=p+[0,0,L*.18]
+        rig.add('Muzzle_'+str(j),'Fuselage',muzzle,**({'frame_rotation':quat([1,0,0],math.pi/2)} if d.get('bomber') else {}));positions['Muzzle_'+str(j)]=muzzle.tolist()
+    d['muzzle_count']=count;d['muzzle_positions']=positions
     for part in rig.parts:
         if part['mesh'] is not None:part['mesh'].remove_duplicates()
     return rig,s

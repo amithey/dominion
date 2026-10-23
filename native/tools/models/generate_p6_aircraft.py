@@ -606,14 +606,14 @@ def drone__saetbyol_4_9(lod=0):
     return male('drone__saetbyol_4_9','Saetbyol-4/9',lod,'saetbyol9',(11.5,20.,3.8,1.2,1.4,1.3),ROSTER_REFERENCE,
         'Approximate Saetbyol-9 MALE exterior; combined roster row',blades=4,stations=(.34,.53,.72),ventral_fin=True,generic_design=True)
 
-def multicopter(slug,name,lod,motors=4,heavy=False,representative=''):
+def multicopter(slug,name,lod,motors=4,heavy=False,representative='',payload_count=1):
     import math
     L,S,H,W,B,b=(2.8,2.8,1.05,.78,.28,.48) if heavy else (1.25,1.25,.62,.35,.18,.28)
     arm=1.02 if heavy else .52;hub=.90 if heavy else .49
     positions=[[arm*math.sin(t),hub,arm*math.cos(t)] for t in [math.tau*i/motors+math.pi/motors for i in range(motors)]]
     s=AircraftSpec(slug,name,'multirotor',L,S,H,W,B,b,0,ROSTER_REFERENCE,seats=0,representative=representative,
         features=[str(motors)+' independent motor/propeller hubs','closed central battery/payload frame','landing skids','gravity payload release' if heavy else 'forward payload and camera'],
-        details={'multirotor':True,'unmanned':True,'generic_design':True,'motors':motors,'propellers':positions,'prop_radius':.43 if heavy else .23,'prop_blades':2,'bomber':heavy})
+        details={'multirotor':True,'unmanned':True,'generic_design':True,'motors':motors,'propellers':positions,'prop_radius':.43 if heavy else .23,'prop_blades':2,'bomber':heavy,'payload_count':payload_count})
     return build(s,lod)
 def drone__shaheen(lod=0):return multicopter('drone__shaheen','Shaheen',lod,representative='Plausible Syrian light FPV strike quadcopter; roster does not identify a unique production airframe')
 
@@ -634,6 +634,15 @@ def drone__taliban_built_drone(lod=0):
 def drone__wing_loong_i_ch_4(lod=0):
     return male('drone__wing_loong_i_ch_4','Wing Loong I / CH-4',lod,'wingloong1',(9.05,14.,2.77,.82,1.,1.),
         'https://cgsc.contentdm.oclc.org/digital/api/collection/p4013coll11/id/2090/download','Wing Loong I exterior',blades=3,stations=(.37,))
+
+def wingloong2(slug,name,lod,representative=''):
+    return male(slug,name,lod,'wingloong2',(11.,20.5,4.1,1.2,1.3,1.25),
+        'https://odin.t2com.army.mil/WEG/Asset/Wing_Loong_II',representative,blades=3,stations=(.34,.53,.72),ventral_fin=True,prop_radius=1.4,store_length=1.6,store_radius=.10)
+def drone__wing_loong_ii(lod=0):return wingloong2('drone__wing_loong_ii','Wing Loong II',lod)
+def drone__wing_loong_ii_akinci(lod=0):return wingloong2('drone__wing_loong_ii_akinci','Wing Loong II / Akinci',lod,'Wing Loong II exterior')
+def akinci__bayraktar_akinci(lod=0):return akinci('akinci__bayraktar_akinci','Bayraktar Akinci',lod)
+def heavyBomberDrone__heavy_hexacopter(lod=0):return multicopter('heavyBomberDrone__heavy_hexacopter','Heavy Hexacopter',lod,6,True,'Original generic six-motor bomber drone')
+def heavyBomberDrone__vampire_baba_yaga(lod=0):return multicopter('heavyBomberDrone__vampire_baba_yaga','Vampire / Baba Yaga',lod,6,True,'Approximate Vampire six-motor bomber with three light mortar payload positions',3)
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):

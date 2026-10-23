@@ -120,13 +120,14 @@ def validate(path):
                 assert len(actual)==want,(prefix,'naval mission store count')
         if doc['extras']['priority']=='P6':
             multi=s['details'].get('multirotor',False)
-            for name in (('Skid',) if multi else ('Gear_Nose','Gear_Left','Gear_Right','Rudder')+(() if s['details'].get('unmanned') else ('Canopy',))):
+            none=s['details'].get('landing_none',False)
+            for name in (('Skid',) if multi else (() if none else ('Gear_Nose','Gear_Left','Gear_Right'))+('Rudder',)+(() if s['details'].get('unmanned') else ('Canopy',))):
                 assert prefix+'/'+name in by,(prefix,name)
             for side in (() if multi else ('L','R')):
                 for name in ('Flap','Aileron'):
                     p=prefix+'/Wing_'+side+'/'+name+'_'+side
                     assert by[p][0]['extras']['rotation_axis']=='X'
-            for name in (() if multi else ('Gear_Nose','Gear_Left','Gear_Right')):
+            for name in (() if multi or none else ('Gear_Nose','Gear_Left','Gear_Right')):
                 layouts={g['name']:g for g in s['details'].get('gear_layout',[])}
                 assert by[prefix+'/'+name][0]['extras']['rotation_axis']==layouts.get(name,{}).get('axis','X')
             if s['details'].get('gear_layout'):

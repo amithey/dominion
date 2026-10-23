@@ -1,0 +1,36 @@
+{
+  "batch": 58,
+  "files": [
+    "aircraft/drone__saetbyol_4_9.glb",
+    "aircraft/drone__shaheen.glb",
+    "aircraft/drone__shahpar_ii_burraq.glb",
+    "aircraft/drone__taliban_built_drone.glb",
+    "aircraft/drone__wing_loong_i_ch_4.glb"
+  ],
+  "sha256": {
+    "aircraft/drone__saetbyol_4_9.glb": "8c8e8794d4c17039f45a35ba847d6035a106117245101ee79d8e0164044ca671",
+    "aircraft/drone__shaheen.glb": "f1ae907718b06cf969d08b39ef3e75c7aa4e1ea945438852ae7e49cf36262666",
+    "aircraft/drone__shahpar_ii_burraq.glb": "546c5e4802810f023ebab296c469dcae4d44b3569c21667c7f71e2e3b81b39e4",
+    "aircraft/drone__taliban_built_drone.glb": "bc43fc2f2f257fd782e55dfe4d2eb338e142ec715a83ea880fdeabbd382e00cc",
+    "aircraft/drone__wing_loong_i_ch_4.glb": "ee4cefea914c0751979bbe6e8586ece2d8c43455c5361756558bf0d9b1bd2f28"
+  },
+  "maximum_triangles": [
+    10304,
+    1640
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}
