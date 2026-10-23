@@ -246,6 +246,53 @@ def corvette__martadinata_class(lod=0):
         houses=[(0,8,10.7,29,5.9,0,.82),(0,-21,10.8,20,5.2,0,.92),(0,10,7.5,12,3.5,5.9,.73)],
         funnels=[(0,-5,4.4,7,6.8,3)],masts=[(8,22,'panel',3.8)],guns=[(0,37,76,4.2),(0,-22,35,2.5,5.5,True)],vls=[(25,4,3,.7,0)],canisters=[(-1,2.8,4)],ciws=[],hangar_z=-31.1)
 
+def corvette__minerva_class(lod=0):
+    return combatant('corvette__minerva_class','Minerva-class',lod,(87.,10.3,3.2,3.6),
+        'https://www.marina.difesa.it/noi-siamo-la-marina/pilastro-operativo/mezzi/forze-navali/SiteAssets/navi_radiate/_Corvette_old.aspx',
+        ['compact conventional ASW corvette','76 mm bow turret','eight-round Albatros aft launcher','single funnel','two separated slim sensor masts','no helicopter hangar or landing deck'],
+        houses=[(0,6,7.8,24,4.7,0,.95),(0,-16,6.8,14,2.8,0,.95),(0,8,5.8,10,2.2,4.7,.92)],
+        funnels=[(0,-5,3.5,5.4,5.6,2)],masts=[(6,17,'bar',3.9),(-12,13,'bar',3)],guns=[(0,30,76,4.1)],vls=[],canisters=[],ciws=[(0,-22,1.2)],ciws_style='ram',ciws_tubes=8,hangar=False,flight_deck=False,bow_sheer=1.1)
+
+def corvette__mogami_class(lod=0):
+    rig,s=combatant('corvette__mogami_class','Mogami-class',lod,(133.,16.3,4.9,4.1),
+        'https://www.mhi.com/jp/business/products-services/space-defense/surface-ships/frigate-mogami-class',
+        ['very clean continuous stealth superstructure','enclosed pyramidal integrated mast','127 mm L62 bow gun','16-cell Mk41 bank','eight Type 17 canisters','11-tube SeaRAM on hangar','aft mine-warfare working deck'],
+        houses=[(0,12,12.7,43,7,0,.80),(0,-27,12.5,23,5.6,0,.91),(0,14,8,17,7,7,.55)],
+        funnels=[(0,-8,5.1,9,6.2,3.8)],masts=[(14,25,'bar',2.6)],fixed_arrays=[14,15,6.3],guns=[(0,48,127,7.6)],vls=[(32,4,4,.76,0)],canisters=[(-4,3,4)],ciws=[(0,-28,5.9)],ciws_style='ram',ciws_tubes=11,hangar_z=-38.6)
+    s.representative='Mogami class with planned/retrofitted Mk41 bank';return rig,s
+
+def corvette__opv_76_nns_aradu(lod=0):
+    rig,s=combatant('corvette__opv_76_nns_aradu','OPV-76 / NNS Aradu',lod,(76.9,11.9,3.5,3.4),
+        'https://www.dearsan.com/en/product/opv-76/',
+        ['Dearsan OPV-76 representative for combined roster row','short high-freeboard patrol hull','long forward bridge','76 mm bow gun','compact aft gun','single exhaust','open stern working platform'],
+        houses=[(0,6,8.8,25,5.2,0,.88),(0,-15,7.8,12,3.3,0,.92),(0,8,6.1,10,2.6,5.2,.81)],
+        funnels=[(0,-5,3.7,5.7,5.4,2)],masts=[(6,18,'panel',3.2)],guns=[(0,26,76,4.0),(0,-20,30,1.8)],vls=[],canisters=[],ciws=[],hangar=False,flight_deck=False,bow_sheer=1.2)
+    s.representative='Dearsan OPV-76; not the much larger MEKO NNS Aradu';return rig,s
+
+def corvette__sa_ar_6(lod=0):
+    return combatant('corvette__sa_ar_6',"Sa'ar 6",lod,(90.,13.,3.8,3.7),
+        'https://d2zo35mdb530wx.cloudfront.net/_binary/UCPthyssenkruppMarineSystems/Press-release-tkMS-hands-over-corvette-to-Israeli-Navy.pdf',
+        ['dense weapon fit on a compact stealth hull','76 mm bow gun','32 Barak-8 and 40 C-Dome cells','16 antiship canisters','large fixed MF-STAR faces','two exhaust blocks','single helicopter hangar'],
+        houses=[(0,7,10,27,5.7,0,.82),(0,-18,10,17,4.8,0,.92),(0,9,6.5,11,4.5,5.7,.68)],
+        funnels=[(0,-3,3.7,4.7,6,2.4),(0,-11,3.6,4.5,6,2.4)],masts=[(8,21,'bar',2.8)],fixed_arrays=[9,12,6.3],guns=[(0,31,76,4.2)],
+        vls=[(21,8,4,.55,0),(-18,8,5,.43,5)],canisters=[(-1,2.4,8)],ciws=[],hangar_z=-26.6)
+
+def corvette__shahid_soleimani_class(lod=0):
+    rig,s=combatant('corvette__shahid_soleimani_class','Shahid Soleimani-class',lod,(65.,14.5,2.,3.5),
+        'native/CODEX-UNIT-ROSTER.md',
+        ['wave-piercing twin hulls with open tunnel','wide cross deck and angular central bridge','30 mm forward gun','six antiship canisters','small vertical-launch banks','raised stern helicopter platform'],
+        houses=[(0,4,8.5,21,4.8,0,.75),(0,-9,8,10,2.2,0,.84),(0,5,5.7,9,3,4.8,.65)],
+        funnels=[(-3,-3,2.1,3.8,3.5,2),(3,-3,2.1,3.8,3.5,2)],masts=[(4,16,'bar',2.8)],guns=[(0,20,30,1.8)],
+        vls=[(-8,4,2,.65,2.3)],canisters=[(-2,2,3)],ciws=[],hangar=False,catamaran=True,demi_beam=3.1,bow_sheer=.8)
+    s.representative='Approximate 65 m / 14.5 m public-estimate class exterior; exact dimensions undisclosed';return rig,s
+
+def corvette__tamandare_frigate(lod=0):
+    return combatant('corvette__tamandare_frigate','Tamandare frigate',lod,(107.2,16.,5.2,4.2),
+        'https://www.ir.tkmsgroup.com/news/after-less-than-four-years-of-construction-tkms-celebrates-the-commissioning-of-the-tamandare-frigate/6a216b0f-7ab3-46cd-a4e7-55ea494d7086',
+        ['MEKO A100-derived hull','12-cell Sea Ceptor foredeck bank','76 mm bow gun','eight antiship canisters','large TRS rotating search array','single wide exhaust structure','aft 30 mm mount and helicopter hangar'],
+        houses=[(0,8,12.3,30,6.1,0,.83),(0,-22,12,20,5.4,0,.92),(0,10,8.1,13,3.7,6.1,.72)],
+        funnels=[(0,-6,4.8,7.5,6.8,3)],masts=[(8,23,'panel',4.5)],guns=[(0,37,76,4.2),(0,-23,30,1.8,5.6,True)],vls=[(25,4,3,.7,0)],canisters=[(-1,2.8,4)],ciws=[],hangar_z=-32.1)
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):

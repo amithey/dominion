@@ -3,7 +3,7 @@
 Hull origin is at the keel under the footprint centre. The published draft
 defines waterline_y in metadata; wake markers sit at that waterline.
 """
-from dataclasses import dataclass,field
+from dataclasses import dataclass,field,replace
 import math
 import numpy as np
 from vehicle_parts import Mesh,Rig,loft,merge_mesh,hollow_muzzle,rotation
@@ -35,6 +35,15 @@ def beam(m,a,b,r=.06,lod=0,role='metal_dark'):
 
 def hull(rig,s,lod):
     L=s.length;B=s.beam;D=s.draft+s.freeboard;d=s.details;m=Mesh()
+    if d.get('catamaran'):
+        temp=Rig(lod);demi=d.get('demi_beam',B*.22)
+        hull(temp,replace(s,beam=demi,details={**d,'catamaran':False}),lod)
+        for side in (-1,1):merge_mesh(m,temp.parts[0]['mesh'],t=(side*(B-demi)/2,0,0))
+        block(m,'paint',0,D-.8,-L*.03,B-.3,.8,L*.70,.98)
+        rig.add('Hull',rig.root,(0,0,0),m)
+        rig.add('Wake_Bow','Hull',(0,s.draft,L*.49),waterline_y=s.draft)
+        rig.add('Wake_Stern','Hull',(0,s.draft,-L*.49),waterline_y=s.draft)
+        return
     profile=d.get('hull_profile',[(-.5,.65),(-.45,.80),(-.3,.96),(-.1,1),(.12,1),(.30,.86),(.41,.55),(.48,.18),(.5,.008)])
     zz=sorted(set([p[0] for p in profile]+list(np.linspace(-.5,.5,10 if lod else 49))))
     rings=[]
@@ -239,14 +248,16 @@ def fittings(rig,s,lod):
     for side in (-1,1):
         points=[]
         for z in np.linspace(-.28,.465,9 if lod else s.details.get('rail_count',37)):
-            x=side*(B/2*np.interp(z,*np.array(outline).T)-.10);y=D+max(0,(z-.22)/.28)*s.details.get('bow_sheer',1.7)
+            w=np.interp(z,*np.array(outline).T)
+            x=side*((B-demi)/2+demi/2*w-.10) if s.details.get('catamaran') and (demi:=s.details.get('demi_beam',B*.22)) else side*(B/2*w-.10)
+            y=D+max(0,(z-.22)/.28)*s.details.get('bow_sheer',1.7)
             p=np.array([x,y,z*L]);points.append(p)
             if not lod:beam(m,p,p+[0,1.05,0],.028,lod)
         for a,b in zip(points,points[1:]):
             beam(m,a+[0,1.05,0],b+[0,1.05,0],.027,lod)
             if not lod:beam(m,a+[0,.5,0],b+[0,.5,0],.022,lod)
         # Bow pennant backing panel, mooring bollards and an anchor.
-        p=[side*B*.31,D*.65,L*.40]
+        p=[side*((B-s.details.get('demi_beam',B*.22))/2+s.details.get('demi_beam',B*.22)*.25) if s.details.get('catamaran') else side*B*.31,D*.65,L*.40]
         m.box('markings',p,(.045,1.4,4.))
         for z in (-L*.44,L*.40):
             for dz in (-.35,.35):m.tube('metal_dark',(side*B*.25,D,z+dz),(side*B*.25,D+.5,z+dz),.18,6 if lod else 12)
