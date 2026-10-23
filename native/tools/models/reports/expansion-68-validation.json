@@ -9,16 +9,16 @@
     "ships/corvette__tamandare_frigate.glb"
   ],
   "sha256": {
-    "ships/corvette__minerva_class.glb": "53e1a5e4372435d03a2e3d3d6b41b076cad63c1f57457deeba259077a1aae62d",
-    "ships/corvette__mogami_class.glb": "9bc5bef4c40d01033c110b3feddb065b3cb530ae86900af3a6eaddd9331488fb",
-    "ships/corvette__opv_76_nns_aradu.glb": "8fbfe3e1354089ec69a46000fd81f14707f44c2c2c18355cafa4fc127ea68e0c",
-    "ships/corvette__sa_ar_6.glb": "55ad26b89ea7c7d0491e2f537c52ee68435a9864f0e39f5955e765eec49eb441",
-    "ships/corvette__shahid_soleimani_class.glb": "5bf900ea4f51d643a808ff743e514bd46f5dacf452d299b3ff2d8dafadca2207",
-    "ships/corvette__tamandare_frigate.glb": "2a10eeaa4d373f9809f11d36fb1a41c7ab1b5d7c9e46fc7585d70fe6202202d3"
+    "ships/corvette__minerva_class.glb": "90a662f06188621a6eda36236db0418dd5fad8d89357d76ea435ba0d86e7e5e2",
+    "ships/corvette__mogami_class.glb": "e98b81f0d646669a0ee1b81a3c2dabb7f1447df4671938e805d491fe9df29b81",
+    "ships/corvette__opv_76_nns_aradu.glb": "774342bf901774417027700418fa266e074bafc0ce2150a076b277a369ac8ddf",
+    "ships/corvette__sa_ar_6.glb": "8743a4d1604e17e866d55f001b4a599b70bb04a1cf6d746ffcdd2752666ec49f",
+    "ships/corvette__shahid_soleimani_class.glb": "a6d337c544de735194dba184bebe1cc63283247b144010af1b3e0f7dc1773064",
+    "ships/corvette__tamandare_frigate.glb": "d8f8eebf72f787765557c9c69bad62f77af9a587cdeda28c3b96db4235626a1c"
   },
   "maximum_triangles": [
-    13178,
-    2018
+    13158,
+    2010
   ],
   "checks": [
     "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
@@ -30,6 +30,7 @@
   "generators": [
     "generate_p7_ships.py",
     "ship_parts.py",
+    "submarine_parts.py",
     "validate_ships.py",
     "vehicle_parts.py"
   ]
