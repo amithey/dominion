@@ -1,0 +1,85 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Hull local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Hull_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Wake_Bow local=[0.0, 12.0, 73.451] world=[0.0, 12.0, 73.451] axis=None pivot
+    Wake_Stern local=[0.0, 12.0, -73.451] world=[0.0, 12.0, -73.451] axis=None pivot
+    Sail local=[0.0, 11.776, 40.473] world=[0.0, 11.776, 40.473] axis=None pivot
+      Sail_Mesh local=[0, 0, 0] world=[0.0, 11.776, 40.473] axis=None mesh
+      Periscope_0 local=[0.0, 7.0, -3.78] world=[0.0, 18.776, 36.693] axis=None pivot
+        Periscope_0_Mesh local=[0, 0, 0] world=[0.0, 18.776, 36.693] axis=None mesh
+      Periscope_1 local=[0.0, 7.0, -1.26] world=[0.0, 18.776, 39.213] axis=None pivot
+        Periscope_1_Mesh local=[0, 0, 0] world=[0.0, 18.776, 39.213] axis=None mesh
+      Periscope_2 local=[0.0, 7.0, 1.26] world=[0.0, 18.776, 41.733] axis=None pivot
+        Periscope_2_Mesh local=[0, 0, 0] world=[0.0, 18.776, 41.733] axis=None mesh
+      Periscope_3 local=[0.0, 7.0, 3.78] world=[0.0, 18.776, 44.253] axis=None pivot
+        Periscope_3_Mesh local=[0, 0, 0] world=[0.0, 18.776, 44.253] axis=None mesh
+      Mast_0 local=[0.0, 7.05, -5.04] world=[0.0, 18.826, 35.433] axis=None pivot
+        Mast_0_Mesh local=[0, 0, 0] world=[0.0, 18.826, 35.433] axis=None mesh
+        Radar local=[0.0, 2.944, 0.0] world=[0.0, 21.77, 35.433] axis=Y pivot
+          Radar_Mesh local=[0, 0, 0] world=[0.0, 21.77, 35.433] axis=None mesh
+      Sail_Fittings local=[0.0, 0.0, 0.0] world=[0.0, 11.776, 40.473] axis=None pivot
+        Sail_Fittings_Mesh local=[0, 0, 0] world=[0.0, 11.776, 40.473] axis=None mesh
+    Missile_Deck_Hatches local=[0.0, 12.8, 27.873] world=[0.0, 12.8, 27.873] axis=None pivot
+      Missile_Deck_Hatches_Mesh local=[0, 0, 0] world=[0.0, 12.8, 27.873] axis=None mesh
+    Tail_Control_0 local=[1.024, 6.4, -62.5083] world=[1.024, 6.4, -62.5083] axis=X pivot
+      Tail_Control_0_Mesh local=[0, 0, 0] world=[1.024, 6.4, -62.5083] axis=None mesh
+    Tail_Control_1 local=[0.0, 7.424, -62.5083] world=[0.0, 7.424, -62.5083] axis=X pivot
+      Tail_Control_1_Mesh local=[0, 0, 0] world=[0.0, 7.424, -62.5083] axis=None mesh
+    Tail_Control_2 local=[-1.024, 6.4, -62.5083] world=[-1.024, 6.4, -62.5083] axis=X pivot
+      Tail_Control_2_Mesh local=[0, 0, 0] world=[-1.024, 6.4, -62.5083] axis=None mesh
+    Tail_Control_3 local=[-0.0, 5.376, -62.5083] world=[-0.0, 5.376, -62.5083] axis=X pivot
+      Tail_Control_3_Mesh local=[0, 0, 0] world=[-0.0, 5.376, -62.5083] axis=None mesh
+    DivePlane_L local=[-4.864, 6.4, 38.974] world=[-4.864, 6.4, 38.974] axis=X pivot
+      DivePlane_L_Mesh local=[0, 0, 0] world=[-4.864, 6.4, 38.974] axis=None mesh
+    DivePlane_R local=[4.864, 6.4, 38.974] world=[4.864, 6.4, 38.974] axis=X pivot
+      DivePlane_R_Mesh local=[0, 0, 0] world=[4.864, 6.4, 38.974] axis=None mesh
+    Propeller_Shaft_0 local=[0.0, 6.4, -65.2065] world=[0.0, 6.4, -65.2065] axis=None pivot
+      Propeller_Shaft_0_Mesh local=[0, 0, 0] world=[0.0, 6.4, -65.2065] axis=None mesh
+    Propeller local=[0.0, 6.4, -72.2518] world=[0.0, 6.4, -72.2518] axis=Z pivot
+      Propeller_Mesh local=[0, 0, 0] world=[0.0, 6.4, -72.2518] axis=None mesh
+    Pumpjet_Shroud local=[0.0, 6.4, -72.2518] world=[0.0, 6.4, -72.2518] axis=None pivot
+      Pumpjet_Shroud_Mesh local=[0, 0, 0] world=[0.0, 6.4, -72.2518] axis=None mesh
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Hull_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Hull_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Wake_Bow_LOD1 local=[0.0, 12.0, 73.451] world=[0.0, 12.0, 73.451] axis=None pivot hidden
+    Wake_Stern_LOD1 local=[0.0, 12.0, -73.451] world=[0.0, 12.0, -73.451] axis=None pivot hidden
+    Sail_LOD1 local=[0.0, 11.776, 40.473] world=[0.0, 11.776, 40.473] axis=None pivot hidden
+      Sail_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 11.776, 40.473] axis=None mesh hidden
+      Periscope_0_LOD1 local=[0.0, 7.0, -3.78] world=[0.0, 18.776, 36.693] axis=None pivot hidden
+        Periscope_0_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 18.776, 36.693] axis=None mesh hidden
+      Periscope_1_LOD1 local=[0.0, 7.0, -1.26] world=[0.0, 18.776, 39.213] axis=None pivot hidden
+        Periscope_1_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 18.776, 39.213] axis=None mesh hidden
+      Periscope_2_LOD1 local=[0.0, 7.0, 1.26] world=[0.0, 18.776, 41.733] axis=None pivot hidden
+        Periscope_2_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 18.776, 41.733] axis=None mesh hidden
+      Periscope_3_LOD1 local=[0.0, 7.0, 3.78] world=[0.0, 18.776, 44.253] axis=None pivot hidden
+        Periscope_3_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 18.776, 44.253] axis=None mesh hidden
+      Mast_0_LOD1 local=[0.0, 7.05, -5.04] world=[0.0, 18.826, 35.433] axis=None pivot hidden
+        Mast_0_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 18.826, 35.433] axis=None mesh hidden
+        Radar_LOD1 local=[0.0, 2.944, 0.0] world=[0.0, 21.77, 35.433] axis=Y pivot hidden
+          Radar_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 21.77, 35.433] axis=None mesh hidden
+      Sail_Fittings_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 11.776, 40.473] axis=None pivot hidden
+        Sail_Fittings_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 11.776, 40.473] axis=None mesh hidden
+    Missile_Deck_Hatches_LOD1 local=[0.0, 12.8, 27.873] world=[0.0, 12.8, 27.873] axis=None pivot hidden
+      Missile_Deck_Hatches_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 12.8, 27.873] axis=None mesh hidden
+    Tail_Control_0_LOD1 local=[1.024, 6.4, -62.5083] world=[1.024, 6.4, -62.5083] axis=X pivot hidden
+      Tail_Control_0_Mesh_LOD1 local=[0, 0, 0] world=[1.024, 6.4, -62.5083] axis=None mesh hidden
+    Tail_Control_1_LOD1 local=[0.0, 7.424, -62.5083] world=[0.0, 7.424, -62.5083] axis=X pivot hidden
+      Tail_Control_1_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 7.424, -62.5083] axis=None mesh hidden
+    Tail_Control_2_LOD1 local=[-1.024, 6.4, -62.5083] world=[-1.024, 6.4, -62.5083] axis=X pivot hidden
+      Tail_Control_2_Mesh_LOD1 local=[0, 0, 0] world=[-1.024, 6.4, -62.5083] axis=None mesh hidden
+    Tail_Control_3_LOD1 local=[-0.0, 5.376, -62.5083] world=[-0.0, 5.376, -62.5083] axis=X pivot hidden
+      Tail_Control_3_Mesh_LOD1 local=[0, 0, 0] world=[-0.0, 5.376, -62.5083] axis=None mesh hidden
+    DivePlane_L_LOD1 local=[-4.864, 6.4, 38.974] world=[-4.864, 6.4, 38.974] axis=X pivot hidden
+      DivePlane_L_Mesh_LOD1 local=[0, 0, 0] world=[-4.864, 6.4, 38.974] axis=None mesh hidden
+    DivePlane_R_LOD1 local=[4.864, 6.4, 38.974] world=[4.864, 6.4, 38.974] axis=X pivot hidden
+      DivePlane_R_Mesh_LOD1 local=[0, 0, 0] world=[4.864, 6.4, 38.974] axis=None mesh hidden
+    Propeller_Shaft_0_LOD1 local=[0.0, 6.4, -65.2065] world=[0.0, 6.4, -65.2065] axis=None pivot hidden
+      Propeller_Shaft_0_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 6.4, -65.2065] axis=None mesh hidden
+    Propeller_LOD1 local=[0.0, 6.4, -72.2518] world=[0.0, 6.4, -72.2518] axis=Z pivot hidden
+      Propeller_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 6.4, -72.2518] axis=None mesh hidden
+    Pumpjet_Shroud_LOD1 local=[0.0, 6.4, -72.2518] world=[0.0, 6.4, -72.2518] axis=None pivot hidden
+      Pumpjet_Shroud_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 6.4, -72.2518] axis=None mesh hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 6.4, 0.0] world=[0.0, 6.4, 0.0] axis=None mesh hidden

@@ -1,0 +1,35 @@
+{
+  "batch": 82,
+  "files": [
+    "ships/nuclearSub__ohio_class.glb",
+    "ships/nuclearSub__triomphant_class.glb",
+    "ships/nuclearSub__type_094.glb",
+    "ships/nuclearSub__vanguard_class.glb",
+    "ships/seaDrone__sea_drone.glb"
+  ],
+  "sha256": {
+    "ships/nuclearSub__ohio_class.glb": "95c79a915dc2c752dc503e0579b40953dab781e65b8acc64ecd7e3d65be2cfa8",
+    "ships/nuclearSub__triomphant_class.glb": "2639ab02bec6c838687ac003ba74ebda36bf5149474dcecbb164929140f448b8",
+    "ships/nuclearSub__type_094.glb": "1dba86342ef553947e25a13a0b9e8065cd914851cffc6d70d020c066a4fdd75e",
+    "ships/nuclearSub__vanguard_class.glb": "99e4f76979589d438112f6c34bed46061c1cb7dcad2ebe8e9298807030b7fd30",
+    "ships/seaDrone__sea_drone.glb": "9e49372a334adcaf3676ca1514a119d3cc86bd1ba824ea3281e29e62a721605e"
+  },
+  "maximum_triangles": [
+    13192,
+    1688
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "submarine_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}

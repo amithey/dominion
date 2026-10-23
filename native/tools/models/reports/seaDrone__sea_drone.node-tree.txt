@@ -1,0 +1,25 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Hull local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Hull_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Wake_Bow local=[0.0, 0.45, 3.185] world=[0.0, 0.45, 3.185] axis=None pivot
+    Wake_Stern local=[0.0, 0.45, -3.185] world=[0.0, 0.45, -3.185] axis=None pivot
+    Bridge local=[0.0, 1.1, -1.0] world=[0.0, 1.1, -1.0] axis=None pivot
+      Bridge_Mesh local=[0, 0, 0] world=[0.0, 1.1, -1.0] axis=None mesh
+    Mast_0 local=[0.0, 1.6, -1.0] world=[0.0, 1.6, -1.0] axis=None pivot
+      Mast_0_Mesh local=[0, 0, 0] world=[0.0, 1.6, -1.0] axis=None mesh
+      Radar local=[0.0, 1.0, 0.0] world=[0.0, 2.6, -1.0] axis=Y pivot
+        Radar_Mesh local=[0, 0, 0] world=[0.0, 2.6, -1.0] axis=None mesh
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Hull_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Hull_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Wake_Bow_LOD1 local=[0.0, 0.45, 3.185] world=[0.0, 0.45, 3.185] axis=None pivot hidden
+    Wake_Stern_LOD1 local=[0.0, 0.45, -3.185] world=[0.0, 0.45, -3.185] axis=None pivot hidden
+    Bridge_LOD1 local=[0.0, 1.1, -1.0] world=[0.0, 1.1, -1.0] axis=None pivot hidden
+      Bridge_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.1, -1.0] axis=None mesh hidden
+    Mast_0_LOD1 local=[0.0, 1.6, -1.0] world=[0.0, 1.6, -1.0] axis=None pivot hidden
+      Mast_0_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.6, -1.0] axis=None mesh hidden
+      Radar_LOD1 local=[0.0, 1.0, 0.0] world=[0.0, 2.6, -1.0] axis=Y pivot hidden
+        Radar_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 2.6, -1.0] axis=None mesh hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 0.55, 0.0] world=[0.0, 0.55, 0.0] axis=None mesh hidden

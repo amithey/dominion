@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 462,
+  "ready_files": 467,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -953,6 +953,17 @@
         "ships/nuclearSub__arihant_class.glb",
         "ships/nuclearSub__borei_a.glb"
       ]
+    },
+    {
+      "batch": 82,
+      "report": "expansion-82-validation.json",
+      "files": [
+        "ships/nuclearSub__ohio_class.glb",
+        "ships/nuclearSub__triomphant_class.glb",
+        "ships/nuclearSub__type_094.glb",
+        "ships/nuclearSub__vanguard_class.glb",
+        "ships/seaDrone__sea_drone.glb"
+      ]
     }
   ],
   "priorities": {
@@ -1361,7 +1372,7 @@
     "P7": {
       "requested_rows": 113,
       "unique_files": 113,
-      "ready_files": 108,
+      "ready_files": 113,
       "ready_slugs": [
         "aegisCruiser__maya_class_aegis_destroyer",
         "asFrigate__admiral_gorshkov_class",
@@ -1451,6 +1462,11 @@
         "missileBoat__type_022",
         "nuclearSub__arihant_class",
         "nuclearSub__borei_a",
+        "nuclearSub__ohio_class",
+        "nuclearSub__triomphant_class",
+        "nuclearSub__type_094",
+        "nuclearSub__vanguard_class",
+        "seaDrone__sea_drone",
         "submarine__agosta_90b",
         "submarine__astute_class",
         "submarine__collins_class",
@@ -1472,13 +1488,7 @@
         "submarine__walrus_class",
         "type45__type_45_destroyer"
       ],
-      "remaining_slugs": [
-        "nuclearSub__ohio_class",
-        "nuclearSub__triomphant_class",
-        "nuclearSub__type_094",
-        "nuclearSub__vanguard_class",
-        "seaDrone__sea_drone"
-      ]
+      "remaining_slugs": []
     }
   }
 }
