@@ -126,7 +126,8 @@ def validate(path):
                     p=prefix+'/Wing_'+side+'/'+name+'_'+side
                     assert by[p][0]['extras']['rotation_axis']=='X'
             for name in ('Gear_Nose','Gear_Left','Gear_Right'):
-                assert by[prefix+'/'+name][0]['extras']['rotation_axis']=='X'
+                layouts={g['name']:g for g in s['details'].get('gear_layout',[])}
+                assert by[prefix+'/'+name][0]['extras']['rotation_axis']==layouts.get(name,{}).get('axis','X')
             if s['details'].get('gear_layout'):
                 for g in s['details']['gear_layout']:
                     children=[p for p in by if p.startswith(prefix+'/'+g['name']+'/'+g['name']+'_Wheel_') and not p.endswith('_Mesh')]
@@ -141,8 +142,9 @@ def validate(path):
                 tips=xy[radii>.985*radii.max()];angles=np.sort(np.mod(np.arctan2(tips[:,1],tips[:,0]),math.tau))
                 gaps=np.diff(np.r_[angles,angles[0]+math.tau]);blades=s['details']['prop_blades']
                 assert np.count_nonzero(gaps>math.pi/blades*.5)==blades,(p,'actual propeller blade count')
-            assert (prefix+'/Rotodome' in by)==bool(s['details'].get('radome'))
-            if s['details'].get('radome'):assert by[prefix+'/Rotodome'][0]['extras']['rotation_axis']=='Y'
+            rotating=bool(s['details'].get('radome')) and not s['details'].get('radome_static')
+            assert (prefix+'/Rotodome' in by)==rotating
+            if rotating:assert by[prefix+'/Rotodome'][0]['extras']['rotation_axis']=='Y'
             assert by[prefix+'/Rudder'][0]['extras']['rotation_axis']=='Y'
             if s['stealth']:
                 assert not any('/Pylon_' in p for p in by if p.startswith(prefix+'/'))

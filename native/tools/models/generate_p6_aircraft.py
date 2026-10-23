@@ -360,6 +360,40 @@ def aewc__e_2c_hawkeye(lod=0):
         propellers=[(-4.05,3.10,3.),(4.05,3.10,3.)],prop_radius=2.05,prop_blades=4,prop_nacelle=5.2,
         stabilator=[(.5,2.3,-4.9,-7.8),(4.4,2.3,-5.3,-7.6)],radome=[0,5.12,-.65,3.66,3.66,.92],gear_layout=gear)
 
+def airliner_gear(L,track,r=.5,axles=1):
+    return [{'name':'Gear_Nose','x':0,'z':L*.32,'radius':r*.72,'pairs':2}]+[
+        {'name':n,'x':x,'z':-L*.08,'radius':r,'pairs':2,'axles':axles,'axis':'Z'} for n,x in [('Gear_Left',-track/2),('Gear_Right',track/2)]]
+
+def sentry(slug,name,lod,cfm=False):
+    return largeplane(slug,name,lod,'e3',(46.68,44.45,12.70,3.76,3.8,2.2),
+        [(1.35,3.8,4.5,-5.8),(22.225,4.9,-10.7,-13.5)],[(0,5.2,12.7,-12.2,-22.3,-18.7,-21.)],
+        'https://awacs.nato.int/organisation/awacs-fleet-2',
+        ['Boeing 707 airframe','four underwing turbofans','dorsal rotating radar disc','low swept wing','four-wheel main bogies','CFM56 nacelles' if cfm else 'slender TF33 nacelles'],
+        turbofans=[(side*x,2.9,z) for side in (-1,1) for x,z in [(7.,2.6),(12.8,-1.6)]],
+        fan_radius=.91 if cfm else .64,fan_length=3.6,engine_mount_y=4.,radome=[0,9.55,-3.3,4.55,4.55,1.8],
+        stabilator=[(.7,5.1,-13.3,-21.),(7.6,5.8,-17.4,-20.3)],gear_layout=airliner_gear(46.68,6.7,.56,2))
+def aewc__e_3a_sentry(lod=0):return sentry('aewc__e_3a_sentry','E-3A Sentry',lod)
+def aewc__e_3f_sentry(lod=0):return sentry('aewc__e_3f_sentry','E-3F Sentry',lod,True)
+def aewc__e_3g_sentry(lod=0):return sentry('aewc__e_3g_sentry','E-3G Sentry',lod)
+
+def wedgetail(slug,name,lod):
+    return largeplane(slug,name,lod,'e7',(33.6,34.3,12.6,3.76,3.8,1.3),
+        [(1.35,2.95,3.6,-5.5),(17.15,4.0,-5.6,-7.9)],[(0,4.9,12.6,-7.,-15.5,-12.0,-14.5)],
+        'https://www.airforce.gov.au/aircraft/e-7a-wedgetail',
+        ['Boeing 737-700 airframe','two underwing turbofans','fixed MESA top-hat radar','swept low wing','electronic radar scan without rotating exterior'],
+        turbofans=[(-5.6,2.15,1.4),(5.6,2.15,1.4)],fan_radius=.94,fan_length=3.1,engine_mount_y=3.0,
+        aesa_bar={'y':7.55,'z':-1.6,'length':10.5,'width':2.4,'height':.34,'top_hat':True},
+        stabilator=[(.65,4.4,-9.1,-15.0),(6.2,4.8,-12.,-14.5)],gear_layout=airliner_gear(33.6,5.3,.48))
+def aewc__e_7_peace_eye(lod=0):return wedgetail('aewc__e_7_peace_eye','E-7 Peace Eye',lod)
+def aewc__e_7_wedgetail_aew1(lod=0):return wedgetail('aewc__e_7_wedgetail_aew1','E-7 Wedgetail AEW1',lod)
+def aewc__e_767(lod=0):
+    return largeplane('aewc__e_767','E-767',lod,'e767',(48.51,47.57,15.85,5.03,5.1,2.0),
+        [(1.8,4.0,4.7,-6.8),(23.785,5.2,-7.8,-10.5)],[(0,6.7,15.85,-12.0,-23.0,-19.2,-22.)],
+        'https://www.mod.go.jp/asdf/equipment/keikaiki/E-767/',
+        ['Boeing 767 wide-body airframe','two large underwing turbofans','dorsal rotating radar disc','swept low wing','four-wheel main bogies'],
+        turbofans=[(-7.1,2.9,1.8),(7.1,2.9,1.8)],fan_radius=1.12,fan_length=4.2,engine_mount_y=4.2,
+        radome=[0,11.0,-3.5,4.55,4.55,1.8],stabilator=[(.9,5.8,-13.0,-22.3),(9.5,6.4,-18.0,-21.5)],gear_layout=airliner_gear(48.51,9.3,.62,2))
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):
     from validate_aircraft import validate

@@ -53,9 +53,9 @@ def curved_shell(m,role,sections,lod=0,window=None,cross_power=1.,cap_start=True
     samples.append(a[-1].tolist())
     shell_surface(m,role,samples,lod,window,cross_power,segments=circumference or (12 if lod else 36),subdivisions=1,cap_start=cap_start,cap_end=cap_end)
 
-def airfoil(m,stations,lod=0,role='paint'):
+def airfoil(m,stations,lod=0,role='paint',span_steps=None,chord_steps=None):
     """Closed symmetric airfoil. Stations are span-X, Y, leading-Z, trailing-Z."""
-    count=4 if lod else 10
+    count=chord_steps or (4 if lod else 10)
     chords=np.linspace(0,1,count)
     profile=[(t,1) for t in chords]+[(t,-1) for t in chords[-2:0:-1]]
     def ring(s):
@@ -67,7 +67,7 @@ def airfoil(m,stations,lod=0,role='paint'):
         return np.asarray(points)
     dense=[]
     for a,b in zip(stations,stations[1:]):
-        for t in np.linspace(0,1,1 if lod else 6,endpoint=False):dense.append(np.asarray(a)*(1-t)+np.asarray(b)*t)
+        for t in np.linspace(0,1,span_steps or (1 if lod else 6),endpoint=False):dense.append(np.asarray(a)*(1-t)+np.asarray(b)*t)
     dense.append(np.asarray(stations[-1]));rings=[ring(s) for s in dense]
     m.face(role,rings[0],[-1,0,0]);m.face(role,rings[-1],[1,0,0])
     for a,b in zip(rings,rings[1:]):
@@ -172,7 +172,9 @@ def engines(rig,s,lod):
                 curved_shell(body,'paint',[(z-length,y,r*.35,r*.35),(z-length*.65,y,r,r),(z-length*.20,y,r,r),(z-.12,y,r*.46,r*.46)],lod,circumference=8 if lod else 24,longitudinal=3)
                 body.shift((x,0,0));parent='Engine_'+str(i);rig.add(parent,'Fuselage',p-[0,0,length*.40],body)
             for angle in np.linspace(0,math.tau,blades,endpoint=False):
-                blade=Mesh();airfoil(blade,[(radius*.12,0,.08,-.08),(radius*.35,0,.15,-.15),(radius*.80,0,.11,-.11),(radius,0,.045,-.045)],lod)
+                blade=Mesh();reduced=len(s.details['propellers'])*blades>10 and not lod
+                airfoil(blade,[(radius*.12,0,.08,-.08),(radius*.35,0,.15,-.15),(radius*.80,0,.11,-.11),(radius,0,.045,-.045)],lod,
+                    span_steps=3 if reduced else None,chord_steps=6 if reduced else None)
                 R=rotation([0,0,1],angle)@rotation([1,0,0],math.radians(70))
                 for g in blade.groups.values():
                     g[0]=(np.asarray(g[0])@R.T+p).tolist();g[1]=(np.asarray(g[1])@R.T).tolist()
@@ -198,6 +200,8 @@ def engines(rig,s,lod):
                 mount=np.interp(abs(x),np.array(s.details['wing'])[:,0],np.array(s.details['wing'])[:,1])
                 a=np.array([x,y+radius*.70,z]);b=np.array([x,mount,z-length*.75])
                 beam(m,'paint',a,b,.22)
+            if s.details.get('rear_engines'):
+                beam(m,'paint',(math.copysign(s.body_width*.40,x),y,z),(x,y,z),.22)
             rig.add('Engine_'+str(i),'Fuselage',p,m)
             rig.add('Afterburner' if i==0 else 'Afterburner_'+str(i),'Engine_'+str(i),rear,frame_rotation=quat([0,1,0],math.pi),forward='-Z',afterburning=False)
         return
@@ -289,7 +293,7 @@ def gear(rig,s,lod):
         for spec in s.details['gear_layout']:
             name=spec['name'];x=spec['x'];z=spec['z'];r=spec.get('radius',.48);hy=spec.get('hinge_y',s.belly+.30)
             hinge=np.array([x,hy,z+.25]);axle=np.array([x,r,z]);m=Mesh();m.tube('metal_dark',hinge,axle,.09,6 if lod else 16)
-            beam(m,'paint',hinge,axle+[0,0,.25],.15);rig.add(name,'Fuselage',hinge,m,'X')
+            beam(m,'paint',hinge,axle+[0,0,.25],.15);rig.add(name,'Fuselage',hinge,m,spec.get('axis','X'))
             axles=spec.get('axles',1);pairs=spec.get('pairs',2)
             for j in range(axles):
                 for k in range(pairs):
@@ -385,6 +389,11 @@ def fittings(rig,s,lod):
     if s.details.get('modern_f5'):
         m.box('paint',(0,y+.05,-L*.10),(.24,.20,.65))
         for side in (-1,1):m.box('paint',(side*W*.43,y-.30,L*.27),(.11,.16,.28))
+    if s.details.get('winglets'):
+        x,yy,le,te=s.details['wing'][-1]
+        for side in (-1,1):
+            verts=[[side*x+dx,yv,zv] for dx in (-.035,.035) for yv,zv in [(yy,le),(yy,te),(yy+1.5,te+.5),(yy+1.5,le-.4)]]
+            m.solid('paint',verts,[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)])
     if s.details.get('lift_fan'):
         for side,label in ((-1,'L'),(1,'R')):
             door=Mesh();door.box('paint',(side*.38,y+.015,L*.08),(.74,.07,1.7))
@@ -408,6 +417,22 @@ def build(s,lod=0):
     return rig,s
 
 def radar(rig,s,lod):
+    if s.details.get('aesa_bar'):
+        d=s.details['aesa_bar'];y=d['y'];z=d['z'];length=d['length'];width=d['width'];h=d['height'];m=Mesh()
+        if d.get('top_hat'):
+            m.box('paint',(0,(s.belly+s.body_height+y)/2,z),(.70,y-s.belly-s.body_height,length*.78))
+            curved_shell(m,'paint',[(z-length/2,y,width*.08,h*.15),(z-length*.42,y,width/2,h/2),
+                (z+length*.42,y,width/2,h/2),(z+length/2,y,width*.08,h*.15)],lod,circumference=8 if lod else 20,longitudinal=3)
+        else:
+            m.box('paint',(0,y,z),(width,h,length))
+            for zz in (z-length*.27,z+length*.27):m.box('paint',(0,(y-h/2+s.belly+s.body_height)/2,zz),(.35,y-h/2-s.belly-s.body_height,.55))
+        rig.add('Radar_AESA','Fuselage',(0,y,z),m,scan='electronic; static exterior')
+    if s.details.get('conformal_radar'):
+        m=Mesh();L=s.length;W=s.body_width;cy=s.belly+s.body_height*.52
+        for side in (-1,1):
+            pod=Mesh();curved_shell(pod,'paint',[(-L*.22,cy,.10,.16),(-L*.16,cy,.28,.45),(L*.12,cy,.28,.45),(L*.21,cy,.10,.16)],lod,circumference=8 if lod else 24,longitudinal=3)
+            pod.shift((side*W*.46,0,0));merge_mesh(m,pod)
+        rig.add('Radar_Conformal','Fuselage',(0,cy,0),m,scan='electronic; static exterior')
     d=s.details.get('radome')
     if not d:return
     x,y,z,rx,rz,h=d;m=Mesh();rings=[];n=8 if lod else 32
@@ -423,4 +448,4 @@ def radar(rig,s,lod):
         verts=[[xx+dx,yy,z+dz] for yy,chord in [(bottom,c),(top,c*.62)] for dx,dz in [(-.15,-chord/2),(.15,-chord/2),(.15,chord/2),(-.15,chord/2)]]
         support.solid('paint',verts,[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)])
     rig.add('Radar_Support','Fuselage',(0,s.belly+s.body_height,z),support)
-    rig.add('Rotodome','Fuselage',(x,y,z),m,'Y')
+    rig.add('Radar_AESA_Disc' if s.details.get('radome_static') else 'Rotodome','Fuselage',(x,y,z),m,None if s.details.get('radome_static') else 'Y')
