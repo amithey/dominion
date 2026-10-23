@@ -9,16 +9,16 @@
     "ships/missileBoat__type_022.glb"
   ],
   "sha256": {
-    "ships/asFrigate__type_23.glb": "b0082b0dee451c59d9254f1024c980ee0e5c371630077efbc0cfdd0d4c75809f",
-    "ships/kcr60__kcr_60.glb": "dc7213628ee552fcad0ccd1b6e58c68924ced4e44aa87ab637c6eaa2defdf365",
-    "ships/missileBoat__ambassador_mk_iii.glb": "4526891e31b4e310277d6bbe1bfe85ddbe02def5c2b58eac88c88056ded8916e",
-    "ships/missileBoat__azmat_class.glb": "aa50beca94f1b3f62c89c519c860ccc19c0409cbfdea7f93e867ff8f00045f61",
-    "ships/missileBoat__sa_ar_4_5.glb": "664cff46700dc40d4e5598aca1b5ea7d01ea8eb5f156f16946230759ba24b096",
-    "ships/missileBoat__type_022.glb": "cda95cb7f56e7966e6d210eb29d668231d6d7311a9fdfe7f694dadfa60897b28"
+    "ships/asFrigate__type_23.glb": "9a4ea2472d45197265ae3408ae9724edacc37cd22c7f1afc75fa2b6e6e71eae8",
+    "ships/kcr60__kcr_60.glb": "02f04779e0067e14fb2122f35f723a8f7a5b5ac3b006ed306b80c345ae86c48a",
+    "ships/missileBoat__ambassador_mk_iii.glb": "bcf0eda3af42f166a791ed01357c63802c47a5fd4f755526fda686a846a0774c",
+    "ships/missileBoat__azmat_class.glb": "54579e2dabe1cf57c347964d2ef72272045c23b0e4dde14b0b375fb2909f75d6",
+    "ships/missileBoat__sa_ar_4_5.glb": "8503da1e327879c6954a421e57513e80bce0468fd50389ae54c8b595369ebef9",
+    "ships/missileBoat__type_022.glb": "80a37337365745ec0d68bb4ed3b70459242c1a50e4b7d66f69576c9360f37e60"
   },
   "maximum_triangles": [
-    11470,
-    1984
+    11450,
+    1976
   ],
   "checks": [
     "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
@@ -30,6 +30,7 @@
   "generators": [
     "generate_p7_ships.py",
     "ship_parts.py",
+    "submarine_parts.py",
     "validate_ships.py",
     "vehicle_parts.py"
   ]
