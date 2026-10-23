@@ -606,7 +606,7 @@ def drone__saetbyol_4_9(lod=0):
     return male('drone__saetbyol_4_9','Saetbyol-4/9',lod,'saetbyol9',(11.5,20.,3.8,1.2,1.4,1.3),ROSTER_REFERENCE,
         'Approximate Saetbyol-9 MALE exterior; combined roster row',blades=4,stations=(.34,.53,.72),ventral_fin=True,generic_design=True)
 
-def multicopter(slug,name,lod,motors=4,heavy=False,representative='',payload_count=1,small=False):
+def multicopter(slug,name,lod,motors=4,heavy=False,representative='',payload_count=1,small=False,round_payload=False):
     import math
     L,S,H,W,B,b=(2.8,2.8,1.05,.78,.28,.48) if heavy else (1.25,1.25,.62,.35,.18,.28)
     arm=1.02 if heavy else .52;hub=.90 if heavy else .49
@@ -614,7 +614,7 @@ def multicopter(slug,name,lod,motors=4,heavy=False,representative='',payload_cou
     positions=[[arm*math.sin(t),hub,arm*math.cos(t)] for t in [math.tau*i/motors+math.pi/motors for i in range(motors)]]
     s=AircraftSpec(slug,name,'multirotor',L,S,H,W,B,b,0,ROSTER_REFERENCE,seats=0,representative=representative,
         features=[str(motors)+' independent motor/propeller hubs','closed central battery/payload frame','landing skids','gravity payload release' if heavy else 'forward payload and camera'],
-        details={'multirotor':True,'unmanned':True,'generic_design':True,'motors':motors,'propellers':positions,'prop_radius':.12 if small else .43 if heavy else .23,'prop_blades':2,'bomber':heavy,'payload_count':payload_count,'small':small})
+        details={'multirotor':True,'unmanned':True,'generic_design':True,'motors':motors,'propellers':positions,'prop_radius':.12 if small else .43 if heavy else .23,'prop_blades':2,'bomber':heavy,'payload_count':payload_count,'small':small,'round_payload':round_payload})
     return build(s,lod)
 def drone__shaheen(lod=0):return multicopter('drone__shaheen','Shaheen',lod,representative='Plausible Syrian light FPV strike quadcopter; roster does not identify a unique production airframe')
 
@@ -672,6 +672,34 @@ def loiterer__arash(lod=0):
         [(.14,.50,.8,-.8),(2.,.50,-.2,-.70)],[(0,.55,1.0,-1.25,-2.0,-1.55,-1.9)],ROSTER_REFERENCE,
         ['slender long fuselage','swept tapered wings','single swept fin','rear pusher propeller','gearless one-way airframe'],
         propellers=[[0,.47,-2.1]],prop_radius=.40,prop_blades=2,prop_pusher=True,generic_design=True)
+
+def loiterer__ch_901(lod=0):
+    return oneway('loiterer__ch_901','CH-901',lod,(1.2,2.,.50,.16,.18,.18),
+        [(.065,.27,.20,-.10),(1.,.27,.05,-.08)],[(0,.28,.50,-.25,-.55,-.37,-.51)],ROSTER_REFERENCE,
+        ['tubular launchable airframe','long straight folding wing','single fin','electric rear pusher'],
+        propellers=[[0,.27,-.55]],prop_radius=.14,prop_blades=2,prop_pusher=True,generic_design=True,stabilator=[(.03,.27,-.35,-.53),(.31,.27,-.40,-.51)])
+
+def cross_uav(slug,name,lod,L,S,W,source,features,front=.12,rear=.65):
+    B=W;cy=.20
+    s=AircraftSpec(slug,name,'cruciform',L,S,S,W,B,cy-B/2,1,source,seats=0,features=features,
+        details={'cruciform':True,'unmanned':True,'oneway':True,'landing_none':True,'wing':[],'fins':[],'gun':False,'stations':(),
+            'front_bank':front,'rear_span_ratio':rear,'propellers':[[0,cy,-L*.49]],'prop_radius':W*.95,'prop_blades':2,'prop_pusher':True,
+            'prop_chord_scale':.28,'spinner_length':.055,
+            'profile':[(-.48,0,.32,.32),(-.36,0,.5,.5),(.18,0,.5,.5),(.42,0,.48,.48),(.5,0,.40,.40)]})
+    return build(s,lod)
+def loiterer__hero_120(lod=0):
+    return cross_uav('loiterer__hero_120','HERO 120',lod,1.34,1.5,.18,'https://uvisionuav.com/loitering-munitions/hero-120/',
+        ['cylindrical body','four cruciform main wings','four rear control fins','electric pusher','blunt EO seeker nose'],front=.08,rear=.45)
+def loiterer__hx_2(lod=0):
+    return cross_uav('loiterer__hx_2','HX-2',lod,1.5,1.2,.19,'https://helsing.ai/newsroom/helsing-unveils-intelligent-strike-drone-for-mass-and-precision',
+        ['X-wing electric airframe','compact tubular fuselage','rear cruciform controls','rear pusher','forward optical window'],front=.02,rear=.48)
+def loiterer__kargu_2(lod=0):
+    rig,s=multicopter('loiterer__kargu_2','Kargu-2',lod,representative='Approximate STM Kargu quadrotor exterior',small=True,round_payload=True)
+    s.source='https://www.stm.com.tr/en/kargu-autonomous-tactical-multi-rotor-attack-uav';s.details['generic_design']=False
+    s.features.append('circular ventral payload module');return rig,s
+def loiterer__lancet_3(lod=0):
+    return cross_uav('loiterer__lancet_3','Lancet-3',lod,1.65,1.0,.15,ROSTER_REFERENCE,
+        ['large forward X-wing bank','smaller aft X-wing bank','slender tubular fuselage','EO nose window','electric pusher'],front=.22,rear=.75)
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):

@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 339,
+  "ready_files": 344,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -698,6 +698,17 @@
         "aircraft/heavyBomberDrone__heavy_hexacopter.glb",
         "aircraft/heavyBomberDrone__vampire_baba_yaga.glb"
       ]
+    },
+    {
+      "batch": 60,
+      "report": "expansion-60-validation.json",
+      "files": [
+        "aircraft/carrierDrone__carrier_drone.glb",
+        "aircraft/interceptorDrone__interceptor_drone.glb",
+        "aircraft/shahed__geran_2.glb",
+        "aircraft/shahed__shahed_drone.glb",
+        "aircraft/loiterer__arash.glb"
+      ]
     }
   ],
   "priorities": {
@@ -971,7 +982,7 @@
     "P6": {
       "requested_rows": 128,
       "unique_files": 127,
-      "ready_files": 112,
+      "ready_files": 117,
       "ready_slugs": [
         "aewc__a_50u",
         "aewc__e_2c_hawkeye",
@@ -1001,6 +1012,7 @@
         "bomber__b_52h_stratofortress",
         "bomber__h_6k",
         "bomber__tu_160m",
+        "carrierDrone__carrier_drone",
         "carrierJet__carrier_fighter",
         "drone__akinci_wing_loong",
         "drone__bayraktar_tb2",
@@ -1030,6 +1042,7 @@
         "ewJet__tornado_ecr",
         "heavyBomberDrone__heavy_hexacopter",
         "heavyBomberDrone__vampire_baba_yaga",
+        "interceptorDrone__interceptor_drone",
         "jet__eurofighter_typhoon",
         "jet__f_15ex_eagle_ii",
         "jet__f_15i_ra_am",
@@ -1065,6 +1078,7 @@
         "lightFighter__mirage_2000_5f",
         "lightFighter__t_50iq",
         "lightFighter__tejas_mk1",
+        "loiterer__arash",
         "maritimePatrol__atlantique_2",
         "maritimePatrol__cn_235_mpa",
         "maritimePatrol__il_38n",
@@ -1078,6 +1092,8 @@
         "maritimePatrol__poseidon_mra1",
         "maritimePatrol__y_8q",
         "raptor__f_22_raptor",
+        "shahed__geran_2",
+        "shahed__shahed_drone",
         "stealthFighter__f_35a",
         "stealthFighter__f_35a_lightning_ii",
         "stealthFighter__f_35b_lightning",
@@ -1087,10 +1103,7 @@
         "superTucano__a_29_super_tucano"
       ],
       "remaining_slugs": [
-        "carrierDrone__carrier_drone",
         "harop__harop",
-        "interceptorDrone__interceptor_drone",
-        "loiterer__arash",
         "loiterer__ch_901",
         "loiterer__hero_120",
         "loiterer__hx_2",
@@ -1099,9 +1112,7 @@
         "loiterer__loitering_munition",
         "loiterer__nagastra_1",
         "loiterer__qasef_2k_samad",
-        "loiterer__switchblade_600",
-        "shahed__geran_2",
-        "shahed__shahed_drone"
+        "loiterer__switchblade_600"
       ]
     },
     "P7": {

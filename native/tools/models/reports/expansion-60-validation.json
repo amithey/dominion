@@ -1,0 +1,36 @@
+{
+  "batch": 60,
+  "files": [
+    "aircraft/carrierDrone__carrier_drone.glb",
+    "aircraft/interceptorDrone__interceptor_drone.glb",
+    "aircraft/shahed__geran_2.glb",
+    "aircraft/shahed__shahed_drone.glb",
+    "aircraft/loiterer__arash.glb"
+  ],
+  "sha256": {
+    "aircraft/carrierDrone__carrier_drone.glb": "fd1423d86509cd62d895137683864aaa4d307debd3960a03520d96f3a367cc3e",
+    "aircraft/interceptorDrone__interceptor_drone.glb": "2a3769482b02161af69fbfaa22cd31cb5bef481d8afacf6cdc52f549e39e4fb4",
+    "aircraft/shahed__geran_2.glb": "fd04a2438d08f1099575990154150cbdd6f10c2301c1986772b3c3aa90d01624",
+    "aircraft/shahed__shahed_drone.glb": "0fc524f34be817266ab0d5a30099501bcb4af861fc0b3aa2ca7131d859eeb26c",
+    "aircraft/loiterer__arash.glb": "25c180db56a1b0a4c45d8cd70d5974de5927f6013d84b1f08469bec1cadd5d9d"
+  },
+  "maximum_triangles": [
+    5840,
+    1136
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

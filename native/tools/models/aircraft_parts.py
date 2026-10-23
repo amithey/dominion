@@ -450,14 +450,19 @@ def fittings(rig,s,lod):
             a=np.asarray(s.details['profile']);local=s.belly+s.body_height/2+s.body_height*np.interp(z/L,a[:,0],a[:,1]+a[:,3])
             base=min(base,local-.06)
         m.box('paint',(0,base+h/2,z),(.045,h,.28))
-    rig.add('Airframe_Fittings','Fuselage',(0,y,0),m)
+    if any(g[0] for g in m.groups.values()):rig.add('Airframe_Fittings','Fuselage',(0,y,0),m)
 
 def build(s,lod=0):
     if s.details.get('multirotor'):return build_multirotor(s,lod)
+    if s.details.get('cruciform'):return build_cruciform(s,lod)
     rig=Rig(lod);fuselage(rig,s,lod);wings(rig,s,lod);canopy(rig,s,lod);engines(rig,s,lod)
     tails(rig,s,lod);gear(rig,s,lod);weapons(rig,s,lod);fittings(rig,s,lod);radar(rig,s,lod)
     for part in rig.parts:
         if part['mesh'] is not None:part['mesh'].remove_duplicates()
+    if s.details.get('oneway'):ground_rig(rig,s)
+    return rig,s
+
+def ground_rig(rig,s):
     if s.details.get('oneway'):
         low=min(float(np.asarray(g[0])[:,1].min()) for p in rig.parts if p['mesh'] is not None for g in p['mesh'].groups.values() if g[0])
         shift=math.floor(low*1000+1e-4)/1000
@@ -471,7 +476,29 @@ def build(s,lod=0):
         s.details['fins']=[[x,y0-shift,y1-shift,*rest] for x,y0,y1,*rest in s.details['fins']]
         s.details['propellers']=[[x,y-shift,z] for x,y,z in s.details.get('propellers',[])]
         for p in s.details['muzzle_positions'].values():p[1]-=shift
-    return rig,s
+
+def build_cruciform(s,lod):
+    rig=Rig(lod);fuselage(rig,s,lod);engines(rig,s,lod);cy=s.belly+s.body_height/2;L=s.length;S=s.span
+    for bank in (0,1):
+        radius=S/math.sqrt(2)*(1 if bank==0 else s.details.get('rear_span_ratio',.65))
+        z=L*s.details.get('front_bank',.12) if bank==0 else -L*.31
+        chord=L*(.17 if bank==0 else .11)
+        for j in range(4):
+            angle=math.pi/4+j*math.pi/2;R=rotation([0,0,1],angle)
+            for moving in (False,True):
+                m=Mesh();le=z+chord*.5 if not moving else z-chord*.26-.004;te=z-chord*.26+.004 if not moving else z-chord*.5
+                airfoil(m,[(s.body_width*.38,0,le,te),(radius,0,le-chord*.16,te-chord*.12)],lod)
+                for g in m.groups.values():g[0]=(np.asarray(g[0])@R.T+[0,cy,0]).tolist();g[1]=(np.asarray(g[1])@R.T).tolist()
+                if not moving:name='Wing_Plane_'+str(bank)+'_'+str(j)
+                elif bank==0:name=('Flap_L','Flap_R','Aileron_L','Aileron_R')[j]
+                else:name='Rudder' if j==0 else 'Tail_Control_'+str(j)
+                p=R@np.array([s.body_width*.38,0,0])+[0,cy,z-chord*.26]
+                rig.add(name,'Fuselage',p,m,'X' if moving else None,**({'frame_rotation':quat([0,0,1],angle)} if moving else {}))
+    optics=Mesh();p=np.array([0,cy,L*.5]);optics.tube('glass',p+[0,0,.001],p+[0,0,.012],s.body_width*.32,8 if lod else 24)
+    rig.add('Nose_Seeker','Fuselage',p,optics);weapons(rig,s,lod)
+    for part in rig.parts:
+        if part['mesh'] is not None:part['mesh'].remove_duplicates()
+    ground_rig(rig,s);return rig,s
 
 def build_multirotor(s,lod):
     rig=Rig(lod);d=s.details;L=s.length;cy=s.belly+s.body_height/2;m=Mesh()
@@ -514,8 +541,12 @@ def build_multirotor(s,lod):
                 payload.tube('paint',p-[0,0,L*.17],p+[0,0,L*.17],s.body_width*.22,8 if lod else 20,.04);muzzle=p+[0,-s.body_width*.22,0]
             rig.add('Payload_Release' if count==1 else 'Payload_Release_'+str(j),'Fuselage',p,payload,'X')
         else:
-            p=np.array([0,cy,L*.25]);payload.tube('paint',p,p+[0,0,L*.18],s.body_width*.22,8 if lod else 20,.02)
-            rig.add('Payload','Fuselage',p,payload);muzzle=p+[0,0,L*.18]
+            if d.get('round_payload'):
+                p=np.array([0,s.belly-.01,0]);payload.tube('paint',p+[0,.08,0],p-[0,.10,0],s.body_width*.40,8 if lod else 24)
+                muzzle=p+[0,0,s.body_width*.40]
+            else:
+                p=np.array([0,cy,L*.25]);payload.tube('paint',p,p+[0,0,L*.18],s.body_width*.22,8 if lod else 20,.02);muzzle=p+[0,0,L*.18]
+            rig.add('Payload','Fuselage',p,payload)
         rig.add('Muzzle_'+str(j),'Fuselage',muzzle,**({'frame_rotation':quat([1,0,0],math.pi/2)} if d.get('bomber') else {}));positions['Muzzle_'+str(j)]=muzzle.tolist()
     d['muzzle_count']=count;d['muzzle_positions']=positions
     for part in rig.parts:
