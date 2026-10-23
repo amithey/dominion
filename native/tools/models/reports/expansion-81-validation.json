@@ -1,0 +1,35 @@
+{
+  "batch": 81,
+  "files": [
+    "ships/submarine__type_212a.glb",
+    "ships/submarine__virginia_class.glb",
+    "ships/submarine__walrus_class.glb",
+    "ships/nuclearSub__arihant_class.glb",
+    "ships/nuclearSub__borei_a.glb"
+  ],
+  "sha256": {
+    "ships/submarine__type_212a.glb": "16532f3d4357eafd3a4062ed8ba9a9098d5f83eacc97ec9fe461b4903dd7f893",
+    "ships/submarine__virginia_class.glb": "fceea9fcf2fe5e5c3264c19322a7661b0bb26898740a83c44ac312cb688258f8",
+    "ships/submarine__walrus_class.glb": "d26acc5a6a0e94a44fd4db9c5df73192c06a14a0cc8fb2601cb92f7fb6c90e0a",
+    "ships/nuclearSub__arihant_class.glb": "aa46f64920d1417f704df6a3c393c5bf098d9e6f1ba3cdf5275d034489ee2d2a",
+    "ships/nuclearSub__borei_a.glb": "c65c70017a48c0fed36b4b9a4ceff58fa9a6a7ba4b3dc522fbddd66b41bad2df"
+  },
+  "maximum_triangles": [
+    12840,
+    1560
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "submarine_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}

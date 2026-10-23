@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 457,
+  "ready_files": 462,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -942,6 +942,17 @@
         "ships/submarine__type_039c.glb",
         "ships/submarine__type_209_1400.glb"
       ]
+    },
+    {
+      "batch": 81,
+      "report": "expansion-81-validation.json",
+      "files": [
+        "ships/submarine__type_212a.glb",
+        "ships/submarine__virginia_class.glb",
+        "ships/submarine__walrus_class.glb",
+        "ships/nuclearSub__arihant_class.glb",
+        "ships/nuclearSub__borei_a.glb"
+      ]
     }
   ],
   "priorities": {
@@ -1350,7 +1361,7 @@
     "P7": {
       "requested_rows": 113,
       "unique_files": 113,
-      "ready_files": 103,
+      "ready_files": 108,
       "ready_slugs": [
         "aegisCruiser__maya_class_aegis_destroyer",
         "asFrigate__admiral_gorshkov_class",
@@ -1438,6 +1449,8 @@
         "missileBoat__azmat_class",
         "missileBoat__sa_ar_4_5",
         "missileBoat__type_022",
+        "nuclearSub__arihant_class",
+        "nuclearSub__borei_a",
         "submarine__agosta_90b",
         "submarine__astute_class",
         "submarine__collins_class",
@@ -1454,19 +1467,17 @@
         "submarine__todaro_class_type_212a",
         "submarine__type_039c",
         "submarine__type_209_1400",
+        "submarine__type_212a",
+        "submarine__virginia_class",
+        "submarine__walrus_class",
         "type45__type_45_destroyer"
       ],
       "remaining_slugs": [
-        "nuclearSub__arihant_class",
-        "nuclearSub__borei_a",
         "nuclearSub__ohio_class",
         "nuclearSub__triomphant_class",
         "nuclearSub__type_094",
         "nuclearSub__vanguard_class",
-        "seaDrone__sea_drone",
-        "submarine__type_212a",
-        "submarine__virginia_class",
-        "submarine__walrus_class"
+        "seaDrone__sea_drone"
       ]
     }
   }
