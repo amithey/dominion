@@ -1,0 +1,1418 @@
+{
+  "nation": "australia",
+  "scope": "current and confirmed-order platforms in existing Tier 7 categories",
+  "all_roster_rows_assessed": true,
+  "complete": false,
+  "completion_note": "Operator evidence, exact visual fit and additional inventory still being audited.",
+  "rows": [
+    {
+      "key": "tank",
+      "roster_model": "M1A2 SEPv3 Abrams",
+      "roster_slug": "tank__m1a2_sepv3_abrams",
+      "asset": {
+        "file": "vehicles/tank__m1a2_sepv3_abrams.glb",
+        "sha256": "523d762f56501dbce738f5cb36cf1d84ca968b5d1f948f0abc43b24a4c040cd2",
+        "exact_slug": true,
+        "declared_vehicle": "m1a2_sepv3_abrams",
+        "declared_name": "M1A2 SEPv3 Abrams",
+        "approximate": false,
+        "representative": "",
+        "features": [],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          13946,
+          2254
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-M1"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "apc",
+      "roster_model": "Boxer CRV",
+      "roster_slug": "apc__boxer_crv",
+      "asset": {
+        "file": "vehicles/apc__boxer_crv.glb",
+        "sha256": "6f40623de2486a3b478ce6567c3b03b4cd3100e40b75b584beb479993fd51dd6",
+        "exact_slug": true,
+        "declared_vehicle": "apc__boxer_crv",
+        "declared_name": "Boxer CRV",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "8x8 Boxer hull",
+          "large two-man Lance 30 mm turret",
+          "side missile pod",
+          "tall modular mission compartment"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          6222,
+          1048
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-M113",
+        "AU-REDBACK"
+      ],
+      "assessment": {
+        "status": "incomplete_inventory",
+        "reason": "Boxer CRV is a reconnaissance vehicle rather than a substitute for the distinct M113AS4 APC fleet. New AS21 Redback is separately in test/introduction. Add M113AS4 and track Redback order separately.",
+        "recommended_action": "add_specific_m113as4_and_track_redback_order",
+        "model_match": "boxer_is_distinct_role",
+        "replacement": "apc__m113as4"
+      }
+    },
+    {
+      "key": "bushmaster",
+      "roster_model": "Bushmaster",
+      "roster_slug": "bushmaster__bushmaster",
+      "asset": {
+        "file": "vehicles/bushmaster__bushmaster.glb",
+        "sha256": "ce5f0505137ec161d007cf8eadcc24ee4dd6d4ce366165f3e29e6a0742300378",
+        "exact_slug": true,
+        "declared_vehicle": "bushmaster__bushmaster",
+        "declared_name": "Bushmaster",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "4x4 mine-protected chassis",
+          "short bonnet and tall windowed passenger cabin",
+          "roof weapon station",
+          "large rear spare tyre"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          4150,
+          892
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-PMV"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "reconVehicle",
+      "roster_model": "Hawkei",
+      "roster_slug": "reconVehicle__hawkei",
+      "asset": {
+        "file": "vehicles/reconVehicle__hawkei.glb",
+        "sha256": "84551206f1b788ce0d3c41e85ba73a6e8725ddc396ccf6e51f7809b6b9cbe951",
+        "exact_slug": true,
+        "declared_vehicle": "reconVehicle__hawkei",
+        "declared_name": "Hawkei",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "4x4 four-door protected patrol vehicle",
+          "pronounced short bonnet",
+          "sloped windscreen and rear equipment bay",
+          "roof remote weapon"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          4078,
+          820
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-PMV"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "recoveryVehicle",
+      "roster_model": "Armoured Recovery Vehicle",
+      "roster_slug": "recoveryVehicle__armoured_recovery_vehicle",
+      "asset": {
+        "file": "vehicles/recoveryVehicle__armoured_recovery_vehicle.glb",
+        "sha256": "730ba5805ed457218fb33c9d70e4264bc11bc958f51b8d2c7fca03d2a72e0d0b",
+        "exact_slug": true,
+        "declared_vehicle": "recoveryVehicle__armoured_recovery_vehicle",
+        "declared_name": "Armoured Recovery Vehicle",
+        "approximate": true,
+        "representative": "M88-family ARV",
+        "features": [
+          "M88-family representative for unspecified ARV",
+          "six wheels",
+          "raised forward recovery cabin",
+          "A-frame boom and front spade",
+          "rear winch deck"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          10976,
+          1672
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-M1"
+      ],
+      "assessment": {
+        "status": "variant_unresolved",
+        "reason": "Generic M88-family model alone is insufficient to verify Australian M88A2 details. Current tank source does not establish exact recovery inventory; obtain M88A2 operator evidence.",
+        "recommended_action": "verify_m88a2_fit",
+        "model_match": "generic_M88_not_exact_A2",
+        "replacement": null
+      }
+    },
+    {
+      "key": "mineClearer",
+      "roster_model": "Mine-clearing Vehicle",
+      "roster_slug": "mineClearer__mine_clearing_vehicle",
+      "asset": {
+        "file": "vehicles/mineClearer__mine_clearing_vehicle.glb",
+        "sha256": "d826a557f2c7557447611df25f8429db004c2c428a2bc8f2d3999454d7980331",
+        "exact_slug": true,
+        "declared_vehicle": "mineClearer__mine_clearing_vehicle",
+        "declared_name": "Mine-clearing Vehicle",
+        "approximate": true,
+        "representative": "T-72-based engineering carrier",
+        "features": [
+          "T-72 engineering representative",
+          "six road wheels",
+          "turretless engineering hull",
+          "front mine-clearing blade"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          10988,
+          1884
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-BREACHER"
+      ],
+      "assessment": {
+        "status": "model_mismatch",
+        "reason": "Actual M1150 Abrams breacher documented in live demonstration; generic T-72-based six-wheel engineer is wrong. Existing mineClearer__m1150_abv should be checked and reused.",
+        "recommended_action": "map_to_existing_specific_model",
+        "model_match": "wrong_generic_hull",
+        "replacement": "mineClearer__m1150_abv"
+      }
+    },
+    {
+      "key": "mineLayer",
+      "roster_model": "Engineer Minelayer",
+      "roster_slug": "mineLayer__engineer_minelayer",
+      "asset": {
+        "file": "vehicles/mineLayer__engineer_minelayer.glb",
+        "sha256": "22c0ebec00ca52a8420d03b6266c8d1ce6e1c736c0e993149a18ef49a543d78a",
+        "exact_slug": true,
+        "declared_vehicle": "mineLayer__engineer_minelayer",
+        "declared_name": "Engineer Minelayer",
+        "approximate": true,
+        "representative": "M548-pattern tracked minelayer",
+        "features": [
+          "M548-pattern tracked dispenser representative",
+          "five wheels",
+          "forward crew cab and four 40-canister mine racks"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          13032,
+          2072
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-BREACHER"
+      ],
+      "assessment": {
+        "status": "unverified",
+        "reason": "Mine-clearing charge in a breacher is not a mine-laying system. The source cannot validate automatic generic Engineer Minelayer entitlement; specific current/order evidence remains needed.",
+        "recommended_action": "hold_pending_named_operator_evidence",
+        "model_match": "generic_not_country_identified",
+        "replacement": null
+      }
+    },
+    {
+      "key": "artillery",
+      "roster_model": "AS9 Huntsman",
+      "roster_slug": "artillery__as9_huntsman",
+      "asset": {
+        "file": "vehicles/artillery__as9_huntsman.glb",
+        "sha256": "1deed9929a527387a0624b4825d9890777b21c95747b8fb9b9e0d836295b0def",
+        "exact_slug": true,
+        "declared_vehicle": "artillery__as9_huntsman",
+        "declared_name": "AS9 Huntsman",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "Six-wheel K9-derived chassis",
+          "155 mm L/52 barrel",
+          "Australian enhanced turret armour",
+          "raised roof module and rear air-conditioning housing",
+          "long square bustle"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          11582,
+          2136
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-AS9",
+        "AU-AS9-FIELD"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "towedHowitzer",
+      "roster_model": "M777",
+      "roster_slug": "towedHowitzer__m777",
+      "asset": {
+        "file": "vehicles/towedHowitzer__m777.glb",
+        "sha256": "5f99a884a06cc7e9ab3ebae80de8008bd040ad72ae3e69361bbac4abfe3e6f1e",
+        "exact_slug": true,
+        "declared_vehicle": "towedHowitzer__m777",
+        "declared_name": "M777",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "Towed M777 in supported travel-height display pose",
+          "one main wheel axle with separate X pivots",
+          "separate splayed trail hinges",
+          "open recoil cradle and 155 mm barrel",
+          "two split trails"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          2310,
+          764
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-HIMARS-2026"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "mlrs",
+      "roster_model": "M142 HIMARS",
+      "roster_slug": "mlrs__m142_himars",
+      "asset": {
+        "file": "vehicles/mlrs__m142_himars.glb",
+        "sha256": "402891f1c1ed46e8a7782e17b8f1f5c51fc2606b4cfe1dcc5ef7c2787e382ff0",
+        "exact_slug": true,
+        "declared_vehicle": "mlrs__m142_himars",
+        "declared_name": "M142 HIMARS",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "fmtv_himars carrier",
+          "6 wheel drive",
+          "6 individual launch tubes; 227 mm class",
+          "1 launch module(s)",
+          "X elevation cradle on Y traversing turntable",
+          "closed modular launch containers"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          5080,
+          1028
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-HIMARS",
+        "AU-HIMARS-2026"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "himars",
+      "roster_model": "M142 HIMARS",
+      "roster_slug": "himars__m142_himars",
+      "asset": {
+        "file": "vehicles/himars__m142_himars.glb",
+        "sha256": "e9fd41741e9e44762c30c3584341eb52af2bbedf3ff244438b779efe6ba49142",
+        "exact_slug": true,
+        "declared_vehicle": "himars__m142_himars",
+        "declared_name": "M142 HIMARS",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "fmtv_himars carrier",
+          "6 wheel drive",
+          "6 individual launch tubes; 227 mm class",
+          "1 launch module(s)",
+          "X elevation cradle on Y traversing turntable",
+          "closed modular launch containers"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          5080,
+          1028
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-HIMARS",
+        "AU-HIMARS-2026"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "aaVehicle",
+      "roster_model": "RBS 70 (vehicle)",
+      "roster_slug": "aaVehicle__rbs_70_vehicle",
+      "asset": {
+        "file": "vehicles/aaVehicle__rbs_70_vehicle.glb",
+        "sha256": "e6f63eefbf850d680f99d028425942773343c12ea0a67732c8b3896a4d1aa29e",
+        "exact_slug": true,
+        "declared_vehicle": "aaVehicle__rbs_70_vehicle",
+        "declared_name": "RBS 70 (vehicle)",
+        "approximate": true,
+        "representative": "Australian Land Rover 6x6 fire unit vehicle; rear-tray RBS 70 display, equipment stowage approximated",
+        "features": [
+          "RBS 70 (vehicle) anti-aircraft mounting",
+          "1 independently marked barrels/canisters",
+          "Y turntable and X common trunnion",
+          "rear optical fire control; no invented radar"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          4624,
+          948
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-RBS-RETIRE",
+        "AU-NASAMS"
+      ],
+      "assessment": {
+        "status": "retired_or_transferred_family",
+        "reason": "Army reports transition from RBS70 to NASAMS and donations to Ukraine. A generic truck RBS70 should not be asserted as current Australian SHORAD without retained-unit evidence.",
+        "recommended_action": "move_to_historical_pending_retained_inventory_check",
+        "model_match": "generic_truck_fit_unconfirmed",
+        "replacement": null
+      }
+    },
+    {
+      "key": "samLauncher",
+      "roster_model": "NASAMS",
+      "roster_slug": "samLauncher__nasams",
+      "asset": {
+        "file": "vehicles/samLauncher__nasams.glb",
+        "sha256": "eea9338a32a50a6c9ac641eb4fa86d1624b3e5ff13eb36da309439c46b8ce05c",
+        "exact_slug": true,
+        "declared_vehicle": "samLauncher__nasams",
+        "declared_name": "NASAMS",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "nasams_trailer carrier",
+          "4 wheel drive",
+          "6 individual launch tubes; 300 mm class",
+          "1 launch module(s)",
+          "X elevation cradle on Y traversing turntable",
+          "closed modular launch containers"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          3476,
+          612
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-NASAMS",
+        "AU-NASAMS-2026"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Australian NASAMS in live firings and final introduction evaluation. Country has canister and Hawkei high-mobility launcher configurations; one generic launcher does not represent both.",
+        "recommended_action": "separate_actual_launcher_variants",
+        "model_match": "configuration_review_needed",
+        "replacement": null
+      }
+    },
+    {
+      "key": "helicopter",
+      "roster_model": "UH-60M",
+      "roster_slug": "helicopter__uh_60m",
+      "asset": {
+        "file": "aircraft/helicopter__uh_60m.glb",
+        "sha256": "de781183364ae17f4cf01524d1d98c9f66f4220abdff293c674464c9d0459330",
+        "exact_slug": true,
+        "declared_vehicle": "helicopter__uh_60m",
+        "declared_name": "UH-60M",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "blackhawk fuselage and tail profile",
+          "4-blade 16.36 m main rotor",
+          "4-blade tail rotor",
+          "tailwheel landing gear",
+          "2 separate turbine nacelles",
+          "published rotor size; small fittings and fuselage cross-sections approximated"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          9140,
+          1412
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-DASA"
+      ],
+      "assessment": {
+        "status": "certificated_service_verification_pending",
+        "reason": "UH-60M or CH-47F certification is established; certification list alone is not sufficient current operator activity/FOC evidence. Direct Army operation source still required.",
+        "recommended_action": "seek_operator_activity_source",
+        "model_match": "designation_matches_specific_fit_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "gunship",
+      "roster_model": "AH-64E Apache",
+      "roster_slug": "gunship__ah_64e_apache",
+      "asset": {
+        "file": "aircraft/gunship__ah_64e_apache.glb",
+        "sha256": "42ddd62522f11de0e2e54da87b88e6ac841e411079318a3436c087c7dea4c6cf",
+        "exact_slug": true,
+        "declared_vehicle": "gunship__ah_64e_apache",
+        "declared_name": "AH-64E Apache",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "apache fuselage and tail profile",
+          "4-blade 14.63 m main rotor",
+          "4-blade tail rotor",
+          "tailwheel landing gear",
+          "2 separate turbine nacelles",
+          "published rotor size; small fittings and fuselage cross-sections approximated",
+          "5.23 m stub-wing span",
+          "2 weapon stations per wing",
+          "chin turret with separate gun trunnion"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          11504,
+          2080
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-APACHE",
+        "AU-TIGER-RETIRE"
+      ],
+      "assessment": {
+        "status": "delivered_introduction",
+        "reason": "AH-64E delivered and live-fired; first six documented July 2026. All 29 planned by 2029 is not current inventory. Tiger officially retired 30 September 2026.",
+        "recommended_action": "retain_with_delivery_stage",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "navalHelicopter",
+      "roster_model": "MH-60R Seahawk",
+      "roster_slug": "navalHelicopter__mh_60r_seahawk",
+      "asset": {
+        "file": "aircraft/navalHelicopter__mh_60r_seahawk.glb",
+        "sha256": "db6345b35c12b00dc8743cd2a17fbc12cf634d0f1396322713e6bb022b21e1cd",
+        "exact_slug": true,
+        "declared_vehicle": "navalHelicopter__mh_60r_seahawk",
+        "declared_name": "MH-60R Seahawk",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "blackhawk fuselage and tail profile",
+          "4-blade 16.36 m main rotor",
+          "4-blade tail rotor",
+          "tailwheel landing gear",
+          "2 separate turbine nacelles",
+          "published rotor size; small fittings and fuselage cross-sections approximated",
+          "naval radar/hoist and the selected real mission stores"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          9992,
+          1752
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-MH60R"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "heavyLift",
+      "roster_model": "CH-47F Chinook",
+      "roster_slug": "heavyLift__ch_47f_chinook",
+      "asset": {
+        "file": "aircraft/heavyLift__ch_47f_chinook.glb",
+        "sha256": "7e74597e5fbbc4ba50f52d2a20d4bf07614e5a20eb203d5b1db219da5bc1fafe",
+        "exact_slug": true,
+        "declared_vehicle": "heavyLift__ch_47f_chinook",
+        "declared_name": "CH-47F Chinook",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "chinook fuselage and tail profile",
+          "3-blade 18.3 m main rotor",
+          "0-blade tail rotor",
+          "four landing gear",
+          "2 separate turbine nacelles",
+          "published rotor size; small fittings and fuselage cross-sections approximated",
+          "two tandem three-blade main rotors, raised aft pylon and rear engine pods"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          11964,
+          2180
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-DASA"
+      ],
+      "assessment": {
+        "status": "certificated_service_verification_pending",
+        "reason": "UH-60M or CH-47F certification is established; certification list alone is not sufficient current operator activity/FOC evidence. Direct Army operation source still required.",
+        "recommended_action": "seek_operator_activity_source",
+        "model_match": "designation_matches_specific_fit_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "jet",
+      "roster_model": "F/A-18F Super Hornet",
+      "roster_slug": "jet__f_a_18f_super_hornet",
+      "asset": {
+        "file": "aircraft/jet__f_a_18f_super_hornet.glb",
+        "sha256": "4bc4958a4f1c38fc696ec6d03d46aa44bd39d6924c51392e93f74cbe9b8db4d4",
+        "exact_slug": true,
+        "declared_vehicle": "jet__f_a_18f_super_hornet",
+        "declared_name": "F/A-18F Super Hornet",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "large leading-edge extensions",
+          "rectangular side intakes",
+          "outward-canted twin fins",
+          "tandem canopy",
+          "broad swept wings",
+          "twin engine nozzles"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          12230,
+          2024
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-AIR-CURRENT"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "stealthFighter",
+      "roster_model": "F-35A",
+      "roster_slug": "stealthFighter__f_35a",
+      "asset": {
+        "file": "aircraft/stealthFighter__f_35a.glb",
+        "sha256": "2bc4796148f5d9a1a53cdc2f63253d933e06d196c67a8edecf618b3e10f74cb5",
+        "exact_slug": true,
+        "declared_vehicle": "stealthFighter__f_35a",
+        "declared_name": "F-35A",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "blended fuselage chines",
+          "trapezoidal wings",
+          "outward-canted twin fins",
+          "single large nozzle",
+          "internal weapon bays with hinged doors",
+          "no external pylons"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          8802,
+          1404
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-AIR-CURRENT"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "carrierJet",
+      "roster_model": "Carrier Fighter",
+      "roster_slug": "carrierJet__carrier_fighter",
+      "asset": {
+        "file": "aircraft/carrierJet__carrier_fighter.glb",
+        "sha256": "a982ef7ffadec48a263da0215b260fdda488e57fbd9116da8855b4d387c8732b",
+        "exact_slug": true,
+        "declared_vehicle": "carrierJet__carrier_fighter",
+        "declared_name": "Carrier Fighter",
+        "approximate": true,
+        "representative": "Generic carrier fighter with F/A-18F exterior",
+        "features": [
+          "large leading-edge extensions",
+          "rectangular side intakes",
+          "outward-canted twin fins",
+          "tandem canopy",
+          "broad swept wings",
+          "twin engine nozzles"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          12230,
+          2024
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-AIR-CURRENT",
+        "AU-FLEET"
+      ],
+      "assessment": {
+        "status": "unsupported_generic_entitlement",
+        "reason": "Current checked fleets do not establish national carrier-based fixed-wing combat aviation. Land-based naval-designed Super Hornet is not evidence of an Australian carrier air wing.",
+        "recommended_action": "recommend_explicit_scenario_or_disable",
+        "model_match": "generic_not_national_operational_fleet",
+        "replacement": null
+      }
+    },
+    {
+      "key": "ewJet",
+      "roster_model": "EA-18G Growler",
+      "roster_slug": "ewJet__ea_18g_growler",
+      "asset": {
+        "file": "aircraft/ewJet__ea_18g_growler.glb",
+        "sha256": "32f7ccf5aed8ea3fd8a9fb83087d5d8d6e086ebd16f72350e92eb9d6c798fd41",
+        "exact_slug": true,
+        "declared_vehicle": "ewJet__ea_18g_growler",
+        "declared_name": "EA-18G Growler",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "large leading-edge extensions",
+          "rectangular side intakes",
+          "outward-canted twin fins",
+          "tandem canopy",
+          "broad swept wings",
+          "twin engine nozzles"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          12440,
+          2096
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-AIR-CURRENT"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "aewc",
+      "roster_model": "E-7A Wedgetail",
+      "roster_slug": "aewc__e_7a_wedgetail",
+      "asset": {
+        "file": "aircraft/aewc__e_7a_wedgetail.glb",
+        "sha256": "e9ae0828564ef9b04e86c2e5c86170b2537428b6d12ffff0761fa81e9ba8a27a",
+        "exact_slug": true,
+        "declared_vehicle": "aewc__e_7a_wedgetail",
+        "declared_name": "E-7A Wedgetail",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "Boeing 737-700 airframe",
+          "two underwing turbofans",
+          "fixed MESA top-hat radar",
+          "swept low wing",
+          "electronic radar scan without rotating exterior"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          7648,
+          1076
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-AIR-CURRENT"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "maritimePatrol",
+      "roster_model": "P-8A Poseidon",
+      "roster_slug": "maritimePatrol__p_8a_poseidon",
+      "asset": {
+        "file": "aircraft/maritimePatrol__p_8a_poseidon.glb",
+        "sha256": "8576c237d2ef97ce3e30543ce6323d74c15666273d4f77aef10512ce0fbb3940",
+        "exact_slug": true,
+        "declared_vehicle": "maritimePatrol__p_8a_poseidon",
+        "declared_name": "P-8A Poseidon",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "Boeing 737-800 patrol airframe",
+          "two underwing turbofans",
+          "raked wingtips",
+          "internal torpedo bay",
+          "conventional tail cone without MAD boom"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          8128,
+          1076
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-AIR-CURRENT"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "carrierDrone",
+      "roster_model": "Carrier Drone",
+      "roster_slug": "carrierDrone__carrier_drone",
+      "asset": {
+        "file": "aircraft/carrierDrone__carrier_drone.glb",
+        "sha256": "fd1423d86509cd62d895137683864aaa4d307debd3960a03520d96f3a367cc3e",
+        "exact_slug": true,
+        "declared_vehicle": "carrierDrone__carrier_drone",
+        "declared_name": "Carrier Drone",
+        "approximate": true,
+        "representative": "Original plausible carrier UCAV with X-47B-like planform",
+        "features": [
+          "cranked flying wing",
+          "dorsal jet intake",
+          "single recessed nozzle",
+          "internal weapon bays",
+          "no vertical tail or external pylons"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          5840,
+          1136
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-AIR-CURRENT",
+        "AU-FLEET"
+      ],
+      "assessment": {
+        "status": "unsupported_generic_entitlement",
+        "reason": "Current checked fleets do not establish national carrier-based fixed-wing combat aviation. Land-based naval-designed Super Hornet is not evidence of an Australian carrier air wing.",
+        "recommended_action": "recommend_explicit_scenario_or_disable",
+        "model_match": "generic_not_national_operational_fleet",
+        "replacement": null
+      }
+    },
+    {
+      "key": "destroyer",
+      "roster_model": "Hobart-class",
+      "roster_slug": "destroyer__hobart_class",
+      "asset": {
+        "file": "ships/destroyer__hobart_class.glb",
+        "sha256": "36cd4f9ec27c0baeb36db7d3e0597c2d598b5e59581d22695963524caaceb277",
+        "exact_slug": true,
+        "declared_vehicle": "destroyer__hobart_class",
+        "declared_name": "Hobart-class",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "F100-derived tall forward Aegis bridge",
+          "48-cell forward Mk41 bank",
+          "single forward 127 mm Mk45 gun",
+          "two funnels and integrated pyramidal mast",
+          "single helicopter hangar",
+          "two quadruple Harpoon canister sets"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          12256,
+          1834
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-FLEET"
+      ],
+      "assessment": {
+        "status": "documented_family",
+        "reason": "Navy operator fleet list confirms Hobart/Anzac/Collins as applicable. Anzac is a frigate, not a separate corvette class; alias roles must not imply extra fleets.",
+        "recommended_action": "retain_with_classification_note",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "corvette",
+      "roster_model": "Anzac-class",
+      "roster_slug": "corvette__anzac_class",
+      "asset": {
+        "file": "ships/corvette__anzac_class.glb",
+        "sha256": "08d1158aa9d584726e1434e867c3ffe77f928f4ed03167156c51e36597a61c2b",
+        "exact_slug": true,
+        "declared_vehicle": "corvette__anzac_class",
+        "declared_name": "Anzac-class",
+        "approximate": true,
+        "representative": "Australian Anzac ASMD exterior, approximate fixed-array mast",
+        "features": [
+          "MEKO 200 frigate hull",
+          "127 mm foredeck gun",
+          "eight-cell Mk41 bank",
+          "large CEAFAR fixed-array enclosure on foremast",
+          "one broad funnel and slender aft mast",
+          "single helicopter hangar"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          10898,
+          1690
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-FLEET"
+      ],
+      "assessment": {
+        "status": "documented_family",
+        "reason": "Navy operator fleet list confirms Hobart/Anzac/Collins as applicable. Anzac is a frigate, not a separate corvette class; alias roles must not imply extra fleets.",
+        "recommended_action": "retain_with_classification_note",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "asFrigate",
+      "roster_model": "Anzac-class",
+      "roster_slug": "asFrigate__anzac_class",
+      "asset": {
+        "file": "ships/asFrigate__anzac_class.glb",
+        "sha256": "be0b3996c89f4b1a4b79430563be6fddc1ce4f35d9bf1c994b46ce3a7c8e26ac",
+        "exact_slug": true,
+        "declared_vehicle": "asFrigate__anzac_class",
+        "declared_name": "Anzac-class",
+        "approximate": true,
+        "representative": "Australian Anzac ASMD exterior, approximate fixed-array mast",
+        "features": [
+          "MEKO 200 frigate hull",
+          "127 mm foredeck gun",
+          "eight-cell Mk41 bank",
+          "large CEAFAR fixed-array enclosure on foremast",
+          "one broad funnel and slender aft mast",
+          "single helicopter hangar"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          10898,
+          1690
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-FLEET"
+      ],
+      "assessment": {
+        "status": "documented_family",
+        "reason": "Navy operator fleet list confirms Hobart/Anzac/Collins as applicable. Anzac is a frigate, not a separate corvette class; alias roles must not imply extra fleets.",
+        "recommended_action": "retain_with_classification_note",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "gunboat",
+      "roster_model": "Gunboat",
+      "roster_slug": "gunboat__gunboat",
+      "asset": {
+        "file": "ships/gunboat__gunboat.glb",
+        "sha256": "d1f8acbc7b200a2d270cf1ea642d6fd11ac701d591e4f978f4435c182cac3878",
+        "exact_slug": true,
+        "declared_vehicle": "gunboat__gunboat",
+        "declared_name": "Gunboat",
+        "approximate": true,
+        "representative": "Original plausible generic 30 m coastal gunboat",
+        "features": [
+          "original generic coastal gunboat",
+          "small pilothouse",
+          "forward 30 mm gun",
+          "aft light gun",
+          "single exhaust and search mast",
+          "no missiles or helicopter facilities"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          9020,
+          1176
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-FLEET",
+        "AU-ARAFURA"
+      ],
+      "assessment": {
+        "status": "generic_model_mismatch",
+        "reason": "Current evolved Cape patrol vessels and commissioned Arafura OPVs are real alternatives to unnamed generic gunboat. Their hulls, weapons and roles differ; do not give OPV a fictitious large naval gun.",
+        "recommended_action": "build_named_patrol_craft",
+        "model_match": "generic_not_actual_class",
+        "replacement": null
+      }
+    },
+    {
+      "key": "landingShip",
+      "roster_model": "Canberra-class",
+      "roster_slug": "landingShip__canberra_class",
+      "asset": {
+        "file": "ships/landingShip__canberra_class.glb",
+        "sha256": "d42fdfdf213ffd0d3f87226d8d7d5d8d3f4fa48ef0a543c768e073b8c6ccc68b",
+        "exact_slug": true,
+        "declared_vehicle": "landingShip__canberra_class",
+        "declared_name": "Canberra-class",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "Juan Carlos I-derived LHD",
+          "long full-width aviation deck",
+          "port-side bow ski jump",
+          "long starboard island with two funnels",
+          "two aircraft elevators",
+          "stern well-deck ramp"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          7244,
+          1368
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-FLEET"
+      ],
+      "assessment": {
+        "status": "operator_detail_pending",
+        "reason": "Canberra-class amphibious ship assignment needs its direct current ship page, beyond this paginated fleet excerpt. Do not infer completeness from one page.",
+        "recommended_action": "check_direct_canberra_page",
+        "model_match": "declared_class_fit_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "submarine",
+      "roster_model": "Collins-class",
+      "roster_slug": "submarine__collins_class",
+      "asset": {
+        "file": "ships/submarine__collins_class.glb",
+        "sha256": "e7dc1adb337153a7fa8c3fca54f5e6df125f224191c53f1efb59bf2fd535c02b",
+        "exact_slug": true,
+        "declared_vehicle": "submarine__collins_class",
+        "declared_name": "Collins-class",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "large Australian conventional hull",
+          "tall sail with fairwater diving planes",
+          "broad blunt sonar bow",
+          "cruciform stern controls",
+          "single open seven-blade screw"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          11340,
+          988
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-FLEET"
+      ],
+      "assessment": {
+        "status": "documented_family",
+        "reason": "Navy operator fleet list confirms Hobart/Anzac/Collins as applicable. Anzac is a frigate, not a separate corvette class; alias roles must not imply extra fleets.",
+        "recommended_action": "retain_with_classification_note",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "seaDrone",
+      "roster_model": "Sea Drone",
+      "roster_slug": "seaDrone__sea_drone",
+      "asset": {
+        "file": "ships/seaDrone__sea_drone.glb",
+        "sha256": "9e49372a334adcaf3676ca1514a119d3cc86bd1ba824ea3281e29e62a721605e",
+        "exact_slug": true,
+        "declared_vehicle": "seaDrone__sea_drone",
+        "declared_name": "Sea drone",
+        "approximate": true,
+        "representative": "Original generic low-profile USV; roster gives no named real class",
+        "features": [
+          "generic low-profile unmanned surface craft",
+          "enclosed payload bow",
+          "compact aft sensor housing",
+          "rotating electro-optical head",
+          "no crew or weapons turret"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          1084,
+          356
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "AU-MASU"
+      ],
+      "assessment": {
+        "status": "named_capabilities_in_introduction",
+        "reason": "Bluebottle is a surface vessel; Ghost Shark and Speartooth are underwater. Generic low-profile explosive sea drone does not represent those platforms. Named unit formation/experimentation is not proof of every weapon being operational.",
+        "recommended_action": "separate_surface_and_underwater_types",
+        "model_match": "wrong_generic_representative",
+        "replacement": "seaDrone__bluebottle"
+      }
+    }
+  ],
+  "additional_inventory": [
+    {
+      "nation": "australia",
+      "key": "apc",
+      "model": "M113AS4",
+      "source_ids": [
+        "AU-M113"
+      ],
+      "status": "documented_service",
+      "reason": "Lengthened six-wheel APC with protected powered 12.7 mm turret, absent from the roster.",
+      "asset_action": "build_missing",
+      "proposed_slug": "apc__m113as4",
+      "existing_exact_asset": "vehicles/apc__m113as4.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "australia",
+      "key": "ifv",
+      "model": "AS21 Redback",
+      "source_ids": [
+        "AU-REDBACK"
+      ],
+      "status": "ordered_in_testing",
+      "reason": "Test/sea-trial vehicle documented; series production/order separate from FOC.",
+      "asset_action": "build_missing",
+      "proposed_slug": "ifv__as21_redback",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "australia",
+      "key": "gunboat",
+      "model": "Arafura-class",
+      "source_ids": [
+        "AU-ARAFURA"
+      ],
+      "status": "documented_service",
+      "reason": "Commissioned OPV absent as a named class; identify actual fit instead of generic gunboat.",
+      "asset_action": "build_missing",
+      "proposed_slug": "gunboat__arafura_class",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "australia",
+      "key": "seaDrone",
+      "model": "Bluebottle",
+      "source_ids": [
+        "AU-MASU"
+      ],
+      "status": "introduction_or_experimentation",
+      "reason": "Named surface USV in new autonomous unit; configuration and operational status need detailed follow-up.",
+      "asset_action": "research_dimensions_and_fit",
+      "proposed_slug": "seaDrone__bluebottle",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    }
+  ]
+}

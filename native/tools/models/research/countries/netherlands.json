@@ -1,0 +1,1423 @@
+{
+  "nation": "netherlands",
+  "scope": "current and confirmed-order platforms in existing Tier 7 categories",
+  "all_roster_rows_assessed": true,
+  "complete": false,
+  "completion_note": "Operator evidence, exact visual fit and additional inventory still being audited.",
+  "rows": [
+    {
+      "key": "tank",
+      "roster_model": "Leopard 2A6",
+      "roster_slug": "tank__leopard_2a6",
+      "asset": {
+        "file": "vehicles/tank__leopard_2a6.glb",
+        "sha256": "501e7a7fe7b5ea6b7802c231c158edcaa3c221442ee47e5cb5a8d5e9c63e2238",
+        "exact_slug": true,
+        "declared_vehicle": "tank__leopard_2a6",
+        "declared_name": "Leopard 2A6",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "Seven road wheels; rear sprockets",
+          "120 mm L/55 gun",
+          "hollow arrowhead wedge cheeks with EMES recess",
+          "standard A6 side skirts and rear stowage baskets",
+          "rear-mounted PERI panoramic head",
+          "no A7V extra front hull armour"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          12886,
+          2156
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-TANK",
+        "NL-TANK-OWNERSHIP"
+      ],
+      "assessment": {
+        "status": "shared_operation",
+        "reason": "2A6 matches the operated type, but vehicles are German owned in joint 414 Battalion. Do not label them an independently owned Dutch tank fleet or substitute ordered 2A8.",
+        "recommended_action": "retain_with_ownership_note",
+        "model_match": "designation_matches",
+        "replacement": null
+      }
+    },
+    {
+      "key": "apc",
+      "roster_model": "Boxer",
+      "roster_slug": "apc__boxer",
+      "asset": {
+        "file": "vehicles/apc__boxer.glb",
+        "sha256": "22ad486e51040e88315eb3381f949c59e4f066429d9b6f79c1dc2ce8ad2963fe",
+        "exact_slug": true,
+        "declared_vehicle": "apc__boxer",
+        "declared_name": "Boxer",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "8x8 large road tyres",
+          "separate tall rear mission module",
+          "sharply sloped front drive module",
+          "roof remote weapon station"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          6126,
+          1008
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-VEHICLES"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator explicitly identifies this type. Exact national subvariant and visible fit remain part of model review.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "ifv",
+      "roster_model": "CV9035NL",
+      "roster_slug": "ifv__cv9035nl",
+      "asset": {
+        "file": "vehicles/ifv__cv9035nl.glb",
+        "sha256": "72c71890ad79070808f8e51919e05bbe9c3361576a9122664d5f52af6cfd7b52",
+        "exact_slug": true,
+        "declared_vehicle": "ifv__cv9035nl",
+        "declared_name": "CV9035NL",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "Seven road wheels and front sprockets",
+          "long 35 mm Bushmaster III barrel",
+          "two-man faceted turret",
+          "rear troop door",
+          "sloping bow and segmented side applique",
+          "baseline Dutch configuration without invented missile box"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          12022,
+          2024
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-CV90"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator explicitly identifies this type. Exact national subvariant and visible fit remain part of model review.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "reconVehicle",
+      "roster_model": "Fennek",
+      "roster_slug": "reconVehicle__fennek",
+      "asset": {
+        "file": "vehicles/reconVehicle__fennek.glb",
+        "sha256": "ac1cbc38723609a1462c360eedf339637cb5908e6f464b34b51ce216014da963",
+        "exact_slug": true,
+        "declared_vehicle": "reconVehicle__fennek",
+        "declared_name": "Fennek",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "Low 4x4 wedge reconnaissance hull",
+          "three-window driving compartment",
+          "retractable observation sensor mast",
+          "compact roof weapon station"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          3334,
+          660
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-FENNEK"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator explicitly identifies this type. Exact national subvariant and visible fit remain part of model review.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "recoveryVehicle",
+      "roster_model": "Armoured Recovery Vehicle",
+      "roster_slug": "recoveryVehicle__armoured_recovery_vehicle",
+      "asset": {
+        "file": "vehicles/recoveryVehicle__armoured_recovery_vehicle.glb",
+        "sha256": "730ba5805ed457218fb33c9d70e4264bc11bc958f51b8d2c7fca03d2a72e0d0b",
+        "exact_slug": true,
+        "declared_vehicle": "recoveryVehicle__armoured_recovery_vehicle",
+        "declared_name": "Armoured Recovery Vehicle",
+        "approximate": true,
+        "representative": "M88-family ARV",
+        "features": [
+          "M88-family representative for unspecified ARV",
+          "six wheels",
+          "raised forward recovery cabin",
+          "A-frame boom and front spade",
+          "rear winch deck"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          10976,
+          1672
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-BUFFEL"
+      ],
+      "assessment": {
+        "status": "model_mismatch",
+        "reason": "Dutch recovery vehicle is Leopard-2-based Buffel/Bergepanzer 3, seven road wheels; generic saved GLB declares M88-family ARV with six wheels and A-frame boom. Existing specific Bergepanzer 3 Buffel GLB can be reused.",
+        "recommended_action": "map_to_existing_specific_model",
+        "model_match": "wrong_hull_and_recovery_arrangement",
+        "replacement": "recoveryVehicle__bergepanzer_3_buffel"
+      }
+    },
+    {
+      "key": "mineClearer",
+      "roster_model": "Mine-clearing Vehicle",
+      "roster_slug": "mineClearer__mine_clearing_vehicle",
+      "asset": {
+        "file": "vehicles/mineClearer__mine_clearing_vehicle.glb",
+        "sha256": "d826a557f2c7557447611df25f8429db004c2c428a2bc8f2d3999454d7980331",
+        "exact_slug": true,
+        "declared_vehicle": "mineClearer__mine_clearing_vehicle",
+        "declared_name": "Mine-clearing Vehicle",
+        "approximate": true,
+        "representative": "T-72-based engineering carrier",
+        "features": [
+          "T-72 engineering representative",
+          "six road wheels",
+          "turretless engineering hull",
+          "front mine-clearing blade"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          10988,
+          1884
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-KODIAK",
+        "NL-KODIAK-CURRENT",
+        "NL-BUFFEL"
+      ],
+      "assessment": {
+        "status": "model_mismatch",
+        "reason": "Current Dutch Kodiak is Leopard-2-based with seven wheels, articulated excavator and mine-plough conversion. Generic saved vehicle is a six-wheel T-72 carrier. Specific Kodiak created in inventory additions batch 01.",
+        "recommended_action": "use_new_specific_model",
+        "model_match": "wrong_generic_hull_new_kodiak_pending_final_QA",
+        "replacement": "mineClearer__kodiak"
+      }
+    },
+    {
+      "key": "mineLayer",
+      "roster_model": "Engineer Minelayer",
+      "roster_slug": "mineLayer__engineer_minelayer",
+      "asset": {
+        "file": "vehicles/mineLayer__engineer_minelayer.glb",
+        "sha256": "22c0ebec00ca52a8420d03b6266c8d1ce6e1c736c0e993149a18ef49a543d78a",
+        "exact_slug": true,
+        "declared_vehicle": "mineLayer__engineer_minelayer",
+        "declared_name": "Engineer Minelayer",
+        "approximate": true,
+        "representative": "M548-pattern tracked minelayer",
+        "features": [
+          "M548-pattern tracked dispenser representative",
+          "five wheels",
+          "forward crew cab and four 40-canister mine racks"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          13032,
+          2072
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-VEHICLES"
+      ],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No named current dedicated Dutch minelayer established in the checked operator overview. This is not proof that the Netherlands has no mine warfare capability. Generic automatic entitlement is unsupported.",
+        "recommended_action": "hold_pending_operator_evidence",
+        "model_match": "generic_not_country_identified",
+        "replacement": null
+      }
+    },
+    {
+      "key": "artillery",
+      "roster_model": "PzH 2000",
+      "roster_slug": "artillery__pzh_2000",
+      "asset": {
+        "file": "vehicles/artillery__pzh_2000.glb",
+        "sha256": "639dc8ae066bd48513c1ee9d4a90f5d1a5fb2f053905c4761158ce8b93cfc055",
+        "exact_slug": true,
+        "declared_vehicle": "artillery__pzh_2000",
+        "declared_name": "PzH 2000",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "Seven road wheels",
+          "very wide angular turret and long ammunition bustle",
+          "155 mm L/52 barrel",
+          "broad forward hull deck",
+          "large rear turret doors"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          12206,
+          2112
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-PZH"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator explicitly identifies this type. Exact national subvariant and visible fit remain part of model review.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "mlrs",
+      "roster_model": "PULS",
+      "roster_slug": "mlrs__puls",
+      "asset": {
+        "file": "vehicles/mlrs__puls.glb",
+        "sha256": "ba0ecc408fa0dc8f72bbf5e03d5e79a1a6681548ee18181c7688baf10d4bded6",
+        "exact_slug": true,
+        "declared_vehicle": "mlrs__puls",
+        "declared_name": "PULS",
+        "approximate": false,
+        "representative": "PULS with paired Accular-122 pods",
+        "features": [
+          "puls_accular122 carrier",
+          "8 wheel drive",
+          "40 individual launch tubes; 122 mm class",
+          "2 launch module(s)",
+          "X elevation cradle on Y traversing turntable",
+          "closed modular launch containers"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          8852,
+          1592
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-PULS",
+        "NL-PULS-2026"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "PULS is operated. Four interim Tatra training vehicles and the definitive Scania Gryphus/crane configuration differ; existing generic PULS must declare which chassis it represents.",
+        "recommended_action": "separate_chassis_variants",
+        "model_match": "configuration_review_needed",
+        "replacement": null
+      }
+    },
+    {
+      "key": "himars",
+      "roster_model": "Guided Rocket Launcher",
+      "roster_slug": "himars__guided_rocket_launcher",
+      "asset": {
+        "file": "vehicles/himars__guided_rocket_launcher.glb",
+        "sha256": "c7abf0659114c534494cfdf54af99495064d68dad59e87124e92daaa85b6e13c",
+        "exact_slug": true,
+        "declared_vehicle": "himars__guided_rocket_launcher",
+        "declared_name": "Guided Rocket Launcher",
+        "approximate": true,
+        "representative": "Generic guided rocket launcher, HIMARS representative",
+        "features": [
+          "fmtv_himars carrier",
+          "6 wheel drive",
+          "6 individual launch tubes; 227 mm class",
+          "1 launch module(s)",
+          "X elevation cradle on Y traversing turntable",
+          "closed modular launch containers"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          5080,
+          1028
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-PULS",
+        "NL-PULS-2026"
+      ],
+      "assessment": {
+        "status": "model_mismatch",
+        "reason": "Dutch guided rocket role should identify PULS; the generic saved Guided Rocket Launcher explicitly represents a six-wheel HIMARS, a different vehicle. Specific himars__puls already exists.",
+        "recommended_action": "map_to_existing_specific_model",
+        "model_match": "wrong_launcher_and_chassis",
+        "replacement": "himars__puls"
+      }
+    },
+    {
+      "key": "aaVehicle",
+      "roster_model": "Skyranger 30",
+      "roster_slug": "aaVehicle__skyranger_30",
+      "asset": {
+        "file": "vehicles/aaVehicle__skyranger_30.glb",
+        "sha256": "7c27d70bf2878652ef3d42437a8d2f37bb06ef4248f47c089638ec7105aebd4a",
+        "exact_slug": true,
+        "declared_vehicle": "aaVehicle__skyranger_30",
+        "declared_name": "Skyranger 30",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "Skyranger 30 anti-aircraft mounting",
+          "5 independently marked barrels/canisters",
+          "Y turntable and X common trunnion",
+          "rear search radar"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          6470,
+          1198
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-SKYRANGER",
+        "NL-SKYRANGER-CHASSIS",
+        "NL-GBAD",
+        "NL-SWP"
+      ],
+      "assessment": {
+        "status": "ordered_future_model_mismatch",
+        "reason": "Dutch Skyranger is on order for 2028–2029 on tracked FFG ACSV. Existing eight-wheel Boxer GLB does not represent that configuration. Current Fennek SWP is a separate active system. User explicitly requests ordered equipment too.",
+        "recommended_action": "build_tracked_acsv_variant_separately",
+        "model_match": "wrong_chassis_for_dutch_order",
+        "replacement": "aaVehicle__skyranger_30_acsv"
+      }
+    },
+    {
+      "key": "samLauncher",
+      "roster_model": "Patriot PAC-3",
+      "roster_slug": "samLauncher__patriot_pac_3",
+      "asset": {
+        "file": "vehicles/samLauncher__patriot_pac_3.glb",
+        "sha256": "bf473aaea780884e4ec63dea657cd1612da0e15b71cd618f3816406bf4fd0082",
+        "exact_slug": true,
+        "declared_vehicle": "samLauncher__patriot_pac_3",
+        "declared_name": "Patriot PAC-3",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "patriot_trailer carrier",
+          "4 wheel drive",
+          "16 individual launch tubes; 250 mm class",
+          "1 launch module(s)",
+          "X elevation cradle on Y traversing turntable",
+          "closed modular launch containers"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          4176,
+          712
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-GBAD",
+        "NL-GBAD-UNITS"
+      ],
+      "assessment": {
+        "status": "documented_family_variant_unresolved",
+        "reason": "Patriot is in service. These operator pages alone do not identify the current PAC-3 canister load of each launch station; do not infer exact missile counts or PAC-3 MSE variant.",
+        "recommended_action": "retain_family_verify_canister_fit",
+        "model_match": "family_matches_exact_load_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "abmLauncher",
+      "roster_model": "Patriot PAC-3",
+      "roster_slug": "abmLauncher__patriot_pac_3",
+      "asset": {
+        "file": "vehicles/abmLauncher__patriot_pac_3.glb",
+        "sha256": "a5c1fec6616bdd59921f21a8cbc8038e51c81111b7938e0ab14b3ed772db556a",
+        "exact_slug": true,
+        "declared_vehicle": "abmLauncher__patriot_pac_3",
+        "declared_name": "Patriot PAC-3",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "patriot_trailer carrier",
+          "4 wheel drive",
+          "16 individual launch tubes; 250 mm class",
+          "1 launch module(s)",
+          "X elevation cradle on Y traversing turntable",
+          "closed modular launch containers"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          4176,
+          712
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-GBAD",
+        "NL-GBAD-UNITS"
+      ],
+      "assessment": {
+        "status": "documented_family_variant_unresolved",
+        "reason": "Patriot is in service. These operator pages alone do not identify the current PAC-3 canister load of each launch station; do not infer exact missile counts or PAC-3 MSE variant.",
+        "recommended_action": "retain_family_verify_canister_fit",
+        "model_match": "family_matches_exact_load_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "helicopter",
+      "roster_model": "NH90",
+      "roster_slug": "helicopter__nh90",
+      "asset": {
+        "file": "aircraft/helicopter__nh90.glb",
+        "sha256": "2328baa2de94249fff21600e6bae8465a0e14c0e72bb78a98bf34cf9e9972932",
+        "exact_slug": true,
+        "declared_vehicle": "helicopter__nh90",
+        "declared_name": "NH90",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "nh90 fuselage and tail profile",
+          "4-blade 16.3 m main rotor",
+          "4-blade tail rotor",
+          "tricycle landing gear",
+          "2 separate turbine nacelles",
+          "published rotor size; small fittings and fuselage cross-sections approximated"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          9236,
+          1424
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-NH90"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Dutch NH90 fleet is NFH, used in maritime or transport configuration. Generic NH90 should not silently imply TTH airframe features.",
+        "recommended_action": "use_nfh_configuration",
+        "model_match": "variant_review_needed",
+        "replacement": "navalHelicopter__nh90_nfh"
+      }
+    },
+    {
+      "key": "gunship",
+      "roster_model": "AH-64E Apache",
+      "roster_slug": "gunship__ah_64e_apache",
+      "asset": {
+        "file": "aircraft/gunship__ah_64e_apache.glb",
+        "sha256": "42ddd62522f11de0e2e54da87b88e6ac841e411079318a3436c087c7dea4c6cf",
+        "exact_slug": true,
+        "declared_vehicle": "gunship__ah_64e_apache",
+        "declared_name": "AH-64E Apache",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "apache fuselage and tail profile",
+          "4-blade 14.63 m main rotor",
+          "4-blade tail rotor",
+          "tailwheel landing gear",
+          "2 separate turbine nacelles",
+          "published rotor size; small fittings and fuselage cross-sections approximated",
+          "5.23 m stub-wing span",
+          "2 weapon stations per wing",
+          "chin turret with separate gun trunnion"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          11504,
+          2080
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-APACHE"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator explicitly identifies this type. Exact national subvariant and visible fit remain part of model review.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "navalHelicopter",
+      "roster_model": "NH90 NFH",
+      "roster_slug": "navalHelicopter__nh90_nfh",
+      "asset": {
+        "file": "aircraft/navalHelicopter__nh90_nfh.glb",
+        "sha256": "1c62ec3f1bed4544149abe0f80d88e21d270a937c72430df8c821d500bec5abb",
+        "exact_slug": true,
+        "declared_vehicle": "navalHelicopter__nh90_nfh",
+        "declared_name": "NH90 NFH",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "nh90 fuselage and tail profile",
+          "4-blade 16.3 m main rotor",
+          "4-blade tail rotor",
+          "tricycle landing gear",
+          "2 separate turbine nacelles",
+          "published rotor size; small fittings and fuselage cross-sections approximated",
+          "naval radar/hoist and the selected real mission stores"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          9936,
+          1708
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-NH90"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Dutch NH90 fleet is NFH, used in maritime or transport configuration. Generic NH90 should not silently imply TTH airframe features.",
+        "recommended_action": "use_nfh_configuration",
+        "model_match": "variant_review_needed",
+        "replacement": "navalHelicopter__nh90_nfh"
+      }
+    },
+    {
+      "key": "heavyLift",
+      "roster_model": "CH-47F Chinook",
+      "roster_slug": "heavyLift__ch_47f_chinook",
+      "asset": {
+        "file": "aircraft/heavyLift__ch_47f_chinook.glb",
+        "sha256": "7e74597e5fbbc4ba50f52d2a20d4bf07614e5a20eb203d5b1db219da5bc1fafe",
+        "exact_slug": true,
+        "declared_vehicle": "heavyLift__ch_47f_chinook",
+        "declared_name": "CH-47F Chinook",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "chinook fuselage and tail profile",
+          "3-blade 18.3 m main rotor",
+          "0-blade tail rotor",
+          "four landing gear",
+          "2 separate turbine nacelles",
+          "published rotor size; small fittings and fuselage cross-sections approximated",
+          "two tandem three-blade main rotors, raised aft pylon and rear engine pods"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          11964,
+          2180
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-CHINOOK"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Operator explicitly identifies this type. Exact national subvariant and visible fit remain part of model review.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "jet",
+      "roster_model": "F-35A",
+      "roster_slug": "jet__f_35a",
+      "asset": {
+        "file": "aircraft/jet__f_35a.glb",
+        "sha256": "fad433f384ac075e0332afdaf57dda116bdb1c571b9e5a08eb6b47c4dc34fe48",
+        "exact_slug": true,
+        "declared_vehicle": "jet__f_35a",
+        "declared_name": "F-35A",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "blended fuselage chines",
+          "trapezoidal wings",
+          "outward-canted twin fins",
+          "single large nozzle",
+          "internal weapon bays with hinged doors",
+          "no external pylons"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          8802,
+          1404
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-F35"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Dutch variant explicitly F-35A CTOL, not B/C. Operator identifies active fleet; retired F-16 is not substituted.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "stealthFighter",
+      "roster_model": "F-35A",
+      "roster_slug": "stealthFighter__f_35a",
+      "asset": {
+        "file": "aircraft/stealthFighter__f_35a.glb",
+        "sha256": "2bc4796148f5d9a1a53cdc2f63253d933e06d196c67a8edecf618b3e10f74cb5",
+        "exact_slug": true,
+        "declared_vehicle": "stealthFighter__f_35a",
+        "declared_name": "F-35A",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "blended fuselage chines",
+          "trapezoidal wings",
+          "outward-canted twin fins",
+          "single large nozzle",
+          "internal weapon bays with hinged doors",
+          "no external pylons"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          8802,
+          1404
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-F35"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Dutch variant explicitly F-35A CTOL, not B/C. Operator identifies active fleet; retired F-16 is not substituted.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
+      }
+    },
+    {
+      "key": "carrierJet",
+      "roster_model": "Carrier Fighter",
+      "roster_slug": "carrierJet__carrier_fighter",
+      "asset": {
+        "file": "aircraft/carrierJet__carrier_fighter.glb",
+        "sha256": "a982ef7ffadec48a263da0215b260fdda488e57fbd9116da8855b4d387c8732b",
+        "exact_slug": true,
+        "declared_vehicle": "carrierJet__carrier_fighter",
+        "declared_name": "Carrier Fighter",
+        "approximate": true,
+        "representative": "Generic carrier fighter with F/A-18F exterior",
+        "features": [
+          "large leading-edge extensions",
+          "rectangular side intakes",
+          "outward-canted twin fins",
+          "tandem canopy",
+          "broad swept wings",
+          "twin engine nozzles"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          12230,
+          2024
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-AIR",
+        "NL-SHIPS"
+      ],
+      "assessment": {
+        "status": "unsupported_generic_entitlement",
+        "reason": "Checked operator aircraft and ship lists do not establish a Dutch carrier-fighter or carrier-strike-drone fleet. F-35A is land-based, distinct from F-35B/C. Flag game availability for correction; do not create a fictional national fleet.",
+        "recommended_action": "recommend_disable_or_explicit_future_scenario",
+        "model_match": "generic_not_real_national_type",
+        "replacement": null
+      }
+    },
+    {
+      "key": "drone",
+      "roster_model": "MQ-9A Reaper",
+      "roster_slug": "drone__mq_9a_reaper",
+      "asset": {
+        "file": "aircraft/drone__mq_9a_reaper.glb",
+        "sha256": "4f5eacc785abce995fc5b168a583d08fe78db2506accd45aea0355852ea356f3",
+        "exact_slug": true,
+        "declared_vehicle": "drone__mq_9a_reaper",
+        "declared_name": "MQ-9A Reaper",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "long straight tapered wing",
+          "single pusher propeller",
+          "outward V tail",
+          "nose satellite fairing",
+          "ventral sensor turret"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          9624,
+          1596
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-MQ9",
+        "NL-MQ9-ARMING"
+      ],
+      "assessment": {
+        "status": "documented_service_arming_integration",
+        "reason": "MQ-9A service confirmed; first training-weapon carriage August 2026. Armed-carriage test is distinct from fleet combat FOC and actual operational weapons load.",
+        "recommended_action": "retain_record_arming_stage",
+        "model_match": "stores_fit_review_needed",
+        "replacement": null
+      }
+    },
+    {
+      "key": "carrierDrone",
+      "roster_model": "Carrier Drone",
+      "roster_slug": "carrierDrone__carrier_drone",
+      "asset": {
+        "file": "aircraft/carrierDrone__carrier_drone.glb",
+        "sha256": "fd1423d86509cd62d895137683864aaa4d307debd3960a03520d96f3a367cc3e",
+        "exact_slug": true,
+        "declared_vehicle": "carrierDrone__carrier_drone",
+        "declared_name": "Carrier Drone",
+        "approximate": true,
+        "representative": "Original plausible carrier UCAV with X-47B-like planform",
+        "features": [
+          "cranked flying wing",
+          "dorsal jet intake",
+          "single recessed nozzle",
+          "internal weapon bays",
+          "no vertical tail or external pylons"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          5840,
+          1136
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-AIR",
+        "NL-SHIPS"
+      ],
+      "assessment": {
+        "status": "unsupported_generic_entitlement",
+        "reason": "Checked operator aircraft and ship lists do not establish a Dutch carrier-fighter or carrier-strike-drone fleet. F-35A is land-based, distinct from F-35B/C. Flag game availability for correction; do not create a fictional national fleet.",
+        "recommended_action": "recommend_disable_or_explicit_future_scenario",
+        "model_match": "generic_not_real_national_type",
+        "replacement": null
+      }
+    },
+    {
+      "key": "destroyer",
+      "roster_model": "De Zeven Provincien-class",
+      "roster_slug": "destroyer__de_zeven_provincien_class",
+      "asset": {
+        "file": "ships/destroyer__de_zeven_provincien_class.glb",
+        "sha256": "689e5319f313c192b8062119c2c9a012a908c5bba39f3d8556750d52fe0e1d9a",
+        "exact_slug": true,
+        "declared_vehicle": "destroyer__de_zeven_provincien_class",
+        "declared_name": "De Zeven Provincien-class",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "large forward 127 mm turret",
+          "40-cell foredeck VLS",
+          "APAR faceted forward mast",
+          "wide rotating SMART-L array aft",
+          "two broad raked funnels",
+          "single aft helicopter hangar"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          12028,
+          1838
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-LCF"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "De Zeven Provincien exists and is a 144 m air-defence/command frigate. Two game roles alias one real class; not two national fleets.",
+        "recommended_action": "retain_with_classification_note",
+        "model_match": "designation_and_published_dimensions_match",
+        "replacement": null
+      }
+    },
+    {
+      "key": "corvette",
+      "roster_model": "Holland-class",
+      "roster_slug": "corvette__holland_class",
+      "asset": {
+        "file": "ships/corvette__holland_class.glb",
+        "sha256": "ea6797530ed291ca84728cdd5d5c061c26f992f6ecdba2a1dab66071de241562",
+        "exact_slug": true,
+        "declared_vehicle": "corvette__holland_class",
+        "declared_name": "Holland-class",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "high-freeboard ocean patrol hull",
+          "large forward bridge",
+          "integrated I-Mast enclosure",
+          "76 mm foredeck gun",
+          "30 mm aft gun",
+          "no antiship canisters or VLS",
+          "single NH90 hangar"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          10136,
+          1432
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-OPV"
+      ],
+      "assessment": {
+        "status": "documented_service_role_mismatch",
+        "reason": "Holland is an ocean patrol vessel, not a missile corvette. Its GLB may represent the real hull; weapon capability must not inherit generic corvette missiles.",
+        "recommended_action": "retain_hull_correct_role_and_armament",
+        "model_match": "designation_matches_role_needs_handoff",
+        "replacement": null
+      }
+    },
+    {
+      "key": "asFrigate",
+      "roster_model": "De Zeven Provincien-class",
+      "roster_slug": "asFrigate__de_zeven_provincien_class",
+      "asset": {
+        "file": "ships/asFrigate__de_zeven_provincien_class.glb",
+        "sha256": "7d4bdca1700242df256fb4d7a3637a3baa711cc5b42a9ed11bc1b84a2f1b19c5",
+        "exact_slug": true,
+        "declared_vehicle": "asFrigate__de_zeven_provincien_class",
+        "declared_name": "De Zeven Provincien-class",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "large forward 127 mm turret",
+          "40-cell foredeck VLS",
+          "APAR faceted forward mast",
+          "wide rotating SMART-L array aft",
+          "two broad raked funnels",
+          "single aft helicopter hangar"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          12028,
+          1838
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-LCF"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "De Zeven Provincien exists and is a 144 m air-defence/command frigate. Two game roles alias one real class; not two national fleets.",
+        "recommended_action": "retain_with_classification_note",
+        "model_match": "designation_and_published_dimensions_match",
+        "replacement": null
+      }
+    },
+    {
+      "key": "gunboat",
+      "roster_model": "Gunboat",
+      "roster_slug": "gunboat__gunboat",
+      "asset": {
+        "file": "ships/gunboat__gunboat.glb",
+        "sha256": "d1f8acbc7b200a2d270cf1ea642d6fd11ac701d591e4f978f4435c182cac3878",
+        "exact_slug": true,
+        "declared_vehicle": "gunboat__gunboat",
+        "declared_name": "Gunboat",
+        "approximate": true,
+        "representative": "Original plausible generic 30 m coastal gunboat",
+        "features": [
+          "original generic coastal gunboat",
+          "small pilothouse",
+          "forward 30 mm gun",
+          "aft light gun",
+          "single exhaust and search mast",
+          "no missiles or helicopter facilities"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          9020,
+          1176
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-FRISC"
+      ],
+      "assessment": {
+        "status": "generic_model_mismatch",
+        "reason": "Generic steel gunboat is not the documented inflatable-collar FRISC craft. Select an actual armed configuration after weapon-fit evidence; boarding/raiding craft are real national small-craft candidates.",
+        "recommended_action": "build_specific_craft_after_fit_check",
+        "model_match": "wrong_representative_family",
+        "replacement": "gunboat__frisc"
+      }
+    },
+    {
+      "key": "landingShip",
+      "roster_model": "Rotterdam-class",
+      "roster_slug": "landingShip__rotterdam_class",
+      "asset": {
+        "file": "ships/landingShip__rotterdam_class.glb",
+        "sha256": "4e19d0983b28eb34b0a0f05897c8384682cfe2332f2d0671a84c0a3d3e349494",
+        "exact_slug": true,
+        "declared_vehicle": "landingShip__rotterdam_class",
+        "declared_name": "Rotterdam-class",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "large forward accommodation and command block",
+          "single broad exhaust block",
+          "two Goalkeeper mounts",
+          "large helicopter hangar and open aft flight deck",
+          "heavy side crane",
+          "stern well-deck ramp"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          10404,
+          1468
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-LPD"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Rotterdam dimensions 166 x 27 m; Johan de Witt is a distinct larger 176 x 29 m ship and needs its own exterior if added.",
+        "recommended_action": "retain_rotterdam_add_distinct_ship",
+        "model_match": "designation_and_dimensions_match",
+        "replacement": null
+      }
+    },
+    {
+      "key": "submarine",
+      "roster_model": "Walrus-class",
+      "roster_slug": "submarine__walrus_class",
+      "asset": {
+        "file": "ships/submarine__walrus_class.glb",
+        "sha256": "d26acc5a6a0e94a44fd4db9c5df73192c06a14a0cc8fb2601cb92f7fb6c90e0a",
+        "exact_slug": true,
+        "declared_vehicle": "submarine__walrus_class",
+        "declared_name": "Walrus-class",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "Dutch ocean-going conventional submarine",
+          "wide rounded hull",
+          "fairwater diving planes",
+          "X-form tail",
+          "seven-blade screw"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          11340,
+          988
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-SUB"
+      ],
+      "assessment": {
+        "status": "documented_service",
+        "reason": "Class assignment remains valid through active Walrus-class boats. Individual decommissioned names must not be counted as current boats. Model class X-tail/hull dimensions match declared representative.",
+        "recommended_action": "retain_class",
+        "model_match": "declared_class_and_dimensions_match",
+        "replacement": null
+      }
+    },
+    {
+      "key": "seaDrone",
+      "roster_model": "Sea Drone",
+      "roster_slug": "seaDrone__sea_drone",
+      "asset": {
+        "file": "ships/seaDrone__sea_drone.glb",
+        "sha256": "9e49372a334adcaf3676ca1514a119d3cc86bd1ba824ea3281e29e62a721605e",
+        "exact_slug": true,
+        "declared_vehicle": "seaDrone__sea_drone",
+        "declared_name": "Sea drone",
+        "approximate": true,
+        "representative": "Original generic low-profile USV; roster gives no named real class",
+        "features": [
+          "generic low-profile unmanned surface craft",
+          "enclosed payload bow",
+          "compact aft sensor housing",
+          "rotating electro-optical head",
+          "no crew or weapons turret"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          1084,
+          356
+        ]
+      },
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "NL-SHIPS"
+      ],
+      "assessment": {
+        "status": "unverified",
+        "reason": "A generic armed sea-drone entitlement is not validated by the checked fleet overview. Separate experiments and mine-countermeasure unmanned craft from operational explosive USVs.",
+        "recommended_action": "hold_pending_specific_operator_evidence",
+        "model_match": "generic_not_country_identified",
+        "replacement": null
+      }
+    }
+  ],
+  "additional_inventory": [
+    {
+      "nation": "netherlands",
+      "key": "bushmaster",
+      "model": "Bushmaster",
+      "source_ids": [
+        "NL-VEHICLES"
+      ],
+      "status": "documented_service",
+      "reason": "Current operator equipment list includes Bushmaster; absent from Dutch Tier 7 assignment list.",
+      "asset_action": "reuse_existing",
+      "proposed_slug": "bushmaster__bushmaster",
+      "existing_exact_asset": "vehicles/bushmaster__bushmaster.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "netherlands",
+      "key": "helicopter",
+      "model": "AS532U2 Cougar",
+      "source_ids": [
+        "NL-COUGAR",
+        "NL-COUGAR-2026"
+      ],
+      "status": "documented_service",
+      "reason": "Current troop transport absent as a separate type.",
+      "asset_action": "build_missing",
+      "proposed_slug": "helicopter__as532u2_cougar",
+      "existing_exact_asset": "aircraft/helicopter__as532u2_cougar.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "netherlands",
+      "key": "aaVehicle",
+      "model": "Fennek SWP",
+      "source_ids": [
+        "NL-GBAD",
+        "NL-SWP"
+      ],
+      "status": "documented_service",
+      "reason": "Actual current four-Stinger short-range defence vehicle, distinct from reconnaissance Fennek and future Skyranger.",
+      "asset_action": "build_missing",
+      "proposed_slug": "aaVehicle__fennek_swp",
+      "existing_exact_asset": "vehicles/aaVehicle__fennek_swp.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "netherlands",
+      "key": "samLauncher",
+      "model": "NASAMS",
+      "source_ids": [
+        "NL-GBAD",
+        "NL-GBAD-UNITS"
+      ],
+      "status": "documented_service",
+      "reason": "Current medium-range system omitted by a single Patriot representative.",
+      "asset_action": "reuse_existing",
+      "proposed_slug": "samLauncher__nasams",
+      "existing_exact_asset": "vehicles/samLauncher__nasams.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "netherlands",
+      "key": "landingShip",
+      "model": "Johan de Witt",
+      "source_ids": [
+        "NL-LPD"
+      ],
+      "status": "documented_service",
+      "reason": "Larger LPD with different dimensions from Rotterdam.",
+      "asset_action": "build_missing",
+      "proposed_slug": "landingShip__johan_de_witt",
+      "existing_exact_asset": "ships/landingShip__johan_de_witt.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "netherlands",
+      "key": "aaVehicle",
+      "model": "Skyranger 30 ACSV",
+      "source_ids": [
+        "NL-SKYRANGER",
+        "NL-SKYRANGER-CHASSIS"
+      ],
+      "status": "ordered_future",
+      "reason": "Confirmed order; first delivery end 2028. Tracked FFG ACSV differs visibly from Boxer-mounted existing model.",
+      "asset_action": "build_missing",
+      "proposed_slug": "aaVehicle__skyranger_30_acsv",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "netherlands",
+      "key": "tank",
+      "model": "Leopard 2A8",
+      "source_ids": [
+        "NL-TANK",
+        "NL-TANK-OWNERSHIP"
+      ],
+      "status": "ordered_future",
+      "reason": "Confirmed Dutch-owned future fleet, delivery 2028–2031; not a replacement for current joint-operated 2A6 in active list.",
+      "asset_action": "check_existing_model",
+      "proposed_slug": "tank__leopard_2a8",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "netherlands",
+      "key": "mineClearer",
+      "model": "Kodiak AEV 3",
+      "source_ids": [
+        "NL-KODIAK",
+        "NL-KODIAK-CURRENT"
+      ],
+      "status": "documented_service",
+      "reason": "Documented current engineering and mine-breaching vehicle.",
+      "asset_action": "build_missing",
+      "proposed_slug": "mineClearer__kodiak",
+      "existing_exact_asset": "vehicles/mineClearer__kodiak.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "netherlands",
+      "key": "gunboat",
+      "model": "FRISC 12 m boarding craft",
+      "source_ids": [
+        "NL-FRISC",
+        "FRISC-MST",
+        "FRISC-DRIVES"
+      ],
+      "status": "documented_service",
+      "reason": "Actual RHIB; selected unarmed boarding configuration, not a generic steel cannon boat.",
+      "asset_action": "build_missing",
+      "proposed_slug": "gunboat__frisc",
+      "existing_exact_asset": "ships/gunboat__frisc.glb",
+      "asset_state": "available_exact_file"
+    }
+  ]
+}

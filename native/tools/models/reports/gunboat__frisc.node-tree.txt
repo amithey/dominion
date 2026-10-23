@@ -1,0 +1,29 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Hull local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Hull_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Wake_Bow local=[0.0, 0.65, 5.88] world=[0.0, 0.65, 5.88] axis=None pivot
+    Wake_Stern local=[0.0, 0.65, -5.88] world=[0.0, 0.65, -5.88] axis=None pivot
+    Collars_Console_and_Seats local=[0.0, 1.05, 0.0] world=[0.0, 1.05, 0.0] axis=None pivot
+      Collars_Console_and_Seats_Mesh local=[0, 0, 0] world=[0.0, 1.05, 0.0] axis=None mesh
+    Stern_Drive_0 local=[-0.64, 0.54, -5.94] world=[-0.64, 0.54, -5.94] axis=Y pivot
+      Stern_Drive_0_Mesh local=[0, 0, 0] world=[-0.64, 0.54, -5.94] axis=None mesh
+    Stern_Drive_1 local=[0.64, 0.54, -5.94] world=[0.64, 0.54, -5.94] axis=Y pivot
+      Stern_Drive_1_Mesh local=[0, 0, 0] world=[0.64, 0.54, -5.94] axis=None mesh
+    Inboard_Engine_Covers local=[0.0, 1.3, -4.65] world=[0.0, 1.3, -4.65] axis=None pivot
+      Inboard_Engine_Covers_Mesh local=[0, 0, 0] world=[0.0, 1.3, -4.65] axis=None mesh
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Hull_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Hull_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Wake_Bow_LOD1 local=[0.0, 0.65, 5.88] world=[0.0, 0.65, 5.88] axis=None pivot hidden
+    Wake_Stern_LOD1 local=[0.0, 0.65, -5.88] world=[0.0, 0.65, -5.88] axis=None pivot hidden
+    Collars_Console_and_Seats_LOD1 local=[0.0, 1.05, 0.0] world=[0.0, 1.05, 0.0] axis=None pivot hidden
+      Collars_Console_and_Seats_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.05, 0.0] axis=None mesh hidden
+    Stern_Drive_0_LOD1 local=[-0.64, 0.54, -5.94] world=[-0.64, 0.54, -5.94] axis=Y pivot hidden
+      Stern_Drive_0_Mesh_LOD1 local=[0, 0, 0] world=[-0.64, 0.54, -5.94] axis=None mesh hidden
+    Stern_Drive_1_LOD1 local=[0.64, 0.54, -5.94] world=[0.64, 0.54, -5.94] axis=Y pivot hidden
+      Stern_Drive_1_Mesh_LOD1 local=[0, 0, 0] world=[0.64, 0.54, -5.94] axis=None mesh hidden
+    Inboard_Engine_Covers_LOD1 local=[0.0, 1.3, -4.65] world=[0.0, 1.3, -4.65] axis=None pivot hidden
+      Inboard_Engine_Covers_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.3, -4.65] axis=None mesh hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 0.65, 0.0] world=[0.0, 0.65, 0.0] axis=None mesh hidden

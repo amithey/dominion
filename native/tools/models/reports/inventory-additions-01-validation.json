@@ -1,0 +1,32 @@
+{
+  "batch": "inventory-additions-01",
+  "files": [
+    "vehicles/apc__m113as4.glb",
+    "aircraft/helicopter__as532u2_cougar.glb",
+    "vehicles/aaVehicle__fennek_swp.glb",
+    "vehicles/mineClearer__kodiak.glb",
+    "ships/landingShip__johan_de_witt.glb",
+    "ships/gunboat__frisc.glb"
+  ],
+  "sha256": {
+    "vehicles/apc__m113as4.glb": "f6827d765fa724681f690f716c939b3e3130204bba093baa9a4fef923a99bf67",
+    "aircraft/helicopter__as532u2_cougar.glb": "25e7bdb20c36854e85447bc85a4fc3e9179dc67d5ae35834b4e94c194f298f82",
+    "vehicles/aaVehicle__fennek_swp.glb": "c6bc9acd7105f391f3f1cbd5529df0397fd413964c03a3d2f9da0453ac0cb3e1",
+    "vehicles/mineClearer__kodiak.glb": "16a4b8584070dfe73c56df40bf196889aad048e183d285a0129628dc9ffc3249",
+    "ships/landingShip__johan_de_witt.glb": "9bd14e65c59ac0f1f23e00cc3e74cad73adbb8c1663a9a4c7e94e9be2f958331",
+    "ships/gunboat__frisc.glb": "5879e3b3600679be83d822563b363e3dcc70648a9af043aa0e264b8df1fef725"
+  },
+  "maximum_triangles": [
+    12454,
+    2208
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "canonical TrackPath with metre mesh scale and U loop coordinate on tracked vehicles; actual axle counts",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions.py"
+}

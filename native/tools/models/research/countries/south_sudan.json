@@ -1,0 +1,244 @@
+{
+  "nation": "south_sudan",
+  "scope": "current and confirmed-order platforms in existing Tier 7 categories",
+  "all_roster_rows_assessed": false,
+  "complete": false,
+  "completion_note": "Operator evidence, exact visual fit and additional inventory still being audited.",
+  "rows": [
+    {
+      "key": "tank",
+      "roster_model": "T-72AV",
+      "roster_slug": "tank__t_72av",
+      "asset": {
+        "file": "vehicles/tank__t_72av.glb",
+        "sha256": "0a251f55e61f88ae5bb0e1eb47f70c74b6219698e3149a167fe5b453dd1cf014",
+        "exact_slug": true,
+        "declared_vehicle": "t_72av",
+        "declared_name": "T-72AV",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "Six large wheels",
+          "cast T-72A turret covered in angled Kontakt-1 bricks",
+          "glacis and skirt ERA",
+          "125 mm gun",
+          "large IR searchlight",
+          "rear fuel drums"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          13396,
+          2442
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "apc",
+      "roster_model": "BTR-80 / Typhoon MRAP",
+      "roster_slug": "apc__btr_80_typhoon_mrap",
+      "asset": {
+        "file": "vehicles/apc__btr_80_typhoon_mrap.glb",
+        "sha256": "f965ac6be6c822212dda3dcc16f6154891d247ec7bad68ecc331c5a36edd4b97",
+        "exact_slug": true,
+        "declared_vehicle": "apc__btr_80_typhoon_mrap",
+        "declared_name": "BTR-80 / Typhoon MRAP",
+        "approximate": true,
+        "representative": "BTR-80",
+        "features": [
+          "BTR-80 selected",
+          "8x8 enlarged hull",
+          "KPVT turret",
+          "split side entry doors between middle wheels",
+          "rear waterjet"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          6506,
+          1084
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "artillery",
+      "roster_model": "D-30 / 2S1",
+      "roster_slug": "artillery__d_30_2s1",
+      "asset": {
+        "file": "vehicles/artillery__d_30_2s1.glb",
+        "sha256": "57711fe2fad55268210759445a5b80b4a7c996660e9aa1629d3f65d22e9e58e2",
+        "exact_slug": true,
+        "declared_vehicle": "artillery__d_30_2s1",
+        "declared_name": "D-30 / 2S1",
+        "approximate": true,
+        "representative": "2S1 Gvozdika self-propelled howitzer",
+        "features": [
+          "2S1 chosen from combined 2S1/D-30 row",
+          "Seven small road wheels with front sprockets",
+          "low amphibious hull",
+          "rear-mounted shallow welded turret",
+          "122 mm 2A31 howitzer with double-baffle muzzle brake",
+          "bow trim vane and rear access door"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          12218,
+          1908
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "aaVehicle",
+      "roster_model": "ZU-23-2",
+      "roster_slug": "aaVehicle__zu_23_2",
+      "asset": {
+        "file": "vehicles/aaVehicle__zu_23_2.glb",
+        "sha256": "51f100365d0355f1f88e86d273dc8acab751a0598f5ac7bacef31980236ed5dd",
+        "exact_slug": true,
+        "declared_vehicle": "aaVehicle__zu_23_2",
+        "declared_name": "ZU-23-2",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "ZU-23-2 anti-aircraft mounting",
+          "2 independently marked barrels/canisters",
+          "Y turntable and X common trunnion",
+          "rear optical fire control; no invented radar"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          1860,
+          444
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "helicopter",
+      "roster_model": "Mi-17",
+      "roster_slug": "helicopter__mi_17",
+      "asset": {
+        "file": "aircraft/helicopter__mi_17.glb",
+        "sha256": "77c064d4cbbf9f64067d42cd23fb7b6568b80aa6f1611483a3dc856d929d1290",
+        "exact_slug": true,
+        "declared_vehicle": "helicopter__mi_17",
+        "declared_name": "Mi-17",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "mi17 fuselage and tail profile",
+          "5-blade 21.29 m main rotor",
+          "3-blade tail rotor",
+          "tricycle landing gear",
+          "2 separate turbine nacelles",
+          "published rotor size; small fittings and fuselage cross-sections approximated"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          13148,
+          2156
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "gunship",
+      "roster_model": "Mi-24V",
+      "roster_slug": "gunship__mi_24v",
+      "asset": {
+        "file": "aircraft/gunship__mi_24v.glb",
+        "sha256": "3ec548be11ee2a999ff76d7134c5bee1978a4ace26a864c7437e26ebc2b95519",
+        "exact_slug": true,
+        "declared_vehicle": "gunship__mi_24v",
+        "declared_name": "Mi-24V",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "mi24 fuselage and tail profile",
+          "5-blade 17.3 m main rotor",
+          "3-blade tail rotor",
+          "tricycle landing gear",
+          "2 separate turbine nacelles",
+          "published rotor size; small fittings and fuselage cross-sections approximated",
+          "6.54 m stub-wing span",
+          "3 weapon stations per wing",
+          "chin turret with separate gun trunnion"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          12772,
+          2316
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    }
+  ],
+  "additional_inventory": []
+}

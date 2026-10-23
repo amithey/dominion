@@ -1,0 +1,196 @@
+# National inventory audit — evidence ledger
+Work in progress. Current equipment **and confirmed orders** are in scope. A reviewed row may still contain an unresolved question; it is not a blanket certification of current service or model accuracy.
+Coverage: 64 of 823 nation–model assignments assessed; 60 source records. No absent-source claim establishes non-possession.
+
+## afghanistan
+Assessed 0/12 roster assignments. Full asset metadata: [country ledger](countries/afghanistan.json).
+
+## australia
+Assessed 31/31 roster assignments. Full asset metadata: [country ledger](countries/australia.json).
+| Role / roster model | Assessment and next action | Sources |
+|---|---|---|
+| `tank` — M1A2 SEPv3 Abrams | **documented_service**. Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks. Next: `retain`. | [AU-M1](https://www.army.gov.au/equipment/vehicles-and-surveillance/m1a2-abrams-tank) |
+| `apc` — Boxer CRV | **incomplete_inventory**. Boxer CRV is a reconnaissance vehicle rather than a substitute for the distinct M113AS4 APC fleet. New AS21 Redback is separately in test/introduction. Add M113AS4 and track Redback order separately. Next: `add_specific_m113as4_and_track_redback_order`. | [AU-M113](https://www.army.gov.au/equipment/vehicles-and-surveillance/m113as4-armoured-personnel-carrier), [AU-REDBACK](https://news.defence.gov.au/army/capability/2026-09-03/new-fighting-vehicles-tested-sea) |
+| `bushmaster` — Bushmaster | **documented_service**. Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks. Next: `retain`. | [AU-PMV](https://www.defence.gov.au/defence-activities/projects/protected-mobility-vehicle) |
+| `reconVehicle` — Hawkei | **documented_service**. Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks. Next: `retain`. | [AU-PMV](https://www.defence.gov.au/defence-activities/projects/protected-mobility-vehicle) |
+| `recoveryVehicle` — Armoured Recovery Vehicle | **variant_unresolved**. Generic M88-family model alone is insufficient to verify Australian M88A2 details. Current tank source does not establish exact recovery inventory; obtain M88A2 operator evidence. Next: `verify_m88a2_fit`. | [AU-M1](https://www.army.gov.au/equipment/vehicles-and-surveillance/m1a2-abrams-tank) |
+| `mineClearer` — Mine-clearing Vehicle | **model_mismatch**. Actual M1150 Abrams breacher documented in live demonstration; generic T-72-based six-wheel engineer is wrong. Existing mineClearer__m1150_abv should be checked and reused. Next: `map_to_existing_specific_model`. | [AU-BREACHER](https://www.defence.gov.au/news-events/news/2025-09-29/new-destructive-breaching-capability-display) |
+| `mineLayer` — Engineer Minelayer | **unverified**. Mine-clearing charge in a breacher is not a mine-laying system. The source cannot validate automatic generic Engineer Minelayer entitlement; specific current/order evidence remains needed. Next: `hold_pending_named_operator_evidence`. | [AU-BREACHER](https://www.defence.gov.au/news-events/news/2025-09-29/new-destructive-breaching-capability-display) |
+| `artillery` — AS9 Huntsman | **documented_service**. Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks. Next: `retain`. | [AU-AS9](https://www.defence.gov.au/news-events/news/2026-06-04/australian-built-howitzer-sends-thunder), [AU-AS9-FIELD](https://news.defence.gov.au/army/activity/2026-08-20/huntsman-tested-field) |
+| `towedHowitzer` — M777 | **documented_service**. Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks. Next: `retain`. | [AU-HIMARS-2026](https://news.defence.gov.au/army/activity/2026-10-21/powerful-joint-live-fire-caps-keris-woomera) |
+| `mlrs` — M142 HIMARS | **documented_service**. Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks. Next: `retain`. | [AU-HIMARS](https://www.minister.defence.gov.au/transcripts/2025-03-24/opening-remarks-delivery-first-australian-himars-avalon-air-show-geelong), [AU-HIMARS-2026](https://news.defence.gov.au/army/activity/2026-10-21/powerful-joint-live-fire-caps-keris-woomera) |
+| `himars` — M142 HIMARS | **documented_service**. Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks. Next: `retain`. | [AU-HIMARS](https://www.minister.defence.gov.au/transcripts/2025-03-24/opening-remarks-delivery-first-australian-himars-avalon-air-show-geelong), [AU-HIMARS-2026](https://news.defence.gov.au/army/activity/2026-10-21/powerful-joint-live-fire-caps-keris-woomera) |
+| `aaVehicle` — RBS 70 (vehicle) | **retired_or_transferred_family**. Army reports transition from RBS70 to NASAMS and donations to Ukraine. A generic truck RBS70 should not be asserted as current Australian SHORAD without retained-unit evidence. Next: `move_to_historical_pending_retained_inventory_check`. | [AU-RBS-RETIRE](https://www.defence.gov.au/news-events/news/2025-06-26/diggers-deliver-missile-training-ukraine), [AU-NASAMS](https://www.defence.gov.au/news-events/news/2025-07-22/first-firing-australian-nasams) |
+| `samLauncher` — NASAMS | **documented_service**. Australian NASAMS in live firings and final introduction evaluation. Country has canister and Hawkei high-mobility launcher configurations; one generic launcher does not represent both. Next: `separate_actual_launcher_variants`. | [AU-NASAMS](https://www.defence.gov.au/news-events/news/2025-07-22/first-firing-australian-nasams), [AU-NASAMS-2026](https://www.defence.gov.au/news-events/news/2026-06-03/nasams-ready-introduction-into-service) |
+| `helicopter` — UH-60M | **certificated_service_verification_pending**. UH-60M or CH-47F certification is established; certification list alone is not sufficient current operator activity/FOC evidence. Direct Army operation source still required. Next: `seek_operator_activity_source`. | [AU-DASA](https://dasa.defence.gov.au/military-type-certificate-holders) |
+| `gunship` — AH-64E Apache | **delivered_introduction**. AH-64E delivered and live-fired; first six documented July 2026. All 29 planned by 2029 is not current inventory. Tiger officially retired 30 September 2026. Next: `retain_with_delivery_stage`. | [AU-APACHE](https://www.defence.gov.au/news-events/releases/2026-07-17/australia-conducts-its-first-live-firing-apaches), [AU-TIGER-RETIRE](https://news.defence.gov.au/army/capability/2026-10-13/tigers-farewelled-sunset) |
+| `navalHelicopter` — MH-60R Seahawk | **documented_service**. Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks. Next: `retain`. | [AU-MH60R](https://www.navy.gov.au/capabilities/aircraft/mh-60r-seahawk) |
+| `heavyLift` — CH-47F Chinook | **certificated_service_verification_pending**. UH-60M or CH-47F certification is established; certification list alone is not sufficient current operator activity/FOC evidence. Direct Army operation source still required. Next: `seek_operator_activity_source`. | [AU-DASA](https://dasa.defence.gov.au/military-type-certificate-holders) |
+| `jet` — F/A-18F Super Hornet | **documented_service**. Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks. Next: `retain`. | [AU-AIR-CURRENT](https://news.defence.gov.au/airforce/2026-04-30/next-decade-investment-whats-it-air-force) |
+| `stealthFighter` — F-35A | **documented_service**. Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks. Next: `retain`. | [AU-AIR-CURRENT](https://news.defence.gov.au/airforce/2026-04-30/next-decade-investment-whats-it-air-force) |
+| `carrierJet` — Carrier Fighter | **unsupported_generic_entitlement**. Current checked fleets do not establish national carrier-based fixed-wing combat aviation. Land-based naval-designed Super Hornet is not evidence of an Australian carrier air wing. Next: `recommend_explicit_scenario_or_disable`. | [AU-AIR-CURRENT](https://news.defence.gov.au/airforce/2026-04-30/next-decade-investment-whats-it-air-force), [AU-FLEET](https://www.navy.gov.au/capabilities/ships-boats-and-submarines?page=1) |
+| `ewJet` — EA-18G Growler | **documented_service**. Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks. Next: `retain`. | [AU-AIR-CURRENT](https://news.defence.gov.au/airforce/2026-04-30/next-decade-investment-whats-it-air-force) |
+| `aewc` — E-7A Wedgetail | **documented_service**. Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks. Next: `retain`. | [AU-AIR-CURRENT](https://news.defence.gov.au/airforce/2026-04-30/next-decade-investment-whats-it-air-force) |
+| `maritimePatrol` — P-8A Poseidon | **documented_service**. Operator evidence identifies the roster platform; delivery/training milestones and planned fleet totals remain distinct. Shape and exact fit require separate saved-model visual checks. Next: `retain`. | [AU-AIR-CURRENT](https://news.defence.gov.au/airforce/2026-04-30/next-decade-investment-whats-it-air-force) |
+| `carrierDrone` — Carrier Drone | **unsupported_generic_entitlement**. Current checked fleets do not establish national carrier-based fixed-wing combat aviation. Land-based naval-designed Super Hornet is not evidence of an Australian carrier air wing. Next: `recommend_explicit_scenario_or_disable`. | [AU-AIR-CURRENT](https://news.defence.gov.au/airforce/2026-04-30/next-decade-investment-whats-it-air-force), [AU-FLEET](https://www.navy.gov.au/capabilities/ships-boats-and-submarines?page=1) |
+| `destroyer` — Hobart-class | **documented_family**. Navy operator fleet list confirms Hobart/Anzac/Collins as applicable. Anzac is a frigate, not a separate corvette class; alias roles must not imply extra fleets. Next: `retain_with_classification_note`. | [AU-FLEET](https://www.navy.gov.au/capabilities/ships-boats-and-submarines?page=1) |
+| `corvette` — Anzac-class | **documented_family**. Navy operator fleet list confirms Hobart/Anzac/Collins as applicable. Anzac is a frigate, not a separate corvette class; alias roles must not imply extra fleets. Next: `retain_with_classification_note`. | [AU-FLEET](https://www.navy.gov.au/capabilities/ships-boats-and-submarines?page=1) |
+| `asFrigate` — Anzac-class | **documented_family**. Navy operator fleet list confirms Hobart/Anzac/Collins as applicable. Anzac is a frigate, not a separate corvette class; alias roles must not imply extra fleets. Next: `retain_with_classification_note`. | [AU-FLEET](https://www.navy.gov.au/capabilities/ships-boats-and-submarines?page=1) |
+| `gunboat` — Gunboat | **generic_model_mismatch**. Current evolved Cape patrol vessels and commissioned Arafura OPVs are real alternatives to unnamed generic gunboat. Their hulls, weapons and roles differ; do not give OPV a fictitious large naval gun. Next: `build_named_patrol_craft`. | [AU-FLEET](https://www.navy.gov.au/capabilities/ships-boats-and-submarines?page=1), [AU-ARAFURA](https://www.navy.gov.au/capabilities/ships-boats-and-submarines/hmas-arafura) |
+| `landingShip` — Canberra-class | **operator_detail_pending**. Canberra-class amphibious ship assignment needs its direct current ship page, beyond this paginated fleet excerpt. Do not infer completeness from one page. Next: `check_direct_canberra_page`. | [AU-FLEET](https://www.navy.gov.au/capabilities/ships-boats-and-submarines?page=1) |
+| `submarine` — Collins-class | **documented_family**. Navy operator fleet list confirms Hobart/Anzac/Collins as applicable. Anzac is a frigate, not a separate corvette class; alias roles must not imply extra fleets. Next: `retain_with_classification_note`. | [AU-FLEET](https://www.navy.gov.au/capabilities/ships-boats-and-submarines?page=1) |
+| `seaDrone` — Sea Drone | **named_capabilities_in_introduction**. Bluebottle is a surface vessel; Ghost Shark and Speartooth are underwater. Generic low-profile explosive sea drone does not represent those platforms. Named unit formation/experimentation is not proof of every weapon being operational. Next: `separate_surface_and_underwater_types`. | [AU-MASU](https://www.defence.gov.au/news-events/news/2026-04-14/navy-names-autonomous-systems-unit) |
+
+Additional: **M113AS4** (`documented_service`), `build_missing`. Lengthened six-wheel APC with protected powered 12.7 mm turret, absent from the roster. Sources: [AU-M113](https://www.army.gov.au/equipment/vehicles-and-surveillance/m113as4-armoured-personnel-carrier).
+
+Additional: **AS21 Redback** (`ordered_in_testing`), `build_missing`. Test/sea-trial vehicle documented; series production/order separate from FOC. Sources: [AU-REDBACK](https://news.defence.gov.au/army/capability/2026-09-03/new-fighting-vehicles-tested-sea).
+
+Additional: **Arafura-class** (`documented_service`), `build_missing`. Commissioned OPV absent as a named class; identify actual fit instead of generic gunboat. Sources: [AU-ARAFURA](https://www.navy.gov.au/capabilities/ships-boats-and-submarines/hmas-arafura).
+
+Additional: **Bluebottle** (`introduction_or_experimentation`), `research_dimensions_and_fit`. Named surface USV in new autonomous unit; configuration and operational status need detailed follow-up. Sources: [AU-MASU](https://www.defence.gov.au/news-events/news/2026-04-14/navy-names-autonomous-systems-unit).
+
+## brazil
+Assessed 0/25 roster assignments. Full asset metadata: [country ledger](countries/brazil.json).
+
+## china
+Assessed 0/42 roster assignments. Full asset metadata: [country ledger](countries/china.json).
+
+## egypt
+Assessed 0/25 roster assignments. Full asset metadata: [country ledger](countries/egypt.json).
+
+## ethiopia
+Assessed 0/11 roster assignments. Full asset metadata: [country ledger](countries/ethiopia.json).
+
+## france
+Assessed 0/36 roster assignments. Full asset metadata: [country ledger](countries/france.json).
+
+## germany
+Assessed 0/37 roster assignments. Full asset metadata: [country ledger](countries/germany.json).
+
+## houthis
+Assessed 0/8 roster assignments. Full asset metadata: [country ledger](countries/houthis.json).
+
+## india
+Assessed 0/37 roster assignments. Full asset metadata: [country ledger](countries/india.json).
+
+## indonesia
+Assessed 4/28 roster assignments. Full asset metadata: [country ledger](countries/indonesia.json).
+| Role / roster model | Assessment and next action | Sources |
+|---|---|---|
+| `gunship` — Mi-35P | **incomplete_inventory**. Mi-35P does not cover the independently documented AH-64E fleet. The prior claim that the Apache purchase never completed is false. Retain Mi-35P pending its own current-service check; add Apache as another type. Next: `add_existing_model`. | [ID-APACHE-DELIVERY](https://jatengprov.go.id/publik/tni-ad-miliki-8-unit-helikopter-serang-baru/), [ID-APACHE-2026](https://ppid.tniad.mil.id/index.php/i/39307/kadislaikad-pimpin-sertifikasi-kelaikan-helikopter-ah-64e-apache-di-skadron-11aaj-puspenerbad), [ID-APACHE-EXERCISE](https://ppid.tni.mil.id/view/32438608/gelar-latihan-live-fire-dan-penerbangan-malam-dalam-sgs-2026.html) |
+| `jet` — Rafale / F-16 | **documented_service**. Both national Rafale deliveries and joint operator activity are documented. The combined label chooses one exterior; it does not make Rafale and F-16 the same aircraft. Next: `split_combined_label`. | [ID-RAFALE-2026](https://www.defense.gouv.fr/en/node/25713) |
+| `corvette` — Martadinata-class | **documented_service**. Martadinata service is corroborated by its combat-system supplier. The corvette key is a game abstraction; the actual class is a frigate. Next: `retain_with_classification_note`. | [ID-NAVAL-THALES](https://www.thalesgroup.com/sites/default/files/2025-10/CountryFactsheets_INDONESIA_English_Oct2025_WEB_0.pdf) |
+| `asFrigate` — Martadinata-class | **documented_service**. Martadinata service is corroborated by its combat-system supplier. The corvette key is a game abstraction; the actual class is a frigate. Next: `retain_with_classification_note`. | [ID-NAVAL-THALES](https://www.thalesgroup.com/sites/default/files/2025-10/CountryFactsheets_INDONESIA_English_Oct2025_WEB_0.pdf) |
+
+Additional: **AH-64E Apache** (`documented_service`), `reuse_existing`. Delivered and operator activity in 2026. Shared exact AH-64E GLB already exists; no duplicate geometry required. Sources: [ID-APACHE-DELIVERY](https://jatengprov.go.id/publik/tni-ad-miliki-8-unit-helikopter-serang-baru/), [ID-APACHE-2026](https://ppid.tniad.mil.id/index.php/i/39307/kadislaikad-pimpin-sertifikasi-kelaikan-helikopter-ah-64e-apache-di-skadron-11aaj-puspenerbad), [ID-APACHE-EXERCISE](https://ppid.tni.mil.id/view/32438608/gelar-latihan-live-fire-dan-penerbangan-malam-dalam-sgs-2026.html).
+
+Additional: **Bushmaster troop carrier** (`documented_service`), `reuse_existing`. Delivered troop carriers are absent from the Indonesian roster. Peacekeeping allocation is recorded; not an unrestricted new domestic combat fleet. Sources: [ID-BUSHMASTER](https://www.kemhan.go.id/kuathan/2023/08/09/acara-penandatanganan-berita-acara-serah-terima-hibah-15-unit-rantis-bushmaster.html).
+
+## iran
+Assessed 0/31 roster assignments. Full asset metadata: [country ledger](countries/iran.json).
+
+## iraq
+Assessed 0/19 roster assignments. Full asset metadata: [country ledger](countries/iraq.json).
+
+## israel
+Assessed 0/29 roster assignments. Full asset metadata: [country ledger](countries/israel.json).
+
+## italy
+Assessed 0/33 roster assignments. Full asset metadata: [country ledger](countries/italy.json).
+
+## japan
+Assessed 0/40 roster assignments. Full asset metadata: [country ledger](countries/japan.json).
+
+## netherlands
+Assessed 29/29 roster assignments. Full asset metadata: [country ledger](countries/netherlands.json).
+| Role / roster model | Assessment and next action | Sources |
+|---|---|---|
+| `tank` — Leopard 2A6 | **shared_operation**. 2A6 matches the operated type, but vehicles are German owned in joint 414 Battalion. Do not label them an independently owned Dutch tank fleet or substitute ordered 2A8. Next: `retain_with_ownership_note`. | [NL-TANK](https://www.defensie.nl/onderwerpen/m/materieel/voertuigen/leopard-2a6-gevechtstank), [NL-TANK-OWNERSHIP](https://www.tweedekamer.nl/kamerstukken/brieven_regering/detail?did=2024D38392&id=2024Z15824) |
+| `apc` — Boxer | **documented_service**. Operator explicitly identifies this type. Exact national subvariant and visible fit remain part of model review. Next: `retain`. | [NL-VEHICLES](https://www.defensie.nl/onderwerpen/m/materieel/voertuigen) |
+| `ifv` — CV9035NL | **documented_service**. Operator explicitly identifies this type. Exact national subvariant and visible fit remain part of model review. Next: `retain`. | [NL-CV90](https://www.defensie.nl/onderwerpen/m/materieel/voertuigen/combat-vehicle-90) |
+| `reconVehicle` — Fennek | **documented_service**. Operator explicitly identifies this type. Exact national subvariant and visible fit remain part of model review. Next: `retain`. | [NL-FENNEK](https://www.defensie.nl/onderwerpen/m/materieel/voertuigen/fennek-bewakings-en-verkenningsvoertuig) |
+| `recoveryVehicle` — Armoured Recovery Vehicle | **model_mismatch**. Dutch recovery vehicle is Leopard-2-based Buffel/Bergepanzer 3, seven road wheels; generic saved GLB declares M88-family ARV with six wheels and A-frame boom. Existing specific Bergepanzer 3 Buffel GLB can be reused. Next: `map_to_existing_specific_model`. | [NL-BUFFEL](https://magazines.defensie.nl/materieelgezien/2024/10/mijn-materieel-leopard-2-bergingstank-buffel) |
+| `mineClearer` — Mine-clearing Vehicle | **model_mismatch**. Current Dutch Kodiak is Leopard-2-based with seven wheels, articulated excavator and mine-plough conversion. Generic saved vehicle is a six-wheel T-72 carrier. Specific Kodiak created in inventory additions batch 01. Next: `use_new_specific_model`. | [NL-KODIAK](https://magazines.defensie.nl/landmacht/2020/05/05_mijn_uitrusting_kodiak_chauffeur), [NL-KODIAK-CURRENT](https://magazines.defensie.nl/materieelgezien/2025/05/pilot-waardebepaling-kodiak-succes), [NL-BUFFEL](https://magazines.defensie.nl/materieelgezien/2024/10/mijn-materieel-leopard-2-bergingstank-buffel) |
+| `mineLayer` — Engineer Minelayer | **unverified**. No named current dedicated Dutch minelayer established in the checked operator overview. This is not proof that the Netherlands has no mine warfare capability. Generic automatic entitlement is unsupported. Next: `hold_pending_operator_evidence`. | [NL-VEHICLES](https://www.defensie.nl/onderwerpen/m/materieel/voertuigen) |
+| `artillery` — PzH 2000 | **documented_service**. Operator explicitly identifies this type. Exact national subvariant and visible fit remain part of model review. Next: `retain`. | [NL-PZH](https://www.defensie.nl/onderwerpen/m/materieel/voertuigen/pantserhouwitser-2000nl-pzh2000) |
+| `mlrs` — PULS | **documented_service**. PULS is operated. Four interim Tatra training vehicles and the definitive Scania Gryphus/crane configuration differ; existing generic PULS must declare which chassis it represents. Next: `separate_chassis_variants`. | [NL-PULS](https://magazines.defensie.nl/materieelgezien/2025/07/update-over-de-puls), [NL-PULS-2026](https://www.defensie.nl/magazines/defensiekrant/2026/editie-35/01_puls) |
+| `himars` — Guided Rocket Launcher | **model_mismatch**. Dutch guided rocket role should identify PULS; the generic saved Guided Rocket Launcher explicitly represents a six-wheel HIMARS, a different vehicle. Specific himars__puls already exists. Next: `map_to_existing_specific_model`. | [NL-PULS](https://magazines.defensie.nl/materieelgezien/2025/07/update-over-de-puls), [NL-PULS-2026](https://www.defensie.nl/magazines/defensiekrant/2026/editie-35/01_puls) |
+| `aaVehicle` — Skyranger 30 | **ordered_future_model_mismatch**. Dutch Skyranger is on order for 2028–2029 on tracked FFG ACSV. Existing eight-wheel Boxer GLB does not represent that configuration. Current Fennek SWP is a separate active system. User explicitly requests ordered equipment too. Next: `build_tracked_acsv_variant_separately`. | [NL-SKYRANGER](https://www.rheinmetall.com/en/media/news-watch/news/2025/12/2025-12-12-rheinmetall-to-supply-skyranger-30-for-the-dutch-armed-forces), [NL-SKYRANGER-CHASSIS](https://www.defensie.nl/actueel/nieuws/2025/01/29/defensie-versterkt-luchtverdediging-met-anti-drone-kanonsystemen), [NL-GBAD](https://www.ministryofdefence.nl/organisation/army/units/defence-ground-based-air-defence-command), [NL-SWP](https://magazines.defensie.nl/landmacht/2019/10/08_mijn_uitrusting_10-2019) |
+| `samLauncher` — Patriot PAC-3 | **documented_family_variant_unresolved**. Patriot is in service. These operator pages alone do not identify the current PAC-3 canister load of each launch station; do not infer exact missile counts or PAC-3 MSE variant. Next: `retain_family_verify_canister_fit`. | [NL-GBAD](https://www.ministryofdefence.nl/organisation/army/units/defence-ground-based-air-defence-command), [NL-GBAD-UNITS](https://www.defensie.nl/defensieonderdelen/koninklijke-landmacht/eenheden/dglc/squadrons-en-batterijen) |
+| `abmLauncher` — Patriot PAC-3 | **documented_family_variant_unresolved**. Patriot is in service. These operator pages alone do not identify the current PAC-3 canister load of each launch station; do not infer exact missile counts or PAC-3 MSE variant. Next: `retain_family_verify_canister_fit`. | [NL-GBAD](https://www.ministryofdefence.nl/organisation/army/units/defence-ground-based-air-defence-command), [NL-GBAD-UNITS](https://www.defensie.nl/defensieonderdelen/koninklijke-landmacht/eenheden/dglc/squadrons-en-batterijen) |
+| `helicopter` — NH90 | **documented_service**. Dutch NH90 fleet is NFH, used in maritime or transport configuration. Generic NH90 should not silently imply TTH airframe features. Next: `use_nfh_configuration`. | [NL-NH90](https://www.defensie.nl/onderwerpen/m/materieel/vliegtuigen-helikopters-drones/nh90) |
+| `gunship` — AH-64E Apache | **documented_service**. Operator explicitly identifies this type. Exact national subvariant and visible fit remain part of model review. Next: `retain`. | [NL-APACHE](https://www.defensie.nl/onderwerpen/m/materieel/vliegtuigen-helikopters-drones/apache-gevechtshelikopter-ah-64) |
+| `navalHelicopter` — NH90 NFH | **documented_service**. Dutch NH90 fleet is NFH, used in maritime or transport configuration. Generic NH90 should not silently imply TTH airframe features. Next: `use_nfh_configuration`. | [NL-NH90](https://www.defensie.nl/onderwerpen/m/materieel/vliegtuigen-helikopters-drones/nh90) |
+| `heavyLift` — CH-47F Chinook | **documented_service**. Operator explicitly identifies this type. Exact national subvariant and visible fit remain part of model review. Next: `retain`. | [NL-CHINOOK](https://www.defensie.nl/onderwerpen/m/materieel/vliegtuigen-helikopters-drones/boeing-ch-47f-chinook-transporthelikopter) |
+| `jet` — F-35A | **documented_service**. Dutch variant explicitly F-35A CTOL, not B/C. Operator identifies active fleet; retired F-16 is not substituted. Next: `retain`. | [NL-F35](https://www.defensie.nl/onderwerpen/m/materieel/vliegtuigen-helikopters-drones/f-35-gevechtsvliegtuig) |
+| `stealthFighter` — F-35A | **documented_service**. Dutch variant explicitly F-35A CTOL, not B/C. Operator identifies active fleet; retired F-16 is not substituted. Next: `retain`. | [NL-F35](https://www.defensie.nl/onderwerpen/m/materieel/vliegtuigen-helikopters-drones/f-35-gevechtsvliegtuig) |
+| `carrierJet` — Carrier Fighter | **unsupported_generic_entitlement**. Checked operator aircraft and ship lists do not establish a Dutch carrier-fighter or carrier-strike-drone fleet. F-35A is land-based, distinct from F-35B/C. Flag game availability for correction; do not create a fictional national fleet. Next: `recommend_disable_or_explicit_future_scenario`. | [NL-AIR](https://www.defensie.nl/onderwerpen/m/materieel/vliegtuigen-en-helikopters), [NL-SHIPS](https://www.defensie.nl/onderwerpen/m/materieel/schepen) |
+| `drone` — MQ-9A Reaper | **documented_service_arming_integration**. MQ-9A service confirmed; first training-weapon carriage August 2026. Armed-carriage test is distinct from fleet combat FOC and actual operational weapons load. Next: `retain_record_arming_stage`. | [NL-MQ9](https://www.defensie.nl/onderwerpen/m/materieel/vliegtuigen-helikopters-drones/mq-9-reaper), [NL-MQ9-ARMING](https://www.defensie.nl/nieuws/20260820-onbemenst-vliegtuig-mq-9-reaper-vliegt-met-bewapening) |
+| `carrierDrone` — Carrier Drone | **unsupported_generic_entitlement**. Checked operator aircraft and ship lists do not establish a Dutch carrier-fighter or carrier-strike-drone fleet. F-35A is land-based, distinct from F-35B/C. Flag game availability for correction; do not create a fictional national fleet. Next: `recommend_disable_or_explicit_future_scenario`. | [NL-AIR](https://www.defensie.nl/onderwerpen/m/materieel/vliegtuigen-en-helikopters), [NL-SHIPS](https://www.defensie.nl/onderwerpen/m/materieel/schepen) |
+| `destroyer` — De Zeven Provincien-class | **documented_service**. De Zeven Provincien exists and is a 144 m air-defence/command frigate. Two game roles alias one real class; not two national fleets. Next: `retain_with_classification_note`. | [NL-LCF](https://www.defensie.nl/onderwerpen/m/materieel/schepen/luchtverdedigings-en-commandofregatten-lcf) |
+| `corvette` — Holland-class | **documented_service_role_mismatch**. Holland is an ocean patrol vessel, not a missile corvette. Its GLB may represent the real hull; weapon capability must not inherit generic corvette missiles. Next: `retain_hull_correct_role_and_armament`. | [NL-OPV](https://www.defensie.nl/onderwerpen/m/materieel/schepen/patrouilleschepen) |
+| `asFrigate` — De Zeven Provincien-class | **documented_service**. De Zeven Provincien exists and is a 144 m air-defence/command frigate. Two game roles alias one real class; not two national fleets. Next: `retain_with_classification_note`. | [NL-LCF](https://www.defensie.nl/onderwerpen/m/materieel/schepen/luchtverdedigings-en-commandofregatten-lcf) |
+| `gunboat` — Gunboat | **generic_model_mismatch**. Generic steel gunboat is not the documented inflatable-collar FRISC craft. Select an actual armed configuration after weapon-fit evidence; boarding/raiding craft are real national small-craft candidates. Next: `build_specific_craft_after_fit_check`. | [NL-FRISC](https://www.defensie.nl/onderwerpen/m/materieel/schepen/frisc-motorboot-fast-raiding-interception-and-special-forces-craft) |
+| `landingShip` — Rotterdam-class | **documented_service**. Rotterdam dimensions 166 x 27 m; Johan de Witt is a distinct larger 176 x 29 m ship and needs its own exterior if added. Next: `retain_rotterdam_add_distinct_ship`. | [NL-LPD](https://www.defensie.nl/onderwerpen/m/materieel/schepen/amfibische-transportschepen) |
+| `submarine` — Walrus-class | **documented_service**. Class assignment remains valid through active Walrus-class boats. Individual decommissioned names must not be counted as current boats. Model class X-tail/hull dimensions match declared representative. Next: `retain_class`. | [NL-SUB](https://www.defensie.nl/onderwerpen/m/materieel/schepen/onderzeeboten) |
+| `seaDrone` — Sea Drone | **unverified**. A generic armed sea-drone entitlement is not validated by the checked fleet overview. Separate experiments and mine-countermeasure unmanned craft from operational explosive USVs. Next: `hold_pending_specific_operator_evidence`. | [NL-SHIPS](https://www.defensie.nl/onderwerpen/m/materieel/schepen) |
+
+Additional: **Bushmaster** (`documented_service`), `reuse_existing`. Current operator equipment list includes Bushmaster; absent from Dutch Tier 7 assignment list. Sources: [NL-VEHICLES](https://www.defensie.nl/onderwerpen/m/materieel/voertuigen).
+
+Additional: **AS532U2 Cougar** (`documented_service`), `build_missing`. Current troop transport absent as a separate type. Sources: [NL-COUGAR](https://www.defensie.nl/onderwerpen/m/materieel/vliegtuigen-helikopters-drones/cougar-transporthelikopter), [NL-COUGAR-2026](https://www.defensie.nl/nieuws/20261009-eerste-verjongde-cougar-transporthelikopter-binnen).
+
+Additional: **Fennek SWP** (`documented_service`), `build_missing`. Actual current four-Stinger short-range defence vehicle, distinct from reconnaissance Fennek and future Skyranger. Sources: [NL-GBAD](https://www.ministryofdefence.nl/organisation/army/units/defence-ground-based-air-defence-command), [NL-SWP](https://magazines.defensie.nl/landmacht/2019/10/08_mijn_uitrusting_10-2019).
+
+Additional: **NASAMS** (`documented_service`), `reuse_existing`. Current medium-range system omitted by a single Patriot representative. Sources: [NL-GBAD](https://www.ministryofdefence.nl/organisation/army/units/defence-ground-based-air-defence-command), [NL-GBAD-UNITS](https://www.defensie.nl/defensieonderdelen/koninklijke-landmacht/eenheden/dglc/squadrons-en-batterijen).
+
+Additional: **Johan de Witt** (`documented_service`), `build_missing`. Larger LPD with different dimensions from Rotterdam. Sources: [NL-LPD](https://www.defensie.nl/onderwerpen/m/materieel/schepen/amfibische-transportschepen).
+
+Additional: **Skyranger 30 ACSV** (`ordered_future`), `build_missing`. Confirmed order; first delivery end 2028. Tracked FFG ACSV differs visibly from Boxer-mounted existing model. Sources: [NL-SKYRANGER](https://www.rheinmetall.com/en/media/news-watch/news/2025/12/2025-12-12-rheinmetall-to-supply-skyranger-30-for-the-dutch-armed-forces), [NL-SKYRANGER-CHASSIS](https://www.defensie.nl/actueel/nieuws/2025/01/29/defensie-versterkt-luchtverdediging-met-anti-drone-kanonsystemen).
+
+Additional: **Leopard 2A8** (`ordered_future`), `check_existing_model`. Confirmed Dutch-owned future fleet, delivery 2028–2031; not a replacement for current joint-operated 2A6 in active list. Sources: [NL-TANK](https://www.defensie.nl/onderwerpen/m/materieel/voertuigen/leopard-2a6-gevechtstank), [NL-TANK-OWNERSHIP](https://www.tweedekamer.nl/kamerstukken/brieven_regering/detail?did=2024D38392&id=2024Z15824).
+
+Additional: **Kodiak AEV 3** (`documented_service`), `build_missing`. Documented current engineering and mine-breaching vehicle. Sources: [NL-KODIAK](https://magazines.defensie.nl/landmacht/2020/05/05_mijn_uitrusting_kodiak_chauffeur), [NL-KODIAK-CURRENT](https://magazines.defensie.nl/materieelgezien/2025/05/pilot-waardebepaling-kodiak-succes).
+
+Additional: **FRISC 12 m boarding craft** (`documented_service`), `build_missing`. Actual RHIB; selected unarmed boarding configuration, not a generic steel cannon boat. Sources: [NL-FRISC](https://www.defensie.nl/onderwerpen/m/materieel/schepen/frisc-motorboot-fast-raiding-interception-and-special-forces-craft), [FRISC-MST](https://www.mstltd.com/products/), [FRISC-DRIVES](https://www.emava.de/_files/ugd/133036_9fcd1ae5335c48c78f573f5da411c4c4.pdf).
+
+## nigeria
+Assessed 0/12 roster assignments. Full asset metadata: [country ledger](countries/nigeria.json).
+
+## north_korea
+Assessed 0/25 roster assignments. Full asset metadata: [country ledger](countries/north_korea.json).
+
+## pakistan
+Assessed 0/30 roster assignments. Full asset metadata: [country ledger](countries/pakistan.json).
+
+## russia
+Assessed 0/43 roster assignments. Full asset metadata: [country ledger](countries/russia.json).
+
+## saudi
+Assessed 0/25 roster assignments. Full asset metadata: [country ledger](countries/saudi.json).
+
+## south_korea
+Assessed 0/33 roster assignments. Full asset metadata: [country ledger](countries/south_korea.json).
+
+## south_sudan
+Assessed 0/6 roster assignments. Full asset metadata: [country ledger](countries/south_sudan.json).
+
+## sudan
+Assessed 0/10 roster assignments. Full asset metadata: [country ledger](countries/sudan.json).
+
+## syria
+Assessed 0/14 roster assignments. Full asset metadata: [country ledger](countries/syria.json).
+
+## turkiye
+Assessed 0/34 roster assignments. Full asset metadata: [country ledger](countries/turkiye.json).
+
+## uk
+Assessed 0/39 roster assignments. Full asset metadata: [country ledger](countries/uk.json).
+
+## ukraine
+Assessed 0/30 roster assignments. Full asset metadata: [country ledger](countries/ukraine.json).
+
+## usa
+Assessed 0/44 roster assignments. Full asset metadata: [country ledger](countries/usa.json).
+
+## yemen
+Assessed 0/5 roster assignments. Full asset metadata: [country ledger](countries/yemen.json).

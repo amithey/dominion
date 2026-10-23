@@ -1,0 +1,975 @@
+{
+  "nation": "saudi",
+  "scope": "current and confirmed-order platforms in existing Tier 7 categories",
+  "all_roster_rows_assessed": false,
+  "complete": false,
+  "completion_note": "Operator evidence, exact visual fit and additional inventory still being audited.",
+  "rows": [
+    {
+      "key": "tank",
+      "roster_model": "M1A2S Abrams",
+      "roster_slug": "tank__m1a2s_abrams",
+      "asset": {
+        "file": "vehicles/tank__m1a2s_abrams.glb",
+        "sha256": "294cff69ad4346b081298cb148533744b75c8d1adac2cc4e1be203d9f2182a1c",
+        "exact_slug": true,
+        "declared_vehicle": "m1a2s_abrams",
+        "declared_name": "M1A2S Abrams",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "Seven road wheels",
+          "approved Abrams hull, angular cheeks, turbine exhaust and L/44 gun",
+          "earlier commander cupola gun mount instead of SEPv3 CROWS-LP",
+          "CITV retained",
+          "M1A2S rear equipment carrier"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          13978,
+          2242
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "apc",
+      "roster_model": "LAV 700",
+      "roster_slug": "apc__lav_700",
+      "asset": {
+        "file": "vehicles/apc__lav_700.glb",
+        "sha256": "32a290db553419d4b851542dd0cbbdd96bb307fbf764511cb82ef2edaced88dc",
+        "exact_slug": true,
+        "declared_vehicle": "apc__lav_700",
+        "declared_name": "LAV 700",
+        "approximate": true,
+        "representative": "LAV 700 APC configuration",
+        "features": [
+          "8x8 long high LAV chassis",
+          "steep front glacis",
+          "long rear troop compartment",
+          "APC roof weapon fit selected"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          6090,
+          972
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "ifv",
+      "roster_model": "M2A2 Bradley",
+      "roster_slug": "ifv__m2a2_bradley",
+      "asset": {
+        "file": "vehicles/ifv__m2a2_bradley.glb",
+        "sha256": "d60d2a27913adde18ac920bce0f19677766b85fe69feada839420c4bcffffca3",
+        "exact_slug": true,
+        "declared_vehicle": "ifv__m2a2_bradley",
+        "declared_name": "M2A2 Bradley",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "Six road wheels",
+          "tall faceted hull",
+          "25 mm turret and left twin-TOW box",
+          "side applique armour",
+          "rear ramp"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          11314,
+          1860
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "recoveryVehicle",
+      "roster_model": "Armoured Recovery Vehicle",
+      "roster_slug": "recoveryVehicle__armoured_recovery_vehicle",
+      "asset": {
+        "file": "vehicles/recoveryVehicle__armoured_recovery_vehicle.glb",
+        "sha256": "730ba5805ed457218fb33c9d70e4264bc11bc958f51b8d2c7fca03d2a72e0d0b",
+        "exact_slug": true,
+        "declared_vehicle": "recoveryVehicle__armoured_recovery_vehicle",
+        "declared_name": "Armoured Recovery Vehicle",
+        "approximate": true,
+        "representative": "M88-family ARV",
+        "features": [
+          "M88-family representative for unspecified ARV",
+          "six wheels",
+          "raised forward recovery cabin",
+          "A-frame boom and front spade",
+          "rear winch deck"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          10976,
+          1672
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "mineClearer",
+      "roster_model": "Mine-clearing Vehicle",
+      "roster_slug": "mineClearer__mine_clearing_vehicle",
+      "asset": {
+        "file": "vehicles/mineClearer__mine_clearing_vehicle.glb",
+        "sha256": "d826a557f2c7557447611df25f8429db004c2c428a2bc8f2d3999454d7980331",
+        "exact_slug": true,
+        "declared_vehicle": "mineClearer__mine_clearing_vehicle",
+        "declared_name": "Mine-clearing Vehicle",
+        "approximate": true,
+        "representative": "T-72-based engineering carrier",
+        "features": [
+          "T-72 engineering representative",
+          "six road wheels",
+          "turretless engineering hull",
+          "front mine-clearing blade"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          10988,
+          1884
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "mineLayer",
+      "roster_model": "Engineer Minelayer",
+      "roster_slug": "mineLayer__engineer_minelayer",
+      "asset": {
+        "file": "vehicles/mineLayer__engineer_minelayer.glb",
+        "sha256": "22c0ebec00ca52a8420d03b6266c8d1ce6e1c736c0e993149a18ef49a543d78a",
+        "exact_slug": true,
+        "declared_vehicle": "mineLayer__engineer_minelayer",
+        "declared_name": "Engineer Minelayer",
+        "approximate": true,
+        "representative": "M548-pattern tracked minelayer",
+        "features": [
+          "M548-pattern tracked dispenser representative",
+          "five wheels",
+          "forward crew cab and four 40-canister mine racks"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          13032,
+          2072
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "artillery",
+      "roster_model": "CAESAR",
+      "roster_slug": "artillery__caesar",
+      "asset": {
+        "file": "vehicles/artillery__caesar.glb",
+        "sha256": "d95d69cc1f9ffd26b5604149d124274f5ddd151329ad926715f065276cf07ce6",
+        "exact_slug": true,
+        "declared_vehicle": "artillery__caesar",
+        "declared_name": "CAESAR",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "caesar truck carrier",
+          "6 driven wheels with real axle pivots",
+          "open rear gun cradle with Y traverse and X trunnion",
+          "long 155 mm barrel",
+          "hinged rear anchoring spade and supported work platform"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          5262,
+          1216
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "mlrs",
+      "roster_model": "ASTROS II",
+      "roster_slug": "mlrs__astros_ii",
+      "asset": {
+        "file": "vehicles/mlrs__astros_ii.glb",
+        "sha256": "a2c6090f509d76a33ea8d92191a8faa0860e152d29efd2f6746720778ed0bc9c",
+        "exact_slug": true,
+        "declared_vehicle": "mlrs__astros_ii",
+        "declared_name": "ASTROS II",
+        "approximate": false,
+        "representative": "ASTROS II with 32 SS-30 rockets",
+        "features": [
+          "astros_ss30 carrier",
+          "6 wheel drive",
+          "32 individual launch tubes; 127 mm class",
+          "2 launch module(s)",
+          "X elevation cradle on Y traversing turntable",
+          "closed modular launch containers"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          6960,
+          1348
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "aaVehicle",
+      "roster_model": "Avenger / Shahine",
+      "roster_slug": "aaVehicle__avenger_shahine",
+      "asset": {
+        "file": "vehicles/aaVehicle__avenger_shahine.glb",
+        "sha256": "207becd531496f7ffe98076a3b400090b2ea32a24a64df43f45b35acdcd27d8d",
+        "exact_slug": true,
+        "declared_vehicle": "aaVehicle__avenger_shahine",
+        "declared_name": "Avenger / Shahine",
+        "approximate": true,
+        "representative": "AN/TWQ-1 Avenger",
+        "features": [
+          "Avenger / Shahine anti-aircraft mounting",
+          "8 independently marked barrels/canisters",
+          "Y turntable and X common trunnion",
+          "rear optical fire control; no invented radar"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          3900,
+          1004
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "samLauncher",
+      "roster_model": "Patriot PAC-3",
+      "roster_slug": "samLauncher__patriot_pac_3",
+      "asset": {
+        "file": "vehicles/samLauncher__patriot_pac_3.glb",
+        "sha256": "bf473aaea780884e4ec63dea657cd1612da0e15b71cd618f3816406bf4fd0082",
+        "exact_slug": true,
+        "declared_vehicle": "samLauncher__patriot_pac_3",
+        "declared_name": "Patriot PAC-3",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "patriot_trailer carrier",
+          "4 wheel drive",
+          "16 individual launch tubes; 250 mm class",
+          "1 launch module(s)",
+          "X elevation cradle on Y traversing turntable",
+          "closed modular launch containers"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          4176,
+          712
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "abmLauncher",
+      "roster_model": "Missile Defence Battery",
+      "roster_slug": "abmLauncher__missile_defence_battery",
+      "asset": {
+        "file": "vehicles/abmLauncher__missile_defence_battery.glb",
+        "sha256": "b0fae9fa295993e222c41c8b4707b5ebeffbb460d60d85526ca4ff1dd3e6e872",
+        "exact_slug": true,
+        "declared_vehicle": "abmLauncher__missile_defence_battery",
+        "declared_name": "Missile Defence Battery",
+        "approximate": true,
+        "representative": "THAAD eight-canister 8x8 launcher",
+        "features": [
+          "sam_thaad carrier",
+          "8 wheel drive",
+          "8 individual launch tubes; 380 mm class",
+          "1 launch module(s)",
+          "X elevation cradle on Y traversing turntable",
+          "closed modular launch containers"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          6552,
+          1212
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "saudiThaad",
+      "roster_model": "Saudi THAAD",
+      "roster_slug": "saudiThaad__saudi_thaad",
+      "asset": {
+        "file": "vehicles/saudiThaad__saudi_thaad.glb",
+        "sha256": "41bdc94583a45199f9bfb2e12aa102784cfa682f747bf425342fe409011c102b",
+        "exact_slug": true,
+        "declared_vehicle": "saudiThaad__saudi_thaad",
+        "declared_name": "Saudi THAAD",
+        "approximate": false,
+        "representative": "",
+        "features": [
+          "sam_thaad carrier",
+          "8 wheel drive",
+          "8 individual launch tubes; 380 mm class",
+          "1 launch module(s)",
+          "X elevation cradle on Y traversing turntable",
+          "closed modular launch containers"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          6552,
+          1212
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "helicopter",
+      "roster_model": "UH-60M",
+      "roster_slug": "helicopter__uh_60m",
+      "asset": {
+        "file": "aircraft/helicopter__uh_60m.glb",
+        "sha256": "de781183364ae17f4cf01524d1d98c9f66f4220abdff293c674464c9d0459330",
+        "exact_slug": true,
+        "declared_vehicle": "helicopter__uh_60m",
+        "declared_name": "UH-60M",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "blackhawk fuselage and tail profile",
+          "4-blade 16.36 m main rotor",
+          "4-blade tail rotor",
+          "tailwheel landing gear",
+          "2 separate turbine nacelles",
+          "published rotor size; small fittings and fuselage cross-sections approximated"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          9140,
+          1412
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "gunship",
+      "roster_model": "AH-64E Apache",
+      "roster_slug": "gunship__ah_64e_apache",
+      "asset": {
+        "file": "aircraft/gunship__ah_64e_apache.glb",
+        "sha256": "42ddd62522f11de0e2e54da87b88e6ac841e411079318a3436c087c7dea4c6cf",
+        "exact_slug": true,
+        "declared_vehicle": "gunship__ah_64e_apache",
+        "declared_name": "AH-64E Apache",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "apache fuselage and tail profile",
+          "4-blade 14.63 m main rotor",
+          "4-blade tail rotor",
+          "tailwheel landing gear",
+          "2 separate turbine nacelles",
+          "published rotor size; small fittings and fuselage cross-sections approximated",
+          "5.23 m stub-wing span",
+          "2 weapon stations per wing",
+          "chin turret with separate gun trunnion"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          11504,
+          2080
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "navalHelicopter",
+      "roster_model": "MH-60R Seahawk",
+      "roster_slug": "navalHelicopter__mh_60r_seahawk",
+      "asset": {
+        "file": "aircraft/navalHelicopter__mh_60r_seahawk.glb",
+        "sha256": "db6345b35c12b00dc8743cd2a17fbc12cf634d0f1396322713e6bb022b21e1cd",
+        "exact_slug": true,
+        "declared_vehicle": "navalHelicopter__mh_60r_seahawk",
+        "declared_name": "MH-60R Seahawk",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "blackhawk fuselage and tail profile",
+          "4-blade 16.36 m main rotor",
+          "4-blade tail rotor",
+          "tailwheel landing gear",
+          "2 separate turbine nacelles",
+          "published rotor size; small fittings and fuselage cross-sections approximated",
+          "naval radar/hoist and the selected real mission stores"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          9992,
+          1752
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "jet",
+      "roster_model": "F-15SA",
+      "roster_slug": "jet__f_15sa",
+      "asset": {
+        "file": "aircraft/jet__f_15sa.glb",
+        "sha256": "81c16cd20ace874696ab55e881c98a22aadedca858dd31ecce25ec3121f05995",
+        "exact_slug": true,
+        "declared_vehicle": "jet__f_15sa",
+        "declared_name": "F-15SA",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "broad trapezoidal wings",
+          "parallel twin vertical tails",
+          "paired rectangular lateral intakes",
+          "two engine nozzles",
+          "all-moving rear stabilators",
+          "2-seat canopy",
+          "paired conformal fuel tanks along inlet and fuselage sides"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          13322,
+          2220
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "attackJet",
+      "roster_model": "Tornado IDS",
+      "roster_slug": "attackJet__tornado_ids",
+      "asset": {
+        "file": "aircraft/attackJet__tornado_ids.glb",
+        "sha256": "6f82daa685ee5436c816548f2833efb23b4a1635cb41720d98af09a1095bbb12",
+        "exact_slug": true,
+        "declared_vehicle": "attackJet__tornado_ids",
+        "declared_name": "Tornado IDS",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "variable-sweep wings",
+          "tandem canopy",
+          "rectangular side intakes",
+          "two close-set nozzles",
+          "large tall swept fin",
+          "strike configuration"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          10806,
+          1920
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "carrierJet",
+      "roster_model": "Carrier Fighter",
+      "roster_slug": "carrierJet__carrier_fighter",
+      "asset": {
+        "file": "aircraft/carrierJet__carrier_fighter.glb",
+        "sha256": "a982ef7ffadec48a263da0215b260fdda488e57fbd9116da8855b4d387c8732b",
+        "exact_slug": true,
+        "declared_vehicle": "carrierJet__carrier_fighter",
+        "declared_name": "Carrier Fighter",
+        "approximate": true,
+        "representative": "Generic carrier fighter with F/A-18F exterior",
+        "features": [
+          "large leading-edge extensions",
+          "rectangular side intakes",
+          "outward-canted twin fins",
+          "tandem canopy",
+          "broad swept wings",
+          "twin engine nozzles"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          12230,
+          2024
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "aewc",
+      "roster_model": "E-3A Sentry",
+      "roster_slug": "aewc__e_3a_sentry",
+      "asset": {
+        "file": "aircraft/aewc__e_3a_sentry.glb",
+        "sha256": "50729f31115329a069a4a5c3c8d4d5059288b07c0ceaac9fde0637ce8dec0b55",
+        "exact_slug": true,
+        "declared_vehicle": "aewc__e_3a_sentry",
+        "declared_name": "E-3A Sentry",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "Boeing 707 airframe",
+          "four underwing turbofans",
+          "dorsal rotating radar disc",
+          "low swept wing",
+          "four-wheel main bogies",
+          "slender TF33 nacelles"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          10036,
+          1504
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "drone",
+      "roster_model": "Wing Loong II / Akinci",
+      "roster_slug": "drone__wing_loong_ii_akinci",
+      "asset": {
+        "file": "aircraft/drone__wing_loong_ii_akinci.glb",
+        "sha256": "5df61799b1d19f3c29191cdae9573ecea5709bb2e39eba52725c3bf7a8b6369a",
+        "exact_slug": true,
+        "declared_vehicle": "drone__wing_loong_ii_akinci",
+        "declared_name": "Wing Loong II / Akinci",
+        "approximate": true,
+        "representative": "Wing Loong II exterior",
+        "features": [
+          "long straight tapered wing",
+          "single pusher propeller",
+          "outward V tail",
+          "nose satellite fairing",
+          "ventral sensor turret"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          9624,
+          1596
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "carrierDrone",
+      "roster_model": "Carrier Drone",
+      "roster_slug": "carrierDrone__carrier_drone",
+      "asset": {
+        "file": "aircraft/carrierDrone__carrier_drone.glb",
+        "sha256": "fd1423d86509cd62d895137683864aaa4d307debd3960a03520d96f3a367cc3e",
+        "exact_slug": true,
+        "declared_vehicle": "carrierDrone__carrier_drone",
+        "declared_name": "Carrier Drone",
+        "approximate": true,
+        "representative": "Original plausible carrier UCAV with X-47B-like planform",
+        "features": [
+          "cranked flying wing",
+          "dorsal jet intake",
+          "single recessed nozzle",
+          "internal weapon bays",
+          "no vertical tail or external pylons"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          5840,
+          1136
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "corvette",
+      "roster_model": "Al Jubail-class",
+      "roster_slug": "corvette__al_jubail_class",
+      "asset": {
+        "file": "ships/corvette__al_jubail_class.glb",
+        "sha256": "d2f0752b3bf620c33134de7b08b0e5fbb76882f161f6daf62c7251e1403b4fa1",
+        "exact_slug": true,
+        "declared_vehicle": "corvette__al_jubail_class",
+        "declared_name": "Al Jubail-class",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "AVANTE 2200 hull",
+          "angular bridge and enclosed sensor tower",
+          "single wide funnel",
+          "76 mm bow gun and 16-cell forward VLS",
+          "eight antiship canisters",
+          "aft RAM and helicopter hangar"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          11574,
+          1646
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "asFrigate",
+      "roster_model": "Al Riyadh-class",
+      "roster_slug": "asFrigate__al_riyadh_class",
+      "asset": {
+        "file": "ships/asFrigate__al_riyadh_class.glb",
+        "sha256": "fe39a4288fc92c28feda4913e2b87d766505862a40538eda027071d97c408cb2",
+        "exact_slug": true,
+        "declared_vehicle": "asFrigate__al_riyadh_class",
+        "declared_name": "Al Riyadh-class",
+        "approximate": true,
+        "representative": "",
+        "features": [
+          "enlarged Saudi La Fayette derivative",
+          "long continuous stealth deckhouse",
+          "76 mm bow gun",
+          "16-cell Sylver/Aster foredeck bank",
+          "large Arabel radome and aft search panel",
+          "eight Exocet canisters",
+          "single helicopter hangar"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          11450,
+          1770
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "gunboat",
+      "roster_model": "Gunboat",
+      "roster_slug": "gunboat__gunboat",
+      "asset": {
+        "file": "ships/gunboat__gunboat.glb",
+        "sha256": "d1f8acbc7b200a2d270cf1ea642d6fd11ac701d591e4f978f4435c182cac3878",
+        "exact_slug": true,
+        "declared_vehicle": "gunboat__gunboat",
+        "declared_name": "Gunboat",
+        "approximate": true,
+        "representative": "Original plausible generic 30 m coastal gunboat",
+        "features": [
+          "original generic coastal gunboat",
+          "small pilothouse",
+          "forward 30 mm gun",
+          "aft light gun",
+          "single exhaust and search mast",
+          "no missiles or helicopter facilities"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          9020,
+          1176
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    },
+    {
+      "key": "seaDrone",
+      "roster_model": "Sea Drone",
+      "roster_slug": "seaDrone__sea_drone",
+      "asset": {
+        "file": "ships/seaDrone__sea_drone.glb",
+        "sha256": "9e49372a334adcaf3676ca1514a119d3cc86bd1ba824ea3281e29e62a721605e",
+        "exact_slug": true,
+        "declared_vehicle": "seaDrone__sea_drone",
+        "declared_name": "Sea drone",
+        "approximate": true,
+        "representative": "Original generic low-profile USV; roster gives no named real class",
+        "features": [
+          "generic low-profile unmanned surface craft",
+          "enclosed payload bow",
+          "compact aft sensor housing",
+          "rotating electro-optical head",
+          "no crew or weapons turret"
+        ],
+        "materials": [
+          "paint",
+          "metal_dark",
+          "rubber",
+          "glass",
+          "markings"
+        ],
+        "triangles": [
+          1084,
+          356
+        ]
+      },
+      "evidence_status": "pending",
+      "evidence_source_ids": [],
+      "assessment": {
+        "status": "unverified",
+        "reason": "No newly checked model-specific operator evidence yet."
+      }
+    }
+  ],
+  "additional_inventory": []
+}
