@@ -124,6 +124,14 @@ def radars(rig,s,lod):
     D=s.draft+s.freeboard
     for i,(z,h,style,width) in enumerate(s.details['masts']):
         x=s.details.get('mast_offsets',[0]*len(s.details['masts']))[i]
+        if s.details.get('unmanned'):
+            p=np.array([x,D+.5,z]);m=Mesh();q=np.array([x,D+h,z])
+            m.tube('metal_dark',p,q,.035,6 if lod else 16)
+            rig.add('Mast_'+str(i),'Hull',p,m)
+            head=Mesh();head.tube('paint',q,q+[0,.20,0],.11,8 if lod else 24,.08)
+            head.box('glass',q+[0,.10,.10],(.12,.08,.04))
+            rig.add('Radar' if i==0 else 'Radar_'+str(i),'Mast_'+str(i),q,head,'Y')
+            continue
         roofs=[a[5]+a[4] for a in s.details['houses'] if abs(x-a[0])<=a[2]/2 and abs(z-a[1])<=a[3]/2]
         m=Mesh();base=D+min(5,max(roofs,default=.1)-.10);top=D+h
         block(m,'paint',x,base,z,width*.48,top-base,width*.6,.50)

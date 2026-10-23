@@ -9,16 +9,16 @@
     "ships/destroyer__horizon_class.glb"
   ],
   "sha256": {
-    "ships/destroyer__arleigh_burke_class.glb": "2bc3b1d8fdccfbdc972bab3453499d2d2f5880aa7df07fbfee3a9dde6404608e",
-    "ships/destroyer__choe_hyon_class.glb": "91ae40708a0a287d07fcf139e8d5767d37839e87dc73bc86be297fe54b9d4f63",
-    "ships/destroyer__de_zeven_provincien_class.glb": "34569373e81d05d7a9e4f6f05f8a77ca7bfe608794a22abe2cb6e1b2a5d6c528",
-    "ships/destroyer__f124_sachsen_class.glb": "898ab780c6bbab42a3bb96de921e2be7a36e03004e2c46eae2ff892f261122e4",
-    "ships/destroyer__hobart_class.glb": "5a3e3d14174f37f05ba8202da7db691518253876bfb3ab2aa88ab6e55e66853a",
-    "ships/destroyer__horizon_class.glb": "b00031ec8372411a77b84265a30acc03b752cdd4ba99de90f5c51f9c23937af1"
+    "ships/destroyer__arleigh_burke_class.glb": "e862aa5ebab004d13ce85097c944e1ae1f4c6334b9227ae6942ff6543b33396a",
+    "ships/destroyer__choe_hyon_class.glb": "acf9a3a9364a124a334101ca35be74317d196289de4a120d4d955e14ceb9063e",
+    "ships/destroyer__de_zeven_provincien_class.glb": "689e5319f313c192b8062119c2c9a012a908c5bba39f3d8556750d52fe0e1d9a",
+    "ships/destroyer__f124_sachsen_class.glb": "f9a94ef0e79265e5911963042745f315af7488d8a5d4c0e2cf283705f794f5e3",
+    "ships/destroyer__hobart_class.glb": "36cd4f9ec27c0baeb36db7d3e0597c2d598b5e59581d22695963524caaceb277",
+    "ships/destroyer__horizon_class.glb": "1b80b7db951c85f2bf51c47fb7fa1837d93b49e7d32b069687b4a55f2b7b2d60"
   },
   "maximum_triangles": [
-    13106,
-    2018
+    13086,
+    2022
   ],
   "checks": [
     "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
@@ -30,6 +30,7 @@
   "generators": [
     "generate_p7_ships.py",
     "ship_parts.py",
+    "submarine_parts.py",
     "validate_ships.py",
     "vehicle_parts.py"
   ]
