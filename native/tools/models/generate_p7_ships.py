@@ -647,6 +647,35 @@ def submarine__agosta_90b(lod=0):
         'https://www.karachishipyard.com.pk/page/smc',
         ['slender conventional hull','rounded bow','low streamlined sail','bow diving planes','cruciform stern controls','single seven-blade propeller'],sail_z=.09,sail_height=4.5,sail_length=11.,prop_blades=7,foreplanes='bow')
 
+def submarine__astute_class(lod=0):
+    return sub('submarine__astute_class','Astute-class',lod,97.,11.3,10.,
+        'https://www.royalnavy.mod.uk/equipment/submarine/astute-class',
+        ['broad nuclear attack-submarine hull','blunt rounded bow','long low sail and optronic masts','retractable bow planes deployed','cruciform stern surfaces','ducted pumpjet propulsor'],
+        sail_z=.10,sail_height=6.8,sail_length=18.,pumpjet=True,foreplanes='bow',prop_blades=7,
+        body_profile=[(-.45,.07),(-.36,.30),(-.23,.48),(-.05,.5),(.2,.5),(.38,.48),(.46,.33),(.5,.006)])
+
+def submarine__collins_class(lod=0):
+    return sub('submarine__collins_class','Collins-class',lod,77.8,7.8,7.,
+        'https://www.navy.gov.au/capabilities/ships-boats-and-submarines/hmas-collins',
+        ['large Australian conventional hull','tall sail with fairwater diving planes','broad blunt sonar bow','cruciform stern controls','single open seven-blade screw'],sail_z=.09,sail_height=6.0,sail_length=13.,foreplanes='sail',prop_blades=7)
+
+def submarine__dolphin_ii(lod=0):
+    rig,s=sub('submarine__dolphin_ii','Dolphin II',lod,68.6,6.8,6.2,'native/CODEX-UNIT-ROSTER.md',
+        ['enlarged Israeli AIP conventional hull','full rounded bow','compact sail','bow diving planes','X-form stern controls','single open propeller'],sail_z=.11,sail_height=4.8,sail_length=10.5,x_tail=True,foreplanes='bow')
+    s.representative='Approximate initial Dolphin II boats; not Drakon with its enlarged sail';return rig,s
+
+def submarine__dosan_ahn_changho_class(lod=0):
+    return sub('submarine__dosan_ahn_changho_class','Dosan Ahn Changho-class',lod,83.5,9.6,7.7,
+        'https://www.hanwha.com/newsroom/news/press-releases/republic-of-korea-navy-kss-iii-submarine-built-by-hanwha-ocean-arrives-in-canada-after-over-14000-km-voyage.do',
+        ['KSS-III Batch I conventional ballistic-missile submarine','six vertical launch hatches abaft the sail','wide parallel-sided hull','fairwater diving planes','cruciform stern controls','single seven-blade screw'],
+        sail_z=.17,sail_height=5.8,sail_length=13.,foreplanes='sail',missile_cells=6,missile_pitch=2.4)
+
+def submarine__fateh_class(lod=0):
+    rig,s=sub('submarine__fateh_class','Fateh-class',lod,48.,4.5,4.,
+        'https://odin.t2com.army.mil/WEG/Asset/7efbda7f1fb450b891f3e90d1d36e999',
+        ['small Iranian coastal submarine','slender hull','low short sail','bow diving planes','cruciform aft controls','single exposed screw'],sail_z=.13,sail_height=3.1,sail_length=8.,prop_blades=5,foreplanes='bow')
+    s.representative='Approximate Fateh exterior; hidden fitting and propulsor dimensions estimated';return rig,s
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):

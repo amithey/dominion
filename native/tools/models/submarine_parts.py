@@ -34,8 +34,10 @@ def submarine(s,lod=0):
     rig.add('Sail_Fittings','Sail',(0,base,z),fittings)
     if d.get('missile_cells'):
         deck=Mesh();count=d['missile_cells'];pitch=d.get('missile_pitch',L*.028);start=z-length*.70
+        rows=math.ceil(count/2);roof=B*(.88+d.get('missile_deck_height',.18))
+        block(deck,'paint',0,B*.88,start-(rows-1)*pitch/2,B*.70,roof-B*.88,rows*pitch,.96)
         for i in range(count):
-            x=(-1 if i%2==0 else 1)*B*.20;zz=start-(i//2)*pitch;yy=cy+math.sqrt((B*.5)**2-x*x)
+            x=(-1 if i%2==0 else 1)*B*.20;zz=start-(i//2)*pitch;yy=roof+.025
             deck.tube('metal_dark',(x,yy-.04,zz),(x,yy+.04,zz),B*.105,8 if lod else 20)
         rig.add('Missile_Deck_Hatches','Hull',(0,B,start),deck,cell_count=count)
     # Stern diving surfaces: X-tail variants rotate their local span frames.
@@ -57,6 +59,9 @@ def submarine(s,lod=0):
     count=d.get('propellers',1);r=B*d.get('prop_radius',.31)
     for i in range(count):
         p=np.array([(i-(count-1)/2)*B*.62,cy,-L*.482]);m=Mesh()
+        shaft=Mesh();a=np.array([p[0]*.65,cy,-L*(.40 if count>1 else .435)])
+        shaft.tube('metal_dark',a,p+[0,0,.12],B*.055,8 if lod else 24,B*.035)
+        rig.add('Propeller_Shaft_'+str(i),'Hull',a,shaft)
         m.tube('metal_dark',p+[0,0,.45],p-[0,0,.38],r*.21,8 if lod else 24,r*.035)
         blades=d.get('prop_blades',7)
         for a in np.linspace(0,math.tau,blades,endpoint=False):
