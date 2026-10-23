@@ -9,16 +9,16 @@
     "ships/corvette__al_jubail_class.glb"
   ],
   "sha256": {
-    "ships/destroyer__udaloy_class.glb": "d5d368ed46e084671e5484d288b79fc7bf74004709f3d089b0d2ae0bee836b58",
-    "ships/destroyer__visakhapatnam_class.glb": "78ee428407ced66a4fec1085e4ec49a6c31c60b09b1ae4d317f6533101be4b73",
-    "ships/aegisCruiser__maya_class_aegis_destroyer.glb": "12798ce8842e7103b352219a1ea0b9a3ffaeae7345b98f9b12bb71c2ad16024b",
-    "ships/type45__type_45_destroyer.glb": "c690c7100abeea7834131b5c675601f8a4328a6ece18038658595ad059b5a692",
-    "ships/corvette__ada_class.glb": "54dd671d00a687e7e22bd8a9a85fb62fdbed00511a27759b71aed1849f9c8c8c",
-    "ships/corvette__al_jubail_class.glb": "9762ed2771dba20c74b00cf95630c04fe3075f4f995d412dc1283f62da8ecff5"
+    "ships/destroyer__udaloy_class.glb": "e0cb0ec14a23e6028b60a06791320bc5bc546201d29c6b38c5b043c6581466d8",
+    "ships/destroyer__visakhapatnam_class.glb": "555c4dc35fa24402a67a94a30d6aa5c8610d801cef1702dd0a55fbfaa838af3f",
+    "ships/aegisCruiser__maya_class_aegis_destroyer.glb": "57eae806c77a5d5baede9da74009b55525eacda486ad08dfb8b048057e40caa0",
+    "ships/type45__type_45_destroyer.glb": "600c56063012b66ecc955339d2434c5311eb2a2df449d190a80251a97be5a74e",
+    "ships/corvette__ada_class.glb": "173f3d40283a3cc0012a47b6300e3871cca8e25f7da0f93cc82fdb65973ac72b",
+    "ships/corvette__al_jubail_class.glb": "d2f0752b3bf620c33134de7b08b0e5fbb76882f161f6daf62c7251e1403b4fa1"
   },
   "maximum_triangles": [
-    14284,
-    2272
+    14264,
+    2276
   ],
   "checks": [
     "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
@@ -30,6 +30,7 @@
   "generators": [
     "generate_p7_ships.py",
     "ship_parts.py",
+    "submarine_parts.py",
     "validate_ships.py",
     "vehicle_parts.py"
   ]

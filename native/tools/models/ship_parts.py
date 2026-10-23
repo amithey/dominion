@@ -75,7 +75,7 @@ def deckhouses(rig,s,lod):
         # x,z,w,length,height,base elevation above main deck,taper
         x,z,w,l,h,base,taper=item;m=Mesh();block(m,'paint',x,D+base,z,w,h,l,taper)
         rig.add('Bridge' if i==0 else 'Deckhouse_'+str(i),'Hull',(x,D+base,z),m)
-        if i==0:
+        if i==0 and not s.details.get('unmanned'):
             glass=Mesh();yy=D+base+h*.72;front=z+l*(1-(1-taper)*.72)/2+.018
             for xx in np.linspace(-w*.32,w*.32,4 if lod else 8):
                 glass.box('glass',(x+xx,yy,front),(w*.075,.60,.035))
