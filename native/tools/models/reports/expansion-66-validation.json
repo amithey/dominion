@@ -9,16 +9,16 @@
     "ships/corvette__gowind_2500.glb"
   ],
   "sha256": {
-    "ships/corvette__amnok_class.glb": "2f417173fb61ec1d30a11459ae4f0cee198ea675631b67b4dbb3eb3021052bbb",
-    "ships/corvette__anzac_class.glb": "a27d00bc0e8461032c5e20732d3b8a0faf1230119e7a7947c02b31a4af91a5d0",
-    "ships/corvette__babur_class_milgem.glb": "ea6535ccd1d6f605ba72934db861dce392f2bfb7cdd82dcbf2ae93ec3a003b06",
-    "ships/corvette__daegu_class.glb": "9fa58e974b980185efcf46c63fa3a4337f0524483bb59ffab2a09f586effd6e6",
-    "ships/corvette__freedom_class_lcs.glb": "59beee10505fbc2baa0fae47385a94ed7d6aebd66678bc2cc62621611132f5c2",
-    "ships/corvette__gowind_2500.glb": "5a398a720f6aefd5e085fa7c9f15d254b062cce0a327653218357a5570ea71d9"
+    "ships/corvette__amnok_class.glb": "8833b8b78d60f8e7b3431a8b31ce3466721c087aede43cd6f4ddd0776789483a",
+    "ships/corvette__anzac_class.glb": "08d1158aa9d584726e1434e867c3ffe77f928f4ed03167156c51e36597a61c2b",
+    "ships/corvette__babur_class_milgem.glb": "fca9540dcd724d374e1c41fe1b9b16f30d971702e064e579ab2c53cba7fbd71e",
+    "ships/corvette__daegu_class.glb": "77b7538925d245c66092e3bdc4adcbffb70dce6be2bd12150db4258397fd1871",
+    "ships/corvette__freedom_class_lcs.glb": "25dfae33dfb71cbde6afc0993a7fd9121fb8badfe6f7344dd4f6d1fa23d137d9",
+    "ships/corvette__gowind_2500.glb": "65661309c43ca1a591eb2ea8e1a6d8caf02d647875f1c7cae5ffd6077188a4d0"
   },
   "maximum_triangles": [
-    11332,
-    1862
+    11312,
+    1866
   ],
   "checks": [
     "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
@@ -30,6 +30,7 @@
   "generators": [
     "generate_p7_ships.py",
     "ship_parts.py",
+    "submarine_parts.py",
     "validate_ships.py",
     "vehicle_parts.py"
   ]
