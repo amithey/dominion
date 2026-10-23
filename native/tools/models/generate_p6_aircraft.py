@@ -160,6 +160,31 @@ def jet__su_30mki(lod=0):return flanker('jet__su_30mki','Su-30MKI',lod,2,True)
 def jet__su_35s(lod=0):return flanker('jet__su_35s','Su-35S',lod)
 def jet__typhoon_fgr4(lod=0):return model('jet__typhoon_fgr4','Typhoon FGR4',lod,'typhoon')
 
+def lightFighter__eurofighter_typhoon(lod=0):return model('lightFighter__eurofighter_typhoon','Eurofighter Typhoon',lod,'typhoon')
+def lightFighter__f_16(lod=0):return model('lightFighter__f_16','F-16',lod,'f16')
+def lightFighter__f_16c(lod=0):return model('lightFighter__f_16c','F-16C',lod,'f16')
+
+def f5(slug,name,lod,modern=False):
+    return airframe(slug,name,lod,'f5',(14.68,8.13,4.06,1.15,1.35,1.02),
+        [(.38,.9,-2.6),(2.15,-.25,-2.5),(4.065,-1.65,-2.4)],[(0,2.05,4.06,-2.5,-6.4,-4.3,-5.55)],
+        'https://www.vtg.admin.ch/dam/en/sd-web/HMnPkJcj12vX/84_003_de_PatrouilleSuisse_2015_web.pdf',engines=2,
+        features=['slender pointed nose','two small engine nozzles','small swept trapezoidal wing','single tail','two nose cannons']+(['modern dorsal warning-receiver fairings'] if modern else []),
+        engine_spacing=.66,engine_radius=.30,intake_x=.64,intake_z=.14,intake_width=.45,intake_height=.48,
+        gun_count=2,gun_fraction=.33,gun_width=.25,modern_f5=modern,
+        stabilator=[(.38,1.78,-3.6,-6.2),(2.1,1.78,-5.,-6.)],
+        profile=[(-.455,0,.3,.35),(-.34,0,.50,.49),(-.12,0,.5,.5),(.12,.01,.39,.44),(.28,.02,.31,.32),(.42,0,.16,.18),(.5,0,.008,.015)])
+def lightFighter__f_5e(lod=0):return f5('lightFighter__f_5e','F-5E',lod)
+def lightFighter__f_5m(lod=0):return f5('lightFighter__f_5m','F-5M',lod,True)
+
+def fa50(slug,name,lod):
+    return airframe(slug,name,lod,'fa50',(13.14,9.45,4.82,1.4,1.4,1.0),
+        [(.5,1.1,-2.5),(2.7,-.1,-2.4),(4.725,-1.25,-2.1)],[(0,2.25,4.82,-2.3,-5.7,-3.95,-5.1)],
+        'https://www.koreaaero.com/EN/Business/FA50.aspx',seats=2,
+        features=['tandem trainer-derived canopy','lateral intakes','single nozzle','swept wing with leading-edge extensions','single tall fin'],
+        lex=True,intake_x=.76,intake_z=.17,intake_width=.54,intake_height=.61,engine_radius=.44,
+        stabilator=[(.42,1.85,-3.25,-5.7),(2.5,1.85,-4.75,-5.4)])
+def lightFighter__fa_50(lod=0):return fa50('lightFighter__fa_50','FA-50',lod)
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):
     from validate_aircraft import validate

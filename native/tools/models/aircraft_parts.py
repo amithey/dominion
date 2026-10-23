@@ -245,14 +245,16 @@ def gear(rig,s,lod):
 def weapons(rig,s,lod):
     count=0;positions={};L=s.length;y=s.belly+s.body_height*.52
     gun=s.details.get('gun',True)
-    if gun:
-        x=s.details.get('gun_side',1)*s.body_width*.43;z=L*.15;m=Mesh()
+    for gi in range(s.details.get('gun_count',1) if gun else 0):
+        side=(-1 if gi==0 else 1) if s.details.get('gun_count',1)==2 else s.details.get('gun_side',1)
+        x=side*s.body_width*s.details.get('gun_width',.43);z=L*s.details.get('gun_fraction',.15);m=Mesh()
         if s.stealth:
             x=-abs(x);m.box('paint',(x,y,z),(.12,.13,.42))
         else:m.box('paint',(x,y,z),(.20,.20,.64))
         hollow_muzzle(m,(x,y,z+.28),(x,y,z+.48),.049,.024,6 if lod else 12)
-        rig.add('Cannon','Fuselage',(x,y,z),m);p=[x,y,z+.48]
-        rig.add('Muzzle_0','Cannon',p);positions['Muzzle_0']=p;count=1
+        parent='Cannon' if gi==0 else 'Cannon_'+str(gi)
+        rig.add(parent,'Fuselage',(x,y,z),m);p=[x,y,z+.48]
+        rig.add('Muzzle_'+str(count),parent,p);positions['Muzzle_'+str(count)]=p;count+=1
     if s.stealth:
         for side,label in ((-1,'L'),(1,'R')):
             m=Mesh();x=side*s.body_width*.25;m.box('paint',(x,s.belly+.06,0),(s.body_width*.44,.10,L*.18))
@@ -307,6 +309,9 @@ def fittings(rig,s,lod):
         for side in (-1,1):
             x,yw,le,te=s.details['wing'][-1];z=(le+te)/2
             m.tube('paint',(side*x,yw,z-.65),(side*x,yw,z+.75),.12,8 if lod else 20,.07)
+    if s.details.get('modern_f5'):
+        m.box('paint',(0,y+.05,-L*.10),(.24,.20,.65))
+        for side in (-1,1):m.box('paint',(side*W*.43,y-.30,L*.27),(.11,.16,.28))
     # Dorsal blades are supported by the skin, with no free-floating fittings.
     for z,h in ((L*.04,.23),(-L*.19,.18)):
         m.box('paint',(0,y-.06+h/2,z),(.045,h,.28))

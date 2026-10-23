@@ -1,0 +1,38 @@
+{
+  "batch": 44,
+  "files": [
+    "aircraft/jet__rafale_f_16.glb",
+    "aircraft/jet__su_25_mig_29se.glb",
+    "aircraft/jet__su_30k_su_27.glb",
+    "aircraft/jet__su_30mki.glb",
+    "aircraft/jet__su_35s.glb",
+    "aircraft/jet__typhoon_fgr4.glb"
+  ],
+  "sha256": {
+    "aircraft/jet__rafale_f_16.glb": "c2d2fa873007b15c360776c6693f1d46107831fdff6fc23e84413739ee67bcd8",
+    "aircraft/jet__su_25_mig_29se.glb": "1928d404a23ac5d4d427bdf8101098847dff3cdcdeba1ddc617e20f219be4b36",
+    "aircraft/jet__su_30k_su_27.glb": "c37367aed266510122ff9cb112cd56d8732918bd816863bc378f95cb7a70c16f",
+    "aircraft/jet__su_30mki.glb": "fdb247b83a50e93b4a03c56a610309b53f68c804b49eed05b9b201f51e0e2cee",
+    "aircraft/jet__su_35s.glb": "f8a974a8da53bb6a76d63738cbb0050d5a3ec6113123af7cc3580da4b1769a8b",
+    "aircraft/jet__typhoon_fgr4.glb": "72f771e4836b10ca664f4ce720bc9d811bad1dbe03020692b07028c37392cc04"
+  },
+  "maximum_triangles": [
+    12726,
+    2064
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

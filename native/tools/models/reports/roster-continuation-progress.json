@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 245,
+  "ready_files": 251,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -508,6 +508,18 @@
         "aircraft/jet__mig_29_mig_21.glb",
         "aircraft/jet__rafale.glb"
       ]
+    },
+    {
+      "batch": 44,
+      "report": "expansion-44-validation.json",
+      "files": [
+        "aircraft/jet__rafale_f_16.glb",
+        "aircraft/jet__su_25_mig_29se.glb",
+        "aircraft/jet__su_30k_su_27.glb",
+        "aircraft/jet__su_30mki.glb",
+        "aircraft/jet__su_35s.glb",
+        "aircraft/jet__typhoon_fgr4.glb"
+      ]
     }
   ],
   "priorities": {
@@ -781,7 +793,7 @@
     "P6": {
       "requested_rows": 128,
       "unique_files": 127,
-      "ready_files": 18,
+      "ready_files": 24,
       "ready_slugs": [
         "jet__eurofighter_typhoon",
         "jet__f_15ex_eagle_ii",
@@ -800,7 +812,13 @@
         "jet__kf_21_boramae_f_15k",
         "jet__mig_29",
         "jet__mig_29_mig_21",
-        "jet__rafale"
+        "jet__rafale",
+        "jet__rafale_f_16",
+        "jet__su_25_mig_29se",
+        "jet__su_30k_su_27",
+        "jet__su_30mki",
+        "jet__su_35s",
+        "jet__typhoon_fgr4"
       ],
       "remaining_slugs": [
         "aewc__a_50u",
@@ -863,12 +881,6 @@
         "heavyBomberDrone__heavy_hexacopter",
         "heavyBomberDrone__vampire_baba_yaga",
         "interceptorDrone__interceptor_drone",
-        "jet__rafale_f_16",
-        "jet__su_25_mig_29se",
-        "jet__su_30k_su_27",
-        "jet__su_30mki",
-        "jet__su_35s",
-        "jet__typhoon_fgr4",
         "jf17__jf_17_thunder",
         "lightFighter__eurofighter_typhoon",
         "lightFighter__f_16",
