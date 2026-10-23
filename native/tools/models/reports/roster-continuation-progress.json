@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 269,
+  "ready_files": 275,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -556,6 +556,18 @@
         "aircraft/attackJet__a_10c_thunderbolt_ii.glb",
         "aircraft/attackJet__jaguar.glb"
       ]
+    },
+    {
+      "batch": 48,
+      "report": "expansion-48-validation.json",
+      "files": [
+        "aircraft/attackJet__l_159_alca.glb",
+        "aircraft/attackJet__mirage_2000d.glb",
+        "aircraft/attackJet__mirage_5.glb",
+        "aircraft/attackJet__su_24mk.glb",
+        "aircraft/attackJet__su_25.glb",
+        "aircraft/attackJet__tornado_ids.glb"
+      ]
     }
   ],
   "priorities": {
@@ -829,10 +841,16 @@
     "P6": {
       "requested_rows": 128,
       "unique_files": 127,
-      "ready_files": 42,
+      "ready_files": 48,
       "ready_slugs": [
         "attackJet__a_10c_thunderbolt_ii",
         "attackJet__jaguar",
+        "attackJet__l_159_alca",
+        "attackJet__mirage_2000d",
+        "attackJet__mirage_5",
+        "attackJet__su_24mk",
+        "attackJet__su_25",
+        "attackJet__tornado_ids",
         "jet__eurofighter_typhoon",
         "jet__f_15ex_eagle_ii",
         "jet__f_15i_ra_am",
@@ -892,12 +910,6 @@
         "aewc__netra_aew_c",
         "aewc__saab_2000_erieye",
         "akinci__bayraktar_akinci",
-        "attackJet__l_159_alca",
-        "attackJet__mirage_2000d",
-        "attackJet__mirage_5",
-        "attackJet__su_24mk",
-        "attackJet__su_25",
-        "attackJet__tornado_ids",
         "bomber__b_52h_stratofortress",
         "bomber__h_6k",
         "bomber__tu_160m",

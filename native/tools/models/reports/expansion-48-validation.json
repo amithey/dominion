@@ -1,0 +1,38 @@
+{
+  "batch": 48,
+  "files": [
+    "aircraft/attackJet__l_159_alca.glb",
+    "aircraft/attackJet__mirage_2000d.glb",
+    "aircraft/attackJet__mirage_5.glb",
+    "aircraft/attackJet__su_24mk.glb",
+    "aircraft/attackJet__su_25.glb",
+    "aircraft/attackJet__tornado_ids.glb"
+  ],
+  "sha256": {
+    "aircraft/attackJet__l_159_alca.glb": "3e936347bff76e73d5d4abc824f37886195d40cc6ecb6b9fa30bb7c089d376f7",
+    "aircraft/attackJet__mirage_2000d.glb": "3211715f4ebe62e428171da612471cb3c7a0f02256b1cc7e863d495df071a1d1",
+    "aircraft/attackJet__mirage_5.glb": "94d97ada0b93b5db80c7f97765f8646fee417bad94c09a7e4e692562ec7ab2e0",
+    "aircraft/attackJet__su_24mk.glb": "e7e5fdc58bf3509b0ae14e422ec61cfa49fddcad72a53f09b9a248eeb9574f10",
+    "aircraft/attackJet__su_25.glb": "557c3fb88ee09731c206c610995c726dc188372fd2f3ce9927358841cd7cd283",
+    "aircraft/attackJet__tornado_ids.glb": "6f82daa685ee5436c816548f2833efb23b4a1635cb41720d98af09a1095bbb12"
+  },
+  "maximum_triangles": [
+    10806,
+    1952
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}
