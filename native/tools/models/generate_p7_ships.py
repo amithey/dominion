@@ -396,6 +396,47 @@ def asFrigate__tughril_class(lod=0):return chinese_frigate('asFrigate__tughril_c
 
 def asFrigate__type_054a(lod=0):return chinese_frigate('asFrigate__type_054a','Type 054A',lod)
 
+def asFrigate__type_23(lod=0):
+    rig,s=corvette__type_23_frigate(lod);s.slug='asFrigate__type_23';s.name='Type 23';return rig,s
+
+def kcr60__kcr_60(lod=0):
+    return combatant('kcr60__kcr_60','KCR-60',lod,(60.,8.1,2.6,2.7),
+        'https://www.pal.co.id/hadiah-di-hari-armada-menteri-pertahanan-ri-luncurkan-kapal-cepat-rudal-kcr-60m-ke-5/',
+        ['KCR-60 fifth-vessel configuration','57 mm Bofors bow gun','four Exocet canisters','compact swept bridge','single funnel and open aft gun deck','no helicopter facilities'],
+        houses=[(0,4,6.4,18,3.8,0,.85),(0,-11,5.6,10,2.0,0,.91),(0,6,4.5,8,2,3.8,.78)],
+        funnels=[(0,-5,2.7,4,4,1.7)],masts=[(4,13,'panel',2.5)],guns=[(0,21,57,3.4),(0,-19,20,1.4)],vls=[],canisters=[(-7,1.8,2)],ciws=[],hangar=False,flight_deck=False,bow_sheer=.8)
+
+def missileBoat__ambassador_mk_iii(lod=0):
+    return combatant('missileBoat__ambassador_mk_iii','Ambassador Mk III',lod,(62.6,10.,2.9,3.1),
+        'native/CODEX-UNIT-ROSTER.md',
+        ['broad angular stealth missile boat','76 mm bow gun','eight Harpoon canisters','21-round RAM and separate Phalanx','central enclosed exhaust','compact integrated radar mast','no helicopter deck'],
+        houses=[(0,4,7.8,20,4.6,0,.78),(0,-12,7.2,10,2.6,0,.86),(0,6,5.4,8,2.7,4.6,.68)],
+        funnels=[(0,-5,3.3,4.3,4.7,2)],masts=[(4,15,'panel',3)],guns=[(0,22,76,4.1)],vls=[],canisters=[(-6,2.1,4)],ciws=[(0,10,4.7),(0,-16,3)],ciws_styles=['ram','phalanx'],hangar=False,flight_deck=False,bow_sheer=.9)
+
+def missileBoat__azmat_class(lod=0):
+    rig,s=combatant('missileBoat__azmat_class','Azmat-class',lod,(63.,8.8,2.4,2.8),
+        'https://www.karachishipyard.com.pk/page/ship-building',
+        ['first-batch Chinese-derived fast missile hull','compact rounded twin 37 mm forward mount','eight C802 canisters','aft AK630 close-in gun','small stepped bridge and twin slim sensor positions','no helicopter deck'],
+        houses=[(0,4,6.8,19,3.9,0,.90),(0,-11,5.7,10,2.1,0,.93),(0,6,4.6,8,2.2,3.9,.85)],
+        funnels=[(0,-5,2.8,4,4,1.7)],masts=[(4,14,'bar',3.4),(-9,10,'bar',2.6)],guns=[(0,22,37,2.7)],gun_barrels=2,vls=[],canisters=[(-7,2,4)],ciws=[(0,-19,.2)],ciws_style='gatling',hangar=False,flight_deck=False,bow_sheer=.8)
+    s.representative='Azmat first-batch eight-C802 fit; not later six-Harbah boats';return rig,s
+
+def missileBoat__sa_ar_4_5(lod=0):
+    rig,s=combatant('missileBoat__sa_ar_4_5',"Sa'ar 4.5",lod,(62.,7.6,2.8,2.6),
+        'https://www.israel-shipyards.com/naval-003.asp',
+        ['Nirit/Hetz missile-boat representative','narrow fast hull','76 mm bow gun','eight Harpoon canisters','forward Phalanx mount','compact bridge and tall search mast','no helicopter hangar'],
+        houses=[(0,4,5.8,17,3.6,0,.95),(0,-11,4.7,9,1.8,0,.95),(0,6,4,7,1.9,3.6,.92)],
+        funnels=[(0,-4,2.4,4,3.7,1.6)],masts=[(4,15,'bar',3.5)],guns=[(0,22,76,4.0)],vls=[],canisters=[(-6,1.8,4)],ciws=[(0,12,1.2)],hangar=False,flight_deck=False,bow_sheer=.8)
+    s.representative='Approximate Nirit/Hetz exterior, no Aliya aviation deck';return rig,s
+
+def missileBoat__type_022(lod=0):
+    return combatant('missileBoat__type_022','Type 022',lod,(42.6,12.2,1.4,2.6),
+        'native/CODEX-UNIT-ROSTER.md',
+        ['wave-piercing catamaran with open bow tunnel','wide cross deck','small sharply faceted bridge','30 mm six-barrel bow gun','eight aft YJ83 canisters','single short integrated mast','no helicopter facilities'],
+        houses=[(0,3,6.8,14,3.4,0,.72),(0,-8,7.5,9,1.7,0,.86),(0,4,4.4,7,2.3,3.4,.65)],
+        funnels=[(-2,-4,1.5,3,2.5,1),(2,-4,1.5,3,2.5,1)],masts=[(3,11,'bar',2.3)],guns=[(0,14,30,1.9)],gun_barrels=6,
+        vls=[],canisters=[(-8,1.8,4)],ciws=[],hangar=False,flight_deck=False,catamaran=True,demi_beam=2.4,bow_sheer=.55)
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):

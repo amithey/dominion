@@ -167,7 +167,11 @@ def naval_gun(rig,s,lod,i,x,z,calibre,length,base=0,aft=False):
     rig.add(parent,'Hull',(x,y+.16,z),m,'Y')
     p=np.array([x,y+(1.6 if calibre>=100 else 1.3),z+.35]);gun=Mesh();sgn=-1 if aft else 1
     start=p+[0,0,sgn*.2];tip=p+[0,0,sgn*length]
-    hollow_muzzle(gun,start,tip,calibre/1000*.70,calibre/1000*.46,8 if lod else 20)
+    barrels=s.details.get('gun_barrels',1) if i==0 else 1
+    for j in range(barrels):
+        t=j*math.tau/barrels
+        offset=np.array([(-.24 if j==0 else .24),0,0]) if barrels==2 else np.array([.055*math.cos(t),.055*math.sin(t),0]) if barrels>1 else np.zeros(3)
+        hollow_muzzle(gun,start+offset,tip+offset,calibre/1000*(.48 if barrels>1 else .70),calibre/1000*.30 if barrels>1 else calibre/1000*.46,(6 if barrels>1 else 8) if lod else 12 if barrels>1 else 20)
     rig.add('Gun' if i==0 else 'Gun_'+str(i),parent,p,gun,'X')
     rig.add('Muzzle' if i==0 else 'Muzzle_'+str(i),'Gun' if i==0 else 'Gun_'+str(i),tip,
             **({'frame_rotation':[0,1,0,0]} if aft else {}))
