@@ -34,7 +34,7 @@ def quat(axis,angle):
     axis=np.asarray(axis,dtype=float);axis/=np.linalg.norm(axis)
     return np.r_[axis*math.sin(angle/2),math.cos(angle/2)].tolist()
 
-def curved_shell(m,role,sections,lod=0,window=None,cross_power=1.,cap_start=True):
+def curved_shell(m,role,sections,lod=0,window=None,cross_power=1.,cap_start=True,cap_end=True):
     """Bounded cubic Hermite meridians; smooth positive radii, fixed end sizes."""
     a=np.asarray(sections,dtype=float);z=a[:,0];values=a[:,1:];h=np.diff(z)
     assert (h>0).all()
@@ -51,7 +51,7 @@ def curved_shell(m,role,sections,lod=0,window=None,cross_power=1.,cap_start=True
             p+=(-2*t**3+3*t*t)*values[j+1]+(t**3-t*t)*h[j]*tangents[j+1]
             samples.append([z[j]+t*h[j],*p])
     samples.append(a[-1].tolist())
-    shell_surface(m,role,samples,lod,window,cross_power,segments=12 if lod else 36,subdivisions=1,cap_start=cap_start)
+    shell_surface(m,role,samples,lod,window,cross_power,segments=12 if lod else 36,subdivisions=1,cap_start=cap_start,cap_end=cap_end)
 
 def airfoil(m,stations,lod=0,role='paint'):
     """Closed symmetric airfoil. Stations are span-X, Y, leading-Z, trailing-Z."""
@@ -118,7 +118,7 @@ def fuselage(rig,s,lod):
              (.15,.04,.36,.43),(.30,.06,.25,.33),(.42,.03,.15,.20),(.50,0,.012,.020)]
     profile=s.details.get('profile',default)
     sections=[(z*L,cy+dy*H,rx*W,ry*H) for z,dy,rx,ry in profile]
-    curved_shell(m,'paint',sections,lod,cross_power=s.details.get('cross_power',1.),cap_start=s.engines!=1)
+    curved_shell(m,'paint',sections,lod,cross_power=s.details.get('cross_power',1.),cap_start=s.engines!=1,cap_end=not s.details.get('nose_intake'))
     if s.details.get('cft'):
         for side in (-1,1):
             tank=Mesh()
@@ -174,6 +174,16 @@ def engines(rig,s,lod):
             m=Mesh();rectangular_duct(m,L*.16,-L*.08,side*.46,side*.51,s.belly+.05,cy-.05,.82,.78,lod)
             m.box('paint',(side*.46,s.belly+.51,L*.14),(.81,.18,.64))
             rig.add('Intake_'+label,'Fuselage',(side*.46,s.belly+.05,L*.16),m)
+    elif s.details.get('nose_intake'):
+        m=Mesh();radius=s.details.get('nose_radius',.46);z=L*.484
+        hollow_muzzle(m,(0,cy,z-.55),(0,cy,z),radius,radius*.88,8 if lod else 24)
+        m.tube('paint',(0,cy,z-.35),(0,cy,L*.50),radius*.47,8 if lod else 24,.012)
+        rig.add('Nose_Intake','Fuselage',(0,cy,z),m)
+    elif s.details.get('side_intakes'):
+        for side,label in ((-1,'L'),(1,'R')):
+            m=Mesh();x=side*s.details.get('intake_x',W*.46);z=L*s.details.get('intake_z',.19)
+            rectangular_duct(m,z,-L*.08,x,x*.80,cy-.15,cy,s.details.get('intake_width',.70),s.details.get('intake_height',.75),lod)
+            rig.add('Intake_'+label,'Fuselage',(x,cy-.15,z),m)
     else:
         # F-16's underslung elliptical mouth, with a recessed closed interior.
         m=Mesh();z=L*.20;cy0=s.belly+.05;n=8 if lod else 24;outer=[];inner=[]
@@ -203,10 +213,10 @@ def horizontal(rig,s,lod,name,stations):
 
 def tails(rig,s,lod):
     for i,fin in enumerate(s.details['fins']):
-        x,y0,y1,le0,te0,le1,te1=fin
+        x,y0,y1,le0,te0,le1,te1=fin;cant=s.details.get('fin_cant',0)*(1 if x>=0 else -1)
         cut0=te0+(le0-te0)*.27;cut1=te1+(le1-te1)*.27
         # Airfoil span is rotated into the vertical plane. No negative scales.
-        R=rotation([0,0,1],math.pi/2)
+        R=rotation([0,0,1],math.pi/2-math.radians(cant))
         for moving in (False,True):
             m=Mesh();a,b=(cut0-.008,te0) if moving else (le0,cut0+.008)
             c,d=(cut1-.008,te1) if moving else (le1,cut1+.008)
@@ -215,8 +225,9 @@ def tails(rig,s,lod):
                 g[0]=(np.asarray(g[0])@R.T+[x,y0,0]).tolist();g[1]=(np.asarray(g[1])@R.T).tolist()
             name=('Rudder' if i==0 else 'Rudder_R') if moving else 'Fin_'+str(i)
             angle=math.atan2(cut1-cut0,y1-y0)
+            frame=quaternion_product(quat([0,0,1],-math.radians(cant)),quat([1,0,0],angle))
             rig.add(name,'Fuselage',(x,y0,cut0),m,'Y' if moving else None,
-                    **({'frame_rotation':quat([1,0,0],angle)} if moving else {}))
+                    **({'frame_rotation':np.asarray(frame).tolist()} if moving else {}))
     if 'stabilator' in s.details:horizontal(rig,s,lod,'Stabilator',s.details['stabilator'])
     if 'canard' in s.details:horizontal(rig,s,lod,'Canard',s.details['canard'])
 
@@ -236,7 +247,10 @@ def weapons(rig,s,lod):
     gun=s.details.get('gun',True)
     if gun:
         x=s.details.get('gun_side',1)*s.body_width*.43;z=L*.15;m=Mesh()
-        m.box('paint',(x,y,z),(.20,.20,.64));hollow_muzzle(m,(x,y,z+.28),(x,y,z+.48),.049,.024,6 if lod else 12)
+        if s.stealth:
+            x=-abs(x);m.box('paint',(x,y,z),(.12,.13,.42))
+        else:m.box('paint',(x,y,z),(.20,.20,.64))
+        hollow_muzzle(m,(x,y,z+.28),(x,y,z+.48),.049,.024,6 if lod else 12)
         rig.add('Cannon','Fuselage',(x,y,z),m);p=[x,y,z+.48]
         rig.add('Muzzle_0','Cannon',p);positions['Muzzle_0']=p;count=1
     if s.stealth:
@@ -281,13 +295,18 @@ def fittings(rig,s,lod):
                 m.box('glass',(side*W*.46,y-.12,L*.24),(.025,.13,.19))
         if variant in ('ex','sa'):
             for side in (-1,1):m.box('paint',(side*W*.48,y-.05,-L*.15),(.15,.25,.48))
-    if s.family=='f16':
+    if s.family=='f16' or s.details.get('lex'):
         for side in (-1,1):
             lex=Mesh();airfoil(lex,[(W*.32,y-.48,L*.21,-L*.13),(W*.68,y-.48,L*.08,-L*.13),(W*1.1,y-.48,0,-L*.13)],lod)
             if side<0:mirror(lex)
             merge_mesh(m,lex)
+        if s.family=='f16':
+            for side in (-1,1):
+                p=np.array([side*.43,s.belly+.17,-L*.35]);m.box('paint',p,(.045,.49,1.23))
+    if s.details.get('wingtip_pods'):
         for side in (-1,1):
-            p=np.array([side*.43,s.belly+.17,-L*.35]);m.box('paint',p,(.045,.49,1.23))
+            x,yw,le,te=s.details['wing'][-1];z=(le+te)/2
+            m.tube('paint',(side*x,yw,z-.65),(side*x,yw,z+.75),.12,8 if lod else 20,.07)
     # Dorsal blades are supported by the skin, with no free-floating fittings.
     for z,h in ((L*.04,.23),(-L*.19,.18)):
         m.box('paint',(0,y-.06+h/2,z),(.045,h,.28))

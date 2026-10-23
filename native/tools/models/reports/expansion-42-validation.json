@@ -1,0 +1,38 @@
+{
+  "batch": 42,
+  "files": [
+    "aircraft/jet__f_16_block_50.glb",
+    "aircraft/jet__f_16iq_fighting_falcon.glb",
+    "aircraft/jet__f_35a.glb",
+    "aircraft/jet__f_7ni.glb",
+    "aircraft/jet__f_a_18f_super_hornet.glb",
+    "aircraft/jet__gripen_e.glb"
+  ],
+  "sha256": {
+    "aircraft/jet__f_16_block_50.glb": "2c40530232c248cd3d9835739741dac8e99caa82b0c8afb8305f5d72b956c56f",
+    "aircraft/jet__f_16iq_fighting_falcon.glb": "63a7492fbe0928c602d4ff9c3b18b067bd1f51b6873d968826a3e32f105a6479",
+    "aircraft/jet__f_35a.glb": "fad433f384ac075e0332afdaf57dda116bdb1c571b9e5a08eb6b47c4dc34fe48",
+    "aircraft/jet__f_7ni.glb": "39b3269481e4e247587e6f658fa08f8fa5e2285a51190b8f5a1c05a1b24f5321",
+    "aircraft/jet__f_a_18f_super_hornet.glb": "4bc4958a4f1c38fc696ec6d03d46aa44bd39d6924c51392e93f74cbe9b8db4d4",
+    "aircraft/jet__gripen_e.glb": "2002fd70fd0c4ae40b30b03c0397813c73c0bfa4ae4a2436700fd842085b309b"
+  },
+  "maximum_triangles": [
+    12230,
+    2024
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

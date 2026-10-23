@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 233,
+  "ready_files": 239,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -484,6 +484,18 @@
         "aircraft/jet__f_15sa.glb",
         "aircraft/jet__f_16_mig_29.glb"
       ]
+    },
+    {
+      "batch": 42,
+      "report": "expansion-42-validation.json",
+      "files": [
+        "aircraft/jet__f_16_block_50.glb",
+        "aircraft/jet__f_16iq_fighting_falcon.glb",
+        "aircraft/jet__f_35a.glb",
+        "aircraft/jet__f_7ni.glb",
+        "aircraft/jet__f_a_18f_super_hornet.glb",
+        "aircraft/jet__gripen_e.glb"
+      ]
     }
   ],
   "priorities": {
@@ -757,14 +769,20 @@
     "P6": {
       "requested_rows": 128,
       "unique_files": 127,
-      "ready_files": 6,
+      "ready_files": 12,
       "ready_slugs": [
         "jet__eurofighter_typhoon",
         "jet__f_15ex_eagle_ii",
         "jet__f_15i_ra_am",
         "jet__f_15j",
         "jet__f_15sa",
-        "jet__f_16_mig_29"
+        "jet__f_16_block_50",
+        "jet__f_16_mig_29",
+        "jet__f_16iq_fighting_falcon",
+        "jet__f_35a",
+        "jet__f_7ni",
+        "jet__f_a_18f_super_hornet",
+        "jet__gripen_e"
       ],
       "remaining_slugs": [
         "aewc__a_50u",
@@ -827,12 +845,6 @@
         "heavyBomberDrone__heavy_hexacopter",
         "heavyBomberDrone__vampire_baba_yaga",
         "interceptorDrone__interceptor_drone",
-        "jet__f_16_block_50",
-        "jet__f_16iq_fighting_falcon",
-        "jet__f_35a",
-        "jet__f_7ni",
-        "jet__f_a_18f_super_hornet",
-        "jet__gripen_e",
         "jet__j_10c_jf_17_f_16",
         "jet__j_16",
         "jet__kf_21_boramae_f_15k",
