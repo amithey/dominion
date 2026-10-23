@@ -676,6 +676,88 @@ def submarine__fateh_class(lod=0):
         ['small Iranian coastal submarine','slender hull','low short sail','bow diving planes','cruciform aft controls','single exposed screw'],sail_z=.13,sail_height=3.1,sail_length=8.,prop_blades=5,foreplanes='bow')
     s.representative='Approximate Fateh exterior; hidden fitting and propulsor dimensions estimated';return rig,s
 
+def submarine__improved_kilo(lod=0):
+    return sub('submarine__improved_kilo','Improved Kilo',lod,73.8,9.9,7.15,'https://www.admship.ru/en/production/underwater/submarine-of-project-636/',
+        ['Project 636 rounded full-bodied hull','long tall sail','bow diving planes','cruciform tail','seven-blade open screw'],sail_z=.08,sail_length=16.,sail_height=6.2,foreplanes='bow',body_profile=[(-.45,.07),(-.34,.32),(-.18,.5),(.14,.5),(.33,.46),(.45,.30),(.5,.006)])
+
+def submarine__kalvari_class(lod=0):
+    return sub('submarine__kalvari_class','Kalvari-class',lod,67.5,6.2,5.8,'https://www.pib.gov.in/newsite/erelcontent.aspx?lang=2&reg=48&relid=174299',
+        ['Indian Scorpene hull','compact swept sail','retractable bow planes deployed','cruciform tail','seven-blade screw'],sail_z=.12,sail_length=10.5,sail_height=5.0,foreplanes='bow')
+
+def submarine__nagapasa_class(lod=0):
+    return sub('submarine__nagapasa_class','Nagapasa-class',lod,61.3,6.2,5.5,'https://www.kemhan.go.id/itjen/2017/08/03/tni-punya-kapal-selam-canggih-buatan-korsel-kri-nagapasa.html',
+        ['Indonesian Type 209 derivative','short cylindrical hull','narrow upright sail','bow planes','cruciform stern'],sail_z=.12,sail_length=9.,sail_height=4.7,foreplanes='bow')
+
+def submarine__reis_class(lod=0):
+    return sub('submarine__reis_class','Reis-class',lod,68.35,6.3,6.0,'https://www.ssb.gov.tr/haber/reis-sinifi-denizaltilara-yeni-section50-teslimati-KYnT9z',
+        ['Turkish Type 214 AIP hull','high tapered sail','bow diving planes','cruciform tail','single skewed propeller'],sail_z=.10,sail_length=11.8,sail_height=5.2,foreplanes='bow')
+
+def submarine__riachuelo_class(lod=0):
+    return sub('submarine__riachuelo_class','Riachuelo-class',lod,70.62,6.2,5.8,'https://hotsites.marinha.mil.br/construcao-naval/riachuelo.html',
+        ['lengthened Brazilian Scorpene','extended parallel midbody','streamlined compact sail','bow diving planes','cruciform tail'],sail_z=.13,sail_length=11.,sail_height=5.,foreplanes='bow')
+
+def submarine__romeo_class(lod=0):
+    return sub('submarine__romeo_class','Romeo-class',lod,76.6,6.7,5.2,'native/CODEX-UNIT-ROSTER.md',
+        ['Project 633 long narrow conventional hull','tall upright conning tower','twin exposed propellers','bow planes and cruciform stern'],sail_z=.04,sail_length=13.,sail_height=5.5,propellers=2,prop_blades=3,prop_radius=.22,foreplanes='bow',body_profile=[(-.45,.12),(-.34,.34),(-.18,.5),(.24,.5),(.42,.35),(.5,.006)])
+
+def submarine__taigei_class(lod=0):
+    return sub('submarine__taigei_class','Taigei-class',lod,84.,9.1,8.5,'https://www.mod.go.jp/msdf/equipment/ships/sse/taigei/',
+        ['Japanese lithium-ion conventional submarine','low blended broad sail','fairwater planes','X-form stern','single seven-blade screw'],sail_z=.12,sail_length=15.,sail_height=4.8,x_tail=True,foreplanes='sail')
+
+def submarine__todaro_class_type_212a(lod=0):
+    return sub('submarine__todaro_class_type_212a','Todaro-class Type 212A',lod,55.9,7.,6.,'native/CODEX-UNIT-ROSTER.md',
+        ['Italian compact Type 212A AIP hull','broad rounded bow','tapered high sail','fairwater planes','X-tail'],sail_z=.10,sail_length=10.,sail_height=4.6,x_tail=True,foreplanes='sail')
+
+def submarine__type_039c(lod=0):
+    return sub('submarine__type_039c','Type 039C',lod,77.6,8.4,6.7,'native/CODEX-UNIT-ROSTER.md',
+        ['Yuan-family AIP hull','distinctive faceted stealth sail','fairwater diving planes','cruciform stern','single exposed screw'],sail_z=.12,sail_length=14.,sail_height=5.2,faceted_sail=True,foreplanes='sail')
+
+def submarine__type_209_1400(lod=0):
+    return sub('submarine__type_209_1400','Type 209/1400',lod,62.,6.2,5.5,'native/CODEX-UNIT-ROSTER.md',
+        ['Type 209/1400 conventional cylindrical hull','tall narrow sail','bow diving planes','cruciform tail','single propeller'],sail_z=.10,sail_length=9.5,sail_height=4.8,foreplanes='bow')
+
+def submarine__type_212a(lod=0):
+    return sub('submarine__type_212a','Type 212A',lod,56.,7.,6.,'native/CODEX-UNIT-ROSTER.md',
+        ['German fuel-cell AIP submarine','short full-bodied hull','swept sail','fairwater planes','X-form stern'],sail_z=.10,sail_length=10.,sail_height=4.5,x_tail=True,foreplanes='sail')
+
+def submarine__virginia_class(lod=0):
+    return sub('submarine__virginia_class','Virginia-class',lod,114.8,10.36,9.8,'https://www.ebac.us/about/oursubmarines/virginia/',
+        ['Block I/II nuclear attack hull','twelve bow VLS hatches','long parallel body','compact sail with optronic masts','bow planes','cruciform stern','pumpjet'],sail_z=.20,sail_length=14.,sail_height=6.2,pumpjet=True,foreplanes='bow',missile_cells=12,missile_pitch=1.35,missile_start=42.,missile_radius=.055,missile_deck_height=.13)
+
+def submarine__walrus_class(lod=0):
+    return sub('submarine__walrus_class','Walrus-class',lod,68.,8.5,7.,'https://www.defensie.nl/onderwerpen/m/materieel/schepen/onderzeeboten',
+        ['Dutch ocean-going conventional submarine','wide rounded hull','fairwater diving planes','X-form tail','seven-blade screw'],sail_z=.10,sail_length=12.,sail_height=5.3,x_tail=True,foreplanes='sail')
+
+def nuclearSub__arihant_class(lod=0):
+    return sub('nuclearSub__arihant_class','Arihant-class',lod,111.,11.,9.,'native/CODEX-UNIT-ROSTER.md',
+        ['Indian ballistic-missile submarine','four large missile hatches abaft sail','raised missile casing','fairwater planes','cruciform tail'],sail_z=.23,sail_length=15.,sail_height=6.,missile_cells=4,missile_pitch=4.8,foreplanes='sail')
+
+def nuclearSub__borei_a(lod=0):
+    return sub('nuclearSub__borei_a','Borei-A',lod,170.,13.5,10.,'native/CODEX-UNIT-ROSTER.md',
+        ['Project 955A ballistic-missile submarine','long low blended missile casing','sixteen missile hatches','streamlined sail','bow planes','pumpjet'],sail_z=.24,sail_length=22.,sail_height=7.,missile_cells=16,missile_pitch=4.2,foreplanes='bow',pumpjet=True,missile_deck_height=.13)
+
+def nuclearSub__ohio_class(lod=0):
+    return sub('nuclearSub__ohio_class','Ohio-class',lod,170.7,12.8,10.8,'https://www.csp.navy.mil/ohio/About/',
+        ['original SSBN configuration','twenty-four missile hatches in two rows','long low missile deck','forward sail with fairwater planes','cruciform tail','single open screw'],sail_z=.30,sail_length=18.,sail_height=7.,missile_cells=24,missile_pitch=4.1,foreplanes='sail',missile_deck_height=.14)
+
+def nuclearSub__triomphant_class(lod=0):
+    return sub('nuclearSub__triomphant_class','Triomphant-class',lod,138.,12.5,10.6,'native/CODEX-UNIT-ROSTER.md',
+        ['French ballistic-missile submarine','sixteen missile hatches','low missile casing','fairwater planes','cruciform stern','pumpjet'],sail_z=.25,sail_length=17.,sail_height=6.8,missile_cells=16,missile_pitch=4.,foreplanes='sail',pumpjet=True)
+
+def nuclearSub__type_094(lod=0):
+    return sub('nuclearSub__type_094','Type 094',lod,135.,12.5,9.,'native/CODEX-UNIT-ROSTER.md',
+        ['Jin-class ballistic-missile hull','pronounced raised missile hump','twelve launch hatches','tall upright sail','fairwater planes','cruciform stern'],sail_z=.25,sail_length=18.,sail_height=7.5,missile_cells=12,missile_pitch=4.4,missile_deck_height=.32,foreplanes='sail')
+
+def nuclearSub__vanguard_class(lod=0):
+    return sub('nuclearSub__vanguard_class','Vanguard-class',lod,149.9,12.8,12.,'https://www.royalnavy.mod.uk/equipment/submarine/vanguard-class',
+        ['British ballistic-missile submarine','sixteen launch hatches','long parallel missile deck','forward sail','bow planes','pumpjet'],sail_z=.27,sail_length=18.,sail_height=7.2,missile_cells=16,missile_pitch=4.3,foreplanes='bow',pumpjet=True)
+
+def seaDrone__sea_drone(lod=0):
+    rig,s=combatant('seaDrone__sea_drone','Sea drone',lod,(6.5,1.9,.45,.65),'native/CODEX-UNIT-ROSTER.md',
+        ['generic low-profile unmanned surface craft','enclosed payload bow','compact aft sensor housing','rotating electro-optical head','no crew or weapons turret'],
+        houses=[(0,-1,.65,1.1,.55,0,.7)],masts=[(-1,1.5,'sphere',.22)],guns=[],vls=[],canisters=[],ciws=[],funnels=[],hangar=False,flight_deck=False,unmanned=True,bow_sheer=.15)
+    s.representative='Original generic low-profile USV; roster gives no named real class';return rig,s
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):

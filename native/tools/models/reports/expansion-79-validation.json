@@ -1,0 +1,35 @@
+{
+  "batch": 79,
+  "files": [
+    "ships/submarine__improved_kilo.glb",
+    "ships/submarine__kalvari_class.glb",
+    "ships/submarine__nagapasa_class.glb",
+    "ships/submarine__reis_class.glb",
+    "ships/submarine__riachuelo_class.glb"
+  ],
+  "sha256": {
+    "ships/submarine__improved_kilo.glb": "09478ef9ba76292e9eba45c0f4528a382a1bec93c9fcb68abebfe89180f65885",
+    "ships/submarine__kalvari_class.glb": "0ec59a7a76cc084dade30d8e8741b5e02ff37215bdf51195d2ab95e354d358dc",
+    "ships/submarine__nagapasa_class.glb": "c1886611e466cd7dae999efd5cb7fe420d85ad8e220fa6eabb60cf3f2ca2a535",
+    "ships/submarine__reis_class.glb": "af02e50ae031bc2724602007a5099bf287675daa9821011ef7da5935d9fa1932",
+    "ships/submarine__riachuelo_class.glb": "0c59897cdd9f2d56ad7f8d6a30f590da4e91ec6d71416de0d1882069c6e1ac74"
+  },
+  "maximum_triangles": [
+    11340,
+    988
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "submarine_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}

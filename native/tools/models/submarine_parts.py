@@ -33,12 +33,12 @@ def submarine(s,lod=0):
         fittings.box('markings',(side*B*.14,base+h*.46,z),(B*.012,h*.18,length*.22))
     rig.add('Sail_Fittings','Sail',(0,base,z),fittings)
     if d.get('missile_cells'):
-        deck=Mesh();count=d['missile_cells'];pitch=d.get('missile_pitch',L*.028);start=z-length*.70
+        deck=Mesh();count=d['missile_cells'];pitch=d.get('missile_pitch',L*.028);start=d.get('missile_start',z-length*.70)
         rows=math.ceil(count/2);roof=B*(.88+d.get('missile_deck_height',.18))
         block(deck,'paint',0,B*.88,start-(rows-1)*pitch/2,B*.70,roof-B*.88,rows*pitch,.96)
         for i in range(count):
             x=(-1 if i%2==0 else 1)*B*.20;zz=start-(i//2)*pitch;yy=roof+.025
-            deck.tube('metal_dark',(x,yy-.04,zz),(x,yy+.04,zz),B*.105,8 if lod else 20)
+            deck.tube('metal_dark',(x,yy-.04,zz),(x,yy+.04,zz),B*d.get('missile_radius',.105),8 if lod else 20)
         rig.add('Missile_Deck_Hatches','Hull',(0,B,start),deck,cell_count=count)
     # Stern diving surfaces: X-tail variants rotate their local span frames.
     angles=(45,135,225,315) if d.get('x_tail') else (0,90,180,270)

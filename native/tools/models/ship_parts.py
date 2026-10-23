@@ -97,7 +97,7 @@ def deckhouses(rig,s,lod):
             beam(m,[R*math.cos(a),y,z+R*math.sin(a)],[R*math.cos(b),y,z+R*math.sin(b)],.045,lod,'markings')
         for x in (-R*.30,R*.30):m.box('markings',(x,y,z),(.12,.022,R*.80))
         m.box('markings',(0,y,z),(R*.60,.022,.12));rig.add('Flight_Deck_Markings','Hull',(0,y,z),m)
-    if s.details.get('aviation_deck'):return
+    if s.details.get('aviation_deck') or s.details.get('unmanned'):return
     m=Mesh()
     for side in (-1,1):
         for i in range(2 if lod else 5):
@@ -259,6 +259,7 @@ def weapons(rig,s,lod):
         rig.add('Launcher_Rail','Launcher_SAM',q,rail,'X');rig.add('SAM_Muzzle','Launcher_Rail',q+[0,.3,2.6])
 
 def fittings(rig,s,lod):
+    if s.details.get('unmanned'):return
     D=s.draft+s.freeboard;B=s.details.get('deck_beam',s.beam);L=s.length;m=Mesh()
     # Railings follow actual deck outlines; no rails across the flight deck.
     outline=s.details.get('hull_profile',[(-.5,.65),(-.45,.80),(-.3,.96),(-.1,1),(.12,1),(.30,.86),(.41,.55),(.48,.18),(.5,.008)])
