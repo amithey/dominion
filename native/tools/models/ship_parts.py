@@ -180,8 +180,25 @@ def weapons(rig,s,lod):
                 m.tube('metal_dark',b,b+[side*.07,.026,0],.29,6 if lod else 12)
         rig.add('AntiShip_Canisters_'+str(i),'Hull',(0,y,z),m)
     for i,(x,z,yoff) in enumerate(s.details.get('ciws',[])):
+        style=s.details.get('ciws_style','phalanx')
+        if style=='ram':
+            p=np.array([x,D+yoff,z]);mount=Mesh();mount.tube('paint',p,p+[0,.8,0],.75,6 if lod else 16)
+            rig.add('CIWS_'+str(i),'Hull',p,mount,'Y');rack=Mesh();pivot=p+[0,1.2,0]
+            rack.box('paint',pivot,(2.3,2.2,2.0))
+            tips=[]
+            for j in range(21):
+                tip=pivot+[(j%5-2)*.42,(j//5-2)*.42,1.04]
+                if not lod:rack.tube('metal_dark',tip-[0,0,.05],tip+[0,0,.035],.16,8)
+                tips.append(tip)
+            rig.add('CIWS_Launcher_'+str(i),'CIWS_'+str(i),pivot,rack,'X')
+            for j,tip in enumerate(tips):rig.add('RAM_Muzzle_'+str(i)+'_'+str(j),'CIWS_Launcher_'+str(i),tip)
+            continue
         m=Mesh();p=np.array([x,D+yoff,z]);m.tube('paint',p,p+[0,1,0],.8,6 if lod else 16)
-        m.box('paint',p+[0,1.5,0],(1.4,1.0,1.2));m.tube('paint',p+[0,2,0],p+[0,3.2,0],.5,6 if lod else 16)
+        m.box('paint',p+[0,1.5,0],(1.4,1.0,1.2))
+        if style=='goalkeeper':m.box('metal_dark',p+[0,2.6,-.25],(1.5,.8,.45))
+        elif style=='kashtan':
+            for side in (-1,1):m.box('paint',p+[side*1.1,2,0],(.6,.8,2.6))
+        else:m.tube('paint',p+[0,2,0],p+[0,3.2,0],.5,6 if lod else 16)
         rig.add('CIWS_'+str(i),'Hull',p,m,'Y')
         barrel=Mesh();hollow_muzzle(barrel,p+[0,1.4,.6],p+[0,1.4,2.1],.12,.065,6 if lod else 12)
         rig.add('CIWS_Gun_'+str(i),'CIWS_'+str(i),p+[0,1.4,.6],barrel,'X')

@@ -578250,10 +578250,10 @@
     "approximate": true,
     "representative_vehicle": "April 2025 public launch exterior; dimensions and hidden arrangement estimated",
     "triangles": [
-      12504,
-      1774
+      12468,
+      1778
     ],
-    "wreck_triangles": 1774,
+    "wreck_triangles": 1778,
     "collision_triangles": 12,
     "size": [
       15.4,
@@ -579546,7 +579546,7 @@
         "Wreck front"
       ]
     },
-    "sha256": "ae29fd56cd47abd7b7dab1be8deaa992226120ab86e37d01ed1f2a070973e904"
+    "sha256": "91ae40708a0a287d07fcf139e8d5767d37839e87dc73bc86be297fe54b9d4f63"
   },
   {
     "file": "ships/destroyer__de_zeven_provincien_class.glb",
@@ -579556,10 +579556,10 @@
     "approximate": true,
     "representative_vehicle": "De Zeven Provincien-class",
     "triangles": [
-      12096,
-      1842
+      12048,
+      1834
     ],
-    "wreck_triangles": 1842,
+    "wreck_triangles": 1834,
     "collision_triangles": 12,
     "size": [
       18.8,
@@ -580984,7 +580984,7 @@
         "Wreck front"
       ]
     },
-    "sha256": "4001f187f85920b54bf1a5a4a706bedc01530e44470d0092134d0e985ed06e69"
+    "sha256": "34569373e81d05d7a9e4f6f05f8a77ca7bfe608794a22abe2cb6e1b2a5d6c528"
   },
   {
     "file": "ships/destroyer__f124_sachsen_class.glb",
@@ -580994,10 +580994,10 @@
     "approximate": true,
     "representative_vehicle": "F124 Sachsen-class",
     "triangles": [
-      12262,
-      1958
+      13106,
+      1814
     ],
-    "wreck_triangles": 1958,
+    "wreck_triangles": 1814,
     "collision_triangles": 12,
     "size": [
       17.4,
@@ -581616,17 +581616,17 @@
         "default_visible": true
       },
       {
-        "path": "LOD0/Hull/CIWS_0/CIWS_Gun_0",
-        "canonical_part": "CIWS_Gun_0",
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0",
+        "canonical_part": "CIWS_Launcher_0",
         "pivot_local": [
           0.0,
-          1.4,
-          0.6
+          1.2,
+          0.0
         ],
         "pivot_world": [
           0.0,
-          16.9,
-          28.6
+          16.7,
+          28.0
         ],
         "axis": "X",
         "rotation_xyzw": [
@@ -581638,17 +581638,457 @@
         "default_visible": true
       },
       {
-        "path": "LOD0/Hull/CIWS_0/CIWS_Gun_0/CIWS_Muzzle_0",
-        "canonical_part": "CIWS_Muzzle_0",
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_0",
+        "canonical_part": "RAM_Muzzle_0_0",
+        "pivot_local": [
+          -0.84,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          15.86,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_1",
+        "canonical_part": "RAM_Muzzle_0_1",
+        "pivot_local": [
+          -0.42,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          15.86,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_2",
+        "canonical_part": "RAM_Muzzle_0_2",
         "pivot_local": [
           0.0,
-          0.0,
-          1.5
+          -0.84,
+          1.04
         ],
         "pivot_world": [
           0.0,
-          16.9,
-          30.1
+          15.86,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_3",
+        "canonical_part": "RAM_Muzzle_0_3",
+        "pivot_local": [
+          0.42,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          15.86,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_4",
+        "canonical_part": "RAM_Muzzle_0_4",
+        "pivot_local": [
+          0.84,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          15.86,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_5",
+        "canonical_part": "RAM_Muzzle_0_5",
+        "pivot_local": [
+          -0.84,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          16.28,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_6",
+        "canonical_part": "RAM_Muzzle_0_6",
+        "pivot_local": [
+          -0.42,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          16.28,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_7",
+        "canonical_part": "RAM_Muzzle_0_7",
+        "pivot_local": [
+          0.0,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.0,
+          16.28,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_8",
+        "canonical_part": "RAM_Muzzle_0_8",
+        "pivot_local": [
+          0.42,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          16.28,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_9",
+        "canonical_part": "RAM_Muzzle_0_9",
+        "pivot_local": [
+          0.84,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          16.28,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_10",
+        "canonical_part": "RAM_Muzzle_0_10",
+        "pivot_local": [
+          -0.84,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          16.7,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_11",
+        "canonical_part": "RAM_Muzzle_0_11",
+        "pivot_local": [
+          -0.42,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          16.7,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_12",
+        "canonical_part": "RAM_Muzzle_0_12",
+        "pivot_local": [
+          0.0,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          0.0,
+          16.7,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_13",
+        "canonical_part": "RAM_Muzzle_0_13",
+        "pivot_local": [
+          0.42,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          16.7,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_14",
+        "canonical_part": "RAM_Muzzle_0_14",
+        "pivot_local": [
+          0.84,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          16.7,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_15",
+        "canonical_part": "RAM_Muzzle_0_15",
+        "pivot_local": [
+          -0.84,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          17.12,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_16",
+        "canonical_part": "RAM_Muzzle_0_16",
+        "pivot_local": [
+          -0.42,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          17.12,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_17",
+        "canonical_part": "RAM_Muzzle_0_17",
+        "pivot_local": [
+          0.0,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.0,
+          17.12,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_18",
+        "canonical_part": "RAM_Muzzle_0_18",
+        "pivot_local": [
+          0.42,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          17.12,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_19",
+        "canonical_part": "RAM_Muzzle_0_19",
+        "pivot_local": [
+          0.84,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          17.12,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_0/CIWS_Launcher_0/RAM_Muzzle_0_20",
+        "canonical_part": "RAM_Muzzle_0_20",
+        "pivot_local": [
+          -0.84,
+          0.84,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          17.54,
+          29.04
         ],
         "axis": null,
         "rotation_xyzw": [
@@ -581682,17 +582122,17 @@
         "default_visible": true
       },
       {
-        "path": "LOD0/Hull/CIWS_1/CIWS_Gun_1",
-        "canonical_part": "CIWS_Gun_1",
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1",
+        "canonical_part": "CIWS_Launcher_1",
         "pivot_local": [
           0.0,
-          1.4,
-          0.6
+          1.2,
+          0.0
         ],
         "pivot_world": [
           0.0,
-          17.9,
-          -30.4
+          17.7,
+          -31.0
         ],
         "axis": "X",
         "rotation_xyzw": [
@@ -581704,17 +582144,457 @@
         "default_visible": true
       },
       {
-        "path": "LOD0/Hull/CIWS_1/CIWS_Gun_1/CIWS_Muzzle_1",
-        "canonical_part": "CIWS_Muzzle_1",
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_0",
+        "canonical_part": "RAM_Muzzle_1_0",
+        "pivot_local": [
+          -0.84,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          16.86,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_1",
+        "canonical_part": "RAM_Muzzle_1_1",
+        "pivot_local": [
+          -0.42,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          16.86,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_2",
+        "canonical_part": "RAM_Muzzle_1_2",
         "pivot_local": [
           0.0,
-          0.0,
-          1.5
+          -0.84,
+          1.04
         ],
         "pivot_world": [
           0.0,
-          17.9,
-          -28.9
+          16.86,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_3",
+        "canonical_part": "RAM_Muzzle_1_3",
+        "pivot_local": [
+          0.42,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          16.86,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_4",
+        "canonical_part": "RAM_Muzzle_1_4",
+        "pivot_local": [
+          0.84,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          16.86,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_5",
+        "canonical_part": "RAM_Muzzle_1_5",
+        "pivot_local": [
+          -0.84,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          17.28,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_6",
+        "canonical_part": "RAM_Muzzle_1_6",
+        "pivot_local": [
+          -0.42,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          17.28,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_7",
+        "canonical_part": "RAM_Muzzle_1_7",
+        "pivot_local": [
+          0.0,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.0,
+          17.28,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_8",
+        "canonical_part": "RAM_Muzzle_1_8",
+        "pivot_local": [
+          0.42,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          17.28,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_9",
+        "canonical_part": "RAM_Muzzle_1_9",
+        "pivot_local": [
+          0.84,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          17.28,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_10",
+        "canonical_part": "RAM_Muzzle_1_10",
+        "pivot_local": [
+          -0.84,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          17.7,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_11",
+        "canonical_part": "RAM_Muzzle_1_11",
+        "pivot_local": [
+          -0.42,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          17.7,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_12",
+        "canonical_part": "RAM_Muzzle_1_12",
+        "pivot_local": [
+          0.0,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          0.0,
+          17.7,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_13",
+        "canonical_part": "RAM_Muzzle_1_13",
+        "pivot_local": [
+          0.42,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          17.7,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_14",
+        "canonical_part": "RAM_Muzzle_1_14",
+        "pivot_local": [
+          0.84,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          17.7,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_15",
+        "canonical_part": "RAM_Muzzle_1_15",
+        "pivot_local": [
+          -0.84,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          18.12,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_16",
+        "canonical_part": "RAM_Muzzle_1_16",
+        "pivot_local": [
+          -0.42,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          18.12,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_17",
+        "canonical_part": "RAM_Muzzle_1_17",
+        "pivot_local": [
+          0.0,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.0,
+          18.12,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_18",
+        "canonical_part": "RAM_Muzzle_1_18",
+        "pivot_local": [
+          0.42,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          18.12,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_19",
+        "canonical_part": "RAM_Muzzle_1_19",
+        "pivot_local": [
+          0.84,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          18.12,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/CIWS_1/CIWS_Launcher_1/RAM_Muzzle_1_20",
+        "canonical_part": "RAM_Muzzle_1_20",
+        "pivot_local": [
+          -0.84,
+          0.84,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          18.54,
+          -29.96
         ],
         "axis": null,
         "rotation_xyzw": [
@@ -582320,17 +583200,17 @@
         "default_visible": false
       },
       {
-        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Gun_0_LOD1",
-        "canonical_part": "CIWS_Gun_0",
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1",
+        "canonical_part": "CIWS_Launcher_0",
         "pivot_local": [
           0.0,
-          1.4,
-          0.6
+          1.2,
+          0.0
         ],
         "pivot_world": [
           0.0,
-          16.9,
-          28.6
+          16.7,
+          28.0
         ],
         "axis": "X",
         "rotation_xyzw": [
@@ -582342,17 +583222,457 @@
         "default_visible": false
       },
       {
-        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Gun_0_LOD1/CIWS_Muzzle_0_LOD1",
-        "canonical_part": "CIWS_Muzzle_0",
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_0_LOD1",
+        "canonical_part": "RAM_Muzzle_0_0",
+        "pivot_local": [
+          -0.84,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          15.86,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_1_LOD1",
+        "canonical_part": "RAM_Muzzle_0_1",
+        "pivot_local": [
+          -0.42,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          15.86,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_2_LOD1",
+        "canonical_part": "RAM_Muzzle_0_2",
         "pivot_local": [
           0.0,
-          0.0,
-          1.5
+          -0.84,
+          1.04
         ],
         "pivot_world": [
           0.0,
-          16.9,
-          30.1
+          15.86,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_3_LOD1",
+        "canonical_part": "RAM_Muzzle_0_3",
+        "pivot_local": [
+          0.42,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          15.86,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_4_LOD1",
+        "canonical_part": "RAM_Muzzle_0_4",
+        "pivot_local": [
+          0.84,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          15.86,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_5_LOD1",
+        "canonical_part": "RAM_Muzzle_0_5",
+        "pivot_local": [
+          -0.84,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          16.28,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_6_LOD1",
+        "canonical_part": "RAM_Muzzle_0_6",
+        "pivot_local": [
+          -0.42,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          16.28,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_7_LOD1",
+        "canonical_part": "RAM_Muzzle_0_7",
+        "pivot_local": [
+          0.0,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.0,
+          16.28,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_8_LOD1",
+        "canonical_part": "RAM_Muzzle_0_8",
+        "pivot_local": [
+          0.42,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          16.28,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_9_LOD1",
+        "canonical_part": "RAM_Muzzle_0_9",
+        "pivot_local": [
+          0.84,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          16.28,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_10_LOD1",
+        "canonical_part": "RAM_Muzzle_0_10",
+        "pivot_local": [
+          -0.84,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          16.7,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_11_LOD1",
+        "canonical_part": "RAM_Muzzle_0_11",
+        "pivot_local": [
+          -0.42,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          16.7,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_12_LOD1",
+        "canonical_part": "RAM_Muzzle_0_12",
+        "pivot_local": [
+          0.0,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          0.0,
+          16.7,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_13_LOD1",
+        "canonical_part": "RAM_Muzzle_0_13",
+        "pivot_local": [
+          0.42,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          16.7,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_14_LOD1",
+        "canonical_part": "RAM_Muzzle_0_14",
+        "pivot_local": [
+          0.84,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          16.7,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_15_LOD1",
+        "canonical_part": "RAM_Muzzle_0_15",
+        "pivot_local": [
+          -0.84,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          17.12,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_16_LOD1",
+        "canonical_part": "RAM_Muzzle_0_16",
+        "pivot_local": [
+          -0.42,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          17.12,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_17_LOD1",
+        "canonical_part": "RAM_Muzzle_0_17",
+        "pivot_local": [
+          0.0,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.0,
+          17.12,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_18_LOD1",
+        "canonical_part": "RAM_Muzzle_0_18",
+        "pivot_local": [
+          0.42,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          17.12,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_19_LOD1",
+        "canonical_part": "RAM_Muzzle_0_19",
+        "pivot_local": [
+          0.84,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          17.12,
+          29.04
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_0_LOD1/CIWS_Launcher_0_LOD1/RAM_Muzzle_0_20_LOD1",
+        "canonical_part": "RAM_Muzzle_0_20",
+        "pivot_local": [
+          -0.84,
+          0.84,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          17.54,
+          29.04
         ],
         "axis": null,
         "rotation_xyzw": [
@@ -582386,17 +583706,17 @@
         "default_visible": false
       },
       {
-        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Gun_1_LOD1",
-        "canonical_part": "CIWS_Gun_1",
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1",
+        "canonical_part": "CIWS_Launcher_1",
         "pivot_local": [
           0.0,
-          1.4,
-          0.6
+          1.2,
+          0.0
         ],
         "pivot_world": [
           0.0,
-          17.9,
-          -30.4
+          17.7,
+          -31.0
         ],
         "axis": "X",
         "rotation_xyzw": [
@@ -582408,17 +583728,457 @@
         "default_visible": false
       },
       {
-        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Gun_1_LOD1/CIWS_Muzzle_1_LOD1",
-        "canonical_part": "CIWS_Muzzle_1",
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_0_LOD1",
+        "canonical_part": "RAM_Muzzle_1_0",
+        "pivot_local": [
+          -0.84,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          16.86,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_1_LOD1",
+        "canonical_part": "RAM_Muzzle_1_1",
+        "pivot_local": [
+          -0.42,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          16.86,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_2_LOD1",
+        "canonical_part": "RAM_Muzzle_1_2",
         "pivot_local": [
           0.0,
-          0.0,
-          1.5
+          -0.84,
+          1.04
         ],
         "pivot_world": [
           0.0,
-          17.9,
-          -28.9
+          16.86,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_3_LOD1",
+        "canonical_part": "RAM_Muzzle_1_3",
+        "pivot_local": [
+          0.42,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          16.86,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_4_LOD1",
+        "canonical_part": "RAM_Muzzle_1_4",
+        "pivot_local": [
+          0.84,
+          -0.84,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          16.86,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_5_LOD1",
+        "canonical_part": "RAM_Muzzle_1_5",
+        "pivot_local": [
+          -0.84,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          17.28,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_6_LOD1",
+        "canonical_part": "RAM_Muzzle_1_6",
+        "pivot_local": [
+          -0.42,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          17.28,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_7_LOD1",
+        "canonical_part": "RAM_Muzzle_1_7",
+        "pivot_local": [
+          0.0,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.0,
+          17.28,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_8_LOD1",
+        "canonical_part": "RAM_Muzzle_1_8",
+        "pivot_local": [
+          0.42,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          17.28,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_9_LOD1",
+        "canonical_part": "RAM_Muzzle_1_9",
+        "pivot_local": [
+          0.84,
+          -0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          17.28,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_10_LOD1",
+        "canonical_part": "RAM_Muzzle_1_10",
+        "pivot_local": [
+          -0.84,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          17.7,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_11_LOD1",
+        "canonical_part": "RAM_Muzzle_1_11",
+        "pivot_local": [
+          -0.42,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          17.7,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_12_LOD1",
+        "canonical_part": "RAM_Muzzle_1_12",
+        "pivot_local": [
+          0.0,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          0.0,
+          17.7,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_13_LOD1",
+        "canonical_part": "RAM_Muzzle_1_13",
+        "pivot_local": [
+          0.42,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          17.7,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_14_LOD1",
+        "canonical_part": "RAM_Muzzle_1_14",
+        "pivot_local": [
+          0.84,
+          0.0,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          17.7,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_15_LOD1",
+        "canonical_part": "RAM_Muzzle_1_15",
+        "pivot_local": [
+          -0.84,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          18.12,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_16_LOD1",
+        "canonical_part": "RAM_Muzzle_1_16",
+        "pivot_local": [
+          -0.42,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          -0.42,
+          18.12,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_17_LOD1",
+        "canonical_part": "RAM_Muzzle_1_17",
+        "pivot_local": [
+          0.0,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.0,
+          18.12,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_18_LOD1",
+        "canonical_part": "RAM_Muzzle_1_18",
+        "pivot_local": [
+          0.42,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.42,
+          18.12,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_19_LOD1",
+        "canonical_part": "RAM_Muzzle_1_19",
+        "pivot_local": [
+          0.84,
+          0.42,
+          1.04
+        ],
+        "pivot_world": [
+          0.84,
+          18.12,
+          -29.96
+        ],
+        "axis": null,
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/CIWS_1_LOD1/CIWS_Launcher_1_LOD1/RAM_Muzzle_1_20_LOD1",
+        "canonical_part": "RAM_Muzzle_1_20",
+        "pivot_local": [
+          -0.84,
+          0.84,
+          1.04
+        ],
+        "pivot_world": [
+          -0.84,
+          18.54,
+          -29.96
         ],
         "axis": null,
         "rotation_xyzw": [
@@ -582555,7 +584315,7 @@
         "Wreck front"
       ]
     },
-    "sha256": "2c6362a6fdb27c7ddf6bd3af92805fa80f1707207d8292583ddea5105d23b373"
+    "sha256": "898ab780c6bbab42a3bb96de921e2be7a36e03004e2c46eae2ff892f261122e4"
   },
   {
     "file": "ships/destroyer__hobart_class.glb",
