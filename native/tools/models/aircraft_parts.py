@@ -182,7 +182,11 @@ def engines(rig,s,lod):
     elif s.details.get('side_intakes'):
         for side,label in ((-1,'L'),(1,'R')):
             m=Mesh();x=side*s.details.get('intake_x',W*.46);z=L*s.details.get('intake_z',.19)
-            rectangular_duct(m,z,-L*.08,x,x*.80,cy-.15,cy,s.details.get('intake_width',.70),s.details.get('intake_height',.75),lod)
+            if s.details.get('intake_round'):
+                radius=s.details.get('intake_width',.70)/2
+                hollow_muzzle(m,(x,cy-.15,z-.85),(x,cy-.15,z),radius,radius*.86,8 if lod else 24)
+                if s.details.get('shock_cones'):m.tube('paint',(x,cy-.15,z-.45),(x,cy-.15,z+.22),radius*.47,8 if lod else 20,.012)
+            else:rectangular_duct(m,z,-L*.08,x,x*.80,cy-.15,cy,s.details.get('intake_width',.70),s.details.get('intake_height',.75),lod)
             rig.add('Intake_'+label,'Fuselage',(x,cy-.15,z),m)
     else:
         # F-16's underslung elliptical mouth, with a recessed closed interior.

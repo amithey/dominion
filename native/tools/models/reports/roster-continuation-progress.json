@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 251,
+  "ready_files": 257,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -520,6 +520,18 @@
         "aircraft/jet__su_35s.glb",
         "aircraft/jet__typhoon_fgr4.glb"
       ]
+    },
+    {
+      "batch": 45,
+      "report": "expansion-45-validation.json",
+      "files": [
+        "aircraft/lightFighter__eurofighter_typhoon.glb",
+        "aircraft/lightFighter__f_16.glb",
+        "aircraft/lightFighter__f_16c.glb",
+        "aircraft/lightFighter__f_5e.glb",
+        "aircraft/lightFighter__f_5m.glb",
+        "aircraft/lightFighter__fa_50.glb"
+      ]
     }
   ],
   "priorities": {
@@ -793,7 +805,7 @@
     "P6": {
       "requested_rows": 128,
       "unique_files": 127,
-      "ready_files": 24,
+      "ready_files": 30,
       "ready_slugs": [
         "jet__eurofighter_typhoon",
         "jet__f_15ex_eagle_ii",
@@ -818,7 +830,13 @@
         "jet__su_30k_su_27",
         "jet__su_30mki",
         "jet__su_35s",
-        "jet__typhoon_fgr4"
+        "jet__typhoon_fgr4",
+        "lightFighter__eurofighter_typhoon",
+        "lightFighter__f_16",
+        "lightFighter__f_16c",
+        "lightFighter__f_5e",
+        "lightFighter__f_5m",
+        "lightFighter__fa_50"
       ],
       "remaining_slugs": [
         "aewc__a_50u",
@@ -882,12 +900,6 @@
         "heavyBomberDrone__vampire_baba_yaga",
         "interceptorDrone__interceptor_drone",
         "jf17__jf_17_thunder",
-        "lightFighter__eurofighter_typhoon",
-        "lightFighter__f_16",
-        "lightFighter__f_16c",
-        "lightFighter__f_5e",
-        "lightFighter__f_5m",
-        "lightFighter__fa_50",
         "lightFighter__j_10c",
         "lightFighter__mirage_2000_5f",
         "lightFighter__t_50iq",

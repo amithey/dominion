@@ -1,0 +1,38 @@
+{
+  "batch": 45,
+  "files": [
+    "aircraft/lightFighter__eurofighter_typhoon.glb",
+    "aircraft/lightFighter__f_16.glb",
+    "aircraft/lightFighter__f_16c.glb",
+    "aircraft/lightFighter__f_5e.glb",
+    "aircraft/lightFighter__f_5m.glb",
+    "aircraft/lightFighter__fa_50.glb"
+  ],
+  "sha256": {
+    "aircraft/lightFighter__eurofighter_typhoon.glb": "b9daec0ae6825138ea39aa799f8a53b92a307e8447e421446a17d61c352f8a42",
+    "aircraft/lightFighter__f_16.glb": "1359988b03e676dd155cfde535d2c0d953deefa6f4d277a02987a927179dde18",
+    "aircraft/lightFighter__f_16c.glb": "01f2ccfb1f185c51bf1233ab8469df4340115b3b8dcd40171e60097c427e571f",
+    "aircraft/lightFighter__f_5e.glb": "8c4cdc0be46eabd7637b3a0f7747b5f9f99cb19167b2ce1acd0f95e9fd33dcf5",
+    "aircraft/lightFighter__f_5m.glb": "b990c92dc10b7971111ce8e523c9d3b41752f0f9aa340992dda03add8ca5c263",
+    "aircraft/lightFighter__fa_50.glb": "39c70d00b04732275b3852ccdae0bbc5e3cd16a387069c4d7686eb1f11cd03be"
+  },
+  "maximum_triangles": [
+    11694,
+    1996
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

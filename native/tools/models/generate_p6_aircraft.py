@@ -185,6 +185,25 @@ def fa50(slug,name,lod):
         stabilator=[(.42,1.85,-3.25,-5.7),(2.5,1.85,-4.75,-5.4)])
 def lightFighter__fa_50(lod=0):return fa50('lightFighter__fa_50','FA-50',lod)
 
+def lightFighter__j_10c(lod=0):return j10('lightFighter__j_10c','J-10C',lod)
+def mirage(slug,name,lod,seats=1,older=False):
+    L,S,H=(15.55,8.22,4.5) if older else (14.36,9.13,5.20)
+    return airframe(slug,name,lod,'mirage5' if older else 'mirage2000',(L,S,H,1.50,1.5,1.03),
+        [(.48,1.35,-4.0),(2.5,-1.4,-3.8),(S/2,-3.25,-3.65)],[(0,2.25,H,-2.4,-6.0,-4.2,-5.4)],
+        'https://dassault-aviation.publispeak.com/2023-annual-report/doc/article/44/',seats=seats,
+        features=['tailless delta wing','single large nozzle','two lateral intakes with shock cones','single vertical fin'],
+        intake_round=True,shock_cones=True,intake_x=.82,intake_width=.85,intake_z=.20,engine_radius=.52,gun_count=2,gun_fraction=.10)
+def lightFighter__mirage_2000_5f(lod=0):return mirage('lightFighter__mirage_2000_5f','Mirage 2000-5F',lod)
+def lightFighter__t_50iq(lod=0):return fa50('lightFighter__t_50iq','T-50IQ',lod)
+def lightFighter__tejas_mk1(lod=0):
+    return airframe('lightFighter__tejas_mk1','Tejas Mk1',lod,'tejas',(13.2,8.2,4.4,1.45,1.48,1.01),
+        [(.45,1.0,-3.4),(2.1,-.65,-3.25),(4.1,-2.5,-3.05)],[(0,2.2,4.4,-2.5,-5.8,-4.2,-5.2)],
+        'https://www.ddpmod.gov.in/en/resources/products/lca-tejas',
+        features=['compound delta wing','tailless planform without canards','lateral intakes','single nozzle','single fin'],
+        intake_x=.76,intake_width=.55,intake_height=.65,intake_z=.18,engine_radius=.45)
+def stealthFighter__f_35a(lod=0):return f35('stealthFighter__f_35a','F-35A',lod)
+def stealthFighter__f_35a_lightning_ii(lod=0):return f35('stealthFighter__f_35a_lightning_ii','F-35A Lightning II',lod)
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):
     from validate_aircraft import validate
