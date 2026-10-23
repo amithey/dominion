@@ -85,6 +85,13 @@ def validate(path):
         for i,(z,cols,rows,pitch,y) in enumerate(s['details'].get('vls',[])):
             assert by[prefix+'/VLS_'+str(i)][0]['extras']['cell_count']==cols*rows*(8 if s['details'].get('vls_carousel') else 1)
         for i,_ in enumerate(s['details']['masts']):assert by[prefix+('/Mast_'+str(i))+('/Radar' if i==0 else '/Radar_'+str(i))][0]['extras']['rotation_axis']=='Y'
+        if s['details'].get('landing'):
+            assert by[prefix+'/Ramp'][0]['extras']['rotation_axis']=='X'
+            z=s['length']*.5+.04 if s['details'].get('bow_ramp') else -s['length']*.5-.04
+            assert np.allclose(by[prefix+'/Ramp'][1][:3,3],[0,s['draft']+.25,z],atol=2e-5)
+        for i,(x,z) in enumerate(s['details'].get('catapults',[])):
+            y=s['draft']+s['freeboard']+s['details'].get('aviation_y',0)+.04
+            assert np.allclose(by[prefix+'/Catapult_'+str(i)][1][:3,3],[x,y,z+s['length']*.10],atol=2e-5)
         for p,(node,M,v) in by.items():
             axisname=node.get('extras',{}).get('rotation_axis')
             if not axisname or not p.startswith(prefix+'/'):continue

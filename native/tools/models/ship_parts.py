@@ -121,13 +121,14 @@ def funnels(rig,s,lod):
 def radars(rig,s,lod):
     D=s.draft+s.freeboard
     for i,(z,h,style,width) in enumerate(s.details['masts']):
+        x=s.details.get('mast_offsets',[0]*len(s.details['masts']))[i]
         m=Mesh();base=D+5;top=D+h
-        block(m,'paint',0,base,z,width*.48,top-base,width*.6,.50)
+        block(m,'paint',x,base,z,width*.48,top-base,width*.6,.50)
         if not lod:
-            for y in (top-4,top-1):beam(m,[-width*.8,y,z],[width*.8,y,z],.12,lod,'paint')
-            for x in (-width*.75,width*.75):beam(m,[x,top-4,z],[x,top-1,z],.065,lod)
-        rig.add('Mast_'+str(i),'Hull',(0,base,z),m)
-        sensor=Mesh();p=np.array([0,top,z])
+            for y in (top-4,top-1):beam(m,[x-width*.8,y,z],[x+width*.8,y,z],.12,lod,'paint')
+            for xx in (x-width*.75,x+width*.75):beam(m,[xx,top-4,z],[xx,top-1,z],.065,lod)
+        rig.add('Mast_'+str(i),'Hull',(x,base,z),m)
+        sensor=Mesh();p=np.array([x,top,z])
         if style=='enclosed':
             sensor.box('metal_dark',p+[0,1.3,0],(width*.7,1.5,.4))
             cover=Mesh();cover.tube('paint',p-[0,.2,0],p+[0,3,0],width*.55,8 if lod else 24,width*.44)
@@ -139,7 +140,7 @@ def radars(rig,s,lod):
             # Low-poly radome assembled as a closed ring loft.
             rr=[]
             for yy,rad in [(-.7,.15),(-.5,.8),(0,1),(.5,.8),(.7,.15)]:
-                rr.append([[width*.5*rad*math.cos(t),top+1+yy*width,z+width*.5*rad*math.sin(t)] for t in np.linspace(0,math.tau,8 if lod else 24,endpoint=False)])
+                rr.append([[x+width*.5*rad*math.cos(t),top+1+yy*width,z+width*.5*rad*math.sin(t)] for t in np.linspace(0,math.tau,8 if lod else 24,endpoint=False)])
             loft(sensor,'paint',rr)
         else:
             sensor.box('metal_dark',p+[0,.3,0],(width,.60,.32))
@@ -282,7 +283,7 @@ def amphibious(rig,s,lod):
     if d.get('landing'):
         bow=d.get('bow_ramp',False);z=L*.5+.04 if bow else -L*.5-.04
         h=d.get('ramp_height',min(6.,s.freeboard+1));p=np.array([0,s.draft+.25,z]);m=Mesh()
-        m.box('metal_dark',p+[0,h/2,0],(B*.40,h,.22))
+        m.box('metal_dark',p+[0,h/2,0],(B*.40,h,.36 if lod else .22))
         if not lod:
             for x in np.linspace(-B*.18,B*.18,9):m.box('paint',p+[x,h/2,.14 if bow else -.14],(.08,h*.93,.08))
         rig.add('Ramp','Hull',p,m,'X',purpose='bow vehicle ramp' if bow else 'stern well-deck closure/ramp')
@@ -309,12 +310,14 @@ def amphibious(rig,s,lod):
     if d.get('ski_jump'):
         ramp=Mesh();width=W*.46;z=L*.32;steps=4 if lod else 12
         for j in range(steps):
-            za=z+j*(L*.16/steps);zb=z+(j+1)*(L*.16/steps);a=(j/steps)**2*3;b=((j+1)/steps)**2*3
-            verts=[[xx+dx,yy,zz] for dx in (-width/2,width/2) for yy,zz in [(y,za),(y,zb),(y+b,zb),(y+a,za)]]
-            if j==0:
-                # First segment begins flush; triangular wedge has no zero-area face.
-                ramp.solid('paint',[[xx-width/2,y,za],[xx-width/2,y,zb],[xx-width/2,y+b,zb],[xx+width/2,y,za],[xx+width/2,y,zb],[xx+width/2,y+b,zb]],[(0,2,1),(3,4,5),(0,1,4,3),(1,2,5,4),(2,0,3,5)])
-            else:ramp.solid('paint',verts,[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)])
+            za=z+j*(L*.16/steps);zb=z+(j+1)*(L*.16/steps);a=.02+(j/steps)**2*3;b=.02+((j+1)/steps)**2*3
+            left=xx-width/2;right=xx+width/2
+            ramp.face('paint',[[left,y+a,za],[right,y+a,za],[right,y+b,zb],[left,y+b,zb]],[0,1,0])
+            ramp.face('paint',[[left,y-.15,za],[right,y-.15,za],[right,y-.15,zb],[left,y-.15,zb]],[0,-1,0])
+            for x,sign in ((left,-1),(right,1)):
+                ramp.face('paint',[[x,y-.15,za],[x,y+a,za],[x,y+b,zb],[x,y-.15,zb]],[sign,0,0])
+            if j==0:ramp.face('paint',[[left,y-.15,za],[right,y-.15,za],[right,y+a,za],[left,y+a,za]],[0,0,-1])
+            if j==steps-1:ramp.face('paint',[[left,y-.15,zb],[right,y-.15,zb],[right,y+b,zb],[left,y+b,zb]],[0,0,1])
         ramp.remove_duplicates();rig.add('Ski_Jump','Hull',(xx,y,L*.32),ramp);rig.add('Launch_0','Hull',(xx,y+3,L*.48),method='ski jump')
 
 def build(s,lod=0):

@@ -437,6 +437,88 @@ def missileBoat__type_022(lod=0):
         funnels=[(-2,-4,1.5,3,2.5,1),(2,-4,1.5,3,2.5,1)],masts=[(3,11,'bar',2.3)],guns=[(0,14,30,1.9)],gun_barrels=6,
         vls=[],canisters=[(-8,1.8,4)],ciws=[],hangar=False,flight_deck=False,catamaran=True,demi_beam=2.4,bow_sheer=.55)
 
+def gunboat__gunboat(lod=0):
+    rig,s=combatant('gunboat__gunboat','Gunboat',lod,(30.,6.5,1.5,1.8),
+        'native/CODEX-UNIT-ROSTER.md',['original generic coastal gunboat','small pilothouse','forward 30 mm gun','aft light gun','single exhaust and search mast','no missiles or helicopter facilities'],
+        houses=[(0,2,4.8,11,2.6,0,.92),(0,-7,3.6,5,1.0,0,.92)],funnels=[(0,-3,1.6,2.4,2.3,1)],masts=[(1,8,'bar',2.2)],guns=[(0,10,30,1.8),(0,-10,12.7,1.1,0,True)],vls=[],canisters=[],ciws=[],hangar=False,flight_deck=False,bow_sheer=.5)
+    s.representative='Original plausible generic 30 m coastal gunboat';return rig,s
+
+def gunboat__island_class_patrol_boat(lod=0):
+    return combatant('gunboat__island_class_patrol_boat','Island-class patrol boat',lod,(33.53,6.4,2.0,1.7),
+        'https://www.uscg.mil/Portals/0/documents/CG_Cutters-Boats-Aircraft_2015-2016_edition.pdf',
+        ['110-foot transferred USCG patrol cutter','narrow round-bilge hull','forward 25 mm gun','long low accommodation block','raised pilothouse and short mast','open stern boat-handling deck'],
+        houses=[(0,2,4.8,14,2.6,0,.98),(0,3,3.9,6,1.9,2.6,.96)],funnels=[(0,-4,1.5,2.6,2.7,1.5)],masts=[(2,9,'bar',2.4)],guns=[(0,11,25,1.7)],vls=[],canisters=[],ciws=[],hangar=False,flight_deck=False,bow_sheer=.6)
+
+def gunboat__patrol_boat(lod=0):
+    rig,s=combatant('gunboat__patrol_boat','Patrol boat',lod,(35.,7.2,1.8,1.9),
+        'native/CODEX-UNIT-ROSTER.md',['Iraqi Swiftships-like patrol representative','forward 30 mm mount','long low deckhouse and raised bridge','single radar mast','aft boat-handling deck'],
+        houses=[(0,2,5.3,14,2.7,0,.93),(0,4,4.1,6,1.8,2.7,.90)],funnels=[(0,-4,1.8,2.9,2.5,1.7)],masts=[(2,9,'panel',2.1)],guns=[(0,12,30,1.8)],vls=[],canisters=[],ciws=[],hangar=False,flight_deck=False,bow_sheer=.5)
+    s.representative='Approximate Iraqi 35 m Swiftships-type exterior for generic roster row';return rig,s
+
+def landingShip__albion_class(lod=0):
+    return combatant('landingShip__albion_class','Albion-class',lod,(176.,28.9,7.1,5.7),
+        'https://www.royalnavy.mod.uk/news/2021/november/10/211110-hms-albion-works-with-french-navy-ship-garonne',
+        ['large high-freeboard landing-platform dock','broad forward accommodation block','two separated radar masts','large stern helicopter deck without a full hangar','stern well-deck ramp','two Phalanx mounts'],
+        houses=[(0,25,23,61,11,0,.94),(0,28,17,24,6,11,.92),(0,-15,18,20,5,0,.94)],
+        funnels=[(-8,-1,5,8,8,4),(8,-1,5,8,8,4)],masts=[(25,31,'panel',5),(-12,23,'bar',4)],guns=[],vls=[],canisters=[],ciws=[(-10,12,10),(10,-20,5)],hangar=False,landing=True,ramp_height=7,cranes=[(10,1,12,-16)])
+
+def landingShip__bahia(lod=0):
+    return combatant('landingShip__bahia','Bahia',lod,(168.,23.5,5.91,5.2),
+        'https://redebim.marinha.mil.br/vinculos/00001c/00001c9b.pdf',
+        ['ex-Siroco Foudre-class landing dock','large forward accommodation block','two slender masts','central boat and cargo working area','wide open stern helicopter deck','heavy cargo crane','stern well-deck closure'],
+        houses=[(0,25,18,51,10,0,.96),(0,28,13,21,5,10,.95),(0,-13,14,18,3.5,0,.96)],
+        funnels=[(-6,0,4,6,7,4),(6,0,4,6,7,4)],masts=[(25,28,'bar',4.6),(-10,20,'bar',3.8)],guns=[],vls=[],canisters=[],ciws=[],hangar=False,landing=True,cranes=[(7,-5,14,-20)],ramp_height=6)
+
+def landingShip__bayraktar_class(lod=0):
+    return combatant('landingShip__bayraktar_class','Bayraktar-class',lod,(138.75,19.6,2.0,5.8),
+        'https://www.anadolushipyard.com/en/catalogue/delivered-projects/landing-ship-tank-lst',['broad bow-ramp landing ship','flat tank deck ahead of aft superstructure','high aft bridge block','two exhausts','stern helicopter platform','twin 40 mm bow gun positions'],
+        houses=[(0,-22,15,38,9,0,.94),(0,-19,10,18,5,9,.90)],funnels=[(-5,-30,3.5,5.5,7,5),(5,-30,3.5,5.5,7,5)],masts=[(-20,27,'panel',4.5)],guns=[(-6,44,40,2.8),(6,44,40,2.8)],
+        vls=[],canisters=[],ciws=[],hangar=False,landing=True,bow_ramp=True,ramp_height=6,
+        hull_profile=[(-.5,.72),(-.40,.93),(-.2,1),(.2,1),(.40,.85),(.50,.55)],bow_sheer=.4,cranes=[(-7,3,8,12),(7,3,8,12)])
+
+def landingShip__canberra_class(lod=0):
+    return combatant('landingShip__canberra_class','Canberra-class',lod,(230.8,32.,7.18,14.32),
+        'https://www.navy.gov.au/capabilities/ships-boats-and-submarines/hmas-canberra-iii',
+        ['Juan Carlos I-derived LHD','long full-width aviation deck','port-side bow ski jump','long starboard island with two funnels','two aircraft elevators','stern well-deck ramp'],
+        houses=[(10,4,9,79,9,0,.93),(10,23,7.8,24,4,9,.91)],funnels=[(10,8,5,8,6,8),(10,-20,5,7,6,8)],
+        masts=[(20,28,'panel',4),(-15,25,'bar',3.5)],mast_offsets=[10,10],guns=[],vls=[],canisters=[],ciws=[],hangar=False,landing=True,ramp_height=7,
+        aviation_deck=True,deck_beam=32,aviation_y=.1,ski_jump=True,bow_sheer=0,elevators=[(0,-65),(10,62)])
+
+def landingShip__dokdo_class(lod=0):
+    return combatant('landingShip__dokdo_class','Dokdo-class',lod,(199.4,31.,6.6,12.4),
+        'https://www.mnd.go.kr/user/mndEN/upload/pblictn/PBLICTNEBOOK_202307280406255500.pdf',
+        ['flat through-deck helicopter assault ship','large starboard island','SMART-L planar radar','two Goalkeeper mounts and one RAM launcher','two aircraft elevators','stern well-deck closure'],
+        houses=[(10,5,9,68,10,0,.93),(10,20,7.5,21,4,10,.92)],funnels=[(10,-8,5.5,8,7,8)],masts=[(18,29,'panel',7.2),(-15,24,'bar',3.7)],mast_offsets=[10,10],
+        guns=[],vls=[],canisters=[],ciws=[(-12,65,.3),(12,-65,.3),(12,60,.3)],ciws_styles=['goalkeeper','goalkeeper','ram'],hangar=False,landing=True,
+        aviation_deck=True,aviation_y=.1,bow_sheer=0,elevators=[(0,46),(0,-55)],ramp_height=7)
+
+def landingShip__hengam_class(lod=0):
+    return combatant('landingShip__hengam_class','Hengam-class',lod,(93.,14.7,2.5,3.5),
+        'native/CODEX-UNIT-ROSTER.md',['conventional bow-ramp tank landing ship','wide flat loading deck','aft bridge and accommodation','single central funnel','40 mm gun positions','small stern helicopter working deck'],
+        houses=[(0,-17,11.4,26,6,0,.96),(0,-15,8,12,3,6,.94)],funnels=[(0,-23,3.8,5.2,5,4)],masts=[(-15,18,'bar',3.9)],guns=[(-4,28,40,2.6),(4,28,40,2.6)],
+        vls=[],canisters=[],ciws=[],hangar=False,landing=True,bow_ramp=True,ramp_height=5,bow_sheer=.4,hull_profile=[(-.5,.70),(-.4,.93),(-.2,1),(.2,1),(.4,.86),(.5,.55)],cranes=[(5,0,6,10)])
+
+def landingShip__ins_jalashwa(lod=0):
+    rig,s=combatant('landingShip__ins_jalashwa','INS Jalashwa',lod,(173.7,25.2,7.,5.5),
+        'native/CODEX-UNIT-ROSTER.md',['ex-Trenton Austin-class landing dock','large forward bridge block','central working well and heavy cargo crane','open stern helicopter deck','two exhaust structures','stern well-deck ramp'],
+        houses=[(0,25,19,56,10.5,0,.96),(0,28,13.5,21,5.2,10.5,.95),(0,-15,15.5,18,4,0,.96)],
+        funnels=[(-7,0,4.3,6,7.6,4),(7,0,4.3,6,7.6,4)],masts=[(25,29,'bar',4.6),(-12,22,'bar',3.8)],guns=[],vls=[],canisters=[],ciws=[(-9,12,10),(9,-20,4.4)],ciws_style='gatling',hangar=False,landing=True,ramp_height=7,cranes=[(8,-3,15,-20)])
+    s.representative='Approximate Indian Jalashwa post-transfer exterior';return rig,s
+
+def landingShip__ivan_gren_class(lod=0):
+    return combatant('landingShip__ivan_gren_class','Ivan Gren-class',lod,(120.,16.5,3.6,4.6),
+        'native/CODEX-UNIT-ROSTER.md',['Project 11711 landing ship','bow ramp and doors','separated forward bridge and aft helicopter hangar','central cargo crane','forward Duet-type gun mount and aft gun positions','stern helicopter deck'],
+        houses=[(0,18,12.2,31,7.5,0,.91),(0,-27,11.5,21,5.3,0,.94),(0,20,8.5,13,3.7,7.5,.88)],
+        funnels=[(0,-4,4.3,6.5,6.5,3)],masts=[(18,23,'panel',4.2)],guns=[],vls=[],canisters=[],ciws=[(0,36,.3),(-5,-25,5.7),(5,-25,5.7)],ciws_styles=['gokdeniz','gatling','gatling'],
+        landing=True,bow_ramp=True,ramp_height=6,bow_sheer=.5,hull_profile=[(-.5,.68),(-.4,.93),(-.2,1),(.2,1),(.4,.83),(.5,.52)],hangar_z=-37.6,cranes=[(5,-3,9,12)])
+
+def landingShip__makassar_class(lod=0):
+    rig,s=combatant('landingShip__makassar_class','Makassar-class',lod,(122.,22.,4.9,5.6),
+        'native/CODEX-UNIT-ROSTER.md',['Indonesian Makassar landing-platform dock','high forward accommodation block','single central funnel','two helicopter operating spots','wide stern working deck','stern well-deck ramp'],
+        houses=[(0,22,17,42,9.5,0,.94),(0,24,12,18,4.8,9.5,.92),(0,-15,13,17,4.5,0,.94)],funnels=[(0,0,5,8,7,4)],masts=[(22,27,'bar',4.4)],
+        guns=[(0,43,40,2.8)],vls=[],canisters=[],ciws=[],landing=True,ramp_height=6,hangar_z=-23.6,cranes=[(8,-1,9,-14)])
+    s.representative='Approximate 122 m lead-ship Makassar exterior; follow-on hulls vary';return rig,s
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):

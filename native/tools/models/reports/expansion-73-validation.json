@@ -1,0 +1,36 @@
+{
+  "batch": 73,
+  "files": [
+    "ships/gunboat__gunboat.glb",
+    "ships/gunboat__island_class_patrol_boat.glb",
+    "ships/gunboat__patrol_boat.glb",
+    "ships/landingShip__albion_class.glb",
+    "ships/landingShip__bahia.glb",
+    "ships/landingShip__bayraktar_class.glb"
+  ],
+  "sha256": {
+    "ships/gunboat__gunboat.glb": "3c83cc2ad276666c6f5ba92e144a96c06fe5a9745ca14b2bef752e642432c27c",
+    "ships/gunboat__island_class_patrol_boat.glb": "5a3efa042ec9960946fc7d37f0ae75cb1a1ea1376cc1ba333dad18f77d65eb0f",
+    "ships/gunboat__patrol_boat.glb": "5ce4d90b5a6f5e6ba4e550e21f36e4ae74498366b9feedc3fe5e5f0a20c40dcd",
+    "ships/landingShip__albion_class.glb": "b22039b77eb4de04a60764e5c33a149ee84dd2f28a15841df0917d9998d5736f",
+    "ships/landingShip__bahia.glb": "412654a79e6ffbd6071e5da9356168ade453d607717b605a84c9ab99f4576970",
+    "ships/landingShip__bayraktar_class.glb": "b908b611bdc509c87287a4ff7c6128e92f3f7ddabcaffac39871a2890c39f727"
+  },
+  "maximum_triangles": [
+    10448,
+    1496
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}
