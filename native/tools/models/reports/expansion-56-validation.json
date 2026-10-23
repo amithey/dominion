@@ -1,0 +1,38 @@
+{
+  "batch": 56,
+  "files": [
+    "aircraft/drone__ch_4b.glb",
+    "aircraft/drone__ch_4b_anka.glb",
+    "aircraft/drone__hermes_900.glb",
+    "aircraft/drone__heron_isr.glb",
+    "aircraft/drone__heron_tp.glb",
+    "aircraft/drone__kus_fs.glb"
+  ],
+  "sha256": {
+    "aircraft/drone__ch_4b.glb": "cbd34d124e6e93d5a39c5978b4e5b662a9f85057bb22df33eac6d4a5f8b0e125",
+    "aircraft/drone__ch_4b_anka.glb": "d6ee51e8f47b62e1b4b60bc6067bf6572b9ceb36b2b78d01178d14ce1bcd65c9",
+    "aircraft/drone__hermes_900.glb": "ee1f18351ec962dfc1e93a7a0fd25f7f93920072edf6f1302597efa67320160f",
+    "aircraft/drone__heron_isr.glb": "5e5cebd887076edb59683e27f802f11f5bcf39e6e18885871dee84243917041b",
+    "aircraft/drone__heron_tp.glb": "f26348f746eedbcac991b1e355780f2aa68ae901fb504dcf837c2e7cb9f82fa9",
+    "aircraft/drone__kus_fs.glb": "630abf88ccee11365adcdf9586b4c3a4bbbe6bf55baf400580671b8967cc2ec4"
+  },
+  "maximum_triangles": [
+    10764,
+    1604
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

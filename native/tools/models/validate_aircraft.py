@@ -119,13 +119,14 @@ def validate(path):
                 actual=[p for p,(n,M,v) in by.items() if p.startswith(prefix+'/') and n.get('extras',{}).get('canonical_part','').startswith('Muzzle_')]
                 assert len(actual)==want,(prefix,'naval mission store count')
         if doc['extras']['priority']=='P6':
-            for name in ('Gear_Nose','Gear_Left','Gear_Right','Rudder')+(() if s['details'].get('unmanned') else ('Canopy',)):
+            multi=s['details'].get('multirotor',False)
+            for name in (('Skid',) if multi else ('Gear_Nose','Gear_Left','Gear_Right','Rudder')+(() if s['details'].get('unmanned') else ('Canopy',))):
                 assert prefix+'/'+name in by,(prefix,name)
-            for side in ('L','R'):
+            for side in (() if multi else ('L','R')):
                 for name in ('Flap','Aileron'):
                     p=prefix+'/Wing_'+side+'/'+name+'_'+side
                     assert by[p][0]['extras']['rotation_axis']=='X'
-            for name in ('Gear_Nose','Gear_Left','Gear_Right'):
+            for name in (() if multi else ('Gear_Nose','Gear_Left','Gear_Right')):
                 layouts={g['name']:g for g in s['details'].get('gear_layout',[])}
                 assert by[prefix+'/'+name][0]['extras']['rotation_axis']==layouts.get(name,{}).get('axis','X')
             if s['details'].get('gear_layout'):
@@ -145,7 +146,7 @@ def validate(path):
             rotating=bool(s['details'].get('radome')) and not s['details'].get('radome_static')
             assert (prefix+'/Rotodome' in by)==rotating
             if rotating:assert by[prefix+'/Rotodome'][0]['extras']['rotation_axis']=='Y'
-            assert by[prefix+'/Rudder'][0]['extras']['rotation_axis']=='Y'
+            if not multi:assert by[prefix+'/Rudder'][0]['extras']['rotation_axis']=='Y'
             if s['stealth']:
                 assert not any('/Pylon_' in p for p in by if p.startswith(prefix+'/'))
                 assert prefix+'/Bay_Door_L' in by and prefix+'/Bay_Door_R' in by
@@ -186,7 +187,7 @@ def validate(path):
         'mobility':'aircraft','has_turret':False,'has_launcher':False,'road_wheels_per_side':0,
         'recognition_features':s['features'],'units':'metres','up':'+Y','front':'+Z','materials':list(ROLES),'nodes':nodes,
         'grid':None,'tileable':False,'frames':None,
-        'sources':[{'url':s['source'],'use':'Exterior identification and published size; original procedural geometry.'}],
+        'sources':[{'url':s['source'],'use':'Roster class only; dimensions and exterior are original plausible estimates.' if s['details'].get('generic_design') else 'Exterior identification and published size; original procedural geometry.'}],
         'notes':'Original Python aircraft; five plain-white PBR roles, no images, baked colours or imported meshes. Closed metre-UV surfaces; empty real hinges carry mesh children. Local quaternion frames preserve canted rotor shafts. LOD1 uses suffixed names and canonical_part extras. Hidden dark static Wreck and Collision_Box. Approximate fields record uncertain exterior proportions and combined-row representatives.',
         'validation':{'readback':True,'node_tree_printed':True,'ccw_normals':True,'duplicate_faces':0,'below_ground_vertices':0,
             'pose_checks':['all named hinges propagate children about their actual local shaft','rotor full-revolution return','airframe-specific main/tail rotor and landing gear configuration'],

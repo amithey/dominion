@@ -444,8 +444,45 @@ def fittings(rig,s,lod):
     rig.add('Airframe_Fittings','Fuselage',(0,y,0),m)
 
 def build(s,lod=0):
+    if s.details.get('multirotor'):return build_multirotor(s,lod)
     rig=Rig(lod);fuselage(rig,s,lod);wings(rig,s,lod);canopy(rig,s,lod);engines(rig,s,lod)
     tails(rig,s,lod);gear(rig,s,lod);weapons(rig,s,lod);fittings(rig,s,lod);radar(rig,s,lod)
+    for part in rig.parts:
+        if part['mesh'] is not None:part['mesh'].remove_duplicates()
+    return rig,s
+
+def build_multirotor(s,lod):
+    from helicopter_parts import rotor_mesh
+    rig=Rig(lod);d=s.details;L=s.length;cy=s.belly+s.body_height/2;m=Mesh()
+    m.box('paint',(0,cy,0),(s.body_width,s.body_height,L*.36))
+    m.box('metal_dark',(0,cy+.10,0),(s.body_width*.75,.16,L*.28))
+    m.box('markings',(s.body_width/2+.006,cy,0),(.012,s.body_height*.58,L*.16))
+    rig.add('Fuselage',rig.root,(0,0,0),m)
+    for i,p in enumerate(d['propellers']):
+        p=np.asarray(p);arm=Mesh();beam(arm,'metal_dark',(0,cy,0),p-[0,.065,0],.045 if d['motors']==4 else .065)
+        arm.tube('metal_dark',p-[0,.11,0],p,.055 if d['motors']==4 else .085,8 if lod else 20)
+        parent='Motor_'+str(i);rig.add(parent,'Fuselage',p,arm)
+        rotor=rotor_mesh(d['prop_radius'],d['prop_blades'],lod,chord=d['prop_radius']*.15,root_fraction=.17)
+        rotor.shift(p);rig.add('Propeller' if i==0 else 'Propeller_'+str(i),parent,p,rotor,'Z',
+            frame_rotation=quat([1,0,0],-math.pi/2),blade_count=d['prop_blades'],radius_metres=d['prop_radius'])
+    skid=Mesh()
+    for side in (-1,1):
+        x=side*s.body_width*.8
+        for z in (-L*.18,L*.18):beam(skid,'metal_dark',(side*s.body_width*.35,cy-.05,z),(x,.025,z),.025)
+        skid.tube('rubber',(x,.025,-L*.27),(x,.025,L*.27),.025,6 if lod else 12)
+    rig.add('Skid','Fuselage',(0,s.belly,0),skid)
+    camera=Mesh();p=np.array([0,cy,L*.20])
+    camera.tube('paint',p,p+[0,0,.11],s.body_width*.20,8 if lod else 20)
+    camera.tube('glass',p+[0,0,.115],p+[0,0,.13],s.body_width*.15,8 if lod else 20)
+    rig.add('Camera','Fuselage',p,camera,'X')
+    p=np.array([0,max(.16,s.belly-.04),0]);payload=Mesh()
+    if d.get('bomber'):
+        payload.tube('paint',p-[0,0,L*.17],p+[0,0,L*.17],s.body_width*.22,8 if lod else 20,.04)
+        rig.add('Payload_Release','Fuselage',p,payload,'X');muzzle=p+[0,-s.body_width*.22,0]
+    else:
+        p=np.array([0,cy,L*.25]);payload.tube('paint',p,p+[0,0,L*.18],s.body_width*.22,8 if lod else 20,.02)
+        rig.add('Payload','Fuselage',p,payload);muzzle=p+[0,0,L*.18]
+    rig.add('Muzzle_0','Fuselage',muzzle);d['muzzle_count']=1;d['muzzle_positions']={'Muzzle_0':muzzle.tolist()}
     for part in rig.parts:
         if part['mesh'] is not None:part['mesh'].remove_duplicates()
     return rig,s

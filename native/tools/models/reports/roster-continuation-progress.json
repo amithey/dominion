@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 317,
+  "ready_files": 323,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -652,6 +652,18 @@
         "aircraft/drone__bayraktar_tb2_domestic.glb",
         "aircraft/drone__bayraktar_tb2_mohajer_6.glb"
       ]
+    },
+    {
+      "batch": 56,
+      "report": "expansion-56-validation.json",
+      "files": [
+        "aircraft/drone__ch_4b.glb",
+        "aircraft/drone__ch_4b_anka.glb",
+        "aircraft/drone__hermes_900.glb",
+        "aircraft/drone__heron_isr.glb",
+        "aircraft/drone__heron_tp.glb",
+        "aircraft/drone__kus_fs.glb"
+      ]
     }
   ],
   "priorities": {
@@ -925,7 +937,7 @@
     "P6": {
       "requested_rows": 128,
       "unique_files": 127,
-      "ready_files": 90,
+      "ready_files": 96,
       "ready_slugs": [
         "aewc__a_50u",
         "aewc__e_2c_hawkeye",
@@ -959,6 +971,12 @@
         "drone__bayraktar_tb2",
         "drone__bayraktar_tb2_domestic",
         "drone__bayraktar_tb2_mohajer_6",
+        "drone__ch_4b",
+        "drone__ch_4b_anka",
+        "drone__hermes_900",
+        "drone__heron_isr",
+        "drone__heron_tp",
+        "drone__kus_fs",
         "ewJet__ea_18g_growler",
         "ewJet__j_16d",
         "ewJet__tornado_ecr",
@@ -1021,12 +1039,6 @@
       "remaining_slugs": [
         "akinci__bayraktar_akinci",
         "carrierDrone__carrier_drone",
-        "drone__ch_4b",
-        "drone__ch_4b_anka",
-        "drone__hermes_900",
-        "drone__heron_isr",
-        "drone__heron_tp",
-        "drone__kus_fs",
         "drone__mohajer_6",
         "drone__mq_9_reaper",
         "drone__mq_9a_reaper",

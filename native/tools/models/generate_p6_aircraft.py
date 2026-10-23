@@ -575,7 +575,8 @@ def heron(slug,name,lod,tp=False):
 def drone__heron_isr(lod=0):return heron('drone__heron_isr','Heron ISR',lod)
 def drone__heron_tp(lod=0):return heron('drone__heron_tp','Heron TP',lod,True)
 def drone__kus_fs(lod=0):
-    return male('drone__kus_fs','KUS-FS',lod,'kusfs',(13.,25.,3.0,1.2,1.4,1.0),'https://www.koreanair.com/contents/footer/about-us/aerospace',blades=4)
+    return male('drone__kus_fs','KUS-FS',lod,'kusfs',(13.,25.,3.0,1.2,1.4,1.0),'https://www.koreanair.com/contents/footer/about-us/aerospace',blades=4,
+        ventral_fin=True,belly_radar=[0,.95,-.5,.60,.25,.80])
 
 def drone__mohajer_6(lod=0):
     return uas('drone__mohajer_6','Mohajer-6',lod,'mohajer6',(5.67,10.,1.8,.63,.60,.60),
