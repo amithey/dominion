@@ -108,7 +108,7 @@ def flanker(slug,name,lod,seats=1,canards=False,representative=''):
         [(-1.8,2.85,6.36,-4.3,-9.0,-7.1,-8.65),(1.8,2.85,6.36,-4.3,-9.0,-7.1,-8.65)],
         'https://www.uacrussia.ru/en/aircraft/lineup/military/su-35/',seats=seats,engines=2,representative=representative,
         features=['widely separated engine nacelles','long blended leading-edge extensions','parallel twin fins','broad swept wings','central rear sting','tandem canopy' if seats==2 else 'single-seat canopy']+(['foreplane canards'] if canards else []),
-        engine_spacing=2.7,engine_radius=.65,intake_x=1.43,intake_z=.10,intake_width=1.11,intake_height=1.03,lex=True,tail_sting=True,
+        engine_spacing=2.7,engine_radius=.65,engine_aft_fraction=.43,intake_x=1.43,intake_z=.10,intake_width=1.11,intake_height=1.03,lex=True,tail_sting=True,
         stabilator=[(1.1,2.35,-5.7,-9.8),(5.0,2.35,-8.1,-9.65)],
         **({'canard':[(1.2,2.95,3.2,1.8),(2.9,2.95,2.05,1.6)]} if canards else {}),
         profile=[(-.50,-.05,.055,.07),(-.40,0,.18,.19),(-.25,0,.50,.45),(0,0,.5,.50),(.17,.04,.32,.4),(.32,.04,.22,.3),(.43,0,.12,.17),(.5,0,.008,.015)])
@@ -143,6 +143,22 @@ def rafale(slug,name,lod,seats=1,representative=''):
         engine_spacing=.90,engine_radius=.40,intake_x=.94,intake_width=.63,intake_height=.68,intake_z=.19,
         canard=[(.70,2.45,3.7,2.3),(2.1,2.45,2.65,2.15)])
 def jet__rafale(lod=0):return rafale('jet__rafale','Rafale',lod)
+
+def jet__rafale_f_16(lod=0):return rafale('jet__rafale_f_16','Rafale / F-16',lod,representative='Rafale C exterior')
+
+def su25(slug,name,lod,representative=''):
+    return airframe(slug,name,lod,'su25',(15.53,14.36,4.80,1.6,1.85,.86),
+        [(.55,1.05,-2.25),(3.5,.05,-2.65),(7.18,-1.65,-3.1)],[(0,2.4,4.8,-3.8,-6.85,-5.3,-6.35)],
+        'https://info.publicintelligence.net/MCIA-UzbekistanHandbook.pdf',engines=2,representative=representative,
+        features=['high-set modestly swept wing','two shoulder-mounted engine nacelles','armoured blunt nose','single fin','wingtip airbrake fairings'],
+        engine_spacing=2.1,engine_radius=.49,engine_aft_fraction=.39,intake_x=1.13,intake_z=.08,intake_width=.79,intake_height=.77,
+        wingtip_pods=True,stabilator=[(.5,2.5,-4.1,-6.7),(2.9,2.5,-5.45,-6.55)],
+        profile=[(-.455,.03,.23,.22),(-.32,.02,.38,.4),(-.10,0,.5,.5),(.13,0,.49,.49),(.30,-.01,.40,.35),(.43,-.10,.29,.23),(.50,-.15,.06,.08)])
+def jet__su_25_mig_29se(lod=0):return su25('jet__su_25_mig_29se','Su-25 / MiG-29SE',lod,'Su-25 single-seat exterior')
+def jet__su_30k_su_27(lod=0):return flanker('jet__su_30k_su_27','Su-30K / Su-27',lod,2,representative='Su-30K tandem-seat exterior')
+def jet__su_30mki(lod=0):return flanker('jet__su_30mki','Su-30MKI',lod,2,True)
+def jet__su_35s(lod=0):return flanker('jet__su_35s','Su-35S',lod)
+def jet__typhoon_fgr4(lod=0):return model('jet__typhoon_fgr4','Typhoon FGR4',lod,'typhoon')
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):

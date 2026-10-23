@@ -1,0 +1,38 @@
+{
+  "batch": 43,
+  "files": [
+    "aircraft/jet__j_10c_jf_17_f_16.glb",
+    "aircraft/jet__j_16.glb",
+    "aircraft/jet__kf_21_boramae_f_15k.glb",
+    "aircraft/jet__mig_29.glb",
+    "aircraft/jet__mig_29_mig_21.glb",
+    "aircraft/jet__rafale.glb"
+  ],
+  "sha256": {
+    "aircraft/jet__j_10c_jf_17_f_16.glb": "4e90821dd9cfff748a2378e56c396c8f58c7a07fb9758ab67c728a4d32154267",
+    "aircraft/jet__j_16.glb": "1d6fa2673f34f60078dae4006f6efe9e5876aeaa48d0ac47fea62c1aba390b34",
+    "aircraft/jet__kf_21_boramae_f_15k.glb": "33134336fba57718771938613a181edb2827722f18f7f0e67e921924c2401b30",
+    "aircraft/jet__mig_29.glb": "6e8494bec66ead1e86e274f04c9a4601e895f51c9b4a57138d2c46378efd7ba6",
+    "aircraft/jet__mig_29_mig_21.glb": "45cb9fe7b05116a4f7e158f05f409d5d1a4df05c57ae48af0fcea8e0afd81590",
+    "aircraft/jet__rafale.glb": "5a62cc074167b2c79b44fd11d3f37a29b37524e0e6779fef912a5989638fd4f4"
+  },
+  "maximum_triangles": [
+    12230,
+    2024
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

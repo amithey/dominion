@@ -157,14 +157,14 @@ def engines(rig,s,lod):
     L=s.length;W=s.body_width;H=s.body_height;cy=s.belly+H/2
     for i in range(s.engines):
         x=(i-(s.engines-1)/2)*s.details.get('engine_spacing',W*.62);m=Mesh()
-        radius=s.details.get('engine_radius',.43 if s.engines==2 else .51)
+        radius=s.details.get('engine_radius',.43 if s.engines==2 else .51);aft=L*(.50-s.details.get('engine_aft_fraction',.50))
         if s.engines==2:
             pod=Mesh();curved_shell(pod,'paint',[(-L*.46,cy,radius,radius),(-L*.42,cy,radius*1.13,radius*1.13),
                  (-L*.15,cy,radius*1.16,radius*1.16),(L*.03,cy,radius*.90,radius*.90)],lod,cap_start=False)
-            pod.shift((x,0,0));merge_mesh(m,pod)
-        hollow_muzzle(m,(x,cy,-L*.46),(x,cy,-L*.50),radius,radius*.82,8 if lod else 24)
+            pod.shift((x,0,aft));merge_mesh(m,pod)
+        hollow_muzzle(m,(x,cy,-L*.46+aft),(x,cy,-L*.50+aft),radius,radius*.82,8 if lod else 24)
         rig.add('Engine_'+str(i),'Fuselage',(x,cy,-L*.20),m)
-        rig.add('Afterburner' if i==0 else 'Afterburner_'+str(i),'Fuselage',(x,cy,-L*.50),frame_rotation=quat([0,1,0],math.pi),forward='-Z')
+        rig.add('Afterburner' if i==0 else 'Afterburner_'+str(i),'Fuselage',(x,cy,-L*.50+aft),frame_rotation=quat([0,1,0],math.pi),forward='-Z')
     if s.family=='f15':
         for side,label in ((-1,'L'),(1,'R')):
             m=Mesh();rectangular_duct(m,L*.16,-L*.20,side*1.32,side*.82,cy+.04,cy,1.10,1.08,lod)
