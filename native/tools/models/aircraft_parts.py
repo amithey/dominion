@@ -177,7 +177,8 @@ def engines(rig,s,lod):
                 body.shift((x,0,0));parent='Engine_'+str(i);rig.add(parent,'Fuselage',p-[0,0,length*.40],body)
             for angle in np.linspace(0,math.tau,blades,endpoint=False):
                 blade=Mesh();reduced=len(s.details['propellers'])*blades>=10 and not lod
-                airfoil(blade,[(radius*.12,0,.08,-.08),(radius*.35,0,.15,-.15),(radius*.80,0,.11,-.11),(radius,0,.045,-.045)],lod,
+                chord=s.details.get('prop_chord_scale',1.)
+                airfoil(blade,[(radius*.12,0,.08*chord,-.08*chord),(radius*.35,0,.15*chord,-.15*chord),(radius*.80,0,.11*chord,-.11*chord),(radius,0,.045*chord,-.045*chord)],lod,
                     span_steps=3 if reduced else None,chord_steps=6 if reduced else None)
                 R=rotation([0,0,1],angle)@rotation([1,0,0],math.radians(70))
                 for g in blade.groups.values():
@@ -246,6 +247,10 @@ def engines(rig,s,lod):
                 if s.details.get('shock_cones'):m.tube('paint',(x,cy-.15,z-.45),(x,cy-.15,z+.22),radius*.47,8 if lod else 20,.012)
             else:rectangular_duct(m,z,-L*.08,x,x*.80,cy-.15,cy,s.details.get('intake_width',.70),s.details.get('intake_height',.75),lod)
             rig.add('Intake_'+label,'Fuselage',(x,cy-.15,z),m)
+    elif s.details.get('dorsal_intake'):
+        m=Mesh();z=L*.24;top=s.belly+s.body_height
+        rectangular_duct(m,z,-L*.05,0,0,top+.05,cy,1.0,.44,lod)
+        rig.add('Intake_Dorsal','Fuselage',(0,top+.05,z),m)
     else:
         # F-16's underslung elliptical mouth, with a recessed closed interior.
         m=Mesh();z=L*.20;cy0=s.belly+.05;n=8 if lod else 24;outer=[];inner=[]
@@ -457,25 +462,27 @@ def build(s,lod=0):
         low=min(float(np.asarray(g[0])[:,1].min()) for p in rig.parts if p['mesh'] is not None for g in p['mesh'].groups.values() if g[0])
         shift=math.floor(low*1000+1e-4)/1000
         for p in rig.parts:
-            p['pivot'][1]-=shift
+            if p['name']!='Fuselage':p['pivot'][1]-=shift
             if p['mesh'] is not None:p['mesh'].shift((0,-shift,0))
-        for pivot in rig.pivots.values():pivot[1]-=shift
+        for name,pivot in rig.pivots.items():
+            if name!='Fuselage':pivot[1]-=shift
         s.belly-=shift;s.details['ground_shift_metres']=shift
-        for row in s.details['wing']:row[1]-=shift
-        for row in s.details['fins']:row[1]-=shift;row[2]-=shift
-        for p in s.details.get('propellers',[]):p[1]-=shift
+        s.details['wing']=[[x,y-shift,le,te] for x,y,le,te in s.details['wing']]
+        s.details['fins']=[[x,y0-shift,y1-shift,*rest] for x,y0,y1,*rest in s.details['fins']]
+        s.details['propellers']=[[x,y-shift,z] for x,y,z in s.details.get('propellers',[])]
         for p in s.details['muzzle_positions'].values():p[1]-=shift
     return rig,s
 
 def build_multirotor(s,lod):
     rig=Rig(lod);d=s.details;L=s.length;cy=s.belly+s.body_height/2;m=Mesh()
     m.box('paint',(0,cy,0),(s.body_width,s.body_height,L*.36))
-    m.box('metal_dark',(0,cy+.10,0),(s.body_width*.75,.16,L*.28))
+    small=d.get('small',False)
+    m.box('metal_dark',(0,cy+(.05 if small else .10),0),(s.body_width*.75,.08 if small else .16,L*.28))
     m.box('markings',(s.body_width/2+.006,cy,0),(.012,s.body_height*.58,L*.16))
     rig.add('Fuselage',rig.root,(0,0,0),m)
     for i,p in enumerate(d['propellers']):
         p=np.asarray(p);arm=Mesh();beam(arm,'metal_dark',(0,cy,0),p-[0,.065,0],.045 if d['motors']==4 else .065)
-        arm.tube('metal_dark',p-[0,.11,0],p,.055 if d['motors']==4 else .085,8 if lod else 20)
+        arm.tube('metal_dark',p-[0,.11,0],p,.030 if small else .055 if d['motors']==4 else .085,8 if lod else 20)
         parent='Motor_'+str(i);rig.add(parent,'Fuselage',p,arm)
         rotor=Mesh();r=d['prop_radius']
         for angle in np.linspace(0,math.tau,d['prop_blades'],endpoint=False):

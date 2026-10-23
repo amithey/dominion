@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 334,
+  "ready_files": 339,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -687,6 +687,17 @@
         "aircraft/drone__taliban_built_drone.glb",
         "aircraft/drone__wing_loong_i_ch_4.glb"
       ]
+    },
+    {
+      "batch": 59,
+      "report": "expansion-59-validation.json",
+      "files": [
+        "aircraft/drone__wing_loong_ii.glb",
+        "aircraft/drone__wing_loong_ii_akinci.glb",
+        "aircraft/akinci__bayraktar_akinci.glb",
+        "aircraft/heavyBomberDrone__heavy_hexacopter.glb",
+        "aircraft/heavyBomberDrone__vampire_baba_yaga.glb"
+      ]
     }
   ],
   "priorities": {
@@ -960,7 +971,7 @@
     "P6": {
       "requested_rows": 128,
       "unique_files": 127,
-      "ready_files": 107,
+      "ready_files": 112,
       "ready_slugs": [
         "aewc__a_50u",
         "aewc__e_2c_hawkeye",
@@ -978,6 +989,7 @@
         "aewc__kj_500",
         "aewc__netra_aew_c",
         "aewc__saab_2000_erieye",
+        "akinci__bayraktar_akinci",
         "attackJet__a_10c_thunderbolt_ii",
         "attackJet__jaguar",
         "attackJet__l_159_alca",
@@ -1011,9 +1023,13 @@
         "drone__shahpar_ii_burraq",
         "drone__taliban_built_drone",
         "drone__wing_loong_i_ch_4",
+        "drone__wing_loong_ii",
+        "drone__wing_loong_ii_akinci",
         "ewJet__ea_18g_growler",
         "ewJet__j_16d",
         "ewJet__tornado_ecr",
+        "heavyBomberDrone__heavy_hexacopter",
+        "heavyBomberDrone__vampire_baba_yaga",
         "jet__eurofighter_typhoon",
         "jet__f_15ex_eagle_ii",
         "jet__f_15i_ra_am",
@@ -1071,13 +1087,8 @@
         "superTucano__a_29_super_tucano"
       ],
       "remaining_slugs": [
-        "akinci__bayraktar_akinci",
         "carrierDrone__carrier_drone",
-        "drone__wing_loong_ii",
-        "drone__wing_loong_ii_akinci",
         "harop__harop",
-        "heavyBomberDrone__heavy_hexacopter",
-        "heavyBomberDrone__vampire_baba_yaga",
         "interceptorDrone__interceptor_drone",
         "loiterer__arash",
         "loiterer__ch_901",

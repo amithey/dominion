@@ -121,7 +121,8 @@ def validate(path):
         if doc['extras']['priority']=='P6':
             multi=s['details'].get('multirotor',False)
             none=s['details'].get('landing_none',False)
-            for name in (('Skid',) if multi else (() if none else ('Gear_Nose','Gear_Left','Gear_Right'))+('Rudder',)+(() if s['details'].get('unmanned') else ('Canopy',))):
+            rudder=() if s['details'].get('flying_wing') else ('Rudder',)
+            for name in (('Skid',) if multi else (() if none else ('Gear_Nose','Gear_Left','Gear_Right'))+rudder+(() if s['details'].get('unmanned') else ('Canopy',))):
                 assert prefix+'/'+name in by,(prefix,name)
             for side in (() if multi else ('L','R')):
                 for name in ('Flap','Aileron'):
@@ -147,7 +148,7 @@ def validate(path):
             rotating=bool(s['details'].get('radome')) and not s['details'].get('radome_static')
             assert (prefix+'/Rotodome' in by)==rotating
             if rotating:assert by[prefix+'/Rotodome'][0]['extras']['rotation_axis']=='Y'
-            if not multi:assert by[prefix+'/Rudder'][0]['extras']['rotation_axis']=='Y'
+            if not multi and rudder:assert by[prefix+'/Rudder'][0]['extras']['rotation_axis']=='Y'
             if s['stealth']:
                 assert not any('/Pylon_' in p for p in by if p.startswith(prefix+'/'))
                 assert prefix+'/Bay_Door_L' in by and prefix+'/Bay_Door_R' in by

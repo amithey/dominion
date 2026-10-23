@@ -1,0 +1,36 @@
+{
+  "batch": 59,
+  "files": [
+    "aircraft/drone__wing_loong_ii.glb",
+    "aircraft/drone__wing_loong_ii_akinci.glb",
+    "aircraft/akinci__bayraktar_akinci.glb",
+    "aircraft/heavyBomberDrone__heavy_hexacopter.glb",
+    "aircraft/heavyBomberDrone__vampire_baba_yaga.glb"
+  ],
+  "sha256": {
+    "aircraft/drone__wing_loong_ii.glb": "8e3d3cb763b000b2378ee163acbdb4d076a97aa3bd979b35e1d569e63f0ca59b",
+    "aircraft/drone__wing_loong_ii_akinci.glb": "5df61799b1d19f3c29191cdae9573ecea5709bb2e39eba52725c3bf7a8b6369a",
+    "aircraft/akinci__bayraktar_akinci.glb": "0649b6b4188ed1a50b8d007e2dd7be11703dbf0bb7e34785f6c5dba69f276c96",
+    "aircraft/heavyBomberDrone__heavy_hexacopter.glb": "a046e9199a877cc2a36662cd2b3a91bacb2cd8766c7e805a853da4ef321c3615",
+    "aircraft/heavyBomberDrone__vampire_baba_yaga.glb": "bb16bdd4094d7bcc78bbc5b7b8cdc010934f3c64c0ae14ce04e16cdbe87ca5ad"
+  },
+  "maximum_triangles": [
+    10580,
+    2044
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

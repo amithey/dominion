@@ -606,14 +606,15 @@ def drone__saetbyol_4_9(lod=0):
     return male('drone__saetbyol_4_9','Saetbyol-4/9',lod,'saetbyol9',(11.5,20.,3.8,1.2,1.4,1.3),ROSTER_REFERENCE,
         'Approximate Saetbyol-9 MALE exterior; combined roster row',blades=4,stations=(.34,.53,.72),ventral_fin=True,generic_design=True)
 
-def multicopter(slug,name,lod,motors=4,heavy=False,representative='',payload_count=1):
+def multicopter(slug,name,lod,motors=4,heavy=False,representative='',payload_count=1,small=False):
     import math
     L,S,H,W,B,b=(2.8,2.8,1.05,.78,.28,.48) if heavy else (1.25,1.25,.62,.35,.18,.28)
     arm=1.02 if heavy else .52;hub=.90 if heavy else .49
+    if small:L=S=.65;H=.35;W=.18;B=.10;b=.12;arm=.27;hub=.24
     positions=[[arm*math.sin(t),hub,arm*math.cos(t)] for t in [math.tau*i/motors+math.pi/motors for i in range(motors)]]
     s=AircraftSpec(slug,name,'multirotor',L,S,H,W,B,b,0,ROSTER_REFERENCE,seats=0,representative=representative,
         features=[str(motors)+' independent motor/propeller hubs','closed central battery/payload frame','landing skids','gravity payload release' if heavy else 'forward payload and camera'],
-        details={'multirotor':True,'unmanned':True,'generic_design':True,'motors':motors,'propellers':positions,'prop_radius':.43 if heavy else .23,'prop_blades':2,'bomber':heavy,'payload_count':payload_count})
+        details={'multirotor':True,'unmanned':True,'generic_design':True,'motors':motors,'propellers':positions,'prop_radius':.12 if small else .43 if heavy else .23,'prop_blades':2,'bomber':heavy,'payload_count':payload_count,'small':small})
     return build(s,lod)
 def drone__shaheen(lod=0):return multicopter('drone__shaheen','Shaheen',lod,representative='Plausible Syrian light FPV strike quadcopter; roster does not identify a unique production airframe')
 
@@ -643,6 +644,34 @@ def drone__wing_loong_ii_akinci(lod=0):return wingloong2('drone__wing_loong_ii_a
 def akinci__bayraktar_akinci(lod=0):return akinci('akinci__bayraktar_akinci','Bayraktar Akinci',lod)
 def heavyBomberDrone__heavy_hexacopter(lod=0):return multicopter('heavyBomberDrone__heavy_hexacopter','Heavy Hexacopter',lod,6,True,'Original generic six-motor bomber drone')
 def heavyBomberDrone__vampire_baba_yaga(lod=0):return multicopter('heavyBomberDrone__vampire_baba_yaga','Vampire / Baba Yaga',lod,6,True,'Approximate Vampire six-motor bomber with three light mortar payload positions',3)
+
+def carrierDrone__carrier_drone(lod=0):
+    return airframe('carrierDrone__carrier_drone','Carrier Drone',lod,'carrier_ucav',(12.,19.,3.2,3.5,1.4,1.1),
+        [(.5,2.2,-4.8),(4.9,.1,-4.6),(9.5,-2.8,-3.7)],[],ROSTER_REFERENCE,stealth=True,
+        features=['cranked flying wing','dorsal jet intake','single recessed nozzle','internal weapon bays','no vertical tail or external pylons'],
+        representative='Original plausible carrier UCAV with X-47B-like planform',unmanned=True,generic_design=True,flying_wing=True,dorsal_intake=True,
+        gun=False,afterburning=False,engine_radius=.50,cross_power=.72,gear_track=4.4,wheel_radius=.28,
+        profile=[(-.47,0,.16,.30),(-.30,0,.40,.40),(-.10,0,.5,.5),(.12,0,.43,.46),(.30,.03,.23,.32),(.44,0,.10,.17),(.50,0,.008,.015)])
+def interceptorDrone__interceptor_drone(lod=0):return multicopter('interceptorDrone__interceptor_drone','Interceptor Drone',lod,representative='Original plausible compact FPV interceptor quadcopter',small=True)
+
+def oneway(slug,name,lod,dimensions,wing,fins,source,features,**details):
+    L,S,H,W,B,b=dimensions
+    return uas(slug,name,lod,'oneway',dimensions,wing,fins,source,features,
+        oneway=True,landing_none=True,sensor_turret=False,nose_hump=False,stations=(),spinner_length=.12,prop_chord_scale=.40,**details)
+def shahed(slug,name,lod):
+    return oneway(slug,name,lod,(3.5,2.5,.60,.38,.35,.145),
+        [(.13,.32,.75,-1.45),(1.25,.32,-1.05,-1.55)],
+        [(-1.25,0,.60,-1.05,-1.62,-1.13,-1.54),(1.25,0,.60,-1.05,-1.62,-1.13,-1.54)],
+        'https://www.dia.mil/Portals/110/DIA_Iranian_UAVs_in_Ukraine-A_Visual_Comparison.pdf',
+        ['delta wing','tip fins extend above and below the wing','narrow central fuselage','rear two-blade piston pusher','no landing gear'],
+        propellers=[[0,.32,-1.6275]],prop_radius=.29,prop_blades=2,prop_pusher=True)
+def shahed__geran_2(lod=0):return shahed('shahed__geran_2','Geran-2',lod)
+def shahed__shahed_drone(lod=0):return shahed('shahed__shahed_drone','Shahed Drone',lod)
+def loiterer__arash(lod=0):
+    return oneway('loiterer__arash','Arash',lod,(4.5,4.,1.0,.38,.38,.28),
+        [(.14,.50,.8,-.8),(2.,.50,-.2,-.70)],[(0,.55,1.0,-1.25,-2.0,-1.55,-1.9)],ROSTER_REFERENCE,
+        ['slender long fuselage','swept tapered wings','single swept fin','rear pusher propeller','gearless one-way airframe'],
+        propellers=[[0,.47,-2.1]],prop_radius=.40,prop_blades=2,prop_pusher=True,generic_design=True)
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):
