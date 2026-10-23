@@ -1,0 +1,38 @@
+{
+  "batch": 41,
+  "files": [
+    "aircraft/jet__eurofighter_typhoon.glb",
+    "aircraft/jet__f_15ex_eagle_ii.glb",
+    "aircraft/jet__f_15i_ra_am.glb",
+    "aircraft/jet__f_15j.glb",
+    "aircraft/jet__f_15sa.glb",
+    "aircraft/jet__f_16_mig_29.glb"
+  ],
+  "sha256": {
+    "aircraft/jet__eurofighter_typhoon.glb": "1e210d337240c34495f6b13f1d95157de658e91f69e5720175c53f654abf9d3f",
+    "aircraft/jet__f_15ex_eagle_ii.glb": "cdfff90e3a4416de42e91c5641ecc6f351b1e7b36d41882b4143d06e535e3a15",
+    "aircraft/jet__f_15i_ra_am.glb": "7bc426179dd0d46787213f4700fcd47edc1d57f313585b3de83e04290588c2eb",
+    "aircraft/jet__f_15j.glb": "5ee4e85d229f88dd2dbe2e4dbfb344753791abbe5ceadae327375d4272135269",
+    "aircraft/jet__f_15sa.glb": "81c16cd20ace874696ab55e881c98a22aadedca858dd31ecce25ec3121f05995",
+    "aircraft/jet__f_16_mig_29.glb": "fd1b9c15e344a2cbf1b22a6cb1507735b3b94dc948a848b05f21a98da5155abb"
+  },
+  "maximum_triangles": [
+    13346,
+    2244
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

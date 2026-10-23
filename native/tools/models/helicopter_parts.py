@@ -37,7 +37,7 @@ class HelicopterSpec:
     features:list=field(default_factory=list)
     details:dict=field(default_factory=dict)
 
-def shell_surface(m,role,sections,lod=0,window=None,cross_power=1.):
+def shell_surface(m,role,sections,lod=0,window=None,cross_power=1.,segments=None,subdivisions=None,cap_start=True,cap_end=True):
     """Closed longitudinal elliptical shell; explicit radial face orientation.
 
     Sections are z, centre-Y, half-width, half-height. Individual planar faces
@@ -45,14 +45,15 @@ def shell_surface(m,role,sections,lod=0,window=None,cross_power=1.):
     """
     samples=[]
     for a,b in zip(sections,sections[1:]):
-        for t in np.linspace(0,1,1 if lod else 4,endpoint=False):samples.append(np.array(a)*(1-t)+np.array(b)*t)
-    samples.append(np.array(sections[-1]));n=12 if lod else 48
+        for t in np.linspace(0,1,(1 if lod else 4) if subdivisions is None else subdivisions,endpoint=False):samples.append(np.array(a)*(1-t)+np.array(b)*t)
+    samples.append(np.array(sections[-1]));n=segments or (12 if lod else 48)
     def ring(s):
         z,y,w,h=s
         def signed(v):return math.copysign(abs(v)**cross_power,v)
         return np.array([[w*signed(math.sin(t)),y+h*signed(math.cos(t)),z] for t in np.linspace(0,math.tau,n,endpoint=False)])
     rings=[ring(s) for s in samples]
-    m.face(role,rings[0],[0,0,-1]);m.face(role,rings[-1],[0,0,1])
+    if cap_start:m.face(role,rings[0],[0,0,-1])
+    if cap_end:m.face(role,rings[-1],[0,0,1])
     for j,(a,b) in enumerate(zip(rings,rings[1:])):
         for i in range(n):
             k=(i+1)%n;theta=(i+.5)*math.tau/n;q=[a[i],a[k],b[k],b[i]]

@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 227,
+  "ready_files": 233,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -472,6 +472,18 @@
         "aircraft/scoutHelicopter__oh_1.glb",
         "aircraft/scoutHelicopter__wildcat_mk1.glb"
       ]
+    },
+    {
+      "batch": 41,
+      "report": "expansion-41-validation.json",
+      "files": [
+        "aircraft/jet__eurofighter_typhoon.glb",
+        "aircraft/jet__f_15ex_eagle_ii.glb",
+        "aircraft/jet__f_15i_ra_am.glb",
+        "aircraft/jet__f_15j.glb",
+        "aircraft/jet__f_15sa.glb",
+        "aircraft/jet__f_16_mig_29.glb"
+      ]
     }
   ],
   "priorities": {
@@ -745,8 +757,15 @@
     "P6": {
       "requested_rows": 128,
       "unique_files": 127,
-      "ready_files": 0,
-      "ready_slugs": [],
+      "ready_files": 6,
+      "ready_slugs": [
+        "jet__eurofighter_typhoon",
+        "jet__f_15ex_eagle_ii",
+        "jet__f_15i_ra_am",
+        "jet__f_15j",
+        "jet__f_15sa",
+        "jet__f_16_mig_29"
+      ],
       "remaining_slugs": [
         "aewc__a_50u",
         "aewc__e_2c_hawkeye",
@@ -808,13 +827,7 @@
         "heavyBomberDrone__heavy_hexacopter",
         "heavyBomberDrone__vampire_baba_yaga",
         "interceptorDrone__interceptor_drone",
-        "jet__eurofighter_typhoon",
-        "jet__f_15ex_eagle_ii",
-        "jet__f_15i_ra_am",
-        "jet__f_15j",
-        "jet__f_15sa",
         "jet__f_16_block_50",
-        "jet__f_16_mig_29",
         "jet__f_16iq_fighting_falcon",
         "jet__f_35a",
         "jet__f_7ni",

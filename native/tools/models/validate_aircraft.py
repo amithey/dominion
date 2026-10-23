@@ -118,6 +118,23 @@ def validate(path):
                 want=0 if s['details'].get('naval_store')=='none' else 1 if s['details'].get('naval_store')=='internal' else 2
                 actual=[p for p,(n,M,v) in by.items() if p.startswith(prefix+'/') and n.get('extras',{}).get('canonical_part','').startswith('Muzzle_')]
                 assert len(actual)==want,(prefix,'naval mission store count')
+        if doc['extras']['priority']=='P6':
+            for name in ('Gear_Nose','Gear_Left','Gear_Right','Rudder','Canopy'):
+                assert prefix+'/'+name in by,(prefix,name)
+            for side in ('L','R'):
+                for name in ('Flap','Aileron'):
+                    p=prefix+'/Wing_'+side+'/'+name+'_'+side
+                    assert by[p][0]['extras']['rotation_axis']=='X'
+            for name in ('Gear_Nose','Gear_Left','Gear_Right'):
+                assert by[prefix+'/'+name][0]['extras']['rotation_axis']=='X'
+            assert by[prefix+'/Rudder'][0]['extras']['rotation_axis']=='Y'
+            if s['stealth']:
+                assert not any('/Pylon_' in p for p in by if p.startswith(prefix+'/'))
+                assert prefix+'/Bay_Door_L' in by and prefix+'/Bay_Door_R' in by
+            markers={n['extras']['canonical_part']:M[:3,3] for p,(n,M,v) in by.items()
+                if p.startswith(prefix+'/') and n.get('extras',{}).get('canonical_part','').startswith('Muzzle_')}
+            assert len(markers)==s['details']['muzzle_count']
+            for name,pos in s['details']['muzzle_positions'].items():assert np.allclose(markers[name],pos,atol=1e-5)
         for p,(node,M,v) in by.items():
             axisname=node.get('extras',{}).get('rotation_axis')
             if not axisname or not p.startswith(prefix+'/'):continue
