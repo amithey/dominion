@@ -35,6 +35,7 @@ def beam(m,a,b,r=.06,lod=0,role='metal_dark'):
 
 def hull(rig,s,lod):
     L=s.length;B=s.beam;D=s.draft+s.freeboard;d=s.details;m=Mesh()
+    B=d.get('hull_beam',B)
     if d.get('catamaran'):
         temp=Rig(lod);demi=d.get('demi_beam',B*.22)
         hull(temp,replace(s,beam=demi,details={**d,'catamaran':False}),lod)
@@ -90,12 +91,13 @@ def deckhouses(rig,s,lod):
                 for y in np.linspace(D+.3,D+4.2,9):m.box('paint',(x,y,z-.045),(B*.245,.045,.04))
         rig.add('Hangar_Doors','Hull',(0,D,z),m)
     if s.details.get('flight_deck',True):
-        m=Mesh();z=-L*.37;y=D+.025;R=min(B*.31,L*.055)
+        m=Mesh();z=-L*.37;y=D+s.details.get('aviation_y',0)+.025;R=min(B*.31,L*.055)
         for a in np.linspace(0,math.tau,12 if lod else 32,endpoint=False):
             b=a+math.tau/(12 if lod else 32)
             beam(m,[R*math.cos(a),y,z+R*math.sin(a)],[R*math.cos(b),y,z+R*math.sin(b)],.045,lod,'markings')
         for x in (-R*.30,R*.30):m.box('markings',(x,y,z),(.12,.022,R*.80))
         m.box('markings',(0,y,z),(R*.60,.022,.12));rig.add('Flight_Deck_Markings','Hull',(0,y,z),m)
+    if s.details.get('aviation_deck'):return
     m=Mesh()
     for side in (-1,1):
         for i in range(2 if lod else 5):
@@ -257,12 +259,12 @@ def weapons(rig,s,lod):
         rig.add('Launcher_Rail','Launcher_SAM',q,rail,'X');rig.add('SAM_Muzzle','Launcher_Rail',q+[0,.3,2.6])
 
 def fittings(rig,s,lod):
-    D=s.draft+s.freeboard;B=s.beam;L=s.length;m=Mesh()
+    D=s.draft+s.freeboard;B=s.details.get('deck_beam',s.beam);L=s.length;m=Mesh()
     # Railings follow actual deck outlines; no rails across the flight deck.
     outline=s.details.get('hull_profile',[(-.5,.65),(-.45,.80),(-.3,.96),(-.1,1),(.12,1),(.30,.86),(.41,.55),(.48,.18),(.5,.008)])
     for side in (-1,1):
         points=[]
-        for z in np.linspace(-.28,.465,9 if lod else s.details.get('rail_count',37)):
+        for z in (() if s.details.get('aviation_deck') else np.linspace(-.28,.465,9 if lod else s.details.get('rail_count',37))):
             w=np.interp(z,*np.array(outline).T)
             x=side*((B-demi)/2+demi/2*w-.10) if s.details.get('catamaran') and (demi:=s.details.get('demi_beam',B*.22)) else side*(B/2*w-.10)
             y=D+max(0,(z-.22)/.28)*s.details.get('bow_sheer',1.7)
@@ -276,7 +278,7 @@ def fittings(rig,s,lod):
         # would hover off the narrowing bow, especially on small patrol boats.
         patch=[];demi=s.details.get('demi_beam',B*.22);cat=s.details.get('catamaran')
         for z in (.40-min(.025,2/L),.40+min(.025,2/L)):
-            w=(demi if cat else B)/2*np.interp(z,*np.array(outline).T)
+            w=(demi if cat else s.details.get('hull_beam',B))/2*np.interp(z,*np.array(outline).T)
             sheer=max(0,(z-.22)/.28)*s.details.get('bow_sheer',1.7)
             rise=s.draft*.90*(max(0,(abs(z)-.25)/.25)**2)
             for y in (max(D*.35,D*.65-.7),min(D*.82,D*.65+.7)):
@@ -285,9 +287,10 @@ def fittings(rig,s,lod):
                 yy=y+rise*(1-y/(D+sheer));zz=z*L-max(0,(z-.35)/.15)*L*.05*(1-y/(D+sheer))
                 patch.append([x,yy,zz])
         for ids in ((0,1,3),(0,3,2)):m.face('markings',[patch[i] for i in ids],[side,0,0])
-        for z in (-L*.44,L*.40):
-            for dz in (-.35,.35):m.tube('metal_dark',(side*B*.25,D,z+dz),(side*B*.25,D+.5,z+dz),.18,6 if lod else 12)
-        beam(m,[side*B*.40,D*.7,L*.34],[side*B*.40,D*.4,L*.34],.14,lod)
+        if not s.details.get('aviation_deck'):
+            for z in (-L*.44,L*.40):
+                for dz in (-.35,.35):m.tube('metal_dark',(side*B*.25,D,z+dz),(side*B*.25,D+.5,z+dz),.18,6 if lod else 12)
+            beam(m,[side*B*.40,D*.7,L*.34],[side*B*.40,D*.4,L*.34],.14,lod)
     rig.add('Deck_Fittings','Hull',(0,D,0),m)
 
 def amphibious(rig,s,lod):
@@ -307,15 +310,46 @@ def amphibious(rig,s,lod):
     if not d.get('aviation_deck'):return
     # Wide aviation deck and starboard island: authored in metres, no textures.
     deck=Mesh();W=d.get('deck_beam',B);y=D+d.get('aviation_y',0)
-    block(deck,'paint',0,y-.65,-L*.01,W,.65,L*.96,.995)
+    if d.get('deck_outline'):
+        poly=d['deck_outline'];n=len(poly);verts=[[x*W,yy,z*L] for yy in (y-.65,y) for x,z in poly]
+        faces=[tuple(range(n)),tuple(range(n,2*n))]+[(j,(j+1)%n,(j+1)%n+n,j+n) for j in range(n)]
+        deck.solid('paint',verts,faces)
+        outline=[np.array([x*W,y,z*L]) for x,z in poly]
+    else:
+        block(deck,'paint',0,y-.65,-L*.01,W,.65,L*.96,.995)
+        a=W/2;b=L*.48;c=min(a,b)*.19
+        outline=[np.array([x,y,z-L*.01]) for x,z in [(-a,-b+c),(-a+c,-b),(a-c,-b),(a,-b+c),(a,b-c),(a-c,b),(-a+c,b),(-a,b-c)]]
     rig.add('Flight_Deck','Hull',(0,y,0),deck)
+    nets=Mesh()
+    for a,b in zip(outline,outline[1:]+outline[:1]):
+        edge=b-a;n=np.array([edge[2],0,-edge[0]]);n/=np.linalg.norm(n)
+        if np.dot(n,(a+b)/2)<0:n=-n
+        count=1 if lod else max(1,math.ceil(np.linalg.norm(edge)/4.5))
+        for j in range(count):
+            p=a+edge*j/count;q=a+edge*(j+1)/count
+            outer=p+n*.80-[0,.35,0];end=q+n*.80-[0,.35,0]
+            # Folded outboard safety-net frame and diagonal tension wires.
+            beam(nets,outer,end,.035,1);beam(nets,p-n*.12,outer,.035,1)
+            if not lod:beam(nets,p-n*.12,end,.018,1)
+    rig.add('Deck_Safety_Nets','Hull',(0,y,0),nets)
+    for i,(x,z,width,length) in enumerate(d.get('sponsons',[])):
+        m=Mesh();m.box('paint',(x,y-.3,z),(width,.6,length))
+        beam(m,[math.copysign(d.get('hull_beam',B)*.34,x),y-4,z],[x,y-.65,z],.35,lod,'paint')
+        rig.add('Sponson_'+str(i),'Hull',(x,y,z),m)
     marks=Mesh();xx=-W*.12
-    for x in (xx-W*.17,xx+W*.17):marks.box('markings',(x,y+.025,0),(.20,.025,L*.82))
+    for x in (xx-W*.17,xx+W*.17):marks.box('markings',(x,y+.025,0),(.20,.025,L*(.70 if d.get('deck_outline') else .82)))
     for z in np.arange(-L*.41,L*.43,8.):marks.box('markings',(xx,y+.025,z),(.20,.025,3.8))
     rig.add('Runway_Markings','Hull',(0,y,0),marks)
-    for i,(x,z) in enumerate(d.get('catapults',[])):
-        m=Mesh();m.box('metal_dark',(x,y+.023,z),( .18,.025,L*.20))
-        rig.add('Catapult_'+str(i),'Hull',(x,y+.04,z+L*.10),m,launch_direction='+Z')
+    if d.get('angled_deck'):
+        theta=math.radians(d['angled_deck']);R=rotation([0,1,0],theta)
+        for side in (-1,1):
+            centre=np.array([-W*.10+side*W*.08,y+.03,-L*.13]);m=Mesh();m.box('markings',centre,(.20,.025,L*.40),R)
+            rig.add('Angled_Landing_Stripe_'+str(side),'Hull',centre,m)
+    for i,item in enumerate(d.get('catapults',[])):
+        x,z=item[:2];length=item[2] if len(item)>2 else L*.20;theta=math.radians(item[3] if len(item)>3 else 0);R=rotation([0,1,0],theta)
+        m=Mesh();m.box('metal_dark',(x,y+.023,z),(.18,.025,length),R)
+        tip=np.array([x,y+.04,z])+R@np.array([0,0,length/2])
+        rig.add('Catapult_'+str(i),'Hull',tip,m,launch_direction='local +Z',frame_rotation=[0,math.sin(theta/2),0,math.cos(theta/2)])
     for i,(x,z) in enumerate(d.get('elevators',[])):
         m=Mesh();m.box('paint',(x,y-.10,z),(min(14,W*.28),.20,L*.075))
         rig.add('Elevator_'+str(i),'Hull',(x,y,z),m,travel_axis='Y')

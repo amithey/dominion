@@ -1,0 +1,36 @@
+{
+  "batch": 75,
+  "files": [
+    "ships/landingShip__mistral_class.glb",
+    "ships/landingShip__osumi_class.glb",
+    "ships/landingShip__rotterdam_class.glb",
+    "ships/landingShip__san_antonio_class.glb",
+    "ships/landingShip__san_giorgio_class.glb",
+    "ships/landingShip__type_071.glb"
+  ],
+  "sha256": {
+    "ships/landingShip__mistral_class.glb": "75e4ece019ebe7b1994dae7bf75a9356a614e43f306af7fda7e9cff3e7d9fb18",
+    "ships/landingShip__osumi_class.glb": "f78df03d881fd89303c3b6eababb8c241bd49096706170bb6522738b69971fbc",
+    "ships/landingShip__rotterdam_class.glb": "4e19d0983b28eb34b0a0f05897c8384682cfe2332f2d0671a84c0a3d3e349494",
+    "ships/landingShip__san_antonio_class.glb": "77c3dbcc5e5bbd01d1c71d55b8e1e1513fc38508052b93f57665897ea3b14d67",
+    "ships/landingShip__san_giorgio_class.glb": "7d571645e798ff27b93c44faf4ec694b9150c10a74ef537491545dd06f9819ec",
+    "ships/landingShip__type_071.glb": "8e26b065484ed5ddd3f8ca0df6a15a75137b0ff95e786c5135c60b090d9b52ce"
+  },
+  "maximum_triangles": [
+    12156,
+    1814
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}

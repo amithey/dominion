@@ -89,9 +89,10 @@ def validate(path):
             assert by[prefix+'/Ramp'][0]['extras']['rotation_axis']=='X'
             z=s['length']*.5+.04 if s['details'].get('bow_ramp') else -s['length']*.5-.04
             assert np.allclose(by[prefix+'/Ramp'][1][:3,3],[0,s['draft']+.25,z],atol=2e-5)
-        for i,(x,z) in enumerate(s['details'].get('catapults',[])):
+        for i,item in enumerate(s['details'].get('catapults',[])):
+            x,z=item[:2];length=item[2] if len(item)>2 else s['length']*.20;theta=math.radians(item[3] if len(item)>3 else 0)
             y=s['draft']+s['freeboard']+s['details'].get('aviation_y',0)+.04
-            assert np.allclose(by[prefix+'/Catapult_'+str(i)][1][:3,3],[x,y,z+s['length']*.10],atol=2e-5)
+            assert np.allclose(by[prefix+'/Catapult_'+str(i)][1][:3,3],[x+math.sin(theta)*length/2,y,z+math.cos(theta)*length/2],atol=2e-5)
         for p,(node,M,v) in by.items():
             axisname=node.get('extras',{}).get('rotation_axis')
             if not axisname or not p.startswith(prefix+'/'):continue

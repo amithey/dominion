@@ -519,6 +519,95 @@ def landingShip__makassar_class(lod=0):
         guns=[(0,43,40,2.8)],vls=[],canisters=[],ciws=[],landing=True,ramp_height=6,hangar_z=-23.6,cranes=[(8,-1,9,-14)])
     s.representative='Approximate 122 m lead-ship Makassar exterior; follow-on hulls vary';return rig,s
 
+def landingShip__mistral_class(lod=0):
+    return combatant('landingShip__mistral_class','Mistral-class',lod,(199.,32.,6.2,14.3),
+        "https://www.defense.gouv.fr/sites/default/files/operations/Dossier%20de%20presse%20JEANNE%20D%27ARC.pdf",
+        ['flat full-length helicopter deck','long starboard island','two separated exhausts','large stern and lateral aircraft elevators','stern well-deck closure','six helicopter operating positions'],
+        houses=[(10,8,9.5,76,10,0,.94),(10,25,8,22,4,10,.94)],funnels=[(10,9,5.3,8,6.5,8),(10,-15,5.3,7.5,6.5,8)],
+        masts=[(22,28,'panel',4),(-13,24,'bar',3.5)],mast_offsets=[10,10],guns=[],vls=[],canisters=[],ciws=[],hangar=False,landing=True,ramp_height=7,
+        aviation_deck=True,aviation_y=.1,bow_sheer=0,elevators=[(0,-76),(12,47)])
+
+def landingShip__osumi_class(lod=0):
+    return combatant('landingShip__osumi_class','Osumi-class',lod,(178.,25.8,6.,9.8),
+        'https://www.pa.skr.mlit.go.jp/general/image/policy/jisintunami/part10/06_shiryo3.pdf',
+        ['flat vehicle and helicopter deck','compact starboard island','fore and aft Phalanx positions','stern LCAC well-deck closure','two exhausts','no ski jump or catapult'],
+        houses=[(8,7,8,52,8.5,0,.94),(8,20,6.5,18,3.5,8.5,.93)],funnels=[(8,4,4.3,6,6,7),(8,-14,4.3,6,6,7)],masts=[(16,25,'panel',4.6),(-12,21,'bar',3.3)],mast_offsets=[8,8],
+        guns=[],vls=[],canisters=[],ciws=[(-10,65,.2),(10,-62,.2)],hangar=False,landing=True,ramp_height=6,aviation_deck=True,aviation_y=.1,bow_sheer=0)
+
+def landingShip__rotterdam_class(lod=0):
+    return combatant('landingShip__rotterdam_class','Rotterdam-class',lod,(166.,27.,5.9,6.1),
+        'https://www.defensie.nl/onderwerpen/m/materieel/schepen/amfibische-transportschepen',
+        ['large forward accommodation and command block','single broad exhaust block','two Goalkeeper mounts','large helicopter hangar and open aft flight deck','heavy side crane','stern well-deck ramp'],
+        houses=[(0,25,21.5,53,10,0,.94),(0,28,15,23,5.5,10,.92),(0,-18,20,23,5.5,0,.94)],funnels=[(0,-2,7,9,8,4)],masts=[(25,30,'panel',5.8),(-14,23,'bar',4)],
+        guns=[],vls=[],canisters=[],ciws=[(0,48,5),(0,-24,6)],ciws_style='goalkeeper',landing=True,ramp_height=7,hangar_z=-29.6,hangar_doors=2,cranes=[(10,0,12,-18)])
+
+def landingShip__san_antonio_class(lod=0):
+    return combatant('landingShip__san_antonio_class','San Antonio-class',lod,(208.48,32.,7.,7.5),
+        'https://www.navy.mil/DesktopModules/ArticleCS/Print.aspx?Article=2222713&ModuleId=724&PortalId=1',
+        ['LPD-17 Flight I high-freeboard hull','two tall enclosed advanced sensor masts','large forward bridge','30 mm fore and aft gun mounts','two RAM launchers','large aft flight deck and hangar','stern LCAC closure'],
+        houses=[(0,30,25,66,11,0,.88),(0,34,18,26,5,11,.88),(0,-36,24,28,6.6,0,.92)],funnels=[(-8,-4,5.5,8,9,5),(8,-4,5.5,8,9,5)],
+        masts=[(28,35,'enclosed',7),(-18,31,'enclosed',6.5)],guns=[(0,72,30,1.8),(0,-48,30,1.8,6.8,True)],vls=[],canisters=[],ciws=[(-12,36,9),(12,-42,7)],ciws_style='ram',landing=True,ramp_height=8,hangar_z=-50.1,hangar_doors=2)
+
+def landingShip__san_giorgio_class(lod=0):
+    return combatant('landingShip__san_giorgio_class','San Giorgio-class',lod,(133.3,20.5,5.25,7.25),
+        'https://digitallibrary.un.org/record/3976750/files/S_2022_427-AR.pdf',
+        ['compact Italian through-deck landing ship','short starboard island','single funnel','bow and stern ramp access','open aft helicopter deck','flat aviation deck without ski jump'],
+        houses=[(6,7,6.5,39,7,0,.94),(6,17,5.3,13,3,7,.92)],funnels=[(6,-3,3.8,5.5,5.4,6)],masts=[(12,22,'bar',3.7)],mast_offsets=[6],guns=[],vls=[],canisters=[],ciws=[],hangar=False,landing=True,ramp_height=5.5,
+        aviation_deck=True,aviation_y=.1,bow_sheer=0,elevators=[(0,30)])
+
+def landingShip__type_071(lod=0):
+    return combatant('landingShip__type_071','Type 071',lod,(210.,28.,7.,6.),
+        'native/CODEX-UNIT-ROSTER.md',['Yuzhao landing-platform dock','large forward bridge and accommodation','76 mm bow gun','four close-in gun positions','two exhausts and separate search radars','large aft hangar and helicopter deck','stern LCAC ramp'],
+        houses=[(0,31,22,61,10,0,.89),(0,34,15.5,24,5.5,10,.88),(0,-38,21.5,30,6.3,0,.93)],funnels=[(0,-4,7,10,9,4),(0,-24,6,8,8,4)],
+        masts=[(28,32,'panel',6.2),(-24,25,'bar',4.4)],guns=[(0,77,76,4.5)],vls=[],canisters=[],ciws=[(-10,20,9),(10,20,9),(-10,-39,6.7),(10,-39,6.7)],ciws_style='gatling',landing=True,ramp_height=7,hangar_z=-53.1,hangar_doors=2)
+
+CATOBAR_OUTLINE=[(-.34,-.48),(.36,-.48),(.47,-.30),(.40,.35),(.22,.49),(-.20,.49),(-.44,.20),(-.50,-.16)]
+
+def carrier(slug,name,lod,dimensions,source,features,**details):
+    d={'aviation_deck':True,'aviation_y':.1,'bow_sheer':0,'hangar':False,'landing':False,'guns':[],'vls':[],'canisters':[],'ciws':[],**details}
+    return combatant(slug,name,lod,dimensions,source,features,**d)
+
+def carrier__cavour(lod=0):
+    return carrier('carrier__cavour','Cavour',lod,(244.,39.,8.7,13.3),
+        'https://www.marina.difesa.it/cosa-facciamo/per-la-difesa-sicurezza/operazioni-in-corso/Documents/Sistema%20Paese%20in%20movimento/Schede%20Navi%20e%20depliant/CAVOUR_ITA_14_11.pdf',
+        ['Italian STOVL carrier','long narrow flight deck','port-side ski jump','long starboard island and twin exhausts','two aircraft elevators','two 76 mm defence gun positions','no catapults'],
+        hull_beam=29.1,deck_beam=34.,houses=[(11,7,9.5,83,10,0,.92),(11,29,8,22,4.5,10,.91)],funnels=[(11,10,5,8,7,8),(11,-17,5,7,7,8)],
+        masts=[(24,29,'sphere',4),(-12,25,'bar',3.5)],mast_offsets=[11,11],guns=[(-17,78,76,4.2),(17,-80,76,4.2,0,True)],sponsons=[(-17,78,5,10),(17,-80,5,10)],ski_jump=True,elevators=[(12,60),(10,-62)])
+
+def carrier__charles_de_gaulle(lod=0):
+    return carrier('carrier__charles_de_gaulle','Charles de Gaulle',lod,(261.5,64.36,9.4,13.6),
+        'https://www.colsbleus.defense.gouv.fr/fr/le-charles-fete-ses-25-ans',
+        ['French nuclear carrier','angled landing deck','two steam catapults','large forward starboard island','two starboard aircraft elevators','three arrestor wires','no propulsion smokestack'],
+        hull_beam=31.5,deck_beam=64.36,deck_outline=CATOBAR_OUTLINE,angled_deck=-8.5,
+        houses=[(20,30,12,58,12,0,.92),(20,39,10,24,5,12,.89)],funnels=[],masts=[(36,33,'panel',5.5),(13,29,'sphere',3.6)],mast_offsets=[20,20],
+        catapults=[(5,78,75,0),(-18,2,75,-8.5)],elevators=[(25,65),(26,-24)],ciws=[(-23,-75,.3),(24,78,.3)],ciws_style='ram',ciws_tubes=6)
+
+def carrier__fujian(lod=0):
+    rig,s=carrier('carrier__fujian','Fujian',lod,(316.,76.,10.,14.),
+        'https://eng.mod.gov.cn/2025xb/D/V/16420460.html',
+        ['conventional-powered Type 003 carrier','three electromagnetic catapults','angled landing deck','compact starboard island amidships','two starboard aircraft elevators','no ski jump'],
+        hull_beam=39.,deck_beam=76.,deck_outline=CATOBAR_OUTLINE,angled_deck=-9,
+        houses=[(24,0,13,63,13,0,.85),(24,13,10,25,5.5,13,.79)],funnels=[(24,-12,7,10,7,10)],masts=[(9,36,'bar',4),(-13,30,'panel',4)],mast_offsets=[24,24],
+        catapults=[(-9,100,90,0),(11,100,90,0),(-24,2,90,-9)],elevators=[(30,60),(30,-70)],ciws=[(-20,110,.3),(24,-110,.3),(-25,-90,.3)],ciws_styles=['gatling','gatling','ram'],ciws_tubes=24)
+    s.representative='Approximate public 316 m / 76 m exterior dimensions; no internal arrangement';return rig,s
+
+def carrier__gerald_r_ford_class(lod=0):
+    return carrier('carrier__gerald_r_ford_class','Gerald R. Ford-class',lod,(337.,78.,11.9,13.1),
+        'https://www.airpac.navy.mil/Organization/Distinguished-Visitor-Info/Important-Links-and-Info/',
+        ['large nuclear supercarrier','four EMALS catapults','angled flight deck','small aft starboard island','three aircraft elevators','no propulsion funnels','three arrestor wires'],
+        hull_beam=40.8,deck_beam=78.,deck_outline=CATOBAR_OUTLINE,angled_deck=-9,
+        houses=[(25,-45,13,48,15,0,.86),(25,-36,10,24,6,15,.82)],funnels=[],masts=[(-36,38,'panel',6),(-53,33,'bar',4)],mast_offsets=[25,25],
+        catapults=[(-8,105,94,0),(12,105,94,0),(-21,10,94,-9),(-30,-15,94,-9)],elevators=[(31,65),(31,0),(-31,-85)],
+        ciws=[(-22,115,.3),(27,-120,.3),(-28,-100,.3),(25,105,.3)],ciws_styles=['phalanx','phalanx','ram','ram'])
+
+def carrier__ins_vikrant(lod=0):
+    return carrier('carrier__ins_vikrant','INS Vikrant',lod,(262.,62.,8.4,13.1),
+        'https://www.pib.gov.in/FeaturesDeatils.aspx?ModuleId+=+2%2F1000&NoteId=151135',
+        ['Indian STOBAR carrier','broad angled landing area','port bow ski jump','long starboard island with twin funnels','two aircraft elevators','arrestor wires and no catapults'],
+        hull_beam=32.,deck_beam=62.,deck_outline=CATOBAR_OUTLINE,angled_deck=-8.5,ski_jump=True,
+        houses=[(19,10,12,82,12,0,.88),(19,30,9.5,24,5,12,.85)],funnels=[(19,10,6.5,9,7.5,9),(19,-16,6.5,8,7.5,9)],masts=[(27,33,'panel',4.5),(-10,29,'bar',3.6)],mast_offsets=[19,19],
+        elevators=[(24,58),(24,-58)],ciws=[(-20,85,.3),(22,-85,.3)],ciws_style='gatling')
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):
