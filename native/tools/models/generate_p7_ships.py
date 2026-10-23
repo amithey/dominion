@@ -68,7 +68,7 @@ def destroyer__istanbul_class(lod=0):
         ['extended MILGEM hull','16-cell MIDLAS foredeck bank','76 mm bow gun','single broad exhaust block','CENK-S rotating array','16 Atmaca canisters amidships','single Seahawk hangar'],
         houses=[(0,8,10.8,30,5.8,0,.82),(0,-22,10.8,20,5,0,.92),(0,11,7.7,12,3.2,5.8,.70)],
         funnels=[(0,-5,4,8,6.5,3)],masts=[(7,21,'panel',3.7)],guns=[(0,39,76,4.2)],vls=[(27,4,4,.72,0)],
-        canisters=[(-1,3,8)],ciws=[(0,-22,5.5)],ciws_style='goalkeeper',hangar_z=-32.1)
+        canisters=[(-1,3,8)],ciws=[(0,-22,5.5)],ciws_style='gokdeniz',hangar_z=-32.1)
 
 def destroyer__maya_class(lod=0):
     return combatant('destroyer__maya_class','Maya-class',lod,(170.,21.,6.2,5.8),
@@ -94,7 +94,7 @@ def destroyer__sejong_the_great_class(lod=0):
         houses=[(0,19,16.5,40,8,0,.83),(0,-32,16,27,6,0,.91),(0,20,11.5,19,4,8,.82)],
         funnels=[(0,-1,5.6,8,10,3),(0,-20,5.6,7.5,10,3)],masts=[(16,28,'bar',5.6),(-23,20,'bar',3.8)],fixed_arrays=[20,10,13],
         guns=[(0,59,127,7.)],vls=[(40,8,6,.76,0),(-31,8,4,.76,6.1),(-40,8,6,.76,6.1)],
-        canisters=[(-8,3,8)],ciws=[(0,-32,7)],ciws_style='goalkeeper',hangar_z=-45.6,hangar_doors=2)
+        canisters=[(-8,3,8)],ciws=[(0,29,9),(0,-32,7)],ciws_styles=['ram','goalkeeper'],rail_count=28,hangar_z=-45.6,hangar_doors=2)
     s.representative='KDX-III Batch I; approximate topside arrangement';return rig,s
 
 def destroyer__type_055(lod=0):
@@ -103,7 +103,7 @@ def destroyer__type_055(lod=0):
         ['large continuous stealth superstructure','integrated faceted radar tower','112 universal VLS cells: 64 forward, 48 aft','130 mm bow gun','twin helicopter hangar','enclosed exhaust blocks'],
         houses=[(0,16,16.7,55,9,0,.84),(0,-39,16.5,29,7,0,.91),(0,22,11,22,8,9,.65)],
         funnels=[(0,-9,6,9,7,6),(0,-27,6,8,7,6)],masts=[(22,31,'bar',4.6),(-23,21,'bar',3.5)],fixed_arrays=[22,14,12],
-        guns=[(0,65,130,7.6)],vls=[(45,8,8,.85,0),(-39,8,6,.85,7.1)],canisters=[],ciws=[(0,32,9.4),(0,-43,7.4)],
+        guns=[(0,65,130,7.6)],vls=[(45,8,8,.85,0),(-39,8,6,.85,7.1)],canisters=[],ciws=[(0,32,9.4),(0,-43,7.4)],ciws_styles=['gatling','ram'],ciws_tubes=24,
         hangar_z=-53.6,hangar_doors=2,hull_profile=[(-.5,.68),(-.42,.86),(-.2,1),(.16,1),(.31,.84),(.43,.48),(.49,.1),(.5,.008)])
 
 def destroyer__type_45(lod=0):
@@ -113,6 +113,44 @@ def destroyer__type_45(lod=0):
         houses=[(0,15,16,37,8,0,.81),(0,-31,15.8,24,6,0,.91),(0,18,10,18,5,8,.70)],
         funnels=[(0,-3,5.5,7,9,3),(0,-18,5.5,7,9,3)],masts=[(17,32,'sphere',4.1),(-23,27,'panel',7.8)],
         guns=[(0,54,114,6.)],vls=[(36,8,6,.72,0)],canisters=[],ciws=[(-7,-20,5),(7,-20,5)],hangar_z=-43.1)
+
+def destroyer__udaloy_class(lod=0):
+    rig,s=combatant('destroyer__udaloy_class','Udaloy-class',lod,(163.,19.3,7.8,4.5),
+        'https://www.usni.org/magazines/proceedings/2020/september/modernizing-udaloy-class-asw-destroyers',
+        ['Project 1155 original ASW fit','two separate 100 mm forward gunhouses','large side-by-side Rastrub canister groups','two tall sensor masts','two helicopter hangar doors','twin broad funnels'],
+        houses=[(0,13,14,36,6.5,0,.95),(0,-33,15,27,6,0,.94),(0,17,10,15,4,6.5,.94)],
+        funnels=[(0,-3,6,8,8.5,3),(0,-22,6,8,8.5,3)],masts=[(15,27,'panel',7),(-23,25,'panel',6)],
+        guns=[(0,60,100,5.5),(0,46,100,5.5,2.1)],vls=[(35,8,4,.64,0)],canisters=[(18,4,4)],ciws=[(-6,-6,5),(6,-6,5)],
+        ciws_style='gatling',hangar_z=-46.6,hangar_doors=2)
+    s.representative='Original Project 1155 exterior, not the Shaposhnikov modernisation';return rig,s
+
+def destroyer__visakhapatnam_class(lod=0):
+    return combatant('destroyer__visakhapatnam_class','Visakhapatnam-class',lod,(163.,17.4,6.5,4.7),
+        'https://www.indiannavy.nic.in/content/commissioning-ins-visakhapatnam',
+        ['Project 15B destroyer','faceted bridge and enclosed MF-STAR mast','two exhaust blocks','16 large BrahMos cells and 32 Barak-8 cells','76 mm bow gun','two helicopter hangar doors','AK-630 close-in mounts'],
+        houses=[(0,17,13,39,7.5,0,.82),(0,-32,13.6,25,6,0,.91),(0,19,8.5,16,5,7.5,.68)],
+        funnels=[(0,-3,5,7,9,3),(0,-20,5,7,9,3)],masts=[(18,27,'bar',3.8),(-22,20,'bar',3.5)],fixed_arrays=[19,16,7.7],
+        guns=[(0,59,76,4.4)],vls=[(43,4,4,1.08,0),(31,8,4,.67,0)],canisters=[],ciws=[(-6,-7,5),(6,-7,5)],ciws_style='gatling',hangar_z=-44.6,hangar_doors=2)
+
+def aegisCruiser__maya_class_aegis_destroyer(lod=0):
+    rig,s=destroyer__maya_class(lod);s.slug='aegisCruiser__maya_class_aegis_destroyer';s.name='Maya-class Aegis destroyer';return rig,s
+
+def type45__type_45_destroyer(lod=0):
+    rig,s=destroyer__type_45(lod);s.slug='type45__type_45_destroyer';s.name='Type 45 Destroyer';return rig,s
+
+def corvette__ada_class(lod=0):
+    return combatant('corvette__ada_class','Ada-class',lod,(99.56,14.4,3.9,3.9),
+        'https://www.stm.com.tr/en/ada-class-corvette',
+        ['short MILGEM corvette hull','76 mm foredeck gun','no forward VLS bank','eight Harpoon canisters amidships','21-round RAM on hangar roof','single funnel and SMART-S mast','single Seahawk hangar'],
+        houses=[(0,7,10.5,28,5.4,0,.83),(0,-20,10.8,18,4.8,0,.92),(0,10,7.2,12,3,5.4,.72)],
+        funnels=[(0,-4,4.1,7.2,6.8,2.5)],masts=[(8,20,'panel',3.8)],guns=[(0,34,76,4.2)],vls=[],canisters=[(-1,2.6,4)],ciws=[(0,-21,5)],ciws_style='ram',hangar_z=-29.1)
+
+def corvette__al_jubail_class(lod=0):
+    return combatant('corvette__al_jubail_class','Al Jubail-class',lod,(104.,14.,3.85,3.9),
+        'https://www.navantia.es/en/news/press-releases/navantia-delivers-to-the-rsnf-the-first-avante-2200-class-corvette/',
+        ['AVANTE 2200 hull','angular bridge and enclosed sensor tower','single wide funnel','76 mm bow gun and 16-cell forward VLS','eight antiship canisters','aft RAM and helicopter hangar'],
+        houses=[(0,7,10.8,29,5.7,0,.82),(0,-21,10.6,19,5,0,.92),(0,10,7.5,12,3.5,5.7,.68)],
+        funnels=[(0,-5,4.5,7.5,6.5,2.6)],masts=[(8,22,'panel',3.6)],guns=[(0,37,76,4.2)],vls=[(25,4,4,.7,0)],canisters=[(-2,2.7,4)],ciws=[(0,-21,5.2)],ciws_style='ram',hangar_z=-30.6)
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 

@@ -180,13 +180,13 @@ def weapons(rig,s,lod):
                 m.tube('metal_dark',b,b+[side*.07,.026,0],.29,6 if lod else 12)
         rig.add('AntiShip_Canisters_'+str(i),'Hull',(0,y,z),m)
     for i,(x,z,yoff) in enumerate(s.details.get('ciws',[])):
-        style=s.details.get('ciws_style','phalanx')
+        style=s.details.get('ciws_styles',[s.details.get('ciws_style','phalanx')]*len(s.details.get('ciws',[])))[i]
         if style=='ram':
             p=np.array([x,D+yoff,z]);mount=Mesh();mount.tube('paint',p,p+[0,.8,0],.75,6 if lod else 16)
             rig.add('CIWS_'+str(i),'Hull',p,mount,'Y');rack=Mesh();pivot=p+[0,1.2,0]
             rack.box('paint',pivot,(2.3,2.2,2.0))
             tips=[]
-            for j in range(21):
+            for j in range(s.details.get('ciws_tubes',21)):
                 tip=pivot+[(j%5-2)*.42,(j//5-2)*.42,1.04]
                 if not lod:rack.tube('metal_dark',tip-[0,0,.05],tip+[0,0,.035],.16,8)
                 tips.append(tip)
@@ -195,12 +195,15 @@ def weapons(rig,s,lod):
             continue
         m=Mesh();p=np.array([x,D+yoff,z]);m.tube('paint',p,p+[0,1,0],.8,6 if lod else 16)
         m.box('paint',p+[0,1.5,0],(1.4,1.0,1.2))
-        if style=='goalkeeper':m.box('metal_dark',p+[0,2.6,-.25],(1.5,.8,.45))
+        if style in ('goalkeeper','gokdeniz'):m.box('metal_dark',p+[0,2.6,-.25],(1.5,.8,.45))
+        elif style=='gatling':m.tube('paint',p+[0,2,0],p+[0,2.5,0],.55,6 if lod else 16)
         elif style=='kashtan':
             for side in (-1,1):m.box('paint',p+[side*1.1,2,0],(.6,.8,2.6))
         else:m.tube('paint',p+[0,2,0],p+[0,3.2,0],.5,6 if lod else 16)
         rig.add('CIWS_'+str(i),'Hull',p,m,'Y')
-        barrel=Mesh();hollow_muzzle(barrel,p+[0,1.4,.6],p+[0,1.4,2.1],.12,.065,6 if lod else 12)
+        barrel=Mesh()
+        for offset in ((-.35,.35) if style in ('gokdeniz','kashtan') else (0,)):
+            hollow_muzzle(barrel,p+[offset,1.4,.6],p+[offset,1.4,2.1],.12,.065,6 if lod else 12)
         rig.add('CIWS_Gun_'+str(i),'CIWS_'+str(i),p+[0,1.4,.6],barrel,'X')
         rig.add('CIWS_Muzzle_'+str(i),'CIWS_Gun_'+str(i),p+[0,1.4,2.1])
 
@@ -210,7 +213,7 @@ def fittings(rig,s,lod):
     outline=s.details.get('hull_profile',[(-.5,.65),(-.45,.80),(-.3,.96),(-.1,1),(.12,1),(.30,.86),(.41,.55),(.48,.18),(.5,.008)])
     for side in (-1,1):
         points=[]
-        for z in np.linspace(-.28,.465,9 if lod else 37):
+        for z in np.linspace(-.28,.465,9 if lod else s.details.get('rail_count',37)):
             x=side*(B/2*np.interp(z,*np.array(outline).T)-.10);y=D+max(0,(z-.22)/.28)*s.details.get('bow_sheer',1.7)
             p=np.array([x,y,z*L]);points.append(p)
             if not lod:beam(m,p,p+[0,1.05,0],.028,lod)

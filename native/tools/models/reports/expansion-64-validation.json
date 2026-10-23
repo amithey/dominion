@@ -1,0 +1,36 @@
+{
+  "batch": 64,
+  "files": [
+    "ships/destroyer__istanbul_class.glb",
+    "ships/destroyer__maya_class.glb",
+    "ships/destroyer__moudge_class.glb",
+    "ships/destroyer__sejong_the_great_class.glb",
+    "ships/destroyer__type_055.glb",
+    "ships/destroyer__type_45.glb"
+  ],
+  "sha256": {
+    "ships/destroyer__istanbul_class.glb": "9bb3da74d50ab97bb1430ea28179be1559a76ac720774dfa46f3fc7da4598c30",
+    "ships/destroyer__maya_class.glb": "dd1e68549aa8fa127c8aa7292a2f000ebb359949969fbece409fe22a33bdd5f8",
+    "ships/destroyer__moudge_class.glb": "a5ff8ec8908ceb95f12633c1c9bc615f7dc434bd89062b8407dd03f7e268049c",
+    "ships/destroyer__sejong_the_great_class.glb": "1dcaae3463f30b57c6e8a6a3ac3f2a589c110e1e1f8e991f2f8e0f63474a9242",
+    "ships/destroyer__type_055.glb": "ec5c1a7b6714deeba692c4cbd24b1e497c821282e391694bf88d8acdb63308a7",
+    "ships/destroyer__type_45.glb": "5314e9f27e1ed43d6676062937999a61749f48094d7ece58cf34d69657f6437f"
+  },
+  "maximum_triangles": [
+    14144,
+    2210
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}
