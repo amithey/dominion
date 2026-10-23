@@ -9,16 +9,16 @@
     "ships/corvette__martadinata_class.glb"
   ],
   "sha256": {
-    "ships/corvette__holland_class.glb": "03619bac648241b583e6447c6f44d28b7591a7d00a8474e726a18892911f45f9",
-    "ships/corvette__k130_braunschweig.glb": "cc7f7f41fd09ae11c16ce45f6124b1ad85d1e3b547435338a8e0c35b330d9a95",
-    "ships/corvette__kamorta_class.glb": "aed3698fd6993420631d8124d15ad99a5a4d2a42fd0e06e8dba3fbec4ead302e",
-    "ships/corvette__karakurt_class.glb": "5ef2345e7197d10d697c7985f9208fb252d022ab9304d8c85dd1dd58e0e829bb",
-    "ships/corvette__la_fayette_class.glb": "893444d2796238b8e5f671584b3b1313f27a22cfec59699747c0dc0544c9bef0",
-    "ships/corvette__martadinata_class.glb": "1f765b0c1d662c100f1ca30e77237072ca16a8e622c120808eea0b575f7a1092"
+    "ships/corvette__holland_class.glb": "ea6797530ed291ca84728cdd5d5c061c26f992f6ecdba2a1dab66071de241562",
+    "ships/corvette__k130_braunschweig.glb": "7ccfad5a51ee271d56b9ae8340299a549786ea547c000ddb1188266318518f10",
+    "ships/corvette__kamorta_class.glb": "5b1221afcf487009082cdf5194f1b7044003d71abdf3bd0a82d4962de1a329b0",
+    "ships/corvette__karakurt_class.glb": "46a32f044a0942bf0c272d8cafa3b67858842d5f15bcd0d7eef371a079ec990a",
+    "ships/corvette__la_fayette_class.glb": "23e645358f049ecf19a6501525f34232c989a59a22fac5f4c066bcb1eb52031d",
+    "ships/corvette__martadinata_class.glb": "ba33d035311dafbfce4e33b7b9cfba0bff7674b7d37d892da237c19f9f3e7626"
   },
   "maximum_triangles": [
-    11666,
-    1894
+    11646,
+    1898
   ],
   "checks": [
     "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
@@ -30,6 +30,7 @@
   "generators": [
     "generate_p7_ships.py",
     "ship_parts.py",
+    "submarine_parts.py",
     "validate_ships.py",
     "vehicle_parts.py"
   ]
