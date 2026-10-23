@@ -55,13 +55,14 @@ def airframe(slug,name,lod,family,dimensions,wing,fins,source,seats=1,engines=1,
 def jet__f_16_block_50(lod=0):return model('jet__f_16_block_50','F-16 Block 50',lod,'f16')
 def jet__f_16iq_fighting_falcon(lod=0):return model('jet__f_16iq_fighting_falcon','F-16IQ Fighting Falcon',lod,'f16')
 
-def f35(slug,name,lod):
-    return airframe(slug,name,lod,'f35',(15.7,10.7,4.38,2.1,1.9,.90),
+def f35(slug,name,lod,stovl=False):
+    return airframe(slug,name,lod,'f35',(15.6 if stovl else 15.7,10.7,4.36 if stovl else 4.38,2.1,1.9,.90),
         [(.70,1.3,-3.5),(3,-.5,-3.7),(5.35,-2.75,-3.65)],
         [(-.75,2.35,4.52,-3.15,-6.85,-4.9,-6.1),(.75,2.35,4.52,-3.15,-6.85,-4.9,-6.1)],
         'https://www.lockheedmartin.com/content/dam/lockheed-martin/aero/documents/F-35/Fast_Facts_May_2020.pdf',
         stealth=True,features=['blended fuselage chines','trapezoidal wings','outward-canted twin fins','single large nozzle','internal weapon bays with hinged doors','no external pylons'],
         fin_cant=20,intake_x=1.02,intake_width=.72,intake_height=.83,intake_z=.21,engine_radius=.63,cross_power=.72,
+        lift_fan=stovl,vector_nozzle=stovl,gun=not stovl,
         stabilator=[(.70,1.8,-3.8,-6.9),(3.43,1.8,-5.8,-7.0)],
         profile=[(-.455,0,.30,.36),(-.38,0,.43,.48),(-.22,0,.50,.50),(0,0,.50,.5),(.21,.10,.30,.40),(.32,.10,.22,.33),(.44,.04,.13,.18),(.50,0,.012,.02)])
 def jet__f_35a(lod=0):return f35('jet__f_35a','F-35A',lod)
@@ -203,6 +204,41 @@ def lightFighter__tejas_mk1(lod=0):
         intake_x=.76,intake_width=.55,intake_height=.65,intake_z=.18,engine_radius=.45)
 def stealthFighter__f_35a(lod=0):return f35('stealthFighter__f_35a','F-35A',lod)
 def stealthFighter__f_35a_lightning_ii(lod=0):return f35('stealthFighter__f_35a_lightning_ii','F-35A Lightning II',lod)
+
+def stealthFighter__f_35b_lightning(lod=0):return f35('stealthFighter__f_35b_lightning','F-35B Lightning',lod,True)
+def stealthFighter__f_35i_adir(lod=0):return f35('stealthFighter__f_35i_adir','F-35I Adir',lod)
+def stealthFighter__j_20(lod=0):
+    return airframe('stealthFighter__j_20','J-20',lod,'j20',(20.4,13.5,4.45,2.6,1.8,1.15),
+        [(.8,2.5,-5.4),(3.9,-.4,-5.2),(6.75,-3.5,-5.0)],
+        [(-1.05,2.55,4.66,-4.4,-8.6,-6.5,-7.9),(1.05,2.55,4.66,-4.4,-8.6,-6.5,-7.9)],
+        'https://odin.t2com.army.mil/WEG/Asset/J-20',engines=2,stealth=True,
+        features=['long chined forebody','canard-delta layout','canted twin fins','twin nozzles','internal weapon bays without pylons'],
+        fin_cant=25,engine_spacing=1.65,engine_radius=.60,intake_x=1.34,intake_width=.80,intake_height=.90,intake_z=.18,cross_power=.75,
+        canard=[(.85,2.65,4.6,2.7),(3.3,2.65,3.1,2.4)])
+def stealthFighter__su_57(lod=0):
+    return airframe('stealthFighter__su_57','Su-57',lod,'su57',(20.1,14.1,4.74,3.6,1.35,1.35),
+        [(1.1,2.2,-4.6),(4.5,-.7,-4.5),(7.05,-3.45,-4.3)],
+        [(-1.75,2.5,4.97,-4.0,-8.2,-6.4,-7.6),(1.75,2.5,4.97,-4.,-8.2,-6.4,-7.6)],
+        'https://www.uacrussia.ru/en/aircraft/lineup/military/su-57/',engines=2,stealth=True,
+        features=['broad flattened blended fuselage','widely separated nozzles','low outward-canted twin fins','swept trapezoidal wings','internal longitudinal weapon bays'],
+        engine_spacing=2.75,engine_radius=.58,intake_x=1.40,intake_width=1.0,intake_height=.75,intake_z=.12,fin_cant=25,cross_power=.70,
+        stabilator=[(1.0,2.15,-5.3,-9.0),(4.8,2.15,-7.4,-8.8)],lex=True)
+def attackJet__a_10c_thunderbolt_ii(lod=0):
+    return airframe('attackJet__a_10c_thunderbolt_ii','A-10C Thunderbolt II',lod,'a10',(16.16,17.42,4.42,1.9,1.95,1.05),
+        [(.65,.7,-1.9),(5.2,.3,-2.0),(8.71,-.2,-1.9)],
+        [(-2.4,2.1,4.42,-5.4,-7.7,-6.0,-7.3),(2.4,2.1,4.42,-5.4,-7.7,-6.0,-7.3)],
+        'https://www.af.mil/Portals/1/documents/aboutus/FactSheets/A10_Thunderbolt_II.pdf',engines=2,
+        features=['straight high-aspect-ratio wings','twin high aft turbofan nacelles','twin tail fins','low blunt armoured nose','forward GAU-8 cannon'],
+        turbofans=[(-1.5,3.25,-3.7),(1.5,3.25,-3.7)],fan_radius=.73,fan_length=3.2,
+        stabilator=[(.55,2.1,-5.45,-7.6),(3.35,2.1,-5.7,-7.5)],gun_fraction=.44,gun_width=.10,
+        profile=[(-.50,0,.05,.08),(-.35,0,.30,.34),(-.1,0,.5,.5),(.12,0,.5,.5),(.3,-.04,.42,.38),(.45,-.12,.27,.22),(.50,-.15,.10,.10)])
+def attackJet__jaguar(lod=0):
+    return airframe('attackJet__jaguar','Jaguar',lod,'jaguar',(16.83,8.68,4.89,1.3,1.6,1.15),
+        [(.45,.55,-2.4),(2.4,-.95,-2.5),(4.34,-2.1,-2.6)],[(0,2.4,4.89,-3.4,-7.0,-5.2,-6.4)],
+        'https://www.rafmuseum.org.uk/documents/LargePrintGuides/The%20RAF%20in%20an%20Age%20of%20Uncertainty.pdf',engines=2,
+        features=['narrow swept high wing','paired lateral intakes','slender twin-engine fuselage','single fin','rear stabilators'],
+        engine_spacing=.82,engine_radius=.35,intake_x=.77,intake_width=.57,intake_height=.62,intake_z=.14,
+        stabilator=[(.4,2.3,-4.6,-7.5),(2.65,2.3,-6.3,-7.25)],gun_count=2,gun_fraction=.25)
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):

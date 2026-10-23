@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 257,
+  "ready_files": 263,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -532,6 +532,18 @@
         "aircraft/lightFighter__f_5m.glb",
         "aircraft/lightFighter__fa_50.glb"
       ]
+    },
+    {
+      "batch": 46,
+      "report": "expansion-46-validation.json",
+      "files": [
+        "aircraft/lightFighter__j_10c.glb",
+        "aircraft/lightFighter__mirage_2000_5f.glb",
+        "aircraft/lightFighter__t_50iq.glb",
+        "aircraft/lightFighter__tejas_mk1.glb",
+        "aircraft/stealthFighter__f_35a.glb",
+        "aircraft/stealthFighter__f_35a_lightning_ii.glb"
+      ]
     }
   ],
   "priorities": {
@@ -805,7 +817,7 @@
     "P6": {
       "requested_rows": 128,
       "unique_files": 127,
-      "ready_files": 30,
+      "ready_files": 36,
       "ready_slugs": [
         "jet__eurofighter_typhoon",
         "jet__f_15ex_eagle_ii",
@@ -836,7 +848,13 @@
         "lightFighter__f_16c",
         "lightFighter__f_5e",
         "lightFighter__f_5m",
-        "lightFighter__fa_50"
+        "lightFighter__fa_50",
+        "lightFighter__j_10c",
+        "lightFighter__mirage_2000_5f",
+        "lightFighter__t_50iq",
+        "lightFighter__tejas_mk1",
+        "stealthFighter__f_35a",
+        "stealthFighter__f_35a_lightning_ii"
       ],
       "remaining_slugs": [
         "aewc__a_50u",
@@ -900,10 +918,6 @@
         "heavyBomberDrone__vampire_baba_yaga",
         "interceptorDrone__interceptor_drone",
         "jf17__jf_17_thunder",
-        "lightFighter__j_10c",
-        "lightFighter__mirage_2000_5f",
-        "lightFighter__t_50iq",
-        "lightFighter__tejas_mk1",
         "loiterer__arash",
         "loiterer__ch_901",
         "loiterer__hero_120",
@@ -929,8 +943,6 @@
         "raptor__f_22_raptor",
         "shahed__geran_2",
         "shahed__shahed_drone",
-        "stealthFighter__f_35a",
-        "stealthFighter__f_35a_lightning_ii",
         "stealthFighter__f_35b_lightning",
         "stealthFighter__f_35i_adir",
         "stealthFighter__j_20",

@@ -155,6 +155,22 @@ def rectangular_duct(m,front,back,x0,x1,y0,y1,width,height,lod):
 
 def engines(rig,s,lod):
     L=s.length;W=s.body_width;H=s.body_height;cy=s.belly+H/2
+    if s.details.get('turbofans'):
+        radius=s.details['fan_radius'];length=s.details['fan_length']
+        for i,p in enumerate(s.details['turbofans']):
+            x,y,z=p;m=Mesh()
+            curved_shell(m,'paint',[(z-length/2,y,radius*.66,radius*.66),(z-length*.28,y,radius*.91,radius*.91),
+                (z+length*.25,y,radius,radius),(z+length/2,y,radius*.94,radius*.94)],lod,cap_start=False,cap_end=False)
+            m.shift((x,0,0));front=np.array([x,y,z+length/2]);rear=np.array([x,y,z-length/2])
+            hollow_muzzle(m,front-[0,0,.45],front,radius*.94,radius*.83,8 if lod else 24)
+            hollow_muzzle(m,rear+[0,0,.25],rear,radius*.66,radius*.48,8 if lod else 24)
+            for t in np.linspace(0,math.tau,6 if lod else 18,endpoint=False):
+                R=rotation([0,0,1],t);c=front-[0,0,.35]+R@[0,radius*.42,0]
+                m.box('metal_dark',c,(radius*.07,radius*.70,.045),R)
+            m.tube('metal_dark',front-[0,0,.39],front-[0,0,.17],radius*.18,8 if lod else 20,.015)
+            rig.add('Engine_'+str(i),'Fuselage',p,m)
+            rig.add('Afterburner' if i==0 else 'Afterburner_'+str(i),'Engine_'+str(i),rear,frame_rotation=quat([0,1,0],math.pi),forward='-Z',afterburning=False)
+        return
     for i in range(s.engines):
         x=(i-(s.engines-1)/2)*s.details.get('engine_spacing',W*.62);m=Mesh()
         radius=s.details.get('engine_radius',.43 if s.engines==2 else .51);aft=L*(.50-s.details.get('engine_aft_fraction',.50))
@@ -163,7 +179,7 @@ def engines(rig,s,lod):
                  (-L*.15,cy,radius*1.16,radius*1.16),(L*.03,cy,radius*.90,radius*.90)],lod,cap_start=False)
             pod.shift((x,0,aft));merge_mesh(m,pod)
         hollow_muzzle(m,(x,cy,-L*.46+aft),(x,cy,-L*.50+aft),radius,radius*.82,8 if lod else 24)
-        rig.add('Engine_'+str(i),'Fuselage',(x,cy,-L*.20),m)
+        rig.add('Engine_'+str(i),'Fuselage',(x,cy,-L*.43 if s.details.get('vector_nozzle') else -L*.20),m,'X' if s.details.get('vector_nozzle') else None)
         rig.add('Afterburner' if i==0 else 'Afterburner_'+str(i),'Fuselage',(x,cy,-L*.50+aft),frame_rotation=quat([0,1,0],math.pi),forward='-Z')
     if s.family=='f15':
         for side,label in ((-1,'L'),(1,'R')):
@@ -316,6 +332,10 @@ def fittings(rig,s,lod):
     if s.details.get('modern_f5'):
         m.box('paint',(0,y+.05,-L*.10),(.24,.20,.65))
         for side in (-1,1):m.box('paint',(side*W*.43,y-.30,L*.27),(.11,.16,.28))
+    if s.details.get('lift_fan'):
+        for side,label in ((-1,'L'),(1,'R')):
+            door=Mesh();door.box('paint',(side*.38,y+.015,L*.08),(.74,.07,1.7))
+            rig.add('Lift_Fan_Door_'+label,'Fuselage',(side*.76,y+.015,L*.08),door,'Z')
     # Dorsal blades are supported by the skin, with no free-floating fittings.
     for z,h in ((L*.04,.23),(-L*.19,.18)):
         m.box('paint',(0,y-.06+h/2,z),(.045,h,.28))

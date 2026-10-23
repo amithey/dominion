@@ -1,0 +1,38 @@
+{
+  "batch": 46,
+  "files": [
+    "aircraft/lightFighter__j_10c.glb",
+    "aircraft/lightFighter__mirage_2000_5f.glb",
+    "aircraft/lightFighter__t_50iq.glb",
+    "aircraft/lightFighter__tejas_mk1.glb",
+    "aircraft/stealthFighter__f_35a.glb",
+    "aircraft/stealthFighter__f_35a_lightning_ii.glb"
+  ],
+  "sha256": {
+    "aircraft/lightFighter__j_10c.glb": "f3ab66b165f67254f96017a81501ab45cb0c78c091eb3f24f18168807c3e8927",
+    "aircraft/lightFighter__mirage_2000_5f.glb": "6d59620515d19bece62b08121ac973b53744020cd032a067cc57d18d293b7dca",
+    "aircraft/lightFighter__t_50iq.glb": "f4e2908fc8fd0691aea38c08dde75364220a38660fd4bf7a81762e62cb065672",
+    "aircraft/lightFighter__tejas_mk1.glb": "bd9a8576ec1a8b8ccf4032f74a0cccf5c285a5bc9d2267038d77746c2299f0c8",
+    "aircraft/stealthFighter__f_35a.glb": "2bc4796148f5d9a1a53cdc2f63253d933e06d196c67a8edecf618b3e10f74cb5",
+    "aircraft/stealthFighter__f_35a_lightning_ii.glb": "008bd3c6b86cac3a10907023bb43dd3e8fc31c043c97617335f999987829fa79"
+  },
+  "maximum_triangles": [
+    9690,
+    1796
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}
