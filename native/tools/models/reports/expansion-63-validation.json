@@ -1,0 +1,36 @@
+{
+  "batch": 63,
+  "files": [
+    "ships/destroyer__arleigh_burke_class.glb",
+    "ships/destroyer__choe_hyon_class.glb",
+    "ships/destroyer__de_zeven_provincien_class.glb",
+    "ships/destroyer__f124_sachsen_class.glb",
+    "ships/destroyer__hobart_class.glb",
+    "ships/destroyer__horizon_class.glb"
+  ],
+  "sha256": {
+    "ships/destroyer__arleigh_burke_class.glb": "2bc3b1d8fdccfbdc972bab3453499d2d2f5880aa7df07fbfee3a9dde6404608e",
+    "ships/destroyer__choe_hyon_class.glb": "ae29fd56cd47abd7b7dab1be8deaa992226120ab86e37d01ed1f2a070973e904",
+    "ships/destroyer__de_zeven_provincien_class.glb": "4001f187f85920b54bf1a5a4a706bedc01530e44470d0092134d0e985ed06e69",
+    "ships/destroyer__f124_sachsen_class.glb": "2c6362a6fdb27c7ddf6bd3af92805fa80f1707207d8292583ddea5105d23b373",
+    "ships/destroyer__hobart_class.glb": "5a3e3d14174f37f05ba8202da7db691518253876bfb3ab2aa88ab6e55e66853a",
+    "ships/destroyer__horizon_class.glb": "b00031ec8372411a77b84265a30acc03b752cdd4ba99de90f5c51f9c23937af1"
+  },
+  "maximum_triangles": [
+    12856,
+    2018
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}

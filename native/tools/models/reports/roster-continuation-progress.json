@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 354,
+  "ready_files": 360,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -731,6 +731,18 @@
         "aircraft/loiterer__switchblade_600.glb",
         "aircraft/harop__harop.glb"
       ]
+    },
+    {
+      "batch": 63,
+      "report": "expansion-63-validation.json",
+      "files": [
+        "ships/destroyer__arleigh_burke_class.glb",
+        "ships/destroyer__choe_hyon_class.glb",
+        "ships/destroyer__de_zeven_provincien_class.glb",
+        "ships/destroyer__f124_sachsen_class.glb",
+        "ships/destroyer__hobart_class.glb",
+        "ships/destroyer__horizon_class.glb"
+      ]
     }
   ],
   "priorities": {
@@ -1139,8 +1151,15 @@
     "P7": {
       "requested_rows": 113,
       "unique_files": 113,
-      "ready_files": 0,
-      "ready_slugs": [],
+      "ready_files": 6,
+      "ready_slugs": [
+        "destroyer__arleigh_burke_class",
+        "destroyer__choe_hyon_class",
+        "destroyer__de_zeven_provincien_class",
+        "destroyer__f124_sachsen_class",
+        "destroyer__hobart_class",
+        "destroyer__horizon_class"
+      ],
       "remaining_slugs": [
         "aegisCruiser__maya_class_aegis_destroyer",
         "asFrigate__admiral_gorshkov_class",
@@ -1191,12 +1210,6 @@
         "corvette__tamandare_frigate",
         "corvette__type_056a",
         "corvette__type_23_frigate",
-        "destroyer__arleigh_burke_class",
-        "destroyer__choe_hyon_class",
-        "destroyer__de_zeven_provincien_class",
-        "destroyer__f124_sachsen_class",
-        "destroyer__hobart_class",
-        "destroyer__horizon_class",
         "destroyer__istanbul_class",
         "destroyer__maya_class",
         "destroyer__moudge_class",
