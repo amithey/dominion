@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 437,
+  "ready_files": 442,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -898,6 +898,17 @@
         "ships/carrier__gerald_r_ford_class.glb",
         "ships/carrier__ins_vikrant.glb"
       ]
+    },
+    {
+      "batch": 77,
+      "report": "expansion-77-validation.json",
+      "files": [
+        "ships/carrier__kaga_f_35b.glb",
+        "ships/carrier__queen_elizabeth_class.glb",
+        "ships/carrier__shahid_bagheri_drone_carrier.glb",
+        "ships/carrier__tcg_anadolu_drone_carrier.glb",
+        "ships/submarine__agosta_90b.glb"
+      ]
     }
   ],
   "priorities": {
@@ -1306,7 +1317,7 @@
     "P7": {
       "requested_rows": 113,
       "unique_files": 113,
-      "ready_files": 83,
+      "ready_files": 88,
       "ready_slugs": [
         "aegisCruiser__maya_class_aegis_destroyer",
         "asFrigate__admiral_gorshkov_class",
@@ -1331,6 +1342,10 @@
         "carrier__fujian",
         "carrier__gerald_r_ford_class",
         "carrier__ins_vikrant",
+        "carrier__kaga_f_35b",
+        "carrier__queen_elizabeth_class",
+        "carrier__shahid_bagheri_drone_carrier",
+        "carrier__tcg_anadolu_drone_carrier",
         "corvette__ada_class",
         "corvette__al_jubail_class",
         "corvette__amnok_class",
@@ -1390,13 +1405,10 @@
         "missileBoat__azmat_class",
         "missileBoat__sa_ar_4_5",
         "missileBoat__type_022",
+        "submarine__agosta_90b",
         "type45__type_45_destroyer"
       ],
       "remaining_slugs": [
-        "carrier__kaga_f_35b",
-        "carrier__queen_elizabeth_class",
-        "carrier__shahid_bagheri_drone_carrier",
-        "carrier__tcg_anadolu_drone_carrier",
         "nuclearSub__arihant_class",
         "nuclearSub__borei_a",
         "nuclearSub__ohio_class",
@@ -1404,7 +1416,6 @@
         "nuclearSub__type_094",
         "nuclearSub__vanguard_class",
         "seaDrone__sea_drone",
-        "submarine__agosta_90b",
         "submarine__astute_class",
         "submarine__collins_class",
         "submarine__dolphin_ii",

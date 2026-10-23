@@ -1,0 +1,35 @@
+{
+  "batch": 77,
+  "files": [
+    "ships/carrier__kaga_f_35b.glb",
+    "ships/carrier__queen_elizabeth_class.glb",
+    "ships/carrier__shahid_bagheri_drone_carrier.glb",
+    "ships/carrier__tcg_anadolu_drone_carrier.glb",
+    "ships/submarine__agosta_90b.glb"
+  ],
+  "sha256": {
+    "ships/carrier__kaga_f_35b.glb": "fce3f9b5b96e9983dc5c40914448e0f5295e91adef5d5b514bb012e7708e628a",
+    "ships/carrier__queen_elizabeth_class.glb": "cf47c51aee28aaa004603033dea7c675fe145e67ed55df6f5b5c5caad617e000",
+    "ships/carrier__shahid_bagheri_drone_carrier.glb": "6adae01a402f4e96c55840ecd51bcfd0790b99d7f19c1dc37283a1d597e99062",
+    "ships/carrier__tcg_anadolu_drone_carrier.glb": "d372be888b274f8a8dd54d74c41171956c83c81751fa7aea01670ebeebc1ef21",
+    "ships/submarine__agosta_90b.glb": "1358bf413a2626a98413c95cc71237a0afcfd88e6b3208d0801255331bcc5f50"
+  },
+  "maximum_triangles": [
+    11248,
+    1848
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "submarine_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}
