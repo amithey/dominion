@@ -122,6 +122,7 @@ def fuselage(rig,s,lod):
     profile=s.details.get('profile',default)
     sections=[(z*L,cy+dy*H,rx*W,ry*H) for z,dy,rx,ry in profile]
     def windows(z,theta):
+        if s.details.get('glazed_nose') and z>.44*L and math.cos(theta)<.45:return 'glass'
         return 'glass' if .325*L<z<.425*L and .35<math.cos(theta)<.92 else 'paint'
     curved_shell(m,'paint',sections,lod,windows if s.details.get('transport') else None,cross_power=s.details.get('cross_power',1.),cap_start=s.engines!=1 or bool(s.details.get('propellers')),cap_end=not s.details.get('nose_intake'),circumference=(12 if lod else 30) if s.details.get('transport') else None)
     if s.details.get('cft'):
@@ -342,8 +343,9 @@ def weapons(rig,s,lod):
             for j,f in enumerate(s.details.get('stations',(.40,.66,.89))):
                 station=interpolate(s.details['wing'],s.span/2*f);x=side*station[0];yy=station[1]-.22;z=(station[2]+station[3])/2
                 m=Mesh();m.box('paint',(x,yy,z),(.10,.38,.70));rig.add('Pylon_'+label+str(j),'Wing_'+label,(x,yy+.19,z),m)
-                store=Mesh();a=(x,yy-.30,z-.95);b=(x,yy-.30,z+1.0)
-                store.tube('paint',a,b,.105,6 if lod else 12,.025)
+                store=Mesh();length=s.details.get('store_length',1.95);radius=s.details.get('store_radius',.105)
+                a=(x,yy-.30,z-length/1.95*.95);b=(x,yy-.30,z+length/1.95)
+                store.tube('paint',a,b,radius,6 if lod else 12,.025 if not s.details.get('store_torpedo') else radius*.65)
                 for sign in (-1,1):store.box('paint',(x+sign*.16,yy-.30,z-.66),(.25,.035,.29))
                 parent='Store_'+label+str(j);rig.add(parent,'Pylon_'+label+str(j),(x,yy-.30,z),store)
                 p=list(b);rig.add('Muzzle_'+str(count),parent,p);positions['Muzzle_'+str(count)]=p;count+=1
@@ -433,6 +435,17 @@ def radar(rig,s,lod):
             pod=Mesh();curved_shell(pod,'paint',[(-L*.22,cy,.10,.16),(-L*.16,cy,.28,.45),(L*.12,cy,.28,.45),(L*.21,cy,.10,.16)],lod,circumference=8 if lod else 24,longitudinal=3)
             pod.shift((side*W*.46,0,0));merge_mesh(m,pod)
         rig.add('Radar_Conformal','Fuselage',(0,cy,0),m,scan='electronic; static exterior')
+    if s.details.get('belly_radar'):
+        x,y,z,rx,ry,half=s.details['belly_radar'];m=Mesh()
+        curved_shell(m,'paint',[(z-half,y,rx*.10,ry*.10),(z-half*.55,y,rx*.86,ry*.86),(z,y,rx,ry),(z+half*.55,y,rx*.86,ry*.86),(z+half,y,rx*.10,ry*.10)],lod,circumference=8 if lod else 24,longitudinal=3)
+        m.shift((x,0,0));rig.add('Radar_Belly','Fuselage',(x,y,z),m)
+    if s.details.get('novella_array'):
+        y=s.belly+s.body_height;z=s.length*.26;m=Mesh()
+        for x in (-.62,.62):beam(m,'paint',(x,y-.15,z),(x,y+1.35,z),.12)
+        for side in (-1,1):
+            m.box('paint',(0,y+1.45,z+side*.85),(1.8,.65,.08))
+            m.box('paint',(side*.85,y+1.45,z),(.08,.65,1.8))
+        rig.add('Novella_Sensor_Array','Fuselage',(0,y,z),m)
     d=s.details.get('radome')
     if not d:return
     x,y,z,rx,rz,h=d;m=Mesh();rings=[];n=8 if lod else 32

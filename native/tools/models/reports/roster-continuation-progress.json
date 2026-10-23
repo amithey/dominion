@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 299,
+  "ready_files": 305,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -616,6 +616,18 @@
         "aircraft/aewc__g550_eitam.glb",
         "aircraft/aewc__kj_500.glb"
       ]
+    },
+    {
+      "batch": 53,
+      "report": "expansion-53-validation.json",
+      "files": [
+        "aircraft/aewc__netra_aew_c.glb",
+        "aircraft/aewc__saab_2000_erieye.glb",
+        "aircraft/maritimePatrol__atlantique_2.glb",
+        "aircraft/maritimePatrol__cn_235_mpa.glb",
+        "aircraft/maritimePatrol__il_38n.glb",
+        "aircraft/maritimePatrol__kawasaki_p_1.glb"
+      ]
     }
   ],
   "priorities": {
@@ -889,7 +901,7 @@
     "P6": {
       "requested_rows": 128,
       "unique_files": 127,
-      "ready_files": 72,
+      "ready_files": 78,
       "ready_slugs": [
         "aewc__a_50u",
         "aewc__e_2c_hawkeye",
@@ -905,6 +917,8 @@
         "aewc__g550_caew",
         "aewc__g550_eitam",
         "aewc__kj_500",
+        "aewc__netra_aew_c",
+        "aewc__saab_2000_erieye",
         "attackJet__a_10c_thunderbolt_ii",
         "attackJet__jaguar",
         "attackJet__l_159_alca",
@@ -955,6 +969,10 @@
         "lightFighter__mirage_2000_5f",
         "lightFighter__t_50iq",
         "lightFighter__tejas_mk1",
+        "maritimePatrol__atlantique_2",
+        "maritimePatrol__cn_235_mpa",
+        "maritimePatrol__il_38n",
+        "maritimePatrol__kawasaki_p_1",
         "raptor__f_22_raptor",
         "stealthFighter__f_35a",
         "stealthFighter__f_35a_lightning_ii",
@@ -965,8 +983,6 @@
         "superTucano__a_29_super_tucano"
       ],
       "remaining_slugs": [
-        "aewc__netra_aew_c",
-        "aewc__saab_2000_erieye",
         "akinci__bayraktar_akinci",
         "carrierDrone__carrier_drone",
         "drone__akinci_wing_loong",
@@ -1006,10 +1022,6 @@
         "loiterer__nagastra_1",
         "loiterer__qasef_2k_samad",
         "loiterer__switchblade_600",
-        "maritimePatrol__atlantique_2",
-        "maritimePatrol__cn_235_mpa",
-        "maritimePatrol__il_38n",
-        "maritimePatrol__kawasaki_p_1",
         "maritimePatrol__p_3am_orion",
         "maritimePatrol__p_3c_orion",
         "maritimePatrol__p_72",

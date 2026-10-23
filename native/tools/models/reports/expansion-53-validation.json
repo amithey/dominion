@@ -1,0 +1,38 @@
+{
+  "batch": 53,
+  "files": [
+    "aircraft/aewc__netra_aew_c.glb",
+    "aircraft/aewc__saab_2000_erieye.glb",
+    "aircraft/maritimePatrol__atlantique_2.glb",
+    "aircraft/maritimePatrol__cn_235_mpa.glb",
+    "aircraft/maritimePatrol__il_38n.glb",
+    "aircraft/maritimePatrol__kawasaki_p_1.glb"
+  ],
+  "sha256": {
+    "aircraft/aewc__netra_aew_c.glb": "fbbe6243b1cabab2d6cf8ed3761bf8adf85305a873750e104886ba2d3de1c261",
+    "aircraft/aewc__saab_2000_erieye.glb": "53d44f7c4c298321d88dccf5bbc09e74c163afe30d1e79070ec21963170168b1",
+    "aircraft/maritimePatrol__atlantique_2.glb": "0be77fb820b53da9419205768e9c1df749ca29d386e9ec556bc0c90d71ae16f4",
+    "aircraft/maritimePatrol__cn_235_mpa.glb": "63f03724628127ecfef10e7927e4c5b120cc34e8eebe7c948907061eb96e8cad",
+    "aircraft/maritimePatrol__il_38n.glb": "5d1b6de12e282c78628bd21971507b753636715c4136014b9d623624efab6022",
+    "aircraft/maritimePatrol__kawasaki_p_1.glb": "4bcc9f6cb3bb6975951c699d7608b78509e517d4929fe40de37fd09b32047fcb"
+  },
+  "maximum_triangles": [
+    13124,
+    2024
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

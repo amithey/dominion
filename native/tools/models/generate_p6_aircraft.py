@@ -397,13 +397,13 @@ def aewc__e_767(lod=0):
 def aewc__e_7a_wedgetail(lod=0):return wedgetail('aewc__e_7a_wedgetail','E-7A Wedgetail',lod)
 def aewc__e_7t_peace_eagle(lod=0):return wedgetail('aewc__e_7t_peace_eagle','E-7T Peace Eagle',lod)
 
-def emb145(slug,name,lod):
+def emb145(slug,name,lod,netra=False):
     return largeplane(slug,name,lod,'emb145',(29.87,20.04,6.76,2.1,2.2,1.3),
         [(.75,2.3,1.9,-3.2),(10.02,3.1,-3.8,-5.5)],[(0,3.6,6.76,-7.7,-14.2,-11.7,-13.8)],
-        'https://www.embraer.com/defense-security/en-us/airborne-early-warning-control',
-        ['slender ERJ-145 airframe','two rear-mounted turbofans','T-tail','fixed dorsal Erieye radar beam','low swept wings'],
+        'https://drdo.gov.in/drdo/en/offerings/products/netra' if netra else 'https://www.embraer.com/defense-security/en-us/airborne-early-warning-control',
+        ['slender ERJ-145 airframe','two rear-mounted turbofans','T-tail','fixed dorsal DRDO radar array' if netra else 'fixed dorsal Erieye radar beam','low swept wings'],
         turbofans=[(-1.6,3.05,-9.),(1.6,3.05,-9.)],fan_radius=.55,fan_length=2.8,rear_engines=True,
-        aesa_bar={'y':5.05,'z':-.5,'length':8.6,'width':.65,'height':.85},
+        aesa_bar={'y':5.05,'z':-.5,'length':8.1 if netra else 8.6,'width':.80 if netra else .65,'height':.85},
         stabilator=[(.025,6.35,-11.6,-14.1),(4.1,6.35,-12.5,-13.9)],gear_layout=airliner_gear(29.87,4.3,.36))
 def aewc__e_99(lod=0):return emb145('aewc__e_99','E-99',lod)
 
@@ -425,6 +425,83 @@ def aewc__kj_500(lod=0):
         propellers=[(side*x,4.65,z) for side in (-1,1) for x,z in [(5.,4.2),(10.5,3.0)]],prop_radius=2.25,prop_blades=6,prop_nacelle=5.7,
         radome=[0,8.45,-1.5,3.5,3.5,.80],radome_static=True,
         stabilator=[(.6,4.8,-9.3,-15.4),(6.7,4.8,-12.0,-15.0)],gear_layout=airliner_gear(34.02,4.9,.54))
+
+def aewc__netra_aew_c(lod=0):return emb145('aewc__netra_aew_c','Netra AEW&C',lod,True)
+def aewc__saab_2000_erieye(lod=0):
+    return largeplane('aewc__saab_2000_erieye','Saab 2000 Erieye',lod,'saab2000',(27.28,24.76,7.73,2.31,2.4,1.25),
+        [(.8,2.6,2.,-2.5),(12.38,3.05,-.5,-1.95)],[(0,3.4,7.73,-7.8,-12.9,-10.6,-12.4)],
+        'https://www.saab.com/products/saab2000',
+        ['slender turboprop airliner','two six-blade propellers','fixed Erieye dorsal radar beam','low tapered wings','conventional tail'],
+        propellers=[(-4.2,2.365,3.6),(4.2,2.365,3.6)],prop_radius=1.905,prop_blades=6,prop_nacelle=4.4,
+        aesa_bar={'y':5.4,'z':-.5,'length':8.5,'width':.65,'height':.85},
+        stabilator=[(.03,3.65,-8.4,-12.8),(4.6,3.65,-10.1,-12.4)],gear_layout=airliner_gear(27.28,5.1,.39))
+
+def maritimePatrol__atlantique_2(lod=0):
+    return largeplane('maritimePatrol__atlantique_2','Atlantique 2',lod,'atl2',(31.7,37.5,10.8,3.3,4.1,1.25),
+        [(1.1,4.2,2.8,-3.4),(18.75,4.3,-1.8,-3.6)],[(0,5.0,10.8,-7.3,-13.3,-10.7,-12.7)],
+        'https://www.dassault-aviation.com/en/defense/customer-support/operational-aircraft/atlantique-2/',
+        ['deep double-bubble patrol fuselage','glazed observer nose','two four-blade Tyne turboprops','ventral radar fairing','long MAD tail sting','internal torpedo bay'],
+        propellers=[(-6.0,4.05,3.6),(6.0,4.05,3.6)],prop_radius=2.44,prop_blades=4,prop_nacelle=6.1,
+        glazed_nose=True,internal_bomber=True,belly_radar=[0,1.20,4.0,1.05,.36,1.5],
+        stabilator=[(.06,4.6,-8.6,-12.8),(6.1,4.6,-10.2,-12.4)],gear_layout=airliner_gear(31.7,7.8,.58,2),
+        profile=[(-.5,.02,.015,.02),(-.40,.02,.04,.05),(-.30,0,.32,.32),(-.14,0,.5,.5),(.16,0,.5,.5),(.32,0,.46,.46),(.43,-.04,.31,.34),(.50,-.08,.09,.12)])
+def maritimePatrol__cn_235_mpa(lod=0):
+    return largeplane('maritimePatrol__cn_235_mpa','CN-235 MPA',lod,'cn235',(21.4,25.81,8.12,2.9,3.1,1.25),
+        [(1.,4.0,1.8,-2.3),(12.905,4.1,-.5,-2.1)],[(0,4.0,8.12,-5.4,-9.7,-7.5,-9.1)],
+        'https://www.military.ie/en/who-we-are/air-corps/the-fleet/casa-cn-235/',
+        ['high tapered wing','two four-blade turboprops','squared cargo-derived fuselage','ventral maritime radar fairing','conventional tail'],
+        propellers=[(-4.4,3.65,3.0),(4.4,3.65,3.0)],prop_radius=1.85,prop_blades=4,prop_nacelle=4.7,cross_power=.85,
+        belly_radar=[0,1.15,2.8,.75,.35,1.1],stabilator=[(.05,3.9,-5.6,-9.3),(4.4,3.9,-7.6,-9.0)],gear_layout=airliner_gear(21.4,3.9,.43))
+def maritimePatrol__il_38n(lod=0):
+    return largeplane('maritimePatrol__il_38n','Il-38N',lod,'il38',(39.6,37.4,10.16,3.7,3.7,2.0),
+        [(1.3,3.5,4.0,-3.6),(18.7,4.0,-.6,-3.2)],[(0,5.1,10.16,-10.1,-17.6,-13.9,-16.9)],
+        'https://npo-leninetz.ru/news/67/',
+        ['four four-blade turboprops','low tapered wings','Novella dorsal sensor frame','ventral radar fairing','MAD tail sting','internal torpedo bay'],
+        propellers=[(side*x,3.55,z) for side in (-1,1) for x,z in [(5.6,5.6),(11.4,4.6)]],prop_radius=2.25,prop_blades=4,prop_nacelle=5.9,
+        novella_array=True,belly_radar=[0,1.8,6.,1.0,.40,1.5],internal_bomber=True,
+        stabilator=[(.05,4.8,-11.5,-17.1),(6.8,4.8,-14.,-16.6)],gear_layout=airliner_gear(39.6,8.0,.58,2),
+        profile=[(-.5,0,.015,.02),(-.42,0,.04,.05),(-.32,0,.32,.32),(-.14,0,.5,.5),(.16,0,.5,.5),(.32,0,.46,.46),(.43,-.04,.31,.34),(.50,-.08,.08,.1)])
+def maritimePatrol__kawasaki_p_1(lod=0):
+    return largeplane('maritimePatrol__kawasaki_p_1','Kawasaki P-1',lod,'p1',(38.,35.4,12.1,3.7,4.,1.6),
+        [(1.3,3.5,4.5,-4.),(17.7,4.5,-5.7,-7.8)],[(0,5.2,12.1,-9.0,-16.9,-13.5,-16.3)],
+        'https://global.kawasaki.com/en/mobility/air/aircrafts/p_1.html',
+        ['four underwing turbofans','broad patrol fuselage','low swept wing','MAD tail sting','internal torpedo bay'],
+        turbofans=[(side*x,2.7,z) for side in (-1,1) for x,z in [(5.,2.4),(9.5,.5)]],fan_radius=.65,fan_length=3.0,engine_mount_y=3.5,internal_bomber=True,
+        stabilator=[(.05,4.9,-10.,-16.4),(6.2,5.1,-13.,-16.)],gear_layout=airliner_gear(38.,7.2,.56,2),
+        profile=[(-.5,0,.015,.02),(-.41,0,.04,.05),(-.30,0,.33,.32),(-.14,0,.5,.5),(.16,0,.5,.5),(.32,0,.46,.46),(.43,-.04,.31,.34),(.50,-.08,.08,.10)])
+
+def orion(slug,name,lod):
+    return largeplane(slug,name,lod,'p3',(35.57,30.38,10.27,3.45,3.6,1.85),
+        [(1.2,3.3,3.,-3.4),(15.19,3.9,-1.3,-3.3)],[(0,4.9,10.27,-8.3,-14.4,-11.6,-13.8)],
+        'https://www.navair.navy.mil/product/P-3C-Orion',
+        ['four four-blade turboprops','low tapered wing','long MAD tail sting','conventional tail','internal torpedo bay'],
+        propellers=[(side*x,3.35,z) for side in (-1,1) for x,z in [(5.1,4.8),(10.2,3.8)]],prop_radius=2.055,prop_blades=4,prop_nacelle=5.5,
+        internal_bomber=True,stabilator=[(.05,4.7,-9.4,-14.0),(5.5,4.7,-11.5,-13.7)],gear_layout=airliner_gear(35.57,7.2,.52),
+        profile=[(-.5,0,.015,.02),(-.41,0,.04,.05),(-.30,0,.32,.32),(-.14,0,.5,.5),(.16,0,.5,.5),(.32,0,.46,.46),(.43,-.04,.31,.34),(.50,-.08,.08,.10)])
+def maritimePatrol__p_3am_orion(lod=0):return orion('maritimePatrol__p_3am_orion','P-3AM Orion',lod)
+def maritimePatrol__p_3c_orion(lod=0):return orion('maritimePatrol__p_3c_orion','P-3C Orion',lod)
+
+def atr72(slug,name,lod,armed=False):
+    return largeplane(slug,name,lod,'atr72',(27.16,27.05,7.65,2.86,3.0,1.2),
+        [(1.0,3.9,1.9,-2.7),(13.525,4.25,-.9,-2.4)],[(0,4.0,7.65,-7.1,-12.8,-10.1,-12.3)],
+        'https://www.aeronautica.difesa.it/en/home/noi-siamo-l-am/personale-e-mezzi/',
+        ['high tapered wing','two six-blade turboprops','T-tail','ventral search radar','two external torpedo stations' if armed else 'unarmed maritime-surveillance configuration'],
+        propellers=[(-4.9,3.6,3.3),(4.9,3.6,3.3)],prop_radius=1.965,prop_blades=6,prop_nacelle=4.9,
+        belly_radar=[0,1.15,3.0,.88,.34,1.25],stabilator=[(.025,7.15,-9.8,-12.5),(4.7,7.15,-10.8,-12.3)],
+        stations=(.42,) if armed else (),store_length=2.85,store_radius=.162,store_torpedo=True,gear_layout=airliner_gear(27.16,4.1,.43))
+def maritimePatrol__p_72(lod=0):return atr72('maritimePatrol__p_72','P-72',lod,True)
+def maritimePatrol__p_72a(lod=0):return atr72('maritimePatrol__p_72a','P-72A',lod)
+
+def poseidon(slug,name,lod,indian=False):
+    extra={'profile':[(-.5,0,.015,.02),(-.43,0,.04,.05),(-.32,0,.32,.32),(-.14,0,.5,.5),(.16,0,.5,.5),(.32,0,.46,.46),(.43,-.04,.31,.34),(.50,-.08,.08,.10)]} if indian else {}
+    return largeplane(slug,name,lod,'p8',(39.5,37.64,12.83,3.76,3.8,1.3),
+        [(1.35,2.95,4.0,-5.8),(15.7,4.0,-5.1,-7.3),(18.82,4.2,-7.3,-8.2)],[(0,4.9,12.83,-8.6,-18.4,-14.7,-17.5)],
+        'https://www.boeing.com/defense/patrol-early-warning-and-battle-management/p-8-poseidon',
+        ['Boeing 737-800 patrol airframe','two underwing turbofans','raked wingtips','internal torpedo bay']+(['MAD tail sting'] if indian else ['conventional tail cone without MAD boom']),
+        turbofans=[(-5.65,2.15,1.8),(5.65,2.15,1.8)],fan_radius=.94,fan_length=3.1,engine_mount_y=3.,internal_bomber=True,
+        stabilator=[(.65,4.4,-11.3,-17.8),(6.4,4.8,-14.5,-17.2)],gear_layout=airliner_gear(39.5,5.5,.49),**extra)
+def maritimePatrol__p_8a_poseidon(lod=0):return poseidon('maritimePatrol__p_8a_poseidon','P-8A Poseidon',lod)
+def maritimePatrol__p_8i_neptune(lod=0):return poseidon('maritimePatrol__p_8i_neptune','P-8I Neptune',lod,True)
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):
