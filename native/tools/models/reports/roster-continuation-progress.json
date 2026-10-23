@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 275,
+  "ready_files": 281,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -568,6 +568,18 @@
         "aircraft/attackJet__su_25.glb",
         "aircraft/attackJet__tornado_ids.glb"
       ]
+    },
+    {
+      "batch": 49,
+      "report": "expansion-49-validation.json",
+      "files": [
+        "aircraft/raptor__f_22_raptor.glb",
+        "aircraft/jf17__jf_17_thunder.glb",
+        "aircraft/superTucano__a_29_super_tucano.glb",
+        "aircraft/carrierJet__carrier_fighter.glb",
+        "aircraft/ewJet__ea_18g_growler.glb",
+        "aircraft/ewJet__j_16d.glb"
+      ]
     }
   ],
   "priorities": {
@@ -841,7 +853,7 @@
     "P6": {
       "requested_rows": 128,
       "unique_files": 127,
-      "ready_files": 48,
+      "ready_files": 54,
       "ready_slugs": [
         "attackJet__a_10c_thunderbolt_ii",
         "attackJet__jaguar",
@@ -851,6 +863,9 @@
         "attackJet__su_24mk",
         "attackJet__su_25",
         "attackJet__tornado_ids",
+        "carrierJet__carrier_fighter",
+        "ewJet__ea_18g_growler",
+        "ewJet__j_16d",
         "jet__eurofighter_typhoon",
         "jet__f_15ex_eagle_ii",
         "jet__f_15i_ra_am",
@@ -875,6 +890,7 @@
         "jet__su_30mki",
         "jet__su_35s",
         "jet__typhoon_fgr4",
+        "jf17__jf_17_thunder",
         "lightFighter__eurofighter_typhoon",
         "lightFighter__f_16",
         "lightFighter__f_16c",
@@ -885,12 +901,14 @@
         "lightFighter__mirage_2000_5f",
         "lightFighter__t_50iq",
         "lightFighter__tejas_mk1",
+        "raptor__f_22_raptor",
         "stealthFighter__f_35a",
         "stealthFighter__f_35a_lightning_ii",
         "stealthFighter__f_35b_lightning",
         "stealthFighter__f_35i_adir",
         "stealthFighter__j_20",
-        "stealthFighter__su_57"
+        "stealthFighter__su_57",
+        "superTucano__a_29_super_tucano"
       ],
       "remaining_slugs": [
         "aewc__a_50u",
@@ -914,7 +932,6 @@
         "bomber__h_6k",
         "bomber__tu_160m",
         "carrierDrone__carrier_drone",
-        "carrierJet__carrier_fighter",
         "drone__akinci_wing_loong",
         "drone__bayraktar_tb2",
         "drone__bayraktar_tb2_domestic",
@@ -938,14 +955,11 @@
         "drone__wing_loong_i_ch_4",
         "drone__wing_loong_ii",
         "drone__wing_loong_ii_akinci",
-        "ewJet__ea_18g_growler",
-        "ewJet__j_16d",
         "ewJet__tornado_ecr",
         "harop__harop",
         "heavyBomberDrone__heavy_hexacopter",
         "heavyBomberDrone__vampire_baba_yaga",
         "interceptorDrone__interceptor_drone",
-        "jf17__jf_17_thunder",
         "loiterer__arash",
         "loiterer__ch_901",
         "loiterer__hero_120",
@@ -968,10 +982,8 @@
         "maritimePatrol__p_8i_neptune",
         "maritimePatrol__poseidon_mra1",
         "maritimePatrol__y_8q",
-        "raptor__f_22_raptor",
         "shahed__geran_2",
-        "shahed__shahed_drone",
-        "superTucano__a_29_super_tucano"
+        "shahed__shahed_drone"
       ]
     },
     "P7": {

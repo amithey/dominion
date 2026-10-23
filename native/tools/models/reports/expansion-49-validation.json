@@ -1,0 +1,38 @@
+{
+  "batch": 49,
+  "files": [
+    "aircraft/raptor__f_22_raptor.glb",
+    "aircraft/jf17__jf_17_thunder.glb",
+    "aircraft/superTucano__a_29_super_tucano.glb",
+    "aircraft/carrierJet__carrier_fighter.glb",
+    "aircraft/ewJet__ea_18g_growler.glb",
+    "aircraft/ewJet__j_16d.glb"
+  ],
+  "sha256": {
+    "aircraft/raptor__f_22_raptor.glb": "d4261dcb44f1024bb817d51cf725c6057eb14d4a43de32429e64a1c44e13a64d",
+    "aircraft/jf17__jf_17_thunder.glb": "759753ebb1b228ea5bbb7dc52acad6495af43ee1ab72b5ae962fd048e1401bfc",
+    "aircraft/superTucano__a_29_super_tucano.glb": "33519eef1c15c39d86c336d635a5a6f06ad81a201daccb1fb6375379ae939545",
+    "aircraft/carrierJet__carrier_fighter.glb": "a982ef7ffadec48a263da0215b260fdda488e57fbd9116da8855b4d387c8732b",
+    "aircraft/ewJet__ea_18g_growler.glb": "32f7ccf5aed8ea3fd8a9fb83087d5d8d6e086ebd16f72350e92eb9d6c798fd41",
+    "aircraft/ewJet__j_16d.glb": "cfd95f3352294cac4d0e6ece360e95373cb55948705e3201d50dfef26747cb9c"
+  },
+  "maximum_triangles": [
+    12440,
+    2096
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

@@ -34,7 +34,7 @@ def quat(axis,angle):
     axis=np.asarray(axis,dtype=float);axis/=np.linalg.norm(axis)
     return np.r_[axis*math.sin(angle/2),math.cos(angle/2)].tolist()
 
-def curved_shell(m,role,sections,lod=0,window=None,cross_power=1.,cap_start=True,cap_end=True):
+def curved_shell(m,role,sections,lod=0,window=None,cross_power=1.,cap_start=True,cap_end=True,circumference=None,longitudinal=None):
     """Bounded cubic Hermite meridians; smooth positive radii, fixed end sizes."""
     a=np.asarray(sections,dtype=float);z=a[:,0];values=a[:,1:];h=np.diff(z)
     assert (h>0).all()
@@ -46,12 +46,12 @@ def curved_shell(m,role,sections,lod=0,window=None,cross_power=1.,cap_start=True
             if u*v>0:tangents[j,k]=(h[j-1]+h[j])/(h[j-1]/u+h[j]/v)
     samples=[]
     for j in range(len(a)-1):
-        for t in np.linspace(0,1,1 if lod else 4,endpoint=False):
+        for t in np.linspace(0,1,1 if lod else (longitudinal or 4),endpoint=False):
             p=(2*t**3-3*t*t+1)*values[j]+(t**3-2*t*t+t)*h[j]*tangents[j]
             p+=(-2*t**3+3*t*t)*values[j+1]+(t**3-t*t)*h[j]*tangents[j+1]
             samples.append([z[j]+t*h[j],*p])
     samples.append(a[-1].tolist())
-    shell_surface(m,role,samples,lod,window,cross_power,segments=12 if lod else 36,subdivisions=1,cap_start=cap_start,cap_end=cap_end)
+    shell_surface(m,role,samples,lod,window,cross_power,segments=circumference or (12 if lod else 36),subdivisions=1,cap_start=cap_start,cap_end=cap_end)
 
 def airfoil(m,stations,lod=0,role='paint'):
     """Closed symmetric airfoil. Stations are span-X, Y, leading-Z, trailing-Z."""
@@ -118,7 +118,9 @@ def fuselage(rig,s,lod):
              (.15,.04,.36,.43),(.30,.06,.25,.33),(.42,.03,.15,.20),(.50,0,.012,.020)]
     profile=s.details.get('profile',default)
     sections=[(z*L,cy+dy*H,rx*W,ry*H) for z,dy,rx,ry in profile]
-    curved_shell(m,'paint',sections,lod,cross_power=s.details.get('cross_power',1.),cap_start=s.engines!=1 or bool(s.details.get('propellers')),cap_end=not s.details.get('nose_intake'))
+    def windows(z,theta):
+        return 'glass' if .325*L<z<.425*L and .35<math.cos(theta)<.92 else 'paint'
+    curved_shell(m,'paint',sections,lod,windows if s.details.get('transport') else None,cross_power=s.details.get('cross_power',1.),cap_start=s.engines!=1 or bool(s.details.get('propellers')),cap_end=not s.details.get('nose_intake'))
     if s.details.get('cft'):
         for side in (-1,1):
             tank=Mesh()
@@ -129,8 +131,11 @@ def fuselage(rig,s,lod):
         p=(side*W*.49,cy,-L*.12)
         m.box('paint',p,(.08,H*.23,L*.05));m.box('markings',(p[0]+side*.047,p[1],p[2]),(.016,H*.17,L*.042))
     rig.add('Fuselage',rig.root,(0,0,0),m)
+    if s.details.get('transport'):
+        glazing=Mesh();glazing.groups['glass']=m.groups.pop('glass');rig.add('Canopy','Fuselage',(0,cy,L*.38),glazing)
 
 def canopy(rig,s,lod):
+    if s.details.get('transport'):return
     L=s.length;W=s.body_width;H=s.body_height;top=s.belly+H
     front=L*s.details.get('canopy_front',.385);rear=L*s.details.get('canopy_rear',.075 if s.seats==2 else .15);mid=(front+rear)/2
     m=Mesh();sections=[(rear,top-.10,W*.13,.10),(rear+(front-rear)*.18,top+.20,W*.28,.46),
@@ -172,14 +177,18 @@ def engines(rig,s,lod):
         for i,p in enumerate(s.details['turbofans']):
             x,y,z=p;m=Mesh()
             curved_shell(m,'paint',[(z-length/2,y,radius*.66,radius*.66),(z-length*.28,y,radius*.91,radius*.91),
-                (z+length*.25,y,radius,radius),(z+length/2,y,radius*.94,radius*.94)],lod,cap_start=False,cap_end=False)
+                (z+length*.25,y,radius,radius),(z+length/2,y,radius*.94,radius*.94)],lod,cap_start=False,cap_end=False,circumference=6 if lod else 24,longitudinal=3)
             m.shift((x,0,0));front=np.array([x,y,z+length/2]);rear=np.array([x,y,z-length/2])
-            hollow_muzzle(m,front-[0,0,.45],front,radius*.94,radius*.83,8 if lod else 24)
-            hollow_muzzle(m,rear+[0,0,.25],rear,radius*.66,radius*.48,8 if lod else 24)
-            for t in np.linspace(0,math.tau,6 if lod else 18,endpoint=False):
+            if s.details.get('supersonic_pods'):rectangular_duct(m,front[2],front[2]-length*.6,x,x,y,y,radius*1.8,radius*1.6,lod)
+            else:hollow_muzzle(m,front-[0,0,.45],front,radius*.94,radius*.83,6 if lod else 24)
+            hollow_muzzle(m,rear+[0,0,.25],rear,radius*.66,radius*.48,6 if lod else 24)
+            for t in np.linspace(0,math.tau,0 if lod or s.details.get('supersonic_pods') else 18,endpoint=False):
                 R=rotation([0,0,1],t);c=front-[0,0,.35]+R@[0,radius*.42,0]
                 m.box('metal_dark',c,(radius*.07,radius*.70,.045),R)
-            m.tube('metal_dark',front-[0,0,.39],front-[0,0,.17],radius*.18,8 if lod else 20,.015)
+            if not lod and not s.details.get('supersonic_pods'):m.tube('metal_dark',front-[0,0,.39],front-[0,0,.17],radius*.18,20,.015)
+            if s.details.get('engine_mount_y'):
+                a=np.array([x,y+radius*.70,z]);b=np.array([x,s.details['engine_mount_y'],z-length*.75])
+                beam(m,'paint',a,b,.22)
             rig.add('Engine_'+str(i),'Fuselage',p,m)
             rig.add('Afterburner' if i==0 else 'Afterburner_'+str(i),'Engine_'+str(i),rear,frame_rotation=quat([0,1,0],math.pi),forward='-Z',afterburning=False)
         return
@@ -295,7 +304,7 @@ def weapons(rig,s,lod):
         parent='Cannon' if gi==0 else 'Cannon_'+str(gi)
         rig.add(parent,'Fuselage',(x,y,z),m);p=[x,y,z+.48]
         rig.add('Muzzle_'+str(count),parent,p);positions['Muzzle_'+str(count)]=p;count+=1
-    if s.stealth:
+    if s.stealth or s.details.get('internal_bomber'):
         for side,label in ((-1,'L'),(1,'R')):
             m=Mesh();x=side*s.body_width*.25;m.box('paint',(x,s.belly+.06,0),(s.body_width*.44,.10,L*.18))
             rig.add('Bay_Door_'+label,'Fuselage',(side*s.body_width*.47,s.belly+.06,0),m,'Z')
