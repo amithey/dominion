@@ -1,0 +1,36 @@
+{
+  "batch": 70,
+  "files": [
+    "ships/asFrigate__de_zeven_provincien_class.glb",
+    "ships/asFrigate__f125_class.glb",
+    "ships/asFrigate__fremm.glb",
+    "ships/asFrigate__fremm_tahya_misr.glb",
+    "ships/asFrigate__istanbul_class.glb",
+    "ships/asFrigate__martadinata_class.glb"
+  ],
+  "sha256": {
+    "ships/asFrigate__de_zeven_provincien_class.glb": "7401ab0dd00b99c0bdc0d144681e03318e9a835abcd6d63a2f115b0018ce9962",
+    "ships/asFrigate__f125_class.glb": "59d61ab82d188202906d6a4c8bdb4f3ab0358a6304b5a92f7ce23835b4a9d0be",
+    "ships/asFrigate__fremm.glb": "36caeccbff53f5e18655bcbf4f8f0a71a1a85d3a88ac369ce281496b7697326a",
+    "ships/asFrigate__fremm_tahya_misr.glb": "3043401a5be6fed1a4dad1163f91afad23adea8771014edf210060026f9d24ef",
+    "ships/asFrigate__istanbul_class.glb": "f8ab8822bd973c33a63ef9b9969995e4a79c232e5c903797be351980a5d99f1b",
+    "ships/asFrigate__martadinata_class.glb": "5106b83f49fd9dead5b63713e1166a461e12cf8b6359c5ce1d2a8a4d926e92ba"
+  },
+  "maximum_triangles": [
+    12342,
+    2090
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}
