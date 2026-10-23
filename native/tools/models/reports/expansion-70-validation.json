@@ -9,16 +9,16 @@
     "ships/asFrigate__martadinata_class.glb"
   ],
   "sha256": {
-    "ships/asFrigate__de_zeven_provincien_class.glb": "7401ab0dd00b99c0bdc0d144681e03318e9a835abcd6d63a2f115b0018ce9962",
-    "ships/asFrigate__f125_class.glb": "59d61ab82d188202906d6a4c8bdb4f3ab0358a6304b5a92f7ce23835b4a9d0be",
-    "ships/asFrigate__fremm.glb": "36caeccbff53f5e18655bcbf4f8f0a71a1a85d3a88ac369ce281496b7697326a",
-    "ships/asFrigate__fremm_tahya_misr.glb": "3043401a5be6fed1a4dad1163f91afad23adea8771014edf210060026f9d24ef",
-    "ships/asFrigate__istanbul_class.glb": "f8ab8822bd973c33a63ef9b9969995e4a79c232e5c903797be351980a5d99f1b",
-    "ships/asFrigate__martadinata_class.glb": "5106b83f49fd9dead5b63713e1166a461e12cf8b6359c5ce1d2a8a4d926e92ba"
+    "ships/asFrigate__de_zeven_provincien_class.glb": "7d4bdca1700242df256fb4d7a3637a3baa711cc5b42a9ed11bc1b84a2f1b19c5",
+    "ships/asFrigate__f125_class.glb": "5614ab443db115a14f2218c4af2dfc0d2a1721b98b70a97c7b3233654f52e223",
+    "ships/asFrigate__fremm.glb": "ac83aaf3decce751a085c4dc4f35bed03e0aeff5cbc9008896cdd921b29ea278",
+    "ships/asFrigate__fremm_tahya_misr.glb": "fc227817ce5b60aeb56803bbe77a3269d8813e762212aa7c546273006d7df99c",
+    "ships/asFrigate__istanbul_class.glb": "153d4e0631caab566513c76bdb36afe010abc6406437a6b3f8753aa907afc734",
+    "ships/asFrigate__martadinata_class.glb": "022d6934656242dd5ec8ee81e049e39433366c96b866e4a96f292c3da731a798"
   },
   "maximum_triangles": [
-    12342,
-    2090
+    12322,
+    2082
   ],
   "checks": [
     "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
@@ -30,6 +30,7 @@
   "generators": [
     "generate_p7_ships.py",
     "ship_parts.py",
+    "submarine_parts.py",
     "validate_ships.py",
     "vehicle_parts.py"
   ]
