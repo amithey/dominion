@@ -9,16 +9,16 @@
     "ships/landingShip__makassar_class.glb"
   ],
   "sha256": {
-    "ships/landingShip__canberra_class.glb": "f91f60f67402402fbd609dd3c03194c34c8ad2c1039e7296f11dac7e5703c31c",
-    "ships/landingShip__dokdo_class.glb": "f2a2ddfa7a5e8cad62070e63c8095aa1a12cc0c776e88be599dcc5d83d89d656",
+    "ships/landingShip__canberra_class.glb": "d42fdfdf213ffd0d3f87226d8d7d5d8d3f4fa48ef0a543c768e073b8c6ccc68b",
+    "ships/landingShip__dokdo_class.glb": "8429984a8cbad184c52594322ea58bb230db8c91dda3179d7fa90ec8b1f415c0",
     "ships/landingShip__hengam_class.glb": "34869596ea2712fa74319986e3e86139b21606ab2e3d6091ce9b1f36fa78ad11",
     "ships/landingShip__ins_jalashwa.glb": "7eaabdefb6971555848244d1d407c617def1153b57b8cddb5f033f7fc1d55c42",
     "ships/landingShip__ivan_gren_class.glb": "3225323c291716d76d950a32ffa97cc49a5251e709b9ebd5410111f2bf818fca",
     "ships/landingShip__makassar_class.glb": "be35cd4307907d5522cfcfaa33ed011e8f38c52a29bb6dab3fd48dc55c95cdd9"
   },
   "maximum_triangles": [
-    11008,
-    1732
+    10476,
+    1520
   ],
   "checks": [
     "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
@@ -30,6 +30,7 @@
   "generators": [
     "generate_p7_ships.py",
     "ship_parts.py",
+    "submarine_parts.py",
     "validate_ships.py",
     "vehicle_parts.py"
   ]

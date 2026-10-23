@@ -9,10 +9,8 @@ LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
       Bridge_Windows_Mesh local=[0, 0, 0] world=[10.0, 26.2, 5.0] axis=None mesh
     Deckhouse_1 local=[10.0, 29.0, 20.0] world=[10.0, 29.0, 20.0] axis=None pivot
       Deckhouse_1_Mesh local=[0, 0, 0] world=[10.0, 29.0, 20.0] axis=None mesh
-    Flight_Deck_Markings local=[0.0, 19.025, -73.778] world=[0.0, 19.025, -73.778] axis=None pivot
-      Flight_Deck_Markings_Mesh local=[0, 0, 0] world=[0.0, 19.025, -73.778] axis=None mesh
-    Boats_and_Liferafts local=[0.0, 19.0, 0.0] world=[0.0, 19.0, 0.0] axis=None pivot
-      Boats_and_Liferafts_Mesh local=[0, 0, 0] world=[0.0, 19.0, 0.0] axis=None mesh
+    Flight_Deck_Markings local=[0.0, 19.125, -73.778] world=[0.0, 19.125, -73.778] axis=None pivot
+      Flight_Deck_Markings_Mesh local=[0, 0, 0] world=[0.0, 19.125, -73.778] axis=None mesh
     Funnel_0 local=[10.0, 27.0, -8.0] world=[10.0, 27.0, -8.0] axis=None pivot
       Funnel_0_Mesh local=[0, 0, 0] world=[10.0, 27.0, -8.0] axis=None mesh
     Exhaust_0 local=[10.0, 34.1, -8.0] world=[10.0, 34.1, -8.0] axis=None pivot
@@ -65,6 +63,8 @@ LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
       Ramp_Mesh local=[0, 0, 0] world=[0.0, 6.85, -99.74] axis=None mesh
     Flight_Deck local=[0.0, 19.1, 0.0] world=[0.0, 19.1, 0.0] axis=None pivot
       Flight_Deck_Mesh local=[0, 0, 0] world=[0.0, 19.1, 0.0] axis=None mesh
+    Deck_Safety_Nets local=[0.0, 19.1, 0.0] world=[0.0, 19.1, 0.0] axis=None pivot
+      Deck_Safety_Nets_Mesh local=[0, 0, 0] world=[0.0, 19.1, 0.0] axis=None mesh
     Runway_Markings local=[0.0, 19.1, 0.0] world=[0.0, 19.1, 0.0] axis=None pivot
       Runway_Markings_Mesh local=[0, 0, 0] world=[0.0, 19.1, 0.0] axis=None mesh
     Elevator_0 local=[0.0, 19.1, 46.0] world=[0.0, 19.1, 46.0] axis=None pivot
@@ -82,10 +82,8 @@ LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
       Bridge_Windows_Mesh_LOD1 local=[0, 0, 0] world=[10.0, 26.2, 5.0] axis=None mesh hidden
     Deckhouse_1_LOD1 local=[10.0, 29.0, 20.0] world=[10.0, 29.0, 20.0] axis=None pivot hidden
       Deckhouse_1_Mesh_LOD1 local=[0, 0, 0] world=[10.0, 29.0, 20.0] axis=None mesh hidden
-    Flight_Deck_Markings_LOD1 local=[0.0, 19.025, -73.778] world=[0.0, 19.025, -73.778] axis=None pivot hidden
-      Flight_Deck_Markings_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 19.025, -73.778] axis=None mesh hidden
-    Boats_and_Liferafts_LOD1 local=[0.0, 19.0, 0.0] world=[0.0, 19.0, 0.0] axis=None pivot hidden
-      Boats_and_Liferafts_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 19.0, 0.0] axis=None mesh hidden
+    Flight_Deck_Markings_LOD1 local=[0.0, 19.125, -73.778] world=[0.0, 19.125, -73.778] axis=None pivot hidden
+      Flight_Deck_Markings_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 19.125, -73.778] axis=None mesh hidden
     Funnel_0_LOD1 local=[10.0, 27.0, -8.0] world=[10.0, 27.0, -8.0] axis=None pivot hidden
       Funnel_0_Mesh_LOD1 local=[0, 0, 0] world=[10.0, 27.0, -8.0] axis=None mesh hidden
     Exhaust_0_LOD1 local=[10.0, 34.1, -8.0] world=[10.0, 34.1, -8.0] axis=None pivot hidden
@@ -138,6 +136,8 @@ LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
       Ramp_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 6.85, -99.74] axis=None mesh hidden
     Flight_Deck_LOD1 local=[0.0, 19.1, 0.0] world=[0.0, 19.1, 0.0] axis=None pivot hidden
       Flight_Deck_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 19.1, 0.0] axis=None mesh hidden
+    Deck_Safety_Nets_LOD1 local=[0.0, 19.1, 0.0] world=[0.0, 19.1, 0.0] axis=None pivot hidden
+      Deck_Safety_Nets_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 19.1, 0.0] axis=None mesh hidden
     Runway_Markings_LOD1 local=[0.0, 19.1, 0.0] world=[0.0, 19.1, 0.0] axis=None pivot hidden
       Runway_Markings_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 19.1, 0.0] axis=None mesh hidden
     Elevator_0_LOD1 local=[0.0, 19.1, 46.0] world=[0.0, 19.1, 46.0] axis=None pivot hidden
