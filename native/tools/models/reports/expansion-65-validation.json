@@ -1,0 +1,36 @@
+{
+  "batch": 65,
+  "files": [
+    "ships/destroyer__udaloy_class.glb",
+    "ships/destroyer__visakhapatnam_class.glb",
+    "ships/aegisCruiser__maya_class_aegis_destroyer.glb",
+    "ships/type45__type_45_destroyer.glb",
+    "ships/corvette__ada_class.glb",
+    "ships/corvette__al_jubail_class.glb"
+  ],
+  "sha256": {
+    "ships/destroyer__udaloy_class.glb": "d5d368ed46e084671e5484d288b79fc7bf74004709f3d089b0d2ae0bee836b58",
+    "ships/destroyer__visakhapatnam_class.glb": "78ee428407ced66a4fec1085e4ec49a6c31c60b09b1ae4d317f6533101be4b73",
+    "ships/aegisCruiser__maya_class_aegis_destroyer.glb": "12798ce8842e7103b352219a1ea0b9a3ffaeae7345b98f9b12bb71c2ad16024b",
+    "ships/type45__type_45_destroyer.glb": "c690c7100abeea7834131b5c675601f8a4328a6ece18038658595ad059b5a692",
+    "ships/corvette__ada_class.glb": "54dd671d00a687e7e22bd8a9a85fb62fdbed00511a27759b71aed1849f9c8c8c",
+    "ships/corvette__al_jubail_class.glb": "9762ed2771dba20c74b00cf95630c04fe3075f4f995d412dc1283f62da8ecff5"
+  },
+  "maximum_triangles": [
+    14284,
+    2272
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}

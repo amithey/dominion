@@ -118,7 +118,11 @@ def radars(rig,s,lod):
             for x in (-width*.75,width*.75):beam(m,[x,top-4,z],[x,top-1,z],.065,lod)
         rig.add('Mast_'+str(i),'Hull',(0,base,z),m)
         sensor=Mesh();p=np.array([0,top,z])
-        if style=='panel':
+        if style=='enclosed':
+            sensor.box('metal_dark',p+[0,1.3,0],(width*.7,1.5,.4))
+            cover=Mesh();cover.tube('paint',p-[0,.2,0],p+[0,3,0],width*.55,8 if lod else 24,width*.44)
+            rig.add('Radar_Radome_'+str(i),'Mast_'+str(i),p,cover)
+        elif style=='panel':
             sensor.box('metal_dark',p+[0,1,0],(width,2,.50))
             sensor.box('paint',p+[0,-.1,0],(1,.25,1.4))
         elif style=='sphere':
@@ -163,6 +167,17 @@ def weapons(rig,s,lod):
     for i,g in enumerate(s.details['guns']):naval_gun(rig,s,lod,i,*g)
     for i,(z,cols,rows,pitch,yoff) in enumerate(s.details.get('vls',[])):
         m=Mesh();y=D+yoff
+        if s.details.get('vls_carousel'):
+            for a in range(cols):
+                for b in range(rows):
+                    p=np.array([(a-(cols-1)/2)*pitch,y,z+(b-(rows-1)/2)*pitch])
+                    m.tube('metal_dark',p+[0,.03,0],p+[0,.18,0],pitch*.44,8 if lod else 24)
+                    if not lod:
+                        for t in np.linspace(0,math.tau,8,endpoint=False):
+                            c=p+[pitch*.29*math.cos(t),.21,pitch*.29*math.sin(t)]
+                            m.tube('paint',c,c+[0,.025,0],pitch*.085,8)
+            rig.add('VLS_'+str(i),'Hull',(0,y,z),m,cell_count=cols*rows*8)
+            continue
         m.box('paint',(0,y+.08,z),(cols*pitch+.16,.16,rows*pitch+.16))
         if not lod:
             for a in range(cols):

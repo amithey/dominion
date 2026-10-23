@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 366,
+  "ready_files": 372,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -755,6 +755,18 @@
         "ships/destroyer__type_055.glb",
         "ships/destroyer__type_45.glb"
       ]
+    },
+    {
+      "batch": 65,
+      "report": "expansion-65-validation.json",
+      "files": [
+        "ships/destroyer__udaloy_class.glb",
+        "ships/destroyer__visakhapatnam_class.glb",
+        "ships/aegisCruiser__maya_class_aegis_destroyer.glb",
+        "ships/type45__type_45_destroyer.glb",
+        "ships/corvette__ada_class.glb",
+        "ships/corvette__al_jubail_class.glb"
+      ]
     }
   ],
   "priorities": {
@@ -1163,8 +1175,11 @@
     "P7": {
       "requested_rows": 113,
       "unique_files": 113,
-      "ready_files": 12,
+      "ready_files": 18,
       "ready_slugs": [
+        "aegisCruiser__maya_class_aegis_destroyer",
+        "corvette__ada_class",
+        "corvette__al_jubail_class",
         "destroyer__arleigh_burke_class",
         "destroyer__choe_hyon_class",
         "destroyer__de_zeven_provincien_class",
@@ -1176,10 +1191,12 @@
         "destroyer__moudge_class",
         "destroyer__sejong_the_great_class",
         "destroyer__type_055",
-        "destroyer__type_45"
+        "destroyer__type_45",
+        "destroyer__udaloy_class",
+        "destroyer__visakhapatnam_class",
+        "type45__type_45_destroyer"
       ],
       "remaining_slugs": [
-        "aegisCruiser__maya_class_aegis_destroyer",
         "asFrigate__admiral_gorshkov_class",
         "asFrigate__al_riyadh_class",
         "asFrigate__anzac_class",
@@ -1206,8 +1223,6 @@
         "carrier__queen_elizabeth_class",
         "carrier__shahid_bagheri_drone_carrier",
         "carrier__tcg_anadolu_drone_carrier",
-        "corvette__ada_class",
-        "corvette__al_jubail_class",
         "corvette__amnok_class",
         "corvette__anzac_class",
         "corvette__babur_class_milgem",
@@ -1228,8 +1243,6 @@
         "corvette__tamandare_frigate",
         "corvette__type_056a",
         "corvette__type_23_frigate",
-        "destroyer__udaloy_class",
-        "destroyer__visakhapatnam_class",
         "gunboat__gunboat",
         "gunboat__island_class_patrol_boat",
         "gunboat__patrol_boat",
@@ -1278,8 +1291,7 @@
         "submarine__type_209_1400",
         "submarine__type_212a",
         "submarine__virginia_class",
-        "submarine__walrus_class",
-        "type45__type_45_destroyer"
+        "submarine__walrus_class"
       ]
     }
   }

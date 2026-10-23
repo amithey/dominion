@@ -1,0 +1,127 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Hull local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Hull_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Wake_Bow local=[0.0, 3.85, 50.96] world=[0.0, 3.85, 50.96] axis=None pivot
+    Wake_Stern local=[0.0, 3.85, -50.96] world=[0.0, 3.85, -50.96] axis=None pivot
+    Bridge local=[0.0, 7.75, 7.0] world=[0.0, 7.75, 7.0] axis=None pivot
+      Bridge_Mesh local=[0, 0, 0] world=[0.0, 7.75, 7.0] axis=None mesh
+    Bridge_Windows local=[0.0, 11.854, 7.0] world=[0.0, 11.854, 7.0] axis=None pivot
+      Bridge_Windows_Mesh local=[0, 0, 0] world=[0.0, 11.854, 7.0] axis=None mesh
+    Deckhouse_1 local=[0.0, 7.75, -21.0] world=[0.0, 7.75, -21.0] axis=None pivot
+      Deckhouse_1_Mesh local=[0, 0, 0] world=[0.0, 7.75, -21.0] axis=None mesh
+    Deckhouse_2 local=[0.0, 13.45, 10.0] world=[0.0, 13.45, 10.0] axis=None pivot
+      Deckhouse_2_Mesh local=[0, 0, 0] world=[0.0, 13.45, 10.0] axis=None mesh
+    Hangar_Doors local=[0.0, 7.75, -30.6] world=[0.0, 7.75, -30.6] axis=None pivot
+      Hangar_Doors_Mesh local=[0, 0, 0] world=[0.0, 7.75, -30.6] axis=None mesh
+    Flight_Deck_Markings local=[0.0, 7.775, -38.48] world=[0.0, 7.775, -38.48] axis=None pivot
+      Flight_Deck_Markings_Mesh local=[0, 0, 0] world=[0.0, 7.775, -38.48] axis=None mesh
+    Boats_and_Liferafts local=[0.0, 7.75, 0.0] world=[0.0, 7.75, 0.0] axis=None pivot
+      Boats_and_Liferafts_Mesh local=[0, 0, 0] world=[0.0, 7.75, 0.0] axis=None mesh
+    Funnel_0 local=[0.0, 10.35, -5.0] world=[0.0, 10.35, -5.0] axis=None pivot
+      Funnel_0_Mesh local=[0, 0, 0] world=[0.0, 10.35, -5.0] axis=None mesh
+    Exhaust_0 local=[0.0, 16.95, -5.0] world=[0.0, 16.95, -5.0] axis=None pivot
+    Mast_0 local=[0.0, 12.75, 8.0] world=[0.0, 12.75, 8.0] axis=None pivot
+      Mast_0_Mesh local=[0, 0, 0] world=[0.0, 12.75, 8.0] axis=None mesh
+      Radar local=[0.0, 17.0, 0.0] world=[0.0, 29.75, 8.0] axis=Y pivot
+        Radar_Mesh local=[0, 0, 0] world=[0.0, 29.75, 8.0] axis=None mesh
+    Turret_Main local=[0.0, 8.73431, 37.0] world=[0.0, 8.73431, 37.0] axis=Y pivot
+      Turret_Main_Mesh local=[0, 0, 0] world=[0.0, 8.73431, 37.0] axis=None mesh
+      Gun local=[0.0, 1.14, 0.35] world=[0.0, 9.87431, 37.35] axis=X pivot
+        Gun_Mesh local=[0, 0, 0] world=[0.0, 9.87431, 37.35] axis=None mesh
+        Muzzle local=[0.0, 0.0, 4.2] world=[0.0, 9.87431, 41.55] axis=None pivot
+    VLS_0 local=[0.0, 7.75, 25.0] world=[0.0, 7.75, 25.0] axis=None pivot
+      VLS_0_Mesh local=[0, 0, 0] world=[0.0, 7.75, 25.0] axis=None mesh
+    AntiShip_Canisters_0 local=[0.0, 10.45, -2.0] world=[0.0, 10.45, -2.0] axis=None pivot
+      AntiShip_Canisters_0_Mesh local=[0, 0, 0] world=[0.0, 10.45, -2.0] axis=None mesh
+    CIWS_0 local=[0.0, 12.95, -21.0] world=[0.0, 12.95, -21.0] axis=Y pivot
+      CIWS_0_Mesh local=[0, 0, 0] world=[0.0, 12.95, -21.0] axis=None mesh
+      CIWS_Launcher_0 local=[0.0, 1.2, 0.0] world=[0.0, 14.15, -21.0] axis=X pivot
+        CIWS_Launcher_0_Mesh local=[0, 0, 0] world=[0.0, 14.15, -21.0] axis=None mesh
+        RAM_Muzzle_0_0 local=[-0.84, -0.84, 1.04] world=[-0.84, 13.31, -19.96] axis=None pivot
+        RAM_Muzzle_0_1 local=[-0.42, -0.84, 1.04] world=[-0.42, 13.31, -19.96] axis=None pivot
+        RAM_Muzzle_0_2 local=[0.0, -0.84, 1.04] world=[0.0, 13.31, -19.96] axis=None pivot
+        RAM_Muzzle_0_3 local=[0.42, -0.84, 1.04] world=[0.42, 13.31, -19.96] axis=None pivot
+        RAM_Muzzle_0_4 local=[0.84, -0.84, 1.04] world=[0.84, 13.31, -19.96] axis=None pivot
+        RAM_Muzzle_0_5 local=[-0.84, -0.42, 1.04] world=[-0.84, 13.73, -19.96] axis=None pivot
+        RAM_Muzzle_0_6 local=[-0.42, -0.42, 1.04] world=[-0.42, 13.73, -19.96] axis=None pivot
+        RAM_Muzzle_0_7 local=[0.0, -0.42, 1.04] world=[0.0, 13.73, -19.96] axis=None pivot
+        RAM_Muzzle_0_8 local=[0.42, -0.42, 1.04] world=[0.42, 13.73, -19.96] axis=None pivot
+        RAM_Muzzle_0_9 local=[0.84, -0.42, 1.04] world=[0.84, 13.73, -19.96] axis=None pivot
+        RAM_Muzzle_0_10 local=[-0.84, 0.0, 1.04] world=[-0.84, 14.15, -19.96] axis=None pivot
+        RAM_Muzzle_0_11 local=[-0.42, 0.0, 1.04] world=[-0.42, 14.15, -19.96] axis=None pivot
+        RAM_Muzzle_0_12 local=[0.0, 0.0, 1.04] world=[0.0, 14.15, -19.96] axis=None pivot
+        RAM_Muzzle_0_13 local=[0.42, 0.0, 1.04] world=[0.42, 14.15, -19.96] axis=None pivot
+        RAM_Muzzle_0_14 local=[0.84, 0.0, 1.04] world=[0.84, 14.15, -19.96] axis=None pivot
+        RAM_Muzzle_0_15 local=[-0.84, 0.42, 1.04] world=[-0.84, 14.57, -19.96] axis=None pivot
+        RAM_Muzzle_0_16 local=[-0.42, 0.42, 1.04] world=[-0.42, 14.57, -19.96] axis=None pivot
+        RAM_Muzzle_0_17 local=[0.0, 0.42, 1.04] world=[0.0, 14.57, -19.96] axis=None pivot
+        RAM_Muzzle_0_18 local=[0.42, 0.42, 1.04] world=[0.42, 14.57, -19.96] axis=None pivot
+        RAM_Muzzle_0_19 local=[0.84, 0.42, 1.04] world=[0.84, 14.57, -19.96] axis=None pivot
+        RAM_Muzzle_0_20 local=[-0.84, 0.84, 1.04] world=[-0.84, 14.99, -19.96] axis=None pivot
+    Deck_Fittings local=[0.0, 7.75, 0.0] world=[0.0, 7.75, 0.0] axis=None pivot
+      Deck_Fittings_Mesh local=[0, 0, 0] world=[0.0, 7.75, 0.0] axis=None mesh
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Hull_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Hull_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Wake_Bow_LOD1 local=[0.0, 3.85, 50.96] world=[0.0, 3.85, 50.96] axis=None pivot hidden
+    Wake_Stern_LOD1 local=[0.0, 3.85, -50.96] world=[0.0, 3.85, -50.96] axis=None pivot hidden
+    Bridge_LOD1 local=[0.0, 7.75, 7.0] world=[0.0, 7.75, 7.0] axis=None pivot hidden
+      Bridge_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 7.75, 7.0] axis=None mesh hidden
+    Bridge_Windows_LOD1 local=[0.0, 11.854, 7.0] world=[0.0, 11.854, 7.0] axis=None pivot hidden
+      Bridge_Windows_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 11.854, 7.0] axis=None mesh hidden
+    Deckhouse_1_LOD1 local=[0.0, 7.75, -21.0] world=[0.0, 7.75, -21.0] axis=None pivot hidden
+      Deckhouse_1_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 7.75, -21.0] axis=None mesh hidden
+    Deckhouse_2_LOD1 local=[0.0, 13.45, 10.0] world=[0.0, 13.45, 10.0] axis=None pivot hidden
+      Deckhouse_2_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 13.45, 10.0] axis=None mesh hidden
+    Hangar_Doors_LOD1 local=[0.0, 7.75, -30.6] world=[0.0, 7.75, -30.6] axis=None pivot hidden
+      Hangar_Doors_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 7.75, -30.6] axis=None mesh hidden
+    Flight_Deck_Markings_LOD1 local=[0.0, 7.775, -38.48] world=[0.0, 7.775, -38.48] axis=None pivot hidden
+      Flight_Deck_Markings_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 7.775, -38.48] axis=None mesh hidden
+    Boats_and_Liferafts_LOD1 local=[0.0, 7.75, 0.0] world=[0.0, 7.75, 0.0] axis=None pivot hidden
+      Boats_and_Liferafts_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 7.75, 0.0] axis=None mesh hidden
+    Funnel_0_LOD1 local=[0.0, 10.35, -5.0] world=[0.0, 10.35, -5.0] axis=None pivot hidden
+      Funnel_0_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 10.35, -5.0] axis=None mesh hidden
+    Exhaust_0_LOD1 local=[0.0, 16.95, -5.0] world=[0.0, 16.95, -5.0] axis=None pivot hidden
+    Mast_0_LOD1 local=[0.0, 12.75, 8.0] world=[0.0, 12.75, 8.0] axis=None pivot hidden
+      Mast_0_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 12.75, 8.0] axis=None mesh hidden
+      Radar_LOD1 local=[0.0, 17.0, 0.0] world=[0.0, 29.75, 8.0] axis=Y pivot hidden
+        Radar_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 29.75, 8.0] axis=None mesh hidden
+    Turret_Main_LOD1 local=[0.0, 8.73431, 37.0] world=[0.0, 8.73431, 37.0] axis=Y pivot hidden
+      Turret_Main_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 8.73431, 37.0] axis=None mesh hidden
+      Gun_LOD1 local=[0.0, 1.14, 0.35] world=[0.0, 9.87431, 37.35] axis=X pivot hidden
+        Gun_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 9.87431, 37.35] axis=None mesh hidden
+        Muzzle_LOD1 local=[0.0, 0.0, 4.2] world=[0.0, 9.87431, 41.55] axis=None pivot hidden
+    VLS_0_LOD1 local=[0.0, 7.75, 25.0] world=[0.0, 7.75, 25.0] axis=None pivot hidden
+      VLS_0_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 7.75, 25.0] axis=None mesh hidden
+    AntiShip_Canisters_0_LOD1 local=[0.0, 10.45, -2.0] world=[0.0, 10.45, -2.0] axis=None pivot hidden
+      AntiShip_Canisters_0_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 10.45, -2.0] axis=None mesh hidden
+    CIWS_0_LOD1 local=[0.0, 12.95, -21.0] world=[0.0, 12.95, -21.0] axis=Y pivot hidden
+      CIWS_0_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 12.95, -21.0] axis=None mesh hidden
+      CIWS_Launcher_0_LOD1 local=[0.0, 1.2, 0.0] world=[0.0, 14.15, -21.0] axis=X pivot hidden
+        CIWS_Launcher_0_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 14.15, -21.0] axis=None mesh hidden
+        RAM_Muzzle_0_0_LOD1 local=[-0.84, -0.84, 1.04] world=[-0.84, 13.31, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_1_LOD1 local=[-0.42, -0.84, 1.04] world=[-0.42, 13.31, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_2_LOD1 local=[0.0, -0.84, 1.04] world=[0.0, 13.31, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_3_LOD1 local=[0.42, -0.84, 1.04] world=[0.42, 13.31, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_4_LOD1 local=[0.84, -0.84, 1.04] world=[0.84, 13.31, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_5_LOD1 local=[-0.84, -0.42, 1.04] world=[-0.84, 13.73, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_6_LOD1 local=[-0.42, -0.42, 1.04] world=[-0.42, 13.73, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_7_LOD1 local=[0.0, -0.42, 1.04] world=[0.0, 13.73, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_8_LOD1 local=[0.42, -0.42, 1.04] world=[0.42, 13.73, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_9_LOD1 local=[0.84, -0.42, 1.04] world=[0.84, 13.73, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_10_LOD1 local=[-0.84, 0.0, 1.04] world=[-0.84, 14.15, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_11_LOD1 local=[-0.42, 0.0, 1.04] world=[-0.42, 14.15, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_12_LOD1 local=[0.0, 0.0, 1.04] world=[0.0, 14.15, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_13_LOD1 local=[0.42, 0.0, 1.04] world=[0.42, 14.15, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_14_LOD1 local=[0.84, 0.0, 1.04] world=[0.84, 14.15, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_15_LOD1 local=[-0.84, 0.42, 1.04] world=[-0.84, 14.57, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_16_LOD1 local=[-0.42, 0.42, 1.04] world=[-0.42, 14.57, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_17_LOD1 local=[0.0, 0.42, 1.04] world=[0.0, 14.57, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_18_LOD1 local=[0.42, 0.42, 1.04] world=[0.42, 14.57, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_19_LOD1 local=[0.84, 0.42, 1.04] world=[0.84, 14.57, -19.96] axis=None pivot hidden
+        RAM_Muzzle_0_20_LOD1 local=[-0.84, 0.84, 1.04] world=[-0.84, 14.99, -19.96] axis=None pivot hidden
+    Deck_Fittings_LOD1 local=[0.0, 7.75, 0.0] world=[0.0, 7.75, 0.0] axis=None pivot hidden
+      Deck_Fittings_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 7.75, 0.0] axis=None mesh hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 3.875, 0.0] world=[0.0, 3.875, 0.0] axis=None mesh hidden

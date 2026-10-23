@@ -120,13 +120,13 @@ def destroyer__udaloy_class(lod=0):
         ['Project 1155 original ASW fit','two separate 100 mm forward gunhouses','large side-by-side Rastrub canister groups','two tall sensor masts','two helicopter hangar doors','twin broad funnels'],
         houses=[(0,13,14,36,6.5,0,.95),(0,-33,15,27,6,0,.94),(0,17,10,15,4,6.5,.94)],
         funnels=[(0,-3,6,8,8.5,3),(0,-22,6,8,8.5,3)],masts=[(15,27,'panel',7),(-23,25,'panel',6)],
-        guns=[(0,60,100,5.5),(0,46,100,5.5,2.1)],vls=[(35,8,4,.64,0)],canisters=[(18,4,4)],ciws=[(-6,-6,5),(6,-6,5)],
+        guns=[(0,60,100,5.5),(0,46,100,5.5,2.1)],vls=[(35,2,2,2.2,0),(-33,2,2,2.2,6.1)],vls_carousel=True,canisters=[(18,4,4)],ciws=[(-6,-6,5),(6,-6,5)],
         ciws_style='gatling',hangar_z=-46.6,hangar_doors=2)
     s.representative='Original Project 1155 exterior, not the Shaposhnikov modernisation';return rig,s
 
 def destroyer__visakhapatnam_class(lod=0):
     return combatant('destroyer__visakhapatnam_class','Visakhapatnam-class',lod,(163.,17.4,6.5,4.7),
-        'https://www.indiannavy.nic.in/content/commissioning-ins-visakhapatnam',
+        'https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=1768017&lang=2&reg=48',
         ['Project 15B destroyer','faceted bridge and enclosed MF-STAR mast','two exhaust blocks','16 large BrahMos cells and 32 Barak-8 cells','76 mm bow gun','two helicopter hangar doors','AK-630 close-in mounts'],
         houses=[(0,17,13,39,7.5,0,.82),(0,-32,13.6,25,6,0,.91),(0,19,8.5,16,5,7.5,.68)],
         funnels=[(0,-3,5,7,9,3),(0,-20,5,7,9,3)],masts=[(18,27,'bar',3.8),(-22,20,'bar',3.5)],fixed_arrays=[19,16,7.7],
@@ -139,7 +139,7 @@ def type45__type_45_destroyer(lod=0):
     rig,s=destroyer__type_45(lod);s.slug='type45__type_45_destroyer';s.name='Type 45 Destroyer';return rig,s
 
 def corvette__ada_class(lod=0):
-    return combatant('corvette__ada_class','Ada-class',lod,(99.56,14.4,3.9,3.9),
+    return combatant('corvette__ada_class','Ada-class',lod,(99.56,14.42,3.85,3.9),
         'https://www.stm.com.tr/en/ada-class-corvette',
         ['short MILGEM corvette hull','76 mm foredeck gun','no forward VLS bank','eight Harpoon canisters amidships','21-round RAM on hangar roof','single funnel and SMART-S mast','single Seahawk hangar'],
         houses=[(0,7,10.5,28,5.4,0,.83),(0,-20,10.8,18,4.8,0,.92),(0,10,7.2,12,3,5.4,.72)],
@@ -151,6 +151,57 @@ def corvette__al_jubail_class(lod=0):
         ['AVANTE 2200 hull','angular bridge and enclosed sensor tower','single wide funnel','76 mm bow gun and 16-cell forward VLS','eight antiship canisters','aft RAM and helicopter hangar'],
         houses=[(0,7,10.8,29,5.7,0,.82),(0,-21,10.6,19,5,0,.92),(0,10,7.5,12,3.5,5.7,.68)],
         funnels=[(0,-5,4.5,7.5,6.5,2.6)],masts=[(8,22,'panel',3.6)],guns=[(0,37,76,4.2)],vls=[(25,4,4,.7,0)],canisters=[(-2,2.7,4)],ciws=[(0,-21,5.2)],ciws_style='ram',hangar_z=-30.6)
+
+def corvette__amnok_class(lod=0):
+    rig,s=combatant('corvette__amnok_class','Amnok-class',lod,(77.,10.,3.,3.2),
+        'native/CODEX-UNIT-ROSTER.md',
+        ['approximate public patrol ship 661 exterior','short narrow hull','stepped forward bridge','single exhaust block','100 mm forward gun','eight cruise-missile canisters','four close-in mounts and open aft working deck'],
+        houses=[(0,5,7.8,24,4.7,0,.91),(0,-14,7.2,14,3.2,0,.94),(0,7,5.5,10,2.5,4.7,.91)],
+        funnels=[(0,-6,3.2,4.5,5.5,2)],masts=[(5,17,'bar',3.7),(-12,12,'bar',2.3)],guns=[(0,26,100,4.7)],
+        vls=[],canisters=[(-3,2.5,4)],ciws=[(-3,1,4.5),(3,1,4.5),(-3,-17,3.5),(3,-17,3.5)],ciws_style='gatling',hangar=False,flight_deck=False,bow_sheer=1.1)
+    s.representative='Approximate Amnok no.661 external silhouette; dimensions and fittings are estimates';return rig,s
+
+def corvette__anzac_class(lod=0):
+    rig,s=combatant('corvette__anzac_class','Anzac-class',lod,(118.,14.8,4.5,4.4),
+        'https://seapower.navy.gov.au/history/units/hmas-anzac-iii',
+        ['MEKO 200 frigate hull','127 mm foredeck gun','eight-cell Mk41 bank','large CEAFAR fixed-array enclosure on foremast','one broad funnel and slender aft mast','single helicopter hangar'],
+        houses=[(0,9,10.8,31,6.3,0,.92),(0,-24,10.8,22,5.3,0,.94),(0,11,7,12,3,6.3,.86)],
+        funnels=[(0,-7,4.5,8,7,2.6)],masts=[(9,24,'bar',3.4),(-20,18,'bar',3.2)],fixed_arrays=[9,14,7.3],
+        guns=[(0,41,127,6.5)],vls=[(27,4,2,.75,0)],canisters=[(-1,2.7,4)],ciws=[],hangar_z=-35.1)
+    s.representative='Australian Anzac ASMD exterior, approximate fixed-array mast';return rig,s
+
+def corvette__babur_class_milgem(lod=0):
+    return combatant('corvette__babur_class_milgem','Babur-class (MILGEM)',lod,(108.2,14.8,4.04,4.0),
+        'https://www.karachishipyard.com.pk/page/ship-building',
+        ['extended Pakistan MILGEM hull','12-cell Albatros-NG foredeck bank','76 mm bow gun','six antiship canisters','Gokdeniz twin-barrel mount on aft hangar','single SMART-S mast and broad funnel'],
+        houses=[(0,7,11,30,5.8,0,.83),(0,-22,11.2,19,5.1,0,.92),(0,10,7.5,12,3.2,5.8,.72)],
+        funnels=[(0,-5,4.3,7.3,7,2.6)],masts=[(8,22,'panel',3.9)],guns=[(0,38,76,4.2)],vls=[(25,4,3,.75,0)],
+        canisters=[(-1,2.7,3)],ciws=[(0,-22,5.3)],ciws_style='gokdeniz',hangar_z=-31.6)
+
+def corvette__daegu_class(lod=0):
+    return combatant('corvette__daegu_class','Daegu-class',lod,(122.,14.,4.15,4.5),
+        'https://www.rolls-royce.com/media/press-releases/2018/01-02-2018-rr-mt30-gas-turbine-powers-new-republic-of-korea-navy-frigate.aspx',
+        ['FFX Batch II hull','long 127 mm Mk45 bow gun','16-cell K-VLS foredeck bank','two broad exhaust structures','eight Haeseong antiship canisters','Phalanx on aft hangar roof','single helicopter hangar'],
+        houses=[(0,10,10.7,31,6.3,0,.84),(0,-25,10.6,22,5.3,0,.92),(0,12,7.4,13,3.4,6.3,.78)],
+        funnels=[(0,-4,4.1,6.5,7.8,2.8),(0,-15,3.9,5.5,7.8,2.8)],masts=[(10,23,'panel',4.2)],guns=[(0,43,127,7.2)],
+        vls=[(29,4,4,.75,0)],canisters=[(-1,2.8,4)],ciws=[(0,-25,5.6)],hangar_z=-36.1)
+
+def corvette__freedom_class_lcs(lod=0):
+    return combatant('corvette__freedom_class_lcs','Freedom-class LCS',lod,(118.1,17.6,4.3,4.1),
+        'https://www.navy.mil/Resources/Fact-Files/Display-FactFiles/Article/2171607/littoral-combat-ship-class-lcs/',
+        ['broad planing monohull','long angular aluminium superstructure','large aft flight deck and mission bay','57 mm foredeck gun','11-tube SeaRAM on hangar roof','compact TRS search mast','no Mk41 bank'],
+        houses=[(0,9,13.8,45,6,0,.76),(0,-21,13.5,17,5.2,0,.90),(0,14,9.5,18,3.6,6,.75)],
+        funnels=[(-3,-4,2.7,5,5.7,4),(3,-4,2.7,5,5.7,4)],masts=[(10,21,'panel',3.5)],guns=[(0,41,57,3.7)],
+        vls=[],canisters=[],ciws=[(0,-22,5.5)],ciws_style='ram',ciws_tubes=11,hangar_z=-29.6,
+        hull_profile=[(-.5,.86),(-.4,.97),(-.15,1),(.18,.96),(.34,.77),(.46,.37),(.5,.008)])
+
+def corvette__gowind_2500(lod=0):
+    return combatant('corvette__gowind_2500','Gowind 2500',lod,(102.,16.,3.6,4.3),
+        'https://sis.gov.eg/en/media-center/news/egypts-1st-locally-built-gowind-2500-stealth-corvette-delivered/',
+        ['Egyptian Al Fateh exterior','broad stealth hull and continuous angular deckhouse','PSIM integrated sensor enclosure','16 VL-MICA forward cells','76 mm bow gun','eight Exocet canisters','single helicopter hangar'],
+        houses=[(0,7,12.5,32,6,0,.80),(0,-20,12.1,20,5.1,0,.91),(0,9,7.6,12,5.5,6,.70)],
+        funnels=[(0,-6,4.8,7,6,3)],masts=[(8,21,'enclosed',4.8)],guns=[(0,35,76,4.2)],vls=[(24,4,4,.70,0)],
+        canisters=[(-1,2.8,4)],ciws=[],hangar_z=-30.1)
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 

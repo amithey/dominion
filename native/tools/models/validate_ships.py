@@ -83,7 +83,7 @@ def validate(path):
             if len(g)<5 or g[4]==0:expected[1]+=max(0,(g[1]/s['length']-.22)/.28)*s['details'].get('bow_sheer',1.7)
             assert np.allclose(by[marker][1][:3,3],expected,atol=2e-5)
         for i,(z,cols,rows,pitch,y) in enumerate(s['details'].get('vls',[])):
-            assert by[prefix+'/VLS_'+str(i)][0]['extras']['cell_count']==cols*rows
+            assert by[prefix+'/VLS_'+str(i)][0]['extras']['cell_count']==cols*rows*(8 if s['details'].get('vls_carousel') else 1)
         for i,_ in enumerate(s['details']['masts']):assert by[prefix+('/Mast_'+str(i))+('/Radar' if i==0 else '/Radar_'+str(i))][0]['extras']['rotation_axis']=='Y'
         for p,(node,M,v) in by.items():
             axisname=node.get('extras',{}).get('rotation_axis')
