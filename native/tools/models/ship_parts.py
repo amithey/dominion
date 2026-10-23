@@ -39,7 +39,8 @@ def hull(rig,s,lod):
         temp=Rig(lod);demi=d.get('demi_beam',B*.22)
         hull(temp,replace(s,beam=demi,details={**d,'catamaran':False}),lod)
         for side in (-1,1):merge_mesh(m,temp.parts[0]['mesh'],t=(side*(B-demi)/2,0,0))
-        block(m,'paint',0,D-.8,-L*.03,B-.3,.8,L*.70,.98)
+        # Full-width aft aviation deck bridges the two hulls to the transom.
+        block(m,'paint',0,D-.8,-L*.075,B-.3,.8,L*.85,.98)
         rig.add('Hull',rig.root,(0,0,0),m)
         rig.add('Wake_Bow','Hull',(0,s.draft,L*.49),waterline_y=s.draft)
         rig.add('Wake_Stern','Hull',(0,s.draft,-L*.49),waterline_y=s.draft)
@@ -240,6 +241,14 @@ def weapons(rig,s,lod):
             rack.tube('metal_dark',a,b,.14,4 if lod else 8);tips.append(b)
         rig.add('RBU_Rack_'+str(i),'RBU_'+str(i),pivot,rack,'X')
         for j,p in enumerate(tips):rig.add('RBU_Muzzle_'+str(i)+'_'+str(j),'RBU_Rack_'+str(i),p)
+    if s.details.get('arm_launcher'):
+        x,z,yoff=s.details['arm_launcher'];p=np.array([x,D+yoff,z]);m=Mesh()
+        m.tube('paint',p,p+[0,1.4,0],.65,6 if lod else 16)
+        rig.add('Launcher_SAM','Hull',p,m,'Y');q=p+[0,1.4,0];rail=Mesh()
+        rail.box('metal_dark',q+[0,0,.4],(.45,.35,3.2))
+        rail.tube('paint',q+[0,.3,-1.8],q+[0,.3,2.6],.17,6 if lod else 16,.035)
+        for side in (-1,1):rail.box('paint',q+[side*.35,.3,-1.2],(.7,.08,.9))
+        rig.add('Launcher_Rail','Launcher_SAM',q,rail,'X');rig.add('SAM_Muzzle','Launcher_Rail',q+[0,.3,2.6])
 
 def fittings(rig,s,lod):
     D=s.draft+s.freeboard;B=s.beam;L=s.length;m=Mesh()

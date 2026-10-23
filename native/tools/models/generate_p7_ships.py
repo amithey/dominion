@@ -328,6 +328,74 @@ def asFrigate__anzac_class(lod=0):
 def asFrigate__daegu_class(lod=0):
     rig,s=corvette__daegu_class(lod);s.slug='asFrigate__daegu_class';return rig,s
 
+def asFrigate__de_zeven_provincien_class(lod=0):
+    rig,s=destroyer__de_zeven_provincien_class(lod);s.slug='asFrigate__de_zeven_provincien_class';return rig,s
+
+def asFrigate__f125_class(lod=0):
+    return combatant('asFrigate__f125_class','F125-class',lod,(149.5,18.8,5.4,5.3),
+        'https://www.bundeswehr.de/de/ausruestung-technik-bundeswehr/seesysteme-bundeswehr/baden-wuerttemberg-klasse-f125-fregatten',
+        ['two separated island superstructures','127 mm L64 forward gun','two 21-tube RAM launchers','eight Harpoon canisters','no VLS bank','large twin helicopter hangar','four embarked boat stations'],
+        houses=[(0,17,14.5,31,7,0,.83),(0,-28,14.2,26,6,0,.91),(0,17,9.5,15,8,7,.60),(0,-17,8.7,15,8,6,.60)],
+        funnels=[(0,2,5,7,7.5,3),(0,-15,5,7,7.5,3)],masts=[(17,28,'bar',3),(-17,27,'bar',3)],fixed_arrays=[17,16,7],guns=[(0,54,127,7.7)],
+        vls=[],canisters=[(-5,3,4)],ciws=[(0,31,5),(0,-29,6.3)],ciws_style='ram',hangar_z=-41.1,hangar_doors=2)
+
+def french_fremm(slug,name,lod,egypt=False):
+    rig,s=combatant(slug,name,lod,(142.2,19.8,5.5,5.4),
+        'https://www.defense.gouv.fr/marine/forces-surface/fregates-multimissions',
+        ['French Aquitaine-derived FREMM hull','76 mm forward gun','Herakles radar in integrated pyramidal mast',
+         '16 Aster cells without MdCN bank' if egypt else '16 Aster and 16 MdCN cells','eight Exocet canisters','two broad exhaust blocks','single NH90 hangar'],
+        houses=[(0,14,15.5,40,7.5,0,.82),(0,-30,14.6,25,6,0,.92),(0,17,9.8,17,7,7.5,.60)],
+        funnels=[(0,-4,5.2,7.5,7.5,3.5),(0,-20,5.2,7,7.5,3.5)],masts=[(16,27,'enclosed',4.5),(-23,18,'bar',3)],guns=[(0,51,76,4.4)],
+        vls=[(35,4,4,.74,0)]+([] if egypt else [(28,4,4,.85,0)]),canisters=[(-8,3,4)],ciws=[],hangar_z=-42.6)
+    s.representative='Egyptian Tahya Misr, ex-Normandie French FREMM' if egypt else 'French Aquitaine ASW exterior for combined France/Italy row';return rig,s
+
+def asFrigate__fremm(lod=0):return french_fremm('asFrigate__fremm','FREMM',lod)
+
+def asFrigate__fremm_tahya_misr(lod=0):return french_fremm('asFrigate__fremm_tahya_misr','FREMM (Tahya Misr)',lod,True)
+
+def asFrigate__istanbul_class(lod=0):
+    rig,s=destroyer__istanbul_class(lod);s.slug='asFrigate__istanbul_class';return rig,s
+
+def asFrigate__martadinata_class(lod=0):
+    rig,s=corvette__martadinata_class(lod);s.slug='asFrigate__martadinata_class';return rig,s
+
+def asFrigate__mogami_class(lod=0):
+    rig,s=corvette__mogami_class(lod);s.slug='asFrigate__mogami_class';return rig,s
+
+def asFrigate__moudge_class(lod=0):
+    rig,s=destroyer__moudge_class(lod);s.slug='asFrigate__moudge_class';return rig,s
+
+def asFrigate__niteroi_class(lod=0):
+    rig,s=combatant('asFrigate__niteroi_class','Niteroi-class',lod,(129.2,13.5,5.5,4.0),
+        'native/CODEX-UNIT-ROSTER.md',
+        ['long conventional Vosper frigate hull','114 mm bow gun','eight-round Aspide aft launcher','two amidships 40 mm gun positions','two raked funnels','separate lattice-style radar masts','single helicopter hangar'],
+        houses=[(0,11,10,32,5.8,0,.96),(0,-27,10,23,4.8,0,.95),(0,13,6.9,13,2.7,5.8,.94)],
+        funnels=[(0,-2,4.3,6,6.5,2.5),(0,-17,4.3,6,6.5,2.5)],masts=[(10,23,'bar',5.1),(-20,18,'panel',4.1)],guns=[(0,46,114,6.),(-4,-8,40,2.6,3),(4,-8,40,2.6,3)],
+        vls=[],canisters=[(-6,2.6,2)],ciws=[(0,-28,5)],ciws_style='ram',ciws_tubes=8,hangar_z=-38.6)
+    s.representative='Approximate post-MODFRAG ASW Niteroi-class exterior';return rig,s
+
+def asFrigate__talwar_class(lod=0):
+    rig,s=combatant('asFrigate__talwar_class','Talwar-class',lod,(124.8,15.2,4.2,4.8),
+        'https://severnoepkb.ru/wp-content/uploads/2020/12/11356_en-1.pdf',
+        ['Project 11356 first-batch exterior','100 mm forward turret','single-arm Shtil launcher','eight Club vertical-launch cells','large Fregat rotating radar','two Kashtan gun-missile mounts','single helicopter hangar'],
+        houses=[(0,11,11.7,32,6.5,0,.88),(0,-26,11.6,22,5.3,0,.93),(0,13,7.6,13,3.5,6.5,.82)],
+        funnels=[(0,-6,4.8,7.8,7.4,3)],masts=[(11,25,'panel',5.8),(-20,18,'bar',3.2)],guns=[(0,44,100,5.5)],
+        vls=[(25,4,2,1.05,0)],canisters=[],ciws=[(-4.5,-23,5.5),(4.5,-23,5.5)],ciws_style='kashtan',arm_launcher=[0,34,0],rbu_positions=[(0,21,1)],hangar_z=-37.1)
+    s.representative='Talwar first-batch fit with Shtil arm launcher';return rig,s
+
+def chinese_frigate(slug,name,lod,pakistan=False):
+    return combatant(slug,name,lod,(134.,16.,5.,4.8),
+        'https://odin.t2com.army.mil/WEG/Asset/Type_054A_Class_%28Jiangkai_II_Class%29_Chinese_Frigate',
+        ['Type 054A/P export frigate' if pakistan else 'Jiangkai II ASW frigate','76 mm bow gun','32-cell HQ-16 foredeck bank',
+         'SR2410C planar search radar' if pakistan else 'large Fregat-style dual-plane search radar','eight angled antiship canisters','two close-in gun positions','single helicopter hangar'],
+        houses=[(0,12,12.4,35,6.8,0,.86),(0,-28,12,23,5.6,0,.92),(0,14,8.3,14,3.5,6.8,.80)],
+        funnels=[(0,-6,4.9,8,7.5,3)],masts=[(12,25,'panel',4.5 if pakistan else 6.2),(-20,19,'bar',3.1)],guns=[(0,48,76,4.4)],
+        vls=[(32,8,4,.74,0)],canisters=[(-2,3,4)],ciws=[(-5,-24,5.8),(5,-24,5.8)],ciws_style='gatling',hangar_z=-39.6)
+
+def asFrigate__tughril_class(lod=0):return chinese_frigate('asFrigate__tughril_class','Tughril-class',lod,True)
+
+def asFrigate__type_054a(lod=0):return chinese_frigate('asFrigate__type_054a','Type 054A',lod)
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):
