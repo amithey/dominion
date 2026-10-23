@@ -133,6 +133,9 @@ def fuselage(rig,s,lod):
             tank.shift((side*W*.54,0,0));merge_mesh(m,tank)
     for side in (-1,1):
         p=(side*W*.49,cy,-L*.12)
+        if s.details.get('unmanned'):
+            a=np.asarray(profile);surface=W*np.interp(-.12,a[:,0],a[:,2]);localcy=cy+H*np.interp(-.12,a[:,0],a[:,1])
+            p=(side*(surface-.015),localcy,-L*.12)
         m.box('paint',p,(.08,H*.23,L*.05));m.box('markings',(p[0]+side*.047,p[1],p[2]),(.016,H*.17,L*.042))
     rig.add('Fuselage',rig.root,(0,0,0),m)
     if s.details.get('transport'):
@@ -173,7 +176,7 @@ def engines(rig,s,lod):
                 curved_shell(body,'paint',[(z-length,y,r*.35,r*.35),(z-length*.65,y,r,r),(z-length*.20,y,r,r),(z-.12,y,r*.46,r*.46)],lod,circumference=8 if lod else 24,longitudinal=3)
                 body.shift((x,0,0));parent='Engine_'+str(i);rig.add(parent,'Fuselage',p-[0,0,length*.40],body)
             for angle in np.linspace(0,math.tau,blades,endpoint=False):
-                blade=Mesh();reduced=len(s.details['propellers'])*blades>10 and not lod
+                blade=Mesh();reduced=len(s.details['propellers'])*blades>=10 and not lod
                 airfoil(blade,[(radius*.12,0,.08,-.08),(radius*.35,0,.15,-.15),(radius*.80,0,.11,-.11),(radius,0,.045,-.045)],lod,
                     span_steps=3 if reduced else None,chord_steps=6 if reduced else None)
                 R=rotation([0,0,1],angle)@rotation([1,0,0],math.radians(70))
@@ -425,9 +428,19 @@ def fittings(rig,s,lod):
                 beam(boom,'paint',(x,yy,-L*.02),(x,yy,-L*.46),.10)
                 wing=interpolate(s.details['wing'],abs(x));beam(boom,'paint',(x,yy,-L*.02),(x,wing[1],-L*.02),.10)
                 rig.add('Tail_Boom_'+label,'Fuselage',(x,yy,-L*.02),boom)
+        if s.details.get('h_tail'):
+            m.box('paint',(0,s.details['boom_y']+.05,-L*.455),(.12,.08,L*.07))
+        if s.details.get('ventral_fin'):
+            cy=s.belly+s.body_height/2
+            verts=[[dx,yy,zz] for dx in (-.035,.035) for yy,zz in [(cy-.1,-L*.35),(cy-.1,-L*.465),(max(.20,cy-.95),-L*.45)]]
+            m.solid('paint',verts,[(0,2,1),(3,4,5),(0,1,4,3),(1,2,5,4),(2,0,3,5)])
     # Dorsal blades are supported by the skin, with no free-floating fittings.
     for z,h in ((L*.04,.23),(-L*.19,.18)):
-        m.box('paint',(0,y-.06+h/2,z),(.045,h,.28))
+        base=y-.06
+        if s.details.get('unmanned'):
+            a=np.asarray(s.details['profile']);local=s.belly+s.body_height/2+s.body_height*np.interp(z/L,a[:,0],a[:,1]+a[:,3])
+            base=min(base,local-.06)
+        m.box('paint',(0,base+h/2,z),(.045,h,.28))
     rig.add('Airframe_Fittings','Fuselage',(0,y,0),m)
 
 def build(s,lod=0):

@@ -527,23 +527,78 @@ def akinci(slug,name,lod,representative=''):
     return uas(slug,name,lod,'akinci',(12.2,20.,4.1,1.5,1.5,1.1),
         [(.5,2.35,1.4,-2.3),(3.3,3.0,.6,-2.0),(10.,2.6,-1.0,-1.9)],[(0,2.5,4.1,-3.2,-5.6,-4.35,-5.25)],
         'https://baykartech.com/en/uav/bayraktar-akinci/',
-        ['twin five-blade tractor turboprops','gull-wing centre section','large nose satellite fairing','conventional tail','ventral electro-optical turret'],representative,
+        ['twin five-blade tractor turboprops','gull-wing centre section','large nose satellite fairing','conventional tail','ventral electro-optical turret'],representative or 'Bayraktar Akinci-A, AI-450T five-blade propeller configuration',
         propellers=[(-3.3,2.6,2.3),(3.3,2.6,2.3)],prop_radius=1.5,prop_blades=5,prop_nacelle=4.1,
         stabilator=[(.05,2.15,-3.5,-5.8),(3.25,2.15,-4.6,-5.6)],gear_track=3.6,wheel_radius=.26,stations=(.36,.56,.77),store_length=1.45,store_radius=.10)
 def drone__akinci_wing_loong(lod=0):return akinci('drone__akinci_wing_loong','Akinci / Wing Loong',lod,'Bayraktar Akinci exterior')
 
 def tb2(slug,name,lod,representative=''):
-    return uas(slug,name,lod,'tb2',(6.5,12.,2.2,.65,.68,.75),
+    return uas(slug,name,lod,'tb2',(6.4,12.,2.2,.65,.68,.75),
         [(.30,1.2,.75,-1.35),(3.,1.2,.4,-1.05),(6.,1.2,-.1,-.75)],
         [(-1.15,.95,2.70,-2.34,-3.18,-2.73,-3.12),(1.15,.95,2.70,-2.34,-3.18,-2.73,-3.12)],
         'https://baykartech.com/en/uav/bayraktar-tb2/',
         ['twin tail booms','inverted-V tail','single rear pusher propeller','straight high-aspect-ratio wing','nose sensor turret','four light-munition stations'],representative,
-        propellers=[(0,1.09,-1.63)],prop_radius=.70,prop_blades=2,prop_pusher=True,
+        propellers=[(0,1.09,-1.63)],prop_radius=.70,prop_blades=3,prop_pusher=True,
         twin_boom=True,boom_x=1.15,boom_y=.95,fin_cant=-45,gear_track=2.1,wheel_radius=.17,
         profile=[(-.25,0,.10,.12),(-.18,0,.30,.34),(0,0,.5,.5),(.20,0,.48,.48),(.38,-.03,.31,.34),(.50,-.06,.05,.07)])
 def drone__bayraktar_tb2(lod=0):return tb2('drone__bayraktar_tb2','Bayraktar TB2',lod)
 def drone__bayraktar_tb2_domestic(lod=0):return tb2('drone__bayraktar_tb2_domestic','Bayraktar TB2 / domestic',lod,'Bayraktar TB2 exterior')
 def drone__bayraktar_tb2_mohajer_6(lod=0):return tb2('drone__bayraktar_tb2_mohajer_6','Bayraktar TB2 / Mohajer-6',lod,'Bayraktar TB2 exterior')
+
+def male(slug,name,lod,family,dimensions,source,representative='',blades=3,stations=(.34,.56),prop_radius=None,**extras):
+    L,S,H,W,B,b=dimensions;cy=b+B/2;root=b+B*.75;delta=(H-root)/.70710678
+    return uas(slug,name,lod,family,dimensions,
+        [(W*.40,b+B*.75,L*.11,-L*.17),(S*.27,b+B*.75,L*.035,-L*.145),(S/2,b+B*.75,-L*.065,-L*.12)],
+        [(-W*.22,root,root+delta,-L*.30,-L*.455,-L*.38,-L*.445),(W*.22,root,root+delta,-L*.30,-L*.455,-L*.38,-L*.445)],
+        source,['long straight tapered wing','single pusher propeller','outward V tail','nose satellite fairing','ventral sensor turret'],representative,
+        propellers=[(0,cy,-L*.49)],prop_radius=prop_radius or min(cy-.28,L*.13),prop_blades=blades,prop_pusher=True,
+        fin_cant=45,gear_track=W*2.2,wheel_radius=min(.27,L*.027),stations=stations,**extras)
+def drone__ch_4b(lod=0):
+    return male('drone__ch_4b','CH-4B',lod,'ch4',(8.5,18.,2.7,.80,.95,1.0),'https://odin.t2com.army.mil/WEG/Asset/CH-4')
+def drone__ch_4b_anka(lod=0):
+    return male('drone__ch_4b_anka','CH-4B / Anka',lod,'ch4',(8.5,18.,2.7,.80,.95,1.0),'https://odin.t2com.army.mil/WEG/Asset/CH-4','CH-4B exterior')
+def drone__hermes_900(lod=0):
+    return male('drone__hermes_900','Hermes 900',lod,'hermes900',(8.3,15.,1.8,.75,.70,.55),'https://www.elbitsystems.com/air-space/unmanned-aerial-systems/hermes-900',blades=2,stations=())
+
+def heron(slug,name,lod,tp=False):
+    L,S,H,W,B,b=(14.,26.,4.6,1.4,1.5,1.5) if tp else (8.5,16.6,2.3,1.0,.85,.75)
+    x=2.0 if tp else 1.3;y=2.1 if tp else 1.2
+    return uas(slug,name,lod,'herontp' if tp else 'heron',(L,S,H,W,B,b),
+        [(W*.4,b+B*.78,L*.1,-L*.17),(S*.28,b+B*.78,L*.03,-L*.14),(S/2,b+B*.78,-L*.04,-L*.10)],
+        [(-x,y,H,-L*.36,-L*.50,-L*.43,-L*.48),(x,y,H,-L*.36,-L*.50,-L*.43,-L*.48)],
+        'https://www.iai.co.il/product/heron-tp/' if tp else 'https://www.iai.co.il/product/heron/',
+        ['long high-aspect-ratio wing','twin tail booms','two vertical fins with connecting tailplane','rear pusher propeller','ISR configuration without external weapons'],
+        propellers=[(0,b+B/2,-L*.26)],prop_radius=1.50 if tp else .75,prop_blades=4 if tp else 2,prop_pusher=True,
+        twin_boom=True,boom_x=x,boom_y=y,h_tail=True,stations=(),gear_track=W*2.3,wheel_radius=.30 if tp else .18,
+        stabilator=[(.03,y+.05,-L*.42,-L*.49),(x+.20,y+.05,-L*.43,-L*.49)],
+        profile=[(-.26,0,.10,.12),(-.18,0,.30,.34),(0,0,.5,.5),(.20,0,.48,.48),(.38,-.03,.31,.34),(.50,-.06,.05,.07)])
+def drone__heron_isr(lod=0):return heron('drone__heron_isr','Heron ISR',lod)
+def drone__heron_tp(lod=0):return heron('drone__heron_tp','Heron TP',lod,True)
+def drone__kus_fs(lod=0):
+    return male('drone__kus_fs','KUS-FS',lod,'kusfs',(13.,25.,3.0,1.2,1.4,1.0),'https://www.koreanair.com/contents/footer/about-us/aerospace',blades=4)
+
+def drone__mohajer_6(lod=0):
+    return uas('drone__mohajer_6','Mohajer-6',lod,'mohajer6',(5.67,10.,1.8,.63,.60,.60),
+        [(.28,1.05,.45,-.80),(2.8,1.05,.18,-.70),(5.,1.05,-.15,-.55)],
+        [(-.88,.90,1.8,-2.0,-2.8,-2.35,-2.7),(.88,.90,1.8,-2.0,-2.8,-2.35,-2.7)],
+        'https://odin.t2com.army.mil/WEG/Asset/Mohajer-6',
+        ['straight tapered wing','twin booms with H tail','three-blade rear pusher','two light guided-bomb stations','ventral sensor turret'],
+        propellers=[(0,.90,-1.50)],prop_radius=.65,prop_blades=3,prop_pusher=True,
+        twin_boom=True,boom_x=.88,boom_y=.90,h_tail=True,gear_track=1.65,wheel_radius=.14,stations=(.34,),
+        stabilator=[(.03,.95,-2.35,-2.78),(1.05,.95,-2.42,-2.76)],
+        profile=[(-.26,0,.10,.12),(-.18,0,.30,.34),(0,0,.5,.5),(.20,0,.48,.48),(.38,-.03,.31,.34),(.50,-.06,.05,.07)])
+
+def reaper(slug,name,lod,b=False,sea=False):
+    return male(slug,name,lod,'mq9b' if b else 'mq9a',(11.7,24.,3.9,1.3,1.4,1.25) if b else (11.,20.1,3.8,1.2,1.3,1.3),
+        'https://www.ga-asi.com/remotely-piloted-aircraft/mq-9b' if b else 'https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104470/mq-9-reaper/',
+        blades=4 if b else 3,stations=(.34,.53,.72),prop_radius=1.55 if b else 1.50,ventral_fin=True,store_length=1.63,store_radius=.089,store_fin_scale=.6,
+        **({'belly_radar':[0,1.15,.5,.45,.30,.65]} if sea else {}))
+def drone__mq_9_reaper(lod=0):return reaper('drone__mq_9_reaper','MQ-9 Reaper',lod)
+def drone__mq_9a_reaper(lod=0):return reaper('drone__mq_9a_reaper','MQ-9A Reaper',lod)
+def drone__mq_9b_protector(lod=0):return reaper('drone__mq_9b_protector','MQ-9B Protector',lod,True)
+def drone__mq_9b_seaguardian(lod=0):return reaper('drone__mq_9b_seaguardian','MQ-9B SeaGuardian',lod,True,True)
+def drone__orion(lod=0):
+    return male('drone__orion','Orion',lod,'orion',(8.,16.3,3.2,.8,.95,.80),'https://odin.t2com.army.mil/WEG/Asset/Orion',blades=3,stations=(.34,))
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):

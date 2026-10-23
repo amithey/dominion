@@ -1,0 +1,38 @@
+{
+  "batch": 55,
+  "files": [
+    "aircraft/maritimePatrol__poseidon_mra1.glb",
+    "aircraft/maritimePatrol__y_8q.glb",
+    "aircraft/drone__akinci_wing_loong.glb",
+    "aircraft/drone__bayraktar_tb2.glb",
+    "aircraft/drone__bayraktar_tb2_domestic.glb",
+    "aircraft/drone__bayraktar_tb2_mohajer_6.glb"
+  ],
+  "sha256": {
+    "aircraft/maritimePatrol__poseidon_mra1.glb": "982b744a2008596828b756cf499ebb1c3f0c2fbd7fda35e6fdf994b1e68a4abf",
+    "aircraft/maritimePatrol__y_8q.glb": "365821e1ae8a3ddfa0d2faeccd49df8fd2102b2f8024e56a7861c21afbe2d089",
+    "aircraft/drone__akinci_wing_loong.glb": "23696fb6ff690f1c3c48b297ed9b060ea886fbe02b268ccd736dfbf4599f7687",
+    "aircraft/drone__bayraktar_tb2.glb": "e1c9a660624bbb3d6beb869ef1c5e1b421fb75140dc07850da6d9a1103889e47",
+    "aircraft/drone__bayraktar_tb2_domestic.glb": "b0999104df8f00a9be359e2728c8e07777c0d655fec92107264dff780171cce1",
+    "aircraft/drone__bayraktar_tb2_mohajer_6.glb": "84a98aaeaf4bdb6e068edcc13670af9c24445df7a0bb479aef255aaa0f325f32"
+  },
+  "maximum_triangles": [
+    12964,
+    2208
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}
