@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 390,
+  "ready_files": 396,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -803,6 +803,18 @@
         "ships/corvette__shahid_soleimani_class.glb",
         "ships/corvette__tamandare_frigate.glb"
       ]
+    },
+    {
+      "batch": 69,
+      "report": "expansion-69-validation.json",
+      "files": [
+        "ships/corvette__type_056a.glb",
+        "ships/corvette__type_23_frigate.glb",
+        "ships/asFrigate__admiral_gorshkov_class.glb",
+        "ships/asFrigate__al_riyadh_class.glb",
+        "ships/asFrigate__anzac_class.glb",
+        "ships/asFrigate__daegu_class.glb"
+      ]
     }
   ],
   "priorities": {
@@ -1211,9 +1223,13 @@
     "P7": {
       "requested_rows": 113,
       "unique_files": 113,
-      "ready_files": 36,
+      "ready_files": 42,
       "ready_slugs": [
         "aegisCruiser__maya_class_aegis_destroyer",
+        "asFrigate__admiral_gorshkov_class",
+        "asFrigate__al_riyadh_class",
+        "asFrigate__anzac_class",
+        "asFrigate__daegu_class",
         "corvette__ada_class",
         "corvette__al_jubail_class",
         "corvette__amnok_class",
@@ -1234,6 +1250,8 @@
         "corvette__sa_ar_6",
         "corvette__shahid_soleimani_class",
         "corvette__tamandare_frigate",
+        "corvette__type_056a",
+        "corvette__type_23_frigate",
         "destroyer__arleigh_burke_class",
         "destroyer__choe_hyon_class",
         "destroyer__de_zeven_provincien_class",
@@ -1251,10 +1269,6 @@
         "type45__type_45_destroyer"
       ],
       "remaining_slugs": [
-        "asFrigate__admiral_gorshkov_class",
-        "asFrigate__al_riyadh_class",
-        "asFrigate__anzac_class",
-        "asFrigate__daegu_class",
         "asFrigate__de_zeven_provincien_class",
         "asFrigate__f125_class",
         "asFrigate__fremm",
@@ -1277,8 +1291,6 @@
         "carrier__queen_elizabeth_class",
         "carrier__shahid_bagheri_drone_carrier",
         "carrier__tcg_anadolu_drone_carrier",
-        "corvette__type_056a",
-        "corvette__type_23_frigate",
         "gunboat__gunboat",
         "gunboat__island_class_patrol_boat",
         "gunboat__patrol_boat",

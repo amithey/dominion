@@ -1,0 +1,36 @@
+{
+  "batch": 69,
+  "files": [
+    "ships/corvette__type_056a.glb",
+    "ships/corvette__type_23_frigate.glb",
+    "ships/asFrigate__admiral_gorshkov_class.glb",
+    "ships/asFrigate__al_riyadh_class.glb",
+    "ships/asFrigate__anzac_class.glb",
+    "ships/asFrigate__daegu_class.glb"
+  ],
+  "sha256": {
+    "ships/corvette__type_056a.glb": "200dd5426cedda4971ebf6e973ece777d23e151191bdf4015ff615174a1da03f",
+    "ships/corvette__type_23_frigate.glb": "d3239fa2a471d1c737391b5cd3e1dcc7dd6af34c3d9dd0af7efc7d96d21e3ace",
+    "ships/asFrigate__admiral_gorshkov_class.glb": "a0e57dd3b3248727fc1dfc4fe839d64ef3c4dcc0c495add40bc899fb13f4e27f",
+    "ships/asFrigate__al_riyadh_class.glb": "351d20f3ea56dec6a7630589a08f4fc00bb579723d9d91dd8f543068c3373d2e",
+    "ships/asFrigate__anzac_class.glb": "c52045ea883aeb4008146c275e8ba79c33dbbe08e1856342b1986da18411d274",
+    "ships/asFrigate__daegu_class.glb": "2ab69598678f9f402d3aea29e84984c4289410a7c0b88e38471deef3a8c32415"
+  },
+  "maximum_triangles": [
+    11814,
+    1766
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}
