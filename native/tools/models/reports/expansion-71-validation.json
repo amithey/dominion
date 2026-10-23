@@ -9,16 +9,16 @@
     "ships/asFrigate__type_054a.glb"
   ],
   "sha256": {
-    "ships/asFrigate__mogami_class.glb": "d0f535266fb932dd7109afa909b26b33835701e9835affc0ede63cb01adc4cf5",
-    "ships/asFrigate__moudge_class.glb": "cc0b280d48beeb190f86b95957e5c2b0d30b4f9b58afcbde31d69e0242322a49",
-    "ships/asFrigate__niteroi_class.glb": "e00f90f267aeffcade70bfef69feaa4c234970e27004231f12f517d42f94a3ec",
-    "ships/asFrigate__talwar_class.glb": "ccc163a094b5a935a5068bc12fae1bcce4f1b6e8fcf23cfce7eef36fc2d8371d",
-    "ships/asFrigate__tughril_class.glb": "5c49862959a0e10c3923c493b1f0c46d24a16e50460a44bbab4bb0f2c9a58bf8",
-    "ships/asFrigate__type_054a.glb": "b9b73c679d882523ac3c5d46f66ade6b9a666f62ae3241de7f84e1bffb8f2ca6"
+    "ships/asFrigate__mogami_class.glb": "e78059fab76e62407d474d3f2316d4dcf2e06606352efe69a327bc2f1aa0d6bb",
+    "ships/asFrigate__moudge_class.glb": "c1be9401276ef18584f1828f49dc3ca04edcdda33019ae60e022982517d1b71d",
+    "ships/asFrigate__niteroi_class.glb": "4f3706fa865f57017e278f4c35486adaccfdb6fd1b7cd5d96c1bae288339b38f",
+    "ships/asFrigate__talwar_class.glb": "ec004df1638cecbea8cfb0427ece45b9d0746e9292288edda126fff35e5c1174",
+    "ships/asFrigate__tughril_class.glb": "3f79e3e7ddcb928331fe384d742c59803baaef38607530c9f259ffa655302ff6",
+    "ships/asFrigate__type_054a.glb": "c3fe8d242c4c51711552ba764f126d0f8e1a54ca48f0db764f30c4fd23160e31"
   },
   "maximum_triangles": [
-    11946,
-    1902
+    11926,
+    1906
   ],
   "checks": [
     "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
@@ -30,6 +30,7 @@
   "generators": [
     "generate_p7_ships.py",
     "ship_parts.py",
+    "submarine_parts.py",
     "validate_ships.py",
     "vehicle_parts.py"
   ]
