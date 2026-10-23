@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 442,
+  "ready_files": 447,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -909,6 +909,17 @@
         "ships/carrier__tcg_anadolu_drone_carrier.glb",
         "ships/submarine__agosta_90b.glb"
       ]
+    },
+    {
+      "batch": 78,
+      "report": "expansion-78-validation.json",
+      "files": [
+        "ships/submarine__astute_class.glb",
+        "ships/submarine__collins_class.glb",
+        "ships/submarine__dolphin_ii.glb",
+        "ships/submarine__dosan_ahn_changho_class.glb",
+        "ships/submarine__fateh_class.glb"
+      ]
     }
   ],
   "priorities": {
@@ -1317,7 +1328,7 @@
     "P7": {
       "requested_rows": 113,
       "unique_files": 113,
-      "ready_files": 88,
+      "ready_files": 93,
       "ready_slugs": [
         "aegisCruiser__maya_class_aegis_destroyer",
         "asFrigate__admiral_gorshkov_class",
@@ -1406,6 +1417,11 @@
         "missileBoat__sa_ar_4_5",
         "missileBoat__type_022",
         "submarine__agosta_90b",
+        "submarine__astute_class",
+        "submarine__collins_class",
+        "submarine__dolphin_ii",
+        "submarine__dosan_ahn_changho_class",
+        "submarine__fateh_class",
         "type45__type_45_destroyer"
       ],
       "remaining_slugs": [
@@ -1416,11 +1432,6 @@
         "nuclearSub__type_094",
         "nuclearSub__vanguard_class",
         "seaDrone__sea_drone",
-        "submarine__astute_class",
-        "submarine__collins_class",
-        "submarine__dolphin_ii",
-        "submarine__dosan_ahn_changho_class",
-        "submarine__fateh_class",
         "submarine__improved_kilo",
         "submarine__kalvari_class",
         "submarine__nagapasa_class",

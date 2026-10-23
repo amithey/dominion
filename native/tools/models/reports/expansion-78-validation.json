@@ -1,0 +1,35 @@
+{
+  "batch": 78,
+  "files": [
+    "ships/submarine__astute_class.glb",
+    "ships/submarine__collins_class.glb",
+    "ships/submarine__dolphin_ii.glb",
+    "ships/submarine__dosan_ahn_changho_class.glb",
+    "ships/submarine__fateh_class.glb"
+  ],
+  "sha256": {
+    "ships/submarine__astute_class.glb": "6cff5a27260d9be04c192fa91d7533f444a2375c977cddcddc3ae787d6706136",
+    "ships/submarine__collins_class.glb": "e7dc1adb337153a7fa8c3fca54f5e6df125f224191c53f1efb59bf2fd535c02b",
+    "ships/submarine__dolphin_ii.glb": "82959808eab9dbd120eade0bff02165f4a0631b7b86c399a548d27c3044df18a",
+    "ships/submarine__dosan_ahn_changho_class.glb": "95fd1da285ea7d0a6f77f9c7e12ba13de369e3fdbdee51bcf0295f8490b59430",
+    "ships/submarine__fateh_class.glb": "d36e29b8effd6ec1a62c2fc9045398ad0284906f056484870c4720118aa543ff"
+  },
+  "maximum_triangles": [
+    11824,
+    1184
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "submarine_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}
