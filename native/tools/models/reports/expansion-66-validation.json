@@ -1,0 +1,36 @@
+{
+  "batch": 66,
+  "files": [
+    "ships/corvette__amnok_class.glb",
+    "ships/corvette__anzac_class.glb",
+    "ships/corvette__babur_class_milgem.glb",
+    "ships/corvette__daegu_class.glb",
+    "ships/corvette__freedom_class_lcs.glb",
+    "ships/corvette__gowind_2500.glb"
+  ],
+  "sha256": {
+    "ships/corvette__amnok_class.glb": "2f417173fb61ec1d30a11459ae4f0cee198ea675631b67b4dbb3eb3021052bbb",
+    "ships/corvette__anzac_class.glb": "a27d00bc0e8461032c5e20732d3b8a0faf1230119e7a7947c02b31a4af91a5d0",
+    "ships/corvette__babur_class_milgem.glb": "ea6535ccd1d6f605ba72934db861dce392f2bfb7cdd82dcbf2ae93ec3a003b06",
+    "ships/corvette__daegu_class.glb": "9fa58e974b980185efcf46c63fa3a4337f0524483bb59ffab2a09f586effd6e6",
+    "ships/corvette__freedom_class_lcs.glb": "59beee10505fbc2baa0fae47385a94ed7d6aebd66678bc2cc62621611132f5c2",
+    "ships/corvette__gowind_2500.glb": "5a398a720f6aefd5e085fa7c9f15d254b062cce0a327653218357a5570ea71d9"
+  },
+  "maximum_triangles": [
+    11332,
+    1862
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicates, ground bounds and LOD limits",
+    "naval class recognition fittings, gun pivots and muzzle markers, VLS cell counts and waterline wakes",
+    "all hinge mesh vertices and markers propagated about local axes",
+    "independent trimesh and native Godot loads and every pivot",
+    "four saved-file render views visually reviewed"
+  ],
+  "generators": [
+    "generate_p7_ships.py",
+    "ship_parts.py",
+    "validate_ships.py",
+    "vehicle_parts.py"
+  ]
+}

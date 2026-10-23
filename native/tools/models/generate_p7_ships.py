@@ -180,7 +180,7 @@ def corvette__babur_class_milgem(lod=0):
 
 def corvette__daegu_class(lod=0):
     return combatant('corvette__daegu_class','Daegu-class',lod,(122.,14.,4.15,4.5),
-        'https://www.rolls-royce.com/media/press-releases/2018/01-02-2018-rr-mt30-gas-turbine-powers-new-republic-of-korea-navy-frigate.aspx',
+        'https://www.rolls-royce.com/media/press-releases/2025/27-05-2025-rolls-royce-mt30-selected-for-korean-ffx-batch-iv-programme.aspx',
         ['FFX Batch II hull','long 127 mm Mk45 bow gun','16-cell K-VLS foredeck bank','two broad exhaust structures','eight Haeseong antiship canisters','Phalanx on aft hangar roof','single helicopter hangar'],
         houses=[(0,10,10.7,31,6.3,0,.84),(0,-25,10.6,22,5.3,0,.92),(0,12,7.4,13,3.4,6.3,.78)],
         funnels=[(0,-4,4.1,6.5,7.8,2.8),(0,-15,3.9,5.5,7.8,2.8)],masts=[(10,23,'panel',4.2)],guns=[(0,43,127,7.2)],
@@ -202,6 +202,49 @@ def corvette__gowind_2500(lod=0):
         houses=[(0,7,12.5,32,6,0,.80),(0,-20,12.1,20,5.1,0,.91),(0,9,7.6,12,5.5,6,.70)],
         funnels=[(0,-6,4.8,7,6,3)],masts=[(8,21,'enclosed',4.8)],guns=[(0,35,76,4.2)],vls=[(24,4,4,.70,0)],
         canisters=[(-1,2.8,4)],ciws=[],hangar_z=-30.1)
+
+def corvette__holland_class(lod=0):
+    return combatant('corvette__holland_class','Holland-class',lod,(108.,16.,4.55,5.),
+        'https://www.ministryofdefence.nl/documents/2022/04/01/ocean-going-patrol-vessel',
+        ['high-freeboard ocean patrol hull','large forward bridge','integrated I-Mast enclosure','76 mm foredeck gun','30 mm aft gun','no antiship canisters or VLS','single NH90 hangar'],
+        houses=[(0,9,12.5,31,7,0,.88),(0,-22,12,20,5.6,0,.94),(0,11,8.5,13,6,7,.65)],
+        funnels=[(0,-6,4.5,7,6,3)],masts=[(10,23,'bar',3)],fixed_arrays=[11,15,6.8],guns=[(0,37,76,4.2),(0,-22,30,1.8,5.8,True)],vls=[],canisters=[],ciws=[],hangar_z=-32.1)
+
+def corvette__k130_braunschweig(lod=0):
+    return combatant('corvette__k130_braunschweig','K130 Braunschweig',lod,(89.1,13.3,3.4,3.8),
+        'https://www.bundeswehr.de/de/ausruestung-technik-bundeswehr/seesysteme-bundeswehr/korvette-k130',
+        ['short X-section stealth corvette','76 mm bow gun','two 21-tube RAM mounts','four RBS15 antiship canisters','two enclosed exhausts','stern helicopter platform and small UAV hangar'],
+        houses=[(0,7,10.3,25,5.2,0,.80),(0,-18,9.6,15,3.8,0,.90),(0,9,6.4,10,3,5.2,.75)],
+        funnels=[(0,-3,3.8,5,6,2),(0,-12,3.7,4.6,6,2)],masts=[(7,18,'panel',3.5)],guns=[(0,30,76,4.2)],vls=[],canisters=[(-5,2,2)],ciws=[(0,17,4),(0,-19,4)],ciws_style='ram',hangar_z=-25.6)
+
+def corvette__kamorta_class(lod=0):
+    return combatant('corvette__kamorta_class','Kamorta-class',lod,(109.1,14.17,4.,4.4),
+        'https://grse.in/anti-submarine-warfare-corvette/index',
+        ['Project 28 ASW corvette','X-section inclined topsides','76 mm gun','ASW rocket launchers on raised forward deck','two exhaust structures','no antiship canister battery','single helicopter hangar'],
+        houses=[(0,9,11,31,6,0,.82),(0,-22,11,20,5.3,0,.92),(0,11,7.2,13,3.5,6,.76)],
+        funnels=[(0,-4,4.3,6.3,7,3),(0,-14,4.2,5.7,7,3)],masts=[(9,22,'bar',4.8),(-16,17,'bar',3)],guns=[(0,38,76,4.2)],vls=[],canisters=[],ciws=[(-4,-20,5.5),(4,-20,5.5)],ciws_style='gatling',rbu_positions=[(-3,27,1),(3,27,1)],hangar_z=-32.1)
+
+def corvette__karakurt_class(lod=0):
+    return combatant('corvette__karakurt_class','Karakurt-class',lod,(67.,11.,3.3,3.1),
+        'native/CODEX-UNIT-ROSTER.md',
+        ['Project 22800 compact missile corvette','high angular bridge and integrated mast','eight UKSK cells aft of bridge','76 mm forward gun','Pantsir-type aft gun-missile mount','no helicopter hangar or landing circle'],
+        houses=[(0,5,8.5,19,5.5,0,.78),(0,-13,7.8,12,3.2,0,.87),(0,6,5.4,9,3.8,5.5,.65)],
+        funnels=[(0,-5,3.4,4.8,5.4,2)],masts=[(5,18,'bar',2.5)],fixed_arrays=[6,10.3,4.4],guns=[(0,23,76,4.2)],vls=[(-9,4,2,.95,3.3)],canisters=[],ciws=[(0,-15,3.5)],ciws_style='kashtan',hangar=False,flight_deck=False,bow_sheer=1.1)
+
+def corvette__la_fayette_class(lod=0):
+    rig,s=combatant('corvette__la_fayette_class','La Fayette-class',lod,(125.,15.4,4.1,5.1),
+        'https://archives.defense.gouv.fr/marine/equipements/batiments-de-combat/fregates/type-la-fayette/la-fayette-f-710.html',
+        ['long continuous stealth deckhouse','high swept bridge sides','100 mm enclosed bow turret','eight Exocet canisters','aft Crotale launcher','two angular exhaust blocks','single Panther hangar'],
+        houses=[(0,10,12,39,7,0,.82),(0,-26,11.7,24,5.7,0,.93),(0,12,7.6,15,3.2,7,.80)],
+        funnels=[(0,-3,4.5,6,6.5,4),(0,-17,4.5,6,6.5,4)],masts=[(10,23,'bar',4.5),(-20,18,'bar',3.3)],guns=[(0,44,100,5.5)],vls=[],canisters=[(-7,3,4)],ciws=[(0,-27,6)],ciws_style='crotale',ciws_tubes=8,hangar_z=-38.1)
+    s.representative='Pre-renovation La Fayette fit with eight-round Crotale';return rig,s
+
+def corvette__martadinata_class(lod=0):
+    return combatant('corvette__martadinata_class','Martadinata-class',lod,(105.11,14.02,3.7,4.1),
+        'https://res.cloudinary.com/damen-shipyards2/catalogue/defence-and-security/sigma/sigma-multi-mission-frigate-10514/product-sheet-sigma-multi-mission-frigate-10514.pdf',
+        ['SIGMA 10514 modular frigate hull','faceted forward bridge','12-cell VL-MICA foredeck bank','76 mm bow gun','eight Exocet canisters','aft Millennium gun','single integrated exhaust and hangar'],
+        houses=[(0,8,10.7,29,5.9,0,.82),(0,-21,10.8,20,5.2,0,.92),(0,10,7.5,12,3.5,5.9,.73)],
+        funnels=[(0,-5,4.4,7,6.8,3)],masts=[(8,22,'panel',3.8)],guns=[(0,37,76,4.2),(0,-22,35,2.5,5.5,True)],vls=[(25,4,3,.7,0)],canisters=[(-1,2.8,4)],ciws=[],hangar_z=-31.1)
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 

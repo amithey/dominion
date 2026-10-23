@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 372,
+  "ready_files": 378,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -767,6 +767,18 @@
         "ships/corvette__ada_class.glb",
         "ships/corvette__al_jubail_class.glb"
       ]
+    },
+    {
+      "batch": 66,
+      "report": "expansion-66-validation.json",
+      "files": [
+        "ships/corvette__amnok_class.glb",
+        "ships/corvette__anzac_class.glb",
+        "ships/corvette__babur_class_milgem.glb",
+        "ships/corvette__daegu_class.glb",
+        "ships/corvette__freedom_class_lcs.glb",
+        "ships/corvette__gowind_2500.glb"
+      ]
     }
   ],
   "priorities": {
@@ -1175,11 +1187,17 @@
     "P7": {
       "requested_rows": 113,
       "unique_files": 113,
-      "ready_files": 18,
+      "ready_files": 24,
       "ready_slugs": [
         "aegisCruiser__maya_class_aegis_destroyer",
         "corvette__ada_class",
         "corvette__al_jubail_class",
+        "corvette__amnok_class",
+        "corvette__anzac_class",
+        "corvette__babur_class_milgem",
+        "corvette__daegu_class",
+        "corvette__freedom_class_lcs",
+        "corvette__gowind_2500",
         "destroyer__arleigh_burke_class",
         "destroyer__choe_hyon_class",
         "destroyer__de_zeven_provincien_class",
@@ -1223,12 +1241,6 @@
         "carrier__queen_elizabeth_class",
         "carrier__shahid_bagheri_drone_carrier",
         "carrier__tcg_anadolu_drone_carrier",
-        "corvette__amnok_class",
-        "corvette__anzac_class",
-        "corvette__babur_class_milgem",
-        "corvette__daegu_class",
-        "corvette__freedom_class_lcs",
-        "corvette__gowind_2500",
         "corvette__holland_class",
         "corvette__k130_braunschweig",
         "corvette__kamorta_class",

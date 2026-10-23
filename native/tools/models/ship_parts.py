@@ -196,13 +196,15 @@ def weapons(rig,s,lod):
         rig.add('AntiShip_Canisters_'+str(i),'Hull',(0,y,z),m)
     for i,(x,z,yoff) in enumerate(s.details.get('ciws',[])):
         style=s.details.get('ciws_styles',[s.details.get('ciws_style','phalanx')]*len(s.details.get('ciws',[])))[i]
-        if style=='ram':
+        if style in ('ram','crotale'):
             p=np.array([x,D+yoff,z]);mount=Mesh();mount.tube('paint',p,p+[0,.8,0],.75,6 if lod else 16)
             rig.add('CIWS_'+str(i),'Hull',p,mount,'Y');rack=Mesh();pivot=p+[0,1.2,0]
-            rack.box('paint',pivot,(2.3,2.2,2.0))
+            rack.box('paint',pivot,(1.0,1.3,1.8) if style=='crotale' else (2.3,2.2,2.0))
+            if style=='crotale':rack.tube('paint',pivot+[0,.7,0],pivot+[0,1.5,0],.5,6 if lod else 16)
             tips=[]
             for j in range(s.details.get('ciws_tubes',21)):
-                tip=pivot+[(j%5-2)*.42,(j//5-2)*.42,1.04]
+                tip=pivot+([(-1 if j<4 else 1)*1.12+(j%2-.5)*.36,((j//2)%2-.5)*.36,1.04] if style=='crotale' else [(j%5-2)*.42,(j//5-2)*.42,1.04])
+                if style=='crotale':rack.tube('paint',tip-[0,0,2.1],tip,.17,6 if lod else 12)
                 if not lod:rack.tube('metal_dark',tip-[0,0,.05],tip+[0,0,.035],.16,8)
                 tips.append(tip)
             rig.add('CIWS_Launcher_'+str(i),'CIWS_'+str(i),pivot,rack,'X')
@@ -221,6 +223,14 @@ def weapons(rig,s,lod):
             hollow_muzzle(barrel,p+[offset,1.4,.6],p+[offset,1.4,2.1],.12,.065,6 if lod else 12)
         rig.add('CIWS_Gun_'+str(i),'CIWS_'+str(i),p+[0,1.4,.6],barrel,'X')
         rig.add('CIWS_Muzzle_'+str(i),'CIWS_Gun_'+str(i),p+[0,1.4,2.1])
+    for i,(x,z,yoff) in enumerate(s.details.get('rbu_positions',[])):
+        p=np.array([x,D+yoff,z]);m=Mesh();m.tube('paint',p,p+[0,.5,0],.65,6 if lod else 16)
+        rig.add('RBU_'+str(i),'Hull',p,m,'Y');rack=Mesh();pivot=p+[0,1,0];tips=[]
+        for j,t in enumerate(np.linspace(0,math.tau,12,endpoint=False)):
+            a=pivot+[.65*math.cos(t),.45*math.sin(t),0];b=a+[0,.60,.75]
+            rack.tube('metal_dark',a,b,.14,4 if lod else 8);tips.append(b)
+        rig.add('RBU_Rack_'+str(i),'RBU_'+str(i),pivot,rack,'X')
+        for j,p in enumerate(tips):rig.add('RBU_Muzzle_'+str(i)+'_'+str(j),'RBU_Rack_'+str(i),p)
 
 def fittings(rig,s,lod):
     D=s.draft+s.freeboard;B=s.beam;L=s.length;m=Mesh()
