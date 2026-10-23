@@ -119,7 +119,7 @@ def validate(path):
                 actual=[p for p,(n,M,v) in by.items() if p.startswith(prefix+'/') and n.get('extras',{}).get('canonical_part','').startswith('Muzzle_')]
                 assert len(actual)==want,(prefix,'naval mission store count')
         if doc['extras']['priority']=='P6':
-            for name in ('Gear_Nose','Gear_Left','Gear_Right','Rudder','Canopy'):
+            for name in ('Gear_Nose','Gear_Left','Gear_Right','Rudder')+(() if s['details'].get('unmanned') else ('Canopy',)):
                 assert prefix+'/'+name in by,(prefix,name)
             for side in ('L','R'):
                 for name in ('Flap','Aileron'):

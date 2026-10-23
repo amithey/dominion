@@ -1,0 +1,38 @@
+{
+  "batch": 54,
+  "files": [
+    "aircraft/maritimePatrol__p_3am_orion.glb",
+    "aircraft/maritimePatrol__p_3c_orion.glb",
+    "aircraft/maritimePatrol__p_72.glb",
+    "aircraft/maritimePatrol__p_72a.glb",
+    "aircraft/maritimePatrol__p_8a_poseidon.glb",
+    "aircraft/maritimePatrol__p_8i_neptune.glb"
+  ],
+  "sha256": {
+    "aircraft/maritimePatrol__p_3am_orion.glb": "0b725e978c1d7694b24f2d4fc2ebf912d6b17d8d3749afa40aead4b40c08b6dd",
+    "aircraft/maritimePatrol__p_3c_orion.glb": "7f61f60ff085c4bb74ddc4305086d8382835112e9da42d1c7ee0c289a58f589a",
+    "aircraft/maritimePatrol__p_72.glb": "396958b6b1f7cc33db8fbcf967184ccd83552b669cba80865ddb2cadc655861b",
+    "aircraft/maritimePatrol__p_72a.glb": "52fc84f9acded5688196a071b1b8572d1eb5ec466312c6ae19104555973abe4c",
+    "aircraft/maritimePatrol__p_8a_poseidon.glb": "8576c237d2ef97ce3e30543ce6323d74c15666273d4f77aef10512ce0fbb3940",
+    "aircraft/maritimePatrol__p_8i_neptune.glb": "6e20693e762650d7a49c4cbf8244a671eaf2c53726ace11762cee9627c745f44"
+  },
+  "maximum_triangles": [
+    10776,
+    1780
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

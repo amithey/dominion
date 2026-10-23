@@ -503,6 +503,48 @@ def poseidon(slug,name,lod,indian=False):
 def maritimePatrol__p_8a_poseidon(lod=0):return poseidon('maritimePatrol__p_8a_poseidon','P-8A Poseidon',lod)
 def maritimePatrol__p_8i_neptune(lod=0):return poseidon('maritimePatrol__p_8i_neptune','P-8I Neptune',lod,True)
 
+def maritimePatrol__poseidon_mra1(lod=0):return poseidon('maritimePatrol__poseidon_mra1','Poseidon MRA1',lod)
+def maritimePatrol__y_8q(lod=0):
+    return largeplane('maritimePatrol__y_8q','Y-8Q',lod,'y8q',(34.02,38.,11.3,3.5,3.7,1.7),
+        [(1.3,5.0,2.6,-3.5),(19.,5.5,-.9,-3.2)],[(0,5.2,11.3,-8.7,-15.8,-12.9,-15.3)],
+        'https://odin.t2com.army.mil/WEG/Asset/Y-8',
+        ['high-wing patrol airframe','four six-blade propellers','large undernose search radar','long MAD tail boom','internal torpedo bay'],
+        propellers=[(side*x,4.65,z) for side in (-1,1) for x,z in [(5.,4.2),(10.5,3.0)]],prop_radius=2.25,prop_blades=6,prop_nacelle=5.7,
+        belly_radar=[0,1.50,7.5,1.05,.45,1.6],internal_bomber=True,
+        stabilator=[(.05,4.8,-9.3,-15.4),(6.7,4.8,-12.0,-15.0)],gear_layout=airliner_gear(34.02,4.9,.54),
+        profile=[(-.5,0,.015,.02),(-.41,0,.04,.05),(-.30,0,.32,.32),(-.14,0,.5,.5),(.16,0,.5,.5),(.32,0,.46,.46),(.43,-.04,.31,.34),(.50,-.08,.08,.10)])
+
+def uas(slug,name,lod,family,dimensions,wing,fins,source,features,representative='',**details):
+    L,S,H,W,B,b=dimensions
+    profile=[(-.48,0,.10,.12),(-.35,0,.25,.30),(-.15,0,.44,.43),(.05,0,.5,.5),(.25,0,.46,.46),(.40,-.03,.28,.31),(.5,-.06,.04,.06)]
+    d={'wing':wing,'fins':fins,'unmanned':True,'gun':False,'nose_hump':True,'profile':profile,
+       'stations':(.34,.56),'store_length':.95,'store_radius':.07,'store_fin_scale':.45,**details}
+    s=AircraftSpec(slug,name,family,L,S,H,W,B,b,len(d.get('propellers',[])) or 1,source,
+        seats=0,representative=representative,features=features,details=d)
+    return build(s,lod)
+
+def akinci(slug,name,lod,representative=''):
+    return uas(slug,name,lod,'akinci',(12.2,20.,4.1,1.5,1.5,1.1),
+        [(.5,2.35,1.4,-2.3),(3.3,3.0,.6,-2.0),(10.,2.6,-1.0,-1.9)],[(0,2.5,4.1,-3.2,-5.6,-4.35,-5.25)],
+        'https://baykartech.com/en/uav/bayraktar-akinci/',
+        ['twin five-blade tractor turboprops','gull-wing centre section','large nose satellite fairing','conventional tail','ventral electro-optical turret'],representative,
+        propellers=[(-3.3,2.6,2.3),(3.3,2.6,2.3)],prop_radius=1.5,prop_blades=5,prop_nacelle=4.1,
+        stabilator=[(.05,2.15,-3.5,-5.8),(3.25,2.15,-4.6,-5.6)],gear_track=3.6,wheel_radius=.26,stations=(.36,.56,.77),store_length=1.45,store_radius=.10)
+def drone__akinci_wing_loong(lod=0):return akinci('drone__akinci_wing_loong','Akinci / Wing Loong',lod,'Bayraktar Akinci exterior')
+
+def tb2(slug,name,lod,representative=''):
+    return uas(slug,name,lod,'tb2',(6.5,12.,2.2,.65,.68,.75),
+        [(.30,1.2,.75,-1.35),(3.,1.2,.4,-1.05),(6.,1.2,-.1,-.75)],
+        [(-1.15,.95,2.70,-2.34,-3.18,-2.73,-3.12),(1.15,.95,2.70,-2.34,-3.18,-2.73,-3.12)],
+        'https://baykartech.com/en/uav/bayraktar-tb2/',
+        ['twin tail booms','inverted-V tail','single rear pusher propeller','straight high-aspect-ratio wing','nose sensor turret','four light-munition stations'],representative,
+        propellers=[(0,1.09,-1.63)],prop_radius=.70,prop_blades=2,prop_pusher=True,
+        twin_boom=True,boom_x=1.15,boom_y=.95,fin_cant=-45,gear_track=2.1,wheel_radius=.17,
+        profile=[(-.25,0,.10,.12),(-.18,0,.30,.34),(0,0,.5,.5),(.20,0,.48,.48),(.38,-.03,.31,.34),(.50,-.06,.05,.07)])
+def drone__bayraktar_tb2(lod=0):return tb2('drone__bayraktar_tb2','Bayraktar TB2',lod)
+def drone__bayraktar_tb2_domestic(lod=0):return tb2('drone__bayraktar_tb2_domestic','Bayraktar TB2 / domestic',lod,'Bayraktar TB2 exterior')
+def drone__bayraktar_tb2_mohajer_6(lod=0):return tb2('drone__bayraktar_tb2_mohajer_6','Bayraktar TB2 / Mohajer-6',lod,'Bayraktar TB2 exterior')
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):
     from validate_aircraft import validate

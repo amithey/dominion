@@ -139,7 +139,7 @@ def fuselage(rig,s,lod):
         glazing=Mesh();glazing.groups['glass']=m.groups.pop('glass');rig.add('Canopy','Fuselage',(0,cy,L*.38),glazing)
 
 def canopy(rig,s,lod):
-    if s.details.get('transport'):return
+    if s.details.get('transport') or s.details.get('unmanned'):return
     L=s.length;W=s.body_width;H=s.body_height;top=s.belly+H
     front=L*s.details.get('canopy_front',.385);rear=L*s.details.get('canopy_rear',.075 if s.seats==2 else .15);mid=(front+rear)/2
     m=Mesh();sections=[(rear,top-.10,W*.13,.10),(rear+(front-rear)*.18,top+.20,W*.28,.46),
@@ -180,7 +180,8 @@ def engines(rig,s,lod):
                 for g in blade.groups.values():
                     g[0]=(np.asarray(g[0])@R.T+p).tolist();g[1]=(np.asarray(g[1])@R.T).tolist()
                 merge_mesh(m,blade)
-            m.tube('paint',p-[0,0,.20],p+[0,0,.27],radius*.14,8 if lod else 24,.012)
+            sign=-1 if s.details.get('prop_pusher') else 1
+            m.tube('paint',p-[0,0,sign*.20],p+[0,0,sign*.27],radius*.14,8 if lod else 24,.012)
             rig.add('Propeller' if i==0 else 'Propeller_'+str(i),parent,p,m,'Z',blade_count=blades,radius_metres=radius)
         return
     if s.details.get('turbofans'):
@@ -307,7 +308,9 @@ def gear(rig,s,lod):
         return
     L=s.length;track=s.details.get('gear_track',s.span*.24);r=s.details.get('wheel_radius',.36)
     for name,x,z in [('Gear_Nose',0,L*.27),('Gear_Left',-track/2,-L*.075),('Gear_Right',track/2,-L*.075)]:
-        rr=r*.77 if name=='Gear_Nose' else r;hinge=np.array([x*.75,s.belly+.35,z+.20]);wheel=np.array([x,rr,z])
+        rr=r*.77 if name=='Gear_Nose' else r;hx=x*.75
+        if s.details.get('unmanned'):hx=math.copysign(min(abs(hx),s.body_width*.40),x)
+        hinge=np.array([hx,s.belly+.35,z+.20]);wheel=np.array([x,rr,z])
         m=Mesh();m.tube('metal_dark',hinge,wheel,.055,6 if lod else 12)
         m.tube('paint',hinge,hinge*.35+wheel*.65,.09,6 if lod else 12)
         rig.add(name,'Fuselage',hinge,m,'X')
@@ -346,7 +349,8 @@ def weapons(rig,s,lod):
                 store=Mesh();length=s.details.get('store_length',1.95);radius=s.details.get('store_radius',.105)
                 a=(x,yy-.30,z-length/1.95*.95);b=(x,yy-.30,z+length/1.95)
                 store.tube('paint',a,b,radius,6 if lod else 12,.025 if not s.details.get('store_torpedo') else radius*.65)
-                for sign in (-1,1):store.box('paint',(x+sign*.16,yy-.30,z-.66),(.25,.035,.29))
+                fin=s.details.get('store_fin_scale',1.)
+                for sign in (-1,1):store.box('paint',(x+sign*.16*fin,yy-.30,z-length/1.95*.66),(.25*fin,.035*fin,.29*fin))
                 parent='Store_'+label+str(j);rig.add(parent,'Pylon_'+label+str(j),(x,yy-.30,z),store)
                 p=list(b);rig.add('Muzzle_'+str(count),parent,p);positions['Muzzle_'+str(count)]=p;count+=1
     s.details['muzzle_positions']=positions;s.details['muzzle_count']=count
@@ -406,6 +410,21 @@ def fittings(rig,s,lod):
             pod=Mesh();pod.tube('paint',(x,yy,z-1.4),(x,yy,z+1.4),.23,8 if lod else 20,.13)
             pod.box('paint',(x,yy+.26,z),(.11,.37,.70))
             rig.add('Jammer_Pod_'+label,'Wing_'+label,(x,yy+.44,z),pod)
+    if s.details.get('unmanned'):
+        if s.details.get('nose_hump'):
+            hump=Mesh();cy=y-.10;W=s.body_width
+            curved_shell(hump,'paint',[(L*.12,cy,W*.12,.08),(L*.20,cy+.10,W*.42,.30),(L*.31,cy+.08,W*.36,.27),(L*.39,cy-.05,W*.08,.06)],lod,circumference=8 if lod else 24,longitudinal=3)
+            merge_mesh(m,hump)
+        p=np.array([0,s.belly-.12,L*.28]);optic=Mesh()
+        optic.tube('paint',p-[0,.14,0],p+[0,.14,0],min(W*.25,.23),8 if lod else 20)
+        optic.tube('glass',p+[0,0,.12],p+[0,0,.19],min(W*.17,.14),8 if lod else 20)
+        rig.add('Sensor_Turret','Fuselage',p,optic,'Y')
+        for side,label in ((-1,'L'),(1,'R')):
+            if s.details.get('twin_boom'):
+                x=side*s.details['boom_x'];yy=s.details['boom_y'];boom=Mesh()
+                beam(boom,'paint',(x,yy,-L*.02),(x,yy,-L*.46),.10)
+                wing=interpolate(s.details['wing'],abs(x));beam(boom,'paint',(x,yy,-L*.02),(x,wing[1],-L*.02),.10)
+                rig.add('Tail_Boom_'+label,'Fuselage',(x,yy,-L*.02),boom)
     # Dorsal blades are supported by the skin, with no free-floating fittings.
     for z,h in ((L*.04,.23),(-L*.19,.18)):
         m.box('paint',(0,y-.06+h/2,z),(.045,h,.28))
