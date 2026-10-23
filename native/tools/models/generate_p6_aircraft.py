@@ -601,6 +601,40 @@ def drone__mq_9b_seaguardian(lod=0):return reaper('drone__mq_9b_seaguardian','MQ
 def drone__orion(lod=0):
     return male('drone__orion','Orion',lod,'orion',(8.,16.3,3.2,.8,.95,.80),'https://odin.t2com.army.mil/WEG/Asset/Orion',blades=3,stations=(.34,))
 
+ROSTER_REFERENCE='https://github.com/amithey/dominion/blob/main/native/CODEX-UNIT-ROSTER.md'
+def drone__saetbyol_4_9(lod=0):
+    return male('drone__saetbyol_4_9','Saetbyol-4/9',lod,'saetbyol9',(11.5,20.,3.8,1.2,1.4,1.3),ROSTER_REFERENCE,
+        'Approximate Saetbyol-9 MALE exterior; combined roster row',blades=4,stations=(.34,.53,.72),ventral_fin=True,generic_design=True)
+
+def multicopter(slug,name,lod,motors=4,heavy=False,representative=''):
+    import math
+    L,S,H,W,B,b=(2.8,2.8,1.05,.78,.28,.48) if heavy else (1.25,1.25,.62,.35,.18,.28)
+    arm=1.02 if heavy else .52;hub=.90 if heavy else .49
+    positions=[[arm*math.sin(t),hub,arm*math.cos(t)] for t in [math.tau*i/motors+math.pi/motors for i in range(motors)]]
+    s=AircraftSpec(slug,name,'multirotor',L,S,H,W,B,b,0,ROSTER_REFERENCE,seats=0,representative=representative,
+        features=[str(motors)+' independent motor/propeller hubs','closed central battery/payload frame','landing skids','gravity payload release' if heavy else 'forward payload and camera'],
+        details={'multirotor':True,'unmanned':True,'generic_design':True,'motors':motors,'propellers':positions,'prop_radius':.43 if heavy else .23,'prop_blades':2,'bomber':heavy})
+    return build(s,lod)
+def drone__shaheen(lod=0):return multicopter('drone__shaheen','Shaheen',lod,representative='Plausible Syrian light FPV strike quadcopter; roster does not identify a unique production airframe')
+
+def drone__shahpar_ii_burraq(lod=0):
+    return uas('drone__shahpar_ii_burraq','Shahpar II / Burraq',lod,'shahpar2',(8.,9.45,2.3,.85,.85,.8),
+        [(.35,1.45,.65,-1.2),(2.5,1.45,-.1,-1.5),(4.725,1.45,-1.,-1.7)],
+        [(-1.2,1.2,2.3,-2.6,-3.95,-3.25,-3.75),(1.2,1.2,2.3,-2.6,-3.95,-3.25,-3.75)],
+        'https://www.gids.com.pk/english-short.pdf',
+        ['twin-boom pusher layout','straight tapered wing','H-tail','three-blade propeller','four light weapon stations'],
+        'Approximate Shahpar-II exterior; combined roster row',
+        propellers=[(0,1.225,-2.1)],prop_radius=.75,prop_blades=3,prop_pusher=True,
+        twin_boom=True,boom_x=1.2,boom_y=1.2,h_tail=True,gear_track=2.2,wheel_radius=.18,
+        stabilator=[(.03,1.25,-3.3,-3.9),(1.4,1.25,-3.4,-3.85)],
+        profile=[(-.26,0,.10,.12),(-.18,0,.30,.34),(0,0,.5,.5),(.20,0,.48,.48),(.38,-.03,.31,.34),(.50,-.06,.05,.07)])
+def drone__taliban_built_drone(lod=0):
+    return male('drone__taliban_built_drone','Taliban-built drone',lod,'local_light',(3.2,4.8,1.1,.40,.40,.45),ROSTER_REFERENCE,
+        'Original plausible locally assembled light UAV; roster provides no unique airframe',blades=2,stations=(),generic_design=True)
+def drone__wing_loong_i_ch_4(lod=0):
+    return male('drone__wing_loong_i_ch_4','Wing Loong I / CH-4',lod,'wingloong1',(9.05,14.,2.77,.82,1.,1.),
+        'https://cgsc.contentdm.oclc.org/digital/api/collection/p4013coll11/id/2090/download','Wing Loong I exterior',blades=3,stations=(.37,))
+
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):
     from validate_aircraft import validate

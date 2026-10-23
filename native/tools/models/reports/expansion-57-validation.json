@@ -1,0 +1,38 @@
+{
+  "batch": 57,
+  "files": [
+    "aircraft/drone__mohajer_6.glb",
+    "aircraft/drone__mq_9_reaper.glb",
+    "aircraft/drone__mq_9a_reaper.glb",
+    "aircraft/drone__mq_9b_protector.glb",
+    "aircraft/drone__mq_9b_seaguardian.glb",
+    "aircraft/drone__orion.glb"
+  ],
+  "sha256": {
+    "aircraft/drone__mohajer_6.glb": "97a58432a21c665d78036bf5e28185288503bae408e957780cebdb20eea47c03",
+    "aircraft/drone__mq_9_reaper.glb": "14e93de9c2f87a510b3fa0e9d5264086d60fe5e42b4748db6c954777e11a679a",
+    "aircraft/drone__mq_9a_reaper.glb": "4f5eacc785abce995fc5b168a583d08fe78db2506accd45aea0355852ea356f3",
+    "aircraft/drone__mq_9b_protector.glb": "3d3dc9065d6f55233b208ca93830bd9cd3b2630f78c4cc775fa0dfb86cd9f77c",
+    "aircraft/drone__mq_9b_seaguardian.glb": "4227fce471b76255bf4f9ce600e060472e69077b44d7b4753e3f6963c9e580e1",
+    "aircraft/drone__orion.glb": "f00ab300f2e39a4e7b64cfbf70a8c12f0d11162e649898670002209dea427561"
+  },
+  "maximum_triangles": [
+    10924,
+    1716
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

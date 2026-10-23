@@ -59,7 +59,7 @@ def airfoil(m,stations,lod=0,role='paint',span_steps=None,chord_steps=None):
     chords=np.linspace(0,1,count)
     profile=[(t,1) for t in chords]+[(t,-1) for t in chords[-2:0:-1]]
     def ring(s):
-        x,y,lead,trail=s;c=lead-trail;assert c>.015
+        x,y,lead,trail=s;c=lead-trail;assert c>1e-4
         points=[]
         for t,side in profile:
             thickness=5*.085*(.2969*math.sqrt(t)-.1260*t-.3516*t*t+.2843*t**3-.1036*t**4)*c
@@ -452,7 +452,6 @@ def build(s,lod=0):
     return rig,s
 
 def build_multirotor(s,lod):
-    from helicopter_parts import rotor_mesh
     rig=Rig(lod);d=s.details;L=s.length;cy=s.belly+s.body_height/2;m=Mesh()
     m.box('paint',(0,cy,0),(s.body_width,s.body_height,L*.36))
     m.box('metal_dark',(0,cy+.10,0),(s.body_width*.75,.16,L*.28))
@@ -462,8 +461,14 @@ def build_multirotor(s,lod):
         p=np.asarray(p);arm=Mesh();beam(arm,'metal_dark',(0,cy,0),p-[0,.065,0],.045 if d['motors']==4 else .065)
         arm.tube('metal_dark',p-[0,.11,0],p,.055 if d['motors']==4 else .085,8 if lod else 20)
         parent='Motor_'+str(i);rig.add(parent,'Fuselage',p,arm)
-        rotor=rotor_mesh(d['prop_radius'],d['prop_blades'],lod,chord=d['prop_radius']*.15,root_fraction=.17)
-        rotor.shift(p);rig.add('Propeller' if i==0 else 'Propeller_'+str(i),parent,p,rotor,'Z',
+        rotor=Mesh();r=d['prop_radius']
+        for angle in np.linspace(0,math.tau,d['prop_blades'],endpoint=False):
+            blade=Mesh();airfoil(blade,[(r*.14,0,r*.06,-r*.06),(r*.35,0,r*.08,-r*.08),(r*.82,0,r*.06,-r*.06),(r,0,r*.025,-r*.025)],lod,span_steps=1 if lod else 3)
+            R=rotation([0,1,0],angle)
+            for g in blade.groups.values():g[0]=(np.asarray(g[0])@R.T+p).tolist();g[1]=(np.asarray(g[1])@R.T).tolist()
+            merge_mesh(rotor,blade)
+        rotor.tube('metal_dark',p-[0,.025,0],p+[0,.025,0],r*.14,8 if lod else 20)
+        rig.add('Propeller' if i==0 else 'Propeller_'+str(i),parent,p,rotor,'Z',
             frame_rotation=quat([1,0,0],-math.pi/2),blade_count=d['prop_blades'],radius_metres=d['prop_radius'])
     skid=Mesh()
     for side in (-1,1):
@@ -482,7 +487,7 @@ def build_multirotor(s,lod):
     else:
         p=np.array([0,cy,L*.25]);payload.tube('paint',p,p+[0,0,L*.18],s.body_width*.22,8 if lod else 20,.02)
         rig.add('Payload','Fuselage',p,payload);muzzle=p+[0,0,L*.18]
-    rig.add('Muzzle_0','Fuselage',muzzle);d['muzzle_count']=1;d['muzzle_positions']={'Muzzle_0':muzzle.tolist()}
+    rig.add('Muzzle_0','Fuselage',muzzle,**({'frame_rotation':quat([1,0,0],math.pi/2)} if d.get('bomber') else {}));d['muzzle_count']=1;d['muzzle_positions']={'Muzzle_0':muzzle.tolist()}
     for part in rig.parts:
         if part['mesh'] is not None:part['mesh'].remove_duplicates()
     return rig,s
