@@ -422,6 +422,10 @@ def fittings(rig,s,lod):
             pod.box('paint',(x,yy+.26,z),(.11,.37,.70))
             rig.add('Jammer_Pod_'+label,'Wing_'+label,(x,yy+.44,z),pod)
     if s.details.get('unmanned'):
+        if s.details.get('nose_seeker'):
+            p=np.array([0,s.belly+s.body_height/2,L*.5]);optic=Mesh()
+            optic.tube('glass',p+[0,0,.001],p+[0,0,.012],W*.28,8 if lod else 24)
+            rig.add('Nose_Seeker','Fuselage',p,optic)
         if s.details.get('nose_hump'):
             hump=Mesh();cy=y-.10;W=s.body_width
             curved_shell(hump,'paint',[(L*.12,cy,W*.12,.08),(L*.20,cy+.10,W*.42,.30),(L*.31,cy+.08,W*.36,.27),(L*.39,cy-.05,W*.08,.06)],lod,circumference=8 if lod else 24,longitudinal=3)

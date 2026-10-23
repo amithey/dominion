@@ -1,0 +1,36 @@
+{
+  "batch": 61,
+  "files": [
+    "aircraft/loiterer__ch_901.glb",
+    "aircraft/loiterer__hero_120.glb",
+    "aircraft/loiterer__hx_2.glb",
+    "aircraft/loiterer__kargu_2.glb",
+    "aircraft/loiterer__lancet_3.glb"
+  ],
+  "sha256": {
+    "aircraft/loiterer__ch_901.glb": "35552e982804c9c5daa85943e756dfd23ac6eac0e0de0ed307611c49a976b570",
+    "aircraft/loiterer__hero_120.glb": "99259cfad00c435a8e42bc27e7299465be182e8356b04b928f42447e76f785fe",
+    "aircraft/loiterer__hx_2.glb": "d294887c4cd0827dadd6f37f52173c8ed52c7808717a314fd59ff682a5d23d68",
+    "aircraft/loiterer__kargu_2.glb": "fc8808b53b7aa61f24e54dc6b66aad14b164b132137378f493164ff56573ac9f",
+    "aircraft/loiterer__lancet_3.glb": "c553e401ca4fdaf5c218b7a1848645946cb311d1bb1a7c370c9a66bbc8590334"
+  },
+  "maximum_triangles": [
+    6780,
+    832
+  ],
+  "checks": [
+    "saved-buffer geometry, metre UVs, CCW winding, unit normals, no duplicate triangles, ground bounds, LOD limits",
+    "airframe-specific propulsion, controls and landing gear",
+    "local-frame hinge propagation and full-revolution return where rotating",
+    "independent trimesh geometry/winding/world transforms",
+    "native Godot load, every pivot and mesh-vertex hinge propagation",
+    "four saved-file views rendered for visual review"
+  ],
+  "generators": [
+    "generate_p6_aircraft.py",
+    "aircraft_parts.py",
+    "helicopter_parts.py",
+    "validate_aircraft.py",
+    "vehicle_parts.py"
+  ]
+}

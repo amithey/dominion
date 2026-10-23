@@ -656,8 +656,9 @@ def interceptorDrone__interceptor_drone(lod=0):return multicopter('interceptorDr
 
 def oneway(slug,name,lod,dimensions,wing,fins,source,features,**details):
     L,S,H,W,B,b=dimensions
+    d={'oneway':True,'landing_none':True,'sensor_turret':False,'nose_hump':False,'stations':(),'spinner_length':.12,'prop_chord_scale':.40,**details}
     return uas(slug,name,lod,'oneway',dimensions,wing,fins,source,features,
-        oneway=True,landing_none=True,sensor_turret=False,nose_hump=False,stations=(),spinner_length=.12,prop_chord_scale=.40,**details)
+        **d)
 def shahed(slug,name,lod):
     return oneway(slug,name,lod,(3.5,2.5,.60,.38,.35,.145),
         [(.13,.32,.75,-1.45),(1.25,.32,-1.05,-1.55)],
@@ -682,7 +683,7 @@ def loiterer__ch_901(lod=0):
 def cross_uav(slug,name,lod,L,S,W,source,features,front=.12,rear=.65):
     B=W;cy=.20
     s=AircraftSpec(slug,name,'cruciform',L,S,S,W,B,cy-B/2,1,source,seats=0,features=features,
-        details={'cruciform':True,'unmanned':True,'oneway':True,'landing_none':True,'wing':[],'fins':[],'gun':False,'stations':(),
+        details={'cruciform':True,'unmanned':True,'oneway':True,'landing_none':True,'wing':[],'fins':[],'gun':False,'stations':(),'generic_design':source==ROSTER_REFERENCE,
             'front_bank':front,'rear_span_ratio':rear,'propellers':[[0,cy,-L*.49]],'prop_radius':W*.95,'prop_blades':2,'prop_pusher':True,
             'prop_chord_scale':.28,'spinner_length':.055,
             'profile':[(-.48,0,.32,.32),(-.36,0,.5,.5),(.18,0,.5,.5),(.42,0,.48,.48),(.5,0,.40,.40)]})
@@ -700,6 +701,39 @@ def loiterer__kargu_2(lod=0):
 def loiterer__lancet_3(lod=0):
     return cross_uav('loiterer__lancet_3','Lancet-3',lod,1.65,1.0,.15,ROSTER_REFERENCE,
         ['large forward X-wing bank','smaller aft X-wing bank','slender tubular fuselage','EO nose window','electric pusher'],front=.22,rear=.75)
+
+def loiterer__loitering_munition(lod=0):
+    rig,s=cross_uav('loiterer__loitering_munition','Loitering Munition',lod,1.2,1.0,.16,ROSTER_REFERENCE,
+        ['original generic tube-launched airframe','cruciform folding wings','rear pusher','forward optical window'],front=.08,rear=.55)
+    s.representative='Original generic cruciform loitering airframe; shared slug serves two roster rows';return rig,s
+def loiterer__nagastra_1(lod=0):
+    return oneway('loiterer__nagastra_1','Nagastra-1',lod,(1.5,1.0,.45,.16,.18,.16),
+        [(.06,.25,.25,0),(.5,.25,.15,.02)],[(0,.26,.45,-.40,-.72,-.52,-.68)],
+        'https://www.solargroup.com/about.html',
+        ['compact tubular fuselage','straight foldable wing','conventional tail','electric pusher','gearless airframe'],
+        propellers=[[0,.25,-.69]],prop_radius=.16,prop_blades=2,prop_pusher=True,spinner_length=.055,
+        stabilator=[(.03,.25,-.45,-.70),(.30,.25,-.50,-.68)])
+def loiterer__qasef_2k_samad(lod=0):
+    return oneway('loiterer__qasef_2k_samad','Qasef-2K / Samad',lod,(2.88,3.25,.85,.25,.28,.30),
+        [(.1,.45,-.10,-1.2),(1.625,.45,-.45,-1.1)],
+        [(-1.625,.45,.85,-.45,-1.1,-.65,-1.03),(1.625,.45,.85,-.45,-1.1,-.65,-1.03)],
+        'https://www.dia.mil/Portals/110/Documents/News/Military_Power_Publications/UAV_Book.pdf',
+        ['Qasef canard layout','small foreplanes','aft main wing with tip fins','rear piston pusher'],
+        representative='Approximate Qasef-2K exterior; combined roster row',
+        propellers=[[0,.44,-1.32]],prop_radius=.24,prop_blades=2,prop_pusher=True,
+        canard=[(.09,.44,.85,.60),(.55,.44,.73,.58)])
+def loiterer__switchblade_600(lod=0):
+    return cross_uav('loiterer__switchblade_600','Switchblade 600',lod,1.3,1.3,.18,'https://www.avinc.com/solution/switchblade-600/',
+        ['tube-launched electric airframe','deployable wing and aft control banks','long cylindrical body','EO/IR nose seeker','rear pusher'],front=.18,rear=.72)
+def harop__harop(lod=0):
+    return oneway('harop__harop','HAROP',lod,(2.5,3.,.80,.38,.32,.20),
+        [(.13,.36,.20,-1.10),(1.5,.36,-.75,-1.15)],
+        [(-1.5,.36,.80,-.74,-1.18,-.88,-1.12),(1.5,.36,.80,-.74,-1.18,-.88,-1.12)],
+        'https://www.iai.co.il/product/harop/',
+        ['delta main wing','front canards','wingtip fins','blunt electro-optical seeker nose','rear pusher'],
+        propellers=[[0,.36,-1.13]],prop_radius=.25,prop_blades=2,prop_pusher=True,nose_seeker=True,
+        canard=[(.12,.36,.91,.68),(.75,.36,.78,.62)],
+        profile=[(-.48,0,.10,.12),(-.30,0,.35,.37),(-.1,0,.5,.5),(.20,0,.48,.48),(.40,0,.43,.43),(.50,0,.40,.40)])
 
 BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswith('_') and callable(f)}
 def save(slug,output_dir=None,tree_dir=None,print_tree=True):

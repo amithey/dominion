@@ -2,7 +2,7 @@
   "request_roster_sha256": "dfb38500e59e45b3fdd342f01bbd5b3bb50762c9d896970185bd6d38b377c6d3",
   "requested_rows": 468,
   "requested_unique_files": 467,
-  "ready_files": 344,
+  "ready_files": 349,
   "shared_slug_note": "Two P6 loitering-munition rows resolve to one loiterer__loitering_munition.glb.",
   "validation": "Each ready batch has saved-buffer checks, printed node trees, independent trimesh and Godot loads and visually reviewed saved-GLB render sheets. Existing approved art checked byte-for-byte against the request baseline.",
   "batches": [
@@ -709,6 +709,17 @@
         "aircraft/shahed__shahed_drone.glb",
         "aircraft/loiterer__arash.glb"
       ]
+    },
+    {
+      "batch": 61,
+      "report": "expansion-61-validation.json",
+      "files": [
+        "aircraft/loiterer__ch_901.glb",
+        "aircraft/loiterer__hero_120.glb",
+        "aircraft/loiterer__hx_2.glb",
+        "aircraft/loiterer__kargu_2.glb",
+        "aircraft/loiterer__lancet_3.glb"
+      ]
     }
   ],
   "priorities": {
@@ -982,7 +993,7 @@
     "P6": {
       "requested_rows": 128,
       "unique_files": 127,
-      "ready_files": 117,
+      "ready_files": 122,
       "ready_slugs": [
         "aewc__a_50u",
         "aewc__e_2c_hawkeye",
@@ -1079,6 +1090,11 @@
         "lightFighter__t_50iq",
         "lightFighter__tejas_mk1",
         "loiterer__arash",
+        "loiterer__ch_901",
+        "loiterer__hero_120",
+        "loiterer__hx_2",
+        "loiterer__kargu_2",
+        "loiterer__lancet_3",
         "maritimePatrol__atlantique_2",
         "maritimePatrol__cn_235_mpa",
         "maritimePatrol__il_38n",
@@ -1104,11 +1120,6 @@
       ],
       "remaining_slugs": [
         "harop__harop",
-        "loiterer__ch_901",
-        "loiterer__hero_120",
-        "loiterer__hx_2",
-        "loiterer__kargu_2",
-        "loiterer__lancet_3",
         "loiterer__loitering_munition",
         "loiterer__nagastra_1",
         "loiterer__qasef_2k_samad",
