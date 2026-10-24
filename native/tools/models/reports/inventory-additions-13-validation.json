@@ -1,0 +1,37 @@
+{
+  "batch": "inventory-additions-13",
+  "files": [
+    "vehicles/coastalASM__type_25_ssm.glb",
+    "vehicles/df17__type_25_hvgp.glb",
+    "vehicles/reconVehicle__type_87_rcv.glb",
+    "vehicles/reconVehicle__komatsu_lav.glb",
+    "aircraft/helicopter__uh_2.glb",
+    "aircraft/navalHelicopter__sh_60l.glb"
+  ],
+  "sha256": {
+    "vehicles/coastalASM__type_25_ssm.glb": "c298288b6204ddfac9a614af75f7def8c8820a3d2ec5260142c3faa95f758e45",
+    "vehicles/df17__type_25_hvgp.glb": "9d17ef7cb809908480f728fd881f48e6ca12b6cf67fada4f681d903484fc497e",
+    "vehicles/reconVehicle__type_87_rcv.glb": "0b405a0c9abbf671d330c04644e7b0b03024bc18fe55fbce65940874096769f3",
+    "vehicles/reconVehicle__komatsu_lav.glb": "f53f104523df24b200348928dd9eca7734b8f6707a42fdd7925881f25868f964",
+    "aircraft/helicopter__uh_2.glb": "426f0455fbe7aecb05111dfd88668b7dbc24d27701ccc3c18f5be69c43113f51",
+    "aircraft/navalHelicopter__sh_60l.glb": "065e7e0f1fe213cc95671eeddf7c0015984d22983c5b7dce0a3112033532154d"
+  },
+  "maximum_triangles": [
+    11300,
+    1916
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "eight-wheel launchers with four rectangular or two cylindrical canisters and real pitch bearings; six-wheel Type87 and four-wheel Komatsu; shared UH2 cowling and actual rotor counts; SH60L fixed radar fairing and twin rear tyres",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_13.py",
+  "extra_views": "six final detail views visually reviewed, including45/90degree launcher erection",
+  "preserved_baseline": {
+    "commit": "ba6e6a6",
+    "entries": 912
+  }
+}
