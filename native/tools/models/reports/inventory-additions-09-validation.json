@@ -1,0 +1,32 @@
+{
+  "batch": "inventory-additions-09",
+  "files": [
+    "ships/asFrigate__type_26_uk.glb",
+    "ships/asFrigate__type_31_uk.glb",
+    "ships/landingShip__bay_class.glb",
+    "ships/gunboat__cutlass_class.glb",
+    "ships/seaDrone__mmcm_ariadne.glb",
+    "ships/seaDrone__arcims_sweep.glb"
+  ],
+  "sha256": {
+    "ships/asFrigate__type_26_uk.glb": "049ba1ccd98075c889ed6903b16824aaad870cef1ede64054659f87826c55ee7",
+    "ships/asFrigate__type_31_uk.glb": "bba22590ddf73cd9c63042739e621eee6003d1d9cddfe67e34fa6b5f8ba38746",
+    "ships/landingShip__bay_class.glb": "7bc22177fb3730bc7b60423e1feec898643eb5b689a7d3a485eebaeaa1349864",
+    "ships/gunboat__cutlass_class.glb": "51043b35328202fb26e32df6aa56e8f28bc279846da71ce0bf3367b071c07298",
+    "ships/seaDrone__mmcm_ariadne.glb": "c5f7f20860a5d5471d2944c6fb3ae9a511d1825c06da6e20b874ec51b632f4ed",
+    "ships/seaDrone__arcims_sweep.glb": "f2f84412da15f83815e00102797d34916b197ab2a309b5aa511669994ba62116"
+  },
+  "maximum_triangles": [
+    14906,
+    2154
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "keel origin, waterline wake markers, named ship gun and radar pivots, landing ramp hinge and MCM payload handling pivots",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_09.py"
+}

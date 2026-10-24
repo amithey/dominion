@@ -1,7 +1,7 @@
 {
   "nation": "uk",
   "scope": "current and confirmed-order platforms in existing Tier 7 categories",
-  "all_roster_rows_assessed": false,
+  "all_roster_rows_assessed": true,
   "complete": false,
   "completion_note": "Operator evidence, exact visual fit and additional inventory still being audited.",
   "rows": [
@@ -1311,11 +1311,17 @@
           1658
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "UK-CSG26",
+        "UK-NSM26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_2026_operator_use",
+        "reason": "Type45 is current, with actual Duncan operations in2026. Two game keys duplicate the same ship family. Existing48Sylver/SAMPSON baseline remains identifiable; NSM and addedCAMM refits are hull/date-specific, not universal fleet fits.",
+        "recommended_action": "retain",
+        "model_match": "exact_visual_reaudit_pending",
+        "replacement": null
       }
     },
     {
@@ -1351,11 +1357,17 @@
           1658
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "UK-CSG26",
+        "UK-NSM26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_2026_operator_use",
+        "reason": "Type45 is current, with actual Duncan operations in2026. Two game keys duplicate the same ship family. Existing48Sylver/SAMPSON baseline remains identifiable; NSM and addedCAMM refits are hull/date-specific, not universal fleet fits.",
+        "recommended_action": "retain",
+        "model_match": "exact_visual_reaudit_pending",
+        "replacement": null
       }
     },
     {
@@ -1391,11 +1403,18 @@
           1666
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "UK-CSG26",
+        "UK-NSM26",
+        "UK-T26-SPEC"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_2026_operator_use_incomplete_inventory",
+        "reason": "DukeType23 is an ASW frigate, despite corvette game category. Two keys represent the same family. Existing antiship canister shape needs review against retired Harpoon/current stagedNSM; newType26/31 require separate models.",
+        "recommended_action": "retain_review_modernisation_add_future_classes",
+        "model_match": "exact_visual_reaudit_pending",
+        "replacement": null
       }
     },
     {
@@ -1431,11 +1450,18 @@
           1666
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "UK-CSG26",
+        "UK-NSM26",
+        "UK-T26-SPEC"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_2026_operator_use_incomplete_inventory",
+        "reason": "DukeType23 is an ASW frigate, despite corvette game category. Two keys represent the same family. Existing antiship canister shape needs review against retired Harpoon/current stagedNSM; newType26/31 require separate models.",
+        "recommended_action": "retain_review_modernisation_add_future_classes",
+        "model_match": "exact_visual_reaudit_pending",
+        "replacement": null
       }
     },
     {
@@ -1470,11 +1496,18 @@
           1176
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "UK-CUTLASS",
+        "UK-HPB1900-DIM",
+        "UK-RIVER26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_model_mismatch",
+        "reason": "Generic30m gunboat with30mm foregun is not19m Cutlass with machinegun mounts. Current River patrol ships are another distinct missing family.",
+        "recommended_action": "build_real_patrol_families",
+        "model_match": "wrong_generic_hull",
+        "replacement": "gunboat__cutlass_class"
       }
     },
     {
@@ -1509,11 +1542,18 @@
           1500
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "UK-BULWARK-SALE26",
+        "UK-BAY",
+        "UK-LYME-MCM26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "retired_national_class",
+        "reason": "Albion/Bulwark no longer current British service. Keep historical asset and assess Brazil transfer separately. Bay-class RFA amphibious ships remain current; LymeBayMCM conversion is a particular2026fit.",
+        "recommended_action": "retain_historical_add_current_bay",
+        "model_match": "retired_class",
+        "replacement": "landingShip__bay_class"
       }
     },
     {
@@ -1548,11 +1588,17 @@
           1848
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "UK-CSG26",
+        "UK-QE26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_2026_operator_use",
+        "reason": "QueenElizabeth-class is real and both hulls have dated2026activity. Existing two islands/ski-jump exterior appropriate family; noCATOBAR and no operational large stealthstrike drone inferred from hybrid-wing development spending.",
+        "recommended_action": "retain",
+        "model_match": "exact_visual_reaudit_pending",
+        "replacement": null
       }
     },
     {
@@ -1587,11 +1633,16 @@
           1060
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "UK-NUCLEAR26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "Astute class is current. Five in-service boats; commissioned Agamemnon remains in trials. Public class existence does not disclose individual operational availability, never infer allboatsready.",
+        "recommended_action": "retain",
+        "model_match": "exact_visual_reaudit_pending",
+        "replacement": null
       }
     },
     {
@@ -1626,11 +1677,17 @@
           1560
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "UK-NUCLEAR26",
+        "UK-DREADNOUGHT-DP4"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_incomplete_inventory",
+        "reason": "Four Vanguard remain current SSBNfleet. Four firm Dreadnought builds are distinct future submarines, not delivered inventory. SSNAUKUS is design/long-lead stage with finalcount yetdecided.",
+        "recommended_action": "retain_add_firm_dreadnought",
+        "model_match": "exact_visual_reaudit_pending",
+        "replacement": null
       }
     },
     {
@@ -1664,11 +1721,19 @@
           356
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "UK-MMCM-DELIVERY",
+        "UK-MMCM26",
+        "UK-SWEEP",
+        "ARCIMS-SPEC"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_model_mismatch",
+        "reason": "British MCM USVs include12m Ariadne/AdventureMMCM and11m ARCIMS sweeping/hunting families. Genericlowprofile attackboat is wrong form and mission. Separate actual payload/hull models needed.",
+        "recommended_action": "build_distinct_mcm_usvs",
+        "model_match": "wrong_hull_and_mission",
+        "replacement": "seaDrone__mmcm_ariadne"
       }
     }
   ],
@@ -1905,6 +1970,134 @@
       "proposed_slug": "jet__f_35a",
       "existing_exact_asset": "aircraft/jet__f_35a.glb",
       "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "uk",
+      "key": "asFrigate",
+      "model": "Type26 City UK",
+      "source_ids": [
+        "UK-T26-SPEC",
+        "UK-T26-BUILD26",
+        "UK-T26-EXTERIOR",
+        "UK-T26-EQUIPMENT",
+        "UK-T26-MK41"
+      ],
+      "status": "firm_order_under_construction",
+      "reason": "Eight firm ships underconstruction, not Hunter/Canadian nationalconfiguration.",
+      "asset_action": "build_missing",
+      "proposed_slug": "asFrigate__type_26_uk",
+      "existing_exact_asset": "ships/asFrigate__type_26_uk.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "uk",
+      "key": "asFrigate",
+      "model": "Type31 Inspiration UK",
+      "source_ids": [
+        "UK-T31-ORDER",
+        "UK-T31-GUNS",
+        "UK-T31-VLS26",
+        "UK-T31-EXTERIOR"
+      ],
+      "status": "firm_order_under_construction",
+      "reason": "Five firm ships underconstruction. Initial57/40/40baseline; avoid unconfirmed installedMk41count.",
+      "asset_action": "build_missing",
+      "proposed_slug": "asFrigate__type_31_uk",
+      "existing_exact_asset": "ships/asFrigate__type_31_uk.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "uk",
+      "key": "landingShip",
+      "model": "Bay class RFA",
+      "source_ids": [
+        "UK-BAY",
+        "UK-LYME-MCM26",
+        "BAY-CLASS-DIMENSIONS"
+      ],
+      "status": "documented_service",
+      "reason": "Current amphibious class with sternwell and large aft flightdeck, not retiredAlbion. Base representativefit, not every2026mothershipconversion.",
+      "asset_action": "build_missing",
+      "proposed_slug": "landingShip__bay_class",
+      "existing_exact_asset": "ships/landingShip__bay_class.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "uk",
+      "key": "gunboat",
+      "model": "Cutlass class",
+      "source_ids": [
+        "UK-CUTLASS",
+        "UK-CUTLASS-BUILDER",
+        "UK-HPB1900-DIM",
+        "UK-CUTLASS-COMMISSION"
+      ],
+      "status": "documented_service",
+      "reason": "Actual19m Gibraltar patrol boat with triplejets, low enclosed angular cabin and machinegun stations.",
+      "asset_action": "build_missing",
+      "proposed_slug": "gunboat__cutlass_class",
+      "existing_exact_asset": "ships/gunboat__cutlass_class.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "uk",
+      "key": "seaDrone",
+      "model": "Ariadne MMCM",
+      "source_ids": [
+        "UK-MMCM-DELIVERY",
+        "UK-MMCM26"
+      ],
+      "status": "delivered_in_service_first_system",
+      "reason": "12m minehunting USV with towed sonar and sternLARS; twin2026delivery evidence.",
+      "asset_action": "build_missing",
+      "proposed_slug": "seaDrone__mmcm_ariadne",
+      "existing_exact_asset": "ships/seaDrone__mmcm_ariadne.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "uk",
+      "key": "seaDrone",
+      "model": "ARCIMS SWEEP",
+      "source_ids": [
+        "UK-SWEEP",
+        "ARCIMS-SPEC",
+        "ARCIMS-LENGTH"
+      ],
+      "status": "accepted_training_evaluation_before_deployment",
+      "reason": "11m Atlas combined-influence sweep module, not ThalesMMCMboat and not combatmissileUSV.",
+      "asset_action": "build_missing",
+      "proposed_slug": "seaDrone__arcims_sweep",
+      "existing_exact_asset": "ships/seaDrone__arcims_sweep.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "uk",
+      "key": "nuclearSub",
+      "model": "Dreadnought class",
+      "source_ids": [
+        "UK-NUCLEAR26",
+        "UK-DREADNOUGHT-DP4"
+      ],
+      "status": "firm_construction_contract",
+      "reason": "Fourfirmunderconstruction, first early2030s; own hull and missile compartment distinctVanguard.",
+      "asset_action": "build_missing",
+      "proposed_slug": "nuclearSub__dreadnought_class",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "uk",
+      "key": "gunboat",
+      "model": "River Batch1",
+      "source_ids": [
+        "UK-RIVER26"
+      ],
+      "status": "documented_2026_operator_use",
+      "reason": "Tyne/Mersey/Severn actual2026patrol duties; offshore ship distinctCutlass.",
+      "asset_action": "build_missing",
+      "proposed_slug": "gunboat__river_batch_1",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
     }
   ]
 }

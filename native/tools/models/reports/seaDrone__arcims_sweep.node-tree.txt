@@ -1,0 +1,47 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Hull local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Hull_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Wake_Bow local=[0.0, 0.6, 5.39] world=[0.0, 0.6, 5.39] axis=None pivot
+    Wake_Stern local=[0.0, 0.6, -5.39] world=[0.0, 0.6, -5.39] axis=None pivot
+    Bridge local=[0.0, 1.5, 2.0] world=[0.0, 1.5, 2.0] axis=None pivot
+      Bridge_Mesh local=[0, 0, 0] world=[0.0, 1.5, 2.0] axis=None mesh
+    Cabin_Windows local=[0.0, 2.364, 2.0] world=[0.0, 2.364, 2.0] axis=None pivot
+      Cabin_Windows_Mesh local=[0, 0, 0] world=[0.0, 2.364, 2.0] axis=None mesh
+    Mast_0 local=[0.0, 2.85, 0.9] world=[0.0, 2.85, 0.9] axis=None pivot
+      Mast_0_Mesh local=[0, 0, 0] world=[0.0, 2.85, 0.9] axis=None mesh
+      Radar local=[0.0, 1.54, -0.18] world=[0.0, 4.39, 0.72] axis=Y pivot
+        Radar_Mesh local=[0, 0, 0] world=[0.0, 4.39, 0.72] axis=None mesh
+      Sensor_EO local=[0.0, 2.9, -0.32] world=[0.0, 5.75, 0.58] axis=Y pivot
+        Sensor_EO_Mesh local=[0, 0, 0] world=[0.0, 5.75, 0.58] axis=None mesh
+    Solid_Fender local=[0.0, 1.36, 0.0] world=[0.0, 1.36, 0.0] axis=None pivot
+      Solid_Fender_Mesh local=[0, 0, 0] world=[0.0, 1.36, 0.0] axis=None mesh
+    Sweep_Power_Generation_Module local=[0.0, 1.5, -0.95] world=[0.0, 1.5, -0.95] axis=None pivot
+      Sweep_Power_Generation_Module_Mesh local=[0, 0, 0] world=[0.0, 1.5, -0.95] axis=None mesh
+    Sweep_Tow_Winch local=[0.0, 1.95, -3.55] world=[0.0, 1.95, -3.55] axis=X pivot
+      Sweep_Tow_Winch_Mesh local=[0, 0, 0] world=[0.0, 1.95, -3.55] axis=None mesh
+    Tow_Point local=[0.0, 1.8, -5.15] world=[0.0, 1.8, -5.15] axis=None pivot
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Hull_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Hull_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Wake_Bow_LOD1 local=[0.0, 0.6, 5.39] world=[0.0, 0.6, 5.39] axis=None pivot hidden
+    Wake_Stern_LOD1 local=[0.0, 0.6, -5.39] world=[0.0, 0.6, -5.39] axis=None pivot hidden
+    Bridge_LOD1 local=[0.0, 1.5, 2.0] world=[0.0, 1.5, 2.0] axis=None pivot hidden
+      Bridge_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.5, 2.0] axis=None mesh hidden
+    Cabin_Windows_LOD1 local=[0.0, 2.364, 2.0] world=[0.0, 2.364, 2.0] axis=None pivot hidden
+      Cabin_Windows_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 2.364, 2.0] axis=None mesh hidden
+    Mast_0_LOD1 local=[0.0, 2.85, 0.9] world=[0.0, 2.85, 0.9] axis=None pivot hidden
+      Mast_0_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 2.85, 0.9] axis=None mesh hidden
+      Radar_LOD1 local=[0.0, 1.54, -0.18] world=[0.0, 4.39, 0.72] axis=Y pivot hidden
+        Radar_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 4.39, 0.72] axis=None mesh hidden
+      Sensor_EO_LOD1 local=[0.0, 2.9, -0.32] world=[0.0, 5.75, 0.58] axis=Y pivot hidden
+        Sensor_EO_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 5.75, 0.58] axis=None mesh hidden
+    Solid_Fender_LOD1 local=[0.0, 1.36, 0.0] world=[0.0, 1.36, 0.0] axis=None pivot hidden
+      Solid_Fender_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.36, 0.0] axis=None mesh hidden
+    Sweep_Power_Generation_Module_LOD1 local=[0.0, 1.5, -0.95] world=[0.0, 1.5, -0.95] axis=None pivot hidden
+      Sweep_Power_Generation_Module_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.5, -0.95] axis=None mesh hidden
+    Sweep_Tow_Winch_LOD1 local=[0.0, 1.95, -3.55] world=[0.0, 1.95, -3.55] axis=X pivot hidden
+      Sweep_Tow_Winch_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.95, -3.55] axis=None mesh hidden
+    Tow_Point_LOD1 local=[0.0, 1.8, -5.15] world=[0.0, 1.8, -5.15] axis=None pivot hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 0.75, 0.0] world=[0.0, 0.75, 0.0] axis=None mesh hidden
