@@ -1,0 +1,32 @@
+{
+  "batch": "inventory-additions-07",
+  "files": [
+    "ships/asFrigate__fremm_gp_italy.glb",
+    "ships/asFrigate__fremm_asw_italy.glb",
+    "ships/landingShip__trieste.glb",
+    "ships/submarine__u212_nfs.glb",
+    "ships/submarine__sauro_class.glb",
+    "aircraft/carrierDrone__scaneagle.glb"
+  ],
+  "sha256": {
+    "ships/asFrigate__fremm_gp_italy.glb": "f14c75c0d586423098ea136d24db2f1a8b8856d79d49a581103e491279b092fd",
+    "ships/asFrigate__fremm_asw_italy.glb": "c0cffdfa38e8bea39ac0b07ac9194878cbc8eddbb2bded09255250207948bb21",
+    "ships/landingShip__trieste.glb": "410557bc724131e85b88c5d6ec7ae34e2210be044c23e14b21ae85271800ec3c",
+    "ships/submarine__u212_nfs.glb": "2db70c8e36eca91921e35563d434d341986ae46823b3a9bc9c04848717f8e1d7",
+    "ships/submarine__sauro_class.glb": "56fa58962bc91eb0477676ec7fd7208d0e499392b58625197c0f8fe38ba936cc",
+    "aircraft/carrierDrone__scaneagle.glb": "71c4dca8cccb34178fefc394a3a9a669f8553a336e2cffa69006b94c445cabd7"
+  },
+  "maximum_triangles": [
+    13320,
+    2488
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "canonical TrackPath with metre mesh scale and U loop coordinate on tracked vehicles; actual axle counts",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_07.py"
+}

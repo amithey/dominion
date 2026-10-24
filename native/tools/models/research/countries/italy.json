@@ -1231,13 +1231,15 @@
       "evidence_status": "reviewed",
       "evidence_source_ids": [
         "IT-NH90-NAVAL",
-        "IT-CAVOUR-AIRWING"
+        "IT-CAVOUR-AIRWING",
+        "IT-FREMM-FIT",
+        "IT-FREMM-DIM"
       ],
       "assessment": {
-        "status": "documented_service_multiple_variants",
-        "reason": "FREMMASWAlpino/CarabiniereandGPMarceglia/Bergaminireal. ExistinggenericFREMMisItalianGPexterior;ASWclasshasdifferent76mm/sonarfittingsandneedsseparatevariant.",
-        "recommended_action": "add_asw_variant_preserve_gp",
-        "model_match": "gp_representative_not_all_asw_configuration",
+        "status": "generic_national_variant_mismatch",
+        "reason": "Directinspectionofgenerate_p7_ships.py french_fremm()andactualGLBmetadataestablishesexistingasFrigate__fremmisFrenchAquitaineHerakles/Exocet/MdCN,notItalianGP. EarlierresearchnotecallingitItalianGPwascorrected. ItalyrequiresbothGP127+76mm/8TeseoandASWtwo76mm/4Teseo,twinhangarandnationalradararrangements.",
+        "recommended_action": "build_both_italian_variants_preserve_french_asset",
+        "model_match": "wrong_national_variant",
         "replacement": "asFrigate__fremm_asw_italy"
       }
     },
@@ -1516,14 +1518,15 @@
       "key": "carrierDrone",
       "model": "ScanEagle",
       "source_ids": [
-        "IT-SCANEAGLE"
+        "IT-SCANEAGLE",
+        "SCANEAGLE-DIM"
       ],
       "status": "contracted_operator_stage_pending",
-      "reason": "RealnavalInsitucontract;smallISRtype,notcarrierstrikewing.",
+      "reason": "Italian2025 purchase order and2026 conformity work support procurement. Current manufacturer exterior, unarmed maritime ISR; exact delivered sensor block and national launch kit unverified.",
       "asset_action": "build_missing",
       "proposed_slug": "carrierDrone__scaneagle",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "aircraft/carrierDrone__scaneagle.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "italy",
@@ -1589,28 +1592,32 @@
       "key": "submarine",
       "model": "U212NFS",
       "source_ids": [
-        "IT-NFS"
+        "IT-NFS",
+        "IT-NFS-DIM",
+        "IT-NFS-SCHEDULE",
+        "IT-NFS-KEEL26"
       ],
       "status": "ordered_future",
-      "reason": "FourfirmboatsafterfourthoptionexerciseJune2024;futureclassdistinctfrom57.15mTodaro.",
+      "reason": "Four firm boats in construction. Manufacturer length58.35m and X-tail; latest OCCAR first delivery September2029. Not an already delivered Todaro variant.",
       "asset_action": "build_missing",
       "proposed_slug": "submarine__u212_nfs",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "ships/submarine__u212_nfs.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "italy",
       "key": "submarine",
-      "model": "SauroIII/IVseries",
+      "model": "Sauro IV series (Primo Longobardo)",
       "source_ids": [
-        "IT-TODARO"
+        "IT-TODARO",
+        "IT-SAURO-IV-SPEC"
       ],
       "status": "documented_family_current_boat_status_pending",
-      "reason": "OperatorfleetlistsSauroboatsseparately;latestindividualretentionandcurrentfitmustbechecked.",
+      "reason": "Navy technical page establishes the distinct66.36m IV-series exterior. This addition does not cover the shorter III-series or certify readiness of every retained boat.",
       "asset_action": "build_missing",
       "proposed_slug": "submarine__sauro_class",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "ships/submarine__sauro_class.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "italy",
@@ -1618,14 +1625,16 @@
       "model": "Trieste",
       "source_ids": [
         "IT-TRIESTE",
-        "IT-TRIESTE-JSF"
+        "IT-TRIESTE-JSF",
+        "IT-TRIESTE-FIT",
+        "IT-TRIESTE-PHOTO"
       ],
       "status": "delivered_service_integration_stage_pending",
       "reason": "LHDdelivered2024;JSFsiteactivationprogramme2026notproofcompletedF35FOC.",
       "asset_action": "build_missing",
       "proposed_slug": "landingShip__trieste",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "ships/landingShip__trieste.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "italy",
@@ -1633,14 +1642,32 @@
       "model": "FREMMASWItalian",
       "source_ids": [
         "IT-CAVOUR-AIRWING",
-        "IT-NH90-NAVAL"
+        "IT-NH90-NAVAL",
+        "IT-FREMM-FIT",
+        "IT-FREMM-DIM"
       ],
       "status": "documented_service",
-      "reason": "ExistingItalianGPmodeldoesnotcoverdifferentASWguns/sonararrangement.",
+      "reason": "Existing sharedGLBisFrenchAquitaine,notItalianGP. BuildItalianASWtwo76mm,4Teseo,CAPTAS4andtwinhangar;GPseparate.",
       "asset_action": "build_missing",
       "proposed_slug": "asFrigate__fremm_asw_italy",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "ships/asFrigate__fremm_asw_italy.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "italy",
+      "key": "asFrigate",
+      "model": "FREMMGPItalian",
+      "source_ids": [
+        "IT-FREMM-FIT",
+        "IT-FREMM-DIM",
+        "IT-CAVOUR-AIRWING"
+      ],
+      "status": "documented_service",
+      "reason": "ExistingFREMMGLBisFrenchAquitaine. ItalianGPneeds127mmfore/76mmaft,8Teseo,twinhangarandItalianmast.",
+      "asset_action": "build_missing",
+      "proposed_slug": "asFrigate__fremm_gp_italy",
+      "existing_exact_asset": "ships/asFrigate__fremm_gp_italy.glb",
+      "asset_state": "available_exact_file"
     }
   ]
 }
