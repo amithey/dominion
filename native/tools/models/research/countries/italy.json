@@ -1,7 +1,7 @@
 {
   "nation": "italy",
   "scope": "current and confirmed-order platforms in existing Tier 7 categories",
-  "all_roster_rows_assessed": false,
+  "all_roster_rows_assessed": true,
   "complete": false,
   "completion_note": "Operator evidence, exact visual fit and additional inventory still being audited.",
   "rows": [
@@ -37,11 +37,17 @@
           2168
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-ARMY",
+        "IT-C2-DELIVERED"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_pending",
+        "reason": "Armyequipmentpageidentifiesthisfamily. Datedoperatoractivityandexactnationalfitstillbeingchecked;Frecciaisarmed25mmIFVdespiteapcgamekey,notunarmedAPC. C2separatedfromexistingC1.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -75,11 +81,16 @@
           1088
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-ARMY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_pending",
+        "reason": "Armyequipmentpageidentifiesthisfamily. Datedoperatoractivityandexactnationalfitstillbeingchecked;Frecciaisarmed25mmIFVdespiteapcgamekey,notunarmedAPC. C2separatedfromexistingC1.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -113,11 +124,16 @@
           2080
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-ARMY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_pending",
+        "reason": "Armyequipmentpageidentifiesthisfamily. Datedoperatoractivityandexactnationalfitstillbeingchecked;Frecciaisarmed25mmIFVdespiteapcgamekey,notunarmedAPC. C2separatedfromexistingC1.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -151,11 +167,16 @@
           1140
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-CENTAURO"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_and_order",
+        "reason": "SupplierconfirmsItalianadoptionand150contractedCentauroII120mm;quantityiscontractcountnotalloperational.",
+        "recommended_action": "retain",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -189,11 +210,16 @@
           1672
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-LEOPARD-SUPPORT"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_model_mismatch",
+        "reason": "ActualLeopard1recoveryvariantundermaintenancecontract;genericM88doesnotrepresentit. NeednationalBergepanzer2configurationandactualcrane/spadeexterior.",
+        "recommended_action": "build_specific_variant",
+        "model_match": "wrong_chassis_family",
+        "replacement": "recoveryVehicle__leopard_1_soccorso"
       }
     },
     {
@@ -226,11 +252,17 @@
           1884
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-LEOPARD-SUPPORT",
+        "IT-ARMY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "unverified_generic_type",
+        "reason": "Leopard1pioneer/bridgecontractprovesengineerfleetbutnotgenericT72mineploughvehicle. NeedactualItalianmineclearer/routeclearerplatformoperatorproof,notinferencefromengineerrole.",
+        "recommended_action": "hold_pending_specific_operator_evidence",
+        "model_match": "generic_chassis_unproven",
+        "replacement": null
       }
     },
     {
@@ -262,11 +294,16 @@
           2072
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-ARMY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "unverified_generic_entitlement",
+        "reason": "CheckedItalianarmyequipmentoverviewdoesnotestablishgenericengineerminelayertype. Furthernationaloperatorandcurrentretention/contractproofrequired;nofictionalGMZfleetinferred.",
+        "recommended_action": "hold_pending_specific_operator_evidence",
+        "model_match": "generic_not_country_identified",
+        "replacement": null
       }
     },
     {
@@ -300,11 +337,16 @@
           2112
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-ARMY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_pending",
+        "reason": "Armyequipmentpageidentifiesthisfamily. Datedoperatoractivityandexactnationalfitstillbeingchecked;Frecciaisarmed25mmIFVdespiteapcgamekey,notunarmedAPC. C2separatedfromexistingC1.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -339,11 +381,17 @@
           1760
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-ARMY",
+        "IT-DEEPFIRE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_pending",
+        "reason": "Armyequipmentpageidentifiesthisfamily. Datedoperatoractivityandexactnationalfitstillbeingchecked;Frecciaisarmed25mmIFVdespiteapcgamekey,notunarmedAPC. C2separatedfromexistingC1. July2026DeepFireoperatoractivitynowcorroboratesArmyNH90/Mangustaandrocketartillery;exactnationalweapon/variantfitremainsopen.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -378,11 +426,16 @@
           1028
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-HIMARS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "firm_order_delivery_unverified",
+        "reason": "21HIMARSactuallycontracted2024/late2024perJanuary2025Ministry. StrongerthanDSCApossible-saleapproval;actualcurrentdeliveryandacceptancenotconfirmedhere.",
+        "recommended_action": "use_specific_m142_mark_ordered",
+        "model_match": "generic_slug_requires_named_representative",
+        "replacement": "himars__m142_himars"
       }
     },
     {
@@ -415,11 +468,17 @@
           1760
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-SIDAM",
+        "IT-SKY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "legacy_service_status_unverified",
+        "reason": "SIDAMlegacytechnicalpageinsufficientfor2026activefleet. Skynexfirstsystemfirmorderwithplanned2026deliveryseparatefromtrackedSIDAM;threeoptionsnotfirm.",
+        "recommended_action": "verify_legacy_status_add_contracted_system",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -454,11 +513,17 @@
           1212
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-SAMPT",
+        "IT-OCCAR-2026"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "ordered_and_in_validation",
+        "reason": "SAMP/TNGandAsterB1NTcontracts/testingconfirmed;ItalianradarfitdiffersFrenchGF300andtwo gamekeysaliasonesystem. Completionof2026operationalvalidationstillneedsactualhandover/acceptanceproof.",
+        "recommended_action": "retain_mark_validation_review_national_radar",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -493,11 +558,17 @@
           1212
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-SAMPT",
+        "IT-OCCAR-2026"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "ordered_and_in_validation",
+        "reason": "SAMP/TNGandAsterB1NTcontracts/testingconfirmed;ItalianradarfitdiffersFrenchGF300andtwo gamekeysaliasonesystem. Completionof2026operationalvalidationstillneedsactualhandover/acceptanceproof.",
+        "recommended_action": "retain_mark_validation_review_national_radar",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -532,11 +603,17 @@
           1424
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-ARMY",
+        "IT-DEEPFIRE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_pending",
+        "reason": "Armyequipmentpageidentifiesthisfamily. Datedoperatoractivityandexactnationalfitstillbeingchecked;Frecciaisarmed25mmIFVdespiteapcgamekey,notunarmedAPC. C2separatedfromexistingC1. July2026DeepFireoperatoractivitynowcorroboratesArmyNH90/Mangustaandrocketartillery;exactnationalweapon/variantfitremainsopen.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -574,11 +651,17 @@
           2000
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-ARMY",
+        "IT-DEEPFIRE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_pending",
+        "reason": "Armyequipmentpageidentifiesthisfamily. Datedoperatoractivityandexactnationalfitstillbeingchecked;Frecciaisarmed25mmIFVdespiteapcgamekey,notunarmedAPC. C2separatedfromexistingC1. July2026DeepFireoperatoractivitynowcorroboratesArmyNH90/Mangustaandrocketartillery;exactnationalweapon/variantfitremainsopen.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -614,11 +697,16 @@
           1708
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-NH90-NAVAL"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "ItalianSH90NFHactualJune2026boardingoperation. DistinguishnavalNFHfromArmyTTH,unarmedboardingloadfromASWcapability,andlaterSWR3trialfromfleetmodernisation.",
+        "recommended_action": "retain_reaudit_national_sensor_fit",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -654,11 +742,16 @@
           2180
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-ARMY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_pending",
+        "reason": "Armyequipmentpageidentifiesthisfamily. Datedoperatoractivityandexactnationalfitstillbeingchecked;Frecciaisarmed25mmIFVdespiteapcgamekey,notunarmedAPC. C2separatedfromexistingC1.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -692,11 +785,17 @@
           1992
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-AIR-EW2026",
+        "IT-AIR-UNITS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "2026officialtrainingauthorizationidentifiesEFAandTornadoECR/IDS. Sharednationalmodelweaponloadstillrequiresreview.",
+        "recommended_action": "retain_reaudit_stores",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -731,11 +830,16 @@
           1404
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-F35"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "September2026MinistryexplicitlyconfirmsF35AandB. AvalidforCTOLcategory; Bneedsseparatephysicalvariant.",
+        "recommended_action": "retain",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -770,11 +874,18 @@
           2024
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-CAVOUR-AIRWING",
+        "IT-NEPTUNE25",
+        "IT-F35"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_model_mismatch",
+        "reason": "ActualItalianF35BcarrieroperationsplusAV8B+late2025notgenericF18F. ReuseexistingF35Bafterexactvisualcheck;HarrierOctober2026retirementtransitionstillneedscheck.",
+        "recommended_action": "reuse_existing_specific_type",
+        "model_match": "wrong_carrier_fighter_family",
+        "replacement": "stealthFighter__f_35b_lightning"
       }
     },
     {
@@ -809,11 +920,17 @@
           1856
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-AIR-EW2026",
+        "IT-AIR-UNITS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "2026officialtrainingauthorizationidentifiesEFAandTornadoECR/IDS. Sharednationalmodelweaponloadstillrequiresreview.",
+        "recommended_action": "retain_reaudit_stores",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -848,11 +965,16 @@
           1148
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-AIR-UNITS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_variant_pending",
+        "reason": "14WingG550CAEWtypeconfirmed. ConformalarraysmustnotbesubstitutedbyGlobalEyeradarbarorE3rotodome;dated2026activitystillpending.",
+        "recommended_action": "retain_reaudit_sensor_geometry",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -886,11 +1008,17 @@
           1480
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-P72",
+        "IT-AIR-UNITS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "P72Asurfacesurveillanceaircraftconfirmed;dontinferASWtorpedosfromATR72MPcommonfamily.",
+        "recommended_action": "retain_remove_unverified_armed_fit",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -924,11 +1052,16 @@
           1596
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-MQ9-ORDER"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_and_firm_additional_order",
+        "reason": "CurrentMQ9AISRplus2newBlock5firmorderedSeptember2026forend2027delivery. WeaponFOCnotprovenbysupplierorderalone.",
+        "recommended_action": "retain_record_order_and_review_stores",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -962,11 +1095,16 @@
           1136
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-SCANEAGLE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_model_mismatch",
+        "reason": "NavalScanEaglecontractexists;genericX47BlargestealthcarrierstrikeaircraftdoesnotrepresentthissmallfixedwingISRsystem. Deploymentandlaunch/recoveryfitstillneedoperatorproof.",
+        "recommended_action": "build_actual_contracted_type",
+        "model_match": "wrong_aircraft_family",
+        "replacement": "carrierDrone__scaneagle"
       }
     },
     {
@@ -1001,11 +1139,16 @@
           2022
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-DORIA26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "ItalianHorizonAndreaDoriaoperatorJanuary2026activity. ExistingItalianthree76mmgunbaselinepotentiallyappropriate;Frenchtwo-gunfitandItalianMLUsensorstateareseparate.",
+        "recommended_action": "retain_reaudit_modernisation_stage",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -1040,11 +1183,16 @@
           1162
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-MINERVA-RETIRED"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "retired",
+        "reason": "LastMinervaclasscorvettesDriade/ChimeraretiredSeptember2019. Existingmodelcanremainhistorical,butcannotestablishcurrentItalianfleet;actualpatrolclassmustbechecked.",
+        "recommended_action": "recommend_disable_historical_or_replace_verified_patrol_class",
+        "model_match": "real_but_retired_national_type",
+        "replacement": null
       }
     },
     {
@@ -1080,11 +1228,17 @@
           1734
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-NH90-NAVAL",
+        "IT-CAVOUR-AIRWING"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_multiple_variants",
+        "reason": "FREMMASWAlpino/CarabiniereandGPMarceglia/Bergaminireal. ExistinggenericFREMMisItalianGPexterior;ASWclasshasdifferent76mm/sonarfittingsandneedsseparatevariant.",
+        "recommended_action": "add_asw_variant_preserve_gp",
+        "model_match": "gp_representative_not_all_asw_configuration",
+        "replacement": "asFrigate__fremm_asw_italy"
       }
     },
     {
@@ -1119,11 +1273,16 @@
           1176
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-NH90-NAVAL"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "unverified_generic_type",
+        "reason": "ContemporaryNavyRHIBuseconfirmedbutgenericsteelgunboatdoesnotidentifyactualItalianarmedcraft. NeedUNPAV/RHIBexactplatformandpublishedarmamentbeforemodelorcapabilityassignment.",
+        "recommended_action": "hold_pending_named_craft",
+        "model_match": "generic_family_unproven",
+        "replacement": null
       }
     },
     {
@@ -1158,11 +1317,17 @@
           1084
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-DORIA26",
+        "IT-TRIESTE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_incomplete_inventory",
+        "reason": "SanGiustocurrentLEG26activitysupportsSanGiorgiofamily. MuchlargerTriestedelivered2024isdistinctmissingLHD;shipdeliverydoesnotproveF35FOC.",
+        "recommended_action": "retain_add_distinct_lhd",
+        "model_match": "san_giusto_variant_details_pending",
+        "replacement": "landingShip__trieste"
       }
     },
     {
@@ -1198,11 +1363,18 @@
           1720
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-CAVOUR-AIRWING",
+        "IT-NEPTUNE25",
+        "IT-TRIESTE-JSF"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "CavouractualmixedF35B/Harrierairwinglate2025. STOVLski-jumpcarrier,nocatapults. TriesteJSFsiteactivationprogrammeisnotCavourhullorcompletedTriesteairwingFOC.",
+        "recommended_action": "retain_reaudit_stovl_deck_fit",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -1236,11 +1408,18 @@
           988
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-TODARO",
+        "IT-TODARO-SPEC",
+        "IT-NFS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "TodaroU212Areal57.15mclass;SauroboatsandfourfirmfutureNFSdistinct. Sharedmodelmustnotclaimallsubmarinesidentical.",
+        "recommended_action": "retain_add_distinct_classes",
+        "model_match": "published_dimensions_and_tail_review_pending",
+        "replacement": null
       }
     },
     {
@@ -1274,13 +1453,194 @@
           356
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IT-UNMANNED-PLAN"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "unverified_generic_entitlement",
+        "reason": "FutureunmannedmaritimeplanningdoesnotestablishcurrentgenericexplosiveattackUSV. UnderwaterMCMrobotsalsoarenotsurfaceattackboats. Identifyactualplatformandsignedcontractbeforebuilding.",
+        "recommended_action": "hold_pending_specific_operator_or_firm_contract",
+        "model_match": "generic_role_unproven",
+        "replacement": null
       }
     }
   ],
-  "additional_inventory": []
+  "additional_inventory": [
+    {
+      "nation": "italy",
+      "key": "tank",
+      "model": "ArieteC2",
+      "source_ids": [
+        "IT-C2-DELIVERED",
+        "IT-C2-SPEC",
+        "IT-C2-PRODUCT"
+      ],
+      "status": "delivered_introduction",
+      "reason": "ActualfirstC2seriesdeliveryJuly2025;7.99mchassisnewopticsandpowerpackdistinctfromC1.",
+      "asset_action": "build_missing",
+      "proposed_slug": "tank__ariete_c2",
+      "existing_exact_asset": "vehicles/tank__ariete_c2.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "italy",
+      "key": "ifv",
+      "model": "LynxKF41initialLance",
+      "source_ids": [
+        "IT-LYNX"
+      ],
+      "status": "delivered_evaluation",
+      "reason": "InitialfourLancedeliveredJanuary2026toevaluationcentre;futureHitfistfitseparate.",
+      "asset_action": "build_missing",
+      "proposed_slug": "ifv__lynx_kf41_lance_italy",
+      "existing_exact_asset": "vehicles/ifv__lynx_kf41_lance_italy.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "italy",
+      "key": "aaVehicle",
+      "model": "Skynex",
+      "source_ids": [
+        "IT-SKY"
+      ],
+      "status": "ordered_future_delivery_unverified",
+      "reason": "Onefirmfirstsystem,threeunexercisedoptions;2026scheduleddeliverynotconfirmedactual.",
+      "asset_action": "check_existing_model",
+      "proposed_slug": "aaVehicle__skynex",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "italy",
+      "key": "carrierDrone",
+      "model": "ScanEagle",
+      "source_ids": [
+        "IT-SCANEAGLE"
+      ],
+      "status": "contracted_operator_stage_pending",
+      "reason": "RealnavalInsitucontract;smallISRtype,notcarrierstrikewing.",
+      "asset_action": "build_missing",
+      "proposed_slug": "carrierDrone__scaneagle",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "italy",
+      "key": "carrierJet",
+      "model": "F35B",
+      "source_ids": [
+        "IT-CAVOUR-AIRWING",
+        "IT-NEPTUNE25",
+        "IT-F35"
+      ],
+      "status": "documented_service",
+      "reason": "ActualNavy/AirForceembarkedF35B;reuseexactexistingBvariant,notA.",
+      "asset_action": "reuse_existing",
+      "proposed_slug": "stealthFighter__f_35b_lightning",
+      "existing_exact_asset": "aircraft/stealthFighter__f_35b_lightning.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "italy",
+      "key": "carrierJet",
+      "model": "AV8B+",
+      "source_ids": [
+        "IT-CAVOUR-AIRWING",
+        "IT-NEPTUNE25"
+      ],
+      "status": "historical_recent_service_current_status_pending",
+      "reason": "Activeasoflate2025;verifyOctober2026statusbeforecountingcurrent.",
+      "asset_action": "check_existing_model",
+      "proposed_slug": "carrierJet__av_8b_harrier_ii_plus",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "italy",
+      "key": "towedHowitzer",
+      "model": "FH70",
+      "source_ids": [
+        "IT-ARMY"
+      ],
+      "status": "documented_family_current_activity_pending",
+      "reason": "OperatorFH70omittedfromsinglePzH2000artilleryrepresentative;sharedFH70modelalreadyexists.",
+      "asset_action": "reuse_existing",
+      "proposed_slug": "towedHowitzer__fh70",
+      "existing_exact_asset": "vehicles/towedHowitzer__fh70.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "italy",
+      "key": "recoveryVehicle",
+      "model": "Leopard1Soccorso",
+      "source_ids": [
+        "IT-LEOPARD-SUPPORT"
+      ],
+      "status": "documented_service_current_fit_pending",
+      "reason": "ActualLeopard1recoverytype,separatefromgenericM88.",
+      "asset_action": "build_missing",
+      "proposed_slug": "recoveryVehicle__leopard_1_soccorso",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "italy",
+      "key": "submarine",
+      "model": "U212NFS",
+      "source_ids": [
+        "IT-NFS"
+      ],
+      "status": "ordered_future",
+      "reason": "FourfirmboatsafterfourthoptionexerciseJune2024;futureclassdistinctfrom57.15mTodaro.",
+      "asset_action": "build_missing",
+      "proposed_slug": "submarine__u212_nfs",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "italy",
+      "key": "submarine",
+      "model": "SauroIII/IVseries",
+      "source_ids": [
+        "IT-TODARO"
+      ],
+      "status": "documented_family_current_boat_status_pending",
+      "reason": "OperatorfleetlistsSauroboatsseparately;latestindividualretentionandcurrentfitmustbechecked.",
+      "asset_action": "build_missing",
+      "proposed_slug": "submarine__sauro_class",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "italy",
+      "key": "landingShip",
+      "model": "Trieste",
+      "source_ids": [
+        "IT-TRIESTE",
+        "IT-TRIESTE-JSF"
+      ],
+      "status": "delivered_service_integration_stage_pending",
+      "reason": "LHDdelivered2024;JSFsiteactivationprogramme2026notproofcompletedF35FOC.",
+      "asset_action": "build_missing",
+      "proposed_slug": "landingShip__trieste",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "italy",
+      "key": "asFrigate",
+      "model": "FREMMASWItalian",
+      "source_ids": [
+        "IT-CAVOUR-AIRWING",
+        "IT-NH90-NAVAL"
+      ],
+      "status": "documented_service",
+      "reason": "ExistingItalianGPmodeldoesnotcoverdifferentASWguns/sonararrangement.",
+      "asset_action": "build_missing",
+      "proposed_slug": "asFrigate__fremm_asw_italy",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    }
+  ]
 }

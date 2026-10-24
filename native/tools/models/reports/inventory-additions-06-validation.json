@@ -1,0 +1,30 @@
+{
+  "batch": "inventory-additions-06",
+  "files": [
+    "vehicles/tank__ariete_c2.glb",
+    "vehicles/ifv__lynx_kf41_lance_italy.glb",
+    "vehicles/ewVehicle__fuchs_cg20_suas.glb",
+    "vehicles/wheeledHowitzer__caesar_mkii.glb",
+    "ships/gunboat__flamant_class.glb"
+  ],
+  "sha256": {
+    "vehicles/tank__ariete_c2.glb": "f10e342e0897e22b4bc025ca6992bfee9b92447294b4b25fd0fbb1bed3e0fddf",
+    "vehicles/ifv__lynx_kf41_lance_italy.glb": "1d6fe51a6960182565a7e2169b4c1a0bfa623c65d3737bdc953137951bb1b063",
+    "vehicles/ewVehicle__fuchs_cg20_suas.glb": "532c45c23e181fee7bb4dcb108f2a81632bf32273c5071c68f4dd52905c9f2f0",
+    "vehicles/wheeledHowitzer__caesar_mkii.glb": "dc12e62d62107dc091b22ffe42108a17d5edb2b7234cec9790ba8994f388d145",
+    "ships/gunboat__flamant_class.glb": "d3b5980452ec7a16f5c2ccd20857568289d259fb657b0ad7be4fdfb5b55e225b"
+  },
+  "maximum_triangles": [
+    13110,
+    2240
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "canonical TrackPath with metre mesh scale and U loop coordinate on tracked vehicles; actual axle counts",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_06.py"
+}
