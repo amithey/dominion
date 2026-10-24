@@ -1,7 +1,7 @@
 {
   "nation": "germany",
   "scope": "current and confirmed-order platforms in existing Tier 7 categories",
-  "all_roster_rows_assessed": false,
+  "all_roster_rows_assessed": true,
   "complete": false,
   "completion_note": "Operator evidence, exact visual fit and additional inventory still being audited.",
   "rows": [
@@ -37,11 +37,17 @@
           2156
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-A7V",
+        "DE-ARMOURED"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "A7V assignment supported; A8 is a separate ordered/testing vehicle, not a relabelled A7V.",
+        "recommended_action": "retain_add_ordered_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -74,11 +80,17 @@
           1008
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-BOXER",
+        "DE-ARMOURED"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "GermanBoxerAPCconfirmed,8x8modularchassiswithFLW20012.7mm/40mm; genericname alone doesnotcertify exactRWS/missionmodule exterior.",
+        "recommended_action": "retain_reaudit_national_fit",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -112,11 +124,17 @@
           1860
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-BRIGADE37",
+        "DE-PUMA"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "Named operator brigade equipment corroborates this real type. Exact exterior/variant audit remains open.",
+        "recommended_action": "retain",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -149,11 +167,16 @@
           660
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-BRIGADE37"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "Named operator brigade equipment corroborates this real type. Exact exterior/variant audit remains open.",
+        "recommended_action": "retain",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -187,11 +210,17 @@
           1784
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-BUFFEL",
+        "DE-ARMOURED"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "Bergepanzer3BuffelconfirmedLeopard2recoverytype. Existingnamedmodelincludes7wheelchassiscraneandspade; currentextraarmourconfigurationstillpendingvisualcomparison.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -224,11 +253,16 @@
           2024
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-BRIGADE37"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "Named operator brigade equipment corroborates this real type. Exact exterior/variant audit remains open.",
+        "recommended_action": "retain",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -261,11 +295,17 @@
           2336
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-MV85",
+        "DE-BRIGADE37"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "national_type_mismatch",
+        "reason": "Operator currently identifies single-axle truck-fed Minenverlegesystem85, not tracked Skorpion. Independent primary confirmation of Skorpion retirement date remains pending.",
+        "recommended_action": "build_actual_trailer",
+        "model_match": "wrong_platform_family",
+        "replacement": "mineLayer__minenverlegesystem_85"
       }
     },
     {
@@ -298,11 +338,16 @@
           864
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-EW"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_model_mismatch",
+        "reason": "Generic truck differs from published6x6 Fuchs CG20+sUAS actual operator platform. Other EloKa systems may coexist; one example is not the whole EW inventory.",
+        "recommended_action": "build_specific_variant",
+        "model_match": "wrong_platform_family",
+        "replacement": "ewVehicle__fuchs_cg20_suas"
       }
     },
     {
@@ -336,11 +381,16 @@
           2112
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-BRIGADE37"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "Named operator brigade equipment corroborates this real type. Exact exterior/variant audit remains open.",
+        "recommended_action": "retain",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -375,11 +425,16 @@
           1760
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-MARS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "MARSII6wheeltrackedtwinpodlauncherconfirmed; exactnationalcab/upgrades stillrequirecomparison, notHIMARS truck.",
+        "recommended_action": "retain",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -414,11 +469,16 @@
           1592
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-PULS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "ordered_future",
+        "reason": "Five EuroPULS contracted, delivery/qualification2027. Existing label must not imply currentoperationalfleet.",
+        "recommended_action": "retain_mark_ordered",
+        "model_match": "truck_chassis_and_fittings_review_pending",
+        "replacement": null
       }
     },
     {
@@ -453,11 +513,17 @@
           1008
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-NAVY",
+        "DE-MEKO"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "unverified_national_ground_system",
+        "reason": "CheckedNavyinventory/procurementdoesnotestablishGermanland-basedNSMcoastalbattery. Ship-launchedmissileprocurementcannotprovea terrestriallauncherfleet. Furthernationalgroundorderproofrequired.",
+        "recommended_action": "hold_pending_operator_or_executed_contract",
+        "model_match": "generic_country_entitlement_unproven",
+        "replacement": null
       }
     },
     {
@@ -490,11 +556,16 @@
           1198
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-SKY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "ordered_with_prototype_delivered",
+        "reason": "German19Boxer order and prototype delivery supported. ExhibitionLynx is not national chassis; exact German missile-count fit still needs primary proof.",
+        "recommended_action": "retain_mark_introduction_stage",
+        "model_match": "national_turret_fit_review_pending",
+        "replacement": null
       }
     },
     {
@@ -529,11 +600,16 @@
           672
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-IRIS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_variant_pending",
+        "reason": "GermanPatriot livefire corroborated. Exact MSE canister combination and national trailer/tractor not verified by generalexercise alone.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -568,11 +644,16 @@
           1264
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-ARROW"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "acquired_capability_buildup",
+        "reason": "ArrowAWS-G procurement and buildup documented; fullmulti-site operational readiness not established here.",
+        "recommended_action": "retain_record_introduction_stage",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -607,11 +688,16 @@
           1212
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-IRIS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "delivered_national_certification",
+        "reason": "October2026firstlivefire national certification milestone; NATOcertificationlater.",
+        "recommended_action": "retain_record_certification_stage",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -644,11 +730,16 @@
           1180
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-COBRA"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_national_variant_pending",
+        "reason": "GermanCOBRAconfirmedMANBRA1carrier; sharedslugwithothernationdoesnotproveidenticaltruck. PublishedGermanvsFrenchcarriergeometriesmustbereconciled.",
+        "recommended_action": "reaudit_specific_carrier",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -683,11 +774,16 @@
           1424
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-ILA"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_variant_pending",
+        "reason": "Operatorprogramme confirms ArmyNH90/Tiger. GenericTigerHADchin gun must not silently substitute GermanUHTmast-sight/weaponfit.",
+        "recommended_action": "reaudit_national_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -725,11 +821,16 @@
           1960
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-ILA"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_variant_pending",
+        "reason": "Operatorprogramme confirms ArmyNH90/Tiger. GenericTigerHADchin gun must not silently substitute GermanUHTmast-sight/weaponfit.",
+        "recommended_action": "reaudit_national_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -765,11 +866,17 @@
           1524
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-SEATIGER",
+        "DE-SEATIGER-HANDOVER"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "SeaLionSAR/transport is valid but distinct SeaTigerASW deliveredDecember2025 absent; add separate model.",
+        "recommended_action": "add_specific_delivered_variant",
+        "model_match": "sea_lion_not_asw_sea_tiger",
+        "replacement": "navalHelicopter__nh90_sea_tiger"
       }
     },
     {
@@ -805,11 +912,17 @@
           2180
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-CH47",
+        "DE-CH53"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "ordered_future_missing_current_type",
+        "reason": "CH47FBlockII SR AARfirstGermanarrivalend2027. CH53GS/GE/GAcurrent and absent; DutchChinookinjointphoto is not German fleet delivery.",
+        "recommended_action": "retain_order_add_current_type",
+        "model_match": "generic_ch47f_needs_block_ii_aar_variant",
+        "replacement": "heavyLift__ch_53ga"
       }
     },
     {
@@ -843,11 +956,16 @@
           1992
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-ILA"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_pending",
+        "reason": "Eurofighter/Tornado operator activity supported. TwoEurofightergame roles do not create twofleets; IDS/ECR specifics and national stores remain to verify.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -881,11 +999,16 @@
           1992
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-ILA"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_pending",
+        "reason": "Eurofighter/Tornado operator activity supported. TwoEurofightergame roles do not create twofleets; IDS/ECR specifics and national stores remain to verify.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -920,11 +1043,16 @@
           1404
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-F35"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "first_handover_testing_training",
+        "reason": "FirstGermanF35A handedoverSeptember2026remainsUStraining/testing;Germanbasearrivals2027.35contract is not35operationalaircraft.",
+        "recommended_action": "retain_record_stage",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -959,11 +1087,16 @@
           1920
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-ILA"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_pending",
+        "reason": "Eurofighter/Tornado operator activity supported. TwoEurofightergame roles do not create twofleets; IDS/ECR specifics and national stores remain to verify.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -998,11 +1131,18 @@
           2024
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-ILA",
+        "DE-NAVY",
+        "DE-F35"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "unsupported_generic_entitlement",
+        "reason": "CheckedairandnavaloperatorpagesidentifylandbasedfightersandnoactualGerman carrierfightertype. ForeignNATOcarriervisitsdonotcreatea nationalfleet;holdpendingexplicitoperatorproof.",
+        "recommended_action": "recommend_disable_or_explicit_future_scenario",
+        "model_match": "generic_country_entitlement_unproven",
+        "replacement": null
       }
     },
     {
@@ -1037,11 +1177,16 @@
           1856
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-ILA"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_pending",
+        "reason": "Eurofighter/Tornado operator activity supported. TwoEurofightergame roles do not create twofleets; IDS/ECR specifics and national stores remain to verify.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -1075,11 +1220,16 @@
           1076
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-P8"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_introduction",
+        "reason": "GermanP8operator deploymentFebruary2026supports actual delivery. Do not retain P3C current after operator calls it retired.",
+        "recommended_action": "retain",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -1113,11 +1263,16 @@
           1372
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-HERON"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "GermanHeronTPBalticsurveillance supported. Additionalapprovedpurchase separate from confirmed delivery or national weaponsFOC.",
+        "recommended_action": "retain_reaudit_stores",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -1151,11 +1306,16 @@
           1136
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-SEAFALCON"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_model_mismatch",
+        "reason": "GenericX47Bcarrierstrike drone not documentedGerman inventory. SeaFalconwas a real navalISRrotorcraft but explicitretirementnote excludes it fromcurrent scope; replacement contract unresolved.",
+        "recommended_action": "hold_pending_actual_current_or_contracted_type",
+        "model_match": "generic_wrong_type",
+        "replacement": null
       }
     },
     {
@@ -1189,11 +1349,16 @@
           628
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-LMS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "contracted_qualification",
+        "reason": "Primaryoperator namesHX2andHelsingcontract26February2026;firstbrigadeintroduction2027. AlsoVirtusandFV014contracted, sooneHX2representativedoesnotcoverallthreegeometries. Quantitiesandqualificationcompletionnotestablishedhere.",
+        "recommended_action": "retain_order_add_distinct_types",
+        "model_match": "hx2_visual_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -1229,11 +1394,16 @@
           1818
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-NAVY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family",
+        "reason": "Operator lists F124frigate,K130corvette,U212A. F124underdestroyer key is a game classification; exact weapons/modernisation fit still needs review.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -1268,11 +1438,16 @@
           1546
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-NAVY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family",
+        "reason": "Operator lists F124frigate,K130corvette,U212A. F124underdestroyer key is a game classification; exact weapons/modernisation fit still needs review.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -1308,11 +1483,17 @@
           1822
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-NAVY",
+        "DE-F123"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory_role_mismatch",
+        "reason": "F125exists asstabilisationfrigate;F123isactualspecialistASWclass withbowsonar. SingleF125assignmentdoesnotcoverF123fleet.",
+        "recommended_action": "add_asw_class_preserve_f125",
+        "model_match": "role_and_sonar_capability_need_handoff",
+        "replacement": "asFrigate__f123_brandenburg_class"
       }
     },
     {
@@ -1347,11 +1528,16 @@
           1176
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-NAVY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "unverified_generic_type",
+        "reason": "GenericgunboatdoesnotidentifyactualGermanoperatorcraft. Navyhasreal smallboats, butexactRHIBmodelandweaponsfitneedprimaryspecificationbeforebuilding.",
+        "recommended_action": "hold_pending_named_craft",
+        "model_match": "generic_not_real_national_type",
+        "replacement": null
       }
     },
     {
@@ -1385,11 +1571,16 @@
           988
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-NAVY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family",
+        "reason": "Operator lists F124frigate,K130corvette,U212A. F124underdestroyer key is a game classification; exact weapons/modernisation fit still needs review.",
+        "recommended_action": "retain_reaudit_variant",
+        "model_match": "not_yet_visually_reaudited",
+        "replacement": null
       }
     },
     {
@@ -1423,13 +1614,192 @@
           356
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "DE-USV"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_model_mismatch",
+        "reason": "ActualSeehundsurfaceMCMdrone documented; genericexplosiveUSV doesnotrepresentMCM platform orgrant attackcapability.",
+        "recommended_action": "build_actual_mcm_craft",
+        "model_match": "wrong_platform_and_role",
+        "replacement": "seaDrone__seehund"
       }
     }
   ],
-  "additional_inventory": []
+  "additional_inventory": [
+    {
+      "nation": "germany",
+      "key": "tank",
+      "model": "Leopard2A8",
+      "source_ids": [
+        "DE-A8"
+      ],
+      "status": "ordered_future",
+      "reason": "123firm ordered;future seriesfleet/testing distinction.",
+      "asset_action": "build_missing",
+      "proposed_slug": "tank__leopard_2a8",
+      "existing_exact_asset": "vehicles/tank__leopard_2a8.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "germany",
+      "key": "heavyLift",
+      "model": "CH53GA",
+      "source_ids": [
+        "DE-CH53",
+        "DE-CH47"
+      ],
+      "status": "documented_service",
+      "reason": "Current German two-engine six-main-blade type; GA internal-tank exterior, not CH53K or GSexternal tanks.",
+      "asset_action": "build_missing",
+      "proposed_slug": "heavyLift__ch_53ga",
+      "existing_exact_asset": "aircraft/heavyLift__ch_53ga.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "germany",
+      "key": "navalHelicopter",
+      "model": "NH90SeaTiger",
+      "source_ids": [
+        "DE-SEATIGER",
+        "DE-SEATIGER-HANDOVER"
+      ],
+      "status": "delivered_introduction",
+      "reason": "DeliverednewASWvariant absent beside SeaLionSAR.",
+      "asset_action": "build_missing",
+      "proposed_slug": "navalHelicopter__nh90_sea_tiger",
+      "existing_exact_asset": "aircraft/navalHelicopter__nh90_sea_tiger.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "germany",
+      "key": "asFrigate",
+      "model": "F123Brandenburg",
+      "source_ids": [
+        "DE-F123",
+        "DE-NAVY"
+      ],
+      "status": "documented_service",
+      "reason": "SpecialistASWclass missing besideF125.",
+      "asset_action": "build_missing",
+      "proposed_slug": "asFrigate__f123_brandenburg_class",
+      "existing_exact_asset": "ships/asFrigate__f123_brandenburg_class.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "germany",
+      "key": "mineLayer",
+      "model": "Minenverlegesystem85",
+      "source_ids": [
+        "DE-MV85",
+        "DE-BRIGADE37"
+      ],
+      "status": "documented_service",
+      "reason": "Actualsingleaxletrailer fed bycargo truck.",
+      "asset_action": "build_missing",
+      "proposed_slug": "mineLayer__minenverlegesystem_85",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "germany",
+      "key": "ewVehicle",
+      "model": "FuchsCG20+sUAS",
+      "source_ids": [
+        "DE-EW"
+      ],
+      "status": "documented_service",
+      "reason": "National6x6 counterIED/UASjamming type.",
+      "asset_action": "build_missing",
+      "proposed_slug": "ewVehicle__fuchs_cg20_suas",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "germany",
+      "key": "seaDrone",
+      "model": "SeehundMCM",
+      "source_ids": [
+        "DE-USV"
+      ],
+      "status": "documented_service",
+      "reason": "RemotelycontrolledsurfaceMCM craft, noexplosiveattack fit.",
+      "asset_action": "build_missing",
+      "proposed_slug": "seaDrone__seehund",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "germany",
+      "key": "loiterer",
+      "model": "Virtus",
+      "source_ids": [
+        "DE-LMS"
+      ],
+      "status": "contracted_qualification",
+      "reason": "Operator explicitly names this distinctcontractedmunition;firstbrigadeintroductionplanned2027, notcurrentfullyqualifiedcombatfleet.",
+      "asset_action": "build_missing",
+      "proposed_slug": "loiterer__virtus",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "germany",
+      "key": "loiterer",
+      "model": "FV014",
+      "source_ids": [
+        "DE-LMS"
+      ],
+      "status": "contracted_qualification",
+      "reason": "Operator explicitly names this distinctcontractedmunition;firstbrigadeintroductionplanned2027, notcurrentfullyqualifiedcombatfleet.",
+      "asset_action": "build_missing",
+      "proposed_slug": "loiterer__fv_014",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "germany",
+      "key": "ifv",
+      "model": "Marder1A3",
+      "source_ids": [
+        "DE-ARMOURED",
+        "DE-BRIGADE37"
+      ],
+      "status": "documented_service",
+      "reason": "Operator explicitly retains this type alongside newerPuma/Boxer;exactversionandexistingassetfitstillneedreview.",
+      "asset_action": "check_existing_model",
+      "proposed_slug": "ifv__marder_1a3",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "germany",
+      "key": "apc",
+      "model": "Fuchs",
+      "source_ids": [
+        "DE-ARMOURED"
+      ],
+      "status": "documented_service",
+      "reason": "Operator explicitly retains this type alongside newerPuma/Boxer;exactversionandexistingassetfitstillneedreview.",
+      "asset_action": "check_existing_model",
+      "proposed_slug": "apc__fuchs",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "germany",
+      "key": "drone",
+      "model": "Eurodrone",
+      "source_ids": [
+        "DE-HERON"
+      ],
+      "status": "ordered_future",
+      "reason": "Sevenordered systems, eachthreeairvehicles/twogroundstations;earlynextdecadeintroduction. Nooperationalfleetclaimed.",
+      "asset_action": "build_missing",
+      "proposed_slug": "drone__eurodrone",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    }
+  ]
 }

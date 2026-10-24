@@ -1,0 +1,30 @@
+{
+  "batch": "inventory-additions-05",
+  "files": [
+    "vehicles/tank__leopard_2a8.glb",
+    "vehicles/tank__leopard_2ri.glb",
+    "aircraft/navalHelicopter__nh90_sea_tiger.glb",
+    "aircraft/heavyLift__ch_53ga.glb",
+    "ships/asFrigate__f123_brandenburg_class.glb"
+  ],
+  "sha256": {
+    "vehicles/tank__leopard_2a8.glb": "5994d4515e4d01d6fac0d92eb3127e50dffbc8481bf3c4b507cb464d6ccff97d",
+    "vehicles/tank__leopard_2ri.glb": "c622dd19a33a84aa078b06df0c4253a2aba623aec2d873ff5c38294d0bdd9c64",
+    "aircraft/navalHelicopter__nh90_sea_tiger.glb": "9db4ae2793f2376b3e1fe12e1224204413df8bb67f3b3fc0c164d65250115970",
+    "aircraft/heavyLift__ch_53ga.glb": "e5553a1b6ee67c96c9d6ce67b27ce6b7ea79c000f531c7293210f82d3f941fd8",
+    "ships/asFrigate__f123_brandenburg_class.glb": "23479472719c262940ed8bed11124061163727f890c08420639d538bc899c564"
+  },
+  "maximum_triangles": [
+    13578,
+    2336
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "canonical TrackPath with metre mesh scale and U loop coordinate on tracked vehicles; actual axle counts",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_05.py"
+}
