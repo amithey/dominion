@@ -122,11 +122,17 @@
           1016
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-PANDUR-DELIVERY",
+        "ID-PANDUR-SECOND"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_delivery",
+        "reason": "Pandur8x8 infantry-vehicle handover confirmed2024; saved IFV armament and current national sensor fit still need inspection.",
+        "recommended_action": "retain_verify_ARES30_fit",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -503,7 +509,7 @@
       ],
       "assessment": {
         "status": "documented_service_combined_label",
-        "reason": "2026 operator inspection and maintenance confirm Skyshield Mk2. A stationary gun fire unit and a separate RBS70 missile team are different equipment; these sources do not confirm the RBS70 half or a combined self-propelled truck.",
+        "reason": "2026 operator inspection/maintenance confirm SkyshieldMk2. Existing combined GLB actually selects RBS70 tripod representative; that cannot represent the distinct Skyshield revolver cannon. These sources do not confirm current RBS70 service.",
         "recommended_action": "split_system_components_verify_rbs70",
         "model_match": "generic_combined_platform_requires_replacement",
         "replacement": "aaVehicle__skyshield_mk2"
@@ -1192,11 +1198,16 @@
           356
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-UMIS-ORDER"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch_confirmed_order",
+        "reason": "Four Inspector90 MCM USVs contracted2025; a generic explosive surface boat is a different mission and shape. Delivery/readiness status remains separate.",
+        "recommended_action": "build_exact_Inspector90",
+        "model_match": "different_MCM_hull",
+        "replacement": "seaDrone__inspector_90"
       }
     }
   ],
@@ -1279,14 +1290,15 @@
       "key": "apc",
       "model": "Kaplan/Harimau APC",
       "source_ids": [
-        "ID-HARIMAU"
+        "ID-HARIMAU",
+        "ID-KAPLAN-ACCEPTANCE"
       ],
-      "status": "contracted_development",
-      "reason": "Development/production contract 2024, separate from delivered medium tank. User includes confirmed orders.",
+      "status": "ordered_pre_delivery_acceptance",
+      "reason": "September2026 official first pre-delivery acceptance in Turkey, Indonesian final acceptance still pending; model unarmed photographed vehicle, not armed marketing concept.",
       "asset_action": "build_missing",
       "proposed_slug": "apc__kaplan_harimau_apc",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "vehicles/apc__kaplan_harimau_apc.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "indonesia",
@@ -1314,8 +1326,8 @@
       "reason": "Seven Badak handed over in 2022; a wheeled 90 mm vehicle, not the tracked 105 mm Harimau.",
       "asset_action": "build_missing",
       "proposed_slug": "directFire__badak",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "vehicles/directFire__badak.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "indonesia",
@@ -1328,6 +1340,20 @@
       "reason": "Named Anka exercise activity; distinct from CH4 selected for combined row.",
       "asset_action": "check_existing_model",
       "proposed_slug": "drone__anka",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "indonesia",
+      "key": "seaDrone",
+      "model": "Inspector90 MCM USV",
+      "source_ids": [
+        "ID-UMIS-ORDER"
+      ],
+      "status": "ordered_delivery_status_pending",
+      "reason": "Four ordered as part of mine-countermeasure system; not surface kamikaze craft.",
+      "asset_action": "build_missing",
+      "proposed_slug": "seaDrone__inspector_90",
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
     }

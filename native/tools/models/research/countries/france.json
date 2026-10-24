@@ -38,11 +38,16 @@
           2152
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-SCORPION"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_delivery",
+        "reason": "Parliamentary record identifies earlier deliveries of named type. Forecast2026 quantities not treated as delivered; saved exterior still needs national fit review.",
+        "recommended_action": "retain_verify_actual_variant",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -76,11 +81,16 @@
           972
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-SCORPION"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_delivery",
+        "reason": "Parliamentary record identifies earlier deliveries of named type. Forecast2026 quantities not treated as delivered; saved exterior still needs national fit review.",
+        "recommended_action": "retain_verify_actual_variant",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -152,11 +162,16 @@
           1064
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-JAGUAR-R3"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_version_split",
+        "reason": "R3 with integrated MMP delivered and authorised in2026; earlier fleet upgrading through2027. Verify saved Jaguar against selected missile/roof configuration.",
+        "recommended_action": "inspect_R3_external_fit",
+        "model_match": "variant_review_pending",
+        "replacement": null
       }
     },
     {
@@ -190,11 +205,16 @@
           1672
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-DCL"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch",
+        "reason": "Actual French Leclerc DCL is distinct from generic M88 recovery model; crane, spade and renovated defensive station required.",
+        "recommended_action": "build_specific_dcl",
+        "model_match": "wrong_generic_hull",
+        "replacement": "recoveryVehicle__leclerc_dcl"
       }
     },
     {
@@ -227,11 +247,17 @@
           1884
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-SDPMAC",
+        "FR-ENGINEERS-2026"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch",
+        "reason": "French SDPMAC is CARPET on AMX30-derived EBG, not generic T72 carrier. SOUVIM is a separate real clearance system.",
+        "recommended_action": "add_specific_french_engineers",
+        "model_match": "wrong_generic_hull",
+        "replacement": "mineClearer__sdpmac"
       }
     },
     {
@@ -263,11 +289,16 @@
           2072
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-ENGINEERS-2026"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_capability_gap",
+        "reason": "February2026 parliamentary report says mechanised area-minelaying is absent and no programme launched; Minotaur/PM12 historical, BaobabK suggested only. Generic M548-type minelayer not verified French equipment; seek later contract before adding one.",
+        "recommended_action": "flag_availability_error_seek_later_order",
+        "model_match": "generic_model_not_supported",
+        "replacement": null
       }
     },
     {
@@ -300,11 +331,17 @@
           864
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-SERVAL",
+        "FR-SCORPION"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "specific_payload_delivery_pending",
+        "reason": "Serval EW is documented but complex mission versions were still under development in budget evidence; a generic EW truck is no proof of French vehicle identity.",
+        "recommended_action": "research_delivered_payload_and_carrier",
+        "model_match": "generic_representation_unverified",
+        "replacement": null
       }
     },
     {
@@ -338,11 +375,17 @@
           1216
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-CAESAR-ORDER",
+        "FR-LRU-EXERCISE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "distinct_generations",
+        "reason": "Current CAESAR family and ordered MkII must be separate configurations; two game roles do not imply two real fleets.",
+        "recommended_action": "retain_MkI_add_ordered_MkII",
+        "model_match": "family_match_MkII_new_cab_needed",
+        "replacement": null
       }
     },
     {
@@ -376,11 +419,17 @@
           1216
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-CAESAR-ORDER",
+        "FR-LRU-EXERCISE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "distinct_generations",
+        "reason": "Current CAESAR family and ordered MkII must be separate configurations; two game roles do not imply two real fleets.",
+        "recommended_action": "retain_MkI_add_ordered_MkII",
+        "model_match": "family_match_MkII_new_cab_needed",
+        "replacement": null
       }
     },
     {
@@ -415,11 +464,17 @@
           1760
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-SCORPION",
+        "FR-LRU-EXERCISE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "LRU tracked launcher in service and exercise. GMLRS describes ammunition, not a wheeled HIMARS chassis; duplicate role aliases must share actual LRU model.",
+        "recommended_action": "verify_tracked_M270_LRU_fit",
+        "model_match": "named_model_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -454,11 +509,17 @@
           1760
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-SCORPION",
+        "FR-LRU-EXERCISE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "LRU tracked launcher in service and exercise. GMLRS describes ammunition, not a wheeled HIMARS chassis; duplicate role aliases must share actual LRU model.",
+        "recommended_action": "verify_tracked_M270_LRU_fit",
+        "model_match": "named_model_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -491,11 +552,16 @@
           1052
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-AAE-2025"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "dated_service_reference",
+        "reason": "January2025 CrotaleNG inventory confirmed; October2026 exact remaining active fleet and replacement status still require new evidence. French unit is trailer-based, not another nation tracked Crotale.",
+        "recommended_action": "verify_2026_service_and_trailer_fit",
+        "model_match": "configuration_review_pending",
+        "replacement": null
       }
     },
     {
@@ -530,11 +596,17 @@
           1212
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-NG-MULTILAYER",
+        "FR-NG-FOUR-ORDER"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "confirmed_order_not_proven_operational",
+        "reason": "Twelve ordered NG firing units; June2026 multilayer configuration delivery starts2030. Earlier forecast dates are not active-service evidence. Separate current Mamba and future NG variants.",
+        "recommended_action": "retain_as_order_add_current_Mamba",
+        "model_match": "variant_and_service_status_review",
+        "replacement": null
       }
     },
     {
@@ -569,11 +641,17 @@
           1212
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-NG-MULTILAYER",
+        "FR-NG-FOUR-ORDER"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "confirmed_order_not_proven_operational",
+        "reason": "Twelve ordered NG firing units; June2026 multilayer configuration delivery starts2030. Earlier forecast dates are not active-service evidence. Separate current Mamba and future NG variants.",
+        "recommended_action": "retain_as_order_add_current_Mamba",
+        "model_match": "variant_and_service_status_review",
+        "replacement": null
       }
     },
     {
@@ -606,11 +684,17 @@
           1180
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-COBRA",
+        "FR-COBRA-ISS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "Supported French COBRA radar system; compare actual10.60m French truck with shared international model carrier.",
+        "recommended_action": "verify_national_truck_fit",
+        "model_match": "sensor_matches_chassis_pending",
+        "replacement": null
       }
     },
     {
@@ -645,11 +729,16 @@
           1424
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-ALAT-EXERCISE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_operator_activity",
+        "reason": "Named Army NH90 Caiman and Tiger in exercise; exact TTH/HAD stores and airframe variant still require saved-file comparison.",
+        "recommended_action": "verify_actual_national_fit",
+        "model_match": "family_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -687,11 +776,16 @@
           1960
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-ALAT-EXERCISE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_operator_activity",
+        "reason": "Named Army NH90 Caiman and Tiger in exercise; exact TTH/HAD stores and airframe variant still require saved-file comparison.",
+        "recommended_action": "verify_actual_national_fit",
+        "model_match": "family_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -727,11 +821,16 @@
           1708
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-NAVAL-AIR-OPS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_operator_activity",
+        "reason": "Caiman Marine in current Navy training; naval sensors, landing gear and mission fit differ from Army TTH.",
+        "recommended_action": "verify_NFH_fit",
+        "model_match": "naval_variant_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -765,11 +864,16 @@
           1920
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-AAE-2025"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "dated_service_reference",
+        "reason": "Named type in January2025 Air Force inventory; exact current2026 status, variant and saved-model stores still require corroboration.",
+        "recommended_action": "seek_2026_operator_record_and_fit",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -802,11 +906,16 @@
           1796
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-AAE-2025"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "dated_service_reference",
+        "reason": "Named type in January2025 Air Force inventory; exact current2026 status, variant and saved-model stores still require corroboration.",
+        "recommended_action": "seek_2026_operator_record_and_fit",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -839,11 +948,16 @@
           1796
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-AAE-2025"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "dated_service_reference",
+        "reason": "Named type in January2025 Air Force inventory; exact current2026 status, variant and saved-model stores still require corroboration.",
+        "recommended_action": "seek_2026_operator_record_and_fit",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -878,11 +992,16 @@
           2024
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-NAVAL-AIR-OPS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch",
+        "reason": "Actual operational carrier fighter is Rafale M. A generic carrier fighter with another aircraft silhouette cannot represent it; find or create exact Rafale M.",
+        "recommended_action": "map_to_specific_Rafale_M",
+        "model_match": "generic_airframe_wrong",
+        "replacement": "carrierJet__rafale_m"
       }
     },
     {
@@ -917,11 +1036,16 @@
           1504
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-AAE-2025"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "dated_service_reference",
+        "reason": "Named type in January2025 Air Force inventory; exact current2026 status, variant and saved-model stores still require corroboration.",
+        "recommended_action": "seek_2026_operator_record_and_fit",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -956,11 +1080,17 @@
           1424
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-ATL2-DELIVERY",
+        "FR-ATL2-OPS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_delivery_and_operation",
+        "reason": "ATL2 standard6 renovation and current2026 operational flights documented; verify saved radar/sensor exterior, not just designation.",
+        "recommended_action": "retain_verify_standard6_fit",
+        "model_match": "class_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -994,11 +1124,16 @@
           1596
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-AAE-2025"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "dated_service_reference",
+        "reason": "Named type in January2025 Air Force inventory; exact current2026 status, variant and saved-model stores still require corroboration.",
+        "recommended_action": "seek_2026_operator_record_and_fit",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -1032,11 +1167,16 @@
           1136
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-VSR700-ORDER"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch_ordered_rotorcraft",
+        "reason": "French ordered naval ISR drone is VSR700 rotorcraft, not generic X47B-like flying wing. Service planned2028; also investigate current S100 separately.",
+        "recommended_action": "add_exact_VSR700_and_S100",
+        "model_match": "generic_flying_wing_not_national_type",
+        "replacement": "carrierDrone__vsr700"
       }
     },
     {
@@ -1069,11 +1209,17 @@
           628
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-DAMOCLES-DELIVERY",
+        "FR-DAMOCLES-ORDER"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "specific_type_missing",
+        "reason": "MX10 Damocles delivered and further ordered. Generic cruciform tube-launched airframe is not this small rotary-wing munition.",
+        "recommended_action": "build_exact_MX10",
+        "model_match": "different_airframe",
+        "replacement": "loiterer__mx_10_damocles"
       }
     },
     {
@@ -1148,11 +1294,16 @@
           1894
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-LAFAYETTE-2026"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_classification",
+        "reason": "LaFayette-class frigate Aconit deployed2026; corvette is game role. Original versus renovated weapon/sensor fit must be selected explicitly.",
+        "recommended_action": "verify_original_or_renovated_hull_fit",
+        "model_match": "frigate_not_corvette",
+        "replacement": null
       }
     },
     {
@@ -1306,11 +1457,16 @@
           1452
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-CDG-OPS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_operator_activity",
+        "reason": "Charles de Gaulle group deployed2026; actual CATOBAR carrier with two catapults. Saved model still needs geometry inspection.",
+        "recommended_action": "retain_verify_two_catapults",
+        "model_match": "class_match_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -1345,11 +1501,16 @@
           1560
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-TRIOMPHANT"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "Triomphant-class is real138m SSBN with16missile tubes; not a generic attack submarine. Fleet class supported, exact exterior requires review.",
+        "recommended_action": "retain_verify_class_shape",
+        "model_match": "class_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -1383,13 +1544,163 @@
           356
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-SLAMF-ORDER"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "specific_mission_mismatch",
+        "reason": "Surface and underwater MCM drones ordered; generic low-profile attack USV does not represent the documented mine-countermeasure equipment. Identify actual named hull for generation.",
+        "recommended_action": "add_named_MCM_system",
+        "model_match": "generic_attack_role_unverified",
+        "replacement": null
       }
     }
   ],
-  "additional_inventory": []
+  "additional_inventory": [
+    {
+      "nation": "france",
+      "key": "recoveryVehicle",
+      "model": "Leclerc DCL",
+      "source_ids": [
+        "FR-DCL"
+      ],
+      "status": "documented_service",
+      "reason": "French crane-and-spade recovery variant; generic M88 has wrong hull.",
+      "asset_action": "build_missing",
+      "proposed_slug": "recoveryVehicle__leclerc_dcl",
+      "existing_exact_asset": "vehicles/recoveryVehicle__leclerc_dcl.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "france",
+      "key": "mineClearer",
+      "model": "SDPMAC on EBG",
+      "source_ids": [
+        "FR-SDPMAC",
+        "FR-ENGINEERS-2026"
+      ],
+      "status": "documented_service",
+      "reason": "AMX30-derived EBG carrying CARPET, separate from generic T72.",
+      "asset_action": "build_missing",
+      "proposed_slug": "mineClearer__sdpmac",
+      "existing_exact_asset": "vehicles/mineClearer__sdpmac.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "france",
+      "key": "wheeledHowitzer",
+      "model": "CAESAR MkII",
+      "source_ids": [
+        "FR-CAESAR-ORDER"
+      ],
+      "status": "ordered_delivery_status_pending",
+      "reason": "Firm109order; larger armoured cab and new truck powertrain, exact delivered status pending.",
+      "asset_action": "build_missing",
+      "proposed_slug": "wheeledHowitzer__caesar_mkii",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "france",
+      "key": "aewc",
+      "model": "GlobalEye Global6500",
+      "source_ids": [
+        "FR-GLOBALEYE-ORDER"
+      ],
+      "status": "ordered_future",
+      "reason": "Firm two-aircraft order, delivery2030; distinct long fixed dorsal Erieye, not E3 rotating disc.",
+      "asset_action": "build_missing",
+      "proposed_slug": "aewc__globaleye_6500",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "france",
+      "key": "carrier",
+      "model": "PA-NG",
+      "source_ids": [
+        "FR-DGA-ORDERS2025"
+      ],
+      "status": "contracted_development",
+      "reason": "Realisation contracted2025; future carrier distinct from Charles de Gaulle. Public design only; dimensions/aircraft fit subject to change.",
+      "asset_action": "build_missing",
+      "proposed_slug": "carrier__pa_ng",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "france",
+      "key": "maritimePatrol",
+      "model": "Albatros Falcon2000",
+      "source_ids": [
+        "FR-DGA-ORDERS2025"
+      ],
+      "status": "ordered_delivery_status_pending",
+      "reason": "Five further airframes ordered2025; maritime surveillance is distinct from armed Atlantique2 ASW aircraft.",
+      "asset_action": "build_missing",
+      "proposed_slug": "maritimePatrol__albatros_falcon_2000",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "france",
+      "key": "apc",
+      "model": "Serval VBMR-L patrol",
+      "source_ids": [
+        "FR-SCORPION",
+        "FR-SERVAL-SPEC"
+      ],
+      "status": "documented_service",
+      "reason": "Delivered four-wheel patrol platform distinct from six-wheel Griffon; standard troop model carries no invented specialised EW payload.",
+      "asset_action": "build_missing",
+      "proposed_slug": "apc__serval",
+      "existing_exact_asset": "vehicles/apc__serval.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "france",
+      "key": "carrierDrone",
+      "model": "VSR700 ISR",
+      "source_ids": [
+        "FR-VSR700-ORDER"
+      ],
+      "status": "ordered_future",
+      "reason": "Six contracted naval rotorcraft; service2028; unarmed ISR sensor configuration.",
+      "asset_action": "build_missing",
+      "proposed_slug": "carrierDrone__vsr700",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "france",
+      "key": "loiterer",
+      "model": "MX10 Damocles",
+      "source_ids": [
+        "FR-DAMOCLES-DELIVERY",
+        "FR-DAMOCLES-ORDER"
+      ],
+      "status": "documented_service",
+      "reason": "Named delivered munition and additional exercised order; distinguish quadcopter from generic tube-launched exterior.",
+      "asset_action": "build_missing",
+      "proposed_slug": "loiterer__mx_10_damocles",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "france",
+      "key": "asFrigate",
+      "model": "Amiral Ronarch FDI",
+      "source_ids": [
+        "FR-FDI-INTRO",
+        "FR-DGA-ORDERS2025"
+      ],
+      "status": "delivered_introduction",
+      "reason": "First delivered and proving deployment; later hulls ordered, exact active-service milestone pending. Distinct inverted bow and fixed radar mast.",
+      "asset_action": "build_missing",
+      "proposed_slug": "asFrigate__amiral_ronarch_fdi",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    }
+  ]
 }

@@ -1,0 +1,30 @@
+{
+  "batch": "inventory-additions-03",
+  "files": [
+    "vehicles/apc__kaplan_harimau_apc.glb",
+    "vehicles/directFire__badak.glb",
+    "vehicles/recoveryVehicle__leclerc_dcl.glb",
+    "vehicles/mineClearer__sdpmac.glb",
+    "vehicles/apc__serval.glb"
+  ],
+  "sha256": {
+    "vehicles/apc__kaplan_harimau_apc.glb": "bf67b638ee863f90dbe679ca9c6ba4b8e8a2c5a68adea8017e19d5bfa9372239",
+    "vehicles/directFire__badak.glb": "1882ac6ada00389ce4923e857ff85ea3aaddf1b9e3206b33894fc87f7ab787ee",
+    "vehicles/recoveryVehicle__leclerc_dcl.glb": "a777d89c93b6ad7dc8acdf389d53a1eb671bcae85755ae4b2ee8b20353dc048b",
+    "vehicles/mineClearer__sdpmac.glb": "a52601f7cf4d91c23afa77e95d9af00f597570618fb0aa562e61fb99a6ac7ba3",
+    "vehicles/apc__serval.glb": "31f4ea9b85308dba58bcad221c0290e8cd20cee873e444f846d34c2c4d1ba660"
+  },
+  "maximum_triangles": [
+    11922,
+    2352
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "canonical TrackPath with metre mesh scale and U loop coordinate on tracked vehicles; actual axle counts",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_03.py"
+}

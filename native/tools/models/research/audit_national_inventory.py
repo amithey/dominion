@@ -69,7 +69,9 @@ def main():
         'as_of':'2026-10-24','roster_sha256':hashlib.sha256(roster_path.read_bytes()).hexdigest(),
         'nations':len(nations),'roster_rows':len(roster),'nation_model_assignments':sum(map(len,nations.values())),
         'reviewed_assignments':len(findings),'pending_assignments':sum(map(len,nations.values()))-len(findings),
-        'complete':all(r['evidence_status']=='reviewed' for rows in nations.values() for r in rows),
+        'all_roster_rows_assessed':all(r['evidence_status']=='reviewed' for rows in nations.values() for r in rows),
+        'complete':False,
+        'completion_note':'Row assessment coverage does not certify current service, resolve open variant questions, or complete additional-platform geometry review.',
         'unresolved_asset_slugs':sorted(set(missing)),'checked_sources':len(sources),
         'country_progress':{n:{'reviewed':sum(r['evidence_status']=='reviewed' for r in rows),'total':len(rows)} for n,rows in sorted(nations.items())}}
     write(HERE/'progress.json',summary)
