@@ -1,0 +1,32 @@
+{
+  "batch": "inventory-additions-08",
+  "files": [
+    "vehicles/tank__challenger_3.glb",
+    "vehicles/reconVehicle__ajax.glb",
+    "vehicles/apc__ares.glb",
+    "vehicles/apc__bulldog_fv432.glb",
+    "vehicles/reconVehicle__jackal_3e.glb",
+    "vehicles/wheeledHowitzer__rch_155.glb"
+  ],
+  "sha256": {
+    "vehicles/tank__challenger_3.glb": "31c52221e1b1a4975e492fde2ac90439eee8c2522472ba57d1f91bda58752c69",
+    "vehicles/reconVehicle__ajax.glb": "7fde31fec5ef6bbc0f355d8f8ad95f14372f2291cc13419ed1afd82aaf03583b",
+    "vehicles/apc__ares.glb": "665b9720e17eddffd696a81a1e22da5504616daa9eb6835b5610de1ae7390d4b",
+    "vehicles/apc__bulldog_fv432.glb": "0c27d6638702df47312860f16fe0c9eb518494d625b5111774c86495ffbd61d4",
+    "vehicles/reconVehicle__jackal_3e.glb": "78f7a29f530bf494b5e472c9a6ac5aac87d15736f9217a64a47f1b6e3d9698dd",
+    "vehicles/wheeledHowitzer__rch_155.glb": "6b57a9d775db35d57e1f7845dd1527ec9e8b0fb6fae3911758164502ade5a095"
+  },
+  "maximum_triangles": [
+    12342,
+    2296
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "canonical TrackPath with metre mesh scale and U loop coordinate on tracked vehicles; actual axle counts",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_08.py"
+}
