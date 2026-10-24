@@ -1,0 +1,48 @@
+{
+  "batch": "inventory-additions-10",
+  "files": [
+    "aircraft/navalHelicopter__merlin_hm2.glb",
+    "aircraft/aewc__merlin_hm2_crowsnest.glb",
+    "aircraft/helicopter__aw149_nmh.glb",
+    "aircraft/heavyLift__h_47er_uk.glb",
+    "aircraft/helicopter__h145_jupiter_hc2.glb",
+    "aircraft/carrierDrone__peregrine_s100.glb"
+  ],
+  "sha256": {
+    "aircraft/navalHelicopter__merlin_hm2.glb": "708eea3ee4524ec644b66dcdf78d925fa47493ddf30351964b5b13a0996e08b4",
+    "aircraft/aewc__merlin_hm2_crowsnest.glb": "50621c68c88f98ae1a6ab1353b88b0ea8cff83c895157047e0bfa8d593c46e6d",
+    "aircraft/helicopter__aw149_nmh.glb": "602dd039cfb2457ad96a23ac75d6745686e7e4bb3ca53a0325b0ef8708dc6d81",
+    "aircraft/heavyLift__h_47er_uk.glb": "d179a417e0bab816a471b97acae0bc34b2b12c42e88a2c77a808b7fc044eec6d",
+    "aircraft/helicopter__h145_jupiter_hc2.glb": "59ccdf1f3c0d3a7b4b3a93f2b67db32145e896d4016524a72ff140a54becb10c",
+    "aircraft/carrierDrone__peregrine_s100.glb": "043a05a00ca3f5a2562a26040b1406caa2c3a868d882f96bcfdd85785e743d2a"
+  },
+  "maximum_triangles": [
+    12336,
+    2288
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "actual geometric rotor blade counts and radii, Y main and X tail pivots, landing gear and feet, mission sensor and deployment pivots",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_10.py",
+  "extra_visual_review": {
+    "aewc__merlin_hm2_crowsnest": [
+      "port forward",
+      "port profile",
+      "port rear"
+    ],
+    "helicopter__h145_jupiter_hc2": [
+      "rear clamshell and Fenestron"
+    ],
+    "carrierDrone__peregrine_s100": [
+      "forward three-foot landing gear and sensors"
+    ],
+    "heavyLift__h_47er_uk": [
+      "starboard refuelling receiver and fuel pods"
+    ]
+  }
+}

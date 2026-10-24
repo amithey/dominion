@@ -1888,14 +1888,15 @@
       "key": "helicopter",
       "model": "AW149 NMH",
       "source_ids": [
-        "UK-NMH-ORDER26"
+        "UK-NMH-ORDER26",
+        "AW149-2024"
       ],
       "status": "ordered_future",
       "reason": "23firm AW149 after23March2026contract; first2030. Not currentPuma orMerlin.",
       "asset_action": "build_missing",
       "proposed_slug": "helicopter__aw149_nmh",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "aircraft/helicopter__aw149_nmh.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "uk",
@@ -1903,14 +1904,16 @@
       "model": "H47ER British",
       "source_ids": [
         "UK-CHINOOK-ER-ORDER",
-        "UK-CHINOOK-TR2"
+        "UK-CHINOOK-TR2",
+        "UK-H47ER-RECEIVER",
+        "UK-H47ER-SCHEDULE26"
       ],
       "status": "firm_tranche1_future",
       "reason": "14approvedER SOFaircraft; exactnewairframe fit and updateddeliveryschedule needreview. Latertranche2 is not ordered.",
       "asset_action": "build_missing",
       "proposed_slug": "heavyLift__h_47er_uk",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "aircraft/heavyLift__h_47er_uk.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "uk",
@@ -1918,14 +1921,15 @@
       "model": "Merlin HM2 ASW",
       "source_ids": [
         "UK-MERLIN",
-        "UK-AIRDEF-OPS26"
+        "UK-AIRDEF-OPS26",
+        "AW101-DIM"
       ],
       "status": "documented_service",
       "reason": "Mk2submarinehuntingmissionfit distinct fromexistingHC4transport.",
       "asset_action": "build_missing",
       "proposed_slug": "navalHelicopter__merlin_hm2",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "aircraft/navalHelicopter__merlin_hm2.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "uk",
@@ -1933,14 +1937,18 @@
       "model": "Merlin HM2 Crowsnest ASaC",
       "source_ids": [
         "UK-MERLIN",
-        "UK-AIRDEF-OPS26"
+        "UK-AIRDEF-OPS26",
+        "UK-CRN-OPS26",
+        "UK-CRN-OSD26",
+        "UK-CRN-KIT",
+        "AW101-DIM"
       ],
       "status": "documented_2026_operator_use",
       "reason": "Actual2026surveillanceconfiguration with externalradarbag, differentfrombareASWvariant.",
       "asset_action": "build_missing",
       "proposed_slug": "aewc__merlin_hm2_crowsnest",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "aircraft/aewc__merlin_hm2_crowsnest.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "uk",
@@ -1948,14 +1956,17 @@
       "model": "Peregrine S100",
       "source_ids": [
         "UK-PEREGRINE-SERVICE",
-        "UK-PEREGRINE26"
+        "UK-PEREGRINE26",
+        "S100-SPEC",
+        "UK-PEREGRINE-CONTRACT23",
+        "UK-PEREGRINE-OPS25"
       ],
       "status": "declared_service_operator_activity2026",
       "reason": "Navy-specificS100ISR with IMasterradar andEO, declaredserviceSeptember2025.",
       "asset_action": "build_missing",
       "proposed_slug": "carrierDrone__peregrine_s100",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "aircraft/carrierDrone__peregrine_s100.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "uk",
@@ -2098,6 +2109,23 @@
       "proposed_slug": "gunboat__river_batch_1",
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "uk",
+      "key": "helicopter",
+      "model": "Jupiter HC2 H145 D3",
+      "source_ids": [
+        "UK-H145-SERVICE25",
+        "UK-H145-CYPRUS26",
+        "H145-D3-DIM",
+        "H145-D3-ROTORS"
+      ],
+      "status": "documented_service",
+      "reason": "Six real British D3 support aircraft for Cyprus/Brunei. Current actual flying, distinct from four-blade HT1 and from military H145M armed configurations.",
+      "asset_action": "build_missing",
+      "proposed_slug": "helicopter__h145_jupiter_hc2",
+      "existing_exact_asset": "aircraft/helicopter__h145_jupiter_hc2.glb",
+      "asset_state": "available_exact_file"
     }
   ]
 }
