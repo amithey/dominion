@@ -133,8 +133,16 @@ def validate(path):
             turn={p:M for p,n,M,v in walk_nodes(doc,{gun:recoil},canonical=True)}
             assert np.allclose(turn[muzzle][:3,3],mp-[0,0,.2]);poses=['yaw +90','gun -8/+20','recoil .20 m']
         if s['slug'].startswith('recoveryVehicle'):
-            for part in ('Boom','Spade'):
+            # Winch-only recovery and crane-only repair variants must not
+            # acquire fictional equipment to satisfy a generic convention.
+            # Existing exports retain the original two-part default.
+            recovery_parts=s.get('details',{}).get('recovery_parts',['Boom','Spade'])
+            assert recovery_parts and len(set(recovery_parts))==len(recovery_parts)
+            assert set(recovery_parts)<=set(('Boom','Spade'))
+            for part in recovery_parts:
                 node,M,_=by[prefix+'/'+part];assert 'mesh' not in node and node['extras']['rotation_axis'] in ('X','Y')
+            for part in set(('Boom','Spade'))-set(recovery_parts):
+                assert prefix+'/'+part not in by,('undeclared recovery mechanism',part)
         # Every exported moving hinge must carry all mesh children with it.
         for p,(node,M,v) in by.items():
             if not p.startswith(prefix+'/') or 'rotation_axis' not in node.get('extras',{}):continue

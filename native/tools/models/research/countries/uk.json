@@ -1829,59 +1829,71 @@
     },
     {
       "nation": "uk",
-      "key": "ewVehicle",
+      "key": "apc",
       "model": "Athena command",
       "source_ids": [
-        "UK-AJAX-FAMILY"
+        "UK-AJAX-FAMILY",
+        "UK-ATHENA-PHOTO",
+        "UK-AJAX-GD-CURRENT",
+        "UK-AJAX-COUNTS25"
       ],
       "status": "contracted_command_not_jammer",
-      "reason": "112 contracted command variants. Command/C2 vehicle is not proof of a dedicated jammer; category fit requires review.",
+      "reason": "112 contracted command variants, not a dedicated jammer. Public higher command roof and communications fit generated; fleet-wide operational acceptance not inferred.",
       "asset_action": "build_missing",
       "proposed_slug": "apc__athena",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "vehicles/apc__athena.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "uk",
       "key": "recoveryVehicle",
       "model": "Atlas",
       "source_ids": [
-        "UK-AJAX-FAMILY"
+        "UK-AJAX-FAMILY",
+        "UK-ATLAS-PHOTO",
+        "UK-AJAX-GD-CURRENT",
+        "UK-AJAX-COUNTS25"
       ],
       "status": "contracted_family",
-      "reason": "38 contracted Ajax-family recovery vehicles; distinct recovery fit.",
+      "reason": "38 contracted winch-recovery variants. Manufacturer photograph shows front anchoring Spade and fairleads without a repair crane; generated accordingly.",
       "asset_action": "build_missing",
       "proposed_slug": "recoveryVehicle__atlas",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "vehicles/recoveryVehicle__atlas.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "uk",
       "key": "recoveryVehicle",
       "model": "Apollo repair",
       "source_ids": [
-        "UK-AJAX-FAMILY"
+        "UK-AJAX-FAMILY",
+        "UK-APOLLO-PHOTO",
+        "UK-AJAX-GD-CURRENT",
+        "UK-AJAX-COUNTS25"
       ],
       "status": "contracted_family",
-      "reason": "50 contracted repair-support vehicles with crane. Different mission from Atlas.",
+      "reason": "50 contracted repair variants. Manufacturer photograph shows powerpack-handling crane and service deck without Atlas front anchoring blade; transport pose estimated.",
       "asset_action": "build_missing",
       "proposed_slug": "recoveryVehicle__apollo",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "vehicles/recoveryVehicle__apollo.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "uk",
       "key": "reconVehicle",
       "model": "Argus engineer reconnaissance",
       "source_ids": [
-        "UK-AJAX-FAMILY"
+        "UK-AJAX-FAMILY",
+        "UK-ARGUS-PHOTO",
+        "UK-AJAX-GD-CURRENT",
+        "UK-AJAX-COUNTS25"
       ],
       "status": "contracted_family",
-      "reason": "51 contracted engineer reconnaissance vehicles, distinct sensors.",
+      "reason": "51 contracted engineer-reconnaissance variants. Closed survey fit generated from public exterior; internal electronics and invisible deployment devices not invented.",
       "asset_action": "build_missing",
       "proposed_slug": "reconVehicle__argus",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "vehicles/reconVehicle__argus.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "uk",
@@ -2087,28 +2099,36 @@
       "model": "Dreadnought class",
       "source_ids": [
         "UK-NUCLEAR26",
-        "UK-DREADNOUGHT-DP4"
+        "UK-DREADNOUGHT-DP4",
+        "UK-DREAD-SPEC",
+        "UK-DREAD-PRODUCTION25",
+        "UK-DREAD-STATUS26"
       ],
       "status": "firm_construction_contract",
-      "reason": "Fourfirmunderconstruction, first early2030s; own hull and missile compartment distinctVanguard.",
+      "reason": "Four firm future SSBNs under construction; not currently operational.153.6m,12 ballistic closures,4 torpedo closures and X-tail/pumpjet represented; local hull/sail sections and draft estimated.",
       "asset_action": "build_missing",
       "proposed_slug": "nuclearSub__dreadnought_class",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "ships/nuclearSub__dreadnought_class.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "uk",
       "key": "gunboat",
       "model": "River Batch1",
       "source_ids": [
-        "UK-RIVER26"
+        "UK-RIVER26",
+        "UK-RIVER1-SERVICE26",
+        "UK-RIVER1-OSD26",
+        "UK-RIVER1-GUN",
+        "UK-RIVER1-DIM",
+        "UK-RIVER1-PHOTO26"
       ],
       "status": "documented_2026_operator_use",
-      "reason": "Tyne/Mersey/Severn actual2026patrol duties; offshore ship distinctCutlass.",
+      "reason": "Three current approximately80m Batch1 OPVs distinct from90m Batch2.20mm manual gun and open working deck, no helicopter pad/hangar. Planned2028 withdrawal remains future.",
       "asset_action": "build_missing",
       "proposed_slug": "gunboat__river_batch_1",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "ships/gunboat__river_batch_1.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "uk",

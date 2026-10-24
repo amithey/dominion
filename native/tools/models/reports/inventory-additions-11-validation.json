@@ -1,0 +1,50 @@
+{
+  "batch": "inventory-additions-11",
+  "files": [
+    "vehicles/apc__athena.glb",
+    "vehicles/reconVehicle__argus.glb",
+    "vehicles/recoveryVehicle__atlas.glb",
+    "vehicles/recoveryVehicle__apollo.glb",
+    "ships/nuclearSub__dreadnought_class.glb",
+    "ships/gunboat__river_batch_1.glb"
+  ],
+  "sha256": {
+    "vehicles/apc__athena.glb": "ffe8adb506065a548b786405ba7401b1df8dd883480e1f5bb9a1cae6f4a9980f",
+    "vehicles/reconVehicle__argus.glb": "ca8a403047c9deccfac8e7842bb07cb62ab726a8ea5a77596b362bdab5f3970a",
+    "vehicles/recoveryVehicle__atlas.glb": "85dd91a5852f9b88bc751908d179183b692b03f55f383f04ab05b2940ac29059",
+    "vehicles/recoveryVehicle__apollo.glb": "326b8619e8bca4b39cbee00df62d1889dc08de20313304b2f52fa2174a7cfb8c",
+    "ships/nuclearSub__dreadnought_class.glb": "3787ab851c2ffb6d1fc58c32bc50c728ad8327102355f1eca3cebe07a45e2bb8",
+    "ships/gunboat__river_batch_1.glb": "6a5268ac7e8ef83778db8c19be6b21685a5e4d38e105e57567948caa65be7479"
+  },
+  "maximum_triangles": [
+    12690,
+    2292
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "canonical track meshes and U, seven road wheels, actual recovery mechanisms, twelve ballistic closures, X stern planes and independent machinery pivots",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_11.py",
+  "extra_views_reviewed": 6,
+  "recovery_validator_regression": {
+    "legacy_files": [
+      "recoveryVehicle__armoured_recovery_vehicle.glb",
+      "recoveryVehicle__bergepanzer_3_buffel.glb",
+      "recoveryVehicle__brem_1.glb",
+      "recoveryVehicle__challenger_arrv.glb",
+      "recoveryVehicle__k1_arv.glb",
+      "recoveryVehicle__leclerc_dcl.glb",
+      "recoveryVehicle__m88a2_hercules.glb",
+      "recoveryVehicle__type_90_arv.glb",
+      "recoveryVehicle__wzt_3.glb"
+    ],
+    "legacy_default_Boom_and_Spade_retained": true,
+    "invalid_declaration_cases_rejected": 4,
+    "saved_GLBs_modified": false
+  },
+  "approved_validator_change": "User explicitly approved updating validate_p3_artillery.py for only the actual recovery mechanisms."
+}
