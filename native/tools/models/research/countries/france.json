@@ -1,7 +1,7 @@
 {
   "nation": "france",
   "scope": "current and confirmed-order platforms in existing Tier 7 categories",
-  "all_roster_rows_assessed": false,
+  "all_roster_rows_assessed": true,
   "complete": false,
   "completion_note": "Operator evidence, exact visual fit and additional inventory still being audited.",
   "rows": [
@@ -124,11 +124,16 @@
           1088
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-VBCI-OPS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_operator_or_programme_evidence",
+        "reason": "Current VBCI operation documented. Saved French25mm turret must not be silently replaced by export MkII40mm.",
+        "recommended_action": "retain_verify_selected_national_fit",
+        "model_match": "class_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -1254,11 +1259,17 @@
           2022
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-HORIZON-2026",
+        "FR-HORIZON-MLU"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_operator_or_programme_evidence",
+        "reason": "Horizon class and ordered upgrade documented; French updated radar fit is future2028/2029, not assumed current.",
+        "recommended_action": "retain_verify_selected_national_fit",
+        "model_match": "class_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -1339,11 +1350,16 @@
           1734
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-FREMM-2026"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_operator_or_programme_evidence",
+        "reason": "Current French FREMM operation documented; verify actual French ASM/AA subtype rather than Italian GP fit.",
+        "recommended_action": "retain_verify_selected_national_fit",
+        "model_match": "class_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -1378,11 +1394,16 @@
           1176
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-CORMORAN"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_model_not_national_identity",
+        "reason": "Named French OPV54patrol craft exist; generic30mgunboat is not that real class. Identify actual patrol classes rather than pretending one generic hull represents all.",
+        "recommended_action": "add_specific_patrol_classes",
+        "model_match": "generic_hull_mismatch",
+        "replacement": "gunboat__flamant_class"
       }
     },
     {
@@ -1417,11 +1438,16 @@
           1284
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "FR-MISTRAL-OPS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_operator_or_programme_evidence",
+        "reason": "Dixmude deployment validates Mistral-class current operation; verify well-deck ramp and ship-specific defensive fit.",
+        "recommended_action": "retain_verify_selected_national_fit",
+        "model_match": "class_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -1606,14 +1632,16 @@
       "key": "aewc",
       "model": "GlobalEye Global6500",
       "source_ids": [
-        "FR-GLOBALEYE-ORDER"
+        "FR-GLOBALEYE-ORDER",
+        "GLOBAL6500-SPEC",
+        "GLOBALEYE-SPEC"
       ],
       "status": "ordered_future",
       "reason": "Firm two-aircraft order, delivery2030; distinct long fixed dorsal Erieye, not E3 rotating disc.",
       "asset_action": "build_missing",
       "proposed_slug": "aewc__globaleye_6500",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "aircraft/aewc__globaleye_6500.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "france",
@@ -1663,14 +1691,15 @@
       "key": "carrierDrone",
       "model": "VSR700 ISR",
       "source_ids": [
-        "FR-VSR700-ORDER"
+        "FR-VSR700-ORDER",
+        "VSR700-SPEC"
       ],
       "status": "ordered_future",
       "reason": "Six contracted naval rotorcraft; service2028; unarmed ISR sensor configuration.",
       "asset_action": "build_missing",
       "proposed_slug": "carrierDrone__vsr700",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "aircraft/carrierDrone__vsr700.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "france",
@@ -1678,14 +1707,15 @@
       "model": "MX10 Damocles",
       "source_ids": [
         "FR-DAMOCLES-DELIVERY",
-        "FR-DAMOCLES-ORDER"
+        "FR-DAMOCLES-ORDER",
+        "MX10-SPEC"
       ],
       "status": "documented_service",
       "reason": "Named delivered munition and additional exercised order; distinguish quadcopter from generic tube-launched exterior.",
       "asset_action": "build_missing",
       "proposed_slug": "loiterer__mx_10_damocles",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "aircraft/loiterer__mx_10_damocles.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "france",
@@ -1699,6 +1729,35 @@
       "reason": "First delivered and proving deployment; later hulls ordered, exact active-service milestone pending. Distinct inverted bow and fixed radar mast.",
       "asset_action": "build_missing",
       "proposed_slug": "asFrigate__amiral_ronarch_fdi",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "france",
+      "key": "carrierJet",
+      "model": "Rafale M",
+      "source_ids": [
+        "FR-NAVAL-AIR-OPS",
+        "FR-RAFALE-M-SPEC"
+      ],
+      "status": "documented_service",
+      "reason": "Actual naval variant with reinforced twin-wheel nose leg, launch bar and arresting hook; generic FA18F has wrong silhouette.",
+      "asset_action": "build_missing",
+      "proposed_slug": "carrierJet__rafale_m",
+      "existing_exact_asset": "aircraft/carrierJet__rafale_m.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "france",
+      "key": "gunboat",
+      "model": "Flamant-class OPV54",
+      "source_ids": [
+        "FR-CORMORAN"
+      ],
+      "status": "documented_service",
+      "reason": "Current public-service patrol class distinct from generic30mboat; verify armament/refit before generation.",
+      "asset_action": "build_missing",
+      "proposed_slug": "gunboat__flamant_class",
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
     }

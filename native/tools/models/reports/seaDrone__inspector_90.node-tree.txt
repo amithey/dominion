@@ -1,0 +1,33 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Hull local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Hull_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Wake_Bow local=[0.0, 0.6, 4.508] world=[0.0, 0.6, 4.508] axis=None pivot
+    Wake_Stern local=[0.0, 0.6, -4.508] world=[0.0, 0.6, -4.508] axis=None pivot
+    Forward_Cabin local=[0.0, 1.25, 1.4] world=[0.0, 1.25, 1.4] axis=None pivot
+      Forward_Cabin_Mesh local=[0, 0, 0] world=[0.0, 1.25, 1.4] axis=None mesh
+    Sensor_Mast local=[0.0, 1.25, -0.64] world=[0.0, 1.25, -0.64] axis=None pivot
+      Sensor_Mast_Mesh local=[0, 0, 0] world=[0.0, 1.25, -0.64] axis=None mesh
+    Radar local=[0.0, 3.78, -0.64] world=[0.0, 3.78, -0.64] axis=Y pivot
+      Radar_Mesh local=[0, 0, 0] world=[0.0, 3.78, -0.64] axis=None mesh
+    LARS local=[0.0, 1.3, -2.25] world=[0.0, 1.3, -2.25] axis=X pivot
+      LARS_Mesh local=[0, 0, 0] world=[0.0, 1.3, -2.25] axis=None mesh
+    MCM_Payload_Cradle local=[0.0, 1.25, -2.12] world=[0.0, 1.25, -2.12] axis=None pivot
+      MCM_Payload_Cradle_Mesh local=[0, 0, 0] world=[0.0, 1.25, -2.12] axis=None mesh
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Hull_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Hull_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Wake_Bow_LOD1 local=[0.0, 0.6, 4.508] world=[0.0, 0.6, 4.508] axis=None pivot hidden
+    Wake_Stern_LOD1 local=[0.0, 0.6, -4.508] world=[0.0, 0.6, -4.508] axis=None pivot hidden
+    Forward_Cabin_LOD1 local=[0.0, 1.25, 1.4] world=[0.0, 1.25, 1.4] axis=None pivot hidden
+      Forward_Cabin_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.25, 1.4] axis=None mesh hidden
+    Sensor_Mast_LOD1 local=[0.0, 1.25, -0.64] world=[0.0, 1.25, -0.64] axis=None pivot hidden
+      Sensor_Mast_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.25, -0.64] axis=None mesh hidden
+    Radar_LOD1 local=[0.0, 3.78, -0.64] world=[0.0, 3.78, -0.64] axis=Y pivot hidden
+      Radar_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 3.78, -0.64] axis=None mesh hidden
+    LARS_LOD1 local=[0.0, 1.3, -2.25] world=[0.0, 1.3, -2.25] axis=X pivot hidden
+      LARS_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.3, -2.25] axis=None mesh hidden
+    MCM_Payload_Cradle_LOD1 local=[0.0, 1.25, -2.12] world=[0.0, 1.25, -2.12] axis=None pivot hidden
+      MCM_Payload_Cradle_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.25, -2.12] axis=None mesh hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 0.625, 0.0] world=[0.0, 0.625, 0.0] axis=None mesh hidden

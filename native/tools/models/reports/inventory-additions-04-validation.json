@@ -1,0 +1,30 @@
+{
+  "batch": "inventory-additions-04",
+  "files": [
+    "aircraft/carrierJet__rafale_m.glb",
+    "aircraft/aewc__globaleye_6500.glb",
+    "aircraft/carrierDrone__vsr700.glb",
+    "aircraft/loiterer__mx_10_damocles.glb",
+    "ships/seaDrone__inspector_90.glb"
+  ],
+  "sha256": {
+    "aircraft/carrierJet__rafale_m.glb": "665c2936251c9b27962f021af1e4a93b22e50f77e7a4e5233eb57e3cace3f2ba",
+    "aircraft/aewc__globaleye_6500.glb": "e95d095073ca99f3a7e72122e8edd91f7678b167dc6da987917f3da9560e2c3e",
+    "aircraft/carrierDrone__vsr700.glb": "c2eea0b4ce9bb34e9dcc288c4a4272054b2664cc7ec69d7525486a62c1e3b49c",
+    "aircraft/loiterer__mx_10_damocles.glb": "34ac7147387332b903c074c441322fff3f417374d27b1c8f96fd7da71e720a20",
+    "ships/seaDrone__inspector_90.glb": "1334b421f33e1df0e70d9d35d2b5c45dae79095b2b8c84f54f32c6434b13a206"
+  },
+  "maximum_triangles": [
+    10498,
+    1676
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "canonical TrackPath with metre mesh scale and U loop coordinate on tracked vehicles; actual axle counts",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_04.py"
+}

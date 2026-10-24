@@ -591,11 +591,17 @@
           1124
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-BELL-EPI-OPS",
+        "ID-BELL-GUN-CERT"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_specific_variant",
+        "reason": "Army identifies412EPI HA5230 in actual relief mission; separately qualified M134D-H fit not assumed mounted on every sortie. Verify FastFin/strakes and actual transport fit.",
+        "recommended_action": "retain_verify_EPI_external_fit",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -1078,11 +1084,16 @@
           1176
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-GOLOK-OPS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_model_not_national_identity",
+        "reason": "Golok trimaran in real2026 border operation. Generic30m monohull cannot cover actual national patrol/fast-attack classes. Exact weapons fit remains to be checked.",
+        "recommended_action": "add_specific_Golok_after_spec_check",
+        "model_match": "generic_monohull_not_trimaran",
+        "replacement": "gunboat__kri_golok"
       }
     },
     {
@@ -1160,11 +1171,16 @@
           988
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-NAGAPASA-OPERATOR"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "dated_operator_evidence_current_readiness_pending",
+        "reason": "Navy confirms Nagapasa403 underway in2024. Current2026 independent reports suggest continued fleet, but current primary readiness proof and exact exterior still pending. Do not equate future Scorpene with Nagapasa.",
+        "recommended_action": "retain_seek_current_operator_activity",
+        "model_match": "class_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -1348,12 +1364,27 @@
       "key": "seaDrone",
       "model": "Inspector90 MCM USV",
       "source_ids": [
-        "ID-UMIS-ORDER"
+        "ID-UMIS-ORDER",
+        "INSPECTOR90-SPEC"
       ],
       "status": "ordered_delivery_status_pending",
       "reason": "Four ordered as part of mine-countermeasure system; not surface kamikaze craft.",
       "asset_action": "build_missing",
       "proposed_slug": "seaDrone__inspector_90",
+      "existing_exact_asset": "ships/seaDrone__inspector_90.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "indonesia",
+      "key": "gunboat",
+      "model": "KRI Golok trimaran",
+      "source_ids": [
+        "ID-GOLOK-OPS"
+      ],
+      "status": "documented_service",
+      "reason": "Actual2026 operator activity; distinct trimaran geometry and hull weapons need specification research.",
+      "asset_action": "build_missing",
+      "proposed_slug": "gunboat__kri_golok",
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
     }
