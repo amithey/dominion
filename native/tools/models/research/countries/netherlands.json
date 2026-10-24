@@ -1370,8 +1370,8 @@
       "reason": "Confirmed order; first delivery end 2028. Tracked FFG ACSV differs visibly from Boxer-mounted existing model.",
       "asset_action": "build_missing",
       "proposed_slug": "aaVehicle__skyranger_30_acsv",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "existing_exact_asset": "vehicles/aaVehicle__skyranger_30_acsv.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "netherlands",
@@ -1417,6 +1417,21 @@
       "asset_action": "build_missing",
       "proposed_slug": "gunboat__frisc",
       "existing_exact_asset": "ships/gunboat__frisc.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "netherlands",
+      "key": "shortRangeSAM",
+      "model": "NOMADS",
+      "source_ids": [
+        "NL-NOMADS-ORDER",
+        "NOMADS-SPEC"
+      ],
+      "status": "ordered_future",
+      "reason": "Confirmed tracked short-range air-defence order, first deliveries 2028, distinct from current Fennek SWP.",
+      "asset_action": "build_missing",
+      "proposed_slug": "shortRangeSAM__nomads",
+      "existing_exact_asset": "vehicles/shortRangeSAM__nomads.glb",
       "asset_state": "available_exact_file"
     }
   ]

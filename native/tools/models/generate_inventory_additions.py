@@ -124,7 +124,7 @@ BUILDERS={n:f for n,f in list(globals().items()) if '__' in n and not n.startswi
 
 def save(slug):
     a,s=BUILDERS[slug](0);b,t=BUILDERS[slug](1);assert asdict(s)==asdict(t)
-    priority='P7' if slug.startswith(('gunboat__','landingShip__')) else 'P5' if slug.startswith('helicopter__') else 'P4' if slug.startswith('aaVehicle__') else 'P2'
+    priority='P7' if slug.startswith(('gunboat__','landingShip__','carrier__','submarine__')) else 'P5' if slug.startswith('helicopter__') else 'P4' if slug.startswith(('aaVehicle__','shortRangeSAM__')) else 'P2'
     folder='ships' if priority=='P7' else 'aircraft' if priority=='P5' else 'vehicles'
     path=ART/folder/(slug+'.glb');c=Mesh()
     if priority=='P7':

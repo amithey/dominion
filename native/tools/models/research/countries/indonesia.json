@@ -37,11 +37,16 @@
           2132
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-ARMOUR-DELIVERY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "Both Leopard 2A4 and more heavily armoured 2RI form the documented procurement/delivery programme. A plain 2A4 does not visually represent the distinct 2RI turret and hull armour. Exact current counts not inferred from forecast.",
+        "recommended_action": "add_distinct_leopard_2ri",
+        "model_match": "2A4_not_2RI",
+        "replacement": "tank__leopard_2ri"
       }
     },
     {
@@ -74,11 +79,17 @@
           980
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-PINDAD-HANDOVER",
+        "ID-PINDAD-OPERATOR"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_delivery_or_operation",
+        "reason": "Named operator or handover source supports the type. Generic combined-role names and model fit still require exact variant inspection; no source total is assumed current readiness.",
+        "recommended_action": "retain_verify_exact_variant",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -148,11 +159,17 @@
           820
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-PINDAD-HANDOVER",
+        "ID-PINDAD-OPERATOR"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_delivery_or_operation",
+        "reason": "Named operator or handover source supports the type. Generic combined-role names and model fit still require exact variant inspection; no source total is assumed current readiness.",
+        "recommended_action": "retain_verify_exact_variant",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -186,11 +203,16 @@
           1672
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-ARMOUR-DELIVERY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch",
+        "reason": "Operator delivery history identifies Leopard ARV2 Buffel. Generic M88-family model is not that seven-wheel Leopard-2 recovery vehicle. Specific Buffel GLB already exists.",
+        "recommended_action": "map_to_existing_specific_model",
+        "model_match": "wrong_generic_hull",
+        "replacement": "recoveryVehicle__bergepanzer_3_buffel"
       }
     },
     {
@@ -223,11 +245,16 @@
           1884
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-ARMOUR-DELIVERY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch",
+        "reason": "Operator delivery history identifies AEV2 Kodiak. A generic T-72 engineering carrier does not represent the Leopard-2-based Kodiak. New specific model is available.",
+        "recommended_action": "map_to_specific_model",
+        "model_match": "wrong_generic_hull",
+        "replacement": "mineClearer__kodiak"
       }
     },
     {
@@ -297,11 +324,16 @@
           1216
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-CAESAR-ACTIVE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_delivery_or_operation",
+        "reason": "Named operator or handover source supports the type. Generic combined-role names and model fit still require exact variant inspection; no source total is assumed current readiness.",
+        "recommended_action": "retain_verify_exact_variant",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -335,11 +367,16 @@
           1216
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-CAESAR-ACTIVE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_delivery_or_operation",
+        "reason": "Named operator or handover source supports the type. Generic combined-role names and model fit still require exact variant inspection; no source total is assumed current readiness.",
+        "recommended_action": "retain_verify_exact_variant",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -374,11 +411,16 @@
           1348
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-ASTROS-ACTIVE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_combined_label",
+        "reason": "ASTROS live fire documented in 2026. This source does not validate the separate RM70 half of the combined label or make two unrelated launchers one model.",
+        "recommended_action": "split_combined_label_verify_rm70",
+        "model_match": "selected_ASTROS_representative_only",
+        "replacement": null
       }
     },
     {
@@ -412,11 +454,16 @@
           2060
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-HARIMAU"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_delivery_or_operation",
+        "reason": "Named operator or handover source supports the type. Generic combined-role names and model fit still require exact variant inspection; no source total is assumed current readiness.",
+        "recommended_action": "retain_verify_exact_variant",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -449,11 +496,17 @@
           232
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-SKYSHIELD-MAINT",
+        "ID-SKYSHIELD-UNIT"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_combined_label",
+        "reason": "2026 operator inspection and maintenance confirm Skyshield Mk2. A stationary gun fire unit and a separate RBS70 missile team are different equipment; these sources do not confirm the RBS70 half or a combined self-propelled truck.",
+        "recommended_action": "split_system_components_verify_rbs70",
+        "model_match": "generic_combined_platform_requires_replacement",
+        "replacement": "aaVehicle__skyshield_mk2"
       }
     },
     {
@@ -488,11 +541,16 @@
           612
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-NASAMS-CONTRACT"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "confirmed_order_delivery_status_pending",
+        "reason": "Signed complete NASAMS battery contract establishes acquisition. Current delivery/FOC evidence still required; inclusion is valid in the user-approved ordered-equipment list, not proof of active status.",
+        "recommended_action": "retain_order_seek_current_operator_confirmation",
+        "model_match": "family_model_exists",
+        "replacement": null
       }
     },
     {
@@ -616,11 +674,17 @@
           2184
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-PANTHER-DELIVERY",
+        "ID-PANTHER-UPDATE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_operator_possession",
+        "reason": "AS565 MBe identified in delivery and specific Navy maintenance/modification reports. Do not infer every helicopter has completed every proposed ASW integration.",
+        "recommended_action": "retain_check_actual_mission_fit",
+        "model_match": "naval_variant_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -698,11 +762,17 @@
           2024
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-CARRIER-COMMISSION",
+        "ID-CARRIER-ARRIVAL"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "aviation_type_unverified_new_carrier",
+        "reason": "Indonesia commissioned Sriwijaya-100 in September 2026, absent from input roster. Its helicopter/drone role does not establish delivered carrier fighters or any named operational carrier-drone airframe. Avoid the outdated inference that Indonesia has no carrier, and avoid inventing its air wing.",
+        "recommended_action": "add_actual_carrier_research_named_air_wing",
+        "model_match": "generic_aircraft_unverified",
+        "replacement": null
       }
     },
     {
@@ -736,11 +806,16 @@
           1304
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-CN235-ACTIVE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_delivery_or_operation",
+        "reason": "Named operator or handover source supports the type. Generic combined-role names and model fit still require exact variant inspection; no source total is assumed current readiness.",
+        "recommended_action": "retain_verify_exact_variant",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -774,11 +849,17 @@
           1476
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-CH4-OPERATOR",
+        "ID-ANKA-ACTIVE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_combined_label",
+        "reason": "Both CH4 and Anka identified by operators, in different unit/time records. They are distinct airframes. Current saved combined label cannot represent both simultaneously; identify its actual representative and add the other.",
+        "recommended_action": "split_combined_airframes",
+        "model_match": "combined_label_requires_two_types",
+        "replacement": "drone__anka"
       }
     },
     {
@@ -812,11 +893,17 @@
           1136
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-CARRIER-COMMISSION",
+        "ID-CARRIER-ARRIVAL"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "aviation_type_unverified_new_carrier",
+        "reason": "Indonesia commissioned Sriwijaya-100 in September 2026, absent from input roster. Its helicopter/drone role does not establish delivered carrier fighters or any named operational carrier-drone airframe. Avoid the outdated inference that Indonesia has no carrier, and avoid inventing its air wing.",
+        "recommended_action": "add_actual_carrier_research_named_air_wing",
+        "model_match": "generic_aircraft_unverified",
+        "replacement": null
       }
     },
     {
@@ -941,11 +1028,16 @@
           1376
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-KCR-DELIVERY"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_delivery",
+        "reason": "KCR60 delivery confirmed. First and later hulls have changing gun/missile fits; a hull-class match alone does not verify the chosen exact weapons fit.",
+        "recommended_action": "retain_verify_hull_batch_fit",
+        "model_match": "class_matches_weapons_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -1019,11 +1111,16 @@
           1326
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "ID-MAKASSAR-ACTIVE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_delivery_or_operation",
+        "reason": "Named operator or handover source supports the type. Generic combined-role names and model fit still require exact variant inspection; no source total is assumed current readiness.",
+        "recommended_action": "retain_verify_exact_variant",
+        "model_match": "designation_matches_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -1133,6 +1230,106 @@
       "proposed_slug": "bushmaster__bushmaster",
       "existing_exact_asset": "vehicles/bushmaster__bushmaster.glb",
       "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "indonesia",
+      "key": "carrier",
+      "model": "KRI Sriwijaya-100",
+      "source_ids": [
+        "ID-CARRIER-COMMISSION",
+        "ID-CARRIER-ARRIVAL"
+      ],
+      "status": "documented_service",
+      "reason": "Commissioned former Giuseppe Garibaldi. Newly absent from game roster; model its actual compact ski-jump deck and starboard island, no catapults.",
+      "asset_action": "build_missing",
+      "proposed_slug": "carrier__kri_sriwijaya_100",
+      "existing_exact_asset": "ships/carrier__kri_sriwijaya_100.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "indonesia",
+      "key": "tank",
+      "model": "Leopard 2RI",
+      "source_ids": [
+        "ID-ARMOUR-DELIVERY"
+      ],
+      "status": "documented_service",
+      "reason": "Distinct heavily armoured Indonesian upgrade, not identical to Leopard 2A4.",
+      "asset_action": "build_missing",
+      "proposed_slug": "tank__leopard_2ri",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "indonesia",
+      "key": "ifv",
+      "model": "Marder 1A3",
+      "source_ids": [
+        "ID-ARMOUR-DELIVERY"
+      ],
+      "status": "documented_service",
+      "reason": "Named delivered IFV distinct from wheeled Pandur. Seek current unit corroboration and reuse matching German base if available.",
+      "asset_action": "check_existing_model",
+      "proposed_slug": "ifv__marder_1a3",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "indonesia",
+      "key": "apc",
+      "model": "Kaplan/Harimau APC",
+      "source_ids": [
+        "ID-HARIMAU"
+      ],
+      "status": "contracted_development",
+      "reason": "Development/production contract 2024, separate from delivered medium tank. User includes confirmed orders.",
+      "asset_action": "build_missing",
+      "proposed_slug": "apc__kaplan_harimau_apc",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "indonesia",
+      "key": "submarine",
+      "model": "Scorpene Evolved",
+      "source_ids": [
+        "ID-SCORPENE-ORDER",
+        "ID-SCORPENE-SPEC"
+      ],
+      "status": "ordered_future",
+      "reason": "Two-boat effective order July 2025; future fleet distinct from Nagapasa.",
+      "asset_action": "build_missing",
+      "proposed_slug": "submarine__scorpene_evolved",
+      "existing_exact_asset": "ships/submarine__scorpene_evolved.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "indonesia",
+      "key": "directFire",
+      "model": "Badak 6x6",
+      "source_ids": [
+        "ID-PINDAD-HANDOVER"
+      ],
+      "status": "documented_service",
+      "reason": "Seven Badak handed over in 2022; a wheeled 90 mm vehicle, not the tracked 105 mm Harimau.",
+      "asset_action": "build_missing",
+      "proposed_slug": "directFire__badak",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "indonesia",
+      "key": "drone",
+      "model": "Anka",
+      "source_ids": [
+        "ID-ANKA-ACTIVE"
+      ],
+      "status": "documented_service",
+      "reason": "Named Anka exercise activity; distinct from CH4 selected for combined row.",
+      "asset_action": "check_existing_model",
+      "proposed_slug": "drone__anka",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
     }
   ]
 }

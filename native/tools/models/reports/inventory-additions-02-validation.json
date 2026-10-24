@@ -1,0 +1,32 @@
+{
+  "batch": "inventory-additions-02",
+  "files": [
+    "vehicles/aaVehicle__skyranger_30_acsv.glb",
+    "vehicles/shortRangeSAM__nomads.glb",
+    "vehicles/ifv__as21_redback.glb",
+    "ships/gunboat__arafura_class.glb",
+    "ships/carrier__kri_sriwijaya_100.glb",
+    "ships/submarine__scorpene_evolved.glb"
+  ],
+  "sha256": {
+    "vehicles/aaVehicle__skyranger_30_acsv.glb": "647e05ec79b9084a6070c1deb2ddaab9626c869371394495afbcdb7b12c5dcf6",
+    "vehicles/shortRangeSAM__nomads.glb": "924fdc59896f857e94f410e693c77f972df8aba94073adcc4ea0ac98b2b23746",
+    "vehicles/ifv__as21_redback.glb": "b6a9a36a15f57671ca0fd79a7c1fe990c452a65b9d0ea0c7ed5cd2db425f3aa1",
+    "ships/gunboat__arafura_class.glb": "a533e355acc1e82d09dd0c60d97c4bf2864c58e0c3daadedfb798023b79cb2ab",
+    "ships/carrier__kri_sriwijaya_100.glb": "68437cdf27b29a3514724e425af63a6fe523c8f71d8f2561cba413be9ee24f22",
+    "ships/submarine__scorpene_evolved.glb": "c89b7c5e0a0cdcf5c933870705815cb64bf1cf6538d8029ba6f86593f71a7421"
+  },
+  "maximum_triangles": [
+    12338,
+    2164
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "canonical TrackPath with metre mesh scale and U loop coordinate on tracked vehicles; actual axle counts",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_02.py"
+}

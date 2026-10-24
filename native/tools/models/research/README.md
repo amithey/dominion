@@ -1,6 +1,6 @@
 # National inventory and model identity audit
 
-Evidence date: 23 October 2026. Scope: all 31 playable national/faction identities,
+Evidence date: 24 October 2026. Scope: all 31 playable national/faction identities,
 823 nation–model assignments in the 565-row Tier 7 roster, plus documented missing
 platforms that fit existing game categories, including equipment on confirmed order
 at the user's explicit request. Counts describe audit coverage, not
