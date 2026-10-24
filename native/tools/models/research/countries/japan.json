@@ -37,11 +37,18 @@
           1988
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-GSDF-VEHICLES",
+        "JP-TANK-STATUS26",
+        "JP-RESERVE25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "Type10 retained; some training restricted after an incident. Selected older vehicles entering reserve does not retire the entire tank force.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
       }
     },
     {
@@ -74,11 +81,18 @@
           948
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-APC96-26",
+        "JP-SUPPORT26",
+        "JP-AMV-DELIVERY25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_replacement_in_delivery",
+        "reason": "Type96 remains present; AMV successor first delivered2025. Do not label all AMV orders delivered or all Type96 retired.",
+        "recommended_action": "retain_add_amv",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
       }
     },
     {
@@ -112,11 +126,18 @@
           1824
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-GSDF-VEHICLES",
+        "JP-TRACKED-MOVEMENT26",
+        "JP-ARMOUR-REVIEW26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "Type89 retained; official unit movement plans and chief statement corroborate older catalogue. Future vehicle introduction is separate.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
       }
     },
     {
@@ -150,11 +171,17 @@
           1656
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-SUPPORT26",
+        "JP-GSDF-VEHICLES"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_missing_other_variant",
+        "reason": "Type90 ARV support remains solicited; Type11 on Type10 hull is also documented and missing.",
+        "recommended_action": "retain_add_type11",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
       }
     },
     {
@@ -187,11 +214,18 @@
           1884
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-ENGINEERS",
+        "JP-TYPE92-TRAIN26",
+        "JP-MCV92-PHOTO"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch",
+        "reason": "Saved generic GLB is a T72 blade vehicle. Current national Type92 is a tracked rocket line-charge carrier.",
+        "recommended_action": "build_specific_type92",
+        "model_match": "wrong_hull_and_mission_equipment",
+        "replacement": "mineClearer__type_92_mbrs"
       }
     },
     {
@@ -223,11 +257,19 @@
           2072
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-ENGINEERS",
+        "JP-TYPE94-26",
+        "JP-TYPE94-MAKER",
+        "JP-MINELAYER94-PHOTO"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch",
+        "reason": "Saved generic M548 dispenser is not Type94 amphibious four-wheel littoral minelayer or Type83 towed system.",
+        "recommended_action": "build_specific_type94_and_research_type83",
+        "model_match": "wrong_mobility_and_dispenser",
+        "replacement": "mineLayer__type_94_amphibious"
       }
     },
     {
@@ -260,11 +302,17 @@
           864
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-EW-STATUS26",
+        "JP-EW-TRAIN26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_model_not_nationally_identified",
+        "reason": "NEWS service and exercises confirmed; generic Elbit-sourced shelter is not verified Japanese hardware. Type24 counter-air EW is separate acquisition.",
+        "recommended_action": "research_specific_news_configuration",
+        "model_match": "generic_not_country_identified",
+        "replacement": "ewVehicle__news"
       }
     },
     {
@@ -298,11 +346,17 @@
           2112
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-LAND-SUPPORT26",
+        "JP-MLRS-OS26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_retained",
+        "reason": "Named national type corroborated by operator/support records. Exact current equipment fit and operational availability remain to be reviewed.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
       }
     },
     {
@@ -336,11 +390,17 @@
           668
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-FIRE-CATALOGUE",
+        "JP-SUPPORT26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_retained",
+        "reason": "Named national type corroborated by operator/support records. Exact current equipment fit and operational availability remain to be reviewed.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
       }
     },
     {
@@ -374,11 +434,16 @@
           1368
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-SUPPORT26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_retained",
+        "reason": "Named national type corroborated by operator/support records. Exact current equipment fit and operational availability remain to be reviewed.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
       }
     },
     {
@@ -413,11 +478,17 @@
           1760
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-MLRS-OS26",
+        "JP-RESERVE25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_with_reserve_programme",
+        "reason": "Japanese MLRS actually fired September2026. Selected vehicles entering reserve does not imply complete retirement.",
+        "recommended_action": "retain_with_active_reserve_note",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
       }
     },
     {
@@ -452,11 +523,17 @@
           1760
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-MLRS-OS26",
+        "JP-RESERVE25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "same_platform_role_variant_unverified",
+        "reason": "Saved GLB is tracked M270, not M142. Two game roles must not double-count one Japanese fleet; exact national GMLRS qualification not established by exercise text.",
+        "recommended_action": "retain_hull_verify_ammunition_and_alias_role",
+        "model_match": "hull_family_matches_ammunition_unverified",
+        "replacement": "mlrs__m270_jgsdf"
       }
     },
     {
@@ -490,11 +567,17 @@
           1104
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-GSDF-VEHICLES",
+        "JP-SUPPORT26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_retained",
+        "reason": "Named national type corroborated by operator/support records. Exact current equipment fit and operational availability remain to be reviewed.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
       }
     },
     {
@@ -529,11 +612,18 @@
           1028
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-FIRE-CATALOGUE",
+        "JP-TYPE25-STATUS26",
+        "JP-TYPE25-LOCAL26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_missing_new_variant",
+        "reason": "Original Type12 is distinct from newly designated/deployed Type25 with a different launcher.",
+        "recommended_action": "retain_add_type25",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
       }
     },
     {
@@ -566,11 +656,17 @@
           1980
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-LAND-SUPPORT26",
+        "JP-ARMOUR-REVIEW26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_retained",
+        "reason": "Named national type corroborated by operator/support records. Exact current equipment fit and operational availability remain to be reviewed.",
+        "recommended_action": "retain",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
       }
     },
     {
@@ -605,11 +701,17 @@
           1192
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-FIRE-CATALOGUE",
+        "JP-BMD26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_unresolved",
+        "reason": "Type03 and improved Type03 are not interchangeable with the further HGV/BMD upgrade still in development.",
+        "recommended_action": "retain_verify_canister_and_radar_variant",
+        "model_match": "family_matches_exact_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -644,11 +746,16 @@
           672
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-BMD26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "combined_designation_mismatch",
+        "reason": "Saved GLB is a12-tube Patriot trailer representative. SM3IIA belongs on Aegis ships; a slash label cannot make it a ground SM3 launcher.",
+        "recommended_action": "separate_patriot_land_and_ship_missile_roles",
+        "model_match": "patriot_representative_not_sm3_launcher",
+        "replacement": null
       }
     },
     {
@@ -683,11 +790,16 @@
           1008
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-FIRE-CATALOGUE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_variant_unresolved",
+        "reason": "Type11 is documented; JGSDF truck versus JASDF base-defence carrier fit must not be inferred from missile name alone.",
+        "recommended_action": "retain_verify_service_specific_carrier",
+        "model_match": "family_matches_exact_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -1554,5 +1666,234 @@
       }
     }
   ],
-  "additional_inventory": []
+  "additional_inventory": [
+    {
+      "nation": "japan",
+      "key": "tank",
+      "model": "Type90",
+      "source_ids": [
+        "JP-GSDF-VEHICLES",
+        "JP-TANK-STATUS26",
+        "JP-TANK90-PHOTO"
+      ],
+      "status": "documented_service",
+      "reason": "Current six-wheel tank missing beside Type10.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "tank__type_90",
+      "asset_validation": {
+        "batch": 12,
+        "sha256": "23ec80da07609a88a42bbee1a17ebf8d481a5d363ce394043c2a52eff7339c2d",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "vehicles/tank__type_90.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "japan",
+      "key": "apc",
+      "model": "Type73 APC",
+      "source_ids": [
+        "JP-GSDF-VEHICLES",
+        "JP-TRACKED-MOVEMENT26",
+        "JP-APC73-PHOTO"
+      ],
+      "status": "documented_service",
+      "reason": "Retained five-wheel troop carrier, not Type73 artillery tractor.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "apc__type_73",
+      "asset_validation": {
+        "batch": 12,
+        "sha256": "0be13176aec29db233f86e219438c293c29e504ecbcfe4a0910f43e8c7f39991",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "vehicles/apc__type_73.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "japan",
+      "key": "recoveryVehicle",
+      "model": "Type11 tracked recovery",
+      "source_ids": [
+        "JP-GSDF-VEHICLES",
+        "JP-SUPPORT26",
+        "JP-ARV11-PHOTO"
+      ],
+      "status": "documented_service",
+      "reason": "Current Type10-derived five-wheel crane recovery vehicle, distinct from Type90 ARV.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "recoveryVehicle__type_11_arv",
+      "asset_validation": {
+        "batch": 12,
+        "sha256": "db854d5c585975e0bf4eb8cda145eeb619447110c748248456cd8fc5650f28bb",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "vehicles/recoveryVehicle__type_11_arv.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "japan",
+      "key": "mineClearer",
+      "model": "Type92 MBRS",
+      "source_ids": [
+        "JP-ENGINEERS",
+        "JP-TYPE92-TRAIN26",
+        "JP-MCV92-PHOTO",
+        "JP-TYPE92-MAKER"
+      ],
+      "status": "documented_service",
+      "reason": "Current rocket mine-clearance carrier replaces unsupported generic T72 assignment. Seven lower road wheels counted in the manufacturer photograph, distinct from five-wheel Type73 APC; original launcher has elevation and vehicle-aimed azimuth.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "mineClearer__type_92_mbrs",
+      "asset_validation": {
+        "batch": 12,
+        "sha256": "90cb8500bc55575075dded0a262a367b22cc8aa207eff519a0a747fb8584f130",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "vehicles/mineClearer__type_92_mbrs.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "japan",
+      "key": "mineLayer",
+      "model": "Type94 amphibious minelayer",
+      "source_ids": [
+        "JP-ENGINEERS",
+        "JP-TYPE94-26",
+        "JP-TYPE94-MAKER",
+        "JP-MINELAYER94-PHOTO"
+      ],
+      "status": "documented_service",
+      "reason": "Current original four-wheel amphibious littoral minelayer, folding floats and twin propellers.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "mineLayer__type_94_amphibious",
+      "asset_validation": {
+        "batch": 12,
+        "sha256": "56c8c853fff9a0996507f6d7db6455e2896389871df70879f7cace5555c84f47",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "vehicles/mineLayer__type_94_amphibious.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "japan",
+      "key": "apc",
+      "model": "AMV XP Japanese",
+      "source_ids": [
+        "JP-AMV-DELIVERY25",
+        "JP-AMV-PATRIA25",
+        "JP-AMV-ORDERS26",
+        "JP-SUPPORT26",
+        "JP-AMV-FIRING-PHOTO26"
+      ],
+      "status": "deliveries_started_firm_orders_remaining",
+      "reason": "First local delivery2025;82 contracted by2026 company presentation, not82 accepted operational vehicles. Original national exterior and the M2 remote-station fit actually photographed firing in June2026; factory protective covers are not assumed to be ballistic shields.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "apc__amv_xp_japan",
+      "asset_validation": {
+        "batch": 12,
+        "sha256": "cbd279cd80127f6bdd5dc767cc47a9082167cd9e3a94d48d480eb54944040b82",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "vehicles/apc__amv_xp_japan.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "japan",
+      "key": "apc",
+      "model": "AAV7A1 RAM RS Japanese",
+      "source_ids": [
+        "JP-GSDF-VEHICLES",
+        "JP-SUPPORT26"
+      ],
+      "status": "documented_service",
+      "reason": "National amphibious carrier omitted from roster; specific AAV7 family model already exists, inspect national configuration.",
+      "asset_action": "research_specific_variant",
+      "proposed_slug": "apc__aav7a1",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "japan",
+      "key": "ewVehicle",
+      "model": "NEWS",
+      "source_ids": [
+        "JP-EW-STATUS26",
+        "JP-EW-TRAIN26"
+      ],
+      "status": "documented_service",
+      "reason": "Current national system; identify which public truck/sensor component to depict before building.",
+      "asset_action": "research_specific_variant",
+      "proposed_slug": "ewVehicle__news",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "japan",
+      "key": "coastalASM",
+      "model": "Type25 SSM",
+      "source_ids": [
+        "JP-TYPE25-STATUS26",
+        "JP-TYPE25-LOCAL26",
+        "JP-TYPE25-CONTRACT23"
+      ],
+      "status": "documented_service",
+      "reason": "Named and deployed successor from improved Type12 ground programme; not merely a2026 budget proposal.",
+      "asset_action": "build_missing",
+      "proposed_slug": "coastalASM__type_25_ssm",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "japan",
+      "key": "mineLayer",
+      "model": "Type83 towed minelayer",
+      "source_ids": [
+        "JP-ENGINEERS"
+      ],
+      "status": "candidate_current_status_or_configuration_review",
+      "reason": "Distinct towed land system. Confirm current unit use before generating; older catalogue alone insufficient.",
+      "asset_action": "research_specific_variant",
+      "proposed_slug": "mineLayer__type_83_towed",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "japan",
+      "key": "reconVehicle",
+      "model": "Type87 reconnaissance vehicle",
+      "source_ids": [
+        "JP-SUPPORT26"
+      ],
+      "status": "candidate_current_status_or_configuration_review",
+      "reason": "Current support demand for national six-wheel25mm scout; national roster currently lacks this role. Geometry and current unit service need specific review.",
+      "asset_action": "research_specific_variant",
+      "proposed_slug": "reconVehicle__type_87_rcv",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    }
+  ]
 }

@@ -1,0 +1,37 @@
+{
+  "batch": "inventory-additions-12",
+  "files": [
+    "vehicles/tank__type_90.glb",
+    "vehicles/apc__type_73.glb",
+    "vehicles/recoveryVehicle__type_11_arv.glb",
+    "vehicles/mineClearer__type_92_mbrs.glb",
+    "vehicles/mineLayer__type_94_amphibious.glb",
+    "vehicles/apc__amv_xp_japan.glb"
+  ],
+  "sha256": {
+    "vehicles/tank__type_90.glb": "23ec80da07609a88a42bbee1a17ebf8d481a5d363ce394043c2a52eff7339c2d",
+    "vehicles/apc__type_73.glb": "0be13176aec29db233f86e219438c293c29e504ecbcfe4a0910f43e8c7f39991",
+    "vehicles/recoveryVehicle__type_11_arv.glb": "db854d5c585975e0bf4eb8cda145eeb619447110c748248456cd8fc5650f28bb",
+    "vehicles/mineClearer__type_92_mbrs.glb": "90cb8500bc55575075dded0a262a367b22cc8aa207eff519a0a747fb8584f130",
+    "vehicles/mineLayer__type_94_amphibious.glb": "56c8c853fff9a0996507f6d7db6455e2896389871df70879f7cace5555c84f47",
+    "vehicles/apc__amv_xp_japan.glb": "cbd279cd80127f6bdd5dc767cc47a9082167cd9e3a94d48d480eb54944040b82"
+  },
+  "maximum_triangles": [
+    12486,
+    2278
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "canonical track meshes and U; distinct Japanese running gear; actual recovery crane/spade; elevating twin breaching launcher; four-wheel amphibian, folding floats and propellers; national eight-wheel AMV",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_12.py",
+  "extra_views": "six final detail views visually reviewed",
+  "preserved_baseline": {
+    "commit": "f2b452e",
+    "entries": 906
+  }
+}
