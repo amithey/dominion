@@ -1,6 +1,6 @@
 # National inventory audit — evidence ledger
 Work in progress. Current equipment **and confirmed orders** are in scope. A reviewed row may still contain an unresolved question; it is not a blanket certification of current service or model accuracy.
-Coverage: 272 of 823 nation–model assignments assessed; 382 source records. No absent-source claim establishes non-possession.
+Coverage: 272 of 823 nation–model assignments assessed; 390 source records. No absent-source claim establishes non-possession.
 
 ## afghanistan
 Assessed 0/12 roster assignments. Full asset metadata: [country ledger](countries/afghanistan.json).
@@ -437,6 +437,18 @@ Additional: **Hayabusa class** (`documented_service`), `generated_and_readback_v
 Additional: **JMU Mogami MCM USV** (`documented_service`), `generate_missing_model`. Production MCM USV, not Umikaze research craft or armedattackboat. Need dimensions and photos before generation. Sources: [JP-JMU-USV](https://www.jmuc.co.jp/jmuds/business/index.html), [JP-MOGAMI](https://www.mod.go.jp/msdf/equipment/ships/ffm/mogami/).
 
 Additional: **Hyuga class DDH** (`documented_service`), `generated_and_readback_verified`. Current Japanese through-deck helicopter destroyer, separate197m class from248m Izumo/Kaga. Gamecarriercategory only; no F35B or CATOBAR role. Sources: [JP-HYUGA](https://www.mod.go.jp/msdf/equipment/ships/ddh/hyuga/), [JP-MAIZURU26](https://www.mod.go.jp/msdf/maizuru/units/), [JP-HYUGA-GROUP26](https://www.mod.go.jp/msdf/wg3hq/index.html).
+
+Additional: **Kongo class** (`documented_service`), `generated_and_readback_verified`. Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified. Sources: [JP-KONGO](https://www.mod.go.jp/msdf/equipment/ships/ddg/kongou/), [JP-DD-DOCK24-26](https://www.mod.go.jp/msdf/bukei/s0/nyuusatsu1/k-06-0013-1211.pdf), [JP-HYUGA-GROUP26](https://www.mod.go.jp/msdf/wg3hq/index.html), [JP-MAIZURU26](https://www.mod.go.jp/msdf/maizuru/units/).
+
+Additional: **Atago class** (`documented_service`), `generated_and_readback_verified`. Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified. Sources: [JP-ATAGO](https://www.mod.go.jp/msdf/equipment/ships/ddg/atago/), [JP-DD-DOCK24-26](https://www.mod.go.jp/msdf/bukei/s0/nyuusatsu1/k-06-0013-1211.pdf), [JP-HYUGA-GROUP26](https://www.mod.go.jp/msdf/wg3hq/index.html), [JP-MAIZURU26](https://www.mod.go.jp/msdf/maizuru/units/).
+
+Additional: **Murasame class** (`documented_service`), `generated_and_readback_verified`. Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified. Sources: [JP-MURASAME](https://www.mod.go.jp/msdf/equipment/ships/dd/murasame/), [JP-DD-DOCK24-26](https://www.mod.go.jp/msdf/bukei/s0/nyuusatsu1/k-06-0013-1211.pdf), [JP-HYUGA-GROUP26](https://www.mod.go.jp/msdf/wg3hq/index.html), [JP-MAIZURU26](https://www.mod.go.jp/msdf/maizuru/units/).
+
+Additional: **Takanami class** (`documented_service`), `generated_and_readback_verified`. Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified. Sources: [JP-TAKANAMI](https://www.mod.go.jp/msdf/equipment/ships/dd/takanami/), [JP-DD-DOCK24-26](https://www.mod.go.jp/msdf/bukei/s0/nyuusatsu1/k-06-0013-1211.pdf), [JP-HYUGA-GROUP26](https://www.mod.go.jp/msdf/wg3hq/index.html), [JP-MAIZURU26](https://www.mod.go.jp/msdf/maizuru/units/).
+
+Additional: **Akizuki class** (`documented_service`), `generated_and_readback_verified`. Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified. Sources: [JP-AKIZUKI](https://www.mod.go.jp/msdf/equipment/ships/dd/akizuki/), [JP-DD-DOCK24-26](https://www.mod.go.jp/msdf/bukei/s0/nyuusatsu1/k-06-0013-1211.pdf), [JP-HYUGA-GROUP26](https://www.mod.go.jp/msdf/wg3hq/index.html), [JP-MAIZURU26](https://www.mod.go.jp/msdf/maizuru/units/).
+
+Additional: **Asahi class** (`documented_service`), `generated_and_readback_verified`. Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified. Sources: [JP-ASAHI](https://www.mod.go.jp/msdf/equipment/ships/dd/asahi/), [JP-DD-DOCK24-26](https://www.mod.go.jp/msdf/bukei/s0/nyuusatsu1/k-06-0013-1211.pdf), [JP-ASAHI-MALPAN26](https://www.mod.go.jp/msdf/release/202604/20260414-3.pdf).
 
 ## netherlands
 Assessed 29/29 roster assignments. Full asset metadata: [country ledger](countries/netherlands.json).

@@ -3437,6 +3437,78 @@
       "accessed": "2026-10-25",
       "type": "primary",
       "supports": "March2026reorganization andAprilHyugacaptainmessage establishcurrent assignment. Do not infer full vessel/airwing readiness."
+    },
+    "JP-KONGO": {
+      "url": "https://www.mod.go.jp/msdf/equipment/ships/ddg/kongou/",
+      "title": "Kongo class operator equipment and photographs",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "161x21m,depth12m,draft6.2m;127mmL54,2Phalanx,SPY/Aegis,VLS,SSM,2triple torpedo systems. Large lattice mast and no helicopter hangar.4named hulls in operator list; later radar/missile retrofit completion not certified."
+    },
+    "JP-ATAGO": {
+      "url": "https://www.mod.go.jp/msdf/equipment/ships/ddg/atago/",
+      "title": "Atago class operator equipment and photographs",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "165x21m,depth12m,draft6.2m;127mmL62,2Phalanx,SPY/Aegis,VLS,SSM,2triple torpedo systems. Solid main mast and aircraft hangar distinguishKongo. Atago177/Ashigara178; no all-hullupgrade/readiness inference."
+    },
+    "JP-MURASAME": {
+      "url": "https://www.mod.go.jp/msdf/equipment/ships/dd/murasame/",
+      "title": "Murasame class operator equipment and photographs",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "151x17.4m,depth10.9m,draft5.2m;76mmL62,2Phalanx,VLS,SSM,2triple torpedo systems,helicopter1.9named hulls. Photos establish lattice mast/two separated funnels; model splitMk41/Mk48bank closure positions/counts remainpublic exterior estimates."
+    },
+    "JP-TAKANAMI": {
+      "url": "https://www.mod.go.jp/msdf/equipment/ships/dd/takanami/",
+      "title": "Takanami class operator equipment and photographs",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "151x17.4m,depth10.9m,draft5.3m;127mmL54,2Phalanx,VLS,SSM,2triple torpedo systems,helicopter1.5named hulls. Different gun and consolidated forward launcher fit fromMurasame. No modernization/loadout availability inference."
+    },
+    "JP-AKIZUKI": {
+      "url": "https://www.mod.go.jp/msdf/equipment/ships/dd/akizuki/",
+      "title": "Akizuki class operator equipment and photographs",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "151x18.3m,depth10.9m,draft5.4m;2Phalanx,VLS,torpedo systems,helicopter. Officialphotos distinguish integrated forward/aftFCS3Aface supports. CurrentMaizuruFuyuzuki pageexplicit127L62 and8SSM containers."
+    },
+    "JP-ASAHI": {
+      "url": "https://www.mod.go.jp/msdf/equipment/ships/dd/asahi/",
+      "title": "Asahi class operator equipment and photographs",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "150.5x18.3m,depth10.9m;2gas turbines+2propulsionmotors,2shafts.127mmL62,2Phalanx,VLS,multifunctionradar,sonar/towed passive sonar/torpedo defence. Photos reviewed forintegratedsensor shoulders and revisedfunnels. Local bank geometry estimated."
+    },
+    "JP-DD-DOCK24-26": {
+      "url": "https://www.mod.go.jp/msdf/bukei/s0/nyuusatsu1/k-06-0013-1211.pdf",
+      "title": "FY2024-26 Sasebo dry-dock service procurement ship table",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": "2023-12-11",
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "Annex lists class dimensions/drafts for drydocking; Asahi rounded151x18.3,depth10.9,draft5.4. Kongo tabledraft6.1 versus equipmentpage6.2: retain equipmentpage6.2baseline. Procurement coverage doesnot prove all-hull operational availability."
+    },
+    "JP-ASAHI-MALPAN26": {
+      "url": "https://www.mod.go.jp/msdf/release/202604/20260414-3.pdf",
+      "title": "MALPAN exercise completed13April2026",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": "2026-04-14",
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "Asahi exercised inSouthChinaSea withMalaysian Selangor,AW139 andHawk208; includes official photographs. Recent actual activity, not proof all class equipment qualified/currentreadiness."
     }
   },
   "findings": [
@@ -9464,6 +9536,149 @@
       "asset_validation": {
         "batch": 15,
         "sha256": "517d321cd48138ef7af6fd0dbe6b779eb4c7cfffb40acf220010afa19e6137b1",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "japan",
+      "key": "destroyer",
+      "model": "Kongo class",
+      "source_ids": [
+        "JP-KONGO",
+        "JP-DD-DOCK24-26",
+        "JP-HYUGA-GROUP26",
+        "JP-MAIZURU26"
+      ],
+      "status": "documented_service",
+      "reason": "Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "destroyer__kongo_class",
+      "asset_validation": {
+        "batch": 16,
+        "sha256": "ab6168fdbcd89058241e411fc536ca866c6e40a609fe806ead4153773f444ccf",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "japan",
+      "key": "destroyer",
+      "model": "Atago class",
+      "source_ids": [
+        "JP-ATAGO",
+        "JP-DD-DOCK24-26",
+        "JP-HYUGA-GROUP26",
+        "JP-MAIZURU26"
+      ],
+      "status": "documented_service",
+      "reason": "Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "destroyer__atago_class",
+      "asset_validation": {
+        "batch": 16,
+        "sha256": "4c506ebc955cc47e20da2a6dfc10ec3e50317c49618797aa12215215c50182b4",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "japan",
+      "key": "destroyer",
+      "model": "Murasame class",
+      "source_ids": [
+        "JP-MURASAME",
+        "JP-DD-DOCK24-26",
+        "JP-HYUGA-GROUP26",
+        "JP-MAIZURU26"
+      ],
+      "status": "documented_service",
+      "reason": "Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "destroyer__murasame_class",
+      "asset_validation": {
+        "batch": 16,
+        "sha256": "6c528be44de2f1d58cdd8a9d220ed9b2973041edcc822468f622073dbff1968b",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "japan",
+      "key": "destroyer",
+      "model": "Takanami class",
+      "source_ids": [
+        "JP-TAKANAMI",
+        "JP-DD-DOCK24-26",
+        "JP-HYUGA-GROUP26",
+        "JP-MAIZURU26"
+      ],
+      "status": "documented_service",
+      "reason": "Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "destroyer__takanami_class",
+      "asset_validation": {
+        "batch": 16,
+        "sha256": "e4b597fe586901d4011007d0896cb487e2c509586e14a6c59f202a709b4db1f8",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "japan",
+      "key": "destroyer",
+      "model": "Akizuki class",
+      "source_ids": [
+        "JP-AKIZUKI",
+        "JP-DD-DOCK24-26",
+        "JP-HYUGA-GROUP26",
+        "JP-MAIZURU26"
+      ],
+      "status": "documented_service",
+      "reason": "Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "destroyer__akizuki_class",
+      "asset_validation": {
+        "batch": 16,
+        "sha256": "d3c6b1a3498e7d865c036b690a066918c1d74cd8d33a97462cd95613e5f41b67",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "japan",
+      "key": "destroyer",
+      "model": "Asahi class",
+      "source_ids": [
+        "JP-ASAHI",
+        "JP-DD-DOCK24-26",
+        "JP-ASAHI-MALPAN26"
+      ],
+      "status": "documented_service",
+      "reason": "Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "destroyer__asahi_class",
+      "asset_validation": {
+        "batch": 16,
+        "sha256": "8b8b287cdd9b9f8fb87a5d9e27b6dcc2ac20dc2c1af8fd4f0493bb8aca44aa45",
         "external_loaders": [
           "trimesh 5.1.1",
           "Godot 4.7.2 GLTFDocument"

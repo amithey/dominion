@@ -1,0 +1,37 @@
+{
+  "batch": "inventory-additions-16",
+  "files": [
+    "ships/destroyer__kongo_class.glb",
+    "ships/destroyer__atago_class.glb",
+    "ships/destroyer__murasame_class.glb",
+    "ships/destroyer__takanami_class.glb",
+    "ships/destroyer__akizuki_class.glb",
+    "ships/destroyer__asahi_class.glb"
+  ],
+  "sha256": {
+    "ships/destroyer__kongo_class.glb": "ab6168fdbcd89058241e411fc536ca866c6e40a609fe806ead4153773f444ccf",
+    "ships/destroyer__atago_class.glb": "4c506ebc955cc47e20da2a6dfc10ec3e50317c49618797aa12215215c50182b4",
+    "ships/destroyer__murasame_class.glb": "6c528be44de2f1d58cdd8a9d220ed9b2973041edcc822468f622073dbff1968b",
+    "ships/destroyer__takanami_class.glb": "e4b597fe586901d4011007d0896cb487e2c509586e14a6c59f202a709b4db1f8",
+    "ships/destroyer__akizuki_class.glb": "d3c6b1a3498e7d865c036b690a066918c1d74cd8d33a97462cd95613e5f41b67",
+    "ships/destroyer__asahi_class.glb": "8b8b287cdd9b9f8fb87a5d9e27b6dcc2ac20dc2c1af8fd4f0493bb8aca44aa45"
+  },
+  "maximum_triangles": [
+    13398,
+    2258
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "distinct161/165/151/150.5m classes; Kongo29+61closed VLS plus crane footprints and nohangar; AtagoL62 and hangar; Murasame76mm/splitbanks versus Takanami127mm/forwardbank; fixedFCS3A/OPY1faces separate from rotating navigation radars",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_16.py",
+  "extra_views": "six detail views reviewed, including Kongo crane footprints and posed Takanami gun; arrays follow tapered support skins",
+  "preserved_baseline": {
+    "commit": "63eaecf",
+    "entries": 928
+  }
+}
