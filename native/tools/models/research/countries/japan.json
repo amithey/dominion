@@ -1,7 +1,7 @@
 {
   "nation": "japan",
   "scope": "current and confirmed-order platforms in existing Tier 7 categories",
-  "all_roster_rows_assessed": false,
+  "all_roster_rows_assessed": true,
   "complete": false,
   "completion_note": "Operator evidence, exact visual fit and additional inventory still being audited.",
   "rows": [
@@ -1280,11 +1280,19 @@
           1716
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-MQ9B-CONTRACT26",
+        "JP-UNMANNED26",
+        "JP-RQ4-EXTERIOR",
+        "JP-RQ4-LOSS26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "confirmed_order_and_incomplete_inventory",
+        "reason": "SeaGuardian contract signed4March2026,one system,set doesnotdisclose airframe count.23planned isnot23contracted orcurrentnavyfleet. RQ4B independently held,one lostSeptember2026. Existing SeaGuardian maritime fit still requires visual review.",
+        "recommended_action": "retain_ordered_and_add_surveillance_type",
+        "model_match": "family_identification_and_delivery_state_review_pending",
+        "replacement": null
       }
     },
     {
@@ -1318,11 +1326,17 @@
           1136
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-VBAT-CONTRACT25",
+        "JP-VBAT-TRAIN26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch",
+        "reason": "Japanese shipborne V-BAT is an unarmed ducted-fan tailsitter ISR platform, observed training aboardKumanoJune2026; generic flyingwingcarrier strike drone iswrong.2aboard trainingnotfull6availability.",
+        "recommended_action": "generate_missing_model",
+        "model_match": "wrong_airframe_and_role",
+        "replacement": "carrierDrone__v_bat"
       }
     },
     {
@@ -1355,11 +1369,16 @@
           628
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-UNMANNED26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "specific_type_unresolved",
+        "reason": "Official SHIELD acquisition plans establish intent, not a named serially contracted or fielded Japanese loitering munition in this row. No absence claim; national designation and contract review remains open.",
+        "recommended_action": "research_named_type_before_generating",
+        "model_match": "unverified_generic_roster_designation",
+        "replacement": null
       }
     },
     {
@@ -1395,11 +1414,16 @@
           1950
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-MAYA"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_class_geometry_fit_review_pending",
+        "reason": "Operator catalogue identifies class. Existing saved model exterior and exact current national fit remain unreaudited.",
+        "recommended_action": "retain_pending_geometry_review",
+        "model_match": "class_matches_not_full_mesh_certification",
+        "replacement": null
       }
     },
     {
@@ -1435,11 +1459,16 @@
           1950
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-MAYA"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_class_geometry_fit_review_pending",
+        "reason": "Same Maya destroyer class as destroyer key, not an independent cruiser fleet. Operator catalogue identifies class. Existing saved model exterior and exact current national fit remain unreaudited.",
+        "recommended_action": "retain_pending_geometry_review",
+        "model_match": "class_matches_not_full_mesh_certification",
+        "replacement": null
       }
     },
     {
@@ -1475,11 +1504,16 @@
           1670
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-MOGAMI"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_class_geometry_fit_review_pending",
+        "reason": "Same MogamiFFMfrigate class as asFrigate key, not a separate corvette fleet. Operator catalogue identifies class. Existing saved model exterior and exact current national fit remain unreaudited.",
+        "recommended_action": "retain_pending_geometry_review",
+        "model_match": "class_matches_not_full_mesh_certification",
+        "replacement": null
       }
     },
     {
@@ -1515,11 +1549,16 @@
           1670
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-MOGAMI"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_class_geometry_fit_review_pending",
+        "reason": "Mogami VLS fit varies by ship and installation date; catalogue doesnotcertify every hull alreadyfitted. Operator catalogue identifies class. Existing saved model exterior and exact current national fit remain unreaudited.",
+        "recommended_action": "retain_pending_geometry_review",
+        "model_match": "class_matches_not_full_mesh_certification",
+        "replacement": null
       }
     },
     {
@@ -1554,11 +1593,16 @@
           1176
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-HAYABUSA"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch",
+        "reason": "Real Hayabusa is50x8.4m,one76mmL62 andSSM,3waterjets; generic patrol/gunboat shape and armament isnot correct national designation.",
+        "recommended_action": "generate_missing_model",
+        "model_match": "wrong_generic_boat",
+        "replacement": "gunboat__hayabusa_class"
       }
     },
     {
@@ -1593,11 +1637,16 @@
           1444
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-OSUMI"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_class_geometry_fit_review_pending",
+        "reason": "Operator catalogue identifies class. Existing saved model exterior and exact current national fit remain unreaudited.",
+        "recommended_action": "retain_pending_geometry_review",
+        "model_match": "class_matches_not_full_mesh_certification",
+        "replacement": null
       }
     },
     {
@@ -1632,11 +1681,16 @@
           1552
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-IZUMO"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_class_geometry_fit_review_pending",
+        "reason": "Kaga F35Bconversion stage and airwing readiness must be established separately; noCATOBARor skijump assumed. Operator catalogue identifies class. Existing saved model exterior and exact current national fit remain unreaudited.",
+        "recommended_action": "retain_pending_geometry_review",
+        "model_match": "class_matches_not_full_mesh_certification",
+        "replacement": null
       }
     },
     {
@@ -1670,11 +1724,16 @@
           988
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-TAIGEI"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_class_geometry_fit_review_pending",
+        "reason": "Taigei family and published dimensions confirmed; existing hidden propeller assumptions not visually certified. Operator catalogue identifies class. Existing saved model exterior and exact current national fit remain unreaudited.",
+        "recommended_action": "retain_pending_geometry_review",
+        "model_match": "class_matches_not_full_mesh_certification",
+        "replacement": null
       }
     },
     {
@@ -1708,11 +1767,17 @@
           356
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "JP-JMU-USV",
+        "JP-MOGAMI"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch",
+        "reason": "JMU production MCM USV adoptedMogami, productionFY2023; generic attackboat misstates national role and exterior. Public dimensions and fullfit still needed before generating.",
+        "recommended_action": "generate_missing_model",
+        "model_match": "wrong_role_and_generic_exterior",
+        "replacement": "seaDrone__jmu_mogami_mcm_usv"
       }
     }
   ],
@@ -2078,10 +2143,19 @@
       ],
       "status": "documented_service",
       "reason": "Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification.",
-      "asset_action": "build_missing",
+      "asset_action": "generated_and_readback_verified",
       "proposed_slug": "gunship__ah_1s_japan",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "asset_validation": {
+        "batch": 14,
+        "sha256": "ed40b013392f565313f0e0e345d3951e6668946731fc3181ddd290f046ada740",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "aircraft/gunship__ah_1s_japan.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "japan",
@@ -2092,10 +2166,19 @@
       ],
       "status": "documented_service",
       "reason": "Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification.",
-      "asset_action": "build_missing",
+      "asset_action": "generated_and_readback_verified",
       "proposed_slug": "helicopter__uh_1j",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "asset_validation": {
+        "batch": 14,
+        "sha256": "9e415ebd05578dfde37db47210eafd1d2f5565cf6d9b8da8916c243cc9b2850d",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "aircraft/helicopter__uh_1j.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "japan",
@@ -2162,10 +2245,19 @@
       ],
       "status": "documented_service",
       "reason": "Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification.",
-      "asset_action": "build_missing",
+      "asset_action": "generated_and_readback_verified",
       "proposed_slug": "jet__f_2a",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "asset_validation": {
+        "batch": 14,
+        "sha256": "b46ad0e8d03d1f13536bdbd78c1330e82db2d7babbfcc5fa596f06adef3a85a9",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "aircraft/jet__f_2a.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "japan",
@@ -2186,14 +2278,25 @@
       "key": "aewc",
       "model": "E2D",
       "source_ids": [
-        "JP-CENSUS26"
+        "JP-CENSUS26",
+        "JP-E2D-NAVAIR",
+        "JP-E2D-MAKER"
       ],
       "status": "documented_service",
       "reason": "Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification.",
-      "asset_action": "build_missing",
-      "proposed_slug": "aewc__e_2d",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "aewc__e_2d_japan",
+      "asset_validation": {
+        "batch": 14,
+        "sha256": "006a9104f2c010f86b9dc3527890a62fa048ae2dccdd5c6ceb9ac0a3c894baf6",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "aircraft/aewc__e_2d_japan.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "japan",
@@ -2214,26 +2317,67 @@
       "key": "drone",
       "model": "RQ4B",
       "source_ids": [
-        "JP-CENSUS26"
+        "JP-CENSUS26",
+        "JP-RQ4-EXTERIOR",
+        "JP-RQ4-LOSS26"
       ],
-      "status": "documented_service",
-      "reason": "Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification.",
-      "asset_action": "build_missing",
-      "proposed_slug": "drone__rq_4b_global_hawk",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "status": "delivered_service_one_loss_2026_readiness_unverified",
+      "reason": "March2026census3;one lost15September2026. Original unarmed highaspect RQ4B created; no claim allthree remainorcurrentflightreadiness.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "drone__rq_4b_japan",
+      "asset_validation": {
+        "batch": 14,
+        "sha256": "5980e37993fd43bc0ade21466b97d0c187b89fe0595ad8f2608c53ebced2a1c6",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "aircraft/drone__rq_4b_japan.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "japan",
       "key": "carrierDrone",
       "model": "V-BAT shipborne ISR",
       "source_ids": [
-        "JP-VBAT-CONTRACT25"
+        "JP-VBAT-CONTRACT25",
+        "JP-VBAT-TRAIN26"
       ],
-      "status": "firm_agreement_delivery_status_under_review",
+      "status": "firm_orders_and_observed_operator_training",
       "reason": "Firm manufacturer agreement for multiple aircraft. Current delivery quantity needs operator corroboration. This is shipborne ISR, not a flying-wing carrier strike aircraft.",
       "asset_action": "build_missing",
       "proposed_slug": "carrierDrone__v_bat",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "japan",
+      "key": "gunboat",
+      "model": "Hayabusa class",
+      "source_ids": [
+        "JP-HAYABUSA"
+      ],
+      "status": "documented_service",
+      "reason": "Official operator identifies six missileboats; specific model missing.",
+      "asset_action": "generate_missing_model",
+      "proposed_slug": "gunboat__hayabusa_class",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "japan",
+      "key": "seaDrone",
+      "model": "JMU Mogami MCM USV",
+      "source_ids": [
+        "JP-JMU-USV",
+        "JP-MOGAMI"
+      ],
+      "status": "documented_service",
+      "reason": "Production MCM USV, not Umikaze research craft or armedattackboat. Need dimensions and photos before generation.",
+      "asset_action": "generate_missing_model",
+      "proposed_slug": "seaDrone__jmu_mogami_mcm_usv",
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
     }

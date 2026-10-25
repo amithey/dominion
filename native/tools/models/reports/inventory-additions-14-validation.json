@@ -1,0 +1,35 @@
+{
+  "batch": "inventory-additions-14",
+  "files": [
+    "aircraft/helicopter__uh_1j.glb",
+    "aircraft/gunship__ah_1s_japan.glb",
+    "aircraft/jet__f_2a.glb",
+    "aircraft/aewc__e_2d_japan.glb",
+    "aircraft/drone__rq_4b_japan.glb"
+  ],
+  "sha256": {
+    "aircraft/helicopter__uh_1j.glb": "9e415ebd05578dfde37db47210eafd1d2f5565cf6d9b8da8916c243cc9b2850d",
+    "aircraft/gunship__ah_1s_japan.glb": "ed40b013392f565313f0e0e345d3951e6668946731fc3181ddd290f046ada740",
+    "aircraft/jet__f_2a.glb": "b46ad0e8d03d1f13536bdbd78c1330e82db2d7babbfcc5fa596f06adef3a85a9",
+    "aircraft/aewc__e_2d_japan.glb": "006a9104f2c010f86b9dc3527890a62fa048ae2dccdd5c6ceb9ac0a3c894baf6",
+    "aircraft/drone__rq_4b_japan.glb": "5980e37993fd43bc0ade21466b97d0c187b89fe0595ad8f2608c53ebced2a1c6"
+  },
+  "maximum_triangles": [
+    11164,
+    1752
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "UH1J single engine and two main blades; AH1S single engine, paired TOW banks and20mm three-barrel gun; F2 independent enlarged-wing stations; E2D eight-blade propellers and four fins; RQ4B39.9m wing, dorsal engine and no weapons",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_14.py",
+  "extra_views": "five detail views reviewed, including Cobra gun, F2 flap and E2D radar poses",
+  "preserved_baseline": {
+    "commit": "be26b39",
+    "entries": 918
+  }
+}
