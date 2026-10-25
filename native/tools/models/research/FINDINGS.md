@@ -1,6 +1,6 @@
 # National inventory audit — evidence ledger
 Work in progress. Current equipment **and confirmed orders** are in scope. A reviewed row may still contain an unresolved question; it is not a blanket certification of current service or model accuracy.
-Coverage: 272 of 823 nation–model assignments assessed; 390 source records. No absent-source claim establishes non-possession.
+Coverage: 272 of 823 nation–model assignments assessed; 397 source records. No absent-source claim establishes non-possession.
 
 ## afghanistan
 Assessed 0/12 roster assignments. Full asset metadata: [country ledger](countries/afghanistan.json).
@@ -449,6 +449,16 @@ Additional: **Takanami class** (`documented_service`), `generated_and_readback_v
 Additional: **Akizuki class** (`documented_service`), `generated_and_readback_verified`. Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified. Sources: [JP-AKIZUKI](https://www.mod.go.jp/msdf/equipment/ships/dd/akizuki/), [JP-DD-DOCK24-26](https://www.mod.go.jp/msdf/bukei/s0/nyuusatsu1/k-06-0013-1211.pdf), [JP-HYUGA-GROUP26](https://www.mod.go.jp/msdf/wg3hq/index.html), [JP-MAIZURU26](https://www.mod.go.jp/msdf/maizuru/units/).
 
 Additional: **Asahi class** (`documented_service`), `generated_and_readback_verified`. Separate current Japanese destroyer class missing from singleMaya roster row. Original exterior differs bylength/gun/mast/radar/hangar/VLS arrangement. Exact per-hull modernization and readiness not certified. Sources: [JP-ASAHI](https://www.mod.go.jp/msdf/equipment/ships/dd/asahi/), [JP-DD-DOCK24-26](https://www.mod.go.jp/msdf/bukei/s0/nyuusatsu1/k-06-0013-1211.pdf), [JP-ASAHI-MALPAN26](https://www.mod.go.jp/msdf/release/202604/20260414-3.pdf).
+
+Additional: **Asagiri class** (`documented_service`), `generated_and_readback_verified`. Active latebatchDD exterior, different137m hull/lattice masts and nonVLS boxlaunchers; no retired/traininghull readiness claim. Sources: [JP-ASAGIRI](https://www.mod.go.jp/msdf/equipment/ships/dd/asagiri/), [JP-DD-DOCK24-26](https://www.mod.go.jp/msdf/bukei/s0/nyuusatsu1/k-06-0013-1211.pdf), [JP-HYUGA-GROUP26](https://www.mod.go.jp/msdf/wg3hq/index.html).
+
+Additional: **Abukuma class DE** (`documented_service`), `generated_and_readback_verified`. Compact escort in Japanese inventory; prospective Philippine transfer notcompleted orproofallretired. No helicopter deck. Sources: [JP-ABUKUMA](https://www.mod.go.jp/msdf/equipment/ships/de/abukuma/), [JP-MAIZURU26](https://www.mod.go.jp/msdf/maizuru/units/), [JP-ABUKUMA-TRANSFER26](https://www.mod.go.jp/j/approach/exchange/area/2026/20260531_phl-j.html).
+
+Additional: **Oyashio class SS** (`documented_service`), `generated_and_readback_verified`. ActiveSS catalogue distinct from TSS training roster; originalcruciformtail classmodel. Hiddenpropellerestimated. Sources: [JP-OYASHIO](https://www.mod.go.jp/msdf/equipment/ships/ss/oyashio/).
+
+Additional: **Soryu class** (`documented_service`), `generated_and_readback_verified`. OriginalXtail classmodel; machineryvaries originalAIP/finalbattery pair without separate cosmeticduplicates. Hiddenpropellerestimated. Sources: [JP-SORYU](https://www.mod.go.jp/msdf/equipment/ships/ss/souryu/).
+
+Additional: **Sakura class OPV** (`firm_built_sea_trials_future_2027_commission`), `generated_and_readback_verified`. Firmbuilt/sea-trialOPV.Officialcommissionplan2027; observedSeptember2026trials notfleetservice.Nooffensivemissilesorfullhelicopterdeckinvented. Sources: [JP-SAKURA-LAUNCH](https://www.mod.go.jp/msdf/operation/meimei/r07/), [JP-SAKURA-TRIAL26](https://trafficnews.jp/post/706335).
 
 ## netherlands
 Assessed 29/29 roster assignments. Full asset metadata: [country ledger](countries/netherlands.json).

@@ -3427,7 +3427,7 @@
       "publication_date": null,
       "accessed": "2026-10-25",
       "type": "primary",
-      "supports": "Current reorganizedSurfaceFleet page listsHyuga andHayabusa/Umitaka. Hyuga is through-deck helicopter destroyer,2hangars,aftVLS,3simultaneous helicopter operations. Hayabusa has3jet pumps. Rounded50x9m localboat width differs detailedclass8.4m, retainclassspecprecision."
+      "supports": "Current reorganizedSurfaceFleet page listsHyuga andHayabusa/Umitaka. Hyuga is through-deck helicopter destroyer,2hangars,aftVLS,3simultaneous helicopter operations. Hayabusa has3jet pumps. Rounded50x9m localboat width differs detailedclass8.4m, retainclassspecprecision. Also lists Sendai incurrent patrol-defence force; only assignment used because rounded local speed/crew conflict with detailedclasssheet."
     },
     "JP-HYUGA-GROUP26": {
       "url": "https://www.mod.go.jp/msdf/wg3hq/index.html",
@@ -3509,6 +3509,69 @@
       "accessed": "2026-10-25",
       "type": "primary",
       "supports": "Asahi exercised inSouthChinaSea withMalaysian Selangor,AW139 andHawk208; includes official photographs. Recent actual activity, not proof all class equipment qualified/currentreadiness."
+    },
+    "JP-ASAGIRI": {
+      "url": "https://www.mod.go.jp/msdf/equipment/ships/dd/asagiri/",
+      "title": "Asagiri class operator equipment and photos",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "137x14.6m,depth8.8m;early draft4.4m,laterHamagiri onward4.5m.76mmL62,2Phalanx,shortSAM,ASROC,SSM,2triple torpedo systems,helicopter1. ActiveDD list153-158, not all original training hulls. Photos reviewed two lattice masts and box launchers."
+    },
+    "JP-ABUKUMA": {
+      "url": "https://www.mod.go.jp/msdf/equipment/ships/de/abukuma/",
+      "title": "Abukuma class operator equipment and photos",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "109x13.4m,depth7.8,draft3.8m.76mmL62,onePhalanx,SSM,ASROC,2triple torpedo systems; no helicopter hangar/landing capability inferred. Class catalogue alone not proof every listed hull deployable."
+    },
+    "JP-OYASHIO": {
+      "url": "https://www.mod.go.jp/msdf/equipment/ships/ss/oyashio/",
+      "title": "Oyashio SS class operator equipment and photos",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "82x8.9m,depth10.3,draft7.4m;2diesels,one mainmotor/shaft. ActiveSS catalogue lists594-600; TSS training boats listed separately. Sailplanes and cruciformstern in public exterior; modelhidden screw count/profile estimated."
+    },
+    "JP-SORYU": {
+      "url": "https://www.mod.go.jp/msdf/equipment/ships/ss/souryu/",
+      "title": "Soryu class operator equipment and photos",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "84x9.1m,depth10.3,draft8.5m. Catalogue lists501-512; broad machinery paragraphdescribes originalAIP and doesnotestablish lithium-ionfinalpair machinery. Sailplanes and Xstern; modelhidden screw profile/count estimated."
+    },
+    "JP-SAKURA-LAUNCH": {
+      "url": "https://www.mod.go.jp/msdf/operation/meimei/r07/",
+      "title": "Sakura/Tachibana and Hinoki/Sugi naming and launch records",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "901/902launched13November2025,903/904on13March2026.95x12m,depth7.7,draft4.2,1900t,CODLAD2shafts.30mm1,firecontrol,navigationradar,2EWcollectionsystems,UAV,bowthruster,crew30. Currentofficialplan2027commission; four actuallaunches establishfirmbuilt orders, not planned12allcontracted orfleetservice."
+    },
+    "JP-SAKURA-TRIAL26": {
+      "url": "https://trafficnews.jp/post/706335",
+      "title": "Firsthand Sakura sea-trial return photographs",
+      "publisher": "TrafficNews, maritime photographerChishoFukamizu",
+      "publication_date": "2026-09-08",
+      "accessed": "2026-10-25",
+      "type": "primary_firsthand_report",
+      "supports": "Author personallyphotographedSakura returningJMU4September2026 aftersecondtrial. Originalpublicgallery reviewed for longfacetedhouse,small30mmmount,sternworkingdeck. Sea trialsnotcommission. GalleryassetURLuploads2027isnotusedas eventdate; article/photocaptions explicitly4September2026."
+    },
+    "JP-ABUKUMA-TRANSFER26": {
+      "url": "https://www.mod.go.jp/j/approach/exchange/area/2026/20260531_phl-j.html",
+      "title": "JapanPhilippines joint ministerial statement",
+      "publisher": "Japan Ministry of Defense",
+      "publication_date": "2026-05-31",
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "Agreement inprinciple todiscusstransferAbukumaclass promptlyAFTERdecommissioning, withtraining,maintenance andmanagement stillunderdiscussion. Doesnotestablishcompletedtransfer,retirementofallJapanesehulls orPhilippinecurrentservice."
     }
   },
   "findings": [
@@ -9679,6 +9742,116 @@
       "asset_validation": {
         "batch": 16,
         "sha256": "8b8b287cdd9b9f8fb87a5d9e27b6dcc2ac20dc2c1af8fd4f0493bb8aca44aa45",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "japan",
+      "key": "destroyer",
+      "model": "Asagiri class",
+      "source_ids": [
+        "JP-ASAGIRI",
+        "JP-DD-DOCK24-26",
+        "JP-HYUGA-GROUP26"
+      ],
+      "status": "documented_service",
+      "reason": "Active latebatchDD exterior, different137m hull/lattice masts and nonVLS boxlaunchers; no retired/traininghull readiness claim.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "destroyer__asagiri_class",
+      "asset_validation": {
+        "batch": 17,
+        "sha256": "771c91fe22da0922652945f70af33e1416e0a41e4abd7de02b95742946579765",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "japan",
+      "key": "asFrigate",
+      "model": "Abukuma class DE",
+      "source_ids": [
+        "JP-ABUKUMA",
+        "JP-MAIZURU26",
+        "JP-ABUKUMA-TRANSFER26"
+      ],
+      "status": "documented_service",
+      "reason": "Compact escort in Japanese inventory; prospective Philippine transfer notcompleted orproofallretired. No helicopter deck.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "asFrigate__abukuma_class",
+      "asset_validation": {
+        "batch": 17,
+        "sha256": "51b9420c35775c189d0daf2c50b3a3110f3fe7839390afcc2b243a9dbff6f88e",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "japan",
+      "key": "submarine",
+      "model": "Oyashio class SS",
+      "source_ids": [
+        "JP-OYASHIO"
+      ],
+      "status": "documented_service",
+      "reason": "ActiveSS catalogue distinct from TSS training roster; originalcruciformtail classmodel. Hiddenpropellerestimated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "submarine__oyashio_class",
+      "asset_validation": {
+        "batch": 17,
+        "sha256": "9bbb071b6acba603e99273b4992015c374629c959369367294bbfaa15ce61a18",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "japan",
+      "key": "submarine",
+      "model": "Soryu class",
+      "source_ids": [
+        "JP-SORYU"
+      ],
+      "status": "documented_service",
+      "reason": "OriginalXtail classmodel; machineryvaries originalAIP/finalbattery pair without separate cosmeticduplicates. Hiddenpropellerestimated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "submarine__soryu_class",
+      "asset_validation": {
+        "batch": 17,
+        "sha256": "c3ff67f9e5f2e3d7b73efd7250562866d75d8a90f9fd346e4e9a10315929d7cf",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "japan",
+      "key": "gunboat",
+      "model": "Sakura class OPV",
+      "source_ids": [
+        "JP-SAKURA-LAUNCH",
+        "JP-SAKURA-TRIAL26"
+      ],
+      "status": "firm_built_sea_trials_future_2027_commission",
+      "reason": "Firmbuilt/sea-trialOPV.Officialcommissionplan2027; observedSeptember2026trials notfleetservice.Nooffensivemissilesorfullhelicopterdeckinvented.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "gunboat__sakura_class_opv",
+      "asset_validation": {
+        "batch": 17,
+        "sha256": "f0876e73f6a3ac23b14c445239b3b3b1ac276afd9aaffa2758c84e42462502a3",
         "external_loaders": [
           "trimesh 5.1.1",
           "Godot 4.7.2 GLTFDocument"

@@ -1,0 +1,35 @@
+{
+  "batch": "inventory-additions-17",
+  "files": [
+    "ships/destroyer__asagiri_class.glb",
+    "ships/asFrigate__abukuma_class.glb",
+    "ships/submarine__oyashio_class.glb",
+    "ships/submarine__soryu_class.glb",
+    "ships/gunboat__sakura_class_opv.glb"
+  ],
+  "sha256": {
+    "ships/destroyer__asagiri_class.glb": "771c91fe22da0922652945f70af33e1416e0a41e4abd7de02b95742946579765",
+    "ships/asFrigate__abukuma_class.glb": "51b9420c35775c189d0daf2c50b3a3110f3fe7839390afcc2b243a9dbff6f88e",
+    "ships/submarine__oyashio_class.glb": "9bbb071b6acba603e99273b4992015c374629c959369367294bbfaa15ce61a18",
+    "ships/submarine__soryu_class.glb": "c3ff67f9e5f2e3d7b73efd7250562866d75d8a90f9fd346e4e9a10315929d7cf",
+    "ships/gunboat__sakura_class_opv.glb": "f0876e73f6a3ac23b14c445239b3b3b1ac276afd9aaffa2758c84e42462502a3"
+  },
+  "maximum_triangles": [
+    11894,
+    2438
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "two distinct76mm escorts with articulated eight-container launchers; cruciformOyashio versus XSoryu, real surfaced draft markers and estimated concealed propellers; ordered95m Sakura30mm/UAVfit with no helicopterdeck or missiles",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_17.py",
+  "extra_views": "five detail views reviewed, including ASROC and Sakura gun poses, distinct submarine sails and cruciform/X tails",
+  "preserved_baseline": {
+    "commit": "83da3e8",
+    "entries": 934
+  }
+}
