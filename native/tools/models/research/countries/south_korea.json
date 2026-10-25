@@ -37,11 +37,20 @@
           2084
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-K1-ROTE",
+        "KR-K1A2-COMPLETE",
+        "KR-K1-TMPS",
+        "KR-HOGUK-2026",
+        "KR-YONHAP-2026"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "additional_service_types_documented",
+        "reason": "K1E1operator activity inOctober2026and K1A2current photographic evidence establish additional tanks beyond selectedK2. Both new files exist. This missing-inventory assessment does not certify the old K2national fit.",
+        "recommended_action": "retain_selected_representative_add_k1_variants",
+        "model_match": "k2_geometry_reaudit_pending",
+        "replacement": null
       }
     },
     {
@@ -75,11 +84,19 @@
           1000
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-K808-2026",
+        "KR-HOGUK-2026",
+        "KR-K200-STANDARDS",
+        "KR-YONHAP-2026"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_multiple_types",
+        "reason": "K808andK200A1are fielded distinct carriers. Existing K808metadata has four axles and an RWS; cited activity does not establish that RWSfit for every hull. Additional K277command variant still needs geometry references.",
+        "recommended_action": "retain_hull_family_verify_roof_station",
+        "model_match": "8x8_hull_family_consistent_weapon_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -187,11 +204,19 @@
           1884
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-K600-APPROVAL19",
+        "KR-K600-DELIVERY20",
+        "KR-K600-CONTRACT25",
+        "KR-K600-PRODUCT"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch",
+        "reason": "Generic file declares T72-based engineering carrier. Korean K600is K1A1based with split mineplough and excavator. Six-wheel count alone does not make the generic chassis correct.2025second production allocation due2029remains future.",
+        "recommended_action": "map_to_specific_k600",
+        "model_match": "wrong_chassis_family_and_equipment",
+        "replacement": "mineClearer__k600_rhino"
       }
     },
     {
@@ -261,11 +286,18 @@
           2100
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-ARTILLERY-2026",
+        "KR-KOTRA-GUIDE",
+        "KR-K200-STANDARDS"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "Current operator names K9A1,K55A1andK105A1. K9A1selected roster does not cover all artillery; K242A1/K281A1mortars also documented. K55and mortar assets generated; K105mount fit still unresolved.",
+        "recommended_action": "retain_k9a1_add_distinct_platforms",
+        "model_match": "selected_k9a1_type_supported_full_geometry_review_pending",
+        "replacement": null
       }
     },
     {
@@ -299,11 +331,17 @@
           2100
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-ARTILLERY-2026",
+        "KR-KOTRA-GUIDE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_family_subvariant_unresolved",
+        "reason": "K9family service supported, with explicit K9A1operator activity. A baseK9label alone does not certify the selected file reproduces every A1exterior or that all legacy hulls share that fit.",
+        "recommended_action": "retain_family_verify_upgrade_configuration",
+        "model_match": "exact_upgrade_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -414,11 +452,19 @@
           1904
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-KOTRA-GUIDE",
+        "KR-HANWHA-PROFILE22",
+        "KR-AA-2026",
+        "KR-K200-WEG25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "representative_hybrid_biho_label_needs_correction",
+        "reason": "Saved BihoIIfile actually declares HybridBiho: six road wheels,two cannon,four missile containers. This is a real fielded type; no duplicate generated. Chunho and Vulcan are different platforms. Full old-model geometry and precise Vulcan electronic fit remain review items.",
+        "recommended_action": "retain_hybrid_representative_add_distinct_aa_types",
+        "model_match": "metadata_matches_hybrid_not_a_separate_biho_ii_fleet",
+        "replacement": null
       }
     },
     {
@@ -1286,7 +1332,8 @@
       "model": "K1E1",
       "source_ids": [
         "KR-K1-ROTE",
-        "KR-K1-TMPS"
+        "KR-K1-TMPS",
+        "KR-HOGUK-2026"
       ],
       "status": "documented_service",
       "reason": "Additional documented Korean type beyond selected K2/K808/K9roster representatives; exact per-hull2026readiness not certified. Estimated exterior fittings; mortar transport configuration explicitly declared.",
@@ -1311,7 +1358,8 @@
       "source_ids": [
         "KR-K1A2-COMPLETE",
         "KR-KOTRA-GUIDE",
-        "KR-ARMY-CROSSING"
+        "KR-ARMY-CROSSING",
+        "KR-YONHAP-2026"
       ],
       "status": "documented_service",
       "reason": "Additional documented Korean type beyond selected K2/K808/K9roster representatives; exact per-hull2026readiness not certified. Estimated exterior fittings; mortar transport configuration explicitly declared.",
@@ -1335,7 +1383,8 @@
       "model": "K200A1",
       "source_ids": [
         "KR-K200-STANDARDS",
-        "KR-ARMY-CROSSING"
+        "KR-ARMY-CROSSING",
+        "KR-YONHAP-2026"
       ],
       "status": "documented_service",
       "reason": "Additional documented Korean type beyond selected K2/K808/K9roster representatives; exact per-hull2026readiness not certified. Estimated exterior fittings; mortar transport configuration explicitly declared.",
@@ -1400,6 +1449,193 @@
       },
       "existing_exact_asset": "vehicles/artillery__k281a1.glb",
       "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "artillery",
+      "model": "K55A1",
+      "source_ids": [
+        "KR-KOTRA-GUIDE",
+        "KR-ARTILLERY-2026"
+      ],
+      "status": "documented_service",
+      "reason": "Distinct fielded M109-derived155mm39cal howitzer, not another K9variant; manufacturer page22photograph reviewed.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "artillery__k55a1",
+      "asset_validation": {
+        "batch": 19,
+        "sha256": "cf09d8efc76f2e0226931b4db5f22f42cd9606efd331f2ec9ddacc7b9cc96f08",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "vehicles/artillery__k55a1.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "aaVehicle",
+      "model": "K263A3 Vulcan",
+      "source_ids": [
+        "KR-K200-WEG25",
+        "KR-AA-PHOTO13",
+        "KR-AA-2026"
+      ],
+      "status": "documented_service",
+      "reason": "A3type documented by2025USArmy reference, baseline open Vulcan mount observed in original operator photograph. Current2026report identifies Vulcan family; per-hull A3electronics not certified or invented.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "aaVehicle__k263a3_vulcan",
+      "asset_validation": {
+        "batch": 19,
+        "sha256": "19a7864096dafe883b349bdb8b41484c280e1afb833688072a044fc0b94b5110",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "vehicles/aaVehicle__k263a3_vulcan.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "aaVehicle",
+      "model": "K30W Chunho AAGW",
+      "source_ids": [
+        "KR-CHUNHO-CONTRACT20",
+        "KR-HANWHA-PROFILE22",
+        "KR-AA-2026"
+      ],
+      "status": "documented_service",
+      "reason": "Eight-wheel twin30mm/EOTS vehicle; documented fielding since2021and2026operator activity. No invented onboard search-radar dish or missile packs.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "aaVehicle__k30w_chunho",
+      "asset_validation": {
+        "batch": 19,
+        "sha256": "14379aadcc1c2b316d7e59a73d7ee4fba53ba15409c1a1040add6f2d27bbbbca",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "vehicles/aaVehicle__k30w_chunho.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "shortRangeSAM",
+      "model": "K31 Chunma",
+      "source_ids": [
+        "KR-HANWHA-PROFILE22",
+        "KR-CHUNMA-SUPPORT26",
+        "KR-AA-PHOTO13",
+        "KR-CHUNMA-PHOTO16",
+        "KR-CHUNMA-AIRSHOW07"
+      ],
+      "status": "documented_service",
+      "reason": "Current support and independently observed six-wheel exterior/eight canisters. Model selects documented legacy radar exterior; exact per-hull current PIP stage unresolved.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "shortRangeSAM__k31_chunma",
+      "asset_validation": {
+        "batch": 19,
+        "sha256": "2be3629ba1ad7bd52cc5f8fc8245da85a3d4ecb5e2eb2d9efc22b88961526962",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "vehicles/shortRangeSAM__k31_chunma.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "mineClearer",
+      "model": "K600 combat engineering vehicle",
+      "source_ids": [
+        "KR-K600-APPROVAL19",
+        "KR-K600-DELIVERY20",
+        "KR-K600-CONTRACT25",
+        "KR-K600-PRODUCT"
+      ],
+      "status": "documented_service_and_firm_future_batch",
+      "reason": "K1A1basis, real plough and articulated excavator replace unsupported generic T72carrier. First production fielded2020; additional2025firm contract due2029is not already fully delivered. Bucket is an interchangeable documented tool; physical span and fitting positions estimated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "mineClearer__k600_rhino",
+      "asset_validation": {
+        "batch": 19,
+        "sha256": "bd8a98a1807afe71a43cf237d752c8d6959de52d2e51a0bc09a3e40adcde88b5",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "vehicles/mineClearer__k600_rhino.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "aaVehicle",
+      "model": "Hybrid Biho",
+      "source_ids": [
+        "KR-KOTRA-GUIDE",
+        "KR-HANWHA-PROFILE22",
+        "KR-AA-2026"
+      ],
+      "status": "documented_service",
+      "reason": "Existing asset already explicitly represents six-wheel HybridBiho with two cannon and four missile containers. Retain exact file; BihoIIlabel must not manufacture a distinct fielded fleet.",
+      "asset_action": "reuse_existing",
+      "proposed_slug": "aaVehicle__k30_biho_ii",
+      "existing_exact_asset": "vehicles/aaVehicle__k30_biho_ii.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "artillery",
+      "model": "K105A1",
+      "source_ids": [
+        "KR-ARTILLERY-2026",
+        "KR-KOTRA-GUIDE"
+      ],
+      "status": "documented_service",
+      "reason": "Current truck-mounted105mm type confirmed. Rear-facing mount and actual transport/pose conventions require further reference checks; no fictional forward firing fit generated.",
+      "asset_action": "research_mount_before_generation",
+      "proposed_slug": "artillery__k105a1",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "south_korea",
+      "key": "apc",
+      "model": "K277A1 command vehicle",
+      "source_ids": [
+        "KR-K200-STANDARDS"
+      ],
+      "status": "documented_service",
+      "reason": "Named fielded command variant;2025driver/camera project standardized one prototype pertype, not all current hulls. Exterior references still to resolve.",
+      "asset_action": "research_mount_before_generation",
+      "proposed_slug": "apc__k277a1_command",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "south_korea",
+      "key": "recoveryVehicle",
+      "model": "K288A1 recovery vehicle",
+      "source_ids": [
+        "KR-K200-STANDARDS",
+        "KR-K200-DELIVERY"
+      ],
+      "status": "documented_service",
+      "reason": "Named fielded recovery type, not K1ARV. Mechanism and mounting geometry must be identified before producing an asset.",
+      "asset_action": "research_mount_before_generation",
+      "proposed_slug": "recoveryVehicle__k288a1",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
     }
   ]
 }

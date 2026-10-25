@@ -1,0 +1,38 @@
+{
+  "batch": "inventory-additions-19",
+  "files": [
+    "vehicles/artillery__k55a1.glb",
+    "vehicles/aaVehicle__k263a3_vulcan.glb",
+    "vehicles/aaVehicle__k30w_chunho.glb",
+    "vehicles/shortRangeSAM__k31_chunma.glb",
+    "vehicles/mineClearer__k600_rhino.glb"
+  ],
+  "sha256": {
+    "vehicles/artillery__k55a1.glb": "cf09d8efc76f2e0226931b4db5f22f42cd9606efd331f2ec9ddacc7b9cc96f08",
+    "vehicles/aaVehicle__k263a3_vulcan.glb": "19a7864096dafe883b349bdb8b41484c280e1afb833688072a044fc0b94b5110",
+    "vehicles/aaVehicle__k30w_chunho.glb": "14379aadcc1c2b316d7e59a73d7ee4fba53ba15409c1a1040add6f2d27bbbbca",
+    "vehicles/shortRangeSAM__k31_chunma.glb": "2be3629ba1ad7bd52cc5f8fc8245da85a3d4ecb5e2eb2d9efc22b88961526962",
+    "vehicles/mineClearer__k600_rhino.glb": "bd8a98a1807afe71a43cf237d752c8d6959de52d2e51a0bc09a3e40adcde88b5"
+  },
+  "maximum_triangles": [
+    12900,
+    2396
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "canonical track meshes and U; K55seven-wheel hull and155mm mount; K263five-wheel Vulcan; eight-wheel Chunho without radar; six-wheel Chunma with eight tubes and search/tracking sensors; K1based K600excavator and plough",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "six rotary barrel ports cyclically advance under60degree rotor rotation in both LODs",
+    "Chunma search radar yaw and launcher elevation are independent; tracking radar has its own pitch pivot",
+    "K600slew, main arm, stick, bucket and plough are separate correctly parented empty hinges"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_19.py",
+  "extra_views": "five final detail/posed views reviewed: raisedK55gun, six-port Vulcan rotor, Chunho EOTS/twin mount, independent Chunma radar/launcher and K600articulated excavator/plough",
+  "preserved_baseline": {
+    "commit": "4bf1249",
+    "entries": 944
+  }
+}
