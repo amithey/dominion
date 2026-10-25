@@ -577,11 +577,18 @@
           1412
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-DECK-2026",
+        "KR-KAI-MUH1",
+        "KR-KAI-HISTORY25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "KUH1Surion is only one national utility type. Current Army UH60P and Marine MUH1independently documented. Surion final production in2024is not retirement. Existing Surion geometry/each current airframe fit still require later visual audit.",
+        "recommended_action": "add_models",
+        "model_match": "existing_surion_does_not_cover_distinct_utility_variants",
+        "replacement": null
       }
     },
     {
@@ -619,11 +626,20 @@
           2080
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-DECK-2026",
+        "KR-KAI-LAH",
+        "KR-AIRBUS-LAH-PRODUCTION",
+        "KR-KAI-HISTORY25",
+        "KR-COBRA-CURRENT26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "AH64Ecurrent activity confirmed; LAHMiron first production delivery December2024and deployment since2024documented, plus continuing AH1Sfamily in2026. Add LAH; Cobra existing variants need Korean-fit comparison before reuse. Never count prototype MarineAttack as fielded.",
+        "recommended_action": "add_models",
+        "model_match": "apache_is_one_of_several_attack_types",
+        "replacement": null
       }
     },
     {
@@ -659,11 +675,16 @@
           1752
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-NAVY-UH60-RESCUE-2026"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "Navy631Squadron UH60SAR independently photographed March2026. Existing MH60Rrow does not represent this conventional BlackHawk rescue fit. MH60Rorder/delivery stage and exact current UH60suffix remain separately unresolved.",
+        "recommended_action": "add_models",
+        "model_match": "mh60r_and_navy_uh60_rescue_are_different_fits",
+        "replacement": null
       }
     },
     {
@@ -775,11 +796,17 @@
           1740
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-KAI-KA1",
+        "KR-AIR-HOGUK-2026"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "Actual October2026exercise includes FA50and KA1. Retain FA50pending full original geometry re-audit; add distinct propeller KA1FAC. Unarmed KT1trainer is not treated as a new combat aircraft merely because it shares the family.",
+        "recommended_action": "add_models",
+        "model_match": "fa50_jet_does_not_represent_ka1_propeller_fac",
+        "replacement": null
       }
     },
     {
@@ -1634,6 +1661,160 @@
       "reason": "Named fielded recovery type, not K1ARV. Mechanism and mounting geometry must be identified before producing an asset.",
       "asset_action": "research_mount_before_generation",
       "proposed_slug": "recoveryVehicle__k288a1",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "south_korea",
+      "key": "gunship",
+      "model": "LAH-1 Miron",
+      "source_ids": [
+        "KR-KAI-LAH",
+        "KR-AIRBUS-LAH-PRODUCTION",
+        "KR-KAI-HISTORY25"
+      ],
+      "status": "documented_service",
+      "reason": "Deployed since2024; clean hardpoints and chin cannon, side-by-side cockpit. Ten tail blades remain heritage assumption requiring independent production confirmation.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "gunship__lah_1_miron",
+      "asset_validation": {
+        "batch": 20,
+        "sha256": "dfdbb0dd2b260b7de3f57e21554d43abce7706305848acded6a3fc920c356045",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true,
+        "unresolved_detail": "LAHproduction tail-fan blade count"
+      },
+      "existing_exact_asset": "aircraft/gunship__lah_1_miron.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "helicopter",
+      "model": "MUH-1 Marineon",
+      "source_ids": [
+        "KR-KAI-MUH1",
+        "KR-DECK-2026"
+      ],
+      "status": "documented_service",
+      "reason": "Current Marine utility transport,4main/4tail blades and documented main-blade folding represented spread. No invented tail fold or ASW stores.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "helicopter__muh_1_marineon",
+      "asset_validation": {
+        "batch": 20,
+        "sha256": "96035436e08fd72919cb72970f6adcd5f597b48ea82fee77ded52a62fc9b567f",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true,
+        "unresolved_detail": null
+      },
+      "existing_exact_asset": "aircraft/helicopter__muh_1_marineon.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "helicopter",
+      "model": "UH-60P Army transport",
+      "source_ids": [
+        "KR-DECK-2026"
+      ],
+      "status": "documented_service",
+      "reason": "Explicit current Army UH60Pin April2026shipboard training; basic unarmed transport fit, no assumed fleetwide modernization.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "helicopter__uh_60p",
+      "asset_validation": {
+        "batch": 20,
+        "sha256": "87ff40ce3c66f387f439f46b604b293dfaef1a8f4fd76a30d2781f7967a689ec",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true,
+        "unresolved_detail": null
+      },
+      "existing_exact_asset": "aircraft/helicopter__uh_60p.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "navalHelicopter",
+      "model": "UH-60 Navy rescue",
+      "source_ids": [
+        "KR-NAVY-UH60-RESCUE-2026"
+      ],
+      "status": "documented_service",
+      "reason": "March2026Navy SAR photo supports paired external tanks, long nose fairing and hoist. Exact suffix not asserted; no Japanese refuelling probe or naval ASW weapons.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "navalHelicopter__uh_60_navy_rescue",
+      "asset_validation": {
+        "batch": 20,
+        "sha256": "9d0abfe024aa4e8faaf0fcccd11743cc00b516fd86acdb62860037a38f1afc46",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true,
+        "unresolved_detail": null
+      },
+      "existing_exact_asset": "aircraft/navalHelicopter__uh_60_navy_rescue.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "lightFighter",
+      "model": "KA-1 armed forward air controller",
+      "source_ids": [
+        "KR-KAI-KA1",
+        "KR-AIR-HOGUK-2026",
+        "KR-KOTRA-GUIDE"
+      ],
+      "status": "documented_service",
+      "reason": "Current October2026FAC, four-blade propeller, tandem seats, four hardpoints. Two fuel tanks and empty outer stations; three single landing-gear tyres also supported by WIAmanufacturer KT1family table, printed26.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "lightFighter__ka_1",
+      "asset_validation": {
+        "batch": 20,
+        "sha256": "ec507f99c5e7927b6c8490f78ec9f0c62e51ff6b624707ee3a928f1fd04c6fe2",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true,
+        "unresolved_detail": null
+      },
+      "existing_exact_asset": "aircraft/lightFighter__ka_1.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "helicopter",
+      "model": "HH-60 Air Force rescue family, exact current fit pending",
+      "source_ids": [
+        "KR-HH60-2026",
+        "KR-COBRA-CURRENT26"
+      ],
+      "status": "documented_service",
+      "reason": "Current Air Force rescue family established; precise current subvariant, sensors and hoist fit need primary exterior evidence. Navy and Japanese configurations cannot be substituted.",
+      "asset_action": "research_variant_before_generation",
+      "proposed_slug": null,
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "south_korea",
+      "key": "gunship",
+      "model": "AH-1S Cobra, Korean equipment fit pending",
+      "source_ids": [
+        "KR-COBRA-CURRENT26"
+      ],
+      "status": "documented_service",
+      "reason": "Current Army AH1Sfamily explicitly identified. Existing Japanese/other Cobra exteriors may supply shared parts, but Korean-specific fit comparison is still required before a reuse or generation decision.",
+      "asset_action": "research_variant_before_generation",
+      "proposed_slug": null,
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
     }

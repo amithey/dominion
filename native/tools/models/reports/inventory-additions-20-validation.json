@@ -1,0 +1,44 @@
+{
+  "batch": "inventory-additions-20",
+  "files": [
+    "aircraft/gunship__lah_1_miron.glb",
+    "aircraft/helicopter__muh_1_marineon.glb",
+    "aircraft/helicopter__uh_60p.glb",
+    "aircraft/navalHelicopter__uh_60_navy_rescue.glb",
+    "aircraft/lightFighter__ka_1.glb"
+  ],
+  "sha256": {
+    "aircraft/gunship__lah_1_miron.glb": "dfdbb0dd2b260b7de3f57e21554d43abce7706305848acded6a3fc920c356045",
+    "aircraft/helicopter__muh_1_marineon.glb": "96035436e08fd72919cb72970f6adcd5f597b48ea82fee77ded52a62fc9b567f",
+    "aircraft/helicopter__uh_60p.glb": "87ff40ce3c66f387f439f46b604b293dfaef1a8f4fd76a30d2781f7967a689ec",
+    "aircraft/navalHelicopter__uh_60_navy_rescue.glb": "9d0abfe024aa4e8faaf0fcccd11743cc00b516fd86acdb62860037a38f1afc46",
+    "aircraft/lightFighter__ka_1.glb": "ec507f99c5e7927b6c8490f78ec9f0c62e51ff6b624707ee3a928f1fd04c6fe2"
+  },
+  "maximum_triangles": [
+    12048,
+    2288
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "LAHside-by-side cockpit and chin Y/Xgun, MUHmarine transport, long-tailwheel Army/Navy BlackHawk variants, KA1four-blade FAC and dihedral controls; production fan details and local fitting dimensions remain qualified",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "LAHYturret/Xgun moves its muzzle independently of main rotor, fixed EO and stub-wing stations",
+    "LAH/MUHtwin nose tyre meshes have separated axle-width intervals",
+    "Army/NavyBlackHawk long tailgear anchors lie in boom and axles remain aft",
+    "KA1four-blade propeller and dihedral; no invented built-in cannon, missile stores or jet afterburner"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_20.py",
+  "extra_views": "five final detail/posed views reviewed: LAHindependent chin gun, Marineon root/flotation fittings, Army aft tailwheel, Navy underside tanks/hoist and KA1propeller/flaps",
+  "preserved_baseline": {
+    "commit": "bf40382",
+    "entries": 949
+  },
+  "limitations": [
+    "LAHten tail blades are inherited H155B1assumption, not independently certified production fan detail",
+    "Navy source names UH60only; exact suffix not asserted",
+    "local contour/fitting dimensions approximate; generated variants are not wholefleet readiness or country-completion certification"
+  ]
+}
