@@ -1,0 +1,572 @@
+diff --git a/native/godot/scripts/hud.gd b/native/godot/scripts/hud.gd
+index 1b97b69..c51f999 100644
+--- a/native/godot/scripts/hud.gd
++++ b/native/godot/scripts/hud.gd
+@@ -76,7 +76,8 @@ var _sel_medal: Control
+ var _sel_stats: HBoxContainer
+ var _stat_values := {}    # caption -> [plate, value Label]
+ var _commands := {}
+-var _launch_row: HBoxContainer   # missile buttons when a missile ship is selected
++var _missile_view := "production"
++var _launch_row: HFlowContainer   # missile buttons when a missile ship is selected
+ var _launch_sig := ""
+ var _health_color := Color.TRANSPARENT
+ var _notices: VBoxContainer
+@@ -139,7 +140,7 @@ func _icon(name: String, px := 22) -> TextureRect:
+ func _text(text: String, size := 15, colour := UI.TEXT, header := false) -> Label:
+ 	var l := Label.new()
+ 	l.text = text
+-	l.add_theme_font_size_override("font_size", size)
++	l.add_theme_font_size_override("font_size", maxi(size, 13))
+ 	l.add_theme_color_override("font_color", colour)
+ 	if header:
+ 		l.theme_type_variation = "HeaderLabel"
+@@ -153,8 +154,8 @@ func cost_text(cost: Dictionary) -> String:
+ 	return " · ".join(PackedStringArray(parts)) if not parts.is_empty() else "free"
+ 
+ ## A row of cost chips: resource icon and amount, red when short.
+-func _cost_row(cost: Dictionary) -> HBoxContainer:
+-	var row := HBoxContainer.new()
++func _cost_row(cost: Dictionary) -> HFlowContainer:
++	var row := HFlowContainer.new()
+ 	row.add_theme_constant_override("separation", 8)
+ 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 	for key in cost:
+@@ -162,7 +163,7 @@ func _cost_row(cost: Dictionary) -> HBoxContainer:
+ 		chip.add_theme_constant_override("separation", 2)
+ 		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 		chip.add_child(_icon(key, 16))
+-		var amount := _text(str(int(cost[key])), 13, UI.CREAM)
++		var amount := _text("%d %s" % [int(cost[key]), str(key).capitalize()], 13, UI.CREAM)
+ 		amount.set_meta("res", key)
+ 		amount.set_meta("need", float(cost[key]))
+ 		chip.add_child(amount)
+@@ -194,7 +195,7 @@ func _build_top_bar() -> void:
+ 	bar.offset_bottom = 48
+ 	add_child(bar)
+ 	var row := HBoxContainer.new()
+-	row.add_theme_constant_override("separation", 8)
++	row.add_theme_constant_override("separation", 3)
+ 	bar.add_child(row)
+ 	# The nation at the head of the strip: its leader in its colour; a click opens the Cabinet.
+ 	row.add_child(_make_leader_face())
+@@ -204,16 +205,16 @@ func _build_top_bar() -> void:
+ 		if not first:
+ 			chip.add_child(_divider())
+ 		first = false
+-		chip.add_theme_constant_override("separation", 5)
++		chip.add_theme_constant_override("separation", 2)
+ 		chip.tooltip_text = r[2]
+ 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
+-		var tinted := _icon(r[1], 26)
++		var tinted := _icon(r[1], 20)
+ 		tinted.modulate = UI.RESOURCE_TINT.get(r[0], Color.WHITE)
+ 		chip.add_child(tinted)
+ 		var figures := VBoxContainer.new()
+ 		figures.add_theme_constant_override("separation", 0)
+ 		chip.add_child(figures)
+-		var value := _text("0", 17, UI.CREAM)
++		var value := _text("0", 14, UI.CREAM)
+ 		figures.add_child(value)
+ 		var rate := _text("+0", 11, UI.GOOD)
+ 		rate.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+@@ -229,11 +230,11 @@ func _build_top_bar() -> void:
+ 			["defcon", "defcon", "DEFCON: the world's nuclear alert, 5 (peace) to 1 (nuclear weapons used). Press K for your own forces' alert."]]:
+ 		var chip := HBoxContainer.new()
+ 		chip.add_child(_divider())
+-		chip.add_theme_constant_override("separation", 5)
++		chip.add_theme_constant_override("separation", 2)
+ 		chip.tooltip_text = extra[2]
+ 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
+-		chip.add_child(_icon(extra[1], 22))
+-		var value := _text("", 16, UI.CREAM)
++		chip.add_child(_icon(extra[1], 18))
++		var value := _text("", 14, UI.CREAM)
+ 		chip.add_child(value)
+ 		row.add_child(chip)
+ 		_extra[extra[0]] = [value, chip]
+@@ -250,6 +251,7 @@ func _build_top_bar() -> void:
+ 	_era.add_theme_font_size_override("font_size", 15)
+ 	cartouche.add_child(_era)
+ 	var right_end := HBoxContainer.new()
++	right_end.name = "TimeControls"
+ 	right_end.anchor_right = 1.0
+ 	right_end.offset_right = -12
+ 	right_end.offset_top = 6
+@@ -572,8 +574,8 @@ func _section(title: String) -> void:
+ 	var holder := VBoxContainer.new()
+ 	holder.add_theme_constant_override("separation", 3)
+ 	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	var l := _text(UI.caps(title), 13, GOLD, true)
+-	l.add_theme_font_size_override("font_size", 13)
++	var l := _text(UI.caps(title), 15, GOLD, true)
++	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ 	holder.add_child(l)
+ 	var rule := ColorRect.new()
+ 	rule.color = Color(UI.TRIM, 0.75)
+@@ -584,63 +586,62 @@ func _section(title: String) -> void:
+ 
+ ## One production bar: picture, name, one line of what it does, cost chips,
+ ## time. Disabled (dimmed) when it cannot be afforded or is locked.
+-func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: float, locked: String, action: Callable) -> void:
++func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: float, locked: String, action: Callable, action_label := "") -> void:
+ 	var b := Button.new()
+ 	b.theme_type_variation = "RowButton"
+-	b.custom_minimum_size = Vector2(0, 120)
+ 	b.focus_mode = Control.FOCUS_NONE
+ 	b.tooltip_text = desc if locked == "" else "%s\n%s" % [locked, desc]
+ 	b.set_meta("cost", cost)
+ 	b.set_meta("locked", locked != "")
+ 	b.pressed.connect(action)
+-	var row := HBoxContainer.new()
+-	row.set_anchors_preset(Control.PRESET_FULL_RECT)
+-	row.offset_left = 7
+-	row.offset_right = -9
+-	row.offset_top = 6
+-	row.offset_bottom = -6
+-	row.add_theme_constant_override("separation", 10)
+-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	b.add_child(row)
+-	# The picture sits in a sunken bronze-lipped frame, as a 4X entry does.
+-	var frame := PanelContainer.new()
+-	frame.add_theme_stylebox_override("panel", UI.inset(2.0))
+-	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	row.add_child(frame)
++	var text := VBoxContainer.new()
++	text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
++	text.offset_left = 10
++	text.offset_right = -10
++	text.offset_top = 9
++	text.offset_bottom = -9
++	text.add_theme_constant_override("separation", 6)
++	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	b.add_child(text)
++	var head := HBoxContainer.new()
++	head.add_theme_constant_override("separation", 10)
++	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	text.add_child(head)
+ 	var pic := TextureRect.new()
+-	pic.custom_minimum_size = Vector2(80, 60)
++	pic.custom_minimum_size = Vector2(54, 40)
+ 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+ 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+ 	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 	_set_portrait(pic, key)
+-	frame.add_child(pic)
+-	var text := VBoxContainer.new()
+-	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+-	text.add_theme_constant_override("separation", 2)
+-	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	row.add_child(text)
+-	var name := _text(title, 15, UI.CREAM, true)
+-	name.add_theme_font_size_override("font_size", 15)
+-	text.add_child(name)
+-	var line := _text(locked if locked != "" else desc, 14, UI.BAD if locked != "" else UI.MUTED)
++	head.add_child(pic)
++	var name := _text(title, 18, UI.CREAM, true)
++	name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	head.add_child(name)
++	var line := _text(desc, 16, UI.TEXT)
+ 	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+-	line.max_lines_visible = 2
+-	line.custom_minimum_size = Vector2(190, 0)
++	# Missile specifications remain visible; other catalogues keep a brief
++	# description, with the full entry available on hover.
++	line.max_lines_visible = -1 if key.begins_with("missile:") else 2
+ 	text.add_child(line)
+-	var prices := _cost_row(cost)
+-	prices.name = "ProductionCost"
+-	text.add_child(prices)
+-	if seconds > 0.0:
+-		# The build time in a small brass tally at the end of the row.
+-		var holder := CenterContainer.new()
+-		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-		var tally := PanelContainer.new()
+-		tally.add_theme_stylebox_override("panel", UI.box(Color("081018"), Color(UI.TRIM, 0.8), 1, 2, 5.0))
+-		tally.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-		tally.add_child(_text("%ds" % int(seconds), 12, GOLD))
+-		holder.add_child(tally)
+-		row.add_child(holder)
++	if not cost.is_empty():
++		var prices := _cost_row(cost)
++		prices.name = "ProductionCost"
++		text.add_child(prices)
++	var verb: String = action_label
++	if verb == "":
++		verb = "Produce weapon" if key.begins_with("missile:") else ("Train unit" if world.unit_defs.has(key) else "Place building")
++		if seconds <= 0.0: verb = title
++	var instruction := _text("%s%s" % [verb, "  ·  %d sec" % int(seconds) if seconds > 0.0 else ""], 14, UI.GOLD)
++	instruction.name = "ActionLabel"
++	instruction.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	text.add_child(instruction)
++	if locked != "":
++		var reason := _text("Unavailable: " + locked, 14, UI.BAD)
++		reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++		text.add_child(reason)
++	text.minimum_size_changed.connect(func(): b.custom_minimum_size.y = text.get_combined_minimum_size().y + 18)
++	b.custom_minimum_size.y = 160
+ 	_list.add_child(b)
+ 
+ func _set_portrait(pic: TextureRect, key: String) -> void:
+@@ -759,7 +760,7 @@ func _build_selection() -> void:
+ 				world.order_mode = "bombard" if action=="Bombard" else "attack"
+ 				world.hud.notice("%s: click a destination on the battlefield." % action))
+ 		commands.add_child(button)
+-	_launch_row = HBoxContainer.new()
++	_launch_row = HFlowContainer.new()
+ 	_launch_row.add_theme_constant_override("separation", 4)
+ 	_launch_row.visible = false
+ 	col.add_child(_launch_row)
+@@ -1165,6 +1166,8 @@ func _update_panel() -> void:
+ 	var key: String = ("menu:" + build_tab) if mode == "build" else "%s:%s:%d:%d" % [_selected.key, _selected.built, _selected.queue.size(), _selected.root.get_instance_id()]
+ 	if _selected != null and _selected.key in ["missileSilo", "strategicComplex", "specialLab"]:
+ 		key += ":%s" % str(world.missiles.stock)
++		for category in ["conventional", "nuclear", "special"]:
++			key += ":%d:%d" % [world.missiles.capacity(category), world.missiles.queued(category)]
+ 	if world.research:
+ 		key += ":%d:%s" % [world.research.era, str(world.research.completed_count())]
+ 	_tabs.visible = mode == "build"
+@@ -1189,6 +1192,8 @@ func _update_panel() -> void:
+ 	else:
+ 		_prod_title.text = UI.caps(_selected.def.name)
+ 		_prod_hint.text = "Choose what this building produces. Up to five orders queue here."
++		if _selected.key in ["missileSilo", "strategicComplex", "specialLab"]:
++			_prod_hint.text = "Produce adds a weapon to the queue. Stockpile / target uses weapons already in storage."
+ 		_action_bars(_selected)
+ 	_update_enabled()
+ 
+@@ -1257,7 +1262,7 @@ func _build_row(b: String) -> void:
+ 	var row_desc := first if first.ends_with(".") else first + "."
+ 	_bar(b, def.name, row_desc, def.cost, float(def.get("buildTime", 0)), why, func(): world.begin_placement(b))
+ 	var row: Control = _list.get_child(_list.get_child_count() - 1)
+-	row.custom_minimum_size.y = 120  # two description lines and the full cost row
++	row.custom_minimum_size.y = maxf(row.custom_minimum_size.y, 160)
+ 	var pics := row.find_children("*", "TextureRect", true, false)
+ 	if not pics.is_empty():
+ 		pics[0].custom_minimum_size = Vector2(66, 48)  # the building's picture (the others are cost icons)
+@@ -1274,18 +1279,42 @@ func _action_bars(b: Dictionary) -> void:
+ 	if b.key in ["missileSilo", "strategicComplex", "specialLab"]:
+ 		var ms: Node = world.missiles
+ 		var cat: String = {"missileSilo": "conventional", "strategicComplex": "nuclear", "specialLab": "special"}[b.key]
+-		var armed := false
+-		for m in ms.types():
+-			# The silo launches everything you hold; a facility shows its own.
+-			if int(ms.stock.get(m, 0)) > 0 and (b.key == "missileSilo" or ms.category(m) == cat):
+-				if not armed:
+-					_section("Launch")
+-					armed = true
+-				_bar("missile:" + m, "LAUNCH %s  (%d)" % [ms.def_of(m).name, ms.stock[m]], "Arm it, then click the target on the map." + ("" if b.key == "missileSilo" else " It flies from your nearest Missile Silo or missile ship."), {}, 0.0, "", func(): world.begin_missile(m))
+-		_section("%s  (%d/%d stored)" % [{"conventional": "Build missiles", "nuclear": "Assemble nuclear warheads", "special": "Produce special weapons"}[cat], ms.stored(cat), ms.capacity(cat)])
++		var choices := HBoxContainer.new()
++		_list.add_child(choices)
++		for view in ["production", "stockpile"]:
++			var tab := Button.new()
++			tab.text = "Produce weapons" if view == "production" else "Stockpile / target"
++			tab.toggle_mode = true
++			tab.button_pressed = _missile_view == view
++			tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++			tab.pressed.connect(func():
++				_missile_view = view
++				_shown_key = ""
++				_update_panel())
++			choices.add_child(tab)
++		if _missile_view == "stockpile":
++			_section("Stockpile · select a target")
++			var count := 0
++			for m in ms.types():
++				if int(ms.stock.get(m, 0)) <= 0 or (b.key != "missileSilo" and ms.category(m) != cat): continue
++				count += 1
++				var why: String = ms.locked(m)
++				if why == "" and ms.platforms_for(m).is_empty(): why = "Needs a compatible launch platform"
++				_bar("missile:" + m, "%s · %d available" % [ms.def_of(m).name, ms.stock[m]], "Click this card, then choose a target on the map. Escape cancels targeting.", {}, 0.0, why, func(): world.begin_missile(m), "Select target")
++			if count == 0:
++				var empty := _text("No weapons in storage. Open Produce weapons to add an item to the production queue.", 14, UI.MUTED)
++				empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++				_list.add_child(empty)
++			return
++		_section("%s\nStorage: %d / %d · Queued: %d" % [{"conventional": "Conventional weapons", "nuclear": "Nuclear weapons", "special": "Special weapons"}[cat], ms.stored(cat), ms.capacity(cat), ms.queued(cat)])
+ 		for m in ms.listed_at(b.key):
+ 			var mdef: Dictionary = ms.def_of(m)
+-			_bar("missile:" + m, mdef.name, "%s Damage %d, blast %d m." % [mdef.desc, int(mdef.dmg), int(mdef.radius)], mdef.cost, float(mdef.buildTime), ms.locked(m), func(): _say(ms.produce(_selected, m)))
++			var why: String = ms.locked(m)
++			if why == "" and b.queue.size() >= 5: why = "Production queue full (5 / 5)"
++			if why == "" and ms.stored(cat) + ms.queued(cat) >= ms.capacity(cat):
++				why = "Storage full · build Ammo Depots" if cat == "conventional" else "Storage full · build another production facility"
++			_bar("missile:" + m, mdef.name, "%s\nDamage: %d  ·  Blast radius: %d m" % [_weapon_summary(mdef, str(m)), int(mdef.dmg), int(mdef.radius)], ms.production_cost(m), ms.build_time(m), why, func(): _say(ms.produce(_selected, m)))
++			_list.get_child(_list.get_child_count() - 1).tooltip_text = "%s\n%s" % [why, mdef.desc]
+ 		return
+ 	if b.key in world.research.LABS:
+ 		_bar("university", "Open the research tree", "Research points from this building flow into the discovery at the head of the queue.", {}, 0.0, "", toggle_research)
+@@ -1303,6 +1332,20 @@ func _action_bars(b: Dictionary) -> void:
+ 		var locked: String = world.research.unit_locked(u) if world.research else ""
+ 		_bar(u, def.name, def.desc, cost, float(def.get("trainTime", 10)), locked, func(): world.queue_unit(_selected, u))
+ 
++## Describe the payload's actual role, rather than the generic national-family
++## prefix added by the arsenal catalogue. Platform names follow its validation.
++func _weapon_summary(def: Dictionary, key: String) -> String:
++	var detail: String = str(def.get("desc", "")).trim_prefix("National missile family. ")
++	if detail.begins_with("Launch platform: "):
++		detail = ". ".join(detail.split(". ").slice(1))
++	var assessment := ""
++	if detail.begins_with("Future programme / assessed capability. "):
++		assessment = "Future programme / assessed capability.\n"
++		detail = detail.trim_prefix("Future programme / assessed capability. ")
++	var platform: String = preload("res://scripts/arsenal_catalog.gd").platform_kind(world, 0, key)
++	var label: String = {"ground": "Missile silo", "air": "Strike aircraft", "drone": "Drone", "air_or_sea": "Aircraft or warship", "sea": "Warship", "sub": "Strategic submarine", "strategic": "Silo or strategic submarine", "ground_or_sea": "Silo or warship"}.get(platform, "Missile silo")
++	return "%s%s.\nLaunch from: %s" % [assessment, detail.split(". ")[0].trim_suffix("."), label]
++
+ func _update_enabled() -> void:
+ 	for b in _list.find_children("*", "Button", true, false):
+ 		if not b.has_meta("cost"):
+@@ -1584,10 +1627,10 @@ func _fill_launch(show: bool) -> void:
+ 		if int(ms.stock[m]) <= 0:
+ 			continue
+ 		var b := Button.new()
+-		b.text = "Launch %s (%d)" % [ms.def_of(m).name, ms.stock[m]]
+-		b.add_theme_font_size_override("font_size", 12)
++		b.text = "Target: %s (%d)" % [ms.def_of(m).name, ms.stock[m]]
++		b.add_theme_font_size_override("font_size", 13)
+ 		b.focus_mode = Control.FOCUS_NONE
+-		b.tooltip_text = "Arm it, then click the target on the map."
++		b.tooltip_text = "Select this weapon, then click a target on the map. Escape cancels targeting."
+ 		b.pressed.connect(func(): world.begin_missile(m))
+ 		_launch_row.add_child(b)
+ 
+@@ -1849,6 +1892,8 @@ func refresh_side() -> void:
+ func _dress_window() -> void:
+ 	# (Afghanistan's power, one long line, stretched the window past the right of the screen)
+ 	for l in _side_rows.find_children("*", "Label", true, false):
++		if l.get_theme_font_size("font_size") < 13:
++			l.add_theme_font_size_override("font_size", 13)
+ 		if l.autowrap_mode == TextServer.AUTOWRAP_OFF and not l.clip_text and l.text.length() > 40:
+ 			l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ 		if l.autowrap_mode != TextServer.AUTOWRAP_OFF:
+@@ -1900,7 +1945,7 @@ func _label(parent: Control, text: String, colour := UI.TEXT, size := 14) -> Lab
+ 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ 	l.custom_minimum_size = Vector2(500, 0)
+ 	l.add_theme_color_override("font_color", colour)
+-	l.add_theme_font_size_override("font_size", size)
++	l.add_theme_font_size_override("font_size", maxi(size, 13))
+ 	parent.add_child(l)
+ 	return l
+ 
+@@ -1948,25 +1993,20 @@ func _pill(parent: Control, text: String, colour: Color) -> void:
+ 
+ ## A bar with a caption over it: relation, chance, intelligence, land share.
+ func _meter(parent: Control, value: float, max_value: float, colour: Color, caption: String) -> Control:
+-	var holder := Control.new()
+-	holder.custom_minimum_size = Vector2(0, 20)
++	var holder := VBoxContainer.new()
+ 	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	holder.add_theme_constant_override("separation", 4)
+ 	parent.add_child(holder)
++	var l := _text(caption, 14, UI.TEXT)
++	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	holder.add_child(l)
+ 	var bar := ProgressBar.new()
+-	bar.set_anchors_preset(Control.PRESET_FULL_RECT)
++	bar.custom_minimum_size.y = 8
+ 	bar.show_percentage = false
+ 	bar.max_value = max_value
+ 	bar.value = value
+-	bar.add_theme_stylebox_override("fill", UI.plate(colour.lightened(0.18), colour.darkened(0.28), Color(0, 0, 0, 0), 0.0, Color(1, 1, 1, 0.25)))
++	bar.add_theme_stylebox_override("fill", UI.box(colour, Color.TRANSPARENT, 0, 3, 0.0))
+ 	holder.add_child(bar)
+-	var l := _text(caption, 12, UI.CREAM)
+-	l.set_anchors_preset(Control.PRESET_FULL_RECT)
+-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+-	l.add_theme_constant_override("outline_size", 5)
+-	l.add_theme_color_override("font_outline_color", Color(0.03, 0.07, 0.12, 0.95))   # readable over a gold fill too
+-	l.add_theme_color_override("font_color", UI.BRIGHT)
+-	holder.add_child(l)
+ 	return holder
+ 
+ func _row(parent: Control, gap := 8) -> HBoxContainer:
+@@ -2502,7 +2542,7 @@ func _rs_label(parent: Control, text: String, colour := Color("b9c4c8"), size :=
+ 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ 	l.custom_minimum_size = Vector2(300, 0)
+ 	l.add_theme_color_override("font_color", colour)
+-	l.add_theme_font_size_override("font_size", size)
++	l.add_theme_font_size_override("font_size", maxi(size, 13))
+ 	parent.add_child(l)
+ 	return l
+ 
+diff --git a/native/godot/scripts/menu.gd b/native/godot/scripts/menu.gd
+index 965bf4b..2f2e419 100644
+--- a/native/godot/scripts/menu.gd
++++ b/native/godot/scripts/menu.gd
+@@ -994,7 +994,7 @@ func _settings_graphics() -> void:
+ 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if v else DisplayServer.VSYNC_DISABLED)))
+ 	_setting("Frame limit", "The most frames a second the game draws. A limit keeps a laptop cooler.", _segmented([["30", 30], ["60", 60], ["120", 120], ["None", 0]], Engine.max_fps, func(v): Engine.max_fps = v))
+ 	_setting("Frame counter", "Frames per second in the bottom-right corner.", _switch(world.show_fps, func(v): world.show_fps = v))
+-	_setting("Interface size", "The size of the panels and text: smaller leaves more of the battlefield in view.", _segmented([["Small", 0.7], ["Medium", 0.8], ["Large", 0.9], ["Original", 1.0]], world.ui_scale, func(v):
++	_setting("Interface size", "Larger text makes labels easier to read. Choose 100% for the clearest interface.", _segmented([["70%", 0.7], ["80%", 0.8], ["90%", 0.9], ["100%", 1.0]], world.ui_scale, func(v):
+ 		world.ui_scale = v
+ 		world.apply_ui_scale()))
+ 
+@@ -1057,7 +1057,7 @@ func _settings_game() -> void:
+ 		if world.hud != null and world.hud.has_method("refresh_cheats"): world.hud.refresh_cheats()))
+ 
+ func _reset_settings() -> void:
+-	world.ui_scale = 0.8
++	world.ui_scale = 1.0
+ 	world.apply_ui_scale()
+ 	world.quality = "balanced"
+ 	world.apply_quality()
+diff --git a/native/godot/scripts/ui_theme.gd b/native/godot/scripts/ui_theme.gd
+index 7f7606f..b267a06 100644
+--- a/native/godot/scripts/ui_theme.gd
++++ b/native/godot/scripts/ui_theme.gd
+@@ -1,6 +1,6 @@
+ extends RefCounted
+ ## Geopolitical atlas: deep navy, pale ink, sand selection and fine map rules.
+-## Serif titles with sans-serif body text; semantic warning colours remain.
++## Sans-serif headings and body text; semantic warning colours remain.
+ ## One shared theme covers the HUD, ministries, campaign and pause menus.
+ 
+ # ---------------------------------------------------------------- palette
+@@ -115,13 +115,10 @@ static func font(weight := 400) -> SystemFont:
+ 	f.hinting = TextServer.HINTING_LIGHT
+ 	return f
+ 
+-## Atlas titles and headline figures, using installed Windows serif families.
++# Compatibility name for existing callers: all interface text uses the same
++# readable sans-serif family, with weight providing the heading hierarchy.
+ static func serif(weight := 600) -> SystemFont:
+-	var f := SystemFont.new()
+-	f.font_names = PackedStringArray(["Georgia", "Cambria", "Times New Roman"])
+-	f.font_weight = weight
+-	f.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
+-	return f
++	return font(weight)
+ 
+ ## Keep titles readable as written; letterspaced() is available for short marks.
+ static func caps(text: String) -> String:
+@@ -343,7 +340,7 @@ static func build() -> Theme:
+ 		t.set_stylebox("grabber", kind, box(Color("4b6668"), Color(0, 0, 0, 0), 0, 3, 2.0))
+ 		t.set_stylebox("grabber_highlight", kind, box(TRIM, Color(0, 0, 0, 0), 0, 3, 2.0))
+ 		t.set_stylebox("grabber_pressed", kind, box(GOLD, Color(0, 0, 0, 0), 0, 3, 2.0))
+-	# Headings take the serif face.
++	# Headings use the same family at a stronger weight.
+ 	t.add_type("HeaderLabel")
+ 	t.set_type_variation("HeaderLabel", "Label")
+ 	t.set_font("font", "HeaderLabel", heading)
+--- a/native/godot/scripts/world.gd
++++ b/native/godot/scripts/world.gd
+@@ -128,7 +128,7 @@
+ var space: RefCounted = null   # space.gd: satellites and anti-satellite weapons
+ ## The interface's size: the panels are laid out for 1280x800 and stretch with
+ ## the screen, so on a large monitor they grow; this scales them back (menu settings).
+-var ui_scale := 0.8
++var ui_scale := 1.0
+ 
+ func apply_ui_scale() -> void:
+ 	get_tree().root.content_scale_factor = ui_scale
+--- /dev/null
++++ b/native/godot/tools/readability-check.gd
+@@ -0,0 +1,80 @@
++extends SceneTree
++var w: Node
++var errors: Array[String] = []
++func _initialize() -> void: call_deferred("run")
++func check(ok: bool, label: String) -> void:
++	if not ok: errors.append(label); push_error(label)
++func settle() -> void:
++	for i in range(20): await process_frame
++func shot(name: String) -> void:
++	await settle()
++	if DisplayServer.get_name() != "headless":
++		await RenderingServer.frame_post_draw
++		root.get_texture().get_image().save_png("res://build/readability-%s.png" % name)
++func cards() -> Array:
++	return w.hud._list.get_children().filter(func(c): return c is Button and c.has_meta("cost"))
++func verify_cards() -> void:
++	await settle()
++	for card in cards():
++		var content: Control = card.get_child(0)
++		check(content.get_combined_minimum_size().y <= card.size.y - 17, "Card fits all text vertically")
++		check(content.get_combined_minimum_size().x <= content.size.x + 1, "Card text fits horizontally")
++		check(card.find_child("ActionLabel", true, false) != null, "Card explains its action")
++func run() -> void:
++	set_meta("match_config", {"map": "island", "players": 3, "nation": 0})
++	change_scene_to_file("res://world.tscn")
++	for i in range(40000):
++		await process_frame
++		if current_scene != null and current_scene.get("nav_ready") == true and current_scene.get("menu") != null:
++			w = current_scene; break
++	if w == null: quit(1); return
++	w.start_match("easy")
++	w.menu.close()
++	w.ui_scale = 1.0
++	w.apply_ui_scale()
++	for i in range(3): await physics_frame
++	w.set_physics_process(false)
++	w.ai.set_physics_process(false)
++	preload("res://tools/test_kit.gd").quiet(w, ["directorate", "defcon", "events", "support", "un"])
++	w.economy.grant_test_resources()
++	w.hud.set_production_open(true)
++	await verify_cards()
++	await shot("build")
++	var silo: Dictionary = w.place_building("missileSilo", w.start + Vector3(18,0,18), 0, true)
++	w.select_building(silo)
++	await verify_cards()
++	check(not cards().is_empty(), "Weapon production has cards")
++	if not cards().is_empty(): check(cards()[0].get_meta("cost") == w.missiles.production_cost(w.missiles.listed_at("missileSilo")[0]), "Displayed weapon price matches the charged national cost")
++	for c in cards(): check(c.find_child("ActionLabel", true, false).text.begins_with("Produce"), "Production never arms a weapon")
++	await shot("missiles")
++	check(w.hud._extra.defcon[1].get_global_rect().end.x < w.hud.find_child("TimeControls", true, false).get_child(0).get_global_rect().position.x, "Resource strip stays clear of time controls at 100%")
++	w.missiles.stock.tactical = 2
++	w.hud._missile_view = "stockpile"
++	w.hud._shown_key = ""
++	w.hud._update_panel()
++	await verify_cards()
++	check(cards().size() == 1, "Stockpile shows owned weapons only")
++	if not cards().is_empty():
++		check(cards()[0].find_child("ActionLabel", true, false).text == "Select target", "Targeting action is explicit")
++		cards()[0].pressed.emit()
++		check(w.missiles.stock.tactical == 2, "Selecting a target does not spend inventory")
++		w.cancel_placement()
++	await shot("stockpile")
++	w.hud._missile_view = "production"
++	w.hud._shown_key = ""
++	w.hud._update_panel()
++	await verify_cards()
++	check(cards()[0].disabled and cards()[0].tooltip_text.contains("Storage full"), "Full storage explains and disables production")
++	w.ui_scale = 0.8
++	w.apply_ui_scale()
++	await verify_cards()
++	w.ui_scale = 1.0
++	w.apply_ui_scale()
++	w.select_building(null)
++	w.hud.set_production_open(false)
++	for mode in ["diplomacy", "market", "intel", "defence"]:
++		w.hud.toggle_panel(mode, true)
++		await shot(mode)
++		check(root.get_visible_rect().grow(2).encloses(w.hud._win.get_global_rect()), mode + " fits viewport")
++	print("READABILITY_CHECK ", "PASS" if errors.is_empty() else str(errors))
++	quit(0 if errors.is_empty() else 1)
+--- /dev/null
++++ b/native/godot/tools/readability-check.gd.uid
+@@ -0,0 +1 @@
++uid://dunn7ebbg80v8
+--- /dev/null
++++ b/native/UI-READABILITY-2026-10-11.md
+@@ -0,0 +1,15 @@
++# Native interface readability — 2026-10-11
++
++Implemented in the existing Godot game, preserving the concurrent gameplay work.
++
++- One Segoe UI / Arial family for titles and body copy; a minimum 13-point size for shared labels and ministry content.
++- Production cards have a name, brief role, named resource costs, duration, explicit action and a separate prerequisite warning. Cards size themselves to their wrapped contents.
++- Missile facilities have separate Produce weapons and Stockpile / target tabs. Production shows storage and queue counts. Target selection only lists stored payloads and explains the next map click and Escape cancellation.
++- Missile summaries show the actual role, compatible launch platform, damage and blast radius; detailed descriptions remain on hover. Capability assessments and research restrictions stay visible.
++- Ship launch buttons wrap instead of running off the selection panel. Ministry meters put their captions above the fill.
++- New installations and settings reset use 100% interface size; existing saved preferences are preserved. Settings show explicit percentages.
++- Four explicit float annotations fix compilation of the in-progress AI directorate without changing its behavior.
++
++Validation: menus-check (52), arsenal-check (332), plus readability-check at 100% with card geometry, stockpile/action behavior, resource-strip clearance and screenshots of construction, missile production/stockpile, diplomacy, market, intelligence and defence.
++
++Local preview: build/regional-preview/DOMINION.exe through Start-Regional-Preview.bat. Official release installers are not updated by this change.

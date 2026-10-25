@@ -73,7 +73,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #05080d; f
   border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 12px; text-align: left; min-width: 120px;
 }
 .prod-btn:hover:not(:disabled) { border-color: var(--accent); }
-.prod-btn:disabled { opacity: .45; cursor: not-allowed; }
+.prod-btn:disabled { opacity: .7; cursor: not-allowed; }
 .prod-btn .cost { display: block; font-size: 10px; color: var(--text-dim); }
 .queue-row { display: flex; gap: 5px; margin-top: 8px; align-items: center; }
 .queue-item { background: var(--panel-light); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; font-size: 11px; }
@@ -161,12 +161,13 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #05080d; f
 .rel-bar-wrap { height: 6px; background: #1a2230; border-radius: 3px; overflow: hidden; margin: 5px 0 8px; position: relative; }
 .rel-bar-wrap .mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.25); }
 .dip-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+.dip-actions .treaty-requirements { flex-basis: 100%; line-height: 1.5; margin-bottom: 4px; }
 .dip-btn {
   background: var(--panel-light); border: 1px solid var(--border); color: var(--text);
   border-radius: 6px; padding: 4px 9px; cursor: pointer; font-size: 11px;
 }
 .dip-btn:hover:not(:disabled) { border-color: var(--accent); }
-.dip-btn:disabled { opacity: .4; cursor: not-allowed; }
+.dip-btn:disabled { opacity: .7; cursor: not-allowed; }
 .dip-btn.danger { border-color: rgba(255,93,93,.5); }
 .dip-btn.danger:hover { border-color: var(--danger); background: rgba(255,93,93,.1); }
 
@@ -383,7 +384,7 @@ kbd { font: 9px 'Segoe UI', sans-serif; background: #233239; color: #c6cfc9; bor
 #transport-panel[hidden] { display: none; }
 #transport-hint { display: block; line-height: 1.6; margin-bottom: 10px; }
 #transport-panel button { padding: 7px 12px; background: #34443c; color: var(--text); border: 1px solid #8b9277; cursor: pointer; }
-#transport-panel button:disabled { opacity: .4; cursor: default; }
+#transport-panel button:disabled { opacity: .7; cursor: default; }
 .supply-state { margin: 8px 0; padding: 7px; color: var(--ok); background: #8fc1a010; font-size: 10px; }
 .supply-state.cut { color: var(--danger); background: #e4877915; }
 .hud-hidden #transport-panel { display: none; }

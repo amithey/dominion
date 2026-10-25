@@ -1,0 +1,247 @@
+--- a/native/godot/scripts/architecture.gd
++++ b/native/godot/scripts/architecture.gd
+@@ -119,9 +119,9 @@
+ 			m.roughness = 0.9
+ 		GLASS:
+ 			m.vertex_color_use_as_albedo = true
+-			m.roughness = 0.08
+-			m.metallic = 0.6
+-			m.metallic_specular = 0.9
++			m.roughness = 0.22
++			m.metallic = 0.18
++			m.metallic_specular = 0.65
+ 		WOOD:
+ 			m.roughness = 0.8
+ 		BANNER:
+@@ -131,7 +131,7 @@
+ 		m.albedo_texture = tex[0]
+ 		m.normal_enabled = true
+ 		m.normal_texture = tex[1]
+-		m.normal_scale = 1.2
++		m.normal_scale = 0.65 # mortar and tiles have relief without sparkling at strategy distance
+ 		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+ 	_materials[kind] = m
+ 	return m
+@@ -170,7 +170,13 @@
+ 	# Godot's front faces wind clockwise; these quads are given counter-clockwise
+ 	# as seen from outside (the normal above points out), so they are emitted reversed.
+ 	for k in [0, 2, 1, 0, 3, 2]:
+-		st.set_color(colour)
++		var surface_colour := colour
++		if kind in [PLASTER, BRICK, STONE, PLANK]:
++			# Baked contact weathering: the base reads as grounded even on Low.
++			# Vertex colour keeps the existing material batches and draw count.
++			var clean := smoothstep(0.25, 2.8, pts[k].y)
++			surface_colour = colour.darkened((1.0 - clean) * 0.18)
++		st.set_color(surface_colour)
+ 		st.set_normal(n)
+ 		st.set_uv(uvs[k] * uv_scale)
+ 		st.add_vertex(pts[k])
+@@ -242,9 +248,15 @@
+ ## with a light frame, a sill, and optionally painted shutters.
+ func window(centre: Vector3, w: float, h: float, frame: Color, shutters := Color(0, 0, 0, 0), lit := false) -> void:
+ 	var z := centre.z + 0.02
+-	var glass := Color("24303a") if not lit else Color("f0c070")
+-	quad(GLASS, Vector3(centre.x - w * 0.5, centre.y - h * 0.5, z), Vector3(centre.x + w * 0.5, centre.y - h * 0.5, z),
+-		Vector3(centre.x + w * 0.5, centre.y + h * 0.5, z), Vector3(centre.x - w * 0.5, centre.y + h * 0.5, z), glass)
++	var glass := Color("304650") if not lit else Color("cba468")
++	# Two panes pick up different sky tones; a darker upper reveal makes the
++	# opening read as recessed without transparent glass or an extra material.
++	for pane in range(2):
++		var y0 := centre.y - h * 0.5 + h * 0.5 * pane
++		var pane_colour := glass.lightened(0.13) if pane == 1 and not lit else glass
++		quad(GLASS, Vector3(centre.x-w*0.5,y0,z),Vector3(centre.x+w*0.5,y0,z),
++			Vector3(centre.x+w*0.5,y0+h*0.5,z),Vector3(centre.x-w*0.5,y0+h*0.5,z),pane_colour)
++	box(TRIM,Vector3(centre.x-w*0.5,centre.y-0.025,z),Vector3(centre.x+w*0.5,centre.y+0.025,z+0.05),frame.darkened(0.12))
+ 	var t := 0.08
+ 	box(TRIM, Vector3(centre.x - w * 0.5 - t, centre.y + h * 0.5, z - 0.02), Vector3(centre.x + w * 0.5 + t, centre.y + h * 0.5 + t, z + 0.06), frame)
+ 	box(TRIM, Vector3(centre.x - w * 0.5 - t, centre.y - h * 0.5 - t * 1.5, z - 0.02), Vector3(centre.x + w * 0.5 + t, centre.y - h * 0.5, z + 0.14), frame)
+@@ -281,6 +293,10 @@
+ 	box(TRIM, Vector3(x - 0.75, y0 + 2.2, z), Vector3(x + 0.75, y0 + 2.4, z + 0.12), Color("d8d0bc"))
+ 	box(ROOF, Vector3(x - 0.9, y0 + 2.55, z), Vector3(x + 0.9, y0 + 2.65, z + 0.9), canopy)
+ 	box(STONE, Vector3(x - 0.8, y0 - 0.02, z), Vector3(x + 0.8, y0 + 0.18, z + 0.6), Color("b8b0a0"))
++	# Door panels and a brass handle remain in the existing WOOD/METAL batches.
++	for side in [-1.0, 1.0]:
++		box(WOOD,Vector3(x+side*0.25-0.18,y0+0.28,z+0.085),Vector3(x+side*0.25+0.18,y0+1.9,z+0.11),colour.lightened(0.09))
++	box(METAL,Vector3(x+0.35,y0+0.95,z+0.12),Vector3(x+0.40,y0+1.2,z+0.18),Color("bfa372"))
+ 
+ ## A cornice: a projecting band round the top of a w x d block at height y.
+ func cornice(w: float, d: float, y: float, colour: Color, depth := 0.25, band := 0.3) -> void:
+--- a/native/godot/scripts/districts.gd
++++ b/native/godot/scripts/districts.gd
+@@ -206,7 +206,21 @@
+ 	crown.radial_segments = 8
+ 	crown.rings = 5
+ 	var green := Color("3e5a2c").lerp(Color("5f7a34"), rng.randf())
+-	shape(st, crown, Transform3D(Basis(), at + Vector3(0, h * 0.62, 0)), green)
++	# An irregular, shaded canopy instead of a smooth green ball. Keep exactly
++	# the same triangle count and the single district prop material batch.
++	var arrays := crown.get_mesh_arrays()
++	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
++	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
++	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
++	for i in indices:
++		var v := verts[i]
++		var azimuth := atan2(v.z, v.x)
++		var lobes := 1.0 + sin(azimuth * 3.0 + h) * 0.13 + sin(azimuth * 5.0 - v.y * 2.0) * 0.07
++		v.x *= lobes; v.z *= lobes
++		var sunward := clampf(v.y / h + 0.4, 0.0, 1.0)
++		st.set_color(green.darkened(0.22).lerp(green.lightened(0.12), sunward))
++		st.set_normal(normals[i])
++		st.add_vertex(at + Vector3(0,h*0.62,0) + v)
+ 
+ func lamp(st: SurfaceTool, at: Vector3) -> void:
+ 	cylinder(st, 0.06, 3.4, at, Color("2d3032"), 6)
+--- a/native/godot/scripts/world.gd
++++ b/native/godot/scripts/world.gd
+@@ -763,7 +763,7 @@
+ 	env.background_mode = Environment.BG_SKY
+ 	env.sky = sky
+ 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+-	env.ambient_light_energy = 0.8
++	env.ambient_light_energy = 0.74
+ 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
+ 	# AgX keeps bright greens and skies from clipping to neon, like a film camera.
+ 	env.tonemap_mode = Environment.TONE_MAPPER_AGX
+@@ -788,8 +788,8 @@
+ 	add_child(world)
+ 	sun = DirectionalLight3D.new()
+ 	sun.rotation_degrees = Vector3(-42, -38, 0)
+-	sun.light_color = Color("fff1dc")
+-	sun.light_energy = 1.18
++	sun.light_color = Color("fff3e2")
++	sun.light_energy = 1.24
+ 	sun.shadow_enabled = true
+ 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+ 	sun.directional_shadow_max_distance = 320
+--- a/native/godot/shaders/vehicle.gdshader
++++ b/native/godot/shaders/vehicle.gdshader
+@@ -43,15 +43,19 @@
+ }
+ 
+ void fragment() {
+-	float grime = tri_noise(0.9);
++	float grime = tri_noise(0.28);
+ 	float speckle = tri_noise(4.5);
+ 	float s = vertex_tone ? tone.r * 2.0 : shade;
+ 	float m = vertex_tone ? tone.g : metal;
++	bool glass = vertex_tone && tone.b > 0.4 && tone.b < 0.75;
++	float painted = (1.0 - m) * (vertex_tone ? 1.0 - step(0.15, tone.b) : 1.0);
+ 	vec3 base = mix(paint * s, vec3(0.13, 0.13, 0.12), m);
++	// Broad field-paint patches reuse the weathering sample: no extra reads.
++	base = mix(base, base * vec3(0.65, 0.72, 0.62), smoothstep(0.51, 0.63, grime) * painted * 0.75);
+ 	if (vertex_tone && tone.b > 0.75) {
+ 		base = team * 0.8;
+ 	} else if (vertex_tone && tone.b > 0.4) {
+-		base = vec3(0.05, 0.07, 0.08);  // vision blocks and lenses
++		base = vec3(0.075, 0.15, 0.19);  // cool optical glass distinct from rubber and tracks
+ 	} else if (vertex_tone && tone.b > 0.15) {
+ 		base = vec3(0.32, 0.1, 0.08) * s;  // antifouling
+ 	}
+@@ -59,11 +63,11 @@
+ 	vec3 col = base * mix(0.8, 1.06, grime) * mix(0.94, 1.03, speckle);
+ 	// Road dust on the lower hull and running gear.
+ 	float dust = (1.0 - smoothstep(dust_height * 0.35, dust_height, above_ground)) * smoothstep(0.35, 0.65, grime + speckle * 0.3);
++	dust *= glass ? 0.0 : 1.0;
+ 	col = mix(col, dust_color, dust * 0.48);
+ 	// Broad upward-facing panels catch a restrained pale edge without extra textures.
+ 	col *= mix(0.96, 1.08, clamp(local_normal.y, 0.0, 1.0));
+ 	ALBEDO = col;
+-	bool glass = vertex_tone && tone.b > 0.4 && tone.b < 0.75;
+ 	ROUGHNESS = glass ? 0.12 : mix(mix(0.72, 0.9, grime), 0.55, m) + dust * 0.1;
+ 	METALLIC = glass ? 0.6 : mix(0.08, 0.55, m) * (1.0 - dust);
+ 	SPECULAR = 0.4;
+--- a/native/godot/shaders/terrain.gdshader
++++ b/native/godot/shaders/terrain.gdshader
+@@ -126,7 +126,8 @@
+ 	// Large-scale colour variation: meadows are never one flat green.
+ 	// Pull distant grass toward a broad meadow tone instead of magnifying
+ 	// photographic flecks with sharpening. Close-up ground keeps its detail.
+-	albedo = mix(albedo, vec3(0.32, 0.40, 0.20), w.x * (1.0 - nd) * 0.45);
++	vec3 meadow = mix(vec3(0.24, 0.34, 0.18), vec3(0.38, 0.42, 0.24), smoothstep(0.32, 0.68, macro));
++	albedo = mix(albedo, meadow, w.x * (1.0 - nd) * 0.48);
+ 	// The grass photo is a bright spring lime; pull it toward a deeper summer green.
+ 	albedo = mix(albedo, albedo * vec3(0.86, 0.87, 0.76), w.x);
+ 	albedo *= mix(0.8, 1.1, macro);
+@@ -140,6 +141,9 @@
+ 	float h = world_pos.y - sea_level;
+ 	float wet = 1.0 - smoothstep(0.0, 0.7, h);
+ 	albedo *= mix(1.0, 0.62, wet);
++	// Restrained mineral strata on steep stone, using existing macro/noise.
++	float strata = sin(world_pos.y * 1.6 + macro * 9.0) * 0.5 + 0.5;
++	albedo *= 1.0 - w.w * (1.0 - n.y) * strata * 0.14;
+ 
+ 	if ((show_territory || show_borders) && world_pos.y > sea_level - 0.2) {
+ 		float near;
+--- a/native/godot/shaders/water.gdshader
++++ b/native/godot/shaders/water.gdshader
+@@ -104,7 +104,9 @@
+ 	float band = 1.0 - smoothstep(0.0, foam_width * mix(1.0, 0.35, lake), depth);
+ 	float lace = noise(world_pos.xz * 0.05 + vec2(TIME * 0.01, 0.0));
+ 	float foam = smoothstep(0.5, 0.75, lace + band * 0.45) * band;
+-	foam = clamp(foam + pow(band, 6.0) * 0.8, 0.0, 1.0) * mix(0.85, 0.3, lake);
++	// Broken surf, not a solid white outline drawn around every coastline.
++	float breakup = mix(0.25, 1.0, smoothstep(0.38, 0.65, lace));
++	foam = clamp(foam + pow(band, 6.0) * 0.25, 0.0, 1.0) * breakup * mix(0.78, 0.3, lake);
+ 
+ 	float fog = fog_at(world_pos.xz);   // fog of war
+ 	ALBEDO = vec3(0.92, 0.95, 0.95) * foam * (1.0 - fog);
+--- /dev/null
++++ b/native/godot/tools/scene-detail-views.gd
+@@ -0,0 +1,52 @@
++extends SceneTree
++var w: Node
++var prefix := "before"
++func _initialize() -> void: call_deferred("run")
++func shot(name: String, at: Vector3, distance: float) -> void:
++	w.cam_focus = at; w.cam_dist = distance; w.cam_dist_target = distance
++	w.cam_ground = INF; w.update_camera(1.0)
++	for i in range(20): await process_frame
++	await RenderingServer.frame_post_draw
++	root.get_texture().get_image().save_png("res://build/scene-detail/"+prefix+"-"+name+".png")
++	print("CAPTURE ",name," draws=",Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
++func run() -> void:
++	if DisplayServer.get_name() == "headless": quit(2); return
++	if "--after-detail" in OS.get_cmdline_user_args(): prefix = "after"
++	seed(1776)
++	set_meta("match_config", {"map":"island", "players":4, "nation":0, "opening":"light"})
++	change_scene_to_file("res://world.tscn")
++	for i in range(12000):
++		await create_timer(0.01).timeout
++		if current_scene != null and current_scene.get("nav_ready") == true and current_scene.get("menu") != null:
++			w = current_scene; break
++	if w == null: quit(2); return
++	if w.menu._root == null: w.menu.setup(w)
++	w.start_match("easy"); w.menu.close(); w.saves.autosave_every = 0
++	w.quality = "balanced"; w.apply_quality()
++	w.set_physics_process(false); w.ai.set_physics_process(false)
++	preload("res://tools/test_kit.gd").quiet(w)
++	w.edge_scroll = false; w.hud.hide(); w.cam_pitch = 0.72; w.cam_yaw = 0.65
++	root.size = Vector2i(1440,900)
++	DirAccess.make_dir_recursive_absolute("res://build/scene-detail")
++	await shot("city", w.start, 90.0)
++	await shot("facade", w.start, 42.0)
++	var p: Vector3 = w.land_point(w.start, 80.0)
++	for i in range(3):
++		var u: Dictionary = w.spawn_unit(["tank","ifv","reconVehicle"][i],p+Vector3(i*9,0,0),0)
++		u.node.reset_physics_interpolation()
++	await shot("forest",p+Vector3(8,0,0),85.0)
++	for tree in w.tree_nodes: tree.hide()
++	await shot("units",p+Vector3(8,0,0),42.0)
++	for tree in w.tree_nodes: tree.show()
++	var shore: Vector3 = w.start
++	for x in range(-160,161,5):
++		var at: Vector3 = w.start+Vector3(x,0,85)
++		if absf(w.height_at(at.x,at.z)-float(w.map.seaLevel)) < 0.5:
++			shore = at; break
++	await shot("coast",shore,125.0)
++	w.quality = "low"; w.apply_quality()
++	await shot("low-city",w.start,90.0)
++	w.quality = "high"; w.apply_quality()
++	await shot("high-facade",w.start,42.0)
++	print("SCENE_DETAIL PASS ",prefix)
++	quit(0)
+--- /dev/null
++++ b/native/godot/tools/scene-detail-views.gd.uid
+@@ -0,0 +1 @@
++uid://7flaruktpoui

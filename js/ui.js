@@ -89,6 +89,12 @@ function openDecision(title, summary, choices) {
    window's centering transform into absolute px coordinates, then use
    pointer capture so fast drags never lose the handle. Positions are
    never touched by re-renders (content refresh only replaces .win-body). */
+function fitFloatingWindow(win, left, top) {
+  const r = win.getBoundingClientRect();
+  win.style.left = clamp(left ?? r.left, 0, Math.max(0, innerWidth - r.width)) + 'px';
+  win.style.top = clamp(top ?? r.top, 0, Math.max(0, innerHeight - r.height)) + 'px';
+  win.style.transform = 'none';
+}
 function makeDraggable(win) {
   const handle = win.querySelector('.win-title');
   let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
@@ -106,10 +112,7 @@ function makeDraggable(win) {
   });
   handle.addEventListener('pointermove', e => {
     if (!dragging) return;
-    const nx = clamp(ox + e.clientX - sx, -win.offsetWidth + 80, innerWidth - 60);
-    const ny = clamp(oy + e.clientY - sy, 0, innerHeight - 40);
-    win.style.left = nx + 'px';
-    win.style.top = ny + 'px';
+    fitFloatingWindow(win, ox + e.clientX - sx, oy + e.clientY - sy);
   });
   const stop = e => { dragging = false; try { handle.releasePointerCapture(e.pointerId); } catch (_) {} };
   handle.addEventListener('pointerup', stop);
@@ -120,7 +123,7 @@ function toggleWindow(id) {
   const win = document.getElementById(id);
   const opening = !win.classList.contains('open');
   win.classList.toggle('open');
-  if (opening) renderWindow(id);
+  if (opening) { renderWindow(id); fitFloatingWindow(win); }
   // the frontier overlay belongs to the Territory window, not to the landscape
   if (id === 'win-territory') setTerritoryOverlay(opening);
 }
@@ -476,17 +479,18 @@ function renderDiplomacy(body) {
         return info + '</div>';
       })()}
       <div class="dip-actions">
+        <div class="fx-list treaty-requirements">Required relations: trade +${DIP_MIN_REL.pact} · non-aggression +${DIP_MIN_REL.nap} · defense +${DIP_MIN_REL.defensePact} · alliance +${DIP_MIN_REL.alliance}. Embassy: $500, relations ${DIP_MIN_REL.embassy} or higher.</div>
         ${isAtWar(0, i)
           ? `<button class="dip-btn" onclick="offerPeace(${i})">🕊️ Offer Peace</button>`
           : `<button class="dip-btn" onclick="sendGift(${i})">🎁 Gift ($250)</button>
              <button class="dip-btn" onclick="sendAid(${i})">Aid ($300 + 80 food)</button>
              ${hasEmbassy(0, i)
                ? `<button class="dip-btn danger" onclick="expelEmbassy(${i})">Expel Embassy</button>`
-               : `<button class="dip-btn" onclick="openEmbassy(${i})">Open Embassy</button>`}
-             <button class="dip-btn" onclick="proposePact(${i})" ${hasPact(0, i) || hasSanction(0, i) ? 'disabled' : ''}>📜 Trade Pact</button>
+               : `<button class="dip-btn" onclick="openEmbassy(${i})" title="$500 and relations ${DIP_MIN_REL.embassy} or higher" ${s < DIP_MIN_REL.embassy || G.res.money < 500 ? 'disabled' : ''}>Open Embassy · $500</button>`}
+             <button class="dip-btn" onclick="proposePact(${i})" title="Requires relations +${DIP_MIN_REL.pact}; no existing pact or sanctions" ${s < DIP_MIN_REL.pact || hasPact(0, i) || hasSanction(0, i) ? 'disabled' : ''}>📜 Trade Pact</button>
              ${hasNap(0, i)
                ? `<button class="dip-btn" onclick="breakNap(${i})">Cancel NAP</button>`
-               : `<button class="dip-btn" onclick="proposeNap(${i})">Non-Aggression</button>`}
+               : `<button class="dip-btn" onclick="proposeNap(${i})" title="Requires relations +${DIP_MIN_REL.nap}" ${s < DIP_MIN_REL.nap ? 'disabled' : ''}>Non-Aggression</button>`}
              ${hasSanction(0, i)
                ? `<button class="dip-btn" onclick="liftSanctions(${i})">Lift Sanctions</button>`
                : `<button class="dip-btn danger" onclick="imposeSanctions(${i})">Sanctions</button>`}
@@ -494,10 +498,10 @@ function renderDiplomacy(body) {
                ? `<button class="dip-btn" onclick="breakAlliance(${i})">💔 Break Alliance</button>
                   ${G.nations.map((t, ti) => ti !== 0 && ti !== i && !t.defeated && isAtWar(0, ti)
                     ? `<button class="dip-btn danger" onclick="requestJointWar(${i},${ti})">⚔️ Join war vs ${t.name.split(' ')[0]}</button>` : '').join('')}`
-               : `<button class="dip-btn" onclick="proposeAlliance(${i})">🤝 Alliance</button>`}
+               : `<button class="dip-btn" onclick="proposeAlliance(${i})" title="Requires relations +${DIP_MIN_REL.alliance}" ${s < DIP_MIN_REL.alliance ? 'disabled' : ''}>🤝 Alliance</button>`}
              ${hasDefensePact(0, i)
                ? `<button class="dip-btn" onclick="breakDefensePact(${i})">Cancel Defense Pact</button>`
-               : `<button class="dip-btn" onclick="proposeDefensePact(${i})">Defense Pact</button>`}
+               : `<button class="dip-btn" onclick="proposeDefensePact(${i})" title="Requires relations +${DIP_MIN_REL.defensePact}" ${s < DIP_MIN_REL.defensePact ? 'disabled' : ''}>Defense Pact</button>`}
              <button class="dip-btn" onclick="demandTribute(${i})">😤 Demand Tribute</button>
              <button class="dip-btn danger" onclick="declareWar(0,${i});refreshWindows()">⚔️ Declare War</button>`}
       </div>
@@ -1059,6 +1063,7 @@ function drawMinimap() {
 /* ---------------- window & HUD wiring ---------------- */
 function initUI() {
   $$('.window').forEach(makeDraggable);
+  window.addEventListener('resize', () => $$('.window.open').forEach(win => fitFloatingWindow(win)));
   $$('.win-close').forEach(b => b.onclick = () => {
     const win = b.closest('.window');
     win.classList.remove('open');
@@ -1152,6 +1157,10 @@ function showEnd(victory, text) {
     ? 'Every rival capital lies in ruins. The world is yours — history will remember your dominion.'
     : 'Your Headquarters has fallen. Your nation dissolves into the pages of history.');
   $('#end-overlay').classList.remove('hidden');
+  if (typeof keys !== 'undefined') for (const k in keys) keys[k] = false;
+  if (typeof mouse !== 'undefined') mouse.down = mouse.midPan = mouse.dragging = false;
+  if (typeof hideDragBox === 'function') hideDragBox();
+  $('#btn-continue').focus?.();
 }
 
 function continueAfterEnd() {

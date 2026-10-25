@@ -1,0 +1,403 @@
+--- a/native/godot/scripts/world.gd
++++ b/native/godot/scripts/world.gd
+@@ -363,6 +363,7 @@
+ 		if u.key in INFANTRY or u.key in VEHICLES or u.key in NAVAL or u.key in AIR:
+ 			spawn_unit(u.key, Vector3(u.x, 0, u.z), int(u.owner))
+ 	camera = Camera3D.new()
++	camera.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF # camera moves every rendered frame
+ 	camera.fov = 48
+ 	camera.near = 1
+ 	camera.far = 2600
+@@ -985,6 +986,7 @@
+ 				for i in range(transforms.size()):
+ 					mm.set_instance_transform(i, transforms[i])
+ 				var node := MultiMeshInstance3D.new()
++				node.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF # grass is static; clearing is instantaneous
+ 				node.multimesh = mm
+ 				node.set_meta("cell_center", Vector2(cx + cell * 0.5, cz + cell * 0.5))
+ 				node.material_override = material
+@@ -1436,6 +1438,7 @@
+ 		research.equip(unit)  # discoveries and rival tech set health, range and speed
+ 	units.append(unit)
+ 	animate(unit, false)
++	node.reset_physics_interpolation() # newly spawned units do not streak from the origin
+ 	return unit
+ 
+ ## A model of `key` (unit, vehicle, ship, aircraft or building) for the
+@@ -1796,6 +1799,7 @@
+ 	if research:
+ 		research.equip(unit)
+ 	units.append(unit)
++	node.reset_physics_interpolation()
+ 	return unit
+ 
+ func is_water(p: Vector3, depth := DEEP) -> bool:
+@@ -1885,6 +1889,7 @@
+ 		if u.owner == 0 and enemy.owner > 0 and not hostile(u.owner, enemy.owner):
+ 			ai.declare_war(enemy.owner, true)
+ 		u.enemy = enemy
++		u.board = null  # a new combat order cancels an unfinished airlift
+ 		u.forced = true  # an ordered target is not swapped for a nearer one
+ 		u.ignore = {}
+ 		u.erase("ground_attack")
+@@ -1894,6 +1899,7 @@
+ 
+ func order_move(selected: Array, point: Vector3, attack := false) -> void:
+ 	selected = selected.filter(func(u): return not u.dead)   # the fallen take no orders
++	for u in selected: u.board = null  # explicit orders replace pending boarding
+ 	# Aircraft sent onto one of their nation's air bases land there and stay.
+ 	var landed := []
+ 	for b in buildings:
+@@ -1958,6 +1964,7 @@
+ 	for u in selected:
+ 		if not can_bombard(u):
+ 			continue
++		u.board = null
+ 		if not is_instance_valid(u.get("bombard_marker")):
+ 			u.bombard_marker = Node3D.new()
+ 			add_child(u.bombard_marker)
+@@ -3704,7 +3711,7 @@
+ 	espionage.intel[rival.id] = 25.0
+ 	seed(11)   # an operation's odds are the espionage tests' business: here only that stolen research moves points
+ 	print("research spy assignment: ", espionage.run("stealTech", rival.id, "", -1, 0.0))
+-	espionage.advance(90.0)
++	espionage.advance(91.0)   # (90 one-second steps from a fractional clock can fall a hair short of the 90 s preparation)
+ 	var stolen_ok: bool = r.points >= 119.0
+ 	print("ships locked %s then open %s, economics level %d, rival tech %d, stolen %d points" % [ship_locked, ship_open, r.tracks.economy, int(r.ai_tech(rival.id)), int(r.points)])
+ 	if capture:
+@@ -5189,7 +5196,7 @@
+ 		return  # workers do not fight; EMP-struck machines are dead weight
+ 	unit.reload -= delta
+ 	unit.search -= delta
+-	# Decisions run ten times a second, each unit on its own tick of six;
++	# Decisions run every six physics ticks (five times a second at 30 Hz);
+ 	# aiming and firing below still run every frame.
+ 	if unit.enemy != null and thinks(unit) and not Tactics.keep_target(self, unit, delta * THINK_EVERY):
+ 		set_stance(unit)
+--- a/native/godot/scripts/hud.gd
++++ b/native/godot/scripts/hud.gd
+@@ -84,6 +84,8 @@
+ var _fps: Label
+ var _help: PanelContainer
+ var _screen_buttons := {}
++var _command_row: HBoxContainer
++var _commands_compact := false
+ var _cheats_button: Button = null   # the testing tools (cheats.gd)
+ var _waiting := {}        # portrait key -> [TextureRect]
+ var _windows: Node
+@@ -275,8 +277,11 @@
+ 	rack.add_theme_stylebox_override("panel", UI.plate(UI.PANEL_TOP, UI.PANEL_LOW, Color(UI.TRIM, 0.6), 5.0, UI.LIFT, Color.TRANSPARENT, 0, 5))
+ 	rack.offset_left = 12
+ 	rack.offset_top = 54
++	rack.anchor_right = 1.0
++	rack.offset_right = -12
+ 	add_child(rack)
+ 	var screens := HBoxContainer.new()
++	_command_row = screens
+ 	screens.add_theme_constant_override("separation", 3)
+ 	rack.add_child(screens)
+ 	row = screens
+@@ -325,8 +330,23 @@
+ 	cheats.pressed.connect(func(): if world.menu != null: world.menu.open_cheats())
+ 	row.add_child(cheats)
+ 	_cheats_button = cheats   # (not a ministry screen: kept apart from _screen_buttons)
++	for command in screens.get_children():
++		command.set_meta("dock_icon", command.icon)
++		command.set_meta("dock_width", command.custom_minimum_size.x)
+ 	refresh_cheats()
++	_fit_commands()
+ 	refresh_speed()
++
++## Keep every named action on screen at normal UI scale on smaller displays.
++## Compact mode removes redundant icons and fixed padding, never the labels.
++func _fit_commands() -> void:
++	if _command_row == null: return
++	var compact := get_viewport().get_visible_rect().size.x < 1400.0
++	if compact == _commands_compact: return
++	_commands_compact = compact
++	for command in _command_row.get_children():
++		command.icon = null if compact else command.get_meta("dock_icon")
++		command.custom_minimum_size.x = 0.0 if compact else float(command.get_meta("dock_width"))
+ 
+ var _guide: Node
+ 
+@@ -1026,6 +1046,7 @@
+ func _process(delta: float) -> void:
+ 	if economy == null:
+ 		return
++	_fit_commands()
+ 	_hover_unit(delta)
+ 	if _idle_button != null and _refresh + delta >= 0.25:
+ 		var idle := idle_workers().size()
+--- a/native/godot/scripts/airlift.gd
++++ b/native/godot/scripts/airlift.gd
+@@ -53,7 +53,7 @@
+ 	if mine.is_empty():
+ 		return null
+ 	var heli = preload("res://scripts/picking.gd").pick(w.camera, mine, screen)
+-	if heli == null or not selected.any(func(u): return u != heli and places(w, heli, u) > 0):
++	if heli == null or not selected.any(func(u): return not is_same(u, heli) and places(w, heli, u) > 0):
+ 		return null
+ 	return heli
+ 
+@@ -90,7 +90,7 @@
+ 		var heli = u.get("board")
+ 		if heli == null:
+ 			continue
+-		if heli.dead or places(w, heli, u) > room(heli):
++		if heli.dead or places(w, heli, u) <= 0 or places(w, heli, u) > room(heli):
+ 			u.board = null
+ 			continue
+ 		var a: Vector3 = u.node.position
+@@ -112,12 +112,24 @@
+ static func unload_blocked(w: Node, heli: Dictionary) -> String:
+ 	if heli.get("cargo", []).is_empty():
+ 		return "Nobody aboard."
+-	if str(heli.get("air_state", "ready")) in ["parked", "rearming", "landing", "taxi_in", "taxi_out"]:
+-		return ""
+ 	var p: Vector3 = heli.node.position
+ 	if w.height_at(p.x, p.z) <= float(w.map.seaLevel) + 0.2:
+ 		return "Over water: fly over dry ground to land them."
++	if landing_spot(w, p) == Vector3.INF:
++		return "No clear landing ground nearby: move away from buildings or cliffs."
+ 	return ""
++
++## Search actual clear ground, not land_point(), which only chooses a direction
++## and can still end in water or inside a building footprint.
++static func landing_spot(w: Node, centre: Vector3, occupied: Array = []) -> Vector3:
++	for radius in [4.5, 8.0, 12.0, 16.0]:
++		for i in range(24):
++			var angle := TAU * i / 24.0
++			var p: Vector3 = centre + Vector3(cos(angle), 0, sin(angle)) * radius
++			p.y = w.height_at(p.x, p.z)
++			if w.open_ground(p) and w.walkable(p.x, p.z) and occupied.all(func(at): return at.distance_to(p) >= 2.0):
++				return p
++	return Vector3.INF
+ 
+ ## Lands everyone aboard around the helicopter.
+ static func unload(w: Node, heli: Dictionary) -> Array:
+@@ -126,20 +138,24 @@
+ 		return out
+ 	var centre: Vector3 = heli.node.position
+ 	var cargo: Array = heli.cargo
++	var remaining := []
++	var occupied := []
+ 	for i in range(cargo.size()):
+ 		var c: Dictionary = cargo[i]
+-		var angle := TAU * i / maxf(1.0, cargo.size())
+-		var spot := Vector3(centre.x + cos(angle) * 4.5, 0.0, centre.z + sin(angle) * 4.5)
+-		spot.y = w.height_at(spot.x, spot.z)
+-		var land = w.land_point(spot, 12.0) if w.has_method("land_point") else spot
+-		var u: Dictionary = w.spawn_unit(str(c.key), land if land != null else spot, int(heli.owner))
++		var spot := landing_spot(w, centre, occupied)
++		if spot == Vector3.INF:
++			remaining.append(c)
++			continue
++		var u: Dictionary = w.spawn_unit(str(c.key), spot, int(heli.owner))
+ 		if u.is_empty():
++			remaining.append(c)
+ 			continue
++		occupied.append(spot)
+ 		u.hp = clampf(float(c.get("hp", u.max_hp)), 1.0, float(u.max_hp))
+ 		if float(c.get("xp", 0.0)) > 0.0:
+ 			preload("res://scripts/veterancy.gd").set_xp(u, float(c.xp))
+ 		out.append(u)
+-	heli.cargo = []
++	heli.cargo = remaining
+ 	return out
+ 
+ ## J: every selected transport of the player's lands its load.
+--- a/native/godot/scripts/un_session_screen.gd
++++ b/native/godot/scripts/un_session_screen.gd
+@@ -200,7 +200,13 @@
+ 	# An uncast live ballot takes priority over an old result or a ballot already
+ 	# submitted in the other chamber, so simultaneous sessions remain actionable.
+ 	pending.sort_custom(func(a, b): return priority(a) < priority(b))
+-	invitation.visible = not screen.visible and not pending.is_empty() and hud.visible
++	# Keep the UN navigation badge live while another window is being used.
++	# The large invitation must not cover its tabs, briefing or controls.
++	var workspace_busy: bool = hud.side_mode != "" or hud.prod_open or hud.modal_input_active()
++	if hud._prod != null and hud._prod.visible: workspace_busy = true
++	if hud._cabinet != null and hud._cabinet.visible: workspace_busy = true
++	if hud._rs != null and hud._rs.visible: workspace_busy = true
++	invitation.visible = not screen.visible and not pending.is_empty() and hud.visible and not workspace_busy
+ 	if not pending.is_empty():
+ 		var top: Dictionary = pending[0]
+ 		var dr: Dictionary = top.draft
+--- a/native/godot/project.godot
++++ b/native/godot/project.godot
+@@ -21,6 +21,10 @@
+ window/size/mode=3
+ window/stretch/mode="canvas_items"
+ window/stretch/aspect="expand"
++
++[physics]
++common/physics_ticks_per_second=30
++common/physics_interpolation=true
+ 
+ [rendering]
+ renderer/rendering_method="forward_plus"
+--- a/native/run-tests.ps1
++++ b/native/run-tests.ps1
+@@ -12,6 +12,8 @@
+ $exe = Join-Path $repo 'dist\DOMINION.exe'
+ 
+ $tests = @(
++    @('customer playtest: replacement orders cancel boarding, water and safe unloading retain passengers', @('--script', 'res://tools/customer-airlift-check.gd'), 'CUSTOMER_AIRLIFT PASS', 180),
++    @('customer windows: navigation at three sizes, UN notices, shortcuts and live aircraft animation', @('--script', 'res://tools/customer-window-check.gd'), 'CUSTOMER_WINDOW PASS', 240),
+     @('action wording: button help across menus, weapon roles, production versus launch, blocking reasons and unchanged actions', @('--script', 'res://tools/action-copy-check.gd'), 'ACTION_COPY PASS', 180),
+     @('UN session invitations, full conference screen, live ballots, eligibility, outcomes and save restore', @('--script', 'res://tools/un-session-check.gd'), 'UN_SESSION PASS', 180),
+     @('fish and gold: clickable deposits, construction actions, coastal reach, food / treasury output and supply gating', @('--script', 'res://tools/resource-use-check.gd'), 'RESOURCE_USE PASS', 180),
+--- /dev/null
++++ b/native/godot/tools/customer-airlift-check.gd
+@@ -0,0 +1,59 @@
++extends SceneTree
++const A = preload("res://scripts/airlift.gd")
++var w: Node
++var errors: Array[String] = []
++var passed := 0
++func _initialize() -> void: call_deferred("run")
++func check(ok: bool, label: String) -> void:
++	print(("ok " if ok else "FAIL ") + label)
++	if ok: passed += 1
++	else: errors.append(label)
++func run() -> void:
++	set_meta("match_config", {"map":"island", "players":3, "nation":0})
++	change_scene_to_file("res://world.tscn")
++	for i in range(12000):
++		await create_timer(0.01).timeout
++		if current_scene != null and current_scene.get("nav_ready") == true and current_scene.get("menu") != null:
++			w = current_scene
++			break
++	if w == null: quit(2); return
++	if w.menu._root == null: w.menu.setup(w)
++	w.start_match("easy"); w.menu.close(); w.saves.autosave_every = 0
++	w.set_physics_process(false); w.ai.set_physics_process(false)
++	var p: Vector3 = w.land_point(w.start, 70.0)
++	var heli: Dictionary = w.spawn_unit("helicopter", p, 0)
++	var soldier: Dictionary = w.spawn_unit("soldier", p + Vector3(20,0,0), 0)
++	check(A.order_board(w, [soldier], heli) == 1, "transport accepts a boarding order")
++	w.order_move([soldier], p + Vector3(40,0,0))
++	check(soldier.get("board") == null, "a new move cancels the old boarding order")
++	soldier.node.position = heli.node.position
++	A.update(w)
++	check(not soldier.dead and A.used(heli) == 0, "passing a helicopter after cancellation does not swallow the soldier")
++	if soldier.dead: soldier = w.spawn_unit("soldier", p, 0)
++	var enemy: Dictionary = w.spawn_unit("soldier", p + Vector3(30,0,0), 1)
++	A.order_board(w, [soldier], heli)
++	w.order_attack([soldier], enemy)
++	check(soldier.get("board") == null, "an attack order cancels boarding")
++	soldier.board = null
++	# A saved/parked helicopter at an invalid location must not bypass terrain validation.
++	heli.cargo = [{"key":"soldier", "hp":60.0, "places":1, "xp":0.0}]
++	var sea := Vector3.ZERO
++	var found := false
++	for x in range(-450,451,15):
++		for z in range(-450,451,15):
++			if w.height_at(x,z) < float(w.map.seaLevel) - 0.3:
++				sea = Vector3(x,30,z); found = true; break
++		if found: break
++	check(found, "fixture found actual water")
++	heli.node.position = sea; heli.air_state = "parked"
++	check(A.unload_blocked(w, heli) != "", "parked state cannot bypass the water check")
++	var unloaded: Array = A.unload(w, heli)
++	check(unloaded.is_empty() and heli.cargo.size() == 1, "failed landing retains cargo and creates no soldier in water")
++	heli.node.position = p; heli.air_state = "ready"
++	heli.cargo = [{"key":"soldier", "hp":60.0, "places":1, "xp":0.0}]
++	unloaded = A.unload(w, heli)
++	check(unloaded.size() == 1 and heli.cargo.is_empty(), "valid landing transfers exactly one passenger")
++	check(unloaded.all(func(u): return w.open_ground(u.node.position) and w.walkable(u.node.position.x,u.node.position.z)), "landed soldiers stand on walkable ground outside buildings")
++	check(unloaded.all(func(u): return is_equal_approx(float(u.hp),60.0)), "landing preserves wounded passenger health")
++	print("CUSTOMER_AIRLIFT %s %d checks" % ["PASS" if errors.is_empty() else "FAIL", passed + errors.size()])
++	quit(0 if errors.is_empty() else 1)
+--- /dev/null
++++ b/native/godot/tools/customer-airlift-check.gd.uid
+@@ -0,0 +1 @@
++uid://bqgvymflndok0
+--- /dev/null
++++ b/native/godot/tools/customer-window-check.gd
+@@ -0,0 +1,80 @@
++extends SceneTree
++var w: Node
++var errors: Array[String] = []
++var checks := 0
++func _initialize() -> void: call_deferred("run")
++func check(ok: bool, label: String) -> void:
++	checks += 1
++	print(("ok " if ok else "FAIL ") + label)
++	if not ok: errors.append(label)
++func frames(n := 8) -> void:
++	for i in range(n): await process_frame
++func shot(name: String) -> void:
++	if DisplayServer.get_name() == "headless": return
++	await frames()
++	await RenderingServer.frame_post_draw
++	root.get_texture().get_image().save_png("res://build/customer-" + name + ".png")
++func key(code: Key) -> void:
++	for down in [true,false]:
++		var e := InputEventKey.new()
++		e.keycode = code; e.physical_keycode = code; e.pressed = down
++		Input.parse_input_event(e)
++		await process_frame
++	await frames()
++func run() -> void:
++	set_meta("match_config", {"map":"island", "players":4, "nation":0})
++	change_scene_to_file("res://world.tscn")
++	for i in range(12000):
++		await create_timer(0.01).timeout
++		if current_scene != null and current_scene.get("nav_ready") == true and current_scene.get("menu") != null:
++			w = current_scene; break
++	if w == null: quit(2); return
++	if w.menu._root == null: w.menu.setup(w)
++	w.start_match("easy"); w.menu.close(); w.saves.autosave_every = 0
++	w.set_physics_process(false); w.ai.set_physics_process(false)
++	w.ui_scale = 1.0; w.apply_ui_scale()
++	var u = w.un
++	u.current = null; u.assembly_current = null; u.queue.clear(); u.record.clear(); u.assembly_record.clear(); u.assembly_queue.clear()
++	var session = w.hud._un_sessions
++	u._open(u.table("player",3,-1,0,"reported conduct","economic"))
++	for viewport in [Vector2i(1280,800),Vector2i(1024,720),Vector2i(1920,1080)]:
++		root.size = viewport; await frames()
++		for command in w.hud._command_row.get_children():
++			if command.visible:
++				check(root.get_visible_rect().encloses(command.get_global_rect()), "named navigation action stays on screen: " + command.text)
++		session.refresh()
++		check(session.invitation.visible, "UN invitation visible on map at " + str(viewport))
++		await key(KEY_K); session.refresh()
++		check(w.hud.side_mode == "defence", "real K shortcut opens Defence")
++		check(not session.invitation.visible, "UN banner does not cover Defence tabs")
++		check(w.hud._screen_buttons.un.text.contains("1"), "pending UN message stays in navigation")
++		check(root.get_visible_rect().encloses(w.hud._win.get_global_rect()), "Defence fits viewport " + str(viewport))
++		await shot("defence-" + str(viewport.x))
++		await key(KEY_ESCAPE); session.refresh()
++		check(session.invitation.visible, "closing Defence restores invitation without dismissing message")
++		await key(KEY_B); session.refresh()
++		check(w.hud.prod_open and not session.invitation.visible, "build shortcut opens unobstructed catalogue")
++		await key(KEY_ESCAPE); session.refresh()
++		await key(KEY_U)
++		check(session.screen.visible, "real UN shortcut reaches pending conference")
++		await key(KEY_ESCAPE)
++		check(not session.screen.visible, "Escape returns from conference without voting")
++	# Animation and motion over actual physics frames, with only rival AI paused.
++	root.size = Vector2i(1280,800)
++	var p: Vector3 = w.land_point(w.start,70.0)
++	var h: Dictionary = w.spawn_unit("helicopter", p, 0)
++	var s: Dictionary = w.spawn_unit("soldier", p, 0)
++	w.cam_focus = p; w.cam_dist_target = 110.0
++	w.order_move([h],p + Vector3(45,0,0))
++	w.order_move([s],w.nearest_open_centre(p + Vector3(12,0,12)))
++	var before: Vector3 = h.node.position
++	var rotor: Basis = h.rotor.basis
++	w.set_physics_process(true)
++	await shot("motion-start")
++	await create_timer(2.0).timeout
++	await shot("motion-end")
++	check(h.node.position.distance_to(before) > 2.0, "helicopter travels during live physics")
++	check(not h.rotor.basis.is_equal_approx(rotor), "helicopter rotor animates across frames")
++	check(s.get("player") != null or str(s.get("clip", "")) != "", "infantry has an active animation state")
++	print("CUSTOMER_WINDOW %s %d checks" % ["PASS" if errors.is_empty() else "FAIL",checks])
++	quit(0 if errors.is_empty() else 1)
+--- /dev/null
++++ b/native/godot/tools/customer-window-check.gd.uid
+@@ -0,0 +1 @@
++uid://em1k2dm2hp8w

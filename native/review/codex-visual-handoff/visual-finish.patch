@@ -1,0 +1,591 @@
+--- a/native/godot/scripts/architecture.gd
++++ b/native/godot/scripts/architecture.gd
+@@ -55,7 +55,9 @@
+ 	var m := StandardMaterial3D.new()
+ 	m.vertex_color_use_as_albedo = true
+ 	m.vertex_color_is_srgb = true
+-	m.roughness = 0.85
++	m.roughness = 0.24 if kind == GLASS else (0.52 if kind == METAL else 0.88)
++	m.metallic = 0.45 if kind == METAL else (0.18 if kind == GLASS else 0.0)
++	m.metallic_specular = 0.55 if kind == GLASS else 0.35
+ 	var n := _noise(7 + kind, 0.08)
+ 	var tex: Array = []
+ 	match kind:
+--- a/native/godot/scripts/cabinet.gd
++++ b/native/godot/scripts/cabinet.gd
+@@ -23,6 +23,9 @@
+ 		var w := size.x
+ 		var h := size.y
+ 		draw_rect(Rect2(Vector2.ZERO, size), Color("0a1522"))
++		for tick in range(1, 4):
++			var y := h * float(tick) / 4.0
++			draw_line(Vector2(0, y), Vector2(w, y), Color(colour, 0.12), 1.0)
+ 		if points.size() < 2:
+ 			draw_string(ThemeDB.fallback_font, Vector2(8, h * 0.6), "Charting… a point every 5 s", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 1, 1, 0.4))
+ 			return
+--- a/native/godot/scripts/health_overlay.gd
++++ b/native/godot/scripts/health_overlay.gd
+@@ -41,13 +41,15 @@
+ 			break
+ 	rect.position.y = foot.position.y + 3
+ 	_placed.append(foot)
++	draw_rect(rect.grow(3), Color(0, 0, 0, 0.35))
+ 	draw_rect(rect.grow(2), Color("101721"))
++	draw_rect(rect, Color("354353"))
+ 	# The owner's colour on a small tab at the left, as 4X unit flags carry it.
+ 	var owner: int = ent.get("owner", 0)
+ 	if owner < world.map.nations.size():
+ 		draw_rect(Rect2(rect.position - Vector2(6, 2), Vector2(4, height + 4)), Color(world.map.nations[owner].color))
+ 	draw_rect(Rect2(rect.position, Vector2(width * ratio, height)), Color("79c98a") if ratio > 0.5 else (Color("e2bd65") if ratio > 0.25 else Color("e97465")))
+-	draw_rect(rect, Color("d9cfb1"), false, 1)
++	draw_rect(rect, Color("f4ead4") if selected else Color("8195a3"), false, 1)
+ 	if selected or not world.perf_opts:
+ 		for i in range(1, 5):
+ 			draw_line(rect.position + Vector2(i * width / 5.0, 0), rect.position + Vector2(i * width / 5.0, height), Color(0, 0, 0, 0.45))
+--- a/native/godot/scripts/hud.gd
++++ b/native/godot/scripts/hud.gd
+@@ -613,7 +613,11 @@
+ 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+ 	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 	_set_portrait(pic, key)
+-	head.add_child(pic)
++	var stage := PanelContainer.new()
++	stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	stage.add_theme_stylebox_override("panel", UI.box(Color("0b1b29"), Color("36516b"), 1, 6, 4.0))
++	stage.add_child(pic)
++	head.add_child(stage)
+ 	var name := _text(title, 18, UI.CREAM, true)
+ 	name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+@@ -1113,6 +1117,15 @@
+ 	_extra.missiles[1].visible = silos
+ 	if silos:
+ 		_extra.missiles[0].text = "%d/%d" % [world.missiles.stored(), world.missiles.capacity()]
++	# At laptop widths, stack the national figures like the resource yields.
++	# Keep every figure and its normal font size clear of the time controls.
++	if get_viewport().get_visible_rect().size.x < 1500.0:
++		_extra.army[0].text = "%d\n/ %d" % [economy.pop_used, economy.pop_cap]
++		_extra.citizens[0].text = "%d\n/ %d" % [int(economy.civilians), int(economy.civ_cap)]
++		if world.research:
++			_extra.research[0].text = "%d\n+%.1f" % [int(world.research.points), world.research.rate]
++		if world.get("defcon") != null:
++			_extra.defcon[0].text = "DEFCON\n%d" % world.defcon.level()
+ 	_fps.visible = world.show_fps
+ 	_fps.text = "%d FPS" % Engine.get_frames_per_second()
+ 	if _selected != null and _selected.dead:
+@@ -1968,7 +1981,7 @@
+ ## A card: a raised panel, with a stripe down the left in `stripe` if given.
+ func _card(stripe := Color(0, 0, 0, 0)) -> VBoxContainer:
+ 	var card := PanelContainer.new()
+-	var style := UI.box(Color("142337"), Color("2d4460"), 1, 2, 10.0)
++	var style := UI.box(Color("172c40"), Color("36516b"), 1, 6, 10.0, 3)
+ 	if stripe.a > 0.0:
+ 		style.border_color = Color(stripe, 0.95)
+ 		style.border_width_left = 5
+@@ -2316,10 +2329,12 @@
+ 		_fill_log()
+ 	var card := PanelContainer.new()
+ 	var style := StyleBoxFlat.new()
+-	style.bg_color = Color(UI.INK, 0.78)
++	style.bg_color = Color(UI.INK, 0.94)
+ 	style.border_color = Color(UI.GOLD, 0.9)
+ 	style.border_width_left = 3
+ 	style.set_corner_radius_all(4)
++	style.shadow_size = 4
++	style.shadow_color = Color(0, 0, 0, 0.3)
+ 	style.content_margin_left = 10
+ 	style.content_margin_right = 10
+ 	style.content_margin_top = 4
+--- a/native/godot/scripts/menu.gd
++++ b/native/godot/scripts/menu.gd
+@@ -1277,7 +1277,7 @@
+ 	b.focus_mode = Control.FOCUS_ALL
+ 	b.tooltip_text = detail
+ 	var styles := _accent(4)
+-	b.add_theme_stylebox_override("normal", UI.plate(Color("375265"), Color("203341"), UI.GOLD, 14.0) if primary else styles[0])
++	b.add_theme_stylebox_override("normal", UI.plate(Color("37576a"), Color("203341"), UI.GOLD, 14.0, UI.LIFT, Color.TRANSPARENT, 0, 5, UI.GOLD, 4) if primary else styles[0])
+ 	b.add_theme_stylebox_override("hover", styles[1])
+ 	b.add_theme_stylebox_override("pressed", styles[1])
+ 	b.add_theme_stylebox_override("focus", UI.box(Color.TRANSPARENT, UI.BRIGHT, 1, 8, 0.0))
+@@ -1291,7 +1291,7 @@
+ 	b.add_child(row)
+ 	var pic := TextureRect.new()
+ 	pic.texture = UI.icon(icon_name) if icon_name != "" else null
+-	pic.custom_minimum_size = Vector2(30, 30)
++	pic.custom_minimum_size = Vector2(34, 34)
+ 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+ 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+ 	pic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+--- a/native/godot/scripts/minimap.gd
++++ b/native/godot/scripts/minimap.gd
+@@ -75,6 +75,11 @@
+ 	var xf := view_transform()
+ 	draw_set_transform_matrix(xf)
+ 	draw_texture_rect(_terrain, Rect2(Vector2.ZERO, size), false)
++	# A quiet cartographic grid stays underneath fog and all tactical symbols.
++	for tick in range(1, 4):
++		var at := size * float(tick) / 4.0
++		draw_line(Vector2(at.x, 0), Vector2(at.x, size.y), Color(0.8, 0.9, 1.0, 0.08))
++		draw_line(Vector2(0, at.y), Vector2(size.x, at.y), Color(0.8, 0.9, 1.0, 0.08))
+ 	var colours := []
+ 	for n in world.map.nations:
+ 		colours.append(Color(n.color).lightened(0.2))
+@@ -101,13 +106,23 @@
+ 			continue
+ 		var p := to_map(b.root.position)
+ 		var s := 5.0 if b.key in ["hq", "cityCenter", "villageCenter"] else 3.5
++		draw_rect(Rect2(p - Vector2(s, s) * 0.5, Vector2(s, s)).grow(1), Color("09141c"))
+ 		draw_rect(Rect2(p - Vector2(s, s) * 0.5, Vector2(s, s)), colours[b.owner % colours.size()])
+ 		if b.key == "hq":
+ 			draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), Color.WHITE, false, 1.0)
+ 	for u in world.units:
+ 		if u.dead or (fog != null and not fog.shows(u)):
+ 			continue
+-		draw_circle(to_map(u.node.position), 1.6 if not u.vehicle else 2.0, colours[u.owner % colours.size()])
++		var p := to_map(u.node.position)
++		var ink: Color = colours[u.owner % colours.size()]
++		if u.get("selected", false): draw_circle(p, 4.0, Color("f4ead4"), false, 1.0)
++		draw_circle(p, 2.8, Color("09141c"))
++		if u.get("fly", false):
++			draw_colored_polygon(PackedVector2Array([p + Vector2(0,-3), p + Vector2(2.5,2), p + Vector2(-2.5,2)]), ink)
++		elif u.get("naval", false):
++			draw_colored_polygon(PackedVector2Array([p + Vector2(0,-3), p + Vector2(2,0), p + Vector2(0,3), p + Vector2(-2,0)]), ink)
++		else:
++			draw_circle(p, 1.6 if not u.vehicle else 2.0, ink)
+ 	# The camera: the ground it sees as a wedge, an arrow at the far edge for the
+ 	# direction it is looking, and a dot where the view is centred.
+ 	var pts := camera_outline()
+--- a/native/godot/scripts/portraits.gd
++++ b/native/godot/scripts/portraits.gd
+@@ -32,21 +32,26 @@
+ 	e.background_mode = Environment.BG_CLEAR_COLOR
+ 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+ 	e.ambient_light_color = Color("9fb4c0")
+-	e.ambient_light_energy = 0.55
++	e.ambient_light_energy = 0.72
+ 	e.tonemap_mode = Environment.TONE_MAPPER_ACES
+ 	e.tonemap_exposure = 1.05
+ 	env.environment = e
+ 	_viewport.add_child(env)
+ 	var key := DirectionalLight3D.new()
+ 	key.rotation_degrees = Vector3(-42, -35, 0)
+-	key.light_energy = 1.6
++	key.light_energy = 1.35
+ 	key.shadow_enabled = true
+ 	_viewport.add_child(key)
+ 	var fill := DirectionalLight3D.new()
+ 	fill.rotation_degrees = Vector3(-20, 150, 0)
+-	fill.light_energy = 0.45
++	fill.light_energy = 0.65
+ 	fill.light_color = Color("b9d4ff")
+ 	_viewport.add_child(fill)
++	var rim := DirectionalLight3D.new()
++	rim.rotation_degrees = Vector3(-28, 65, 0)
++	rim.light_energy = 0.38
++	rim.light_color = Color("ffe2bb")
++	_viewport.add_child(rim)
+ 	_camera = Camera3D.new()
+ 	_camera.fov = 30
+ 	_viewport.add_child(_camera)
+@@ -80,7 +85,7 @@
+ 	var box: AABB = world.model_bounds(model)
+ 	var centre := box.get_center()  # the model stands at the stage origin
+ 	var radius := maxf(box.size.length() * 0.5, 0.5)
+-	if world.unit_defs.has(key) and key in world.INFANTRY and not key in ["machineGunTeam", "mortarTeam", "scoutTeam"]:
++	if world.unit_defs.has(key) and key in world.INFANTRY and not key in ["machineGunTeam", "mortarTeam", "scoutTeam", "recoillessTeam"]:
+ 		radius = box.size.y * 0.5  # a figure's arms spread its bounds; frame it by height
+ 		centre.y = box.size.y * 0.5
+ 	var dir := Vector3(0.95, 0.5, -0.3).normalized() if munition else Vector3(0.62, 0.48, 0.62).normalized()
+--- a/native/godot/scripts/research_tree.gd
++++ b/native/godot/scripts/research_tree.gd
+@@ -22,6 +22,21 @@
+ var _cards := {}   # key -> Rect2
+ var _row_top := {}
+ var _row_h := {}
++var _surfaces := {}
++
++func card_surface(fill: Color, border: Color, emphasized: bool) -> StyleBoxFlat:
++	var key := "%s:%s:%s" % [fill.to_html(), border.to_html(), emphasized]
++	if not _surfaces.has(key):
++		var surface := StyleBoxFlat.new()
++		surface.bg_color = fill
++		surface.border_color = border
++		surface.set_border_width_all(2 if emphasized else 1)
++		surface.set_corner_radius_all(6)
++		surface.shadow_color = Color(0, 0, 0, 0.28)
++		surface.shadow_size = 3
++		surface.shadow_offset = Vector2(0, 2)
++		_surfaces[key] = surface
++	return _surfaces[key]
+ 
+ func setup(r: Node) -> void:
+ 	research = r
+@@ -150,11 +165,10 @@
+ 			fill = Color("1e3349")
+ 		else:
+ 			fill = Color("111e2c")
+-		draw_rect(r, fill)
++		var border := Color("f2dfa9") if key == selected else (Color("7fb7e8") if queued else Color("435a70"))
++		draw_style_box(card_surface(fill, border, key == selected or queued), r)
+ 		# A hairline of light along the top edge, as on every plate.
+ 		draw_line(r.position + Vector2(1, 1), Vector2(r.end.x - 1, r.position.y + 1), Color(1, 1, 1, 0.10), 1.0)
+-		var border := Color("f2dfa9") if key == selected else (Color("7fb7e8") if queued else Color("83734f"))
+-		draw_rect(r, border, false, 2.0 if key == selected or queued else 1.5)   # (1 px blinked out on scaled screens)
+ 		var locked: bool = stage == 0 and why != "" and not why.contains(" needs a ")
+ 		# The branch's colour down the left edge.
+ 		draw_rect(Rect2(r.position + Vector2(1, 1), Vector2(4, r.size.y - 2)), Color(colours.get(research.def_of(key).branch, Color("83734f")), 0.45 if locked else 1.0))
+--- a/native/godot/scripts/side_panels.gd
++++ b/native/godot/scripts/side_panels.gd
+@@ -1,4 +1,5 @@
+ extends RefCounted
++const UI := preload("res://scripts/ui_theme.gd")
+ ## The side windows (hud.gd): Diplomacy, Intelligence, World market and
+ ## Territory, redesigned.
+ ## Each window has tabs along its top so nothing needs long scrolling:
+@@ -634,6 +635,10 @@
+ 	chart.draw.connect(func():
+ 		var w := size.x
+ 		var h := size.y
++		chart.draw_style_box(UI.box(Color("0b1b29"), Color("36516b"), 1, 4, 0.0), Rect2(Vector2.ZERO, size))
++		for tick in range(1, 4):
++			var y := h * float(tick) / 4.0
++			chart.draw_line(Vector2(1, y), Vector2(w - 1, y), Color(0.7, 0.8, 0.9, 0.1), 1.0)
+ 		if values.size() < 2:
+ 			chart.draw_line(Vector2(0, h * 0.5), Vector2(w, h * 0.5), Color(colour, 0.5), 1.0)
+ 			return
+@@ -654,7 +659,8 @@
+ 		for x in range(0, int(w), 8):
+ 			chart.draw_line(Vector2(x, start_y), Vector2(x + 4, start_y), Color(1, 1, 1, 0.18), 1.0)
+ 		chart.draw_polyline(line, colour, 2.0, true)
+-		chart.draw_circle(line[line.size() - 1], 3.0, colour))
++		chart.draw_circle(line[line.size() - 1], 4.0, Color("0b1b29"))
++		chart.draw_circle(line[line.size() - 1], 2.5, colour))
+ 	return chart
+ 
+ func _exchange(m: Node) -> void:
+--- a/native/godot/scripts/ui_theme.gd
++++ b/native/godot/scripts/ui_theme.gd
+@@ -24,17 +24,17 @@
+ const KEY_TOP := Color("1c3850")
+ const KEY_LOW := Color("142b42")
+ 
+-## Navigation shares the atlas accent; icons and names identify each ministry.
++## Ministry accents complement icons and names; colour never carries meaning alone.
+ const MINISTRY := {
+-	"economy": GOLD, "market": GOLD, "research": GOLD,
+-	"diplomacy": GOLD, "intel": GOLD, "territory": GOLD, "defence": GOLD, "un": GOLD,
+-	"land": GOLD, "military": GOLD, "build": GOLD,
+-	"people": GOLD, "cabinet": GOLD, "menu": GOLD,
++	"economy": Color("d8bd80"), "market": Color("d8bd80"), "research": Color("91baf0"),
++	"diplomacy": Color("b6a6e3"), "intel": Color("8dc8c9"), "territory": Color("a9c68f"), "defence": Color("e2a28a"), "un": Color("8ebfdc"),
++	"land": Color("a9c68f"), "military": Color("e2a28a"), "build": Color("d8bd80"),
++	"people": Color("a9c68f"), "cabinet": Color("d8bd80"), "menu": GOLD,
+ }
+ ## Each resource's colour on the strip.
+ const RESOURCE_TINT := {
+-	"money": GOLD, "food": CREAM, "iron": CREAM, "oil": GOLD,
+-	"silicon": CREAM, "uranium": CREAM, "gas": CREAM,
++	"money": GOLD, "food": Color("b2d497"), "iron": Color("b2c5d8"), "oil": Color("d8b18d"),
++	"silicon": Color("8ecadf"), "uranium": Color("c2d98e"), "gas": Color("b5b6e7"),
+ }
+ 
+ static func ministry(key: String) -> Color:
+@@ -48,7 +48,7 @@
+ 		s.bg_color = accent if int(state[3]) == 3 else Color(BG.lerp(accent, float(state[1])), 0.98)
+ 		s.border_color = Color(accent, float(state[2]))
+ 		s.border_width_bottom = int(state[3])
+-		s.set_corner_radius_all(2)
++		s.set_corner_radius_all(5)
+ 		s.corner_radius_bottom_left = 0 if int(state[3]) > 0 else 2
+ 		s.corner_radius_bottom_right = 0 if int(state[3]) > 0 else 2
+ 		s.content_margin_left = 10
+@@ -73,7 +73,7 @@
+ 		s.bg_color = accent if float(state[1]) >= 0.14 else Color(BG_2.lerp(accent, float(state[1])), 0.98)
+ 		s.border_color = Color(accent, float(state[2]))
+ 		s.border_width_bottom = int(state[3])
+-		s.set_corner_radius_all(2)
++		s.set_corner_radius_all(5)
+ 		s.corner_radius_bottom_left = 0
+ 		s.corner_radius_bottom_right = 0
+ 		s.content_margin_left = 8
+@@ -213,9 +213,9 @@
+ ## corners, a rule or an accent bar where asked, a soft shadow for a window.)
+ static func plate(top: Color, bottom: Color, border := Color(0, 0, 0, 0), margin := 10.0, bevel := LIFT, rule := Color(0, 0, 0, 0), rule_px := 0, shadow := 0, accent := Color(0, 0, 0, 0), accent_px := 0) -> StyleBox:
+ 	var s := StyleBoxFlat.new()
+-	s.bg_color = top.lerp(bottom, 0.5)
++	s.bg_color = top.lerp(bottom, 0.35)
+ 	s.anti_aliasing = true
+-	s.set_corner_radius_all(3 if shadow > 0 else 2)
++	s.set_corner_radius_all(8 if shadow > 0 else 5)
+ 	if border.a > 0.0:
+ 		s.border_color = Color(TRIM, 0.9) if border.s < 0.35 or border.v < 0.6 else Color(border, 0.9)
+ 		s.set_border_width_all(1)
+@@ -381,23 +381,23 @@
+ 	t.set_color("selection_color", "LineEdit", Color("365d69"))
+ 	# Atlas controls: sand selection has dark ink, including icons, for contrast.
+ 	for kind in ["Button", "TabButton", "RowButton"]:
+-		var normal := box(KEY_LOW, Color(TRIM, 0.6), 1, 2, 9.0 if kind == "Button" else 6.0)
+-		var hover := box(KEY_TOP, GOLD, 1, 2, 9.0 if kind == "Button" else 6.0)
+-		var selected := box(GOLD, BRIGHT, 1, 2, 9.0 if kind == "Button" else 6.0)
++		var normal := box(KEY_LOW, Color(TRIM, 0.45), 1, 6, 9.0 if kind == "Button" else 6.0)
++		var hover := box(KEY_TOP.lightened(0.05), GOLD, 1, 6, 9.0 if kind == "Button" else 6.0)
++		var selected := box(GOLD, BRIGHT, 1, 6, 9.0 if kind == "Button" else 6.0)
+ 		t.set_stylebox("normal", kind, normal)
+ 		t.set_stylebox("hover", kind, hover)
+ 		for state in ["pressed", "hover_pressed"]:
+ 			if kind == "RowButton":
+ 				# A list row carries its own light labels: selected it turns deep blue
+ 				# with a gold frame, not sand (light text on sand could not be read).
+-				t.set_stylebox(state, kind, box(Color("2d4863"), GOLD, 2, 2, 6.0))
++				t.set_stylebox(state, kind, box(Color("2d4863"), GOLD, 2, 6, 6.0))
+ 				t.set_color("font_%s_color" % state, kind, BRIGHT)
+ 				t.set_color("icon_%s_color" % state, kind, BRIGHT)
+ 				continue
+ 			t.set_stylebox(state, kind, selected)
+ 			t.set_color("font_%s_color" % state, kind, INK)
+ 			t.set_color("icon_%s_color" % state, kind, INK)
+-		t.set_stylebox("focus", kind, box(Color.TRANSPARENT, BRIGHT, 2, 2, 0.0))
++		t.set_stylebox("focus", kind, box(Color.TRANSPARENT, BRIGHT, 2, 6, 0.0))
+ 		t.set_color("icon_normal_color", kind, GOLD)
+ 		t.set_color("font_color", kind, TEXT)
+ 		t.set_color("font_hover_color", kind, BRIGHT)
+--- a/native/godot/scripts/unit_overlay.gd
++++ b/native/godot/scripts/unit_overlay.gd
+@@ -9,6 +9,12 @@
+ 
+ var world: Node
+ var _elapsed := 0.0
++var _badge_styles: Dictionary = {}
++
++func badge_style(selected: bool) -> StyleBoxFlat:
++	if not _badge_styles.has(selected):
++		_badge_styles[selected] = preload("res://scripts/ui_theme.gd").box(Color("142c3d"), Color("f0d690") if selected else Color("526b7c"), 1, 4, 0.0, 2)
++	return _badge_styles[selected]
+ 
+ func setup(world_node: Node) -> void:
+ 	world = world_node
+@@ -27,8 +33,8 @@
+ 	if key == "worker": return "W"
+ 	if u.get("naval", false): return "SEA"
+ 	if u.get("fly", false): return "AIR"
+-	if key in ["artillery", "mlrs", "himars", "tos1a", "k9", "heavyRocket", "mortarTeam", "towedHowitzer"]: return "ART"
+-	if key in ["aaVehicle", "samLauncher", "manpads", "laserAD", "irisT", "abmLauncher", "saudiThaad", "hpmVehicle"]: return "AA"
++	if key in ["artillery", "mlrs", "himars", "tos1a", "k9", "heavyRocket", "mortarTeam", "towedHowitzer", "wheeledHowitzer"]: return "ART"
++	if key in ["aaVehicle", "samLauncher", "manpads", "laserAD", "irisT", "abmLauncher", "saudiThaad", "hpmVehicle", "shortRangeSAM"]: return "AA"
+ 	return "ARM" if u.get("vehicle", false) else "INF"
+ 
+ func role_markers() -> Array:
+@@ -65,8 +71,7 @@
+ 			if not placed.any(func(other): return other.grow(2).intersects(box)): break
+ 			box.position.y -= 21.0
+ 		placed.append(box)
+-		draw_rect(box.grow(1), Color("f0d690") if mark.selected else Color("0b151d"))
+-		draw_rect(box, Color("11232e"))
++		draw_style_box(badge_style(mark.selected), box)
+ 		var colour := Color(world.map.nations[mark.owner].color)
+ 		draw_rect(Rect2(box.position, Vector2(3, 18)), colour)
+ 		draw_string(font, box.position + Vector2(6, 13), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("f5ecd8"))
+--- a/native/godot/scripts/world.gd
++++ b/native/godot/scripts/world.gd
+@@ -780,15 +780,15 @@
+ 	env.fog_aerial_perspective = 0.45  # distant land takes on the sky's blue: depth
+ 	env.fog_sky_affect = 0.0
+ 	env.adjustment_enabled = true
+-	env.adjustment_saturation = 1.2
+-	env.adjustment_contrast = 1.06
++	env.adjustment_saturation = 1.02
++	env.adjustment_contrast = 1.04
+ 	var world := WorldEnvironment.new()
+ 	world.environment = env
+ 	add_child(world)
+ 	sun = DirectionalLight3D.new()
+ 	sun.rotation_degrees = Vector3(-42, -38, 0)
+ 	sun.light_color = Color("fff1dc")
+-	sun.light_energy = 1.35
++	sun.light_energy = 1.18
+ 	sun.shadow_enabled = true
+ 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+ 	sun.directional_shadow_max_distance = 320
+--- a/native/godot/shaders/terrain.gdshader
++++ b/native/godot/shaders/terrain.gdshader
+@@ -128,7 +128,7 @@
+ 	// photographic flecks with sharpening. Close-up ground keeps its detail.
+ 	albedo = mix(albedo, vec3(0.32, 0.40, 0.20), w.x * (1.0 - nd) * 0.45);
+ 	// The grass photo is a bright spring lime; pull it toward a deeper summer green.
+-	albedo = mix(albedo, albedo * vec3(0.82, 0.9, 0.7), w.x);
++	albedo = mix(albedo, albedo * vec3(0.86, 0.87, 0.76), w.x);
+ 	albedo *= mix(0.8, 1.1, macro);
+ 	albedo = mix(albedo, albedo * vec3(1.06, 1.0, 0.84), smoothstep(0.55, 0.75, noise(p * 0.0017 + 0.13)) * w.x);
+ 
+--- a/native/godot/shaders/vehicle.gdshader
++++ b/native/godot/shaders/vehicle.gdshader
+@@ -59,7 +59,9 @@
+ 	vec3 col = base * mix(0.8, 1.06, grime) * mix(0.94, 1.03, speckle);
+ 	// Road dust on the lower hull and running gear.
+ 	float dust = (1.0 - smoothstep(dust_height * 0.35, dust_height, above_ground)) * smoothstep(0.35, 0.65, grime + speckle * 0.3);
+-	col = mix(col, dust_color, dust * 0.7);
++	col = mix(col, dust_color, dust * 0.48);
++	// Broad upward-facing panels catch a restrained pale edge without extra textures.
++	col *= mix(0.96, 1.08, clamp(local_normal.y, 0.0, 1.0));
+ 	ALBEDO = col;
+ 	bool glass = vertex_tone && tone.b > 0.4 && tone.b < 0.75;
+ 	ROUGHNESS = glass ? 0.12 : mix(mix(0.72, 0.9, grime), 0.55, m) + dust * 0.1;
+--- a/native/godot/shaders/water.gdshader
++++ b/native/godot/shaders/water.gdshader
+@@ -9,7 +9,7 @@
+ 
+ uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
+ uniform sampler2D depth_tex : hint_depth_texture, filter_linear_mipmap;
+-uniform vec3 shallow_color : source_color = vec3(0.10, 0.52, 0.50);
++uniform vec3 shallow_color : source_color = vec3(0.12, 0.40, 0.43);
+ uniform vec3 deep_color : source_color = vec3(0.012, 0.075, 0.13);
+ uniform float clarity = 0.16;          // how quickly colour saturates with depth
+ uniform float swell = 0.32;            // wave height in metres
+--- /dev/null
++++ b/native/godot/tools/visual-finish-views.gd
+@@ -0,0 +1,112 @@
++extends SceneTree
++const UI := preload("res://scripts/ui_theme.gd")
++const Overlay := preload("res://scripts/unit_overlay.gd")
++var w: Node
++var errors: Array[String] = []
++var checks := 0
++func _initialize() -> void: call_deferred("run")
++func frames(n := 12) -> void:
++	for i in range(n): await process_frame
++func check(ok: bool, label: String) -> void:
++	checks += 1
++	if not ok: errors.append(label); push_error(label)
++func shot(name: String) -> void:
++	await frames()
++	await RenderingServer.frame_post_draw
++	root.get_texture().get_image().save_png("res://build/visual-finish/" + name + ".png")
++func production_fits() -> void:
++	await frames()
++	for card in w.hud._list.get_children():
++		if not card is Button or not card.has_meta("cost"): continue
++		var content: Control = card.get_child(0)
++		check(content.get_combined_minimum_size().y <= card.size.y - 17, "Production card height fits")
++		check(content.get_combined_minimum_size().x <= content.size.x + 1, "Production card width fits")
++func run() -> void:
++	if DisplayServer.get_name() == "headless": quit(1); return
++	DirAccess.make_dir_recursive_absolute("res://build/visual-finish")
++	set_meta("match_config", {"map":"island", "players":3, "nation":0})
++	change_scene_to_file("res://world.tscn")
++	for i in range(12000):
++		await create_timer(0.01).timeout
++		if current_scene != null and current_scene.get("nav_ready") == true and current_scene.get("menu") != null:
++			w = current_scene; break
++	if w == null: push_error("Visual scene not ready"); quit(1); return
++	# World skips interactive menu setup when a command-line test flag is present.
++	if w.menu._root == null: w.menu.setup(w)
++	root.size = Vector2i(1280,800)
++	w.ui_scale = 1.0
++	w.apply_ui_scale()
++	w.menu.open_main()
++	await shot("01-main-menu")
++	w.menu.open_new_game()
++	await shot("02-campaign")
++	w.menu.open_settings()
++	await shot("03-settings")
++	w.start_match("easy")
++	w.menu.close()
++	await frames()
++	w.set_physics_process(false)
++	w.ai.set_physics_process(false)
++	preload("res://tools/test_kit.gd").quiet(w, ["un", "wmd", "defcon", "directorate", "generals", "events", "support"])
++	w.economy.grant_test_resources()
++	w.cam_focus = w.start
++	w.cam_dist = 110
++	w.cam_dist_target = 110
++	w.update_camera(1.0)
++	if "--visual-forward-smoke" in OS.get_cmdline_user_args():
++		await shot("11-forward-battlefield")
++		print("VISUAL_FORWARD_SMOKE PASS")
++		quit(0)
++		return
++	await shot("04-battlefield")
++	var tank: Dictionary = w.units.filter(func(u): return u.owner == 0 and u.get("vehicle", false) and not u.get("fly", false))[0]
++	tank.hp = tank.max_hp * 0.55
++	w.select_same_kind(tank)
++	w.hud.notice("Selected armour: damaged units retain clear health and ownership markers.", tank.node.position)
++	await shot("04-unit-selection")
++	for u in w.units:
++		u.selected = false
++		u.ring.visible = false
++	var site: Dictionary = w.place_building("farm", w.start + Vector3(-22,0,18), 0, false)
++	site.progress = 0.35
++	w.hud._update_panel()
++	await shot("04-construction-progress")
++	w.hud.set_production_open(true)
++	await production_fits()
++	await shot("05-construction")
++	var silo: Dictionary = w.place_building("missileSilo", w.start + Vector3(18,0,18), 0, true)
++	w.select_building(silo)
++	await production_fits()
++	check(w.hud._extra.defcon[1].get_global_rect().end.x < w.hud.find_child("TimeControls", true, false).get_child(0).get_global_rect().position.x, "All national figures clear time controls with full stores and missiles")
++	await shot("06-missiles-selection")
++	w.select_building(null)
++	w.hud.set_production_open(false)
++	w.hud.toggle_cabinet()
++	await shot("07-cabinet")
++	w.hud.toggle_cabinet()
++	w.hud.toggle_log()
++	await shot("07-log")
++	w.hud.toggle_log()
++	for mode in ["diplomacy", "market", "intel", "defence", "territory", "un"]:
++		w.hud.toggle_panel(mode, true)
++		await frames()
++		check(root.get_visible_rect().grow(2).encloses(w.hud._win.get_global_rect()), mode + " window fits at 1280x800")
++		await shot("07-" + mode)
++	w.hud.toggle_panel("defence", true)
++	for tab in ["ai", "arsenal", "nuclear"]:
++		w.hud._panels.defence_tab = tab
++		w.hud.refresh_side()
++		await shot("08-defence-" + tab)
++	w.hud.toggle_panel("defence")
++	w.hud.toggle_research()
++	await shot("09-research")
++	w.hud.toggle_research()
++	root.size = Vector2i(1600,900)
++	w.hud.toggle_panel("market", true)
++	await frames()
++	check(root.get_visible_rect().grow(2).encloses(w.hud._win.get_global_rect()), "Market fits at 1600x900")
++	await shot("10-large-market")
++	check(Overlay.role_of({"key":"wheeledHowitzer", "vehicle":true}) == "ART", "New artillery has artillery badge")
++	check(Overlay.role_of({"key":"shortRangeSAM", "vehicle":true}) == "AA", "New SAM has air defence badge")
++	print("VISUAL_FINISH_VIEWS ", "PASS" if errors.is_empty() else errors, " checks=", checks)
++	quit(0 if errors.is_empty() else 1)
+--- /dev/null
++++ b/native/VISUAL-FINISH-2026-10-12.md
+@@ -0,0 +1,30 @@
++# שיפור חזותי — DOMINION — 12.10.2026
++
++השינויים מיושמים במשחק Godot המקומי. זו שכבה מעל גרסה 0.9.92 ומעל הרחבת הארסנל שנמסרה בנפרד. הפרסום והמתקין הרשמי נשארים באחריות קלוד.
++
++| אזור | השיפור המיושם | צילום לבדיקה ב־native/godot/build/visual-finish |
++|---|---|---|
++| תפריט ראשי | פעולה ראשית עם פס זיהוי, צל ומסגרת; אייקונים גדולים יותר | 01-main-menu.png |
++| קמפיין, בחירת מדינה והגדרות | שפה אחידה של חלונות, בחירה, מעבר עכבר ומיקוד מקלדת | 02-campaign.png, 03-settings.png |
++| סרגל משאבים וניווט | צבעי משאבים ותחומי ניהול; נתונים נערמים במסך צר כדי להשאיר מקום לבקרת הזמן | 05-construction.png, 06-missiles-selection.png |
++| שדה הקרב | הפחתת רוויה ותאורה צורבת; גווני קרקע ומים מרוסנים; אבק פחות אטום על רכבים | 04-battlefield.png |
++| יחידות ובחירה | תגי תפקיד עם מסגרת וצל; זיהוי נכון לתותח הגלגלי ולנ״מ החדש; פסי בריאות עם רקע ריק ומסגרת בחירה | 04-unit-selection.png |
++| בנייה וייצור | כרטיסים מעוגלים, שלבי תמונה כהים עם מסגרת, פעולות ועלויות גלויות | 04-construction-progress.png, 05-construction.png |
++| טילים וכלי נשק | תמונה ממוסגרת בנפרד מהשם, תאורת סטודיו משופרת, הפרדת המפרט מהפעולה | 06-missiles-selection.png |
++| מבנים | גימור נפרד לזכוכית, מתכת וקירות במקום חספוס זהה | 04-battlefield.png |
++| מינימפה | רשת עדינה מתחת לערפל, הילה כהה לסמלים, משולש למטוס, מעוין לספינה וטבעת לבחירה | 04-battlefield.png |
++| קבינט | צבעים נפרדים למשרדים ורשת עזר בגרפים | 07-cabinet.png |
++| דיפלומטיה | סגול בהיר בכותרת, ניווט וכרטיסי המשרד; כרטיסים עם עומק | 07-diplomacy.png |
++| שוק וכלכלה | זהב בכותרת, גרפים ממוסגרים עם קווי עזר ונקודת קצה ברורה | 07-market.png, 10-large-market.png |
++| מודיעין | טורקיז בכותרת ובניווט; שפת כרטיסים אחידה | 07-intel.png |
++| הגנה, AI, ארסנל והתראה גרעינית | גוון נחושתי, כרטיסים ומצבי בחירה אחידים | 07-defence.png, 08-defence-*.png |
++| שטחים | ירוק זית בכותרת ובניווט; סמלי מפה עם ניגודיות | 07-territory.png |
++| האו״ם | כחול בהיר בכותרת ובניווט | 07-un.png |
++| מחקר | כרטיסים מעוגלים עם צל, גבולות שקטים למחקר לא נבחר והדגשה נפרדת לבחירה ולתור | 09-research.png |
++| הודעות, יומן ועזרה | רקע הודעות אטום יותר וצל; חלונות, כפתורים וטולטיפים מהעיצוב המשותף | 07-log.png, 04-unit-selection.png |
++
++הצבע מלווה תמיד שם, סמל או מצב כתוב. אין שינוי בעלויות, נזק, טווחים, התקדמות מחקר, תנאי פתיחה או שמירות. סינון ערפל הקרב נשמר לפני ציור יחידות ומבנים; רשת המינימפה מצוירת לפני שכבת הערפל.
++
++התמונות נשארות ברזולוציה 224×168 ונוצרות פעם אחת בתור. סגנונות תגי היחידות וכרטיסי המחקר נשמרים במטמון. לא נוספו חלקיקים או אובייקטים מתמשכים לשדה הקרב.
++
++אימות: תפריטים, קריאות הייצור והטילים, מחקר, בחירה/סמלים וארסנל; תצוגה גרפית ב־1280×800 וב־1600×900. פרטי התוצאות, מגבלות סביבת הריצה ופקודות השחזור בחבילת המסירה `native/review/codex-visual-handoff/HANDOFF.md`.

@@ -295,6 +295,7 @@ function startGameNow() {
 
 /* ---------------- camera ---------------- */
 function updateCamera(dt) {
+	if (G.paused || (G.gameOver && !G.continuingAfterEnd)) return;
   camDist += (camZoomTarget - camDist) * (1 - Math.exp(-dt * 12));
   const panSpeed = camDist * 0.9 * dt;
   const fwdX = -Math.sin(camYaw), fwdZ = -Math.cos(camYaw);
@@ -520,6 +521,10 @@ function initInput() {
       return;
     }
     if (!G.started) return;
+	if (G.gameOver && !G.continuingAfterEnd) return;
+	// Space/Enter belong to a focused button. Let its native activation run.
+	if (e.target.closest('button, [role="button"]') && [' ', 'enter'].includes(k)) return;
+	if (G.paused && ![' ', 'escape', 'f3', 'f10'].includes(k)) return;
     if (handleControlGroup(e)) return;
     if (k === 'home') { e.preventDefault(); focusCapital(); return; }
     if (k === 'f3') { e.preventDefault(); toggleDisplayPanel(); return; }
@@ -542,6 +547,7 @@ function initInput() {
   window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; mouse.onCanvas = mouse.midPan = mouse.down = false; hideDragBox(); });
 
   canvas.addEventListener('wheel', e => {
+	if (!G.started || (G.gameOver && !G.continuingAfterEnd)) return;
     // bigger maps allow a wider command view
     camZoomTarget = clamp(camZoomTarget + e.deltaY * 0.06, 24, Math.max(220, MAP_SIZE * 0.3));
   }, { passive: true });
@@ -733,6 +739,13 @@ function loop() {
   const measuredDt = clock.getDelta();
   const rawDt = Math.min(measuredDt, 0.05);
   if (!G.started) return;
+  // A paused campaign has a static world. Refresh it at 2 Hz for resize and
+  // graphics changes while HTML menus remain fully responsive.
+  if (G.paused) {
+    const now = performance.now();
+    if (loop._pausedRenderTime != null && now - loop._pausedRenderTime < 500) return;
+    loop._pausedRenderTime = now;
+  } else loop._pausedRenderTime = null;
   const frameStart = performance.now();
   renderer.info.autoReset = false;
   renderer.info.reset();
@@ -828,7 +841,7 @@ function loop() {
   if (composer) composer.render();
   else renderer.render(scene, camera);
   const frameEnd = performance.now();
-  recordFrameStats(measuredDt, frameEnd - frameStart, frameEnd - renderStart);
+  if (!G.paused) recordFrameStats(measuredDt, frameEnd - frameStart, frameEnd - renderStart);
 }
 
 /* ---------------- boot ---------------- */

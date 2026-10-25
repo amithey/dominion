@@ -1,0 +1,1373 @@
+diff --git a/native/godot/scripts/force_catalog.gd b/native/godot/scripts/force_catalog.gd
+index 288f0c9..f950d05 100644
+--- a/native/godot/scripts/force_catalog.gd
++++ b/native/godot/scripts/force_catalog.gd
+@@ -1,15 +1,19 @@
+ extends RefCounted
++const Diversity := preload("res://scripts/arsenal_diversity_data.gd")
+ ## Representative operator rosters, not inventories or weapon specifications.
+ ## Evidence, limitations and additions deferred for research are in
+ ## native/FORCE-ROSTER-RESEARCH-2026-10-06.md. All figures below are game balance.
+ const IDS := ["usa", "china", "eu", "iran", "russia", "india", "japan", "turkiye", "israel", "uk", "south_korea", "saudi", "brazil", "indonesia", "ukraine", "north_korea", "egypt", "australia", "pakistan", "iraq", "syria", "afghanistan"] + preload("res://scripts/regional_factions.gd").IDS
+-const BASE := {"machineGunTeam": "soldier", "mortarTeam": "artillery", "scoutTeam": "commando", "ifv": "apc", "heavyAPC": "tank", "reconVehicle": "apc", "directFire": "tank", "towedHowitzer": "artillery", "attackJet": "jet", "lightFighter": "jet", "scoutHelicopter": "helicopter", "missileBoat": "corvette"}
+-const HOME := {"machineGunTeam": "barracks", "mortarTeam": "barracks", "scoutTeam": "barracks", "ifv": "tankFactory", "heavyAPC": "tankFactory", "reconVehicle": "tankFactory", "directFire": "tankFactory", "towedHowitzer": "tankFactory", "attackJet": "airfield", "lightFighter": "airfield", "scoutHelicopter": "helipad", "missileBoat": "shipyard"}
+-const INFANTRY := ["machineGunTeam", "mortarTeam", "scoutTeam"]
++const BASE := {"recoillessTeam": "rocketSoldier", "wheeledHowitzer": "artillery", "shortRangeSAM": "samLauncher", "machineGunTeam": "soldier", "mortarTeam": "artillery", "scoutTeam": "commando", "ifv": "apc", "heavyAPC": "tank", "reconVehicle": "apc", "directFire": "tank", "towedHowitzer": "artillery", "attackJet": "jet", "lightFighter": "jet", "scoutHelicopter": "helicopter", "missileBoat": "corvette"}
++const HOME := {"recoillessTeam": "barracks", "wheeledHowitzer": "tankFactory", "shortRangeSAM": "tankFactory", "machineGunTeam": "barracks", "mortarTeam": "barracks", "scoutTeam": "barracks", "ifv": "tankFactory", "heavyAPC": "tankFactory", "reconVehicle": "tankFactory", "directFire": "tankFactory", "towedHowitzer": "tankFactory", "attackJet": "airfield", "lightFighter": "airfield", "scoutHelicopter": "helipad", "missileBoat": "shipyard"}
++const INFANTRY := ["machineGunTeam", "mortarTeam", "scoutTeam", "recoillessTeam"]
+ const SCOUTS := ["scoutTeam", "reconVehicle", "scoutHelicopter"]
+ const SIGHT := {"scoutTeam": 72.0, "reconVehicle": 84.0, "scoutHelicopter": 100.0, "ifv": 44.0, "heavyAPC": 38.0, "directFire": 52.0, "missileBoat": 52.0}
+-const INDIRECT := ["mortarTeam", "towedHowitzer"]
++const INDIRECT := ["mortarTeam", "towedHowitzer", "wheeledHowitzer"]
+ const ROLES := {
++	"recoillessTeam": {"name": "Recoilless Support Team", "hp": 95, "dmg": 35, "range": 24, "cooldown": 4.0, "aggro": 28, "speed": 4.0, "cost": {"money": 210, "iron": 12}, "trainTime": 12, "pop": 2, "desc": "Cheap unguided direct fire against light vehicles and fortifications. Shorter reach and less anti-tank power than an ATGM. Exposed crew; cannot engage aircraft or warships. Ammunition selection is abstracted."},
++	"wheeledHowitzer": {"name": "Wheeled Self-propelled Howitzer", "hp": 240, "dmg": 62, "range": 88, "cooldown": 6.5, "aggro": 88, "speed": 6.2, "cost": {"money": 610, "iron": 42, "oil": 24}, "trainTime": 25, "pop": 3, "requires": "advancedLogistics", "desc": "Long-range conventional gun support with fast relocation and light protection. Same reach as established artillery; costs more than a towed gun. Needs a spotter beyond its sight. Use Bombard for area fire; cannot engage aircraft."},
++	"shortRangeSAM": {"name": "Short-range Air Defence", "hp": 280, "dmg": 36, "range": 44, "cooldown": 2.8, "aggro": 52, "speed": 5.8, "cost": {"money": 570, "iron": 30, "oil": 18, "silicon": 28}, "trainTime": 23, "pop": 3, "requires": "guidedMunitions", "desc": "Mobile local air defence against aircraft and UAV units. Shorter reach and lower cost than the long-range SAM. Cannot attack ground targets, bombard or intercept strategic missile events. Gun and missile combinations are abstracted into one anti-aircraft shot."},
+ 	"machineGunTeam": {"name": "Machine-gun Team", "hp": 110, "dmg": 9, "range": 26, "cooldown": 0.4, "aggro": 30, "speed": 4.3, "cost": {"money": 170, "iron": 8}, "trainTime": 10, "pop": 2, "desc": "Sustained fire against infantry and exposed light vehicles. Cannot engage aircraft, warships or heavy armour. Slower than rifle infantry."},
+ 	"mortarTeam": {"name": "Mortar Team", "hp": 85, "dmg": 28, "range": 54, "cooldown": 4.8, "aggro": 54, "speed": 3.6, "cost": {"money": 230, "iron": 12}, "trainTime": 14, "pop": 2, "desc": "Portable indirect fire against infantry concentrations. Needs a spotter beyond its own sight; weak against armour and vulnerable in close combat. Bombard can target a location."},
+ 	"scoutTeam": {"name": "Reconnaissance Patrol", "hp": 80, "dmg": 6, "range": 16, "cooldown": 1.2, "aggro": 24, "speed": 6.5, "cost": {"money": 140, "iron": 4}, "trainTime": 9, "pop": 1, "desc": "Fast infantry scouts with extended vision. Reveal targets for indirect fire and warn of an advance; light weapons and little protection."},
+@@ -41,6 +45,7 @@ const NAMES := {
+ }
+ const CORRECTIONS := {"apc": {"south_korea": "K808 APC"}}
+ const PROFILES := {
++	"recoillessTeam": [0.7, 1.4, 0.55, 0.0, 0.0, 1.4], "wheeledHowitzer": [1.2, 1.0, 0.8, 0.0, 0.6, 1.4], "shortRangeSAM": [0.0, 0.0, 0.0, 1.6, 0.0, 0.0],
+ 	"machineGunTeam": [1.8, 0.45, 0.0, 0.0, 0.0, 0.25], "mortarTeam": [1.6, 0.8, 0.15, 0.0, 0.2, 0.75], "scoutTeam": [0.8, 0.2, 0.0, 0.0, 0.0, 0.2],
+ 	"ifv": [1.8, 1.4, 0.45, 0.0, 0.2, 0.65], "heavyAPC": [1.6, 0.3, 0.0, 0.0, 0.0, 0.25], "reconVehicle": [1.2, 0.6, 0.0, 0.0, 0.0, 0.25], "directFire": [0.75, 1.4, 1.15, 0.0, 0.4, 1.3],
+ 	"towedHowitzer": [1.2, 1.0, 0.8, 0.0, 0.6, 1.4], "attackJet": [1.5, 1.6, 1.6, 0.0, 0.6, 1.6], "lightFighter": [0.6, 0.7, 0.65, 1.8, 0.6, 0.65], "scoutHelicopter": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "missileBoat": [0.0, 0.0, 0.0, 0.0, 1.8, 0.0],
+@@ -53,17 +58,24 @@ static func id_of(w: Node, owner: int) -> String:
+ 	return str(w.map.nations[owner].get("id", ""))
+ 
+ static func operators(key: String) -> Array:
+-	return IDS.duplicate() if key in INFANTRY else NAMES.get(key, {}).keys()
++	return IDS.duplicate() if key in ["machineGunTeam", "mortarTeam", "scoutTeam"] else names(key).keys()
++
++static func names(key: String) -> Dictionary:
++	var out: Dictionary = NAMES.get(key, {}).duplicate()
++	out.merge(Diversity.names(key), true)
++	return out
+ 
+ static func name_for(w: Node, owner: int, key: String) -> String:
+ 	var id: String = id_of(w, owner)
+-	return str(w.map.nations[owner].get("unit_names", {}).get(key, NAMES.get(key, CORRECTIONS.get(key, {})).get(id, ROLES.get(key, {}).get("name", ""))))
++	return str(w.map.nations[owner].get("unit_names", {}).get(key, names(key).get(id, CORRECTIONS.get(key, {}).get(id, ROLES.get(key, {}).get("name", "")))))
+ 
+ static func apply(w: Node) -> void:
+ 	for key in ROLES:
+ 		var def: Dictionary = ROLES[key].duplicate(true)
+ 		def.generic = def.name
+ 		def.name = name_for(w, 0, key)
++		var provenance: String = Diversity.evidence(key, id_of(w, 0))
++		if provenance != "": def.desc += " " + provenance
+ 		if (id_of(w, 0) == "iran" and key in ["ifv", "attackJet", "lightFighter"]) or (id_of(w, 0) == "north_korea" and key == "attackJet"):
+ 			def.desc += " Documented legacy equipment; current readiness is unverified."
+ 		def.nation = operators(key).map(func(id): return {"usa": "blue", "china": "red", "eu": "green", "iran": "gold"}.get(id, id))
+diff --git a/native/godot/scripts/force_models.gd b/native/godot/scripts/force_models.gd
+index 56e3b30..09b86f1 100644
+--- a/native/godot/scripts/force_models.gd
++++ b/native/godot/scripts/force_models.gd
+@@ -25,7 +25,7 @@ static func ground(g: RefCounted, key: String, owner: int) -> Dictionary:
+ 		g.block(top, Vector3(0.45, 0.26, 0.4), Vector3(0, 0.35, 4.9), g.METAL, 0, 0, 0, raised)
+ 		parts.muzzle = 4.9
+ 	else:
+-		var tracked: bool = key == "heavyAPC" or (key == "ifv" and id != "indonesia") or (key == "directFire" and id == "indonesia") or (key == "reconVehicle" and id == "usa")
++		var tracked: bool = key == "heavyAPC" or (key == "ifv" and id != "indonesia") or (key == "directFire" and id == "indonesia") or (key == "reconVehicle" and id == "usa") or (key == "shortRangeSAM" and id in ["uk", "turkiye"])
+ 		var scout: bool = key == "reconVehicle" and not tracked
+ 		var heavy: bool = key == "heavyAPC"
+ 		var length := 4.5 if scout else (7.3 if heavy else 6.5)
+@@ -49,10 +49,26 @@ static func ground(g: RefCounted, key: String, owner: int) -> Dictionary:
+ 		parts.turret = Node3D.new()
+ 		parts.turret.position = Vector3(0, height, 0.3)
+ 		parts.root.add_child(parts.turret)
+-		var gun: bool = key == "directFire"
++		var gun: bool = key in ["directFire", "wheeledHowitzer"]
+ 		g.block(top, Vector3(1.7 if gun else 1.1, 0.55, 1.9 if gun else 1.2), Vector3.ZERO, g.PAINT, 0.1, 0.2, 0.1)
+-		g.cyl(top, 0.12 if gun else (0.065 if key == "ifv" else 0.035), 4.3 if gun else 1.9, Vector3(0, 0.22, 2.7 if gun else 1.35), "z", g.METAL, 10)
++		if not key in ["wheeledHowitzer", "shortRangeSAM"]:
++			g.cyl(top, 0.12 if gun else (0.065 if key == "ifv" else 0.035), 4.3 if gun else 1.9, Vector3(0, 0.22, 2.7 if gun else 1.35), "z", g.METAL, 10)
+ 		parts.muzzle = 4.8 if gun else 2.3
++		if key == "wheeledHowitzer":
++			# Truck cab ahead of an exposed rear gun; distinct from tracked guns.
++			g.block(body, Vector3(2.5, 1.4, 1.6), Vector3(0, 2.0, 2.3), g.PAINT)
++			g.block(body, Vector3(2.1, 0.65, 0.06), Vector3(0, 2.3, 3.13), g.GLASS)
++			parts.turret.position.z = -1.6
++			var elevated := Transform3D(Basis(Vector3.RIGHT, -0.4), Vector3(0, 0.6, 0))
++			g.cyl(top, 0.15, 7.0, Vector3(0, 0, 3.2), "z", g.LIGHT, 12, 0.1, elevated)
++			parts.muzzle = 6.2
++		if key == "shortRangeSAM":
++			for side: float in [-1.0, 1.0]:
++				for level: float in [0.45, 0.95]:
++					g.block(top, Vector3(0.6, 0.4, 2.3), Vector3(side * 1.15, level, 0.25), g.LIGHT)
++					g.block(top, Vector3(0.53, 0.33, 0.08), Vector3(side * 1.15, level, 1.44), g.DARK)
++			g.block(top, Vector3(1.0, 0.65, 0.16), Vector3(0, 1.5, -0.5), g.GLASS)
++			parts.muzzle = 1.5
+ 		if scout:
+ 			g.block(top, Vector3(0.3, 0.4, 0.4), Vector3(0.45, 0.8, -0.2), g.DARK)
+ 			g.block(top, Vector3(0.26, 0.16, 0.04), Vector3(0.45, 0.85, 0.02), g.GLASS)
+@@ -110,7 +126,7 @@ static func craft_model(c: RefCounted, key: String, owner: int) -> Dictionary:
+ 	return parts
+ 
+ static func infantry_prop(w: Node, holder: Node3D, key: String, owner: int) -> void:
+-	if not key in ["mortarTeam", "machineGunTeam", "scoutTeam"]: return
++	if not key in ["mortarTeam", "machineGunTeam", "scoutTeam", "recoillessTeam"]: return
+ 	var g: RefCounted = w.armor
+ 	g._mat = g.material_for(owner)
+ 	var st: SurfaceTool = g._begin()
+@@ -123,6 +139,11 @@ static func infantry_prop(w: Node, holder: Node3D, key: String, owner: int) -> v
+ 		g.cyl(st, 0.085, 1.5, Vector3(0, 0.7, 0), "y", g.METAL, 10, 0.085, raised)
+ 		for side: float in [-1.0, 1.0]:
+ 			g.block(st, Vector3(0.06, 0.85, 0.06), Vector3(0.8 + side * 0.24, 0.48, 1.0), g.PAINT)
++	elif key == "recoillessTeam":
++		g.cyl(st, 0.12, 1.55, Vector3(0.65, 1.2, 0.5), "z", g.METAL, 12)
++		g.cyl(st, 0.19, 0.28, Vector3(0.65, 1.2, -0.35), "z", g.DARK, 12)
++		g.block(st, Vector3(0.3, 0.18, 0.25), Vector3(0.65, 1.42, 0.55), g.GLASS)
++		g.block(st, Vector3(0.45, 0.45, 0.6), Vector3(-0.6, 0.25, 0), g.PAINT)
+ 	elif key == "machineGunTeam":
+ 		g.block(st, Vector3(0.22, 0.18, 0.75), Vector3(0.65, 0.85, 0.6), g.DARK)
+ 		g.cyl(st, 0.045, 1.1, Vector3(0.65, 0.9, 1.35), "z", g.METAL, 8)
+diff --git a/native/godot/scripts/regional_factions.gd b/native/godot/scripts/regional_factions.gd
+index 1168f52..d299a39 100644
+--- a/native/godot/scripts/regional_factions.gd
++++ b/native/godot/scripts/regional_factions.gd
+@@ -59,7 +59,7 @@ const AI_PROFILES := {
+ const HOUTHI_MISSILES := ["tactical", "ballistic", "cruise", "antiShip"]
+ 
+ static func fields(id: String, key: String) -> bool:
+-	return key in COMMON or key in EQUIPMENT.get(id, [])
++	return key in COMMON or key in EQUIPMENT.get(id, []) or preload("res://scripts/arsenal_diversity_data.gd").ROSTER.get(key, {}).has(id)
+ static func builds(id: String, key: String) -> bool:
+ 	if key == "missileSilo" and id == "houthis": return true   # its missile tunnels and launch sites
+ 	if key in ["silo", "missileSilo", "nuclearReactor", "strategicComplex", "specialLab"]: return false
+diff --git a/native/godot/scripts/side_panels.gd b/native/godot/scripts/side_panels.gd
+index ad21be1..0cdadfe 100644
+--- a/native/godot/scripts/side_panels.gd
++++ b/native/godot/scripts/side_panels.gd
+@@ -40,6 +40,8 @@ var hud: Node
+ var diplomacy_tab := "nations"
+ var intel_tab := "operations"
+ var defence_tab := "generals"
++var arsenal_country := ""
++var arsenal_domain := "land"
+ var un_tab := "council"
+ var un_target := 1
+ 
+@@ -969,8 +971,10 @@ func _territory_yours() -> void:
+ ## The Defence window: the general staff, the units' ranks, and the nuclear
+ ## alert (generals.gd, veterancy.gd, defcon.gd).
+ func defence() -> void:
+-	_tabs([["Generals", "generals"], ["Veterans", "veterans"], ["Nuclear alert", "nuclear"], ["AI", "ai"]], defence_tab, func(v): defence_tab = v)
++	_tabs([["Generals", "generals"], ["Veterans", "veterans"], ["Nuclear alert", "nuclear"], ["AI", "ai"], ["Arsenal", "arsenal"]], defence_tab, func(v): defence_tab = v)
+ 	match defence_tab:
++		"arsenal":
++			preload("res://scripts/arsenal_diversity_panel.gd").draw(self)
+ 		"ai":
+ 			preload("res://scripts/ai_panel.gd").draw(self)
+ 		"veterans":
+diff --git a/native/godot/tools/force-roster-check.gd b/native/godot/tools/force-roster-check.gd
+index d2a5384..bff5579 100644
+--- a/native/godot/tools/force-roster-check.gd
++++ b/native/godot/tools/force-roster-check.gd
+@@ -34,8 +34,8 @@ func run() -> void:
+ 			check(w.unit_allowed(0, key) == legal and N.fields(key, F.ARSENALS[index]) == legal, "%s / %s operator and starting-roster gate" % [F.IDS[index], key])
+ 			if legal:
+ 				entries += 1
+-				check(N.name_for(w, 0, key) == str(C.NAMES.get(key, {}).get(F.IDS[index], C.ROLES[key].name)), "%s / %s national model name" % [F.IDS[index], key])
+-	check(entries == 139, "139 operator-role choices across all 28 identities")
++				check(N.name_for(w, 0, key) == str(C.names(key).get(F.IDS[index], C.ROLES[key].name)), "%s / %s national model name" % [F.IDS[index], key])
++	check(entries == 159, "159 operator-role choices across all 28 identities")
+ 	w.map.nations[0].id = "future_nation"
+ 	check(C.ROLES.keys().all(func(key): return not w.unit_allowed(0, key)), "new country ID does not inherit an arsenal")
+ 	w.map.nations[0].units = ["scoutTeam", "ifv"]
+--- a/native/godot/scripts/world.gd
++++ b/native/godot/scripts/world.gd
+@@ -59,8 +59,8 @@
+ # centre, which leaves at least two 4 m walk cells between any two neighbouring
+ # districts (6.0 left a single cell, and armour jammed in city streets).
+ const DISTRICT_NAV_SIZE := 4.5
+-const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker", "fpvTeam", "atgmTeam", "manpads", "medic", "machineGunTeam", "mortarTeam", "scoutTeam"]
+-const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle", "tos1a", "brahmos", "k9", "saudiThaad", "heavyRocket", "bushmaster", "ifv", "heavyAPC", "reconVehicle", "directFire", "towedHowitzer"]
++const INFANTRY := ["soldier", "sniper", "commando", "rocketSoldier", "worker", "fpvTeam", "atgmTeam", "manpads", "medic", "machineGunTeam", "mortarTeam", "scoutTeam", "recoillessTeam"]
++const VEHICLES := ["tank", "apc", "artillery", "aaVehicle", "mlrs", "samLauncher", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle", "tos1a", "brahmos", "k9", "saudiThaad", "heavyRocket", "bushmaster", "ifv", "heavyAPC", "reconVehicle", "directFire", "towedHowitzer", "wheeledHowitzer", "shortRangeSAM"]
+ const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "seaDrone", "railgunShip", "orca", "aegisCruiser", "type45", "kcr60", "missileBoat"]
+ const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17", "attackJet", "lightFighter", "scoutHelicopter"]
+ const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17", "attackJet", "lightFighter"]
+@@ -1969,7 +1969,7 @@
+ 		u.path = PackedVector3Array()
+ 
+ func can_bombard(u: Dictionary) -> bool:
+-	return not u.dead and u.dmg > 0 and (u.vehicle or u.key in load("res://scripts/force_catalog.gd").INDIRECT) and not u.key in ["samLauncher", "aaVehicle", "submarine", "nuclearSub", "missileBoat"]
++	return not u.dead and u.dmg > 0 and (u.vehicle or u.key in load("res://scripts/force_catalog.gd").INDIRECT) and not u.key in ["samLauncher", "shortRangeSAM", "aaVehicle", "submarine", "nuclearSub", "missileBoat"]
+ 
+ # ---------------------------------------------------------------- profiler
+ # `-- --profile` during a benchmark measures where each frame goes: every
+@@ -5241,7 +5241,7 @@
+ 			var direction: Vector3 = enemy.node.position-unit.node.position
+ 			if absf(angle_difference(unit.heading,atan2(direction.x,direction.z))) > 0.65:
+ 				return false
+-	var weapon: String = {"mortarTeam": "mortar", "towedHowitzer": "shell_arc", "attackJet": "missile", "lightFighter": "missile", "missileBoat": "missile"}.get(unit.key, WEAPONS.get(unit.key, ""))
++	var weapon: String = {"recoillessTeam": "rocket", "wheeledHowitzer": "shell_arc", "shortRangeSAM": "sam", "mortarTeam": "mortar", "towedHowitzer": "shell_arc", "attackJet": "missile", "lightFighter": "missile", "missileBoat": "missile"}.get(unit.key, WEAPONS.get(unit.key, ""))
+ 	if weapon != "":
+ 		var fired := fire_weapon(unit, enemy, weapon)
+ 		if fired and unit.get("fly", false) and not unit.dead:
+--- a/native/run-tests.ps1
++++ b/native/run-tests.ps1
+@@ -12,6 +12,7 @@
+ $exe = Join-Path $repo 'dist\DOMINION.exe'
+ 
+ $tests = @(
++    @('28 arsenal dossiers, evidence-backed operators, new support / artillery / air-defence roles, production, live combat and save round trip', @('--script', 'res://tools/arsenal-diversity-check.gd'), 'ARSENAL_DIVERSITY PASS', 600),
+     @('strategic AI: who uses what, targeting, counter-drone, undersea sensing, surveillance, counter-disinformation, revenue, exports, the dead hand and its accidents, biosecurity, the second generation, saves, rivals and screens', @('--script', 'res://tools/ai-strategic-check.gd'), 'AI_STRATEGIC PASS', 600),
+     @('practical AI: national evidence, research, validation, commissioning, compute budgets, live effects, diplomacy, rivals and saves', @('--script', 'res://tools/ai-applications-check.gd'), 'AI_APPLICATIONS PASS', 600),
+     @('the six regional entities: national names, unit quality, Houthi missiles and launch sites, South Sudan helicopters, regime, plan, sanctions, treaties, generals', @('--script', 'res://tools/regional-entities-check.gd'), 'REGIONAL_ENTITIES PASS', 900),
+--- /dev/null
++++ b/native/godot/scripts/arsenal_diversity_data.gd
+@@ -0,0 +1,113 @@
++extends RefCounted
++## Evidence snapshot 2026-10-11. These are representative systems, not stock counts.
++## Source dates and acquisition status matter: an order never grants a playable unit.
++const REVIEWED := "2026-10-11"
++const SOURCES := {
++	"us_rr": ["US Army: M3A1 fielding completed (2024)", "https://www.army.mil/article-amp/280535/army_completes_fielding_of_the_m3a1_multi_role_anti_armor_anti_personnel_weapon_system_maaws"],
++	"us_aa": ["US Army: Avenger role", "https://www.army.mil/article/3215/avenger"],
++	"booker": ["US Army: M10 procurement terminated (2025)", "https://www.army.mil/article-amp/286271/army_to_cease_procurement_of_m10_booker_combat_vehicles"],
++	"china": ["Chinese MoD: PCL-181 live-fire (2026)", "https://eng.mod.gov.cn/2025xb/D/P_251753/16466631_3.html"],
++	"france": ["French MoD: equipment delivered to Ukraine", "https://www.defense.gouv.fr/sites/default/files/ministere-armees/Liste%20des%20%C3%A9quipements%20livr%C3%A9s%20%C3%A0%20l%27Ukraine_0.pdf"],
++	"iran": ["DIA: Iran Military Power (2019; legacy assessment)", "https://www.dia.mil/Portals/110/Images/News/Military_Powers_Publications/Iran_Military_Power_LR.pdf"],
++	"malva": ["Rostec: first Malva delivery (2023; supplier statement)", "https://rostec.ru/media/news/rostekh-peredal-minoborony-pervuyu-partiyu-samokhodnykh-kolesnykh-gaubits-malva/"],
++	"pantsir": ["Rostec: Pantsir-S delivery (2025; supplier statement)", "https://rostec.ru/media/pressrelease/rostekh-postavil-v-voyska-boevye-mashiny-pantsir-s/"],
++	"india": ["Saab: Indian Army Carl-Gustaf service", "https://www.saab.com/markets/india/stories/2016/a-40-year-history-in-india"],
++	"japan": ["JGSDF: infantry weapons and air defence", "https://www.mod.go.jp/gsdf/equipment/fire/"],
++	"type19": ["JGSDF: Type 19 deployment ceremony (2023)", "https://www.mod.go.jp/pco/kumamoto/topics/2023_8/20230804/index.html"],
++	"turkiye": ["SSB: HISAR-A in service; layered air defence", "https://www.ssb.gov.tr/haber/siper-urun-1-ve-hisar-projelerinde-seri-uretim-icin-imzalar-atildi-LPq5Os"],
++	"israel": ["Israeli MoD: first Eitan APC delivery", "https://mod.gov.il/en/press-releases/press-room/delivery-of-first-eitan-armored-personnel-carriers-apc-to-the-israel-defense-forces-nahal-infantry-brigade"],
++	"archer": ["British Army: gunners fire Archer", "https://www.army.mod.uk/news/british-gunners-take-aim-and-fire-swedish-archer-for-the-first-time/"],
++	"stormer": ["British Army: Starstreak and Stormer", "https://www.army.mod.uk/learn-and-explore/equipment/artillery-and-air-defence/starstreak-high-velocity-missile/"],
++	"korea": ["Hanwha: 2024 sustainability report; domestic systems", "https://www.hanwhaaerospace.com/assets/content/esg/sustainBusiness/download/en/HanwhaAerospace_SustainabilityReport_2024_ENG.pdf"],
++	"saudi": ["US Army imagery: Saudi Bradley equipment (2025)", "https://www.dvidshub.net/image/9380249/rslf-equipment-arrives-ntc-rotation"],
++	"brazil": ["Saab: Carl-Gustaf M3 in Brazilian Army", "https://www.saab.com/pt-br/markets/brasil/historias/2017/carl-gustaf-no-exercito-brasileiro"],
++	"indonesia": ["Indonesian MoD: TNI equipment parade (2017)", "https://www.kemhan.go.id/2017/10/05/menhan-hadiri-upacara-hut-tni-ke-72-di-cilegon.html"],
++	"indo_caesar": ["Indonesian MoD: CAESAR handover (2014)", "https://www.kemhan.go.id/baloghan/2014/06/26/penyerahan-secara-simbolis-empat-unit-caesar-155.html"],
++	"ukraine": ["German government: delivered vs planned aid", "https://www.bundesregierung.de/breg-de/service/archiv-bundesregierung/waffenlieferungen-ukraine-2054514"],
++	"nk": ["DIA: North Korea Military Power (2021)", "https://www.dia.mil/Portals/110/Documents/News/North_Korea_Military_Power.pdf"],
++	"egypt": ["Hanwha: K9A1EGY delivery schedule; not arrival confirmation", "https://www.hanwhaaerospace.com/eng/media/newsroom/view.do?seq=480"],
++	"australia": ["Australian Defence: Carl-Gustaf service / modernization", "https://www.saab.com/markets/australia/news/press/2018/saab-receives-australian-order-for-carl-gustaf-m4"],
++	"as9": ["Australian Defence: first AS9 battery (August 2026)", "https://news.defence.gov.au/army/capability/2026-08-12/parade-marks-major-advance-artillery-capability"],
++	"redback": ["Australian Defence: Redback sea trials (September 2026)", "https://news.defence.gov.au/army/capability/2026-09-03/new-fighting-vehicles-tested-sea"],
++	"pakistan": ["Janes: SH-15 delivered to Pakistan (reported)", "https://www.janes.com/defence-intelligence-insights/defence-news/defence/chinas-norinco-delivers-sh-15-howitzers-to-pakistan"],
++	"iraq": ["Aero: Iraqi L-159 delivery", "https://www.aero.cz/en/l-159/"],
++	"syria": ["UK Home Office: Syrian military reorganization (2025)", "https://assets.publishing.service.gov.uk/media/6874e05eb1b4ebc2c2e46547/SYR%2BCPIN%2BMilitary%2BService.pdf"],
++	"afghanistan": ["SIGAR: captured equipment and sustainment (April 2025)", "https://www.sigar.mil/Portals/147/Files/Reports/Quarterly-Reports/2025-04-30qr.pdf"],
++	"yemen": ["UN Panel of Experts: Yemen (2025)", "https://documents.un.org/api/symbol/access?l=en&s=S%2F2025%2F650&t=pdf"],
++	"ethiopia": ["Janes: Ethiopia displays SH-15 (reported)", "https://www.janes.com/defence-intelligence-insights/defence-news/defence/ethiopia-displays-new-sh15-howitzers"],
++	"nigeria": ["Nigerian Air Force: T129 inducted (2024)", "https://airforce.mil.ng/news/president-tinubu-reaffirms-commitment-to-ending-insecurity-inducts-new-combat-helicopters-into-naf-inventory775984965"],
++	"naf29": ["Nigerian Air Force: A-29 operational support (2023)", "https://www.airforce.mil.ng/news/a-29st-program-naf-commissions-operations-support-facilities-wings-additional-6-pilots376732102"],
++	"nafjf": ["Nigerian Air Force: JF-17 induction (2021)", "https://www.airforce.mil.ng/news/naf-day-2021-ends-with-induction-of-jf-17-multi-role-thunder-aircraft1424548808"],
++	"sudan": ["Amnesty: visually identified weapons in Sudan (2024)", "https://www.amnesty.org/en/latest/research/2024/07/new-weapons-fuelling-the-sudan-conflict/"],
++	"rsf": ["Amnesty: AH-4 and GB50 evidence; actor attribution (2025)", "https://www.amnesty.org/en/latest/news/2025/05/sudan-advanced-chinese-weaponry-provided-by-uae-identified-in-breach-of-arms-embargo-new-investigation/"],
++	"south_sudan": ["UN Panel of Experts: South Sudan (2025)", "https://digitallibrary.un.org/record/4085042/files/S_2025_442-EN.pdf"],
++	"sipri": ["SIPRI: transfers database; not a readiness inventory", "https://www.sipri.org/databases/armstransfers"]
++}
++## [model, source, evidence status]. Only these positively attributed entries
++## grant new production choices; country essays and watch lists grant nothing.
++const ROSTER := {
++	"recoillessTeam": {
++		"usa": ["M3A1 MAAWS Team", "us_rr", "Fielding documented"],
++		"india": ["Carl-Gustaf Team", "india", "Established service"],
++		"japan": ["84 mm Recoilless Team", "japan", "Official equipment list"],
++		"brazil": ["Carl-Gustaf M3 Team", "brazil", "Established service"],
++		"australia": ["Carl-Gustaf Team", "australia", "Established service; variant abstracted"]},
++	"wheeledHowitzer": {
++		"china": ["PCL-181", "china", "Live-fire documented"],
++		"eu": ["CAESAR", "france", "Delivered French equipment"],
++		"russia": ["2S43 Malva", "malva", "Supplier-reported delivery"],
++		"japan": ["Type 19 Howitzer", "type19", "Deployment documented"],
++		"uk": ["Archer", "archer", "Army firing documented"],
++		"indonesia": ["CAESAR", "indo_caesar", "Handover documented"],
++		"ukraine": ["CAESAR", "france", "Delivery documented"],
++		"pakistan": ["SH-15", "pakistan", "Reported delivery"],
++		"ethiopia": ["SH-15", "ethiopia", "Observed delivery; readiness unknown"]},
++	"shortRangeSAM": {
++		"usa": ["AN/TWQ-1 Avenger", "us_aa", "Established service"],
++		"russia": ["Pantsir-S", "pantsir", "Supplier-reported delivery"],
++		"japan": ["Type 11 SAM", "japan", "Official equipment list"],
++		"turkiye": ["HISAR-A", "turkiye", "In-service statement"],
++		"uk": ["Stormer HVM", "stormer", "Official equipment list"],
++		"ukraine": ["IRIS-T SLS", "ukraine", "Delivery documented"]}
++}
++## Each dossier covers land, air, maritime, fires/defence, sustainment and
++## an explicit evidence boundary. Existing national unit lists remain separate.
++const PROFILES := {
++	"usa": {"land": "Abrams and Bradley cover heavy armour and infantry support; MAAWS adds a cheaper close-range support team.", "air": "F-16 / A-10 and the existing F-22 / B-21 roles separate multirole, close support and high-cost advanced aircraft.", "sea": "Ocean-going surface forces and submarines need different missions; a carrier is not a coastal missile boat.", "fires": "M777 / tracked artillery offer fires; Avenger adds local air escort below strategic missile defence.", "support": "Fuel, ammunition, airfield capacity and expensive electronics constrain the advanced roster.", "limits": "M10 Booker procurement was terminated. M1E3 remains a research scenario, not an established operational fleet.", "watch": ["M10 Booker: cancelled procurement; no production choice added"], "sources": ["us_rr", "us_aa", "booker"]},
++	"china": {"land": "ZBD-04A infantry support complements the existing heavy tank; PCL-181 adds wheeled artillery rather than another tank.", "air": "J-10C is a light multirole choice alongside heavier fighters; unmanned aircraft have separate costs and vulnerabilities.", "sea": "Type 022 is coastal surface warfare; it does not inherit submarine hunting or strategic nuclear launch.", "fires": "Wheeled PCL-181 trades protection for relocation. Existing DF-17 / missile research remains separately gated.", "support": "Reconnaissance must expose targets beyond the gun's sight; artillery needs protected logistics.", "limits": "Manufacturer range claims are not map distances. No extra hypersonic inventory follows from a parade.", "watch": ["New parade systems require separate delivery evidence"], "sources": ["china", "sipri"]},
++	"eu": {"land": "Puma, Fennek and Leopard represent different member-state contributions, not one standardized European army.", "air": "Mirage 2000D supplies ground attack; Gripen supplies a lighter multirole option beside advanced European fighters.", "sea": "Surface and submarine models pool member examples; national export approval and maintenance remain real constraints.", "fires": "CAESAR adds mobile gun support below rocket artillery; IRIS-T SLM is a different air-defence layer.", "support": "Mixed ammunition, spares and national supply chains matter; the game abstracts them into resources and research.", "limits": "EU is a coalition abstraction. A French delivery does not prove every member owns that system.", "watch": ["CAESAR MkII and Type 212CD: procurement / future variants remain distinct"], "sources": ["france", "ukraine"]},
++	"iran": {"land": "BMP-2 and legacy armoured platforms support a mixed fleet; local names do not prove entirely new designs.", "air": "F-5E and Su-24 represent documented legacy aircraft; spare parts and current serviceability are uncertain.", "sea": "Coastal craft and shore-based threats differ from a modern blue-water escort fleet.", "fires": "Drones, rockets and ballistic / cruise missiles are separate roles; one-way drones are not reusable fighters.", "support": "Imported components, sanctions, repairs and dispersed production constrain sophisticated systems.", "limits": "The DIA baseline is from 2019. Conflict losses and 2026 readiness are not verified here; no new advanced fleet is granted.", "watch": ["New fighter or air-defence announcements: confirmation needed"], "sources": ["iran", "sipri"]},
++	"russia": {"land": "BMP-3 and tanks supply protected manoeuvre; Malva supplies less protected, faster wheeled gun support.", "air": "Su-25 is ground attack, not a dogfighter; the existing strike and fighter classes retain separate missions.", "sea": "Surface ships and submarines are separate platforms, with theatre and maintenance limits.", "fires": "Malva complements tracked guns and rockets. Pantsir-S adds local anti-aircraft escort, not strategic ABM in this expansion.", "support": "Gun crews need reconnaissance, ammunition and protection; moving faster does not make them more heavily armoured.", "limits": "Rostec confirms claimed deliveries, not independent fleet readiness or combat success. Losses are not estimated.", "watch": ["Supplier success claims are not used as hit probabilities"], "sources": ["malva", "pantsir", "sipri"]},
++	"india": {"land": "BMP-2 Sarath and heavy tanks gain close support from Carl-Gustaf crews; a support launcher is not an ATGM replacement.", "air": "Jaguar and Tejas separate ground attack and lighter fighter roles; imported and domestic platforms coexist.", "sea": "A substantial maritime roster needs port and research investment; ground missile ownership does not grant every naval launcher.", "fires": "M777 complements tracked artillery; BrahMos and air-defence projects remain separate capabilities.", "support": "Multiple suppliers complicate ammunition and spares. Cheap infantry support remains useful before expensive missile research.", "limits": "Carl-Gustaf service is documented; the dossier does not assert a delivered number of the newest M4 variant.", "watch": ["Zorawar and new gun contracts: trials / orders need delivery confirmation"], "sources": ["india", "sipri"]},
++	"japan": {"land": "Type 89 IFV, Type 16 wheeled gun and heavy tanks serve different protection / mobility needs; 84 mm crews add portable support.", "air": "Fighter defence and OH-1 reconnaissance are separate; the game reconnaissance sortie carries no attack load.", "sea": "Aegis and surface escorts emphasize maritime defence; an Aegis hull is not automatically nuclear armed.", "fires": "FH70, Type 19 and Type 11 separate cheap towed fires, mobile fires and local air defence.", "support": "Type 19 uses existing artillery research and spotting; Type 11 requires guided-munition research.", "limits": "Type 19 deployment is documented. Procurement budgets alone are not delivery counts; Type 12 upgrades remain separately assessed.", "watch": ["Extended-range missile upgrades: distinguish trials from units in service"], "sources": ["japan", "type19"]},
++	"turkiye": {"land": "ACV-15 and conventional armour support ground forces; new domestic tank deliveries do not instantly replace the mixed fleet.", "air": "F-16 and Akinci separate crewed multirole and unmanned strike roles.", "sea": "Coastal and larger surface combatants need different weapons and support; local construction is not limitless availability.", "fires": "HISAR-A adds local air defence below longer-range layers; it cannot bombard ground targets.", "support": "Electronics, radar and protection consume resources; drones remain vulnerable to air defence and electronic warfare.", "limits": "KAAN and future aircraft remain research projects. The source distinguishes HISAR service from then-testing Siper.", "watch": ["KAAN: development aircraft, not a newly granted operational fleet"], "sources": ["turkiye", "sipri"]},
++	"israel": {"land": "Merkava, Namer and Eitan separate heavy tank, heavily protected carrier and wheeled carrier; passengers are abstracted.", "air": "Crewed aircraft and Harop have distinct sortie / expendable-weapon economics.", "sea": "Sa'ar 4.5 supplies coastal missile warfare; no nuclear weapon is inferred from a missile boat.", "fires": "Layered interception and local anti-aircraft defence must be distinguished; the game retains its existing missile-defence systems.", "support": "Advanced protection costs electronics and research; heavy protection cannot replace reconnaissance or logistics.", "limits": "Eitan APC is distinct from the Eitan UAV. No extra strategic capability or new Ro'em fleet is inferred from announcements.", "watch": ["New artillery and interceptor variants need actual delivery evidence"], "sources": ["israel", "sipri"]},
++	"uk": {"land": "Warrior, Jackal and the existing tank fill infantry support, reconnaissance and heavy armour roles.", "air": "Wildcat reconnaissance is abstracted without weapons; fighter sorties use limited parking and ammunition.", "sea": "Type 45, other surface forces and submarines have separate escort and strike roles.", "fires": "L118 is cheap and slow to relocate; Archer is more mobile. Stormer HVM escorts ground forces against aircraft.", "support": "An interim Archer capability does not imply unlimited systems; keep scouts and supplies with mobile guns.", "limits": "Challenger 3 is a modernization programme. No retired Tornado fleet is reintroduced from historical lists.", "watch": ["New Carl-Gustaf purchase: variant / fielding requires a separate check"], "sources": ["archer", "stormer"]},
++	"south_korea": {"land": "K21 IFV and K808 carrier remain separate from K2 heavy armour; they are not interchangeable labels.", "air": "FA-50 is a lighter fighter; advanced aircraft and future programmes keep independent gates.", "sea": "Surface escorts and submarines require maritime infrastructure and separate weapons.", "fires": "K9 tracked artillery, Chunmoo rockets and close air defence belong to different layers and mobility classes.", "support": "Tracked gun protection costs more than exposed towed crews; domestic manufacturing does not remove supply needs.", "limits": "Hanwha's export catalogue is not an operator list. Export-specific variants are not automatically granted to Korea.", "watch": ["L-SAM and new aircraft variants: assess delivered configuration individually"], "sources": ["korea", "sipri"]},
++	"saudi": {"land": "Bradley is documented in Saudi service; heavy armour and infantry support remain separate choices.", "air": "Tornado IDS serves ground attack beside multirole aircraft; sustainment depends heavily on foreign partners.", "sea": "Coastal and escort capability is represented separately from any presumed submarine fleet.", "fires": "Existing Patriot / THAAD roles cover different threats; an ammunition-sale notice is not a new battery delivery.", "support": "Imported spares, training and contractor support are consequential despite strong purchasing power.", "limits": "CAESAR and additional air-defence variants are research candidates here; no fresh unit grant relies on an unconfirmed sale.", "watch": ["Proposed FMS approvals are not proof of delivered equipment"], "sources": ["saudi", "sipri"]},
++	"brazil": {"land": "Guarani and Cascavel emphasize wheeled mobility; Carl-Gustaf M3 crews provide cheaper portable fire support.", "air": "F-5M and existing Gripen / A-29 choices separate fighter and close-support tasks; retired types need retirement checks.", "sea": "Coastal and ocean-going missions differ; submarine projects must be separated from delivered boats.", "fires": "ASTROS rockets differ from towed guns and portable launchers; new cruise-missile projects are not automatically operational.", "support": "Affordable infantry support consumes less industrial material than armour but needs protection in close combat.", "limits": "The M3 service source does not prove a universal M4 conversion. AMX and AH-2 are not newly granted from older lists.", "watch": ["MTC-300 and guided ASTROS development: no operational grant in this update"], "sources": ["brazil", "sipri"]},
++	"indonesia": {"land": "Harimau medium tank, Pandur II and Komodo distinguish direct fire, infantry support and reconnaissance.", "air": "A mixed imported fleet complicates maintenance; fighters and support aircraft remain distinct roles.", "sea": "An archipelago needs coastal missile craft and escorts; a small craft does not gain submarine-hunting weapons by default.", "fires": "Delivered CAESAR adds mobile artillery alongside tracked M109 and rockets; Starstreak / Mistral are a different role.", "support": "Protect mobile guns with scouts and infantry; faster relocation trades against tank-like protection.", "limits": "A 2017 parade is historical evidence, not a 2026 readiness census. Harimau production evidence is tracked in the earlier roster report.", "watch": ["New fighter contracts: orders and operational squadrons stay distinct"], "sources": ["indonesia", "indo_caesar", "sipri"]},
++	"ukraine": {"land": "Bradley, AMX-10 RC and donated tanks form a mixed fleet with different ammunition and spares.", "air": "Su-25 ground attack needs fighter cover; aid announcements do not prove an entire operational squadron.", "sea": "Coastal weapons and unmanned maritime activity do not recreate the pre-war surface fleet.", "fires": "Delivered CAESAR adds wheeled fires; IRIS-T SLS gives local air defence, distinct from SLM and Patriot.", "support": "Donor supply, repairs and ammunition are central. Long-range guns still need target visibility in the game.", "limits": "German aid records explicitly separate delivered and planned systems; only delivered examples grant new production here.", "watch": ["Pending aid is shown as a plan, never counted as on-hand stock"], "sources": ["ukraine", "france"]},
++	"north_korea": {"land": "Legacy armour and massed guns coexist with displayed newer designs; a parade alone does not prove fleet scale.", "air": "Su-25 and older fighters are legacy assessments, with uncertain current serviceability.", "sea": "Small surface vessels and submarines have coastal roles; modern escort capability is not assumed.", "fires": "Artillery, rockets and strategic missiles are separate systems; missile imagery does not establish stock counts.", "support": "Ammunition volume cannot substitute for electronics, maintenance or reconnaissance.", "limits": "The DIA assessment is from 2021. No new advanced SAM, tank or reconnaissance helicopter is granted from unverified displays.", "watch": ["Recent parade systems: operational status and configuration remain uncertain"], "sources": ["nk", "sipri"]},
++	"egypt": {"land": "Existing heavy armour and carriers retain a mixed-supplier legacy; modernization orders do not instantly replace them.", "air": "A varied imported fleet has distinct fighter, support and maintenance needs.", "sea": "Ambassador Mk III represents fast coastal missile combat; larger escorts and submarines remain separate classes.", "fires": "Conventional artillery and air defence remain available through the established roster; K9A1EGY is a procurement watch item.", "support": "Spare parts from multiple suppliers, ammunition and trained crews limit availability.", "limits": "A schedule for first K9 deliveries by early 2026 is not proof they arrived. No unverified K9 production choice is added.", "watch": ["K9A1EGY: delivery schedule documented; actual arrival needs confirmation"], "sources": ["egypt", "sipri"]},
++	"australia": {"land": "Hawkei reconnaissance, protected mobility and heavy armour coexist; Carl-Gustaf service adds portable support.", "air": "Modern fighters require fuel and airfield support; unmanned development is separately gated.", "sea": "Long-distance maritime operations require escorts and sustainment; future submarines are not current inventory.", "fires": "M777 and the first documented AS9 battery separate towed and tracked fires; NASAMS is a different defence layer.", "support": "Small high-value fleets depend on training, imported components and support vehicles.", "limits": "AS9 first battery was documented in August 2026. Redback sea trials do not prove a fully operational IFV fleet.", "watch": ["AS21 Redback: trials / procurement; no fielded IFV grant", "AS9: first battery documented; no claim of fleet-wide conversion"], "sources": ["australia", "as9", "redback"]},
++	"pakistan": {"land": "Heavy armour and MG3 support coexist; wheeled SH-15 adds a distinct artillery mobility choice.", "air": "Mirage 5 attack and F-16 / JF-17 fighter roles differ; maintenance and imported parts constrain availability.", "sea": "Azmat-class is coastal surface warfare, not a submarine hunter or strategic nuclear launcher in this expansion.", "fires": "SH-15 deliveries are reported; its game shells are conventional. Ownership does not prove a nuclear artillery role.", "support": "Multiple suppliers require spares and ammunition; mobile artillery still needs escorts and spotting.", "limits": "The new howitzer attribution is a Janes report, not an independently audited readiness count.", "watch": ["Nuclear-capable SH-15 speculation does not grant a nuclear firing mode"], "sources": ["pakistan", "sipri"]},
++	"iraq": {"land": "Mixed-origin heavy armour and infantry equipment need common training and sustainment; no unsupported new IFV is granted.", "air": "Delivered L-159 fills ground attack; T-50IQ is a separate light aircraft choice in the established roster.", "sea": "Coastal security is limited; it is not an ocean-going combat fleet.", "fires": "Conventional guns and local air defence remain distinct from future long-range air-defence procurement.", "support": "Repairs, foreign support and spare parts are essential to a mixed fleet.", "limits": "A proposed sale or a denial from 2015 cannot establish a new operational BMP-3 fleet in 2026.", "watch": ["New long-range SAM contracts need delivered-battery confirmation"], "sources": ["iraq", "sipri"]},
++	"syria": {"land": "Fragmented inherited and captured ground equipment does not establish a standardized new army inventory.", "air": "An inherited paper list does not establish an operational fighter or gunship force after the change of government.", "sea": "No new combat fleet is inferred from the former government's navy.", "fires": "Portable support, guns and drones require actor attribution; former stocks do not prove current launch capability.", "support": "Reorganization, damage, ammunition and repair infrastructure constrain the ground roster.", "limits": "The 2025 institutional assessment is not a verified 2026 inventory. No new advanced system is granted without evidence.", "watch": ["Former regime aircraft, SAMs and ships are not treated as new operational stock"], "sources": ["syria", "sipri"]},
++	"afghanistan": {"land": "Captured small arms and vehicles support a limited ground force; captured equipment is not local manufacturing capacity.", "air": "A few maintained helicopters do not establish a combat-ready modern fighter force.", "sea": "Landlocked: no port, shipyard or navy should be inferred from generic game templates.", "fires": "Basic portable support and legacy artillery differ from guided missiles and modern integrated air defence.", "support": "Parts, trained maintainers and airworthiness are the central uncertainty for captured equipment.", "limits": "SIGAR's discussion of abandoned equipment is not proof that all assets remain operational or even inside Afghanistan.", "watch": ["Captured Western platforms: present condition and support remain unverified"], "sources": ["afghanistan", "sipri"]},
++	"yemen": {"land": "The recognized government's forces are fragmented; support weapons and vehicles require specific actor attribution.", "air": "No new operational fighter fleet is inferred from the pre-war Yemeni air force.", "sea": "Limited coastal security differs from the Houthis' shore-based shipping threats.", "fires": "Conventional support and reported UAV activity do not grant Ansar Allah's missile families to the government.", "support": "Reconstruction, partner support, imported parts and divided command constrain readiness.", "limits": "Yemen is the internationally recognized state; it is not interchangeable with Ansar Allah-controlled territory.", "watch": ["Pre-war inventories and Houthi seizures cannot be assigned wholesale to the PLC"], "sources": ["yemen", "sipri"]},
++	"houthis": {"land": "Ansar Allah relies on dispersed ground forces, support weapons and captured or externally sourced materiel.", "air": "One-way attack UAVs and reconnaissance drones do not constitute a conventional fighter air force.", "sea": "Coastal missiles and drones threaten shipping; they do not imply an advanced navy or submarine fleet.", "fires": "Ballistic, cruise and anti-ship weapons are distinct; reported attacks provide stronger evidence of use than parade labels.", "support": "Imported electronics, repairs and component access constrain replenishment; the game models this through resources.", "limits": "An armed authority inside Yemen, not a separate UN member. Claimed weapon performance and stock counts are not accepted as verified.", "watch": ["Paraded new missile labels: configuration and stocks may be unverified"], "sources": ["yemen", "sipri"]},
++	"ethiopia": {"land": "A mixed imported armoured fleet gains a documented wheeled artillery option: SH-15.", "air": "Crewed combat aircraft and imported UAVs have separate support and vulnerability profiles.", "sea": "Landlocked: naval aspirations do not justify a playable port or surface fleet.", "fires": "Observed SH-15 provides mobile conventional fires; it does not grant Chinese strategic missile technology.", "support": "Foreign spares, ammunition, fuel and reconnaissance constrain the gun's usefulness.", "limits": "Janes observed delivery imagery; current readiness and precise fleet size are not established by this dossier.", "watch": ["Additional fighter or UAV reports need configuration and delivery confirmation"], "sources": ["ethiopia", "sipri"]},
++	"nigeria": {"land": "Ground forces emphasize protected mobility and counterinsurgency; an export catalogue is not proof of a delivered tank model.", "air": "NAF confirms A-29 support facilities, JF-17 induction and T129 induction: attack aircraft, fighter and attack helicopter are distinct.", "sea": "Coastal patrol and maritime security do not imply an attack-submarine capability.", "fires": "Ground artillery and local anti-aircraft weapons remain separate from strategic missile and nuclear capabilities.", "support": "Pilots, maintenance facilities, electricity and foreign parts are essential alongside aircraft procurement.", "limits": "The established A-29 / JF-17 / gunship choices already cover these roles; no duplicate attack-jet label is added just to enlarge the list.", "watch": ["New aircraft orders do not bypass research or create a ready fleet"], "sources": ["nigeria", "naf29", "nafjf"]},
++	"sudan": {"land": "The game state represents SAF-aligned Sudan, not the RSF. Mixed legacy equipment requires actor-specific attribution.", "air": "Documented use and legacy aircraft do not establish the number currently serviceable after war damage.", "sea": "Red Sea coastal access does not imply a sophisticated ocean-going combat fleet.", "fires": "Mortars, small arms and electronic equipment are documented; AH-4 / GB50 findings must be attributed to the correct actor.", "support": "Damaged bases, supply routes, maintenance and imported ammunition dominate sustainment.", "limits": "RSF weapons and isolated captured examples are not granted as a standard SAF production line.", "watch": ["AH-4 / GB50: RSF-related investigation; no automatic Sudan arsenal grant"], "sources": ["sudan", "rsf"]},
++	"south_sudan": {"land": "A limited legacy ground roster reflects weak procurement and maintenance capacity, not Sudan's inventory.", "air": "UN reporting supports Mi-24 activity; it does not establish a modern fighter force or a large ready helicopter fleet.", "sea": "Landlocked: river security is not a seagoing navy, and no naval production is granted.", "fires": "Small arms and basic support differ from advanced SAMs, precision rockets and strategic missiles.", "support": "Restricted arms access, oil revenue and transit dependence shape affordable force development.", "limits": "South Sudan is an independent state. Reported plans to obtain Stinger or Javelin are not evidence of possession.", "watch": ["Coup allegations and attempted purchases do not grant operational weapons"], "sources": ["south_sudan", "sipri"]}
++}
++
++static func names(key: String) -> Dictionary:
++	var out := {}
++	for id in ROSTER.get(key, {}): out[id] = ROSTER[key][id][0]
++	return out
++
++static func evidence(key: String, id: String) -> String:
++	var row: Array = ROSTER.get(key, {}).get(id, [])
++	return "" if row.is_empty() else "%s. %s. Reviewed %s; no stock or readiness count implied." % [row[2], SOURCES[row[1]][0], REVIEWED]
+--- /dev/null
++++ b/native/godot/scripts/arsenal_diversity_panel.gd
+@@ -0,0 +1,114 @@
++extends RefCounted
++const Data := preload("res://scripts/arsenal_diversity_data.gd")
++const Factions := preload("res://scripts/factions.gd")
++const Forces := preload("res://scripts/force_catalog.gd")
++const Variants := preload("res://scripts/national_variants.gd")
++const DOMAINS := {"land": "Land forces", "air": "Aircraft", "sea": "Maritime", "fires": "Fires & air defence", "support": "Sustainment", "limits": "Evidence limits"}
++
++static func paragraph(hud: Node, parent: Control, text: String, colour: Color) -> void:
++	var label: Label = hud._text(text, 15, colour)
++	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	parent.add_child(label)
++
++static func draw(panel: RefCounted) -> void:
++	var hud: Node = panel.hud
++	var w: Node = hud.world
++	if panel.arsenal_country == "": panel.arsenal_country = Factions.identity(w, 0)
++	var id: String = panel.arsenal_country
++	var picker := OptionButton.new()
++	picker.name = "ArsenalCountry"
++	picker.add_theme_font_size_override("font_size", 16)
++	picker.custom_minimum_size.y = 38
++	for i in range(Factions.IDS.size()):
++		picker.add_item(Factions.NAMES[i], i)
++		if Factions.IDS[i] == id: picker.select(i)
++	picker.item_selected.connect(func(index: int):
++		panel.arsenal_country = Factions.IDS[index]
++		hud.refresh_side())
++	hud._side_rows.add_child(picker)
++	var dossier: Dictionary = Data.PROFILES.get(id, {})
++	if dossier.is_empty(): return
++	var tabs := HFlowContainer.new()
++	tabs.add_theme_constant_override("h_separation", 5)
++	tabs.add_theme_constant_override("v_separation", 5)
++	hud._side_rows.add_child(tabs)
++	for domain: String in DOMAINS:
++		var picked: String = domain
++		var b: Button = hud._button(tabs, DOMAINS[domain], func():
++			panel.arsenal_domain = picked
++			hud.refresh_side()
++			return "")
++		b.toggle_mode = true
++		b.button_pressed = panel.arsenal_domain == domain
++	var card: VBoxContainer = hud._card(hud.UI.GOLD)
++	card.add_child(hud._text(DOMAINS[panel.arsenal_domain], 18, hud.UI.CREAM, true))
++	paragraph(hud, card, str(dossier[panel.arsenal_domain]), hud.UI.TEXT)
++	paragraph(hud, card, "Evidence reviewed " + Data.REVIEWED + ". Representative types, not stock counts. Production represents acquisition and support; prices and performance are game balance.", hud.UI.MUTED)
++	var own: bool = id == Factions.identity(w, 0)
++	var ix: int = Factions.IDS.find(id)
++	if panel.arsenal_domain in ["land", "fires"]:
++		var units: VBoxContainer = hud._card()
++		units.add_child(hud._text("New researched choices", 18, hud.UI.CREAM, true))
++		var count := 0
++		for key: String in Data.ROSTER:
++			if not Data.ROSTER[key].has(id): continue
++			if panel.arsenal_domain == "land" and key != "recoillessTeam": continue
++			if panel.arsenal_domain == "fires" and key == "recoillessTeam": continue
++			if panel.arsenal_domain in ["air", "sea", "support", "limits"]: continue
++			count += 1
++			var row: Array = Data.ROSTER[key][id]
++			units.add_child(hud._text(str(row[0]), 17, hud.UI.GOLD, true))
++			paragraph(hud, units, str(Forces.ROLES[key].desc), hud.UI.TEXT)
++			paragraph(hud, units, Data.evidence(key, id), hud.UI.MUTED)
++			var def: Dictionary = Forces.ROLES[key]
++			var home: String = Forces.HOME[key]
++			var facility: String = str(w.building_defs[home].name)
++			var need: String = str(def.get("requires", ""))
++			var gate: String = "Available without research" if need == "" else "Research: " + str(w.research.discoveries.get(need, {}).get("name", need))
++			paragraph(hud, units, "Production: %s. %s. %s" % [facility, gate, "Your country's choice" if own else "Other country's choice"], hud.UI.MUTED)
++			if own:
++				var existing: Array = w.buildings.filter(func(b): return b.owner == 0 and b.key == home and not b.dead and not b.get("constructing", false))
++				if not existing.is_empty():
++					var building: Dictionary = existing[0]
++					hud._button(units, "Open " + facility + " production", func():
++						hud.world.cam_focus = building.node.position
++						hud.show_building(building)
++						return "")
++		if count == 0: paragraph(hud, units, "No additional production choice in this category. See Land forces and Fires & air defence for the new units. Orders and uncertain inventories do not unlock production.", hud.UI.MUTED)
++	if panel.arsenal_domain in ["land", "air", "sea", "fires"]:
++		var existing: VBoxContainer = hud._card()
++		existing.add_child(hud._text("Established game roster", 18, hud.UI.CREAM, true))
++		paragraph(hud, existing, "Existing game abstractions are listed for comparison; this is not a newly verified real-world inventory.", hud.UI.MUTED)
++		var lines := PackedStringArray()
++		# Read country names without changing the live world's player identity.
++		for key: String in w.unit_defs:
++			if not Variants.fields(key, Factions.ARSENALS[ix]): continue
++			var def: Dictionary = w.unit_defs[key]
++			if not Variants.admits(def.get("nation", ""), Factions.ARSENALS[ix]): continue
++			var is_air: bool = bool(def.get("fly", false))
++			var is_sea: bool = bool(def.get("naval", false))
++			var base: String = preload("res://scripts/additional_factions.gd").base(key)
++			var fires: bool = base in ["artillery", "mlrs", "samLauncher", "aaVehicle", "himars", "atgmTeam", "manpads"]
++			if panel.arsenal_domain == "air" and not is_air: continue
++			if panel.arsenal_domain == "sea" and not is_sea: continue
++			if panel.arsenal_domain == "fires" and not fires: continue
++			if panel.arsenal_domain == "land" and (is_air or is_sea or fires): continue
++			if panel.arsenal_domain in ["support", "limits"]: continue
++			var name: String = str(Forces.names(key).get(id, preload("res://scripts/arsenal_catalog.gd").UNIT_NAMES.get(key, {}).get(id, Variants.NAMES.get(key, {}).get(Factions.ARSENALS[ix], def.get("generic", def.name)))))
++			lines.append(name)
++		paragraph(hud, existing, " · ".join(lines) if not lines.is_empty() else "See the doctrine and evidence notes above.", hud.UI.TEXT)
++	var watch: VBoxContainer = hud._card(hud.UI.BAD)
++	watch.add_child(hud._text("Not granted by this research", 17, hud.UI.CREAM, true))
++	for item: String in dossier.watch: paragraph(hud, watch, item, hud.UI.TEXT)
++	var sources: VBoxContainer = hud._card()
++	sources.add_child(hud._text("Research sources", 17, hud.UI.CREAM, true))
++	for source: String in dossier.sources:
++		var link := LinkButton.new()
++		link.text = str(Data.SOURCES[source][0])
++		link.add_theme_font_size_override("font_size", 14)
++		link.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
++		var url: String = Data.SOURCES[source][1]
++		link.tooltip_text = url
++		link.pressed.connect(func(): OS.shell_open(url))
++		sources.add_child(link)
+--- /dev/null
++++ b/native/godot/tools/arsenal-diversity-check.gd
+@@ -0,0 +1,101 @@
++extends SceneTree
++const Data := preload("res://scripts/arsenal_diversity_data.gd")
++const F := preload("res://scripts/factions.gd")
++const C := preload("res://scripts/force_catalog.gd")
++var w: Node
++var passed := 0
++var failed := 0
++func _initialize() -> void: call_deferred("run")
++func check(ok: bool, label: String) -> void:
++	print(("ok   " if ok else "FAIL ") + label)
++	if ok: passed += 1
++	else: failed += 1
++func run() -> void:
++	set_meta("match_config", {"map": "island", "players": 3, "nation": 0})
++	change_scene_to_file("res://world.tscn")
++	for frame in range(40000):
++		await process_frame
++		if current_scene != null and current_scene.get("nav_ready") == true and current_scene.get("menu") != null:
++			w = current_scene
++			break
++	if w == null: quit(1); return
++	w.start_match("easy")
++	w.menu.close()
++	for frame in range(4): await physics_frame
++	w.set_physics_process(false)
++	w.ai.set_physics_process(false)
++	preload("res://tools/test_kit.gd").quiet(w, ["fog", "un", "wmd"])
++	var original: Dictionary = w.map.nations[0].duplicate(true)
++	check(Data.PROFILES.size() == 28, "every playable identity has a dossier")
++	for id: String in F.IDS:
++		var dossier: Dictionary = Data.PROFILES.get(id, {})
++		check(["land", "air", "sea", "fires", "support", "limits"].all(func(k): return str(dossier.get(k, "")).length() > 35), id + " six substantive research domains")
++		check(not dossier.get("watch", []).is_empty() and not dossier.get("sources", []).is_empty(), id + " uncertainty and sources recorded")
++		check(dossier.sources.all(func(s): return Data.SOURCES.has(s) and str(Data.SOURCES[s][1]).begins_with("https://")), id + " valid source references")
++	var added := 0
++	for key: String in Data.ROSTER:
++		check(C.ROLES.has(key) and key in w.ai.train_pool and key in w.building_defs[C.HOME[key]].trains, key + " live AI and production registration")
++		for id: String in Data.ROSTER[key]:
++			added += 1
++			w.map.nations[0] = F.nation(F.IDS.find(id), true)
++			check(w.unit_allowed(0, key) and not Data.evidence(key, id).is_empty(), id + " / " + key + " positively attributed production")
++	check(added == 20, "20 evidence-backed additional country / role choices")
++	w.map.nations[0] = original
++	w.economy.grant_test_resources()
++	w.economy.pop_cap = 10000
++	var at: Vector3 = w.start + Vector3(25, 0, 22)
++	var barracks: Dictionary = w.place_building("barracks", at + Vector3(18, 0, 12), 0, true)
++	w.queue_unit(barracks, "recoillessTeam")
++	check(barracks.queue == ["recoillessTeam"], "support crew enters paid production without guided-missile research")
++	w.update_training(100.0)
++	check(w.units.any(func(u): return u.key == "recoillessTeam" and u.owner == 0), "support crew finishes training")
++	var factory: Dictionary = w.place_building("tankFactory", at + Vector3(18, 0, -15), 0, true)
++	w.queue_unit(factory, "shortRangeSAM")
++	check(factory.queue.is_empty(), "local SAM cannot bypass guided research")
++	w.research.progress.guidedMunitions = {"stage": 3, "work": 0, "paid": false}
++	w.research.progress.advancedLogistics = {"stage": 3, "work": 0, "paid": false}
++	w.research._recompute()
++	w.queue_unit(factory, "shortRangeSAM")
++	check(factory.queue == ["shortRangeSAM"], "local SAM enters actual queue after research")
++	w.cancel_queued(factory, 0)
++	w.queue_unit(factory, "wheeledHowitzer")
++	check(factory.queue.is_empty(), "US production cannot acquire a foreign wheeled gun")
++	w.map.nations[0] = F.nation(F.IDS.find("china"), true)
++	w.queue_unit(factory, "wheeledHowitzer")
++	check(factory.queue == ["wheeledHowitzer"], "Chinese PCL-181 enters actual factory queue")
++	w.update_training(100.0)
++	check(w.units.any(func(u): return u.key == "wheeledHowitzer"), "wheeled gun completes production")
++	w.map.nations[0] = original
++	var sam: Dictionary = w.spawn_unit("shortRangeSAM", at, 0)
++	var crew: Dictionary = w.spawn_unit("recoillessTeam", at + Vector3(5, 0, 0), 0)
++	var gun: Dictionary = w.spawn_unit("wheeledHowitzer", at + Vector3(10, 0, 0), 0)
++	var light: Dictionary = w.spawn_unit("apc", at + Vector3(15, 0, 0), 1)
++	var infantry: Dictionary = w.spawn_unit("soldier", at + Vector3(16, 0, 0), 1)
++	var aircraft: Dictionary = w.spawn_unit("drone", at + Vector3(18, 0, 0), 1)
++	check(sam.vehicle and gun.vehicle and not crew.vehicle and w.target_class(crew) == "infantry", "spawn uses vehicle models and exposed support crew classification")
++	check(w.effectiveness(sam, aircraft) > 0 and w.effectiveness(sam, light) == 0 and not w.can_bombard(sam), "local air defence cannot attack ground or bombard")
++	check(w.effectiveness(crew, light) > 1 and w.effectiveness(crew, aircraft) == 0, "unguided crew counters light vehicles, not aircraft")
++	check(w.can_bombard(gun) and gun.range > w.fog.sight_of(gun) and gun.speed > C.ROLES.towedHowitzer.speed, "wheeled gun needs spotting and can relocate / bombard")
++	w.diplomacy.declare_war(0, 1)
++	w.fog.enabled = false
++	w.rebuild_grid()
++	check(w.fire(sam, aircraft) and not w.fire(sam, light), "real local SAM firing dispatch respects target restriction")
++	check(w.fire(crew, light) and not w.fire(crew, aircraft), "real support crew projectile dispatch respects target restriction")
++	var hp: float = infantry.hp
++	check(w.fire(gun, infantry), "wheeled gun dispatches an indirect shell")
++	for step in range(100): w.effects._physics_process(0.1)
++	check(infantry.hp < hp, "new gun shell applies live damage")
++	var saved: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
++	w.saves.restore(saved)
++	check(Data.ROSTER.keys().all(func(key): return w.units.any(func(u): return u.key == key and not u.dead)), "JSON save / restore preserves all three new roles")
++	w.hud.toggle_panel("defence", true)
++	w.hud._panels.defence_tab = "arsenal"
++	for id: String in F.IDS:
++		w.hud._panels.arsenal_country = id
++		for domain: String in ["land", "air", "sea", "fires", "support", "limits"]:
++			w.hud._panels.arsenal_domain = domain
++			w.hud.refresh_side()
++			check(w.hud._side_rows.find_child("ArsenalCountry", true, false) != null, id + " / " + domain + " dossier renders")
++	print("ARSENAL_DIVERSITY: %d passed, %d failed" % [passed, failed])
++	print("ARSENAL_DIVERSITY PASS" if failed == 0 else "ARSENAL_DIVERSITY FAIL")
++	quit(0 if failed == 0 else 1)
+--- /dev/null
++++ b/native/godot/tools/arsenal-diversity-views.gd
+@@ -0,0 +1,84 @@
++extends SceneTree
++const Data := preload("res://scripts/arsenal_diversity_data.gd")
++var w: Node
++var failures := 0
++func _initialize() -> void: call_deferred("run")
++func frames(n := 8) -> void:
++	for frame in range(n): await process_frame
++func check(ok: bool, label: String) -> void:
++	print(("ok " if ok else "FAIL ") + label)
++	if not ok: failures += 1
++func capture(name: String) -> void:
++	await frames(14)
++	await RenderingServer.frame_post_draw
++	root.get_texture().get_image().save_png("res://build/arsenal-%s.png" % name)
++func run() -> void:
++	if DisplayServer.get_name() == "headless": quit(1); return
++	set_meta("match_config", {"map": "island", "players": 3, "nation": 0})
++	change_scene_to_file("res://world.tscn")
++	for frame in range(12000):
++		await create_timer(0.01).timeout
++		if current_scene != null and current_scene.get("nav_ready") == true and current_scene.get("menu") != null:
++			w = current_scene
++			break
++	if w == null:
++		push_error("Arsenal visual scene did not become ready")
++		quit(1)
++		return
++	root.size = Vector2i(1280, 800)
++	w.start_match("easy")
++	w.menu.close()
++	await frames()
++	w.set_physics_process(false)
++	w.ai.set_physics_process(false)
++	preload("res://tools/test_kit.gd").quiet(w, ["un", "wmd", "defcon", "ai_directorate", "generals"])
++	w.ui_scale = 1.0
++	w.apply_ui_scale()
++	DirAccess.make_dir_recursive_absolute("res://build")
++	w.hud.toggle_panel("defence", true)
++	w.hud._panels.defence_tab = "arsenal"
++	for pair in [["japan", "fires"], ["ethiopia", "fires"], ["sudan", "limits"], ["usa", "land"]]:
++		w.hud._panels.arsenal_country = pair[0]
++		w.hud._panels.arsenal_domain = pair[1]
++		w.hud.refresh_side()
++		await frames()
++		var picker: OptionButton = w.hud._side_rows.find_child("ArsenalCountry", true, false)
++		check(picker != null and picker.item_count == 28, str(pair[0]) + " country picker")
++		check(w.hud._win.get_global_rect().end.x <= 1281, str(pair[0]) + " window fits viewport")
++		for label: Label in w.hud._side_rows.find_children("*", "Label", true, false):
++			check(label.size.x < 540, str(pair[0]) + " label wraps: " + label.text.left(30))
++		await capture(str(pair[0]) + "-" + str(pair[1]))
++	w.hud.toggle_panel("defence")
++	var canvas := CanvasLayer.new()
++	canvas.layer = 120
++	root.add_child(canvas)
++	var background := ColorRect.new()
++	background.color = Color("102433")
++	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
++	canvas.add_child(background)
++	var row := HBoxContainer.new()
++	row.position = Vector2(30, 140)
++	row.add_theme_constant_override("separation", 20)
++	canvas.add_child(row)
++	for key: String in Data.ROSTER:
++		var card := VBoxContainer.new()
++		card.custom_minimum_size = Vector2(390, 350)
++		row.add_child(card)
++		var picture := TextureRect.new()
++		picture.custom_minimum_size = Vector2(380, 300)
++		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
++		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
++		card.add_child(picture)
++		w.portraits.get_portrait(key)
++		for frame in range(180):
++			await process_frame
++			if w.portraits._cache.has(key): break
++		picture.texture = w.portraits._cache.get(key)
++		check(picture.texture != null, key + " rendered native portrait")
++		var title := Label.new()
++		title.text = w.unit_defs[key].get("generic", key)
++		title.add_theme_font_size_override("font_size", 20)
++		card.add_child(title)
++	await capture("new-models")
++	print("ARSENAL_DIVERSITY_VIEWS PASS" if failures == 0 else "ARSENAL_DIVERSITY_VIEWS FAIL: %d" % failures)
++	quit(0 if failures == 0 else 1)
+--- /dev/null
++++ b/native/ARSENAL-DIVERSITY-RESEARCH-2026-10-12.md
+@@ -0,0 +1,677 @@
++# DOMINION — הרחבת מגוון החימוש: מחקר לכל 28 הישויות
++
++תאריך מסמך: 12 באוקטובר 2026. חיתוך הראיות: 11 באוקטובר 2026.
++
++המחקר מחבר בין סוג הנשק לתפקיד שהשחקן יכול להשתמש בו. נוספו שלושה תפקידים ו־20 בחירות מדינה–תפקיד, לצד תיק חימוש לכל 28 הישויות. לכל תיק שישה תחומים, מקורות ופריטים שלא הוענקו. זהו מחקר הרחבה של סגל המשחק, ולא סדר כוחות מלא או אימות של כל כלי שהיה בקוד קודם לכן.
++
++## שיטת המחקר והבחנה בין מציאות למשחק
++
++נבדקו דפי מפעילים, הודעות אספקה, דוחות או״ם, הערכות DIA, דוחות פיקוח וראיות מתועדות. עדיפות למקור ראשוני; באתיופיה ובפקיסטן אספקת SH-15 נשענת על דיווח Janes ומסומנת כך. הודעת יצרן מאשרת את טענת האספקה שלו, לא שיעור כשירות או הצלחה בקרב. SIPRI מתעד העברות ואינו מלאי כשיר בזמן אמת. הזמנה, אישור מכירה, ניסוי ותצוגה אינם נחשבים אוטומטית לשירות מבצעי.
++
++הדוחות מ־2019/2021 על איראן וצפון קוריאה הם בסיס היסטורי. אין מהם אומדן לכשירות ב־2026. בסוריה, אפגניסטן, תימן וסודאן הופרדו רשימות עבר, ציוד שנתפס וכוחות בעלי שליטה שונה. סודאן ודרום סודאן הן שתי מדינות; RSF אינו דרום סודאן. ממשלת תימן והחות׳ים הם שני צדדי משחק בתוך מדינה אחת. EU הוא איגום משחקי של דוגמאות ממדינות חברות.
++
++מחיר, נזק, טווח, מהירות, משך אימון ואוכלוסייה הם איזון משחקי. ייצור מייצג רכישה, הקצאת צוות ותחזוקה; הוא אינו טענה ליכולת ייצור מקומית. לא הוזנו כמויות מלאי משוערות. מסכי המשחק באנגלית, ולכן נוסח התיקים להלן תואם את התצוגה במשחק.
++
++המחקר משלים את [מחקר הסגל הקודם](FORCE-ROSTER-RESEARCH-2026-10-06.md), [מחקר הטילים והחימוש](ARSENAL-RESEARCH-2026-10-06.md) ואת [מחקר הישויות האזוריות](REGIONAL-ENTITIES-RESEARCH-2026-10-11.md). המקורות שם שייכים לשינויים ההם; רשימת Existing game roster במסך החדש היא לצורכי השוואה ואינה מאשרת אותם מחדש.
++
++## מה השתנה בפועל
++
++| תפקיד | החלטת משחק | גבול |
++|---|---|---|
++| צוות תותח ללא רתע | תמיכה זולה מול רכב קל וביצורים, ללא מחקר טילים | טווח קצר, צוות חשוף, פחות כוח מול טנק מ־ATGM; בלי ירי אווירי |
++| הוביצר גלגלי | תנועה מהירה מול תותח נגרר; אותה מערכת הפגזה ותצפית | מיגון קל, יקר מנגרר; אין תוספת טווח מציאותי בקילומטרים למפה |
++| הגנה אווירית קצרת טווח | ליווי קרקעי זול יותר מ־SAM ארוך טווח מול מטוסים וכטב״מים | בלי ירי קרקע, בלי הפגזה ובלי יירוט אירועי טילים אסטרטגיים |
++
++כל התפקידים מחוברים לייצור, למחקר הנדרש, לבחירת AI היריב, למודלי תלת־ממד ולשמירות הקיימות. ההגנה הקצרה מייצגת תפקיד משותף למערכות שונות; אין טענה שלכולן אותו חיישן, טיל או ביצועים. לצוות ללא רתע בחירת התחמושת מופשטת; אין מנגנון ייעודי לעשן או תאורה.
++
++גישה במשחק: Defence → Arsenal. בחירת מדינה ואחד מששת התחומים. מקורות נפתחים רק בלחיצה. למדינה שלך, כשיש מתקן מתאים, יש מעבר לרשימת הייצור שלו. לחיצה על נשק אינה קונה יחידה ולא עוקפת מחקר.
++
++## 20 בחירות הייצור החדשות
++
++| מדינה | סוג | דגם | מעמד ראיות | מקור |
++|---|---|---|---|---|
++| ארה״ב | צוות תותח ללא רתע | M3A1 MAAWS Team | Fielding documented | [US Army: M3A1 fielding completed (2024)](https://www.army.mil/article-amp/280535/army_completes_fielding_of_the_m3a1_multi_role_anti_armor_anti_personnel_weapon_system_maaws) |
++| הודו | צוות תותח ללא רתע | Carl-Gustaf Team | Established service | [Saab: Indian Army Carl-Gustaf service](https://www.saab.com/markets/india/stories/2016/a-40-year-history-in-india) |
++| יפן | צוות תותח ללא רתע | 84 mm Recoilless Team | Official equipment list | [JGSDF: infantry weapons and air defence](https://www.mod.go.jp/gsdf/equipment/fire/) |
++| ברזיל | צוות תותח ללא רתע | Carl-Gustaf M3 Team | Established service | [Saab: Carl-Gustaf M3 in Brazilian Army](https://www.saab.com/pt-br/markets/brasil/historias/2017/carl-gustaf-no-exercito-brasileiro) |
++| אוסטרליה | צוות תותח ללא רתע | Carl-Gustaf Team | Established service; variant abstracted | [Australian Defence: Carl-Gustaf service / modernization](https://www.saab.com/markets/australia/news/press/2018/saab-receives-australian-order-for-carl-gustaf-m4) |
++| סין | הוביצר מתנייע גלגלי | PCL-181 | Live-fire documented | [Chinese MoD: PCL-181 live-fire (2026)](https://eng.mod.gov.cn/2025xb/D/P_251753/16466631_3.html) |
++| האיחוד האירופי | הוביצר מתנייע גלגלי | CAESAR | Delivered French equipment | [French MoD: equipment delivered to Ukraine](https://www.defense.gouv.fr/sites/default/files/ministere-armees/Liste%20des%20%C3%A9quipements%20livr%C3%A9s%20%C3%A0%20l%27Ukraine_0.pdf) |
++| רוסיה | הוביצר מתנייע גלגלי | 2S43 Malva | Supplier-reported delivery | [Rostec: first Malva delivery (2023; supplier statement)](https://rostec.ru/media/news/rostekh-peredal-minoborony-pervuyu-partiyu-samokhodnykh-kolesnykh-gaubits-malva/) |
++| יפן | הוביצר מתנייע גלגלי | Type 19 Howitzer | Deployment documented | [JGSDF: Type 19 deployment ceremony (2023)](https://www.mod.go.jp/pco/kumamoto/topics/2023_8/20230804/index.html) |
++| בריטניה | הוביצר מתנייע גלגלי | Archer | Army firing documented | [British Army: gunners fire Archer](https://www.army.mod.uk/news/british-gunners-take-aim-and-fire-swedish-archer-for-the-first-time/) |
++| אינדונזיה | הוביצר מתנייע גלגלי | CAESAR | Handover documented | [Indonesian MoD: CAESAR handover (2014)](https://www.kemhan.go.id/baloghan/2014/06/26/penyerahan-secara-simbolis-empat-unit-caesar-155.html) |
++| אוקראינה | הוביצר מתנייע גלגלי | CAESAR | Delivery documented | [French MoD: equipment delivered to Ukraine](https://www.defense.gouv.fr/sites/default/files/ministere-armees/Liste%20des%20%C3%A9quipements%20livr%C3%A9s%20%C3%A0%20l%27Ukraine_0.pdf) |
++| פקיסטן | הוביצר מתנייע גלגלי | SH-15 | Reported delivery | [Janes: SH-15 delivered to Pakistan (reported)](https://www.janes.com/defence-intelligence-insights/defence-news/defence/chinas-norinco-delivers-sh-15-howitzers-to-pakistan) |
++| אתיופיה | הוביצר מתנייע גלגלי | SH-15 | Observed delivery; readiness unknown | [Janes: Ethiopia displays SH-15 (reported)](https://www.janes.com/defence-intelligence-insights/defence-news/defence/ethiopia-displays-new-sh15-howitzers) |
++| ארה״ב | הגנה אווירית קצרת טווח | AN/TWQ-1 Avenger | Established service | [US Army: Avenger role](https://www.army.mil/article/3215/avenger) |
++| רוסיה | הגנה אווירית קצרת טווח | Pantsir-S | Supplier-reported delivery | [Rostec: Pantsir-S delivery (2025; supplier statement)](https://rostec.ru/media/pressrelease/rostekh-postavil-v-voyska-boevye-mashiny-pantsir-s/) |
++| יפן | הגנה אווירית קצרת טווח | Type 11 SAM | Official equipment list | [JGSDF: infantry weapons and air defence](https://www.mod.go.jp/gsdf/equipment/fire/) |
++| טורקיה | הגנה אווירית קצרת טווח | HISAR-A | In-service statement | [SSB: HISAR-A in service; layered air defence](https://www.ssb.gov.tr/haber/siper-urun-1-ve-hisar-projelerinde-seri-uretim-icin-imzalar-atildi-LPq5Os) |
++| בריטניה | הגנה אווירית קצרת טווח | Stormer HVM | Official equipment list | [British Army: Starstreak and Stormer](https://www.army.mod.uk/learn-and-explore/equipment/artillery-and-air-defence/starstreak-high-velocity-missile/) |
++| אוקראינה | הגנה אווירית קצרת טווח | IRIS-T SLS | Delivery documented | [German government: delivered vs planned aid](https://www.bundesregierung.de/breg-de/service/archiv-bundesregierung/waffenlieferungen-ukraine-2054514) |
++
++## התיקים לכל מדינה
++
++### 1. ארה״ב — `usa`
++
++**קרקע ושריון:** Abrams and Bradley cover heavy armour and infantry support; MAAWS adds a cheaper close-range support team.
++
++**תעופה:** F-16 / A-10 and the existing F-22 / B-21 roles separate multirole, close support and high-cost advanced aircraft.
++
++**ים:** Ocean-going surface forces and submarines need different missions; a carrier is not a coastal missile boat.
++
++**אש והגנה אווירית:** M777 / tracked artillery offer fires; Avenger adds local air escort below strategic missile defence.
++
++**תחזוקה והחלטת משחק:** Fuel, ammunition, airfield capacity and expensive electronics constrain the advanced roster.
++
++**גבולות הראיות:** M10 Booker procurement was terminated. M1E3 remains a research scenario, not an established operational fleet.
++
++**נוסף לייצור:** M3A1 MAAWS Team; AN/TWQ-1 Avenger
++
++**מעקב / לא הוענק במחקר זה:**
++
++- M10 Booker: cancelled procurement; no production choice added
++
++**מקורות התיק:** [US Army: M3A1 fielding completed (2024)](https://www.army.mil/article-amp/280535/army_completes_fielding_of_the_m3a1_multi_role_anti_armor_anti_personnel_weapon_system_maaws); [US Army: Avenger role](https://www.army.mil/article/3215/avenger); [US Army: M10 procurement terminated (2025)](https://www.army.mil/article-amp/286271/army_to_cease_procurement_of_m10_booker_combat_vehicles)
++
++### 2. סין — `china`
++
++**קרקע ושריון:** ZBD-04A infantry support complements the existing heavy tank; PCL-181 adds wheeled artillery rather than another tank.
++
++**תעופה:** J-10C is a light multirole choice alongside heavier fighters; unmanned aircraft have separate costs and vulnerabilities.
++
++**ים:** Type 022 is coastal surface warfare; it does not inherit submarine hunting or strategic nuclear launch.
++
++**אש והגנה אווירית:** Wheeled PCL-181 trades protection for relocation. Existing DF-17 / missile research remains separately gated.
++
++**תחזוקה והחלטת משחק:** Reconnaissance must expose targets beyond the gun's sight; artillery needs protected logistics.
++
++**גבולות הראיות:** Manufacturer range claims are not map distances. No extra hypersonic inventory follows from a parade.
++
++**נוסף לייצור:** PCL-181
++
++**מעקב / לא הוענק במחקר זה:**
++
++- New parade systems require separate delivery evidence
++
++**מקורות התיק:** [Chinese MoD: PCL-181 live-fire (2026)](https://eng.mod.gov.cn/2025xb/D/P_251753/16466631_3.html); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 3. האיחוד האירופי — `eu`
++
++**קרקע ושריון:** Puma, Fennek and Leopard represent different member-state contributions, not one standardized European army.
++
++**תעופה:** Mirage 2000D supplies ground attack; Gripen supplies a lighter multirole option beside advanced European fighters.
++
++**ים:** Surface and submarine models pool member examples; national export approval and maintenance remain real constraints.
++
++**אש והגנה אווירית:** CAESAR adds mobile gun support below rocket artillery; IRIS-T SLM is a different air-defence layer.
++
++**תחזוקה והחלטת משחק:** Mixed ammunition, spares and national supply chains matter; the game abstracts them into resources and research.
++
++**גבולות הראיות:** EU is a coalition abstraction. A French delivery does not prove every member owns that system.
++
++**נוסף לייצור:** CAESAR
++
++**מעקב / לא הוענק במחקר זה:**
++
++- CAESAR MkII and Type 212CD: procurement / future variants remain distinct
++
++**מקורות התיק:** [French MoD: equipment delivered to Ukraine](https://www.defense.gouv.fr/sites/default/files/ministere-armees/Liste%20des%20%C3%A9quipements%20livr%C3%A9s%20%C3%A0%20l%27Ukraine_0.pdf); [German government: delivered vs planned aid](https://www.bundesregierung.de/breg-de/service/archiv-bundesregierung/waffenlieferungen-ukraine-2054514)
++
++### 4. איראן — `iran`
++
++**קרקע ושריון:** BMP-2 and legacy armoured platforms support a mixed fleet; local names do not prove entirely new designs.
++
++**תעופה:** F-5E and Su-24 represent documented legacy aircraft; spare parts and current serviceability are uncertain.
++
++**ים:** Coastal craft and shore-based threats differ from a modern blue-water escort fleet.
++
++**אש והגנה אווירית:** Drones, rockets and ballistic / cruise missiles are separate roles; one-way drones are not reusable fighters.
++
++**תחזוקה והחלטת משחק:** Imported components, sanctions, repairs and dispersed production constrain sophisticated systems.
++
++**גבולות הראיות:** The DIA baseline is from 2019. Conflict losses and 2026 readiness are not verified here; no new advanced fleet is granted.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- New fighter or air-defence announcements: confirmation needed
++
++**מקורות התיק:** [DIA: Iran Military Power (2019; legacy assessment)](https://www.dia.mil/Portals/110/Images/News/Military_Powers_Publications/Iran_Military_Power_LR.pdf); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 5. רוסיה — `russia`
++
++**קרקע ושריון:** BMP-3 and tanks supply protected manoeuvre; Malva supplies less protected, faster wheeled gun support.
++
++**תעופה:** Su-25 is ground attack, not a dogfighter; the existing strike and fighter classes retain separate missions.
++
++**ים:** Surface ships and submarines are separate platforms, with theatre and maintenance limits.
++
++**אש והגנה אווירית:** Malva complements tracked guns and rockets. Pantsir-S adds local anti-aircraft escort, not strategic ABM in this expansion.
++
++**תחזוקה והחלטת משחק:** Gun crews need reconnaissance, ammunition and protection; moving faster does not make them more heavily armoured.
++
++**גבולות הראיות:** Rostec confirms claimed deliveries, not independent fleet readiness or combat success. Losses are not estimated.
++
++**נוסף לייצור:** 2S43 Malva; Pantsir-S
++
++**מעקב / לא הוענק במחקר זה:**
++
++- Supplier success claims are not used as hit probabilities
++
++**מקורות התיק:** [Rostec: first Malva delivery (2023; supplier statement)](https://rostec.ru/media/news/rostekh-peredal-minoborony-pervuyu-partiyu-samokhodnykh-kolesnykh-gaubits-malva/); [Rostec: Pantsir-S delivery (2025; supplier statement)](https://rostec.ru/media/pressrelease/rostekh-postavil-v-voyska-boevye-mashiny-pantsir-s/); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 6. הודו — `india`
++
++**קרקע ושריון:** BMP-2 Sarath and heavy tanks gain close support from Carl-Gustaf crews; a support launcher is not an ATGM replacement.
++
++**תעופה:** Jaguar and Tejas separate ground attack and lighter fighter roles; imported and domestic platforms coexist.
++
++**ים:** A substantial maritime roster needs port and research investment; ground missile ownership does not grant every naval launcher.
++
++**אש והגנה אווירית:** M777 complements tracked artillery; BrahMos and air-defence projects remain separate capabilities.
++
++**תחזוקה והחלטת משחק:** Multiple suppliers complicate ammunition and spares. Cheap infantry support remains useful before expensive missile research.
++
++**גבולות הראיות:** Carl-Gustaf service is documented; the dossier does not assert a delivered number of the newest M4 variant.
++
++**נוסף לייצור:** Carl-Gustaf Team
++
++**מעקב / לא הוענק במחקר זה:**
++
++- Zorawar and new gun contracts: trials / orders need delivery confirmation
++
++**מקורות התיק:** [Saab: Indian Army Carl-Gustaf service](https://www.saab.com/markets/india/stories/2016/a-40-year-history-in-india); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 7. יפן — `japan`
++
++**קרקע ושריון:** Type 89 IFV, Type 16 wheeled gun and heavy tanks serve different protection / mobility needs; 84 mm crews add portable support.
++
++**תעופה:** Fighter defence and OH-1 reconnaissance are separate; the game reconnaissance sortie carries no attack load.
++
++**ים:** Aegis and surface escorts emphasize maritime defence; an Aegis hull is not automatically nuclear armed.
++
++**אש והגנה אווירית:** FH70, Type 19 and Type 11 separate cheap towed fires, mobile fires and local air defence.
++
++**תחזוקה והחלטת משחק:** Type 19 uses existing artillery research and spotting; Type 11 requires guided-munition research.
++
++**גבולות הראיות:** Type 19 deployment is documented. Procurement budgets alone are not delivery counts; Type 12 upgrades remain separately assessed.
++
++**נוסף לייצור:** 84 mm Recoilless Team; Type 19 Howitzer; Type 11 SAM
++
++**מעקב / לא הוענק במחקר זה:**
++
++- Extended-range missile upgrades: distinguish trials from units in service
++
++**מקורות התיק:** [JGSDF: infantry weapons and air defence](https://www.mod.go.jp/gsdf/equipment/fire/); [JGSDF: Type 19 deployment ceremony (2023)](https://www.mod.go.jp/pco/kumamoto/topics/2023_8/20230804/index.html)
++
++### 8. טורקיה — `turkiye`
++
++**קרקע ושריון:** ACV-15 and conventional armour support ground forces; new domestic tank deliveries do not instantly replace the mixed fleet.
++
++**תעופה:** F-16 and Akinci separate crewed multirole and unmanned strike roles.
++
++**ים:** Coastal and larger surface combatants need different weapons and support; local construction is not limitless availability.
++
++**אש והגנה אווירית:** HISAR-A adds local air defence below longer-range layers; it cannot bombard ground targets.
++
++**תחזוקה והחלטת משחק:** Electronics, radar and protection consume resources; drones remain vulnerable to air defence and electronic warfare.
++
++**גבולות הראיות:** KAAN and future aircraft remain research projects. The source distinguishes HISAR service from then-testing Siper.
++
++**נוסף לייצור:** HISAR-A
++
++**מעקב / לא הוענק במחקר זה:**
++
++- KAAN: development aircraft, not a newly granted operational fleet
++
++**מקורות התיק:** [SSB: HISAR-A in service; layered air defence](https://www.ssb.gov.tr/haber/siper-urun-1-ve-hisar-projelerinde-seri-uretim-icin-imzalar-atildi-LPq5Os); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 9. ישראל — `israel`
++
++**קרקע ושריון:** Merkava, Namer and Eitan separate heavy tank, heavily protected carrier and wheeled carrier; passengers are abstracted.
++
++**תעופה:** Crewed aircraft and Harop have distinct sortie / expendable-weapon economics.
++
++**ים:** Sa'ar 4.5 supplies coastal missile warfare; no nuclear weapon is inferred from a missile boat.
++
++**אש והגנה אווירית:** Layered interception and local anti-aircraft defence must be distinguished; the game retains its existing missile-defence systems.
++
++**תחזוקה והחלטת משחק:** Advanced protection costs electronics and research; heavy protection cannot replace reconnaissance or logistics.
++
++**גבולות הראיות:** Eitan APC is distinct from the Eitan UAV. No extra strategic capability or new Ro'em fleet is inferred from announcements.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- New artillery and interceptor variants need actual delivery evidence
++
++**מקורות התיק:** [Israeli MoD: first Eitan APC delivery](https://mod.gov.il/en/press-releases/press-room/delivery-of-first-eitan-armored-personnel-carriers-apc-to-the-israel-defense-forces-nahal-infantry-brigade); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 10. בריטניה — `uk`
++
++**קרקע ושריון:** Warrior, Jackal and the existing tank fill infantry support, reconnaissance and heavy armour roles.
++
++**תעופה:** Wildcat reconnaissance is abstracted without weapons; fighter sorties use limited parking and ammunition.
++
++**ים:** Type 45, other surface forces and submarines have separate escort and strike roles.
++
++**אש והגנה אווירית:** L118 is cheap and slow to relocate; Archer is more mobile. Stormer HVM escorts ground forces against aircraft.
++
++**תחזוקה והחלטת משחק:** An interim Archer capability does not imply unlimited systems; keep scouts and supplies with mobile guns.
++
++**גבולות הראיות:** Challenger 3 is a modernization programme. No retired Tornado fleet is reintroduced from historical lists.
++
++**נוסף לייצור:** Archer; Stormer HVM
++
++**מעקב / לא הוענק במחקר זה:**
++
++- New Carl-Gustaf purchase: variant / fielding requires a separate check
++
++**מקורות התיק:** [British Army: gunners fire Archer](https://www.army.mod.uk/news/british-gunners-take-aim-and-fire-swedish-archer-for-the-first-time/); [British Army: Starstreak and Stormer](https://www.army.mod.uk/learn-and-explore/equipment/artillery-and-air-defence/starstreak-high-velocity-missile/)
++
++### 11. דרום קוריאה — `south_korea`
++
++**קרקע ושריון:** K21 IFV and K808 carrier remain separate from K2 heavy armour; they are not interchangeable labels.
++
++**תעופה:** FA-50 is a lighter fighter; advanced aircraft and future programmes keep independent gates.
++
++**ים:** Surface escorts and submarines require maritime infrastructure and separate weapons.
++
++**אש והגנה אווירית:** K9 tracked artillery, Chunmoo rockets and close air defence belong to different layers and mobility classes.
++
++**תחזוקה והחלטת משחק:** Tracked gun protection costs more than exposed towed crews; domestic manufacturing does not remove supply needs.
++
++**גבולות הראיות:** Hanwha's export catalogue is not an operator list. Export-specific variants are not automatically granted to Korea.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- L-SAM and new aircraft variants: assess delivered configuration individually
++
++**מקורות התיק:** [Hanwha: 2024 sustainability report; domestic systems](https://www.hanwhaaerospace.com/assets/content/esg/sustainBusiness/download/en/HanwhaAerospace_SustainabilityReport_2024_ENG.pdf); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 12. סעודיה — `saudi`
++
++**קרקע ושריון:** Bradley is documented in Saudi service; heavy armour and infantry support remain separate choices.
++
++**תעופה:** Tornado IDS serves ground attack beside multirole aircraft; sustainment depends heavily on foreign partners.
++
++**ים:** Coastal and escort capability is represented separately from any presumed submarine fleet.
++
++**אש והגנה אווירית:** Existing Patriot / THAAD roles cover different threats; an ammunition-sale notice is not a new battery delivery.
++
++**תחזוקה והחלטת משחק:** Imported spares, training and contractor support are consequential despite strong purchasing power.
++
++**גבולות הראיות:** CAESAR and additional air-defence variants are research candidates here; no fresh unit grant relies on an unconfirmed sale.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- Proposed FMS approvals are not proof of delivered equipment
++
++**מקורות התיק:** [US Army imagery: Saudi Bradley equipment (2025)](https://www.dvidshub.net/image/9380249/rslf-equipment-arrives-ntc-rotation); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 13. ברזיל — `brazil`
++
++**קרקע ושריון:** Guarani and Cascavel emphasize wheeled mobility; Carl-Gustaf M3 crews provide cheaper portable fire support.
++
++**תעופה:** F-5M and existing Gripen / A-29 choices separate fighter and close-support tasks; retired types need retirement checks.
++
++**ים:** Coastal and ocean-going missions differ; submarine projects must be separated from delivered boats.
++
++**אש והגנה אווירית:** ASTROS rockets differ from towed guns and portable launchers; new cruise-missile projects are not automatically operational.
++
++**תחזוקה והחלטת משחק:** Affordable infantry support consumes less industrial material than armour but needs protection in close combat.
++
++**גבולות הראיות:** The M3 service source does not prove a universal M4 conversion. AMX and AH-2 are not newly granted from older lists.
++
++**נוסף לייצור:** Carl-Gustaf M3 Team
++
++**מעקב / לא הוענק במחקר זה:**
++
++- MTC-300 and guided ASTROS development: no operational grant in this update
++
++**מקורות התיק:** [Saab: Carl-Gustaf M3 in Brazilian Army](https://www.saab.com/pt-br/markets/brasil/historias/2017/carl-gustaf-no-exercito-brasileiro); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 14. אינדונזיה — `indonesia`
++
++**קרקע ושריון:** Harimau medium tank, Pandur II and Komodo distinguish direct fire, infantry support and reconnaissance.
++
++**תעופה:** A mixed imported fleet complicates maintenance; fighters and support aircraft remain distinct roles.
++
++**ים:** An archipelago needs coastal missile craft and escorts; a small craft does not gain submarine-hunting weapons by default.
++
++**אש והגנה אווירית:** Delivered CAESAR adds mobile artillery alongside tracked M109 and rockets; Starstreak / Mistral are a different role.
++
++**תחזוקה והחלטת משחק:** Protect mobile guns with scouts and infantry; faster relocation trades against tank-like protection.
++
++**גבולות הראיות:** A 2017 parade is historical evidence, not a 2026 readiness census. Harimau production evidence is tracked in the earlier roster report.
++
++**נוסף לייצור:** CAESAR
++
++**מעקב / לא הוענק במחקר זה:**
++
++- New fighter contracts: orders and operational squadrons stay distinct
++
++**מקורות התיק:** [Indonesian MoD: TNI equipment parade (2017)](https://www.kemhan.go.id/2017/10/05/menhan-hadiri-upacara-hut-tni-ke-72-di-cilegon.html); [Indonesian MoD: CAESAR handover (2014)](https://www.kemhan.go.id/baloghan/2014/06/26/penyerahan-secara-simbolis-empat-unit-caesar-155.html); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 15. אוקראינה — `ukraine`
++
++**קרקע ושריון:** Bradley, AMX-10 RC and donated tanks form a mixed fleet with different ammunition and spares.
++
++**תעופה:** Su-25 ground attack needs fighter cover; aid announcements do not prove an entire operational squadron.
++
++**ים:** Coastal weapons and unmanned maritime activity do not recreate the pre-war surface fleet.
++
++**אש והגנה אווירית:** Delivered CAESAR adds wheeled fires; IRIS-T SLS gives local air defence, distinct from SLM and Patriot.
++
++**תחזוקה והחלטת משחק:** Donor supply, repairs and ammunition are central. Long-range guns still need target visibility in the game.
++
++**גבולות הראיות:** German aid records explicitly separate delivered and planned systems; only delivered examples grant new production here.
++
++**נוסף לייצור:** CAESAR; IRIS-T SLS
++
++**מעקב / לא הוענק במחקר זה:**
++
++- Pending aid is shown as a plan, never counted as on-hand stock
++
++**מקורות התיק:** [German government: delivered vs planned aid](https://www.bundesregierung.de/breg-de/service/archiv-bundesregierung/waffenlieferungen-ukraine-2054514); [French MoD: equipment delivered to Ukraine](https://www.defense.gouv.fr/sites/default/files/ministere-armees/Liste%20des%20%C3%A9quipements%20livr%C3%A9s%20%C3%A0%20l%27Ukraine_0.pdf)
++
++### 16. צפון קוריאה — `north_korea`
++
++**קרקע ושריון:** Legacy armour and massed guns coexist with displayed newer designs; a parade alone does not prove fleet scale.
++
++**תעופה:** Su-25 and older fighters are legacy assessments, with uncertain current serviceability.
++
++**ים:** Small surface vessels and submarines have coastal roles; modern escort capability is not assumed.
++
++**אש והגנה אווירית:** Artillery, rockets and strategic missiles are separate systems; missile imagery does not establish stock counts.
++
++**תחזוקה והחלטת משחק:** Ammunition volume cannot substitute for electronics, maintenance or reconnaissance.
++
++**גבולות הראיות:** The DIA assessment is from 2021. No new advanced SAM, tank or reconnaissance helicopter is granted from unverified displays.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- Recent parade systems: operational status and configuration remain uncertain
++
++**מקורות התיק:** [DIA: North Korea Military Power (2021)](https://www.dia.mil/Portals/110/Documents/News/North_Korea_Military_Power.pdf); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 17. מצרים — `egypt`
++
++**קרקע ושריון:** Existing heavy armour and carriers retain a mixed-supplier legacy; modernization orders do not instantly replace them.
++
++**תעופה:** A varied imported fleet has distinct fighter, support and maintenance needs.
++
++**ים:** Ambassador Mk III represents fast coastal missile combat; larger escorts and submarines remain separate classes.
++
++**אש והגנה אווירית:** Conventional artillery and air defence remain available through the established roster; K9A1EGY is a procurement watch item.
++
++**תחזוקה והחלטת משחק:** Spare parts from multiple suppliers, ammunition and trained crews limit availability.
++
++**גבולות הראיות:** A schedule for first K9 deliveries by early 2026 is not proof they arrived. No unverified K9 production choice is added.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- K9A1EGY: delivery schedule documented; actual arrival needs confirmation
++
++**מקורות התיק:** [Hanwha: K9A1EGY delivery schedule; not arrival confirmation](https://www.hanwhaaerospace.com/eng/media/newsroom/view.do?seq=480); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 18. אוסטרליה — `australia`
++
++**קרקע ושריון:** Hawkei reconnaissance, protected mobility and heavy armour coexist; Carl-Gustaf service adds portable support.
++
++**תעופה:** Modern fighters require fuel and airfield support; unmanned development is separately gated.
++
++**ים:** Long-distance maritime operations require escorts and sustainment; future submarines are not current inventory.
++
++**אש והגנה אווירית:** M777 and the first documented AS9 battery separate towed and tracked fires; NASAMS is a different defence layer.
++
++**תחזוקה והחלטת משחק:** Small high-value fleets depend on training, imported components and support vehicles.
++
++**גבולות הראיות:** AS9 first battery was documented in August 2026. Redback sea trials do not prove a fully operational IFV fleet.
++
++**נוסף לייצור:** Carl-Gustaf Team
++
++**מעקב / לא הוענק במחקר זה:**
++
++- AS21 Redback: trials / procurement; no fielded IFV grant
++- AS9: first battery documented; no claim of fleet-wide conversion
++
++**מקורות התיק:** [Australian Defence: Carl-Gustaf service / modernization](https://www.saab.com/markets/australia/news/press/2018/saab-receives-australian-order-for-carl-gustaf-m4); [Australian Defence: first AS9 battery (August 2026)](https://news.defence.gov.au/army/capability/2026-08-12/parade-marks-major-advance-artillery-capability); [Australian Defence: Redback sea trials (September 2026)](https://news.defence.gov.au/army/capability/2026-09-03/new-fighting-vehicles-tested-sea)
++
++### 19. פקיסטן — `pakistan`
++
++**קרקע ושריון:** Heavy armour and MG3 support coexist; wheeled SH-15 adds a distinct artillery mobility choice.
++
++**תעופה:** Mirage 5 attack and F-16 / JF-17 fighter roles differ; maintenance and imported parts constrain availability.
++
++**ים:** Azmat-class is coastal surface warfare, not a submarine hunter or strategic nuclear launcher in this expansion.
++
++**אש והגנה אווירית:** SH-15 deliveries are reported; its game shells are conventional. Ownership does not prove a nuclear artillery role.
++
++**תחזוקה והחלטת משחק:** Multiple suppliers require spares and ammunition; mobile artillery still needs escorts and spotting.
++
++**גבולות הראיות:** The new howitzer attribution is a Janes report, not an independently audited readiness count.
++
++**נוסף לייצור:** SH-15
++
++**מעקב / לא הוענק במחקר זה:**
++
++- Nuclear-capable SH-15 speculation does not grant a nuclear firing mode
++
++**מקורות התיק:** [Janes: SH-15 delivered to Pakistan (reported)](https://www.janes.com/defence-intelligence-insights/defence-news/defence/chinas-norinco-delivers-sh-15-howitzers-to-pakistan); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 20. עיראק — `iraq`
++
++**קרקע ושריון:** Mixed-origin heavy armour and infantry equipment need common training and sustainment; no unsupported new IFV is granted.
++
++**תעופה:** Delivered L-159 fills ground attack; T-50IQ is a separate light aircraft choice in the established roster.
++
++**ים:** Coastal security is limited; it is not an ocean-going combat fleet.
++
++**אש והגנה אווירית:** Conventional guns and local air defence remain distinct from future long-range air-defence procurement.
++
++**תחזוקה והחלטת משחק:** Repairs, foreign support and spare parts are essential to a mixed fleet.
++
++**גבולות הראיות:** A proposed sale or a denial from 2015 cannot establish a new operational BMP-3 fleet in 2026.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- New long-range SAM contracts need delivered-battery confirmation
++
++**מקורות התיק:** [Aero: Iraqi L-159 delivery](https://www.aero.cz/en/l-159/); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 21. סוריה — `syria`
++
++**קרקע ושריון:** Fragmented inherited and captured ground equipment does not establish a standardized new army inventory.
++
++**תעופה:** An inherited paper list does not establish an operational fighter or gunship force after the change of government.
++
++**ים:** No new combat fleet is inferred from the former government's navy.
++
++**אש והגנה אווירית:** Portable support, guns and drones require actor attribution; former stocks do not prove current launch capability.
++
++**תחזוקה והחלטת משחק:** Reorganization, damage, ammunition and repair infrastructure constrain the ground roster.
++
++**גבולות הראיות:** The 2025 institutional assessment is not a verified 2026 inventory. No new advanced system is granted without evidence.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- Former regime aircraft, SAMs and ships are not treated as new operational stock
++
++**מקורות התיק:** [UK Home Office: Syrian military reorganization (2025)](https://assets.publishing.service.gov.uk/media/6874e05eb1b4ebc2c2e46547/SYR%2BCPIN%2BMilitary%2BService.pdf); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 22. אפגניסטן — `afghanistan`
++
++**קרקע ושריון:** Captured small arms and vehicles support a limited ground force; captured equipment is not local manufacturing capacity.
++
++**תעופה:** A few maintained helicopters do not establish a combat-ready modern fighter force.
++
++**ים:** Landlocked: no port, shipyard or navy should be inferred from generic game templates.
++
++**אש והגנה אווירית:** Basic portable support and legacy artillery differ from guided missiles and modern integrated air defence.
++
++**תחזוקה והחלטת משחק:** Parts, trained maintainers and airworthiness are the central uncertainty for captured equipment.
++
++**גבולות הראיות:** SIGAR's discussion of abandoned equipment is not proof that all assets remain operational or even inside Afghanistan.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- Captured Western platforms: present condition and support remain unverified
++
++**מקורות התיק:** [SIGAR: captured equipment and sustainment (April 2025)](https://www.sigar.mil/Portals/147/Files/Reports/Quarterly-Reports/2025-04-30qr.pdf); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 23. ממשלת תימן — `yemen`
++
++**קרקע ושריון:** The recognized government's forces are fragmented; support weapons and vehicles require specific actor attribution.
++
++**תעופה:** No new operational fighter fleet is inferred from the pre-war Yemeni air force.
++
++**ים:** Limited coastal security differs from the Houthis' shore-based shipping threats.
++
++**אש והגנה אווירית:** Conventional support and reported UAV activity do not grant Ansar Allah's missile families to the government.
++
++**תחזוקה והחלטת משחק:** Reconstruction, partner support, imported parts and divided command constrain readiness.
++
++**גבולות הראיות:** Yemen is the internationally recognized state; it is not interchangeable with Ansar Allah-controlled territory.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- Pre-war inventories and Houthi seizures cannot be assigned wholesale to the PLC
++
++**מקורות התיק:** [UN Panel of Experts: Yemen (2025)](https://documents.un.org/api/symbol/access?l=en&s=S%2F2025%2F650&t=pdf); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 24. החות׳ים — `houthis`
++
++**קרקע ושריון:** Ansar Allah relies on dispersed ground forces, support weapons and captured or externally sourced materiel.
++
++**תעופה:** One-way attack UAVs and reconnaissance drones do not constitute a conventional fighter air force.
++
++**ים:** Coastal missiles and drones threaten shipping; they do not imply an advanced navy or submarine fleet.
++
++**אש והגנה אווירית:** Ballistic, cruise and anti-ship weapons are distinct; reported attacks provide stronger evidence of use than parade labels.
++
++**תחזוקה והחלטת משחק:** Imported electronics, repairs and component access constrain replenishment; the game models this through resources.
++
++**גבולות הראיות:** An armed authority inside Yemen, not a separate UN member. Claimed weapon performance and stock counts are not accepted as verified.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- Paraded new missile labels: configuration and stocks may be unverified
++
++**מקורות התיק:** [UN Panel of Experts: Yemen (2025)](https://documents.un.org/api/symbol/access?l=en&s=S%2F2025%2F650&t=pdf); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 25. אתיופיה — `ethiopia`
++
++**קרקע ושריון:** A mixed imported armoured fleet gains a documented wheeled artillery option: SH-15.
++
++**תעופה:** Crewed combat aircraft and imported UAVs have separate support and vulnerability profiles.
++
++**ים:** Landlocked: naval aspirations do not justify a playable port or surface fleet.
++
++**אש והגנה אווירית:** Observed SH-15 provides mobile conventional fires; it does not grant Chinese strategic missile technology.
++
++**תחזוקה והחלטת משחק:** Foreign spares, ammunition, fuel and reconnaissance constrain the gun's usefulness.
++
++**גבולות הראיות:** Janes observed delivery imagery; current readiness and precise fleet size are not established by this dossier.
++
++**נוסף לייצור:** SH-15
++
++**מעקב / לא הוענק במחקר זה:**
++
++- Additional fighter or UAV reports need configuration and delivery confirmation
++
++**מקורות התיק:** [Janes: Ethiopia displays SH-15 (reported)](https://www.janes.com/defence-intelligence-insights/defence-news/defence/ethiopia-displays-new-sh15-howitzers); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++### 26. ניגריה — `nigeria`
++
++**קרקע ושריון:** Ground forces emphasize protected mobility and counterinsurgency; an export catalogue is not proof of a delivered tank model.
++
++**תעופה:** NAF confirms A-29 support facilities, JF-17 induction and T129 induction: attack aircraft, fighter and attack helicopter are distinct.
++
++**ים:** Coastal patrol and maritime security do not imply an attack-submarine capability.
++
++**אש והגנה אווירית:** Ground artillery and local anti-aircraft weapons remain separate from strategic missile and nuclear capabilities.
++
++**תחזוקה והחלטת משחק:** Pilots, maintenance facilities, electricity and foreign parts are essential alongside aircraft procurement.
++
++**גבולות הראיות:** The established A-29 / JF-17 / gunship choices already cover these roles; no duplicate attack-jet label is added just to enlarge the list.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- New aircraft orders do not bypass research or create a ready fleet
++
++**מקורות התיק:** [Nigerian Air Force: T129 inducted (2024)](https://airforce.mil.ng/news/president-tinubu-reaffirms-commitment-to-ending-insecurity-inducts-new-combat-helicopters-into-naf-inventory775984965); [Nigerian Air Force: A-29 operational support (2023)](https://www.airforce.mil.ng/news/a-29st-program-naf-commissions-operations-support-facilities-wings-additional-6-pilots376732102); [Nigerian Air Force: JF-17 induction (2021)](https://www.airforce.mil.ng/news/naf-day-2021-ends-with-induction-of-jf-17-multi-role-thunder-aircraft1424548808)
++
++### 27. סודאן — SAF — `sudan`
++
++**קרקע ושריון:** The game state represents SAF-aligned Sudan, not the RSF. Mixed legacy equipment requires actor-specific attribution.
++
++**תעופה:** Documented use and legacy aircraft do not establish the number currently serviceable after war damage.
++
++**ים:** Red Sea coastal access does not imply a sophisticated ocean-going combat fleet.
++
++**אש והגנה אווירית:** Mortars, small arms and electronic equipment are documented; AH-4 / GB50 findings must be attributed to the correct actor.
++
++**תחזוקה והחלטת משחק:** Damaged bases, supply routes, maintenance and imported ammunition dominate sustainment.
++
++**גבולות הראיות:** RSF weapons and isolated captured examples are not granted as a standard SAF production line.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- AH-4 / GB50: RSF-related investigation; no automatic Sudan arsenal grant
++
++**מקורות התיק:** [Amnesty: visually identified weapons in Sudan (2024)](https://www.amnesty.org/en/latest/research/2024/07/new-weapons-fuelling-the-sudan-conflict/); [Amnesty: AH-4 and GB50 evidence; actor attribution (2025)](https://www.amnesty.org/en/latest/news/2025/05/sudan-advanced-chinese-weaponry-provided-by-uae-identified-in-breach-of-arms-embargo-new-investigation/)
++
++### 28. דרום סודאן — `south_sudan`
++
++**קרקע ושריון:** A limited legacy ground roster reflects weak procurement and maintenance capacity, not Sudan's inventory.
++
++**תעופה:** UN reporting supports Mi-24 activity; it does not establish a modern fighter force or a large ready helicopter fleet.
++
++**ים:** Landlocked: river security is not a seagoing navy, and no naval production is granted.
++
++**אש והגנה אווירית:** Small arms and basic support differ from advanced SAMs, precision rockets and strategic missiles.
++
++**תחזוקה והחלטת משחק:** Restricted arms access, oil revenue and transit dependence shape affordable force development.
++
++**גבולות הראיות:** South Sudan is an independent state. Reported plans to obtain Stinger or Javelin are not evidence of possession.
++
++**נוסף לייצור:** לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק.
++
++**מעקב / לא הוענק במחקר זה:**
++
++- Coup allegations and attempted purchases do not grant operational weapons
++
++**מקורות התיק:** [UN Panel of Experts: South Sudan (2025)](https://digitallibrary.un.org/record/4085042/files/S_2025_442-EN.pdf); [SIPRI: transfers database; not a readiness inventory](https://www.sipri.org/databases/armstransfers)
++
++## אימות והיקף מסירה
++
++בדיקות ההרחבה: 293 הצלחות, אפס כישלונות; בדיקות הסגל המורחב: 674 הצלחות, אפס כישלונות. נבדקו כל המדינות וששת התחומים, שיוך למפעיל, מחקר, תור ייצור, ירי ופגיעה, מגבלות מטרות, ראייה ו־JSON save/restore. בדיקות גרפיות, רגרסיה ויצוא מפורטים ב־HANDOFF.md לאחר השלמתם.
++
++הרחבה זו משנה את המשחק הפעיל ב־native/godot. גרסת הדפדפן הישנה אינה מקבלת כאן מסך או יחידות מקבילות. מסירה לקלוד נעשית בקובץ התיאום המשותף; הודעת מסירה אינה אישור שקרא או פרסם.
+--- /dev/null
++++ b/native/review/codex-arsenal-handoff/build_report.py
+@@ -0,0 +1,46 @@
++"""Rebuild the research dossier from the evidence records shipped in the game."""
++import json
++from pathlib import Path
++
++root = Path(__file__).resolve().parents[3]
++text = (root / "native/godot/scripts/arsenal_diversity_data.gd").read_text(encoding="utf-8")
++
++def constant(name):
++    tail = text.split(f"const {name} := ", 1)[1]
++    return json.JSONDecoder().raw_decode(tail)[0]
++
++sources, profiles, roster = (constant(n) for n in ("SOURCES", "PROFILES", "ROSTER"))
++names = dict(zip(profiles, ["ארה״ב", "סין", "האיחוד האירופי", "איראן", "רוסיה", "הודו", "יפן", "טורקיה", "ישראל", "בריטניה", "דרום קוריאה", "סעודיה", "ברזיל", "אינדונזיה", "אוקראינה", "צפון קוריאה", "מצרים", "אוסטרליה", "פקיסטן", "עיראק", "סוריה", "אפגניסטן", "ממשלת תימן", "החות׳ים", "אתיופיה", "ניגריה", "סודאן — SAF", "דרום סודאן"]))
++roles = {"recoillessTeam": "צוות תותח ללא רתע", "wheeledHowitzer": "הוביצר מתנייע גלגלי", "shortRangeSAM": "הגנה אווירית קצרת טווח"}
++domains = {"land": "קרקע ושריון", "air": "תעופה", "sea": "ים", "fires": "אש והגנה אווירית", "support": "תחזוקה והחלטת משחק", "limits": "גבולות הראיות"}
++out = ["# DOMINION — הרחבת מגוון החימוש: מחקר לכל 28 הישויות", "", "תאריך מסמך: 12 באוקטובר 2026. חיתוך הראיות: 11 באוקטובר 2026.", "",
++"המחקר מחבר בין סוג הנשק לתפקיד שהשחקן יכול להשתמש בו. נוספו שלושה תפקידים ו־20 בחירות מדינה–תפקיד, לצד תיק חימוש לכל 28 הישויות. לכל תיק שישה תחומים, מקורות ופריטים שלא הוענקו. זהו מחקר הרחבה של סגל המשחק, ולא סדר כוחות מלא או אימות של כל כלי שהיה בקוד קודם לכן.", "",
++"## שיטת המחקר והבחנה בין מציאות למשחק", "",
++"נבדקו דפי מפעילים, הודעות אספקה, דוחות או״ם, הערכות DIA, דוחות פיקוח וראיות מתועדות. עדיפות למקור ראשוני; באתיופיה ובפקיסטן אספקת SH-15 נשענת על דיווח Janes ומסומנת כך. הודעת יצרן מאשרת את טענת האספקה שלו, לא שיעור כשירות או הצלחה בקרב. SIPRI מתעד העברות ואינו מלאי כשיר בזמן אמת. הזמנה, אישור מכירה, ניסוי ותצוגה אינם נחשבים אוטומטית לשירות מבצעי.", "",
++"הדוחות מ־2019/2021 על איראן וצפון קוריאה הם בסיס היסטורי. אין מהם אומדן לכשירות ב־2026. בסוריה, אפגניסטן, תימן וסודאן הופרדו רשימות עבר, ציוד שנתפס וכוחות בעלי שליטה שונה. סודאן ודרום סודאן הן שתי מדינות; RSF אינו דרום סודאן. ממשלת תימן והחות׳ים הם שני צדדי משחק בתוך מדינה אחת. EU הוא איגום משחקי של דוגמאות ממדינות חברות.", "",
++"מחיר, נזק, טווח, מהירות, משך אימון ואוכלוסייה הם איזון משחקי. ייצור מייצג רכישה, הקצאת צוות ותחזוקה; הוא אינו טענה ליכולת ייצור מקומית. לא הוזנו כמויות מלאי משוערות. מסכי המשחק באנגלית, ולכן נוסח התיקים להלן תואם את התצוגה במשחק.", "",
++"המחקר משלים את [מחקר הסגל הקודם](../FORCE-ROSTER-RESEARCH-2026-10-06.md), [מחקר הטילים והחימוש](../ARSENAL-RESEARCH-2026-10-06.md) ואת [מחקר הישויות האזוריות](../REGIONAL-ENTITIES-RESEARCH-2026-10-11.md). המקורות שם שייכים לשינויים ההם; רשימת Existing game roster במסך החדש היא לצורכי השוואה ואינה מאשרת אותם מחדש.", "",
++"## מה השתנה בפועל", "",
++"| תפקיד | החלטת משחק | גבול |", "|---|---|---|",
++"| צוות תותח ללא רתע | תמיכה זולה מול רכב קל וביצורים, ללא מחקר טילים | טווח קצר, צוות חשוף, פחות כוח מול טנק מ־ATGM; בלי ירי אווירי |",
++"| הוביצר גלגלי | תנועה מהירה מול תותח נגרר; אותה מערכת הפגזה ותצפית | מיגון קל, יקר מנגרר; אין תוספת טווח מציאותי בקילומטרים למפה |",
++"| הגנה אווירית קצרת טווח | ליווי קרקעי זול יותר מ־SAM ארוך טווח מול מטוסים וכטב״מים | בלי ירי קרקע, בלי הפגזה ובלי יירוט אירועי טילים אסטרטגיים |", "",
++"כל התפקידים מחוברים לייצור, למחקר הנדרש, לבחירת AI היריב, למודלי תלת־ממד ולשמירות הקיימות. ההגנה הקצרה מייצגת תפקיד משותף למערכות שונות; אין טענה שלכולן אותו חיישן, טיל או ביצועים. לצוות ללא רתע בחירת התחמושת מופשטת; אין מנגנון ייעודי לעשן או תאורה.", "",
++"גישה במשחק: Defence → Arsenal. בחירת מדינה ואחד מששת התחומים. מקורות נפתחים רק בלחיצה. למדינה שלך, כשיש מתקן מתאים, יש מעבר לרשימת הייצור שלו. לחיצה על נשק אינה קונה יחידה ולא עוקפת מחקר.", "",
++"## 20 בחירות הייצור החדשות", "", "| מדינה | סוג | דגם | מעמד ראיות | מקור |", "|---|---|---|---|---|"]
++for role, countries in roster.items():
++    for country, (model, source, status) in countries.items():
++        title, url = sources[source]
++        out.append(f"| {names[country]} | {roles[role]} | {model} | {status} | [{title}]({url}) |")
++out += ["", "## התיקים לכל מדינה", ""]
++for i, (country, profile) in enumerate(profiles.items(), 1):
++    out += [f"### {i}. {names[country]} — `{country}`", ""]
++    for key, heading in domains.items():
++        out += [f"**{heading}:** {profile[key]}", ""]
++    additions = [model for entries in roster.values() for c, (model, _, _) in entries.items() if c == country]
++    out += ["**נוסף לייצור:** " + ("; ".join(additions) if additions else "לא הוענק דגם חדש ללא ראיות מספיקות; התיק והסגל הקיים זמינים במשחק."), "", "**מעקב / לא הוענק במחקר זה:**", ""]
++    out += ["- " + item for item in profile["watch"]]
++    out += ["", "**מקורות התיק:** " + "; ".join(f"[{sources[s][0]}]({sources[s][1]})" for s in profile["sources"]), ""]
++out += ["## אימות והיקף מסירה", "", "בדיקות ההרחבה: 293 הצלחות, אפס כישלונות; בדיקות הסגל המורחב: 674 הצלחות, אפס כישלונות. נבדקו כל המדינות וששת התחומים, שיוך למפעיל, מחקר, תור ייצור, ירי ופגיעה, מגבלות מטרות, ראייה ו־JSON save/restore. בדיקות גרפיות, רגרסיה ויצוא מפורטים ב־HANDOFF.md לאחר השלמתם.", "", "הרחבה זו משנה את המשחק הפעיל ב־native/godot. גרסת הדפדפן הישנה אינה מקבלת כאן מסך או יחידות מקבילות. מסירה לקלוד נעשית בקובץ התיאום המשותף; הודעת מסירה אינה אישור שקרא או פרסם.", ""]
++(root / "native/ARSENAL-DIVERSITY-RESEARCH-2026-10-12.md").write_text("\n".join(out).replace("](../", "]("), encoding="utf-8")
++print(f"Wrote 28 dossiers, {sum(map(len, roster.values()))} operator choices, {len(sources)} source records")

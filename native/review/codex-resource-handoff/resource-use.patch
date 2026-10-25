@@ -1,0 +1,347 @@
+--- a/native/godot/scripts/hud.gd
++++ b/native/godot/scripts/hud.gd
+@@ -1147,6 +1147,19 @@
+ 
+ ## null shows the build menu; a building entity shows its details and training.
+ var _diplomatic_contact_screen: Control
++var _resource_site: PanelContainer
++
++func open_resource_site(dep) -> void:
++	if _resource_site == null:
++		if dep == null: return
++		_resource_site = preload("res://scripts/resource_site_panel.gd").new()
++		add_child(_resource_site)
++		_resource_site.setup(world)
++	if dep == null:
++		_resource_site.hide()
++	else:
++		_show_side("")
++		_resource_site.open(dep)
+ 
+ func open_diplomatic_contact(nation: int) -> String:
+ 	if _diplomatic_contact_screen == null:
+@@ -1372,6 +1385,7 @@
+ 
+ ## The selection panel: a building, a group of units, or road planning.
+ func _update_selection() -> void:
++	if _resource_site != null and (_selected != null or not _selected_units().is_empty()): _resource_site.hide()
+ 	var units := _selected_units()
+ 	_update_roster(units if _selected == null else [])
+ 	var own_units: Array = units.filter(func(u):return u.owner==0 and not u.dead) if _selected==null else []
+@@ -1839,6 +1853,7 @@
+ 	_show_side("" if side_mode == mode and not force_open else mode)
+ 
+ func _show_side(mode: String) -> void:
++	if mode != "" and _resource_site != null: _resource_site.hide()
+ 	if not _hooked and world.market != null:
+ 		_hooked = true
+ 		world.market.changed.connect(func(): if side_mode == "market": refresh_side())
+@@ -2427,6 +2442,7 @@
+ 
+ ## The Cabinet: the whole state at a glance (cabinet.gd).
+ func toggle_cabinet() -> void:
++	if _resource_site != null: _resource_site.hide()
+ 	if _cabinet == null:
+ 		_cabinet = preload("res://scripts/cabinet.gd").new()
+ 		add_child(_cabinet)
+@@ -2439,6 +2455,7 @@
+ 		_cabinet.open()
+ 
+ func toggle_research() -> void:
++	if _resource_site != null: _resource_site.hide()
+ 	if _rs == null:
+ 		_build_research()
+ 		_rs.visible = false
+--- a/native/godot/scripts/resource_picking.gd
++++ b/native/godot/scripts/resource_picking.gd
+@@ -7,6 +7,7 @@
+ 	var nearest := 18.0
+ 	for dep in world.deposits:
+ 		if not is_instance_valid(dep.get("node")): continue
++		if world.get("fog") != null and world.fog.enabled and not world.fog.charted(dep.pos): continue
+ 		var icon: Node3D = dep.node.get_node_or_null("Icon")
+ 		if icon == null or not icon.is_visible_in_tree(): continue
+ 		if world.camera.is_position_behind(icon.global_position): continue
+@@ -15,3 +16,13 @@
+ 			nearest = gap
+ 			best = dep
+ 	return best
++
++static func site_at(world: Node, screen: Vector2):
++	var marker = marker_at(world, screen)
++	if marker != null: return marker
++	var at = world.ground_point(screen)
++	if at == null: return null
++	var dep = world.deposit_near(at, 6.0)
++	if dep == null or not is_instance_valid(dep.get("node")) or not dep.node.is_visible_in_tree(): return null
++	if world.get("fog") != null and world.fog.enabled and not world.fog.charted(dep.pos): return null
++	return dep
+--- a/native/godot/scripts/world.gd
++++ b/native/godot/scripts/world.gd
+@@ -4629,6 +4629,8 @@
+ 		land_owner = territory.zone_owner(at)
+ 	if land_owner == owner:
+ 		in_district = true
++	elif land_owner < 0 and def.get("coastal", false) and coast_reach(at, owner):
++		in_district = true
+ 	elif land_owner >= 0 and land_owner != owner:
+ 		return "Inside %s's %s" % ["your" if land_owner == 0 else diplomacy.name_of(land_owner), "waters" if def.get("water", false) else "land"]
+ 	if def.get("unique", false) and buildings.any(func(b): return b.owner == owner and b.key == key and not b.dead):
+@@ -6121,7 +6123,11 @@
+ 						Future.select_group(self, closest)   # a sixth-generation fighter and its wingmen together
+ 				# A click on empty ground or a building selects that building.
+ 				if click and closest.is_empty():
+-					select_building(building_under(event.position))
++					var resource = preload("res://scripts/resource_picking.gd").marker_at(self, event.position)
++					select_building(building_under(event.position) if resource == null else null)
++					if selected_building == null:
++						if resource == null: resource = preload("res://scripts/resource_picking.gd").site_at(self, event.position)
++						hud.open_resource_site(resource)
+ 					if hud.side_mode == "territory":
+ 						var point = ground_point(event.position)
+ 						if point != null:
+--- a/native/run-tests.ps1
++++ b/native/run-tests.ps1
+@@ -12,6 +12,7 @@
+ $exe = Join-Path $repo 'dist\DOMINION.exe'
+ 
+ $tests = @(
++    @('fish and gold: clickable deposits, construction actions, coastal reach, food / treasury output and supply gating', @('--script', 'res://tools/resource-use-check.gd'), 'RESOURCE_USE PASS', 180),
+     @('28 arsenal dossiers, evidence-backed operators, new support / artillery / air-defence roles, production, live combat and save round trip', @('--script', 'res://tools/arsenal-diversity-check.gd'), 'ARSENAL_DIVERSITY PASS', 600),
+     @('strategic AI: who uses what, targeting, counter-drone, undersea sensing, surveillance, counter-disinformation, revenue, exports, the dead hand and its accidents, biosecurity, the second generation, saves, rivals and screens', @('--script', 'res://tools/ai-strategic-check.gd'), 'AI_STRATEGIC PASS', 600),
+     @('practical AI: national evidence, research, validation, commissioning, compute budgets, live effects, diplomacy, rivals and saves', @('--script', 'res://tools/ai-applications-check.gd'), 'AI_APPLICATIONS PASS', 600),
+--- /dev/null
++++ b/native/godot/scripts/resource_site_panel.gd
+@@ -0,0 +1,96 @@
++extends PanelContainer
++## A deposit's usable output and the normal, paid construction path.
++const UI := preload("res://scripts/ui_theme.gd")
++var world: Node
++var deposit: Dictionary
++var _title: Label
++var _description: Label
++var _status: Label
++var _action: Button
++var _elapsed := 0.0
++
++func setup(w: Node) -> void:
++	world = w
++	name = "ResourceSite"
++	position = Vector2(12, 120)
++	custom_minimum_size.x = 410
++	z_index = 12
++	add_theme_stylebox_override("panel", UI.plate(UI.PANEL_TOP, UI.PANEL_LOW, UI.GOLD, 14.0, UI.LIFT, Color.TRANSPARENT, 0, 8))
++	var col := VBoxContainer.new()
++	col.add_theme_constant_override("separation", 10)
++	add_child(col)
++	var head := HBoxContainer.new()
++	col.add_child(head)
++	_title = Label.new()
++	_title.theme_type_variation = "HeaderLabel"
++	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	head.add_child(_title)
++	var close := Button.new()
++	close.text = "Close"
++	close.pressed.connect(hide)
++	head.add_child(close)
++	_description = paragraph(col)
++	_status = paragraph(col)
++	_status.add_theme_color_override("font_color", UI.GOLD)
++	_action = Button.new()
++	_action.name = "ResourceBuildAction"
++	_action.pressed.connect(place)
++	col.add_child(_action)
++	hide()
++
++func paragraph(parent: Control) -> Label:
++	var label := Label.new()
++	label.custom_minimum_size.x = 380
++	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	label.add_theme_font_size_override("font_size", 15)
++	parent.add_child(label)
++	return label
++
++func open(dep: Dictionary) -> void:
++	deposit = dep
++	show()
++	refresh()
++
++func building_key() -> String:
++	return "fishingWharf" if deposit.type == "fish" else ("offshoreRig" if deposit.get("water", false) else "extractor")
++
++func refresh() -> void:
++	if deposit.get("gone", false) or not is_instance_valid(deposit.get("node")):
++		hide(); return
++	if world.get("fog") != null and world.fog.enabled and not world.fog.charted(deposit.pos):
++		hide(); return
++	var key := building_key()
++	var def: Dictionary = world.building_defs[key]
++	_title.text = str(deposit.def.name)
++	if deposit.type == "fish":
++		_description.text = "Fish become FOOD through a Fishing Wharf. Build it on a dry coastal hex within 60 m of this shoal, not on the fish.\n\nA supplied wharf produces 2 food/s, plus 2 per nearby shoal (up to 6 food/s before national bonuses). Connect it to your supply network."
++		var working := 0
++		for b in world.buildings:
++			if b.dead or b.owner != 0 or b.key != "fishingWharf" or not b.built: continue
++			if b.root.position.distance_to(deposit.pos) <= 60 and b.get("supplied", true): working += 1
++		_status.text = "%d supplied fishing wharf(s) currently use this shoal. Unclaimed coast may be built on within three hexes of your land." % working
++	else:
++		var output: String = "MONEY (treasury)" if deposit.def.res == "money" else str(deposit.def.res).to_upper()
++		_description.text = "Base output: +%.1f %s per second.\n\nBuild %s directly on this deposit, finish construction and connect it to your supply network." % [float(deposit.def.rate), output, str(def.name)]
++		if deposit.def.res == "money": _description.text += " Gold and diamonds add spendable money directly to your treasury."
++		var mine = deposit.get("extractor")
++		_status.text = ("Producing" if mine.built and mine.get("supplied", true) else ("Needs a supply connection" if mine.built else "Construction in progress")) if mine != null and not mine.dead else world.site_problem(key, deposit.pos, 0)
++		if _status.text == "": _status.text = "Available: place the extractor on the resource marker."
++	_action.text = "Place %s · %s" % [str(def.name), world.hud.cost_text(def.cost)]
++	_action.disabled = not world.economy.can_afford(def.cost) or (deposit.get("extractor") != null and not deposit.extractor.dead)
++	_action.tooltip_text = "Not enough " + world.economy.missing(def.cost) if not world.economy.can_afford(def.cost) else "Choose the building site; payment occurs when placement is confirmed."
++
++func place() -> void:
++	refresh()
++	if _action.disabled: return
++	world.begin_placement(building_key())
++	if world.placing != "":
++		world.hud.notice("Place the Fishing Wharf on dry coast within 60 m of the fish. Connect it to supply after building." if deposit.type == "fish" else "Click this deposit's resource marker to place the extractor. Claim the land first if it is outside your territory.")
++		hide()
++
++func _process(delta: float) -> void:
++	if not visible: return
++	_elapsed += delta
++	if _elapsed >= 0.5:
++		_elapsed = 0
++		refresh()
+--- /dev/null
++++ b/native/godot/tools/resource-use-check.gd
+@@ -0,0 +1,133 @@
++extends SceneTree
++var w: Node
++var errors: Array[String] = []
++var checks := 0
++func _initialize() -> void: call_deferred("run")
++func check(ok: bool, label: String) -> void:
++	checks += 1
++	print(("ok " if ok else "FAIL ") + label)
++	if not ok: errors.append(label)
++func frames(n := 5) -> void:
++	for i in range(n): await process_frame
++func capture(label: String, dep: Dictionary) -> void:
++	if DisplayServer.get_name() == "headless": return
++	w.cam_focus = dep.pos
++	w.cam_dist = 90; w.cam_dist_target = 90
++	w.update_camera(1.0)
++	await frames(10)
++	await RenderingServer.frame_post_draw
++	root.get_texture().get_image().save_png("res://build/resource-" + label + ".png")
++func run() -> void:
++	set_meta("match_config", {"map":"island", "players":3, "nation":0, "opening":"light"})
++	change_scene_to_file("res://world.tscn")
++	for i in range(12000):
++		await create_timer(0.01).timeout
++		if current_scene != null and current_scene.get("menu") != null and current_scene.get("nav_ready") == true:
++			w = current_scene; break
++	if w == null: quit(1); return
++	if w.menu._root == null: w.menu.setup(w)
++	root.size = Vector2i(1280,800)
++	w.start_match("easy"); w.menu.close()
++	w.set_physics_process(false); w.ai.set_physics_process(false)
++	preload("res://tools/test_kit.gd").quiet(w)
++	w.ui_scale = 1.0; w.apply_ui_scale()
++	w.economy.grant_test_resources()
++	var gold: Dictionary = w.deposits.filter(func(d): return d.type == "gold")[0]
++	w.cam_focus = gold.pos
++	w.cam_dist = 90; w.cam_dist_target = 90; w.update_camera(1.0)
++	await frames()
++	var icon: Node3D = gold.node.get_node("Icon")
++	var screen: Vector2 = w.camera.unproject_position(icon.global_position)
++	for pressed in [true, false]:
++		var event := InputEventMouseButton.new()
++		event.button_index = MOUSE_BUTTON_LEFT; event.position = screen; event.pressed = pressed
++		w._unhandled_input(event)
++	await frames()
++	var panel = w.hud._resource_site
++	check(panel != null and panel.visible and is_same(panel.deposit, gold), "Clicking the visible gold marker opens its resource action")
++	if panel == null: quit(1); return
++	check(root.get_visible_rect().encloses(panel.get_global_rect()), "Resource explanation fits the laptop viewport")
++	check(panel.visible and panel._description.text.contains("MONEY"), "Gold explicitly becomes spendable money")
++	check(panel.building_key() == "extractor", "Gold action uses extractor")
++	await capture("gold", gold)
++	var money: float = w.economy.res.money
++	panel.place()
++	check(w.placing == "extractor" and w.economy.res.money == money, "Choosing extraction does not charge or build")
++	w.cancel_placement()
++	# The existing economic loop must actually pay for a completed, supplied gold mine.
++	w.economy.tick()
++	var rate: float = w.economy.rates.money
++	var mine: Dictionary = w.place_building("extractor", gold.pos, 0, true)
++	mine.supplied = true
++	check(is_same(mine.deposit, gold) and is_same(gold.extractor, mine), "Gold mine binds the actual deposit")
++	w.economy.tick()
++	check(w.economy.rates.money >= rate + 3.9, "Gold raises treasury income by its mining output")
++	mine.supplied = false
++	w.economy.tick()
++	check(w.economy.rates.money < rate + 3.9, "Unsupplied mine cannot produce gold income")
++	w.hud.open_resource_site(gold)
++	check(panel._action.disabled, "An occupied deposit cannot order a second extractor")
++	var fish: Dictionary = w.deposits.filter(func(d): return d.type == "fish")[0]
++	w.hud.open_resource_site(fish)
++	check(panel.building_key() == "fishingWharf" and panel._description.text.contains("FOOD"), "Fish action explains food and Fishing Wharf")
++	await capture("fish", fish)
++	panel.place()
++	check(w.placing == "fishingWharf", "Fish action enters the real wharf placement flow")
++	w.cancel_placement()
++	# Find a legal nearby coastal hex and test the border policy on that same site.
++	var coast = null
++	var frontier := -1
++	var frontier_was := -1
++	for i in range(w.territory.owner_of.size()):
++		var at: Vector3 = w.territory.center(i)
++		if w.territory.owner_of[i] != -1 or not w.coast_near(at, w.logistics.radius * 1.6): continue
++		var near: int = w.territory.neighbours(i)[0]
++		var was: int = w.territory.owner_of[near]
++		w.territory.owner_of[near] = 0
++		var why: String = w.site_problem("fishingWharf", at, 0)
++		if why == "":
++			coast = at; frontier = near; frontier_was = was; break
++		w.territory.owner_of[near] = was
++	check(coast != null, "Unclaimed dry coast is usable when your land reaches within three hexes")
++	if coast != null:
++		var idx: int = w.territory.cell_of(coast)
++		w.territory.owner_of[idx] = 1
++		check(w.site_problem("fishingWharf", coast, 0).contains("land"), "Rival-owned coast remains protected")
++		w.territory.owner_of[idx] = -1
++		# Move the fixture shoal into range, then verify actual food production.
++		var old: Vector3 = fish.pos
++		fish.pos = coast + Vector3(15,0,0)
++		w.economy.tick()
++		var food: float = w.economy.rates.food
++		var wharf: Dictionary = w.place_building("fishingWharf", coast, 0, true)
++		wharf.supplied = true
++		w.economy.tick()
++		check(w.economy.rates.food >= food + 3.9, "A supplied wharf catches nearby fish as food")
++		wharf.supplied = false
++		w.economy.tick()
++		check(w.economy.rates.food < food + 3.9, "Unsupplied fishing does not produce food")
++		fish.pos = old
++		w.territory.owner_of[frontier] = frontier_was
++	w.hud.open_resource_site(fish)
++	w.hud.toggle_panel("market", true)
++	check(not panel.visible, "Resource window yields to ministry navigation")
++	w.hud.toggle_panel("market")
++	w.hud.open_resource_site(fish)
++	w.hud.toggle_cabinet()
++	check(not panel.visible, "Cabinet closes the resource window")
++	w.hud.toggle_cabinet()
++	w.hud.open_resource_site(fish)
++	w.hud.toggle_research()
++	check(not panel.visible, "Research closes the resource window")
++	w.hud.toggle_research()
++	w.economy.res.money = 0
++	w.hud.open_resource_site(fish)
++	check(panel._action.disabled, "Unaffordable extraction has a disabled, explained action")
++	w.fog.enabled = true
++	var unknown: Array = w.deposits.filter(func(d): return not w.fog.charted(d.pos))
++	if not unknown.is_empty():
++		w.hud.open_resource_site(unknown[0])
++		check(not panel.visible, "Uncharted deposits cannot reveal resource details")
++	w.fog.enabled = false
++	print("RESOURCE_USE ", "PASS" if errors.is_empty() else errors, " checks=", checks)
++	quit(0 if errors.is_empty() else 1)

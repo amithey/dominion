@@ -3,6 +3,8 @@
    Diplomacy: relations, treaties, trade, espionage
    ============================================================ */
 
+const DIP_MIN_REL = Object.freeze({alliance: 55, embassy: -30, defensePact: 35, pact: 20, nap: 10});
+
 function initDiplomacy() {
   const n = G.nations.length;
   G.diplo = {
@@ -107,7 +109,7 @@ function offerPeace(other) {
 }
 
 function proposeAlliance(other) {
-  if (relScore(0, other) < 55) { notify('They need a relation of at least +55 to consider an alliance.', 'warn'); return; }
+  if (relScore(0, other) < DIP_MIN_REL.alliance) { notify(`They need a relation of at least +${DIP_MIN_REL.alliance} to consider an alliance.`, 'warn'); return; }
   if (Math.random() < 0.75) {
     G.diplo.alliance[0][other] = G.diplo.alliance[other][0] = true;
     changeRel(0, other, 15);
@@ -119,7 +121,7 @@ function proposeAlliance(other) {
 function openEmbassy(other) {
   if (isAtWar(0, other)) { notify('You cannot open an embassy during war.', 'warn'); return; }
   if (hasEmbassy(0, other)) return;
-  if (relScore(0, other) < -30) { notify('Relations are too hostile for an embassy.', 'warn'); return; }
+  if (relScore(0, other) < DIP_MIN_REL.embassy) { notify(`Embassies need relations of at least ${DIP_MIN_REL.embassy}.`, 'warn'); return; }
   if (G.res.money < 500) { notify('Opening an embassy costs $500.', 'warn'); return; }
   G.res.money -= 500;
   G.diplo.embassy[0][other] = G.diplo.embassy[other][0] = true;
@@ -149,7 +151,7 @@ function sendAid(other) {
 function proposeDefensePact(other) {
   if (isAtWar(0, other)) { notify('You cannot sign a defense pact during war.', 'warn'); return; }
   if (hasDefensePact(0, other)) return;
-  if (relScore(0, other) < 35) { notify('Relations need to be at least +35 for a defense pact.', 'warn'); return; }
+  if (relScore(0, other) < DIP_MIN_REL.defensePact) { notify(`Relations need to be at least +${DIP_MIN_REL.defensePact} for a defense pact.`, 'warn'); return; }
   const chance = clamp(0.35 + relScore(0, other) / 130 + (hasEmbassy(0, other) ? 0.1 : 0), 0.15, 0.9);
   if (Math.random() < chance) {
     G.diplo.defensePact[0][other] = G.diplo.defensePact[other][0] = true;
@@ -171,7 +173,7 @@ function breakDefensePact(other) {
 }
 
 function proposePact(other) {
-  if (relScore(0, other) < 20) { notify('Relations too cold for a trade pact (+20 needed).', 'warn'); return; }
+  if (relScore(0, other) < DIP_MIN_REL.pact) { notify(`Relations too cold for a trade pact (+${DIP_MIN_REL.pact} needed).`, 'warn'); return; }
   G.diplo.pact[0][other] = G.diplo.pact[other][0] = true;
   changeRel(0, other, 10);
   notify(`📜 Trade pact signed with ${G.nations[other].name}: +$4/s for both sides.`, 'good', 6);
@@ -181,7 +183,7 @@ function proposePact(other) {
 function proposeNap(other) {
   if (isAtWar(0, other)) { notify('You cannot sign a non-aggression pact during war.', 'warn'); return; }
   if (hasNap(0, other)) { notify('A non-aggression pact is already active.', 'warn'); return; }
-  if (relScore(0, other) < 10) { notify('Relations need to be at least +10 for a non-aggression pact.', 'warn'); return; }
+  if (relScore(0, other) < DIP_MIN_REL.nap) { notify(`Relations need to be at least +${DIP_MIN_REL.nap} for a non-aggression pact.`, 'warn'); return; }
   const chance = clamp(0.45 + relScore(0, other) / 120, 0.25, 0.9);
   if (Math.random() < chance) {
     G.diplo.nap[0][other] = G.diplo.nap[other][0] = true;

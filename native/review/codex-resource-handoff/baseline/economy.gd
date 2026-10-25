@@ -1,0 +1,302 @@
+extends Node
+## The player's economy, ported from updateCity() in js/entities.js.
+## Every number comes from the map export (config.js): prices, build times,
+## what each building provides, deposit rates and the economy constants.
+## Once a second: citizens grow toward housing capacity, taxes are collected
+## through the administration level, farms feed citizens and soldiers,
+## extractors fill material stores up to their caps.
+
+signal changed
+
+const RESOURCES := ["money", "food", "oil", "iron", "silicon", "uranium", "gas"]
+
+var world: Node  # world.gd: buildings, units, deposits
+var cfg: Dictionary
+var res := {}
+var rates := {}
+var caps := {}
+var civilians := 120.0
+var happiness := 60.0
+var health := 55.0
+var civ_cap := 200.0
+var admin := 0.28
+var pop_used := 0
+var pop_cap := 0
+# The army a nation starts with is its standing garrison: it has barracks of
+# its own and does not take up the housing that new recruits need.
+var garrison := 0
+var test_mode := false   ## F8 (testing): huge stores, set by grant_test_resources()
+var military_spending := {"money": 0.0, "oil": 0.0, "shots": 0.0, "intercepts": 0.0}
+var military_flow := {"money": 0.0, "oil": 0.0}
+var military_rates := {"money": 0.0, "oil": 0.0}
+var operating_notices := {}
+const TEST_CAP := 99999.0
+var _tick := 0.0
+
+func setup(world_node: Node, economy: Dictionary) -> void:
+	world = world_node
+	cfg = economy
+	for key in RESOURCES:
+		res[key] = float(cfg.startResources.get(key, 0))
+		rates[key] = 0.0
+	# The starting garrison needs an initial operational fuel reserve; the old
+	# economy started with zero oil because movement was free.
+	res.oil = maxf(float(res.oil), 60.0)
+	civilians = float(cfg.startCivilians)
+	recalculate()
+
+func _process(delta: float) -> void:
+	if world == null:
+		return
+	_tick += delta
+	if _tick >= 1.0:
+		_tick -= 1.0
+		tick()
+
+## What the player's finished buildings add up to.
+func owned(key: String) -> int:
+	var n := 0
+	for b in world.buildings:
+		if b.owner == 0 and b.built and not b.dead and b.get("supplied", true) and b.key == key:
+			n += 1
+	return n
+
+## Built and standing, supplied or not (a research facility need only exist).
+func standing(key: String) -> int:
+	var n := 0
+	for b in world.buildings:
+		if b.owner == 0 and b.built and not b.dead and b.key == key:
+			n += 1
+	return n
+
+func provided(stat: String) -> float:
+	var total := 0.0
+	for b in world.buildings:
+		if b.owner == 0 and b.built and not b.dead and b.get("supplied", true):
+			total += float(b.def.provides.get(stat, 0.0))
+	return total
+
+func recalculate() -> void:
+	civ_cap = (float(cfg.baseCivCap) + provided("civCap")) * (1.0 + (world.research.bonus("civCapPct") if world.research else 0.0))
+	var mat_cap := owned("warehouse") * float(cfg.warehouseBonus)
+	for key in cfg.baseCap:
+		caps[key] = float(cfg.baseCap[key]) + mat_cap
+	caps.food = float(cfg.foodCapBase) + owned("foodDepot") * float(cfg.foodDepotBonus)
+	if test_mode:
+		for key in caps:
+			caps[key] = maxf(caps[key], TEST_CAP)
+	# Taxes need administration; residential districts extend it (config.js admin).
+	admin = clampf(float(cfg.baseAdmin) + mini(owned("residential"), 3) * 0.05 + mini(owned("villageCenter"), 3) * 0.05 + owned("cityCenter") * 0.10, float(cfg.baseAdmin), 1.0)
+	pop_cap = int(provided("pop")) + garrison
+	_plant = minf(provided("prodPct"), 0.30)
+	_depot_damage = minf(provided("dmgPct"), 0.25)
+	_depot_reload = minf(owned("ammoDepot") * 0.06, 0.18)
+	_command_health = minf(provided("hpPct"), 0.10)
+	pop_used = 0
+	for u in world.units:
+		if u.owner == 0 and not u.dead:
+			pop_used += int(world.unit_defs.get(u.key, {}).get("pop", 1))
+
+## For testing the game (F8): $100,000 more, every store raised to 99,999 and
+## filled, and 200 more army capacity. Each press adds again.
+func grant_test_resources() -> void:
+	test_mode = true
+	garrison += 200
+	recalculate()
+	res.money += 100000.0
+	for key in caps:
+		res[key] = caps[key]
+	civilians = civ_cap
+	changed.emit()
+
+func tick() -> void:
+	recalculate()
+	var army := 0
+	for u in world.units:
+		if u.owner == 0 and not u.dead and u.key != "worker":
+			army += 1
+	# Held land yields by terrain and how firmly it is held (territory.gd).
+	var land: Dictionary = world.territory.yields(0) if world.territory != null else {"money": 0.0, "food": 0.0, "iron": 0.0}
+	# Food: farms and farmland against mouths to feed.
+	var r: Node = world.research
+	var food_in: float = owned("farm") * float(cfg.farmFood) * (1.0 + (r.bonus("foodPct") if r else 0.0)) + float(land.food)
+	# A bigger city eats more per head (it no longer grows its own food).
+	var food_out := civilians * float(cfg.foodPerCivilian) * (1.0 + civilians / 2000.0) * float(preload("res://scripts/additional_factions.gd").profile(world, 0).get("civilian_food", 1.0)) + army * float(cfg.foodPerSoldier)
+	for b in world.buildings:
+		if b.dead or not b.built or b.owner != 0 or b.key != "fishingWharf" or not b.get("supplied", true): continue
+		var shoals := 0
+		for d in world.deposits:
+			if d.type == "fish" and d.pos.distance_to(b.root.position) <= 60: shoals += 1
+		food_in += (2.0 + mini(shoals, 2) * 2.0) * float(preload("res://scripts/additional_factions.gd").profile(world, 0).get("fishing", 1.0))
+	rates.food = food_in - food_out
+	res.food = clampf(res.food + rates.food, 0.0, caps.food)
+	var starving: bool = res.food <= 0.5
+	# Citizens grow with happiness and health (the browser's 60 and 55 to start),
+	# which civic buildings and discoveries raise.
+	happiness = clampf(60.0 + provided("happiness") + (r.bonus("happiness") if r else 0.0) - SHORTAGE_UNREST * shortages.size(), 0.0, 100.0)
+	health = clampf(55.0 + provided("health") + (r.bonus("health") if r else 0.0), 0.0, 100.0)
+	var growth := civilians * ((happiness - 45.0) / 50.0) * (health / 100.0) * 0.0025
+	if growth > 0.0:
+		growth *= preload("res://scripts/national_profile.gd").growth(world, 0)   # a young or an ageing population
+	if starving:
+		growth -= civilians * 0.005
+	civilians = clampf(civilians + growth, 20.0, civ_cap)
+	# Taxes reach only settlements the supply network connects (config.js
+	# supplyCoverage, weighted by how many people each settlement houses).
+	# Markets and ports add a share of income (config.js incomePct).
+	rates.money = civilians * float(cfg.taxPerCivilian) * admin * supply_coverage() * (1.0 + provided("incomePct") + (r.bonus("incomePct") if r else 0.0))
+	rates.money += float(land.money)
+	rates.money *= preload("res://scripts/faction_powers.gd").income_mult(world, 0)   # sanctions, sabotage, a closed strait
+	# Extractors on deposits, and iron from held mountains.
+	for key in ["oil", "iron", "silicon", "uranium", "gas"]:
+		rates[key] = 0.0
+	rates.iron = float(land.iron) * preload("res://scripts/national_profile.gd").resource_mult(world, 0, "iron")
+	rates.oil = float(land.get("oil", 0.0)) * preload("res://scripts/national_profile.gd").resource_mult(world, 0, "oil")
+	var mining: float = 1.0 + (r.bonus("extractPct") if r else 0.0)
+	for b in world.buildings:
+		if b.owner != 0 or not b.built or b.dead or b.deposit == null or not b.get("supplied", true):
+			continue
+		var dep: Dictionary = b.deposit.def
+		rates[dep.res] = rates.get(dep.res, 0.0) + float(dep.rate) * mining * (1.0 + preload("res://scripts/additional_powers.gd").bonus(world, 0, "mining")) * preload("res://scripts/national_profile.gd").resource_mult(world, 0, dep.res)
+	# A growing population burns fuel and uses electronics: oil from about 150
+	# people up, chips (silicon) once a city passes 400. Running short makes
+	# people unhappy (see happiness above, applied on the next tick).
+	var oil_use := maxf(civilians - 150.0, 0.0) * OIL_PER_PERSON
+	var chip_use := maxf(civilians - 400.0, 0.0) * CHIPS_PER_PERSON
+	rates.oil = rates.get("oil", 0.0) - oil_use
+	rates.silicon = rates.get("silicon", 0.0) - chip_use
+	# AI Data Centers burn chips and money (ai_directorate.gd).
+	var dc_use: Dictionary = world.directorate.upkeep() if world.get("directorate") != null and world.directorate != null else {}
+	rates.silicon -= float(dc_use.get("silicon", 0.0))
+	rates.money -= float(dc_use.get("money", 0.0))
+	shortages.clear()
+	# Four 180-second seasons; the final quarter needs household heating.
+	var heating := civilians * 0.006 if fmod(world.game_time, 720.0) >= 540.0 else 0.0
+	rates.gas -= heating
+	if heating > 0.0 and res.gas <= 0.5: shortages.append("winter heating")
+	if oil_use > 0.0 and res.get("oil", 0.0) <= 0.5:
+		shortages.append("oil")
+	if chip_use > 0.0 and res.get("silicon", 0.0) <= 0.5:
+		shortages.append("chips")
+	for key in RESOURCES:
+		if key == "food":
+			continue
+		res[key] = maxf(res[key] + rates.get(key, 0.0), 0.0)
+		if caps.has(key):
+			res[key] = minf(res[key], caps[key])
+	# Charges were already deducted at launch/travel; subtract from displayed
+	# rates only, so the resource bar shows net flow without charging twice.
+	for key in ["money", "oil"]:
+		military_rates[key] = military_flow[key]
+		rates[key] -= military_flow[key]
+		military_flow[key] = 0.0
+	changed.emit()
+
+const OIL_PER_PERSON := 0.0012     ## oil a second for each person past 150
+const CHIPS_PER_PERSON := 0.0006   ## silicon a second for each person past 400
+const SHORTAGE_UNREST := 6.0       ## happiness lost for each shortage (oil, chips)
+var shortages: Array[String] = []
+
+const POPULATION_WEIGHTS := {"hq": 200.0, "villageCenter": 90.0, "cityCenter": 260.0, "residential": 150.0, "cottage": 80.0, "apartments": 280.0, "luxuryVillas": 60.0}
+func supply_coverage() -> float:
+	var connected := 0.0
+	var total := 0.0
+	for b in world.buildings:
+		if b.owner != 0 or b.dead or not b.built or not POPULATION_WEIGHTS.has(b.key):
+			continue
+		total += POPULATION_WEIGHTS[b.key]
+		if b.get("supplied", true):
+			connected += POPULATION_WEIGHTS[b.key]
+	return connected / total if total > 0.0 else 0.0
+
+## One town's accounts (a capital, city or village centre `s`): the homes and
+## other buildings that belong to it (the nearest town hall, logistics.gd),
+## how many people live there (the nation's citizens shared by housing), what
+## its amenities add to happiness, its food balance and the taxes it pays.
+func city_report(s: Dictionary) -> Dictionary:
+	var own: Array = []
+	for b in world.buildings:
+		if b.owner != s.owner or b.dead or not b.built:
+			continue
+		if is_same(b, s) or (b.def.get("settlement") == null and is_same(world.logistics.settlement_of(b), s)):
+			own.append(b)
+	var capacity := 0.0
+	var amenities := 0.0
+	var farms := 0.0
+	var income_pct := 0.0
+	var homes := 0
+	for b in own:
+		var p: Dictionary = b.def.provides
+		capacity += float(p.get("civCap", 0.0))
+		if float(p.get("civCap", 0.0)) > 0.0 and not is_same(b, s):
+			homes += 1
+		amenities += float(p.get("happiness", 0.0))
+		income_pct += float(p.get("incomePct", 0.0))
+		if b.key == "farm":
+			farms += float(cfg.farmFood)
+		elif b.key == "fishingWharf":
+			farms += 2.0
+	if s.key == "hq":
+		capacity += float(cfg.baseCivCap)  # the capital's own streets
+	# The nation's citizens live where the homes are.
+	var all_capacity := float(cfg.baseCivCap)
+	for b in world.buildings:
+		if b.owner == s.owner and b.built and not b.dead:
+			all_capacity += float(b.def.provides.get("civCap", 0.0))
+	var people := 0.0
+	if s.owner == 0:
+		people = civilians * capacity / maxf(all_capacity, 1.0)
+	var supplied: bool = s.get("supplied", true)
+	var eats := people * float(cfg.foodPerCivilian) * (1.0 + civilians / 2000.0)
+	var r: Node = world.research
+	var tax: float = people * float(cfg.taxPerCivilian) * admin * (1.0 if supplied else 0.0) * (1.0 + provided("incomePct") + (r.bonus("incomePct") if r else 0.0))
+	return {"residents": people, "capacity": capacity, "homes": homes, "buildings": own.size(), "amenities": amenities,
+		"happiness": happiness, "food_in": farms, "food_out": eats, "tax": tax, "supplied": supplied}
+
+## What military and industrial buildings add, with their ceilings (the
+## building cards promise these): power plants +15% production and
+## construction each, up to +30%; ammo depots +5% damage each, up to +25%, and
+## 6% faster reloading each, up to 18%; a command centre +10% health for the
+## units trained while it stands.
+## (Counted in recalculate(), not per shot: a battle fires thousands.)
+var _plant := 0.0
+var _depot_damage := 0.0
+var _depot_reload := 0.0
+var _command_health := 0.0
+
+func plant_bonus() -> float:
+	return _plant
+
+func depot_damage() -> float:
+	return _depot_damage
+
+func depot_reload() -> float:
+	return _depot_reload
+
+func command_health() -> float:
+	return _command_health
+
+func can_afford(cost: Dictionary) -> bool:
+	for key in cost:
+		if res.get(key, 0.0) < float(cost[key]):
+			return false
+	return true
+
+func missing(cost: Dictionary) -> String:
+	for key in cost:
+		if res.get(key, 0.0) < float(cost[key]):
+			return key
+	return ""
+
+func pay(cost: Dictionary) -> bool:
+	if not can_afford(cost):
+		return false
+	for key in cost:
+		res[key] -= float(cost[key])
+	changed.emit()
+	return true
+
+func refund(cost: Dictionary) -> void:
+	for key in cost:
+		res[key] += float(cost[key])
+	changed.emit()

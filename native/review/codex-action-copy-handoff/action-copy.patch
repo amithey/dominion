@@ -1,0 +1,651 @@
+--- a/native/godot/scripts/hud.gd
++++ b/native/godot/scripts/hud.gd
+@@ -129,6 +129,9 @@
+ 	_un_sessions = preload("res://scripts/un_session_screen.gd").new()
+ 	add_child(_un_sessions)
+ 	_un_sessions.setup(self)
++	var button_hints := preload("res://scripts/button_hints.gd").new()
++	button_hints.name = "ButtonHints"
++	add_child(button_hints)
+ 
+ func _box(_at: Vector2) -> PanelContainer:
+ 	var box := PanelContainer.new()
+@@ -597,7 +600,9 @@
+ 	var b := Button.new()
+ 	b.theme_type_variation = "RowButton"
+ 	b.focus_mode = Control.FOCUS_NONE
+-	b.tooltip_text = desc if locked == "" else "%s\n%s" % [locked, desc]
++	var instruction_help: String = "Choose a map site to place this building." if world.building_defs.has(key) else ""
++	if world.unit_defs.has(key): instruction_help = "Pay the listed cost to queue ONE unit. It becomes available when training finishes."
++	b.tooltip_text = "%s\n%s%s" % [instruction_help, desc, "\nUnavailable: " + locked if locked != "" else ""]
+ 	b.set_meta("cost", cost)
+ 	b.set_meta("locked", locked != "")
+ 	b.pressed.connect(action)
+@@ -633,7 +638,7 @@
+ 	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ 	# Missile specifications remain visible; other catalogues keep a brief
+ 	# description, with the full entry available on hover.
+-	line.max_lines_visible = -1 if key.begins_with("missile:") else 2
++	line.max_lines_visible = -1
+ 	text.add_child(line)
+ 	if not cost.is_empty():
+ 		var prices := _cost_row(cost)
+@@ -1333,7 +1338,8 @@
+ 				count += 1
+ 				var why: String = ms.locked(m)
+ 				if why == "" and ms.platforms_for(m).is_empty(): why = "Needs a compatible launch platform"
+-				_bar("missile:" + m, "%s · %d available" % [ms.def_of(m).name, ms.stock[m]], "Click this card, then choose a target on the map. Escape cancels targeting.", {}, 0.0, why, func(): world.begin_missile(m), "Select target")
++				_bar("missile:" + m, "%s · %d available" % [preload("res://scripts/weapon_copy.gd").display_name(world, m), ms.stock[m]], preload("res://scripts/weapon_copy.gd").summary(world, m), {}, 0.0, why, func(): world.begin_missile(m), "Choose target · uses 1 stored weapon on launch")
++				_list.get_child(_list.get_child_count() - 1).tooltip_text = preload("res://scripts/weapon_copy.gd").tooltip(world, m, false) + ("\nUnavailable: " + why if why != "" else "")
+ 			if count == 0:
+ 				var empty := _text("No weapons in storage. Open Produce weapons to add an item to the production queue.", 14, UI.MUTED)
+ 				empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+@@ -1346,8 +1352,8 @@
+ 			if why == "" and b.queue.size() >= 5: why = "Production queue full (5 / 5)"
+ 			if why == "" and ms.stored(cat) + ms.queued(cat) >= ms.capacity(cat):
+ 				why = "Storage full · build Ammo Depots" if cat == "conventional" else "Storage full · build another production facility"
+-			_bar("missile:" + m, mdef.name, "%s\nDamage: %d  ·  Blast radius: %d m" % [_weapon_summary(mdef, str(m)), int(mdef.dmg), int(mdef.radius)], ms.production_cost(m), ms.build_time(m), why, func(): _say(ms.produce(_selected, m)))
+-			_list.get_child(_list.get_child_count() - 1).tooltip_text = "%s\n%s" % [why, mdef.desc]
++			_bar("missile:" + m, preload("res://scripts/weapon_copy.gd").display_name(world, m), preload("res://scripts/weapon_copy.gd").summary(world, m), ms.production_cost(m), ms.build_time(m), why, func(): _say(ms.produce(_selected, m)), "Produce 1 weapon → storage")
++			_list.get_child(_list.get_child_count() - 1).tooltip_text = preload("res://scripts/weapon_copy.gd").tooltip(world, m, true) + ("\nUnavailable: " + why if why != "" else "")
+ 		return
+ 	if b.key in world.research.LABS:
+ 		_bar("university", "Open the research tree", "Research points from this building flow into the discovery at the head of the queue.", {}, 0.0, "", toggle_research)
+@@ -1664,7 +1670,7 @@
+ 		b.text = "Target: %s (%d)" % [ms.def_of(m).name, ms.stock[m]]
+ 		b.add_theme_font_size_override("font_size", 13)
+ 		b.focus_mode = Control.FOCUS_NONE
+-		b.tooltip_text = "Select this weapon, then click a target on the map. Escape cancels targeting."
++		b.tooltip_text = preload("res://scripts/weapon_copy.gd").tooltip(world, m, false)
+ 		b.pressed.connect(func(): world.begin_missile(m))
+ 		_launch_row.add_child(b)
+ 
+@@ -2057,6 +2063,11 @@
+ func _button(parent: Control, text: String, action: Callable, enabled := true, tone := "") -> Button:
+ 	var b := Button.new()
+ 	b.text = text
++	if side_mode == "defence" and _panels != null and _panels.defence_tab == "ai":
++		if text == "Resume": b.set_meta("action_help", "Restart this commissioned AI application. Its compute demand and running cost resume.")
++		if text in ["+", "-"]:
++			var safety: bool = world.directorate != null and world.directorate.ui_tab == "agi"
++			b.set_meta("action_help", ("Increase" if text == "+" else "Decrease") + (" the AGI safety share by 10 percentage points. More safety slows development but reduces runaway risk." if safety else " this pool's compute allocation by 10 percentage points. Available compute remains shared between pools."))
+ 	b.disabled = not enabled
+ 	b.focus_mode = Control.FOCUS_NONE
+ 	if tone == "good":
+--- a/native/godot/scripts/side_panels.gd
++++ b/native/godot/scripts/side_panels.gd
+@@ -524,7 +524,7 @@
+ 	var st: Label = hud._text("Field agents", 16, hud.UI.CREAM, true)
+ 	st.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ 	head.add_child(st)
+-	hud._button(head, "Recruit ($%d)" % e.recruit_cost(), e.recruit, e.has_agency(), "good")
++	hud._button(head, "Recruit agent ($%d)" % e.recruit_cost(), e.recruit, e.has_agency(), "good")
+ 	if e.agents.is_empty():
+ 		service.add_child(hud._text("No agents yet.", 13, hud.UI.MUTED))
+ 	for a in e.agents:
+@@ -798,7 +798,7 @@
+ 		var t: Label = hud._text("%s  %d %s  %s  %s  (%s)" % ["Export" if r.dir == "export" else "Import", r.qty, r.res, arrow, d.name_of(r.nation), by], 15, hud.UI.CREAM, true)
+ 		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ 		head.add_child(t)
+-		hud._button(head, "Close", m.close_route.bind(r.id), true, "bad")
++		hud._button(head, "Close trade route", m.close_route.bind(r.id), true, "bad")
+ 		if r.shipment != null:
+ 			var left: float = maxf(0.0, float(r.shipment.eta) - m._tick)
+ 			hud._meter(card, 1.0 - left / float(m.cfg.voyage), 1.0, hud.GOLD, "%s  ·  worth $%d" % [r.status, int(r.shipment.value)])
+@@ -1014,13 +1014,13 @@
+ 		var row: HBoxContainer = hud._row(card)
+ 		var why: String = g.assign_blocked(gen, target)
+ 		var who: Dictionary = gen
+-		var b: Button = hud._button(row, "Give command of the selected unit", func(): return g.assign(who, target), why == "", "good")
++		var b: Button = hud._button(row, "Assign general", func(): return g.assign(who, target), why == "", "good")
+ 		b.tooltip_text = why
+ 		if gen.unit != null:
+ 			hud._button(row, "Go to", func():
+ 				hud.world.cam_focus = who.unit.node.position
+ 				return "")
+-		hud._button(row, "Dismiss", func(): return g.dismiss(who), true, "bad")
++			hud._button(row, "Dismiss general", func(): return g.dismiss(who), true, "bad")
+ 	var offer: VBoxContainer = hud._card()
+ 	offer.add_child(hud._text("Candidates  ·  $%d an appointment  ·  new ones in %ds" % [int(g.hire_cost()), maxi(0, ceili(g._next_offer - hud.world.game_time))], 15, hud.UI.CREAM, true))
+ 	for i in range(g.candidates.size()):
+@@ -1032,7 +1032,7 @@
+ 		lab.mouse_filter = Control.MOUSE_FILTER_PASS
+ 		row.add_child(lab)
+ 		var index: int = i
+-		hud._button(row, "Appoint", func(): return g.hire(index), g.of(0).size() < g.MAX_PLAYER and hud.world.economy.res.money >= g.hire_cost(), "good")
++		hud._button(row, "Appoint general", func(): return g.hire(index), g.of(0).size() < g.MAX_PLAYER and hud.world.economy.res.money >= g.hire_cost(), "good")
+ 	# The rivals' generals.
+ 	var d: Node = hud.world.diplomacy
+ 	var known := PackedStringArray()
+@@ -1201,7 +1201,7 @@
+ 			amend.add_child(hud._text("Amend:", 12, hud.UI.MUTED))
+ 			for m in ["economic", "embargo", "targeted", "condemn", "statement"]:
+ 				var mm: String = m
+-				hud._button(amend, u.MEASURES[m].name, func(): return u.amend(mm), dr.measure != m)
++				hud._button(amend, u.MEASURES[m].name, func(): return u.amend(mm), dr.measure != m).set_meta("action_help", "Amend your draft during consultations. Proposed effect: " + str(preload("res://scripts/un_session_screen.gd").EFFECTS.get(m, "")))
+ 		# Lobbying: aid to a member moves its vote one step.
+ 		var lob: VBoxContainer = hud._card()
+ 		lob.add_child(hud._text("Lobby a member ($%d each)" % int(u.lobby_cost()), 13, hud.UI.CREAM, true))
+@@ -1249,6 +1249,7 @@
+ 		var why: String = u.draft_blocked(m, target)
+ 		var mm: String = m
+ 		var b: Button = hud._button(row, u.MEASURES[m].name, func(): return u.draft(mm, target), why == "", "bad" if u.MEASURES[m].severity >= 3 else "")
++		b.set_meta("action_help", "Submit this Council draft for consultations and a vote. If adopted: " + str(preload("res://scripts/un_session_screen.gd").EFFECTS.get(m, "")))
+ 		b.custom_minimum_size.x = 220
+ 		var guess: Dictionary = u.tally({"kind": "player", "measure": m, "target": target, "other": -1, "by": 0, "cause": cause, "votes": {}, "lobby": {}}, true)
+ 		var note: Label = hud._text(why if why != "" else "Expected: %d-%d-%d%s" % [guess.yes, guess.no, guess.abstain, "  (vetoed)" if not guess.vetoes.is_empty() else ("  (passes)" if guess.passes else "")], 12, hud.UI.BAD if why != "" else hud.UI.MUTED)
+--- a/native/godot/scripts/menu.gd
++++ b/native/godot/scripts/menu.gd
+@@ -631,6 +631,7 @@
+ 	var chosen: bool = int(setup_options.nation) == i
+ 	var b := Button.new()
+ 	b.custom_minimum_size = Vector2(304, 260)
++	b.set_meta("action_help", "Choose %s as your country for the next campaign. This sets its leader, arsenal, strengths and limitations." % parts[0])
+ 	b.focus_mode = Control.FOCUS_ALL
+ 	b.toggle_mode = true
+ 	b.button_pressed = chosen
+@@ -686,6 +687,7 @@
+ 	for item in items:
+ 		var chosen: bool = (setup_difficulty == item[2]) if key == "difficulty" else (setup_options[key] == item[2])
+ 		var b := Button.new()
++		b.set_meta("action_help", "Set %s to %s. %s" % [key.replace("_", " "), item[0], item[1]])
+ 		b.toggle_mode = true
+ 		b.button_pressed = chosen
+ 		b.focus_mode = Control.FOCUS_ALL
+@@ -1326,6 +1328,7 @@
+ # A larger choice with a line of explanation: difficulties, saved games.
+ func _option_card(title: String, detail: String, action: Callable) -> void:
+ 	var b := Button.new()
++	b.set_meta("action_help", "Load the saved campaign '%s'. This replaces the current campaign; save your current progress first." % title)
+ 	b.custom_minimum_size = Vector2(380, 72)
+ 	b.focus_mode = Control.FOCUS_ALL
+ 	b.tooltip_text = detail
+--- a/native/godot/scripts/ui_theme.gd
++++ b/native/godot/scripts/ui_theme.gd
+@@ -333,7 +333,7 @@
+ 	# Tooltips.
+ 	t.set_stylebox("panel", "TooltipPanel", plate(Color("1a3036"), Color("0a171b"), GOLD, 9.0, LIFT, Color(0, 0, 0, 0), 0, 6))
+ 	t.set_color("font_color", "TooltipLabel", TEXT)
+-	t.set_font_size("font_size", "TooltipLabel", 14)
++	t.set_font_size("font_size", "TooltipLabel", 15)
+ 	# Slim scroll bars.
+ 	for kind in ["VScrollBar", "HScrollBar"]:
+ 		t.set_stylebox("scroll", kind, box(Color(0, 0, 0, 0.35), Color(0, 0, 0, 0), 0, 3, 2.0))
+--- a/native/godot/tools/readability-check.gd
++++ b/native/godot/tools/readability-check.gd
+@@ -55,7 +55,7 @@
+ 	await verify_cards()
+ 	check(cards().size() == 1, "Stockpile shows owned weapons only")
+ 	if not cards().is_empty():
+-		check(cards()[0].find_child("ActionLabel", true, false).text == "Select target", "Targeting action is explicit")
++		check(cards()[0].find_child("ActionLabel", true, false).text.contains("Choose target") and cards()[0].find_child("ActionLabel", true, false).text.contains("1 stored weapon"), "Targeting action and inventory use are explicit")
+ 		cards()[0].pressed.emit()
+ 		check(w.missiles.stock.tactical == 2, "Selecting a target does not spend inventory")
+ 		w.cancel_placement()
+--- a/native/run-tests.ps1
++++ b/native/run-tests.ps1
+@@ -12,6 +12,7 @@
+ $exe = Join-Path $repo 'dist\DOMINION.exe'
+ 
+ $tests = @(
++    @('action wording: button help across menus, weapon roles, production versus launch, blocking reasons and unchanged actions', @('--script', 'res://tools/action-copy-check.gd'), 'ACTION_COPY PASS', 180),
+     @('UN session invitations, full conference screen, live ballots, eligibility, outcomes and save restore', @('--script', 'res://tools/un-session-check.gd'), 'UN_SESSION PASS', 180),
+     @('fish and gold: clickable deposits, construction actions, coastal reach, food / treasury output and supply gating', @('--script', 'res://tools/resource-use-check.gd'), 'RESOURCE_USE PASS', 180),
+     @('28 arsenal dossiers, evidence-backed operators, new support / artillery / air-defence roles, production, live combat and save round trip', @('--script', 'res://tools/arsenal-diversity-check.gd'), 'ARSENAL_DIVERSITY PASS', 600),
+--- /dev/null
++++ b/native/godot/scripts/action_copy.gd
+@@ -0,0 +1,175 @@
++extends RefCounted
++## Short, action-oriented help. Context is taken from the button's own card,
++## never from a different screen. Costs and blocking reasons remain authoritative.
++const TEXT := {
++	"Build":"Open construction choices. Select a building, then choose a legal site on the map.",
++	"Cabinet":"Open the national overview: economy, population, army, research and government actions.",
++	"Research":"Open the research tree. Choose a discovery to inspect its effects and requirements before queuing it.",
++	"Diplomacy":"View relations and contact other nations to negotiate, make agreements or declare war.",
++	"Market":"Buy or sell resources immediately, or arrange recurring international trade routes.",
++	"Intel":"Manage agents and select intelligence operations, targets, cost and risk.",
++	"Defence":"Manage generals, military readiness and nuclear release conditions.",
++	"Territory":"Inspect land ownership and settlement districts; manage territory purchases.",
++	"Log":"Read earlier messages from this match.", "Menu":"Open the pause menu, settings and save/load controls.",
++	"UN":"Read UN invitations, attend Council or Assembly sessions, or manage UN affairs.",
++	"New Game":"Configure a new campaign before starting. This does not immediately replace the current match.",
++	"Begin campaign":"Start a new campaign using the selected country, map, rivals and rules.",
++	"Resume":"Continue the paused campaign.", "Settings":"Change display, sound and interface settings.",
++	"Load Game":"Choose a saved campaign to restore.", "Save Game":"Choose a slot and save the current campaign.",
++	"Main menu":"Return to the main menu. Save first if you want to keep your current progress.",
++	"Quit":"Exit the game. Unsaved progress is lost.", "Back":"Return to the previous screen.",
++	"Close":"Close this window and return to the game.",
++	"✕":"Close this window and return to the game.", "×":"Close this window and return to the game.",
++	"Contact":"Open contact options for this nation, including each channel's fee and response time.",
++	"Declare war":"Start a war with this nation. Your forces may attack each other; diplomatic consequences apply.",
++	"Authorize operation":"Pay the displayed operation cost and send the selected agent against the chosen target. Success is not guaranteed.",
++	"Recall the agent":"Cancel this agent's current mission and bring them back.",
++	"End partner funding":"Stop funding the selected proxy partner.",
++	"Recruit agent":"Pay the recruitment cost to add one intelligence agent. This does not start a mission.",
++	"Close trade route":"Stop this recurring trade route. This closes a commercial agreement, not the window.",
++	"Open route":"Start the selected recurring import or export route. Shipments and payments follow the route's schedule.",
++	"Assign general":"Give this general command of the selected eligible unit.",
++	"Dismiss general":"Remove this general from your command roster.",
++	"Appoint general":"Pay the appointment cost to add this general to your command roster.",
++	"Go to":"Move the camera to this unit or location; does not order the unit to move.",
++	"Raise the alert":"Increase military readiness by one step. Read the production, income and diplomatic effects before escalating.",
++	"Stand down":"Lower military readiness by one step and reduce the alert's ongoing effects.",
++	"Pay arrears":"Pay your outstanding UN dues from the treasury and restore Assembly voting eligibility when applicable.",
++	"Yes":"Vote in favour of the proposal in this chamber.", "No":"Vote against the proposal in this chamber.",
++	"Veto":"Cast a permanent Council member's No vote, blocking adoption of this resolution.",
++	"Abstain":"Record an abstention. Council abstentions do not lower its Yes threshold; Assembly abstentions are excluded from Yes + No.",
++	"Toward yes":"Pay the lobbying cost to move this Council member's leaning one step toward Yes during consultations.",
++	"Toward no":"Pay the lobbying cost to move this Council member's leaning one step toward No during consultations.",
++	"Join restrictions":"Voluntarily join economic restrictions following this Assembly recommendation.",
++	"Leave restrictions":"Withdraw your participation in the voluntary economic restrictions.",
++	"Request mediation":"Ask the Secretary-General to seek a negotiated settlement. A request alone does not end the war.",
++	"Suspend":"Stop this AI application's operation and ongoing benefits while preserving its completed development.",
++	"Pause trials":"Pause local AI validation. Completed trial work is retained.",
++	"Resume trials":"Continue local AI validation using compute. This does not yet activate the application.",
++	"Open research":"Open the research tree for the discovery this application needs.",
++	"Sign":"Sign the agreement described in this card and accept its conditions.",
++	"Withdraw":"Withdraw from the agreement described in this card; its diplomatic consequences apply.",
++	"Produce weapons":"Show weapons this facility can manufacture. Production spends resources and adds one item to its queue.",
++	"Stockpile / target":"Show completed weapons in storage. Choosing one starts target selection; it does not produce a new weapon.",
++	"Attack-move":"Choose a destination on the map. Selected units move there and engage suitable targets along the way.",
++	"Bombard":"Choose a ground position or infrastructure to fire on with a suitable weapon.",
++	"Repair":"Order repairs on a friendly damaged vehicle or completed building. Repairs cost $0.25 per HP and pause in combat.",
++	"Buy land":"Select an adjacent unclaimed hex to buy for this settlement. Each hex costs $1000; up to four purchases per settlement.",
++	"End this contact":"Finish this diplomatic contact and read the final result.",
++	"Skip the guide":"Dismiss the introductory walkthrough and continue playing.",
++	"Show first steps":"Show the introductory steps for construction, research and army control.",
++	"Pause":"Pause campaign time. Resume to continue production, movement and deadlines.",
++	"1x":"Set campaign time to normal speed.", "2x":"Run campaign time at double speed, including production and voting deadlines.",
++	"4x":"Run campaign time at four times normal speed, including production and voting deadlines.",
++	"Research now":"Queue this discovery. Its three stages develop in order, using research points and each stage's resources when its requirements are met.",
++	"Add to queue":"Add this discovery after the current projects. Research goes to the first eligible project; blocked projects wait for their requirements.",
++	"Remove from queue":"Remove this discovery from the research queue. This does not remove stages already completed.",
++	"Defaults":"Restore the default settings for the options in this screen.",
++	"Quit to Main Menu":"Leave the campaign for the main menu. Unsaved progress is lost; a second click confirms.",
++	"Quit to Desktop":"Exit the game. Unsaved progress is lost; a second click confirms.",
++	"Propose Assembly recommendation":"Submit a separate non-binding recommendation to the Assembly. All eligible members vote; it does not automatically impose Council sanctions.",
++	"Read decision":"Open the UN conference result and read the final vote count.",
++	"Attend session":"Enter the pending UN conference to read the proposal and cast your ballot if eligible.",
++	"Accept":"Accept the offer or consent request described in this card.",
++	"Decline":"Reject the offer or consent request described in this card.",
++}
++const TABS := {
++	"Council":"Council seats, draft resolutions, consultations, lobbying and ballots.",
++	"Draft":"Choose a proposed UN measure, its subject and the requirements to sponsor it.",
++	"Assembly":"General Assembly recommendations and ballots; no permanent-member veto.",
++	"Organisation":"UN leadership, membership, dues and voting eligibility.", "Record":"Earlier UN resolutions and recorded outcomes.",
++	"Overview":"The current status and key facts for this department.", "Agents":"Recruitment, active agents and their assignments.",
++	"Operations":"Choose an intelligence operation and inspect its target, price and risk.",
++	"Trade":"Recurring international import and export routes.", "Economy":"Buildings for resources, food, homes and trade.",
++	"Military":"Training buildings, military defences and weapon facilities.", "Civic & research":"Education, research and public-service buildings.",
++	"Graphics":"Display quality, window and rendering settings.", "Sound":"Music and sound-effect volume controls.",
++	"Controls":"Mouse, camera and interface control settings.", "Game":"Campaign preferences and gameplay display options.",
++	"Generals":"Appoint commanders and assign them to units.", "Veterans":"Experience and ranks earned by your units.",
++	"Nuclear alert":"Military readiness, nuclear release and escalation effects.", "AI":"Compute, applications, autonomy and strategic AI choices.",
++	"Arsenal":"Your country's weapon roles, operators and production facilities.",
++	"Compute":"AI training progress and the allocation of shared compute.", "Applications":"Validate and activate practical AI programmes, with compute demand and upkeep.",
++	"Doctrine":"Human oversight, weapons autonomy and AI agreements.", "AGI":"Advanced AI development, safety work and runaway risk.",
++	"Rivals":"Other nations' AI progress and observed activity.",
++}
++
++static func context(b: BaseButton) -> String:
++	var parts: Array[String] = []
++	var parent: Node = b.get_parent()
++	for depth in range(4):
++		if parent == null or parent is CanvasLayer: break
++		for child in parent.get_children():
++			if child is Label:
++				var words: String = child.text.strip_edges()
++				if words.length() > 2 and not words in parts:
++					parts.append(words)
++		if not parts.is_empty(): break
++		parent = parent.get_parent()
++	return "\n".join(PackedStringArray(parts)).left(360)
++
++static func meaning(b: BaseButton, original := "") -> String:
++	if b.has_meta("action_help"): return str(b.get_meta("action_help"))
++	var words: String = b.text.strip_edges() if b is Button else ""
++	var ctx := context(b)
++	if words == "Resume" and ("compute" in ctx.to_lower() or "Validated" in ctx): return "Restart this commissioned AI application. Its compute demand and running cost resume."
++	if words in ["+", "-", "−"]:
++		var direction := "Increase" if words == "+" else "Decrease"
++		if "safety" in ctx.to_lower(): return direction + " the share of AGI work devoted to safety by 10 percentage points."
++		if "Compute allocation" in ctx or "compute" in ctx.to_lower(): return direction + " this pool's compute allocation by 10 percentage points; the available compute remains shared."
++		return direction + " the value shown beside this control.\n" + ctx
++	if TEXT.has(words): return TEXT[words]
++	if words.begins_with("UN ("): return TEXT.UN
++	if TABS.has(words) and b.toggle_mode: return "Open this section: " + TABS[words]
++	if b is OptionButton: return "Choose a value from this list.\n" + ctx
++	if b is CheckButton or b is CheckBox: return "Enable or disable the setting shown beside this switch.\n" + ctx
++	for prefix in ["Recruit (", "Recruit agent (", "Ransom ", "Commission ", "Validate ", "Second generation ", "Sell to ", "Consult ", "Buy ", "Sell ", "Jam (", "Anti-satellite missile", "Nuclear detonation in orbit", "Start retraining", "End retraining", "Campaign for a seat", "Arrange food relief", "Send food relief"]:
++		if words.begins_with(prefix): return _prefix(prefix)
++	if words.begins_with("Enter ") and "chamber" in words: return "Enter this UN conference to read the proposal, voting rules and your delegation's choices."
++	if words.begins_with("Return to game"): return "Close this conference and return to the map. Campaign time continues; closing does not cast a ballot."
++	if words.begins_with("Close "): return TEXT.Close
++	if words.begins_with("Target:"): return "Select this stored weapon, then click the map to launch one. Escape or right click cancels."
++	if words.begins_with("Place "): return "Select a legal map location for this building. Placement requires the displayed resources and a valid site."
++	if words.begins_with("Open "): return "Open " + words.trim_prefix("Open ").trim_suffix(".") + ".\n" + ctx
++	# Existing purpose text is more precise than inferred nearby context. A
++	# gate-only tooltip still needs the action description above, when known.
++	for gate in ["Needs ", "Research ", "Unavailable", "Requires ", "Not fielded", "Not enough", "Already "]:
++		if original.begins_with(gate): return (words + ".\n" if words != "" else "") + ctx
++	if original.strip_edges() != "": return ""
++	if b.toggle_mode: return "Select " + words + ".\n" + ctx
++	return (words + ".\n" if words != "" else "") + ctx
++
++static func _prefix(prefix: String) -> String:
++	return {
++		"Recruit (":TEXT["Recruit agent"], "Recruit agent (":TEXT["Recruit agent"], "Ransom ":"Pay the displayed ransom to recover this captured agent.",
++		"Commission ":"Pay the commissioning cost and activate this validated AI application. It then consumes compute and running funds.",
++		"Validate ":"Pay to start local engineering and field trials. Research alone does not activate this application.",
++		"Second generation ":"Pay to upgrade this field-tested AI application after meeting its research and experience requirements.",
++		"Sell to ":"Export an AI package to this nation for the listed income and diplomatic effects; it also improves their models.",
++		"Consult ":"Pay $250 and 40 intelligence reserve for AI-assisted diplomatic consultation. Improves relations; does not force a treaty or ceasefire.",
++		"Buy ":"Buy the displayed quantity now: pay money and receive the selected resource, subject to storage and market restrictions.",
++		"Sell ":"Sell the displayed quantity now: remove the selected resource from storage and receive money.",
++		"Jam (":"Pay to temporarily disrupt this rival satellite.",
++		"Anti-satellite missile":"Pay to attack this satellite; the strike has diplomatic consequences.",
++		"Nuclear detonation in orbit":"Detonate a nuclear weapon in orbit. It can damage satellites indiscriminately and causes nuclear escalation.",
++		"Start retraining":"Fund worker retraining at the displayed ongoing cost to address AI-related unemployment.",
++		"End retraining":"Stop funding worker retraining and its ongoing cost.",
++		"Campaign for a seat":"Pay $1500 to campaign for an elected Council seat. A campaign does not guarantee election.",
++		"Arrange food relief":"Pay $250 logistics for a humanitarian food delivery to your country, subject to the relief cooldown.",
++		"Send food relief":"Pay $250 logistics to send humanitarian food relief to this country, subject to the relief cooldown.",
++	}.get(prefix, "")
++
++static func tooltip(b: BaseButton, original: String) -> String:
++	var help := meaning(b, original)
++	var out := original.strip_edges()
++	if help != "" and not help in out: out = help + ("\n\n" + out if out != "" else "")
++	return wrap_lines(out)
++
++static func wrap_lines(words: String) -> String:
++	var lines: Array[String] = []
++	for paragraph in words.split("\n"):
++		var line := ""
++		for word in paragraph.split(" "):
++			if line.length() + word.length() > 68:
++				lines.append(line); line = ""
++			line += (" " if line != "" else "") + word
++		lines.append(line)
++	return "\n".join(PackedStringArray(lines))
+--- /dev/null
++++ b/native/godot/scripts/action_copy.gd.uid
+@@ -0,0 +1 @@
++uid://cmxqr1aoiu0ct
+--- /dev/null
++++ b/native/godot/scripts/button_hints.gd
+@@ -0,0 +1,39 @@
++extends Node
++## Covers buttons created by every native screen, including later-created menu,
++## AI and diplomatic widgets. No click behavior, costs or game state are changed.
++const Copy := preload("res://scripts/action_copy.gd")
++var registered := 0
++
++func _ready() -> void:
++	get_tree().node_added.connect(_added)
++	_scan(get_tree().root)
++
++func _scan(node: Node) -> void:
++	if node is BaseButton: _register(node)
++	for child in node.get_children(): _scan(child)
++
++func _added(node: Node) -> void:
++	if node is BaseButton: _register.call_deferred(node)
++
++func _register(button: BaseButton) -> void:
++	if not is_instance_valid(button) or button.has_meta("copy_registered"): return
++	button.set_meta("copy_registered", true)
++	registered += 1
++	button.mouse_entered.connect(func(): update(button))
++	button.focus_entered.connect(func(): update(button))
++	update(button)
++
++func update(button: BaseButton) -> void:
++	if not is_instance_valid(button): return
++	var original: String = button.tooltip_text
++	if original == str(button.get_meta("copy_output", "")):
++		original = str(button.get_meta("copy_original", ""))
++	button.set_meta("copy_original", original)
++	var current := original
++	if button.has_meta("cost") and not bool(button.get_meta("locked", false)):
++		var hud: Node = get_parent()
++		var price: Dictionary = button.get_meta("cost")
++		if hud.economy != null and not hud.economy.can_afford(price):
++			current += "\nUnavailable: need " + hud.economy.missing(price) + "."
++	button.tooltip_text = Copy.tooltip(button, current)
++	button.set_meta("copy_output", button.tooltip_text)
+--- /dev/null
++++ b/native/godot/scripts/button_hints.gd.uid
+@@ -0,0 +1 @@
++uid://be6ommdd0sfiy
+--- /dev/null
++++ b/native/godot/scripts/weapon_copy.gd
+@@ -0,0 +1,72 @@
++extends RefCounted
++## Player-facing descriptions of existing game mechanics, never real-world
++## performance figures. Shared by production, stockpile and ship launch menus.
++const ROLES := {
++	"cluster": "Anti-unit strike: strong against troop groups; weak against buildings.",
++	"antiShip": "Anti-ship strike: triple damage to ships; only a quarter of normal damage on land.",
++	"penetrator": "Bunker-buster: triple damage to buildings and ignores bunker protection. Conventional versions are weak against exposed troops.",
++	"thermobaric": "Anti-infantry blast: ignores bunker protection; weaker against vehicles and solid buildings.",
++	"antiRadar": "Radar suppression: homes on enemy air-defence radar within 40 m of your aim point, deals triple damage to emitters and disables them for 30 seconds.",
++	"emp": "Electronic disruption: microwave pulses disable electronics along the flight path. No explosive blast.",
++	"hemp": "Wide-area nuclear EMP: causes a blackout and damages satellites. No ground blast; nuclear escalation still applies.",
++	"mirv": "Multiple nuclear warheads: releases three additional warheads around the target, causing several impacts.",
++	"neutron": "Anti-crew nuclear strike: strong against people and vehicle crews; buildings take little damage near the centre and none farther out.",
++	"hgv": "Glide strike: manoeuvring flight with reduced interception chances; extra damage to ships. It can still be intercepted.",
++	"brahmos": "Fast strike against land or sea targets; double damage to ships.",
++	"burevestnik": "Nuclear-powered strike: leaves a radioactive trail along the flight path as well as the target effects.",
++	"dirty": "Radiological strike: contaminates the area with lasting fallout; this is not a nuclear detonation.",
++	"chemical": "Chemical area denial: leaves toxic clouds and ground contamination that continue to harm exposed units.",
++	"chlorine": "Chemical area denial: leaves a weaker, shorter-lived toxic cloud.",
++	"riot": "Riot-agent cloud: drives troops out of cover and disrupts them; counts as chemical use in war.",
++	"incapacitant": "Incapacitating cloud: temporarily disables exposed infantry; counts as chemical use in war.",
++	"anthrax": "Persistent biological contamination: creates a long-lived hazardous area.",
++	"bio": "Biological attack: can start an outbreak in a nearby town; otherwise contaminates the target area.",
++}
++const PLATFORMS := {
++	"ground":"Missile silo", "air":"Ready strike aircraft", "drone":"Ready drone or FPV team",
++	"air_or_sea":"Ready strike aircraft or compatible warship", "sea":"Compatible warship",
++	"sub":"Strategic submarine", "strategic":"Missile silo or strategic submarine",
++	"ground_or_sea":"Missile silo or compatible warship",
++}
++const FAMILIES := {"tactical":"Tactical strike", "ballistic":"Ballistic strike", "cruise":"Cruise missile", "hypersonic":"Hypersonic strike", "cluster":"Cluster munition", "emp":"Electronic attack", "antiShip":"Anti-ship missile", "nuke":"Strategic nuclear"}
++
++static func display_name(w: Node, key: String) -> String:
++	var name: String = str(w.missiles.def_of(key).get("name", key))
++	return name + " · " + str(FAMILIES[key]) if FAMILIES.has(key) else name
++
++static func role(def: Dictionary, key: String) -> String:
++	var special: String = str(def.get("special", ""))
++	if ROLES.has(special): return ROLES[special]
++	if def.get("sub_only", false): return "Coastal nuclear strike: launched by a strategic submarine; target must be on or near the sea."
++	if bool(def.get("nuclear", key == "nuke")): return "Nuclear area strike: massive blast and lasting fallout; can harm everything around the target."
++	return "Area strike against units and buildings."
++
++static func summary(w: Node, key: String) -> String:
++	var def: Dictionary = w.missiles.def_of(key)
++	if def.is_empty(): return "Unavailable weapon."
++	var kind: String = preload("res://scripts/arsenal_catalog.gd").platform_kind(w, 0, key)
++	var lines: Array[String] = ["Role: " + role(def, key), "Launch from: " + str(PLATFORMS.get(kind, "Compatible launch platform")) + "."]
++	var special: String = str(def.get("special", ""))
++	if special in ["emp", "hemp"]:
++		lines.append("Effect radius: %d m · electronic effect, no blast damage." % int(def.get("radius", 0)))
++	else:
++		lines.append("Impact: %d m · base peak damage: %d HP." % [int(def.get("radius",0)), roundi(float(def.get("dmg",0)) * 1.75)])
++	if bool(def.get("nuclear", key == "nuke")):
++		lines.append("Consequence: nuclear release is required; use escalates the nuclear alert and lowers all nations' relations with you by 30.")
++	elif special in ["dirty", "chemical", "chlorine", "riot", "incapacitant", "anthrax", "bio"]:
++		lines.append("Consequence: hazardous contamination or agents; use can trigger international condemnation and UN action.")
++	var desc: String = str(def.get("desc", ""))
++	if "Future programme" in desc or "assessed capability" in desc:
++		lines.append("Status: future programme / assessed capability in this scenario.")
++	return "\n".join(PackedStringArray(lines))
++
++static func tooltip(w: Node, key: String, production: bool) -> String:
++	var lines := summary(w, key)
++	if not str(w.missiles.def_of(key).get("special", "")) in ["emp", "hemp"]:
++		lines += "\nDamage decreases toward the impact edge; target modifiers, defences and interception can change the outcome."
++	if production:
++		lines += "\nAction: pay the listed cost and queue ONE weapon. It enters storage when production finishes; this does not fire it."
++	else:
++		lines += "\nAction: enter targeting mode, then click the map to launch ONE stored weapon. Escape or right click cancels; choosing a weapon alone does not fire it."
++		lines += "\nImpact can hit friendly forces too. Striking a nation at peace can start a war."
++	return lines
+--- /dev/null
++++ b/native/godot/scripts/weapon_copy.gd.uid
+@@ -0,0 +1 @@
++uid://vu2joi2ucswi
+--- /dev/null
++++ b/native/godot/tools/action-copy-check.gd
+@@ -0,0 +1,143 @@
++extends SceneTree
++const Copy := preload("res://scripts/action_copy.gd")
++const Weapon := preload("res://scripts/weapon_copy.gd")
++var w: Node
++var errors: Array[String] = []
++var checks := 0
++var audit: Array[String] = []
++func _initialize() -> void: call_deferred("run")
++func check(ok: bool, words: String) -> void:
++	checks += 1
++	print(("ok " if ok else "FAIL ") + words)
++	if not ok: errors.append(words)
++func frames(n := 6) -> void:
++	for i in range(n): await process_frame
++func cards() -> Array:
++	return w.hud._list.get_children().filter(func(c): return c is Button and c.has_meta("cost"))
++func scan(page: String) -> void:
++	await frames()
++	var buttons: Array = root.find_children("*", "BaseButton", true, false).filter(func(b): return b.is_visible_in_tree())
++	var missing: Array = []
++	for b in buttons:
++		w.hud.get_node("ButtonHints").update(b)
++		if b.tooltip_text.strip_edges().length() < 10: missing.append(b.text if b is Button else b.name)
++		audit.append(page + " | " + (b.text if b is Button else str(b.name)) + " | " + b.tooltip_text.replace("\n", " / "))
++	check(missing.is_empty(), "%s: all %d visible buttons have explanatory help %s" % [page, buttons.size(), missing])
++func shot(name: String) -> void:
++	if DisplayServer.get_name() == "headless": return
++	await frames(10)
++	await RenderingServer.frame_post_draw
++	root.get_texture().get_image().save_png("res://build/action-copy-" + name + ".png")
++func run() -> void:
++	set_meta("match_config", {"map":"island", "players":4, "nation":0, "opening":"light"})
++	change_scene_to_file("res://world.tscn")
++	for i in range(12000):
++		await create_timer(0.01).timeout
++		if current_scene != null and current_scene.get("nav_ready") == true and current_scene.get("menu") != null:
++			w = current_scene; break
++	if w == null: quit(1); return
++	if w.menu._root == null: w.menu.setup(w)
++	root.size = Vector2i(1280,800)
++	w.start_match("easy"); w.menu.close()
++	w.set_physics_process(false); w.ai.set_physics_process(false)
++	preload("res://tools/test_kit.gd").quiet(w, ["un", "directorate", "defcon", "support"])
++	w.ui_scale = 1.0; w.apply_ui_scale()
++	w.economy.grant_test_resources()
++	await scan("HUD")
++	w.hud.set_production_open(true); await scan("Construction")
++	var silo: Dictionary = w.place_building("missileSilo", w.start + Vector3(18,0,18), 0, true)
++	w.select_building(silo)
++	await scan("Weapon production")
++	check(not cards().is_empty(), "Weapon production remains available")
++	for card in cards():
++		check(card.tooltip_text.contains("queue ONE") and card.tooltip_text.contains("does not fire"), "Production explains storage and does not imply a launch")
++		check(card.get_child(0).get_combined_minimum_size().y <= card.size.y - 17, "Weapon copy fits its dynamically sized card")
++	await shot("production")
++	if DisplayServer.get_name() != "headless" and not cards().is_empty():
++		var motion := InputEventMouseMotion.new()
++		motion.position = cards()[0].get_global_rect().get_center()
++		root.push_input(motion)
++		await create_timer(1.2).timeout
++		await shot("weapon-help")
++	var cash: float = w.economy.res.money
++	var amount: int = w.missiles.stored()
++	var queue_size: int = silo.queue.size()
++	for card in cards(): card.mouse_entered.emit(); card.focus_entered.emit()
++	check(w.economy.res.money == cash and w.missiles.stored() == amount and silo.queue.size() == queue_size, "Reading help neither spends resources nor queues or launches a weapon")
++	if not cards().is_empty():
++		var first: String = w.missiles.listed_at("missileSilo")[0]
++		cards()[0].pressed.emit()
++		check(silo.queue.size() == queue_size + 1 and w.missiles.stored() == amount, "Production button still queues one weapon without firing it")
++		w.cancel_queued(silo, 0)
++	w.missiles.stock.tactical = 1
++	w.hud._missile_view = "stockpile"; w.hud._shown_key = ""; w.hud._update_panel()
++	await scan("Stockpile targeting")
++	check(cards().size() == 1 and cards()[0].tooltip_text.contains("launch ONE"), "Stockpile explains the actual next click")
++	if not cards().is_empty():
++		cards()[0].pressed.emit()
++		check(w.missile_aim == "tactical" and w.missiles.stock.tactical == 1, "Target selection still preserves inventory until launch")
++		w.cancel_placement()
++	await shot("stockpile")
++	# Cover every payload installed in this campaign, including national families.
++	for key in w.missiles.types():
++		var def: Dictionary = w.missiles.def_of(key)
++		var help := Weapon.summary(w, key)
++		check(help.contains("Role:") and help.contains("Launch from:"), "%s has a practical role and correct platform category" % key)
++		if str(def.get("special", "")) in ["emp", "hemp"]:
++			check(help.contains("no blast damage") and not help.contains("centre damage"), "%s does not advertise fictitious blast damage" % key)
++	check(Weapon.role({"special":"antiShip"}, "").contains("quarter"), "Anti-ship copy discloses its land-target weakness")
++	check(Weapon.role({"special":"cluster"}, "").contains("weak against buildings"), "Cluster copy distinguishes its target type")
++	check(Weapon.display_name(w, "tactical") != Weapon.display_name(w, "ballistic"), "Shared national family names still distinguish tactical and ballistic choices")
++	w.select_building(null); w.hud.set_production_open(false)
++	for mode in ["diplomacy", "market", "intel", "defence", "territory", "un"]:
++		w.hud.toggle_panel(mode, true); await scan(mode)
++	var sp = w.hud._panels
++	for tab in ["agents", "dossiers", "reports", "space"]:
++		sp.intel_tab = tab; w.hud.toggle_panel("intel", true); await scan("Intel / " + tab)
++	for tab in ["generals", "veterans", "nuclear", "arsenal", "ai"]:
++		sp.defence_tab = tab; w.hud.toggle_panel("defence", true); await scan("Defence / " + tab)
++	for tab in ["compute", "applications", "doctrine", "operations", "agi", "rivals"]:
++		w.directorate.ui_tab = tab; w.hud.refresh_side(); await scan("AI / " + tab)
++		if tab == "compute":
++			var plus: Array = w.hud._side_rows.find_children("*", "Button", true, false).filter(func(b): return b.text == "+")
++			check(not plus.is_empty() and plus[0].tooltip_text.contains("10 percentage"), "AI allocation controls disclose their exact step")
++	for tab in ["council", "draft", "assembly", "org", "record"]:
++		sp.un_tab = tab; w.hud.toggle_panel("un", true); await scan("UN / " + tab)
++	w.hud._show_side(""); w.hud.toggle_research(); await scan("Research"); w.hud.toggle_research()
++	w.menu.open_pause(); await scan("Pause menu")
++	w.menu.open_new_game(); await scan("New campaign")
++	for tab in ["graphics", "sound", "controls", "game"]:
++		w.menu.settings_tab = tab; w.menu.open_settings(); await scan("Settings / " + tab)
++	w.menu.close()
++	var hints: Node = w.hud.get_node("ButtonHints")
++	var b := Button.new(); b.text = "Declare war"; w.hud.add_child(b); await frames()
++	check(b.has_meta("copy_registered") and b.tooltip_text.contains("Start a war"), "A late-created button is automatically explained")
++	var before: String = b.tooltip_text
++	for i in range(5): hints.update(b)
++	check(b.tooltip_text == before, "Repeated hovering never duplicates the explanation")
++	b.tooltip_text = "Unavailable: needs an agreement."
++	hints.update(b)
++	check(b.tooltip_text.contains("Unavailable") and b.tooltip_text.contains("Start a war"), "Dynamic blocking reasons survive alongside the explanation")
++	b.queue_free()
++	# Generic context-only controls must keep their explanation across hovers.
++	var box := HBoxContainer.new(); w.hud.add_child(box)
++	var caption := Label.new(); caption.text = "Example setting"; box.add_child(caption)
++	var unknown := Button.new(); unknown.text = "Medium"; unknown.toggle_mode = true; box.add_child(unknown)
++	await frames(); hints.update(unknown)
++	var context_tip: String = unknown.tooltip_text
++	hints.update(unknown)
++	check(unknown.tooltip_text == context_tip and context_tip.contains("Example setting"), "Context-only controls retain their own nearby explanation across hovers")
++	box.queue_free()
++	var purchase := Button.new(); purchase.text = "Example purchase"
++	purchase.set_meta("cost", {"money":100.0})
++	var old_money: float = w.economy.res.money
++	w.economy.res.money = 0; w.hud.add_child(purchase); await frames()
++	hints.update(purchase)
++	check(purchase.tooltip_text.contains("Unavailable: need"), "Unaffordable actions explain the missing resources")
++	w.economy.res.money = old_money; hints.update(purchase)
++	check(not purchase.tooltip_text.contains("Unavailable: need"), "Resource explanation clears when the action becomes affordable")
++	purchase.queue_free()
++	var file := FileAccess.open("res://build/action-copy-audit.txt", FileAccess.WRITE)
++	file.store_string("\n".join(PackedStringArray(audit)))
++	print("ACTION_COPY PASS %d" % checks if errors.is_empty() else "ACTION_COPY FAIL: " + str(errors))
++	quit(0 if errors.is_empty() else 1)
+--- /dev/null
++++ b/native/godot/tools/action-copy-check.gd.uid
+@@ -0,0 +1 @@
++uid://duclvustsounk
