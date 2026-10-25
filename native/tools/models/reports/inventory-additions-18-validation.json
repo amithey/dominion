@@ -1,0 +1,35 @@
+{
+  "batch": "inventory-additions-18",
+  "files": [
+    "vehicles/tank__k1e1.glb",
+    "vehicles/tank__k1a2.glb",
+    "vehicles/apc__k200a1.glb",
+    "vehicles/artillery__k242a1.glb",
+    "vehicles/artillery__k281a1.glb"
+  ],
+  "sha256": {
+    "vehicles/tank__k1e1.glb": "03fb2bb779241da14fc182dfd7ffab89cf7ba7cb0c6c43acb9da887e2dd1422f",
+    "vehicles/tank__k1a2.glb": "3d9c5b3b8b03b5a1d3607413b6cff990e832787eb41d57cf1e32f9182a1cdbf0",
+    "vehicles/apc__k200a1.glb": "621c3a4610462db622eba19084d4892956aa6a84c86340e0666caad417c21422",
+    "vehicles/artillery__k242a1.glb": "af00e1c708ccadd4ccf4aaf2421b470826d89337e92c070701af03f1973b6605",
+    "vehicles/artillery__k281a1.glb": "45fde331df64da56d00f6aaac997e579c952477f3f51e3d75ec1d18527fbf561"
+  },
+  "maximum_triangles": [
+    12804,
+    2446
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "canonical track meshes and U; K1E1 versus K1A2 running gear and gun calibre; K200family five-wheel hull, openable roof doors and transport-stowed mortars",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_18.py",
+  "extra_views": "five detail views reviewed, including raised107/81mm mortars with opened roof doors and distinct105/120mmK1 turrets",
+  "preserved_baseline": {
+    "commit": "1e79607",
+    "entries": 939
+  }
+}

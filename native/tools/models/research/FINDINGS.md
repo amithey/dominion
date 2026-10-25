@@ -1,6 +1,6 @@
 # National inventory audit — evidence ledger
 Work in progress. Current equipment **and confirmed orders** are in scope. A reviewed row may still contain an unresolved question; it is not a blanket certification of current service or model accuracy.
-Coverage: 272 of 823 nation–model assignments assessed; 397 source records. No absent-source claim establishes non-possession.
+Coverage: 272 of 823 nation–model assignments assessed; 404 source records. No absent-source claim establishes non-possession.
 
 ## afghanistan
 Assessed 0/12 roster assignments. Full asset metadata: [country ledger](countries/afghanistan.json).
@@ -531,6 +531,16 @@ Assessed 0/25 roster assignments. Full asset metadata: [country ledger](countrie
 
 ## south_korea
 Assessed 0/33 roster assignments. Full asset metadata: [country ledger](countries/south_korea.json).
+
+Additional: **K1E1** (`documented_service`), `generated_and_readback_verified`. Additional documented Korean type beyond selected K2/K808/K9roster representatives; exact per-hull2026readiness not certified. Estimated exterior fittings; mortar transport configuration explicitly declared. Sources: [KR-K1-ROTE](https://www.hyundai-rotem.co.kr/ko/company/press/details.do?seq=1051), [KR-K1-TMPS](https://www.dapa.go.kr/dapa/doc/selectDoc.do?bbsSeq=326&docSeq=21542&menuSeq=3069).
+
+Additional: **K1A2** (`documented_service`), `generated_and_readback_verified`. Additional documented Korean type beyond selected K2/K808/K9roster representatives; exact per-hull2026readiness not certified. Estimated exterior fittings; mortar transport configuration explicitly declared. Sources: [KR-K1A2-COMPLETE](https://dapa.go.kr/dapa/doc/selectDoc.do?bbsSeq=326&docSeq=19872&menuSeq=3069), [KR-KOTRA-GUIDE](https://www.kotra.or.kr/kodits/upload_file/promotion/2019%20Korea%20Defense%20Products%20Guide.pdf), [KR-ARMY-CROSSING](https://kookbang.dema.mil.kr/newsWeb/20250627/1/ATCE_CTGR_0010030000/view.do).
+
+Additional: **K200A1** (`documented_service`), `generated_and_readback_verified`. Additional documented Korean type beyond selected K2/K808/K9roster representatives; exact per-hull2026readiness not certified. Estimated exterior fittings; mortar transport configuration explicitly declared. Sources: [KR-K200-STANDARDS](https://dapa.go.kr/dapa/doc/selectDoc.do?bbsSeq=326&docSeq=20549&menuSeq=3069), [KR-ARMY-CROSSING](https://kookbang.dema.mil.kr/newsWeb/20250627/1/ATCE_CTGR_0010030000/view.do).
+
+Additional: **K242A1** (`documented_service`), `generated_and_readback_verified`. Additional documented Korean type beyond selected K2/K808/K9roster representatives; exact per-hull2026readiness not certified. Estimated exterior fittings; mortar transport configuration explicitly declared. Sources: [KR-K200-STANDARDS](https://dapa.go.kr/dapa/doc/selectDoc.do?bbsSeq=326&docSeq=20549&menuSeq=3069), [KR-K200-DELIVERY](https://dapa.go.kr/dapa/doc/selectDoc.do?bbsSeq=326&docSeq=16190&menuSeq=3069).
+
+Additional: **K281A1** (`documented_service`), `generated_and_readback_verified`. Additional documented Korean type beyond selected K2/K808/K9roster representatives; exact per-hull2026readiness not certified. Estimated exterior fittings; mortar transport configuration explicitly declared. Sources: [KR-K200-STANDARDS](https://dapa.go.kr/dapa/doc/selectDoc.do?bbsSeq=326&docSeq=20549&menuSeq=3069), [KR-K200-DELIVERY](https://dapa.go.kr/dapa/doc/selectDoc.do?bbsSeq=326&docSeq=16190&menuSeq=3069).
 
 ## south_sudan
 Assessed 0/6 roster assignments. Full asset metadata: [country ledger](countries/south_sudan.json).

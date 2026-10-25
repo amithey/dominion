@@ -3572,6 +3572,69 @@
       "accessed": "2026-10-25",
       "type": "primary",
       "supports": "Agreement inprinciple todiscusstransferAbukumaclass promptlyAFTERdecommissioning, withtraining,maintenance andmanagement stillunderdiscussion. Doesnotestablishcompletedtransfer,retirementofallJapanesehulls orPhilippinecurrentservice."
+    },
+    "KR-K1-ROTE": {
+      "url": "https://www.hyundai-rotem.co.kr/ko/company/press/details.do?seq=1051",
+      "title": "K1E1modernization contract",
+      "publisher": "Hyundai Rotem",
+      "publication_date": "2022-10-13",
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "K1E1fielded from2014;firm2022modernization contract.105mm K1family versus120mm K1A1. Digital systems and camera additions; manufacturer exterior image reviewed, not a new operational photograph."
+    },
+    "KR-K1A2-COMPLETE": {
+      "url": "https://dapa.go.kr/dapa/doc/selectDoc.do?bbsSeq=326&docSeq=19872&menuSeq=3069",
+      "title": "K1A1toK1A2modernization completed",
+      "publisher": "DAPA",
+      "publication_date": "2024-09-12",
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "Fourth production contract completed conversion of deployed Army and Marine K1A1toK1A2. BMS,IFF and cameras. Completion is a delivered modernization programme, not a per-hull2026readiness certification."
+    },
+    "KR-K1-TMPS": {
+      "url": "https://www.dapa.go.kr/dapa/doc/selectDoc.do?bbsSeq=326&docSeq=21542&menuSeq=3069",
+      "title": "K1family simulator modernization",
+      "publisher": "DAPA",
+      "publication_date": "2025-08-07",
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "Operator explicitly lists K1,K1E1,K1A1,K1A2family in Army and Marines, with simulator improvements. Historical A1name in simulator list does not override2024completed A2conversion notice."
+    },
+    "KR-K200-STANDARDS": {
+      "url": "https://dapa.go.kr/dapa/doc/selectDoc.do?bbsSeq=326&docSeq=20549&menuSeq=3069",
+      "title": "Kseries APC safety and driver modernization standards",
+      "publisher": "DAPA",
+      "publication_date": "2025-01-07",
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "Current K200A1,K242A1(4.2inch),K281A1(81mm),K277A1command,K288A1recovery named. Ergonomic console and camera changes standardized on ONE prototype pertype, not the whole fleet; later depot work planned."
+    },
+    "KR-K200-DELIVERY": {
+      "url": "https://dapa.go.kr/dapa/doc/selectDoc.do?bbsSeq=326&docSeq=16190&menuSeq=3069",
+      "title": "First modernized K200family derivative delivery",
+      "publisher": "DAPA",
+      "publication_date": "2022-12-14",
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "First upgraded K242,K281,K288production delivery; programme through2027. Distinct from prototype-only2025ergonomic standards. Does not establish all future programme deliveries completed."
+    },
+    "KR-KOTRA-GUIDE": {
+      "url": "https://www.kotra.or.kr/kodits/upload_file/promotion/2019%20Korea%20Defense%20Products%20Guide.pdf",
+      "title": "Korea Defense Products Guide: original manufacturer entries",
+      "publisher": "KOTRA / Hyundai Rotem / Hanwha Defense",
+      "publication_date": "2019",
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "PDF verified and read, pages67and70-73printed: K1A2is K1A1digital upgrade with120mmL44; manufacturer exterior image reviewed. Hanwha portfolio confirms K200family and derivatives. Catalogue is technical identification, not2026inventory status; small contour and body-dimension estimates remain disclosed."
+    },
+    "KR-ARMY-CROSSING": {
+      "url": "https://kookbang.dema.mil.kr/newsWeb/20250627/1/ATCE_CTGR_0010030000/view.do",
+      "title": "Army2ndArmoredBrigade combined crossing training",
+      "publisher": "Defense Media Agency / ROK Army",
+      "publication_date": "2025-06-26",
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "Firsthand exercise report and official photographs identify K200A1andK1A2participating together on24June. Confirms operator activity, not fleetwide readiness."
     }
   },
   "findings": [
@@ -9852,6 +9915,117 @@
       "asset_validation": {
         "batch": 17,
         "sha256": "f0876e73f6a3ac23b14c445239b3b3b1ac276afd9aaffa2758c84e42462502a3",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "south_korea",
+      "key": "tank",
+      "model": "K1E1",
+      "source_ids": [
+        "KR-K1-ROTE",
+        "KR-K1-TMPS"
+      ],
+      "status": "documented_service",
+      "reason": "Additional documented Korean type beyond selected K2/K808/K9roster representatives; exact per-hull2026readiness not certified. Estimated exterior fittings; mortar transport configuration explicitly declared.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "tank__k1e1",
+      "asset_validation": {
+        "batch": 18,
+        "sha256": "03fb2bb779241da14fc182dfd7ffab89cf7ba7cb0c6c43acb9da887e2dd1422f",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "south_korea",
+      "key": "tank",
+      "model": "K1A2",
+      "source_ids": [
+        "KR-K1A2-COMPLETE",
+        "KR-KOTRA-GUIDE",
+        "KR-ARMY-CROSSING"
+      ],
+      "status": "documented_service",
+      "reason": "Additional documented Korean type beyond selected K2/K808/K9roster representatives; exact per-hull2026readiness not certified. Estimated exterior fittings; mortar transport configuration explicitly declared.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "tank__k1a2",
+      "asset_validation": {
+        "batch": 18,
+        "sha256": "3d9c5b3b8b03b5a1d3607413b6cff990e832787eb41d57cf1e32f9182a1cdbf0",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "south_korea",
+      "key": "apc",
+      "model": "K200A1",
+      "source_ids": [
+        "KR-K200-STANDARDS",
+        "KR-ARMY-CROSSING"
+      ],
+      "status": "documented_service",
+      "reason": "Additional documented Korean type beyond selected K2/K808/K9roster representatives; exact per-hull2026readiness not certified. Estimated exterior fittings; mortar transport configuration explicitly declared.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "apc__k200a1",
+      "asset_validation": {
+        "batch": 18,
+        "sha256": "621c3a4610462db622eba19084d4892956aa6a84c86340e0666caad417c21422",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "south_korea",
+      "key": "artillery",
+      "model": "K242A1",
+      "source_ids": [
+        "KR-K200-STANDARDS",
+        "KR-K200-DELIVERY"
+      ],
+      "status": "documented_service",
+      "reason": "Additional documented Korean type beyond selected K2/K808/K9roster representatives; exact per-hull2026readiness not certified. Estimated exterior fittings; mortar transport configuration explicitly declared.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "artillery__k242a1",
+      "asset_validation": {
+        "batch": 18,
+        "sha256": "af00e1c708ccadd4ccf4aaf2421b470826d89337e92c070701af03f1973b6605",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
+    },
+    {
+      "nation": "south_korea",
+      "key": "artillery",
+      "model": "K281A1",
+      "source_ids": [
+        "KR-K200-STANDARDS",
+        "KR-K200-DELIVERY"
+      ],
+      "status": "documented_service",
+      "reason": "Additional documented Korean type beyond selected K2/K808/K9roster representatives; exact per-hull2026readiness not certified. Estimated exterior fittings; mortar transport configuration explicitly declared.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "artillery__k281a1",
+      "asset_validation": {
+        "batch": 18,
+        "sha256": "45fde331df64da56d00f6aaac997e579c952477f3f51e3d75ec1d18527fbf561",
         "external_loaders": [
           "trimesh 5.1.1",
           "Godot 4.7.2 GLTFDocument"
