@@ -1,0 +1,35 @@
+{
+  "batch": "inventory-additions-15",
+  "files": [
+    "aircraft/helicopter__uh_60j_rescue.glb",
+    "aircraft/navalHelicopter__sh_60j.glb",
+    "aircraft/heavyLift__mch_101.glb",
+    "ships/gunboat__hayabusa_class.glb",
+    "ships/carrier__hyuga_class.glb"
+  ],
+  "sha256": {
+    "aircraft/helicopter__uh_60j_rescue.glb": "35d1c237e2543c2df1ee647b6f2eb3ab7cbefbadc4939f9e088484d868b6d94e",
+    "aircraft/navalHelicopter__sh_60j.glb": "19ae12d1176d3c746afd2b43f8f29ef352b24197d9cf40552c78f3b59e22a36c",
+    "aircraft/heavyLift__mch_101.glb": "a1a3bbcf742c4e7dee2d21196312a334d3b333a925e0c0f3c40bf106ad8e714a",
+    "ships/gunboat__hayabusa_class.glb": "461ba54ed3fadeea687ffd6006b60d29b66b30ff29939d93c03ad6aceff729c0",
+    "ships/carrier__hyuga_class.glb": "517d321cd48138ef7af6fd0dbe6b779eb4c7cfffb40acf220010afa19e6137b1"
+  },
+  "maximum_triangles": [
+    13324,
+    2088
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "three distinct rescue/ASW/MCM rotorcraft with actual rotor counts and landing configurations; Hyuga helicopter deck and Hayabusa76mm,SSM and three waterjets; no invented catapults or attack stores on rescue/MCM aircraft",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_15.py",
+  "extra_views": "five detail views reviewed, including MCH101 ramp pose, six tyres, Hyuga helicopter deck and Hayabusa stern jets",
+  "preserved_baseline": {
+    "commit": "e87195e",
+    "entries": 923
+  }
+}

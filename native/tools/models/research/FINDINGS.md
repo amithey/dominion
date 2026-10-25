@@ -1,6 +1,6 @@
 # National inventory audit — evidence ledger
 Work in progress. Current equipment **and confirmed orders** are in scope. A reviewed row may still contain an unresolved question; it is not a blanket certification of current service or model accuracy.
-Coverage: 272 of 823 nation–model assignments assessed; 375 source records. No absent-source claim establishes non-possession.
+Coverage: 272 of 823 nation–model assignments assessed; 382 source records. No absent-source claim establishes non-possession.
 
 ## afghanistan
 Assessed 0/12 roster assignments. Full asset metadata: [country ledger](countries/afghanistan.json).
@@ -414,11 +414,11 @@ Additional: **UH1J** (`documented_service`), `generated_and_readback_verified`. 
 
 Additional: **V22** (`documented_service`), `build_missing`. Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification. Sources: [JP-CENSUS26](https://www.mod.go.jp/j/press/wp/wp2026/pdf/R08shiryo.pdf).
 
-Additional: **SH60J** (`documented_service`), `research_specific_variant`. Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification. Sources: [JP-CENSUS26](https://www.mod.go.jp/j/press/wp/wp2026/pdf/R08shiryo.pdf).
+Additional: **SH60J** (`documented_service`), `generated_and_readback_verified`. Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification. Sources: [JP-CENSUS26](https://www.mod.go.jp/j/press/wp/wp2026/pdf/R08shiryo.pdf), [JP-SH60J-EXTERIOR](https://www.mod.go.jp/msdf/equipment/rotorcraft/patrol/sh60j/).
 
-Additional: **MCH101** (`documented_service`), `research_specific_variant`. Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification. Sources: [JP-CENSUS26](https://www.mod.go.jp/j/press/wp/wp2026/pdf/R08shiryo.pdf).
+Additional: **MCH101** (`documented_service`), `generated_and_readback_verified`. Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification. Sources: [JP-CENSUS26](https://www.mod.go.jp/j/press/wp/wp2026/pdf/R08shiryo.pdf), [JP-MCH101-EXTERIOR](https://www.mod.go.jp/msdf/equipment/rotorcraft/ms-t/mch-101/), [JP-MCH101-ACTIVITY26](https://www.pref.yamaguchi.lg.jp/press/354881.html).
 
-Additional: **UH60J rescue** (`documented_service`), `research_specific_variant`. Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification. Sources: [JP-CENSUS26](https://www.mod.go.jp/j/press/wp/wp2026/pdf/R08shiryo.pdf).
+Additional: **UH60J rescue** (`documented_service`), `generated_and_readback_verified`. Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification. Sources: [JP-CENSUS26](https://www.mod.go.jp/j/press/wp/wp2026/pdf/R08shiryo.pdf), [JP-UH60J-RESCUE](https://www.mod.go.jp/asdf/equipment/kyuunanki/UH-60J/).
 
 Additional: **F2A** (`documented_service`), `generated_and_readback_verified`. Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification. Sources: [JP-CENSUS26](https://www.mod.go.jp/j/press/wp/wp2026/pdf/R08shiryo.pdf).
 
@@ -432,9 +432,11 @@ Additional: **RQ4B** (`delivered_service_one_loss_2026_readiness_unverified`), `
 
 Additional: **V-BAT shipborne ISR** (`firm_orders_and_observed_operator_training`), `build_missing`. Firm manufacturer agreement for multiple aircraft. Current delivery quantity needs operator corroboration. This is shipborne ISR, not a flying-wing carrier strike aircraft. Sources: [JP-VBAT-CONTRACT25](https://shield.ai/shield-ai-v-bat-selected-as-japan-maritime-self-defense-forces-first-maritime-isr-platform/), [JP-VBAT-TRAIN26](https://j-defense.ikaros.jp/docs/special/005629.html).
 
-Additional: **Hayabusa class** (`documented_service`), `generate_missing_model`. Official operator identifies six missileboats; specific model missing. Sources: [JP-HAYABUSA](https://www.mod.go.jp/msdf/equipment/ships/pg/hayabusa/).
+Additional: **Hayabusa class** (`documented_service`), `generated_and_readback_verified`. Official operator identifies six missileboats; specific model missing. Sources: [JP-HAYABUSA](https://www.mod.go.jp/msdf/equipment/ships/pg/hayabusa/), [JP-MAIZURU26](https://www.mod.go.jp/msdf/maizuru/units/).
 
 Additional: **JMU Mogami MCM USV** (`documented_service`), `generate_missing_model`. Production MCM USV, not Umikaze research craft or armedattackboat. Need dimensions and photos before generation. Sources: [JP-JMU-USV](https://www.jmuc.co.jp/jmuds/business/index.html), [JP-MOGAMI](https://www.mod.go.jp/msdf/equipment/ships/ffm/mogami/).
+
+Additional: **Hyuga class DDH** (`documented_service`), `generated_and_readback_verified`. Current Japanese through-deck helicopter destroyer, separate197m class from248m Izumo/Kaga. Gamecarriercategory only; no F35B or CATOBAR role. Sources: [JP-HYUGA](https://www.mod.go.jp/msdf/equipment/ships/ddh/hyuga/), [JP-MAIZURU26](https://www.mod.go.jp/msdf/maizuru/units/), [JP-HYUGA-GROUP26](https://www.mod.go.jp/msdf/wg3hq/index.html).
 
 ## netherlands
 Assessed 29/29 roster assignments. Full asset metadata: [country ledger](countries/netherlands.json).

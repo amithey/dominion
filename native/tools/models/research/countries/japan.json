@@ -2199,42 +2199,73 @@
       "key": "navalHelicopter",
       "model": "SH60J",
       "source_ids": [
-        "JP-CENSUS26"
+        "JP-CENSUS26",
+        "JP-SH60J-EXTERIOR"
       ],
       "status": "documented_service",
       "reason": "Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification.",
-      "asset_action": "research_specific_variant",
+      "asset_action": "generated_and_readback_verified",
       "proposed_slug": "navalHelicopter__sh_60j",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "asset_validation": {
+        "batch": 15,
+        "sha256": "19ae12d1176d3c746afd2b43f8f29ef352b24197d9cf40552c78f3b59e22a36c",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "aircraft/navalHelicopter__sh_60j.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "japan",
       "key": "heavyLift",
       "model": "MCH101",
       "source_ids": [
-        "JP-CENSUS26"
+        "JP-CENSUS26",
+        "JP-MCH101-EXTERIOR",
+        "JP-MCH101-ACTIVITY26"
       ],
       "status": "documented_service",
       "reason": "Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification.",
-      "asset_action": "research_specific_variant",
+      "asset_action": "generated_and_readback_verified",
       "proposed_slug": "heavyLift__mch_101",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "asset_validation": {
+        "batch": 15,
+        "sha256": "a1a3bbcf742c4e7dee2d21196312a334d3b333a925e0c0f3c40bf106ad8e714a",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "aircraft/heavyLift__mch_101.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "japan",
       "key": "helicopter",
       "model": "UH60J rescue",
       "source_ids": [
-        "JP-CENSUS26"
+        "JP-CENSUS26",
+        "JP-UH60J-RESCUE"
       ],
       "status": "documented_service",
       "reason": "Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification.",
-      "asset_action": "research_specific_variant",
+      "asset_action": "generated_and_readback_verified",
       "proposed_slug": "helicopter__uh_60j_rescue",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "asset_validation": {
+        "batch": 15,
+        "sha256": "35d1c237e2543c2df1ee647b6f2eb3ab7cbefbadc4939f9e088484d868b6d94e",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "aircraft/helicopter__uh_60j_rescue.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "japan",
@@ -2357,14 +2388,24 @@
       "key": "gunboat",
       "model": "Hayabusa class",
       "source_ids": [
-        "JP-HAYABUSA"
+        "JP-HAYABUSA",
+        "JP-MAIZURU26"
       ],
       "status": "documented_service",
       "reason": "Official operator identifies six missileboats; specific model missing.",
-      "asset_action": "generate_missing_model",
+      "asset_action": "generated_and_readback_verified",
       "proposed_slug": "gunboat__hayabusa_class",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "asset_validation": {
+        "batch": 15,
+        "sha256": "461ba54ed3fadeea687ffd6006b60d29b66b30ff29939d93c03ad6aceff729c0",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "ships/gunboat__hayabusa_class.glb",
+      "asset_state": "available_exact_file"
     },
     {
       "nation": "japan",
@@ -2380,6 +2421,31 @@
       "proposed_slug": "seaDrone__jmu_mogami_mcm_usv",
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "japan",
+      "key": "carrier",
+      "model": "Hyuga class DDH",
+      "source_ids": [
+        "JP-HYUGA",
+        "JP-MAIZURU26",
+        "JP-HYUGA-GROUP26"
+      ],
+      "status": "documented_service",
+      "reason": "Current Japanese through-deck helicopter destroyer, separate197m class from248m Izumo/Kaga. Gamecarriercategory only; no F35B or CATOBAR role.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "carrier__hyuga_class",
+      "asset_validation": {
+        "batch": 15,
+        "sha256": "517d321cd48138ef7af6fd0dbe6b779eb4c7cfffb40acf220010afa19e6137b1",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      },
+      "existing_exact_asset": "ships/carrier__hyuga_class.glb",
+      "asset_state": "available_exact_file"
     }
   ]
 }

@@ -3374,6 +3374,69 @@
       "accessed": "2026-10-25",
       "type": "primary",
       "supports": "84x9.1m,depth10.4m not draft; diesel electric one shaft, underwater launch tubes. Public catalogue not authority for hidden propeller blade count."
+    },
+    "JP-UH60J-RESCUE": {
+      "url": "https://www.mod.go.jp/asdf/equipment/kyuunanki/UH-60J/",
+      "title": "UH60J rescue equipment profile and official photos",
+      "publisher": "Japan Air Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "Published15.65m body,5.43m external width,5.13m height. Rescue radar/IR equipment; refuelling probe only a stated subset, not every aircraft. Photos show rescue hoist/external tanks; noASW loadout. Older planned40 prose isnot current census."
+    },
+    "JP-SH60J-EXTERIOR": {
+      "url": "https://www.mod.go.jp/msdf/equipment/rotorcraft/patrol/sh60j/",
+      "title": "SH60J patrol helicopter",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "Rotor16.4m,rotors-turning length19.8m,height5.2m,twoT700-IHI401C. CompactJ cabin and shipboard gear differ enlargedK/L. Equipment listing and March2026census do not certify today serviceability."
+    },
+    "JP-MCH101-EXTERIOR": {
+      "url": "https://www.mod.go.jp/msdf/equipment/rotorcraft/ms-t/mch-101/",
+      "title": "MCH101 mine-countermeasure and transport helicopter",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "Rotor18.6m,turning length22.8m,height6.6m,threeRTM322 engines. Official photo reviewed paired tyres on allthree struts, five main/four tail blades, side sponsons and Japanese cabin; clean transport/MCM fit, not armedASW MerlinHM2."
+    },
+    "JP-MCH101-ACTIVITY26": {
+      "url": "https://www.pref.yamaguchi.lg.jp/press/354881.html",
+      "title": "MCH101 missing access-cover report",
+      "publisher": "Yamaguchi prefectural government",
+      "publication_date": "2026-07-09",
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "Official incident records111Squadron MCH1018660 flying8July2026 toOminato. Supports recent operator activity, not combat readiness or all10airframes serviceable."
+    },
+    "JP-HYUGA": {
+      "url": "https://www.mod.go.jp/msdf/equipment/ships/ddh/hyuga/",
+      "title": "Hyuga helicopter destroyer equipment and photos",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "197x33m,depth22m,draft7m,4turbines2shafts,2Phalanx,VLS,2torpedo installations. Hyuga181,Ise182. No fixedwing carrier or catapult role implied. Catalogue doesnotstate VLS cellcount; model16-cell closure layout remainsestimated."
+    },
+    "JP-MAIZURU26": {
+      "url": "https://www.mod.go.jp/msdf/maizuru/units/",
+      "title": "Maizuru assigned ships and roles",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": null,
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "Current reorganizedSurfaceFleet page listsHyuga andHayabusa/Umitaka. Hyuga is through-deck helicopter destroyer,2hangars,aftVLS,3simultaneous helicopter operations. Hayabusa has3jet pumps. Rounded50x9m localboat width differs detailedclass8.4m, retainclassspecprecision."
+    },
+    "JP-HYUGA-GROUP26": {
+      "url": "https://www.mod.go.jp/msdf/wg3hq/index.html",
+      "title": "SurfaceWarfareGroup3 commander and Hyuga captain",
+      "publisher": "Japan Maritime Self-Defense Force",
+      "publication_date": "2026-04",
+      "accessed": "2026-10-25",
+      "type": "primary",
+      "supports": "March2026reorganization andAprilHyugacaptainmessage establishcurrent assignment. Do not infer full vessel/airwing readiness."
     }
   },
   "findings": [
@@ -9184,36 +9247,67 @@
       "key": "navalHelicopter",
       "model": "SH60J",
       "source_ids": [
-        "JP-CENSUS26"
+        "JP-CENSUS26",
+        "JP-SH60J-EXTERIOR"
       ],
       "status": "documented_service",
       "reason": "Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification.",
-      "asset_action": "research_specific_variant",
-      "proposed_slug": "navalHelicopter__sh_60j"
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "navalHelicopter__sh_60j",
+      "asset_validation": {
+        "batch": 15,
+        "sha256": "19ae12d1176d3c746afd2b43f8f29ef352b24197d9cf40552c78f3b59e22a36c",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
     },
     {
       "nation": "japan",
       "key": "heavyLift",
       "model": "MCH101",
       "source_ids": [
-        "JP-CENSUS26"
+        "JP-CENSUS26",
+        "JP-MCH101-EXTERIOR",
+        "JP-MCH101-ACTIVITY26"
       ],
       "status": "documented_service",
       "reason": "Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification.",
-      "asset_action": "research_specific_variant",
-      "proposed_slug": "heavyLift__mch_101"
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "heavyLift__mch_101",
+      "asset_validation": {
+        "batch": 15,
+        "sha256": "a1a3bbcf742c4e7dee2d21196312a334d3b333a925e0c0f3c40bf106ad8e714a",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
     },
     {
       "nation": "japan",
       "key": "helicopter",
       "model": "UH60J rescue",
       "source_ids": [
-        "JP-CENSUS26"
+        "JP-CENSUS26",
+        "JP-UH60J-RESCUE"
       ],
       "status": "documented_service",
       "reason": "Separate type identified in the dated national holdings table. Exact current variant, later status and national exterior fit still require review; existence of a family model is not a visual certification.",
-      "asset_action": "research_specific_variant",
-      "proposed_slug": "helicopter__uh_60j_rescue"
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "helicopter__uh_60j_rescue",
+      "asset_validation": {
+        "batch": 15,
+        "sha256": "35d1c237e2543c2df1ee647b6f2eb3ab7cbefbadc4939f9e088484d868b6d94e",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
     },
     {
       "nation": "japan",
@@ -9324,12 +9418,22 @@
       "key": "gunboat",
       "model": "Hayabusa class",
       "source_ids": [
-        "JP-HAYABUSA"
+        "JP-HAYABUSA",
+        "JP-MAIZURU26"
       ],
       "status": "documented_service",
       "reason": "Official operator identifies six missileboats; specific model missing.",
-      "asset_action": "generate_missing_model",
-      "proposed_slug": "gunboat__hayabusa_class"
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "gunboat__hayabusa_class",
+      "asset_validation": {
+        "batch": 15,
+        "sha256": "461ba54ed3fadeea687ffd6006b60d29b66b30ff29939d93c03ad6aceff729c0",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
     },
     {
       "nation": "japan",
@@ -9343,6 +9447,29 @@
       "reason": "Production MCM USV, not Umikaze research craft or armedattackboat. Need dimensions and photos before generation.",
       "asset_action": "generate_missing_model",
       "proposed_slug": "seaDrone__jmu_mogami_mcm_usv"
+    },
+    {
+      "nation": "japan",
+      "key": "carrier",
+      "model": "Hyuga class DDH",
+      "source_ids": [
+        "JP-HYUGA",
+        "JP-MAIZURU26",
+        "JP-HYUGA-GROUP26"
+      ],
+      "status": "documented_service",
+      "reason": "Current Japanese through-deck helicopter destroyer, separate197m class from248m Izumo/Kaga. Gamecarriercategory only; no F35B or CATOBAR role.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "carrier__hyuga_class",
+      "asset_validation": {
+        "batch": 15,
+        "sha256": "517d321cd48138ef7af6fd0dbe6b779eb4c7cfffb40acf220010afa19e6137b1",
+        "external_loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "public_exterior_estimates": true
+      }
     }
   ]
 }
