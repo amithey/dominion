@@ -133,14 +133,16 @@
       "evidence_status": "reviewed",
       "evidence_source_ids": [
         "KR-K21-K1ARV-ACTIVITY26",
-        "KR-KOTRA-GUIDE"
+        "KR-KOTRA-GUIDE",
+        "KR-K21-FOURTH-ORDER-ISSUER25",
+        "KR-K21-FOURTH-SUBCONTRACT25"
       ],
       "assessment": {
-        "status": "current_type_supported_exact_legacy_fit_pending",
-        "reason": "Actual2026K21activity and maker40mm/six-wheel identity supported. Existing shared K21geometry broadly identifies family; its paired ATGMfit is not certified by current unit photos. Advertised maker equipment is not proof every vehicle carries it; national legacy exterior comparison/rework remains open.",
-        "recommended_action": "compare_existing_fit_and_add_missing_real_variants",
-        "model_match": "broad_type_only_current_ATGM_fit_unverified",
-        "replacement": null
+        "status": "current_legacy_exterior_added_and_further_production_order",
+        "reason": "Actual2026K21type supported; selected40mmlegacy exterior compared to operator/makerphotos and added without unverified Bradley-style twin ATGMbox. Additional signed fourth-production order runs through2028; future fit/acceptance not certified by legacy photos.",
+        "recommended_action": "use_selected_legacy_fit_record_order_separately",
+        "model_match": "selected_public_exterior_estimated_not_all_current_serials",
+        "replacement": "ifv__k21_korean_legacy"
       }
     },
     {
@@ -177,15 +179,15 @@
       "evidence_source_ids": [
         "KR-K1ARV-MAKER",
         "KR-K21-K1ARV-ACTIVITY26",
+        "KR-K288-DAPA-PHOTO",
         "KR-K288-ACTIVITY26",
-        "KR-K200-DELIVERY",
-        "KR-K288-MAKER-BROCHURE"
+        "KR-K200-DELIVERY"
       ],
       "assessment": {
-        "status": "current_type_and_missing_distinct_recovery_vehicle",
-        "reason": "ActualK1ARVandK288activity independently supported. OldgenericK1recovery lacks selected sloping cabin/large telescopic crane/manualHMGfit, new K1exterior added. K288A1is smaller five-wheel K200family, cannot substitute K1 or generic M88; photo comparison/newmesh pending.",
-        "recommended_action": "add_selected_K1_exterior_and_K288A1",
-        "model_match": "selected_manufacturer_K1_exterior_estimated_not_all_current_serials",
+        "status": "distinct_K1ARV_and_K288A1_selected_exteriors_added",
+        "reason": "K1ARVandK288familycurrent use documented. Labelled official K288A1annex resolves distinct five-wheel K200family/forward-folded roof crane, new original mesh added; never substitute six-wheel K1orM88. Local crane/spades dimensions/rear details estimated, current per-hull retrofit unverified.",
+        "recommended_action": "retain_both_real_recovery_types",
+        "model_match": "selected_public_exteriors_estimated_not_factory_replicas",
         "replacement": "recoveryVehicle__k1_arv_korean"
       }
     },
@@ -398,11 +400,19 @@
           1312
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-K239-OPERATOR23",
+        "KR-K239-ACTIVITY26",
+        "KR-K239-RECOGNITION26",
+        "KR-K21-FOURTH-ORDER-ISSUER25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "current_K239_same_physical_launcher_across_game_keys",
+        "reason": "Korean K239actualuse/current production supported. New specific Korean8x8armouredcab with two six-cell pods; not Polish/Jelczexport or generic HIMARS. Both game roles can use the same physical selected carrier, not duplicate identical meshes. Alternate loads/future orders not all current pod fits.",
+        "recommended_action": "use_selected_Korean_K239_shared_real_type",
+        "model_match": "selected_Korean_carrier_and_pod_exterior_estimated",
+        "replacement": "mlrs__k239_chunmoo_korean"
       }
     },
     {
@@ -437,11 +447,19 @@
           1312
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-K239-OPERATOR23",
+        "KR-K239-ACTIVITY26",
+        "KR-K239-RECOGNITION26",
+        "KR-K21-FOURTH-ORDER-ISSUER25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "current_K239_same_physical_launcher_across_game_keys",
+        "reason": "Korean K239actualuse/current production supported. New specific Korean8x8armouredcab with two six-cell pods; not Polish/Jelczexport or generic HIMARS. Both game roles can use the same physical selected carrier, not duplicate identical meshes. Alternate loads/future orders not all current pod fits.",
+        "recommended_action": "use_selected_Korean_K239_shared_real_type",
+        "model_match": "selected_Korean_carrier_and_pod_exterior_estimated",
+        "replacement": "mlrs__k239_chunmoo_korean"
       }
     },
     {
@@ -1803,21 +1821,6 @@
     },
     {
       "nation": "south_korea",
-      "key": "artillery",
-      "model": "K105A1",
-      "source_ids": [
-        "KR-ARTILLERY-2026",
-        "KR-KOTRA-GUIDE"
-      ],
-      "status": "documented_service",
-      "reason": "Current truck-mounted105mm type confirmed. Rear-facing mount and actual transport/pose conventions require further reference checks; no fictional forward firing fit generated.",
-      "asset_action": "research_mount_before_generation",
-      "proposed_slug": "artillery__k105a1",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
-    },
-    {
-      "nation": "south_korea",
       "key": "apc",
       "model": "K277A1 command vehicle",
       "source_ids": [
@@ -1827,21 +1830,6 @@
       "reason": "Named fielded command variant;2025driver/camera project standardized one prototype pertype, not all current hulls. Exterior references still to resolve.",
       "asset_action": "research_mount_before_generation",
       "proposed_slug": "apc__k277a1_command",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
-    },
-    {
-      "nation": "south_korea",
-      "key": "recoveryVehicle",
-      "model": "K288A1 recovery vehicle",
-      "source_ids": [
-        "KR-K200-STANDARDS",
-        "KR-K200-DELIVERY"
-      ],
-      "status": "documented_service",
-      "reason": "Named fielded recovery type, not K1ARV. Mechanism and mounting geometry must be identified before producing an asset.",
-      "asset_action": "research_mount_before_generation",
-      "proposed_slug": "recoveryVehicle__k288a1",
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
     },
@@ -2917,22 +2905,6 @@
     },
     {
       "nation": "south_korea",
-      "key": "recoveryVehicle",
-      "model": "K288A1 light recovery vehicle",
-      "source_ids": [
-        "KR-K288-MAKER-BROCHURE",
-        "KR-K200-DELIVERY",
-        "KR-K288-ACTIVITY26"
-      ],
-      "status": "documented_family_service_exact_exterior_pending",
-      "reason": "Distinct small K200familyrecovery type, upgrade deliveries2022andactualK288familyactivity2026. Need usable primaryexteriorphoto before authoring; no fictitious crane/spade copied fromK1.",
-      "asset_action": "compare_primary_exterior_then_generate",
-      "proposed_slug": "recoveryVehicle__k288a1",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
-    },
-    {
-      "nation": "south_korea",
       "key": "stealthFighter",
       "model": "F35A follow-on20aircraft confirmed order",
       "source_ids": [
@@ -2945,6 +2917,163 @@
       "asset_action": "reuse_existing_type_compare_future_production_fit",
       "proposed_slug": "stealthFighter__f_35a",
       "existing_exact_asset": "aircraft/stealthFighter__f_35a.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "ifv",
+      "model": "K21 selected Korean legacy40mm exterior",
+      "source_ids": [
+        "KR-K21-K1ARV-ACTIVITY26",
+        "KR-KOTRA-GUIDE",
+        "KR-K21-FOURTH-ORDER-ISSUER25",
+        "KR-K21-FOURTH-SUBCONTRACT25"
+      ],
+      "status": "documented_current_service_additional_confirmed_order",
+      "reason": "Actualcurrent type; selected public40mmturret/six-wheelboat hull without unverified paired ATGMbox. Signed additional production recorded separately; future fit not presumed.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "ifv__k21_korean_legacy",
+      "confirmed_orders": [
+        {
+          "programme": "K21fourth production",
+          "order_month": "2024-12",
+          "delivery_end_month": "2028-09",
+          "source_ids": [
+            "KR-K21-FOURTH-ORDER-ISSUER25",
+            "KR-K21-FOURTH-SUBCONTRACT25"
+          ],
+          "status": "signed_contract_future_fit_and_remaining_deliveries_unverified",
+          "current_selected_exterior_is_not_future_fit_certification": true
+        }
+      ],
+      "asset_validation": {
+        "batch": 27,
+        "file": "vehicles/ifv__k21_korean_legacy.glb",
+        "sha256": "91fa234c59e01d83ae961d163719342b3e57217d1935e3fedffaaed221f90020",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Selected public exterior, local fittings/dimensions estimated; actual current per-hull fit, hidden inner tyres and future production fit/acceptance unverified; no readiness or weapon internals claim."
+      },
+      "existing_exact_asset": "vehicles/ifv__k21_korean_legacy.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "recoveryVehicle",
+      "model": "K288A1 light recovery vehicle",
+      "source_ids": [
+        "KR-K200-STANDARDS",
+        "KR-K200-DELIVERY",
+        "KR-K288-MAKER-BROCHURE",
+        "KR-K288-ACTIVITY26",
+        "KR-K288-DAPA-PHOTO"
+      ],
+      "status": "documented_family_service_selected_A1_exterior",
+      "reason": "Official labelled2022annex and2026familyactivity; five-wheel hull, forward roof crane and paired rear spades. Local dimensions and unseen rear details estimated; current exact serial upgrade unverified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "recoveryVehicle__k288a1",
+      "aliases": [
+        "K288A1 recovery vehicle",
+        "K288A1 light recovery vehicle"
+      ],
+      "prior_research_notes": [
+        "Named fielded recovery type, not K1ARV. Mechanism and mounting geometry must be identified before producing an asset.",
+        "Distinct small K200familyrecovery type, upgrade deliveries2022andactualK288familyactivity2026. Need usable primaryexteriorphoto before authoring; no fictitious crane/spade copied fromK1."
+      ],
+      "asset_validation": {
+        "batch": 27,
+        "file": "vehicles/recoveryVehicle__k288a1.glb",
+        "sha256": "f76a13b43c1b41dff126ddccb53a0a0de16a1a21399142b7765fe825ab592f9e",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Selected public exterior, local fittings/dimensions estimated; actual current per-hull fit, hidden inner tyres and future production fit/acceptance unverified; no readiness or weapon internals claim."
+      },
+      "existing_exact_asset": "vehicles/recoveryVehicle__k288a1.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "mlrs",
+      "model": "K239 Chunmoo selected Korean six-cell twin pods",
+      "source_ids": [
+        "KR-K239-OPERATOR23",
+        "KR-K239-ACTIVITY26",
+        "KR-K239-RECOGNITION26",
+        "KR-K21-FOURTH-ORDER-ISSUER25"
+      ],
+      "status": "documented_current_service",
+      "reason": "Actual Korean carrier, same physical type covers both game mlrs/himarsroles. Selected12closed canister ends, rear-facing transport mount frame; local dimensions estimated, no export chassis substitution.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "mlrs__k239_chunmoo_korean",
+      "asset_validation": {
+        "batch": 27,
+        "file": "vehicles/mlrs__k239_chunmoo_korean.glb",
+        "sha256": "cff1c1b0804e8649cf09aeac41b2e4d807ebb5699130c59932e78fd1740e8210",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Selected public exterior, local fittings/dimensions estimated; actual current per-hull fit, hidden inner tyres and future production fit/acceptance unverified; no readiness or weapon internals claim."
+      },
+      "existing_exact_asset": "vehicles/mlrs__k239_chunmoo_korean.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "towedHowitzer",
+      "model": "KH179 Korean reserve/storage-training howitzer",
+      "source_ids": [
+        "KR-KH179-WIA",
+        "KR-KH179-OPERATOR26",
+        "KR-KH179-RESERVE-MARCH26"
+      ],
+      "status": "documented_2026_reserve_storage_training",
+      "reason": "Actual2026reserve/storage/training type, not assumed retired. Maker labelled long155mmcarriage with split box trails and rounded brake, local dimensions estimated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "towedHowitzer__kh179",
+      "asset_validation": {
+        "batch": 27,
+        "file": "vehicles/towedHowitzer__kh179.glb",
+        "sha256": "f2fdfca360e7e624efc70af6a1c66c44739720406d45d068198559fc45058f2d",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Selected public exterior, local fittings/dimensions estimated; actual current per-hull fit, hidden inner tyres and future production fit/acceptance unverified; no readiness or weapon internals claim."
+      },
+      "existing_exact_asset": "vehicles/towedHowitzer__kh179.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "artillery",
+      "model": "K105A1",
+      "source_ids": [
+        "KR-ARTILLERY-2026",
+        "KR-KOTRA-GUIDE",
+        "KR-K105-OPERATOR26",
+        "KR-K105-CLASS21",
+        "KR-K21-FOURTH-ORDER-ISSUER25"
+      ],
+      "status": "documented_current_service",
+      "reason": "Current rear-facing105mm gun on five-ton6x6carrier. No invented forward barrel or substitute2.5tonchassis; bind-frame axes tested locally, actual production measurements/inner tyres unverified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "artillery__k105a1",
+      "asset_validation": {
+        "batch": 27,
+        "file": "vehicles/artillery__k105a1.glb",
+        "sha256": "000dbcb6f90ec995d5c0bb35abd98848308ea1cf8abcde7f3245ed35865f7483",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Selected public exterior, local fittings/dimensions estimated; actual current per-hull fit, hidden inner tyres and future production fit/acceptance unverified; no readiness or weapon internals claim."
+      },
+      "existing_exact_asset": "vehicles/artillery__k105a1.glb",
       "asset_state": "available_exact_file"
     }
   ]

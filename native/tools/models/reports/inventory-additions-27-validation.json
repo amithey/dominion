@@ -1,0 +1,57 @@
+{
+  "batch": "inventory-additions-27",
+  "files": [
+    "vehicles/ifv__k21_korean_legacy.glb",
+    "vehicles/recoveryVehicle__k288a1.glb",
+    "vehicles/mlrs__k239_chunmoo_korean.glb",
+    "vehicles/towedHowitzer__kh179.glb",
+    "vehicles/artillery__k105a1.glb"
+  ],
+  "sha256": {
+    "vehicles/ifv__k21_korean_legacy.glb": "91fa234c59e01d83ae961d163719342b3e57217d1935e3fedffaaed221f90020",
+    "vehicles/recoveryVehicle__k288a1.glb": "f76a13b43c1b41dff126ddccb53a0a0de16a1a21399142b7765fe825ab592f9e",
+    "vehicles/mlrs__k239_chunmoo_korean.glb": "cff1c1b0804e8649cf09aeac41b2e4d807ebb5699130c59932e78fd1740e8210",
+    "vehicles/towedHowitzer__kh179.glb": "f2fdfca360e7e624efc70af6a1c66c44739720406d45d068198559fc45058f2d",
+    "vehicles/artillery__k105a1.glb": "000dbcb6f90ec995d5c0bb35abd98848308ea1cf8abcde7f3245ed35865f7483"
+  },
+  "maximum_triangles": [
+    12224,
+    2364
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "Five distinct Korean public exteriors: K21legacy40mm, K288A1forward crane, K239two six-cell pods, KH179towed carriage, K105aft-facing gun; selected fit and local dimensions estimated",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "Central body geometry contained by CollisionBox at both LODs",
+    "Vehicle Hull/Carriage frame stays identity,+Zfront while aft-facing weapons preserve local+Zbore",
+    "All twelve K239tube markers and K105gun muzzle point aft in the selected neutral mount and rise for negative localX",
+    "K105local-Zrecoil moves muzzle+Zin vehicle frame without moving Hull; original P3checker unchanged",
+    "New frame-aware checker also reloads three untouched forward/legacy vehicles with all original geometry/UV/track constraints retained",
+    "K288five road wheels, forward crane negative-Xluff and positive-Zextension; separate paired rear spade hinges",
+    "K21six wheels/front drive/selected40mmturret, no unverified twinATGMbox",
+    "KH179real two-wheel conventional carriage, open rounded muzzle brake, independent split trail hinges and GunX",
+    "20final saved-file overview and six detail/posed views actually visually inspected"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_27.py",
+  "preserved_baseline": {
+    "commit": "8d25bd6a0046e91271cabb98ae231a5c6ad9edac",
+    "manifest_entries": 985,
+    "old_asset_bytes_and_entries": "checked by scoped commit helper"
+  },
+  "limitations": [
+    "Public exteriors/local fitting measurements are estimates, not factory drawings or exact per-serial/current-readiness certification",
+    "K21advertised ATGMavailability is not proof every photographed legacy vehicle has it; fourth-production signed order recorded, future exterior/remaining delivery not assumed",
+    "K288labelled DAPAfront photo resolves basic recovery shape; rear details/paired-spade local dimensions/current upgrades still partly estimated",
+    "K239selected Korean carrier and twin six-cell pods, not all export chassis or alternative missile loads; complete launcher bind frame must be preserved by animator",
+    "KH179actual2026reserve/storage/training role separated from regular frontline units; no whole-country retirement inferred",
+    "K105five-ton carrier class correct; local dimensions installed gun/inner-wheel arrangement not certified; preserve rear-facing Turretrest basis in animation",
+    "Compact towed gun and K105remain below8000LOD0triangles rather than adding invented machinery"
+  ],
+  "review_images": [
+    "inventory-additions-27-vehicles.jpg",
+    "inventory-additions-27-details.jpg"
+  ]
+}
