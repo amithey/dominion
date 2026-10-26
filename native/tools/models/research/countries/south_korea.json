@@ -761,11 +761,24 @@
           1960
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-F15K-PHOTO26",
+        "KR-F15K-DELIVERY12",
+        "KR-F15K-GE",
+        "KR-F15K-PW10",
+        "KR-PW-SUSTAIN24",
+        "KR-KF21-ORDER24",
+        "KR-KF21-CERT26",
+        "KR-KF21-DEVELOP26",
+        "KR-AIR-HOGUK-2026"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "combined_label_masks_different_airframes",
+        "reason": "Saved jet__kf_21_boramae_f_15kactually declares KF21family16.9x11.2m, single-seat and canted fins: it is NOT an F15K. New F15K GErepresentative is a separate real current type; later PWpowered variant requires comparison. Existing KF21firm production contract confirmed, actual latest delivery stage and cannon/station geometry re-audit remain pending.",
+        "recommended_action": "split_combined_game_assignment_and_add_model",
+        "model_match": "existing_asset_is_kf21_not_f15k",
+        "replacement": "jet__f_15k_slam_eagle"
       }
     },
     {
@@ -802,13 +815,22 @@
       "evidence_status": "reviewed",
       "evidence_source_ids": [
         "KR-KAI-KA1",
-        "KR-AIR-HOGUK-2026"
+        "KR-AIR-HOGUK-2026",
+        "KR-F5-IMPORTED-RETIRE26",
+        "KR-KF5-PLAN26",
+        "KR-KF5-HISTORY19",
+        "KR-F5F-SIZE",
+        "KR-KF16-EXTERIOR23",
+        "KR-KF16-PITCH26",
+        "KR-LM-KOREA",
+        "KR-PW-SUSTAIN24",
+        "KR-KF16-SIM25"
       ],
       "assessment": {
         "status": "incomplete_inventory",
-        "reason": "Actual October2026exercise includes FA50and KA1. Retain FA50pending full original geometry re-audit; add distinct propeller KA1FAC. Unarmed KT1trainer is not treated as a new combat aircraft merely because it shares the family.",
-        "recommended_action": "add_models",
-        "model_match": "fa50_jet_does_not_represent_ka1_propeller_fac",
+        "reason": "FA50roster alone does not cover KF16C/D, Korean-builtKF5E/FandKA1. Imported F5E/F105squadron retirementJuly2026does not mean licensedKF5E/Falready retired: planned byend2027. Five new fighter models cover selected national basic variants, not all current radar/nozzle/gun-port/earlyBlock32variants. Trainer contract and many Viper upgrades are not all-aircraft completion proof.",
+        "recommended_action": "add_and_compare_specific_national_models",
+        "model_match": "single_tandem_variants_and_engine_fits_require_distinct_review",
         "replacement": null
       }
     },
@@ -2074,9 +2096,13 @@
         "KR-FLEET-EXERCISE-JUN26"
       ],
       "status": "documented_service",
-      "reason": "Current ROKAF KF16explicitly named; single/twin-seat versions, engine/nozzle, upgrade equipment and reusable existing F16variant comparison remain pending.",
-      "asset_action": "research_variant_before_generation",
+      "reason": "Current family now split into explicitC/Drepresentatives; new basic shapes do not certify all engine blocks and radar upgrades. Original family candidate retained as provenance, not a third distinct platform.",
+      "asset_action": "split_into_single_and_tandem_models",
       "proposed_slug": null,
+      "generated_variant_slugs": [
+        "lightFighter__kf_16c",
+        "lightFighter__kf_16d"
+      ],
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
     },
@@ -2212,6 +2238,180 @@
       },
       "existing_exact_asset": "ships/submarine__son_won_il_class.glb",
       "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "lightFighter",
+      "model": "KF16C Block52",
+      "source_ids": [
+        "KR-KF16-ENGINE91",
+        "KR-PW-SUSTAIN24",
+        "KR-LM-KOREA",
+        "KR-KF16-PITCH26",
+        "KR-KF16-SIM25",
+        "KR-KF16-EXTERIOR23"
+      ],
+      "status": "documented_service",
+      "reason": "Current national F16family, single-seat Block52representative with small-mouth PWfamily inlet and decorative feathered nozzle, empty racks. Local antenna/nozzle/radar upgrade fit not fleet-wide certified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "lightFighter__kf_16c",
+      "asset_validation": {
+        "batch": 23,
+        "file": "aircraft/lightFighter__kf_16c.glb",
+        "sha256": "6d9b8038dd0d3bf0dadf7491b661f5bc8789ac693754eaac264803c18f23e825",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal sizes and distinct basic national airframes; local nozzle/petal/antenna/cannon/station dimensions estimated. F15KlaterPWvariant and exact current per-airframe radar/engine fits remain pending; no live sortie load or readiness claim."
+      },
+      "existing_exact_asset": "aircraft/lightFighter__kf_16c.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "lightFighter",
+      "model": "KF16D Block52",
+      "source_ids": [
+        "KR-KF16-ENGINE91",
+        "KR-PW-SUSTAIN24",
+        "KR-LM-KOREA",
+        "KR-KF16-PITCH26",
+        "KR-KF16-SIM25",
+        "KR-KF16-EXTERIOR23"
+      ],
+      "status": "documented_service",
+      "reason": "Distinct tandem long canopy on same basic Block52airframe; national tandem taxi photo inspected. No invented export dorsal spine/CFTor blanket all-hull Viper upgrade.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "lightFighter__kf_16d",
+      "asset_validation": {
+        "batch": 23,
+        "file": "aircraft/lightFighter__kf_16d.glb",
+        "sha256": "03c17b3f1c860385248446f111fe1f81a50a13aa1f5d07b2f0c8994b5143c101",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal sizes and distinct basic national airframes; local nozzle/petal/antenna/cannon/station dimensions estimated. F15KlaterPWvariant and exact current per-airframe radar/engine fits remain pending; no live sortie load or readiness claim."
+      },
+      "existing_exact_asset": "aircraft/lightFighter__kf_16d.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "lightFighter",
+      "model": "KF5E Jegongho",
+      "source_ids": [
+        "KR-KF5-HISTORY19",
+        "KR-KF5-PLAN26",
+        "KR-F5-IMPORTED-RETIRE26",
+        "KR-AIR-HOGUK-2026"
+      ],
+      "status": "documented_service",
+      "reason": "Korean-built single-seat14.45m TigerIItype, not retired imported105squadron aircraft. Selected two nose gun ports and empty racks; exact per-airframe cannon/sensor fit remains uncertain.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "lightFighter__kf_5e",
+      "asset_validation": {
+        "batch": 23,
+        "file": "aircraft/lightFighter__kf_5e.glb",
+        "sha256": "98313b1cd3b6c6bd8f4032b8cbe065417ac37d50996a23a0694edfbe5257f4eb",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal sizes and distinct basic national airframes; local nozzle/petal/antenna/cannon/station dimensions estimated. F15KlaterPWvariant and exact current per-airframe radar/engine fits remain pending; no live sortie load or readiness claim."
+      },
+      "existing_exact_asset": "aircraft/lightFighter__kf_5e.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "lightFighter",
+      "model": "KF5F Jegongho",
+      "source_ids": [
+        "KR-KF5-HISTORY19",
+        "KR-F5F-SIZE",
+        "KR-KF5-PLAN26",
+        "KR-F5-IMPORTED-RETIRE26",
+        "KR-AIR-HOGUK-2026"
+      ],
+      "status": "documented_service",
+      "reason": "Korean-built longer tandem variant,15.7m common-family public size and two independently hinged canopies from Korean primary photo. Selected one left gun-port layout is an unverified local-fit modelling selection, not certification.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "lightFighter__kf_5f",
+      "asset_validation": {
+        "batch": 23,
+        "file": "aircraft/lightFighter__kf_5f.glb",
+        "sha256": "e7ac0e5df7d8efe8c4e81ceaa6193488e3384d6d5779948c36b32664b2e7a5d0",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal sizes and distinct basic national airframes; local nozzle/petal/antenna/cannon/station dimensions estimated. F15KlaterPWvariant and exact current per-airframe radar/engine fits remain pending; no live sortie load or readiness claim."
+      },
+      "existing_exact_asset": "aircraft/lightFighter__kf_5f.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "jet",
+      "model": "F15K Slam Eagle GE representative",
+      "source_ids": [
+        "KR-F15K-PHOTO26",
+        "KR-F15K-DELIVERY12",
+        "KR-F15K-GE",
+        "KR-F15-FAMILY-SIZE",
+        "KR-PW-SUSTAIN24",
+        "KR-F15K-PW10",
+        "KR-AIR-HOGUK-2026"
+      ],
+      "status": "documented_service",
+      "reason": "Current distinct F15K, tandem cockpit and separate CFT/racks. Earlier GEpowered representative; PWlater-lot fit separately recorded, no false all-F15KGEor completedAESAupgrade claim. Decorative petal/station geometry estimated, not actual load.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "jet__f_15k_slam_eagle",
+      "asset_validation": {
+        "batch": 23,
+        "file": "aircraft/jet__f_15k_slam_eagle.glb",
+        "sha256": "1d6ba30c72e297265223b13883db6f4a823b1de9125cbd03f478885860f2f59c",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal sizes and distinct basic national airframes; local nozzle/petal/antenna/cannon/station dimensions estimated. F15KlaterPWvariant and exact current per-airframe radar/engine fits remain pending; no live sortie load or readiness claim."
+      },
+      "existing_exact_asset": "aircraft/jet__f_15k_slam_eagle.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "jet",
+      "model": "F15K F100PW229EEP later lot",
+      "source_ids": [
+        "KR-F15K-PW10",
+        "KR-PW-SUSTAIN24",
+        "KR-F15K-DELIVERY12"
+      ],
+      "status": "documented_service",
+      "reason": "Real later-lot engine variant independently documented; new earlier-GErepresentative is not a claim every F15KusesGE. Current per-serial nozzle exterior still needs photographic comparison before deciding a separate GLB.",
+      "asset_action": "compare_national_engine_variant_before_generation",
+      "proposed_slug": null,
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "south_korea",
+      "key": "lightFighter",
+      "model": "Earlier imported F16 Korean variant",
+      "source_ids": [
+        "KR-KF16-TWINEAGLE26",
+        "KR-PW-SUSTAIN24"
+      ],
+      "status": "documented_family_current_variant_fit_pending",
+      "reason": "Current operator text distinguishes F16fromKF16; exact earlyBlock32andPW220serial/fit ownership comparison remains pending. Do not automatically count all generic F16mentions as KF16Block52or generate a guessed new modernisation.",
+      "asset_action": "research_variant_before_generation",
+      "proposed_slug": null,
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
     }
   ]
 }

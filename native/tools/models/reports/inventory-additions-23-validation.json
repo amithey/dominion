@@ -1,0 +1,52 @@
+{
+  "batch": "inventory-additions-23",
+  "files": [
+    "aircraft/lightFighter__kf_16c.glb",
+    "aircraft/lightFighter__kf_16d.glb",
+    "aircraft/lightFighter__kf_5e.glb",
+    "aircraft/lightFighter__kf_5f.glb",
+    "aircraft/jet__f_15k_slam_eagle.glb"
+  ],
+  "sha256": {
+    "aircraft/lightFighter__kf_16c.glb": "6d9b8038dd0d3bf0dadf7491b661f5bc8789ac693754eaac264803c18f23e825",
+    "aircraft/lightFighter__kf_16d.glb": "03c17b3f1c860385248446f111fe1f81a50a13aa1f5d07b2f0c8994b5143c101",
+    "aircraft/lightFighter__kf_5e.glb": "98313b1cd3b6c6bd8f4032b8cbe065417ac37d50996a23a0694edfbe5257f4eb",
+    "aircraft/lightFighter__kf_5f.glb": "e7ac0e5df7d8efe8c4e81ceaa6193488e3384d6d5779948c36b32664b2e7a5d0",
+    "aircraft/jet__f_15k_slam_eagle.glb": "1d6ba30c72e297265223b13883db6f4a823b1de9125cbd03f478885860f2f59c"
+  },
+  "maximum_triangles": [
+    13310,
+    2400
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "Five Korean fighter exteriors: KF16C/D seating and small PW intake, KF5E/F lengths and independently hinged tandem canopies, F15K GE representative with separate conformal tanks; engine/fit uncertainties explicit",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "Actual saved central-body/cockpit/engine/inlet/CFT geometry contained in CollisionBox at both LODs",
+    "Representative empty hardpoint markers KF16C/D10, KF5E9, KF5F8, F15K16 including cannon ports; no arbitrary missile load",
+    "KF16small-mouth1.10m selected exterior inlet; single versus tandem canopy on same basic airframe",
+    "KF5F15.7m versus KF5E14.45m, TWO independent X canopy hinges and fixed windscreen",
+    "F15Kf15family and tandem cockpit, two separate CFTs with12short rack fittings and two main wing pylons; no copied EXouterwing stations",
+    "Afterburner markers face-Z; exact decorative engine/petal and station fits explicitly qualified",
+    "20final saved-file overview views and five posed/detail views actually visually inspected"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_23.py",
+  "preserved_baseline": {
+    "commit": "58bb5ce2818a7ca52f278f8b79596912d54aad2a",
+    "manifest_entries": 964,
+    "old_asset_bytes_and_entries": "checked by scoped commit helper"
+  },
+  "limitations": [
+    "Local nozzle/petal/antenna/cannon/station dimensions estimated, not per-serial installed-fit certification",
+    "F15KGErepresentative does not cover exact later PWnozzle; existing KF21geometry/cannon/station review pending",
+    "KF5imported retirement distinguished from licensed family timetable; KF21order/certification/rollout not automatically actual delivery",
+    "No fleet-wide Viper/AESAupgrade completion, live sortie load or national readiness claim"
+  ],
+  "review_images": [
+    "inventory-additions-23-aircraft.jpg",
+    "inventory-additions-23-details.jpg"
+  ]
+}
