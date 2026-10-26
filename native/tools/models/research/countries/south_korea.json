@@ -968,11 +968,19 @@
           1076
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-AEW-PEACEEYE-CURRENT26",
+        "KR-AEW-GLOBAL-CONTRACT25",
+        "KR-AEW-GLOBAL-DATASHEET26",
+        "GLOBAL6500-MAKER-SIZE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "current_type_and_distinct_confirmed_order",
+        "reason": "Existing BoeingPeaceEyecurrent activity confirmed; new firm Global6500conformalAEWcontract distinct from E737and FrenchSaabGlobalEye. Add fixed-side-array order exterior; final antennas/acceptance not certified. Existing PeaceEyeexact national geometry still needs comparison.",
+        "recommended_action": "add_ordered_variant_and_compare_existing_fit",
+        "model_match": "new_conformal_global6500_is_distinct",
+        "replacement": "aewc__global_6500_korean_caew"
       }
     },
     {
@@ -1050,11 +1058,25 @@
           1604
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-MUAV-ROLL-MAKER26",
+        "KR-MUAV-ROLL-PHOTOS26",
+        "KR-MUAV-ROLL-STAGE26",
+        "KR-KUSFT-MAKER",
+        "KR-KUSFT-SERIES21",
+        "KR-RQ101-MAKER",
+        "KR-RQ101-UPGRADE25",
+        "KR-REMO-MAKER18",
+        "KR-REMO-OPERATOR21",
+        "KR-REMO-ACTIVITY25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "production_fit_mismatch_and_incomplete_inventory",
+        "reason": "Original KUSFSasset13x25m carries unverified external weapons; actual2026productionmaker says13x26m and public rollout photos show unarmed ISRconfiguration. Newproductionexterior added; rollout not proof delivery. TacticalKUSFT,RQ101andRemoEye002Balso distinct national types; exact present sensors/serial availability qualified.",
+        "recommended_action": "replace_generic_muav_fit_and_add_tactical_types",
+        "model_match": "old_armed25m_generic_not_exact_production_isr",
+        "replacement": "drone__muav_kus_fs_production"
       }
     },
     {
@@ -2566,6 +2588,160 @@
       "proposed_slug": null,
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "south_korea",
+      "key": "aewc",
+      "model": "Global6500 Korean conformal AEW order",
+      "source_ids": [
+        "KR-AEW-GLOBAL-CONTRACT25",
+        "KR-AEW-GLOBAL-DATASHEET26",
+        "GLOBAL6500-MAKER-SIZE"
+      ],
+      "status": "confirmed_order",
+      "reason": "Firm contract, fixed conformal side fairings/twin aft engines/Ttail; not SaabErieyebar. Final national production fit and delivery unverified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "aewc__global_6500_korean_caew",
+      "asset_validation": {
+        "batch": 25,
+        "file": "aircraft/aewc__global_6500_korean_caew.glb",
+        "sha256": "e0a154506e48120e37c5002508bdb9a979b3e3dfd82e351c74df3372f8fec104",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal size and national type/order identity; marketing concepts do not certify final antennas/acceptance. Local fairings, propeller/camera/gear details estimated; no live weapon load or readiness claim."
+      },
+      "existing_exact_asset": "aircraft/aewc__global_6500_korean_caew.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "ewJet",
+      "model": "Falcon2000LXS Baekdu phaseII order",
+      "source_ids": [
+        "KR-BAEKDU-II-CONTRACT21",
+        "KR-FALCON-GREEN-DELIVERY24",
+        "FALCON2000LXS-MAKER-SIZE"
+      ],
+      "status": "confirmed_development_order",
+      "reason": "Four-development-aircraft contract; public KAIconcept fairings estimated. Greenairframes delivered separately from mission acceptance. PassiveSIGINTnot fictional strike/jamming load.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "ewJet__falcon_2000lxs_baekdu_ii",
+      "asset_validation": {
+        "batch": 25,
+        "file": "aircraft/ewJet__falcon_2000lxs_baekdu_ii.glb",
+        "sha256": "f91f4f79a7535e8af56e35112d3bdf9b51c126a319db3dfb3d40c58bd6d0fa51",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal size and national type/order identity; marketing concepts do not certify final antennas/acceptance. Local fairings, propeller/camera/gear details estimated; no live weapon load or readiness claim."
+      },
+      "existing_exact_asset": "aircraft/ewJet__falcon_2000lxs_baekdu_ii.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "drone",
+      "model": "KUSFT tactical UAV",
+      "source_ids": [
+        "KR-KUSFT-MAKER",
+        "KR-KUSFT-SERIES21"
+      ],
+      "status": "documented_service",
+      "reason": "Published3.7x4.5x.9m, twinbooms/high connecting tail, fixed tricycle gear and pusher. Local equipment estimated; not prospective VTOLsuccessor.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "drone__kus_ft",
+      "asset_validation": {
+        "batch": 25,
+        "file": "aircraft/drone__kus_ft.glb",
+        "sha256": "1196eb2219e247685aa8313ffcdf2e6a70c79484968408bb0412e171e5282c75",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal size and national type/order identity; marketing concepts do not certify final antennas/acceptance. Local fairings, propeller/camera/gear details estimated; no live weapon load or readiness claim."
+      },
+      "existing_exact_asset": "aircraft/drone__kus_ft.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "drone",
+      "model": "RQ101 Songgolmae",
+      "source_ids": [
+        "KR-RQ101-MAKER",
+        "KR-RQ101-UPGRADE25"
+      ],
+      "status": "documented_service",
+      "reason": "Makerdimensionimage4.7x6.4x1.5m, fixedgear/twinbooms/raised bent tailplane.2025minorupgradefielded; exact replacement sensors/propeller exterior not certified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "drone__rq_101_songgolmae",
+      "asset_validation": {
+        "batch": 25,
+        "file": "aircraft/drone__rq_101_songgolmae.glb",
+        "sha256": "75fa8289e7a7cd9aa80825a7875b7add4606708fc6a8cbf9ca2836174e16ec6d",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal size and national type/order identity; marketing concepts do not certify final antennas/acceptance. Local fairings, propeller/camera/gear details estimated; no live weapon load or readiness claim."
+      },
+      "existing_exact_asset": "aircraft/drone__rq_101_songgolmae.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "drone",
+      "model": "RemoEye002B selected Army exterior",
+      "source_ids": [
+        "KR-REMO-MAKER18",
+        "KR-REMO-OPERATOR21",
+        "KR-REMO-ACTIVITY25"
+      ],
+      "status": "documented_service_current_per_unit_suffix_unverified",
+      "reason": "1.44x1.8m handlaunch/airbagrecovery, pusher/roundnosecamera/twinlowbooms.002Bservice documented2021, familyexercise2025does not certify every currentunit suffix.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "drone__remoeye_002b",
+      "asset_validation": {
+        "batch": 25,
+        "file": "aircraft/drone__remoeye_002b.glb",
+        "sha256": "3217307cfa72edac2b1f5d281f4d145c5705dc7ac22024c56eb36dfa9b59e2c6",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal size and national type/order identity; marketing concepts do not certify final antennas/acceptance. Local fairings, propeller/camera/gear details estimated; no live weapon load or readiness claim."
+      },
+      "existing_exact_asset": "aircraft/drone__remoeye_002b.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "drone",
+      "model": "MUAV KUSFS production unarmed ISR exterior",
+      "source_ids": [
+        "KR-MUAV-ROLL-MAKER26",
+        "KR-MUAV-ROLL-PHOTOS26",
+        "KR-MUAV-ROLL-STAGE26"
+      ],
+      "status": "production_rollout_confirmed_latest_acceptance_unverified",
+      "reason": "Production13x26m unarmed public rollout, large nose/bellyfairing/dorsalintake. Not old25m armed generic or deliveredfleet; minorfittings/height/propeller estimated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "drone__muav_kus_fs_production",
+      "asset_validation": {
+        "batch": 25,
+        "file": "aircraft/drone__muav_kus_fs_production.glb",
+        "sha256": "8be84922531286c2582b86ae33d67bfd50d17220a39e2c67bb89dc5afc841348",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal size and national type/order identity; marketing concepts do not certify final antennas/acceptance. Local fairings, propeller/camera/gear details estimated; no live weapon load or readiness claim."
+      },
+      "existing_exact_asset": "aircraft/drone__muav_kus_fs_production.glb",
+      "asset_state": "available_exact_file"
     }
   ]
 }

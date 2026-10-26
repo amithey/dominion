@@ -1,0 +1,57 @@
+{
+  "batch": "inventory-additions-25",
+  "files": [
+    "aircraft/aewc__global_6500_korean_caew.glb",
+    "aircraft/ewJet__falcon_2000lxs_baekdu_ii.glb",
+    "aircraft/drone__kus_ft.glb",
+    "aircraft/drone__rq_101_songgolmae.glb",
+    "aircraft/drone__remoeye_002b.glb",
+    "aircraft/drone__muav_kus_fs_production.glb"
+  ],
+  "sha256": {
+    "aircraft/aewc__global_6500_korean_caew.glb": "e0a154506e48120e37c5002508bdb9a979b3e3dfd82e351c74df3372f8fec104",
+    "aircraft/ewJet__falcon_2000lxs_baekdu_ii.glb": "f91f4f79a7535e8af56e35112d3bdf9b51c126a319db3dfb3d40c58bd6d0fa51",
+    "aircraft/drone__kus_ft.glb": "1196eb2219e247685aa8313ffcdf2e6a70c79484968408bb0412e171e5282c75",
+    "aircraft/drone__rq_101_songgolmae.glb": "75fa8289e7a7cd9aa80825a7875b7add4606708fc6a8cbf9ca2836174e16ec6d",
+    "aircraft/drone__remoeye_002b.glb": "3217307cfa72edac2b1f5d281f4d145c5705dc7ac22024c56eb36dfa9b59e2c6",
+    "aircraft/drone__muav_kus_fs_production.glb": "8be84922531286c2582b86ae33d67bfd50d17220a39e2c67bb89dc5afc841348"
+  },
+  "maximum_triangles": [
+    11016,
+    1520
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "Six distinct Korean aircraft and UAV exteriors: ordered conformal Global6500AEW, Falcon2000LXS SIGINT, fielded tacticalKUSFT/RQ101/RemoEye002B and unarmed26m MUAVproduction exterior; order stages and local-fit estimates explicit",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "Actual central body/engine/array/mission fairing/camera/SAR/boom meshes contained by CollisionBox at both LODs",
+    "All six airframes unarmed, no pylons/store meshes or fictional rotating AEWdisc",
+    "Global6500fixed conformal arrays remain static during landing-gear pose; Falcon2000LXSdistinct low tail and valid closed winglets",
+    "KUSFT/RQ101fixed gear explicit null axis, three single wheel axles X, twin booms and correct individual published sizes",
+    "RemoEye002B1.44x1.80m, handlaunch/closed airbag and no gear nodes",
+    "MUAVproduction13x26m, four-blade representative propeller, closed belly sensor fairing/dorsal intake and Vtail",
+    "PropellerZmotion leaves fuselage fixed; full geometric blade counts and control-hinge motion already tested on readback",
+    "24final saved-file overview and six detail/posed views actually visually inspected"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_25.py",
+  "preserved_baseline": {
+    "commit": "5a570c31dbe43b471e4684c92703223efe119cd6",
+    "manifest_entries": 974,
+    "old_asset_bytes_and_entries": "checked by scoped commit helper"
+  },
+  "limitations": [
+    "Global6500contract and Falcondevelopment order not completed national mission-aircraft delivery",
+    "Falcongreen-airframe delivery not military acceptance; KAIpublic concept not certified final sensor installation",
+    "RQ101minorupgrade does not certify same older propeller/sensors on every airframe",
+    "RemoEye002Bdocumented service versus later generic family activity distinguished; present per-unit suffix unverified",
+    "MUAVApril2026rollout not accepted fleet,2027delivery plan not inferred completed; exact current acceptance and local fittings pending",
+    "Smallest handlaunched1.44mUAV6896LOD0triangles, kept compact rather than adding artificial surface detail"
+  ],
+  "review_images": [
+    "inventory-additions-25-aircraft.jpg",
+    "inventory-additions-25-details.jpg"
+  ]
+}
