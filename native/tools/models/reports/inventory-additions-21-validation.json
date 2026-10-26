@@ -1,0 +1,45 @@
+{
+  "batch": "inventory-additions-21",
+  "files": [
+    "ships/destroyer__gwanggaeto_the_great_class.glb",
+    "ships/destroyer__chungmugong_yi_sun_sin_class.glb",
+    "ships/destroyer__jeongjo_the_great_class.glb",
+    "ships/asFrigate__incheon_class.glb",
+    "ships/asFrigate__chungnam_class.glb"
+  ],
+  "sha256": {
+    "ships/destroyer__gwanggaeto_the_great_class.glb": "4536ff7d2fe8569fbbb1f9992056e2674b3dccc6c7ad8762338f14734e23cf14",
+    "ships/destroyer__chungmugong_yi_sun_sin_class.glb": "ddb8cb55242deedc2096b40fef0d4082ed26159a0836b364530eb7ceb857aa1d",
+    "ships/destroyer__jeongjo_the_great_class.glb": "53665af6a81e2df8bd9c6229770c4b5b852511d42cf768109130af3659e05e7e",
+    "ships/asFrigate__incheon_class.glb": "d44a3fd3a2dbfbdd309bbd90ab3f6f285f5eb21b78a8803c307deda5b79b8c46",
+    "ships/asFrigate__chungnam_class.glb": "7bcbffc149c28e696dd027c40d90ca975385ef7173397de2516ab500da637f13"
+  },
+  "maximum_triangles": [
+    14196,
+    2468
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "Five distinct Korean destroyer/frigate bodies; separate gun trunnions and six/seven-barrel CIWS rotors; fixed SPY/MFR faces independent of rotating search/navigation radar; current/planned fit limits qualified",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "all CIWSfront-tip vertices belong to actual six/seven-barrel circles with matching open bore radii; all ports cycle under360/nrotation in bothLODs",
+    "four physical fixed SPY/MFRfaces remain stationary under search/navigation radar yaw",
+    "foreVLSfoundations clear maximum bow sheer; SSMbanks separated from funnel envelopes",
+    "Chungnam38.9m overall height, empty plannedCIWSfoundation; Incheonhas no phantomVLS",
+    "CollisionBox contains actual saved Hull bounds including raised bow in bothLODs"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_21.py",
+  "extra_views": "five final detail/posed views reviewed: KDXIrounded127mount, KDXIIRAM/Goalkeeperand twin hangars, JeongjofixedSPY/Phalanx, IncheonnoVLS and ChungnamfixedISM/emptyCIWSpad",
+  "preserved_baseline": {
+    "commit": "a3e337b",
+    "entries": 954
+  },
+  "limitations": [
+    "local cross-sections, fittings, exposed barrel and cell layouts estimated, not engineering drawings or current missile-load certification",
+    "ChungnamCIWSIIplanned in2026manufacturer brochure; empty foundation selected, not proof every delivered sistership has identical fit",
+    "earlier broad rosters and generated models still need national variant/retirement and complete geometry reviews"
+  ]
+}
