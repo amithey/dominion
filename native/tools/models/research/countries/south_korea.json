@@ -581,11 +581,15 @@
       "evidence_source_ids": [
         "KR-DECK-2026",
         "KR-KAI-MUH1",
-        "KR-KAI-HISTORY25"
+        "KR-KAI-HISTORY25",
+        "KR-HH60-2026",
+        "KR-ADEX-RESCUE-PHOTOS13",
+        "KR-HH60-UPGRADE25",
+        "KR-HH32-RETIRE25"
       ],
       "assessment": {
         "status": "incomplete_inventory",
-        "reason": "KUH1Surion is only one national utility type. Current Army UH60P and Marine MUH1independently documented. Surion final production in2024is not retirement. Existing Surion geometry/each current airframe fit still require later visual audit.",
+        "reason": "KUH1Surion is only one national utility type. Current Army UH60P and Marine MUH1independently documented. Surion final production in2024is not retirement. Existing Surion geometry/each current airframe fit still require later visual audit. Batch24adds selected HH60Phigh-tankrescue exterior; historical shape/current family evidence separate. HH32retiredDecember2025, no current GLB. HH60upgrade planned2029not complete.",
         "recommended_action": "add_models",
         "model_match": "existing_surion_does_not_cover_distinct_utility_variants",
         "replacement": null
@@ -632,11 +636,14 @@
         "KR-KAI-LAH",
         "KR-AIRBUS-LAH-PRODUCTION",
         "KR-KAI-HISTORY25",
-        "KR-COBRA-CURRENT26"
+        "KR-COBRA-CURRENT26",
+        "KR-500MD-FIRING26",
+        "KR-500MD-SCHOOL-END26",
+        "KR-500MD-EXTERIOR18"
       ],
       "assessment": {
         "status": "incomplete_inventory",
-        "reason": "AH64Ecurrent activity confirmed; LAHMiron first production delivery December2024and deployment since2024documented, plus continuing AH1Sfamily in2026. Add LAH; Cobra existing variants need Korean-fit comparison before reuse. Never count prototype MarineAttack as fielded.",
+        "reason": "AH64Ecurrent activity confirmed; LAHMiron first production delivery December2024and deployment since2024documented, plus continuing AH1Sfamily in2026. Add LAH; Cobra existing variants need Korean-fit comparison before reuse. Never count prototype MarineAttack as fielded.500MDSeptember2026firing follows school-role withdrawal. New manned round-cabin armed scout has empty carriers; exact live load not certified.",
         "recommended_action": "add_models",
         "model_match": "apache_is_one_of_several_attack_types",
         "replacement": null
@@ -680,11 +687,18 @@
         "KR-NAVY-UH60-RESCUE-2026",
         "KR-FLEET-EXERCISE-JUN26",
         "KR-RIMPAC-RETURN26",
-        "KR-KDXII-DEPLOY26"
+        "KR-KDXII-DEPLOY26",
+        "KR-AW159-MAKER24",
+        "KR-AW159-AVIONICS17",
+        "KR-AW159-SONAR17",
+        "KR-LYNX-MAKER17",
+        "KR-LYNX-USN-PHOTO13",
+        "KR-LYNX-CAPTION-MISMATCH25",
+        "KR-MH60R-II-SELECTION26"
       ],
       "assessment": {
         "status": "incomplete_inventory",
-        "reason": "MH60Ractual activity now confirmed June2026, resolving earlier delivery-stage uncertainty. Current AW159and Lynx also identified, alongside Navy631UH60SARalready generated. Exact Korean ASW equipment/variants require dedicated comparison; source names NavyUH60without certifying suffix.",
+        "reason": "MH60Ractual activity now confirmed June2026, resolving earlier delivery-stage uncertainty. Current AW159and Lynx also identified, alongside Navy631UH60SARalready generated. Exact Korean ASW equipment/variants require dedicated comparison; source names NavyUH60without certifying suffix. Batch24adds KoreanASWAW159and selectedhistoricalMk99Aexterior, empty carriers. All-hull fits not certified; additionalMH60Rselection not new delivery or signed contract proof.",
         "recommended_action": "add_or_compare_models",
         "model_match": "mh60r_is_one_of_multiple_current_naval_rotorcraft_types",
         "replacement": null
@@ -723,11 +737,17 @@
           2180
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-HH60-2026",
+        "KR-ADEX-RESCUE-PHOTOS13"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "Basic ArmyCH47Ddoes not cover AirForce HH47rescue. Current February2026HH47activity independently confirmed;2013HH47Dphotograph supports selected ERtanks/radome/hoist. ArmyD/Fcurrent exact fits/orders remain pending.",
+        "recommended_action": "add_rescue_variant_and_compare_other_subtypes",
+        "model_match": "hh47d_rescue_is_distinct_from_basic_ch47d",
+        "replacement": "helicopter__hh_47d_rescue"
       }
     },
     {
@@ -1893,9 +1913,10 @@
         "KR-COBRA-CURRENT26"
       ],
       "status": "documented_service",
-      "reason": "Current Air Force rescue family established; precise current subvariant, sensors and hoist fit need primary exterior evidence. Navy and Japanese configurations cannot be substituted.",
-      "asset_action": "research_variant_before_generation",
+      "reason": "Current Air Force rescue family established; precise current subvariant, sensors and hoist fit need primary exterior evidence. Navy and Japanese configurations cannot be substituted. Historical selected exterior generated in batch24; retained family candidate is provenance, not extra distinct airframe.",
+      "asset_action": "selected_variant_generated_current_fit_pending",
       "proposed_slug": null,
+      "generated_variant_slug": "helicopter__hh_60p_rescue",
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
     },
@@ -2047,30 +2068,16 @@
     {
       "nation": "south_korea",
       "key": "navalHelicopter",
-      "model": "AW159 Korean naval ASW variant",
-      "source_ids": [
-        "KR-FLEET-EXERCISE-JUN26",
-        "KR-RIMPAC-RETURN26"
-      ],
-      "status": "documented_service",
-      "reason": "Current Korean AW159documented. Existing UKWildcat HMA2must not automatically substitute for Korean sonar/torpedo fit; exact variant/exterior research pending.",
-      "asset_action": "research_variant_before_generation",
-      "proposed_slug": null,
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
-    },
-    {
-      "nation": "south_korea",
-      "key": "navalHelicopter",
       "model": "Lynx Korean naval variant",
       "source_ids": [
         "KR-FLEET-EXERCISE-JUN26",
         "KR-KDXII-DEPLOY26"
       ],
       "status": "documented_service",
-      "reason": "Current deployed Navy Lynxdetachment documented. Exact Mk99/99Asuffix and installed mission equipment need evidence before generation.",
-      "asset_action": "research_variant_before_generation",
+      "reason": "Current deployed Navy Lynxdetachment documented. Exact Mk99/99Asuffix and installed mission equipment need evidence before generation. Historical selected exterior generated in batch24; retained family candidate is provenance, not extra distinct airframe.",
+      "asset_action": "selected_variant_generated_current_fit_pending",
       "proposed_slug": null,
+      "generated_variant_slug": "navalHelicopter__super_lynx_mk99a",
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
     },
@@ -2409,6 +2416,153 @@
       "status": "documented_family_current_variant_fit_pending",
       "reason": "Current operator text distinguishes F16fromKF16; exact earlyBlock32andPW220serial/fit ownership comparison remains pending. Do not automatically count all generic F16mentions as KF16Block52or generate a guessed new modernisation.",
       "asset_action": "research_variant_before_generation",
+      "proposed_slug": null,
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "south_korea",
+      "key": "navalHelicopter",
+      "model": "AW159 Korean naval ASW variant",
+      "source_ids": [
+        "KR-FLEET-EXERCISE-JUN26",
+        "KR-RIMPAC-RETURN26",
+        "KR-AW159-MAKER24",
+        "KR-AW159-AVIONICS17",
+        "KR-AW159-SONAR17"
+      ],
+      "status": "documented_service",
+      "reason": "Current ASWtype, twin-fin outline, radome/optics, closed sonar aperture and empty carriers; no UKmissile load.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "navalHelicopter__aw159_korean_asw",
+      "asset_validation": {
+        "batch": 24,
+        "file": "aircraft/navalHelicopter__aw159_korean_asw.glb",
+        "sha256": "6290b197ff08ca9938460909d89db2ca54612ff5aed0b73eeaf7e685c814ccbb",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Historical selected national exterior plus independent current family activity. Family sizes/local contours, sensors, carriers and precise per-hull fits qualified; no live load/readiness certification."
+      },
+      "existing_exact_asset": "aircraft/navalHelicopter__aw159_korean_asw.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "navalHelicopter",
+      "model": "Super Lynx Mk99A selected Korean exterior",
+      "source_ids": [
+        "KR-KDXII-DEPLOY26",
+        "KR-FLEET-EXERCISE-JUN26",
+        "KR-LYNX-MAKER17",
+        "KR-LYNX-USN-PHOTO13"
+      ],
+      "status": "documented_service",
+      "reason": "Current Lynxfamily; selected2013Mk99Aexterior, round nose/low radome/EO, twin nose tyres and empty carriers. EarlierMk99/current upgrades pending.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "navalHelicopter__super_lynx_mk99a",
+      "asset_validation": {
+        "batch": 24,
+        "file": "aircraft/navalHelicopter__super_lynx_mk99a.glb",
+        "sha256": "0fb92d9bd33fb21914b55c5fd7aebf540bcbed3c3b9bb529c9b07de250611aa8",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Historical selected national exterior plus independent current family activity. Family sizes/local contours, sensors, carriers and precise per-hull fits qualified; no live load/readiness certification."
+      },
+      "existing_exact_asset": "aircraft/navalHelicopter__super_lynx_mk99a.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "helicopter",
+      "model": "HH60P Air Force rescue selected exterior",
+      "source_ids": [
+        "KR-HH60-2026",
+        "KR-ADEX-RESCUE-PHOTOS13",
+        "KR-HH60-UPGRADE25"
+      ],
+      "status": "documented_service",
+      "reason": "Current HH60family plus historical HH60Pphoto; high tanks/braces, cheek fairing/searchlight/chin optics/hoist. Exact current per-hull fit pending.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "helicopter__hh_60p_rescue",
+      "asset_validation": {
+        "batch": 24,
+        "file": "aircraft/helicopter__hh_60p_rescue.glb",
+        "sha256": "a4e264e3a2c41d0cea2810936959014b186abd765b089521c17846a1c8ae2387",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Historical selected national exterior plus independent current family activity. Family sizes/local contours, sensors, carriers and precise per-hull fits qualified; no live load/readiness certification."
+      },
+      "existing_exact_asset": "aircraft/helicopter__hh_60p_rescue.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "heavyLift",
+      "model": "HH47D Air Force rescue ER selected exterior",
+      "source_ids": [
+        "KR-HH60-2026",
+        "KR-ADEX-RESCUE-PHOTOS13"
+      ],
+      "status": "documented_service",
+      "reason": "Current HH47family, selected2013HH47DERsponsons/radome/hoist. Not basicCH47DorMH47probe; local dimensions/current individual fit estimated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "helicopter__hh_47d_rescue",
+      "asset_validation": {
+        "batch": 24,
+        "file": "aircraft/helicopter__hh_47d_rescue.glb",
+        "sha256": "78a1abd96d686a6bc7c85b423f6592470d02afbf8e79c1bfa7c12ec39a650c55",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Historical selected national exterior plus independent current family activity. Family sizes/local contours, sensors, carriers and precise per-hull fits qualified; no live load/readiness certification."
+      },
+      "existing_exact_asset": "aircraft/helicopter__hh_47d_rescue.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "gunship",
+      "model": "500MD Korean Army manned armed scout",
+      "source_ids": [
+        "KR-500MD-FIRING26",
+        "KR-500MD-SCHOOL-END26",
+        "KR-500MD-EXTERIOR18",
+        "MD500-FAMILY-TYPE"
+      ],
+      "status": "documented_service",
+      "reason": "Current attack firing after school-role retirement; bubble cabin,5main/2tail blades and Ttail, empty carriers. Unverified pod tube count/TOW/gun/sensor combination not invented.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "gunship__500md_korean_attack",
+      "asset_validation": {
+        "batch": 24,
+        "file": "aircraft/gunship__500md_korean_attack.glb",
+        "sha256": "dc6aba5526e469a86558ab8585b0677044abdaf14e1373e546560496c695c5b7",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Historical selected national exterior plus independent current family activity. Family sizes/local contours, sensors, carriers and precise per-hull fits qualified; no live load/readiness certification."
+      },
+      "existing_exact_asset": "aircraft/gunship__500md_korean_attack.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "helicopter",
+      "model": "HH32 historical rescue type",
+      "source_ids": [
+        "KR-HH32-RETIRE25"
+      ],
+      "status": "retired_historical",
+      "reason": "Retired12December2025; historical documentation, outdated directory not current possession.",
+      "asset_action": "document_retirement_no_current_model",
       "proposed_slug": null,
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"

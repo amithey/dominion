@@ -1,0 +1,52 @@
+{
+  "batch": "inventory-additions-24",
+  "files": [
+    "aircraft/navalHelicopter__aw159_korean_asw.glb",
+    "aircraft/navalHelicopter__super_lynx_mk99a.glb",
+    "aircraft/helicopter__hh_60p_rescue.glb",
+    "aircraft/helicopter__hh_47d_rescue.glb",
+    "aircraft/gunship__500md_korean_attack.glb"
+  ],
+  "sha256": {
+    "aircraft/navalHelicopter__aw159_korean_asw.glb": "6290b197ff08ca9938460909d89db2ca54612ff5aed0b73eeaf7e685c814ccbb",
+    "aircraft/navalHelicopter__super_lynx_mk99a.glb": "0fb92d9bd33fb21914b55c5fd7aebf540bcbed3c3b9bb529c9b07de250611aa8",
+    "aircraft/helicopter__hh_60p_rescue.glb": "a4e264e3a2c41d0cea2810936959014b186abd765b089521c17846a1c8ae2387",
+    "aircraft/helicopter__hh_47d_rescue.glb": "78a1abd96d686a6bc7c85b423f6592470d02afbf8e79c1bfa7c12ec39a650c55",
+    "aircraft/gunship__500md_korean_attack.glb": "dc6aba5526e469a86558ab8585b0677044abdaf14e1373e546560496c695c5b7"
+  },
+  "maximum_triangles": [
+    11984,
+    2432
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "Five Korean rotary-wing exteriors: AW159 ASW, SuperLynx Mk99A, HH60P, HH47D ER and manned500MD; historical selected fits and current type activity separated",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "Actual fixed body/engine/fitting meshes enclosed by CollisionBox at both LODs",
+    "Rotating main shafts leave body/engines fixed; numerical geometric blade counts and hinge poses checked on readback",
+    "AW159twin-fin versus selectedMk99Asingle-fin exterior; two empty carrier markers each",
+    "HH60Phigh tanks/braces, single lower stabilator and external chin optics/searchlight",
+    "HH47Dreplaces small shared sponsons with larger ERtanks; two independent three-blade rotors, four gear stations",
+    "500MDfive/two blades, one turbine, highTtail and skids, two empty carrier markers",
+    "20final overview and five detail/posed saved-file views visually inspected"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_24.py",
+  "preserved_baseline": {
+    "commit": "257a4725b418d384a90f44e8f3c7dd77ca87513e",
+    "manifest_entries": 969,
+    "old_asset_bytes_and_entries": "checked by scoped commit helper"
+  },
+  "limitations": [
+    "Historical selected photographic fits/current type operations separated; local fitting dimensions estimated",
+    "No all-airframe upgrade, precise current serial equipment, fleet quantity, live weapon load or readiness certification",
+    "HH32operator retirement overrides outdateddirectory; additionalMH60Rtype selection not proof new signedLOA/delivery",
+    "EarlierMk99and current KoreanMH60R/basic ArmyCH47variants still need specific comparison"
+  ],
+  "review_images": [
+    "inventory-additions-24-aircraft.jpg",
+    "inventory-additions-24-details.jpg"
+  ]
+}
