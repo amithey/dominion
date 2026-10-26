@@ -1,0 +1,58 @@
+{
+  "batch": "inventory-additions-26",
+  "files": [
+    "vehicles/recoveryVehicle__k1_arv_korean.glb",
+    "vehicles/mineLayer__km138_truck.glb",
+    "vehicles/samLauncher__cheongung_ii_korean.glb",
+    "vehicles/abmLauncher__l_sam_trailer.glb",
+    "vehicles/counterBatteryRadar__cheongyeong_ii.glb"
+  ],
+  "sha256": {
+    "vehicles/recoveryVehicle__k1_arv_korean.glb": "da4384bb45dc11d4b688debf319b5a769ceaa1288b4d8a5bfe58259a68077003",
+    "vehicles/mineLayer__km138_truck.glb": "6658456708eb0077715fe1a5c2577b9144171bc70caaeb2219b27bc782ea30bf",
+    "vehicles/samLauncher__cheongung_ii_korean.glb": "e63e012fded6868765d013d0767814d0fa7a4bab5cd58213921f083c4a5a284b",
+    "vehicles/abmLauncher__l_sam_trailer.glb": "bcb4fdcb9690dd59ca1862e656f576b8a66baf17202cc1fa09bea1dccdffd278",
+    "vehicles/counterBatteryRadar__cheongyeong_ii.glb": "d1a2bc5708ea1368cfbc463967b56e717c49d7cd92ae645cbb119867b1ea6be0"
+  },
+  "maximum_triangles": [
+    12614,
+    2386
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "Five distinct Korean public exteriors: K1ARVrecovery cabin and telescopic crane, KM138truck mount, three-axle CheongungII, ordered L-SAMsemitrailer and CheongyeongIIradar; local dimensions and latest fit/acceptance limits explicit",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "Central hull/cab/closed winch-cover geometry contained by actual CollisionBox at both LODs",
+    "K1six-wheel rear-drive canonical tracks, distinct recovery cabin, actual yaw/luff/extension/Spade and separate manualHMGpivots",
+    "K1aft folded arm rises for positiveX, extension moves Hook half-metre alongZwhile central hull stays fixed",
+    "KM138single visible exterior outlet with Ymanual traverse/Xelevation; representative Korean6x6carrier, no generic multiple-mine launcher or explosive internals",
+    "KoreanCheongungIIthree axles/eight closed cylindrical canisters, L-SAMthree-axle semitrailer/six canisters; neither carries fictional radar/azimuth turntable",
+    "All fourteen vertical-launch markers rise above base at90degrees and their +Zaxes become +Y",
+    "All four stabilisers on each launcher translateYwithout moving central hull",
+    "CheongyeongIIhas eight wheel pivots and supported rectangularYradar; folded panel clears equipment-van roof by more than40mm, no fictional weapons",
+    "20final saved-file overview and six detail/posed views actually visually inspected"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_26.py",
+  "preserved_baseline": {
+    "commit": "6075afa2b595eb9df025cf254f2094bc8e01d018",
+    "manifest_entries": 980,
+    "old_asset_bytes_and_entries": "checked by scoped commit helper"
+  },
+  "limitations": [
+    "K1selected public manufacturer exterior/local fittings estimated, not every current serial or a measured engineering replica",
+    "KM138actual2024Marine use versus manufacturer ending production distinguished; exact photographed carrier suffix, hidden/inner tyre arrangement and latest2026fit not certified",
+    "Kia current KM250webpage contains apparent1.25ton/KM450copied specification, so2019maker6.8x2.5x2.9m KM250brochure used instead; laterOEMdirect brochure404not claimed downloaded",
+    "Small KM138cargo truck remains compact below8000LOD0triangles rather than adding invented hardware",
+    "L-SAMsigned2025contract not accepted operational fleet; manufacturer concept/trailer dimensions/local hardware estimated, tractor separate",
+    "CheongyeongII2024fielding completion not current per-unit readiness; exact factory dimensions/stow fit unverified",
+    "K288A1photo comparison/generation and K21exact current ATGM/legacy fit remain pending; no unsupported command/smoke/NBCvehicle forced into combat categories",
+    "F35A20follow-on aircraft confirmed signedLOA, cumulative40original deliveries not current ready-fleet count; existing common exterior reused, futureBlock4fit not fabricated"
+  ],
+  "review_images": [
+    "inventory-additions-26-vehicles.jpg",
+    "inventory-additions-26-details.jpg"
+  ]
+}

@@ -130,11 +130,17 @@
           1908
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-K21-K1ARV-ACTIVITY26",
+        "KR-KOTRA-GUIDE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "current_type_supported_exact_legacy_fit_pending",
+        "reason": "Actual2026K21activity and maker40mm/six-wheel identity supported. Existing shared K21geometry broadly identifies family; its paired ATGMfit is not certified by current unit photos. Advertised maker equipment is not proof every vehicle carries it; national legacy exterior comparison/rework remains open.",
+        "recommended_action": "compare_existing_fit_and_add_missing_real_variants",
+        "model_match": "broad_type_only_current_ATGM_fit_unverified",
+        "replacement": null
       }
     },
     {
@@ -167,11 +173,20 @@
           1668
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-K1ARV-MAKER",
+        "KR-K21-K1ARV-ACTIVITY26",
+        "KR-K288-ACTIVITY26",
+        "KR-K200-DELIVERY",
+        "KR-K288-MAKER-BROCHURE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "current_type_and_missing_distinct_recovery_vehicle",
+        "reason": "ActualK1ARVandK288activity independently supported. OldgenericK1recovery lacks selected sloping cabin/large telescopic crane/manualHMGfit, new K1exterior added. K288A1is smaller five-wheel K200family, cannot substitute K1 or generic M88; photo comparison/newmesh pending.",
+        "recommended_action": "add_selected_K1_exterior_and_K288A1",
+        "model_match": "selected_manufacturer_K1_exterior_estimated_not_all_current_serials",
+        "replacement": "recoveryVehicle__k1_arv_korean"
       }
     },
     {
@@ -248,11 +263,18 @@
           2072
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-KM138-OPERATOR24",
+        "KR-KM138-MAKER",
+        "KR-KOTRA-GUIDE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_operator_shape_unverified_real_KM138_documented",
+        "reason": "Generic engineer-minelayer is not specific evidence of Korean inventory. ActualKM138truck-bedmount documented2024; selected unit on representative6x6KM250class truck added. Exact carrier suffix/current2026serial fit unresolved; manufacturer ending production does not imply retirement.",
+        "recommended_action": "use_selected_real_KM138_and_verify_latest_fit",
+        "model_match": "generic_armored_minelayer_not_this_observed_truck_mount",
+        "replacement": "mineLayer__km138_truck"
       }
     },
     {
@@ -499,11 +521,18 @@
           1212
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-CHEONGUNG-ACTUAL26",
+        "KR-LSAM-CONTRACT25",
+        "KR-LSAM-II-DEVELOP25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "current_CheongungII_shape_mismatch_and_separate_order",
+        "reason": "Actual2026KoreanCheongungIIuses three-axle carrier/eight cylindrical canisters versus existing generic four-axle geometry. Add selected current exterior. L-SAMsigned production contract distinct future tier, L-SAM-IIdevelopment not completed fielding.",
+        "recommended_action": "replace_wrong_carrier_and_add_confirmed_order",
+        "model_match": "old_eight_wheel_generic_not_photographed_Korean_six_wheel_carrier",
+        "replacement": "samLauncher__cheongung_ii_korean"
       }
     },
     {
@@ -538,11 +567,18 @@
           712
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "PAC3-MAKER-USERS24",
+        "KR-CHEONGUNG-ACTUAL26",
+        "KR-LSAM-CONTRACT25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "Patriot_family_supported_CRI_and_MSE_not_interchangeable",
+        "reason": "KoreanPatriotcurrent family acknowledged separately from CheongungII; maker lists Koreaas CRIandMSEuser. Existing16cellCRIand separate12cellMSEgeometry already available, exact current Korean per-launcher load/fittings unresolved. L-SAMproductionorder added separately without claiming accepted fleet.",
+        "recommended_action": "compare_existing_CRI_and_MSE_loads_add_LSAM_order",
+        "model_match": "broad_type_only_exact_current_launcher_load_unverified",
+        "replacement": null
       }
     },
     {
@@ -886,11 +922,19 @@
           1404
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-F35A-ACTIVITY26",
+        "KR-F35A-UPGRADE-PLAN26",
+        "KR-F35A-LOA23",
+        "KR-F35A-MAKER-ORDER"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "current_type_confirmed_upgrade_stage_qualified",
+        "reason": "Current KoreanF35Aactivity independently supported. Original40deliveries are cumulative history, not current readiness count. DAPAconfirms December2023LOAand maker20additional ordered, plannedfieldingfrom2027notdeliveryalready. Existingcommon Aairframe retained; exact current/future national outer fit unverified.2026revisedupgrade strategy not completed Block4fleet.",
+        "recommended_action": "retain_common_airframe_compare_current_fit_and_order_stage",
+        "model_match": "broad_type_supported_exact_current_upgrade_fit_pending",
+        "replacement": null
       }
     },
     {
@@ -2741,6 +2785,166 @@
         "limits": "Public principal size and national type/order identity; marketing concepts do not certify final antennas/acceptance. Local fairings, propeller/camera/gear details estimated; no live weapon load or readiness claim."
       },
       "existing_exact_asset": "aircraft/drone__muav_kus_fs_production.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "recoveryVehicle",
+      "model": "K1 ARV selected Korean manufacturer exterior",
+      "source_ids": [
+        "KR-K1ARV-MAKER",
+        "KR-K21-K1ARV-ACTIVITY26",
+        "KR-KOTRA-GUIDE"
+      ],
+      "status": "documented_service_selected_exterior",
+      "reason": "Six K1wheels, sloping forward cabin, large telescopic folded crane, painted dozer and manualHMG; localfittings/selected fit estimated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "recoveryVehicle__k1_arv_korean",
+      "asset_validation": {
+        "batch": 26,
+        "file": "vehicles/recoveryVehicle__k1_arv_korean.glb",
+        "sha256": "da4384bb45dc11d4b688debf319b5a769ceaa1288b4d8a5bfe58259a68077003",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Selected public exterior, local measurements/fittings estimated; KM138exact carrier/latest operator fit unverified, L-SAMproduction acceptance unverified; no fleet-readiness or operational internals claim."
+      },
+      "existing_exact_asset": "vehicles/recoveryVehicle__k1_arv_korean.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "mineLayer",
+      "model": "KM138 on representative Korean6x6cargo carrier",
+      "source_ids": [
+        "KR-KM138-OPERATOR24",
+        "KR-KM138-MAKER",
+        "KR-KOTRA-GUIDE"
+      ],
+      "status": "documented2024_service_latest_per_unit_fit_unverified",
+      "reason": "Observed small truck-bed mount, representative published6.8mKM250carrier, exact photographed suffix/latest2026use unresolved. No mine/dispensing internals.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "mineLayer__km138_truck",
+      "asset_validation": {
+        "batch": 26,
+        "file": "vehicles/mineLayer__km138_truck.glb",
+        "sha256": "6658456708eb0077715fe1a5c2577b9144171bc70caaeb2219b27bc782ea30bf",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Selected public exterior, local measurements/fittings estimated; KM138exact carrier/latest operator fit unverified, L-SAMproduction acceptance unverified; no fleet-readiness or operational internals claim."
+      },
+      "existing_exact_asset": "vehicles/mineLayer__km138_truck.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "samLauncher",
+      "model": "CheongungII selected Korean2026three-axle fit",
+      "source_ids": [
+        "KR-CHEONGUNG-ACTUAL26"
+      ],
+      "status": "documented2026_service",
+      "reason": "Photographed actual2026Korean six-wheel cabover, eight closed cylindricalcanisters and stabilisers; localdimensions/fittingsestimated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "samLauncher__cheongung_ii_korean",
+      "asset_validation": {
+        "batch": 26,
+        "file": "vehicles/samLauncher__cheongung_ii_korean.glb",
+        "sha256": "e63e012fded6868765d013d0767814d0fa7a4bab5cd58213921f083c4a5a284b",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Selected public exterior, local measurements/fittings estimated; KM138exact carrier/latest operator fit unverified, L-SAMproduction acceptance unverified; no fleet-readiness or operational internals claim."
+      },
+      "existing_exact_asset": "vehicles/samLauncher__cheongung_ii_korean.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "abmLauncher",
+      "model": "L-SAM ordered six-canister semitrailer",
+      "source_ids": [
+        "KR-LSAM-CONTRACT25",
+        "KR-CHEONGUNG-ACTUAL26",
+        "KR-LSAM-II-DEVELOP25"
+      ],
+      "status": "confirmed_production_order_latest_acceptance_unverified",
+      "reason": "Firm2025productionorder, selectedmakerillustration three-axle trailer/sixcanisters; no integrated fictitious8x8TEL/radar. Production dimensions/acceptance not certified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "abmLauncher__l_sam_trailer",
+      "asset_validation": {
+        "batch": 26,
+        "file": "vehicles/abmLauncher__l_sam_trailer.glb",
+        "sha256": "bcb4fdcb9690dd59ca1862e656f576b8a66baf17202cc1fa09bea1dccdffd278",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Selected public exterior, local measurements/fittings estimated; KM138exact carrier/latest operator fit unverified, L-SAMproduction acceptance unverified; no fleet-readiness or operational internals claim."
+      },
+      "existing_exact_asset": "vehicles/abmLauncher__l_sam_trailer.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "counterBatteryRadar",
+      "model": "Cheongyeong counter-battery radarII",
+      "source_ids": [
+        "KR-CBRADAR-II-FIELDED24",
+        "KR-CBRADAR-DIVISION-DEV23",
+        "KR-KOTRA-GUIDE"
+      ],
+      "status": "fielding_completed2024_current_exact_serial_fit_unverified",
+      "reason": "Actualmaker2024vehiclephoto and fieldingcompletion: eight-wheelcarrier, equipmentvan, tall singlepanel with lift/azimuth support. Not new division-development replacement.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "counterBatteryRadar__cheongyeong_ii",
+      "asset_validation": {
+        "batch": 26,
+        "file": "vehicles/counterBatteryRadar__cheongyeong_ii.glb",
+        "sha256": "d1a2bc5708ea1368cfbc463967b56e717c49d7cd92ae645cbb119867b1ea6be0",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Selected public exterior, local measurements/fittings estimated; KM138exact carrier/latest operator fit unverified, L-SAMproduction acceptance unverified; no fleet-readiness or operational internals claim."
+      },
+      "existing_exact_asset": "vehicles/counterBatteryRadar__cheongyeong_ii.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "recoveryVehicle",
+      "model": "K288A1 light recovery vehicle",
+      "source_ids": [
+        "KR-K288-MAKER-BROCHURE",
+        "KR-K200-DELIVERY",
+        "KR-K288-ACTIVITY26"
+      ],
+      "status": "documented_family_service_exact_exterior_pending",
+      "reason": "Distinct small K200familyrecovery type, upgrade deliveries2022andactualK288familyactivity2026. Need usable primaryexteriorphoto before authoring; no fictitious crane/spade copied fromK1.",
+      "asset_action": "compare_primary_exterior_then_generate",
+      "proposed_slug": "recoveryVehicle__k288a1",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "south_korea",
+      "key": "stealthFighter",
+      "model": "F35A follow-on20aircraft confirmed order",
+      "source_ids": [
+        "KR-F35A-LOA23",
+        "KR-F35A-MAKER-ORDER",
+        "KR-F35A-UPGRADE-PLAN26"
+      ],
+      "status": "confirmed_order_future_deliveries_unverified",
+      "reason": "Signed2023LOA, DAPAplannedfieldingfrom2027. Reuse commonAairframe; do not fabricate new exterior absent proven visual differences or count25sale-ceiling as20contracteddelivery. Exact future fit/acceptance pending.",
+      "asset_action": "reuse_existing_type_compare_future_production_fit",
+      "proposed_slug": "stealthFighter__f_35a",
+      "existing_exact_asset": "aircraft/stealthFighter__f_35a.glb",
       "asset_state": "available_exact_file"
     }
   ]

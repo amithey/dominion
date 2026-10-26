@@ -1,0 +1,53 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Hull local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Hull_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Wheel_L0 local=[-1.31, 0.6, -3.7] world=[-1.31, 0.6, -3.7] axis=X pivot
+      Wheel_L0_Mesh local=[0, 0, 0] world=[-1.31, 0.6, -3.7] axis=None mesh
+    Wheel_L1 local=[-1.31, 0.6, -2.34] world=[-1.31, 0.6, -2.34] axis=X pivot
+      Wheel_L1_Mesh local=[0, 0, 0] world=[-1.31, 0.6, -2.34] axis=None mesh
+    Wheel_L2 local=[-1.31, 0.6, 1.16] world=[-1.31, 0.6, 1.16] axis=X pivot
+      Wheel_L2_Mesh local=[0, 0, 0] world=[-1.31, 0.6, 1.16] axis=None mesh
+    Wheel_L3 local=[-1.31, 0.6, 2.86] world=[-1.31, 0.6, 2.86] axis=X pivot
+      Wheel_L3_Mesh local=[0, 0, 0] world=[-1.31, 0.6, 2.86] axis=None mesh
+    Wheel_R0 local=[1.31, 0.6, -3.7] world=[1.31, 0.6, -3.7] axis=X pivot
+      Wheel_R0_Mesh local=[0, 0, 0] world=[1.31, 0.6, -3.7] axis=None mesh
+    Wheel_R1 local=[1.31, 0.6, -2.34] world=[1.31, 0.6, -2.34] axis=X pivot
+      Wheel_R1_Mesh local=[0, 0, 0] world=[1.31, 0.6, -2.34] axis=None mesh
+    Wheel_R2 local=[1.31, 0.6, 1.16] world=[1.31, 0.6, 1.16] axis=X pivot
+      Wheel_R2_Mesh local=[0, 0, 0] world=[1.31, 0.6, 1.16] axis=None mesh
+    Wheel_R3 local=[1.31, 0.6, 2.86] world=[1.31, 0.6, 2.86] axis=X pivot
+      Wheel_R3_Mesh local=[0, 0, 0] world=[1.31, 0.6, 2.86] axis=None mesh
+    Engine_Deck local=[0.0, 3.35, 4.66] world=[0.0, 3.35, 4.66] axis=None pivot
+    Exhaust local=[1.35, 1.2, 3.34] world=[1.35, 1.2, 3.34] axis=None pivot
+    Radar_Lift local=[0.0, 3.65, 0.74] world=[0.0, 3.65, 0.74] axis=X pivot
+      Radar_Lift_Mesh local=[0, 0, 0] world=[0.0, 3.65, 0.74] axis=None mesh
+      Radar local=[0.0, 0.05, 0.0] world=[0.0, 3.7, 0.74] axis=Y pivot
+        Radar_Mesh local=[0, 0, 0] world=[0.0, 3.7, 0.74] axis=None mesh
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Hull_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Hull_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Wheel_L0_LOD1 local=[-1.31, 0.6, -3.7] world=[-1.31, 0.6, -3.7] axis=X pivot hidden
+      Wheel_L0_Mesh_LOD1 local=[0, 0, 0] world=[-1.31, 0.6, -3.7] axis=None mesh hidden
+    Wheel_L1_LOD1 local=[-1.31, 0.6, -2.34] world=[-1.31, 0.6, -2.34] axis=X pivot hidden
+      Wheel_L1_Mesh_LOD1 local=[0, 0, 0] world=[-1.31, 0.6, -2.34] axis=None mesh hidden
+    Wheel_L2_LOD1 local=[-1.31, 0.6, 1.16] world=[-1.31, 0.6, 1.16] axis=X pivot hidden
+      Wheel_L2_Mesh_LOD1 local=[0, 0, 0] world=[-1.31, 0.6, 1.16] axis=None mesh hidden
+    Wheel_L3_LOD1 local=[-1.31, 0.6, 2.86] world=[-1.31, 0.6, 2.86] axis=X pivot hidden
+      Wheel_L3_Mesh_LOD1 local=[0, 0, 0] world=[-1.31, 0.6, 2.86] axis=None mesh hidden
+    Wheel_R0_LOD1 local=[1.31, 0.6, -3.7] world=[1.31, 0.6, -3.7] axis=X pivot hidden
+      Wheel_R0_Mesh_LOD1 local=[0, 0, 0] world=[1.31, 0.6, -3.7] axis=None mesh hidden
+    Wheel_R1_LOD1 local=[1.31, 0.6, -2.34] world=[1.31, 0.6, -2.34] axis=X pivot hidden
+      Wheel_R1_Mesh_LOD1 local=[0, 0, 0] world=[1.31, 0.6, -2.34] axis=None mesh hidden
+    Wheel_R2_LOD1 local=[1.31, 0.6, 1.16] world=[1.31, 0.6, 1.16] axis=X pivot hidden
+      Wheel_R2_Mesh_LOD1 local=[0, 0, 0] world=[1.31, 0.6, 1.16] axis=None mesh hidden
+    Wheel_R3_LOD1 local=[1.31, 0.6, 2.86] world=[1.31, 0.6, 2.86] axis=X pivot hidden
+      Wheel_R3_Mesh_LOD1 local=[0, 0, 0] world=[1.31, 0.6, 2.86] axis=None mesh hidden
+    Engine_Deck_LOD1 local=[0.0, 3.35, 4.66] world=[0.0, 3.35, 4.66] axis=None pivot hidden
+    Exhaust_LOD1 local=[1.35, 1.2, 3.34] world=[1.35, 1.2, 3.34] axis=None pivot hidden
+    Radar_Lift_LOD1 local=[0.0, 3.65, 0.74] world=[0.0, 3.65, 0.74] axis=X pivot hidden
+      Radar_Lift_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 3.65, 0.74] axis=None mesh hidden
+      Radar_LOD1 local=[0.0, 0.05, 0.0] world=[0.0, 3.7, 0.74] axis=Y pivot hidden
+        Radar_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 3.7, 0.74] axis=None mesh hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 1.97875, 0.11] world=[0.0, 1.97875, 0.11] axis=None mesh hidden
