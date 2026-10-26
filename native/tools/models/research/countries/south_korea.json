@@ -1273,11 +1273,22 @@
           1176
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-HJSC-PATROL",
+        "KR-PKG-CURRENT26",
+        "KR-PKG-EXTERIOR-DMA",
+        "KR-PKMR-CURRENT26",
+        "KR-PKMR-BATCHII-DELIVERY26",
+        "KR-PKMR-ORDER25",
+        "KR-BIRYONG-ADD"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_model_requires_specific_type",
+        "reason": "Generic gunboat cannot represent both larger63m PKGwithfourSSM/afttwin40 and45m PKMRwithaftrocket rack. Current named PKG and PKMRactivity proven. Selected original later-hull PKGangularWIAgun differs from lead roundedOTO; current BatchIand ordered/delivered BatchIIstages kept distinct.",
+        "recommended_action": "add_models_and_review_game_assignment",
+        "model_match": "two_distinct_current_small_combatant_families",
+        "replacement": null
       }
     },
     {
@@ -1314,13 +1325,16 @@
       },
       "evidence_status": "reviewed",
       "evidence_source_ids": [
-        "KR-RIMPAC-RETURN26"
+        "KR-RIMPAC-RETURN26",
+        "KR-LANDING-HISTORY19",
+        "KR-LSTII-LAUNCH13",
+        "KR-GOJUNBONG-CURRENT26"
       ],
       "assessment": {
         "status": "incomplete_inventory",
-        "reason": "Current LSTII CheonJaBong is independently documented, distinct from existing DokdoLPH. Existing Dokdo and the exact LSTIIramp/landing-craft/weapon configuration require their own checks; no LSTIIbuilt in this batch.",
-        "recommended_action": "research_additional_model",
-        "model_match": "dokdo_does_not_cover_conventional_lstii",
+        "reason": "DokdoLPHdoes not cover current CheonWangBongLSTIIand olderGoJunBongLSTI. Published sizes, central-versus-aft superstructure and helicopter spots distinguish classes. New models have stern ramps; LSTIalso has separate estimated bow beaching doors/ramp.20mm mount local subtype, SAAMlid layout, concealed thirdLCM and every-hull upgrades remain unverified.",
+        "recommended_action": "add_models",
+        "model_match": "dokdo_plus_two_distinct_conventional_landing_families",
         "replacement": null
       }
     },
@@ -1358,13 +1372,17 @@
       },
       "evidence_status": "reviewed",
       "evidence_source_ids": [
-        "KR-RIMPAC-RETURN26"
+        "KR-RIMPAC-RETURN26",
+        "KR-KSSII-HISTORY19",
+        "KR-SUBMARINE-TRAINING26",
+        "KR-KSSII-EW-TRIAL26",
+        "KR-KSSII-DIMS18"
       ],
       "assessment": {
-        "status": "documented_service",
-        "reason": "Named Dosan An Chang-ho actually deployed and returned RIMPAC2026; this establishes current BatchIfamily activity, not all boats available or all KSSIIIversions identical. Existing model geometry, stern controls and six-versus-ten-cell BatchI/IIdistinction still require dedicated check.",
-        "recommended_action": "retain_pending_variant_reaudit",
-        "model_match": "national_type_confirmed_geometry_reaudit_pending",
+        "status": "incomplete_inventory",
+        "reason": "Current operator identifies JangBogo,SonWonIl andDosan families. New65.3x6.3m SonWonIlType214has bowplanes/tallnarrow sail/flatcasing and no inventedVLS. Existing Dosan geometry/BatchIandIIand old JangBogoindividual retirement and dimensions still need separate primary review.2026loan prototypes are not completed all-hull upgrades.",
+        "recommended_action": "add_and_compare_models",
+        "model_match": "existing_dosan_cannot_represent_type214_or_type209",
         "replacement": null
       }
     },
@@ -2006,20 +2024,6 @@
     },
     {
       "nation": "south_korea",
-      "key": "landingShip",
-      "model": "Cheon Wang Bong class LSTII",
-      "source_ids": [
-        "KR-RIMPAC-RETURN26"
-      ],
-      "status": "documented_service",
-      "reason": "Current CheonJaBong confirmed; research stern ramp, carried landing craft, cranes and actual gun before geometry. Not a DokdoLPH.",
-      "asset_action": "research_variant_before_generation",
-      "proposed_slug": "landingShip__cheonwangbong_class",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
-    },
-    {
-      "nation": "south_korea",
       "key": "navalHelicopter",
       "model": "AW159 Korean naval ASW variant",
       "source_ids": [
@@ -2075,6 +2079,139 @@
       "proposed_slug": null,
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "south_korea",
+      "key": "gunboat",
+      "model": "Chamsuri211 PKMR BatchI",
+      "source_ids": [
+        "KR-HJSC-PATROL",
+        "KR-PKMR-CURRENT26",
+        "KR-PKMR-BATCHII-DELIVERY26",
+        "KR-PKMR-ORDER25",
+        "KR-BIRYONG-ADD"
+      ],
+      "status": "documented_service",
+      "reason": "Smaller current45x7m maker rounded hull. Angular76gun, afttwelve selected closed rocket covers, two RWSandwaterjets. Current and firmly ordered BatchIIstages separately qualified; not every modernisation represented.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "gunboat__chamsuri_211_pkmr",
+      "asset_validation": {
+        "batch": 22,
+        "file": "ships/gunboat__chamsuri_211_pkmr.glb",
+        "sha256": "9b2d7b3eb267c619dd730fc8e52b97700abc73a3eb7f27af99b57b629b6b3f6b",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal sizes; local deck fittings, closed lid arrangement and propeller geometry estimated. GoJunBong20mmmount type/count/location not independently certified; no current fleet-wide EW/weapon-load/readiness claim."
+      },
+      "existing_exact_asset": "ships/gunboat__chamsuri_211_pkmr.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "missileBoat",
+      "model": "Yoon Youngha class later-hull PKG",
+      "source_ids": [
+        "KR-HJSC-PATROL",
+        "KR-PKG-CURRENT26",
+        "KR-PKG-EXTERIOR-DMA"
+      ],
+      "status": "documented_service",
+      "reason": "Larger current63x9m PKG, later-hull angular WIA76gun, afttwin40Nobong andfourSSMcanisters. Lead roundedOTOgun not substituted. Localfits/waterjetdimensions estimated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "missileBoat__yoon_youngha_class",
+      "asset_validation": {
+        "batch": 22,
+        "file": "ships/missileBoat__yoon_youngha_class.glb",
+        "sha256": "0ecb7449399f2ae88f668b3ab67a8c7a29c500c2d0fafc04cb963dcc42f2010c",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal sizes; local deck fittings, closed lid arrangement and propeller geometry estimated. GoJunBong20mmmount type/count/location not independently certified; no current fleet-wide EW/weapon-load/readiness claim."
+      },
+      "existing_exact_asset": "ships/missileBoat__yoon_youngha_class.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "landingShip",
+      "model": "Cheon Wang Bong class LSTII",
+      "source_ids": [
+        "KR-RIMPAC-RETURN26",
+        "KR-LANDING-HISTORY19",
+        "KR-LSTII-LAUNCH13"
+      ],
+      "status": "documented_service",
+      "reason": "Current CheonJaBong confirmed.126.9x19.4m, centralbridge, twoforedeckLCMs/twin afthelicopterspots/sternRamp. Threecraftcapacity doesnot invent visiblethird; selected8closedSAAMlids/localcranes estimated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "landingShip__cheonwangbong_class",
+      "asset_validation": {
+        "batch": 22,
+        "file": "ships/landingShip__cheonwangbong_class.glb",
+        "sha256": "8f9c41e51daf113c9599fbc5fa25d463d60ab814109a049b0ba2a30d249e3061",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal sizes; local deck fittings, closed lid arrangement and propeller geometry estimated. GoJunBong20mmmount type/count/location not independently certified; no current fleet-wide EW/weapon-load/readiness claim."
+      },
+      "existing_exact_asset": "ships/landingShip__cheonwangbong_class.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "landingShip",
+      "model": "Go Jun Bong class LSTI",
+      "source_ids": [
+        "KR-LANDING-HISTORY19",
+        "KR-GOJUNBONG-CURRENT26",
+        "KR-KOTRA-GUIDE"
+      ],
+      "status": "documented_service",
+      "reason": "Older current112.7x15.4m beaching class, aftbridge, twin40mm/20mmrepresentative mounts and singlehelipad; separatebowdoors/ramp and sternRamp. Selected six-barrel navalVulcanfamily exterior is a modelling estimate; exact20mmmount/count/location and allhullconfigurations remain unverified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "landingShip__gojunbong_class",
+      "asset_validation": {
+        "batch": 22,
+        "file": "ships/landingShip__gojunbong_class.glb",
+        "sha256": "f87eabe5abd4c9d0bd6548b759cf9742cae7732141357a47ac5cdf76dffd64cf",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal sizes; local deck fittings, closed lid arrangement and propeller geometry estimated. GoJunBong20mmmount type/count/location not independently certified; no current fleet-wide EW/weapon-load/readiness claim."
+      },
+      "existing_exact_asset": "ships/landingShip__gojunbong_class.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "submarine",
+      "model": "Son Won-il class KSSII Type214",
+      "source_ids": [
+        "KR-KSSII-HISTORY19",
+        "KR-SUBMARINE-TRAINING26",
+        "KR-KSSII-EW-TRIAL26",
+        "KR-KSSII-DIMS18"
+      ],
+      "status": "documented_service",
+      "reason": "Current65.3x6.3m Type214family, bowplanes, tallnarrow sail/flatcasing, cruciformtail and representativeopen screw; noVLS. Seven decorative screwblades and localsensors explicitly unverified; 2026trialprototypes not claimedfleetwide.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "submarine__son_won_il_class",
+      "asset_validation": {
+        "batch": 22,
+        "file": "ships/submarine__son_won_il_class.glb",
+        "sha256": "a5574836d53446d04e32f5eb091664f0c552200e78ede106fb74047c594f68c4",
+        "loaders": [
+          "trimesh 5.1.1",
+          "Godot 4.7.2 GLTFDocument"
+        ],
+        "limits": "Public principal sizes; local deck fittings, closed lid arrangement and propeller geometry estimated. GoJunBong20mmmount type/count/location not independently certified; no current fleet-wide EW/weapon-load/readiness claim."
+      },
+      "existing_exact_asset": "ships/submarine__son_won_il_class.glb",
+      "asset_state": "available_exact_file"
     }
   ]
 }

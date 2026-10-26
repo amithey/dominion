@@ -1,0 +1,51 @@
+{
+  "batch": "inventory-additions-22",
+  "files": [
+    "ships/gunboat__chamsuri_211_pkmr.glb",
+    "ships/missileBoat__yoon_youngha_class.glb",
+    "ships/landingShip__cheonwangbong_class.glb",
+    "ships/landingShip__gojunbong_class.glb",
+    "ships/submarine__son_won_il_class.glb"
+  ],
+  "sha256": {
+    "ships/gunboat__chamsuri_211_pkmr.glb": "9b2d7b3eb267c619dd730fc8e52b97700abc73a3eb7f27af99b57b629b6b3f6b",
+    "ships/missileBoat__yoon_youngha_class.glb": "0ecb7449399f2ae88f668b3ab67a8c7a29c500c2d0fafc04cb963dcc42f2010c",
+    "ships/landingShip__cheonwangbong_class.glb": "8f9c41e51daf113c9599fbc5fa25d463d60ab814109a049b0ba2a30d249e3061",
+    "ships/landingShip__gojunbong_class.glb": "f87eabe5abd4c9d0bd6548b759cf9742cae7732141357a47ac5cdf76dffd64cf",
+    "ships/submarine__son_won_il_class.glb": "a5574836d53446d04e32f5eb091664f0c552200e78ede106fb74047c594f68c4"
+  },
+  "maximum_triangles": [
+    13928,
+    2472
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "Five distinct Korean patrol, landing and submarine exteriors; twelve aft rocket ports, twin40mm ports, bow and stern ramps, LCMs, cruciform controls and propeller pivots; source and fit limitations qualified",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "Full CollisionBox contains both saved Hull LODs including bow sheer",
+    "PKMRtwelve aft marker children under X launcher/Y turntable and two RWS; no propellers",
+    "All selected Nobongmounts have two distinct muzzle-port markers in both LODs",
+    "LSTIIonlysternRamp, two stowed open-well LCMs and two crane chains; no invented visible third boat",
+    "LSTIseparatebowdoors/bowRamp/sternRamp; selected navalVulcan has six visible ports, installed fit remains unverified",
+    "Type214bowplanes and four cruciform controls, no KSSIIIVLS; decorative propeller not certified real blade geometry",
+    "20final saved-file overview views and five grey detail/posed views actually visually inspected"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_22.py",
+  "preserved_baseline": {
+    "commit": "2a363b37772c831811d098de9451a0671f633d89",
+    "manifest_entries": 959,
+    "old_asset_bytes_and_entries": "checked by scoped commit helper"
+  },
+  "limitations": [
+    "Local dimensions, SAAM/rocket cover layout and concealed arrangements estimated",
+    "GoJunBong20mmmount style/count/location and decorative submarine propeller remain unverified real-hull configuration",
+    "Ordered/launched/delivered/workup/current statuses distinguished; no all-hull retrofit or national serviceability claim"
+  ],
+  "review_images": [
+    "inventory-additions-22-ships.jpg",
+    "inventory-additions-22-details-grey.jpg"
+  ]
+}
