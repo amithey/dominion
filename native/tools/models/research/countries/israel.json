@@ -188,11 +188,16 @@
           1884
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-PUMA-OPERATOR25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "generic_model_mismatch",
+        "reason": "Official2025operator evidence names Puma; a genericT72-derived carrier cannot certify the Israeli engineering fleet. National Puma/Namera/armouredD9attachments need separate primary exterior checks and original models. A2018unit-specific replacement announcement is not whole-fleet Puma retirement proof.",
+        "recommended_action": "research_specific_Puma_Namera_D9",
+        "model_match": "wrong_generic_hull_family",
+        "replacement": "mineClearer__puma"
       }
     },
     {
@@ -848,11 +853,12 @@
         "HERMES450-OPERATOR-SIZE15",
         "IL-SKYLARK-CONTRACT23",
         "IL-SKYLARK-LEX-NIN",
-        "IL-SKYLARK3-OPERATOR25"
+        "IL-SKYLARK3-OPERATOR25",
+        "IL-HERON-FAMILIES25"
       ],
       "assessment": {
         "status": "incomplete_inventory",
-        "reason": "Hermes900roster does not cover IDF450Zik. Added original450public outer fit; Hermes900national geometry and other Heron/Skylark families still require separate current operator/variant audit. No exhaustive two-type fleet or readiness claim. Added three distinct Skylark public exteriors: LEX, electric3 and contracted new I eVTOL. Published spans3/4.7m versus local body-length estimates and wholly estimated eVTOLsize explicitly separated. Neither complete old-type retirement nor eVTOLacceptance inferred; further Heron/900national variants still pending.",
+        "reason": "Hermes900roster does not cover IDF450Zik. Added original450public outer fit; Hermes900national geometry and other Heron/Skylark families still require separate current operator/variant audit. No exhaustive two-type fleet or readiness claim. Added three distinct Skylark public exteriors: LEX, electric3 and contracted new I eVTOL. Published spans3/4.7m versus local body-length estimates and wholly estimated eVTOLsize explicitly separated. Neither complete old-type retirement nor eVTOLacceptance inferred; further Heron/900national variants still pending. Maker2025also confirms HeronShoval/HeronTPEitan. Specific family files already exist, but national payload/antenna fit still needs individual visual audit; no duplicate relabels or complete inventory certification.",
         "recommended_action": "add_missing_type_continue_inventory",
         "model_match": "450_is_not_900_or_watchkeeper",
         "replacement": null
@@ -1005,11 +1011,17 @@
           2010
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-SAAR5-PHOTO18",
+        "IL-SAAR5-USN25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "Current national family includes Sa ar5andSa ar6, not identical vessels. Added selected classic2018Sa ar5outer fit, currentHanitfamily separately confirmed2025. ExistingSa ar6precise national fit and updatedLahavstill require their own geometry review.",
+        "recommended_action": "add_missing_class_continue_variants",
+        "model_match": "different_hulls_masts_and_forward_weapon",
+        "replacement": null
       }
     },
     {
@@ -1045,11 +1057,18 @@
           1502
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-RESHEF-CONTRACT24",
+        "IL-RESHEF-STEEL25",
+        "ISL-S80-MAKER"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_current_type_and_future_order",
+        "reason": "NiritSa ar4.5remains distinct from signed futureReshefreplacement. Production/expected delivery does not prove old boats retired or new ones fielded. Added official public Reshefconcept; precise existing4.5serial fit and final future production shape remain separate.",
+        "recommended_action": "retain_Nirit_record_future_Reshef_separately",
+        "model_match": "distinct_current_and_future_vessels",
+        "replacement": null
       }
     },
     {
@@ -1123,11 +1142,19 @@
           988
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-DOLPHIN-OPERATOR25",
+        "IL-DRAKON-TKMS26",
+        "IL-DRAKON-OPERATOR26",
+        "IL-DRAKON-FIRSTHAND26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "Initial AIPpair, originalDolphinI and new2026Drakon have different public exteriors. Added shorter original generation and long-sailDrakon; Dakarconfirmed construction queued separately. ExistinginitialAIPasset geometry/current serial fit not automatically certified by family presence. Local dimensions/propulsor estimates explicit, no hidden weapon speculation.",
+        "recommended_action": "add_distinct_generations_keep_Dakar_future",
+        "model_match": "compact_sail_vs_AIPpair_vs_long_sail_Drakon",
+        "replacement": null
       }
     },
     {
@@ -1591,6 +1618,193 @@
       "proposed_slug": "gunship__ah_64e_apache",
       "existing_exact_asset": "aircraft/gunship__ah_64e_apache.glb",
       "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "corvette",
+      "model": "Sa ar5 selected Israeli public exterior",
+      "source_ids": [
+        "IL-SAAR5-PHOTO18",
+        "IL-SAAR5-USN25"
+      ],
+      "status": "documented_current_family_selected2018_fit_current_serial_pending",
+      "reason": "Current Sa ar5family missing from Sa ar6-only roster. Selected2018class two-mast/Phalanx/hangar exterior, exact Eilatidentity/category not certified, not modernLahavMFSTARorSa ar6. Adopted nominal85.6x11.9m/local fittings not primary factory-certified. Closed bank covers do not invent capacities.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "corvette__sa_ar_5",
+      "asset_validation": {
+        "batch": 31,
+        "file": "ships/corvette__sa_ar_5.glb",
+        "sha256": "41f00280b2ab30d405dadfa66e2ce814c67dec803b3564712b2eee2891452dc2",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public exterior, source-published sizes versus local estimates explicit; Reshef future concept/Drakonnew arrival/LSVintegration distinct readiness stages, no hidden weapon or propulsor certification."
+      },
+      "existing_exact_asset": "ships/corvette__sa_ar_5.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "missileBoat",
+      "model": "Reshef confirmed-order national public concept",
+      "source_ids": [
+        "IL-RESHEF-CONTRACT24",
+        "IL-RESHEF-STEEL25",
+        "IL-RESHEF-NATIONAL-CONCEPT",
+        "ISL-S80-MAKER"
+      ],
+      "status": "confirmed_order_future_official_concept_not_delivered_service",
+      "reason": "Five signed2024, production2025/firstexpected3.5years later. Original official national concept, not S80helicopter rendering: angular bridge/pyramidal mast/raked covers/aft platform/visible angular remote mount/closed equipment. Related80x11m adopted representative size, final configuration/capacities/auxiliary calibre unverified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "missileBoat__reshef",
+      "asset_validation": {
+        "batch": 31,
+        "file": "ships/missileBoat__reshef.glb",
+        "sha256": "c15cdc09b7d15de32cfd78cac2314d69492b7f1fddc452053479c604b4414309",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public exterior, source-published sizes versus local estimates explicit; Reshef future concept/Drakonnew arrival/LSVintegration distinct readiness stages, no hidden weapon or propulsor certification."
+      },
+      "existing_exact_asset": "ships/missileBoat__reshef.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "landingShip",
+      "model": "Nahshon class selected public exterior",
+      "source_ids": [
+        "IL-NAHSHON-HANDOVER23",
+        "IL-LSV-CEREMONY24",
+        "IL-LSV-COMMANDER24",
+        "IL-NAHSHON-OFFICIAL-PHOTOS23"
+      ],
+      "status": "delivered_class_integration_current_FOC_unverified",
+      "reason": "Documented two delivered/arrived same-class ships, not in national roster.95x20m operator size, aft accommodation/upper bridge/side exhausts/catwalks, empty cargo deck and deck-level bow ramp. Local draft/freeboard/bow/ramp fittings estimated; integration/arrival not proof every current readiness stage.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "landingShip__nahshon",
+      "asset_validation": {
+        "batch": 31,
+        "file": "ships/landingShip__nahshon.glb",
+        "sha256": "60e74bc642a42727d3cc94422edd38ab950a4d08bbb9caf2fbf7e85670e827fd",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public exterior, source-published sizes versus local estimates explicit; Reshef future concept/Drakonnew arrival/LSVintegration distinct readiness stages, no hidden weapon or propulsor certification."
+      },
+      "existing_exact_asset": "ships/landingShip__nahshon.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "submarine",
+      "model": "Original DolphinI selected public exterior",
+      "source_ids": [
+        "IL-DOLPHIN-OPERATOR25",
+        "IL-DOLPHIN-PARTICIPANT-PHOTOS"
+      ],
+      "status": "documented_current_original_generation_selected_historical_fit",
+      "reason": "Short original diesel-electric generation missing from AIPonly roster. Compact rounded sail/casing/high bow planes from historical participant photographs; current generation corroborated separately.57.3x6.8m nominal target/local underwater fittings and propeller expressly estimated, no disguised AIPrename or hidden weapon reconstruction.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "submarine__dolphin_i",
+      "asset_validation": {
+        "batch": 31,
+        "file": "ships/submarine__dolphin_i.glb",
+        "sha256": "0ae484fc69b8271e0a965a696aaa1b20efcca13d29bcc93750d2375b5b7868b4",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public exterior, source-published sizes versus local estimates explicit; Reshef future concept/Drakonnew arrival/LSVintegration distinct readiness stages, no hidden weapon or propulsor certification."
+      },
+      "existing_exact_asset": "ships/submarine__dolphin_i.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "submarine",
+      "model": "INS Drakon newly delivered public exterior",
+      "source_ids": [
+        "IL-DRAKON-TKMS26",
+        "IL-DRAKON-MOD26",
+        "IL-DRAKON-OPERATOR26",
+        "IL-DRAKON-FIRSTHAND26"
+      ],
+      "status": "newly_delivered_arrived_Sept2026_operational_certification_unverified",
+      "reason": "Newly delivered/arrived2026boat with much longer/wider sail and foreclustered masts, distinct first AIPpair and futureDakar. Operatoronlygreaterthan70m: selected73m/6.8m/23m sail local photo estimates. No hiddenVLS/weapon/shaftclaims or full readiness inferred.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "submarine__drakon",
+      "asset_validation": {
+        "batch": 31,
+        "file": "ships/submarine__drakon.glb",
+        "sha256": "5eb54d3aaadc3c13a846551970be5d98fc0b28f29985a55701b957aafb3bf9e3",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public exterior, source-published sizes versus local estimates explicit; Reshef future concept/Drakonnew arrival/LSVintegration distinct readiness stages, no hidden weapon or propulsor certification."
+      },
+      "existing_exact_asset": "ships/submarine__drakon.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "submarine",
+      "model": "Dakar class confirmed future construction",
+      "source_ids": [
+        "IL-DRAKON-TKMS26"
+      ],
+      "status": "confirmed_order_in_construction_future_fit_pending",
+      "reason": "Three separate futureDakarclass boats already in construction, distinct from deliveredDrakon. Exact selected future public exterior references still need research; no current delivery/readiness or hidden arrangements assumed.",
+      "asset_action": "research_public_future_exterior_before_generation",
+      "proposed_slug": "submarine__dakar_class",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "israel",
+      "key": "drone",
+      "model": "Heron Shoval existing family asset",
+      "source_ids": [
+        "IL-HERON-FAMILIES25"
+      ],
+      "status": "documented_service",
+      "reason": "Maker confirms national family; exact specific family GLB already exists, so no renamed duplicate is generated. Existing geometry and selected national camera/antenna/serial fit remain to be visually audited before certification.",
+      "asset_action": "check_existing_specific_model_national_fit",
+      "proposed_slug": "drone__heron_isr",
+      "existing_exact_asset": "aircraft/drone__heron_isr.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "drone",
+      "model": "HeronTP Eitan existing family asset",
+      "source_ids": [
+        "IL-HERON-FAMILIES25"
+      ],
+      "status": "documented_service",
+      "reason": "Maker confirms national family; exact specific family GLB already exists, so no renamed duplicate is generated. Existing geometry and selected national camera/antenna/serial fit remain to be visually audited before certification.",
+      "asset_action": "check_existing_specific_model_national_fit",
+      "proposed_slug": "drone__heron_tp",
+      "existing_exact_asset": "aircraft/drone__heron_tp.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "mineClearer",
+      "model": "Puma engineering selected outer fit queued",
+      "source_ids": [
+        "IL-PUMA-OPERATOR25"
+      ],
+      "status": "documented_service",
+      "reason": "Continued2025typepresence is confirmed; replacing part of fleet by Namera does not establish blanket retirement. GenericT72carrier is not a country-specific CenturionPuma. Primary full exterior/attachment references still needed before original generation.",
+      "asset_action": "research_specific_public_exterior_before_generation",
+      "proposed_slug": "mineClearer__puma",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
     }
   ]
 }

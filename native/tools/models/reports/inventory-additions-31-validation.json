@@ -1,0 +1,55 @@
+{
+  "batch": "inventory-additions-31",
+  "files": [
+    "ships/corvette__sa_ar_5.glb",
+    "ships/missileBoat__reshef.glb",
+    "ships/landingShip__nahshon.glb",
+    "ships/submarine__dolphin_i.glb",
+    "ships/submarine__drakon.glb"
+  ],
+  "sha256": {
+    "ships/corvette__sa_ar_5.glb": "41f00280b2ab30d405dadfa66e2ce814c67dec803b3564712b2eee2891452dc2",
+    "ships/missileBoat__reshef.glb": "c15cdc09b7d15de32cfd78cac2314d69492b7f1fddc452053479c604b4414309",
+    "ships/landingShip__nahshon.glb": "60e74bc642a42727d3cc94422edd38ab950a4d08bbb9caf2fbf7e85670e827fd",
+    "ships/submarine__dolphin_i.glb": "0ae484fc69b8271e0a965a696aaa1b20efcca13d29bcc93750d2375b5b7868b4",
+    "ships/submarine__drakon.glb": "5eb54d3aaadc3c13a846551970be5d98fc0b28f29985a55701b957aafb3bf9e3"
+  },
+  "maximum_triangles": [
+    11688,
+    2108
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "Five distinct Israeli naval public exteriors: selected Saar5, delivered Nahshon, original DolphinI, newly delivered Drakon and ordered Reshef official concept; published principal sizes versus local estimates and delivery versus readiness separated",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "Sa ar5selected2018classic masts/forward six-tube CIWS and aft aviation, not Sa ar6or unverified currentLahavfit",
+    "Reshefofficialconcept pyramidal mast/raked covers/aft sensor platform/visible auxiliary mount; no S80helicopter circle/hangar",
+    "Nahshon95x20m/operator size, empty cargo deck/aft accommodation; bow Ramp Xhinge at cargo deck with independent native propagation",
+    "OriginalDolphinIcompact10m sail versus Drakon23m broad sail/foreclustered masts, both local estimated dimensions clearly labelled",
+    "Submarinefour Xtail real local-axis frames, geometric decorative7blade screws/Zrotation/high bow-plane pivots, no inventedVLS",
+    "20final overview and six detail/posed views actually inspected"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_31.py",
+  "preserved_baseline": {
+    "commit": "9431fa87148c0591ed34a8ea767ee64c9ab841e4",
+    "manifest_entries": 1006,
+    "old_asset_bytes_and_entries": "checked by scoped commit helper"
+  },
+  "limitations": [
+    "Local sizes/fittings/selected serial fit are estimates, not factory certification or fleet readiness",
+    "Nahshonoperator95x20m versus estimated draft/freeboard/bow/ramp; delivered/arrived2024with integration distinct from currentFOC",
+    "Selected2018Sa ar5class image category attributes Eilat but exact hull IDnot certified;2025Hanitfamily presence does not certify identical mast upgrade",
+    "Reshef2024signedfive/2025production/firstexpectedroughly3.5yearslater; official national concept differs generic makerS80helicopter illustration, related80x11m not final national certification",
+    "DolphinIoriginalgeneration currentfamily corroborated separately from historical photos; adopted nominal57.3x6.8m/local underwater fits not primaryfactory dimensions",
+    "Drakonoperatoronlylengthgreaterthan70m: chosen73x6.8m/23x3.25m sail/local fittings estimated. Handover/transit/newarrival does not prove completed operational certification; separate futureDakar3inconstruction stillqueued",
+    "Submarinepropeller7blades are decorative estimates, no claimed authentic hydrodynamics/internal weapons/machinery",
+    "HeronShoval/Eitanexistingexact-family files recorded for further national-fit audit; Pumacontinued2025presence confirmed, original specific outer model queued"
+  ],
+  "review_images": [
+    "inventory-additions-31-ships.jpg",
+    "inventory-additions-31-details.jpg"
+  ]
+}
