@@ -1,0 +1,56 @@
+{
+  "batch": "inventory-additions-29",
+  "files": [
+    "aircraft/jet__f_15c_baz.glb",
+    "aircraft/jet__f_15d_baz.glb",
+    "aircraft/aewc__g550_oron.glb",
+    "aircraft/aewc__g500_shavit.glb",
+    "aircraft/drone__hermes_450_zik.glb",
+    "aircraft/heavyLift__ch_53k_pereh.glb"
+  ],
+  "sha256": {
+    "aircraft/jet__f_15c_baz.glb": "9ab7fae76d6fef47871027949ab60af3b92125b4aa37027b1148f67d7303ebe9",
+    "aircraft/jet__f_15d_baz.glb": "131b6a3c6c629446fde5c4cf8f05a0e673f98febbda07b1325eb26f5a9ea7fe4",
+    "aircraft/aewc__g550_oron.glb": "0e7c38674defbe9fb6e16d4102766f20407e60b8c9d775576763e8b1919bc17d",
+    "aircraft/aewc__g500_shavit.glb": "aa982621dc63c3bff0407d34fcd2e4f6a7e3f997ee27e55ec110117925f06aba",
+    "aircraft/drone__hermes_450_zik.glb": "e24b9d0c230dd638104fe9fb3aa615fd7e7ca59ed13e1db47d43e7c93f1f2d1f",
+    "aircraft/heavyLift__ch_53k_pereh.glb": "61cf595f31ec69f60c5a3b67e22d9c9456585b78ec4cfeb22f749df8aca17ab4"
+  },
+  "maximum_triangles": [
+    12682,
+    1916
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "Six distinct public exteriors: IsraeliBazC/D, Oron/Shavit, Hermes450 and ordered CH53KPereh; current families and historical/future selected fits separated",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "central geometry inside CollisionBox in both LODs",
+    "Csingle/Dtandem, selected FASTpacks both, Drounded dorsal cover only, single tyres and exposed-looking cosmetic nozzle ribs",
+    "Oron rounded side covers/2024official closeup vs legacyShavit forward canoe/fixed tail cover; neither rotating AEWdisc nor armed",
+    "Hermes4506.1x10.5m/narrow wing/small drooped tips, two-blade pusher, Vtail, no900satellite hump",
+    "OrderedPereh three engines with raised aft-port third, geometric7/4blades, cantedtail20degrees, broad sponsons, three twin-tyre groups",
+    "Pereh selected8.4m wheelbase/3.9m track, rotor/ramp poses leave body fixed",
+    "24final overview and eight detail/posed views actually visually inspected"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_29.py",
+  "preserved_baseline": {
+    "commit": "8fe8e329e037657433000d2e1765141d99ed3aaf",
+    "manifest_entries": 995,
+    "old_asset_bytes_and_entries": "checked by scoped commit helper"
+  },
+  "limitations": [
+    "Public selected exteriors/local dimensions are estimates, not factory certification of every current or future serial fit/readiness",
+    "2019BazC/Dselected FASTpacks are mission-dependent, not universal; futureF15IAcontract is separate and pending original exterior",
+    "Oron and Shavit are MultiINT/SIGINT variants placed in gameaewc namespace as explicit role abstractions, not EitamAEWtechnical equivalents",
+    "2024Oronofficial closeup resolves rounded side covers; Shavit2007historical selected fit corroborated as current family by2025maker",
+    "Hermes450unarmed selected outer fit is distinct from Hermes900/Watchkeeper and not a claim futureZikOr already fielded",
+    "CH53KPereh12confirmed order with2028firstarrivalexpectation, separate from current two-engine/six-bladeYasur; final national EW/sensor installation unverified"
+  ],
+  "review_images": [
+    "inventory-additions-29-aircraft.jpg",
+    "inventory-additions-29-details.jpg"
+  ]
+}

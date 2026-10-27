@@ -658,11 +658,15 @@
         "IL-SUFA-MAKER03",
         "IL-FIGHTER-OPERATOR25",
         "IL-BARAK1-RETIREMENT24",
-        "IL-SUFA-EW-ORDER25"
+        "IL-SUFA-EW-ORDER25",
+        "IL-BAZ-C-PHOTO19",
+        "IL-BAZ-D-PHOTO19",
+        "IL-BAZ-C-METADATA25",
+        "IL-F15IA-CONTRACT24"
       ],
       "assessment": {
         "status": "incomplete_inventory",
-        "reason": "F15IRaam roster does not cover the independently documented F16ISufa, current F16C/DBarak or F15Baz families. F16CBarakI retired; current CBarakII and D selected variants are separate. New original F16s added; existing F15Inational geometry and additional Baz still require their own review.2025Sufa EWcontract is not all-fleet completed installation.",
+        "reason": "F15IRaam roster does not cover the independently documented F16ISufa, current F16C/DBarak or F15Baz families. F16CBarakI retired; current CBarakII and D selected variants are separate. New original F16s added; existing F15Inational geometry and additional Baz still require their own review.2025Sufa EWcontract is not all-fleet completed installation. New selected F15C/DFASTpack exteriors added; A/Bblock-specific current fit remains a separate question.25F15IAconfirmed in2024contract plus25option and2031expected first delivery are future, not fielded Baz/Raam. Later procurement approvals are follow-up, not automatically additional delivered or exercised-option quantities.",
         "recommended_action": "add_types_and_review_remaining_variants",
         "model_match": "current_types_corrob_existing_f15i_geometry_not_reaudited",
         "replacement": null
@@ -783,11 +787,18 @@
           1148
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-IAI-MISSION-FAMILIES25",
+        "IL-ORON-OPERATOR24",
+        "IL-SHAVIT-PROGRAMME-LECTURE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "Eitam roster is one of three distinct national mission-aircraft families. Add Oron/Shavit public exteriors; SIGINT/MultiINT are explicitly aewc game-role abstractions, not technical AEWequivalence. Existing Eitam geometry/current serial fit still requires its own review.",
+        "recommended_action": "add_special_mission_variants",
+        "model_match": "three_different_mission_families_existing_eitam_geometry_pending",
+        "replacement": null
       }
     },
     {
@@ -821,11 +832,18 @@
           1208
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-HERMES450-MAKER",
+        "IL-ZIK-OPERATOR22",
+        "HERMES450-OPERATOR-SIZE15"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "Hermes900roster does not cover IDF450Zik. Added original450public outer fit; Hermes900national geometry and other Heron/Skylark families still require separate current operator/variant audit. No exhaustive two-type fleet or readiness claim.",
+        "recommended_action": "add_missing_type_continue_inventory",
+        "model_match": "450_is_not_900_or_watchkeeper",
+        "replacement": null
       }
     },
     {
@@ -1262,12 +1280,173 @@
         "IL-PEREH-INTEGRATION26",
         "IL-PEREH-ASSEMBLY25",
         "IL-PEREH-MAKER-ILLUSTRATION",
-        "SIK-CH53K-BROCHURE24"
+        "SIK-CH53K-BROCHURE24",
+        "SIK-CH53K-PUBLIC-TYPE"
       ],
       "status": "confirmed_order_future_delivery_not_current_service",
       "reason": "Twelve contracted CH53K with Israeli integration; first arrival expected2028, not current fielded Yasur. Future separate original exterior needed after manufacturer outline inspection; three engines/seven blades, not a Yasur relabel. Final national sensor/avionics fit not assumed from an illustration.",
-      "asset_action": "generate_after_outline_reference_review",
+      "asset_action": "generated_and_readback_verified",
       "proposed_slug": "heavyLift__ch_53k_pereh",
+      "asset_validation": {
+        "batch": 29,
+        "file": "aircraft/heavyLift__ch_53k_pereh.glb",
+        "sha256": "61cf595f31ec69f60c5a3b67e22d9c9456585b78ec4cfeb22f749df8aca17ab4",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Original selected public outer fit; local dimensions/fittings and exact current/future serial installation not factory certified. Pereh is a confirmed order, not delivered service."
+      },
+      "existing_exact_asset": "aircraft/heavyLift__ch_53k_pereh.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "jet",
+      "model": "F15C Baz selected Israeli CFT exterior",
+      "source_ids": [
+        "IL-BAZ-OPERATOR21",
+        "IL-FIGHTER-OPERATOR25",
+        "IL-BAZ-C-PHOTO19",
+        "IL-BAZ-D-PHOTO19",
+        "IL-BAZ-C-METADATA25"
+      ],
+      "status": "documented_service",
+      "reason": "Single-seat C with selected FASTpack fit.2019photograph inspected;2025Cphotographer metadata and current family separately corroborated. Not every Cmission load or exact current serial upgrade.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "jet__f_15c_baz",
+      "asset_validation": {
+        "batch": 29,
+        "file": "aircraft/jet__f_15c_baz.glb",
+        "sha256": "9ab7fae76d6fef47871027949ab60af3b92125b4aa37027b1148f67d7303ebe9",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Original selected public outer fit; local dimensions/fittings and exact current/future serial installation not factory certified. Pereh is a confirmed order, not delivered service."
+      },
+      "existing_exact_asset": "aircraft/jet__f_15c_baz.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "jet",
+      "model": "F15D Baz selected Israeli CFT exterior",
+      "source_ids": [
+        "IL-BAZ-OPERATOR21",
+        "IL-FIGHTER-OPERATOR25",
+        "IL-BAZ-C-PHOTO19",
+        "IL-BAZ-D-PHOTO19",
+        "IL-BAZ-C-METADATA25"
+      ],
+      "status": "documented_service",
+      "reason": "Tandem D with selected FASTpacks and rounded dorsal cover. Current Bazfamily separately corroborated;2019selected outer fit/local dimensions not certified for every serial.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "jet__f_15d_baz",
+      "asset_validation": {
+        "batch": 29,
+        "file": "aircraft/jet__f_15d_baz.glb",
+        "sha256": "131b6a3c6c629446fde5c4cf8f05a0e673f98febbda07b1325eb26f5a9ea7fe4",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Original selected public outer fit; local dimensions/fittings and exact current/future serial installation not factory certified. Pereh is a confirmed order, not delivered service."
+      },
+      "existing_exact_asset": "aircraft/jet__f_15d_baz.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "aewc",
+      "model": "G550 Oron MultiINT selected public exterior",
+      "source_ids": [
+        "IL-IAI-MISSION-FAMILIES25",
+        "IL-ORON-OPERATOR24",
+        "IL-ORON-MAKER21",
+        "GULFSTREAM-G550-SPEC19"
+      ],
+      "status": "documented_service",
+      "reason": "Current special-mission type absent from Eitam-only roster. Original large rounded fixed side covers and lower aft canoe;2024official closeup plus2021planform, no rotating disc or internals. Game aewc role abstraction explicitly declared.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "aewc__g550_oron",
+      "asset_validation": {
+        "batch": 29,
+        "file": "aircraft/aewc__g550_oron.glb",
+        "sha256": "0e7c38674defbe9fb6e16d4102766f20407e60b8c9d775576763e8b1919bc17d",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Original selected public outer fit; local dimensions/fittings and exact current/future serial installation not factory certified. Pereh is a confirmed order, not delivered service."
+      },
+      "existing_exact_asset": "aircraft/aewc__g550_oron.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "aewc",
+      "model": "Legacy GV/G500 Shavit SIGINT selected public exterior",
+      "source_ids": [
+        "IL-IAI-MISSION-FAMILIES25",
+        "IL-SHAVIT-PROGRAMME-LECTURE",
+        "IL-SHAVIT-PHOTO07",
+        "GULFSTREAM-G550-SPEC19"
+      ],
+      "status": "documented_service",
+      "reason": "Current family absent from Eitam-only roster; legacy GV/G500, not new G500or an Eitam radar relabel. Selected2007photograph and local fitting estimates; fixed lower forward canoe/tail cover, game aewc abstraction not AEWequivalence.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "aewc__g500_shavit",
+      "asset_validation": {
+        "batch": 29,
+        "file": "aircraft/aewc__g500_shavit.glb",
+        "sha256": "aa982621dc63c3bff0407d34fcd2e4f6a7e3f997ee27e55ec110117925f06aba",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Original selected public outer fit; local dimensions/fittings and exact current/future serial installation not factory certified. Pereh is a confirmed order, not delivered service."
+      },
+      "existing_exact_asset": "aircraft/aewc__g500_shavit.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "drone",
+      "model": "Hermes450 Zik selected Israeli exterior",
+      "source_ids": [
+        "IL-HERMES450-MAKER",
+        "IL-ZIK-OPERATOR22",
+        "HERMES450-OPERATOR-SIZE15"
+      ],
+      "status": "documented_service",
+      "reason": "IDF450missing from900-only roster. Narrow6.1m body/10.5m wing, small drooped tips, upward Vtail, pusher, belly optic and three-wheel gear. Selected unarmed outer fit/local heights estimated, no future ZikOr production configuration assumed.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "drone__hermes_450_zik",
+      "asset_validation": {
+        "batch": 29,
+        "file": "aircraft/drone__hermes_450_zik.glb",
+        "sha256": "e24b9d0c230dd638104fe9fb3aa615fd7e7ca59ed13e1db47d43e7c93f1f2d1f",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Original selected public outer fit; local dimensions/fittings and exact current/future serial installation not factory certified. Pereh is a confirmed order, not delivered service."
+      },
+      "existing_exact_asset": "aircraft/drone__hermes_450_zik.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "jet",
+      "model": "F15IA confirmed future order",
+      "source_ids": [
+        "IL-F15IA-CONTRACT24"
+      ],
+      "status": "confirmed_order_future_type_not_current_service",
+      "reason": "Signed2024purchase25plus25option, expected first2031delivery. Future original national exterior still queued after maker reference review; do not treat approval ceiling/options or later squadron approval reports as completed delivery or final Israeli fit.",
+      "asset_action": "research_public_future_exterior_before_generation",
+      "proposed_slug": "jet__f_15ia",
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
     }
