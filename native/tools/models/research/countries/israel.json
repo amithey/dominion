@@ -652,11 +652,20 @@
           2244
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-LOCKHEED-F16-FAMILIES",
+        "IL-SUFA-MAKER03",
+        "IL-FIGHTER-OPERATOR25",
+        "IL-BARAK1-RETIREMENT24",
+        "IL-SUFA-EW-ORDER25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "F15IRaam roster does not cover the independently documented F16ISufa, current F16C/DBarak or F15Baz families. F16CBarakI retired; current CBarakII and D selected variants are separate. New original F16s added; existing F15Inational geometry and additional Baz still require their own review.2025Sufa EWcontract is not all-fleet completed installation.",
+        "recommended_action": "add_types_and_review_remaining_variants",
+        "model_match": "current_types_corrob_existing_f15i_geometry_not_reaudited",
+        "replacement": null
       }
     },
     {
@@ -691,11 +700,16 @@
           1404
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-FIGHTER-OPERATOR25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service",
+        "reason": "Operator explicitly confirms F35IAdir activity. National designation corroborated; existing GLB geometry/individual modification fit and further orders still require separate audit.",
+        "recommended_action": "retain_pending_exact_geometry_review",
+        "model_match": "designation_matches_geometry_review_pending",
+        "replacement": null
       }
     },
     {
@@ -1125,5 +1139,137 @@
       }
     }
   ],
-  "additional_inventory": []
+  "additional_inventory": [
+    {
+      "nation": "israel",
+      "key": "jet",
+      "model": "F16I Sufa selected Israeli exterior",
+      "source_ids": [
+        "IL-LOCKHEED-F16-FAMILIES",
+        "IL-SUFA-MAKER03",
+        "IL-FIGHTER-OPERATOR25",
+        "IL-BARAK1-RETIREMENT24",
+        "IL-SUFA-EW-ORDER25",
+        "IL-SUFA-PHOTO22"
+      ],
+      "status": "documented_service",
+      "reason": "Tandem canopy, broad dorsal spine, paired upper conformal tanks, singleF100family engine/small inlet and empty racks. Local dimensions/fittings estimated, selected2022public fit, not completed2025EWupgrade or exact current serial.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "jet__f_16i_sufa",
+      "asset_validation": {
+        "batch": 28,
+        "file": "aircraft/jet__f_16i_sufa.glb",
+        "sha256": "fa16edd6c117b60b5e7356670c3d50400e0f51b40be4770b0b782594c2ec37fa",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected original public exterior; local dimensions/fittings estimated, not certified exact delivered/current national serial configuration or readiness."
+      },
+      "existing_exact_asset": "aircraft/jet__f_16i_sufa.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "lightFighter",
+      "model": "F16C BarakII selected Israeli exterior",
+      "source_ids": [
+        "IL-LOCKHEED-F16-FAMILIES",
+        "IL-SUFA-MAKER03",
+        "IL-FIGHTER-OPERATOR25",
+        "IL-BARAK1-RETIREMENT24",
+        "IL-SUFA-EW-ORDER25",
+        "IL-BARAK-C-PHOTO21"
+      ],
+      "status": "documented_service",
+      "reason": "Remaining single-seat BarakII family, not retired single-seat CBlock30BarakI. Short canopy, no tandem spine or CFT, selected wideGEfamily inlet. Sunset photo supports silhouette only; exact block/intake/local fit not factory certified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "lightFighter__f_16c_barak_ii",
+      "asset_validation": {
+        "batch": 28,
+        "file": "aircraft/lightFighter__f_16c_barak_ii.glb",
+        "sha256": "56e871cbf56fdee1db7231d10f91c1f6e120bdef7f30b4489d3c472917c60c88",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected original public exterior; local dimensions/fittings estimated, not certified exact delivered/current national serial configuration or readiness."
+      },
+      "existing_exact_asset": "aircraft/lightFighter__f_16c_barak_ii.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "lightFighter",
+      "model": "F16D Barak selected Israeli exterior",
+      "source_ids": [
+        "IL-LOCKHEED-F16-FAMILIES",
+        "IL-SUFA-MAKER03",
+        "IL-FIGHTER-OPERATOR25",
+        "IL-BARAK1-RETIREMENT24",
+        "IL-SUFA-EW-ORDER25",
+        "IL-BARAK-D-PHOTO22"
+      ],
+      "status": "documented_service",
+      "reason": "Tandem canopy/broad spine and no CFT in selected originalUSAF2022photograph. No unverified exactBlock30/40certification; local nozzle/inlet/fittings estimated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "lightFighter__f_16d_barak",
+      "asset_validation": {
+        "batch": 28,
+        "file": "aircraft/lightFighter__f_16d_barak.glb",
+        "sha256": "f5066c0e1fb5e5df88e40df46b8389a31fef3bd790f725a255e3aa04680b79e1",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected original public exterior; local dimensions/fittings estimated, not certified exact delivered/current national serial configuration or readiness."
+      },
+      "existing_exact_asset": "aircraft/lightFighter__f_16d_barak.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "heavyLift",
+      "model": "CH53 Yasur2025 selected Israeli exterior",
+      "source_ids": [
+        "SIK-S65-HISTORY",
+        "IL-YASUR-PHOTO16",
+        "IL-PEREH-INTEGRATION26",
+        "IL-PEREH-ASSEMBLY25"
+      ],
+      "status": "documented_service",
+      "reason": "Current Yasur family kept separate from orderedCH53K. Two engines, six main/four tail blades, round low fuel tanks and three twin-tyre groups. Selected2016Yasur2025photograph; body20.42m/main22m from archive, minor fittings/local height/current individual upgrade fit estimated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "heavyLift__ch_53_yasur_2025",
+      "asset_validation": {
+        "batch": 28,
+        "file": "aircraft/heavyLift__ch_53_yasur_2025.glb",
+        "sha256": "da0d714b95f4597270ed0dd7f2f4e2ca59d629f3f5b5276036026727d4eb39f9",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected original public exterior; local dimensions/fittings estimated, not certified exact delivered/current national serial configuration or readiness."
+      },
+      "existing_exact_asset": "aircraft/heavyLift__ch_53_yasur_2025.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "heavyLift",
+      "model": "CH53K Pereh confirmed order",
+      "source_ids": [
+        "IL-PEREH-INTEGRATION26",
+        "IL-PEREH-ASSEMBLY25",
+        "IL-PEREH-MAKER-ILLUSTRATION",
+        "SIK-CH53K-BROCHURE24"
+      ],
+      "status": "confirmed_order_future_delivery_not_current_service",
+      "reason": "Twelve contracted CH53K with Israeli integration; first arrival expected2028, not current fielded Yasur. Future separate original exterior needed after manufacturer outline inspection; three engines/seven blades, not a Yasur relabel. Final national sensor/avionics fit not assumed from an illustration.",
+      "asset_action": "generate_after_outline_reference_review",
+      "proposed_slug": "heavyLift__ch_53k_pereh",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    }
+  ]
 }

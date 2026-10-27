@@ -1,7 +1,7 @@
 {
   "nation": "south_korea",
   "scope": "current and confirmed-order platforms in existing Tier 7 categories",
-  "all_roster_rows_assessed": false,
+  "all_roster_rows_assessed": true,
   "complete": false,
   "completion_note": "Operator evidence, exact visual fit and additional inventory still being audited.",
   "rows": [
@@ -693,11 +693,13 @@
         "KR-COBRA-CURRENT26",
         "KR-500MD-FIRING26",
         "KR-500MD-SCHOOL-END26",
-        "KR-500MD-EXTERIOR18"
+        "KR-500MD-EXTERIOR18",
+        "KR-COBRA-GROUND26",
+        "KR-COBRA-RETIREMENT-TALKS26"
       ],
       "assessment": {
         "status": "incomplete_inventory",
-        "reason": "AH64Ecurrent activity confirmed; LAHMiron first production delivery December2024and deployment since2024documented, plus continuing AH1Sfamily in2026. Add LAH; Cobra existing variants need Korean-fit comparison before reuse. Never count prototype MarineAttack as fielded.500MDSeptember2026firing follows school-role withdrawal. New manned round-cabin armed scout has empty carriers; exact live load not certified.",
+        "reason": "AH64Ecurrent activity confirmed; LAHMiron first production delivery December2024and deployment since2024documented, plus AH1Sfamily ownership references in2026, with grounding and retirement transition separately qualified. Add LAH; Cobra existing variants need Korean-fit comparison before reuse. Never count prototype MarineAttack as fielded.500MDSeptember2026firing follows school-role withdrawal. New manned round-cabin armed scout has empty carriers; exact live load not certified. Qualification: AH1Sownership is not current flight readiness; Februarygrounding and Septemberaccelerated-retirement consultations documented, latest reactivation unverified.",
         "recommended_action": "add_models",
         "model_match": "apache_is_one_of_several_attack_types",
         "replacement": null
@@ -1079,11 +1081,12 @@
       "evidence_status": "reviewed",
       "evidence_source_ids": [
         "KR-RIMPAC-RETURN26",
-        "KR-FLEET-EXERCISE-JUN26"
+        "KR-FLEET-EXERCISE-JUN26",
+        "KR-P3CK-TEST-RETURN26"
       ],
       "assessment": {
         "status": "incomplete_inventory",
-        "reason": "Current P8Aand P3Cboth documented. Existing P8Aroster covers only one type; a four-four-blade generic P3Casset exists but Korean C/CKequipment comparison remains pending. Avoid attributing foreign aircraft in multinational exercises to Korea.",
+        "reason": "Current P8Aand P3Cboth documented. Existing P8Aroster covers only one type; a four-four-blade generic P3Casset exists but Korean C/CKequipment comparison remains pending. Avoid attributing foreign aircraft in multinational exercises to Korea. CKis distinct: official Augustreport describes future Septembertest flights before training/evaluation, not completed operational return. Do not apply JuneP3Cactivity to CKreadiness.",
         "recommended_action": "compare_existing_additional_model",
         "model_match": "p8a_and_p3c_are_distinct_real_airframes",
         "replacement": null
@@ -1214,11 +1217,19 @@
           628
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-WARMATE3-CONTRACT24",
+        "KR-WARMATE-DELIVERY25",
+        "WB-WARMATE-PUBLIC-BROCHURE22",
+        "WB-WARMATE-EXTERIOR25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "Signed Warmate3 contract and subsequent maker delivery reference establish a named platform missing from the generic roster model. Exact delivered nose/electro-optics acceptance/current readiness unverified. Harpy/Rotem or K-LUCAS programme leads are not substituted without specific operator/order evidence.",
+        "recommended_action": "add_named_platform",
+        "model_match": "generic_is_not_country_identified",
+        "replacement": "loiterer__warmate_3"
       }
     },
     {
@@ -1543,11 +1554,16 @@
           356
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "KR-USV-DEVELOPMENT25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "development_programme_not_verified_fielded_type",
+        "reason": "Combat USV core R&D through2030 precedes BatchII development; reconnaissance USV development through2027 is separate. Do not label the generic roster boat a currently fielded Korean combat USV or a signed mass-production order. This is not a claim that no Korean unmanned maritime capability exists.",
+        "recommended_action": "hold_generic_mapping_pending_production_or_operator_evidence",
+        "model_match": "generic_not_verified_as_national_platform",
+        "replacement": null
       }
     }
   ],
@@ -1979,10 +1995,12 @@
       "key": "gunship",
       "model": "AH-1S Cobra, Korean equipment fit pending",
       "source_ids": [
-        "KR-COBRA-CURRENT26"
+        "KR-COBRA-CURRENT26",
+        "KR-COBRA-GROUND26",
+        "KR-COBRA-RETIREMENT-TALKS26"
       ],
-      "status": "documented_service",
-      "reason": "Current Army AH1Sfamily explicitly identified. Existing Japanese/other Cobra exteriors may supply shared parts, but Korean-specific fit comparison is still required before a reuse or generation decision.",
+      "status": "owned_family_grounding_and_retirement_transition_latest_reactivation_unverified",
+      "reason": "Owned/historically operated AH1Sfamily; official February2026grounding and SeptemberArmy retirement consultations prevent treating an August educational reference as proof current flight readiness. Entire fleet retirement or later reactivation not established. Exact Korean exterior still pending.",
       "asset_action": "research_variant_before_generation",
       "proposed_slug": null,
       "existing_exact_asset": null,
@@ -2140,10 +2158,11 @@
       "key": "maritimePatrol",
       "model": "P3C Korean patrol family",
       "source_ids": [
-        "KR-FLEET-EXERCISE-JUN26"
+        "KR-FLEET-EXERCISE-JUN26",
+        "KR-P3CK-TEST-RETURN26"
       ],
       "status": "documented_service",
-      "reason": "Current family confirmed; generic maritimePatrol__p_3c_orion exists with four4blade engines/internal bay, but national C/CKvariant/exterior comparison remains pending.",
+      "reason": "June2026operator activity corroborates P3C only. CKgrounding and proposed Septembertest return are separate and do not certify CKoperational patrol resumption. Current C/CKnational outer equipment comparison remains pending.",
       "asset_action": "research_variant_before_generation",
       "proposed_slug": "maritimePatrol__p_3c_orion",
       "existing_exact_asset": "aircraft/maritimePatrol__p_3c_orion.glb",
@@ -3075,6 +3094,47 @@
       },
       "existing_exact_asset": "vehicles/artillery__k105a1.glb",
       "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "loiterer",
+      "model": "Warmate3 Korean contracted family",
+      "source_ids": [
+        "KR-WARMATE3-CONTRACT24",
+        "KR-WARMATE-DELIVERY25",
+        "WB-WARMATE-PUBLIC-BROCHURE22",
+        "WB-WARMATE-EXTERIOR25"
+      ],
+      "status": "signed_order_with_manufacturer_delivery_reference_exact_acceptance_unverified",
+      "reason": "Signed2024Warmate3contract plus2025maker delivery reference. New original public-family exterior:1.6m span, locally estimated length/fittings, no invented belly gimbal/gear/gun. Exact delivered national sensor nose and fleet readiness not certified.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "loiterer__warmate_3",
+      "asset_validation": {
+        "batch": 28,
+        "file": "aircraft/loiterer__warmate_3.glb",
+        "sha256": "1c05eb6607cd3c45011a948a4d14746df87c35567f950e705c21bbf8c1c11b48",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected original public exterior; local dimensions/fittings estimated, not certified exact delivered/current national serial configuration or readiness."
+      },
+      "existing_exact_asset": "aircraft/loiterer__warmate_3.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "south_korea",
+      "key": "maritimePatrol",
+      "model": "P3CK Korean patrol variant, return programme pending",
+      "source_ids": [
+        "KR-P3CK-TEST-RETURN26"
+      ],
+      "status": "grounded_test_return_programme_not_verified_operational",
+      "reason": "Grounded fleet with planned September2026test-flight return; accepted operational reactivation not established. Keep distinct from P3C current activity; research exact public exterior before generation.",
+      "asset_action": "research_variant_and_reactivation_before_generation",
+      "proposed_slug": "maritimePatrol__p_3ck_korean",
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
     }
   ]
 }

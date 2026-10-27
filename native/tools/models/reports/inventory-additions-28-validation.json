@@ -1,0 +1,52 @@
+{
+  "batch": "inventory-additions-28",
+  "files": [
+    "aircraft/loiterer__warmate_3.glb",
+    "aircraft/jet__f_16i_sufa.glb",
+    "aircraft/lightFighter__f_16c_barak_ii.glb",
+    "aircraft/lightFighter__f_16d_barak.glb",
+    "aircraft/heavyLift__ch_53_yasur_2025.glb"
+  ],
+  "sha256": {
+    "aircraft/loiterer__warmate_3.glb": "1c05eb6607cd3c45011a948a4d14746df87c35567f950e705c21bbf8c1c11b48",
+    "aircraft/jet__f_16i_sufa.glb": "fa16edd6c117b60b5e7356670c3d50400e0f51b40be4770b0b782594c2ec37fa",
+    "aircraft/lightFighter__f_16c_barak_ii.glb": "56e871cbf56fdee1db7231d10f91c1f6e120bdef7f30b4489d3c472917c60c88",
+    "aircraft/lightFighter__f_16d_barak.glb": "f5066c0e1fb5e5df88e40df46b8389a31fef3bd790f725a255e3aa04680b79e1",
+    "aircraft/heavyLift__ch_53_yasur_2025.glb": "da0d714b95f4597270ed0dd7f2f4e2ca59d629f3f5b5276036026727d4eb39f9"
+  },
+  "maximum_triangles": [
+    12316,
+    2204
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "Five distinct public exteriors: KoreanWarmate3contract/delivery family, IsraeliF16ISufa/F16CBarakII/F16DBarak and two-engine six-blade Yasur; current types/retired variants/future orders distinguished",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "central geometry inside CollisionBox at both LODs",
+    "Warmate1.6m/no invented gimbal/gear/cannon; oppositely canted Vtail hinges and Zpropeller",
+    "single-engine F16s, no live stores; Csingle-seat, Dtandem+spine, ISufa+twinCFT",
+    "Yasur two engines, geometric6main/4tailblades, three dual-tyre groups; rotor/ramp movement leaves body fixed",
+    "20final overview and six detail/posed views actually visually inspected"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_28.py",
+  "preserved_baseline": {
+    "commit": "c78f6730cc217b8313631d77a82a3bcc922d2752",
+    "manifest_entries": 990,
+    "old_asset_bytes_and_entries": "checked by scoped commit helper"
+  },
+  "limitations": [
+    "Public exterior/local dimensions are estimates; no factory drawing, exact serial upgrade fit or readiness certification",
+    "Warmate signed Korean contract and maker delivery reference do not certify all delivered sensor variants or acceptance; no explosive internals/flight logic",
+    "Retired single-seat BarakI distinguished from current CBarakII and selected DBarak; future SufaEW programme not claimed completed",
+    "Yasur selected historical2025fit/current family distinct from twelve ordered CH53KPereh, expected2028first arrival; final future national fit pending",
+    "P3CKplanned test return not operational certification; AH1Sgrounding and retirement talks qualified; USVR&Dnot current combat fleet",
+    "Compact UAV and fighters are not padded with invented machinery to hit an arbitrary triangle minimum"
+  ],
+  "review_images": [
+    "inventory-additions-28-aircraft.jpg",
+    "inventory-additions-28-details.jpg"
+  ]
+}
