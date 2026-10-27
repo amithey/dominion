@@ -299,11 +299,18 @@
           1588
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-M109-OPERATOR-PHOTO24",
+        "IL-M109-FIRSTHAND24",
+        "IL-DOHER-HERITAGE"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "Roem-only roster does not represent documented continuing M109family. Added original selected Doher public exterior; precise gun/Aletterblock not certified. Roemnational chassis/exact current introduction stage requires its own source and geometry review; adding M109does not certify Roemmodel or exhaustive national inventory.",
+        "recommended_action": "add_missing_M109_continue_Roem_review",
+        "model_match": "classic_M109_is_not_wheeled_Roem",
+        "replacement": null
       }
     },
     {
@@ -662,11 +669,12 @@
         "IL-BAZ-C-PHOTO19",
         "IL-BAZ-D-PHOTO19",
         "IL-BAZ-C-METADATA25",
-        "IL-F15IA-CONTRACT24"
+        "IL-F15IA-CONTRACT24",
+        "IL-FIGHTER-APPROVAL26"
       ],
       "assessment": {
         "status": "incomplete_inventory",
-        "reason": "F15IRaam roster does not cover the independently documented F16ISufa, current F16C/DBarak or F15Baz families. F16CBarakI retired; current CBarakII and D selected variants are separate. New original F16s added; existing F15Inational geometry and additional Baz still require their own review.2025Sufa EWcontract is not all-fleet completed installation. New selected F15C/DFASTpack exteriors added; A/Bblock-specific current fit remains a separate question.25F15IAconfirmed in2024contract plus25option and2031expected first delivery are future, not fielded Baz/Raam. Later procurement approvals are follow-up, not automatically additional delivered or exercised-option quantities.",
+        "reason": "F15IRaam roster does not cover the independently documented F16ISufa, current F16C/DBarak or F15Baz families. F16CBarakI retired; current CBarakII and D selected variants are separate. New original F16s added; existing F15Inational geometry and additional Baz still require their own review.2025Sufa EWcontract is not all-fleet completed installation. New selected F15C/DFASTpack exteriors added; A/Bblock-specific current fit remains a separate question.25F15IAconfirmed in2024contract plus25option and2031expected first delivery are future, not fielded Baz/Raam. Later procurement approvals are follow-up, not automatically additional delivered or exercised-option quantities. May2026ministerial approval of further F35/F15IA squadrons is not by itself a signed further agreement, exercised option or delivery. Original ordered F15IApublic concept added separately; final future fit not certified.",
         "recommended_action": "add_types_and_review_remaining_variants",
         "model_match": "current_types_corrob_existing_f15i_geometry_not_reaudited",
         "replacement": null
@@ -706,11 +714,12 @@
       },
       "evidence_status": "reviewed",
       "evidence_source_ids": [
-        "IL-FIGHTER-OPERATOR25"
+        "IL-FIGHTER-OPERATOR25",
+        "IL-FIGHTER-APPROVAL26"
       ],
       "assessment": {
         "status": "documented_service",
-        "reason": "Operator explicitly confirms F35IAdir activity. National designation corroborated; existing GLB geometry/individual modification fit and further orders still require separate audit.",
+        "reason": "Operator explicitly confirms F35IAdir activity. National designation corroborated; existing GLB geometry/individual modification fit and further orders still require separate audit. May2026ministerial approval of further F35/F15IA squadrons is not by itself a signed further agreement, exercised option or delivery. Original ordered F15IApublic concept added separately; final future fit not certified.",
         "recommended_action": "retain_pending_exact_geometry_review",
         "model_match": "designation_matches_geometry_review_pending",
         "replacement": null
@@ -836,11 +845,14 @@
       "evidence_source_ids": [
         "IL-HERMES450-MAKER",
         "IL-ZIK-OPERATOR22",
-        "HERMES450-OPERATOR-SIZE15"
+        "HERMES450-OPERATOR-SIZE15",
+        "IL-SKYLARK-CONTRACT23",
+        "IL-SKYLARK-LEX-NIN",
+        "IL-SKYLARK3-OPERATOR25"
       ],
       "assessment": {
         "status": "incomplete_inventory",
-        "reason": "Hermes900roster does not cover IDF450Zik. Added original450public outer fit; Hermes900national geometry and other Heron/Skylark families still require separate current operator/variant audit. No exhaustive two-type fleet or readiness claim.",
+        "reason": "Hermes900roster does not cover IDF450Zik. Added original450public outer fit; Hermes900national geometry and other Heron/Skylark families still require separate current operator/variant audit. No exhaustive two-type fleet or readiness claim. Added three distinct Skylark public exteriors: LEX, electric3 and contracted new I eVTOL. Published spans3/4.7m versus local body-length estimates and wholly estimated eVTOLsize explicitly separated. Neither complete old-type retirement nor eVTOLacceptance inferred; further Heron/900national variants still pending.",
         "recommended_action": "add_missing_type_continue_inventory",
         "model_match": "450_is_not_900_or_watchkeeper",
         "replacement": null
@@ -1438,17 +1450,147 @@
     },
     {
       "nation": "israel",
+      "key": "drone",
+      "model": "Skylark ILEX selected IDF public exterior",
+      "source_ids": [
+        "IL-SKYLARK-CONTRACT23",
+        "IL-SKYLARK-LEX-NIN",
+        "SKYLARK-LEX-BROCHURE16"
+      ],
+      "status": "documented_IDF_standard_type_replacement_rollout_unverified",
+      "reason": "Exact LEXmaker IDF identification.3m published span, front tractor/high gull wing/single central tail boom/conventional tail.1.8m body is local estimate. No unsupported assumption all LEXalready retired or all eVTOLdelivered.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "drone__skylark_i_lex",
+      "asset_validation": {
+        "batch": 30,
+        "file": "aircraft/drone__skylark_i_lex.glb",
+        "sha256": "97618214b25d0f62b28892c5ed8f04ae4c7dcc01948d0530f58d434f0e305305",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected original public exteriors; source-published spans distinguished from local body/fitting estimates. F15IA/eVTOLorders not claimed delivered, exact national serial fits/readiness unverified."
+      },
+      "existing_exact_asset": "aircraft/drone__skylark_i_lex.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "drone",
+      "model": "Skylark3 selected IDF electric public exterior",
+      "source_ids": [
+        "IL-SKYLARK-CONTRACT23",
+        "SKYLARK3-BROCHURE16",
+        "SKYLARK3-MAKER-PHOTO",
+        "IL-SKYLARK3-OPERATOR25"
+      ],
+      "status": "documented_IDF_family_selected_electric_exterior",
+      "reason": "4.7m published span, inverted Vtail and rear pusher, local2.6m outline length estimate.2023maker identifies IDFfleet and2025operator confirms DoherShamayim presence. Exact national per-serial Hybrid fit not established or invented.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "drone__skylark_3",
+      "asset_validation": {
+        "batch": 30,
+        "file": "aircraft/drone__skylark_3.glb",
+        "sha256": "a32907e590d718aee1fe07c1e8af77b6581cdc4f55ecc927f865b0704ad534af",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected original public exteriors; source-published spans distinguished from local body/fitting estimates. F15IA/eVTOLorders not claimed delivered, exact national serial fits/readiness unverified."
+      },
+      "existing_exact_asset": "aircraft/drone__skylark_3.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "drone",
+      "model": "Skylark I eVTOL confirmed IDF order",
+      "source_ids": [
+        "IL-SKYLARK-CONTRACT23",
+        "SKYLARK-EVTOL-BROCHURE"
+      ],
+      "status": "confirmed_order_delivery_and_acceptance_unverified",
+      "reason": "Signed2023supply/replacement contract; no complete delivery count established. New public exterior: four lift rotors plus rear pusher, Htail/two booms/fixed feet.3m span/2.4m body local photo estimates because brochure lacks factory dimensions.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "drone__skylark_i_evtol",
+      "asset_validation": {
+        "batch": 30,
+        "file": "aircraft/drone__skylark_i_evtol.glb",
+        "sha256": "00fdc4f9f78b1e1e9bb80504f2c1deab405ff2354de2d66f240417769895ac4d",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected original public exteriors; source-published spans distinguished from local body/fitting estimates. F15IA/eVTOLorders not claimed delivered, exact national serial fits/readiness unverified."
+      },
+      "existing_exact_asset": "aircraft/drone__skylark_i_evtol.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
       "key": "jet",
       "model": "F15IA confirmed future order",
       "source_ids": [
-        "IL-F15IA-CONTRACT24"
+        "IL-F15IA-CONTRACT24",
+        "IL-F15IA-PUBLIC-CONCEPT",
+        "IL-FIGHTER-APPROVAL26"
       ],
-      "status": "confirmed_order_future_type_not_current_service",
-      "reason": "Signed2024purchase25plus25option, expected first2031delivery. Future original national exterior still queued after maker reference review; do not treat approval ceiling/options or later squadron approval reports as completed delivery or final Israeli fit.",
-      "asset_action": "research_public_future_exterior_before_generation",
+      "status": "confirmed_order_future_public_concept_not_current_service",
+      "reason": "25signed2024plus25option,2031first expected in that release.2026additional squadron approval explicitly precedes finalized agreements. Original selected public concept, not final national production geometry or delivered airframe.",
+      "asset_action": "generated_and_readback_verified",
       "proposed_slug": "jet__f_15ia",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
+      "asset_validation": {
+        "batch": 30,
+        "file": "aircraft/jet__f_15ia.glb",
+        "sha256": "aba310501578e6d686c14dbfa6991f9c82c3181e0b51e7c8bc33028d16eef2c2",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected original public exteriors; source-published spans distinguished from local body/fitting estimates. F15IA/eVTOLorders not claimed delivered, exact national serial fits/readiness unverified."
+      },
+      "existing_exact_asset": "aircraft/jet__f_15ia.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "artillery",
+      "model": "M109 Doher selected Israeli long-gun exterior",
+      "source_ids": [
+        "IL-M109-OPERATOR-PHOTO24",
+        "IL-M109-FIRSTHAND24",
+        "IL-DOHER-HERITAGE"
+      ],
+      "status": "documented_M109_family_selected_Doher_public_exterior",
+      "reason": "Classic M109family missing from Roem-only roster. Seven-wheel classic hull, rear turret/long155mmgun/rounded open brake/stowage/large plate spades selected from public operator image. Doherheritage naming context; precise gun/Aletterblock local fit not certified. No entire fleet withdrawal inferred from Roemintroduction.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "artillery__m109_doher",
+      "asset_validation": {
+        "batch": 30,
+        "file": "vehicles/artillery__m109_doher.glb",
+        "sha256": "b0e94d66abb553b97acf90e26d450ad87faa77131c24424a0c7c5bbc4b1d870e",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected original public exteriors; source-published spans distinguished from local body/fitting estimates. F15IA/eVTOLorders not claimed delivered, exact national serial fits/readiness unverified."
+      },
+      "existing_exact_asset": "vehicles/artillery__m109_doher.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "gunship",
+      "model": "AH64E Apache Echo confirmed future order",
+      "source_ids": [
+        "IL-APACHE-E-CONTRACT26"
+      ],
+      "status": "confirmed_order_future_not_current_service",
+      "reason": "Twelve signed2026futureEcho, early-next-decade arrival expectation; existing exact Efamily GLB may represent family but final Israeli fit/current acceptance unverified. Current SarafD/PetenA are separate variants.",
+      "asset_action": "reuse_existing_with_future_national_fit_caveat",
+      "proposed_slug": "gunship__ah_64e_apache",
+      "existing_exact_asset": "aircraft/gunship__ah_64e_apache.glb",
+      "asset_state": "available_exact_file"
     }
   ]
 }
