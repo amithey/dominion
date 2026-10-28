@@ -82,11 +82,19 @@
           1020
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-EITAN-DELIVERY23",
+        "IL-EITAN-HULL-CONTRACT23",
+        "IL-EITAN-OPERATOR25",
+        "IL-ARMOUR-PROGRAM25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch_selected_fit",
+        "reason": "Confirmed production APC family and current operator type. Existing eight-wheel generic wedge captures mobility but misses low broad nose/flat roof, separate rear cabinets/centre ramp, rear basket and selected production roof station. New original selected2023outer fit added, local dimensions/weapon small fittings explicit. No automatic30mm/APS fit:2025committee plan approval separate from signed variant contract or completed delivery.",
+        "recommended_action": "retain_old_asset_add_source_selected_exterior",
+        "model_match": "existing_generic_geometry_not_specific_public_fit",
+        "replacement": "apc__eitan_series_2023"
       }
     },
     {
@@ -447,11 +455,18 @@
           404
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-DOME-MAKER23",
+        "IL-DOME-MAKER-ESG21",
+        "IL-DOME-CONTRACT25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch_selected_fit",
+        "reason": "Current national IronDome family and actual production contract supported. Existing static model has twenty common-box round openings and a generic rotating base; maker selected exterior uses separate long closed containers, retention bands/panels and exposed erection supports/legs. New selected MFU keeps20external markers with no imaginary radar/truck. I-Dome catalogue ten-roundtruck and navalCDome not automatically national land variants.",
+        "recommended_action": "retain_old_asset_add_source_selected_exterior",
+        "model_match": "existing_generic_geometry_not_specific_public_fit",
+        "replacement": "aaVehicle__iron_dome_mfu"
       }
     },
     {
@@ -486,11 +501,19 @@
           1252
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-DAVID-UPGRADE25",
+        "IL-DAVID-PHOTO17",
+        "IL-DAVID-MDA-GALLERY",
+        "IL-DOME-MAKER-ESG21"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch_selected_fit",
+        "reason": "National family current and2025upgrade documented. Existing common-box launcher on generic eight-wheel cabbed truck mismatches selected public2017APdisplay whole-trailer fit. New separate two-axle semitrailer with equipment shelter/stairs/legs and twelve closed containers, three across/four deep when erect. Historical display exterior does not certify every current serial or invisible upgrades; principal sizes/hinges local estimates.",
+        "recommended_action": "retain_old_asset_add_source_selected_exterior",
+        "model_match": "existing_generic_geometry_not_specific_public_fit",
+        "replacement": "samLauncher__davids_sling_trailer"
       }
     },
     {
@@ -525,11 +548,18 @@
           1264
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-ARROW-CONTRACT24",
+        "IL-ARROW-APPROVAL26",
+        "IL-ARROW-MAKER25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch",
+        "reason": "Arrow3 national family and signed2024procurement corroborated. Existing saved generic eight-wheel cabbed truck is not the trailer platform in maker brochure. All five existing candidate GLBs independently loaded/rendered and20views inspected. Exact trailer axle/hinge arrangement still needs unobscured public references; no speculative new file this batch.2026approval not automatically signed increment.",
+        "recommended_action": "research_specific_trailer_before_generation",
+        "model_match": "wrong_generic_carrier_specific_geometry_pending",
+        "replacement": null
       }
     },
     {
@@ -562,11 +592,17 @@
           940
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-IRONBEAM-HANDOVER25",
+        "IL-IRONBEAM-TRIALS25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "model_mismatch_selected_fit",
+        "reason": "Actual buyer handoverDecember28,2025supersedes earlier forecastDecember30. Existing generic single optical head on six-wheel truck mismatches official twin-head container photographs. New original long panelled enclosure/two independent Ybearings/Xheads/aperture markers; local sizes and underside estimates. Public system identity/delivery separate from all-serial fit/readiness; no hidden optical/laser internals.",
+        "recommended_action": "retain_old_asset_add_source_selected_exterior",
+        "model_match": "existing_generic_geometry_not_specific_public_fit",
+        "replacement": "laserAD__iron_beam_or_eitan"
       }
     },
     {
@@ -2095,6 +2131,158 @@
       "status": "retirement_approval_reported_completion_and_current_retention_unverified",
       "reason": "Do not treat undated recruiting as proof current2026fleet after original reporting of retirement approval. Need primary confirmation of withdrawal/conversion completion before any current-service asset decision; historical model/current fleet assignment separate.",
       "asset_action": "resolve_retirement_and_current_status_before_generation",
+      "proposed_slug": null,
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "israel",
+      "key": "apc",
+      "model": "Eitan selected May2023 series-delivery APC",
+      "source_ids": [
+        "IL-EITAN-DELIVERY23",
+        "IL-EITAN-HULL-CONTRACT23",
+        "IL-EITAN-OPERATOR25",
+        "IL-ARMOUR-PROGRAM25"
+      ],
+      "status": "documented_national_family_selected_public_outer_fit",
+      "reason": "Confirmed production APC family and current operator type. Existing eight-wheel generic wedge captures mobility but misses low broad nose/flat roof, separate rear cabinets/centre ramp, rear basket and selected production roof station. New original selected2023outer fit added, local dimensions/weapon small fittings explicit. No automatic30mm/APS fit:2025committee plan approval separate from signed variant contract or completed delivery.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "apc__eitan_series_2023",
+      "asset_validation": {
+        "batch": 34,
+        "file": "vehicles/apc__eitan_series_2023.glb",
+        "sha256": "3c70c058f3f756ae17b5dd174e30fe79e6c0e79d0ae1f33f5bcd80dbfe8be8a9",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "native_additional_motion_checks": 52,
+        "limits": "Selected public exteriors; all principal sizes/fittings/hinges locally estimated, historical/maker fit not every national serial or readiness certification."
+      },
+      "existing_exact_asset": "vehicles/apc__eitan_series_2023.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "aaVehicle",
+      "model": "Iron Dome selected public twenty-canister MFU",
+      "source_ids": [
+        "IL-DOME-MAKER23",
+        "IL-DOME-MAKER-ESG21",
+        "IL-DOME-CONTRACT25"
+      ],
+      "status": "documented_national_family_selected_public_outer_fit",
+      "reason": "Current national IronDome family and actual production contract supported. Existing static model has twenty common-box round openings and a generic rotating base; maker selected exterior uses separate long closed containers, retention bands/panels and exposed erection supports/legs. New selected MFU keeps20external markers with no imaginary radar/truck. I-Dome catalogue ten-roundtruck and navalCDome not automatically national land variants.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "aaVehicle__iron_dome_mfu",
+      "asset_validation": {
+        "batch": 34,
+        "file": "vehicles/aaVehicle__iron_dome_mfu.glb",
+        "sha256": "1242c0248e771be61a6b6820a39c9b0bd8ed27c2689f56fda922e3774652671c",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "native_additional_motion_checks": 52,
+        "limits": "Selected public exteriors; all principal sizes/fittings/hinges locally estimated, historical/maker fit not every national serial or readiness certification."
+      },
+      "existing_exact_asset": "vehicles/aaVehicle__iron_dome_mfu.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "samLauncher",
+      "model": "David Sling selected public two-axle launcher trailer",
+      "source_ids": [
+        "IL-DAVID-UPGRADE25",
+        "IL-DAVID-PHOTO17",
+        "IL-DAVID-MDA-GALLERY",
+        "IL-DOME-MAKER-ESG21"
+      ],
+      "status": "documented_national_family_selected_public_outer_fit",
+      "reason": "National family current and2025upgrade documented. Existing common-box launcher on generic eight-wheel cabbed truck mismatches selected public2017APdisplay whole-trailer fit. New separate two-axle semitrailer with equipment shelter/stairs/legs and twelve closed containers, three across/four deep when erect. Historical display exterior does not certify every current serial or invisible upgrades; principal sizes/hinges local estimates.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "samLauncher__davids_sling_trailer",
+      "asset_validation": {
+        "batch": 34,
+        "file": "vehicles/samLauncher__davids_sling_trailer.glb",
+        "sha256": "682f37483229ec02a057dcbea349dcb5e954f4776c6a4b307d78c0996053a944",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "native_additional_motion_checks": 52,
+        "limits": "Selected public exteriors; all principal sizes/fittings/hinges locally estimated, historical/maker fit not every national serial or readiness certification."
+      },
+      "existing_exact_asset": "vehicles/samLauncher__davids_sling_trailer.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "laserAD",
+      "model": "Iron Beam OrEitan selected2025twin-head container exterior",
+      "source_ids": [
+        "IL-IRONBEAM-HANDOVER25",
+        "IL-IRONBEAM-TRIALS25"
+      ],
+      "status": "documented_national_family_selected_public_outer_fit",
+      "reason": "Actual buyer handoverDecember28,2025supersedes earlier forecastDecember30. Existing generic single optical head on six-wheel truck mismatches official twin-head container photographs. New original long panelled enclosure/two independent Ybearings/Xheads/aperture markers; local sizes and underside estimates. Public system identity/delivery separate from all-serial fit/readiness; no hidden optical/laser internals.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "laserAD__iron_beam_or_eitan",
+      "asset_validation": {
+        "batch": 34,
+        "file": "vehicles/laserAD__iron_beam_or_eitan.glb",
+        "sha256": "95827b47105b7f4a4ac352dfc006aa31bdd28acc6759e31554a5e5f5189c1648",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "native_additional_motion_checks": 52,
+        "limits": "Selected public exteriors; all principal sizes/fittings/hinges locally estimated, historical/maker fit not every national serial or readiness certification."
+      },
+      "existing_exact_asset": "vehicles/laserAD__iron_beam_or_eitan.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "counterBatteryRadar",
+      "model": "ELM2084 selected classic public static MMR module",
+      "source_ids": [
+        "IL-MMR-MAKER",
+        "IL-MMR-NATIONAL19",
+        "IL-DAVID-UPGRADE25"
+      ],
+      "status": "national_MMR_family_selected_classic_maker_fit_not_specific_serial",
+      "reason": "Separate national radar family not represented by launchers. New selected classic public maker module on four legs with inclined array and Ybearing; no truck/launcher or automatic MS-MMR payload. Maker photograph not certified a national serial, dimensions estimated. No absence of another radar or current readiness inferred.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "counterBatteryRadar__elm_2084_mmr",
+      "asset_validation": {
+        "batch": 34,
+        "file": "vehicles/counterBatteryRadar__elm_2084_mmr.glb",
+        "sha256": "78857a306a7b3ff773069e7c4636eb251073609939ea55f02004c4e232a37dad",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "native_additional_motion_checks": 52,
+        "limits": "Selected public exteriors; all principal sizes/fittings/hinges locally estimated, historical/maker fit not every national serial or readiness certification."
+      },
+      "existing_exact_asset": "vehicles/counterBatteryRadar__elm_2084_mmr.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "abmLauncher",
+      "model": "Arrow3 specific public launcher trailer fit pending",
+      "source_ids": [
+        "IL-ARROW-CONTRACT24",
+        "IL-ARROW-APPROVAL26",
+        "IL-ARROW-MAKER25"
+      ],
+      "status": "documented_national_family_specific_trailer_reference_pending",
+      "reason": "Current generic8x8carrier differs maker trailer photograph. Need unobscured whole carrier, exact axles and visible hinges before original specific geometry. No copying commercial3Dassets or hidden assemblies.",
+      "asset_action": "verify_full_public_carrier_reference_before_generation",
       "proposed_slug": null,
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"

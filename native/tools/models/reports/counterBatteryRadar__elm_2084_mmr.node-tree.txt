@@ -1,0 +1,33 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Hull local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Hull_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Outrigger_L0 local=[-1.2, 1.13, -1.786] world=[-1.2, 1.13, -1.786] axis=None pivot
+      Outrigger_L0_Mesh local=[0, 0, 0] world=[-1.2, 1.13, -1.786] axis=None mesh
+    Outrigger_L1 local=[-1.2, 1.13, 1.786] world=[-1.2, 1.13, 1.786] axis=None pivot
+      Outrigger_L1_Mesh local=[0, 0, 0] world=[-1.2, 1.13, 1.786] axis=None mesh
+    Outrigger_R0 local=[1.2, 1.13, -1.786] world=[1.2, 1.13, -1.786] axis=None pivot
+      Outrigger_R0_Mesh local=[0, 0, 0] world=[1.2, 1.13, -1.786] axis=None mesh
+    Outrigger_R1 local=[1.2, 1.13, 1.786] world=[1.2, 1.13, 1.786] axis=None pivot
+      Outrigger_R1_Mesh local=[0, 0, 0] world=[1.2, 1.13, 1.786] axis=None mesh
+    Radar local=[0.0, 1.34, -0.55] world=[0.0, 1.34, -0.55] axis=Y pivot
+      Radar_Mesh local=[0, 0, 0] world=[0.0, 1.34, -0.55] axis=None mesh
+      Radar_Elevation local=[0.0, 0.57, 0.29] world=[0.0, 1.91, -0.26] axis=X pivot
+        Radar_Elevation_Mesh local=[0, 0, 0] world=[0.0, 1.91, -0.26] axis=None mesh
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Hull_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Hull_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Outrigger_L0_LOD1 local=[-1.2, 1.13, -1.786] world=[-1.2, 1.13, -1.786] axis=None pivot hidden
+      Outrigger_L0_Mesh_LOD1 local=[0, 0, 0] world=[-1.2, 1.13, -1.786] axis=None mesh hidden
+    Outrigger_L1_LOD1 local=[-1.2, 1.13, 1.786] world=[-1.2, 1.13, 1.786] axis=None pivot hidden
+      Outrigger_L1_Mesh_LOD1 local=[0, 0, 0] world=[-1.2, 1.13, 1.786] axis=None mesh hidden
+    Outrigger_R0_LOD1 local=[1.2, 1.13, -1.786] world=[1.2, 1.13, -1.786] axis=None pivot hidden
+      Outrigger_R0_Mesh_LOD1 local=[0, 0, 0] world=[1.2, 1.13, -1.786] axis=None mesh hidden
+    Outrigger_R1_LOD1 local=[1.2, 1.13, 1.786] world=[1.2, 1.13, 1.786] axis=None pivot hidden
+      Outrigger_R1_Mesh_LOD1 local=[0, 0, 0] world=[1.2, 1.13, 1.786] axis=None mesh hidden
+    Radar_LOD1 local=[0.0, 1.34, -0.55] world=[0.0, 1.34, -0.55] axis=Y pivot hidden
+      Radar_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.34, -0.55] axis=None mesh hidden
+      Radar_Elevation_LOD1 local=[0.0, 0.57, 0.29] world=[0.0, 1.91, -0.26] axis=X pivot hidden
+        Radar_Elevation_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.91, -0.26] axis=None mesh hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 1.12, 0.0] world=[0.0, 1.12, 0.0] axis=None mesh hidden

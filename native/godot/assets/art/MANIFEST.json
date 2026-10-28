@@ -976947,5 +976947,3738 @@
       "https://www.navalnews.com/naval-news/2022/01/israel-orders-3-new-dakar-class-submarines-from-tkms/",
       "https://www.twz.com/43951/our-first-look-at-israels-new-dakar-class-submarine-reveals-a-very-peculiar-feature"
     ]
+  },
+  {
+    "file": "vehicles/apc__eitan_series_2023.glb",
+    "kind": "model",
+    "name": "Eitan selected May2023 series-delivery APC",
+    "priority": "P2",
+    "pilot": false,
+    "approximate": true,
+    "representative_vehicle": "Original selected public outer fit, not all current national serials. All principal dimensions, small fittings and hinge placements locally estimated from photographs, not factory drawings. See dated national service/order evidence separately in research/evidence.json. No weapon or sensor internals reconstructed.",
+    "triangles": [
+      11810,
+      1774
+    ],
+    "wreck_triangles": 1526,
+    "collision_triangles": 12,
+    "size": [
+      3.66,
+      3.28767,
+      8.1
+    ],
+    "bounds": [
+      [
+        -1.83,
+        0.0,
+        -4.08
+      ],
+      [
+        1.83,
+        3.28767,
+        4.02
+      ]
+    ],
+    "hull_footprint": [
+      3.14,
+      8.1
+    ],
+    "road_wheels_per_side": 4,
+    "wheel_radius_metres": 0.64,
+    "mobility": "wheeled",
+    "has_turret": true,
+    "recognition_features": [
+      "eight large wheels/four axles and tall flat side armour",
+      "wide low wedge nose, split front shoulder facets and front-left engine grille",
+      "periscoped driver and commander hatches, actual remote MG station",
+      "rear centre ramp between separate tall side equipment cabinets",
+      "rear roof basket, mirror arms and external panel/handle details"
+    ],
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "materials": [
+      "paint",
+      "metal_dark",
+      "rubber",
+      "glass",
+      "markings"
+    ],
+    "nodes": [
+      {
+        "path": "LOD0",
+        "canonical_part": "LOD0",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L0",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.38,
+          0.64,
+          -2.78
+        ],
+        "pivot_world": [
+          -1.38,
+          0.64,
+          -2.78
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L1",
+        "canonical_part": "Wheel_L1",
+        "pivot_local": [
+          -1.38,
+          0.64,
+          -1.11
+        ],
+        "pivot_world": [
+          -1.38,
+          0.64,
+          -1.11
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L2",
+        "canonical_part": "Wheel_L2",
+        "pivot_local": [
+          -1.38,
+          0.64,
+          1.05
+        ],
+        "pivot_world": [
+          -1.38,
+          0.64,
+          1.05
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L3",
+        "canonical_part": "Wheel_L3",
+        "pivot_local": [
+          -1.38,
+          0.64,
+          2.67
+        ],
+        "pivot_world": [
+          -1.38,
+          0.64,
+          2.67
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R0",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.38,
+          0.64,
+          -2.78
+        ],
+        "pivot_world": [
+          1.38,
+          0.64,
+          -2.78
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R1",
+        "canonical_part": "Wheel_R1",
+        "pivot_local": [
+          1.38,
+          0.64,
+          -1.11
+        ],
+        "pivot_world": [
+          1.38,
+          0.64,
+          -1.11
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R2",
+        "canonical_part": "Wheel_R2",
+        "pivot_local": [
+          1.38,
+          0.64,
+          1.05
+        ],
+        "pivot_world": [
+          1.38,
+          0.64,
+          1.05
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R3",
+        "canonical_part": "Wheel_R3",
+        "pivot_local": [
+          1.38,
+          0.64,
+          2.67
+        ],
+        "pivot_world": [
+          1.38,
+          0.64,
+          2.67
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Ramp",
+        "canonical_part": "Ramp",
+        "pivot_local": [
+          0.0,
+          0.91,
+          -3.96
+        ],
+        "pivot_world": [
+          0.0,
+          0.91,
+          -3.96
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Hatch_Driver",
+        "canonical_part": "Hatch_Driver",
+        "pivot_local": [
+          0.85,
+          2.5,
+          1.72
+        ],
+        "pivot_world": [
+          0.85,
+          2.5,
+          1.72
+        ],
+        "axis": "Z",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Hatch_Commander",
+        "canonical_part": "Hatch_Commander",
+        "pivot_local": [
+          0.97,
+          2.5,
+          -0.12
+        ],
+        "pivot_world": [
+          0.97,
+          2.5,
+          -0.12
+        ],
+        "axis": "Z",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Rear_Roof_Basket",
+        "canonical_part": "Rear_Roof_Basket",
+        "pivot_local": [
+          0.0,
+          2.46,
+          -3.1
+        ],
+        "pivot_world": [
+          0.0,
+          2.46,
+          -3.1
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret",
+        "canonical_part": "Turret",
+        "pivot_local": [
+          -0.57,
+          2.49,
+          -0.18
+        ],
+        "pivot_world": [
+          -0.57,
+          2.49,
+          -0.18
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Gun",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          0.62,
+          0.0
+        ],
+        "pivot_world": [
+          -0.57,
+          3.11,
+          -0.18
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turret/Gun/Muzzle",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          1.1
+        ],
+        "pivot_world": [
+          -0.57,
+          3.11,
+          0.92
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Engine_Deck",
+        "canonical_part": "Engine_Deck",
+        "pivot_local": [
+          -0.64,
+          2.5,
+          2.15
+        ],
+        "pivot_world": [
+          -0.64,
+          2.5,
+          2.15
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Exhaust",
+        "canonical_part": "Exhaust",
+        "pivot_local": [
+          -1.48,
+          2.26,
+          0.7
+        ],
+        "pivot_world": [
+          -1.48,
+          2.26,
+          0.7
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD1",
+        "canonical_part": "LOD1",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L0_LOD1",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.38,
+          0.64,
+          -2.78
+        ],
+        "pivot_world": [
+          -1.38,
+          0.64,
+          -2.78
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L1_LOD1",
+        "canonical_part": "Wheel_L1",
+        "pivot_local": [
+          -1.38,
+          0.64,
+          -1.11
+        ],
+        "pivot_world": [
+          -1.38,
+          0.64,
+          -1.11
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L2_LOD1",
+        "canonical_part": "Wheel_L2",
+        "pivot_local": [
+          -1.38,
+          0.64,
+          1.05
+        ],
+        "pivot_world": [
+          -1.38,
+          0.64,
+          1.05
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L3_LOD1",
+        "canonical_part": "Wheel_L3",
+        "pivot_local": [
+          -1.38,
+          0.64,
+          2.67
+        ],
+        "pivot_world": [
+          -1.38,
+          0.64,
+          2.67
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R0_LOD1",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.38,
+          0.64,
+          -2.78
+        ],
+        "pivot_world": [
+          1.38,
+          0.64,
+          -2.78
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R1_LOD1",
+        "canonical_part": "Wheel_R1",
+        "pivot_local": [
+          1.38,
+          0.64,
+          -1.11
+        ],
+        "pivot_world": [
+          1.38,
+          0.64,
+          -1.11
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R2_LOD1",
+        "canonical_part": "Wheel_R2",
+        "pivot_local": [
+          1.38,
+          0.64,
+          1.05
+        ],
+        "pivot_world": [
+          1.38,
+          0.64,
+          1.05
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R3_LOD1",
+        "canonical_part": "Wheel_R3",
+        "pivot_local": [
+          1.38,
+          0.64,
+          2.67
+        ],
+        "pivot_world": [
+          1.38,
+          0.64,
+          2.67
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Ramp_LOD1",
+        "canonical_part": "Ramp",
+        "pivot_local": [
+          0.0,
+          0.91,
+          -3.96
+        ],
+        "pivot_world": [
+          0.0,
+          0.91,
+          -3.96
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Hatch_Driver_LOD1",
+        "canonical_part": "Hatch_Driver",
+        "pivot_local": [
+          0.85,
+          2.5,
+          1.72
+        ],
+        "pivot_world": [
+          0.85,
+          2.5,
+          1.72
+        ],
+        "axis": "Z",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Hatch_Commander_LOD1",
+        "canonical_part": "Hatch_Commander",
+        "pivot_local": [
+          0.97,
+          2.5,
+          -0.12
+        ],
+        "pivot_world": [
+          0.97,
+          2.5,
+          -0.12
+        ],
+        "axis": "Z",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Rear_Roof_Basket_LOD1",
+        "canonical_part": "Rear_Roof_Basket",
+        "pivot_local": [
+          0.0,
+          2.46,
+          -3.1
+        ],
+        "pivot_world": [
+          0.0,
+          2.46,
+          -3.1
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1",
+        "canonical_part": "Turret",
+        "pivot_local": [
+          -0.57,
+          2.49,
+          -0.18
+        ],
+        "pivot_world": [
+          -0.57,
+          2.49,
+          -0.18
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Gun_LOD1",
+        "canonical_part": "Gun",
+        "pivot_local": [
+          0.0,
+          0.62,
+          0.0
+        ],
+        "pivot_world": [
+          -0.57,
+          3.11,
+          -0.18
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turret_LOD1/Gun_LOD1/Muzzle_LOD1",
+        "canonical_part": "Muzzle",
+        "pivot_local": [
+          0.0,
+          0.0,
+          1.1
+        ],
+        "pivot_world": [
+          -0.57,
+          3.11,
+          0.92
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Engine_Deck_LOD1",
+        "canonical_part": "Engine_Deck",
+        "pivot_local": [
+          -0.64,
+          2.5,
+          2.15
+        ],
+        "pivot_world": [
+          -0.64,
+          2.5,
+          2.15
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Exhaust_LOD1",
+        "canonical_part": "Exhaust",
+        "pivot_local": [
+          -1.48,
+          2.26,
+          0.7
+        ],
+        "pivot_world": [
+          -1.48,
+          2.26,
+          0.7
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "Wreck",
+        "canonical_part": "Wreck",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision",
+        "canonical_part": "collision",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision/Collision_Box",
+        "canonical_part": "Collision_Box",
+        "pivot_local": [
+          0.0,
+          1.4825,
+          -0.03
+        ],
+        "pivot_world": [
+          0.0,
+          1.4825,
+          -0.03
+        ],
+        "axis": null,
+        "default_visible": false
+      }
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "notes": "Original generate_inventory_additions_34.py with approved shared Python parts, no Blender, imported mesh/pixels or insignia. Public outer geometry only, no functional weapon/sensor internals or operating logic. Local principal dimensions and fittings expressly estimated; selected historical/current exterior and national service/order evidence separated in research/evidence.json. Static equipment does not gain invented truck cabs or installed missiles/radars.",
+    "sources": [
+      {
+        "url": "https://mod.gov.il/en/press-releases/press-room/delivery-of-first-eitan-armored-personnel-carriers-apc-to-the-israel-defense-forces-nahal-infantry-brigade",
+        "use": "Vehicle exterior identification and size class; original geometry, no photographs embedded."
+      }
+    ],
+    "validation": {
+      "readback": true,
+      "node_tree_printed": true,
+      "ccw_normals": true,
+      "duplicate_faces": 0,
+      "below_ground_vertices": 0,
+      "track_uv_seams": 0,
+      "canonical_track_vertices": false,
+      "track_shader_phases": [],
+      "pose_checks": [
+        "yaw +90",
+        "gun -8/+20",
+        "recoil .20 m",
+        "all named hinges propagate children",
+        "axle positions and wheel count"
+      ],
+      "lod_limits": [
+        15000,
+        2500
+      ],
+      "external_loaders": [
+        "trimesh 5.1.1",
+        "Godot 4.7.2 GLTFDocument"
+      ],
+      "rendered_views": [
+        "LOD0 front",
+        "LOD0 side",
+        "LOD1 front",
+        "Wreck front"
+      ],
+      "visual_review": "20 final saved-file overviews plus six final detail/posed views actually inspected; current GLB hashes match independent imports",
+      "extra_checks": [
+        "Eitan8wheel/four-axle layout, low broad bow, periscoped hatches, actual remote MG, rear central Ramp X and separate cabinets/basket; no automatic30mm/APS fit",
+        "IronDome20individual closed canisters and end markers in4x5rack on transverse erection hinge/four static legs, no invented truck/radar/Ybearing",
+        "DavidSling12closed canisters in3x4rack, unpowered2axle semitrailer/equipment shelter/access stairs/legs, no invented cab/azimuth bearing",
+        "Classic MMR separate4leg platform, smooth inclined single array/back braces/equipment box and Ybearing/Xfolding pivot; no MS-MMR sensor kit or launcher",
+        "OrEitan2independentYbearings/Xheads and each optical aperture marker; twin-head container photographed, no truck/laser internals",
+        "52 local hinges and descendant mesh vertices/markers independently tested in nativeGodot, including both optical heads and radar",
+        "20 final saved-file overview and six final detail/posed views actually inspected"
+      ]
+    },
+    "sha256": "3c70c058f3f756ae17b5dd174e30fe79e6c0e79d0ae1f33f5bcd80dbfe8be8a9",
+    "has_launcher": false,
+    "launcher_tubes": 0,
+    "research_evidence_ids": [
+      "IL-EITAN-DELIVERY23",
+      "IL-EITAN-HULL-CONTRACT23",
+      "IL-EITAN-OPERATOR25",
+      "IL-ARMOUR-PROGRAM25"
+    ],
+    "primary_source_urls": [
+      "https://mod.gov.il/en/press-releases/press-room/delivery-of-first-eitan-armored-personnel-carriers-apc-to-the-israel-defense-forces-nahal-infantry-brigade",
+      "https://mod.gov.il/en/press-releases/press-room/eitan-apc-procurement-agreement-finalized",
+      "https://www.idf.il/\u05d0\u05ea\u05e8\u05d9-\u05d9\u05d7\u05d9\u05d3\u05d5\u05ea/\u05d9\u05d5\u05de\u05df-\u05d4\u05de\u05dc\u05d7\u05de\u05d4/\u05db\u05dc-\u05d4\u05db\u05ea\u05d1\u05d5\u05ea/\u05d4\u05e4\u05e6\u05d5\u05ea/\u05db\u05d5\u05d7\u05d5\u05ea-\u05d4\u05d1\u05d9\u05d8\u05d7\u05d5\u05df-\u05de\u05de\u05e9\u05d9\u05db\u05d9\u05dd-\u05dc\u05e4\u05e2\u05d5\u05dc-\u05d1\u05de\u05d1\u05e6\u05e2-\u05d1\u05e6\u05e4\u05d5\u05df-\u05d4\u05e9\u05d5\u05de\u05e8\u05d5\u05df-\u05ea\u05d9\u05e2\u05d5\u05d3\u05d9\u05dd/",
+      "https://www.mod.gov.il/en/press-releases/press-room/israel-defense-procurement-committee-approves-approximately-15b-plan-to-expand-tank-and-apc-production"
+    ],
+    "has_radar": false,
+    "optical_heads": 0
+  },
+  {
+    "file": "vehicles/aaVehicle__iron_dome_mfu.glb",
+    "kind": "model",
+    "name": "Iron Dome selected public twenty-canister MFU",
+    "priority": "P4",
+    "pilot": false,
+    "approximate": true,
+    "representative_vehicle": "Original selected public outer fit, not all current national serials. All principal dimensions, small fittings and hinge placements locally estimated from photographs, not factory drawings. See dated national service/order evidence separately in research/evidence.json. No weapon or sensor internals reconstructed.",
+    "triangles": [
+      7044,
+      2180
+    ],
+    "wreck_triangles": 1928,
+    "collision_triangles": 12,
+    "size": [
+      3.17,
+      2.985,
+      4.2
+    ],
+    "bounds": [
+      [
+        -1.585,
+        -0.0,
+        -2.1
+      ],
+      [
+        1.585,
+        2.985,
+        2.1
+      ]
+    ],
+    "hull_footprint": [
+      3.05,
+      4.6
+    ],
+    "road_wheels_per_side": 0,
+    "wheel_radius_metres": 0,
+    "mobility": "static",
+    "has_turret": false,
+    "recognition_features": [
+      "separate static twenty-canister firing unit, not all-in-oneI-Dome truck",
+      "twenty individual long sealed containers, four across and five deep when upright",
+      "transverse erection hinge, exposed cross frame and four levelling legs",
+      "side exterior panels/retaining bands/end caps; separate radar not invented here"
+    ],
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "materials": [
+      "paint",
+      "metal_dark",
+      "rubber",
+      "glass",
+      "markings"
+    ],
+    "nodes": [
+      {
+        "path": "LOD0",
+        "canonical_part": "LOD0",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_L0",
+        "canonical_part": "Outrigger_L0",
+        "pivot_local": [
+          -1.375,
+          0.6,
+          -1.748
+        ],
+        "pivot_world": [
+          -1.375,
+          0.6,
+          -1.748
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_L1",
+        "canonical_part": "Outrigger_L1",
+        "pivot_local": [
+          -1.375,
+          0.6,
+          1.748
+        ],
+        "pivot_world": [
+          -1.375,
+          0.6,
+          1.748
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_R0",
+        "canonical_part": "Outrigger_R0",
+        "pivot_local": [
+          1.375,
+          0.6,
+          -1.748
+        ],
+        "pivot_world": [
+          1.375,
+          0.6,
+          -1.748
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_R1",
+        "canonical_part": "Outrigger_R1",
+        "pivot_local": [
+          1.375,
+          0.6,
+          1.748
+        ],
+        "pivot_world": [
+          1.375,
+          0.6,
+          1.748
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher",
+        "canonical_part": "Launcher",
+        "pivot_local": [
+          0.0,
+          0.76,
+          -1.75
+        ],
+        "pivot_world": [
+          0.0,
+          0.76,
+          -1.75
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_0",
+        "canonical_part": "Muzzle_0",
+        "pivot_local": [
+          -0.5925,
+          0.35,
+          3.102
+        ],
+        "pivot_world": [
+          -0.5925,
+          1.11,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_1",
+        "canonical_part": "Muzzle_1",
+        "pivot_local": [
+          -0.1975,
+          0.35,
+          3.102
+        ],
+        "pivot_world": [
+          -0.1975,
+          1.11,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_2",
+        "canonical_part": "Muzzle_2",
+        "pivot_local": [
+          0.1975,
+          0.35,
+          3.102
+        ],
+        "pivot_world": [
+          0.1975,
+          1.11,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_3",
+        "canonical_part": "Muzzle_3",
+        "pivot_local": [
+          0.5925,
+          0.35,
+          3.102
+        ],
+        "pivot_world": [
+          0.5925,
+          1.11,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_4",
+        "canonical_part": "Muzzle_4",
+        "pivot_local": [
+          -0.5925,
+          0.745,
+          3.102
+        ],
+        "pivot_world": [
+          -0.5925,
+          1.505,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_5",
+        "canonical_part": "Muzzle_5",
+        "pivot_local": [
+          -0.1975,
+          0.745,
+          3.102
+        ],
+        "pivot_world": [
+          -0.1975,
+          1.505,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_6",
+        "canonical_part": "Muzzle_6",
+        "pivot_local": [
+          0.1975,
+          0.745,
+          3.102
+        ],
+        "pivot_world": [
+          0.1975,
+          1.505,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_7",
+        "canonical_part": "Muzzle_7",
+        "pivot_local": [
+          0.5925,
+          0.745,
+          3.102
+        ],
+        "pivot_world": [
+          0.5925,
+          1.505,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_8",
+        "canonical_part": "Muzzle_8",
+        "pivot_local": [
+          -0.5925,
+          1.14,
+          3.102
+        ],
+        "pivot_world": [
+          -0.5925,
+          1.9,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_9",
+        "canonical_part": "Muzzle_9",
+        "pivot_local": [
+          -0.1975,
+          1.14,
+          3.102
+        ],
+        "pivot_world": [
+          -0.1975,
+          1.9,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_10",
+        "canonical_part": "Muzzle_10",
+        "pivot_local": [
+          0.1975,
+          1.14,
+          3.102
+        ],
+        "pivot_world": [
+          0.1975,
+          1.9,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_11",
+        "canonical_part": "Muzzle_11",
+        "pivot_local": [
+          0.5925,
+          1.14,
+          3.102
+        ],
+        "pivot_world": [
+          0.5925,
+          1.9,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_12",
+        "canonical_part": "Muzzle_12",
+        "pivot_local": [
+          -0.5925,
+          1.535,
+          3.102
+        ],
+        "pivot_world": [
+          -0.5925,
+          2.295,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_13",
+        "canonical_part": "Muzzle_13",
+        "pivot_local": [
+          -0.1975,
+          1.535,
+          3.102
+        ],
+        "pivot_world": [
+          -0.1975,
+          2.295,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_14",
+        "canonical_part": "Muzzle_14",
+        "pivot_local": [
+          0.1975,
+          1.535,
+          3.102
+        ],
+        "pivot_world": [
+          0.1975,
+          2.295,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_15",
+        "canonical_part": "Muzzle_15",
+        "pivot_local": [
+          0.5925,
+          1.535,
+          3.102
+        ],
+        "pivot_world": [
+          0.5925,
+          2.295,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_16",
+        "canonical_part": "Muzzle_16",
+        "pivot_local": [
+          -0.5925,
+          1.93,
+          3.102
+        ],
+        "pivot_world": [
+          -0.5925,
+          2.69,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_17",
+        "canonical_part": "Muzzle_17",
+        "pivot_local": [
+          -0.1975,
+          1.93,
+          3.102
+        ],
+        "pivot_world": [
+          -0.1975,
+          2.69,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_18",
+        "canonical_part": "Muzzle_18",
+        "pivot_local": [
+          0.1975,
+          1.93,
+          3.102
+        ],
+        "pivot_world": [
+          0.1975,
+          2.69,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_19",
+        "canonical_part": "Muzzle_19",
+        "pivot_local": [
+          0.5925,
+          1.93,
+          3.102
+        ],
+        "pivot_world": [
+          0.5925,
+          2.69,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD1",
+        "canonical_part": "LOD1",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_L0_LOD1",
+        "canonical_part": "Outrigger_L0",
+        "pivot_local": [
+          -1.375,
+          0.6,
+          -1.748
+        ],
+        "pivot_world": [
+          -1.375,
+          0.6,
+          -1.748
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_L1_LOD1",
+        "canonical_part": "Outrigger_L1",
+        "pivot_local": [
+          -1.375,
+          0.6,
+          1.748
+        ],
+        "pivot_world": [
+          -1.375,
+          0.6,
+          1.748
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_R0_LOD1",
+        "canonical_part": "Outrigger_R0",
+        "pivot_local": [
+          1.375,
+          0.6,
+          -1.748
+        ],
+        "pivot_world": [
+          1.375,
+          0.6,
+          -1.748
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_R1_LOD1",
+        "canonical_part": "Outrigger_R1",
+        "pivot_local": [
+          1.375,
+          0.6,
+          1.748
+        ],
+        "pivot_world": [
+          1.375,
+          0.6,
+          1.748
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1",
+        "canonical_part": "Launcher",
+        "pivot_local": [
+          0.0,
+          0.76,
+          -1.75
+        ],
+        "pivot_world": [
+          0.0,
+          0.76,
+          -1.75
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_0_LOD1",
+        "canonical_part": "Muzzle_0",
+        "pivot_local": [
+          -0.5925,
+          0.35,
+          3.102
+        ],
+        "pivot_world": [
+          -0.5925,
+          1.11,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_1_LOD1",
+        "canonical_part": "Muzzle_1",
+        "pivot_local": [
+          -0.1975,
+          0.35,
+          3.102
+        ],
+        "pivot_world": [
+          -0.1975,
+          1.11,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_2_LOD1",
+        "canonical_part": "Muzzle_2",
+        "pivot_local": [
+          0.1975,
+          0.35,
+          3.102
+        ],
+        "pivot_world": [
+          0.1975,
+          1.11,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_3_LOD1",
+        "canonical_part": "Muzzle_3",
+        "pivot_local": [
+          0.5925,
+          0.35,
+          3.102
+        ],
+        "pivot_world": [
+          0.5925,
+          1.11,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_4_LOD1",
+        "canonical_part": "Muzzle_4",
+        "pivot_local": [
+          -0.5925,
+          0.745,
+          3.102
+        ],
+        "pivot_world": [
+          -0.5925,
+          1.505,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_5_LOD1",
+        "canonical_part": "Muzzle_5",
+        "pivot_local": [
+          -0.1975,
+          0.745,
+          3.102
+        ],
+        "pivot_world": [
+          -0.1975,
+          1.505,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_6_LOD1",
+        "canonical_part": "Muzzle_6",
+        "pivot_local": [
+          0.1975,
+          0.745,
+          3.102
+        ],
+        "pivot_world": [
+          0.1975,
+          1.505,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_7_LOD1",
+        "canonical_part": "Muzzle_7",
+        "pivot_local": [
+          0.5925,
+          0.745,
+          3.102
+        ],
+        "pivot_world": [
+          0.5925,
+          1.505,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_8_LOD1",
+        "canonical_part": "Muzzle_8",
+        "pivot_local": [
+          -0.5925,
+          1.14,
+          3.102
+        ],
+        "pivot_world": [
+          -0.5925,
+          1.9,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_9_LOD1",
+        "canonical_part": "Muzzle_9",
+        "pivot_local": [
+          -0.1975,
+          1.14,
+          3.102
+        ],
+        "pivot_world": [
+          -0.1975,
+          1.9,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_10_LOD1",
+        "canonical_part": "Muzzle_10",
+        "pivot_local": [
+          0.1975,
+          1.14,
+          3.102
+        ],
+        "pivot_world": [
+          0.1975,
+          1.9,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_11_LOD1",
+        "canonical_part": "Muzzle_11",
+        "pivot_local": [
+          0.5925,
+          1.14,
+          3.102
+        ],
+        "pivot_world": [
+          0.5925,
+          1.9,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_12_LOD1",
+        "canonical_part": "Muzzle_12",
+        "pivot_local": [
+          -0.5925,
+          1.535,
+          3.102
+        ],
+        "pivot_world": [
+          -0.5925,
+          2.295,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_13_LOD1",
+        "canonical_part": "Muzzle_13",
+        "pivot_local": [
+          -0.1975,
+          1.535,
+          3.102
+        ],
+        "pivot_world": [
+          -0.1975,
+          2.295,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_14_LOD1",
+        "canonical_part": "Muzzle_14",
+        "pivot_local": [
+          0.1975,
+          1.535,
+          3.102
+        ],
+        "pivot_world": [
+          0.1975,
+          2.295,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_15_LOD1",
+        "canonical_part": "Muzzle_15",
+        "pivot_local": [
+          0.5925,
+          1.535,
+          3.102
+        ],
+        "pivot_world": [
+          0.5925,
+          2.295,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_16_LOD1",
+        "canonical_part": "Muzzle_16",
+        "pivot_local": [
+          -0.5925,
+          1.93,
+          3.102
+        ],
+        "pivot_world": [
+          -0.5925,
+          2.69,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_17_LOD1",
+        "canonical_part": "Muzzle_17",
+        "pivot_local": [
+          -0.1975,
+          1.93,
+          3.102
+        ],
+        "pivot_world": [
+          -0.1975,
+          2.69,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_18_LOD1",
+        "canonical_part": "Muzzle_18",
+        "pivot_local": [
+          0.1975,
+          1.93,
+          3.102
+        ],
+        "pivot_world": [
+          0.1975,
+          2.69,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_19_LOD1",
+        "canonical_part": "Muzzle_19",
+        "pivot_local": [
+          0.5925,
+          1.93,
+          3.102
+        ],
+        "pivot_world": [
+          0.5925,
+          2.69,
+          1.352
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "Wreck",
+        "canonical_part": "Wreck",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision",
+        "canonical_part": "collision",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision/Collision_Box",
+        "canonical_part": "Collision_Box",
+        "pivot_local": [
+          0.0115,
+          0.38,
+          0.0
+        ],
+        "pivot_world": [
+          0.0115,
+          0.38,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      }
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "notes": "Original generate_inventory_additions_34.py with approved shared Python parts, no Blender, imported mesh/pixels or insignia. Public outer geometry only, no functional weapon/sensor internals or operating logic. Local principal dimensions and fittings expressly estimated; selected historical/current exterior and national service/order evidence separated in research/evidence.json. Static equipment does not gain invented truck cabs or installed missiles/radars.",
+    "sources": [
+      {
+        "url": "https://www.rafael.co.il/exhibitions/wp-content/uploads/2024/05/IRON-Dome_Brochure_new-2023b.pdf",
+        "use": "Vehicle exterior identification and size class; original geometry, no photographs embedded."
+      }
+    ],
+    "validation": {
+      "readback": true,
+      "node_tree_printed": true,
+      "ccw_normals": true,
+      "duplicate_faces": 0,
+      "below_ground_vertices": 0,
+      "track_uv_seams": 0,
+      "canonical_track_vertices": false,
+      "track_shader_phases": [],
+      "pose_checks": [
+        "all named hinges propagate children",
+        "axle positions and wheel count",
+        "every tube marker elevates -30 degrees and traverses +90 degrees"
+      ],
+      "lod_limits": [
+        15000,
+        2500
+      ],
+      "external_loaders": [
+        "trimesh 5.1.1",
+        "Godot 4.7.2 GLTFDocument"
+      ],
+      "rendered_views": [
+        "LOD0 front",
+        "LOD0 side",
+        "LOD1 front",
+        "Wreck front"
+      ],
+      "visual_review": "20 final saved-file overviews plus six final detail/posed views actually inspected; current GLB hashes match independent imports",
+      "extra_checks": [
+        "Eitan8wheel/four-axle layout, low broad bow, periscoped hatches, actual remote MG, rear central Ramp X and separate cabinets/basket; no automatic30mm/APS fit",
+        "IronDome20individual closed canisters and end markers in4x5rack on transverse erection hinge/four static legs, no invented truck/radar/Ybearing",
+        "DavidSling12closed canisters in3x4rack, unpowered2axle semitrailer/equipment shelter/access stairs/legs, no invented cab/azimuth bearing",
+        "Classic MMR separate4leg platform, smooth inclined single array/back braces/equipment box and Ybearing/Xfolding pivot; no MS-MMR sensor kit or launcher",
+        "OrEitan2independentYbearings/Xheads and each optical aperture marker; twin-head container photographed, no truck/laser internals",
+        "52 local hinges and descendant mesh vertices/markers independently tested in nativeGodot, including both optical heads and radar",
+        "20 final saved-file overview and six final detail/posed views actually inspected"
+      ]
+    },
+    "sha256": "1242c0248e771be61a6b6820a39c9b0bd8ed27c2689f56fda922e3774652671c",
+    "has_launcher": true,
+    "launcher_tubes": 20,
+    "research_evidence_ids": [
+      "IL-DOME-MAKER23",
+      "IL-DOME-MAKER-ESG21",
+      "IL-DOME-CONTRACT25"
+    ],
+    "primary_source_urls": [
+      "https://www.rafael.co.il/exhibitions/wp-content/uploads/2024/05/IRON-Dome_Brochure_new-2023b.pdf",
+      "https://he.rafael.co.il/wp-content/uploads/2024/01/Refael_Imud_ENGLISH_271223_compressed.pdf",
+      "https://mod.gov.il/en/press-releases/press-room/israel-mod-signs-first-defense-procurement-contract-from-us-aid-package-with-rafael-to-expand-the-serial-production-of-iron-dome-interceptors"
+    ],
+    "has_radar": false,
+    "optical_heads": 0
+  },
+  {
+    "file": "vehicles/samLauncher__davids_sling_trailer.glb",
+    "kind": "model",
+    "name": "David Sling selected public two-axle launcher trailer",
+    "priority": "P4",
+    "pilot": false,
+    "approximate": true,
+    "representative_vehicle": "Original selected public outer fit, not all current national serials. All principal dimensions, small fittings and hinge placements locally estimated from photographs, not factory drawings. See dated national service/order evidence separately in research/evidence.json. No weapon or sensor internals reconstructed.",
+    "triangles": [
+      10104,
+      1904
+    ],
+    "wreck_triangles": 1736,
+    "collision_triangles": 12,
+    "size": [
+      2.98,
+      3.76,
+      9.6
+    ],
+    "bounds": [
+      [
+        -1.36,
+        -0.0,
+        -4.8
+      ],
+      [
+        1.62,
+        3.76,
+        4.8
+      ]
+    ],
+    "hull_footprint": [
+      2.6,
+      9.8
+    ],
+    "road_wheels_per_side": 2,
+    "wheel_radius_metres": 0.52,
+    "mobility": "wheeled",
+    "has_turret": false,
+    "recognition_features": [
+      "unpowered two-axle semitrailer, no invented forward cab",
+      "twelve closed containers, three across/four deep when erect",
+      "large forward equipment shelter with exterior vents/doors and end safety rail",
+      "four visible levelling jacks, side steps and transverse erection hinge"
+    ],
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "materials": [
+      "paint",
+      "metal_dark",
+      "rubber",
+      "glass",
+      "markings"
+    ],
+    "nodes": [
+      {
+        "path": "LOD0",
+        "canonical_part": "LOD0",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L0",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.11,
+          0.52,
+          -3.46
+        ],
+        "pivot_world": [
+          -1.11,
+          0.52,
+          -3.46
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_L1",
+        "canonical_part": "Wheel_L1",
+        "pivot_local": [
+          -1.11,
+          0.52,
+          -2.2
+        ],
+        "pivot_world": [
+          -1.11,
+          0.52,
+          -2.2
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R0",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.11,
+          0.52,
+          -3.46
+        ],
+        "pivot_world": [
+          1.11,
+          0.52,
+          -3.46
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Wheel_R1",
+        "canonical_part": "Wheel_R1",
+        "pivot_local": [
+          1.11,
+          0.52,
+          -2.2
+        ],
+        "pivot_world": [
+          1.11,
+          0.52,
+          -2.2
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_L0",
+        "canonical_part": "Outrigger_L0",
+        "pivot_local": [
+          -1.15,
+          1.2,
+          -4.15
+        ],
+        "pivot_world": [
+          -1.15,
+          1.2,
+          -4.15
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_L1",
+        "canonical_part": "Outrigger_L1",
+        "pivot_local": [
+          -1.15,
+          1.2,
+          3.96
+        ],
+        "pivot_world": [
+          -1.15,
+          1.2,
+          3.96
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_R0",
+        "canonical_part": "Outrigger_R0",
+        "pivot_local": [
+          1.15,
+          1.2,
+          -4.15
+        ],
+        "pivot_world": [
+          1.15,
+          1.2,
+          -4.15
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_R1",
+        "canonical_part": "Outrigger_R1",
+        "pivot_local": [
+          1.15,
+          1.2,
+          3.96
+        ],
+        "pivot_world": [
+          1.15,
+          1.2,
+          3.96
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher",
+        "canonical_part": "Launcher",
+        "pivot_local": [
+          0.0,
+          1.53,
+          -4.22
+        ],
+        "pivot_world": [
+          0.0,
+          1.53,
+          -4.22
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_0",
+        "canonical_part": "Muzzle_0",
+        "pivot_local": [
+          -0.495,
+          0.395,
+          4.532
+        ],
+        "pivot_world": [
+          -0.495,
+          1.925,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_1",
+        "canonical_part": "Muzzle_1",
+        "pivot_local": [
+          0.0,
+          0.395,
+          4.532
+        ],
+        "pivot_world": [
+          0.0,
+          1.925,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_2",
+        "canonical_part": "Muzzle_2",
+        "pivot_local": [
+          0.495,
+          0.395,
+          4.532
+        ],
+        "pivot_world": [
+          0.495,
+          1.925,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_3",
+        "canonical_part": "Muzzle_3",
+        "pivot_local": [
+          -0.495,
+          0.89,
+          4.532
+        ],
+        "pivot_world": [
+          -0.495,
+          2.42,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_4",
+        "canonical_part": "Muzzle_4",
+        "pivot_local": [
+          0.0,
+          0.89,
+          4.532
+        ],
+        "pivot_world": [
+          0.0,
+          2.42,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_5",
+        "canonical_part": "Muzzle_5",
+        "pivot_local": [
+          0.495,
+          0.89,
+          4.532
+        ],
+        "pivot_world": [
+          0.495,
+          2.42,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_6",
+        "canonical_part": "Muzzle_6",
+        "pivot_local": [
+          -0.495,
+          1.385,
+          4.532
+        ],
+        "pivot_world": [
+          -0.495,
+          2.915,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_7",
+        "canonical_part": "Muzzle_7",
+        "pivot_local": [
+          0.0,
+          1.385,
+          4.532
+        ],
+        "pivot_world": [
+          0.0,
+          2.915,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_8",
+        "canonical_part": "Muzzle_8",
+        "pivot_local": [
+          0.495,
+          1.385,
+          4.532
+        ],
+        "pivot_world": [
+          0.495,
+          2.915,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_9",
+        "canonical_part": "Muzzle_9",
+        "pivot_local": [
+          -0.495,
+          1.88,
+          4.532
+        ],
+        "pivot_world": [
+          -0.495,
+          3.41,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_10",
+        "canonical_part": "Muzzle_10",
+        "pivot_local": [
+          0.0,
+          1.88,
+          4.532
+        ],
+        "pivot_world": [
+          0.0,
+          3.41,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Launcher/Muzzle_11",
+        "canonical_part": "Muzzle_11",
+        "pivot_local": [
+          0.495,
+          1.88,
+          4.532
+        ],
+        "pivot_world": [
+          0.495,
+          3.41,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Access_Steps",
+        "canonical_part": "Access_Steps",
+        "pivot_local": [
+          1.34,
+          1.22,
+          -1.44
+        ],
+        "pivot_world": [
+          1.34,
+          1.22,
+          -1.44
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD1",
+        "canonical_part": "LOD1",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L0_LOD1",
+        "canonical_part": "Wheel_L0",
+        "pivot_local": [
+          -1.11,
+          0.52,
+          -3.46
+        ],
+        "pivot_world": [
+          -1.11,
+          0.52,
+          -3.46
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_L1_LOD1",
+        "canonical_part": "Wheel_L1",
+        "pivot_local": [
+          -1.11,
+          0.52,
+          -2.2
+        ],
+        "pivot_world": [
+          -1.11,
+          0.52,
+          -2.2
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R0_LOD1",
+        "canonical_part": "Wheel_R0",
+        "pivot_local": [
+          1.11,
+          0.52,
+          -3.46
+        ],
+        "pivot_world": [
+          1.11,
+          0.52,
+          -3.46
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Wheel_R1_LOD1",
+        "canonical_part": "Wheel_R1",
+        "pivot_local": [
+          1.11,
+          0.52,
+          -2.2
+        ],
+        "pivot_world": [
+          1.11,
+          0.52,
+          -2.2
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_L0_LOD1",
+        "canonical_part": "Outrigger_L0",
+        "pivot_local": [
+          -1.15,
+          1.2,
+          -4.15
+        ],
+        "pivot_world": [
+          -1.15,
+          1.2,
+          -4.15
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_L1_LOD1",
+        "canonical_part": "Outrigger_L1",
+        "pivot_local": [
+          -1.15,
+          1.2,
+          3.96
+        ],
+        "pivot_world": [
+          -1.15,
+          1.2,
+          3.96
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_R0_LOD1",
+        "canonical_part": "Outrigger_R0",
+        "pivot_local": [
+          1.15,
+          1.2,
+          -4.15
+        ],
+        "pivot_world": [
+          1.15,
+          1.2,
+          -4.15
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_R1_LOD1",
+        "canonical_part": "Outrigger_R1",
+        "pivot_local": [
+          1.15,
+          1.2,
+          3.96
+        ],
+        "pivot_world": [
+          1.15,
+          1.2,
+          3.96
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1",
+        "canonical_part": "Launcher",
+        "pivot_local": [
+          0.0,
+          1.53,
+          -4.22
+        ],
+        "pivot_world": [
+          0.0,
+          1.53,
+          -4.22
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_0_LOD1",
+        "canonical_part": "Muzzle_0",
+        "pivot_local": [
+          -0.495,
+          0.395,
+          4.532
+        ],
+        "pivot_world": [
+          -0.495,
+          1.925,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_1_LOD1",
+        "canonical_part": "Muzzle_1",
+        "pivot_local": [
+          0.0,
+          0.395,
+          4.532
+        ],
+        "pivot_world": [
+          0.0,
+          1.925,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_2_LOD1",
+        "canonical_part": "Muzzle_2",
+        "pivot_local": [
+          0.495,
+          0.395,
+          4.532
+        ],
+        "pivot_world": [
+          0.495,
+          1.925,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_3_LOD1",
+        "canonical_part": "Muzzle_3",
+        "pivot_local": [
+          -0.495,
+          0.89,
+          4.532
+        ],
+        "pivot_world": [
+          -0.495,
+          2.42,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_4_LOD1",
+        "canonical_part": "Muzzle_4",
+        "pivot_local": [
+          0.0,
+          0.89,
+          4.532
+        ],
+        "pivot_world": [
+          0.0,
+          2.42,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_5_LOD1",
+        "canonical_part": "Muzzle_5",
+        "pivot_local": [
+          0.495,
+          0.89,
+          4.532
+        ],
+        "pivot_world": [
+          0.495,
+          2.42,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_6_LOD1",
+        "canonical_part": "Muzzle_6",
+        "pivot_local": [
+          -0.495,
+          1.385,
+          4.532
+        ],
+        "pivot_world": [
+          -0.495,
+          2.915,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_7_LOD1",
+        "canonical_part": "Muzzle_7",
+        "pivot_local": [
+          0.0,
+          1.385,
+          4.532
+        ],
+        "pivot_world": [
+          0.0,
+          2.915,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_8_LOD1",
+        "canonical_part": "Muzzle_8",
+        "pivot_local": [
+          0.495,
+          1.385,
+          4.532
+        ],
+        "pivot_world": [
+          0.495,
+          2.915,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_9_LOD1",
+        "canonical_part": "Muzzle_9",
+        "pivot_local": [
+          -0.495,
+          1.88,
+          4.532
+        ],
+        "pivot_world": [
+          -0.495,
+          3.41,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_10_LOD1",
+        "canonical_part": "Muzzle_10",
+        "pivot_local": [
+          0.0,
+          1.88,
+          4.532
+        ],
+        "pivot_world": [
+          0.0,
+          3.41,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Launcher_LOD1/Muzzle_11_LOD1",
+        "canonical_part": "Muzzle_11",
+        "pivot_local": [
+          0.495,
+          1.88,
+          4.532
+        ],
+        "pivot_world": [
+          0.495,
+          3.41,
+          0.312
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Access_Steps_LOD1",
+        "canonical_part": "Access_Steps",
+        "pivot_local": [
+          1.34,
+          1.22,
+          -1.44
+        ],
+        "pivot_world": [
+          1.34,
+          1.22,
+          -1.44
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "Wreck",
+        "canonical_part": "Wreck",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision",
+        "canonical_part": "collision",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision/Collision_Box",
+        "canonical_part": "Collision_Box",
+        "pivot_local": [
+          0.0,
+          1.66,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          1.66,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      }
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "notes": "Original generate_inventory_additions_34.py with approved shared Python parts, no Blender, imported mesh/pixels or insignia. Public outer geometry only, no functional weapon/sensor internals or operating logic. Local principal dimensions and fittings expressly estimated; selected historical/current exterior and national service/order evidence separated in research/evidence.json. Static equipment does not gain invented truck cabs or installed missiles/radars.",
+    "sources": [
+      {
+        "url": "https://www.timesofisrael.com/russia-reportedly-in-possession-of-advanced-israeli-interceptor-missile/",
+        "use": "Vehicle exterior identification and size class; original geometry, no photographs embedded."
+      }
+    ],
+    "validation": {
+      "readback": true,
+      "node_tree_printed": true,
+      "ccw_normals": true,
+      "duplicate_faces": 0,
+      "below_ground_vertices": 0,
+      "track_uv_seams": 0,
+      "canonical_track_vertices": false,
+      "track_shader_phases": [],
+      "pose_checks": [
+        "all named hinges propagate children",
+        "axle positions and wheel count",
+        "every tube marker elevates -30 degrees and traverses +90 degrees"
+      ],
+      "lod_limits": [
+        15000,
+        2500
+      ],
+      "external_loaders": [
+        "trimesh 5.1.1",
+        "Godot 4.7.2 GLTFDocument"
+      ],
+      "rendered_views": [
+        "LOD0 front",
+        "LOD0 side",
+        "LOD1 front",
+        "Wreck front"
+      ],
+      "visual_review": "20 final saved-file overviews plus six final detail/posed views actually inspected; current GLB hashes match independent imports",
+      "extra_checks": [
+        "Eitan8wheel/four-axle layout, low broad bow, periscoped hatches, actual remote MG, rear central Ramp X and separate cabinets/basket; no automatic30mm/APS fit",
+        "IronDome20individual closed canisters and end markers in4x5rack on transverse erection hinge/four static legs, no invented truck/radar/Ybearing",
+        "DavidSling12closed canisters in3x4rack, unpowered2axle semitrailer/equipment shelter/access stairs/legs, no invented cab/azimuth bearing",
+        "Classic MMR separate4leg platform, smooth inclined single array/back braces/equipment box and Ybearing/Xfolding pivot; no MS-MMR sensor kit or launcher",
+        "OrEitan2independentYbearings/Xheads and each optical aperture marker; twin-head container photographed, no truck/laser internals",
+        "52 local hinges and descendant mesh vertices/markers independently tested in nativeGodot, including both optical heads and radar",
+        "20 final saved-file overview and six final detail/posed views actually inspected"
+      ]
+    },
+    "sha256": "682f37483229ec02a057dcbea349dcb5e954f4776c6a4b307d78c0996053a944",
+    "has_launcher": true,
+    "launcher_tubes": 12,
+    "research_evidence_ids": [
+      "IL-DAVID-UPGRADE25",
+      "IL-DAVID-PHOTO17",
+      "IL-DAVID-MDA-GALLERY",
+      "IL-DOME-MAKER-ESG21"
+    ],
+    "primary_source_urls": [
+      "https://www.mod.gov.il/en/press-releases/press-room/davids-sling-air-and-missile-defense-system-successfully-completes-advanced-upgrade-tests",
+      "https://www.timesofisrael.com/russia-reportedly-in-possession-of-advanced-israeli-interceptor-missile/",
+      "https://www.mda.mil/news/gallery_internationalcoop_davidssling.html",
+      "https://he.rafael.co.il/wp-content/uploads/2024/01/Refael_Imud_ENGLISH_271223_compressed.pdf"
+    ],
+    "has_radar": false,
+    "optical_heads": 0
+  },
+  {
+    "file": "vehicles/counterBatteryRadar__elm_2084_mmr.glb",
+    "kind": "model",
+    "name": "ELM2084 selected classic public static MMR module",
+    "priority": "P4",
+    "pilot": false,
+    "approximate": true,
+    "representative_vehicle": "Original selected public outer fit, not all current national serials. All principal dimensions, small fittings and hinge placements locally estimated from photographs, not factory drawings. See dated national service/order evidence separately in research/evidence.json. No weapon or sensor internals reconstructed.",
+    "triangles": [
+      2228,
+      508
+    ],
+    "wreck_triangles": 508,
+    "collision_triangles": 12,
+    "size": [
+      2.82,
+      5.09,
+      4.45
+    ],
+    "bounds": [
+      [
+        -1.41,
+        0.0,
+        -2.225
+      ],
+      [
+        1.41,
+        5.09,
+        2.225
+      ]
+    ],
+    "hull_footprint": [
+      2.7,
+      4.7
+    ],
+    "road_wheels_per_side": 0,
+    "wheel_radius_metres": 0,
+    "mobility": "static",
+    "has_turret": false,
+    "recognition_features": [
+      "separate deployable four-leg platform, no invented launcher or truck cab",
+      "large inclined single classic rectangular array on Y bearing",
+      "external antenna back braces, base housing, side equipment box and cooling grille",
+      "not automatically the2019multi-sensorMS-MMR or every national/export configuration"
+    ],
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "materials": [
+      "paint",
+      "metal_dark",
+      "rubber",
+      "glass",
+      "markings"
+    ],
+    "nodes": [
+      {
+        "path": "LOD0",
+        "canonical_part": "LOD0",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_L0",
+        "canonical_part": "Outrigger_L0",
+        "pivot_local": [
+          -1.2,
+          1.13,
+          -1.786
+        ],
+        "pivot_world": [
+          -1.2,
+          1.13,
+          -1.786
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_L1",
+        "canonical_part": "Outrigger_L1",
+        "pivot_local": [
+          -1.2,
+          1.13,
+          1.786
+        ],
+        "pivot_world": [
+          -1.2,
+          1.13,
+          1.786
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_R0",
+        "canonical_part": "Outrigger_R0",
+        "pivot_local": [
+          1.2,
+          1.13,
+          -1.786
+        ],
+        "pivot_world": [
+          1.2,
+          1.13,
+          -1.786
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_R1",
+        "canonical_part": "Outrigger_R1",
+        "pivot_local": [
+          1.2,
+          1.13,
+          1.786
+        ],
+        "pivot_world": [
+          1.2,
+          1.13,
+          1.786
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Radar",
+        "canonical_part": "Radar",
+        "pivot_local": [
+          0.0,
+          1.34,
+          -0.55
+        ],
+        "pivot_world": [
+          0.0,
+          1.34,
+          -0.55
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Radar/Radar_Elevation",
+        "canonical_part": "Radar_Elevation",
+        "pivot_local": [
+          0.0,
+          0.57,
+          0.29
+        ],
+        "pivot_world": [
+          0.0,
+          1.91,
+          -0.26
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD1",
+        "canonical_part": "LOD1",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_L0_LOD1",
+        "canonical_part": "Outrigger_L0",
+        "pivot_local": [
+          -1.2,
+          1.13,
+          -1.786
+        ],
+        "pivot_world": [
+          -1.2,
+          1.13,
+          -1.786
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_L1_LOD1",
+        "canonical_part": "Outrigger_L1",
+        "pivot_local": [
+          -1.2,
+          1.13,
+          1.786
+        ],
+        "pivot_world": [
+          -1.2,
+          1.13,
+          1.786
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_R0_LOD1",
+        "canonical_part": "Outrigger_R0",
+        "pivot_local": [
+          1.2,
+          1.13,
+          -1.786
+        ],
+        "pivot_world": [
+          1.2,
+          1.13,
+          -1.786
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_R1_LOD1",
+        "canonical_part": "Outrigger_R1",
+        "pivot_local": [
+          1.2,
+          1.13,
+          1.786
+        ],
+        "pivot_world": [
+          1.2,
+          1.13,
+          1.786
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Radar_LOD1",
+        "canonical_part": "Radar",
+        "pivot_local": [
+          0.0,
+          1.34,
+          -0.55
+        ],
+        "pivot_world": [
+          0.0,
+          1.34,
+          -0.55
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Radar_LOD1/Radar_Elevation_LOD1",
+        "canonical_part": "Radar_Elevation",
+        "pivot_local": [
+          0.0,
+          0.57,
+          0.29
+        ],
+        "pivot_world": [
+          0.0,
+          1.91,
+          -0.26
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "Wreck",
+        "canonical_part": "Wreck",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision",
+        "canonical_part": "collision",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision/Collision_Box",
+        "canonical_part": "Collision_Box",
+        "pivot_local": [
+          0.0,
+          1.12,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          1.12,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      }
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "notes": "Original generate_inventory_additions_34.py with approved shared Python parts, no Blender, imported mesh/pixels or insignia. Public outer geometry only, no functional weapon/sensor internals or operating logic. Local principal dimensions and fittings expressly estimated; selected historical/current exterior and national service/order evidence separated in research/evidence.json. Static equipment does not gain invented truck cabs or installed missiles/radars.",
+    "sources": [
+      {
+        "url": "https://www.iai.co.il/product/elm-2084-mmr/",
+        "use": "Vehicle exterior identification and size class; original geometry, no photographs embedded."
+      }
+    ],
+    "validation": {
+      "readback": true,
+      "node_tree_printed": true,
+      "ccw_normals": true,
+      "duplicate_faces": 0,
+      "below_ground_vertices": 0,
+      "track_uv_seams": 0,
+      "canonical_track_vertices": false,
+      "track_shader_phases": [],
+      "pose_checks": [
+        "all named hinges propagate children",
+        "axle positions and wheel count"
+      ],
+      "lod_limits": [
+        15000,
+        2500
+      ],
+      "external_loaders": [
+        "trimesh 5.1.1",
+        "Godot 4.7.2 GLTFDocument"
+      ],
+      "rendered_views": [
+        "LOD0 front",
+        "LOD0 side",
+        "LOD1 front",
+        "Wreck front"
+      ],
+      "visual_review": "20 final saved-file overviews plus six final detail/posed views actually inspected; current GLB hashes match independent imports",
+      "extra_checks": [
+        "Eitan8wheel/four-axle layout, low broad bow, periscoped hatches, actual remote MG, rear central Ramp X and separate cabinets/basket; no automatic30mm/APS fit",
+        "IronDome20individual closed canisters and end markers in4x5rack on transverse erection hinge/four static legs, no invented truck/radar/Ybearing",
+        "DavidSling12closed canisters in3x4rack, unpowered2axle semitrailer/equipment shelter/access stairs/legs, no invented cab/azimuth bearing",
+        "Classic MMR separate4leg platform, smooth inclined single array/back braces/equipment box and Ybearing/Xfolding pivot; no MS-MMR sensor kit or launcher",
+        "OrEitan2independentYbearings/Xheads and each optical aperture marker; twin-head container photographed, no truck/laser internals",
+        "52 local hinges and descendant mesh vertices/markers independently tested in nativeGodot, including both optical heads and radar",
+        "20 final saved-file overview and six final detail/posed views actually inspected"
+      ]
+    },
+    "sha256": "78857a306a7b3ff773069e7c4636eb251073609939ea55f02004c4e232a37dad",
+    "has_launcher": false,
+    "launcher_tubes": 0,
+    "research_evidence_ids": [
+      "IL-MMR-MAKER",
+      "IL-MMR-NATIONAL19",
+      "IL-DAVID-UPGRADE25"
+    ],
+    "primary_source_urls": [
+      "https://www.iai.co.il/product/elm-2084-mmr/",
+      "https://www.iai.co.il/press/elta-systems-introduces-next-generation-multi-sensor-elm-2084-mmr-radar/",
+      "https://www.mod.gov.il/en/press-releases/press-room/davids-sling-air-and-missile-defense-system-successfully-completes-advanced-upgrade-tests"
+    ],
+    "has_radar": true,
+    "optical_heads": 0
+  },
+  {
+    "file": "vehicles/laserAD__iron_beam_or_eitan.glb",
+    "kind": "model",
+    "name": "Iron Beam OrEitan selected2025twin-head container exterior",
+    "priority": "P4",
+    "pilot": false,
+    "approximate": true,
+    "representative_vehicle": "Original selected public outer fit, not all current national serials. All principal dimensions, small fittings and hinge placements locally estimated from photographs, not factory drawings. See dated national service/order evidence separately in research/evidence.json. No weapon or sensor internals reconstructed.",
+    "triangles": [
+      5748,
+      1300
+    ],
+    "wreck_triangles": 1132,
+    "collision_triangles": 12,
+    "size": [
+      2.68,
+      4.505,
+      12.155
+    ],
+    "bounds": [
+      [
+        -1.34,
+        -0.0,
+        -6.0775
+      ],
+      [
+        1.34,
+        4.505,
+        6.0775
+      ]
+    ],
+    "hull_footprint": [
+      2.56,
+      12.2
+    ],
+    "road_wheels_per_side": 0,
+    "wheel_radius_metres": 0,
+    "mobility": "static",
+    "has_turret": false,
+    "recognition_features": [
+      "long container with two separate photographed roof optical assemblies",
+      "each optical head independently traversesY/elevatesX, large lower and small upper apertures",
+      "external container doors/locking bars/corners and end levelling legs",
+      "not generic laser truck, no projector beams or functional laser electronics"
+    ],
+    "units": "metres",
+    "up": "+Y",
+    "front": "+Z",
+    "materials": [
+      "paint",
+      "metal_dark",
+      "rubber",
+      "glass",
+      "markings"
+    ],
+    "nodes": [
+      {
+        "path": "LOD0",
+        "canonical_part": "LOD0",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_L0",
+        "canonical_part": "Outrigger_L0",
+        "pivot_local": [
+          -1.13,
+          0.55,
+          -5.84
+        ],
+        "pivot_world": [
+          -1.13,
+          0.55,
+          -5.84
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_L1",
+        "canonical_part": "Outrigger_L1",
+        "pivot_local": [
+          -1.13,
+          0.55,
+          5.84
+        ],
+        "pivot_world": [
+          -1.13,
+          0.55,
+          5.84
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_R0",
+        "canonical_part": "Outrigger_R0",
+        "pivot_local": [
+          1.13,
+          0.55,
+          -5.84
+        ],
+        "pivot_world": [
+          1.13,
+          0.55,
+          -5.84
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Outrigger_R1",
+        "canonical_part": "Outrigger_R1",
+        "pivot_local": [
+          1.13,
+          0.55,
+          5.84
+        ],
+        "pivot_world": [
+          1.13,
+          0.55,
+          5.84
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turntable",
+        "canonical_part": "Turntable",
+        "pivot_local": [
+          0.0,
+          2.91,
+          -4.3
+        ],
+        "pivot_world": [
+          0.0,
+          2.91,
+          -4.3
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turntable/Launcher",
+        "canonical_part": "Launcher",
+        "pivot_local": [
+          0.0,
+          0.68,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          3.59,
+          -4.3
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turntable/Launcher/Muzzle_0",
+        "canonical_part": "Muzzle_0",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.515
+        ],
+        "pivot_world": [
+          0.0,
+          3.59,
+          -3.785
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turntable_1",
+        "canonical_part": "Turntable_1",
+        "pivot_local": [
+          0.0,
+          2.91,
+          4.3
+        ],
+        "pivot_world": [
+          0.0,
+          2.91,
+          4.3
+        ],
+        "axis": "Y",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turntable_1/Launcher_1",
+        "canonical_part": "Launcher_1",
+        "pivot_local": [
+          0.0,
+          0.68,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          3.59,
+          4.3
+        ],
+        "axis": "X",
+        "default_visible": true
+      },
+      {
+        "path": "LOD0/Hull/Turntable_1/Launcher_1/Muzzle_1",
+        "canonical_part": "Muzzle_1",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.515
+        ],
+        "pivot_world": [
+          0.0,
+          3.59,
+          4.815
+        ],
+        "axis": null,
+        "default_visible": true
+      },
+      {
+        "path": "LOD1",
+        "canonical_part": "LOD1",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1",
+        "canonical_part": "Hull",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_L0_LOD1",
+        "canonical_part": "Outrigger_L0",
+        "pivot_local": [
+          -1.13,
+          0.55,
+          -5.84
+        ],
+        "pivot_world": [
+          -1.13,
+          0.55,
+          -5.84
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_L1_LOD1",
+        "canonical_part": "Outrigger_L1",
+        "pivot_local": [
+          -1.13,
+          0.55,
+          5.84
+        ],
+        "pivot_world": [
+          -1.13,
+          0.55,
+          5.84
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_R0_LOD1",
+        "canonical_part": "Outrigger_R0",
+        "pivot_local": [
+          1.13,
+          0.55,
+          -5.84
+        ],
+        "pivot_world": [
+          1.13,
+          0.55,
+          -5.84
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Outrigger_R1_LOD1",
+        "canonical_part": "Outrigger_R1",
+        "pivot_local": [
+          1.13,
+          0.55,
+          5.84
+        ],
+        "pivot_world": [
+          1.13,
+          0.55,
+          5.84
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turntable_LOD1",
+        "canonical_part": "Turntable",
+        "pivot_local": [
+          0.0,
+          2.91,
+          -4.3
+        ],
+        "pivot_world": [
+          0.0,
+          2.91,
+          -4.3
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turntable_LOD1/Launcher_LOD1",
+        "canonical_part": "Launcher",
+        "pivot_local": [
+          0.0,
+          0.68,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          3.59,
+          -4.3
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turntable_LOD1/Launcher_LOD1/Muzzle_0_LOD1",
+        "canonical_part": "Muzzle_0",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.515
+        ],
+        "pivot_world": [
+          0.0,
+          3.59,
+          -3.785
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turntable_1_LOD1",
+        "canonical_part": "Turntable_1",
+        "pivot_local": [
+          0.0,
+          2.91,
+          4.3
+        ],
+        "pivot_world": [
+          0.0,
+          2.91,
+          4.3
+        ],
+        "axis": "Y",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turntable_1_LOD1/Launcher_1_LOD1",
+        "canonical_part": "Launcher_1",
+        "pivot_local": [
+          0.0,
+          0.68,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          3.59,
+          4.3
+        ],
+        "axis": "X",
+        "default_visible": false
+      },
+      {
+        "path": "LOD1/Hull_LOD1/Turntable_1_LOD1/Launcher_1_LOD1/Muzzle_1_LOD1",
+        "canonical_part": "Muzzle_1",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.515
+        ],
+        "pivot_world": [
+          0.0,
+          3.59,
+          4.815
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "Wreck",
+        "canonical_part": "Wreck",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision",
+        "canonical_part": "collision",
+        "pivot_local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      },
+      {
+        "path": "collision/Collision_Box",
+        "canonical_part": "Collision_Box",
+        "pivot_local": [
+          0.0,
+          1.455,
+          0.0
+        ],
+        "pivot_world": [
+          0.0,
+          1.455,
+          0.0
+        ],
+        "axis": null,
+        "default_visible": false
+      }
+    ],
+    "grid": null,
+    "tileable": false,
+    "frames": null,
+    "notes": "Original generate_inventory_additions_34.py with approved shared Python parts, no Blender, imported mesh/pixels or insignia. Public outer geometry only, no functional weapon/sensor internals or operating logic. Local principal dimensions and fittings expressly estimated; selected historical/current exterior and national service/order evidence separated in research/evidence.json. Static equipment does not gain invented truck cabs or installed missiles/radars.",
+    "sources": [
+      {
+        "url": "https://www.mod.gov.il/en/press-releases/press-room/israel-mod-and-rafael-deliver-first-operational-high-power-laser-system-iron-beam-to-the-idf",
+        "use": "Vehicle exterior identification and size class; original geometry, no photographs embedded."
+      }
+    ],
+    "validation": {
+      "readback": true,
+      "node_tree_printed": true,
+      "ccw_normals": true,
+      "duplicate_faces": 0,
+      "below_ground_vertices": 0,
+      "track_uv_seams": 0,
+      "canonical_track_vertices": false,
+      "track_shader_phases": [],
+      "pose_checks": [
+        "all named hinges propagate children",
+        "axle positions and wheel count"
+      ],
+      "lod_limits": [
+        15000,
+        2500
+      ],
+      "external_loaders": [
+        "trimesh 5.1.1",
+        "Godot 4.7.2 GLTFDocument"
+      ],
+      "rendered_views": [
+        "LOD0 front",
+        "LOD0 side",
+        "LOD1 front",
+        "Wreck front"
+      ],
+      "visual_review": "20 final saved-file overviews plus six final detail/posed views actually inspected; current GLB hashes match independent imports",
+      "extra_checks": [
+        "Eitan8wheel/four-axle layout, low broad bow, periscoped hatches, actual remote MG, rear central Ramp X and separate cabinets/basket; no automatic30mm/APS fit",
+        "IronDome20individual closed canisters and end markers in4x5rack on transverse erection hinge/four static legs, no invented truck/radar/Ybearing",
+        "DavidSling12closed canisters in3x4rack, unpowered2axle semitrailer/equipment shelter/access stairs/legs, no invented cab/azimuth bearing",
+        "Classic MMR separate4leg platform, smooth inclined single array/back braces/equipment box and Ybearing/Xfolding pivot; no MS-MMR sensor kit or launcher",
+        "OrEitan2independentYbearings/Xheads and each optical aperture marker; twin-head container photographed, no truck/laser internals",
+        "52 local hinges and descendant mesh vertices/markers independently tested in nativeGodot, including both optical heads and radar",
+        "20 final saved-file overview and six final detail/posed views actually inspected"
+      ]
+    },
+    "sha256": "95827b47105b7f4a4ac352dfc006aa31bdd28acc6759e31554a5e5f5189c1648",
+    "has_launcher": false,
+    "launcher_tubes": 0,
+    "research_evidence_ids": [
+      "IL-IRONBEAM-HANDOVER25",
+      "IL-IRONBEAM-TRIALS25"
+    ],
+    "primary_source_urls": [
+      "https://www.mod.gov.il/en/press-releases/press-room/israel-mod-and-rafael-deliver-first-operational-high-power-laser-system-iron-beam-to-the-idf",
+      "https://www.mod.gov.il/en/press-releases/press-room/israel-mod-and-rafael-announce-development-of-high-power-laser-system-completed-delivery-for-idf-operational-use-expected-in-the-near-term"
+    ],
+    "has_radar": false,
+    "optical_heads": 2
   }
 ]

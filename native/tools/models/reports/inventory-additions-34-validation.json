@@ -1,0 +1,57 @@
+{
+  "batch": "inventory-additions-34",
+  "files": [
+    "vehicles/apc__eitan_series_2023.glb",
+    "vehicles/aaVehicle__iron_dome_mfu.glb",
+    "vehicles/samLauncher__davids_sling_trailer.glb",
+    "vehicles/counterBatteryRadar__elm_2084_mmr.glb",
+    "vehicles/laserAD__iron_beam_or_eitan.glb"
+  ],
+  "sha256": {
+    "vehicles/apc__eitan_series_2023.glb": "3c70c058f3f756ae17b5dd174e30fe79e6c0e79d0ae1f33f5bcd80dbfe8be8a9",
+    "vehicles/aaVehicle__iron_dome_mfu.glb": "1242c0248e771be61a6b6820a39c9b0bd8ed27c2689f56fda922e3774652671c",
+    "vehicles/samLauncher__davids_sling_trailer.glb": "682f37483229ec02a057dcbea349dcb5e954f4776c6a4b307d78c0996053a944",
+    "vehicles/counterBatteryRadar__elm_2084_mmr.glb": "78857a306a7b3ff773069e7c4636eb251073609939ea55f02004c4e232a37dad",
+    "vehicles/laserAD__iron_beam_or_eitan.glb": "95827b47105b7f4a4ac352dfc006aa31bdd28acc6759e31554a5e5f5189c1648"
+  },
+  "maximum_triangles": [
+    11810,
+    2180
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "Five distinct selected public exteriors: Eitan series2023, IronDome MFU, DavidSling trailer, classic ELM2084MMR and twin-head IronBeamOrEitan; operator evidence, date and local estimates separated",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "Eitan8wheel/four-axle layout, low broad bow, periscoped hatches, actual remote MG, rear central Ramp X and separate cabinets/basket; no automatic30mm/APS fit",
+    "IronDome20individual closed canisters and end markers in4x5rack on transverse erection hinge/four static legs, no invented truck/radar/Ybearing",
+    "DavidSling12closed canisters in3x4rack, unpowered2axle semitrailer/equipment shelter/access stairs/legs, no invented cab/azimuth bearing",
+    "Classic MMR separate4leg platform, smooth inclined single array/back braces/equipment box and Ybearing/Xfolding pivot; no MS-MMR sensor kit or launcher",
+    "OrEitan2independentYbearings/Xheads and each optical aperture marker; twin-head container photographed, no truck/laser internals",
+    "52 local hinges and descendant mesh vertices/markers independently tested in nativeGodot, including both optical heads and radar",
+    "20 final saved-file overview and six final detail/posed views actually inspected"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_34.py",
+  "native_motion_log": "52 local hinges/descendant mesh vertices and markers independently checked in nativeGodot",
+  "preserved_baseline": {
+    "commit": "ba6338e25572ef5d08fe8c77c078357cb978f1b8",
+    "manifest_entries": 1021,
+    "old_asset_bytes_and_entries": "checked by scoped commit helper"
+  },
+  "limitations": [
+    "All new principal dimensions/fittings/hinges are explicit local photograph estimates, not factory drawings",
+    "Eitan2023production exterior independently corroborated operator2025; future30mmprogramme approval not current all-fleet turret/APS or signed variant-specific order",
+    "IronDomeMFU selected makerFebruary2023closed-container exterior, not catalogueI-Dome truck or navalCDome; current national procurement not all-serial fit",
+    "DavidSling2017APdisplay exterior/2025national upgrade evidence separated; INERTdisplay labels not copied and do not certify current contents/serial geometry",
+    "Classic MMR maker exterior on static4legs not certified national serial or2019MS-MMR upgrade; no electronics/performance reconstructed",
+    "IronBeamOrEitan December28,2025actual first delivery supersedes earlierDecember30forecast; twin optical assemblies external only, not every current serial/readiness",
+    "Arrow3generic8x8carrier mismatch queued; unobscured exact trailer/axle/hinge reference still required before new geometry",
+    "National inventory research INCOMPLETE; no country completeness certification"
+  ],
+  "review_images": [
+    "inventory-additions-34-vehicles.jpg",
+    "inventory-additions-34-details.jpg"
+  ]
+}
