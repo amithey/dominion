@@ -1,0 +1,55 @@
+{
+  "batch": "inventory-additions-32",
+  "files": [
+    "vehicles/mineClearer__puma.glb",
+    "vehicles/tank__merkava_mk_3_baz.glb",
+    "vehicles/mineClearer__namer_engineering.glb",
+    "vehicles/bushmaster__sandcat_tigris.glb",
+    "vehicles/reconVehicle__zmag.glb"
+  ],
+  "sha256": {
+    "vehicles/mineClearer__puma.glb": "70b98dcb8965a4e53716c2efc5a85aa351e09df68f4cbc72559625522968b39f",
+    "vehicles/tank__merkava_mk_3_baz.glb": "cc340ea6a5fe422cae79955763f9940e1cd39c2ab53389f98fb25d7f96bed4a1",
+    "vehicles/mineClearer__namer_engineering.glb": "efffad067cc508d4117af21b3a5337ce837bedc902b9d4e63840ae3872309081",
+    "vehicles/bushmaster__sandcat_tigris.glb": "b52c57a5e43b6ea9f6112bd9a905cfc467bbb13824fb2e067725dc07463edf91",
+    "vehicles/reconVehicle__zmag.glb": "e38d908bfc312dd30a558cb75732d09af36119409525b41852c9677176187e8e"
+  },
+  "maximum_triangles": [
+    13394,
+    2292
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "Five distinct Israeli ground exteriors: Puma CEV, MerkavaIII, Namer company-dozer option, Tigris, ZMAG; references and local estimates separated",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "Puma six-wheel three-pair Centurion layout/rear drive/bare tool interface and real RWS; not German PumaIFV",
+    "MerkavaIIIfront drive/low side-armoured turret/roof-level rear basket/two manual gun yaw and elevation pivots; no invented Trophy or generic tall CITV",
+    "Namer separate company-dozer option, Spade Xhinge, RWS and rear ramp, no composite bridge/roller/crane; attachment estimates explicit",
+    "Tigris five doors/guards/plain hatch, four axle pivots/no tracks/no fictional RWS; unarmed selected fit",
+    "ZMAGopen cage/empty buckets/rear spare/large angular bonnet, four wheels/no tracks/weapons; distinguished from Zibar and ZD",
+    "20final overview and six detail/posed views actually inspected"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_32.py",
+  "preserved_baseline": {
+    "commit": "9701ed003751bff018cc3620021ef47792a7d5ee",
+    "manifest_entries": 1011,
+    "old_asset_bytes_and_entries": "checked by scoped commit helper"
+  },
+  "limitations": [
+    "All new geometry principal sizes/fittings are explicit local estimates, not primary factory dimensions",
+    "Puma2018display fit retains bare interface;2025operator presence proves family, not all serial tool/roof configurations",
+    "MkIIIhistorical DorDalet exterior plus buyer family description does not certify invisible Baz electronics/all-hull Trophy/current readiness; upgrade recommendations are not confirmed orders",
+    "Namer company-dozer option is buyer described, but2018photo shows bare coupler: blade/hinge estimated and not claimed photographed; no mixture of three engineer configurations",
+    "Tigris unarmed2023selected exterior/current family2026, not all MkVoptions; ambulance outer distinction pending",
+    "ZMAGselected maker open exterior distinct from Zibar/ZD, national exact payload/seat/serial fit unverified",
+    "ArmouredD9not generated with false oblong tracks; triangular elevated-drive compatibility requires separate solution without game edits",
+    "National inventory research INCOMPLETE; no nation certified complete"
+  ],
+  "review_images": [
+    "inventory-additions-32-vehicles.jpg",
+    "inventory-additions-32-details.jpg"
+  ]
+}
