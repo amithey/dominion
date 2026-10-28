@@ -1,0 +1,56 @@
+{
+  "batch": "inventory-additions-33",
+  "files": [
+    "vehicles/bushmaster__jltv_pera.glb",
+    "vehicles/reconVehicle__flyer72_beeri.glb",
+    "aircraft/loiterer__firefly_maoz.glb",
+    "aircraft/navalHelicopter__sh_60f_israel.glb",
+    "ships/submarine__dakar_class.glb"
+  ],
+  "sha256": {
+    "vehicles/bushmaster__jltv_pera.glb": "e95d377584aa505d28eb6584b3f58a02514e474f3add0e72fb25c3a10227aa9b",
+    "vehicles/reconVehicle__flyer72_beeri.glb": "d3cb188ee84701800ebd4bf8a7615c15f6ee5005f8b1960826af51e2d757adbd",
+    "aircraft/loiterer__firefly_maoz.glb": "7e1d14534c35dd0e85d4cdd28014c6d7f7921d87bcd6102309c4dac8f63f4659",
+    "aircraft/navalHelicopter__sh_60f_israel.glb": "762b8d1c48c226b51bbaac2caa04bc5d4744a7e3c52170ad4b3fc8143269692f",
+    "ships/submarine__dakar_class.glb": "250fcb5b598370715afb4cf18cfb5b600af64bacb68856b1baae280b585ad046"
+  },
+  "maximum_triangles": [
+    10228,
+    1700
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, watertight component edges, duplicate triangles, ground bounds and LOD limits",
+    "Five distinct selected exteriors: JLTVPera, Flyer72Beeri, coaxial FireflyMaoz, contracted SH60Fbase, future Dakarconcept; sources, orders and local estimates separated",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "Pera four wheel pivots/two axles/four doors/plain hatch; no fictional RWS or tracks",
+    "Beeri maker3.20m wheelbase/four doors/opening windscreen/empty Gunner_Ring Y shield; no invented guns/muzzles",
+    "Maoz two Y coaxial two-blade rotors/four Skid feet/80mm closed casing; no tail rotor/gun or hidden internals",
+    "SH60F base four main/four canted tail blades, forward main gear and twin forward tail tyres; contracted refurbishment, not certified delivered national fit",
+    "Dakar future official concept has long aft sail, closed casing, no deployed masts/radar/VLS, plus-tail and decorative screw; principal sizes estimated",
+    "20 final overview and six final detail/posed views actually inspected"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_33.py",
+  "preserved_baseline": {
+    "commit": "2cf8e427a0812a4c8a46425b810dab45e67f6eb5",
+    "manifest_entries": 1016,
+    "old_asset_bytes_and_entries": "checked by scoped commit helper"
+  },
+  "limitations": [
+    "Pera2024selected unarmed trial photo fit,2025fielding/2026family presence do not certify every current serial; dimensions/fittings local estimates",
+    "Beeri maker wheelbase published, national armour/cab/overall dimensions local; empty mount not evidence all vehicles carry no gun",
+    "Maoz brochure80x80x400mm round envelope published, deployed rotor/feet estimated;2026report uses earlier stock photo, not captured2026serial proof",
+    "SH60F confirmed2022refurbishment contract for three,2016possible approval8 not delivery; selected2012USNbase exterior does not certify final Israeli sensor/weapon fit or readiness",
+    "Dakar official2022TKMSconcept and2026confirmed future construction, not current Drakon; all dimensions/seven decorative blades local estimates, production may differ; cover function unknown, no speculative hidden weapons",
+    "Achzarit retirement decision versus old undated recruiting page recorded as unresolved; no assumption retirement/conversion completed",
+    "National inventory research INCOMPLETE; no country completeness certification"
+  ],
+  "review_images": [
+    "inventory-additions-33-vehicles.jpg",
+    "inventory-additions-33-aircraft.jpg",
+    "inventory-additions-33-ships.jpg",
+    "inventory-additions-33-details.jpg"
+  ]
+}

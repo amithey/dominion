@@ -1,0 +1,41 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Hull local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Hull_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Wheel_L0 local=[-1.06, 0.56, -1.65] world=[-1.06, 0.56, -1.65] axis=X pivot
+      Wheel_L0_Mesh local=[0, 0, 0] world=[-1.06, 0.56, -1.65] axis=None mesh
+    Wheel_L1 local=[-1.06, 0.56, 1.65] world=[-1.06, 0.56, 1.65] axis=X pivot
+      Wheel_L1_Mesh local=[0, 0, 0] world=[-1.06, 0.56, 1.65] axis=None mesh
+    Wheel_R0 local=[1.06, 0.56, -1.65] world=[1.06, 0.56, -1.65] axis=X pivot
+      Wheel_R0_Mesh local=[0, 0, 0] world=[1.06, 0.56, -1.65] axis=None mesh
+    Wheel_R1 local=[1.06, 0.56, 1.65] world=[1.06, 0.56, 1.65] axis=X pivot
+      Wheel_R1_Mesh local=[0, 0, 0] world=[1.06, 0.56, 1.65] axis=None mesh
+    Door_L0 local=[-1.108, 1.6, 0.09] world=[-1.108, 1.6, 0.09] axis=Y pivot
+      Door_L0_Mesh local=[0, 0, 0] world=[-1.108, 1.6, 0.09] axis=None mesh
+    Door_L1 local=[-1.108, 1.6, -1.27] world=[-1.108, 1.6, -1.27] axis=Y pivot
+      Door_L1_Mesh local=[0, 0, 0] world=[-1.108, 1.6, -1.27] axis=None mesh
+    Door_R0 local=[1.108, 1.6, 0.09] world=[1.108, 1.6, 0.09] axis=Y pivot
+      Door_R0_Mesh local=[0, 0, 0] world=[1.108, 1.6, 0.09] axis=None mesh
+    Door_R1 local=[1.108, 1.6, -1.27] world=[1.108, 1.6, -1.27] axis=Y pivot
+      Door_R1_Mesh local=[0, 0, 0] world=[1.108, 1.6, -1.27] axis=None mesh
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Hull_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Hull_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Wheel_L0_LOD1 local=[-1.06, 0.56, -1.65] world=[-1.06, 0.56, -1.65] axis=X pivot hidden
+      Wheel_L0_Mesh_LOD1 local=[0, 0, 0] world=[-1.06, 0.56, -1.65] axis=None mesh hidden
+    Wheel_L1_LOD1 local=[-1.06, 0.56, 1.65] world=[-1.06, 0.56, 1.65] axis=X pivot hidden
+      Wheel_L1_Mesh_LOD1 local=[0, 0, 0] world=[-1.06, 0.56, 1.65] axis=None mesh hidden
+    Wheel_R0_LOD1 local=[1.06, 0.56, -1.65] world=[1.06, 0.56, -1.65] axis=X pivot hidden
+      Wheel_R0_Mesh_LOD1 local=[0, 0, 0] world=[1.06, 0.56, -1.65] axis=None mesh hidden
+    Wheel_R1_LOD1 local=[1.06, 0.56, 1.65] world=[1.06, 0.56, 1.65] axis=X pivot hidden
+      Wheel_R1_Mesh_LOD1 local=[0, 0, 0] world=[1.06, 0.56, 1.65] axis=None mesh hidden
+    Door_L0_LOD1 local=[-1.108, 1.6, 0.09] world=[-1.108, 1.6, 0.09] axis=Y pivot hidden
+      Door_L0_Mesh_LOD1 local=[0, 0, 0] world=[-1.108, 1.6, 0.09] axis=None mesh hidden
+    Door_L1_LOD1 local=[-1.108, 1.6, -1.27] world=[-1.108, 1.6, -1.27] axis=Y pivot hidden
+      Door_L1_Mesh_LOD1 local=[0, 0, 0] world=[-1.108, 1.6, -1.27] axis=None mesh hidden
+    Door_R0_LOD1 local=[1.108, 1.6, 0.09] world=[1.108, 1.6, 0.09] axis=Y pivot hidden
+      Door_R0_Mesh_LOD1 local=[0, 0, 0] world=[1.108, 1.6, 0.09] axis=None mesh hidden
+    Door_R1_LOD1 local=[1.108, 1.6, -1.27] world=[1.108, 1.6, -1.27] axis=Y pivot hidden
+      Door_R1_Mesh_LOD1 local=[0, 0, 0] world=[1.108, 1.6, -1.27] axis=None mesh hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 1.34125, 0.18133] world=[0.0, 1.34125, 0.18133] axis=None mesh hidden

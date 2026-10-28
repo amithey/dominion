@@ -124,11 +124,13 @@
       "evidence_source_ids": [
         "IL-MANTAK-FAMILIES",
         "IL-NAMER-PHOTO18",
-        "IL-NAMER-OPERATOR18"
+        "IL-NAMER-OPERATOR18",
+        "IL-ACHZARIT-RECRUITING",
+        "IL-ACHZARIT-RETIREMENT26"
       ],
       "assessment": {
         "status": "documented_family_variant_distinction",
-        "reason": "Existing infantry Namer remains a real family but is not an engineering configuration. Added separate buyer-described company-dozer engineering option with2018CEVroof/hull reference; local blade/hinge approximations explicit. Infantry model precise roof/serial fit remains unreviewed, no full fleet certification.",
+        "reason": "Existing infantry Namer remains a real family but is not an engineering configuration. Added separate buyer-described company-dozer engineering option with2018CEVroof/hull reference; local blade/hinge approximations explicit. Infantry model precise roof/serial fit remains unreviewed, no full fleet certification. Achzaritretention not certified from old recruiting: original2026retirement-approval report requires separate confirmation of actual withdrawal/conversion completion; current asset generation deferred.",
         "recommended_action": "retain_infantry_check_fit_add_engineering_variant",
         "model_match": "existing_infantry_family_not_engineering_fit",
         "replacement": null
@@ -950,11 +952,19 @@
           628
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "IL-MAOZ-MAKER25",
+        "IL-MAOZ-CONTRACT20",
+        "IL-MAOZ-ORDER20-MIRROR",
+        "IL-MAOZ-REPORT26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "incomplete_inventory",
+        "reason": "Fixed-wing Hero120row does not cover separately documented national Firefly/Maoz coaxial craft. Added original public Maozexterior; national Hero120specific operator/contract and exact outer fit remain unverified, not assumed from Israeli manufacturer origin.2026article carries older stock exterior image, not current per-serial proof.",
+        "recommended_action": "add_Maoz_continue_Hero120_operator_fit_research",
+        "model_match": "different_coaxial_airframe_not_Hero120_relabel",
+        "replacement": null
       }
     },
     {
@@ -1164,11 +1174,13 @@
         "IL-DOLPHIN-OPERATOR25",
         "IL-DRAKON-TKMS26",
         "IL-DRAKON-OPERATOR26",
-        "IL-DRAKON-FIRSTHAND26"
+        "IL-DRAKON-FIRSTHAND26",
+        "IL-DAKAR-CONTRACT-RENDER22",
+        "IL-DAKAR-OFFICIAL-CONCEPT22"
       ],
       "assessment": {
         "status": "incomplete_inventory",
-        "reason": "Initial AIPpair, originalDolphinI and new2026Drakon have different public exteriors. Added shorter original generation and long-sailDrakon; Dakarconfirmed construction queued separately. ExistinginitialAIPasset geometry/current serial fit not automatically certified by family presence. Local dimensions/propulsor estimates explicit, no hidden weapon speculation.",
+        "reason": "Initial AIPpair, originalDolphinI and new2026Drakon have different public exteriors. Added shorter original generation and long-sailDrakon; Dakarconfirmed construction queued separately. ExistinginitialAIPasset geometry/current serial fit not automatically certified by family presence. Local dimensions/propulsor estimates explicit, no hidden weapon speculation. FutureDakarofficial2022concept now separately modelled, with aft-of-midships swept sail/closed casing/interpreted plus-tail. Principal sizes/control/screw details locally estimated, not final production or hidden weapon reconstruction.",
         "recommended_action": "add_distinct_generations_keep_Dakar_future",
         "model_match": "compact_sail_vs_AIPpair_vs_long_sail_Drakon",
         "replacement": null
@@ -1769,20 +1781,6 @@
     },
     {
       "nation": "israel",
-      "key": "submarine",
-      "model": "Dakar class confirmed future construction",
-      "source_ids": [
-        "IL-DRAKON-TKMS26"
-      ],
-      "status": "confirmed_order_in_construction_future_fit_pending",
-      "reason": "Three separate futureDakarclass boats already in construction, distinct from deliveredDrakon. Exact selected future public exterior references still need research; no current delivery/readiness or hidden arrangements assumed.",
-      "asset_action": "research_public_future_exterior_before_generation",
-      "proposed_slug": "submarine__dakar_class",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
-    },
-    {
-      "nation": "israel",
       "key": "drone",
       "model": "Heron Shoval existing family asset",
       "source_ids": [
@@ -1943,34 +1941,6 @@
     {
       "nation": "israel",
       "key": "bushmaster",
-      "model": "JLTV Pera national outer fit pending",
-      "source_ids": [
-        "IL-VEHICLES-OPERATOR26"
-      ],
-      "status": "documented_service",
-      "reason": "Operator firsthand2026identifies introduced JLTV/Pera. Need original national external fit references and a check for an existing exact family file before generating; do not infer all future procurement quantities or copy foreign RWS installation.",
-      "asset_action": "research_specific_public_exterior_before_generation",
-      "proposed_slug": "bushmaster__jltv_pera",
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
-    },
-    {
-      "nation": "israel",
-      "key": "reconVehicle",
-      "model": "Beeri national mobility vehicle identity/fit pending",
-      "source_ids": [
-        "IL-VEHICLES-OPERATOR26"
-      ],
-      "status": "documented_service",
-      "reason": "Operator firsthand2026names Beeri and central-driver layout. Underlying manufacturer/subvariant and selected public exterior need corroboration before choosing a filename or generating; no guessed Flyer/JLTV rename.",
-      "asset_action": "research_underlying_type_before_generation",
-      "proposed_slug": null,
-      "existing_exact_asset": null,
-      "asset_state": "not_yet_created_or_unresolved"
-    },
-    {
-      "nation": "israel",
-      "key": "bushmaster",
       "model": "Tigris ambulance exterior difference pending",
       "source_ids": [
         "IL-VEHICLES-OPERATOR26"
@@ -1978,6 +1948,153 @@
       "status": "documented_service",
       "reason": "Operator reports2025ambulance introduction and seating/body adaptations. Need evidence of visible external geometry change before another asset; internal beds, role/name or markings alone do not justify duplicate exterior.",
       "asset_action": "compare_public_outer_fit_before_any_duplicate",
+      "proposed_slug": null,
+      "existing_exact_asset": null,
+      "asset_state": "not_yet_created_or_unresolved"
+    },
+    {
+      "nation": "israel",
+      "key": "bushmaster",
+      "model": "JLTV Pera selected unarmed public trial fit",
+      "source_ids": [
+        "IL-PERA-OPERATOR24",
+        "IL-PERA-FIELDING25",
+        "IL-VEHICLES-OPERATOR26"
+      ],
+      "status": "documented_current_JLTV_Pera_family_selected2024_trial_fit",
+      "reason": "Original selected national2024JLTVtrial exterior, four wheels/four doors/rounded bonnet/rear frame/mirror guards and plain hatch, no imagined RWS.2025fielding/2026operator presence corroborated separately; unverified national kit dimensions/fittings locally estimated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "bushmaster__jltv_pera",
+      "asset_validation": {
+        "batch": 33,
+        "file": "vehicles/bushmaster__jltv_pera.glb",
+        "sha256": "e95d377584aa505d28eb6584b3f58a02514e474f3add0e72fb25c3a10227aa9b",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public exteriors and confirmed orders; national fit, local dimensions/fittings, concept production and delivery/readiness explicitly unverified where applicable."
+      },
+      "existing_exact_asset": "vehicles/bushmaster__jltv_pera.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "reconVehicle",
+      "model": "Flyer72 Beeri selected protected empty-station exterior",
+      "source_ids": [
+        "IL-BEERI-OPERATOR24",
+        "IL-BEERI-GPK-MAKER24",
+        "IL-FLYER72-MAKER24",
+        "IL-VEHICLES-OPERATOR26"
+      ],
+      "status": "documented_current_Beeri_family_selected2024_empty_mount_fit",
+      "reason": "Identity now corroborated as Flyer72by firsthand operator and GPKsupplier, not guessed ZMAG/JLTV. Selected2024protected4door enclosure/broad opening windshield/real empty traversing roof shields. No installed gun shown and supplier says other MGmounts under evaluation, so no invented barrels/muzzles.3.20m maker wheelbase, national enclosure/overall local estimates.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "reconVehicle__flyer72_beeri",
+      "asset_validation": {
+        "batch": 33,
+        "file": "vehicles/reconVehicle__flyer72_beeri.glb",
+        "sha256": "d3cb188ee84701800ebd4bf8a7615c15f6ee5005f8b1960826af51e2d757adbd",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public exteriors and confirmed orders; national fit, local dimensions/fittings, concept production and delivery/readiness explicitly unverified where applicable."
+      },
+      "existing_exact_asset": "vehicles/reconVehicle__flyer72_beeri.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "loiterer",
+      "model": "SPIKE Firefly Maoz selected public coaxial exterior",
+      "source_ids": [
+        "IL-MAOZ-MAKER25",
+        "IL-MAOZ-CONTRACT20",
+        "IL-MAOZ-ORDER20-MIRROR",
+        "IL-MAOZ-REPORT26"
+      ],
+      "status": "documented_order_and_current_reported_Maoz_family_selected_maker_fit",
+      "reason": "Original tiny upright coaxial rotor craft, distinct fixed-wing Hero120. Published80x80x400mm round envelope with local deployed rotor/feet estimates. Two2bladeYrotors, closed casing/optic and four feet, no gun/tail rotor/flight/payload internals.2026report stock photo matches2025brochure, not newly captured2026serialproof.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "loiterer__firefly_maoz",
+      "asset_validation": {
+        "batch": 33,
+        "file": "aircraft/loiterer__firefly_maoz.glb",
+        "sha256": "7e1d14534c35dd0e85d4cdd28014c6d7f7921d87bcd6102309c4dac8f63f4659",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public exteriors and confirmed orders; national fit, local dimensions/fittings, concept production and delivery/readiness explicitly unverified where applicable."
+      },
+      "existing_exact_asset": "aircraft/loiterer__firefly_maoz.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "navalHelicopter",
+      "model": "SH60F Israeli confirmed refurbishment public base airframe",
+      "source_ids": [
+        "IL-SH60F-DSCA16",
+        "IL-SH60F-CONTRACT22",
+        "IL-SH60F-USN-PHOTO12"
+      ],
+      "status": "confirmed_refurbishment_order_national_delivery_final_fit_unverified",
+      "reason": "DistinctFfamily missing from J/K/L/B/Rassets. Actual signed2022refurbishment work for three, not merely2016possible approval8. Selected unarmed public USNbaseF with forward undercarriage/twin tail tyres and four/canted-four rotors; no unverified Israeli radar/torpedo configuration. Actual arrival/acceptance/currentFOC and final national fit remain pending.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "navalHelicopter__sh_60f_israel",
+      "asset_validation": {
+        "batch": 33,
+        "file": "aircraft/navalHelicopter__sh_60f_israel.glb",
+        "sha256": "762b8d1c48c226b51bbaac2caa04bc5d4744a7e3c52170ad4b3fc8143269692f",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public exteriors and confirmed orders; national fit, local dimensions/fittings, concept production and delivery/readiness explicitly unverified where applicable."
+      },
+      "existing_exact_asset": "aircraft/navalHelicopter__sh_60f_israel.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "submarine",
+      "model": "Dakar future official public concept",
+      "source_ids": [
+        "IL-DRAKON-TKMS26",
+        "IL-DAKAR-CONTRACT-RENDER22",
+        "IL-DAKAR-OFFICIAL-CONCEPT22"
+      ],
+      "status": "confirmed_future_class_in_construction_official_public_concept",
+      "reason": "Three future boats in construction, not newly arrivedDrakon. Selected official2022concept: closed broad/faceted hull, aft-of-midships long swept-shoulder sail/long casing/interpreted plus-tail, small unknown-function foredeck cover. No generic212CD/Tanin substitution, imaginary deployed masts or concealed launchers.80x7.5m/draft/fittings/7decorative screw blades explicit local estimates; not production/readiness certification.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "submarine__dakar_class",
+      "asset_validation": {
+        "batch": 33,
+        "file": "ships/submarine__dakar_class.glb",
+        "sha256": "250fcb5b598370715afb4cf18cfb5b600af64bacb68856b1baae280b585ad046",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public exteriors and confirmed orders; national fit, local dimensions/fittings, concept production and delivery/readiness explicitly unverified where applicable."
+      },
+      "existing_exact_asset": "ships/submarine__dakar_class.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "israel",
+      "key": "heavyAPC",
+      "model": "Achzarit retirement status conflicts with stale recruiting",
+      "source_ids": [
+        "IL-ACHZARIT-RECRUITING",
+        "IL-ACHZARIT-RETIREMENT26"
+      ],
+      "status": "retirement_approval_reported_completion_and_current_retention_unverified",
+      "reason": "Do not treat undated recruiting as proof current2026fleet after original reporting of retirement approval. Need primary confirmation of withdrawal/conversion completion before any current-service asset decision; historical model/current fleet assignment separate.",
+      "asset_action": "resolve_retirement_and_current_status_before_generation",
       "proposed_slug": null,
       "existing_exact_asset": null,
       "asset_state": "not_yet_created_or_unresolved"
