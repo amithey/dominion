@@ -4747,6 +4747,10 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 	if not preload("res://scripts/national_variants.gd").builds(self, owner, key):
 		var industry: String = preload("res://scripts/national_industry.gd").why(self, owner, key)
 		return industry if industry != "" else "Not built by %s" % str(map.nations[owner].get("name", "this nation")).split(" · ")[0]
+	# height_at() clamps to the map's edge, so a spot beyond it would read as shore: say what is wrong instead.
+	var map_edge := float(map.mapSize) * 0.5
+	if not (absf(at.x) <= map_edge and absf(at.z) <= map_edge):
+		return "That spot is outside the map"
 	var footprint := footprint_of(key)
 	var half := footprint * 0.5
 	var lowest := INF
