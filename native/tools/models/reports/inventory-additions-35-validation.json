@@ -1,0 +1,53 @@
+{
+  "batch": "inventory-additions-35",
+  "files": [
+    "aircraft/helicopter__mh_6m_little_bird.glb",
+    "aircraft/gunship__ah_6m_little_bird.glb",
+    "aircraft/helicopter__mh_60m_black_hawk.glb",
+    "aircraft/helicopter__hh_60w_jolly_green_ii.glb",
+    "aircraft/heavyLift__mh_47g_chinook.glb"
+  ],
+  "sha256": {
+    "aircraft/helicopter__mh_6m_little_bird.glb": "114272b6a2e3e1191870431d9ca71127ffdbab375edd2bee884834f4d236f36a",
+    "aircraft/gunship__ah_6m_little_bird.glb": "c9cfc4c2f2ba9a15958897dea9d768403e55f49d8ab3dfe229b8ce5121f6e2b3",
+    "aircraft/helicopter__mh_60m_black_hawk.glb": "b40ad9d0bf780a710f96afa8d4ba12e23fbeb465eba89864973ddae1b5d5d13c",
+    "aircraft/helicopter__hh_60w_jolly_green_ii.glb": "8188f4bab3e8cac9b73d6de51f358a9014d191dbcfaf0d67813f65a2e2bbcf8c",
+    "aircraft/heavyLift__mh_47g_chinook.glb": "d8681a1a0c9c2998a19ac4eaa05e327b5630c03d77d1ea168b589d1367a7a09c"
+  },
+  "maximum_triangles": [
+    14764,
+    2492
+  ],
+  "checks": [
+    "every saved file reloaded and full pivot tree printed",
+    "finite buffers, metre UVs, winding, normals, consistent shared-edge winding and intentional cabin apertures, duplicate triangles, ground bounds and LOD limits",
+    "Five distinct selected public exteriors: MH6M benches, AH6M fixed weapons, MH60M assault, HH60W rescue, MH47G tandem/sponsons/probe; dates and local estimates separated",
+    "independent trimesh and native Godot imports, every pivot and local hinge propagation",
+    "four saved-file views generated for separate visual review",
+    "LittleBird six/four actual rotor blades, skids, open straight-edged rear cabin; transport six empty bench pads distinct from attack fixed planks and two seven-mouth pods/16markers/chin optic",
+    "H60 four/canted-four rotors, starboard probes, framed cockpit and upturned engine fairings; assault MH60M two Y/X door guns with fixed mount frames; selected HH60W hoist and empty weapon supports",
+    "MH47G tandem three/three rotors, no tail rotor, enlarged continuous sponsons, six tyres on four fixed legs, starboard probe, X cargo ramp and four independently pivoted external guns",
+    "Every named local shaft and descendant mesh vertices checked natively in Godot with canted bind frame preserved, plus strict saved-buffer geometric checks",
+    "20 final saved-file overview views and six final detail/posed views actually inspected; four older US rotorcraft inspected separately and their exact-fit corrections queued"
+  ],
+  "sources": "native/tools/models/research/evidence.json",
+  "generator": "native/tools/models/generate_inventory_additions_35.py",
+  "preserved_baseline": {
+    "commit": "0c6965d5df9e9e46a6ac422f265940f288996720",
+    "manifest_entries": 1026,
+    "old_asset_bytes_and_entries": "checked by scoped commit helper"
+  },
+  "limitations": [
+    "Published nominal rotor diameters distinguished from locally estimated body sizes/fittings/hinges",
+    "SOCOM2026factbook and2025programme overview corroborate families, not final future serial shapes",
+    "Selected AH6M symmetric load is operator-listed option; inspected mixed-gun closeup is not identical selected load or incorrectly dated2015",
+    "MH60M assault not DAP; selected HH60W empty supports do not mean all rescue helicopters unarmed",
+    "MH47G public2024exterior not certified BlockII; signed five remanufactures from2027 separated from deliveries already completed",
+    "Four old baseline US rotorcraft inspected independently, exact selected-fit corrections queued; no existing asset silently certified or overwritten",
+    "National inventory research INCOMPLETE; all-row assessment and completeness certification remain different"
+  ],
+  "review_images": [
+    "inventory-additions-35-aircraft.jpg",
+    "inventory-additions-35-details.jpg"
+  ]
+}

@@ -749,11 +749,19 @@
           1412
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "US-UH60M-CURRENT25",
+        "US-SOCOM-FLEET26",
+        "US-SOCOM-RW25",
+        "US-HH60W-REPAIR26"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_incomplete_variants",
+        "reason": "Operator confirms basicUH60M, with current MH6M/MH60M/HH60W distinct missing outer fits now separately created. ExistingUH60M independently loaded/rendered in16views of four baseline rotorcraft; four/canted-four rotors and tailwheel family recognizable, broad canopy/nose/specificMblade and engine fits need revision. RFI not signed future order.",
+        "recommended_action": "retain_base_add_distinct_types_queue_selected_fit_revision",
+        "model_match": "base_family_recognizable_exact_fit_unverified",
+        "replacement": null
       }
     },
     {
@@ -791,11 +799,19 @@
           2080
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "US-AH64E-DELIVERY24",
+        "US-AH64E-ACTIVITY25",
+        "US-SOCOM-FLEET26",
+        "US-SOCOM-RW25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_incomplete_variants",
+        "reason": "OwnAH64E delivery and2025operator activity confirmed, not inferred from export orders. Existing four-blade tandem-canopy mast-radar/stub-wing base independently loaded/rendered, precise USnose/cheeks/roof/stores still unverified. Separate AH6M original model added; no test-only missile fit automatically assigned to every Apache.",
+        "recommended_action": "retain_base_add_AH6M_queue_exact_Apache_exterior_review",
+        "model_match": "basic_Apache_family_exact_national_serial_fit_unverified",
+        "replacement": null
       }
     },
     {
@@ -831,11 +847,16 @@
           1752
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "US-MH60R-NAVAIR"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_fit_review_pending",
+        "reason": "NAVAIR explicitly confirms ownNavyR. Existing model independently loaded/rendered: four/canted-four rotors, hoist/stores and forward-positioned tailwheel capture family; broad generic cockpit, detailedRnose/underbody/tyre/stores need selected official photo verification. Undated page inventory figure not treated current fleet total.",
+        "recommended_action": "retain_family_queue_specific_R_fit_review",
+        "model_match": "base_naval_family_not_exact_national_fit_certification",
+        "replacement": null
       }
     },
     {
@@ -871,11 +892,19 @@
           2180
         ]
       },
-      "evidence_status": "pending",
-      "evidence_source_ids": [],
+      "evidence_status": "reviewed",
+      "evidence_source_ids": [
+        "US-CH47F-TRANSITION26",
+        "US-SOCOM-FLEET26",
+        "US-MH47-PHOTO24",
+        "US-MH47-ORDER25"
+      ],
       "assessment": {
-        "status": "unverified",
-        "reason": "No newly checked model-specific operator evidence yet."
+        "status": "documented_service_incomplete_variants",
+        "reason": "CurrentCH47F and production transition supported. Existing basicF independently loaded/rendered: tandem3blade rotors recognizable but four single tyres need specific production-gear review before correction, not silently certified exact. Separate newMH47G has enlarged sponsons/probe/six tyres/fittings; futureGremanufacture distinct from basicFBlockIItransition or every current serial.",
+        "recommended_action": "retain_base_add_MH47G_queue_F_gear_and_exterior_review",
+        "model_match": "tandem_family_matches_national_fit_corrections_pending",
+        "replacement": null
       }
     },
     {
@@ -1695,5 +1724,139 @@
       }
     }
   ],
-  "additional_inventory": []
+  "additional_inventory": [
+    {
+      "nation": "usa",
+      "key": "helicopter",
+      "model": "MH6M Little Bird selected external-bench fit",
+      "source_ids": [
+        "US-SOCOM-FLEET26",
+        "US-SOCOM-RW25",
+        "US-MH6-PHOTO23"
+      ],
+      "status": "documented_current_family_selected_public_fit",
+      "reason": "Separate small six/four-blade bubble helicopter with six empty external bench pads/open side apertures/skids/Ttail, not a relabelled BlackHawk or armedAH6. Nominal main rotor from operator, body/tail and small details local estimates; current family and2023selected exterior separated.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "helicopter__mh_6m_little_bird",
+      "asset_validation": {
+        "batch": 35,
+        "file": "aircraft/helicopter__mh_6m_little_bird.glb",
+        "sha256": "114272b6a2e3e1191870431d9ca71127ffdbab375edd2bee884834f4d236f36a",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public external fits; nominal source rotor diameters distinguished from estimated body/fittings/hinges; no every-serial or readiness certification."
+      },
+      "existing_exact_asset": "aircraft/helicopter__mh_6m_little_bird.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "usa",
+      "key": "gunship",
+      "model": "AH6M Little Bird selected operator-listed attack fit",
+      "source_ids": [
+        "US-SOCOM-FLEET26",
+        "US-SOCOM-RW25",
+        "US-AH6-MIXED-PHOTO"
+      ],
+      "status": "documented_current_family_selected_public_fit",
+      "reason": "Separate six/four-blade LittleBird attack airframe, fixed planks/two M134silhouettes/two seven-mouth pods/16markers/optic, no imaginary chin gun turret or transport benches. Selected load is an operator-listed option; inspected close-up has mixedGAU19fit and is not claimed identical or dated2015. No functional weapon internals.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "gunship__ah_6m_little_bird",
+      "asset_validation": {
+        "batch": 35,
+        "file": "aircraft/gunship__ah_6m_little_bird.glb",
+        "sha256": "c9cfc4c2f2ba9a15958897dea9d768403e55f49d8ab3dfe229b8ce5121f6e2b3",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public external fits; nominal source rotor diameters distinguished from estimated body/fittings/hinges; no every-serial or readiness certification."
+      },
+      "existing_exact_asset": "aircraft/gunship__ah_6m_little_bird.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "usa",
+      "key": "helicopter",
+      "model": "MH60M Black Hawk selected assault exterior",
+      "source_ids": [
+        "US-SOCOM-FLEET26",
+        "US-SOCOM-RW25",
+        "US-MH60-PHOTO26",
+        "US-MH60-PHOTO25"
+      ],
+      "status": "documented_current_family_selected_public_fit",
+      "reason": "AssaultM external probe/extended opaque nose/optics/upturned nacelles/four-canted-four rotors and two independently pivoted door miniguns. Distinct basicUH60M and HH60W rescue; no DAPcombined rocket wings. Source-listed guns and local mount/fitting estimates explicit, not every serial kit.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "helicopter__mh_60m_black_hawk",
+      "asset_validation": {
+        "batch": 35,
+        "file": "aircraft/helicopter__mh_60m_black_hawk.glb",
+        "sha256": "b40ad9d0bf780a710f96afa8d4ba12e23fbeb465eba89864973ddae1b5d5d13c",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public external fits; nominal source rotor diameters distinguished from estimated body/fittings/hinges; no every-serial or readiness certification."
+      },
+      "existing_exact_asset": "aircraft/helicopter__mh_60m_black_hawk.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "usa",
+      "key": "helicopter",
+      "model": "HH60W JollyGreenII selected public rescue exterior",
+      "source_ids": [
+        "US-HH60W-PHOTO25",
+        "US-HH60W-MAKER20",
+        "US-HH60W-FACTS",
+        "US-HH60W-REPAIR26"
+      ],
+      "status": "documented_current_family_selected_public_fit",
+      "reason": "Missing AirForce rescue type, independently delivered/current. Selected2025outer nose/probe/hoist/empty weapon supports/upturned fairings/rotors, no invented unresolved installed guns.2020maker image historical, direct factpage403not misrepresented full access. Related nominalH60rotor and body/fittings/hinge estimates separated; no all-serial readiness claim.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "helicopter__hh_60w_jolly_green_ii",
+      "asset_validation": {
+        "batch": 35,
+        "file": "aircraft/helicopter__hh_60w_jolly_green_ii.glb",
+        "sha256": "8188f4bab3e8cac9b73d6de51f358a9014d191dbcfaf0d67813f65a2e2bbcf8c",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public external fits; nominal source rotor diameters distinguished from estimated body/fittings/hinges; no every-serial or readiness certification."
+      },
+      "existing_exact_asset": "aircraft/helicopter__hh_60w_jolly_green_ii.glb",
+      "asset_state": "available_exact_file"
+    },
+    {
+      "nation": "usa",
+      "key": "heavyLift",
+      "model": "MH47G Chinook selected public exterior and future remanufacture",
+      "source_ids": [
+        "US-SOCOM-FLEET26",
+        "US-SOCOM-RW25",
+        "US-MH47-PHOTO24",
+        "US-MH47-ORDER25"
+      ],
+      "status": "documented_current_family_selected_public_fit_with_future_order_separate",
+      "reason": "Separate SOFChinook with tandem3blade rotors, enlarged continuous sponsons, probe/forward covers/optic, rear ramp, six tyres on four legs and four articulated exterior gun stations. Source-selected armament, body family sizes and local fittings/mount estimates explicit. Signed2025fiveBlockIIremanufacture deliveriesfrom2027not current completed deliveries, and selected publicGfit does not certify final future serial changes.",
+      "asset_action": "generated_and_readback_verified",
+      "proposed_slug": "heavyLift__mh_47g_chinook",
+      "asset_validation": {
+        "batch": 35,
+        "file": "aircraft/heavyLift__mh_47g_chinook.glb",
+        "sha256": "d8681a1a0c9c2998a19ac4eaa05e327b5630c03d77d1ea168b589d1367a7a09c",
+        "loaders": [
+          "trimesh5.1.1",
+          "Godot4.7.2GLTFDocument"
+        ],
+        "limits": "Selected public external fits; nominal source rotor diameters distinguished from estimated body/fittings/hinges; no every-serial or readiness certification."
+      },
+      "existing_exact_asset": "aircraft/heavyLift__mh_47g_chinook.glb",
+      "asset_state": "available_exact_file"
+    }
+  ]
 }

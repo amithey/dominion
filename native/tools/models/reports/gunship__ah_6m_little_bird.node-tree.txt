@@ -1,0 +1,151 @@
+LOD0 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot
+  Fuselage local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot
+    Fuselage_Mesh local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh
+    Canopy_Frames local=[0.0, 1.18, 2.3] world=[0.0, 1.18, 2.3] axis=None pivot
+      Canopy_Frames_Mesh local=[0, 0, 0] world=[0.0, 1.18, 2.3] axis=None mesh
+    Engine_0 local=[0.0, 1.8, -0.1] world=[0.0, 1.8, -0.1] axis=None pivot
+      Engine_0_Mesh local=[0, 0, 0] world=[0.0, 1.8, -0.1] axis=None mesh
+      Exhaust_0 local=[0.0, 0.0, -0.92] world=[0.0, 1.8, -1.02] axis=None pivot
+    Rotor_Main local=[0.0, 2.55, 1.65] world=[0.0, 2.55, 1.65] axis=Y pivot
+      Rotor_Main_Mesh local=[0, 0, 0] world=[0.0, 2.55, 1.65] axis=None mesh
+    Rotor_Main_Mast local=[0.0, 1.93, 1.65] world=[0.0, 1.93, 1.65] axis=None pivot
+      Rotor_Main_Mast_Mesh local=[0, 0, 0] world=[0.0, 1.93, 1.65] axis=None mesh
+    Rotor_Tail local=[-0.1728, 1.98, -3.56] world=[-0.1728, 1.98, -3.56] axis=X rotation=[0.0, 0.0, 0.0, 1.0] pivot
+      Rotor_Tail_Mesh local=[0, 0, 0] world=[-0.1728, 1.98, -3.56] axis=None mesh
+    Skid local=[0.0, 0.34, 0.745] world=[0.0, 0.34, 0.745] axis=None pivot
+      Skid_Mesh local=[0, 0, 0] world=[0.0, 0.34, 0.745] axis=None mesh
+    Chin_Optic local=[0.0, 0.43, 2.73] world=[0.0, 0.43, 2.73] axis=Y pivot
+      Chin_Optic_Mesh local=[0, 0, 0] world=[0.0, 0.43, 2.73] axis=None mesh
+    Weapon_Plank_L local=[-0.55, 0.8, 1.18] world=[-0.55, 0.8, 1.18] axis=None pivot
+      Weapon_Plank_L_Mesh local=[0, 0, 0] world=[-0.55, 0.8, 1.18] axis=None mesh
+      Gun_L local=[-0.36, 0.0, 0.2] world=[-0.91, 0.8, 1.38] axis=None pivot
+        Gun_L_Mesh local=[0, 0, 0] world=[-0.91, 0.8, 1.38] axis=None mesh
+        Muzzle_0 local=[0.0, 0.0, 0.73] world=[-0.91, 0.8, 2.11] axis=None pivot
+      Pod_L local=[-0.97, -0.16, -0.02] world=[-1.52, 0.64, 1.16] axis=None pivot
+        Pod_L_Mesh local=[0, 0, 0] world=[-1.52, 0.64, 1.16] axis=None mesh
+        Pod_Mouth_L0 local=[0.0, 0.0, 0.535] world=[-1.52, 0.64, 1.695] axis=None pivot
+          Pod_Mouth_L0_Mesh local=[0, 0, 0] world=[-1.52, 0.64, 1.695] axis=None mesh
+        Muzzle_1 local=[0.0, 0.0, 0.535] world=[-1.52, 0.64, 1.695] axis=None pivot
+        Pod_Mouth_L1 local=[0.128, 0.0, 0.535] world=[-1.392, 0.64, 1.695] axis=None pivot
+          Pod_Mouth_L1_Mesh local=[0, 0, 0] world=[-1.392, 0.64, 1.695] axis=None mesh
+        Muzzle_2 local=[0.128, 0.0, 0.535] world=[-1.392, 0.64, 1.695] axis=None pivot
+        Pod_Mouth_L2 local=[0.064, 0.11085, 0.535] world=[-1.456, 0.75085, 1.695] axis=None pivot
+          Pod_Mouth_L2_Mesh local=[0, 0, 0] world=[-1.456, 0.75085, 1.695] axis=None mesh
+        Muzzle_3 local=[0.064, 0.11085, 0.535] world=[-1.456, 0.75085, 1.695] axis=None pivot
+        Pod_Mouth_L3 local=[-0.064, 0.11085, 0.535] world=[-1.584, 0.75085, 1.695] axis=None pivot
+          Pod_Mouth_L3_Mesh local=[0, 0, 0] world=[-1.584, 0.75085, 1.695] axis=None mesh
+        Muzzle_4 local=[-0.064, 0.11085, 0.535] world=[-1.584, 0.75085, 1.695] axis=None pivot
+        Pod_Mouth_L4 local=[-0.128, 0.0, 0.535] world=[-1.648, 0.64, 1.695] axis=None pivot
+          Pod_Mouth_L4_Mesh local=[0, 0, 0] world=[-1.648, 0.64, 1.695] axis=None mesh
+        Muzzle_5 local=[-0.128, 0.0, 0.535] world=[-1.648, 0.64, 1.695] axis=None pivot
+        Pod_Mouth_L5 local=[-0.064, -0.11085, 0.535] world=[-1.584, 0.52915, 1.695] axis=None pivot
+          Pod_Mouth_L5_Mesh local=[0, 0, 0] world=[-1.584, 0.52915, 1.695] axis=None mesh
+        Muzzle_6 local=[-0.064, -0.11085, 0.535] world=[-1.584, 0.52915, 1.695] axis=None pivot
+        Pod_Mouth_L6 local=[0.064, -0.11085, 0.535] world=[-1.456, 0.52915, 1.695] axis=None pivot
+          Pod_Mouth_L6_Mesh local=[0, 0, 0] world=[-1.456, 0.52915, 1.695] axis=None mesh
+        Muzzle_7 local=[0.064, -0.11085, 0.535] world=[-1.456, 0.52915, 1.695] axis=None pivot
+    Weapon_Plank_R local=[0.55, 0.8, 1.18] world=[0.55, 0.8, 1.18] axis=None pivot
+      Weapon_Plank_R_Mesh local=[0, 0, 0] world=[0.55, 0.8, 1.18] axis=None mesh
+      Gun_R local=[0.36, 0.0, 0.2] world=[0.91, 0.8, 1.38] axis=None pivot
+        Gun_R_Mesh local=[0, 0, 0] world=[0.91, 0.8, 1.38] axis=None mesh
+        Muzzle_8 local=[0.0, 0.0, 0.73] world=[0.91, 0.8, 2.11] axis=None pivot
+      Pod_R local=[0.97, -0.16, -0.02] world=[1.52, 0.64, 1.16] axis=None pivot
+        Pod_R_Mesh local=[0, 0, 0] world=[1.52, 0.64, 1.16] axis=None mesh
+        Pod_Mouth_R0 local=[0.0, 0.0, 0.535] world=[1.52, 0.64, 1.695] axis=None pivot
+          Pod_Mouth_R0_Mesh local=[0, 0, 0] world=[1.52, 0.64, 1.695] axis=None mesh
+        Muzzle_9 local=[0.0, 0.0, 0.535] world=[1.52, 0.64, 1.695] axis=None pivot
+        Pod_Mouth_R1 local=[0.128, 0.0, 0.535] world=[1.648, 0.64, 1.695] axis=None pivot
+          Pod_Mouth_R1_Mesh local=[0, 0, 0] world=[1.648, 0.64, 1.695] axis=None mesh
+        Muzzle_10 local=[0.128, 0.0, 0.535] world=[1.648, 0.64, 1.695] axis=None pivot
+        Pod_Mouth_R2 local=[0.064, 0.11085, 0.535] world=[1.584, 0.75085, 1.695] axis=None pivot
+          Pod_Mouth_R2_Mesh local=[0, 0, 0] world=[1.584, 0.75085, 1.695] axis=None mesh
+        Muzzle_11 local=[0.064, 0.11085, 0.535] world=[1.584, 0.75085, 1.695] axis=None pivot
+        Pod_Mouth_R3 local=[-0.064, 0.11085, 0.535] world=[1.456, 0.75085, 1.695] axis=None pivot
+          Pod_Mouth_R3_Mesh local=[0, 0, 0] world=[1.456, 0.75085, 1.695] axis=None mesh
+        Muzzle_12 local=[-0.064, 0.11085, 0.535] world=[1.456, 0.75085, 1.695] axis=None pivot
+        Pod_Mouth_R4 local=[-0.128, 0.0, 0.535] world=[1.392, 0.64, 1.695] axis=None pivot
+          Pod_Mouth_R4_Mesh local=[0, 0, 0] world=[1.392, 0.64, 1.695] axis=None mesh
+        Muzzle_13 local=[-0.128, 0.0, 0.535] world=[1.392, 0.64, 1.695] axis=None pivot
+        Pod_Mouth_R5 local=[-0.064, -0.11085, 0.535] world=[1.456, 0.52915, 1.695] axis=None pivot
+          Pod_Mouth_R5_Mesh local=[0, 0, 0] world=[1.456, 0.52915, 1.695] axis=None mesh
+        Muzzle_14 local=[-0.064, -0.11085, 0.535] world=[1.456, 0.52915, 1.695] axis=None pivot
+        Pod_Mouth_R6 local=[0.064, -0.11085, 0.535] world=[1.584, 0.52915, 1.695] axis=None pivot
+          Pod_Mouth_R6_Mesh local=[0, 0, 0] world=[1.584, 0.52915, 1.695] axis=None mesh
+        Muzzle_15 local=[0.064, -0.11085, 0.535] world=[1.584, 0.52915, 1.695] axis=None pivot
+LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Fuselage_LOD1 local=[0.0, 0.0, 0.0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+    Fuselage_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+    Canopy_Frames_LOD1 local=[0.0, 1.18, 2.3] world=[0.0, 1.18, 2.3] axis=None pivot hidden
+      Canopy_Frames_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.18, 2.3] axis=None mesh hidden
+    Engine_0_LOD1 local=[0.0, 1.8, -0.1] world=[0.0, 1.8, -0.1] axis=None pivot hidden
+      Engine_0_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.8, -0.1] axis=None mesh hidden
+      Exhaust_0_LOD1 local=[0.0, 0.0, -0.92] world=[0.0, 1.8, -1.02] axis=None pivot hidden
+    Rotor_Main_LOD1 local=[0.0, 2.55, 1.65] world=[0.0, 2.55, 1.65] axis=Y pivot hidden
+      Rotor_Main_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 2.55, 1.65] axis=None mesh hidden
+    Rotor_Main_Mast_LOD1 local=[0.0, 1.93, 1.65] world=[0.0, 1.93, 1.65] axis=None pivot hidden
+      Rotor_Main_Mast_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 1.93, 1.65] axis=None mesh hidden
+    Rotor_Tail_LOD1 local=[-0.1728, 1.98, -3.56] world=[-0.1728, 1.98, -3.56] axis=X rotation=[0.0, 0.0, 0.0, 1.0] pivot hidden
+      Rotor_Tail_Mesh_LOD1 local=[0, 0, 0] world=[-0.1728, 1.98, -3.56] axis=None mesh hidden
+    Skid_LOD1 local=[0.0, 0.34, 0.745] world=[0.0, 0.34, 0.745] axis=None pivot hidden
+      Skid_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.34, 0.745] axis=None mesh hidden
+    Chin_Optic_LOD1 local=[0.0, 0.43, 2.73] world=[0.0, 0.43, 2.73] axis=Y pivot hidden
+      Chin_Optic_Mesh_LOD1 local=[0, 0, 0] world=[0.0, 0.43, 2.73] axis=None mesh hidden
+    Weapon_Plank_L_LOD1 local=[-0.55, 0.8, 1.18] world=[-0.55, 0.8, 1.18] axis=None pivot hidden
+      Weapon_Plank_L_Mesh_LOD1 local=[0, 0, 0] world=[-0.55, 0.8, 1.18] axis=None mesh hidden
+      Gun_L_LOD1 local=[-0.36, 0.0, 0.2] world=[-0.91, 0.8, 1.38] axis=None pivot hidden
+        Gun_L_Mesh_LOD1 local=[0, 0, 0] world=[-0.91, 0.8, 1.38] axis=None mesh hidden
+        Muzzle_0_LOD1 local=[0.0, 0.0, 0.73] world=[-0.91, 0.8, 2.11] axis=None pivot hidden
+      Pod_L_LOD1 local=[-0.97, -0.16, -0.02] world=[-1.52, 0.64, 1.16] axis=None pivot hidden
+        Pod_L_Mesh_LOD1 local=[0, 0, 0] world=[-1.52, 0.64, 1.16] axis=None mesh hidden
+        Pod_Mouth_L0_LOD1 local=[0.0, 0.0, 0.535] world=[-1.52, 0.64, 1.695] axis=None pivot hidden
+          Pod_Mouth_L0_Mesh_LOD1 local=[0, 0, 0] world=[-1.52, 0.64, 1.695] axis=None mesh hidden
+        Muzzle_1_LOD1 local=[0.0, 0.0, 0.535] world=[-1.52, 0.64, 1.695] axis=None pivot hidden
+        Pod_Mouth_L1_LOD1 local=[0.128, 0.0, 0.535] world=[-1.392, 0.64, 1.695] axis=None pivot hidden
+          Pod_Mouth_L1_Mesh_LOD1 local=[0, 0, 0] world=[-1.392, 0.64, 1.695] axis=None mesh hidden
+        Muzzle_2_LOD1 local=[0.128, 0.0, 0.535] world=[-1.392, 0.64, 1.695] axis=None pivot hidden
+        Pod_Mouth_L2_LOD1 local=[0.064, 0.11085, 0.535] world=[-1.456, 0.75085, 1.695] axis=None pivot hidden
+          Pod_Mouth_L2_Mesh_LOD1 local=[0, 0, 0] world=[-1.456, 0.75085, 1.695] axis=None mesh hidden
+        Muzzle_3_LOD1 local=[0.064, 0.11085, 0.535] world=[-1.456, 0.75085, 1.695] axis=None pivot hidden
+        Pod_Mouth_L3_LOD1 local=[-0.064, 0.11085, 0.535] world=[-1.584, 0.75085, 1.695] axis=None pivot hidden
+          Pod_Mouth_L3_Mesh_LOD1 local=[0, 0, 0] world=[-1.584, 0.75085, 1.695] axis=None mesh hidden
+        Muzzle_4_LOD1 local=[-0.064, 0.11085, 0.535] world=[-1.584, 0.75085, 1.695] axis=None pivot hidden
+        Pod_Mouth_L4_LOD1 local=[-0.128, 0.0, 0.535] world=[-1.648, 0.64, 1.695] axis=None pivot hidden
+          Pod_Mouth_L4_Mesh_LOD1 local=[0, 0, 0] world=[-1.648, 0.64, 1.695] axis=None mesh hidden
+        Muzzle_5_LOD1 local=[-0.128, 0.0, 0.535] world=[-1.648, 0.64, 1.695] axis=None pivot hidden
+        Pod_Mouth_L5_LOD1 local=[-0.064, -0.11085, 0.535] world=[-1.584, 0.52915, 1.695] axis=None pivot hidden
+          Pod_Mouth_L5_Mesh_LOD1 local=[0, 0, 0] world=[-1.584, 0.52915, 1.695] axis=None mesh hidden
+        Muzzle_6_LOD1 local=[-0.064, -0.11085, 0.535] world=[-1.584, 0.52915, 1.695] axis=None pivot hidden
+        Pod_Mouth_L6_LOD1 local=[0.064, -0.11085, 0.535] world=[-1.456, 0.52915, 1.695] axis=None pivot hidden
+          Pod_Mouth_L6_Mesh_LOD1 local=[0, 0, 0] world=[-1.456, 0.52915, 1.695] axis=None mesh hidden
+        Muzzle_7_LOD1 local=[0.064, -0.11085, 0.535] world=[-1.456, 0.52915, 1.695] axis=None pivot hidden
+    Weapon_Plank_R_LOD1 local=[0.55, 0.8, 1.18] world=[0.55, 0.8, 1.18] axis=None pivot hidden
+      Weapon_Plank_R_Mesh_LOD1 local=[0, 0, 0] world=[0.55, 0.8, 1.18] axis=None mesh hidden
+      Gun_R_LOD1 local=[0.36, 0.0, 0.2] world=[0.91, 0.8, 1.38] axis=None pivot hidden
+        Gun_R_Mesh_LOD1 local=[0, 0, 0] world=[0.91, 0.8, 1.38] axis=None mesh hidden
+        Muzzle_8_LOD1 local=[0.0, 0.0, 0.73] world=[0.91, 0.8, 2.11] axis=None pivot hidden
+      Pod_R_LOD1 local=[0.97, -0.16, -0.02] world=[1.52, 0.64, 1.16] axis=None pivot hidden
+        Pod_R_Mesh_LOD1 local=[0, 0, 0] world=[1.52, 0.64, 1.16] axis=None mesh hidden
+        Pod_Mouth_R0_LOD1 local=[0.0, 0.0, 0.535] world=[1.52, 0.64, 1.695] axis=None pivot hidden
+          Pod_Mouth_R0_Mesh_LOD1 local=[0, 0, 0] world=[1.52, 0.64, 1.695] axis=None mesh hidden
+        Muzzle_9_LOD1 local=[0.0, 0.0, 0.535] world=[1.52, 0.64, 1.695] axis=None pivot hidden
+        Pod_Mouth_R1_LOD1 local=[0.128, 0.0, 0.535] world=[1.648, 0.64, 1.695] axis=None pivot hidden
+          Pod_Mouth_R1_Mesh_LOD1 local=[0, 0, 0] world=[1.648, 0.64, 1.695] axis=None mesh hidden
+        Muzzle_10_LOD1 local=[0.128, 0.0, 0.535] world=[1.648, 0.64, 1.695] axis=None pivot hidden
+        Pod_Mouth_R2_LOD1 local=[0.064, 0.11085, 0.535] world=[1.584, 0.75085, 1.695] axis=None pivot hidden
+          Pod_Mouth_R2_Mesh_LOD1 local=[0, 0, 0] world=[1.584, 0.75085, 1.695] axis=None mesh hidden
+        Muzzle_11_LOD1 local=[0.064, 0.11085, 0.535] world=[1.584, 0.75085, 1.695] axis=None pivot hidden
+        Pod_Mouth_R3_LOD1 local=[-0.064, 0.11085, 0.535] world=[1.456, 0.75085, 1.695] axis=None pivot hidden
+          Pod_Mouth_R3_Mesh_LOD1 local=[0, 0, 0] world=[1.456, 0.75085, 1.695] axis=None mesh hidden
+        Muzzle_12_LOD1 local=[-0.064, 0.11085, 0.535] world=[1.456, 0.75085, 1.695] axis=None pivot hidden
+        Pod_Mouth_R4_LOD1 local=[-0.128, 0.0, 0.535] world=[1.392, 0.64, 1.695] axis=None pivot hidden
+          Pod_Mouth_R4_Mesh_LOD1 local=[0, 0, 0] world=[1.392, 0.64, 1.695] axis=None mesh hidden
+        Muzzle_13_LOD1 local=[-0.128, 0.0, 0.535] world=[1.392, 0.64, 1.695] axis=None pivot hidden
+        Pod_Mouth_R5_LOD1 local=[-0.064, -0.11085, 0.535] world=[1.456, 0.52915, 1.695] axis=None pivot hidden
+          Pod_Mouth_R5_Mesh_LOD1 local=[0, 0, 0] world=[1.456, 0.52915, 1.695] axis=None mesh hidden
+        Muzzle_14_LOD1 local=[-0.064, -0.11085, 0.535] world=[1.456, 0.52915, 1.695] axis=None pivot hidden
+        Pod_Mouth_R6_LOD1 local=[0.064, -0.11085, 0.535] world=[1.584, 0.52915, 1.695] axis=None pivot hidden
+          Pod_Mouth_R6_Mesh_LOD1 local=[0, 0, 0] world=[1.584, 0.52915, 1.695] axis=None mesh hidden
+        Muzzle_15_LOD1 local=[0.064, -0.11085, 0.535] world=[1.584, 0.52915, 1.695] axis=None pivot hidden
+Wreck local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None mesh hidden
+collision local=[0, 0, 0] world=[0.0, 0.0, 0.0] axis=None pivot hidden
+  Collision_Box local=[0.0, 1.345, -0.26] world=[0.0, 1.345, -0.26] axis=None mesh hidden
