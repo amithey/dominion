@@ -12,6 +12,7 @@ $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.e
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
+    @('flag colours: no two nations of one match share a colour (every pair, 200 rosters, the set-up itself)', @('--script', 'res://tools/colour-separation-check.gd'), 'COLOUR_SEPARATION PASS', 120),
     @('a big enclosed sea is a sea: coast for a shipyard on Inland Sea, Crown, Ten Isles, Archipelago', @('--script', 'res://tools/inland-sea-check.gd'), 'INLAND_SEA PASS', 600),
     @('arsenals match reality: who fields precision rocket artillery, jammers and loitering munitions', @('--script', 'res://tools/arsenal-reality-check.gd'), 'ARSENAL_REALITY PASS', 120),
     @('a loaded helicopter obeys its orders after idling; attack warnings need agents or a satellite', @('--script', 'res://tools/heli-order-check.gd'), 'HELI_ORDER PASS', 300),

@@ -181,6 +181,7 @@ static func apply(data: Dictionary, options: Dictionary) -> void:
 	data.nations = []
 	for i in range(chosen.size()):
 		data.nations.append(Factions.nation(chosen[i], i == 0))
+	preload("res://scripts/colour_separation.gd").separate(data.nations)   # no two flags the same colour in one match
 	data.startPositions = order.map(func(i): return data.startPositions[i].duplicate())
 	# Your starting army holds only what your nation fields (no bomber for Japan).
 	preload("res://scripts/national_variants.gd").fix_start(data, str(data.nations[0].get("arsenal", "")))
