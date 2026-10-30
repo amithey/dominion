@@ -21,13 +21,22 @@ static func update(w: Node, delta: float) -> void:
 			continue
 		var enemy = null
 		var nearest := REACH
-		for u in w.units:
-			if u.dead or u.get("fly", false) or not w.hostile(b.owner, u.owner):
-				continue
-			var gap: float = w.flat_distance(b, u)
-			if gap < nearest:
-				nearest = gap
-				enemy = u
+		var at: Vector3 = b.root.position
+		var span := ceili(REACH / w.GRID)
+		var cx := floori(at.x / w.GRID)
+		var cz := floori(at.z / w.GRID)
+		for dz in range(-span, span + 1):
+			for dx in range(-span, span + 1):
+				var bucket = w.grid.get(Vector2i(cx + dx, cz + dz))
+				if bucket == null:
+					continue
+				for u in bucket:
+					if u.dead or u.get("fly", false) or not w.hostile(b.owner, u.owner):
+						continue
+					var gap: float = w.flat_distance(b, u)
+					if gap < nearest:
+						nearest = gap
+						enemy = u
 		if enemy == null:
 			continue
 		b.mg_reload = RELOAD

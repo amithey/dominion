@@ -314,6 +314,8 @@ func _update_flocks(delta: float) -> void:
 		f.angle += speed * delta
 		var radius: float = f.radius + (f.flee * 12.0)
 		var centre: Vector3 = f.centre + Vector3(cos(f.angle) * radius, f.height + f.flee * 6.0, sin(f.angle) * radius)
+		var ground_y := maxf(w.height_at(centre.x, centre.z), float(w.map.seaLevel))
+		centre.y = maxf(centre.y, ground_y + f.height + f.flee * 6.0)
 		var heading := Vector3(-sin(f.angle), 0, cos(f.angle)) * signf(speed)
 		for bird in f.birds:
 			var n: Node3D = bird.node

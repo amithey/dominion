@@ -11,6 +11,7 @@ func check(ok: bool, label: String) -> void:
 	else: errors.append(label)
 
 func run() -> void:
+	DirAccess.remove_absolute("user://settings.cfg")
 	set_meta("match_config", {"map": "island", "players": 4, "nation": 0, "style": "standard"})
 	change_scene_to_file("res://world.tscn")
 	for i in range(40000):
@@ -172,11 +173,11 @@ func run() -> void:
 	check(sam.hp < 100000.0 and float(sam.get("disabled_until", 0.0)) > w.game_time, "an anti-radiation missile aimed 25 m off homes on the SAM site and silences it")
 
 	# ---- the interface size
-	check(is_equal_approx(w.ui_scale, 0.8) and is_equal_approx(w.get_tree().root.content_scale_factor, 0.8), "the interface is 20% smaller by default")
+	check(is_equal_approx(w.ui_scale, 1.0) and is_equal_approx(w.get_tree().root.content_scale_factor, 1.0), "the interface is 100% by default")
 	w.ui_scale = 0.7
 	w.apply_ui_scale()
 	check(is_equal_approx(w.get_tree().root.content_scale_factor, 0.7), "and the setting changes it")
-	w.ui_scale = 0.8
+	w.ui_scale = 1.0
 	w.apply_ui_scale()
 
 	# ---- no dates or one-off events in the game's text

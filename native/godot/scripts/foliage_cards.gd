@@ -29,6 +29,7 @@ static func mesh(kind: String) -> ArrayMesh:
 			st.set_normal(n)
 			st.set_uv(pts[idx][1])
 			st.add_vertex(pts[idx][0])
+	st.generate_tangents()
 	var m: ArrayMesh = st.commit()
 	_meshes[kind] = m
 	return m

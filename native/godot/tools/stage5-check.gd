@@ -185,7 +185,7 @@ func run() -> void:
 		w.hud.refresh_side()
 		check(w.hud._side_rows.get_child_count() >= 2, "the Defence window's %s tab" % tab)
 	w.hud._process(0.5)
-	check(str(w.hud._extra.defcon[0].text) == "DEFCON 1", "the top bar shows DEFCON 1")
+	check(str(w.hud._extra.defcon[0].text).replace("\n", " ") == "DEFCON 1", "the top bar shows DEFCON 1")
 	print("\nSTAGE5: %d passed, %d failed" % [passed, errors.size()])
 	for f in errors: print("  FAILED: " + f)
 	print("STAGE5 PASS" if errors.is_empty() else "STAGE5 FAIL")

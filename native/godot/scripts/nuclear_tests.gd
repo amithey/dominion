@@ -78,10 +78,12 @@ func conduct(owner: int, kind: String) -> String:
 		var why := blocked(kind)
 		if why != "":
 			return why
-		w.economy.pay(COST)
+
 	var at := _site(owner)
 	if at == Vector3.INF:
-		return ""
+		return "No land of your own far enough from your towns." if owner == 0 else ""
+	if owner == 0:
+		w.economy.pay(COST)
 	var k: Dictionary = KINDS[kind]
 	last[owner] = w.game_time
 	count[owner] = int(count.get(owner, 0)) + 1

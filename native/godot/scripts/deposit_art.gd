@@ -49,7 +49,7 @@ func build(type: String, at: Vector3, spin: float) -> Node3D:
 	root.add_child(body)
 	match type:
 		"gas":
-			root.add_child(_flare())   # a gas wellhead with its flare
+			root.add_child(_flare(Vector3(0, 1.8, 0)))   # a gas wellhead with its flare
 		"oil":
 			root.add_child(_pumpjack())
 		"platform":
@@ -459,9 +459,9 @@ func _pumpjack() -> Node3D:
 	return rig
 
 ## The gas flare on an offshore platform: a flickering flame and its light.
-func _flare() -> Node3D:
+func _flare(pos := Vector3(-2.5, 7.4, -6.3)) -> Node3D:
 	var root := Node3D.new()
-	root.position = Vector3(-2.5, 7.4, -6.3)
+	root.position = pos
 	var flame := MeshInstance3D.new()
 	var q := SphereMesh.new()
 	q.radius = 0.35

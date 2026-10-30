@@ -102,6 +102,7 @@ func run() -> void:
 	a._rival_operations()
 	check(a.smuggling.has(foe) and is_equal_approx(a.chip_factor(foe), 0.8), "a rival under controls smuggles chips in (80%)")
 	var eu := 2
+	w.map.nations[eu].chip_controller = true
 	check(a.control_blocked(eu).contains("makes its own"), "a chip-supply nation cannot be cut off")
 	a.impose_controls(eu, 0)
 	check(a.controlled(0) and is_equal_approx(a.chip_factor(0), 0.5), "a rival can put controls on you")

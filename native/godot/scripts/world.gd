@@ -1421,6 +1421,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	var def: Dictionary = unit_defs.get(key, {"hp": 100, "dmg": 10, "range": 13, "cooldown": 1.0, "aggro": 24})
 	unit.merge({
 		"key": key, "hp": float(def.hp), "max_hp": float(def.hp), "dmg": float(def.dmg),
+		"speed": float(def.speed) if def.has("speed") else unit.speed,
 		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
 		"reload": randf() * minf(float(def.cooldown), 3.0), "search": randf() * 0.35, "enemy": null,
 		"attack_move": false, "dead": false, "dead_time": 0.0, "stance": "",
@@ -1610,7 +1611,7 @@ func dress_realistic(model: Node3D, owner: int, weapon_name: String) -> void:
 		patch.material_override = cached_material("patch:%d" % owner, func(): return matte(nation, 0.7))
 		patch.position = Vector3(0, 11.0, 0)
 		arm.add_child(patch)
-	var slung := weapon_name == "RocketLauncher"
+	var slung := false
 	var hand := BoneAttachment3D.new()
 	hand.bone_name = "mixamorig_Spine2" if slung else "mixamorig_RightHand"
 	skeleton.add_child(hand)

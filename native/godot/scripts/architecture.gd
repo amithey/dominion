@@ -744,7 +744,9 @@ func airfield(rng: RandomNumberGenerator) -> void:
 	var tx := rx - 5.0
 	var tz := 5.5
 	box(STONE, Vector3(tx - 1.0, 0.0, tz - 1.0), Vector3(tx + 1.0, 5.2, tz + 1.0), Color("d8d2c2"))
+	xf = Transform3D(Basis(), Vector3(tx, 0.0, tz))
 	fenestrate(2.0, 2.0, 0.0, 1, 4.0, Color("e8e2d4"), Color(0, 0, 0, 0), rng, false)
+	xf = Transform3D()
 	box(TRIM, Vector3(tx - 1.5, 5.2, tz - 1.5), Vector3(tx + 1.5, 5.35, tz + 1.5), Color("c8c2b2"))
 	box(GLASS, Vector3(tx - 1.3, 5.35, tz - 1.3), Vector3(tx + 1.3, 6.6, tz + 1.3), Color("5a7888"))
 	box(ROOF, Vector3(tx - 1.6, 6.6, tz - 1.6), Vector3(tx + 1.6, 6.8, tz + 1.6), Color("5a5f64"))

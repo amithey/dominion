@@ -53,6 +53,10 @@ static func reachable(unit: Dictionary, target: Dictionary) -> bool:
 ## `engaged_with` >= 0: only an enemy now fighting that nation (world.update_combat:
 ## an idle unit answers a fight beside it), and no buildings.
 static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with := -1) -> Variant:
+	var own: int = unit.owner
+	var foes: Array = w.diplomacy.enemies_of(own) if w.diplomacy != null else []
+	if engaged_with < 0 and foes.is_empty():
+		return null
 	var best = null
 	var best_score := INF
 	var ignore: Dictionary = unit.get("ignore", {})
@@ -71,16 +75,13 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 		lists.append(w.air_sea)
 	else:
 		lists.append(w.units)
-	var own: int = unit.owner
 	for list in lists:
 		for other in list:
-			if other.owner == own or other.dead:
+			if other.owner == own or other.dead or not other.owner in foes:
 				continue
 			var op: Vector3 = other.node.position
 			var d2 := (op.x - at.x) * (op.x - at.x) + (op.z - at.z) * (op.z - at.z)
 			if d2 > r2:
-				continue
-			if not w.hostile(own, other.owner):
 				continue
 			if engaged_with >= 0:
 				var fighting = other.get("enemy")
@@ -115,7 +116,7 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 		return best
 	var best_d := radius
 	for b in w.buildings:
-		if b.dead or b.owner == own:
+		if b.dead or b.owner == own or not (b.owner in foes):
 			continue
 		var bp: Vector3 = b.root.position
 		if absf(bp.x - at.x) > radius + 20.0 or absf(bp.z - at.z) > radius + 20.0:

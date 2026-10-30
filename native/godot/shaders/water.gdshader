@@ -52,7 +52,7 @@ void vertex() {
 	float ground = (luv.x >= 0.0 && luv.y >= 0.0 && luv.x <= 1.0 && luv.y <= 1.0) ? textureLod(depth_map, luv, 0.0).r : 0.0;
 	float calm = smoothstep(0.0, 1.0, ground);
 	VERTEX += d * (swell / 0.32) * (1.0 - calm);
-	world_pos = w + d;
+	world_pos = w + d * (swell / 0.32) * (1.0 - calm);
 	crest = clamp(d.y / 0.30 * 0.5 + 0.5, 0.0, 1.0) * (1.0 - calm);
 }
 

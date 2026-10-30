@@ -29,8 +29,11 @@ func _bar(ent: Dictionary, eye: Vector3, screen_rect: Rect2, lift: float, width 
 	# In a melee the bars would pile into one unreadable block: each steps up
 	# above any bar it would cover (a few steps at most, then it is drawn anyway).
 	# The footprint includes the frame and the owner tab, so neighbours never touch.
+	if _placed.size() > 40 and not selected:
+		return
 	var foot := Rect2(rect.position - Vector2(9, 3), rect.size + Vector2(12, 6))
-	for attempt in range(8):
+	var max_attempts := 2 if _placed.size() > 15 else 5
+	for attempt in range(max_attempts):
 		var clash := false
 		for other in _placed:
 			if other.intersects(foot):

@@ -26,8 +26,8 @@ void vertex() {
 	facing_up = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz).y * 0.5 + 0.5;
 	float gust = sin(TIME * 0.9 + phase) * 0.6 + sin(TIME * 2.1 + phase * 1.7) * 0.25;
 	float height = max(VERTEX.y, 0.0);
-	VERTEX.x += gust * sway * height * height * 0.15;
-	VERTEX.z += gust * sway * height * height * 0.08;
+	vec3 world_offset = vec3(gust * sway * height * height * 0.15, 0.0, gust * sway * height * height * 0.08);
+	VERTEX += inverse(mat3(MODEL_MATRIX)) * world_offset;
 	if (leaves) {
 		float f = sin(TIME * 7.0 + VERTEX.x * 3.1 + VERTEX.z * 2.7 + phase * 5.0);
 		VERTEX += NORMAL * f * flutter;

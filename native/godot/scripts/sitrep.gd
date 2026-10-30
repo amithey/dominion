@@ -307,7 +307,11 @@ func _fresh(e: Dictionary) -> Dictionary:
 func alerts() -> Array:
 	var now := _now()
 	var out := []
-	for e in events:
+	var max_window: float = maxf(WARNING_SECONDS, ALERT_SECONDS)
+	for i in range(events.size() - 1, -1, -1):
+		var e: Dictionary = events[i]
+		if now - float(e.last) > max_window:
+			break
 		var live: float = WARNING_SECONDS if e.cat == "warning" else ALERT_SECONDS
 		if e.cat in ["warning", "enemy", "attack", "loss"] and int(SEV[e.sev]) >= 1 and now - float(e.last) <= live:
 			out.append(_fresh(e))

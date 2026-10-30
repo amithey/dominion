@@ -16,8 +16,8 @@ void vertex() {
 	float phase = origin.x * 0.043 + origin.z * 0.061;
 	float gust = sin(TIME * 0.9 + phase) * 0.6 + sin(TIME * 2.1 + phase * 1.7) * 0.25;
 	float height = max(VERTEX.y, 0.0);
-	VERTEX.x += gust * 0.035 * height * height;
-	VERTEX.z += gust * 0.02 * height * height;
+	vec3 world_offset = vec3(gust * 0.035 * height * height, 0.0, gust * 0.02 * height * height);
+	VERTEX += inverse(mat3(MODEL_MATRIX)) * world_offset;
 	tint = INSTANCE_CUSTOM.rgb;
 	local = VERTEX;
 }

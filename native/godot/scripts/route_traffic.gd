@@ -475,6 +475,9 @@ func _gap_ahead(c: Dictionary, at: Vector3) -> float:
 	for o in _fleet:
 		if is_same(o, c) or o.kind != c.kind:
 			continue
+		var lead_p: Vector3 = o.bodies[0].get("at", Vector3.INF)
+		if lead_p != Vector3.INF and (absf(lead_p.x - at.x) > 35.0 or absf(lead_p.z - at.z) > 35.0):
+			continue
 		var ofwd := Vector3(sin(o.yaw), 0, cos(o.yaw))
 		if ofwd.dot(fwd) < 0.2:
 			continue  # oncoming or crossing: the other lane
@@ -730,9 +733,15 @@ func _pose() -> void:
 			var fwd := Vector3(sin(yaw), 0, cos(yaw))
 			var half: float = b.length * 0.42
 			var right := _right(fwd) * 0.7
-			if c.tick % (8 if far else 2) == 0 or not b.has("g"):
+			if c.tick % (10 if far else 3) == 0 or not b.has("g"):
 				# The ground under the wheels (every other frame; rarely out of sight).
-				b.g = [_ground(at + fwd * half), _ground(at - fwd * half), _ground(at - right), _ground(at + right)]
+				if far:
+					var g0 := _ground(at)
+					b.g = [g0, g0, g0, g0]
+				elif c.wait > 0.0 and b.has("g"):
+					pass
+				else:
+					b.g = [_ground(at + fwd * half), _ground(at - fwd * half), _ground(at - right), _ground(at + right)]
 			var g: Array = b.g
 			at.y = (g[0] + g[1] + g[2] + g[3]) * 0.25 + float(b.lift)
 			b.at = at

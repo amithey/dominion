@@ -32,8 +32,8 @@ void vertex() {
 	float phase = origin.x * 0.09 + origin.z * 0.07;
 	float gust = sin(TIME * 1.4 + phase) * 0.65 + sin(TIME * 3.1 + phase * 2.0) * 0.25;
 	float bend = height01 * height01;
-	VERTEX.x += gust * sway * bend;
-	VERTEX.z += sin(TIME * 1.1 + phase * 1.3) * sway * 0.6 * bend;
+	vec3 world_offset = vec3(gust * sway * bend, 0.0, sin(TIME * 1.1 + phase * 1.3) * sway * 0.6 * bend);
+	VERTEX += inverse(mat3(MODEL_MATRIX)) * world_offset;
 	distance_to_camera = length((MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz);
 }
 
