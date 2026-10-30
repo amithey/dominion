@@ -2018,6 +2018,11 @@ func spent(key: String, from: int) -> void:
 	if profiling:
 		prof[key] = float(prof.get(key, 0.0)) + float(Time.get_ticks_usec() - from)
 
+## Profiling only: records the time since `from` under `key` and returns the clock for the next lap.
+func lap(key: String, from: int) -> int:
+	spent(key, from)
+	return clock()
+
 func profile_report() -> String:
 	if prof_frames == 0:
 		return ""
@@ -2083,51 +2088,79 @@ func _physics_process(delta: float) -> void:
 		trim_wrecks()
 	var now := Time.get_ticks_msec() / 1000.0
 	var t0 := clock()
+	var tb := t0
 	rebuild_grid()
+	tb = lap("  grid", tb)
 	update_detail_level()
+	tb = lap("  detail level", tb)
 	game_time += delta
 	if engagement != null:
 		engagement.update()
+		tb = lap("  engagement", tb)
 	if economy != null:
 		Repairs.update(self,delta)
+		tb = lap("  repairs", tb)
 	if economy:
 		update_construction(delta)
+		tb = lap("  construction", tb)
 		update_training(delta)
+		tb = lap("  training", tb)
 		preload("res://scripts/air_defence.gd").update(self, delta)
+		tb = lap("  air defence", tb)
 		Modern.update(self, delta)  # medics
+		tb = lap("  medics", tb)
 		preload("res://scripts/war_tools.gd").update(self, delta)  # engineers, recovery, sensors (war_tools.gd)
+		tb = lap("  war tools", tb)
 		Future.update(self, delta)  # microwave pulses, wingmen
+		tb = lap("  future", tb)
 		preload("res://scripts/national_capabilities.gd").update(self, delta)  # Russia's foreign recruits
+		tb = lap("  capabilities", tb)
 		if fog != null:
 			fog.update(delta)  # what the player's side sees
+			tb = lap("  fog", tb)
 		if support != null:
 			support.update(delta)  # the home front
+			tb = lap("  support", tb)
 		if events != null:
 			events.update(delta)  # world events and their causes
+			tb = lap("  events", tb)
 		if victory != null:
 			victory.update(delta)  # paths to victory
+			tb = lap("  victory", tb)
 		if space != null:
 			space.update(delta)  # satellites in orbit
+			tb = lap("  space", tb)
 		if generals != null:
 			generals.update(delta)  # generals' commands (and veterans' field repairs)
+			tb = lap("  generals", tb)
 		if defcon != null:
 			defcon.update(delta)  # the nuclear escalation ladder
+			tb = lap("  defcon", tb)
 		if wmd != null:
 			wmd.update(delta)  # fallout, gas clouds, outbreaks
+			tb = lap("  wmd", tb)
 		if un != null:
 			un.update(delta)  # the United Nations
+			tb = lap("  un", tb)
 		if tests != null:
 			tests.update(delta)  # rivals' nuclear tests
+			tb = lap("  tests", tb)
 		if directorate != null:
 			directorate.update(delta)  # compute, AI levels, autonomy incidents, AI cyber campaigns
+			tb = lap("  directorate", tb)
 		if crisis != null:
 			crisis.update(delta)  # national crises: recession, blackouts, inflation, default, protest, condemnation
+			tb = lap("  crisis", tb)
 		if stats != null:
 			stats.update(delta)  # the statistics office publishes every nation's figures
+			tb = lap("  stats", tb)
 		if ambience != null:
 			ambience.update(delta)  # smoke, birds, winter, order markers
+			tb = lap("  ambience", tb)
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
+		tb = lap("  faction powers", tb)
 		preload("res://scripts/bunker.gd").update(self, delta)
+		tb = lap("  bunkers", tb)
 	spent("build+train", t0)
 	var t_units := clock()
 	for i in range(units.size() - 1, -1, -1):
@@ -2194,6 +2227,10 @@ func _physics_process(delta: float) -> void:
 		slot += 1
 		if unit.dead or disabled(unit):
 			continue
+		# The combat pass above may have cleared away this unit's enemy (a body is removed and its node freed
+		# while a unit elsewhere in the list still points at it): drop the stale target, never read a freed node.
+		if unit.enemy != null and not is_instance_valid(unit.enemy.get("node")):
+			unit.enemy = null
 		if unit.get("fly", false) or unit.get("naval", false):
 			move_craft(unit, delta)
 			continue
@@ -5380,6 +5417,8 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 		return
 	if unit.dmg <= 0.0 or disabled(unit):
 		return  # workers do not fight; EMP-struck machines are dead weight
+	if unit.enemy != null and not is_instance_valid(unit.enemy.get("node")):
+		unit.enemy = null   # its target was cleared away since the last tick (the node is freed)
 	unit.reload -= delta
 	unit.search -= delta
 	# Decisions run every six physics ticks (five times a second at 30 Hz);
@@ -5397,6 +5436,13 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 			# to watch from 32 m as invaders shot up the capital's army (gameplay-nations-100).
 			if unit.enemy == null and unit.target == null:
 				unit.enemy = Tactics.pick_target(self, unit, maxf(unit.aggro, unit.range) * 1.6, unit.owner)
+			# A unit that keeps finding nothing looks less often (a late army stands idle by the hundred
+			# and every search walks the grid): up to once in 0.9 s, and every search that finds a foe resets it.
+			if unit.enemy == null:
+				unit.idle_scans = mini(int(unit.get("idle_scans", 0)) + 1, 4)
+				unit.search = 0.35 + 0.14 * float(unit.idle_scans)
+			else:
+				unit.idle_scans = 0
 	if unit.enemy == null or unit.reload > 0.0:
 		return
 	var enemy: Dictionary = unit.enemy

@@ -155,6 +155,14 @@ func run() -> void:
 	for i in range(10): await process_frame
 	grant_land(8)
 	var funds: GDScript = preload("res://tools/test_kit.gd")
+	w.profiling = true   # the game's own per-system timers (world.spent): physics-tick cost by bucket
+	# --trace: the world's own physics systems are stepped by hand and every call is written (and flushed) to
+	# build/audit/trace-<tag>.txt first, so a hang leaves the name of the call that never came back as the last line.
+	var trace_on: bool = "--trace" in OS.get_cmdline_user_args()
+	var trace_file: FileAccess = null
+	if trace_on:
+		trace_file = FileAccess.open("res://build/audit/trace-%s.txt" % tag, FileAccess.WRITE)
+		for n in [w, w.effects, w.missiles, w.ai]: n.set_physics_process(false)
 	Engine.time_scale = scale
 	var next_minute := 60.0
 	var minute := 0
@@ -175,6 +183,15 @@ func run() -> void:
 			print("GROWTH FAIL: the match ended (the scene changed) at minute %d" % minute)
 			break
 		frames += 1
+		if trace_on:
+			var dt: float = scale / 60.0
+			for k in range(int(maxf(1.0, scale))):
+				for pair in [["world", w], ["effects", w.effects], ["missiles", w.missiles], ["ai", w.ai]]:
+					trace_file.store_line("%.2f %s" % [w.game_time, pair[0]])
+					trace_file.flush()
+					pair[1]._physics_process(dt)
+			trace_file.store_line("%.2f frame" % w.game_time)
+			trace_file.flush()
 		if minute >= 1: watch_nan()
 		proc_sum += Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
 		phys_sum += Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
@@ -197,7 +214,17 @@ func run() -> void:
 				first_subtrees = subtrees()
 			last_sizes = collect_sizes() if minute >= minutes - 1 or minute % 10 == 0 else last_sizes
 			if minute >= minutes - 1: last_subtrees = subtrees()
+			if w.prof_frames > 0:
+				var buckets: Array = w.prof.keys()
+				buckets.sort_custom(func(a, b): return w.prof[a] > w.prof[b])
+				var whole: float = 0.0
+				for k in buckets:
+					if not str(k).begins_with(" "): whole += float(w.prof[k])
+				print("GROWTH PROFILE minute %d (%d ticks): %.1f ms a tick | %s" % [minute, w.prof_frames, whole / w.prof_frames / 1000.0, " | ".join(PackedStringArray(buckets.slice(0, 18).map(func(k): return "%s %.2f" % [str(k).strip_edges(), w.prof[k] / w.prof_frames / 1000.0])))])
+				w.prof = {}
+				w.prof_frames = 0
 			if minute % int(arg("probe-every", "5")) == 0 or minute == 2: probe(minute)
+			if str(minute) in arg("attribute-at", "").split(","): await attribute(minute)
 			wall_minute_start = Time.get_ticks_msec()
 			frames = 0
 			proc_sum = 0.0
@@ -280,6 +307,46 @@ func probe(minute: int) -> void:
 	for k in out: if k != "TOTAL": top.append([out[k][0] + out[k][1], k])
 	top.sort_custom(func(a, b): return a[0] > b[0])
 	print("GROWTH PROBE minute %d: %.1f ms for one frame and tick by hand | %s" % [minute, total, " | ".join(PackedStringArray(top.slice(0, 5).map(func(t): return "%s %.1f" % [t[1], t[0]])))])
+
+## Engine-side process time (ms a frame) over `count` frames, the world standing still (--trace stepping is what moves it).
+func process_cost(count: int) -> float:
+	var t := 0.0
+	for i in range(count):
+		await process_frame
+		t += Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+	return t / count
+
+## At a heavy minute: what does each system's switching-off save of the frame's process time? Every reading is
+## taken between two baselines (the cost drifts); the world is not stepped meanwhile.
+func attribute(minute: int) -> void:
+	var cands: Array = []
+	var stack: Array = [w]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		for k in n.get_children():
+			if k.get_script() != null or k is CanvasLayer: cands.append(k)
+			if k is CanvasLayer or k.get_script() != null: stack.append(k)
+	var anims: Array = w.find_children("*", "AnimationPlayer", true, false)
+	var base0: float = await process_cost(20)
+	var out := []
+	for k in cands:
+		var a: float = await process_cost(8)
+		var was: int = k.process_mode
+		k.process_mode = Node.PROCESS_MODE_DISABLED
+		var off: float = await process_cost(12)
+		k.process_mode = was
+		var b: float = await process_cost(8)
+		out.append([(a + b) / 2.0 - off, "%s (%s)" % [k.get_script().resource_path.get_file() if k.get_script() != null else k.get_class(), k.name], (a + b) / 2.0])
+	# all animation players at once
+	var a1: float = await process_cost(8)
+	for p in anims: p.process_mode = Node.PROCESS_MODE_DISABLED
+	var off1: float = await process_cost(12)
+	for p in anims: p.process_mode = Node.PROCESS_MODE_INHERIT
+	var b1: float = await process_cost(8)
+	out.append([(a1 + b1) / 2.0 - off1, "all %d AnimationPlayers" % anims.size(), (a1 + b1) / 2.0])
+	out.sort_custom(func(x, y): return x[0] > y[0])
+	print("GROWTH ATTRIBUTE minute %d: process time %.1f ms a frame; switching off saves:" % [minute, base0])
+	for r in out.slice(0, 10): print("GROWTH ATTRIBUTE   %6.1f ms  %s  (frame %.1f)" % [r[0], r[1], r[2]])
 
 func column(i: int) -> Array:
 	var out := []

@@ -39,6 +39,7 @@ func run() -> void:
 	var bunker: Dictionary = w.place_building("bunker", spot, 0, true)
 	var raider: Dictionary = w.spawn_unit("soldier", spot + Vector3(30, 0, 0), 1)
 	var hp: float = raider.hp
+	w.rebuild_grid()   # the bunker looks for targets in the unit grid, which the world rebuilds each tick
 	for f in range(120):
 		preload("res://scripts/bunker.gd").update(w, 1.0 / 60.0)
 	check(raider.hp < hp, "a bunker fires on an enemy soldier 30 m away")

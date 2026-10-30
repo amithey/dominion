@@ -41,6 +41,10 @@ var texture: ImageTexture
 var _tick := 0.0
 var _masks := {}
 var _scout_tick := 0
+var _static_seen := PackedByteArray()     # what the player's side's buildings see: they never move, so it is stamped only when they change
+var _static_key := -1
+var _painted_seen := PackedByteArray()    # what the texture shows now: it is repainted only when seen or explored differ from it
+var _painted_explored := PackedByteArray()
 var rival_seen := {}         # rival -> cells its forces see (refreshed each second)
 
 func _init(world: Node) -> void:
@@ -128,13 +132,20 @@ func update(delta: float) -> void:
 ## Recomputes what the player's side sees, shows and hides the enemy, and
 ## repaints the fog.
 func refresh() -> void:
-	seen.fill(0)
+	# Buildings do not move: their sight is stamped again only when the set of friendly buildings changes.
+	var key := _building_key()
+	if key != _static_key or _static_seen.size() != seen.size():
+		_static_key = key
+		seen.fill(0)
+		for b in w.buildings:
+			if not b.dead and friendly(int(b.owner)):
+				_stamp(b.root.position, float(BUILDING_SIGHT.get(b.key, b.footprint * 0.5 + 28.0)))
+		_static_seen = seen.duplicate()
+	else:
+		seen = _static_seen.duplicate()
 	for u in w.units:
 		if not u.dead and friendly(int(u.owner)):
 			_stamp(u.node.position, sight_of(u))
-	for b in w.buildings:
-		if not b.dead and friendly(int(b.owner)):
-			_stamp(b.root.position, float(BUILDING_SIGHT.get(b.key, b.footprint * 0.5 + 28.0)))
 	# A reconnaissance satellite's pass (space.gd).
 	if w.get("space") != null:
 		for r in w.space.reveals:
@@ -243,7 +254,22 @@ func _mask(cells: int) -> Array:
 		_masks[cells] = out
 	return _masks[cells]
 
+## A number that changes when a friendly building is added, lost or passes to another side.
+func _building_key() -> int:
+	var h := 0
+	var count := 0
+	for b in w.buildings:
+		if not b.dead and friendly(int(b.owner)):
+			count += 1
+			h = (h + int(b.root.get_instance_id())) & 0xffffffffffff
+	return h * 1024 + count
+
 func _paint() -> void:
+	# Nothing the player can see has changed since the last repaint: the texture is already right.
+	if seen == _painted_seen and explored == _painted_explored:
+		return
+	_painted_seen = seen.duplicate()
+	_painted_explored = explored.duplicate()
 	var data := PackedByteArray()
 	data.resize(n * n * 2)
 	var dark := int(UNEXPLORED * 255.0)

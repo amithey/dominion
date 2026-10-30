@@ -95,6 +95,7 @@ static func update(w: Node, delta: float) -> void:
 		return
 	var dt: float = s.t
 	s.t = 0.0
+	var t_lap: int = w.clock()
 	# The support units of each nation, by key, for the hot damage path.
 	var support := {}
 	for u in w.units:
@@ -107,17 +108,24 @@ static func update(w: Node, delta: float) -> void:
 		if not support[o].has(u.key): support[o][u.key] = []
 		support[o][u.key].append(u.node.position)
 	s.support = support
+	t_lap = w.lap("    wt support index", t_lap)
 	for u in w.units:
 		if not _alive(u) or w.disabled(u):
 			continue
+		var t_handler: int = w.clock()
 		match u.key:
 			"carrier": _air_wing(w, u, dt)
 			"mineLayer": _engineer(w, s, u, dt)
 			"mineClearer": _clear(w, s, u, dt)
 			"recoveryVehicle": _repair(w, u, dt)
 			"logisticsUGV": _evacuate(w, u, dt)
+		if w.profiling and u.key in ["carrier", "mineLayer", "mineClearer", "recoveryVehicle", "logisticsUGV"]:
+			w.spent("      wt " + str(u.key), t_handler)
+	t_lap = w.lap("    wt unit tools", t_lap)
 	_trigger(w, s)
+	t_lap = w.lap("    wt minefields (%d)" % s.fields.size() if w.profiling else "", t_lap)
 	preload("res://scripts/airlift.gd").update(w)   # troops boarding helicopters
+	t_lap = w.lap("    wt airlift", t_lap)
 
 # ---------------------------------------------------------------- minefields
 
@@ -232,7 +240,11 @@ static func _repair(w: Node, u: Dictionary, dt: float) -> void:
 	var worst = null
 	var share := 0.999
 	for other in w.units:
-		if other == u or not _alive(other) or int(other.owner) != int(u.owner) or not other.get("vehicle", false) or other.get("fly", false) or other.get("naval", false):
+		# Most of the army is unhurt: the cheap tests that rule a unit out come first (this runs for every
+		# recovery vehicle against every unit, four times a second).
+		if float(other.hp) >= float(other.max_hp) * 0.999 or other == u or int(other.owner) != int(u.owner):
+			continue
+		if not other.get("vehicle", false) or other.get("fly", false) or other.get("naval", false) or not _alive(other):
 			continue
 		var s: float = float(other.hp) / maxf(float(other.max_hp), 1.0)
 		if s < share and other.node.position.distance_to(u.node.position) < REPAIR_REACH:
@@ -247,7 +259,9 @@ static func _evacuate(w: Node, u: Dictionary, dt: float) -> void:
 	var worst = null
 	var share := 0.999
 	for other in w.units:
-		if other == u or not _alive(other) or int(other.owner) != int(u.owner) or not other.key in w.infantry_keys or other.key == "worker":
+		if float(other.hp) >= float(other.max_hp) * 0.999 or other == u or int(other.owner) != int(u.owner):
+			continue
+		if not other.key in w.infantry_keys or other.key == "worker" or not _alive(other):
 			continue
 		var s: float = float(other.hp) / maxf(float(other.max_hp), 1.0)
 		if s < share and other.node.position.distance_to(u.node.position) < EVAC_REACH:
@@ -454,7 +468,11 @@ static func _air_wing(w: Node, carrier: Dictionary, dt: float) -> void:
 			wing.rearming.erase(t)
 			wing.aboard = int(wing.aboard) + 1
 	# A lost aircraft is replaced, one at a time, while the carrier lives (the player pays; a rival's navy is not charged).
-	var info := wing_info(w, carrier)
+	# How many of the wing are flying is a walk over every unit: once a second is often enough for the replacement clock.
+	if w.game_time - float(wing.get("info_time", -9.0)) >= 1.0 or not wing.has("info_cache"):
+		wing.info_cache = wing_info(w, carrier)
+		wing.info_time = w.game_time
+	var info: Dictionary = wing.info_cache
 	if int(info.lost) > 0:
 		wing.replace_in = float(wing.get("replace_in", REPLACE_EVERY)) - dt
 		if float(wing.replace_in) <= 0.0:
@@ -479,6 +497,7 @@ static func _air_wing(w: Node, carrier: Dictionary, dt: float) -> void:
 		return
 	var target = _strike_target(w, carrier)
 	if target == null:
+		wing.next = 0.75   # nothing in reach: the search walks every unit and building, so look again in a moment, not next tick
 		return
 	wing.next = LAUNCH_EVERY
 	wing.aboard = int(wing.aboard) - 1
