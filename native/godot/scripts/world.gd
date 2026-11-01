@@ -253,6 +253,7 @@ var edge_scroll := true   # pan when the mouse touches the screen edge (Settings
 var pan_speed := 1.0      # camera pan speed multiplier (Settings)
 var show_fps := false     # the frame counter in the corner (Settings; off for players)
 var testing_tools := false   # Settings, Game: the Cheats button, F8 and F10 (cheats.gd)
+var road_traffic := true     # Settings, Game: cars, lorries and trains on the roads and railways (route_traffic.gd)
 var middle_drag := false  # the middle mouse button turns the view (with Shift: drags the map)
 var order_mode := ""
 const MatchSetup := preload("res://scripts/match_setup.gd")

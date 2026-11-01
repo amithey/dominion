@@ -92,6 +92,15 @@ func _process(delta: float) -> void:
 		refresh = 2.0
 		_sync_network()
 		_sync_ships()
+	# Settings, Game: road and rail traffic can be switched off; the fleet is cleared and none is added.
+	if not world.road_traffic:
+		if not _fleet.is_empty():
+			_fleet = []
+			_layout_dirty = true
+		if _layout_dirty:
+			_layout()
+		_move_ships(delta)
+		return
 	_populate(delta)
 	for c in _fleet:
 		_drive(c, delta)

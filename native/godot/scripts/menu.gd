@@ -1035,6 +1035,8 @@ func _settings_game() -> void:
 	var every: float = world.saves.autosave_every if world.saves else 180.0
 	_setting("Autosave", "Saves the match as \"Autosave\" at this interval, so a crash or a mistake costs little.", _segmented([["1 min", 60.0], ["3 min", 180.0], ["5 min", 300.0], ["Off", 0.0]], every, func(v):
 		if world.saves: world.saves.autosave_every = v))
+	_setting("Road and rail traffic", "Cars, lorries and trains driving on the roads and railways you build. Switch it off for a calmer map or a lighter game; supply and trade work the same either way.", _switch(world.road_traffic, func(v):
+		world.road_traffic = v))
 	var guide := Button.new()
 	guide.name = "ReplayGuide"
 	guide.text = "Show first steps"
@@ -1057,6 +1059,7 @@ func _reset_settings() -> void:
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED)
 	Engine.max_fps = 0
 	world.show_fps = false
+	world.road_traffic = true
 	_set_bus_volume("Master", 100.0)
 	_set_bus_volume("SFX", 100.0)
 	_set_bus_volume("Music", 100.0)
@@ -1174,6 +1177,7 @@ func load_settings() -> void:
 	# The counter used to be on for everyone; settings saved before then turn it off once.
 	world.show_fps = bool(cfg.get_value("graphics", "show_fps", false)) if cfg.has_section_key("graphics", "fps_choice") else false
 	world.testing_tools = bool(cfg.get_value("game", "testing_tools", false))
+	world.road_traffic = bool(cfg.get_value("game", "road_traffic", true))
 	if world.hud != null and world.hud.has_method("refresh_cheats"): world.hud.refresh_cheats()
 	if world.saves:
 		world.saves.autosave_every = float(cfg.get_value("game", "autosave", 180.0))
@@ -1195,6 +1199,7 @@ func save_settings() -> void:
 	cfg.set_value("graphics", "ui_scale", world.ui_scale)
 	cfg.set_value("meta", "version", BuildInfo.version())
 	cfg.set_value("game", "testing_tools", world.testing_tools)
+	cfg.set_value("game", "road_traffic", world.road_traffic)
 	if world.saves:
 		cfg.set_value("game", "autosave", world.saves.autosave_every)
 	cfg.save(SETTINGS)

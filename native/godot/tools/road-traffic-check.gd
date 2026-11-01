@@ -252,6 +252,17 @@ func run() -> void:
 	var instances := 0
 	for name in traffic._models: instances += int(traffic._models[name].count)
 	check(instances == bodies, "every vehicle is drawn, once (%d instances for %d bodies)" % [instances, bodies])
+	# 16: Settings, Game: Road and rail traffic can be switched off, and on again.
+	w.road_traffic = false
+	for i in range(30): traffic._process(0.1)
+	var drawn := 0
+	for name in traffic._models: drawn += int(traffic._models[name].count)
+	check(traffic._fleet.is_empty() and drawn == 0, "switched off, no vehicle is left or drawn (%d, %d)" % [traffic._fleet.size(), drawn])
+	for i in range(100): traffic._process(0.1)
+	check(traffic._fleet.is_empty(), "and none comes back while it is off")
+	w.road_traffic = true
+	for i in range(600): traffic._process(0.1)
+	check(not traffic._fleet.is_empty(), "switched on again, the traffic returns (%d vehicles)" % traffic._fleet.size())
 	print("\nROAD_TRAFFIC: %d passed, %d failed" % [passed, errors.size()])
 	for f in errors: print("  FAILED: " + f)
 	print("ROAD_TRAFFIC PASS" if errors.is_empty() else "ROAD_TRAFFIC FAIL")
