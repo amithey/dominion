@@ -35,6 +35,7 @@ var elapsed := 0.0
 var refresh := 0.0
 
 var _graph := {"road": {}, "rail": {}}   # kind -> hex -> Array of neighbour hexes
+var _solid := {}            # hex -> Array of [centre, clearance radius] of the buildings that stand in it and are not a town district (a mine, a rig, a bunker...)
 var _edge_count := {"road": 0, "rail": 0}
 var _fleet: Array = []      # road vehicles and trains
 var _spawn_timer := 0.0
@@ -109,6 +110,15 @@ func _sync() -> void:
 func _sync_network() -> void:
 	var graph := {"road": {}, "rail": {}}
 	var count := {"road": 0, "rail": 0}
+	# Buildings that are not part of a town but stand in a hex a road crosses (a mine on a deposit, a bunker): a vehicle
+	# would drive through them, so a link that passes one carries no traffic.
+	_solid = {}
+	for b in world.buildings:
+		if b.dead or world.is_district(b.key):
+			continue
+		var hx: Vector2i = world.logistics.world_hex(b.root.position)
+		if not _solid.has(hx): _solid[hx] = []
+		_solid[hx].append([b.root.position, float(b.footprint) * 0.5 + 2.5])
 	for key in world.logistics.edges:
 		var e: Dictionary = world.logistics.edges[key]
 		var halves: Array = e.get("half", [e.hp, e.hp])
@@ -116,6 +126,8 @@ func _sync_network() -> void:
 			continue
 		if _is_town(e.a) and _is_town(e.b):
 			continue  # inside a city the link runs through its buildings: no through traffic
+		if _blocked(e.a, e.b):
+			continue  # a building stands on the road
 		var g: Dictionary = graph[e.kind]
 		if not g.has(e.a): g[e.a] = []
 		if not g.has(e.b): g[e.b] = []
@@ -174,6 +186,28 @@ func _populate(delta: float) -> void:
 func _is_town(h: Vector2i) -> bool:
 	var d = world.district_hex.get(h)
 	return d != null and not d.dead
+
+## Whether a building that is not a town district stands on the straight link between two hex centres.
+func _blocked(a: Vector2i, b: Vector2i) -> bool:
+	var pa: Vector3 = world.logistics.hex_center(a)
+	var pb: Vector3 = world.logistics.hex_center(b)
+	var ab := Vector2(pb.x - pa.x, pb.z - pa.z)
+	var len2 := maxf(ab.length_squared(), 0.0001)
+	for h in [a, b]:
+		for item in _solid.get(h, []):
+			var at: Vector3 = item[0]
+			var t := clampf(((at.x - pa.x) * ab.x + (at.z - pa.z) * ab.y) / len2, 0.0, 1.0)
+			if Vector2(at.x - (pa.x + ab.x * t), at.z - (pa.z + ab.y * t)).length() < float(item[1]) + LANE:
+				return true
+	return false
+
+## How far from a town's centre a trip ends: the street at the edge of its buildings, which for a big
+## building (a city centre is 19 m across) lies further out than STOP.
+func _stop_at(h: Vector2i) -> float:
+	var d = world.district_hex.get(h)
+	if d == null or d.dead:
+		return STOP
+	return maxf(STOP, float(d.footprint) * 0.5 + 2.5)
 
 ## Hexes of a trip from `from`: to a town (or the end of a line) 2-14 links away.
 func _trip(kind: String, from: Vector2i, avoid: Variant) -> Array:
@@ -245,14 +279,14 @@ func _track(kind: String, hexes: Array, came: Variant) -> PackedVector3Array:
 		var d_out: Vector3 = (_centre(hexes[i + 1]) - c).normalized() if i < n - 1 else Vector3.ZERO
 		var town := _is_town(hexes[i])
 		if i == 0 and (town or d_in == Vector3.ZERO):
-			pts.append(c + d_out * (STOP if town else 0.0))
+			pts.append(c + d_out * (_stop_at(hexes[i]) if town else 0.0))
 		elif i == 0 and d_in.dot(d_out) < -0.9:
 			# Turning back where it stopped (the end of a line): the U-turn does
 			# that; the track starts out along the other lane, with no loop
 			# forward into the lane it arrived by.
 			pts.append(c)
 		elif d_out == Vector3.ZERO:
-			pts.append(c - d_in * (STOP if town else 0.0))
+			pts.append(c - d_in * (_stop_at(hexes[i]) if town else 0.0))
 		elif d_in.dot(d_out) > 0.98:
 			pts.append(c)
 		else:
@@ -454,6 +488,18 @@ func _drive(c: Dictionary, delta: float) -> void:
 		c.limit = limit * clampf(1.0 - maxf(climb, 0.0) * c.heavy * 3.0, 0.45, 1.0)
 	if c.tick % 3 == 0 or not c.has("gap"):
 		c.gap = _gap_ahead(c, c.bodies[0].get("at", _point_at(c, c.s)))
+	# Two vehicles can each wait for the other (head to head at a town's street, or one on top of another where trips
+	# start): a vehicle that has stood still for ten seconds on its way drives through the others for eight.
+	if float(c.v) < 0.05 and remain > 0.35:
+		c.stuck_for = float(c.get("stuck_for", 0.0)) + delta
+		if float(c.stuck_for) > 10.0:
+			c.ghost = 8.0
+			c.stuck_for = 0.0
+	else:
+		c.stuck_for = 0.0
+	if float(c.get("ghost", 0.0)) > 0.0:
+		c.ghost = float(c.ghost) - delta
+		c.gap = INF
 	var target: float = c.limit
 	# Brake to a stop at the end of the trip.
 	target = minf(target, sqrt(2.0 * c.decel * 0.6 * maxf(remain - 0.2, 0.0)))
