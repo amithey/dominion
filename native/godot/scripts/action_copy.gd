@@ -74,10 +74,10 @@ const TEXT := {
 	"Decline":"Reject the offer or consent request described in this card.",
 }
 const TABS := {
-	"Council":"Council seats, draft resolutions, consultations, lobbying and ballots.",
-	"Draft":"Choose a proposed UN measure, its subject and the requirements to sponsor it.",
+	"Vote now":"The vote before the Security Council: who votes how, your own vote, and how to win members over.",
+	"Propose":"Pick a country and a UN measure, and put it to the Council.",
 	"Assembly":"General Assembly recommendations and ballots; no permanent-member veto.",
-	"Organisation":"UN leadership, membership, dues and voting eligibility.", "Record":"Earlier UN resolutions and recorded outcomes.",
+	"Dues & members":"UN membership, the Council president, elections, your dues and treaties.", "History":"Earlier UN votes and how they ended.",
 	"Overview":"The current status and key facts for this department.", "Agents":"Recruitment, active agents and their assignments.",
 	"Operations":"Choose an intelligence operation and inspect its target, price and risk.",
 	"Trade":"Recurring international import and export routes.", "Economy":"Buildings for resources, food, homes and trade.",

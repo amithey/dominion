@@ -86,7 +86,7 @@ func setup(owner_hud: Node) -> void:
 	var feed := VBoxContainer.new()
 	feed.add_theme_constant_override("separation", 8)
 	invitation.add_child(feed)
-	label(feed, "UNITED NATIONS  /  SESSION MESSAGE", 15, ACCENT)
+	label(feed, "UNITED NATIONS", 15, ACCENT)
 	invitation_text = label(feed, "", 16)
 	join_button = button(feed, "Attend session", func():
 		if not pending.is_empty(): open_proposal(pending[0].chamber, pending[0].draft))
@@ -125,18 +125,18 @@ func setup(owner_hud: Node) -> void:
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", 14)
 	scroll.add_child(content)
-	var briefing := card(content, "ON THE AGENDA")
+	var briefing := card(content, "THE VOTE")
 	title = label(briefing, "", 24, UI.CREAM)
 	details = label(briefing, "", 15, UI.MUTED)
 	effect = label(briefing, "", 17)
 	rule = label(briefing, "", 15, ACCENT)
-	var delegates := card(content, "DELEGATIONS")
+	var delegates := card(content, "WHO VOTES")
 	seats = HFlowContainer.new()
 	seats.add_theme_constant_override("h_separation", 8)
 	seats.add_theme_constant_override("v_separation", 8)
 	delegates.add_child(seats)
 	# The ballot stays visible even when the briefing scrolls on a smaller screen.
-	var ballot := card(layout, "YOUR DELEGATION")
+	var ballot := card(layout, "YOUR VOTE")
 	result_label = label(ballot, "", 18, UI.GOOD)
 	eligibility = label(ballot, "", 15, UI.MUTED)
 	var row := HBoxContainer.new()
@@ -153,7 +153,7 @@ func setup(owner_hud: Node) -> void:
 		b.add_theme_stylebox_override("focus", UI.box(Color.TRANSPARENT, UI.CREAM, 2, 6, 12))
 		ballots[value] = b
 	choice_label = label(ballot, "", 16, UI.CREAM)
-	label(layout, "Campaign time continues during the session. Your ballot can be changed until voting closes.", 14, UI.MUTED)
+	label(layout, "The game keeps running. You can change your vote until it closes.", 14, UI.MUTED)
 	screen.hide()
 	invitation.hide()
 	refresh()
@@ -208,18 +208,18 @@ func refresh() -> void:
 	# Keep the UN navigation badge live while another window is being used.
 	# The large invitation must not cover its tabs, briefing or controls.
 	# It sits in the notification dock on the right edge: it gives way only when a window leaves no room for it.
-	var workspace_busy: bool = hud.modal_input_active()
+	var workspace_busy: bool = hud.modal_input_active() or hud.side_mode == "un"   # (the UN window itself says what the card would)
 	if hud.get("_dock") != null and hud._dock.space() < 300.0: workspace_busy = true
 	invitation.visible = not screen.visible and not pending.is_empty() and hud.visible and not workspace_busy
 	if not pending.is_empty():
 		var top: Dictionary = pending[0]
 		var dr: Dictionary = top.draft
 		var active: bool = not concluded(top.chamber, dr)
-		var status := "decision received"
+		var status := "result ready"
 		if active:
 			var consult: bool = dr.get("phase", "") == "consult"
 			var deadline: float = float(dr.get("opens", 0)) + u.CONSULT_SECONDS if consult else float(dr.closes)
-			status = ("vote opens" if consult else "voting closes") + " in %ds" % maxi(0, ceili(deadline - hud.world.game_time))
+			status = ("vote opens" if consult else "voting closes") + " in " + preload("res://scripts/un_plain.gd").span(deadline - hud.world.game_time)
 		invitation_text.text = "%s · %s\n%s" % ["Security Council" if top.chamber == "council" else "General Assembly", status, str(dr.title)]
 		join_button.text = ("Attend session" if active else "Read decision") + ("  ·  %d messages" % pending.size() if pending.size() > 1 else "")
 	if hud._screen_buttons.has("un"):
@@ -264,19 +264,19 @@ func _input(event: InputEvent) -> void:
 
 func blocked_reason() -> String:
 	var u = hud.world.un
-	if proposal.is_empty(): return "No proposal is before this chamber."
-	if concluded(selected, proposal): return "Voting has closed. The final decision is shown above."
+	if proposal.is_empty(): return "No vote right now."
+	if concluded(selected, proposal): return "Voting has closed. The result is above."
 	var current = u.current if selected == "council" else u.assembly_current
 	if not is_same(current, proposal): return "This session has ended."
-	if hud.world.game_time >= float(proposal.closes): return "Voting has closed; the final count is being recorded."
+	if hud.world.game_time >= float(proposal.closes): return "Voting has closed. Counting the votes."
 	if selected == "assembly":
 		if not 0 in u.members(): return "You attend as an observer and cannot vote."
-		if u.lost_vote(): return "Your Assembly vote is suspended for unpaid dues. Pay arrears in UN / Organisation."
+		if u.lost_vote(): return "Your Assembly vote is suspended for unpaid dues. Pay them under UN, Dues & members."
 	else:
-		if not 0 in proposal.get("electorate", u.council()): return "You may attend, but your country holds no Council seat in this session."
+		if not 0 in proposal.get("electorate", u.council()): return "You can watch, but you have no Council seat in this vote."
 		if proposal.measure != "statement" and int(u.MEASURES.get(proposal.measure, {}).get("chapter", 7)) == 6 and 0 in [int(proposal.target), int(proposal.other)]:
-			return "As a party to this Chapter VI dispute, your delegation must abstain."
-	if str(proposal.get("phase", "")) != "vote": return "Consultations are in progress. Ballots open when consultations end."
+			return "You are a party to this dispute, so you must abstain."
+	if str(proposal.get("phase", "")) != "vote": return "Talks are under way. Voting opens when they end."
 	return ""
 
 func cast(value: String) -> void:
@@ -288,36 +288,36 @@ func cast(value: String) -> void:
 func render() -> void:
 	var u = hud.world.un
 	var assembly: bool = selected == "assembly"
-	heading.text = "UNITED NATIONS  /  " + ("GENERAL ASSEMBLY" if assembly else "SECURITY COUNCIL")
+	heading.text = "United Nations  ·  " + ("General Assembly" if assembly else "Security Council")
 	var empty: bool = proposal.is_empty()
 	var done: bool = not empty and concluded(selected, proposal)
 	var consult: bool = not empty and proposal.get("phase", "") == "consult" and not done
 	var deadline: float = 0.0 if empty else (float(proposal.get("opens", 0)) + u.CONSULT_SECONDS if consult else float(proposal.get("closes", 0)))
 	var remaining: int = maxi(0, ceili(deadline - hud.world.game_time))
-	phase.text = "NO ACTIVE SESSION" if empty else ("SESSION CONCLUDED" if done else ("CONSULTATIONS" if consult else "VOTING OPEN") + "  ·  %ds" % remaining)
+	phase.text = "NO VOTE NOW" if empty else ("VOTE ENDED" if done else ("TALKS · VOTE OPENS IN " if consult else "VOTING OPEN · ENDS IN ") + preload("res://scripts/un_plain.gd").span(remaining).to_upper())
 	timer.max_value = u.CONSULT_SECONDS if consult else u.VOTE_SECONDS
 	timer.value = remaining if not done else 0
-	title.text = "The chamber is awaiting its next proposal." if empty else str(proposal.title)
-	details.text = "You can return here when a UN session message arrives." if empty else "Subject: %s   ·   Sponsor: %s" % [u._cap(int(proposal.target)), "Secretary-General" if int(proposal.by) < 0 else u._cap(int(proposal.by))]
-	effect.text = "" if empty else ("This is a non-binding Assembly recommendation. Adoption affects diplomatic relations and public support; economic restrictions require voluntary participation. Your Yes ballot does not automatically join those restrictions." if assembly else str(EFFECTS.get(proposal.measure, "")))
+	title.text = "No vote right now." if empty else str(proposal.title)
+	details.text = "A message appears when a new vote opens." if empty else "About: %s   ·   Proposed by: %s" % [u._cap(int(proposal.target)), "Secretary-General" if int(proposal.by) < 0 else u._cap(int(proposal.by))]
+	effect.text = "" if empty else ("A recommendation, not an order. It changes how countries see the target, and economic limits only apply to those who choose to join." if assembly else preload("res://scripts/un_plain.gd").what(proposal.measure))
 	if not empty:
 		effect.text = ("Adopted measure: " if done and proposal.result == "adopted" else ("Proposed effect (not adopted): " if done else "If adopted: ")) + effect.text
-	rule.text = "Two-thirds of Yes + No votes are needed. Abstentions are excluded; no nation has a veto." if assembly else ("A presidential statement needs consensus: any objection prevents adoption." if not empty and proposal.measure == "statement" else "%d Yes votes are needed in this campaign. Any permanent member's No is a veto. Abstentions do not lower the threshold." % (u.needed(proposal) if not empty else maxi(1, ceili(u.council().size() * u.PASS_SHARE))))
+	rule.text = "To pass: two thirds of the Yes and No votes. No veto here." if assembly else ("To pass: nobody objects." if not empty and proposal.measure == "statement" else "To pass: %d yes votes and no veto. Abstaining neither helps nor hurts." % (u.needed(proposal) if not empty else maxi(1, ceili(u.council().size() * u.PASS_SHARE))))
 	var reason := blocked_reason()
-	eligibility.text = reason if reason != "" else "Your delegation can vote now. Select one ballot below."
+	eligibility.text = reason if reason != "" else "You can vote now."
 	var choice: String = str(proposal.get("player_choice", ""))
-	choice_label.text = "Your recorded choice: " + choice.to_upper() if choice != "" else "No ballot submitted. If you do not vote, your delegation abstains."
-	if empty: choice_label.text = "Your ballot becomes available when a session opens and your delegation is eligible."
+	choice_label.text = "You voted: " + choice.to_upper() if choice != "" else "You have not voted. No vote counts as abstaining."
+	if empty: choice_label.text = "You can vote when a vote opens."
 	if not empty and not assembly and proposal.measure != "statement" and int(u.MEASURES.get(proposal.measure, {}).get("chapter", 7)) == 6 and 0 in [int(proposal.target), int(proposal.other)]:
-		choice_label.text = "Required ballot: ABSTAIN (party to a Chapter VI dispute)."
+		choice_label.text = "You must ABSTAIN: you are a party to this dispute."
 	elif "observer" in reason or "no Council seat" in reason or "suspended" in reason:
-		choice_label.text = "Attendance only · no ballot available."
+		choice_label.text = "You can watch, but not vote."
 	if _feedback != "": choice_label.text += "  ·  " + _feedback
-	var no_label := "NO · oppose"
+	var no_label := "NO"
 	if not assembly and not empty:
-		if proposal.measure == "statement": no_label = "OBJECT · block consensus"
-		elif u.permanent(0): no_label = "VETO · block adoption"
-	var texts := {"yes":"YES · support", "no":no_label, "abstain":"ABSTAIN · neither"}
+		if proposal.measure == "statement": no_label = "OBJECT"
+		elif u.permanent(0): no_label = "VETO (blocks it)"
+	var texts := {"yes":"YES", "no":no_label, "abstain":"ABSTAIN"}
 	for value in ballots:
 		ballots[value].text = ("✓  " if choice == value else "") + texts[value]
 		ballots[value].disabled = reason != ""
@@ -325,7 +325,7 @@ func render() -> void:
 	result_label.visible = done
 	if done:
 		var count: Dictionary = proposal.get("tally", {})
-		result_label.text = "DECISION: %s  ·  %d Yes  /  %d No  /  %d Abstain" % [str(proposal.result).to_upper(), count.get("yes",0), count.get("no",0), count.get("abstain",0)]
+		result_label.text = "RESULT: %s  ·  %d yes  ·  %d no  ·  %d abstain" % [str(proposal.result).to_upper(), count.get("yes",0), count.get("no",0), count.get("abstain",0)]
 		result_label.add_theme_color_override("font_color", UI.GOOD if proposal.result == "adopted" else UI.BAD)
 		seen[key(selected, proposal)] = true
 	var members: Array = u.members() if assembly else proposal.get("electorate", u.council())
@@ -340,8 +340,8 @@ func render() -> void:
 			seats.add_child(plate)
 			var body := VBoxContainer.new()
 			plate.add_child(body)
-			label(body, "Your delegation" if member == 0 else u._cap(member), 16, UI.CREAM)
-			var status: String = "Member" if assembly else ("Permanent seat · veto" if u.permanent(member) else "Elected Council seat")
-			if done: status = "Ballot: " + str(proposal.get("votes", {}).get(member, "not recorded")).to_upper()
-			elif member == 0 and choice != "": status = "Your ballot: " + choice.to_upper()
+			label(body, "You" if member == 0 else u._cap(member), 16, UI.CREAM)
+			var status: String = "Member" if assembly else ("Permanent · can veto" if u.permanent(member) else "Elected seat")
+			if done: status = "Voted: " + str(proposal.get("votes", {}).get(member, "not recorded")).to_upper()
+			elif member == 0 and choice != "": status = "You voted: " + choice.to_upper()
 			label(body, status, 14, ACCENT if member == 0 else UI.MUTED)

@@ -133,9 +133,10 @@ static func _un(hud: Node, box: VBoxContainer, accent: Color) -> void:
 	var u = hud.world.un
 	if u == null:
 		return
-	_figure(box, "Permanent" if u.permanent(0) else ("Elected" if 0 in u.council() else "Not a member"), "your seat on the Security Council", accent)
-	_figure(box, str(u.record.filter(func(r): return int(r.get("number", 0)) > 0).size()), "draft resolutions voted", accent)
-	_figure(box, "Yes" if u.sanctioned(0) else "No", "UN sanctions on you", accent, UI.BAD if u.sanctioned(0) else Color(0, 0, 0, 0))
+	# (your seat, the votes needed and any sanctions on you are the tiles at the top of the window itself)
+	_figure(box, str(u.record.filter(func(r): return int(r.get("number", 0)) > 0).size()), "votes held so far", accent)
+	var d: Node = hud.world.diplomacy
+	_figure(box, "You" if u.president == 0 else (d.name_of(u.president) if u.president >= 0 else "Nobody"), "Council president", accent)
 
 static func _defence(hud: Node, box: VBoxContainer, accent: Color) -> void:
 	var w: Node = hud.world
