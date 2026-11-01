@@ -93,6 +93,9 @@ static func recoil(unit: Dictionary, strength := 1.0) -> void:
 ## Advances the spring and returns the vehicle's basis on ground with
 ## normal `ground_up`, heading `heading`.
 static func body_basis(unit: Dictionary, ground_up: Vector3, heading: float, delta: float) -> Basis:
+	# The springs are stepped explicitly, which blows up (to NaN, and an invalid transform every frame) when a step
+	# is long: at x8 a tick is 0.13 s. A long step is taken as a short one: the hull settles a little slower.
+	delta = minf(delta, 0.05)
 	# The hull follows the ground through its suspension, not triangle by triangle.
 	var up: Vector3 = unit.get("hull_up", ground_up)
 	# Normals on adjacent terrain cells can be almost parallel. Normalised
@@ -112,6 +115,8 @@ static func body_basis(unit: Dictionary, ground_up: Vector3, heading: float, del
 	roll_v += (-(roll - want_roll) * SPRING - roll_v * DAMPING) * delta
 	pitch = clampf(pitch + pitch_v * delta, -MAX_TILT, MAX_TILT)
 	roll = clampf(roll + roll_v * delta, -MAX_TILT, MAX_TILT)
+	if not (is_finite(pitch) and is_finite(roll) and is_finite(pitch_v) and is_finite(roll_v)):
+		pitch = 0.0; roll = 0.0; pitch_v = 0.0; roll_v = 0.0   # a spring that has diverged restarts at rest
 	unit.sus_pitch = pitch
 	unit.sus_pitch_v = pitch_v
 	unit.sus_roll = roll

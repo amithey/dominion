@@ -159,6 +159,7 @@ func run() -> void:
 	# --trace: the world's own physics systems are stepped by hand and every call is written (and flushed) to
 	# build/audit/trace-<tag>.txt first, so a hang leaves the name of the call that never came back as the last line.
 	var trace_on: bool = "--trace" in OS.get_cmdline_user_args()
+	var disable_at := float(arg("disable-at", "0"))
 	var trace_file: FileAccess = null
 	if trace_on:
 		trace_file = FileAccess.open("res://build/audit/trace-%s.txt" % tag, FileAccess.WRITE)
@@ -183,13 +184,51 @@ func run() -> void:
 			print("GROWTH FAIL: the match ended (the scene changed) at minute %d" % minute)
 			break
 		frames += 1
+		if str(w.game_over) != "" and not game_over_told:
+			game_over_told = true
+			print("GROWTH GAMEOVER: the match ended ('%s') at game %.1f s: the world stops here by design, so a loop waiting for the clock waits for ever" % [str(w.game_over), w.game_time])
+			if "--stop-on-gameover" in OS.get_cmdline_user_args(): break
+		if trace_on and disable_at > 0.0 and w.game_time >= disable_at and w.process_mode != Node.PROCESS_MODE_DISABLED:
+			var what: String = arg("disable", "all")
+			if what == "all": w.process_mode = Node.PROCESS_MODE_DISABLED
+			elif what == "anim":
+				for ap in w.find_children("*", "AnimationPlayer", true, false): ap.active = false
+				w.process_mode = Node.PROCESS_MODE_INHERIT if false else w.process_mode
+			elif what == "hud": w.hud.process_mode = Node.PROCESS_MODE_DISABLED
+			elif what == "effects": w.effects.process_mode = Node.PROCESS_MODE_DISABLED
+			print("GROWTH disabled '%s' at game %.0f s" % [what, w.game_time])
+			disable_at = -1.0
 		if trace_on:
+			trace_file.store_line("%.2f resume" % w.game_time)
+			trace_file.flush()
 			var dt: float = scale / 60.0
 			for k in range(int(maxf(1.0, scale))):
 				for pair in [["world", w], ["effects", w.effects], ["missiles", w.missiles], ["ai", w.ai]]:
 					trace_file.store_line("%.2f %s" % [w.game_time, pair[0]])
 					trace_file.flush()
 					pair[1]._physics_process(dt)
+					if not nan_found: nan_found = first_bad_vector(str(pair[0]))
+			trace_file.store_line("%.2f physics done" % w.game_time)
+			trace_file.flush()
+			# the per-frame _process of every system too, by hand, each logged first
+			if frames % 10 == 1 or proc_nodes.is_empty():
+				trace_file.store_line("%.2f gather start (%d nodes)" % [w.game_time, int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))])
+				trace_file.flush()
+				proc_nodes = []
+				var stack: Array = [w]
+				while not stack.is_empty():
+					var n: Node = stack.pop_back()
+					if n.get_script() != null and n.has_method("_process") and n.is_processing():
+						n.set_process(false)
+						proc_nodes.append(n)
+					for k in n.get_children(): stack.append(k)
+			trace_file.store_line("%.2f gather done (%d with _process)" % [w.game_time, proc_nodes.size()])
+			trace_file.flush()
+			for n in proc_nodes:
+				if is_instance_valid(n):
+					trace_file.store_line("%.2f process %s" % [w.game_time, n.get_script().resource_path.get_file()])
+					trace_file.flush()
+					n._process(0.05)
 			trace_file.store_line("%.2f frame" % w.game_time)
 			trace_file.flush()
 		if minute >= 1: watch_nan()
@@ -248,6 +287,39 @@ func run() -> void:
 	quit(0)
 
 var nan_reports := 0
+var game_over_told := false
+var proc_nodes: Array = []
+var nan_found := false
+## After a system ran: the first unit, building or camera value that is not a finite number, with what the unit was doing.
+func first_bad_vector(system: String) -> bool:
+	for u in w.units:
+		var p: Vector3 = u.node.position
+		var bad_float := ""
+		for k in ["heading", "turret_yaw", "cur_speed", "gun_elev", "gun_kick", "yaw_rate", "accel", "hp"]:
+			if u.has(k) and (u[k] is float) and not is_finite(float(u[k])): bad_float = k
+		if bad_float == "" and not is_finite(u.node.basis.x.x + u.node.basis.y.y + u.node.basis.z.z): bad_float = "node basis"
+		if bad_float != "":
+			print("GROWTH BADFLOAT after %s at game %.1f s: %s of nation %d has a non-finite %s | state: moving=%s enemy=%s target=%s attack_move=%s path=%d" % [system, w.game_time, u.key, u.owner, bad_float, u.get("moving"), u.get("enemy") != null, str(u.get("target")), u.get("attack_move"), u.get("path", []).size()])
+			return true
+		if not (is_finite(p.x) and is_finite(p.y) and is_finite(p.z)):
+			var facts := PackedStringArray()
+			for k in u:
+				var v = u[k]
+				if v is bool or v is int or v is float or v is String or v is Vector3: facts.append("%s=%s" % [k, str(v)])
+				elif v is Array: facts.append("%s=[%d]" % [k, v.size()])
+			print("GROWTH BADPOS after %s at game %.1f s: %s of nation %d (dead=%s) | %s" % [system, w.game_time, u.key, u.owner, u.dead, " ".join(facts).substr(0, 1200)])
+			return true
+	for b in w.buildings:
+		var q: Vector3 = b.root.position
+		if not (is_finite(q.x) and is_finite(q.y) and is_finite(q.z)):
+			print("GROWTH BADPOS building %s after %s at game %.1f s" % [b.key, system, w.game_time])
+			return true
+	var c: Vector3 = w.cam_focus
+	if not (is_finite(c.x) and is_finite(c.z)):
+		print("GROWTH BADPOS camera focus after %s" % system)
+		return true
+	return false
+
 ## The first unit whose position (or any vector it carries) stops being a finite number: what it was doing.
 func watch_nan() -> void:
 	if nan_reports >= 4: return
