@@ -30,15 +30,19 @@ func setup(hud_node: Node) -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_banner = VBoxContainer.new()
 	_banner.name = "AlertBanner"
-	_banner.anchor_left = 0.5
-	_banner.anchor_right = 0.5
-	_banner.anchor_top = 0.0
-	_banner.offset_left = -100
-	_banner.offset_right = 380
-	_banner.offset_top = 110
 	_banner.add_theme_constant_override("separation", 4)
 	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_banner)
+	# The live alerts are cards in the notification dock on the right edge, not a banner over the map.
+	if hud.get("_dock") != null:
+		_banner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hud._dock.column.add_child(_banner)
+	else:
+		_banner.anchor_left = 0.5
+		_banner.anchor_right = 0.5
+		_banner.offset_left = -100
+		_banner.offset_right = 380
+		_banner.offset_top = 110
+		add_child(_banner)
 
 func _process(delta: float) -> void:
 	if world == null or world.sitrep == null:

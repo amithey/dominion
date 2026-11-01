@@ -166,7 +166,7 @@ func building_lost(b: Dictionary) -> void:
 		_battle.bkilled = int(_battle.get("bkilled", 0)) + 1
 
 ## Every message the HUD shows is also an entry, by its wording.
-func from_notice(text: String, pos := Vector3.INF) -> void:
+func from_notice(text: String, pos := Vector3.INF) -> Dictionary:
 	var low := text.to_lower()
 	var cat := "world"
 	var sev := "info"
@@ -195,7 +195,7 @@ func from_notice(text: String, pos := Vector3.INF) -> void:
 		sev = "warn"
 	elif low.contains("complete") or low.contains("finished") or low.contains("ready") or low.contains("built") or low.contains("trained") or low.contains("discovered") or low.contains("researched") or low.contains("arrived") or low.contains("put ashore") or low.contains("opened"):
 		cat = "done"
-	record(cat, sev, "msg:" + text.left(80), text, pos)
+	return record(cat, sev, "msg:" + text.left(80), text, pos)
 
 ## ---------------------------------------------------------------- battles
 

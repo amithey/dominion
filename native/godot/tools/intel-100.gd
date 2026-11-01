@@ -86,7 +86,15 @@ func op(key: String, nation := T, roll := 0.0, role := "") -> String:
 	e.advance(float(e.PROGRAMS[key][0]) + 1.0)
 	return str(e.reports[0].text) if not e.reports.is_empty() else ""
 
+func clear_notices() -> void:
+	w.hud.notice("-")
+	for e in w.hud._dock.entries.duplicate(): w.hud._dock._remove(e)
+
 func last_notice() -> String:
+	# What happened goes to the notification dock; replies to your clicks to the toasts along the bottom.
+	var dock: Control = w.hud._dock
+	if dock != null and not dock.entries.is_empty():
+		return str(dock.entries[dock.entries.size() - 1].text)
 	var box: Node = w.hud._notices
 	return str(box.get_child(box.get_child_count() - 1).get_child(0).text) if box.get_child_count() > 0 else ""
 
@@ -358,13 +366,13 @@ func run() -> void:
 	check(e.INTEL_TIERS.size() == 4 and int(e.INTEL_TIERS[3][0]) == 60, "intelligence opens four tiers, warning of attacks at 60")
 	e.intel[2] = 70.0
 	e.dossiers[2] = {"t": e.clock, "confidence": "high", "source": "x", "army_low": 1, "army_high": 2, "money_low": 1, "money_high": 2, "ties": "", "stability": 70}
-	w.hud.notice("-")
+	clear_notices()
 	e.warn_attack(2)
 	check(last_notice().begins_with("INTELLIGENCE"), "with intelligence 60 and a fresh dossier you are warned of an attack (%s)" % last_notice())
 	e.dossiers[2].t = e.clock - 400.0
-	w.hud.notice("--")
+	clear_notices()
 	e.warn_attack(2)
-	check(last_notice() == "--", "a stale dossier gives no warning")
+	check(last_notice() == "-" or last_notice() == "", "a stale dossier gives no warning")
 	check(e.dossier_text(2).contains("STALE"), "and the Intel panel marks it stale")
 	check(e.dossier_text(1).contains("confidence"), "a dossier tells its confidence and age")
 

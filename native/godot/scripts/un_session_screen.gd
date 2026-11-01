@@ -73,11 +73,16 @@ func setup(owner_hud: Node) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	invitation = PanelContainer.new()
-	invitation.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	invitation.offset_left = -245; invitation.offset_right = 245
-	invitation.offset_top = 112
-	invitation.add_theme_stylebox_override("panel", UI.box(UI.INK, ACCENT, 2, 8, 14, 8))
-	add_child(invitation)
+	invitation.add_theme_stylebox_override("panel", UI.box(UI.INK, ACCENT, 2, 6, 12, 8))
+	if hud.get("_dock") != null:
+		invitation.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hud._dock.column.add_child(invitation)   # a card in the notification dock, not a panel over the map
+		hud._dock.column.move_child(invitation, 0)
+	else:
+		invitation.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+		invitation.offset_left = -245; invitation.offset_right = 245
+		invitation.offset_top = 112
+		add_child(invitation)
 	var feed := VBoxContainer.new()
 	feed.add_theme_constant_override("separation", 8)
 	invitation.add_child(feed)
@@ -202,10 +207,9 @@ func refresh() -> void:
 	pending.sort_custom(func(a, b): return priority(a) < priority(b))
 	# Keep the UN navigation badge live while another window is being used.
 	# The large invitation must not cover its tabs, briefing or controls.
-	var workspace_busy: bool = hud.side_mode != "" or hud.prod_open or hud.modal_input_active()
-	if hud._prod != null and hud._prod.visible: workspace_busy = true
-	if hud._cabinet != null and hud._cabinet.visible: workspace_busy = true
-	if hud._rs != null and hud._rs.visible: workspace_busy = true
+	# It sits in the notification dock on the right edge: it gives way only when a window leaves no room for it.
+	var workspace_busy: bool = hud.modal_input_active()
+	if hud.get("_dock") != null and hud._dock.space() < 300.0: workspace_busy = true
 	invitation.visible = not screen.visible and not pending.is_empty() and hud.visible and not workspace_busy
 	if not pending.is_empty():
 		var top: Dictionary = pending[0]

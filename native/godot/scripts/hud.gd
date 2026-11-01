@@ -87,6 +87,7 @@ var _launch_sig := ""
 var _health_color := Color.TRANSPARENT
 var _notices: VBoxContainer
 var _sitrep_view: Control        # sitrep_view.gd: the alert banner and the report window's content
+var _dock: Control               # notification_dock.gd: the icons for what happens, and the cards that stay open
 var _log_button: Button
 var _log_tabs := {}
 var _fps: Label
@@ -133,6 +134,9 @@ func setup(world_node: Node, economy_node: Node) -> void:
 	_notices.add_theme_constant_override("separation", 6)
 	_notices.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_notices)
+	_dock = preload("res://scripts/notification_dock.gd").new()
+	add_child(_dock)
+	_dock.setup(self)
 	_sitrep_view = preload("res://scripts/sitrep_view.gd").new()
 	add_child(_sitrep_view)
 	_sitrep_view.setup(self)
@@ -2551,6 +2555,13 @@ var _log_rows: VBoxContainer
 ## three at most, each gone after 5 s.
 var _recent_notices := {}   # text -> when it last appeared (real seconds)
 
+## Whether a message reports something that happened (to the dock) rather than answering your last click (a toast).
+func _is_event(text: String, event: Dictionary) -> bool:
+	for reply in ["Not enough", "Cannot", "Can't", "No ", "Queue", "Army capacity", "Select", "Too ", "Place", "Needs", "Choose", "Pick ", "Click", "Right-click", "Press", "Build ", "Research ", "Already", "Nothing", "Game saved", "Game loaded", "Autosave"]:
+		if text.begins_with(reply):
+			return false
+	return str(event.sev) != "info" or str(event.cat) in ["war", "attack", "loss", "warning", "enemy"]
+
 func notice(text: String, at := Vector3.INF) -> void:
 	var now: float = Time.get_ticks_msec() / 1000.0
 	for previous in _recent_notices.keys():
@@ -2561,13 +2572,19 @@ func notice(text: String, at := Vector3.INF) -> void:
 		return
 	_recent_notices[text] = now
 	var t: int = int(world.game_time) if world != null else 0
+	var event: Dictionary = {}
 	if world != null and world.get("sitrep") != null:
-		world.sitrep.from_notice(text, at)
+		event = world.sitrep.from_notice(text, at)
 	notice_log.append("%02d:%02d   %s" % [t / 60, t % 60, text])
 	if notice_log.size() > 120:
 		notice_log.pop_front()
 	if _log_box != null and _log_box.visible:
 		_fill_log()
+	# What happened (an attack, a loss, a war, a shortage) goes to the dock and stays there until it is dealt with;
+	# only the replies to what you just did ("Not enough money") flash along the bottom, briefly.
+	if _dock != null and not event.is_empty() and _is_event(text, event):
+		_dock.post(str(event.key), str(event.cat), str(event.sev), text, at)
+		return
 	var card := PanelContainer.new()
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(UI.INK, 0.94)
