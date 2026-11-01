@@ -4,25 +4,25 @@ extends RefCounted
 ## One shared theme covers the HUD, ministries, campaign and pause menus.
 
 # ---------------------------------------------------------------- palette
-const INK := Color("081725")
-const BG := Color("10233a")
-const BG_2 := Color("172f47")
+const INK := Color("0a1a21")
+const BG := Color("112f3a")
+const BG_2 := Color("18404d")
 const LIFT := Color(1, 1, 1, 0.0)   ## (the old plates' lit edge: flat now)
-const TRIM := Color("526272")
-const GOLD := Color("c1af86")
-const BRIGHT := Color("f4ead4")
-const CREAM := Color("eee9de")
-const TEXT := Color("d8dfe5")
-const MUTED := Color("a1b0bd")
-const GOOD := Color("5fd39a")
-const BAD := Color("f08a6b")
-# The surfaces (the plates were two-tone gradients; now one flat colour each).
-const PANEL_TOP := Color("10283e")
-const PANEL_LOW := Color("10233a")
-const BAND_TOP := Color("19354d")
-const BAND_LOW := Color("142b42")
-const KEY_TOP := Color("1c3850")
-const KEY_LOW := Color("142b42")
+const TRIM := Color("7f8f86")
+const GOLD := Color("d9b45f")
+const BRIGHT := Color("fbf1d6")
+const CREAM := Color("f1e8d0")
+const TEXT := Color("e6dfcc")
+const MUTED := Color("aebcb6")
+const GOOD := Color("8fd68d")
+const BAD := Color("f19273")
+# The surfaces: a deep teal, one flat colour each, framed in gold.
+const PANEL_TOP := Color("143642")
+const PANEL_LOW := Color("112f3a")
+const BAND_TOP := Color("1b4553")
+const BAND_LOW := Color("16394a")
+const KEY_TOP := Color("1d4a58")
+const KEY_LOW := Color("153540")
 
 ## Ministry accents complement icons and names; colour never carries meaning alone.
 const MINISTRY := {
@@ -104,20 +104,61 @@ static func ministry_band(key: String) -> StyleBoxFlat:
 
 # ---------------------------------------------------------------- fonts
 
-static func font(weight := 400) -> SystemFont:
+const BODY_FONTS := {400: "FiraSans-Regular", 500: "FiraSans-Medium", 600: "FiraSans-SemiBold"}
+static var _font_cache := {}
+
+## The body face: Fira Sans (bundled, open licence), a humanist sans that stays clear at 12-14 px. Weight picks the
+## file: 400 regular, 500 medium, 600 and up semibold. Windows' own fonts fill in any glyph it lacks.
+static func font(weight := 400) -> Font:
+	var w := 600 if weight >= 600 else (500 if weight >= 500 else 400)
+	var key := "body%d" % w
+	if _font_cache.has(key):
+		return _font_cache[key]
+	var path := "res://ui/fonts/%s.ttf" % BODY_FONTS[w]
+	var made: Font
+	if ResourceLoader.exists(path):
+		var file: FontFile = load(path)
+		# Grayscale: with LCD antialiasing and hinting, a hyphen or minus sign vanished at 12-13 px.
+		file.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
+		file.hinting = TextServer.HINTING_LIGHT
+		file.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_AUTO
+		made = FontVariation.new()
+		made.base_font = file
+		made.fallbacks = [_system_font(w)]
+	else:
+		made = _system_font(w)   # the files are missing: the old look rather than none
+	_font_cache[key] = made
+	return made
+
+static func _system_font(weight: int) -> SystemFont:
 	var f := SystemFont.new()
 	f.font_names = PackedStringArray(["Segoe UI", "Arial"])
 	f.font_weight = weight
-	# Grayscale: with LCD antialiasing and hinting, a hyphen or minus sign
-	# vanished at 12-13 px ("income -10%" read "income  10%").
 	f.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
 	f.hinting = TextServer.HINTING_LIGHT
 	return f
 
-# Compatibility name for existing callers: all interface text uses the same
-# readable sans-serif family, with weight providing the heading hierarchy.
-static func serif(weight := 600) -> SystemFont:
-	return font(weight)
+## The heading face: Cinzel (bundled, open licence), the classical capitals of an engraved inscription; lower case
+## sets as small capitals. Titles of windows and screens only; never running text.
+static func serif(weight := 600) -> Font:
+	var key := "head%d" % weight
+	if _font_cache.has(key):
+		return _font_cache[key]
+	var path := "res://ui/fonts/Cinzel-VF.ttf"
+	var made: Font
+	if ResourceLoader.exists(path):
+		var file: FontFile = load(path)
+		file.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
+		file.hinting = TextServer.HINTING_LIGHT
+		var v := FontVariation.new()
+		v.base_font = file
+		v.variation_opentype = {0x77676874: clampi(weight, 400, 900)}   # 0x77676874 is the axis tag "wght"
+		v.fallbacks = [_system_font(weight)]
+		made = v
+	else:
+		made = font(weight)
+	_font_cache[key] = made
+	return made
 
 ## Keep titles readable as written; letterspaced() is available for short marks.
 static func caps(text: String) -> String:
@@ -143,9 +184,10 @@ static func plate(top: Color, bottom: Color, border := Color(0, 0, 0, 0), margin
 	var s := StyleBoxFlat.new()
 	s.bg_color = top.lerp(bottom, 0.35)
 	s.anti_aliasing = true
-	s.set_corner_radius_all(8 if shadow > 0 else 5)
+	s.set_corner_radius_all(4 if shadow > 0 else 3)
 	if border.a > 0.0:
-		s.border_color = Color(TRIM, 0.9) if border.s < 0.35 or border.v < 0.6 else Color(border, 0.9)
+		# Civilization's frame: a thin line of gold round every plate.
+		s.border_color = Color(GOLD, 0.6) if border.s < 0.35 or border.v < 0.6 else Color(border, 0.9)
 		s.set_border_width_all(1)
 	if rule_px > 0 and rule.a > 0.0:
 		s.border_width_bottom = clampi(rule_px, 1, 3)
@@ -192,7 +234,7 @@ static func box(bg: Color, border: Color, width := 1, radius := 6, margin := 10.
 static func build() -> Theme:
 	var t := Theme.new()
 	t.default_font = font(400)
-	t.default_font_size = 15
+	t.default_font_size = 16
 	var bold := font(600)
 	var heading := serif(600)
 	# Panels: a navy plate in a bronze frame, standing off the battlefield on
@@ -214,7 +256,7 @@ static func build() -> Theme:
 	t.set_color("font_hover_pressed_color", "Button", Color.WHITE)
 	t.set_color("font_disabled_color", "Button", Color("8d9dab"))
 	t.set_font("font", "Button", bold)
-	t.set_font_size("font_size", "Button", 14)
+	t.set_font_size("font_size", "Button", 15)
 	# Drop-downs follow the buttons, but an open one stays readable rather
 	# than turning gold.
 	for kind in ["OptionButton", "MenuButton"]:
@@ -272,7 +314,7 @@ static func build() -> Theme:
 	t.add_type("HeaderLabel")
 	t.set_type_variation("HeaderLabel", "Label")
 	t.set_font("font", "HeaderLabel", heading)
-	t.set_font_size("font_size", "HeaderLabel", 21)
+	t.set_font_size("font_size", "HeaderLabel", 22)
 	t.set_color("font_color", "HeaderLabel", CREAM)
 	# A tab in a strip: dim and flat while it waits, a gold plate while its
 	# page is the one on show. Active text remains light for contrast.

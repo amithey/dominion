@@ -1,8 +1,10 @@
 # Dominion interface
 
-The menu and in-match interface share a midnight-blue, ivory and muted-gold
-palette. Serif headings establish hierarchy; sans-serif text carries figures,
-controls and descriptions. Colourful nation flags and gameplay status colours
+The menu and in-match interface follow the look of Civilization VI: deep teal plates in a thin gold
+frame, struck gold for accents, warm cream text. Cinzel (engraved capitals, bundled in ui/fonts) sets
+every title; Fira Sans (also bundled) carries figures, controls and running text. Both are under the
+SIL Open Font License (the licence texts sit beside the font files). Windows' Segoe UI only fills in a
+glyph the bundled fonts lack. Colourful nation flags and gameplay status colours
 remain distinct from navigation state.
 
 - Main menu: cinematic council-table artwork, a stronger contrast veil, a clear

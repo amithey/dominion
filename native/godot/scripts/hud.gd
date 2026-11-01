@@ -237,7 +237,7 @@ func _build_top_bar() -> void:
 		var figures := VBoxContainer.new()
 		figures.add_theme_constant_override("separation", 0)
 		chip.add_child(figures)
-		var value := _text("0", 14, UI.CREAM)
+		var value := _text("0", 13, UI.CREAM)
 		figures.add_child(value)
 		var rate := _text("+0", 11, UI.GOOD)
 		rate.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
@@ -257,7 +257,7 @@ func _build_top_bar() -> void:
 		chip.tooltip_text = extra[2]
 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
 		chip.add_child(_icon(extra[1], 18))
-		var value := _text("", 14, UI.CREAM)
+		var value := _text("", 13, UI.CREAM)
 		chip.add_child(value)
 		row.add_child(chip)
 		_extra[extra[0]] = [value, chip]
@@ -1213,7 +1213,7 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 		_extra.support[1].tooltip_text = "War support %d%% · %s (%s). %s" % [roundi(world.support.value(0)), mood, world.support.regime(0), world.support.describe(mood)]
 	if world.get("defcon") != null and world.defcon != null:
 		var lvl: int = world.defcon.level()
-		_extra.defcon[0].text = "DEFCON %d" % lvl
+		_extra.defcon[0].text = "%d" % lvl   # the icon says DEFCON; the tooltip explains it
 		_extra.defcon[0].add_theme_color_override("font_color", [Color("ff5a4a"), Color("ff5a4a"), Color("f08a4b"), Color("e8c66a"), Color("9fd0e8"), UI.CREAM][lvl])
 		var why: String = world.defcon.cause()
 		_extra.defcon[1].tooltip_text = "DEFCON %d · %s%s
@@ -1230,7 +1230,7 @@ Your forces: DEFCON %d (%s). Press K." % [lvl, world.defcon.DESC[lvl], (" Cause:
 		if world.research:
 			_extra.research[0].text = "%d\n+%.1f" % [int(world.research.points), world.research.rate]
 		if world.get("defcon") != null:
-			_extra.defcon[0].text = "DEFCON\n%d" % world.defcon.level()
+			_extra.defcon[0].text = "%d" % world.defcon.level()
 	_fps.visible = world.show_fps
 	_fps.text = "%d FPS" % Engine.get_frames_per_second()
 	if _selected != null and _selected.dead:
