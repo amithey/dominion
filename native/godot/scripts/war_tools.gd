@@ -443,21 +443,25 @@ static func _strike_target(w: Node, carrier: Dictionary) -> Variant:
 	var at: Vector3 = carrier.node.position
 	var best = null
 	var score := INF
-	for e in w.units + w.buildings:
-		if e.dead or int(e.owner) == o or int(e.owner) < 0 or not w.hostile(o, int(e.owner)):
-			continue
-		if str(e.get("key", "")) in SUBMARINES or _base(str(e.get("key", ""))) in SUBMARINES:
-			continue
-		var p: Vector3 = e.node.position if not e.get("is_building", false) else e.root.position
-		var d := Vector2(p.x - at.x, p.z - at.z).length()
-		if d > STRIKE_REACH:
-			continue
-		if o == 0 and w.get("fog") != null and w.fog.enabled and not w.fog.shows(e):
-			continue
-		var weight := d * (0.6 if e.get("naval", false) else 1.0)
-		if weight < score:
-			score = weight
-			best = e
+	# Distance first (a number), then who and what (dictionary lookups and strings): most of the world is out of reach.
+	for pool in [w.units, w.buildings]:
+		for e in pool:
+			if e.dead:
+				continue
+			var p: Vector3 = e.node.position if not e.get("is_building", false) else e.root.position
+			var d := Vector2(p.x - at.x, p.z - at.z).length()
+			if d > STRIKE_REACH:
+				continue
+			if int(e.owner) == o or int(e.owner) < 0 or not w.hostile(o, int(e.owner)):
+				continue
+			if str(e.get("key", "")) in SUBMARINES or _base(str(e.get("key", ""))) in SUBMARINES:
+				continue
+			if o == 0 and w.get("fog") != null and w.fog.enabled and not w.fog.shows(e):
+				continue
+			var weight := d * (0.6 if e.get("naval", false) else 1.0)
+			if weight < score:
+				score = weight
+				best = e
 	return best
 
 static func _air_wing(w: Node, carrier: Dictionary, dt: float) -> void:

@@ -174,7 +174,7 @@ func run() -> void:
 	var errors := 0
 	var wall_total := Time.get_ticks_msec()
 	print("GROWTH start: %s on %s, %d players, %d game minutes at x%.0f" % [Registry.column("id")[nation], map_key, players, minutes, scale])
-	var header := "minute,real_s,frames,process_ms,physics_ms,fps,cpu_ms_per_game_s,units,buildings,nodes,orphans,objects,mem_mb,territory,rival_units,rival_buildings"
+	var header := "minute,real_s,frames,process_ms,physics_ms,fps,cpu_ms_per_game_s,units,buildings,nodes,orphans,objects,mem_mb,territory,rival_units,rival_buildings,draw_calls,objects_drawn,vram_mb,phys_active,phys_pairs,nav_agents,nav_ms"
 	rows.append(header)
 	var guard := 0
 	while minute < minutes and guard < 4000000:
@@ -245,7 +245,7 @@ func run() -> void:
 			var owned := 0
 			for o in w.territory.owner_of: if o == 0: owned += 1
 			var nodes := Performance.get_monitor(Performance.OBJECT_NODE_COUNT)
-			var row := "%d,%.1f,%d,%.2f,%.2f,%.0f,%.1f,%d,%d,%d,%d,%d,%.0f,%d,%d,%d" % [minute, real, frames, proc_sum / maxf(frames, 1), phys_sum / maxf(frames, 1), Engine.get_frames_per_second(), (proc_sum + phys_sum) / 60.0, live_units, live_buildings, nodes, Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT), Performance.get_monitor(Performance.OBJECT_COUNT), Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0, owned, rival_units, rival_buildings]
+			var row := "%d,%.1f,%d,%.2f,%.2f,%.0f,%.1f,%d,%d,%d,%d,%d,%.0f,%d,%d,%d,%d,%d,%d,%d,%d,%d,%.1f" % [minute, real, frames, proc_sum / maxf(frames, 1), phys_sum / maxf(frames, 1), Engine.get_frames_per_second(), (proc_sum + phys_sum) / 60.0, live_units, live_buildings, nodes, Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT), Performance.get_monitor(Performance.OBJECT_COUNT), Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0, owned, rival_units, rival_buildings, int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)), int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)), int(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0), int(Performance.get_monitor(Performance.PHYSICS_3D_ACTIVE_OBJECTS)), int(Performance.get_monitor(Performance.PHYSICS_3D_COLLISION_PAIRS)), int(Performance.get_monitor(Performance.NAVIGATION_AGENT_COUNT)), snappedf(Performance.get_monitor(Performance.TIME_NAVIGATION_PROCESS) * 1000.0, 0.1)]
 			rows.append(row)
 			print("GROWTH ", row)
 			if minute == 2:
@@ -276,9 +276,9 @@ func run() -> void:
 			if builder:
 				funds.fund(w)
 				if minute % 5 == 0: grant_land(8 + minute / 5)
-				build_some(3, 10 + minute / 4)
+				build_some(int(arg("build", "3")), 10 + minute / 4)
 				train_some()
-				if minute % 4 == 0: attack_nearest()
+				if minute % 4 == 0 and arg("war", "1") == "1": attack_nearest()
 	Engine.time_scale = 1.0
 	var f := FileAccess.open("res://build/audit/growth-%s.csv" % tag, FileAccess.WRITE)
 	f.store_string("\n".join(PackedStringArray(rows)))
@@ -391,34 +391,40 @@ func process_cost(count: int) -> float:
 ## At a heavy minute: what does each system's switching-off save of the frame's process time? Every reading is
 ## taken between two baselines (the cost drifts); the world is not stepped meanwhile.
 func attribute(minute: int) -> void:
+	# The world stands still while this runs (its physics steps are switched off), so the process time is what the
+	# frame costs without any simulation: scripts' _process, animation, tweens and the engine's own node work.
+	var frozen: Array = [w, w.effects, w.missiles, w.ai]
+	for n in frozen: n.set_physics_process(false)
 	var cands: Array = []
 	var stack: Array = [w]
 	while not stack.is_empty():
 		var n: Node = stack.pop_back()
 		for k in n.get_children():
-			if k.get_script() != null or k is CanvasLayer: cands.append(k)
+			if k.get_script() != null or k is CanvasLayer: cands.append([str(k.get_script().resource_path.get_file()) if k.get_script() != null else k.get_class(), [k]])
 			if k is CanvasLayer or k.get_script() != null: stack.append(k)
-	var anims: Array = w.find_children("*", "AnimationPlayer", true, false)
-	var base0: float = await process_cost(20)
+	var groups: Array = cands.duplicate()
+	groups.append(["all %d building roots" % w.buildings.size(), w.buildings.map(func(b): return b.root)])
+	groups.append(["all %d unit nodes" % w.units.size(), w.units.filter(func(u): return is_instance_valid(u.node)).map(func(u): return u.node)])
+	groups.append(["all AnimationPlayers", w.find_children("*", "AnimationPlayer", true, false)])
+	groups.append(["all particle systems", w.find_children("*", "GPUParticles3D", true, false) + w.find_children("*", "CPUParticles3D", true, false)])
+	groups.append(["all Skeleton3D", w.find_children("*", "Skeleton3D", true, false)])
+	groups.append(["all Timers", w.find_children("*", "Timer", true, false)])
+	var base0: float = await process_cost(30)
 	var out := []
-	for k in cands:
-		var a: float = await process_cost(8)
-		var was: int = k.process_mode
-		k.process_mode = Node.PROCESS_MODE_DISABLED
-		var off: float = await process_cost(12)
-		k.process_mode = was
-		var b: float = await process_cost(8)
-		out.append([(a + b) / 2.0 - off, "%s (%s)" % [k.get_script().resource_path.get_file() if k.get_script() != null else k.get_class(), k.name], (a + b) / 2.0])
-	# all animation players at once
-	var a1: float = await process_cost(8)
-	for p in anims: p.process_mode = Node.PROCESS_MODE_DISABLED
-	var off1: float = await process_cost(12)
-	for p in anims: p.process_mode = Node.PROCESS_MODE_INHERIT
-	var b1: float = await process_cost(8)
-	out.append([(a1 + b1) / 2.0 - off1, "all %d AnimationPlayers" % anims.size(), (a1 + b1) / 2.0])
+	for g in groups:
+		var items: Array = g[1].filter(func(x): return is_instance_valid(x))
+		if items.is_empty(): continue
+		var a: float = await process_cost(10)
+		var was: Array = items.map(func(x): return x.process_mode)
+		for x in items: x.process_mode = Node.PROCESS_MODE_DISABLED
+		var off: float = await process_cost(14)
+		for i in range(items.size()): items[i].process_mode = was[i]
+		var b: float = await process_cost(10)
+		out.append([(a + b) / 2.0 - off, "%s (%d nodes)" % [g[0], items.size()], (a + b) / 2.0])
+	for n in frozen: n.set_physics_process(true)
 	out.sort_custom(func(x, y): return x[0] > y[0])
-	print("GROWTH ATTRIBUTE minute %d: process time %.1f ms a frame; switching off saves:" % [minute, base0])
-	for r in out.slice(0, 10): print("GROWTH ATTRIBUTE   %6.1f ms  %s  (frame %.1f)" % [r[0], r[1], r[2]])
+	print("GROWTH ATTRIBUTE minute %d: process time %.1f ms a frame with the world standing still; switching off saves:" % [minute, base0])
+	for r in out.slice(0, 12): print("GROWTH ATTRIBUTE   %6.1f ms  %s  (frame %.1f)" % [r[0], r[1], r[2]])
 
 func column(i: int) -> Array:
 	var out := []
