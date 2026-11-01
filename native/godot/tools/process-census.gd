@@ -50,5 +50,26 @@ func run() -> void:
 	show.call("nodes by class", classes)
 	show.call("processing every frame", proc)
 	show.call("physics-processing", phys)
+	var count := func(n: Node, self_ref: Callable) -> int:
+		var c := 1
+		for k in n.get_children(): c += self_ref.call(k, self_ref)
+		return c
+	var per_b := {}
+	for b in w.buildings:
+		if b.dead: continue
+		var e: Array = per_b.get(b.key, [0, 0, 0])
+		var nc: int = count.call(b.root, count)
+		per_b[b.key] = [e[0] + 1, e[1] + nc, maxi(e[2], nc)]
+	var per_u := {}
+	for u in w.units:
+		if u.dead or not is_instance_valid(u.node): continue
+		var e: Array = per_u.get(u.key, [0, 0, 0])
+		var nc: int = count.call(u.node, count)
+		per_u[u.key] = [e[0] + 1, e[1] + nc, maxi(e[2], nc)]
+	for title in ["buildings", "units"]:
+		var d: Dictionary = per_b if title == "buildings" else per_u
+		var keys: Array = d.keys()
+		keys.sort_custom(func(a, b): return d[a][1] > d[b][1])
+		print("CENSUS %s by total nodes (count, nodes each): %s" % [title, ", ".join(PackedStringArray(keys.slice(0, 14).map(func(k): return "%s x%d @%d (max %d)" % [k, d[k][0], d[k][1] / d[k][0], d[k][2]])))])
 	print("CENSUS total nodes ", int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)), ", objects ", int(Performance.get_monitor(Performance.OBJECT_COUNT)), ", resources ", int(Performance.get_monitor(Performance.OBJECT_RESOURCE_COUNT)))
 	quit(0)
