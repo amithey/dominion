@@ -38,7 +38,7 @@ const MODEL_KIND := {"hq": "town_hall", "cityCenter": "town_hall", "cityHall": "
 const VERTICAL_SAM := ["uk", "germany", "france", "italy", "israel", "australia", "ukraine", "netherlands"]   # as architecture.gd sam_site
 ## Keys that borrow another key's Blender model.
 const BLEND_ALIAS := {"hq": "cityHall", "cityCenter": "cityHall", "university": "library", "museum": "library"}
-const BLENDER_MADE := ["bunker", "aiDataCenter", "missileSilo", "fusionCell", "ammoDepot", "helipad", "port", "shipyard", "strategicComplex", "samSite", "specialLab", "cityHall", "bank", "hospital", "school", "policeStation", "library", "market", "barracks", "tvStation", "techPark", "intelAgency", "tankFactory", "powerPlant", "warehouse", "commandCenter"]
+const BLENDER_MADE := ["bunker", "aiDataCenter", "missileSilo", "fusionCell", "ammoDepot", "helipad", "port", "shipyard", "strategicComplex", "samSite", "specialLab", "cityHall", "bank", "hospital", "school", "policeStation", "library", "market", "barracks", "tvStation", "techPark", "intelAgency", "tankFactory", "powerPlant", "warehouse", "commandCenter", "foodDepot"]
 ## Tallest a model-built central building may stand per style (metres): a tower is narrow but not a skyscraper over the town.
 const MODEL_CAP := {0: 15.0, 1: 11.5, 2: 12.0, 3: 8.0, 4: 8.5}
 var model_seed := 0.0
