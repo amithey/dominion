@@ -95,7 +95,7 @@ static func release(world: Node, u: Dictionary) -> void:
 ## A world position on base `b` given in its hex's own space.
 static func on_base(world: Node, b: Dictionary, local: Vector3) -> Vector3:
 	var p: Vector3 = b.root.position + local
-	p.y = world.height_at(p.x, p.z) + 1.2
+	p.y = maxf(world.height_at(p.x, p.z), b.root.position.y) + 1.2   # a raised platform lifts the aircraft with it
 	return p
 
 static func slot_point(world: Node, b: Dictionary, i: int) -> Vector3:

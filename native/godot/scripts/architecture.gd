@@ -729,71 +729,162 @@ func power_station(rng: RandomNumberGenerator, footprint: float) -> void:
 		box(TRIM, foot + Vector3(-0.07, 0, -0.07), foot + Vector3(0.07, 9.0 * s, 0.07), Color("8a8c88"))
 	box(TRIM, yard + Vector3(-1.8, 7.5 * s, -3.2 * s - 0.08), yard + Vector3(1.8, 7.5 * s + 0.15, -3.2 * s + 0.08), Color("8a8c88"))
 
-## A military airfield on its hex: a runway along z with threshold bars,
-## centre-line dashes and edge lights, a taxiway to an apron of numbered
-## parking slots (air_operations.gd uses the same positions), an arched
-## hangar, a control tower with a glazed cab, fuel tanks and a windsock.
-## Coordinates are the hex's own (the district's container is not rotated).
+## An airfield. One runway along z at RUNWAY_X (the same numbers air_operations.gd flies by), a taxiway to a four-slot
+## apron, an arched hangar and a control tower west of the runway, a fuel farm behind a bund, an operations building,
+## approach and edge lights, and a floodlit perimeter. Everything stands on a hexagonal concrete slab.
 func airfield(rng: RandomNumberGenerator) -> void:
 	const AO := preload("res://scripts/air_operations.gd")
 	var rx: float = AO.RUNWAY_X
-	var asphalt := Color("3a3d40")
-	var paint := Color("e8e6dc")
-	# Runway: 3.6 m wide, corner to corner of the hex.
-	quad(TRIM, Vector3(rx - 1.8, 0.12, 11.0), Vector3(rx + 1.8, 0.12, 11.0), Vector3(rx + 1.8, 0.12, -11.0), Vector3(rx - 1.8, 0.12, -11.0), asphalt)
-	for z in range(-9, 10, 3):
-		quad(TRIM, Vector3(rx - 0.07, 0.14, z + 1.0), Vector3(rx + 0.07, 0.14, z + 1.0), Vector3(rx + 0.07, 0.14, z), Vector3(rx - 0.07, 0.14, z), paint)
-	for end in [-10.4, 10.4]:
-		for k in range(4):
-			var x := rx - 1.4 + k * 0.75 + 0.1
-			quad(TRIM, Vector3(x, 0.14, end + 0.5), Vector3(x + 0.35, 0.14, end + 0.5), Vector3(x + 0.35, 0.14, end - 0.5), Vector3(x, 0.14, end - 0.5), paint)
-	for z in range(-10, 11, 4):
+	var haz := Color("e0b020")
+	var ink := Color("1d252a")
+	var light := Color("dfe4e6")
+	var pale := Color(1.5, 1.5, 1.52)
+	var bright := Color(2.3, 2.3, 2.4)
+	var line := Color(1.7, 1.7, 1.6)
+	var yel := Color(1.5, 1.25, 0.3)
+	var warm := Color(1.0, 0.88, 0.65)
+	# ---- the slab (a hexagon like the district), the runway with shoulders, markings and lights
+	var s0 := xf
+	xf = xf * Transform3D(Basis(Vector3.UP, PI / 6.0), Vector3.ZERO)
+	cylinder(CONCRETE, Vector3(0, -1.6, 0), 12.3, 1.7, Color(1.0, 1.0, 1.0), 6)
+	xf = s0
+	box(ASPHALT, Vector3(rx - 2.0, 0.1, -10.0), Vector3(rx + 2.0, 0.16, 10.0), Color(0.82, 0.82, 0.86))
+	for side in [-1.0, 1.0]:
+		box(CONCRETE, Vector3(rx + side * 2.0 - (0.3 if side > 0 else 0.0), 0.1, -10.0), Vector3(rx + side * 2.0 + (0.3 if side < 0 else 0.0), 0.165, 10.0), Color(1.25, 1.25, 1.25))
+		box(TRIM, Vector3(rx + side * 1.8 - 0.04, 0.16, -9.8), Vector3(rx + side * 1.8 + 0.04, 0.17, 9.8), line)
+	for z in range(-8, 8, 2):
+		box(TRIM, Vector3(rx - 0.06, 0.16, z + 0.2), Vector3(rx + 0.06, 0.17, z + 1.2), line)
+	for end in [-1.0, 1.0]:
+		for k in range(5):   # the threshold bars
+			var x := rx - 1.5 + k * 0.75
+			box(TRIM, Vector3(x, 0.16, end * 9.3 - 0.45), Vector3(x + 0.35, 0.17, end * 9.3 + 0.45), line)
+		for k in range(2):   # the touchdown marks
+			for sx in [-0.8, 0.8]:
+				box(TRIM, Vector3(rx + sx - 0.18, 0.16, end * (6.6 - k * 1.2) - 0.35), Vector3(rx + sx + 0.18, 0.17, end * (6.6 - k * 1.2) + 0.35), line)
+	for i in range(11):   # edge lights, green at the near end, red at the far
+		var z := -9.5 + i * 1.9
 		for side in [-1.0, 1.0]:
-			box(TRIM, Vector3(rx + side * 1.95 - 0.08, 0.1, z - 0.08), Vector3(rx + side * 1.95 + 0.08, 0.35, z + 0.08), Color("f2d060"))
-	# Taxiway from the runway to the apron, and the apron itself.
-	quad(TRIM, Vector3(rx + 1.8, 0.11, 1.2), Vector3(3.2, 0.11, 1.2), Vector3(3.2, 0.11, -1.2), Vector3(rx + 1.8, 0.11, -1.2), Color("45484a"))
-	quad(TRIM, Vector3(3.2, 0.11, 8.4), Vector3(8.0, 0.11, 8.4), Vector3(8.0, 0.11, -8.4), Vector3(3.2, 0.11, -8.4), Color("54575a"))
+			var k := GLOWG if z < -7.0 else (GLOWR if z > 7.0 else GLOWW)
+			var col := Color(0.6, 1.0, 0.55) if k == GLOWG else (Color(1.0, 0.4, 0.35) if k == GLOWR else warm)
+			box(k, Vector3(rx + side * 2.45 - 0.07, 0.1, z - 0.07), Vector3(rx + side * 2.45 + 0.07, 0.3, z + 0.07), col)
+	for i in range(4):   # PAPI lights beside the near threshold
+		box(GLOWR if i < 2 else GLOWW, Vector3(rx - 3.2 - i * 0.5, 0.1, -6.0), Vector3(rx - 2.8 - i * 0.5, 0.45, -5.6), Color(1.0, 0.4, 0.35) if i < 2 else warm)
+	# ---- the taxiway to the apron and the apron itself, with parking boxes, lead-in lines and slot bars
+	box(ASPHALT, Vector3(rx + 2.0, 0.1, -1.4), Vector3(3.2, 0.155, 1.4), Color(0.9, 0.9, 0.92))
+	box(TRIM, Vector3(rx + 2.0, 0.16, -0.04), Vector3(3.2, 0.17, 0.04), yel)
+	for side in [-1.0, 1.0]:
+		box(TRIM, Vector3(rx + 2.0, 0.16, side * 1.3 - 0.03), Vector3(3.2, 0.17, side * 1.3 + 0.03), yel)
+	box(CONCRETE, Vector3(3.2, 0.1, -8.6), Vector3(9.6, 0.15, 8.6), Color(1.3, 1.3, 1.3))
 	for i in range(AO.SLOT_POSITIONS.airfield.size()):
 		var sp: Vector3 = AO.SLOT_POSITIONS.airfield[i]
-		# A painted parking box with a yellow lead-in line.
 		for side in [-1.0, 1.0]:
-			quad(TRIM, Vector3(sp.x - 1.6, 0.13, sp.z + side * 1.9 + 0.05), Vector3(sp.x + 2.4, 0.13, sp.z + side * 1.9 + 0.05), Vector3(sp.x + 2.4, 0.13, sp.z + side * 1.9 - 0.05), Vector3(sp.x - 1.6, 0.13, sp.z + side * 1.9 - 0.05), Color("f2d060"))
-		quad(TRIM, Vector3(3.2, 0.13, sp.z + 0.05), Vector3(sp.x + 1.6, 0.13, sp.z + 0.05), Vector3(sp.x + 1.6, 0.13, sp.z - 0.05), Vector3(3.2, 0.13, sp.z - 0.05), Color("f2d060"))
-		# The slot number, as bars (1 to 4).
+			box(TRIM, Vector3(sp.x - 1.6, 0.15, sp.z + side * 1.9 - 0.05), Vector3(sp.x + 2.4, 0.16, sp.z + side * 1.9 + 0.05), yel)
+		box(TRIM, Vector3(sp.x + 2.4, 0.15, sp.z - 1.9), Vector3(sp.x + 2.5, 0.16, sp.z + 1.9), yel)
+		box(TRIM, Vector3(3.2, 0.15, sp.z - 0.05), Vector3(sp.x - 1.6, 0.16, sp.z + 0.05), yel)
 		for k in range(i + 1):
-			quad(TRIM, Vector3(sp.x + 1.9, 0.14, sp.z - 0.6 + k * 0.35 + 0.12), Vector3(sp.x + 2.2, 0.14, sp.z - 0.6 + k * 0.35 + 0.12), Vector3(sp.x + 2.2, 0.14, sp.z - 0.6 + k * 0.35), Vector3(sp.x + 1.9, 0.14, sp.z - 0.6 + k * 0.35), paint)
-	# An arched hangar west of the runway, doors open toward it.
+			box(TRIM, Vector3(sp.x + 1.9, 0.15, sp.z - 0.6 + k * 0.35), Vector3(sp.x + 2.2, 0.16, sp.z - 0.6 + k * 0.35 + 0.12), line)
+		for side in [-1.0, 1.0]:   # the tie-down rings
+			box(TRIM, Vector3(sp.x - 0.3, 0.15, sp.z + side * 1.2 - 0.1), Vector3(sp.x + 0.1, 0.19, sp.z + side * 1.2 + 0.1), Color("5a6a72"))
+	# ---- the hangar: block walls, a barrel vault, an open lit door, a stripe, roof vents and an apron in front
 	var hx := rx - 5.0
 	var hz := -4.0
-	for i in range(10):
-		var a0 := PI * i / 10.0
-		var a1 := PI * (i + 1) / 10.0
-		var p0 := Vector3(hx + cos(a0) * 2.4, sin(a0) * 2.6, 0)
-		var p1 := Vector3(hx + cos(a1) * 2.4, sin(a1) * 2.6, 0)
-		quad(METAL, Vector3(p1.x, p1.y, hz - 3.0), Vector3(p0.x, p0.y, hz - 3.0), Vector3(p0.x, p0.y, hz + 3.0), Vector3(p1.x, p1.y, hz + 3.0), Color("8a948a"))
-	for i in range(10):
-		var a0 := PI * i / 10.0
-		var a1 := PI * (i + 1) / 10.0
-		tri(METAL, Vector3(hx, 0, hz - 3.0), Vector3(hx + cos(a0) * 2.4, sin(a0) * 2.6, hz - 3.0), Vector3(hx + cos(a1) * 2.4, sin(a1) * 2.6, hz - 3.0), Color("7a847a"))
-	quad(GLASS, Vector3(hx - 2.2, 0.1, hz + 3.01), Vector3(hx + 2.2, 0.1, hz + 3.01), Vector3(hx + 2.2, 2.2, hz + 3.01), Vector3(hx - 2.2, 2.2, hz + 3.01), Color("1c2026"))
-	# Control tower.
+	var hw := 2.3
+	var hl := 3.7
+	var sv := xf
+	xf = xf * Transform3D(Basis(), Vector3(hx, 0, hz))
+	box(CONCRETE, Vector3(-hw - 2.2, 0.1, hl), Vector3(hw + 2.4, 0.15, hl + 3.8), Color(1.3, 1.3, 1.3))
+	for sx in [-1.0, 1.0]:
+		box(PANEL, Vector3(sx * hw - (0.08 if sx > 0 else -0.0) - (0.0 if sx > 0 else 0.08), 0.15, -hl), Vector3(sx * hw + (0.08 if sx > 0 else 0.0), 2.6, hl), pale)
+	box(PANEL, Vector3(-hw, 0.15, -hl - 0.08), Vector3(hw, 2.6, -hl), pale)
+	for s in range(10):
+		var a0 := -PI * 0.5 + PI * s / 10.0
+		var a1 := -PI * 0.5 + PI * (s + 1) / 10.0
+		var x0 := hw * sin(a0)
+		var x1 := hw * sin(a1)
+		var y0 := 2.6 + 1.7 * cos(a0)
+		var y1 := 2.6 + 1.7 * cos(a1)
+		quad(PANEL, Vector3(x0, y0, hl), Vector3(x1, y1, hl), Vector3(x1, y1, -hl), Vector3(x0, y0, -hl), pale)
+		quad(PANEL, Vector3(x0, 2.6, hl), Vector3(x1, 2.6, hl), Vector3(x1, y1, hl), Vector3(x0, y0, hl), pale)
+		quad(PANEL, Vector3(x1, 2.6, -hl), Vector3(x0, 2.6, -hl), Vector3(x0, y0, -hl), Vector3(x1, y1, -hl), pale)
+	box(TRIM, Vector3(-hw + 0.2, 0.15, hl), Vector3(hw - 0.2, 3.3, hl + 0.05), ink)       # the open door
+	for k in range(3):
+		box(GLOWW, Vector3(-1.3 + k * 1.1, 2.7, hl + 0.04), Vector3(-0.9 + k * 1.1, 2.8, hl + 0.08), warm)
+	for sx in [-1.0, 1.0]:
+		box(STEEL, Vector3(sx * (hw - 0.2) - 0.08, 0.15, hl + 0.02), Vector3(sx * (hw - 0.2) + 0.08, 3.3, hl + 0.12), bright)
+	box(TRIM, Vector3(-hw + 0.1, 3.3, hl), Vector3(hw - 0.1, 3.45, hl + 0.2), haz)
+	for k in range(4):
+		box(TRIM, Vector3(-hw + 0.04, 0.2 + k * 0.0, -hl + 0.6 + k * 1.8), Vector3(-hw - 0.01, 2.4, -hl + 0.7 + k * 1.8), Color("8a949a"))
+	for k in range(2):
+		cylinder(METAL, Vector3(-0.0, 4.2, -2.0 + k * 3.0), 0.3, 0.3, light, 10)
+	banner(-hw + 0.5, 3.2, hl + 0.05, 1.8)
+	xf = sv
+	# ---- the control tower: a concrete shaft with a stair window strip, a flared glass cab, a deep roof and a radar
 	var tx := rx - 5.0
 	var tz := 5.5
-	box(STONE, Vector3(tx - 1.0, 0.0, tz - 1.0), Vector3(tx + 1.0, 5.2, tz + 1.0), Color("d8d2c2"))
-	xf = Transform3D(Basis(), Vector3(tx, 0.0, tz))
-	fenestrate(2.0, 2.0, 0.0, 1, 4.0, Color("e8e2d4"), Color(0, 0, 0, 0), rng, false)
-	xf = Transform3D()
-	box(TRIM, Vector3(tx - 1.5, 5.2, tz - 1.5), Vector3(tx + 1.5, 5.35, tz + 1.5), Color("c8c2b2"))
-	box(GLASS, Vector3(tx - 1.3, 5.35, tz - 1.3), Vector3(tx + 1.3, 6.6, tz + 1.3), Color("5a7888"))
-	box(ROOF, Vector3(tx - 1.6, 6.6, tz - 1.6), Vector3(tx + 1.6, 6.8, tz + 1.6), Color("5a5f64"))
-	box(TRIM, Vector3(tx - 0.04, 6.8, tz - 0.04), Vector3(tx + 0.04, 8.4, tz + 0.04), Color("a8aaa6"))
-	box(TRIM, Vector3(tx - 0.12, 8.4, tz - 0.12), Vector3(tx + 0.12, 8.6, tz + 0.12), Color("d84030"))
-	# Fuel tanks and the windsock.
+	box(CONCRETE, Vector3(tx - 0.8, 0.1, tz - 0.8), Vector3(tx + 0.8, 5.6, tz + 0.8), Color(1.3, 1.3, 1.3))
+	for k in range(5):
+		box(GLASS, Vector3(tx - 0.12, 0.8 + k * 0.9, tz + 0.8), Vector3(tx + 0.12, 1.3 + k * 0.9, tz + 0.84), Color("2f5568"))
+	box(TRIM, Vector3(tx - 1.0, 5.6, tz - 1.0), Vector3(tx + 1.0, 5.76, tz + 1.0), Color("56646a"))
+	box(TRIM, Vector3(tx - 1.65, 5.76, tz - 1.65), Vector3(tx + 1.65, 5.9, tz + 1.65), Color(1.3, 1.3, 1.3))
+	box(GLASS, Vector3(tx - 1.55, 5.9, tz - 1.55), Vector3(tx + 1.55, 7.2, tz + 1.55), Color("2c4d5c"))
+	for k in range(5):
+		var cx := tx - 1.55 + k * 0.775
+		bar(STEEL, Vector3(cx, 5.9, tz + 1.55), Vector3(cx, 7.2, tz + 1.55), 0.035, bright)
+		bar(STEEL, Vector3(cx, 5.9, tz - 1.55), Vector3(cx, 7.2, tz - 1.55), 0.035, bright)
+	box(TRIM, Vector3(tx - 2.0, 7.2, tz - 2.0), Vector3(tx + 2.0, 7.4, tz + 2.0), Color("3a464c"))
+	for sd in [-1.0, 1.0]:   # a yellow fascia round the cab roof
+		box(TRIM, Vector3(tx + sd * 2.0 - 0.04, 7.2, tz - 2.0), Vector3(tx + sd * 2.0 + 0.04, 7.4, tz + 2.0), haz)
+		box(TRIM, Vector3(tx - 2.0, 7.2, tz + sd * 2.0 - 0.04), Vector3(tx + 2.0, 7.4, tz + sd * 2.0 + 0.04), haz)
+	bar(STEEL, Vector3(tx, 7.5, tz), Vector3(tx, 8.6, tz), 0.04, bright)
+	bar(TRIM, Vector3(tx - 0.8, 8.6, tz), Vector3(tx + 0.8, 8.6, tz), 0.06, ink)
+	box(GLOWR, Vector3(tx - 0.1, 8.65, tz - 0.1), Vector3(tx + 0.1, 8.85, tz + 0.1), Color(1.0, 0.4, 0.35))
+	for sx in [-1.0, 1.0]:   # a railing round the cab roof
+		bar(STEEL, Vector3(tx + sx * 1.9, 7.5, tz - 1.9), Vector3(tx + sx * 1.9, 7.5, tz + 1.9), 0.02, bright)
+	# ---- the operations building south of the taxiway: a long low block, a glass front, a canopy and a flagpole
+	box(PANEL, Vector3(-0.6, 0.1, 4.4), Vector3(3.0, 2.8, 8.4), pale)
+	box(TRIM, Vector3(-0.7, 2.8, 4.3), Vector3(3.1, 2.95, 8.5), Color("56646a"))
+	box(GLASS, Vector3(-0.3, 0.8, 4.4 - 0.04), Vector3(2.7, 2.3, 4.4), Color("2f5568"))
+	for gx in range(5):
+		bar(STEEL, Vector3(-0.3 + gx * 0.75, 0.8, 4.34), Vector3(-0.3 + gx * 0.75, 2.3, 4.34), 0.03, bright)
+	box(CONCRETE, Vector3(-0.8, 2.5, 3.2), Vector3(3.2, 2.62, 4.5), teal_colour())
+	for px in [-0.6, 3.0]:
+		bar(STEEL, Vector3(px, 0.1, 3.3), Vector3(px, 2.5, 3.3), 0.05, bright)
+	for k in range(2):
+		fan(Vector3(0.4 + k * 1.8, 2.95, 6.4), 0.4)
+	bar(STEEL, Vector3(3.6, 0.1, 3.4), Vector3(3.6, 5.6, 3.4), 0.04, bright)
+	banner(3.6, 5.5, 3.4, 1.6)
+	# ---- the fuel farm: two tanks inside a bund wall with a pump house and a loading arm
+	box(CONCRETE, Vector3(-0.8, 0.1, -9.0), Vector3(2.6, 0.5, -3.8), Color(1.25, 1.25, 1.25))
+	box(PAVERS, Vector3(-0.6, 0.5, -8.8), Vector3(2.4, 0.52, -4.0), Color(1.1, 1.1, 1.1))
 	for i in range(2):
-		cylinder(METAL, Vector3(7.2, 0.0, -9.3 + i * 0.0 + (i * 2.0)), 0.8, 1.6, Color("d8dcd6"), 12)
-	box(TRIM, Vector3(0.6 - 0.04, 0.0, 9.5 - 0.04), Vector3(0.6 + 0.04, 3.0, 9.5 + 0.04), Color("d8d8d0"))
-	cylinder(BANNER, Vector3(0.6, 2.9, 9.5), 0.2, 0.25, Color("f08030"), 8, 0.12)
-	quad(BANNER, Vector3(0.6, 2.95, 9.35), Vector3(1.8, 2.8, 9.42), Vector3(1.8, 2.95, 9.58), Vector3(0.6, 3.1, 9.65), Color("f08030"))
+		var cz := -7.4 + i * 2.6
+		cylinder(METAL, Vector3(0.9, 0.52, cz), 0.95, 2.0, light, 16)
+		cylinder(TRIM, Vector3(0.9, 2.52, cz), 0.98, 0.06, Color("8a949a"), 16)
+		box(TRIM, Vector3(0.85, 2.58, cz - 0.1), Vector3(0.95, 2.78, cz + 0.1), ink)
+		bar(STEEL, Vector3(1.8, 0.52, cz), Vector3(1.8, 2.4, cz), 0.03, bright)
+		box(TRIM, Vector3(-0.45, 1.2, cz - 0.05), Vector3(-0.2, 1.3, cz + 0.05), Color("c83a2e"))
+	box(PANEL, Vector3(-0.7, 0.52, -4.3), Vector3(0.7, 1.7, -3.9), pale)
+	pipe(METAL, Vector3(0.0, 0.8, -7.4), Vector3(0.0, 0.8, -4.3), 0.1, Color("c83a2e"))
+	# ---- the windsock, two floodlight masts at the far corners, an approach-light bar and a perimeter fence
+	bar(STEEL, Vector3(1.2, 0.1, 9.6), Vector3(1.2, 4.0, 9.6), 0.05, bright)
+	for k in range(4):
+		pipe(METAL, Vector3(1.2 + k * 0.5, 4.0 - k * 0.04, 9.6), Vector3(1.2 + (k + 1) * 0.5, 3.96 - k * 0.04, 9.6), 0.26 - k * 0.04, Color("f08030") if k % 2 == 0 else Color("f0eee4"), 8)
+	for p in [Vector3(-9.0, 0, -4.2), Vector3(9.4, 0, 3.0), Vector3(9.4, 0, -4.0), Vector3(-6.4, 0, 8.4)]:
+		bar(STEEL, p + Vector3(0, 0.1, 0), p + Vector3(0, 6.0, 0), 0.06, bright)
+		box(GLOWW, p + Vector3(-0.4, 5.95, -0.15), p + Vector3(0.4, 6.05, 0.15), warm)
+	for i in range(8):
+		box(GLOWW, Vector3(rx - 1.8 + i * 0.5, 0.1, -10.6), Vector3(rx - 1.64 + i * 0.5, 0.25, -10.44), warm)
+	for i in range(14):
+		var a := TAU * i / 14.0
+		var fp := Vector3(cos(a) * 11.4, 0.1, sin(a) * 11.4)
+		if absf(fp.x) < 10.4 and absf(fp.z) < 12.0 - absf(fp.x) * 0.577:
+			bar(STEEL, fp, fp + Vector3(0, 1.5, 0), 0.03, bright)
+	for t in [Vector3(-9.8, 0, -7.4), Vector3(-6.2, 0, 7.0), Vector3(9.8, 0, 6.4)]:
+		cylinder(WOOD, t + Vector3(0, 0.1, 0), 0.2, 1.5, Color("6a5038"), 7, 0.13)
+		dome(PLASTER, t + Vector3(0, 1.3, 0), 1.1, 1.1, Color("3f6e3c"), 10, 4)
+
+func teal_colour() -> Color:
+	return Color("2f6f7e")
 
 ## A shipping container, 2.6 x 1.25 x 1.1 m lying along x, its lower corner at `lo`; the paint is brightened for the grey metal.
 func container(lo: Vector3, colour: Color) -> void:

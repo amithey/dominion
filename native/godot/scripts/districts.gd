@@ -122,15 +122,22 @@ func corner(k: int) -> Vector2:
 	var a := deg_to_rad(30.0 + 60.0 * k)
 	return Vector2(cos(a), sin(a)) * radius
 
+## The level of the building platform: above every sample of the ground under the inside of the hex (so the terrain
+## never covers the building's floor on the uphill side), but no more than 1.6 m over the average on a steep hill.
 func floor_height(centre: Vector3) -> float:
 	var total: float = world.height_at(centre.x, centre.z)
+	var top := total
 	for k in range(6):
 		var c := corner(k) * 0.7
-		total += world.height_at(centre.x + c.x, centre.z + c.y)
-	return total / 7.0
+		var h: float = world.height_at(centre.x + c.x, centre.z + c.y)
+		total += h
+		top = maxf(top, h)
+		var c2 := corner(k) * 0.4
+		top = maxf(top, world.height_at(centre.x + c2.x, centre.z + c2.y))
+	return minf(top + 0.12, total / 7.0 + 1.6)
 
-# Three rings of a hexagon, eased onto the floor height near the middle and
-# onto the terrain at the rim, never below the ground; a skirt drops from the
+# Three rings of a hexagon, level at the floor height over the inside and
+# eased onto the terrain over the outer third to the rim, never below the ground; a skirt drops from the
 # rim so no gap shows on a slope.
 func make_pad(centre: Vector3, floor_y: float) -> MeshInstance3D:
 	var st := SurfaceTool.new()
@@ -146,7 +153,7 @@ func make_pad(centre: Vector3, floor_y: float) -> MeshInstance3D:
 				var c := j / 4
 				p = corner(c).lerp(corner((c + 1) % 6), (j % 4) / 4.0) * f
 			var ground_y: float = world.height_at(centre.x + p.x, centre.z + p.y)
-			var y: float = maxf(lerpf(floor_y, ground_y, pow(f, 3.0)), ground_y + 0.03) + 0.05
+			var y: float = maxf(lerpf(floor_y, ground_y, smoothstep(0.7, 1.0, f)), ground_y + 0.03) + 0.05
 			ring.append(Vector3(p.x, y - centre.y, p.y))
 		points.append(ring)
 	for j in range(24):
