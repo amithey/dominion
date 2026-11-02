@@ -156,3 +156,156 @@ def truck(m, x, z, yaw=0.0, canvas=True, bed=5.1, body=None):
                 m.pipe("dark", (x * 0 + sx * 0.78, 0.45, az), (sx * 1.1, 0.45, az), 0.45, 14)
         m.box("glow_warm", (-0.9, 0.55, 3.6), (-0.6, 0.7, 3.64))
         m.box("glow_warm", (0.6, 0.55, 3.6), (0.9, 0.7, 3.64))
+
+
+def watch_tower(m, x, z, h):
+    """A watch tower: a lattice, a glass cab under a deep roof, a searchlight and a ladder."""
+    lattice(m, x, z, h, 1.1, 0.1, 0.04)
+    m.box("cladding", (x - 0.9, 0.1 + h, z - 0.9), (x + 0.9, 0.1 + h + 1.3, z + 0.9), bevel=0.04, seg=1)
+    m.box("glass", (x - 0.85, h + 0.4, z + 0.88), (x + 0.85, h + 1.2, z + 0.94))
+    m.box("glass", (x + 0.88, h + 0.4, z - 0.85), (x + 0.94, h + 1.2, z + 0.85))
+    m.box("wall_concrete", (x - 1.2, h + 1.4, z - 1.2), (x + 1.2, h + 1.55, z + 1.2), bevel=0.03, seg=1)
+    m.box("glow_warm", (x - 0.2, h + 1.25, z + 1.2), (x + 0.2, h + 1.38, z + 1.4))
+    m.pipe(METAL, (x, h + 1.55, z), (x, h + 2.4, z), 0.03, 5)
+    for k in range(int(h / 0.9)):
+        m.pipe(METAL, (x + 0.35, 0.3 + k * 0.9, z + 0.55), (x + 0.35, 0.3 + k * 0.9, z + 0.95), 0.015, 4)
+
+
+def trefoil(m, c, r):
+    """A radiation sign on a wall facing +z: a yellow disc, three dark blades, a dark hub."""
+    with m.frame(c, pitch=math.pi / 2):
+        m.cyl("hazard", (0, 0, 0), r, 0.03, 24)
+        for k in range(3):
+            a = math.tau * k / 3.0 + math.pi / 6
+            pts = []
+            for da in (-math.pi / 6, math.pi / 6):
+                for rr in (r * 0.22, r * 0.85):
+                    for yy in (0.03, 0.045):
+                        pts.append((math.cos(a + da) * rr, yy, math.sin(a + da) * rr))
+            m.hull("dark", pts)
+        m.cyl("dark", (0, 0.03, 0), r * 0.13, 0.02, 10)
+
+
+def vent_stack(m, x, z, h, r):
+    """A tall concrete stack, red and white bands, a beacon, a ladder cage."""
+    rings = 8
+    for i in range(rings):
+        f0, f1 = i / rings, (i + 1) / rings
+        r0, r1 = r * (1 - 0.3 * f0), r * (1 - 0.3 * f1)
+        red = i % 2 == 1 and i > 2
+        m.cyl("paint" if red else "wall_concrete", (x, 0.1 + f0 * h, z), r0, h / rings, 16, r2=r1, tint=hexc("c0392b") if red else (1.1, 1.1, 1.12))
+    m.tube("dark", (x, 0.1 + h, z), r * 0.74, r * 0.62, 0.12, 16)
+    m.cyl("glow_red", (x, 0.1 + h + 0.12, z), 0.12, 0.2, 8)
+    for y in (h * 0.2, h * 0.45, h * 0.7):
+        m.tube(METAL, (x, y, z), r * 0.95, r * 0.92, 0.05, 16)
+    m.pipe(METAL, (x + r * 0.9, 0.3, z), (x + r * 0.9, h * 0.9, z), 0.02, 4)
+
+
+def fence_poly(m, R, gate=None, hazard_every=5, h=1.7, post=1.4):
+    """A security fence round the hex at radius R: leaning posts, three wires and a razor strand on top; gate=(x0, x1) leaves the front open."""
+    pts = [(math.cos(math.radians(30 + 60 * k)) * R, math.sin(math.radians(30 + 60 * k)) * R) for k in range(7)]
+    idx = 0
+    for (ax, az), (bx, bz) in zip(pts, pts[1:]):
+        length = math.hypot(bx - ax, bz - az)
+        n = max(1, int(length / post))
+        ox, oz = ((ax + bx) / 2, (az + bz) / 2)
+        nl = math.hypot(ox, oz)
+        ox, oz = ox / nl, oz / nl
+        run = []
+        for i in range(n + 1):
+            t = i / n
+            px, pz = ax + (bx - ax) * t, az + (bz - az) * t
+            if gate and pz > 5.0 and gate[0] < px < gate[1]:
+                if len(run) > 1:
+                    for y in (0.5, 1.0, h):
+                        m.wire(METAL, [(q[0], y, q[1]) for q in run], 0.01, 4)
+                run = []
+                continue
+            m.pipe(METAL, (px, 0.1, pz), (px, h, pz), 0.03, 5)
+            m.pipe(METAL, (px, h, pz), (px + ox * 0.3, h + 0.28, pz + oz * 0.3), 0.022, 4)
+            run.append((px, pz))
+            idx += 1
+            if hazard_every and idx % hazard_every == 0:
+                m.box("hazard", (px - 0.3, 1.0, pz - 0.02), (px + 0.3, 1.5, pz + 0.02))
+        if len(run) > 1:
+            for y in (0.5, 1.0, h):
+                m.wire(METAL, [(q[0], y, q[1]) for q in run], 0.01, 4)
+
+
+CONC, CLAD, GLASS = "wall_concrete", "cladding", "glass"
+GREEN = hexc("5a8a46")
+OLIVE = hexc("5d6a4a")
+
+
+def noise(x, z):
+    return (math.sin(x * 1.9) * math.cos(z * 2.4) + math.sin(x * 3.7 + z * 3.3) * 0.5) / 1.5
+
+
+def magazine(m, cx, number, hw=2.3, hl=2.8, front=-2.4):
+    """An igloo: an earth mound over a barrel vault with a concrete headwall and a blast door facing +z."""
+    h0, rise = 1.2, hw * 0.85
+    top = h0 + rise + 0.45
+    wide = hw + 0.7
+    zb = front - hl * 2.0
+
+    def mound(x, z):
+        u = (x - cx) / wide
+        if abs(u) >= 1.0 or z > front - 0.25 or z < zb:
+            return -0.03
+        t = (z - zb) / (front - 0.25 - zb)                          # 0 at the back, 1 at the headwall
+        back = min(1.0, t / 0.3) ** 0.6
+        prof = (1.0 - u * u) ** 0.55 * (top - 0.3) + 0.3
+        return prof * back * (1.0 + 0.04 * noise(x, z)) + 0.07 * noise(x * 2, z * 2) * back
+    m.grid("turf", cx - wide, cx + wide, zb, front - 0.25, mound, 22, 22, base=0.1, tint=GREEN)
+    # the headwall: a concrete face with an arched recess cut into it, wing walls running into the mound
+    dw = hw - 0.55
+    arch = []
+    for k in range(9):
+        a = math.pi * k / 8
+        arch.append((cx + math.cos(a) * dw, 1.2 + math.sin(a) * dw))
+    cut = [(x, y, front - 0.0 + 0.2) for x, y in [(cx - dw, 0.0), (cx + dw, 0.0)] + arch] + [(x, y, front - 0.35) for x, y in [(cx - dw, 0.0), (cx + dw, 0.0)] + arch]
+    m.cut_box(CONC, (cx - hw - 0.5, 0.1, front - 0.35), (cx + hw + 0.5, 3.2, front + 0.12), [cut], bevel=0.04, seg=1)
+    for sgn in (-1, 1):                                                                       # wing walls
+        xa = cx + sgn * (hw + 0.5)
+        m.hull(CONC, [(xa, 0.1, front + 0.12), (xa, 3.2, front + 0.12), (xa + sgn * 0.5, 0.1, front + 0.12), (xa, 0.1, front - 0.9), (xa, 2.0, front - 0.9), (xa + sgn * 0.5, 0.1, front - 0.9)])
+    # the blast door in the recess: two leaves of dark steel, diagonal hazard stripes, a lock bar, lamps
+    dz = front - 0.3
+    m.box("dark", (cx - dw, 0.1, dz - 0.02), (cx + dw, 2.45, dz + 0.0))
+    for sgn in (-1, 1):
+        x0, x1 = (cx - dw + 0.08, cx - 0.03) if sgn < 0 else (cx + 0.03, cx + dw - 0.08)
+        m.box(DARK, (x0, 0.12, dz), (x1, 2.3, dz + 0.12), bevel=0.03, seg=1)
+        for k in range(4):
+            xs = x0 + (x1 - x0) * (k + 0.5) / 4
+            m.hull("hazard" if k % 2 == 0 else "dark", [(xs - 0.12, 0.2, dz + 0.125), (xs + 0.12, 0.2, dz + 0.125), (xs + 0.12 + 0.5, 1.0, dz + 0.125), (xs - 0.12 + 0.5, 1.0, dz + 0.125),
+                                                      (xs - 0.12, 0.2, dz + 0.135), (xs + 0.12, 0.2, dz + 0.135), (xs + 0.12 + 0.5, 1.0, dz + 0.135), (xs - 0.12 + 0.5, 1.0, dz + 0.135)])
+        for hy in (0.5, 1.6):
+            m.box(METAL, (x0 + 0.1, hy, dz + 0.12), (x1 - 0.1, hy + 0.06, dz + 0.16), bevel=0.01, seg=1)
+    m.pipe(METAL, (cx, 0.3, dz + 0.17), (cx, 1.9, dz + 0.17), 0.04, 6)
+    for sy in (0.6, 1.5):
+        m.cyl(METAL, (cx, sy, dz + 0.19), 0.09, 0.05, 8)
+    m.box("paint", (cx - 0.4, 3.35, front - 0.1), (cx + 0.4, 3.75, front + 0.08), bevel=0.02, seg=1, tint=hexc("e8e4d6"))      # the number plate
+    for k in range(number):
+        m.box("dark", (cx - 0.28 + k * 0.22, 3.43, front + 0.08), (cx - 0.2 + k * 0.22, 3.68, front + 0.1))
+    m.box("glow_warm", (cx - 0.2, 2.9, front + 0.12), (cx + 0.2, 3.0, front + 0.2))
+    m.box("paint", (cx - hw - 0.3, 1.2, front + 0.12), (cx - hw - 0.1, 1.9, front + 0.17), tint=hexc("c83a2e"))               # warning placards
+    m.box("paint", (cx + hw + 0.1, 1.2, front + 0.12), (cx + hw + 0.3, 1.9, front + 0.17), tint=hexc("c83a2e"))
+    for k in range(2):                                                                         # vents on the crown
+        vx, vz = cx - 0.8 + k * 1.6, front - hl * 1.1
+        m.pipe(METAL, (vx, top - 0.2, vz), (vx, top + 0.5, vz), 0.11, 8)
+        m.cyl(DARK, (vx, top + 0.5, vz), 0.2, 0.07, 8)
+    m.box(CONC, (cx - hw + 0.3, 0.1, front + 0.1), (cx + hw - 0.3, 0.2, front + 1.3), bevel=0.02, seg=1)                     # the doorstep
+    m.box(DARK, (cx - 0.5, 0.2, front + 1.3), (cx + 0.5, 0.22, front + 1.5))                                                   # a drain grate
+
+
+def crate(m, x, y, z, w, h, d, tint=hexc("7a6a42"), yaw=0.0):
+    m.box("wood", (x, y, z), (x + w, y + h, z + d), bevel=0.015, seg=1, tint=tint, yaw=yaw)
+    for q in (0.04, w - 0.08):
+        m.box("wood", (x + q, y, z - 0.012), (x + q + 0.04, y + h, z + d + 0.012), tint=tuple(t * 0.8 for t in tint), yaw=yaw)
+    m.box("hazard", (x + w * 0.15, y + h * 0.4, z + d), (x + w * 0.85, y + h * 0.55, z + d + 0.012), yaw=yaw)
+
+
+def drum(m, x, z, tint=OLIVE):
+    m.cyl("paint", (x, 0.15, z), 0.32, 0.9, 12, tint=tint)
+    for y in (0.35, 0.6, 0.85):
+        m.tube("paint", (x, 0.15 + y - 0.1, z), 0.335, 0.31, 0.03, 12, tint=tuple(t * 0.8 for t in tint))
+    m.cyl(DARK, (x, 1.05, z), 0.33, 0.04, 12)
