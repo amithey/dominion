@@ -117,26 +117,26 @@ def radome(m, c, r):
     m.tube("dark", (x, y + 0.5, z), r * 1.0, r * 0.97, 0.04, 20)
 
 
-def container(m, x, z, yaw, tint, length=2.6, width=1.25, height=1.8):
+def container(m, x, z, yaw, tint, length=2.6, width=1.25, height=1.8, y0=0.1):
     """A shipping-container shelter: corrugated sides, corner posts, a door end with locking bars."""
     with m.frame((x, 0, z), yaw=yaw):
         hl, hw = length / 2, width / 2
-        m.box("paint", (-hl, 0.1, -hw), (hl, 0.1 + height, hw), bevel=0.03, seg=1, tint=tint)
+        m.box("paint", (-hl, y0, -hw), (hl, y0 + height, hw), bevel=0.03, seg=1, tint=tint)
         for sgn in (-1, 1):
             for k in range(int(length / 0.22)):
                 xx = -hl + 0.15 + k * 0.22
-                m.box("paint", (xx - 0.04, 0.2, sgn * hw), (xx + 0.04, 0.1 + height - 0.1, sgn * hw + sgn * 0.035), tint=tuple(t * 0.85 for t in tint))
+                m.box("paint", (xx - 0.04, y0 + 0.1, sgn * hw), (xx + 0.04, y0 + height - 0.1, sgn * hw + sgn * 0.035), tint=tuple(t * 0.85 for t in tint))
         for sx in (-1, 1):
             for sz in (-1, 1):
-                m.box(DARK, (sx * hl - 0.05, 0.1, sz * hw - 0.05), (sx * hl + 0.05, 0.1 + height, sz * hw + 0.05))
+                m.box(DARK, (sx * hl - 0.05, y0, sz * hw - 0.05), (sx * hl + 0.05, y0 + height, sz * hw + 0.05))
         for q in (-0.35, 0.35):
-            m.pipe(METAL, (hl + 0.03, 0.25, q), (hl + 0.03, 0.1 + height - 0.15, q), 0.02, 5)
-        m.box(DARK, (-hl, 0.1 + height, -hw), (hl, 0.15 + height, hw))
+            m.pipe(METAL, (hl + 0.03, y0 + 0.15, q), (hl + 0.03, y0 + height - 0.15, q), 0.02, 5)
+        m.box(DARK, (-hl, y0 + height, -hw), (hl, y0 + 0.05 + height, hw))
 
 
-def truck(m, x, z, yaw=0.0, canvas=True, bed=5.1):
+def truck(m, x, z, yaw=0.0, canvas=True, bed=5.1, body=None):
     """A military support truck: ladder chassis, cab, canvas bed on arches, six wheels."""
-    olive = hexc("55633f")
+    olive = body or hexc("55633f")
     with m.frame((x, 0, z), yaw=yaw):
         rear = 2.2 - bed
         m.box("dark", (-1.0, 0.45, rear), (1.0, 0.8, 2.2), bevel=0.04, seg=1)

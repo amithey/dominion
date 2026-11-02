@@ -193,6 +193,35 @@ class Model:
         self.add(role, bm, Matrix.Translation(P(*base)), tint)
         bm.free()
 
+    def loft(self, role, stations, outward_from=None, inward=False, tint=(1, 1, 1), jitter=0.0):
+        """A skinned surface through stations (each a list of game points, all the same length): quads between
+        neighbours. Faces are turned to look away from `outward_from` (or towards it when `inward`)."""
+        bm = bmesh.new()
+        rows = [[bm.verts.new(P(*p)) for p in st] for st in stations]
+        for i in range(len(rows) - 1):
+            for j in range(len(rows[i]) - 1):
+                try:
+                    f = bm.faces.new((rows[i][j], rows[i + 1][j], rows[i + 1][j + 1], rows[i][j + 1]))
+                except ValueError:
+                    continue
+                if outward_from is not None:
+                    d = f.calc_center_median() - P(*outward_from)
+                    if (f.normal.dot(d) < 0) != inward:
+                        f.normal_flip()
+        self.add(role, bm, None, tint, jitter)
+        bm.free()
+
+    def vault(self, role, cx, z0, z1, hw, y0, rise, seg=12, thick=0.0, tint=(1, 1, 1)):
+        """A barrel vault (a hangar, a hall roof) along z from z0 to z1: half an ellipse from y0 up by `rise`. With `thick`
+        an inner skin is added so it reads from inside."""
+        arc = lambda r_, up: [(cx + (hw + r_) * math.sin(-math.pi / 2 + math.pi * k / seg), y0 + (rise + up) * math.cos(-math.pi / 2 + math.pi * k / seg), 0) for k in range(seg + 1)]
+        outer = arc(0.0, 0.0)
+        mid = ((z0 + z1) / 2)
+        self.loft(role, [[(x, y, z0) for x, y, _ in outer], [(x, y, z1) for x, y, _ in outer]], outward_from=(cx, y0, mid), tint=tint)
+        if thick:
+            inner = arc(-thick, -thick)
+            self.loft(role, [[(x, y, z0) for x, y, _ in inner], [(x, y, z1) for x, y, _ in inner]], outward_from=(cx, y0, mid), inward=True, tint=tint)
+
     def hull(self, role, points, tint=(1, 1, 1)):
         """The convex solid through some game points (wedges, frusta, teeth)."""
         bm = _hull(points)
