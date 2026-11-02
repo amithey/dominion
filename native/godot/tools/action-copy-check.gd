@@ -97,7 +97,7 @@ func run() -> void:
 		sp.intel_tab = tab; w.hud.toggle_panel("intel", true); await scan("Intel / " + tab)
 	for tab in ["generals", "veterans", "nuclear", "arsenal", "ai"]:
 		sp.defence_tab = tab; w.hud.toggle_panel("defence", true); await scan("Defence / " + tab)
-	for tab in ["compute", "applications", "doctrine", "operations", "agi", "rivals"]:
+	for tab in ["overview", "compute", "applications", "doctrine", "operations", "agi", "rivals"]:
 		w.directorate.ui_tab = tab; w.hud.refresh_side(); await scan("AI / " + tab)
 		if tab == "compute":
 			var plus: Array = w.hud._side_rows.find_children("*", "Button", true, false).filter(func(b): return b.text == "+")

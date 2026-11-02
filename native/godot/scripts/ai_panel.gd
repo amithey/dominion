@@ -22,7 +22,15 @@ static func draw(sp) -> void:
 	var a = hud.world.get("directorate")
 	if a == null:
 		return
-	sp._tabs([["Compute", "compute"], ["Applications", "applications"], ["Doctrine", "doctrine"], ["Operations", "operations"], ["AGI", "agi"], ["Rivals", "rivals"]], a.ui_tab, func(v): a.ui_tab = v)
+	# Only the pages this nation can use get a tab: a country whose limit is level 2 has no use for the AGI race.
+	var limit: int = a.AIData.ceiling(hud.world, 0)
+	var pages := [["Overview", "overview"]]
+	if limit >= 1: pages += [["Compute", "compute"], ["Programmes", "applications"]]
+	if limit >= 2: pages.append(["Operations", "operations"])
+	if limit >= 3: pages.append(["Rules", "doctrine"])
+	if limit >= 4: pages.append(["AGI race", "agi"])
+	pages.append(["Rivals", "rivals"])
+	sp._tabs(pages, a.ui_tab, func(v): a.ui_tab = v)
 	match a.ui_tab:
 		"applications":
 			_applications(sp, a)
@@ -34,8 +42,65 @@ static func draw(sp) -> void:
 			_operations(sp, a)
 		"rivals":
 			_rivals(sp, a)
-		_:
+		"compute":
 			_compute(sp, a)
+		_:
+			_overview(sp, a)
+
+const LEVEL_GIVES := ["", "Simple tools: small boosts to the economy.", "Farm, tax and service programmes, and cyber operations.",
+	"Smarter drones and air defence, and the rules for autonomy.", "Top models: strong research and cyber. The AGI race begins.",
+	"The AGI project: a technology victory, and the risk that comes with it."]
+const LEVEL_NEEDS := {2: "Machine Learning", 3: "Military AI", 4: "Frontier Models"}
+
+## The first page: what AI does for you, how far your nation can take it and why, and the one thing to do next.
+static func _overview(sp, a) -> void:
+	var hud = sp.hud
+	var world: Node = hud.world
+	var lvl: int = a.level(0)
+	var limit: int = a.AIData.ceiling(world, 0)
+	var cap: int = a.cap(0)
+	var nation: String = str(world.diplomacy.name_of(0)).split(" · ")[0]
+	var top: VBoxContainer = hud._card(hud.UI.GOLD)
+	top.add_child(hud._text("Artificial intelligence", 17, hud.UI.CREAM, true))
+	sp._wrap(top, "AI makes your economy and army stronger. It runs on compute and grows riskier as it advances.", 13, hud.UI.TEXT)
+	# What to do next: one line.
+	var next_step := ""
+	if limit <= 0: next_step = "Nothing to do here: %s has no base for AI." % nation
+	elif not a.researched(0, "machineLearning"): next_step = "Research Machine Learning."
+	elif float(a.st[0].rate) <= 0.0: next_step = "Build an AI Data Centre (Civic & research) for compute."
+	elif lvl < mini(cap, limit): next_step = "Compute is raising your level. Give Training runs more in Compute."
+	elif lvl < limit: next_step = "Research %s to go further." % LEVEL_NEEDS.get(lvl + 1, "more")
+	else: next_step = "You are at %s's limit. Spend compute on the economy and the army." % nation
+	var todo: VBoxContainer = hud._card(hud.UI.GOOD if limit > 0 else Color(0, 0, 0, 0))
+	todo.add_child(hud._text("Next: " + next_step, 15, hud.UI.CREAM, true))
+	# The ladder.
+	var ladder: VBoxContainer = hud._card()
+	ladder.add_child(hud._text("Your level: %d, %s" % [lvl, a.LEVEL_NAMES[lvl]], 15, hud.UI.CREAM, true))
+	for L in range(1, 6):
+		var state := ""
+		var colour: Color = hud.UI.TEXT
+		if L <= lvl:
+			state = "reached"
+			colour = hud.UI.GOOD
+		elif L > limit:
+			state = "out of reach for %s" % nation
+			colour = hud.UI.MUTED
+		elif L > cap:
+			state = "research %s first" % LEVEL_NEEDS[L] if LEVEL_NEEDS.has(L) else "needs compute: build an AI Data Centre"
+		else:
+			state = "next: training %d / %d compute" % [int(a.st[0].train), int(a.next_cost(0))] if L == lvl + 1 else "later"
+		var row: Label = hud._text("%s  %d  %s: %s  (%s)" % ["✔" if L <= lvl else ("✖" if L > limit else "→"), L, a.LEVEL_NAMES[L], LEVEL_GIVES[L], state], 13, colour)
+		row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.custom_minimum_size.x = 440
+		ladder.add_child(row)
+	# Why this nation's limit is what it is.
+	var why: VBoxContainer = hud._card()
+	if limit > 0:
+		why.add_child(hud._text("Why %s stops at level %d" % [nation, limit], 14, hud.UI.CREAM, true))
+		sp._wrap(why, str(a.AIData.profile(world, 0).get("why", "")), 13, hud.UI.TEXT)
+	else:
+		why.add_child(hud._text("%s cannot field AI" % nation, 14, hud.UI.CREAM, true))
+		sp._wrap(why, "It has no chips, data centres or research base to build on.", 13, hud.UI.TEXT)
 
 static func _compute(sp, a) -> void:
 	var hud = sp.hud

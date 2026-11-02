@@ -88,6 +88,8 @@ const TABS := {
 	"Nuclear alert":"Readiness and nuclear release.", "AI":"Compute, applications and AI choices.",
 	"Arsenal":"Your weapons and where they are made.",
 	"Compute":"AI training and shared compute.", "Applications":"Test and start AI programmes.",
+	"Programmes":"Test and start AI programmes.", "Rules":"Human control, autonomy and AI treaties.",
+	"AGI race":"Advanced AI, safety and risk.",
 	"Doctrine":"Human control, autonomy and AI treaties.", "AGI":"Advanced AI, safety and risk.",
 	"Rivals":"What other nations are doing with AI.",
 }

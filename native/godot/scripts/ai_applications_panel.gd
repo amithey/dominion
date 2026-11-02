@@ -12,8 +12,8 @@ static func draw(sp, a) -> void:
 	var apps = a.applications
 	var info: Array = apps.country(0)
 	var intro: VBoxContainer = hud._card(hud.UI.GOLD)
-	intro.add_child(hud._text("AI applications: from research to service", 17, hud.UI.CREAM, true))
-	sp._wrap(intro, "National evidence: %s. %s" % [info[0], info[1]], 12)
+	intro.add_child(hud._text("AI programmes", 17, hud.UI.CREAM, true))
+	sp._wrap(intro, "Your nation today: %s. %s" % [info[0], info[1]], 12)
 	sp._wrap(intro, "Research it, test it, then start it. Testing uses half of the Training compute. While it runs it needs working sites, money and compute.", 12, hud.UI.MUTED)
 	sp._tabs([["Civil economy", "civil"], ["Military", "security"], ["Politics & state", "state"], ["Doomsday", "doomsday"], ["Who uses what", "world"]], apps.category, func(v): apps.category = v)
 	if apps.category == "world":
@@ -33,7 +33,7 @@ static func draw(sp, a) -> void:
 		if str(record[0]) != "":
 			sp._wrap(card, "Your nation: %s. %s" % [UseData.label(str(record[0])), str(record[1])], 11, hud.UI.CREAM if str(record[0]) == "fielded" else hud.UI.MUTED)
 		var commissioned := bool(r.get("commissioned", false))
-		var state := "Research required"
+		var state := "Needs research"
 		if a.researched(0, p.research): state = "Ready for local validation"
 		if float(r.work) > 0.0: state = "Local trials paused"
 		if apps.projects.get(0, "") == k: state = "Engineering" if float(r.work) < float(p.work) * 0.5 else "Field trials"
@@ -41,7 +41,7 @@ static func draw(sp, a) -> void:
 		if commissioned: state = "Suspended"
 		if bool(r.enabled): state = "Operating: %d%% coverage" % roundi(float(apps.coverage.get(0, {}).get(k, 0.0)) * 100.0)
 		if bool(r.enabled) and int(r.get("gen", 1)) >= 2: state += ", second generation"
-		sp._wrap(card, "%s | AI level %d | %s pool %.2f compute/s | $%.1f/s" % [state, int(p.level), a.POOL_NAMES[p.pool], float(p.demand), float(p.upkeep)], 11, hud.UI.GOLD)
+		sp._wrap(card, "%s · needs AI level %d · uses %.2f compute/s (%s) and $%.1f/s" % [state, int(p.level), float(p.demand), a.POOL_NAMES[p.pool], float(p.upkeep)], 12, hud.UI.GOLD)
 		if not bool(r.validated) and (float(r.work) > 0.0 or apps.projects.get(0, "") == k):
 			sp._wrap(card, "Local validation: %d / %d compute" % [int(r.work), int(p.work)], 11, hud.UI.CREAM)
 			var progress := ProgressBar.new()

@@ -110,7 +110,7 @@ func surfaces() -> Array:
 		out.append(["territory-" + t, func(): P.territory_tab = t; h.toggle_panel("territory", true)])
 	for t in ["generals", "veterans", "nuclear", "arsenal"]:
 		out.append(["defence-" + t, func(): P.defence_tab = t; h.toggle_panel("defence", true)])
-	for t in ["compute", "applications", "doctrine", "operations", "agi", "rivals"]:
+	for t in ["overview", "compute", "applications", "doctrine", "operations", "agi", "rivals"]:
 		out.append(["ai-" + t, func(): P.defence_tab = "ai"; w.directorate.ui_tab = t; h.toggle_panel("defence", true)])
 	for t in ["council", "draft", "assembly", "agencies", "org", "record"]:
 		out.append(["un-" + t, func(): P.un_tab = t; h.toggle_panel("un", true)])
