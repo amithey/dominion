@@ -3,7 +3,7 @@
 extends RefCounted
 
 const KEYS := ["extractor:oil", "extractor:iron", "extractor:gold", "extractor:silicon", "extractor:uranium", "extractor:diamond",
-	"oilRefinery", "chipFab", "aiDataCenter", "nuclearReactor", "solarFarm", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "port", "shipyard"]
+	"oilRefinery", "chipFab", "aiDataCenter", "nuclearReactor", "solarFarm", "ammoDepot", "missileSilo", "helipad", "bunker", "samSite", "park", "stadium", "port", "shipyard"]
 
 static func capture(w: Node) -> void:
 	for i in range(30):
@@ -13,17 +13,19 @@ static func capture(w: Node) -> void:
 	var only := ""
 	var yaw := 0.7
 	var dist := 36.0
+	var pitch := -1.0
 	for a in OS.get_cmdline_user_args() + OS.get_cmdline_args():
 		if a.begins_with("--only="): only = a.get_slice("=", 1)
 		elif a.begins_with("--yaw="): yaw = float(a.get_slice("=", 1))
 		elif a.begins_with("--dist="): dist = float(a.get_slice("=", 1))
+		elif a.begins_with("--pitch="): pitch = float(a.get_slice("=", 1))
 	for entry: String in KEYS:
 		if only != "" and entry != only:
 			continue
 		var key: String = entry.get_slice(":", 0)
 		var at: Vector3
 		if key in ["port", "shipyard"]:
-			at = w.snap_to_hex(w.land_point(sea, 6.0)) if sea != null else w.start
+			at = w.snap_to_hex(w.land_point(sea, 15.0)) if sea != null else w.start
 		elif entry.contains(":"):
 			var type: String = entry.get_slice(":", 1)
 			var dep = null
@@ -40,7 +42,7 @@ static func capture(w: Node) -> void:
 		w.cam_focus = b.root.position
 		w.cam_dist = dist
 		w.cam_dist_target = dist
-		w.cam_pitch = 0.95 if only == "" else 0.6
+		w.cam_pitch = pitch if pitch > 0.0 else (0.95 if only == "" else 0.6)
 		w.cam_yaw = yaw
 		for f in range(25):
 			await w.get_tree().process_frame

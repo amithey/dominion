@@ -795,25 +795,186 @@ func airfield(rng: RandomNumberGenerator) -> void:
 	cylinder(BANNER, Vector3(0.6, 2.9, 9.5), 0.2, 0.25, Color("f08030"), 8, 0.12)
 	quad(BANNER, Vector3(0.6, 2.95, 9.35), Vector3(1.8, 2.8, 9.42), Vector3(1.8, 2.95, 9.58), Vector3(0.6, 3.1, 9.65), Color("f08030"))
 
-## A helipad hex: two marked pads (the same positions air_operations.gd uses) and a small hangar.
+## A shipping container, 2.6 x 1.25 x 1.1 m lying along x, its lower corner at `lo`; the paint is brightened for the grey metal.
+func container(lo: Vector3, colour: Color) -> void:
+	box(PANEL, lo, lo + Vector3(2.6, 1.25, 1.1), Color(colour.r * 1.7, colour.g * 1.7, colour.b * 1.7))
+	box(TRIM, lo + Vector3(2.6, 0.05, 0.1), lo + Vector3(2.64, 1.2, 1.0), Color("2a2f33"))
+	box(TRIM, lo + Vector3(-0.04, 0.05, 0.1), lo + Vector3(0.0, 1.2, 1.0), Color("2a2f33"))
+
+## A quay-side container crane at x on the quay: a portal on two rails, a lattice boom out over the water and a back
+## reach, a trolley, and (when `lift` is set) a container hanging from its spreader.
+func ship_crane(x: float, paint: Color, lift: Color, lifting: bool) -> void:
+	var ink := Color("1d252a")
+	var lxs := [x - 1.7, x + 1.7]
+	for lx in lxs:
+		for lz in [6.0, 8.2]:
+			bar(TRIM, Vector3(lx, 0.4, lz), Vector3(lx, 8.6, lz), 0.2, paint)
+		bar(TRIM, Vector3(lx, 8.6, 6.0), Vector3(lx, 8.6, 8.2), 0.2, paint)
+		bar(TRIM, Vector3(lx, 1.8, 6.0), Vector3(lx, 7.4, 8.2), 0.07, paint)
+		bar(TRIM, Vector3(lx, 1.8, 8.2), Vector3(lx, 7.4, 6.0), 0.07, paint)
+		bar(TRIM, Vector3(lx, 0.45, 5.9), Vector3(lx, 0.45, 8.3), 0.25, ink)          # the bogie on its rail
+		# the boom: top and bottom chords, posts and diagonals, out over the water
+		bar(TRIM, Vector3(lx, 9.0, 3.0), Vector3(lx, 9.5, 13.6), 0.13, paint)
+		bar(TRIM, Vector3(lx, 8.2, 6.0), Vector3(lx, 8.55, 13.6), 0.1, paint)
+		for k in range(6):
+			var z0 := 6.0 + k * 1.3
+			var z1 := z0 + 1.3
+			var yt0 := 9.0 + (z0 - 3.0) * 0.047
+			var yt1 := 9.0 + (z1 - 3.0) * 0.047
+			bar(TRIM, Vector3(lx, yt0 - 0.85, z0), Vector3(lx, yt0, z0), 0.05, paint)
+			bar(TRIM, Vector3(lx, yt0 - 0.85, z0), Vector3(lx, yt1, z1), 0.04, paint)
+		bar(TRIM, Vector3(lx, 9.0, 3.0), Vector3(lx, 8.6, 6.0), 0.1, paint)       # the back reach
+	for z in [6.0, 8.2, 13.6]:
+		bar(TRIM, Vector3(lxs[0], 9.0 + (z - 3.0) * 0.047, z), Vector3(lxs[1], 9.0 + (z - 3.0) * 0.047, z), 0.1, paint)
+	box(TRIM, Vector3(x - 1.5, 9.1, 3.2), Vector3(x + 1.5, 10.5, 5.6), paint)              # the machinery house
+	box(GLASS, Vector3(x - 1.4, 9.5, 5.6), Vector3(x + 1.4, 10.3, 5.64), Color("2f5568"))
+	box(TRIM, Vector3(x - 1.6, 10.5, 3.1), Vector3(x + 1.6, 10.62, 5.7), Color("aab4b8"))
+	box(TRIM, Vector3(x - 1.2, 7.7, 10.5), Vector3(x + 1.2, 8.2, 11.7), ink)                # the trolley
+	box(TRIM, Vector3(x - 2.9, 6.7, 10.7), Vector3(x - 2.2, 7.6, 11.5), Color("3a4a54"))    # the driver's cab
+	box(GLASS, Vector3(x - 2.88, 6.9, 11.5), Vector3(x - 2.22, 7.5, 11.54), Color("2f5568"))
+	var drop := 2.8 if lifting else 6.2
+	for cx in [-0.7, 0.7]:
+		bar(TRIM, Vector3(x + cx, 7.6, 11.1), Vector3(x + cx, drop + 0.3, 11.1), 0.025, ink)
+	box(TRIM, Vector3(x - 0.9, drop, 10.75), Vector3(x + 0.9, drop + 0.3, 11.45), ink)       # the spreader
+	if lifting:
+		container(Vector3(x - 1.3, drop - 1.25, 10.55), lift)
+	box(GLOWR, Vector3(x - 0.1, 9.6, 13.6), Vector3(x + 0.1, 9.9, 13.8), Color(1.0, 0.4, 0.35))
+
+## A hull on the slip: stepped slices narrowing to a bow, red below the waterline and grey above, on keel blocks,
+## with the forward third still open frames, scaffolding along the sides and welding lights.
+func hull(x: float, z0: float, z1: float) -> void:
+	var n := 16
+	var ink := Color("1d252a")
+	for k in range(n):
+		var s := (k + 0.5) / n
+		var za := z0 + (z1 - z0) * k / n
+		var zb := z0 + (z1 - z0) * (k + 1) / n
+		var hw := 1.8 * (0.78 + 0.22 * smoothstep(0.0, 0.2, s))
+		if s > 0.62:
+			hw *= sqrt(maxf(0.0, 1.0 - pow((s - 0.62) / 0.38, 2.0)))
+		hw = maxf(hw, 0.12)
+		box(TRIM, Vector3(x - hw, 0.9, za), Vector3(x + hw, 2.1, zb), Color("8a3a2e"))
+		if s < 0.65:
+			box(TRIM, Vector3(x - hw * 0.96, 2.1, za), Vector3(x + hw * 0.96, 3.2, zb), Color("9aa3a8"))
+			box(TRIM, Vector3(x - hw * 0.96, 3.2, za), Vector3(x + hw * 0.96, 3.26, zb), Color("56646a"))
+		else:
+			for side in [-1.0, 1.0]:
+				bar(TRIM, Vector3(x + side * hw * 0.96, 2.1, (za + zb) * 0.5), Vector3(x + side * hw * 0.96, 3.2, (za + zb) * 0.5), 0.05, Color("9aa3a8"))
+			if k % 2 == 0:
+				bar(TRIM, Vector3(x - hw * 0.96, 3.2, (za + zb) * 0.5), Vector3(x + hw * 0.96, 3.2, (za + zb) * 0.5), 0.05, Color("9aa3a8"))
+		if k % 3 == 0:
+			box(CONCRETE, Vector3(x - 0.5, 0.4, za), Vector3(x + 0.5, 0.9, za + 0.5), Color(1.1, 1.1, 1.1))   # a keel block
+	box(TRIM, Vector3(x - 0.9, 3.26, z0 + 1.0), Vector3(x + 0.9, 4.4, z0 + 3.4), Color("c9d0d2"))              # the deckhouse so far
+	box(GLASS, Vector3(x - 0.8, 3.7, z0 + 3.4), Vector3(x + 0.8, 4.2, z0 + 3.44), Color("2f5568"))
+	for i in range(8):   # scaffolding along both sides: posts and two lifts of boards
+		var sz := z0 + 0.8 + i * 1.35
+		for side in [-1.0, 1.0]:
+			var sx: float = x + side * 2.45
+			bar(STEEL, Vector3(sx, 0.4, sz), Vector3(sx, 4.4, sz), 0.04, Color(2.3, 2.3, 2.4))
+			if i < 7:
+				for y in [2.2, 3.5]:
+					box(TRIM, Vector3(sx - 0.25, y, sz), Vector3(sx + 0.25, y + 0.05, sz + 1.35), Color("d9b45f"))
+	for p in [Vector3(x - 2.0, 3.3, z0 + 5.0), Vector3(x + 2.0, 2.3, z0 + 7.5), Vector3(x + 1.8, 3.3, z0 + 3.0)]:
+		box(GLOWW, p, p + Vector3(0.18, 0.18, 0.18), Color(1.0, 0.9, 0.7))
+
+## A helipad hex: two lit and marked pads (the positions air_operations.gd uses), an arched hangar with its doors open
+## and lit, a control cabin, a fuel point, a crash tender, a windsock and floodlights.
 func helipad(rng: RandomNumberGenerator) -> void:
 	const AO := preload("res://scripts/air_operations.gd")
+	var haz := Color("e0b020")
+	var ink := Color("1d252a")
+	var light := Color("dfe4e6")
+	var pale := Color(1.5, 1.5, 1.52)
+	var bright := Color(2.3, 2.3, 2.4)
+	box(CONCRETE, Vector3(-8.4, -1.4, -9.4), Vector3(8.4, 0.18, 6.6), Color(1.0, 1.0, 1.0))
+	box(PAVERS, Vector3(-8.2, 0.18, -4.2), Vector3(8.2, 0.2, 6.4), Color(1.2, 1.2, 1.2))
 	for sp in AO.SLOT_POSITIONS.helipad:
-		cylinder(STONE, sp + Vector3(0, -0.2, 0), 2.6, 0.35, Color("5a5d60"), 24)
-		cylinder(TRIM, sp + Vector3(0, 0.16, 0), 2.1, 0.02, Color("e8e6dc"), 24)
-		cylinder(TRIM, sp + Vector3(0, 0.17, 0), 1.95, 0.02, Color("5a5d60"), 24)
-		# The H.
-		box(TRIM, sp + Vector3(-0.8, 0.18, -0.9), sp + Vector3(-0.5, 0.2, 0.9), Color("e8e6dc"))
-		box(TRIM, sp + Vector3(0.5, 0.18, -0.9), sp + Vector3(0.8, 0.2, 0.9), Color("e8e6dc"))
-		box(TRIM, sp + Vector3(-0.5, 0.18, -0.15), sp + Vector3(0.5, 0.2, 0.15), Color("e8e6dc"))
+		cylinder(CONCRETE, sp + Vector3(0, 0.18, 0), 2.9, 0.08, Color(1.3, 1.3, 1.3), 28)
+		cylinder(TRIM, sp + Vector3(0, 0.265, 0), 2.55, 0.02, Color("6d777c"), 28)
+		for k in range(28):
+			var a0 := TAU * k / 28.0
+			var a1 := TAU * (k + 1) / 28.0
+			bar(TRIM, sp + Vector3(cos(a0) * 2.5, 0.285, sin(a0) * 2.5), sp + Vector3(cos(a1) * 2.5, 0.285, sin(a1) * 2.5), 0.05, Color("f0eee4"))
+		for k in range(20):
+			var a0 := TAU * k / 20.0
+			var a1 := TAU * (k + 1) / 20.0
+			bar(TRIM, sp + Vector3(cos(a0) * 2.1, 0.285, sin(a0) * 2.1), sp + Vector3(cos(a1) * 2.1, 0.285, sin(a1) * 2.1), 0.04, haz if k % 2 == 0 else ink)
+		box(TRIM, sp + Vector3(-0.8, 0.27, -0.95), sp + Vector3(-0.5, 0.30, 0.95), Color("f0eee4"))
+		box(TRIM, sp + Vector3(0.5, 0.27, -0.95), sp + Vector3(0.8, 0.30, 0.95), Color("f0eee4"))
+		box(TRIM, sp + Vector3(-0.5, 0.27, -0.15), sp + Vector3(0.5, 0.30, 0.15), Color("f0eee4"))
+		for k in range(16):   # the edge lights
+			var a := TAU * k / 16.0
+			box(GLOWW, sp + Vector3(cos(a) * 2.78 - 0.07, 0.22, sin(a) * 2.78 - 0.07), sp + Vector3(cos(a) * 2.78 + 0.07, 0.32, sin(a) * 2.78 + 0.07), Color(1.0, 0.88, 0.65))
+	for x in [-3.5, 3.5]:   # taxi lines from each pad to the hangar
+		box(TRIM, Vector3(x - 0.05, 0.2, -4.2), Vector3(x + 0.05, 0.21, -2.9), Color(0.95, 0.85, 0.3))
+	# the hangar: walls, a barrel-vault roof, an open lit door, a lit office annex and roof fans
 	var saved := xf
-	xf = xf * Transform3D(Basis(), Vector3(0, 0, -6.5))
-	box(STONE, Vector3(-3.0, -0.2, -1.8), Vector3(3.0, 0.3, 1.8), Color("9c9484"))
-	walls(METAL, 6.0, 3.6, 0.3, 3.0, Color("8a948a"))
-	gable_roof(6.0, 3.6, 3.3, 1.0, Color("5a5f64"), METAL, Color("8a948a"), 0.3)
-	quad(GLASS, Vector3(-2.2, 0.3, 1.81), Vector3(2.2, 0.3, 1.81), Vector3(2.2, 2.6, 1.81), Vector3(-2.2, 2.6, 1.81), Color("1c2026"))
+	xf = xf * Transform3D(Basis(), Vector3(0, 0, -7.0))
+	var hw := 4.2
+	var hd := 3.8
+	walls(PANEL, hw * 2.0, hd * 2.0, 0.13, 3.6, pale)
+	box(CONCRETE, Vector3(-hw - 0.06, 0.13, hd - 0.02), Vector3(hw + 0.06, 0.7, hd + 0.07), Color(1.1, 1.1, 1.1))
+	for s in range(8):
+		var a0 := -PI * 0.5 + PI * s / 8.0
+		var a1 := -PI * 0.5 + PI * (s + 1) / 8.0
+		var x0 := hw * sin(a0)
+		var x1 := hw * sin(a1)
+		var y0 := 3.73 + 1.7 * cos(a0)
+		var y1 := 3.73 + 1.7 * cos(a1)
+		quad(PANEL, Vector3(x0, y0, hd), Vector3(x1, y1, hd), Vector3(x1, y1, -hd), Vector3(x0, y0, -hd), pale)
+		quad(PANEL, Vector3(x0, 3.73, hd), Vector3(x1, 3.73, hd), Vector3(x1, y1, hd), Vector3(x0, y0, hd), pale)
+		quad(PANEL, Vector3(x1, 3.73, -hd), Vector3(x0, 3.73, -hd), Vector3(x0, y0, -hd), Vector3(x1, y1, -hd), pale)
+	box(TRIM, Vector3(-3.0, 0.13, hd), Vector3(3.0, 3.4, hd + 0.05), ink)                 # the open door
+	box(GLOWW, Vector3(-2.7, 3.1, hd + 0.04), Vector3(2.7, 3.2, hd + 0.09), Color(1.0, 0.88, 0.65))
+	for k in range(3):
+		box(GLOWW, Vector3(-2.0 + k * 2.0, 2.2, hd + 0.04), Vector3(-1.6 + k * 2.0, 2.3, hd + 0.08), Color(1.0, 0.88, 0.65))
+	for sx in [-1.0, 1.0]:
+		box(STEEL, Vector3(sx * 3.1 - 0.1, 0.13, hd + 0.02), Vector3(sx * 3.1 + 0.1, 3.4, hd + 0.12), bright)
+	box(TRIM, Vector3(-3.1, 3.4, hd), Vector3(3.1, 3.55, hd + 0.2), haz)
+	box(PANEL, Vector3(hw, 0.13, -1.4), Vector3(hw + 2.2, 2.7, 1.6), pale)                 # the office annex
+	box(TRIM, Vector3(hw - 0.1, 2.7, -1.5), Vector3(hw + 2.3, 2.85, 1.7), Color("56646a"))
+	for k in range(2):
+		box(GLASS, Vector3(hw + 0.2 + k * 1.0, 1.0, 1.6), Vector3(hw + 1.0 + k * 1.0, 2.1, 1.64), Color("2f5568"))
+	for k in range(2):
+		fan(Vector3(-1.6 + k * 3.2, 5.44, 0.0), 0.5)
+	banner(-hw + 0.8, 3.3, hd + 0.05, 2.0)
 	xf = saved
-
+	# the control cabin: a concrete shaft, a glass cab and a radar bar
+	box(CONCRETE, Vector3(6.4, 0.13, -5.2), Vector3(7.6, 4.4, -4.0), Color(1.3, 1.3, 1.3))
+	box(TRIM, Vector3(6.1, 4.4, -5.5), Vector3(7.9, 4.55, -3.7), Color("56646a"))
+	box(GLASS, Vector3(6.2, 4.55, -5.4), Vector3(7.8, 5.7, -3.8), Color("2c4d5c"))
+	for cx in [6.2, 7.0, 7.8]:
+		bar(STEEL, Vector3(cx, 4.55, -5.4), Vector3(cx, 5.7, -5.4), 0.04, bright)
+	box(TRIM, Vector3(6.0, 5.7, -5.6), Vector3(8.0, 5.85, -3.6), Color(1.3, 1.3, 1.3))
+	bar(STEEL, Vector3(7.0, 5.85, -4.6), Vector3(7.0, 6.9, -4.6), 0.04, bright)
+	bar(TRIM, Vector3(6.2, 6.9, -4.6), Vector3(7.8, 6.9, -4.6), 0.06, ink)
+	box(GLOWR, Vector3(6.9, 6.95, -4.7), Vector3(7.1, 7.15, -4.5), Color(1.0, 0.4, 0.35))
+	# a fuel point: a tank on saddles, a dispenser and a hose
+	pipe(METAL, Vector3(6.6, 0.95, -0.4), Vector3(6.6, 0.95, 2.4), 0.7, light, 14)
+	for z in [0.0, 2.0]:
+		box(CONCRETE, Vector3(5.9, 0.13, z - 0.15), Vector3(7.3, 0.8, z + 0.15), Color(1.2, 1.2, 1.2))
+	box(TRIM, Vector3(7.5, 0.13, 0.6), Vector3(8.0, 1.6, 1.1), Color("c83a2e"))
+	box(GLOWG, Vector3(7.55, 1.2, 1.1), Vector3(7.95, 1.4, 1.14), Color(0.6, 1.0, 0.55))
+	# a crash tender with a light bar
+	box(TRIM, Vector3(-7.5, 0.35, -2.6), Vector3(-5.2, 1.5, -1.6), Color("c0392b"))
+	box(TRIM, Vector3(-5.2, 0.35, -2.6), Vector3(-4.2, 2.0, -1.6), Color("a8322a"))
+	box(GLASS, Vector3(-4.2, 1.3, -2.5), Vector3(-4.16, 1.9, -1.7), Color("1c2d36"))
+	box(TRIM, Vector3(-7.5, 1.0, -2.62), Vector3(-5.2, 1.15, -2.6), Color("f0eee4"))
+	box(GLOWR, Vector3(-5.0, 2.0, -2.4), Vector3(-4.5, 2.12, -1.8), Color(1.0, 0.4, 0.35))
+	for wx in [-6.8, -5.6, -4.7]:
+		for wz in [-2.7, -1.5]:
+			box(TRIM, Vector3(wx - 0.3, 0.13, wz - 0.1), Vector3(wx + 0.3, 0.7, wz + 0.1), Color("1a1c1e"))
+	# a windsock on a mast, floodlights and a low fence
+	bar(STEEL, Vector3(-7.4, 0.13, 3.6), Vector3(-7.4, 5.2, 3.6), 0.05, bright)
+	for k in range(4):
+		pipe(METAL, Vector3(-7.4 + k * 0.62, 5.2 - k * 0.05, 3.6), Vector3(-7.4 + (k + 1) * 0.62, 5.15 - k * 0.05, 3.6), 0.34 - k * 0.05, Color("f08030") if k % 2 == 0 else Color("f0eee4"), 8)
+	for p in [Vector3(-8.0, 0, 5.8), Vector3(8.0, 0, 5.8), Vector3(8.0, 0, -8.6), Vector3(-8.0, 0, -8.6)]:
+		bar(STEEL, p + Vector3(0, 0.13, 0), p + Vector3(0, 5.2, 0), 0.05, bright)
+		box(GLOWW, p + Vector3(-0.35, 5.15, -0.15), p + Vector3(0.35, 5.25, 0.15), Color(1.0, 0.88, 0.65))
+	for i in range(14):
+		var fx := -8.1 + i * 1.25
+		bar(STEEL, Vector3(fx, 0.13, 6.2), Vector3(fx, 1.3, 6.2), 0.03, bright)
+	box(TRIM, Vector3(-8.1, 1.0, 6.17), Vector3(8.1, 1.04, 6.23), Color("a0aaae"))
 
 # ---------------------------------------------------------------- industry
 
@@ -1305,41 +1466,143 @@ func solar(rng: RandomNumberGenerator) -> void:
 			_beam(Vector3(x, 0, z), Vector3(x, 1.0, z), 0.06, Color("8a8c88"))
 	box(METAL, Vector3(-1.0, 0, 8.0), Vector3(1.0, 1.8, 9.2), Color("c8ccc8"))
 
-## A shipyard or port on the water's edge: sheds, a gantry crane and a quay;
-## the port adds cranes, stacked containers and a warehouse.
+## A shipyard or port on the water's edge, the quay along z 4 to 9.5 facing the water. The port has a paved container
+## yard with stacks, two quay cranes (one lifting), a warehouse, a harbour-master tower and mast lights; the shipyard
+## has a building hall, a slipway with a hull under construction, a goliath gantry and a material yard.
 func harbour(rng: RandomNumberGenerator, port: bool) -> void:
-	box(STONE, Vector3(-8.0, -1.0, 4.0), Vector3(8.0, 0.4, 9.5), Color("a8a296"))  # the quay
-	for x in range(-7, 8, 2):
-		cylinder(TRIM, Vector3(x, 0.4, 9.2), 0.15, 0.4, Color("2a2a2a"), 8)
+	var ink := Color("1d252a")
+	var haz := Color("e0b020")
+	var pale := Color(1.5, 1.5, 1.52)
+	var bright := Color(2.3, 2.3, 2.4)
+	var teal := Color("2f6f7e")
+	# the quay: a deep concrete slab, a paved yard, fenders, bollards and a painted edge
+	box(CONCRETE, Vector3(-8.2, -1.6, -8.6), Vector3(8.2, 0.4, 9.6), Color(1.05, 1.05, 1.05))
+	box(PAVERS if port else ASPHALT, Vector3(-8.0, 0.4, -8.4), Vector3(8.0, 0.43, 9.4), Color(1.2, 1.2, 1.2))
+	box(TRIM, Vector3(-8.0, 0.43, 8.9), Vector3(8.0, 0.44, 9.05), haz)
+	for i in range(11):
+		var fx := -7.5 + i * 1.5
+		box(TRIM, Vector3(fx - 0.25, -0.6, 9.6), Vector3(fx + 0.25, 0.3, 9.85), ink)               # a rubber fender
+	for i in range(8):
+		var bx := -7.0 + i * 2.0
+		cylinder(STEEL, Vector3(bx, 0.43, 9.15), 0.22, 0.4, bright, 8)
+		cylinder(STEEL, Vector3(bx, 0.83, 9.15), 0.3, 0.14, bright, 8)
 	if not port:
-		# A building shed with an open end, and a gantry over the slip.
-		var saved := xf
-		xf = xf * Transform3D(Basis(), Vector3(-3.0, 0, -2.0))
-		box(STONE, Vector3(-3.0, -0.2, -4.0), Vector3(3.0, 0.3, 4.0), Color("9c9484"))
-		walls(METAL, 6.0, 8.0, 0.3, 6.0, Color("8a9aa0"))
-		gable_roof(6.0, 8.0, 6.3, 2.0, Color("5a5f64"), METAL, Color("8a9aa0"), 0.3)
-		xf = saved
-		for x in [2.5, 7.0]:
-			_beam(Vector3(x, 0, -2.0), Vector3(x, 10.0, -2.0), 0.3, Color("d0a030"))
-			_beam(Vector3(x, 0, 6.0), Vector3(x, 10.0, 6.0), 0.3, Color("d0a030"))
-		_beam(Vector3(2.5, 10.0, -2.0), Vector3(7.0, 10.0, -2.0), 0.3, Color("d0a030"))
-		_beam(Vector3(2.5, 10.0, 6.0), Vector3(7.0, 10.0, 6.0), 0.3, Color("d0a030"))
-		_beam(Vector3(4.75, 10.3, -2.0), Vector3(4.75, 10.3, 6.0), 0.35, Color("d0a030"))
-	else:
-		var paints := [Color("7a3b2e"), Color("35506a"), Color("5b6b3a"), Color("8a6a2a"), Color("b8b8b0")]
-		for i in range(8):
-			var x := -6.0 + (i % 4) * 2.8
-			var z := -5.0 + (i / 4) * 2.6
-			for layer in range(1 + rng.randi() % 2):
-				box(METAL, Vector3(x, layer * 1.3, z), Vector3(x + 2.5, layer * 1.3 + 1.25, z + 1.2), paints[rng.randi() % paints.size()])
-		for x in [-4.0, 3.0]:
-			lattice(Vector3(x, 0.4, 7.0), 9.0, 2.0, 1.6, Color("c03a2a"))
-			_beam(Vector3(x, 9.4, 3.0), Vector3(x, 9.4, 14.0), 0.3, Color("c03a2a"))
-		var saved2 := xf
-		xf = xf * Transform3D(Basis(), Vector3(5.0, 0, -3.5))
-		walls(METAL, 4.0, 5.0, 0.0, 4.0, Color("a8b0a8"))
-		gable_roof(4.0, 5.0, 4.0, 1.0, Color("7a3a2e"), METAL, Color("a8b0a8"), 0.3)
-		xf = saved2
+		_shipyard(rng, ink, haz, pale, bright, teal)
+		return
+	var paints := [Color("8a3a2e"), Color("2f5a78"), Color("56703a"), Color("a8782a"), Color("c8c8c0"), Color("6a2f50")]
+	# container stacks, three bays of up to three high
+	for bay in range(3):
+		for col in range(2):
+			for row in range(2):
+				var cx := -7.2 + bay * 2.9
+				var cz := -7.4 + col * 2.4 + row * 1.15
+				for layer in range(1 + (bay + col + row) % 3):
+					container(Vector3(cx, 0.43 + layer * 1.25, cz), paints[rng.randi() % paints.size()])
+	# two quay cranes, the left one lifting a container
+	ship_crane(-3.2, teal, Color("a8782a"), true)
+	ship_crane(3.4, teal, Color("a8782a"), false)
+	# a warehouse with roller doors on its water side and a gable roof
+	box(PANEL, Vector3(2.4, 0.43, -8.0), Vector3(7.8, 4.2, -2.2), pale)
+	box(TRIM, Vector3(2.3, 4.2, -8.1), Vector3(7.9, 4.35, -2.1), Color("56646a"))
+	for k in range(9):   # standing-seam ribs, a ridge cap and roof vents
+		box(TRIM, Vector3(2.4 + k * 0.62, 4.35, -8.0), Vector3(2.46 + k * 0.62, 4.45, -2.2), Color("8a949a"))
+	box(TRIM, Vector3(2.3, 4.45, -5.2), Vector3(7.9, 4.6, -5.0), Color("56646a"))
+	for k in range(3):
+		cylinder(METAL, Vector3(3.6 + k * 1.8, 4.35, -6.6), 0.32, 0.45, Color("aab4b8"), 10)
+		cylinder(TRIM, Vector3(3.6 + k * 1.8, 4.8, -6.6), 0.4, 0.06, Color("56646a"), 10)
+	for k in range(3):
+		box(TRIM, Vector3(2.8 + k * 1.7, 0.43, -2.2), Vector3(4.2 + k * 1.7, 3.0, -2.16), ink)
+		box(STEEL, Vector3(2.8 + k * 1.7, 3.0, -2.2), Vector3(4.2 + k * 1.7, 3.15, -2.1), bright)
+	box(GLOWW, Vector3(3.2, 3.5, -2.16), Vector3(7.4, 3.58, -2.1), Color(1.0, 0.88, 0.65))
+	# the harbour master's tower: a concrete shaft, a glass cab and a radar
+	box(CONCRETE, Vector3(-7.4, 0.43, 2.0), Vector3(-6.2, 6.0, 3.2), Color(1.3, 1.3, 1.3))
+	box(TRIM, Vector3(-7.7, 6.0, 1.7), Vector3(-5.9, 6.15, 3.5), Color("56646a"))
+	box(GLASS, Vector3(-7.6, 6.15, 1.8), Vector3(-6.0, 7.3, 3.4), Color("2c4d5c"))
+	box(TRIM, Vector3(-7.8, 7.3, 1.6), Vector3(-5.8, 7.45, 3.6), Color(1.3, 1.3, 1.3))
+	bar(STEEL, Vector3(-6.8, 7.45, 2.6), Vector3(-6.8, 8.4, 2.6), 0.04, bright)
+	bar(TRIM, Vector3(-7.5, 8.4, 2.6), Vector3(-6.1, 8.4, 2.6), 0.06, ink)
+	banner(-5.7, 5.8, 2.0, 2.2)
+	# mast lights and two yard trucks
+	for p in [Vector3(-7.4, 0, -1.0), Vector3(0.0, 0, 2.6), Vector3(7.4, 0, 2.6)]:
+		bar(STEEL, p + Vector3(0, 0.43, 0), p + Vector3(0, 7.0, 0), 0.07, bright)
+		for k in range(3):
+			box(GLOWW, p + Vector3(-0.6 + k * 0.45, 6.95, -0.15), p + Vector3(-0.3 + k * 0.45, 7.1, 0.15), Color(1.0, 0.88, 0.65))
+	for t in [Vector3(-0.8, 0.43, 4.4), Vector3(5.4, 0.43, 5.4)]:
+		box(TRIM, t + Vector3(0, 0.3, 0), t + Vector3(1.6, 0.9, 0.9), haz)
+		box(TRIM, t + Vector3(1.6, 0.3, 0), t + Vector3(2.3, 1.4, 0.9), Color("c9972a"))
+		box(GLASS, t + Vector3(2.3, 0.8, 0.1), t + Vector3(2.34, 1.3, 0.8), Color("1c2d36"))
+		for wx in [0.3, 1.5, 2.0]:
+			for wz in [-0.1, 0.9]:
+				box(TRIM, t + Vector3(wx - 0.25, 0, wz - 0.08), t + Vector3(wx + 0.25, 0.5, wz + 0.08), Color("1a1c1e"))
+
+func _shipyard(rng: RandomNumberGenerator, ink: Color, haz: Color, pale: Color, bright: Color, teal: Color) -> void:
+	# the building hall: a long shed with a vaulted roof, a lit open end towards the slip and an office wing
+	var saved := xf
+	xf = xf * Transform3D(Basis(), Vector3(-4.6, 0, -2.4))
+	var hw := 3.4
+	var hd := 5.6
+	walls(PANEL, hw * 2.0, hd * 2.0, 0.43, 6.0, pale)
+	for s in range(8):
+		var a0 := -PI * 0.5 + PI * s / 8.0
+		var a1 := -PI * 0.5 + PI * (s + 1) / 8.0
+		var x0 := hw * sin(a0)
+		var x1 := hw * sin(a1)
+		var y0 := 6.43 + 1.9 * cos(a0)
+		var y1 := 6.43 + 1.9 * cos(a1)
+		quad(PANEL, Vector3(x0, y0, hd), Vector3(x1, y1, hd), Vector3(x1, y1, -hd), Vector3(x0, y0, -hd), pale)
+		quad(PANEL, Vector3(x0, 6.43, hd), Vector3(x1, 6.43, hd), Vector3(x1, y1, hd), Vector3(x0, y0, hd), pale)
+		quad(PANEL, Vector3(x1, 6.43, -hd), Vector3(x0, 6.43, -hd), Vector3(x0, y0, -hd), Vector3(x1, y1, -hd), pale)
+	box(TRIM, Vector3(-2.7, 0.43, hd), Vector3(2.7, 5.4, hd + 0.05), ink)
+	box(GLOWW, Vector3(-2.4, 5.0, hd + 0.04), Vector3(2.4, 5.12, hd + 0.09), Color(1.0, 0.88, 0.65))
+	for k in range(3):
+		box(GLOWW, Vector3(-1.8 + k * 1.8, 3.6, hd + 0.04), Vector3(-1.4 + k * 1.8, 3.7, hd + 0.08), Color(1.0, 0.88, 0.65))
+	for sx in [-1.0, 1.0]:
+		box(STEEL, Vector3(sx * 2.8 - 0.1, 0.43, hd + 0.02), Vector3(sx * 2.8 + 0.1, 5.4, hd + 0.12), bright)
+	box(TRIM, Vector3(-2.8, 5.4, hd), Vector3(2.8, 5.55, hd + 0.2), haz)
+	for i in range(6):   # clerestory windows along the sides
+		box(GLASS, Vector3(hw, 4.4, -hd + 0.8 + i * 1.8), Vector3(hw + 0.04, 5.4, -hd + 2.2 + i * 1.8), Color("2f5568"))
+		box(GLASS, Vector3(-hw - 0.04, 4.4, -hd + 0.8 + i * 1.8), Vector3(-hw, 5.4, -hd + 2.2 + i * 1.8), Color("2f5568"))
+	box(PANEL, Vector3(hw, 0.43, -hd), Vector3(hw + 2.0, 3.0, -hd + 3.4), pale)
+	box(TRIM, Vector3(hw - 0.1, 3.0, -hd - 0.1), Vector3(hw + 2.1, 3.15, -hd + 3.5), Color("56646a"))
+	for k in range(2):
+		box(GLASS, Vector3(hw + 2.0, 1.0, -hd + 0.5 + k * 1.4), Vector3(hw + 2.04, 2.2, -hd + 1.5 + k * 1.4), Color("2f5568"))
+	banner(-hw + 0.8, 5.3, hd + 0.05, 2.2)
+	xf = saved
+	# the slipway on the right: paving down into the water, rails and a hull on keel blocks
+	quad(ASPHALT, Vector3(0.0, 0.43, 6.0), Vector3(8.0, 0.43, 6.0), Vector3(8.0, -0.8, 9.6), Vector3(0.0, -0.8, 9.6), Color(1.1, 1.1, 1.1))
+	for rx in [2.4, 6.4]:
+		bar(STEEL, Vector3(rx, 0.5, -6.0), Vector3(rx, 0.5, 6.0), 0.1, bright)
+		bar(STEEL, Vector3(rx, 0.5, 6.0), Vector3(rx, -0.7, 9.6), 0.1, bright)
+	hull(4.4, -5.0, 6.6)
+	# the goliath gantry: four legs, two portal beams and a bridge with a trolley and hook
+	var gold := Color("c8902a")
+	for gx in [2.0, 6.8]:
+		for gz in [-5.6, 5.2]:
+			bar(TRIM, Vector3(gx, 0.43, gz), Vector3(gx, 11.0, gz), 0.28, gold)
+			box(TRIM, Vector3(gx - 0.5, 0.43, gz - 0.4), Vector3(gx + 0.5, 0.9, gz + 0.4), ink)
+		bar(TRIM, Vector3(gx, 11.0, -5.6), Vector3(gx, 11.0, 5.2), 0.28, gold)
+		bar(TRIM, Vector3(gx, 3.0, -5.6), Vector3(gx, 10.0, 5.2), 0.08, gold)
+		bar(TRIM, Vector3(gx, 3.0, 5.2), Vector3(gx, 10.0, -5.6), 0.08, gold)
+	for gz in [-5.6, 5.2]:
+		bar(TRIM, Vector3(2.0, 11.0, gz), Vector3(6.8, 11.0, gz), 0.3, gold)
+	bar(TRIM, Vector3(2.0, 11.4, 0.0), Vector3(6.8, 11.4, 0.0), 0.35, gold)
+	box(TRIM, Vector3(3.7, 10.6, -0.8), Vector3(5.1, 11.2, 0.8), ink)
+	for cx in [-0.35, 0.35]:
+		bar(TRIM, Vector3(4.4 + cx, 10.6, 0.0), Vector3(4.4 + cx, 6.0, 0.0), 0.02, ink)
+	box(TRIM, Vector3(4.2, 5.7, -0.2), Vector3(4.6, 6.0, 0.2), ink)
+	box(GLOWR, Vector3(2.0 - 0.15, 11.4, -5.7), Vector3(2.0 + 0.15, 11.7, -5.4), Color(1.0, 0.4, 0.35))
+	# a material yard: steel plates, pipe racks, a welding cabin and a portable generator
+	for i in range(3):
+		box(PANEL, Vector3(-8.0 + i * 1.9, 0.43, 4.4), Vector3(-6.4 + i * 1.9, 0.43 + 0.5 + i * 0.35, 6.0), Color(1.0, 0.95, 0.9))
+	for k in range(4):
+		pipe(METAL, Vector3(-7.8, 0.75 + (k % 2) * 0.35, 7.0 + k * 0.4), Vector3(-3.4, 0.75 + (k % 2) * 0.35, 7.0 + k * 0.4), 0.16, Color("c9972a") if k % 2 == 0 else Color("8e999e"))
+	box(PANEL, Vector3(-3.0, 0.43, 6.4), Vector3(-0.8, 2.4, 8.0), pale)
+	box(TRIM, Vector3(-3.1, 2.4, 6.3), Vector3(-0.7, 2.52, 8.1), Color("56646a"))
+	box(GLASS, Vector3(-2.6, 1.1, 8.0), Vector3(-1.2, 2.0, 8.04), Color("2f5568"))
+	for p in [Vector3(-8.0, 0, 0.0), Vector3(0.4, 0, -7.6), Vector3(8.0, 0, -7.6)]:
+		bar(STEEL, p + Vector3(0, 0.43, 0), p + Vector3(0, 6.2, 0), 0.06, bright)
+		for k in range(2):
+			box(GLOWW, p + Vector3(-0.4 + k * 0.5, 6.15, -0.15), p + Vector3(-0.1 + k * 0.5, 6.3, 0.15), Color(1.0, 0.88, 0.65))
 
 ## A fishing wharf: a timber jetty, a net shed and boats alongside.
 func wharf(rng: RandomNumberGenerator) -> void:
