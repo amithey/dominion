@@ -39,7 +39,7 @@ const MODEL_CAP := {0: 15.0, 1: 11.5, 2: 12.0, 3: 8.0, 4: 8.5}
 var model_seed := 0.0
 ## Buildings the kit makes as whole-hex compositions: key -> recipe.
 const RECIPES := {"extractor": "extractor", "mountainMine": "extractor", "oilRefinery": "refinery",
-	"chipFab": "chip_fab", "aiDataCenter": "data_centre", "nuclearReactor": "nuclear", "solarFarm": "solar", "fishingWharf": "wharf",
+	"chipFab": "chip_fab", "aiDataCenter": "data_centre", "missileSilo": "missile_silo", "nuclearReactor": "nuclear", "solarFarm": "solar", "fishingWharf": "wharf",
 	"bunker": "bunker", "samSite": "sam_site", "park": "park", "stadium": "stadium"}
 ## Keys whose kit building is a complete composition (no yard props or landmarks added).
 const COMPLETE := ["extractor", "mountainMine", "oilRefinery", "chipFab", "aiDataCenter", "nuclearReactor", "solarFarm", "shipyard",
