@@ -34,6 +34,8 @@ const MODEL_KIND := {"hq": "town_hall", "cityCenter": "town_hall", "cityHall": "
 	"policeStation": "police_station", "market": "market_hall", "tvStation": "office_tower", "techPark": "office_tower", "intelAgency": "office_tower",
 	"tankFactory": "factory_brick", "warehouse": "warehouse", "powerPlant": "power_station", "foodDepot": "grain_silo",
 	"waterTreatment": "water_tower", "barracks": "barracks", "commandCenter": "command_bunker"}
+## Buildings modelled in Blender, one glb each (assets/art/blender/KEY.glb), standing on their own hex slab.
+const BLENDER_MADE := ["bunker"]
 ## Tallest a model-built central building may stand per style (metres): a tower is narrow but not a skyscraper over the town.
 const MODEL_CAP := {0: 15.0, 1: 11.5, 2: 12.0, 3: 8.0, 4: 8.5}
 var model_seed := 0.0
@@ -275,6 +277,13 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 		frng.seed = int(model_seed * 1000.0) + 17
 		place_model(container, "farmhouse", at + Vector3(-2.4, 0, 0.2), 0.0, 4.6, 0.0, frng)
 		place_model(container, "barn", at + Vector3(2.8, 0, -0.4), -0.25, 4.8, 0.0, frng)
+		return
+	if key in BLENDER_MADE and BModels.has_blender(key):
+		# Modelled in Blender (native/tools/models/blender): a whole hex, placed at its own size.
+		var tint := Color(world.map.nations[owner].color) if owner < world.map.nations.size() else Color.WHITE
+		var made: Node3D = BModels.build_blender(key, tint)
+		made.position = at
+		container.add_child(made)
 		return
 	if MODEL_KIND.has(key) and not BModels.variants(MODEL_KIND[key]).is_empty():
 		var mrng := RandomNumberGenerator.new()

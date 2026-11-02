@@ -1,0 +1,277 @@
+"""Modelling kit for the Blender-made DOMINION buildings (run inside Blender: blender -b -P build_X.py).
+
+Coordinates are the game's: metres, x right, y up, z towards the front of the building. Blender is Z-up with the front
+at -Y, so every point goes through P(). Parts are collected per ROLE (a material name the game dresses with the shared
+PBR sets: native/godot/scripts/building_models.gd), merged into one mesh per role, given UVs in metres (a texture tile
+keeps its real size on every face), smoothed by angle, and exported as a .glb with no textures inside.
+
+Real Blender tools are used where they earn their keep: bmesh bevels for the chamfered concrete edges, boolean cuts for
+splayed firing ports and vision slits, height-field meshes for the earth and the camouflage net, curves for wire.
+"""
+import math
+import random
+import bpy
+import bmesh
+from mathutils import Vector, Matrix, Quaternion
+
+# role -> preview colour (the game replaces it with the role's PBR material)
+PREVIEW = {
+    "wall_concrete": (0.55, 0.55, 0.53), "camo": (0.30, 0.36, 0.22), "earth": (0.30, 0.22, 0.14), "turf": (0.45, 0.40, 0.20),
+    "gravel": (0.45, 0.43, 0.40), "asphalt": (0.12, 0.12, 0.13), "wood": (0.35, 0.27, 0.18), "metal": (0.5, 0.52, 0.54),
+    "steel_dark": (0.12, 0.14, 0.15), "sandbag": (0.62, 0.55, 0.40), "hazard": (0.85, 0.65, 0.1), "net": (0.20, 0.27, 0.15),
+    "dark": (0.02, 0.02, 0.02), "glow_warm": (1.0, 0.85, 0.55), "glow_red": (1.0, 0.2, 0.15), "banner": (0.8, 0.8, 0.8),
+    "glow_green": (0.4, 1.0, 0.4), "olive_paint": (0.30, 0.34, 0.22),
+}
+
+
+def P(x, y, z):
+    """A game point as a Blender vector."""
+    return Vector((x, -z, y))
+
+
+def _hull(points):
+    bm = bmesh.new()
+    verts = [bm.verts.new(P(*p)) for p in points]
+    bmesh.ops.convex_hull(bm, input=verts)
+    return bm
+
+
+class Model:
+    def __init__(self, name):
+        self.name = name
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        self.parts = {}
+        self.rng = random.Random(7)
+        self._cache = {}
+
+    # ------------------------------------------------------------ accumulation
+    def _acc(self, role):
+        if role not in self.parts:
+            bm = bmesh.new()
+            bm.loops.layers.color.new("Color")
+            self.parts[role] = bm
+        return self.parts[role]
+
+    def add(self, role, src, matrix=None, tint=(1, 1, 1)):
+        """Append a bmesh (in Blender space) to a role, transformed by matrix and tinted."""
+        acc = self._acc(role)
+        tmp = src.copy()
+        if matrix is not None:
+            bmesh.ops.transform(tmp, matrix=matrix, verts=tmp.verts)
+        mesh = bpy.data.meshes.new("t")
+        tmp.to_mesh(mesh)
+        tmp.free()
+        n0 = len(acc.faces)
+        acc.from_mesh(mesh)
+        bpy.data.meshes.remove(mesh)
+        acc.faces.ensure_lookup_table()
+        layer = acc.loops.layers.color.active
+        for f in acc.faces[n0:]:
+            for l in f.loops:
+                l[layer] = (tint[0], tint[1], tint[2], 1.0)
+
+    def add_object(self, role, obj, tint=(1, 1, 1)):
+        """A Blender object with modifiers: evaluate them, bring the result in world space, append."""
+        dg = bpy.context.evaluated_depsgraph_get()
+        ev = obj.evaluated_get(dg)
+        mesh = bpy.data.meshes.new_from_object(ev)
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+        bpy.data.meshes.remove(mesh)
+        self.add(role, bm, obj.matrix_world.copy(), tint)
+        bm.free()
+
+    # ------------------------------------------------------------ primitives
+    def box(self, role, lo, hi, bevel=0.0, seg=2, yaw=0.0, tint=(1, 1, 1), about=None):
+        """An axis-aligned box from lo to hi (game coords), chamfered by `bevel`, turned `yaw` about `about` (default its centre)."""
+        key = ("box", round(hi[0] - lo[0], 4), round(hi[1] - lo[1], 4), round(hi[2] - lo[2], 4), bevel, seg)
+        if key not in self._cache:
+            bm = bmesh.new()
+            bmesh.ops.create_cube(bm, size=1.0)
+            for v in bm.verts:
+                v.co = Vector((v.co.x * (hi[0] - lo[0]), v.co.y * (hi[2] - lo[2]), v.co.z * (hi[1] - lo[1])))
+            if bevel > 0.0:
+                b = min(bevel, (hi[0] - lo[0]) * 0.45, (hi[1] - lo[1]) * 0.45, (hi[2] - lo[2]) * 0.45)
+                bmesh.ops.bevel(bm, geom=list(bm.edges), offset=b, segments=seg, affect="EDGES", profile=0.6)
+            self._cache[key] = bm
+        centre = ((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2)
+        m = Matrix.Translation(P(*centre))
+        if yaw:
+            c = P(*(about if about else centre))
+            m = Matrix.Translation(c) @ Matrix.Rotation(yaw, 4, "Z") @ Matrix.Translation(-c) @ m
+        self.add(role, self._cache[key], m, tint)
+
+    def cyl(self, role, base, r, h, seg=12, r2=None, tint=(1, 1, 1), cap=True):
+        """A vertical cylinder or cone frustum standing on `base`."""
+        bm = bmesh.new()
+        bmesh.ops.create_cone(bm, cap_ends=cap, segments=seg, radius1=r, radius2=r if r2 is None else r2, depth=h)
+        self.add(role, bm, Matrix.Translation(P(base[0], base[1] + h / 2, base[2])) , tint)
+        bm.free()
+
+    def pipe(self, role, a, b, r, seg=8, tint=(1, 1, 1), r2=None):
+        """A cylinder between two game points."""
+        pa, pb = P(*a), P(*b)
+        d = pb - pa
+        bm = bmesh.new()
+        bmesh.ops.create_cone(bm, cap_ends=True, segments=seg, radius1=r, radius2=r if r2 is None else r2, depth=d.length)
+        rot = Vector((0, 0, 1)).rotation_difference(d.normalized()).to_matrix().to_4x4()
+        self.add(role, bm, Matrix.Translation((pa + pb) / 2) @ rot, tint)
+        bm.free()
+
+    def dome(self, role, c, r, h, seg=14, rings=5, tint=(1, 1, 1)):
+        bm = bmesh.new()
+        bmesh.ops.create_uvsphere(bm, u_segments=seg, v_segments=rings * 2, radius=1.0)
+        for v in list(bm.verts):
+            if v.co.z < -1e-4:
+                bm.verts.remove(v)
+        for v in bm.verts:
+            v.co = Vector((v.co.x * r, v.co.y * r, v.co.z * h))
+        self.add(role, bm, Matrix.Translation(P(*c)), tint)
+        bm.free()
+
+    def hull(self, role, points, tint=(1, 1, 1)):
+        """The convex solid through some game points (wedges, frusta, teeth)."""
+        bm = _hull(points)
+        self.add(role, bm, None, tint)
+        bm.free()
+
+    def grid(self, role, x0, x1, z0, z1, height, nx=24, nz=12, tint=(1, 1, 1), base=0.0):
+        """A height-field surface over x0..x1, z0..z1: height(x, z) metres above `base`."""
+        bm = bmesh.new()
+        rows = []
+        for j in range(nz + 1):
+            z = z1 + (z0 - z1) * j / nz          # by = -z ascends with j
+            row = []
+            for i in range(nx + 1):
+                x = x0 + (x1 - x0) * i / nx
+                row.append(bm.verts.new(P(x, base + height(x, z), z)))
+            rows.append(row)
+        for j in range(nz):
+            for i in range(nx):
+                try:
+                    bm.faces.new((rows[j][i], rows[j][i + 1], rows[j + 1][i + 1], rows[j + 1][i]))
+                except ValueError:
+                    pass
+        self.add(role, bm, None, tint)
+        bm.free()
+
+    def polygon(self, role, pts, y, thick=0.02, tint=(1, 1, 1)):
+        """A flat slab with a polygonal outline (x, z pairs) at height y."""
+        bm = bmesh.new()
+        lo = [bm.verts.new(P(x, y, z)) for x, z in pts]
+        f = bm.faces.new(lo)
+        if f.normal.z < 0:
+            f.normal_flip()
+        res = bmesh.ops.extrude_face_region(bm, geom=[f])
+        vs = [e for e in res["geom"] if isinstance(e, bmesh.types.BMVert)]
+        bmesh.ops.translate(bm, vec=Vector((0, 0, thick)), verts=vs)
+        bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+        self.add(role, bm, None, tint)
+        bm.free()
+
+    # ------------------------------------------------------------ booleans
+    def cut_box(self, role, lo, hi, cutters, bevel=0.0, seg=2, tint=(1, 1, 1)):
+        """A box with holes: each cutter is a list of game points (their convex hull is subtracted)."""
+        bm = bmesh.new()
+        bmesh.ops.create_cube(bm, size=1.0)
+        for v in bm.verts:
+            v.co = Vector((v.co.x * (hi[0] - lo[0]), v.co.y * (hi[2] - lo[2]), v.co.z * (hi[1] - lo[1])))
+        if bevel > 0.0:
+            bmesh.ops.bevel(bm, geom=list(bm.edges), offset=bevel, segments=seg, affect="EDGES", profile=0.6)
+        centre = ((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2)
+        mesh = bpy.data.meshes.new("wall")
+        bm.to_mesh(mesh)
+        bm.free()
+        obj = bpy.data.objects.new("wall", mesh)
+        obj.location = P(*centre)
+        bpy.context.scene.collection.objects.link(obj)
+        tools = []
+        for pts in cutters:
+            cb = _hull(pts)
+            cm = bpy.data.meshes.new("cut")
+            cb.to_mesh(cm)
+            cb.free()
+            co = bpy.data.objects.new("cut", cm)
+            bpy.context.scene.collection.objects.link(co)
+            mod = obj.modifiers.new("b", "BOOLEAN")
+            mod.operation = "DIFFERENCE"
+            mod.solver = "EXACT"
+            mod.object = co
+            tools.append(co)
+        bpy.context.view_layer.update()
+        self.add_object(role, obj, tint)
+        for t in tools + [obj]:
+            bpy.data.objects.remove(t, do_unlink=True)
+
+    # ------------------------------------------------------------ wire
+    def wire(self, role, pts, r=0.012, seg=4, tint=(1, 1, 1)):
+        """A thin wire along a polyline of game points, built as a bevelled curve."""
+        cu = bpy.data.curves.new("w", "CURVE")
+        cu.dimensions = "3D"
+        cu.bevel_depth = r
+        cu.bevel_resolution = max(0, seg // 2 - 1)
+        sp = cu.splines.new("POLY")
+        sp.points.add(len(pts) - 1)
+        for p, q in zip(sp.points, pts):
+            v = P(*q)
+            p.co = (v.x, v.y, v.z, 1.0)
+        obj = bpy.data.objects.new("w", cu)
+        bpy.context.scene.collection.objects.link(obj)
+        bpy.context.view_layer.update()
+        self.add_object(role, obj, tint)
+        bpy.data.objects.remove(obj, do_unlink=True)
+        bpy.data.curves.remove(cu)
+
+    # ------------------------------------------------------------ finish
+    def finish(self, out_path, smooth_angle=38.0):
+        scene = bpy.context.scene
+        for role, bm in self.parts.items():
+            if not bm.faces:
+                continue
+            _uvs(bm)
+            ang = math.radians(smooth_angle)
+            for e in bm.edges:
+                e.smooth = True
+                if len(e.link_faces) == 2 and e.calc_face_angle(0.0) > ang:
+                    e.smooth = False
+            for f in bm.faces:
+                f.smooth = True
+            mesh = bpy.data.meshes.new(role)
+            bm.to_mesh(mesh)
+            obj = bpy.data.objects.new(role, mesh)
+            scene.collection.objects.link(obj)
+            mat = bpy.data.materials.new(role)
+            mat.use_nodes = True
+            bsdf = mat.node_tree.nodes.get("Principled BSDF")
+            col = PREVIEW.get(role, (0.5, 0.5, 0.5))
+            bsdf.inputs["Base Color"].default_value = (*col, 1.0)
+            if role.startswith("glow"):
+                bsdf.inputs["Emission Color"].default_value = (*col, 1.0)
+                bsdf.inputs["Emission Strength"].default_value = 2.0
+            obj.data.materials.append(mat)
+        bpy.ops.export_scene.gltf(filepath=out_path, export_format="GLB", export_apply=True, export_yup=True,
+                                  export_materials="EXPORT", export_image_format="NONE", export_texcoords=True,
+                                  export_normals=True, export_vertex_color="ACTIVE", export_cameras=False, export_lights=False)
+        tris = sum(len(b.faces) for b in self.parts.values())
+        print("MODEL %s: %d roles, %d faces -> %s" % (self.name, len(self.parts), tris, out_path))
+
+
+def _lin(c):
+    return c
+
+
+def _uvs(bm):
+    """UVs in metres: each face is projected along its dominant axis."""
+    uv = bm.loops.layers.uv.verify()
+    for f in bm.faces:
+        n = f.normal
+        ax, ay, az = abs(n.x), abs(n.y), abs(n.z)
+        for l in f.loops:
+            p = l.vert.co
+            if az >= ax and az >= ay:
+                u, v = p.x, p.y
+            elif ax >= ay:
+                u, v = p.y, p.z
+            else:
+                u, v = p.x, p.z
+            l[uv].uv = (u, v)
