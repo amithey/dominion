@@ -641,7 +641,7 @@ func _nation_card(i: int) -> Button:
 	var colour := Color(world.MatchSetup.COLOURS[i]) if i < world.MatchSetup.COLOURS.size() else UI.GOLD
 	var chosen: bool = int(setup_options.nation) == i
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(304, 260)
+	b.custom_minimum_size = Vector2(304, 226)
 	b.set_meta("action_help", "Choose %s as your country for the next campaign. This sets its leader, arsenal, strengths and limitations." % parts[0])
 	b.focus_mode = Control.FOCUS_ALL
 	b.toggle_mode = true
@@ -663,8 +663,8 @@ func _nation_card(i: int) -> Button:
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(col)
 	var pic := TextureRect.new()
-	pic.texture = Gallery.face(parts[1] if parts.size() > 1 else "", 292.0 / 160.0)
-	pic.custom_minimum_size = Vector2(0, 160)
+	pic.texture = Gallery.face(parts[1] if parts.size() > 1 else "", 292.0 / 130.0)
+	pic.custom_minimum_size = Vector2(0, 130)
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE

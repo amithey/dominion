@@ -1511,6 +1511,7 @@ func _update_selection() -> void:
 	_sel_fuel.visible = false
 	_launch_row.visible = false
 	_cargo_row.visible = false
+	_wing_row.visible = false
 	if transport_text != "":
 		_sel.visible = true
 		_sel_title.text = UI.caps("Road" if world.transport_kind == "road" else "Railway")
