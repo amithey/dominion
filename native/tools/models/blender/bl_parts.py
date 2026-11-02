@@ -113,7 +113,8 @@ def radome(m, c, r):
     x, y, z = c
     m.cyl("paint", (x, y, z), r * 0.92, 0.45, 20, tint=hexc("dfe4e6"))
     m.cyl("glow_cyan", (x, y + 0.45, z), r * 0.94, 0.05, 20)
-    m.dome("paint", (x, y + 0.5, z), r, r * 0.95, 20, 7, tint=(1.0, 1.0, 1.02))
+    m.geodome("paint", (x, y + 0.5, z), r, r * 0.95, 2, tint=(1.0, 1.0, 1.02), jitter=0.07)
+    m.tube("dark", (x, y + 0.5, z), r * 1.0, r * 0.97, 0.04, 20)
 
 
 def container(m, x, z, yaw, tint, length=2.6, width=1.25, height=1.8):

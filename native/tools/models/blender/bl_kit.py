@@ -55,7 +55,7 @@ class Model:
             self.parts[role] = bm
         return self.parts[role]
 
-    def add(self, role, src, matrix=None, tint=(1, 1, 1)):
+    def add(self, role, src, matrix=None, tint=(1, 1, 1), jitter=0.0):
         """Append a bmesh (in Blender space) to a role, transformed by matrix and tinted."""
         acc = self._acc(role)
         tmp = src.copy()
@@ -72,8 +72,9 @@ class Model:
         acc.faces.ensure_lookup_table()
         layer = acc.loops.layers.float_color.get("Color")
         for f in acc.faces[n0:]:
+            k = 1.0 + self.rng.uniform(-jitter, jitter) if jitter else 1.0
             for l in f.loops:
-                l[layer] = (tint[0], tint[1], tint[2], 1.0)
+                l[layer] = (tint[0] * k, tint[1] * k, tint[2] * k, 1.0)
 
     def add_object(self, role, obj, tint=(1, 1, 1)):
         """A Blender object with modifiers: evaluate them, bring the result in world space, append."""
@@ -136,6 +137,20 @@ class Model:
         for v in bm.verts:
             v.co = Vector((v.co.x * r, v.co.y * r, v.co.z * h))
         self.add(role, bm, Matrix.Translation(P(*c)), tint)
+        bm.free()
+
+    def geodome(self, role, c, r, h, freq=2, tint=(1, 1, 1), jitter=0.06):
+        """A geodesic dome (a radome): flat triangular panels, each a touch different in tone, seams between them."""
+        bm = bmesh.new()
+        bmesh.ops.create_icosphere(bm, subdivisions=freq, radius=1.0)
+        for v in list(bm.verts):
+            if v.co.z < -0.01:
+                bm.verts.remove(v)
+        for v in bm.verts:
+            v.co = Vector((v.co.x * r, v.co.y * r, max(v.co.z, 0.0) * h))
+        for f in bm.faces:
+            f.material_index = 1
+        self.add(role, bm, Matrix.Translation(P(*c)), tint, jitter)
         bm.free()
 
     def tube(self, role, base, r_out, r_in, h, seg=16, tint=(1, 1, 1)):
@@ -281,8 +296,10 @@ class Model:
             ang = math.radians(smooth_angle)
             for e in bm.edges:
                 e.smooth = True
-                if len(e.link_faces) == 2 and e.calc_face_angle(0.0) > ang:
+                if len(e.link_faces) == 2 and (e.calc_face_angle(0.0) > ang or (e.link_faces[0].material_index == 1 and e.link_faces[1].material_index == 1)):
                     e.smooth = False
+            for f in bm.faces:
+                f.material_index = 0
             for f in bm.faces:
                 f.smooth = True
             mesh = bpy.data.meshes.new(role)

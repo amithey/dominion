@@ -40,11 +40,24 @@ m.box("gravel", (-9.0, 0.1, -8.0), (9.0, 0.16, -4.6))
 # ------------------------------------------------------------------ the operations block, 11 x 5 x 4, a lit screen wall in front
 BZ, W, D = -2.0, 11.0, 5.0
 z0 = BZ + D / 2
-m.box(CONC, (-W / 2, 0.1, BZ - D / 2), (W / 2, 4.0, z0), bevel=0.05)
+m.box("dark", (-W / 2, 0.1, BZ - D / 2), (W / 2, 4.0, z0 - 0.04))                       # the core; precast panels hang on it
+for side in (-1, 1):                                                                       # panelised precast concrete, a joint between each
+    xa, xb = (1.7, W / 2) if side > 0 else (-W / 2, -1.7)
+    n = 3
+    for k in range(n):
+        x0 = xa + (xb - xa) * k / n + 0.02
+        x1 = xa + (xb - xa) * (k + 1) / n - 0.02
+        t = 0.93 + rng.random() * 0.12
+        m.box(CONC, (x0, 0.1, z0 - 0.06), (x1, 3.0, z0), bevel=0.02, seg=1, tint=(t, t, t))
+        for r_ in range(3):                                                                 # tie-bolt holes
+            for q in (0.25, 0.75):
+                m.cyl("dark", (x0 + (x1 - x0) * q, 0.6 + r_ * 0.9, z0 - 0.002), 0.03, 0.03, 6)
+        m.box("dark", (x0 + 0.05, 1.45, z0), (x1 - 0.05, 1.47, z0 + 0.012))                 # a formwork seam
+m.box(CONC, (-W / 2, 3.0, z0 - 0.06), (W / 2, 4.0, z0 - 0.0), bevel=0.02, seg=1)
+m.box(CONC, (-W / 2, 0.1, BZ - D / 2), (-W / 2 + 0.2, 4.0, z0), bevel=0.03, seg=1)
+m.box(CONC, (W / 2 - 0.2, 0.1, BZ - D / 2), (W / 2, 4.0, z0), bevel=0.03, seg=1)
 m.box(CONC, (-W / 2 - 0.15, 4.0, BZ - D / 2 - 0.15), (W / 2 + 0.15, 4.3, z0 + 0.15), bevel=0.06)
 m.box("gravel", (-W / 2, 4.3, BZ - D / 2), (W / 2, 4.35, z0))
-for k in range(7):                                                                       # panel joints on the front
-    m.box("dark", (-W / 2 + 0.7 + k * 1.6 - 0.03, 0.4, z0), (-W / 2 + 0.7 + k * 1.6 + 0.03, 2.95, z0 + 0.03))
 m.box("dark", (-W / 2, 3.0, z0), (W / 2, 3.15, z0 + 0.06))
 for k in range(8):                                                                       # the screen wall: panels of varied brightness
     x0 = -W / 2 + 0.4 + k * 1.3
@@ -58,7 +71,16 @@ for k in range(5):
     m.hull("hazard" if k % 2 == 0 else "dark", [(-0.85 + k * 0.38, 0.15, z0 + 0.15), (-0.7 + k * 0.38, 0.15, z0 + 0.15), (-0.7 + k * 0.38, 2.3, z0 + 0.15), (-0.85 + k * 0.38, 2.3, z0 + 0.15),
                                                 (-0.85 + k * 0.38, 0.15, z0 + 0.17), (-0.7 + k * 0.38, 0.15, z0 + 0.17), (-0.7 + k * 0.38, 2.3, z0 + 0.17), (-0.85 + k * 0.38, 2.3, z0 + 0.17)])
 m.box("glow_warm", (-0.2, 2.7, z0 + 0.0), (0.2, 2.8, z0 + 0.1))
-m.box(CONC, (-1.4, 0.1, z0 + 0.1), (1.4, 0.22, z0 + 1.1), bevel=0.02, seg=1)
+m.cut_box(CONC, (-1.7, 0.1, z0), (1.7, 3.0, z0 + 1.6), [[(-0.95, 0.1, z0 + 0.5), (0.95, 0.1, z0 + 0.5), (-0.95, 2.5, z0 + 0.5), (0.95, 2.5, z0 + 0.5),
+                                                    (-0.95, 0.1, z0 + 1.8), (0.95, 0.1, z0 + 1.8), (-0.95, 2.5, z0 + 1.8), (0.95, 2.5, z0 + 1.8)]], bevel=0.04, seg=1)
+m.box("glow_warm", (-0.3, 2.45, z0 + 0.6), (0.3, 2.5, z0 + 1.2))
+m.box("hazard", (-1.7, 0.1, z0 + 1.6), (1.7, 0.18, z0 + 1.9))
+for bx in (-1.2, -0.4, 0.4, 1.2):                                                          # bollards
+    m.cyl(METAL, (bx, 0.1, z0 + 2.4), 0.11, 0.9, 10)
+    m.cyl("hazard", (bx, 0.75, z0 + 2.4), 0.115, 0.1, 10)
+m.pipe(METAL, (1.6, 2.7, z0 + 1.6), (1.9, 2.9, z0 + 1.9), 0.02, 4)                         # a camera on a bracket
+m.box(DARK, (1.8, 2.78, z0 + 1.8), (2.1, 2.95, z0 + 2.1), bevel=0.02, seg=1)
+m.box("glow_red", (2.05, 2.82, z0 + 2.0), (2.08, 2.86, z0 + 2.03))
 mound(-W / 2 - 0.1, BZ, 2.3, 2.5, 2.2)                                                    # earth banked against the sides and back
 mound(W / 2 + 0.1, BZ, 2.3, 2.5, 2.2)
 mound(0.0, BZ - D / 2 - 0.3, 4.6, 2.2, 2.2)
@@ -85,6 +107,21 @@ for k in range(2):
     fan(m, (5.2 - k * 1.5, R + 0.55, BZ - 1.4), 0.35)
     m.box(DARK, (5.2 - k * 1.5 - 0.5, R, BZ - 1.9), (5.2 - k * 1.5 + 0.5, R + 0.55, BZ - 0.9), bevel=0.03, seg=1)
 
+for k in range(12):                                                                        # a safety rail along the roof front
+    m.pipe(METAL, (-W / 2 + 0.2 + k * 0.96, R, z0 + 0.05), (-W / 2 + 0.2 + k * 0.96, R + 0.95, z0 + 0.05), 0.025, 5)
+m.pipe(METAL, (-W / 2 + 0.2, R + 0.95, z0 + 0.05), (W / 2 - 0.2 + 0.0, R + 0.95, z0 + 0.05), 0.025, 5)
+m.pipe(METAL, (-W / 2 + 0.2, R + 0.5, z0 + 0.05), (W / 2 - 0.2, R + 0.5, z0 + 0.05), 0.02, 5)
+m.box(CONC, (3.4, R, BZ + 1.7), (4.6, R + 0.9, BZ + 2.3), bevel=0.04, seg=1)             # a roof hatch
+m.box("dark", (3.5, R + 0.9, BZ + 1.8), (4.5, R + 0.95, BZ + 2.2))
+for ex in (-5.0, -4.4):                                                                    # exhaust stacks
+    m.pipe(DARK, (ex, R, BZ + 1.6), (ex, R + 1.4, BZ + 1.6), 0.09, 8)
+    m.cyl(DARK, (ex, R + 1.4, BZ + 1.6), 0.14, 0.06, 8)
+for rx in (-W / 2 + 0.3, W / 2 - 0.3):                                                     # lightning rods
+    m.pipe(METAL, (rx, R, BZ - 2.0), (rx, R + 1.8, BZ - 2.0), 0.015, 4)
+for k in range(4):                                                                         # whip antennas
+    m.pipe(METAL, (-2.2 + k * 0.25, R, BZ - 1.9), (-2.2 + k * 0.25, R + 1.5 + 0.3 * (k % 2), BZ - 1.9), 0.012, 4)
+for lx in (-3.6, 3.6):                                                                     # air intake louvres low on the front
+    pass
 # ------------------------------------------------------------------ the communications yard: containers with antennas, a feeder
 for i in range(3):
     z = 2.4 + i * 1.5
@@ -100,6 +137,19 @@ for k in range(4):
 m.pipe(DARK, (7.7, 2.22, 3.6), (7.7, 3.6, 3.6), 0.12, 8)
 m.cyl(DARK, (7.7, 3.6, 3.6), 0.17, 0.08, 8)
 m.box("glow_green", (5.3, 1.4, 3.8), (5.34, 1.6, 4.0))
+m.box(DARK, (6.0, 0.1, 0.8), (8.4, 1.5, 2.2), bevel=0.04, seg=1)                          # a chiller on a pad, two fans, pipes to the block
+m.box(CONC, (5.9, 0.1, 0.7), (8.5, 0.2, 2.3), bevel=0.02, seg=1)
+for fx in (6.7, 7.7):
+    fan(m, (fx, 1.5, 1.5), 0.42)
+m.pipe("paint", (6.2, 0.5, 0.8), (6.2, 0.5, -0.4), 0.09, 8, tint=hexc("c83a2e"))
+m.pipe("paint", (6.5, 0.5, 0.8), (6.5, 0.5, -0.4), 0.09, 8, tint=hexc("2f6f7e"))
+for mx, mz in ((-3.0, 3.2), (3.0, 1.8), (-1.0, 4.6)):                                      # manholes and a cable duct
+    m.tube(METAL, (mx, 0.14, mz), 0.38, 0.3, 0.03, 16)
+    m.cyl("dark", (mx, 0.14, mz), 0.3, 0.025, 16)
+for p in ((-9.0, -7.0), (9.0, -7.0), (9.0, 7.0), (-9.0, 7.0)):                             # camera poles at the fence corners
+    m.pipe(METAL, (p[0], 0.1, p[1]), (p[0], 4.0, p[1]), 0.04, 6)
+    m.box(DARK, (p[0] - 0.15, 3.9, p[1] - 0.15), (p[0] + 0.15, 4.1, p[1] + 0.3), bevel=0.02, seg=1)
+    m.box("glow_red", (p[0] - 0.03, 3.98, p[1] + 0.3), (p[0] + 0.03, 4.02, p[1] + 0.32))
 truck(m, 3.6, 5.2, yaw=math.pi / 2, canvas=False, bed=2.8)                                # the command vehicle
 m.box("paint", (2.1, 1.1, 4.3), (4.7, 2.3, 6.1), bevel=0.08, seg=2, tint=hexc("4c5a38"))
 m.pipe(METAL, (3.4, 2.3, 5.2), (3.4, 3.1, 5.2), 0.03, 5)
