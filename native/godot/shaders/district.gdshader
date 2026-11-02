@@ -26,6 +26,7 @@ uniform float core = 5.0;            // the central building's footprint
 instance uniform int style = 0;
 instance uniform int streets = 0;
 instance uniform float seed = 0.0;
+instance uniform float solid = 0.0;   // 1: a hard surface right to the edge, with a concrete kerb (industrial and military sites)
 
 varying vec2 local;
 varying vec3 world_pos;
@@ -114,7 +115,7 @@ void fragment() {
 	// in green instead of ending in a grey slab at the hex edge.
 	if (style == 0 || style == 2 || style == 4) {
 		float wobble = (noise(w * 0.09 + seed * 2.3) - 0.5) * 2.4;
-		float green = smoothstep(core + 3.0, core + 5.2, length(p) + wobble);
+		float green = smoothstep(core + 3.0, core + 5.2, length(p) + wobble) * (1.0 - solid);
 		float mown = step(0.5, fract(dot(w, vec2(0.6, 0.8)) / 3.0));
 		vec3 lawn = meadow * mix(0.95, 1.05, mown);
 		col = mix(col, lawn, green);
@@ -161,6 +162,12 @@ void fragment() {
 	// Contact shadow: the ground darkens close round the central building (where the walls meet it), none on streets.
 	float footprint = max(abs(p.x), abs(p.y));
 	col *= mix(1.0, 0.72, (1.0 - smoothstep(core * 0.5, core * 0.5 + 2.4, footprint)) * (1.0 - open));
+	// A solid site ends in a crisp concrete kerb with a dark line outside it, so it never melts into the meadow.
+	if (solid > 0.5) {
+		float kerb_band = 1.0 - smoothstep(0.42, 0.5, to_rim);
+		col = mix(col, srgb(vec3(0.74, 0.74, 0.71)) * mix(0.95, 1.05, grain), kerb_band * (1.0 - open) * 0.95);
+		col *= mix(1.0, 0.55, (1.0 - smoothstep(0.0, 0.14, to_rim)) * (1.0 - open));
+	}
 	// A touch of shade where the tile meets the ground (none across streets).
 	col *= mix(1.0, 0.82, (1.0 - smoothstep(0.0, 0.12, to_rim)) * (1.0 - open));
 	if (winter > 0.0) {
