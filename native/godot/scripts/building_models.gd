@@ -41,6 +41,13 @@ const BLEND_ROLES := {
 	"glow_red": ["", 1.0, 1.0, 0.0, Color(1.0, 0.25, 0.2), 2.5],
 	"glow_green": ["", 1.0, 1.0, 0.0, Color(0.4, 1.0, 0.4), 2.0],
 	"banner": ["", 1.0, 0.9, 0.0, Color.WHITE, 0.0],
+	"cladding": ["concrete_smooth", 4.0, 0.55, 0.25, Color(1.25, 1.27, 1.3), 0.0],
+	"glass": ["", 1.0, 0.06, 0.1, Color(0.17, 0.27, 0.34), 0.0],
+	"glow_cyan": ["", 1.0, 1.0, 0.0, Color(0.75, 0.92, 1.0), 2.2],
+	"pavers": ["concrete_pavers", 2.0, 1.0, 0.0, Color(1.2, 1.2, 1.2), 0.0],
+	"paint": ["", 1.0, 0.4, 0.3, Color.WHITE, 0.0],
+	"leaf": ["", 1.0, 1.0, 0.0, Color(0.62, 0.66, 0.6), 0.0],
+	"solar": ["", 1.0, 0.2, 0.6, Color(0.08, 0.13, 0.22), 0.0],
 }
 static var _cache := {}
 

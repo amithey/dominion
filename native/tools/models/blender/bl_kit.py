@@ -21,6 +21,8 @@ PREVIEW = {
     "steel_dark": (0.12, 0.14, 0.15), "sandbag": (0.62, 0.55, 0.40), "hazard": (0.85, 0.65, 0.1), "net": (0.20, 0.27, 0.15),
     "dark": (0.02, 0.02, 0.02), "glow_warm": (1.0, 0.85, 0.55), "glow_red": (1.0, 0.2, 0.15), "banner": (0.8, 0.8, 0.8),
     "glow_green": (0.4, 1.0, 0.4), "olive_paint": (0.30, 0.34, 0.22),
+    "cladding": (0.8, 0.82, 0.84), "glass": (0.12, 0.2, 0.26), "glow_cyan": (0.6, 0.85, 1.0), "pavers": (0.6, 0.6, 0.58),
+    "paint": (0.8, 0.8, 0.8), "leaf": (0.2, 0.4, 0.15), "solar": (0.05, 0.09, 0.16),
 }
 
 
@@ -43,12 +45,13 @@ class Model:
         self.parts = {}
         self.rng = random.Random(7)
         self._cache = {}
+        self.stack = []
 
     # ------------------------------------------------------------ accumulation
     def _acc(self, role):
         if role not in self.parts:
             bm = bmesh.new()
-            bm.loops.layers.color.new("Color")
+            bm.loops.layers.float_color.new("Color")
             self.parts[role] = bm
         return self.parts[role]
 
@@ -56,6 +59,8 @@ class Model:
         """Append a bmesh (in Blender space) to a role, transformed by matrix and tinted."""
         acc = self._acc(role)
         tmp = src.copy()
+        for f in reversed(self.stack):
+            matrix = f if matrix is None else f @ matrix
         if matrix is not None:
             bmesh.ops.transform(tmp, matrix=matrix, verts=tmp.verts)
         mesh = bpy.data.meshes.new("t")
@@ -65,7 +70,7 @@ class Model:
         acc.from_mesh(mesh)
         bpy.data.meshes.remove(mesh)
         acc.faces.ensure_lookup_table()
-        layer = acc.loops.layers.color.active
+        layer = acc.loops.layers.float_color.get("Color")
         for f in acc.faces[n0:]:
             for l in f.loops:
                 l[layer] = (tint[0], tint[1], tint[2], 1.0)
@@ -80,6 +85,10 @@ class Model:
         bpy.data.meshes.remove(mesh)
         self.add(role, bm, obj.matrix_world.copy(), tint)
         bm.free()
+
+    def frame(self, pos=(0, 0, 0), yaw=0.0, pitch=0.0):
+        """`with m.frame(pos, yaw, pitch):` everything inside is placed relative to pos, turned about the up axis, then tipped about x."""
+        return _Frame(self, Matrix.Translation(P(*pos)) @ Matrix.Rotation(yaw, 4, "Z") @ Matrix.Rotation(pitch, 4, "X"))
 
     # ------------------------------------------------------------ primitives
     def box(self, role, lo, hi, bevel=0.0, seg=2, yaw=0.0, tint=(1, 1, 1), about=None):
@@ -127,6 +136,20 @@ class Model:
         for v in bm.verts:
             v.co = Vector((v.co.x * r, v.co.y * r, v.co.z * h))
         self.add(role, bm, Matrix.Translation(P(*c)), tint)
+        bm.free()
+
+    def tube(self, role, base, r_out, r_in, h, seg=16, tint=(1, 1, 1)):
+        """A vertical ring (a fan housing, a pipe flange): walls inside and out, flat top and bottom."""
+        bm = bmesh.new()
+        ring = lambda r, z: [bm.verts.new(Vector((math.cos(math.tau * i / seg) * r, math.sin(math.tau * i / seg) * r, z))) for i in range(seg)]
+        ob, ot, ib, it = ring(r_out, 0.0), ring(r_out, h), ring(r_in, 0.0), ring(r_in, h)
+        for i in range(seg):
+            j = (i + 1) % seg
+            bm.faces.new((ob[i], ob[j], ot[j], ot[i]))
+            bm.faces.new((ib[j], ib[i], it[i], it[j]))
+            bm.faces.new((ot[i], ot[j], it[j], it[i]))
+            bm.faces.new((ob[j], ob[i], ib[i], ib[j]))
+        self.add(role, bm, Matrix.Translation(P(*base)), tint)
         bm.free()
 
     def hull(self, role, points, tint=(1, 1, 1)):
@@ -238,6 +261,9 @@ class Model:
                 f.smooth = True
             mesh = bpy.data.meshes.new(role)
             bm.to_mesh(mesh)
+            if mesh.color_attributes:
+                mesh.color_attributes.active_color = mesh.color_attributes[0]
+                mesh.color_attributes.render_color_index = 0
             obj = bpy.data.objects.new(role, mesh)
             scene.collection.objects.link(obj)
             mat = bpy.data.materials.new(role)
@@ -256,8 +282,25 @@ class Model:
         print("MODEL %s: %d roles, %d faces -> %s" % (self.name, len(self.parts), tris, out_path))
 
 
-def _lin(c):
-    return c
+class _Frame:
+    def __init__(self, model, matrix):
+        self.model, self.matrix = model, matrix
+
+    def __enter__(self):
+        self.model.stack.append(self.matrix)
+
+    def __exit__(self, *a):
+        self.model.stack.pop()
+
+
+def hexc(h, k=1.0):
+    """A sRGB hex colour as the linear tint the game multiplies a role's colour by."""
+    h = h.lstrip("#")
+    out = []
+    for i in (0, 2, 4):
+        v = int(h[i:i + 2], 16) / 255.0
+        out.append(k * (v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4))
+    return tuple(out)
 
 
 def _uvs(bm):
