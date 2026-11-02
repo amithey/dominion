@@ -14,7 +14,7 @@ extends RefCounted
 ## their size on any wall or roof. Everything a district holds is gathered into
 ## one mesh per material (a handful of draws per district).
 
-enum { PLASTER, BRICK, STONE, ROOF, TRIM, GLASS, WOOD, BANNER, METAL, PLANK, GLOW }
+enum { PLASTER, BRICK, STONE, ROOF, TRIM, GLASS, WOOD, BANNER, METAL, PLANK, GLOW, GLOWG, GLOWW, CONCRETE, PANEL, STEEL, PAVERS, ASPHALT, GRAVEL }
 
 var world: Node
 var _materials := {}
@@ -48,6 +48,24 @@ func _noise(seed: int, frequency: float) -> FastNoiseLite:
 	n.seed = seed
 	n.frequency = frequency
 	return n
+
+## The tileable PBR set `set_name` (assets/art/materials), `tile` metres to a repeat; vertex colours tint it (above 1 brightens).
+func _pbr(m: StandardMaterial3D, set_name: String, tile: float, metal: float, rough: float) -> void:
+	var dir := "res://assets/art/materials/%s_" % set_name
+	m.albedo_texture = load(dir + "albedo.png")
+	var normal = load(dir + "normal.png")
+	if normal != null:
+		m.normal_enabled = true
+		m.normal_texture = normal
+		m.normal_scale = 0.8
+	var rough_tex = load(dir + "roughness.png")
+	if rough_tex != null:
+		m.roughness_texture = rough_tex
+		m.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
+	m.roughness = rough
+	m.metallic = metal
+	m.uv1_scale = Vector3(1.0 / tile, 1.0 / tile, 1.0)
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 
 func _material(kind: int) -> Material:
 	if _materials.has(kind):
@@ -128,12 +146,24 @@ func _material(kind: int) -> Material:
 			m.rim_tint = 0.5
 		WOOD:
 			m.roughness = 0.8
-		GLOW:
-			# Lit slits and status lights: they stay bright at night and in shade.
+		GLOW, GLOWG, GLOWW:
+			# Lit slits, status lamps and warm lights: they stay bright at night and in shade.
 			m.roughness = 0.4
 			m.emission_enabled = true
-			m.emission = Color("4fb6ee")
-			m.emission_energy_multiplier = 0.9
+			m.emission = Color("4fb6ee") if kind == GLOW else (Color("5fdc66") if kind == GLOWG else Color("ffc070"))
+			m.emission_energy_multiplier = 0.9 if kind != GLOWW else 0.7
+		CONCRETE:
+			_pbr(m, "concrete_smooth", 3.0, 0.0, 1.0)
+		PANEL:
+			_pbr(m, "corrugated_metal_grey", 5.0, 0.3, 0.9)
+		STEEL:
+			_pbr(m, "steel_painted_dark", 2.0, 0.5, 0.8)
+		PAVERS:
+			_pbr(m, "concrete_pavers", 2.0, 0.0, 1.0)
+		ASPHALT:
+			_pbr(m, "asphalt_worn", 3.0, 0.0, 1.0)
+		GRAVEL:
+			_pbr(m, "gravel", 2.0, 0.0, 1.0)
 		BANNER:
 			m.cull_mode = BaseMaterial3D.CULL_DISABLED
 			m.roughness = 0.9
@@ -811,17 +841,7 @@ func lattice(base: Vector3, h: float, w: float, top_w: float, colour: Color) -> 
 
 ## A square beam from a to b.
 func _beam(a: Vector3, b: Vector3, t: float, colour: Color) -> void:
-	var d := b - a
-	var length := d.length()
-	if length < 0.01:
-		return
-	var y := d / length
-	var x := y.cross(Vector3.UP if absf(y.y) < 0.95 else Vector3.RIGHT).normalized()
-	var z := x.cross(y)
-	var saved := xf
-	xf = xf * Transform3D(Basis(x, y, z), a)
-	box(TRIM, Vector3(-t, 0, -t), Vector3(t, length, t), colour)
-	xf = saved
+	bar(TRIM, a, b, t, colour)
 
 ## A heap of loose material (ore, coal, sand), a low cone of `r` metres.
 func heap(c: Vector3, r: float, h: float, colour: Color) -> void:
@@ -955,89 +975,297 @@ func chip_fab(rng: RandomNumberGenerator) -> void:
 		cylinder(METAL, Vector3(2.6 + i * 1.2, 5.5, 2.0), 0.3, 2.8, Color("d8dcd8"), 10)
 	box(TRIM, Vector3(-w * 0.5, 4.6, d * 0.5), Vector3(-w * 0.5 + 3.0, 5.0, d * 0.5 + 0.05), banner_colour)
 
-## An AI data centre: a long server hall in pale cladding with a teal band and glowing slits, a glass lobby under a
-## gold canopy, rows of roof coolers, a chiller yard, backup generators and a substation mast behind a low fence.
+## A square beam of half-thickness t from a to b, in any material.
+func bar(kind: int, a: Vector3, b: Vector3, t: float, colour: Color) -> void:
+	var d := b - a
+	var length := d.length()
+	if length < 0.01:
+		return
+	var y := d / length
+	var x := y.cross(Vector3.UP if absf(y.y) < 0.95 else Vector3.RIGHT).normalized()
+	var z := x.cross(y)
+	var saved := xf
+	xf = xf * Transform3D(Basis(x, y, z), a)
+	box(kind, Vector3(-t, 0, -t), Vector3(t, length, t), colour)
+	xf = saved
+
+## A round pipe of radius r from a to b (open at the lower end).
+func pipe(kind: int, a: Vector3, b: Vector3, r: float, colour: Color, sides := 8) -> void:
+	var d := b - a
+	var length := d.length()
+	if length < 0.01:
+		return
+	var y := d / length
+	var x := y.cross(Vector3.UP if absf(y.y) < 0.95 else Vector3.RIGHT).normalized()
+	var z := x.cross(y)
+	var saved := xf
+	xf = xf * Transform3D(Basis(x, y, z), a)
+	cylinder(kind, Vector3.ZERO, r, length, colour, sides)
+	xf = saved
+
+## A cooling fan seen from above: a pale ring, a dark well, three blades and a hub, on top of a unit at c.
+func fan(c: Vector3, r: float) -> void:
+	cylinder(METAL, c, r, 0.16, Color(1.0, 1.0, 1.02), 16)
+	cylinder(TRIM, c + Vector3(0, 0.165, 0), r * 0.84, 0.01, Color("1d252a"), 16)
+	for k in range(3):
+		var a := TAU * k / 3.0 + 0.4
+		var dir := Vector3(cos(a), 0, sin(a))
+		bar(METAL, c + Vector3(0, 0.19, 0) - dir * r * 0.78, c + Vector3(0, 0.19, 0) + dir * r * 0.78, 0.045, Color("9aa4a8"))
+	cylinder(METAL, c + Vector3(0, 0.17, 0), r * 0.14, 0.07, Color("c9d0d2"), 8)
+
+## A glowing hexagon outline, r metres across from the centre, on a wall facing +z.
+func hexagon(c: Vector3, r: float, t: float, kind: int, colour: Color) -> void:
+	for i in range(6):
+		var a0 := PI / 6.0 + TAU * i / 6.0
+		var a1 := a0 + TAU / 6.0
+		bar(kind, c + Vector3(cos(a0) * r, sin(a0) * r, 0), c + Vector3(cos(a1) * r, sin(a1) * r, 0), t, colour)
+
+## A louvred plant door on a wall facing +z at depth z: a dark recess and rows of slats.
+func louvres(x0: float, x1: float, y0: float, y1: float, z: float, colour: Color, dark: Color) -> void:
+	box(TRIM, Vector3(x0, y0, z - 0.02), Vector3(x1, y1, z + 0.04), dark)
+	var n := int((y1 - y0) / 0.16)
+	for i in range(n):
+		var y := y0 + 0.08 + i * 0.16
+		box(TRIM, Vector3(x0 + 0.05, y, z + 0.03), Vector3(x1 - 0.05, y + 0.07, z + 0.11), colour)
+
+## A small car parked nose to +z, its feet at p.
+func car(p: Vector3, colour: Color) -> void:
+	box(TRIM, p + Vector3(-0.85, 0.2, -1.6), p + Vector3(0.85, 0.75, 1.6), colour)
+	box(GLASS, p + Vector3(-0.75, 0.75, -0.9), p + Vector3(0.75, 1.3, 0.9), Color("1c2d36"))
+	box(TRIM, p + Vector3(-0.78, 1.3, -0.8), p + Vector3(0.78, 1.34, 0.8), colour)
+	for sx in [-0.85, 0.85]:
+		for sz in [-1.0, 1.0]:
+			box(TRIM, p + Vector3(sx - 0.1, 0.0, sz - 0.3), p + Vector3(sx + 0.1, 0.4, sz + 0.3), Color("1a1c1e"))
+
+## An AI data centre. A long server hall in pale cladding with a dark shadow gap and a concrete parapet, glowing slits
+## and louvred plant doors, a glass lobby under a cantilevered canopy, a roof of dry coolers with their pipework, a
+## row of cooling towers with their basins, backup generators and a fuel tank, a two-transformer substation, a solar
+## car port, a gatehouse and lamp posts. Pale surfaces are brightened past white on purpose (vertex colours above 1).
 func data_centre(rng: RandomNumberGenerator) -> void:
-	var cladding := Color("dfe4e4")
+	var pale := Color(1.5, 1.5, 1.52)
 	var teal := Color("2f6f7e")
 	var gold := Color("d9b45f")
-	var ink := Color("2a3a42")
+	var ink := Color("1d252a")
+	var light := Color("dfe4e6")
+	var steel := Color("8e999e")
 	var origin := xf
-	xf = xf * Transform3D(Basis(), Vector3(-1.4, 0, 0.4))
-	var w := 10.0
-	var d := 6.4
-	var zc := -2.2
-	# plinth and paving
-	box(STONE, Vector3(-6.6, -0.3, -6.9), Vector3(10.4, 0.25, 4.9), Color("b4b4aa"))
-	# the server hall: corrugated cladding, a teal band, a flat roof with a parapet
+	xf = xf * Transform3D(Basis(), Vector3(-0.4, 0, 0.6))
+	# ---- the ground: a concrete slab, a paved forecourt, a gravel plant yard, asphalt and parking lines
+	box(CONCRETE, Vector3(-9.0, -1.6, -9.6), Vector3(9.8, 0.12, 6.4), Color(1.0, 1.0, 1.0))
+	box(PAVERS, Vector3(-0.2, 0.12, 3.8), Vector3(7.0, 0.15, 6.2), Color(1.25, 1.25, 1.25))
+	box(ASPHALT, Vector3(-9.0, 0.12, 2.0), Vector3(-0.4, 0.15, 6.2), Color(1.1, 1.1, 1.1))
+	box(GRAVEL, Vector3(4.6, 0.12, -9.6), Vector3(9.8, 0.17, 2.2), Color(1.1, 1.1, 1.1))
+	for i in range(4):
+		box(TRIM, Vector3(-8.6 + i * 2.3, 0.15, 2.3), Vector3(-8.5 + i * 2.3, 0.16, 5.7), Color(0.95, 0.95, 0.9))
+	# ---- the server hall, 10.4 x 6.8 and 5.6 high, centred at (-1.8, -3.0)
 	var saved := xf
-	xf = xf * Transform3D(Basis(), Vector3(0, 0, zc))
-	walls(METAL, w, d, 0.25, 4.2, cladding)
-	cornice(w, d, 2.9, teal, 0.07, 0.6)
-	cornice(w, d, 4.35, Color("c8ced0"), 0.18, 0.28)
-	box(TRIM, Vector3(-w * 0.5, 4.4, -d * 0.5), Vector3(w * 0.5, 4.5, d * 0.5), Color("56646a"))
-	xf = saved
-	# glowing slits: a row of lit server-hall windows on the right wall and the front either side of the lobby
-	for i in range(7):
-		var z := zc - d * 0.5 + 0.7 + i * 0.84
-		box(GLOW, Vector3(w * 0.5, 3.45, z), Vector3(w * 0.5 + 0.05, 4.05, z + 0.34), Color("bfe6fa"))
-		box(GLOW, Vector3(w * 0.5, 1.3, z), Vector3(w * 0.5 + 0.05, 1.9, z + 0.34), Color("8fd0f2"))
+	xf = xf * Transform3D(Basis(), Vector3(-1.8, 0, -3.0))
+	var W := 10.4
+	var D := 6.8
+	var H := 5.6
+	walls(PANEL, W, D, 0.12, H, pale)
+	for s in range(4):   # a concrete plinth round the foot
+		var yaw := s * PI * 0.5
+		var sp := xf
+		xf = xf * Transform3D(Basis(Vector3.UP, yaw), Vector3.ZERO)
+		var span := W if s % 2 == 0 else D
+		var depth := D if s % 2 == 0 else W
+		box(CONCRETE, Vector3(-span * 0.5 - 0.06, 0.12, depth * 0.5 - 0.02), Vector3(span * 0.5 + 0.06, 0.75, depth * 0.5 + 0.07), Color(1.1, 1.1, 1.1))
+		# panel joints: dark reveals every 2.6 m
+		var n := int(span / 2.6)
+		for i in range(1, n + 1):
+			var x := -span * 0.5 + i * span / (n + 1) * 1.0
+			box(TRIM, Vector3(x - 0.03, 0.75, depth * 0.5), Vector3(x + 0.03, H - 0.6, depth * 0.5 + 0.035), ink)
+		# the shadow gap under the parapet, and the parapet itself
+		box(TRIM, Vector3(-span * 0.5, H - 0.6, depth * 0.5), Vector3(span * 0.5, H - 0.4, depth * 0.5 + 0.05), ink)
+		box(CONCRETE, Vector3(-span * 0.5 - 0.12, H - 0.4, depth * 0.5 - 0.1), Vector3(span * 0.5 + 0.12, H + 0.4, depth * 0.5 + 0.12), Color(1.3, 1.3, 1.3))
+		xf = sp
+	box(GRAVEL, Vector3(-W * 0.5, H, -D * 0.5), Vector3(W * 0.5, H + 0.06, D * 0.5), Color(0.9, 0.9, 0.9))
+	# lit slits in groups of three, high on the walls; louvred plant doors low on the front and back
+	for i in range(6):
+		var z := -D * 0.5 + 0.7 + i * 1.08
+		for side in [-1.0, 1.0]:
+			var xs: float = side * W * 0.5
+			box(TRIM, Vector3(minf(xs, xs + side * 0.05), 3.55, z - 0.06), Vector3(maxf(xs, xs + side * 0.05), 4.45, z + 0.66), ink)
+			box(GLOW, Vector3(minf(xs + side * 0.04, xs + side * 0.09), 3.65, z), Vector3(maxf(xs + side * 0.04, xs + side * 0.09), 4.35, z + 0.6), Color(0.75, 0.92, 1.0))
 	for i in range(3):
-		var x := 0.7 + i * 1.3
-		box(GLOW, Vector3(x, 3.45, zc + d * 0.5), Vector3(x + 0.8, 4.05, zc + d * 0.5 + 0.05), Color("bfe6fa"))
-	# the lobby: a glass box under a gold-edged canopy, a door, steps, the nation's banner
-	var lz := zc + d * 0.5
-	box(GLASS, Vector3(-4.6, 0.25, lz), Vector3(-0.6, 3.1, lz + 2.2), Color("2c4d5c"))
-	for x in [-4.6, -2.6, -0.6]:
-		box(TRIM, Vector3(x - 0.08, 0.25, lz), Vector3(x + 0.08, 3.4, lz + 2.3), Color("eef0ee"))
-	box(TRIM, Vector3(-4.9, 3.25, lz), Vector3(-0.3, 3.62, lz + 2.8), teal)
-	box(TRIM, Vector3(-4.9, 3.25, lz + 2.7), Vector3(-0.3, 3.62, lz + 2.82), gold)   # gold fascia on the front edge
-	box(TRIM, Vector3(-3.5, 0.25, lz + 2.2), Vector3(-1.7, 2.3, lz + 2.26), ink)
-	box(STONE, Vector3(-3.9, -0.02, lz + 2.2), Vector3(-1.3, 0.2, lz + 2.9), Color("c4c4ba"))
-	banner(-5.3, 3.5, lz + 0.1, 2.4)
-	# roof coolers with fan grilles, joined by a pipe
+		var x := -4.5 + i * 1.5
+		box(TRIM, Vector3(x - 0.06, 3.55, D * 0.5), Vector3(x + 1.26, 4.45, D * 0.5 + 0.05), ink)
+		box(GLOW, Vector3(x, 3.65, D * 0.5 + 0.04), Vector3(x + 1.2, 4.35, D * 0.5 + 0.09), Color(0.75, 0.92, 1.0))
+	louvres(-4.7, -2.6, 0.95, 3.2, D * 0.5, light, ink)
+	louvres(-2.3, -0.2, 0.95, 3.2, D * 0.5, light, ink)
+	# the emblem: a lit hexagon over the lobby
+	hexagon(Vector3(3.0, 4.35, D * 0.5 + 0.02), 0.55, 0.06, GLOW, Color(0.75, 0.92, 1.0))
+	hexagon(Vector3(3.0, 4.35, D * 0.5 + 0.02), 0.26, 0.05, GLOW, Color(0.75, 0.92, 1.0))
+	# the back wall: a row of grilles
+	var back := xf
+	xf = xf * Transform3D(Basis(Vector3.UP, PI), Vector3.ZERO)
+	for i in range(3):
+		louvres(-4.2 + i * 2.9, -2.4 + i * 2.9, 0.95, 3.0, D * 0.5, light, ink)
+	xf = back
+	# roof: dry coolers, two rows of four, each a housing under a fan ring, joined by insulated pipes
+	var roof := H + 0.4
 	for row in range(2):
 		for i in range(4):
-			var cx := -3.6 + i * 2.4
-			var cz := zc - 1.1 + row * 2.0
-			box(METAL, Vector3(cx - 0.8, 4.5, cz - 0.7), Vector3(cx + 0.8, 5.3, cz + 0.7), Color("b8c0c4"))
-			cylinder(TRIM, Vector3(cx, 5.3, cz), 0.52, 0.05, ink, 14)
-			cylinder(TRIM, Vector3(cx, 5.34, cz), 0.12, 0.08, Color("8a949a"), 8)
-	_beam(Vector3(-3.6, 4.75, zc - 1.1), Vector3(5.4, 4.75, zc - 1.1), 0.07, gold)
-	# a radome on a short mast
-	box(TRIM, Vector3(4.55, 4.5, zc - 2.6), Vector3(4.7, 6.0, zc - 2.45), Color("8a949a"))
-	dome(TRIM, Vector3(4.62, 6.0, zc - 2.52), 0.7, 0.55, Color("f2f4f2"), 14, 4)
-	# the chiller yard on the right: three tall units with fans
+			var cx := -3.9 + i * 2.6
+			var cz := -1.6 + row * 3.0
+			box(METAL, Vector3(cx - 0.95, roof, cz - 0.85), Vector3(cx + 0.95, roof + 1.0, cz + 0.85), Color(1.0, 1.0, 1.02))
+			box(TRIM, Vector3(cx - 0.97, roof + 0.55, cz - 0.87), Vector3(cx + 0.97, roof + 0.62, cz + 0.87), steel)
+			for k in range(3):
+				box(TRIM, Vector3(cx - 0.8 + k * 0.8, roof, cz + 0.85), Vector3(cx - 0.5 + k * 0.8, roof + 0.5, cz + 0.88), ink)
+			fan(Vector3(cx, roof + 1.0, cz), 0.66)
+	pipe(METAL, Vector3(-4.8, roof + 0.3, 0.0), Vector3(4.8, roof + 0.3, 0.0), 0.1, light)
+	pipe(METAL, Vector3(-4.8, roof + 0.55, 0.0), Vector3(4.8, roof + 0.55, 0.0), 0.07, teal)
+	for i in range(8):
+		box(TRIM, Vector3(-4.6 + i * 1.3, roof, -0.05), Vector3(-4.5 + i * 1.3, roof + 0.3, 0.05), ink)
+	# stair bulkhead, a lightning mast and a radome
+	box(PANEL, Vector3(-4.9, roof, 1.4), Vector3(-3.3, roof + 2.2, 3.0), pale)
+	box(TRIM, Vector3(-5.0, roof + 2.2, 1.3), Vector3(-3.2, roof + 2.35, 3.1), Color("56646a"))
+	box(TRIM, Vector3(-4.4, roof, 3.0), Vector3(-3.8, roof + 1.9, 3.04), ink)
+	bar(METAL, Vector3(4.4, roof, -2.6), Vector3(4.4, roof + 2.6, -2.6), 0.04, ink)
+	cylinder(METAL, Vector3(4.4, roof + 2.6, -2.6), 0.1, 0.1, light, 8)
+	bar(METAL, Vector3(3.6, roof, 2.7), Vector3(3.6, roof + 1.2, 2.7), 0.05, steel)
+	dome(TRIM, Vector3(3.6, roof + 1.2, 2.7), 0.62, 0.5, Color(1.4, 1.4, 1.4), 14, 4)
+	xf = saved
+	# ---- the lobby: a glass annex with a curtain wall, a cantilevered canopy, doors, planters and the nation's banner
+	var lx0 := 0.4
+	var lx1 := 5.8
+	var lz0 := 0.4
+	var lz1 := 4.0
+	box(CONCRETE, Vector3(lx0, 0.12, lz0), Vector3(lx1, 0.32, lz1), Color(1.2, 1.2, 1.2))
+	box(PANEL, Vector3(lx0, 0.32, lz0), Vector3(lx0 + 0.1, 4.4, lz1), pale)
+	for gx in range(5):   # the front curtain wall: panes of varied tint between steel mullions
+		for gy in range(3):
+			var x0 := lx0 + 0.1 + gx * (lx1 - lx0 - 0.1) / 5.0
+			var x1 := x0 + (lx1 - lx0 - 0.1) / 5.0
+			var y0 := 0.32 + gy * 1.36
+			var tone := 0.85 + rng.randf() * 0.5
+			quad(GLASS, Vector3(x0, y0, lz1), Vector3(x1, y0, lz1), Vector3(x1, y0 + 1.36, lz1), Vector3(x0, y0 + 1.36, lz1), Color("2f5568") * tone)
+	for gz in range(3):   # the side wall, towards the plant
+		for gy in range(3):
+			var z0 := lz0 + gz * (lz1 - lz0) / 3.0
+			var z1 := z0 + (lz1 - lz0) / 3.0
+			var y0 := 0.32 + gy * 1.36
+			var tone := 0.85 + rng.randf() * 0.5
+			quad(GLASS, Vector3(lx1, y0, z1), Vector3(lx1, y0, z0), Vector3(lx1, y0 + 1.36, z0), Vector3(lx1, y0 + 1.36, z1), Color("2f5568") * tone)
+	for gx in range(6):
+		var mx := lx0 + 0.1 + gx * (lx1 - lx0 - 0.1) / 5.0
+		box(STEEL, Vector3(mx - 0.05, 0.32, lz1), Vector3(mx + 0.05, 4.4, lz1 + 0.12), Color(1.6, 1.6, 1.6))
+	for gz in range(4):
+		var mz := lz0 + gz * (lz1 - lz0) / 3.0
+		box(STEEL, Vector3(lx1, 0.32, mz - 0.05), Vector3(lx1 + 0.12, 4.4, mz + 0.05), Color(1.6, 1.6, 1.6))
+	for gy in range(4):
+		var my := 0.32 + gy * 1.36
+		box(STEEL, Vector3(lx0, my - 0.04, lz1), Vector3(lx1 + 0.12, my + 0.04, lz1 + 0.12), Color(1.6, 1.6, 1.6))
+	box(TRIM, Vector3(2.5, 0.32, lz1 + 0.02), Vector3(4.1, 2.4, lz1 + 0.07), ink)          # the double door
+	box(TRIM, Vector3(3.27, 0.32, lz1 + 0.07), Vector3(3.33, 2.4, lz1 + 0.13), steel)
+	box(METAL, Vector3(3.05, 1.0, lz1 + 0.12), Vector3(3.15, 1.5, lz1 + 0.17), light)
+	box(METAL, Vector3(3.45, 1.0, lz1 + 0.12), Vector3(3.55, 1.5, lz1 + 0.17), light)
+	box(CONCRETE, Vector3(lx0 - 0.7, 4.4, lz0), Vector3(lx1 + 0.8, 4.78, lz1 + 1.1), Color(1.25, 1.25, 1.25))   # the canopy
+	box(TRIM, Vector3(lx0 - 0.7, 4.4, lz1 + 1.02), Vector3(lx1 + 0.8, 4.78, lz1 + 1.12), gold)
+	box(TRIM, Vector3(lx0 - 0.7, 4.34, lz1 + 0.55), Vector3(lx1 + 0.8, 4.4, lz1 + 1.1), teal)
+	box(GLOWW, Vector3(lx0 - 0.5, 4.3, lz1 + 0.4), Vector3(lx1 + 0.6, 4.34, lz1 + 0.6), Color(1.0, 0.85, 0.6))
+	for cx in [lx0 - 0.5, 2.6, lx1 + 0.6]:
+		bar(STEEL, Vector3(cx, 0.15, lz1 + 0.9), Vector3(cx, 4.4, lz1 + 0.9), 0.1, Color(1.6, 1.6, 1.6))
+	box(CONCRETE, Vector3(2.2, 0.12, lz1 + 0.08), Vector3(4.4, 0.2, lz1 + 1.4), Color(1.3, 1.3, 1.3))
+	banner(0.0, 4.2, 0.5, 2.6)
+	for px in [lx0 + 0.2, lx1 - 1.0]:
+		box(CONCRETE, Vector3(px, 0.12, lz1 + 0.3), Vector3(px + 1.2, 0.7, lz1 + 0.95), Color(1.2, 1.2, 1.2))
+		dome(PLASTER, Vector3(px + 0.6, 0.7, lz1 + 0.62), 0.5, 0.45, Color("4f7f46"), 10, 3)
+	for k in range(4):
+		cylinder(STEEL, Vector3(1.2 + k * 1.6, 0.12, lz1 + 1.7), 0.07, 0.7, Color(1.5, 1.5, 1.5), 8)
+	# ---- the cooling plant on the right: three towers on a concrete basin, piped to the hall
+	box(CONCRETE, Vector3(5.0, 0.12, -7.6), Vector3(9.4, 0.45, 1.8), Color(1.25, 1.25, 1.25))
 	for i in range(3):
-		var z := -5.6 + i * 2.7
-		box(METAL, Vector3(6.2, 0.25, z - 1.0), Vector3(8.4, 2.5, z + 1.0), Color("c4ccd0"))
-		box(TRIM, Vector3(6.2, 2.5, z - 1.0), Vector3(8.4, 2.62, z + 1.0), Color("56646a"))
-		for k in range(2):
-			cylinder(TRIM, Vector3(7.3, 2.62, z - 0.5 + k * 1.0), 0.4, 0.05, ink, 12)
-		box(GLOW, Vector3(8.4, 1.8, z - 0.15), Vector3(8.45, 2.1, z + 0.15), Color("9be08a"))   # status lamp
-	_beam(Vector3(5.0, 0.9, -5.6), Vector3(6.2, 0.9, -5.6), 0.12, gold)
-	_beam(Vector3(5.0, 0.9, -0.2), Vector3(6.2, 0.9, -0.2), 0.12, gold)
-	# backup generators behind the hall, each with a stack
+		var tz := -6.2 + i * 2.9
+		var tx := 7.2
+		box(PANEL, Vector3(tx - 1.3, 0.45, tz - 1.2), Vector3(tx + 1.3, 3.2, tz + 1.2), Color(1.35, 1.38, 1.4))
+		var tsave := xf
+		xf = xf * Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(tx, 0, tz))
+		louvres(-1.05, 1.05, 0.75, 3.0, 1.3, light, ink)
+		xf = tsave
+		cylinder(METAL, Vector3(tx, 3.2, tz), 1.1, 0.8, light, 16, 0.96)
+		cylinder(TRIM, Vector3(tx, 4.0, tz), 0.9, 0.02, ink, 16)
+		fan(Vector3(tx, 3.98, tz), 0.9)
+		box(GLOWG, Vector3(tx + 1.3, 2.6, tz - 0.15), Vector3(tx + 1.36, 2.85, tz + 0.15), Color(0.6, 1.0, 0.55))
+	pipe(METAL, Vector3(5.6, 0.9, -6.4), Vector3(5.6, 0.9, 0.2), 0.2, light)
+	pipe(METAL, Vector3(5.6, 1.3, -6.4), Vector3(5.6, 1.3, 0.2), 0.15, teal)
+	pipe(METAL, Vector3(5.6, 0.9, -3.4), Vector3(3.3, 0.9, -3.4), 0.2, light)
+	pipe(METAL, Vector3(5.6, 1.3, -2.6), Vector3(3.3, 1.3, -2.6), 0.15, teal)
+	for z in [-5.2, -2.0, 0.0]:
+		box(TRIM, Vector3(5.5, 0.45, z - 0.06), Vector3(5.7, 0.7, z + 0.06), ink)
+	# ---- backup power behind the hall: three generator containers with stacks, and a fuel tank on saddles
 	for i in range(3):
-		var x := -3.6 + i * 3.0
-		box(METAL, Vector3(x - 1.2, 0.25, -6.6), Vector3(x + 1.2, 1.8, -5.6), Color("7a868c"))
-		box(TRIM, Vector3(x - 1.25, 1.8, -6.65), Vector3(x + 1.25, 1.9, -5.55), teal)
-		cylinder(METAL, Vector3(x + 0.8, 1.9, -6.2), 0.1, 1.1, Color("30383c"), 8)
-	# a substation on the left: a mast, a transformer and a pair of insulators
-	lattice(Vector3(-6.0, 0.25, -5.6), 6.0, 1.3, 0.45, Color("8c9498"))
-	box(METAL, Vector3(-6.4, 0.25, -4.0), Vector3(-5.2, 1.6, -2.6), Color("7d8a90"))
-	for k in range(3):
-		cylinder(TRIM, Vector3(-6.2 + k * 0.4, 1.6, -3.3), 0.08, 0.5, Color("e8e2d0"), 8)
-	# a low fence along the front with a gap for the gate, and shrubs at the corners
-	for i in range(14):
-		var x := -6.4 + i * 1.2
-		if x > -3.9 and x < -1.3:
+		var gx := -6.0 + i * 3.0
+		box(METAL, Vector3(gx - 1.3, 0.12, -8.3), Vector3(gx + 1.3, 2.3, -7.1), Color(0.7, 0.74, 0.78))
+		box(TRIM, Vector3(gx - 1.34, 2.3, -8.34), Vector3(gx + 1.34, 2.42, -7.06), ink)
+		for k in range(4):
+			box(TRIM, Vector3(gx - 1.0 + k * 0.62, 0.3, -7.1), Vector3(gx - 0.95 + k * 0.62, 2.1, -7.07), ink)
+		box(GLOWG, Vector3(gx + 1.0, 1.6, -7.1), Vector3(gx + 1.2, 1.8, -7.06), Color(0.6, 1.0, 0.55))
+		pipe(METAL, Vector3(gx + 0.7, 2.42, -7.9), Vector3(gx + 0.7, 3.8, -7.9), 0.12, Color("30383c"))
+		cylinder(TRIM, Vector3(gx + 0.7, 3.8, -7.9), 0.17, 0.08, ink, 8)
+	pipe(METAL, Vector3(2.3, 0.95, -8.0), Vector3(4.3, 0.95, -8.0), 0.75, light, 14)
+	for x in [2.7, 3.9]:
+		box(CONCRETE, Vector3(x - 0.15, 0.12, -8.6), Vector3(x + 0.15, 0.55, -7.4), Color(1.2, 1.2, 1.2))
+	box(TRIM, Vector3(3.2, 1.7, -8.12), Vector3(3.4, 1.9, -7.88), steel)
+	# ---- the substation: two transformers with radiator fins and bushings under a small gantry
+	for i in range(2):
+		var ex := 5.8 + i * 2.8
+		var ez := -8.4
+		box(METAL, Vector3(ex - 0.9, 0.17, ez - 0.7), Vector3(ex + 0.9, 1.7, ez + 0.7), Color(0.78, 0.9, 0.84))
+		for k in range(6):
+			box(METAL, Vector3(ex - 0.8 + k * 0.32, 0.3, ez + 0.7), Vector3(ex - 0.72 + k * 0.32, 1.5, ez + 0.95), Color(0.7, 0.8, 0.75))
+		pipe(METAL, Vector3(ex - 0.6, 1.7, ez), Vector3(ex + 0.6, 1.7, ez), 0.2, Color(0.7, 0.8, 0.75), 10)
+		for k in range(3):
+			pipe(METAL, Vector3(ex - 0.5 + k * 0.5, 1.7, ez - 0.35), Vector3(ex - 0.5 + k * 0.5, 2.7, ez - 0.35), 0.09, Color("d9c9a8"))
+			cylinder(TRIM, Vector3(ex - 0.5 + k * 0.5, 2.7, ez - 0.35), 0.12, 0.08, Color("a89878"), 8)
+	lattice(Vector3(5.0, 0.17, -9.2), 5.0, 1.0, 0.4, steel)
+	lattice(Vector3(9.4, 0.17, -9.2), 5.0, 1.0, 0.4, steel)
+	bar(TRIM, Vector3(5.0, 5.0, -9.2), Vector3(9.4, 5.0, -9.2), 0.07, steel)
+	# ---- a solar car port over the parking, with three cars
+	for i in range(3):
+		var px := -8.6 + i * 2.3
+		var tilt := xf
+		xf = xf * Transform3D(Basis(Vector3.RIGHT, 0.16), Vector3(px + 1.15, 3.5, 2.2))
+		quad(GLASS, Vector3(-1.1, 0, 3.6), Vector3(1.1, 0, 3.6), Vector3(1.1, 0, 0), Vector3(-1.1, 0, 0), Color("172538"))
+		for k in range(1, 4):
+			box(TRIM, Vector3(-1.1, 0.005, k * 0.9 - 0.02), Vector3(1.1, 0.02, k * 0.9 + 0.02), Color(1.2, 1.25, 1.3))
+		box(TRIM, Vector3(-0.02, 0.005, 0), Vector3(0.02, 0.02, 3.6), Color(1.2, 1.25, 1.3))
+		box(STEEL, Vector3(-1.1, -0.1, 0), Vector3(1.1, 0, 3.6), Color(1.4, 1.4, 1.4))
+		xf = tilt
+	for x in [-8.6, -4.0, -1.7]:
+		bar(STEEL, Vector3(x, 0.15, 2.5), Vector3(x, 3.6, 2.5), 0.09, Color(1.5, 1.5, 1.5))
+		bar(STEEL, Vector3(x, 0.15, 5.7), Vector3(x, 3.0, 5.7), 0.09, Color(1.5, 1.5, 1.5))
+	for c in [[-7.45, Color("e8ecee")], [-5.15, Color("26384e")], [-2.85, Color("a8322a")]]:
+		car(Vector3(c[0], 0.15, 3.0), c[1])
+	# ---- a gatehouse with a barrier on the drive, lamp posts, a fence, trees and a hedge
+	box(PANEL, Vector3(7.6, 0.12, 4.0), Vector3(9.4, 2.6, 5.6), pale)
+	box(GLASS, Vector3(7.7, 1.0, 5.6), Vector3(9.3, 2.2, 5.64), Color("2f5568"))
+	box(TRIM, Vector3(7.4, 2.6, 3.8), Vector3(9.6, 2.78, 5.8), Color("56646a"))
+	bar(TRIM, Vector3(6.9, 1.0, 5.0), Vector3(7.6, 1.0, 5.0), 0.05, steel)
+	box(TRIM, Vector3(5.2, 0.9, 4.95), Vector3(6.9, 1.05, 5.05), Color("d8d8d0"))
+	for k in range(4):
+		box(TRIM, Vector3(5.2 + k * 0.425, 0.9, 4.94), Vector3(5.2 + k * 0.425 + 0.21, 1.05, 5.06), Color("c83a2e"))
+	box(STEEL, Vector3(5.0, 0.12, 4.9), Vector3(5.2, 1.15, 5.1), Color(1.5, 1.5, 1.5))
+	for p in [Vector3(-0.8, 0, 6.0), Vector3(3.4, 0, 6.0), Vector3(8.8, 0, 2.4), Vector3(-9.0, 0, -1.0), Vector3(-9.0, 0, -6.0)]:
+		bar(STEEL, p + Vector3(0, 0.15, 0), p + Vector3(0, 4.4, 0), 0.05, Color(1.4, 1.4, 1.4))
+		bar(STEEL, p + Vector3(0, 4.4, 0), p + Vector3(0.45, 4.5, 0), 0.04, Color(1.4, 1.4, 1.4))
+		box(GLOWW, p + Vector3(0.3, 4.38, -0.14), p + Vector3(0.75, 4.44, 0.14), Color(1.0, 0.88, 0.65))
+	for i in range(15):
+		var fx := -9.0 + i * 1.28
+		if fx > 4.6 and fx < 6.5:
 			continue
-		box(TRIM, Vector3(x - 0.04, 0.0, 4.4), Vector3(x + 0.04, 0.9, 4.48), Color("8a949a"))
-	box(TRIM, Vector3(-6.4, 0.6, 4.4), Vector3(-3.9, 0.66, 4.46), Color("8a949a"))
-	box(TRIM, Vector3(-1.3, 0.6, 4.4), Vector3(9.8, 0.66, 4.46), Color("8a949a"))
-	for p in [Vector3(-6.0, 0, 3.6), Vector3(-0.2, 0, 3.8), Vector3(9.2, 0, 3.8), Vector3(9.4, 0, -6.2)]:
-		dome(PLASTER, p, 0.8, 0.8, Color("5f8f5a"), 10, 3)
+		bar(STEEL, Vector3(fx, 0.12, 6.3), Vector3(fx, 1.5, 6.3), 0.035, Color(1.2, 1.2, 1.2))
+	box(TRIM, Vector3(-9.0, 1.2, 6.27), Vector3(4.6, 1.26, 6.33), Color("a0aaae"))
+	box(TRIM, Vector3(-9.0, 0.5, 6.27), Vector3(4.6, 0.56, 6.33), Color("a0aaae"))
+	box(TRIM, Vector3(6.5, 1.2, 6.27), Vector3(9.8, 1.26, 6.33), Color("a0aaae"))
+	box(TRIM, Vector3(6.5, 0.5, 6.27), Vector3(9.8, 0.56, 6.33), Color("a0aaae"))
+	for t in [Vector3(-8.6, 0, -6.0), Vector3(-8.2, 0, 0.4), Vector3(9.2, 0, 6.2)]:
+		cylinder(WOOD, t + Vector3(0, 0.12, 0), 0.2, 1.6, Color("6a5038"), 7, 0.13)
+		dome(PLASTER, t + Vector3(0, 1.3, 0), 1.1, 1.1, Color("3f6e3c"), 10, 4)
+		dome(PLASTER, t + Vector3(0.35, 2.1, 0.15), 0.75, 0.8, Color("4f8046"), 8, 3)
+	for i in range(4):
+		dome(PLASTER, Vector3(0.6 + i * 1.4, 0.0, 6.9), 0.7, 0.6, Color("3f6e3c"), 8, 3)
 	xf = origin
 
 ## A nuclear power station: a hyperbolic cooling tower, the containment dome
