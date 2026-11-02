@@ -22,7 +22,7 @@ PREVIEW = {
     "dark": (0.02, 0.02, 0.02), "glow_warm": (1.0, 0.85, 0.55), "glow_red": (1.0, 0.2, 0.15), "banner": (0.8, 0.8, 0.8),
     "glow_green": (0.4, 1.0, 0.4), "olive_paint": (0.30, 0.34, 0.22),
     "cladding": (0.8, 0.82, 0.84), "glass": (0.12, 0.2, 0.26), "glow_cyan": (0.6, 0.85, 1.0), "pavers": (0.6, 0.6, 0.58),
-    "paint": (0.8, 0.8, 0.8), "leaf": (0.2, 0.4, 0.15), "solar": (0.05, 0.09, 0.16),
+    "paint": (0.8, 0.8, 0.8), "glow_dim": (0.45, 0.75, 1.0), "leaf": (0.2, 0.4, 0.15), "solar": (0.05, 0.09, 0.16),
 }
 
 
@@ -149,6 +149,32 @@ class Model:
             bm.faces.new((ib[j], ib[i], it[i], it[j]))
             bm.faces.new((ot[i], ot[j], it[j], it[i]))
             bm.faces.new((ob[j], ob[i], ib[i], ib[j]))
+        self.add(role, bm, Matrix.Translation(P(*base)), tint)
+        bm.free()
+
+    def lathe(self, role, base, profile, seg=24, tint=(1, 1, 1)):
+        """A solid of revolution about the vertical axis at base: profile is a closed polygon of (radius, height) that
+        starts and ends on the axis (radius 0): dishes, domes, nose cones, flared bowls."""
+        bm = bmesh.new()
+        rings = []
+        for r, y in profile:
+            if r < 1e-6:
+                rings.append([bm.verts.new(Vector((0, 0, y)))] * seg)
+            else:
+                rings.append([bm.verts.new(Vector((math.cos(math.tau * j / seg) * r, math.sin(math.tau * j / seg) * r, y))) for j in range(seg)])
+        for i in range(len(profile) - 1):
+            for j in range(seg):
+                k = (j + 1) % seg
+                vs = []
+                for v in (rings[i][j], rings[i][k], rings[i + 1][k], rings[i + 1][j]):
+                    if v not in vs:
+                        vs.append(v)
+                if len(vs) >= 3:
+                    try:
+                        bm.faces.new(vs)
+                    except ValueError:
+                        pass
+        bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
         self.add(role, bm, Matrix.Translation(P(*base)), tint)
         bm.free()
 

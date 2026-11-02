@@ -44,6 +44,7 @@ const BLEND_ROLES := {
 	"cladding": ["concrete_smooth", 4.0, 0.55, 0.25, Color(1.25, 1.27, 1.3), 0.0],
 	"glass": ["", 1.0, 0.06, 0.1, Color(0.17, 0.27, 0.34), 0.0],
 	"glow_cyan": ["", 1.0, 1.0, 0.0, Color(0.75, 0.92, 1.0), 2.2],
+	"glow_dim": ["", 1.0, 1.0, 0.0, Color(0.45, 0.75, 1.0), 1.0],
 	"pavers": ["concrete_pavers", 2.0, 1.0, 0.0, Color(1.2, 1.2, 1.2), 0.0],
 	"paint": ["", 1.0, 0.4, 0.3, Color.WHITE, 0.0],
 	"leaf": ["", 1.0, 1.0, 0.0, Color(0.62, 0.66, 0.6), 0.0],
