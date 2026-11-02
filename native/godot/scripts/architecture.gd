@@ -14,7 +14,7 @@ extends RefCounted
 ## their size on any wall or roof. Everything a district holds is gathered into
 ## one mesh per material (a handful of draws per district).
 
-enum { PLASTER, BRICK, STONE, ROOF, TRIM, GLASS, WOOD, BANNER, METAL, PLANK }
+enum { PLASTER, BRICK, STONE, ROOF, TRIM, GLASS, WOOD, BANNER, METAL, PLANK, GLOW }
 
 var world: Node
 var _materials := {}
@@ -128,6 +128,12 @@ func _material(kind: int) -> Material:
 			m.rim_tint = 0.5
 		WOOD:
 			m.roughness = 0.8
+		GLOW:
+			# Lit slits and status lights: they stay bright at night and in shade.
+			m.roughness = 0.4
+			m.emission_enabled = true
+			m.emission = Color("4fb6ee")
+			m.emission_energy_multiplier = 0.9
 		BANNER:
 			m.cull_mode = BaseMaterial3D.CULL_DISABLED
 			m.roughness = 0.9
@@ -949,6 +955,91 @@ func chip_fab(rng: RandomNumberGenerator) -> void:
 		cylinder(METAL, Vector3(2.6 + i * 1.2, 5.5, 2.0), 0.3, 2.8, Color("d8dcd8"), 10)
 	box(TRIM, Vector3(-w * 0.5, 4.6, d * 0.5), Vector3(-w * 0.5 + 3.0, 5.0, d * 0.5 + 0.05), banner_colour)
 
+## An AI data centre: a long server hall in pale cladding with a teal band and glowing slits, a glass lobby under a
+## gold canopy, rows of roof coolers, a chiller yard, backup generators and a substation mast behind a low fence.
+func data_centre(rng: RandomNumberGenerator) -> void:
+	var cladding := Color("dfe4e4")
+	var teal := Color("2f6f7e")
+	var gold := Color("d9b45f")
+	var ink := Color("2a3a42")
+	var origin := xf
+	xf = xf * Transform3D(Basis(), Vector3(-1.4, 0, 0.4))
+	var w := 10.0
+	var d := 6.4
+	var zc := -2.2
+	# plinth and paving
+	box(STONE, Vector3(-6.6, -0.3, -6.9), Vector3(10.4, 0.25, 4.9), Color("b4b4aa"))
+	# the server hall: corrugated cladding, a teal band, a flat roof with a parapet
+	var saved := xf
+	xf = xf * Transform3D(Basis(), Vector3(0, 0, zc))
+	walls(METAL, w, d, 0.25, 4.2, cladding)
+	cornice(w, d, 2.9, teal, 0.07, 0.6)
+	cornice(w, d, 4.35, Color("c8ced0"), 0.18, 0.28)
+	box(TRIM, Vector3(-w * 0.5, 4.4, -d * 0.5), Vector3(w * 0.5, 4.5, d * 0.5), Color("56646a"))
+	xf = saved
+	# glowing slits: a row of lit server-hall windows on the right wall and the front either side of the lobby
+	for i in range(7):
+		var z := zc - d * 0.5 + 0.7 + i * 0.84
+		box(GLOW, Vector3(w * 0.5, 3.45, z), Vector3(w * 0.5 + 0.05, 4.05, z + 0.34), Color("bfe6fa"))
+		box(GLOW, Vector3(w * 0.5, 1.3, z), Vector3(w * 0.5 + 0.05, 1.9, z + 0.34), Color("8fd0f2"))
+	for i in range(3):
+		var x := 0.7 + i * 1.3
+		box(GLOW, Vector3(x, 3.45, zc + d * 0.5), Vector3(x + 0.8, 4.05, zc + d * 0.5 + 0.05), Color("bfe6fa"))
+	# the lobby: a glass box under a gold-edged canopy, a door, steps, the nation's banner
+	var lz := zc + d * 0.5
+	box(GLASS, Vector3(-4.6, 0.25, lz), Vector3(-0.6, 3.1, lz + 2.2), Color("2c4d5c"))
+	for x in [-4.6, -2.6, -0.6]:
+		box(TRIM, Vector3(x - 0.08, 0.25, lz), Vector3(x + 0.08, 3.4, lz + 2.3), Color("eef0ee"))
+	box(TRIM, Vector3(-4.9, 3.25, lz), Vector3(-0.3, 3.62, lz + 2.8), teal)
+	box(TRIM, Vector3(-4.9, 3.25, lz + 2.7), Vector3(-0.3, 3.62, lz + 2.82), gold)   # gold fascia on the front edge
+	box(TRIM, Vector3(-3.5, 0.25, lz + 2.2), Vector3(-1.7, 2.3, lz + 2.26), ink)
+	box(STONE, Vector3(-3.9, -0.02, lz + 2.2), Vector3(-1.3, 0.2, lz + 2.9), Color("c4c4ba"))
+	banner(-5.3, 3.5, lz + 0.1, 2.4)
+	# roof coolers with fan grilles, joined by a pipe
+	for row in range(2):
+		for i in range(4):
+			var cx := -3.6 + i * 2.4
+			var cz := zc - 1.1 + row * 2.0
+			box(METAL, Vector3(cx - 0.8, 4.5, cz - 0.7), Vector3(cx + 0.8, 5.3, cz + 0.7), Color("b8c0c4"))
+			cylinder(TRIM, Vector3(cx, 5.3, cz), 0.52, 0.05, ink, 14)
+			cylinder(TRIM, Vector3(cx, 5.34, cz), 0.12, 0.08, Color("8a949a"), 8)
+	_beam(Vector3(-3.6, 4.75, zc - 1.1), Vector3(5.4, 4.75, zc - 1.1), 0.07, gold)
+	# a radome on a short mast
+	box(TRIM, Vector3(4.55, 4.5, zc - 2.6), Vector3(4.7, 6.0, zc - 2.45), Color("8a949a"))
+	dome(TRIM, Vector3(4.62, 6.0, zc - 2.52), 0.7, 0.55, Color("f2f4f2"), 14, 4)
+	# the chiller yard on the right: three tall units with fans
+	for i in range(3):
+		var z := -5.6 + i * 2.7
+		box(METAL, Vector3(6.2, 0.25, z - 1.0), Vector3(8.4, 2.5, z + 1.0), Color("c4ccd0"))
+		box(TRIM, Vector3(6.2, 2.5, z - 1.0), Vector3(8.4, 2.62, z + 1.0), Color("56646a"))
+		for k in range(2):
+			cylinder(TRIM, Vector3(7.3, 2.62, z - 0.5 + k * 1.0), 0.4, 0.05, ink, 12)
+		box(GLOW, Vector3(8.4, 1.8, z - 0.15), Vector3(8.45, 2.1, z + 0.15), Color("9be08a"))   # status lamp
+	_beam(Vector3(5.0, 0.9, -5.6), Vector3(6.2, 0.9, -5.6), 0.12, gold)
+	_beam(Vector3(5.0, 0.9, -0.2), Vector3(6.2, 0.9, -0.2), 0.12, gold)
+	# backup generators behind the hall, each with a stack
+	for i in range(3):
+		var x := -3.6 + i * 3.0
+		box(METAL, Vector3(x - 1.2, 0.25, -6.6), Vector3(x + 1.2, 1.8, -5.6), Color("7a868c"))
+		box(TRIM, Vector3(x - 1.25, 1.8, -6.65), Vector3(x + 1.25, 1.9, -5.55), teal)
+		cylinder(METAL, Vector3(x + 0.8, 1.9, -6.2), 0.1, 1.1, Color("30383c"), 8)
+	# a substation on the left: a mast, a transformer and a pair of insulators
+	lattice(Vector3(-6.0, 0.25, -5.6), 6.0, 1.3, 0.45, Color("8c9498"))
+	box(METAL, Vector3(-6.4, 0.25, -4.0), Vector3(-5.2, 1.6, -2.6), Color("7d8a90"))
+	for k in range(3):
+		cylinder(TRIM, Vector3(-6.2 + k * 0.4, 1.6, -3.3), 0.08, 0.5, Color("e8e2d0"), 8)
+	# a low fence along the front with a gap for the gate, and shrubs at the corners
+	for i in range(14):
+		var x := -6.4 + i * 1.2
+		if x > -3.9 and x < -1.3:
+			continue
+		box(TRIM, Vector3(x - 0.04, 0.0, 4.4), Vector3(x + 0.04, 0.9, 4.48), Color("8a949a"))
+	box(TRIM, Vector3(-6.4, 0.6, 4.4), Vector3(-3.9, 0.66, 4.46), Color("8a949a"))
+	box(TRIM, Vector3(-1.3, 0.6, 4.4), Vector3(9.8, 0.66, 4.46), Color("8a949a"))
+	for p in [Vector3(-6.0, 0, 3.6), Vector3(-0.2, 0, 3.8), Vector3(9.2, 0, 3.8), Vector3(9.4, 0, -6.2)]:
+		dome(PLASTER, p, 0.8, 0.8, Color("5f8f5a"), 10, 3)
+	xf = origin
+
 ## A nuclear power station: a hyperbolic cooling tower, the containment dome
 ## and the turbine hall.
 func nuclear(rng: RandomNumberGenerator) -> void:
@@ -1215,7 +1306,7 @@ static func has_recipe(key: String) -> bool:
 	return key in ["hq", "cityCenter", "cityHall", "courthouse", "bank", "university", "library", "school", "policeStation",
 		"hospital", "market", "villageCenter", "tankFactory", "warehouse", "barracks", "cottage", "residential", "workerHouse",
 		"luxuryVillas", "housing", "apartments", "tvStation", "intelAgency", "techPark", "farm", "foodDepot", "powerPlant", "airfield", "helipad",
-		"extractor", "mountainMine", "oilRefinery", "chipFab", "nuclearReactor", "solarFarm", "shipyard", "port",
+		"extractor", "mountainMine", "oilRefinery", "chipFab", "aiDataCenter", "nuclearReactor", "solarFarm", "shipyard", "port",
 		"fishingWharf", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "commandCenter",
 		"museum", "waterTreatment"]
 

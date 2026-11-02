@@ -3,13 +3,23 @@
 extends RefCounted
 
 const KEYS := ["extractor:oil", "extractor:iron", "extractor:gold", "extractor:silicon", "extractor:uranium", "extractor:diamond",
-	"oilRefinery", "chipFab", "nuclearReactor", "solarFarm", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "port", "shipyard"]
+	"oilRefinery", "chipFab", "aiDataCenter", "nuclearReactor", "solarFarm", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "port", "shipyard"]
 
 static func capture(w: Node) -> void:
 	for i in range(30):
 		await w.get_tree().process_frame
 	var sea = w.water_near(w.start, 320)
+	# --only=aiDataCenter --yaw=0.0 --dist=22 narrow the pictures to one building from one side.
+	var only := ""
+	var yaw := 0.7
+	var dist := 36.0
+	for a in OS.get_cmdline_user_args() + OS.get_cmdline_args():
+		if a.begins_with("--only="): only = a.get_slice("=", 1)
+		elif a.begins_with("--yaw="): yaw = float(a.get_slice("=", 1))
+		elif a.begins_with("--dist="): dist = float(a.get_slice("=", 1))
 	for entry: String in KEYS:
+		if only != "" and entry != only:
+			continue
 		var key: String = entry.get_slice(":", 0)
 		var at: Vector3
 		if key in ["port", "shipyard"]:
@@ -28,10 +38,10 @@ static func capture(w: Node) -> void:
 			at = w.snap_to_hex(w.land_point(w.start + Vector3(0, 0, -90), 50.0))
 		var b: Dictionary = w.place_building(key, at, 0, true)
 		w.cam_focus = b.root.position
-		w.cam_dist = 36.0
-		w.cam_dist_target = 36.0
-		w.cam_pitch = 0.95
-		w.cam_yaw = 0.7
+		w.cam_dist = dist
+		w.cam_dist_target = dist
+		w.cam_pitch = 0.95 if only == "" else 0.6
+		w.cam_yaw = yaw
 		for f in range(25):
 			await w.get_tree().process_frame
 		await RenderingServer.frame_post_draw
