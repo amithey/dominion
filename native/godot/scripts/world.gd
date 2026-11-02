@@ -1245,6 +1245,8 @@ func place_district(key: String, at: Vector3, owner: int, built: bool) -> Dictio
 func register_building(key: String, owner: int, built: bool, root: Node3D, model: Node3D, footprint: float, at: Vector3) -> Dictionary:
 	clear_site_grass(at, logistics.radius if is_district(key) else footprint)
 	var def: Dictionary = building_defs.get(key, {"name": key, "hp": 500, "buildTime": 10, "trains": [], "provides": {}, "desc": "", "cost": {}})
+	if key == "samSite":
+		def = preload("res://scripts/air_defence_systems.gd").def_for(self, owner, def)   # the nation's own battery, its name and data
 	var entity := {
 		"key": key, "owner": owner, "def": def, "root": root, "model": model, "footprint": footprint,
 		"built": built, "progress": 1.0 if built else 0.0, "hp": float(def.hp), "max_hp": float(def.hp),

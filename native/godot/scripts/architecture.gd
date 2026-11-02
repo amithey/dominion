@@ -21,6 +21,7 @@ var _materials := {}
 var _st := {}             # surface -> SurfaceTool for the building being made
 var xf := Transform3D.IDENTITY   # where the next piece goes, in the container's space
 var banner_colour := Color.WHITE
+var nation := ""          # the nation id of the building being made (a SAM site is launched differently in different services)
 var extract_type := ""    # the deposit under an Extractor, which decides what is built on it
 
 func _init(world_node: Node) -> void:
@@ -2369,19 +2370,160 @@ func bunker(rng: RandomNumberGenerator) -> void:
 		var a := TAU * i / 10.0
 		box(TRIM, Vector3(cos(a) * 4.6 - 0.5, 0, sin(a) * 4.0 - 0.3), Vector3(cos(a) * 4.6 + 0.5, 0.5, sin(a) * 4.0 + 0.3), Color("8a7a58"))
 
-## A surface-to-air missile site: launchers with tilted tubes and a radar.
+## A road-mobile canister launcher at `c` facing +z: a truck on three axles with a cab, a stabiliser frame, and four
+## canisters raised at an angle (or laid down when `raised` is false) with orange caps.
+func sam_launcher(c: Vector3, raised: bool, body: Color) -> void:
+	var ink := Color("1d252a")
+	var dark := body * 0.75
+	box(TRIM, c + Vector3(-1.1, 0.7, -3.6), c + Vector3(1.1, 1.05, 2.4), dark)                    # the chassis
+	box(TRIM, c + Vector3(-1.15, 1.05, -3.0), c + Vector3(1.15, 1.25, 1.6), body)                  # the deck
+	box(TRIM, c + Vector3(-1.1, 0.75, 2.4), c + Vector3(1.1, 2.55, 3.8), body)                    # the cab
+	box(GLASS, c + Vector3(-0.9, 1.7, 3.8), c + Vector3(0.9, 2.4, 3.84), Color("1c2d36"))
+	box(TRIM, c + Vector3(-1.1, 0.75, 3.8), c + Vector3(1.1, 1.1, 3.95), ink)                     # the bumper
+	for ax in [-2.8, -0.4, 3.1]:
+		for sx in [-1.0, 1.0]:
+			box(TRIM, c + Vector3(sx * 1.0 - 0.17, 0.0, ax - 0.5), c + Vector3(sx * 1.0 + 0.17, 1.0, ax + 0.5), Color("1a1c1e"))
+	for sz in [-3.4, 1.8]:   # outriggers
+		for sx in [-1.0, 1.0]:
+			box(TRIM, c + Vector3(sx * 1.6 - 0.1, 0.0, sz - 0.12), c + Vector3(sx * 1.1 + 0.1, 0.25, sz + 0.12), ink)
+	var saved := xf
+	var tilt := -1.2 if raised else -0.06
+	xf = xf * Transform3D(Basis(Vector3.RIGHT, tilt), c + Vector3(0, 1.4, -2.4))
+	box(TRIM, Vector3(-1.0, -0.15, -0.3), Vector3(1.0, 0.0, 1.6), Color("3a4630"))
+	for rx in [-0.95, 0.95]:   # two side rails carry the canisters
+		box(TRIM, Vector3(rx - 0.06, -0.1, -0.3), Vector3(rx + 0.06, 0.12, 4.4), Color("3a4630"))
+	for ix in range(2):
+		for iy in range(2):
+			var x0 := -0.9 + ix * 0.9
+			var y0 := 0.1 + iy * 0.9
+			box(PANEL, Vector3(x0, y0, 0.0), Vector3(x0 + 0.8, y0 + 0.8, 4.4), Color(0.78, 0.82, 0.7) * 1.7)
+			box(TRIM, Vector3(x0 + 0.05, y0 + 0.05, 4.4), Vector3(x0 + 0.75, y0 + 0.75, 4.46), Color("c9702a"))
+			box(TRIM, Vector3(x0, y0 + 0.35, 0.8), Vector3(x0 + 0.8, y0 + 0.45, 0.95), ink)
+	xf = saved
+
+## A vertical launch module: a low armoured block with a grid of hatches on its roof, two of them open with
+## a missile tip showing, and a lit status panel.
+func sam_vls(c: Vector3) -> void:
+	var ink := Color("1d252a")
+	var bright := Color(2.3, 2.3, 2.4)
+	box(CONCRETE, c + Vector3(-1.9, 0.0, -2.2), c + Vector3(1.9, 0.35, 2.2), Color(1.25, 1.25, 1.25))
+	box(PANEL, c + Vector3(-1.7, 0.35, -2.0), c + Vector3(1.7, 1.9, 2.0), Color(0.62, 0.68, 0.58) * 1.7)
+	box(TRIM, c + Vector3(-1.8, 1.9, -2.1), c + Vector3(1.8, 2.0, 2.1), Color("3a464c"))
+	for ix in range(3):
+		for iz in range(4):
+			var hx := c.x - 1.15 + ix * 1.15
+			var hz := c.z - 1.5 + iz * 1.0
+			var open := (ix == 1 and iz == 1) or (ix == 0 and iz == 3)
+			box(TRIM, Vector3(hx - 0.4, c.y + 2.0, hz - 0.4), Vector3(hx + 0.4, c.y + 2.06, hz + 0.4), ink)
+			if open:
+				pipe(METAL, Vector3(hx, c.y + 2.0, hz), Vector3(hx, c.y + 3.1, hz), 0.2, Color(1.5, 1.5, 1.52), 10)
+				cylinder(TRIM, Vector3(hx, c.y + 3.1, hz), 0.2, 0.5, Color("5d6468"), 10, 0.03)
+				box(TRIM, Vector3(hx + 0.35, c.y + 2.06, hz - 0.35), Vector3(hx + 0.65, c.y + 2.5, hz - 0.05), Color("c9702a"))
+			else:
+				box(STEEL, Vector3(hx - 0.36, c.y + 2.06, hz - 0.36), Vector3(hx + 0.36, c.y + 2.1, hz + 0.36), bright)
+	box(GLOW, c + Vector3(-1.2, 1.1, 2.0), c + Vector3(1.2, 1.5, 2.06), Color(0.75, 0.92, 1.0))
+
+## A phased-array radar on a tower trailer at `c` facing +z: a square array tilted back, a mast and outriggers.
+func sam_radar(c: Vector3, size: float) -> void:
+	var ink := Color("1d252a")
+	var bright := Color(2.3, 2.3, 2.4)
+	box(TRIM, c + Vector3(-1.4, 0.4, -2.0), c + Vector3(1.4, 0.8, 2.0), Color("4c5a38"))
+	for sz in [-1.7, 1.7]:
+		for sx in [-1.0, 1.0]:
+			box(TRIM, c + Vector3(sx * 1.5 - 0.12, 0.0, sz - 0.12), c + Vector3(sx * 1.5 + 0.12, 0.5, sz + 0.12), ink)
+	box(PANEL, c + Vector3(-0.5, 0.8, -0.6), c + Vector3(0.5, 3.0, 0.6), Color(0.62, 0.68, 0.58) * 1.7)
+	var saved := xf
+	xf = xf * Transform3D(Basis(Vector3.RIGHT, 0.22), c + Vector3(0, 3.0, 0.2))
+	box(PANEL, Vector3(-size * 0.5, 0.0, 0.0), Vector3(size * 0.5, size, 0.3), Color(0.78, 0.82, 0.7) * 1.8)
+	box(TRIM, Vector3(-size * 0.5 + 0.12, 0.12, 0.3), Vector3(size * 0.5 - 0.12, size - 0.12, 0.34), Color("22343c"))
+	for gx in range(6):
+		for gy in range(6):
+			if (gx + gy) % 2 == 0:
+				box(TRIM, Vector3(-size * 0.5 + 0.25 + gx * (size - 0.5) / 6.0, 0.25 + gy * (size - 0.5) / 6.0, 0.34), Vector3(-size * 0.5 + 0.25 + (gx + 0.8) * (size - 0.5) / 6.0, 0.25 + (gy + 0.8) * (size - 0.5) / 6.0, 0.36), Color("2f4b56"))
+	xf = saved
+	box(GLOWR, c + Vector3(-0.1, 3.0 + size + 0.2, 0.2), c + Vector3(0.1, 3.0 + size + 0.4, 0.4), Color(1.0, 0.4, 0.35))
+
+## A surveillance radar: a lattice tower with a slowly turning mesh antenna on top.
+func sam_search_radar(c: Vector3) -> void:
+	var bright := Color(2.3, 2.3, 2.4)
+	lattice(c, 6.0, 1.3, 0.9, Color(1.4, 1.4, 1.45))
+	box(TRIM, c + Vector3(-0.6, 6.0, -0.6), c + Vector3(0.6, 6.4, 0.6), Color("3a464c"))
+	box(PANEL, c + Vector3(-2.2, 6.4, -0.12), c + Vector3(2.2, 8.0, 0.12), Color(1.6, 1.6, 1.62))
+	for k in range(6):
+		box(TRIM, c + Vector3(-2.2 + k * 0.88, 6.4, -0.16), c + Vector3(-2.1 + k * 0.88, 8.0, 0.16), Color("8a949a"))
+	bar(STEEL, c + Vector3(0, 8.0, 0), c + Vector3(0, 8.8, 0), 0.03, bright)
+
+## A ground-based air-defence site: a battery of four launchers (road-mobile canisters, or a vertical-launch block
+## for the nations that field one) around a phased-array radar, a surveillance radar, a command container under
+## camouflage netting, a generator, sandbag walls and a fenced yard with a gate.
 func sam_site(rng: RandomNumberGenerator) -> void:
-	for i in range(3):
-		var a := TAU * i / 3.0
-		var c := Vector3(cos(a), 0, sin(a)) * 5.0
-		box(METAL, c + Vector3(-1.4, 0, -0.9), c + Vector3(1.4, 1.0, 0.9), Color("5b6b3a"))
-		var saved := xf
-		xf = xf * Transform3D(Basis(Vector3.UP, -a).rotated(Vector3.UP, 0.0) * Basis(Vector3.BACK, 0.7), c + Vector3(0, 1.0, 0))
-		for k in range(2):
-			box(METAL, Vector3(-0.3 + k * 0.62, 0, -0.3), Vector3(0.27 + k * 0.62, 3.6, 0.3), Color("6a7a4a"))
-		xf = saved
-	lattice(Vector3.ZERO, 5.0, 1.4, 0.6, Color("8a8c88"))
-	box(METAL, Vector3(-1.4, 5.0, -0.1), Vector3(1.4, 6.4, 0.1), Color("c8ccc8"))
+	var haz := Color("e0b020")
+	var ink := Color("1d252a")
+	var bright := Color(2.3, 2.3, 2.4)
+	var pale := Color(1.5, 1.5, 1.52)
+	var olive := Color(0.62, 0.68, 0.55)
+	var warm := Color(1.0, 0.88, 0.65)
+	var vertical: bool = nation in ["uk", "germany", "france", "italy", "israel", "australia", "ukraine", "netherlands"]
+	var origin := xf
+	var s0 := xf
+	xf = xf * Transform3D(Basis(Vector3.UP, PI / 6.0), Vector3.ZERO)
+	cylinder(CONCRETE, Vector3(0, -1.6, 0), 12.3, 1.7, Color(1.0, 1.0, 1.0), 6)
+	xf = s0
+	box(GRAVEL, Vector3(-9.2, 0.1, -9.0), Vector3(9.2, 0.14, 8.0), Color(1.0, 1.0, 1.0))
+	box(ASPHALT, Vector3(-1.2, 0.1, 1.0), Vector3(1.2, 0.15, 9.4), Color(0.85, 0.85, 0.88))
+	box(ASPHALT, Vector3(-9.0, 0.1, 0.4), Vector3(9.0, 0.15, 1.6), Color(0.85, 0.85, 0.88))
+	# ---- four launchers in a row on concrete pads, each behind a sandbag wall on the +z side, the first two raised
+	for i in range(4):
+		var lx := -6.0 + i * 4.0
+		box(CONCRETE, Vector3(lx - 1.8, 0.1, -6.6), Vector3(lx + 1.8, 0.2, -0.2), Color(1.3, 1.3, 1.3))
+		if vertical:
+			sam_vls(Vector3(lx, 0.2, -3.4))
+		else:
+			sam_launcher(Vector3(lx, 0.2, -3.6), i < 3, olive)
+		for k in range(5):   # the sandbag wall: staggered rounded blocks
+			box(PLASTER, Vector3(lx - 1.9 + k * 0.78, 0.2, -7.2), Vector3(lx - 1.2 + k * 0.78, 0.7, -6.7), Color("a89a72"))
+			if k < 4:
+				box(PLASTER, Vector3(lx - 1.5 + k * 0.78, 0.7, -7.2), Vector3(lx - 0.8 + k * 0.78, 1.2, -6.7), Color("9a8c66"))
+	# ---- the phased-array radar and the surveillance radar behind and beside the battery
+	sam_radar(Vector3(0.0, 0.1, 5.4), 2.8)
+	sam_search_radar(Vector3(7.0, 0.1, 5.2))
+	box(CONCRETE, Vector3(-1.8, 0.1, 3.2), Vector3(1.8, 0.14, 7.2), Color(1.3, 1.3, 1.3))
+	# ---- the command post under camouflage netting: a container, antennas, a table of screens, a generator
+	box(PANEL, Vector3(-8.2, 0.1, 3.0), Vector3(-5.2, 2.0, 4.4), pale)
+	box(TRIM, Vector3(-8.25, 2.0, 2.95), Vector3(-5.15, 2.1, 4.45), Color("56646a"))
+	box(GLOW, Vector3(-7.6, 1.2, 4.4), Vector3(-5.8, 1.7, 4.46), Color(0.75, 0.92, 1.0))
+	bar(STEEL, Vector3(-7.4, 2.1, 3.6), Vector3(-7.4, 4.4, 3.6), 0.03, bright)
+	bar(TRIM, Vector3(-7.9, 4.4, 3.6), Vector3(-6.9, 4.4, 3.6), 0.03, ink)
+	for k in range(4):
+		bar(STEEL, Vector3(-8.8 + (k % 2) * 4.2, 0.1, 2.0 + (k / 2) * 3.4), Vector3(-8.8 + (k % 2) * 4.2, 3.0, 2.0 + (k / 2) * 3.4), 0.05, bright)
+	quad(PLASTER, Vector3(-8.8, 3.0, 5.4), Vector3(-4.6, 3.0, 5.4), Vector3(-4.6, 3.0, 2.0), Vector3(-8.8, 3.0, 2.0), Color("5c6a42"))
+	quad(PLASTER, Vector3(-8.8, 3.0, 2.0), Vector3(-4.6, 3.0, 2.0), Vector3(-4.6, 2.2, 1.4), Vector3(-8.8, 2.2, 1.4), Color("4f5c38"))
+	box(PANEL, Vector3(-4.0, 0.1, 6.2), Vector3(-2.4, 1.6, 7.6), pale)
+	box(TRIM, Vector3(-4.1, 1.6, 6.1), Vector3(-2.3, 1.72, 7.7), Color("56646a"))
+	pipe(METAL, Vector3(-3.4, 1.72, 6.6), Vector3(-3.4, 2.8, 6.6), 0.1, Color("30383c"))
+	box(GLOWG, Vector3(-2.4, 1.0, 6.8), Vector3(-2.34, 1.2, 7.0), Color(0.6, 1.0, 0.55))
+	# ---- the guard post at the gate, floodlights, warning plates and the perimeter fence leaning outward
+	box(PANEL, Vector3(2.2, 0.1, 8.0), Vector3(3.6, 2.3, 9.2), pale)
+	box(TRIM, Vector3(2.1, 2.3, 7.9), Vector3(3.7, 2.42, 9.3), Color("56646a"))
+	box(GLASS, Vector3(2.3, 1.0, 9.2), Vector3(3.5, 2.1, 9.24), Color("2f5568"))
+	bar(TRIM, Vector3(1.2, 1.0, 8.4), Vector3(-0.2, 1.0, 8.4), 0.05, bright)
+	for k in range(3):
+		box(TRIM, Vector3(1.2 - k * 0.46, 0.95, 8.35), Vector3(1.0 - k * 0.46, 1.05, 8.45), Color("c83a2e") if k % 2 == 0 else Color("f0eee4"))
+	for p in [Vector3(-9.0, 0, 5.0), Vector3(9.0, 0, 3.0), Vector3(9.0, 0, -6.0), Vector3(-9.0, 0, -7.0), Vector3(0.0, 0, -8.6)]:
+		bar(STEEL, p + Vector3(0, 0.1, 0), p + Vector3(0, 5.2, 0), 0.05, bright)
+		box(GLOWW, p + Vector3(-0.4, 5.15, -0.15), p + Vector3(0.4, 5.25, 0.15), warm)
+	for i in range(26):
+		var a := TAU * i / 26.0
+		var fp := Vector3(cos(a) * 11.0, 0.1, sin(a) * 11.0)
+		if absf(fp.x) < 10.0 and absf(fp.z) < 11.4 - absf(fp.x) * 0.577:
+			if fp.z > 7.0 and fp.x > -1.6 and fp.x < 1.6:
+				continue
+			bar(STEEL, fp, fp + Vector3(0, 1.8, 0), 0.03, bright)
+			bar(STEEL, fp + Vector3(0, 1.8, 0), fp + Vector3(fp.x * 0.03, 2.1, fp.z * 0.03), 0.02, bright)
+			if i % 5 == 0:
+				box(TRIM, fp + Vector3(-0.3, 1.0, -0.02), fp + Vector3(0.3, 1.5, 0.02), haz)
+	banner(-9.0, 4.4, 7.0, 1.8)
+	xf = origin
 
 ## A park: lawns cut by paths, a fountain and a bandstand.
 func park(rng: RandomNumberGenerator) -> void:

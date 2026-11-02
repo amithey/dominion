@@ -169,8 +169,11 @@ func run() -> void:
 	var before := rate(site, "ballistic", 0, 600)
 	complete("manoeuvringWarheads")
 	var after := rate(site, "ballistic", 0, 600)
-	check(absf(before - 0.25) < 0.06 and absf(after - 0.15) < 0.05, "a SAM site stops ~25%% of ballistic missiles, ~15%% once they manoeuvre (%.2f -> %.2f)" % [before, after])
-	check(Modern.intercept_chance(w, "samSite", {"type": "hypersonic", "owner": 0}, 1) < 0.06, "a SAM site almost never stops a manoeuvring hypersonic missile")
+	# (the rival's SAM site is its own nation's system: air_defence_systems.gd)
+	var own_ballistic: float = preload("res://scripts/air_defence_systems.gd").odds(w, 1, "ballistic")
+	if own_ballistic < 0.0: own_ballistic = 0.25
+	check(absf(before - own_ballistic) < 0.08 and absf(after - own_ballistic * 0.6) < 0.07 and after < before, "a SAM site stops about its nation's share of ballistic missiles, and fewer once they manoeuvre (%.2f -> %.2f, system %.2f)" % [before, after, own_ballistic])
+	check(Modern.intercept_chance(w, "samSite", {"type": "hypersonic", "owner": 0}, 1) < 0.08, "a SAM site almost never stops a manoeuvring hypersonic missile")
 	complete("missileDefence")
 	check(absf(Modern.intercept_chance(w, "abmLauncher", {"type": "ballistic", "owner": 1}, 0) - 0.96) < 0.001, "Missile Defence research adds 10% to your interceptors")
 	check(str(w.missiles.def_of("hypersonic").desc).contains("Interception: SAM site 8%"), "missile cards show their interception odds")

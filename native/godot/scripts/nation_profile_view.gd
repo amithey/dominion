@@ -38,6 +38,12 @@ static func append_to(parent: Control, faction_id: String, resized := Callable()
 			text.add_theme_font_size_override("font_size", 13)
 			text.add_theme_color_override("font_color", UI.TEXT)
 			details.add_child(text)
+	var air := Label.new()
+	air.text = "AIR DEFENCE  " + preload("res://scripts/air_defence_systems.gd").line(faction_id)
+	air.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	air.add_theme_font_size_override("font_size", 13)
+	air.add_theme_color_override("font_color", UI.MUTED)
+	details.add_child(air)
 	toggle.toggled.connect(func(on):
 		details.visible = on
 		toggle.text = "Strengths & weaknesses  −" if on else "Strengths & weaknesses  +"

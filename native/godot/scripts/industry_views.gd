@@ -14,11 +14,13 @@ static func capture(w: Node) -> void:
 	var yaw := 0.7
 	var dist := 36.0
 	var pitch := -1.0
+	var as_nation := ""
 	for a in OS.get_cmdline_user_args() + OS.get_cmdline_args():
 		if a.begins_with("--only="): only = a.get_slice("=", 1)
 		elif a.begins_with("--yaw="): yaw = float(a.get_slice("=", 1))
 		elif a.begins_with("--dist="): dist = float(a.get_slice("=", 1))
 		elif a.begins_with("--pitch="): pitch = float(a.get_slice("=", 1))
+		elif a.begins_with("--as="): as_nation = a.get_slice("=", 1)   # draw it as this nation fields it
 	for entry: String in KEYS:
 		if only != "" and entry != only:
 			continue
@@ -38,6 +40,7 @@ static func capture(w: Node) -> void:
 			at = w.snap_to_hex(dep.pos)
 		else:
 			at = w.snap_to_hex(w.land_point(w.start + Vector3(0, 0, -90), 50.0))
+		if as_nation != "": w.map.nations[0].id = as_nation
 		var b: Dictionary = w.place_building(key, at, 0, true)
 		w.cam_focus = b.root.position
 		w.cam_dist = dist

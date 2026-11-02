@@ -189,6 +189,7 @@ static func apply(w: Node) -> void:
 	preload("res://scripts/arsenal_catalog.gd").apply(w)   # verified operators, platforms and future programmes
 	preload("res://scripts/force_catalog.gd").apply(w)   # additional battlefield roles and operator rosters
 	preload("res://scripts/balance.gd").apply(w)   # cost-efficiency corrections (BALANCE-2026-10-18.md)
+	preload("res://scripts/air_defence_systems.gd").apply(w)   # each nation's own SAM system, its name and data
 	preload("res://scripts/regional_factions.gd").restrict(w, preload("res://scripts/factions.gd").ARSENALS)
 	var types: Dictionary = w.map.missiles.types
 	for key in types:
@@ -267,6 +268,9 @@ static func update(w: Node, delta: float) -> void:
 ## Chance that defender `kind` (owned by `defender`) stops missile `m`.
 static func intercept_chance(w: Node, kind: String, m: Dictionary, defender: int) -> float:
 	var odds: float = INTERCEPT[CLASS_OF.get(m.type, "cruise")].get(kind, 0.0)
+	if kind == "samSite":
+		var own: float = preload("res://scripts/air_defence_systems.gd").odds(w, defender, CLASS_OF.get(m.type, "cruise"))
+		if own >= 0.0: odds = own   # the nation's own system (air_defence_systems.gd)
 	if kind == "type45": odds = {"cruise": 0.7, "seaSkimmer": 0.65, "shortBallistic": 0.25}.get(CLASS_OF.get(m.type, "cruise"), 0.0)
 	if kind == "saudiThaad": odds = {"shortBallistic": 0.8, "ballistic": 0.86}.get(CLASS_OF.get(m.type, "cruise"), 0.0)
 	if odds <= 0.0:
@@ -308,7 +312,7 @@ static func intercept(w: Node, m: Dictionary, at: Vector3, f: float) -> bool:
 			continue
 		if not m.arc and d.kind == "abmLauncher" and f < 0.3:
 			continue
-		if Vector2(d.node.position.x - at.x, d.node.position.z - at.z).length() > REACH[d.kind]:
+		if Vector2(d.node.position.x - at.x, d.node.position.z - at.z).length() > _reach(w, d):
 			continue
 		var chance := intercept_chance(w, d.kind, m, d.owner)
 		if chance <= 0.0:
@@ -319,9 +323,9 @@ static func intercept(w: Node, m: Dictionary, at: Vector3, f: float) -> bool:
 			preload("res://scripts/war_costs.gd").blocked(w, d.ent, "interceptor budget")
 			continue
 		m.engaged[id] = true
-		d.ent.intercept_ready = w.game_time + RELOAD[d.kind]
+		d.ent.intercept_ready = w.game_time + _reload(w, d)
 		if d.kind == "samSite":
-			d.ent.aa_reload = RELOAD.samSite
+			d.ent.aa_reload = _reload(w, d)
 		var from: Vector3 = d.node.position + Vector3.UP * (5.0 if d.kind == "samSite" else 3.0)
 		var hit := randf() < chance
 		w.intercepts.append({"type": m.type, "by": d.kind, "hit": hit, "owner": int(m.owner)})
@@ -333,6 +337,12 @@ static func intercept(w: Node, m: Dictionary, at: Vector3, f: float) -> bool:
 		if hit:
 			return true
 	return false
+
+static func _reach(w: Node, d: Dictionary) -> float:
+	return preload("res://scripts/air_defence_systems.gd").reach(w, int(d.owner)) if d.kind == "samSite" else float(REACH[d.kind])
+
+static func _reload(w: Node, d: Dictionary) -> float:
+	return preload("res://scripts/air_defence_systems.gd").reload_time(w, int(d.owner)) if d.kind == "samSite" else float(RELOAD[d.kind])
 
 ## Golden Dome: one shot from orbit at a missile fired at the player, wherever
 ## it flies, while the treasury can pay for the interceptor.
@@ -369,7 +379,7 @@ static func _report(w: Node, m: Dictionary, d: Dictionary, hit: bool) -> void:
 	if w.hud == null:
 		return
 	var name: String = w.missiles.def_of(m.type).get("name", "missile")
-	var by: String = {"samSite": "a SAM site", "samLauncher": "a mobile SAM", "abmLauncher": "a missile defence battery", "laserAD": "a laser", "irisT": "an IRIS-T battery", "railgunShip": "a railgun", "goldenDome": "Golden Dome", "aegisCruiser": "an Aegis cruiser", "type45": "a Type 45 destroyer", "saudiThaad": "a THAAD battery"}[d.kind]
+	var by: String = {"samSite": preload("res://scripts/air_defence_systems.gd").title(w, int(d.owner)), "samLauncher": "a mobile SAM", "abmLauncher": "a missile defence battery", "laserAD": "a laser", "irisT": "an IRIS-T battery", "railgunShip": "a railgun", "goldenDome": "Golden Dome", "aegisCruiser": "an Aegis cruiser", "type45": "a Type 45 destroyer", "saudiThaad": "a THAAD battery"}[d.kind]
 	if int(m.owner) == 0:
 		w.hud.notice(("Your %s was shot down by %s." if hit else "Your %s slipped past %s.") % [name, by])
 	elif d.owner == 0:

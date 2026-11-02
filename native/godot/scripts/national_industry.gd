@@ -29,6 +29,7 @@ const WHY := {
 	"aiDataCenter": "No domestic compute industry for a data centre: AI services are imported.",
 	"fusionCell": "No military AI programme to fuse targets with.",
 	"nuclearReactor": "No civil nuclear power programme.",
+	"samSite": "No ground-based air-defence battery in service: this nation relies on fighters and shoulder-launched missiles.",
 }
 
 ## Whether nation `owner` has the industrial base for building `key`.
@@ -39,6 +40,7 @@ static func allowed(w: Node, owner: int, key: String) -> bool:
 		"techPark", "aiDataCenter": return preload("res://scripts/ai_data.gd").ceiling(w, owner) >= DATA_CENTRE_CEILING
 		"fusionCell": return preload("res://scripts/ai_data.gd").ceiling(w, owner) >= 3   # military AI
 		"nuclearReactor": return not id in NO_REACTOR
+		"samSite": return preload("res://scripts/air_defence_systems.gd").has(id)   # a nation with no such battery has none to build
 	return true
 
 ## Why not, in words for the build card ("" when it may).

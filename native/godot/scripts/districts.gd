@@ -287,6 +287,7 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 		rng.seed = int(absf(at.x * 131.0 + at.z * 71.0)) + key.hash() + city_size
 		arch.begin()
 		arch.banner_colour = Color(world.map.nations[owner].color) if owner < world.map.nations.size() else Color.WHITE
+		arch.nation = preload("res://scripts/factions.gd").identity(world, owner)
 		arch.xf = Transform3D(Basis(), at)
 		if key in ["tankFactory", "warehouse"]:
 			arch.factory(rng, footprint)
