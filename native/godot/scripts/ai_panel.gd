@@ -60,7 +60,7 @@ static func _compute(sp, a) -> void:
 	card.add_child(hud._text("Compute %.1f/s  (%s)" % [float(a.st[0].rate), src], 13, hud.UI.TEXT))
 	if a.applications.projects.has(0):
 		sp._wrap(card, "Local validation receives half the Training runs allocation; the rest trains models or feeds AGI.", 12, hud.UI.GOLD)
-	sp._wrap(card, "Commissioned applications reserve compute before general pool bonuses. Running applications cost $%.1f/s." % a.applications.upkeep(), 11, hud.UI.MUTED)
+	sp._wrap(card, "Running applications reserve compute first. Running cost $%.1f/s." % a.applications.upkeep(), 11, hud.UI.MUTED)
 	if a.chip_factor(0) < 1.0:
 		sp._wrap(card, "Data centres at %d%%: %s." % [roundi(a.chip_factor(0) * 100.0), "export controls on you" + (" (smuggling)" if a.smuggling.has(0) else "") if a.controlled(0) else "a global chip shortage"], 12, hud.UI.BAD)
 	if float(a.st[0].rate) <= 0.0:
@@ -121,7 +121,7 @@ static func _doctrine(sp, a) -> void:
 	if dc != null and dc.nuclear(0):
 		var ew: VBoxContainer = hud._card(hud.UI.BAD if a.early_warning.has(0) else Color(0, 0, 0, 0))
 		ew.add_child(hud._text("Automated early warning: %s" % ("on" if a.early_warning.has(0) else "off"), 15, hud.UI.CREAM, true))
-		sp._wrap(ew, "An AI watches for missile launches and readies the answer: rivals believe a launch on warning (a third less likely to strike you first) and interception +5%. It can report an attack that is not there: your alert rises, and the world's tension with it.", 12)
+		sp._wrap(ew, "An AI watches for missile launches. Rivals think twice about striking first (a third less likely) and interception is +5%. But it can raise a false alarm.", 12)
 		if a.early_warning.has(0):
 			sp._wrap(ew, "False alarms: about %d%% a minute while tension is 20 or more." % roundi(a.alarm_rate(0) * 100.0), 12, hud.UI.BAD)
 		var why_e: String = a.warning_blocked()
@@ -145,7 +145,7 @@ static func _doctrine(sp, a) -> void:
 			var why: String = a.sign_blocked(t)
 			var sb: Button = hud._button(row, "Sign", func(): return a.sign(tt), why == "", "good")
 			sb.tooltip_text = why
-	sp._wrap(tr, "Signatories of the autonomous weapons treaty keep a human in or on the loop. Fighting without one costs standing with them.", 11)
+	sp._wrap(tr, "Treaty members keep a human in or on the loop. Fighting without one costs standing with them.", 11)
 
 static func _operations(sp, a) -> void:
 	var hud = sp.hud
@@ -171,7 +171,7 @@ static func _operations(sp, a) -> void:
 		["Synthetic influence (%d)" % int(a.INFLUENCE_COST), a.influence_blocked(t), func(): return a.influence(0, t),
 			"Deepfake videos and voices turn its people against the war: its war support -8, stability -10. If traced to you: a scandal at home and abroad."],
 		["Steal model weights ($%d)" % int(a.THEFT_COST.money), a.theft_blocked(t), func(): return a.steal(0, t),
-			"Your agents and AI go after a stronger rival's model: your AI level closes half the gap. If exposed: -30 relations, and a chip-supply nation puts export controls on you."],
+			"Your agents and AI chase a stronger rival's model: your AI level closes half the gap. If exposed: relations -30, and chip suppliers restrict exports."],
 	]
 	if a.can_control(0):
 		acts.append(["Chip export controls", a.control_blocked(t), func(): return a.impose_controls(0, t),
@@ -206,7 +206,7 @@ static func _agi(sp, a) -> void:
 	if stage >= 3:
 		sp._wrap(card, "General intelligence achieved.", 13, hud.UI.GOOD)
 	elif not a.researched(0, "agiProject"):
-		sp._wrap(card, "Research The AGI Project (after Frontier Models) to begin. Three stages paid in compute: %s; %s; %s" % [a.AGI_GAINS[0], a.AGI_GAINS[1].to_lower(), a.AGI_GAINS[2].to_lower()], 12)
+		sp._wrap(card, "Research The AGI Project first (after Frontier Models). Three stages, paid in compute: %s; %s; %s" % [a.AGI_GAINS[0], a.AGI_GAINS[1].to_lower(), a.AGI_GAINS[2].to_lower()], 12)
 	elif a.level(0) < 4:
 		sp._wrap(card, "Your AI must reach level 4 first.", 12)
 	else:
@@ -222,7 +222,7 @@ static func _agi(sp, a) -> void:
 	srow.add_child(sl)
 	hud._button(srow, "-", func(): return a.set_safety(-0.1), a.safety > 0.0).custom_minimum_size.x = 30
 	hud._button(srow, "+", func(): return a.set_safety(0.1), a.safety < 0.5).custom_minimum_size.x = 30
-	sp._wrap(safe, "Compute given to safety slows the project. Too little, and the system may run out of control: the stage's work halved, drones frozen, intrusions everywhere, markets down, perhaps a pathogen. Risk now: about %d%% a minute." % roundi(a.runaway_rate(0) * 100.0), 12)
+	sp._wrap(safe, "Compute on safety slows the project. Too little and it may run out of control: work halved, drones frozen, markets down. Risk now: about %d%% a minute." % roundi(a.runaway_rate(0) * 100.0), 12)
 	var race: VBoxContainer = hud._card()
 	race.add_child(hud._text("The race", 15, hud.UI.CREAM, true))
 	var any := false

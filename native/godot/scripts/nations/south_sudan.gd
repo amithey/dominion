@@ -9,5 +9,5 @@ const DATA := {
 	"colour": "#6285b3",
 	"portrait": "south-sudan",
 	"signature": "Oil Transit Contract",
-	"doctrine": "Oil and transit: export actual oil stocks through a paid agreement with Sudan. Both sides need supplied extractors; war or lost infrastructure cancels the escrow and refunds it. Landlocked, with a limited ground roster.",
+	"doctrine": "Oil and transit: sell real oil stocks through a paid deal with Sudan. Both need working extractors; war or lost sites cancel it and refund. Landlocked, small roster.",
 }

@@ -9,5 +9,5 @@ const DATA := {
 	"colour": "#368250",
 	"portrait": "bin-salman",
 	"signature": "Saudi THAAD",
-	"doctrine": "Oil power: oil finances development, and an OPEC+ output cut lifts the world price. THAAD protects against ballistic missiles; food and aircraft are costly.",
+	"doctrine": "Oil power: oil funds development, and an OPEC+ cut lifts the world price. THAAD covers against ballistic missiles; food and aircraft cost more.",
 }

@@ -2,94 +2,94 @@ extends RefCounted
 ## Short, action-oriented help. Context is taken from the button's own card,
 ## never from a different screen. Costs and blocking reasons remain authoritative.
 const TEXT := {
-	"Build":"Open construction choices. Select a building, then choose a legal site on the map.",
-	"Cabinet":"Open the national overview: economy, population, army, research and government actions.",
-	"Research":"Open the research tree. Choose a discovery to inspect its effects and requirements before queuing it.",
-	"Diplomacy":"View relations and contact other nations to negotiate, make agreements or declare war.",
-	"Market":"Buy or sell resources immediately, or arrange recurring international trade routes.",
-	"Intel":"Manage agents and select intelligence operations, targets, cost and risk.",
-	"Defence":"Manage generals, military readiness and nuclear release conditions.",
-	"Territory":"Inspect land ownership and settlement districts; manage territory purchases.",
-	"Log":"Read earlier messages from this match.", "Menu":"Open the pause menu, settings and save/load controls.",
-	"UN":"Read UN invitations, attend Council or Assembly sessions, or manage UN affairs.",
-	"New Game":"Configure a new campaign before starting. This does not immediately replace the current match.",
-	"Begin campaign":"Start a new campaign using the selected country, map, rivals and rules.",
-	"Resume":"Continue the paused campaign.", "Settings":"Change display, sound and interface settings.",
-	"Load Game":"Choose a saved campaign to restore.", "Save Game":"Choose a slot and save the current campaign.",
-	"Main menu":"Return to the main menu. Save first if you want to keep your current progress.",
-	"Quit":"Exit the game. Unsaved progress is lost.", "Back":"Return to the previous screen.",
-	"Close":"Close this window and return to the game.",
-	"✕":"Close this window and return to the game.", "×":"Close this window and return to the game.",
-	"Contact":"Open contact options for this nation, including each channel's fee and response time.",
-	"Declare war":"Start a war with this nation. Your forces may attack each other; diplomatic consequences apply.",
-	"Authorize operation":"Pay the displayed operation cost and send the selected agent against the chosen target. Success is not guaranteed.",
-	"Recall the agent":"Cancel this agent's current mission and bring them back.",
-	"End partner funding":"Stop funding the selected proxy partner.",
-	"Recruit agent":"Pay the recruitment cost to add one intelligence agent. This does not start a mission.",
-	"Close trade route":"Stop this recurring trade route. This closes a commercial agreement, not the window.",
-	"Open route":"Start the selected recurring import or export route. Shipments and payments follow the route's schedule.",
-	"Assign general":"Give this general command of the selected eligible unit.",
-	"Dismiss general":"Remove this general from your command roster.",
-	"Appoint general":"Pay the appointment cost to add this general to your command roster.",
-	"Go to":"Move the camera to this unit or location; does not order the unit to move.",
-	"Raise the alert":"Increase military readiness by one step. Read the production, income and diplomatic effects before escalating.",
-	"Stand down":"Lower military readiness by one step and reduce the alert's ongoing effects.",
-	"Pay arrears":"Pay your outstanding UN dues from the treasury and restore Assembly voting eligibility when applicable.",
-	"Yes":"Vote in favour of the proposal in this chamber.", "No":"Vote against the proposal in this chamber.",
-	"Veto":"Cast a permanent Council member's No vote, blocking adoption of this resolution.",
-	"Abstain":"Record an abstention. Council abstentions do not lower its Yes threshold; Assembly abstentions are excluded from Yes + No.",
-	"Toward yes":"Pay the lobbying cost to move this Council member's leaning one step toward Yes during consultations.",
-	"Toward no":"Pay the lobbying cost to move this Council member's leaning one step toward No during consultations.",
-	"Join restrictions":"Voluntarily join economic restrictions following this Assembly recommendation.",
-	"Leave restrictions":"Withdraw your participation in the voluntary economic restrictions.",
-	"Request mediation":"Ask the Secretary-General to seek a negotiated settlement. A request alone does not end the war.",
-	"Suspend":"Stop this AI application's operation and ongoing benefits while preserving its completed development.",
-	"Pause trials":"Pause local AI validation. Completed trial work is retained.",
-	"Resume trials":"Continue local AI validation using compute. This does not yet activate the application.",
-	"Open research":"Open the research tree for the discovery this application needs.",
-	"Sign":"Sign the agreement described in this card and accept its conditions.",
-	"Withdraw":"Withdraw from the agreement described in this card; its diplomatic consequences apply.",
-	"Produce weapons":"Show weapons this facility can manufacture. Production spends resources and adds one item to its queue.",
-	"Stockpile / target":"Show completed weapons in storage. Choosing one starts target selection; it does not produce a new weapon.",
-	"Attack-move":"Choose a destination on the map. Selected units move there and engage suitable targets along the way.",
-	"Bombard":"Choose a ground position or infrastructure to fire on with a suitable weapon.",
-	"Repair":"Order repairs on a friendly damaged vehicle or completed building. Repairs cost $0.25 per HP and pause in combat.",
-	"Buy land":"Select an adjacent unclaimed hex to buy for this settlement. Each hex costs $1000; up to four purchases per settlement.",
-	"End this contact":"Finish this diplomatic contact and read the final result.",
-	"Skip the guide":"Dismiss the introductory walkthrough and continue playing.",
-	"Show first steps":"Show the introductory steps for construction, research and army control.",
-	"Pause":"Pause campaign time. Resume to continue production, movement and deadlines.",
-	"1x":"Set campaign time to normal speed.", "2x":"Run campaign time at double speed, including production and voting deadlines.",
-	"4x":"Run campaign time at four times normal speed, including production and voting deadlines.",
-	"Research now":"Queue this discovery. Its three stages develop in order, using research points and each stage's resources when its requirements are met.",
-	"Add to queue":"Add this discovery after the current projects. Research goes to the first eligible project; blocked projects wait for their requirements.",
-	"Remove from queue":"Remove this discovery from the research queue. This does not remove stages already completed.",
-	"Defaults":"Restore the default settings for the options in this screen.",
-	"Quit to Main Menu":"Leave the campaign for the main menu. Unsaved progress is lost; a second click confirms.",
-	"Quit to Desktop":"Exit the game. Unsaved progress is lost; a second click confirms.",
-	"Propose Assembly recommendation":"Submit a separate non-binding recommendation to the Assembly. All eligible members vote; it does not automatically impose Council sanctions.",
-	"Read decision":"Open the UN conference result and read the final vote count.",
-	"Attend session":"Enter the pending UN conference to read the proposal and cast your ballot if eligible.",
-	"Accept":"Accept the offer or consent request described in this card.",
-	"Decline":"Reject the offer or consent request described in this card.",
+	"Build":"Choose a building, then a site on the map.",
+	"Cabinet":"Your nation at a glance: economy, people, army, research.",
+	"Research":"Open the research tree.",
+	"Diplomacy":"Talk to other nations, sign deals or declare war.",
+	"Market":"Buy and sell resources, or set up trade routes.",
+	"Intel":"Agents, operations and what you know about rivals.",
+	"Defence":"Generals, alert level and nuclear weapons.",
+	"Territory":"Your land and its borders. Buy more land here.",
+	"Log":"Earlier messages from this match.", "Menu":"Pause, settings, save and load.",
+	"UN":"UN votes, invitations and affairs.",
+	"New Game":"Set up a new campaign. Your current match stays until you begin.",
+	"Begin campaign":"Start with the nation, map and rules you picked.",
+	"Resume":"Back to the game.", "Settings":"Display, sound and controls.",
+	"Load Game":"Pick a saved campaign.", "Save Game":"Pick a slot and save.",
+	"Main menu":"Back to the main menu. Save first to keep your progress.",
+	"Quit":"Exit the game. Unsaved progress is lost.", "Back":"Go back to the previous screen.",
+	"Close":"Close this window.",
+	"✕":"Close this window.", "×":"Close this window.",
+	"Contact":"Ways to contact this nation, with price and speed.",
+	"Declare war":"Start a war. Your forces may fight, and others will react.",
+	"Authorize operation":"Pay the cost and send the agent. It can fail.",
+	"Recall the agent":"End the mission and bring the agent home.",
+	"End partner funding":"Stop funding this partner.",
+	"Recruit agent":"Pay to hire one agent. No mission starts.",
+	"Close trade route":"End this trade route.",
+	"Open route":"Start this trade route. Goods and money follow its schedule.",
+	"Assign general":"Put this general in command of the selected unit.",
+	"Dismiss general":"Remove this general.",
+	"Appoint general":"Pay to add this general to your staff.",
+	"Go to":"Move the camera here. The unit does not move.",
+	"Raise the alert":"One step higher. Check the costs first.",
+	"Stand down":"One step lower. The alert's effects ease.",
+	"Pay arrears":"Pay your UN dues and get your Assembly vote back.",
+	"Yes":"Vote for it.", "No":"Vote against it.",
+	"Veto":"Vote No as a permanent member: it cannot pass.",
+	"Abstain":"Do not vote either way.",
+	"Toward yes":"Pay to move this member one step toward Yes.",
+	"Toward no":"Pay to move this member one step toward No.",
+	"Join restrictions":"Join the recommended economic limits.",
+	"Leave restrictions":"Stop taking part in the economic limits.",
+	"Request mediation":"Ask the Secretary-General to help. It does not end the war by itself.",
+	"Suspend":"Switch this AI application off. Its progress is kept.",
+	"Pause trials":"Pause the trials. Progress is kept.",
+	"Resume trials":"Continue the trials. It does not switch the application on.",
+	"Open research":"Open the research this application needs.",
+	"Sign":"Sign this agreement and accept its terms.",
+	"Withdraw":"Leave this agreement. Others will notice.",
+	"Produce weapons":"See what this site can build. Building costs resources.",
+	"Stockpile / target":"See stored weapons. Pick one to aim it.",
+	"Attack-move":"Pick a spot. Units go there and fight what they meet.",
+	"Bombard":"Pick a spot to fire on.",
+	"Repair":"Repair a damaged vehicle or building. $0.25 per HP, stops in combat.",
+	"Buy land":"Buy a neighbouring hex: $1000 each, up to four per settlement.",
+	"End this contact":"Finish this contact and see the result.",
+	"Skip the guide":"Close the introduction.",
+	"Show first steps":"Show the first steps again.",
+	"Pause":"Pause the game.",
+	"1x":"Normal speed.", "2x":"Double speed.",
+	"4x":"Four times speed.",
+	"Research now":"Start this discovery. Its three stages run in order.",
+	"Add to queue":"Add it after the current projects.",
+	"Remove from queue":"Take it off the queue. Finished stages stay.",
+	"Defaults":"Reset the options on this screen.",
+	"Quit to Main Menu":"Leave the campaign. Unsaved progress is lost. Click twice to confirm.",
+	"Quit to Desktop":"Exit the game. Unsaved progress is lost. Click twice to confirm.",
+	"Propose Assembly recommendation":"Put a non-binding recommendation to all members.",
+	"Read decision":"See how the vote ended.",
+	"Attend session":"Go to the vote and cast yours.",
+	"Accept":"Accept this offer.",
+	"Decline":"Turn this offer down.",
 }
 const TABS := {
-	"Vote now":"The vote before the Security Council: who votes how, your own vote, and how to win members over.",
-	"Propose":"Pick a country and a UN measure, and put it to the Council.",
-	"Assembly":"General Assembly recommendations and ballots; no permanent-member veto.",
-	"Dues & members":"UN membership, the Council president, elections, your dues and treaties.", "History":"Earlier UN votes and how they ended.",
-	"Overview":"The current status and key facts for this department.", "Agents":"Recruitment, active agents and their assignments.",
-	"Operations":"Choose an intelligence operation and inspect its target, price and risk.",
-	"Trade":"Recurring international import and export routes.", "Economy":"Buildings for resources, food, homes and trade.",
-	"Military":"Training buildings, military defences and weapon facilities.", "Civic & research":"Education, research and public-service buildings.",
-	"Graphics":"Display quality, window and rendering settings.", "Sound":"Music and sound-effect volume controls.",
-	"Controls":"Mouse, camera and interface control settings.", "Game":"Campaign preferences and gameplay display options.",
-	"Generals":"Appoint commanders and assign them to units.", "Veterans":"Experience and ranks earned by your units.",
-	"Nuclear alert":"Military readiness, nuclear release and escalation effects.", "AI":"Compute, applications, autonomy and strategic AI choices.",
-	"Arsenal":"Your country's weapon roles, operators and production facilities.",
-	"Compute":"AI training progress and the allocation of shared compute.", "Applications":"Validate and activate practical AI programmes, with compute demand and upkeep.",
-	"Doctrine":"Human oversight, weapons autonomy and AI agreements.", "AGI":"Advanced AI development, safety work and runaway risk.",
-	"Rivals":"Other nations' AI progress and observed activity.",
+	"Vote now":"The Council vote: who votes how, and your vote.",
+	"Propose":"Pick a country and a measure, and put it to the Council.",
+	"Assembly":"Assembly votes. No veto.",
+	"Dues & members":"Membership, elections, your dues and treaties.", "History":"Earlier UN votes and results.",
+	"Overview":"Status and key facts.", "Agents":"Hire agents and give them missions.",
+	"Operations":"Pick an operation; see its target, price and risk.",
+	"Trade":"Trade routes.", "Economy":"Resources, food, homes and trade.",
+	"Military":"Training, defences and weapon sites.", "Civic & research":"Schools, research and public services.",
+	"Graphics":"Quality and window.", "Sound":"Music and effects volume.",
+	"Controls":"Mouse, camera and interface.", "Game":"Campaign options.",
+	"Generals":"Appoint commanders and give them units.", "Veterans":"Ranks your units have earned.",
+	"Nuclear alert":"Readiness and nuclear release.", "AI":"Compute, applications and AI choices.",
+	"Arsenal":"Your weapons and where they are made.",
+	"Compute":"AI training and shared compute.", "Applications":"Test and start AI programmes.",
+	"Doctrine":"Human control, autonomy and AI treaties.", "AGI":"Advanced AI, safety and risk.",
+	"Rivals":"What other nations are doing with AI.",
 }
 
 static func context(b: BaseButton) -> String:
@@ -104,57 +104,63 @@ static func context(b: BaseButton) -> String:
 					parts.append(words)
 		if not parts.is_empty(): break
 		parent = parent.get_parent()
-	return "\n".join(PackedStringArray(parts)).left(360)
+	return "\n".join(PackedStringArray(parts)).left(70)
+
+## What a button does when nothing says so: its own name and the nearest label, on one short line.
+static func _with_context(words: String, ctx: String) -> String:
+	var near := ctx.replace("
+", " · ")
+	return (words + ". " if words != "" else "") + near
 
 static func meaning(b: BaseButton, original := "") -> String:
 	if b.has_meta("action_help"): return str(b.get_meta("action_help"))
 	var words: String = b.text.strip_edges() if b is Button else ""
 	var ctx := context(b)
-	if words == "Resume" and ("compute" in ctx.to_lower() or "Validated" in ctx): return "Restart this commissioned AI application. Its compute demand and running cost resume."
+	if words == "Resume" and ("compute" in ctx.to_lower() or "Validated" in ctx): return "Switch this AI application back on. It uses compute and money again."
 	if words in ["+", "-", "−"]:
 		var direction := "Increase" if words == "+" else "Decrease"
-		if "safety" in ctx.to_lower(): return direction + " the share of AGI work devoted to safety by 10 percentage points."
-		if "Compute allocation" in ctx or "compute" in ctx.to_lower(): return direction + " this pool's compute allocation by 10 percentage points; the available compute remains shared."
-		return direction + " the value shown beside this control.\n" + ctx
+		if "safety" in ctx.to_lower(): return direction + " the share of work on safety by 10 points."
+		if "Compute allocation" in ctx or "compute" in ctx.to_lower(): return direction + " this pool's compute by 10 points."
+		return direction + " the value."
 	if TEXT.has(words): return TEXT[words]
 	if words.begins_with("UN ("): return TEXT.UN
-	if TABS.has(words) and b.toggle_mode: return "Open this section: " + TABS[words]
-	if b is OptionButton: return "Choose a value from this list.\n" + ctx
-	if b is CheckButton or b is CheckBox: return "Enable or disable the setting shown beside this switch.\n" + ctx
+	if TABS.has(words) and b.toggle_mode: return TABS[words]
+	if b is OptionButton: return "Choose from the list."
+	if b is CheckButton or b is CheckBox: return "Turn this on or off."
 	for prefix in ["Recruit (", "Recruit agent (", "Ransom ", "Commission ", "Validate ", "Second generation ", "Sell to ", "Consult ", "Buy ", "Sell ", "Jam (", "Anti-satellite missile", "Nuclear detonation in orbit", "Start retraining", "End retraining", "Campaign for a seat", "Arrange food relief", "Send food relief"]:
 		if words.begins_with(prefix): return _prefix(prefix)
-	if words.begins_with("Enter ") and "chamber" in words: return "Enter this UN conference to read the proposal, voting rules and your delegation's choices."
-	if words.begins_with("Return to game"): return "Close this conference and return to the map. Campaign time continues; closing does not cast a ballot."
+	if words.begins_with("Enter ") and "chamber" in words: return "Go into this chamber to see the vote and cast yours."
+	if words.begins_with("Return to game"): return "Back to the map. The game keeps running. You have not voted."
 	if words.begins_with("Close "): return TEXT.Close
-	if words.begins_with("Target:"): return "Select this stored weapon, then click the map to launch one. Escape or right click cancels."
-	if words.begins_with("Place "): return "Select a legal map location for this building. Placement requires the displayed resources and a valid site."
-	if words.begins_with("Open "): return "Open " + words.trim_prefix("Open ").trim_suffix(".") + ".\n" + ctx
+	if words.begins_with("Target:"): return "Pick it, then click the map to launch one. Esc cancels."
+	if words.begins_with("Place "): return "Pick a site on the map. You need the resources shown."
+	if words.begins_with("Open "): return "Open " + words.trim_prefix("Open ").trim_suffix(".") + "."
 	# Existing purpose text is more precise than inferred nearby context. A
 	# gate-only tooltip still needs the action description above, when known.
 	for gate in ["Needs ", "Research ", "Unavailable", "Requires ", "Not fielded", "Not enough", "Already "]:
-		if original.begins_with(gate): return (words + ".\n" if words != "" else "") + ctx
+		if original.begins_with(gate): return _with_context(words, ctx)
 	if original.strip_edges() != "": return ""
-	if b.toggle_mode: return "Select " + words + ".\n" + ctx
-	return (words + ".\n" if words != "" else "") + ctx
+	if b.toggle_mode: return _with_context("Select " + words, ctx)
+	return _with_context(words, ctx)
 
 static func _prefix(prefix: String) -> String:
 	return {
-		"Recruit (":TEXT["Recruit agent"], "Recruit agent (":TEXT["Recruit agent"], "Ransom ":"Pay the displayed ransom to recover this captured agent.",
-		"Commission ":"Pay the commissioning cost and activate this validated AI application. It then consumes compute and running funds.",
-		"Validate ":"Pay to start local engineering and field trials. Research alone does not activate this application.",
-		"Second generation ":"Pay to upgrade this field-tested AI application after meeting its research and experience requirements.",
-		"Sell to ":"Export an AI package to this nation for the listed income and diplomatic effects; it also improves their models.",
-		"Consult ":"Pay $250 and 40 intelligence reserve for AI-assisted diplomatic consultation. Improves relations; does not force a treaty or ceasefire.",
-		"Buy ":"Buy the displayed quantity now: pay money and receive the selected resource, subject to storage and market restrictions.",
-		"Sell ":"Sell the displayed quantity now: remove the selected resource from storage and receive money.",
-		"Jam (":"Pay to temporarily disrupt this rival satellite.",
-		"Anti-satellite missile":"Pay to attack this satellite; the strike has diplomatic consequences.",
-		"Nuclear detonation in orbit":"Detonate a nuclear weapon in orbit. It can damage satellites indiscriminately and causes nuclear escalation.",
-		"Start retraining":"Fund worker retraining at the displayed ongoing cost to address AI-related unemployment.",
-		"End retraining":"Stop funding worker retraining and its ongoing cost.",
-		"Campaign for a seat":"Pay $1500 to campaign for an elected Council seat. A campaign does not guarantee election.",
-		"Arrange food relief":"Pay $250 logistics for a humanitarian food delivery to your country, subject to the relief cooldown.",
-		"Send food relief":"Pay $250 logistics to send humanitarian food relief to this country, subject to the relief cooldown.",
+		"Recruit (":TEXT["Recruit agent"], "Recruit agent (":TEXT["Recruit agent"], "Ransom ":"Pay the ransom to get this agent back.",
+		"Commission ":"Pay to start this tested AI application. It then uses compute and money.",
+		"Validate ":"Pay to test it first. Research alone does not start it.",
+		"Second generation ":"Pay to upgrade this tested application.",
+		"Sell to ":"Sell an AI package to this nation for income. It improves their models.",
+		"Consult ":"$250 and 40 intelligence: better relations. It does not force a deal.",
+		"Buy ":"Buy this amount now, if you have storage.",
+		"Sell ":"Sell this amount now for money.",
+		"Jam (":"Pay to disrupt this satellite for a while.",
+		"Anti-satellite missile":"Pay to destroy this satellite. The world will react.",
+		"Nuclear detonation in orbit":"Blow up a nuclear weapon in orbit. It hits satellites and raises the nuclear alert.",
+		"Start retraining":"Pay to retrain workers who lost jobs to AI.",
+		"End retraining":"Stop paying for retraining.",
+		"Campaign for a seat":"$1500 for a chance at a Council seat.",
+		"Arrange food relief":"$250 for a food delivery to you. Cooldown applies.",
+		"Send food relief":"$250 to send food here. Cooldown applies.",
 	}.get(prefix, "")
 
 static func tooltip(b: BaseButton, original: String) -> String:

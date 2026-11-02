@@ -10,7 +10,7 @@ const DATA := {
 	"colour": "#5f9e7e",
 	"portrait": "meloni",
 	"signature": "Cavour",
-	"doctrine": "The Mediterranean bridge: energy and investment deals with its southern neighbours, a carrier of its own and shipyards that build for others. Almost no oil or gas at home, a public debt above 130% of output and a population that shrinks faster than any other in the region.",
+	"doctrine": "Mediterranean bridge: energy deals with southern neighbours, its own carrier and shipyards for others. Almost no oil or gas, debt above 130% of output and a shrinking population.",
 	# Income: GDP a head near $40,000 is three times the world's level: +5% on the table's scale (15 points a
 	# tenfold, rounded to 5). Research +5% (a good output of articles, a low research budget). Oil and gas:
 	# little is produced at home (-60%). Growth 0.6: the lowest births in the region. Combat damage -3%: a

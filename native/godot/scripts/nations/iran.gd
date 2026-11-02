@@ -9,5 +9,5 @@ const DATA := {
 	"colour": "#e8a83a",
 	"portrait": "pezeshkian",
 	"signature": "Shahed Launcher",
-	"doctrine": "Drone saturation: the Shahed launcher (Russia builds it too, as the Geran-2). Five drones per salvo can overwhelm defences, but individual drones are fragile and slow.",
+	"doctrine": "Drone saturation: the Shahed launcher fires five drones a salvo to overwhelm defences, but each drone is fragile and slow.",
 }

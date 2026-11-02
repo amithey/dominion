@@ -10,7 +10,7 @@ const DATA := {
 	"colour": "#33b86e",
 	"portrait": "merz",
 	"signature": "IRIS-T SLM",
-	"doctrine": "Layered defence: exclusive IRIS-T SLM air defence. It protects an army from aircraft but cannot fight ground targets. An industrial exporter with no nuclear weapons of its own, short of oil and gas, and slow to rearm.",
+	"doctrine": "Layered defence: exclusive IRIS-T air defence (it cannot hit ground targets). An industrial exporter with no nuclear weapons, short of oil and gas, slow to rearm.",
 	# Income: GDP a head above $55,000 puts it in the United Kingdom's tier (+10%). Research +10%: a large
 	# research budget. Oil and gas: almost none is produced at home (-70%). Growth 0.65: births far below
 	# replacement. Combat damage -4%: years of low spending, now rising (figures to check, see the ledger).

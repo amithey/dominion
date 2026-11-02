@@ -588,7 +588,7 @@ func _start_picker(slot: int) -> OptionButton:
 		picker.disabled = true
 		picker.tooltip_text = "On the original islands you always start in your prepared town."
 		return picker
-	picker.tooltip_text = "Where this nation starts: a region of the map, numbered as on the map above, or Auto (the map's own choice: on the real-world maps, a nation's own capital)."
+	picker.tooltip_text = "Where this nation starts: a map region (numbered above) or Auto. Auto picks its own capital on real-world maps."
 	picker.add_item("Auto", 0)
 	for k in range(regions.size()):
 		if fixed and k == 0:
@@ -727,7 +727,7 @@ func _map_picker(parent: Control = null) -> void:
 	note.add_theme_color_override("font_color", UI.CREAM)
 	detail.add_child(note)
 	var legend := Label.new()
-	legend.text = "Gold dots: prepared capital regions, numbered as in Start below (coloured: a nation chose it). North is up."
+	legend.text = "Gold dots: capital regions, numbered as in Start below (coloured: taken). North is up."
 	legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	legend.add_theme_font_size_override("font_size", 12)
 	legend.add_theme_color_override("font_color", UI.MUTED)
@@ -808,17 +808,17 @@ func open_about() -> void:
 	var version := _description("Version %s" % BuildInfo.full())
 	version.add_theme_font_size_override("font_size", 20)
 	version.add_theme_color_override("font_color", UI.GOLD)
-	_description("DOMINION is a real-time strategy game of nations: cities, supply, research, diplomacy, espionage and war, from the first village to the United Nations Security Council.")
-	_description("This is an ALPHA: it is complete enough to play from start to finish, but it has not been tested by many people. Expect rough edges, unbalanced weapons and the occasional error. Saves from an earlier alpha should load; if one does not, the game says so and keeps the file.")
+	_description("A real-time strategy game of nations: cities, supply, research, diplomacy, espionage and war.")
+	_description("ALPHA: playable start to finish, but little tested. Expect rough edges. Old saves should load; if not, you are told and the file is kept.")
 	_section("Something went wrong?")
 	var report := _button("Report a problem", func():
 		var folder := Diagnostics.send(world)
 		if world.hud != null:
 			world.hud.notice("A report was copied to the clipboard and saved in %s. Please paste it in your message and attach godot.log from the same folder." % folder))
 	report.custom_minimum_size = Vector2(240, 46)
-	_description("Writes a report (version, your machine, the match and the last messages), copies it and opens the folder with the game's log.")
+	_description("Writes a report (version, machine, match, last messages), copies it and opens the log folder.")
 	_section("Credits")
-	_description("Built with the Godot Engine (MIT). Art: Kenney, Quaternius and ambientCG (public domain); the infantry character is a Mixamo model. Everything else, the vehicles, ships, aircraft, effects, sounds and interface, is made in code. Full notices are installed beside the game (THIRD-PARTY-NOTICES.txt).")
+	_description("Godot Engine (MIT). Art: Kenney, Quaternius, ambientCG (public domain); soldier: Mixamo. The rest is made in code. See THIRD-PARTY-NOTICES.txt.")
 	var foot := HBoxContainer.new()
 	_footer.show()
 	_footer.add_child(foot)
@@ -1035,7 +1035,7 @@ func _settings_game() -> void:
 	var every: float = world.saves.autosave_every if world.saves else 180.0
 	_setting("Autosave", "Saves the match as \"Autosave\" at this interval, so a crash or a mistake costs little.", _segmented([["1 min", 60.0], ["3 min", 180.0], ["5 min", 300.0], ["Off", 0.0]], every, func(v):
 		if world.saves: world.saves.autosave_every = v))
-	_setting("Road and rail traffic", "Cars, lorries and trains driving on the roads and railways you build. Switch it off for a calmer map or a lighter game; supply and trade work the same either way.", _switch(world.road_traffic, func(v):
+	_setting("Road and rail traffic", "Cars, lorries and trains on your roads and railways. Turn off for a calmer, lighter game. Supply and trade work either way.", _switch(world.road_traffic, func(v):
 		world.road_traffic = v))
 	var guide := Button.new()
 	guide.name = "ReplayGuide"

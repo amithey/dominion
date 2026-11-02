@@ -44,7 +44,7 @@ static func draw(panel: RefCounted) -> void:
 	var card: VBoxContainer = hud._card(hud.UI.GOLD)
 	card.add_child(hud._text(DOMAINS[panel.arsenal_domain], 18, hud.UI.CREAM, true))
 	paragraph(hud, card, str(dossier[panel.arsenal_domain]), hud.UI.TEXT)
-	paragraph(hud, card, "Public evidence only. Representative types, not stock counts. Production represents acquisition and support; prices and performance are game balance.", hud.UI.MUTED)
+	paragraph(hud, card, "Public evidence only; types, not stock counts. Prices and performance are game balance.", hud.UI.MUTED)
 	var own: bool = id == Factions.identity(w, 0)
 	var ix: int = Factions.IDS.find(id)
 	if panel.arsenal_domain in ["land", "fires"]:
@@ -79,7 +79,7 @@ static func draw(panel: RefCounted) -> void:
 	if panel.arsenal_domain in ["land", "air", "sea", "fires"]:
 		var existing: VBoxContainer = hud._card()
 		existing.add_child(hud._text("Established game roster", 18, hud.UI.CREAM, true))
-		paragraph(hud, existing, "Existing game abstractions are listed for comparison; this is not a newly verified real-world inventory.", hud.UI.MUTED)
+		paragraph(hud, existing, "Game stand-ins for comparison, not a verified inventory.", hud.UI.MUTED)
 		var lines := PackedStringArray()
 		# Read country names without changing the live world's player identity.
 		for key: String in w.unit_defs:

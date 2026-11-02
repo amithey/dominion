@@ -9,5 +9,5 @@ const DATA := {
 	"colour": "#ba6557",
 	"portrait": "yemen",
 	"signature": "Reconstruction Crew",
-	"doctrine": "Rebuild institutions: affordable civilian construction and partner-funded reconstruction. Limited ground forces; no assumed operational fighter fleet. Competes with Ansar Allah within Yemen.",
+	"doctrine": "Rebuilding institutions: cheap civilian construction and partner-funded reconstruction. Few ground forces, no assumed fighters. Competes with Ansar Allah.",
 }

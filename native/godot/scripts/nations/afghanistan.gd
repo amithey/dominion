@@ -9,7 +9,7 @@ const DATA := {
 	"colour": "#d9d4c5",
 	"portrait": "akhundzada",
 	"signature": "Suicide Attack Squad",
-	"doctrine": "Insurgency: cheap, fast-raised, hardy infantry, suicide attack squads and attacks deep inside an enemy country. No air force, no navy, no nuclear reactor; sanctions and isolation starve its economy and research.",
+	"doctrine": "Insurgency: cheap, hardy infantry, suicide squads and deep raids. No air force, navy or reactor; sanctions starve its economy and research.",
 	# Afghanistan: $417 a head: -25%; 4 articles a million: -30%, times the 72% of students left after the
 	# ban on women: -50%. Trade -40%: trade with Pakistan fell 40% in 2025, the border shut since October
 	# 2025. Happiness -8: the world's least happy nation (World Happiness Report, last six years running)

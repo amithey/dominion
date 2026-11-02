@@ -10,7 +10,7 @@ const DATA := {
 	"colour": "#d98c5f",
 	"portrait": "jetten",
 	"signature": "Chip Equipment Embargo",
-	"doctrine": "The trading hub: Europe's largest port, the machines that make the world's advanced chips, and a small, well-equipped army folded into its neighbours'. Little land and little oil or gas of its own, and a minority government.",
+	"doctrine": "Trading hub: Europe's biggest port, the machines that make advanced chips, and a small, well-equipped army inside its neighbours'. Little land or energy; a minority government.",
 	# Income: GDP a head near $65,000 is nearly five times the world's level: +10% on the table's scale (15 points
 	# a tenfold, rounded to 5). Research +15%: among the highest outputs of scientific articles a million people
 	# (not re-checked this round, see the ledger). Trade 1.2: Rotterdam and Schiphol. Ports 15% cheaper. Oil and gas:

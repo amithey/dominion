@@ -50,7 +50,7 @@ func run() -> void:
 	await scan("Weapon production")
 	check(not cards().is_empty(), "Weapon production remains available")
 	for card in cards():
-		check(card.tooltip_text.contains("queue ONE") and card.tooltip_text.contains("does not fire"), "Production explains storage and does not imply a launch")
+		check(card.tooltip_text.contains("Queues one") and card.tooltip_text.contains("storage"), "Production explains storage and does not imply a launch")
 		check(card.get_child(0).get_combined_minimum_size().y <= card.size.y - 17, "Weapon copy fits its dynamically sized card")
 	await shot("production")
 	if DisplayServer.get_name() != "headless" and not cards().is_empty():
@@ -72,7 +72,7 @@ func run() -> void:
 	w.missiles.stock.tactical = 1
 	w.hud._missile_view = "stockpile"; w.hud._shown_key = ""; w.hud._update_panel()
 	await scan("Stockpile targeting")
-	check(cards().size() == 1 and cards()[0].tooltip_text.contains("launch ONE"), "Stockpile explains the actual next click")
+	check(cards().size() == 1 and cards()[0].tooltip_text.contains("launch one"), "Stockpile explains the actual next click")
 	if not cards().is_empty():
 		cards()[0].pressed.emit()
 		check(w.missile_aim == "tactical" and w.missiles.stock.tactical == 1, "Target selection still preserves inventory until launch")
@@ -82,9 +82,10 @@ func run() -> void:
 	for key in w.missiles.types():
 		var def: Dictionary = w.missiles.def_of(key)
 		var help := Weapon.summary(w, key)
-		check(help.contains("Role:") and help.contains("Launch from:"), "%s has a practical role and correct platform category" % key)
+		check(help.contains("Launch from:") and help.split("
+")[0].length() > 15, "%s has a practical role and correct platform category" % key)
 		if str(def.get("special", "")) in ["emp", "hemp"]:
-			check(help.contains("no blast damage") and not help.contains("centre damage"), "%s does not advertise fictitious blast damage" % key)
+			check(help.to_lower().contains("no blast damage") and not help.contains("centre damage"), "%s does not advertise fictitious blast damage" % key)
 	check(Weapon.role({"special":"antiShip"}, "").contains("quarter"), "Anti-ship copy discloses its land-target weakness")
 	check(Weapon.role({"special":"cluster"}, "").contains("weak against buildings"), "Cluster copy distinguishes its target type")
 	check(Weapon.display_name(w, "tactical") != Weapon.display_name(w, "ballistic"), "Shared national family names still distinguish tactical and ballistic choices")

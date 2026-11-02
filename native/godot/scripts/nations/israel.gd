@@ -9,5 +9,5 @@ const DATA := {
 	"colour": "#8fbce6",
 	"portrait": "netanyahu",
 	"signature": "Harop",
-	"doctrine": "Precision defence: mobile SAMs, MANPADS and lasers gain 10% range and 15% shorter reloads. Missile interception gains 5 percentage points (capped at 97%). Commandos deal 15% more damage. These specialists have 10% less health.",
+	"doctrine": "Precision defence: mobile SAMs, MANPADS and lasers gain 10% range and 15% faster reloads; interception +5 points (max 97%); commandos +15% damage, specialists -10% health.",
 }

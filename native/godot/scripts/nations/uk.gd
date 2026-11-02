@@ -9,5 +9,5 @@ const DATA := {
 	"colour": "#bc354b",
 	"portrait": "burnham",
 	"signature": "Type 45 Destroyer",
-	"doctrine": "Maritime power: Type 45 air defence protects commerce, and the London market can deny a rival's ships their insurance. Expensive infantry and slower population growth reward a compact force.",
+	"doctrine": "Maritime power: Type 45 air defence protects trade, and London insurance can deny a rival's ships cover. Costly infantry and slow growth reward a small force.",
 }

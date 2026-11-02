@@ -9,5 +9,5 @@ const DATA := {
 	"colour": "#e7c443",
 	"portrait": "zelenskyy",
 	"signature": "Interceptor Drone",
-	"doctrine": "Drone war: cheaper route repairs, fast drone production and long-range strikes on an enemy's refineries. Interceptor drones engage only hostile airborne drones.",
+	"doctrine": "Drone war: cheaper route repairs, fast drone production and long-range strikes on refineries. Interceptor drones attack only hostile drones.",
 }

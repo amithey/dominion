@@ -14,13 +14,13 @@ static func draw(sp, a) -> void:
 	var intro: VBoxContainer = hud._card(hud.UI.GOLD)
 	intro.add_child(hud._text("AI applications: from research to service", 17, hud.UI.CREAM, true))
 	sp._wrap(intro, "National evidence: %s. %s" % [info[0], info[1]], 12)
-	sp._wrap(intro, "Research the application, validate it against local data, then commission it. Trials use half of Training runs compute. Working facilities, money and compute are needed throughout service. National priorities speed trials by 15%.", 12, hud.UI.MUTED)
+	sp._wrap(intro, "Research it, test it, then start it. Testing uses half of the Training compute. While it runs it needs working sites, money and compute.", 12, hud.UI.MUTED)
 	sp._tabs([["Civil economy", "civil"], ["Military", "security"], ["Politics & state", "state"], ["Doomsday", "doomsday"], ["Who uses what", "world"]], apps.category, func(v): apps.category = v)
 	if apps.category == "world":
 		_world(sp, a)
 		return
 	if apps.category == "doomsday":
-		sp._wrap(intro, "Machines in the nuclear chain: a check on false warnings, a dead hand that answers when no one can, and the screening that stands between a model and a pathogen. Each is a choice between being believed and being safe.", 12, hud.UI.MUTED)
+		sp._wrap(intro, "AI in the nuclear chain: a check on false alarms, a dead hand that answers when no one can, and screening against pathogens. Each trades trust for safety.", 12, hud.UI.MUTED)
 	var me: String = Factions.identity(hud.world, 0)
 	for key in GROUPS.get(apps.category, GROUPS.civil):
 		var k: String = key
@@ -84,14 +84,14 @@ static func draw(sp, a) -> void:
 	if apps.category == "state":
 		var sales: VBoxContainer = hud._card()
 		sales.add_child(hud._text("AI exports", 15, hud.UI.CREAM, true))
-		sp._wrap(sales, "Sell a package of compute, models and services to a nation at peace with you: $900 (more for a second-generation package), relations +10, its models train faster, and your engineers see part of its networks. One sale every 240 seconds.", 12)
+		sp._wrap(sales, "Sell compute, models and services to a nation at peace: $900 (more for second generation), relations +10, their models train faster, you see part of their networks. Once per 240 s.", 12)
 		for target in sp._targets(hud.world.diplomacy):
 			var t: int = target
 			var why: String = apps.export_blocked(0, t)
 			hud._button(sales, "Sell to " + hud.world.diplomacy.name_of(t), func(): return apps.export_to(0, t), why == "").tooltip_text = why
 		var talks: VBoxContainer = hud._card()
 		talks.add_child(hud._text("Diplomatic consultation", 15, hud.UI.CREAM, true))
-		sp._wrap(talks, "$250 and 40 intelligence reserve; relations +8 at peace or +4 at war. One consultation every 180 seconds. Treaty and ceasefire decisions remain with governments.", 12)
+		sp._wrap(talks, "$250 and 40 intelligence: relations +8 at peace, +4 at war. Once per 180 s. Governments still decide treaties and ceasefires.", 12)
 		for target in sp._targets(hud.world.diplomacy):
 			var t: int = target
 			var why: String = apps.consultation_blocked(0, t)
@@ -113,7 +113,7 @@ static func _world(sp, a) -> void:
 	var d: Node = w.diplomacy
 	var card: VBoxContainer = hud._card(hud.UI.GOLD)
 	card.add_child(hud._text("Who uses AI for what", 17, hud.UI.CREAM, true))
-	sp._wrap(card, "The public record behind each nation, by domain: fielded, developing, barred by law or pledged against. A nation that already fields a use needs half the trials; one developing it, 80%. No public evidence is not proof of absence.", 12, hud.UI.MUTED)
+	sp._wrap(card, "What each nation publicly does with AI: fielded, in development, barred or pledged against. Already fielded: half the trials; in development: 80%. No evidence is not proof.", 12, hud.UI.MUTED)
 	for i in range(d.n):
 		if i > 0 and d.defeated(i): continue
 		var id: String = Factions.identity(w, i)

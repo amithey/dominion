@@ -504,7 +504,7 @@ func _operations(e: Node, d: Node) -> void:
 		return ""
 	var more: Button = hud._button(team_row, "+", on_more, team < mini(e.MAX_TEAM, ready_n))
 	more.custom_minimum_size.x = 34
-	more.tooltip_text = "Up to %d agents. Each extra agent adds to the odds and shortens the preparation, and costs 25%% more; the exposure risk rises by about a third, and a failure can lose every one of them." % e.MAX_TEAM
+	more.tooltip_text = "Up to %d agents. Each extra one improves the odds and speed, and costs 25%% more. Risk of exposure rises; a failure can lose them all." % e.MAX_TEAM
 	if team > 1:
 		brief.add_child(hud._text("A team of %d: +%d points of success, %d%% shorter preparation, intelligence and network gains +%d%%, exposure risk x%.2f." % [team, roundi(e.team_bonus(team) * 100.0), roundi((1.0 - e.team_duration(hud.spy_op, team) / float(e.PROGRAMS[hud.spy_op][0])) * 100.0), roundi(e.TEAM_YIELD * (team - 1) * 100.0), 1.0 + e.TEAM_EXPOSURE * (team - 1)], 12, hud.UI.MUTED))
 	var reason: String = e.blocked_reason(hud.spy_op, hud.spy_target, hud.spy_role if needs_person else "", hud.spy_agent, team)
@@ -680,8 +680,8 @@ const DOWN := Color("e8836f")
 func market() -> void:
 	var m: Node = hud.world.market
 	hud._side_rows.add_child(hud._text(preload("res://scripts/war_costs.gd").summary(hud.world), 12, hud.UI.MUTED))
-	var costs: Label = hud._text("Fuel is consumed by motorised travel. Ammunition and interceptors are paid when fired, including misses. Aircraft buy fuel before each sortie.", 12, hud.UI.MUTED)
-	costs.tooltip_text = "Tank: 3.5 oil / 100 m, $1.20 / shell. Artillery: $2 / shell; MLRS: $6 / salvo. SAM: $5; ABM: $18; laser: $0.35 per attempt. Aircraft: 4–12 oil per 90-second sortie. Nuclear submarines use no oil."
+	var costs: Label = hud._text("Fuel is used by motor travel. Ammo and interceptors cost money when fired, misses too. Aircraft buy fuel per sortie.", 12, hud.UI.MUTED)
+	costs.tooltip_text = "Tank: 3.5 oil per 100 m, $1.20 a shell. Artillery $2 a shell, MLRS $6 a salvo. SAM $5, ABM $18, laser $0.35. Aircraft: 4-12 oil a sortie."
 	hud._side_rows.add_child(costs)
 	_tabs([["Exchange", "exchange"], ["Trade routes (%d/%d)" % [m.routes.size(), m.route_cap()], "routes"]], market_tab, func(v): market_tab = v)
 	if market_tab == "routes":
@@ -1063,7 +1063,7 @@ func _generals() -> void:
 		return
 	var picked: Array = hud._selected_units().filter(func(u): return u.owner == 0 and not u.dead)
 	var target = picked[0] if picked.size() == 1 else null
-	var head: Label = hud._text("Your general staff: %d of %d. A general commands from a ground or naval unit; every unit of yours within %d m fights under their traits (Air Power: the whole air force). Select one unit, then give a general its command." % [g.of(0).size(), g.MAX_PLAYER, int(g.COMMAND_RADIUS)], 13, hud.UI.MUTED)
+	var head: Label = hud._text("Staff: %d of %d. A general commands from a ground or naval unit; units within %d m fight with their traits (Air Power: all aircraft). Select a unit, then a general." % [g.of(0).size(), g.MAX_PLAYER, int(g.COMMAND_RADIUS)], 13, hud.UI.MUTED)
 	head.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	head.custom_minimum_size.x = 460
 	hud._side_rows.add_child(head)
@@ -1130,7 +1130,7 @@ func _veterans() -> void:
 		effect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		effect.custom_minimum_size.x = 240   # (without a width it wrapped letter by letter)
 		row.add_child(effect)
-	var how: Label = hud._text("A unit earns experience from the damage it deals, and more for each kill. It becomes a Veteran once it has dealt its own health in damage, Elite at three times and Heroic at six. The rivals' units rank up the same way.", 12, hud.UI.MUTED)
+	var how: Label = hud._text("Units earn experience from damage and kills. Veteran after dealing their own health in damage, Elite at 3 times, Heroic at 6. Rivals rank up too.", 12, hud.UI.MUTED)
 	how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	how.custom_minimum_size.x = 460
 	card.add_child(how)
@@ -1184,7 +1184,7 @@ func _nuclear() -> void:
 	if nt != null and dc.nuclear(0):
 		var test: VBoxContainer = hud._card(hud.UI.BAD)
 		test.add_child(hud._text("Nuclear test", 15, hud.UI.CREAM, true))
-		var how: Label = hud._text("Proves the weapon works: for 15 minutes rivals believe your deterrent (they are far slower to start a war with you, and slower to strike you with nuclear weapons), and your scientists learn from it. The world condemns it, tension rises, and the Security Council takes it up. Underground: almost nothing escapes. In the open air: a mushroom cloud and fallout that drifts with the wind, and twice the anger.", 12, hud.UI.MUTED)
+		var how: Label = hud._text("Proves your weapon works: rivals believe your deterrent for 15 minutes. The world condemns it. Open-air tests add fallout and twice the anger.", 12, hud.UI.MUTED)
 		how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		how.custom_minimum_size.x = 460
 		test.add_child(how)
@@ -1278,7 +1278,7 @@ func _council(u) -> void:
 		_wrap(seats, "%s%s  ·  %s" % ["You" if i == 0 else d.name_of(i), "  (President)" if i == u.president else "", tag], 13, hud._nation_colour(i).lightened(0.35) if i != 0 else hud.UI.CREAM)
 	var how := _wrap(seats, "To pass: %d yes votes and no veto from a permanent member. Abstaining neither helps nor hurts." % ceili(u.council().size() * u.PASS_SHARE), 13)
 	how.mouse_filter = Control.MOUSE_FILTER_STOP
-	how.tooltip_text = "The real Council needs 9 of 15 votes. This game scales it to the nations playing. A country in a dispute must abstain, and a statement needs everyone to agree."
+	how.tooltip_text = "The real Council needs 9 of 15 votes; here it scales to the nations playing. A country in a dispute abstains. A statement needs everyone."
 	var floor: VBoxContainer = hud._card(hud.UI.BAD if u.current != null else Color(0, 0, 0, 0))
 	if u.current == null:
 		floor.add_child(hud._text("Nothing is being voted on.", 14, hud.UI.MUTED))

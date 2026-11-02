@@ -11,7 +11,7 @@ const DATA := {
 	"colour": "#2b4aa8",
 	"portrait": "macron",
 	"signature": "Charles de Gaulle",
-	"doctrine": "Independence and reach: a permanent seat and veto at the Security Council, a carrier group, and air defence 10% cheaper. A smaller army than its neighbours and a thin domestic energy supply: oil and gas output are halved, and public debt weighs on politics.",
+	"doctrine": "Independence and reach: a Security Council veto, a carrier group, and 10% cheaper air defence. A small army, thin energy (oil and gas halved) and heavy debt.",
 	# Income: GDP a head near $49,000 puts it in the tier of the United Kingdom (+10%). Research +5%, the
 	# lower half of that tier: its output of scientific articles a million people is below the British
 	# (not re-checked this round, see the ledger). Oil and gas: almost none is produced at home, and the

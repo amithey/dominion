@@ -9,5 +9,5 @@ const DATA := {
 	"colour": "#6d92bf",
 	"portrait": "lee",
 	"signature": "K9 Thunder",
-	"doctrine": "Arsenal for partners: K9 artillery reloads and moves quickly, and tanks and howitzers are sold abroad on export credit. Strong research and production depend on imported energy.",
+	"doctrine": "Arsenal for partners: fast-reloading K9 artillery, and tanks and guns sold abroad on credit. Strong research and industry rely on imported energy.",
 }

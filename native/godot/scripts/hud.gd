@@ -35,7 +35,7 @@ const RESOURCES := [
 	["oil", "oil", "Oil. From rigs on oil deposits; for aircraft and some buildings."],
 	["silicon", "silicon", "Silicon. From silicon deposits; for high technology and missiles."],
 	["uranium", "uranium", "Uranium. From uranium deposits; for the nuclear programme."],
-	["gas", "gas", "Natural gas. Gas fields on land, offshore rigs and imports supply winter heating. With none in winter, homes freeze: unrest, deaths and slow factories. Winter lasts from 9 to 12 minutes of each 12-minute year."],
+	["gas", "gas", "Natural gas, for winter heating (9 to 12 minutes of each 12-minute year). With none, homes freeze: unrest, deaths, slow factories."],
 ]
 const GOLD := Color("c1af86")   ## atlas sand accent (headings, labels)
 const RIGHT_W := 392.0
@@ -636,8 +636,8 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 	var b := Button.new()
 	b.theme_type_variation = "RowButton"
 	b.focus_mode = Control.FOCUS_NONE
-	var instruction_help: String = "Choose a map site to place this building." if world.building_defs.has(key) else ""
-	if world.unit_defs.has(key): instruction_help = "Pay the listed cost to queue ONE unit. It becomes available when training finishes."
+	var instruction_help: String = "Pick a site on the map." if world.building_defs.has(key) else ""
+	if world.unit_defs.has(key): instruction_help = "Train one. The cost is paid now."
 	b.tooltip_text = "%s\n%s%s" % [instruction_help, desc, "\nUnavailable: " + locked if locked != "" else ""]
 	b.set_meta("cost", cost)
 	b.set_meta("locked", locked != "")
@@ -993,13 +993,13 @@ func _build_help() -> void:
 	scroll.add_child(col)
 	for line in [["Move the camera", "W A S D or arrows, the screen edge, or Shift + middle mouse drag"],
 			["Turn / tilt / zoom", "Hold the middle mouse button and drag to turn and tilt  ·  mouse wheel zooms toward the cursor"],
-			["Select", "Click or drag a box  ·  Shift + click adds or removes a unit  ·  double click: every unit of its kind on screen"],
-			["Unit badges", "At a distance: W worker · INF infantry · ARM armour · ART artillery · AA air defence · AIR aircraft · SEA ship. × counts nearby units of the same role. Gold frame: includes selected units."],
+			["Select", "Click or drag a box  ·  Shift + click adds or removes  ·  double click: all of that kind on screen"],
+			["Unit badges", "Far away: W worker · INF infantry · ARM armour · ART artillery · AA air defence · AIR aircraft · SEA ship. × = how many. Gold frame: selected."],
 			["Cabinet", "Tab: the whole state at a glance, every ministry in its colour"],
 			["Orders", "Right click: move or attack  ·  Ctrl + right click: attack-move"],
 			["Bombard", "Alt + right click: fire at ground or infrastructure (armed vehicles)"],
 			["Aircraft", "Limited salvos; empty aircraft return to a supplied airfield / helipad to rearm"],
-			["Build", "B opens the list  ·  pick a building, then a green hex (Shift keeps placing)  ·  workers: right-click a site to build; Shift queues sites"],
+			["Build", "B opens the list  ·  pick a building, then a green hex (Shift keeps placing)  ·  workers: right-click a site to build, Shift queues"],
 			["Screens", "Y research  ·  G diplomacy  ·  M market  ·  I intelligence  ·  T territory"],
 			["Game", "F5 quick save  ·  F9 quick load  ·  F11 full screen  ·  Esc cancel / pause menu  ·  L message log  ·  U United Nations  ·  K defence  ·  F1 this help"],
 			["Speed", "Space: pause  ·  + and -: 1x, 2x, 4x (the buttons beside the era do the same)"],
@@ -1769,7 +1769,7 @@ func _fill_launch(show: bool) -> void:
 	if not show:
 		return
 	if sig == "" or sig == "boat:":
-		var none: Label = _text("No missile this ship can fire is in storage. Missiles are made at a Missile Silo (nuclear ones at a Strategic Complex); a silo's own missiles launch from the silo.", 12, UI.MUTED)
+		var none: Label = _text("No missile this ship can fire is stored. Silos make missiles (nuclear ones: Strategic Complex); a silo launches its own.", 12, UI.MUTED)
 		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		none.custom_minimum_size.x = 320
 		_launch_row.add_child(none)
@@ -1857,7 +1857,7 @@ func _fill_wing(own: Array) -> void:
 		head.tooltip_text = "How far from the carrier its aircraft fly to strike. The carrier's own guns (24 m) only defend it; the aircraft are its weapon."
 		_wing_row.add_child(head)
 		_wing_row.add_child(_text(WT.wing_text(world, c), 14, UI.CREAM))
-		var how := _text("Right-click an enemy within reach: the wing strikes it from where the carrier stands (the carrier moves only if the enemy is out of reach). Aircraft land back aboard to rearm.", 12, UI.MUTED)
+		var how := _text("Right-click an enemy in reach: the wing strikes. The carrier moves only if it is out of reach. Aircraft rearm aboard.", 12, UI.MUTED)
 		how.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		how.custom_minimum_size.x = 280
 		_wing_row.add_child(how)
@@ -2336,11 +2336,11 @@ func _standing_orders() -> void:
 		return
 	var card := _card(GOLD)
 	card.add_child(_text(UI.caps("Standing orders"), 14, GOLD, true))
-	_label(card, "How your government frames an attack on a nation you are not at war with. Your soldiers obey the order either way; the cabinet decides what it is called, and their government answers as it sees fit.", UI.MUTED, 13)
+	_label(card, "How your government labels an attack on a nation you are not at war with. Your soldiers obey either way; the label decides how they react.", UI.MUTED, 13)
 	_segments(card, [["Limited operation", "limited"], ["Full war", "war"]], e.policy, func(v):
 		e.policy = v
 		notice("Standing orders: %s." % e.doctrine_text()))
-	_label(card, "Limited operation: ninety seconds of fighting, no declaration of war. They may contain it, answer in kind, or call it war — a government swallows only so many incidents." if e.policy == "limited" else "Full war: the strike comes with a declaration of war, and their allies may join them.",
+	_label(card, "Limited operation: 90 seconds of fighting, no declaration of war. They may contain it, answer in kind or call it war." if e.policy == "limited" else "Full war: the strike comes with a declaration of war, and their allies may join them.",
 		UI.TEXT, 13)
 	var running := PackedStringArray()
 	for id in range(1, world.diplomacy.n):
@@ -2803,7 +2803,7 @@ func _build_research() -> void:
 	_rs_queue = VBoxContainer.new()
 	_rs_queue.add_theme_constant_override("separation", 6)
 	side_col.add_child(_rs_queue)
-	var tracks_hint := _text("Fields: each one raises a whole area for every unit and building, a level at a time. The tree above holds the individual discoveries.", 12, UI.MUTED)
+	var tracks_hint := _text("Fields raise a whole area for every unit and building, one level at a time. Single discoveries are in the tree above.", 12, UI.MUTED)
 	tracks_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(tracks_hint)
 	_rs_tracks = HBoxContainer.new()
@@ -2947,7 +2947,7 @@ func _research_detail() -> void:
 	if _rs_sel == "":
 		var hint := _rs_card(_rs_detail)
 		_rs_label(hint, "Pick a discovery in the tree.", UI.CREAM, 15)
-		_rs_label(hint, "Each one is developed in three stages. Points from the capital, schools, libraries, universities and tech parks flow into the first project in the queue that can advance.", UI.MUTED, 13)
+		_rs_label(hint, "Three stages each. Points from the capital, schools, libraries, universities and tech parks feed the first project that can advance.", UI.MUTED, 13)
 		return
 	var key := _rs_sel
 	var def: Dictionary = r.def_of(key)
@@ -3042,7 +3042,7 @@ func _research_queue() -> void:
 	head.add_child(t)
 	head.add_child(_text("%d / %d" % [r.queue.size(), r.QUEUE_MAX], 13, UI.MUTED))
 	if r.queue.is_empty():
-		_rs_label(card, "Nothing in development: research points are piling up. Click a discovery in the tree, then press Research now. Develop starts a field below.", Color("e8a86f"), 13)
+		_rs_label(card, "Nothing in development: points are piling up. Click a discovery, then Research now. Develop starts a field below.", Color("e8a86f"), 13)
 	for i in range(r.queue.size()):
 		var item: String = r.queue[i]
 		var track: bool = item.begins_with("track:")

@@ -9,5 +9,5 @@ const DATA := {
 	"colour": "#b39160",
 	"portrait": "sudan",
 	"signature": "Reconstruction Engineers",
-	"doctrine": "Reconstruction: agriculture and engineering support recovery from war damage. Pay to repair damaged buildings near the capital. Sudan is distinct from South Sudan; the skirmish does not reproduce territorial control in the civil war.",
+	"doctrine": "Reconstruction: farming and engineering help recover from war. Pay to repair damaged buildings near the capital. Not the same nation as South Sudan.",
 }

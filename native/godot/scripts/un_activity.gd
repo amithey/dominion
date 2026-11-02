@@ -17,7 +17,7 @@ static func council(p) -> void:
 			hud._button(row, "Decline", func(): return u.respond(case_id, false), true, "bad")
 	var civil: VBoxContainer = hud._card()
 	civil.add_child(hud._text("Secretary-General and civilian relief", 14, hud.UI.CREAM, true))
-	p._wrap(civil, "Good offices offer mediation without a Council vote. Humanitarian relief remains available under sanctions: $250 logistics, 80 food, 120s between deliveries. Peace observers require both parties' consent; they are a monitoring mission, not combat units.")
+	p._wrap(civil, "The Secretary-General can mediate without a vote. Food relief still reaches you under sanctions ($250, 80 food, every 120 s). Peace observers need both sides to agree.")
 	var relief_row: HBoxContainer = hud._row(civil)
 	hud._button(relief_row, "Arrange food relief ($250)", func(): return u.relief(0))
 	for i in u.members():
@@ -36,7 +36,7 @@ static func assembly(p) -> void:
 	var u = hud.world.un
 	var box: VBoxContainer = hud._card(hud.UI.GOLD)
 	box.add_child(hud._text("General Assembly: %d members" % u.members().size(), 16, hud.UI.CREAM, true))
-	p._wrap(box, "One vote per member; no veto. Peace and security recommendations need two-thirds of yes + no votes; abstentions are excluded. A Council veto opens a debate and a separate recommendation vote here. Recommendations do not compel sanctions or stop wars.")
+	p._wrap(box, "One vote per member, no veto. Needs two thirds of the yes and no votes. A Council veto sends a case here. A recommendation forces nothing.")
 	if u.lost_vote(): p._wrap(box, "Your Assembly vote is suspended because of unpaid dues (Art. 19). Pay arrears in Organisation.", 13, hud.UI.BAD)
 	if u.assembly_current != null:
 		var dr: Dictionary = u.assembly_current

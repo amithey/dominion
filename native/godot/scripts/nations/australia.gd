@@ -9,5 +9,5 @@ const DATA := {
 	"colour": "#628a9e",
 	"portrait": "albanese",
 	"signature": "Bushmaster",
-	"doctrine": "Resource frontier: iron and uranium fund a compact army and critical minerals pacts with partners. Bushmasters resist explosive attacks but lack anti-tank firepower.",
+	"doctrine": "Resource frontier: iron and uranium fund a compact army and mineral pacts. Bushmasters resist blasts but lack anti-tank firepower.",
 }

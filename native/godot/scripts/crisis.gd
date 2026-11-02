@@ -97,11 +97,11 @@ const KINDS := {
 	"humanitarian": {"title": "Displacement", "group": "humanitarian", "player": {"happiness": -4.0, "incomePct": -0.03}, "ai": 0.97, "drain": 0.01, "public": true,
 		"text": "A large share of the people have lost their homes: happiness -4, income -3%."},
 	"political":    {"title": "Political crisis", "group": "political", "player": {"incomePct": -0.06, "prodPct": -0.05, "happiness": -3.0}, "ai": 0.93, "drain": 0.04, "public": true,
-		"text": "Mass protests against the government: income -6%, production -5%, and support for the war drains. If the pressure keeps rising, the government will fall."},
+		"text": "Mass protests: income -6%, production -5%, war support drains. If the pressure keeps rising, the government falls."},
 	"collapse":     {"title": "Government collapse", "group": "political", "player": {"incomePct": -0.12, "prodPct": -0.1, "happiness": -5.0}, "ai": 0.85, "drain": 0.0, "public": true,
 		"text": "The government has fallen: income -12%, production -10% for three minutes."},
 	"isolation":    {"title": "International condemnation", "group": "diplomatic", "player": {"incomePct": -0.04}, "ai": 0.96, "drain": 0.01, "public": true,
-		"text": "The world condemns strikes on homes, power stations and hospitals: the nations not at war with the striker think less of it, and its trade suffers (income -4%)."},
+		"text": "Strikes on homes, power stations and hospitals are condemned: neutral nations like the striker less, and trade suffers (income -4%)."},
 }
 const HOLD := 6.0                 # a crisis begins only when its cause has held this long (not a building being replaced)
 const SMALL := 20.0               # an economy smaller than this is measured as if it were this size (a young nation is not
@@ -385,7 +385,7 @@ func _fall(id: int, s: Dictionary, now: float) -> void:
 		# The regime holds by force: no peace, but the economy and its name abroad suffer.
 		s.crises["collapse"] = now
 		if id == 0:
-			_say("CRISIS: Crackdown. The protests are put down by force; the state survives, but income -12% and production -10% for three minutes, and the democracies think less of you.")
+			_say("CRISIS: Crackdown. The protests are crushed. The state survives: income -12%, production -10% for three minutes, and democracies like you less.")
 		else:
 			_say("World news: %s's regime cracks down on mass protests." % w.diplomacy.name_of(id))
 		if w.diplomacy != null and w.support != null:
@@ -463,7 +463,7 @@ func _condemn(by: int, victim: int) -> void:
 			d.change(victim, other, 3.0)   # sympathy for the victim
 	var target: String = "you" if victim == 0 else d.name_of(victim)
 	if by == 0:
-		_say("CRISIS: International condemnation. Your strikes on %s homes, power stations and hospitals are condemned: the nations neither at war with you nor allied to you think less of you, and trade suffers (income -4%%). It eases as time passes without such strikes." % (d.name_of(victim) + "'s"))
+		_say("CRISIS: International condemnation. Your strikes on %s homes, power stations and hospitals are condemned: neutral nations like you less and trade suffers (income -4%%). It eases without further strikes." % (d.name_of(victim) + "'s"))
 	else:
 		_say("World news: %s is condemned for its strikes on the homes and power stations of %s; nations distance themselves from it." % [d.name_of(by), target])
 
