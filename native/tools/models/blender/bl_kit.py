@@ -46,6 +46,7 @@ class Model:
         self.rng = random.Random(7)
         self._cache = {}
         self.stack = []
+        self.markers = []
 
     # ------------------------------------------------------------ accumulation
     def _acc(self, role):
@@ -86,6 +87,10 @@ class Model:
         bpy.data.meshes.remove(mesh)
         self.add(role, bm, obj.matrix_world.copy(), tint)
         bm.free()
+
+    def marker(self, name, pos):
+        """An empty node the game reads (Smoke_Industry_0 ... for chimney smoke), at a game point."""
+        self.markers.append((name, P(*pos)))
 
     def frame(self, pos=(0, 0, 0), yaw=0.0, pitch=0.0):
         """`with m.frame(pos, yaw, pitch):` everything inside is placed relative to pos, turned about the up axis, then tipped about x."""
@@ -347,6 +352,10 @@ class Model:
                 bsdf.inputs["Emission Color"].default_value = (*col, 1.0)
                 bsdf.inputs["Emission Strength"].default_value = 2.0
             obj.data.materials.append(mat)
+        for name, pos in self.markers:
+            e = bpy.data.objects.new(name, None)
+            e.location = pos
+            scene.collection.objects.link(e)
         bpy.ops.export_scene.gltf(filepath=out_path, export_format="GLB", export_apply=True, export_yup=True,
                                   export_materials="EXPORT", export_image_format="NONE", export_texcoords=True,
                                   export_normals=True, export_vertex_color="ACTIVE", export_cameras=False, export_lights=False)

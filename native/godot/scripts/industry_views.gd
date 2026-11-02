@@ -3,7 +3,7 @@
 extends RefCounted
 
 const KEYS := ["extractor:oil", "extractor:iron", "extractor:gold", "extractor:silicon", "extractor:uranium", "extractor:diamond",
-	"oilRefinery", "chipFab", "aiDataCenter", "fusionCell", "nuclearReactor", "solarFarm", "ammoDepot", "strategicComplex", "specialLab", "missileSilo", "helipad", "airfield", "bunker", "samSite", "park", "stadium", "port", "shipyard", "cityHall", "bank", "hospital", "school", "policeStation", "library", "market", "tvStation", "techPark", "intelAgency", "barracks", "tankFactory"]
+	"oilRefinery", "chipFab", "aiDataCenter", "fusionCell", "nuclearReactor", "solarFarm", "ammoDepot", "strategicComplex", "specialLab", "missileSilo", "helipad", "airfield", "bunker", "samSite", "park", "stadium", "port", "shipyard", "cityHall", "bank", "hospital", "school", "policeStation", "library", "market", "tvStation", "techPark", "intelAgency", "barracks", "tankFactory", "powerPlant"]
 
 static func capture(w: Node) -> void:
 	for i in range(30):

@@ -107,6 +107,15 @@ static func build_blender(model: String, owner_colour := Color.WHITE) -> Node3D:
 			mi.set_surface_override_material(s, blend_material(src.resource_name if src != null else "", owner_colour))
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		mi.set_meta("architecture", true)
+	# Empty nodes Smoke_Industry_N / Smoke_Home_N at chimney tops become the markers ambience.gd looks for.
+	var own := 0
+	for node in root.find_children("Smoke_*", "Node3D", true, false):
+		var industry: bool = str(node.name).begins_with("Smoke_Industry")
+		var marker := Marker3D.new()
+		marker.name = ("SmokeIndustry%d" if industry else "SmokeHome%d") % own
+		root.add_child(marker)
+		marker.transform = _local_transform(node, root)
+		own += 1
 	return root
 
 static func has_blender(model: String) -> bool:
