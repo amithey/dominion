@@ -73,7 +73,7 @@ func setup(colours: Array, identities: Array, together: bool) -> void:
 		if not together and i == 0: continue
 		var card := PanelContainer.new()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.add_theme_stylebox_override("panel", preload("res://scripts/ui_theme.gd").plate(Color("122329"), Color("080f13"), colours[i].darkened(0.3), 3))
+		card.add_theme_stylebox_override("panel", preload("res://scripts/ui_theme.gd").plate(Color("15292b"), Color("091314"), colours[i].darkened(0.3), 3))
 		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(card)
 		var picture := TextureRect.new()

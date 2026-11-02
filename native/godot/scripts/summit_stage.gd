@@ -19,7 +19,7 @@ func setup(colours: Array, identities: Array, together: bool) -> void:
 	var env := WorldEnvironment.new()
 	var settings := Environment.new()
 	settings.background_mode = Environment.BG_COLOR
-	settings.background_color = Color("101f26")
+	settings.background_color = Color("122628")
 	settings.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	settings.ambient_light_color = Color("c5d9df")
 	settings.ambient_light_energy = 0.45
@@ -36,8 +36,8 @@ func setup(colours: Array, identities: Array, together: bool) -> void:
 	cam.position = Vector3(0, 3.0, 6.0)
 	cam.look_at(Vector3(0, 1.4, 0))
 	cam.fov = 43
-	box(root, Vector3(0, -0.12, 0), Vector3(12, 0.2, 10), Color("243438"))
-	box(root, Vector3(0, 2.8, -2.1), Vector3(10, 5.6, 0.2), Color("12282e"))
+	box(root, Vector3(0, -0.12, 0), Vector3(12, 0.2, 10), Color("27393a"))
+	box(root, Vector3(0, 2.8, -2.1), Vector3(10, 5.6, 0.2), Color("152f30"))
 	for x in [-3.4, -1.9, 0.0, 1.9, 3.4]:
 		box(root, Vector3(x, 2.4, -1.93), Vector3(0.045, 4.8, 0.04), Color("a68a50"), 0.65)
 	for i in range(2):
@@ -47,12 +47,12 @@ func setup(colours: Array, identities: Array, together: bool) -> void:
 		box(root, Vector3(x + 0.32, 2.7, -1.46), Vector3(0.48, 0.07, 0.02), Color("e6d19b"))
 		oval(root, Vector3(x, 3.66, -1.5), Vector3(0.1, 0.1, 0.1), Color("d1b576"))
 	# A polished table with brass edging and negotiating folders.
-	box(root, Vector3(0, 0.58, 0.45), Vector3(0.55, 1.1, 1.1), Color("182b2e"))
+	box(root, Vector3(0, 0.58, 0.45), Vector3(0.55, 1.1, 1.1), Color("1b2f30"))
 	box(root, Vector3(0, 1.16, 0.45), Vector3(3.45, 0.13, 1.7), Color("c0a575"), 0.6)
 	box(root, Vector3(0, 1.24, 0.45), Vector3(3.4, 0.08, 1.65), Color("3c2923"))
 	for i in range(2):
 		var x := -1.05 if i == 0 else 1.05
-		box(root, Vector3(x, 1.3, 0.55), Vector3(0.5, 0.035, 0.4), Color("122c32"))
+		box(root, Vector3(x, 1.3, 0.55), Vector3(0.5, 0.035, 0.4), Color("153334"))
 		box(root, Vector3(x, 1.32, 0.53), Vector3(0.4, 0.008, 0.29), Color("e3dcc3"))
 		if together or i == 1:
 			_leader(root, x, colours[i], str(identities[i]), i)
@@ -84,14 +84,14 @@ func _mesh(parent: Node3D, at: Vector3, shape: Mesh, colour: Color, metal := 0.0
 	return node
 
 func _leader(parent: Node3D, x: float, accent: Color, identity: String, index: int) -> void:
-	box(parent, Vector3(x, 1.1, -0.55), Vector3(0.88, 1.5, 0.2), Color("2a3638"))
-	box(parent, Vector3(x, 0.51, -0.22), Vector3(0.88, 0.15, 0.7), Color("273235"))
+	box(parent, Vector3(x, 1.1, -0.55), Vector3(0.88, 1.5, 0.2), Color("2d3a3a"))
+	box(parent, Vector3(x, 0.51, -0.22), Vector3(0.88, 0.15, 0.7), Color("2a3737"))
 	var body := Node3D.new()
 	parent.add_child(body)
 	body.position = Vector3(x, 0.63, -0.15)
 	body.rotation.y = -0.46 if index == 1 else 0.46
 	var skin: Color = [Color("c69776"), Color("aa7959"), Color("d9b294"), Color("94654d")][absi(identity.hash()) % 4]
-	var suit := accent.darkened(0.65).lerp(Color("283038"), 0.5)
+	var suit := accent.darkened(0.65).lerp(Color("2b383a"), 0.5)
 	oval(body, Vector3(0, 0.6, 0), Vector3(0.79, 1.02, 0.46), suit)
 	box(body, Vector3(0, 0.84, 0.22), Vector3(0.22, 0.42, 0.03), Color("ede9da"))
 	box(body, Vector3(0, 0.78, 0.25), Vector3(0.075, 0.32, 0.02), accent.lightened(0.25))

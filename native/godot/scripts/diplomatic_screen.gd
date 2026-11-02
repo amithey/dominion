@@ -20,7 +20,7 @@ func setup(w: Node) -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	z_index = 50
 	var shade := ColorRect.new()
-	shade.color = Color(0.015, 0.035, 0.045, 0.91)
+	shade.color = Color(0.018, 0.043, 0.045, 0.91)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(shade)
 	var frame := PanelContainer.new()

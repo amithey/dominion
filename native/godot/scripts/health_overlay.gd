@@ -45,8 +45,8 @@ func _bar(ent: Dictionary, eye: Vector3, screen_rect: Rect2, lift: float, width 
 	rect.position.y = foot.position.y + 3
 	_placed.append(foot)
 	draw_rect(rect.grow(3), Color(0, 0, 0, 0.35))
-	draw_rect(rect.grow(2), Color("101721"))
-	draw_rect(rect, Color("354353"))
+	draw_rect(rect.grow(2), Color("121f22"))
+	draw_rect(rect, Color("3a5256"))
 	# The owner's colour on a small tab at the left, as 4X unit flags carry it.
 	var owner: int = ent.get("owner", 0)
 	if owner < world.map.nations.size():

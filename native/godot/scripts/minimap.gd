@@ -13,7 +13,7 @@ var _terrain: ImageTexture
 var _half := 320.0
 var _refresh := 0.0
 var _fit := 1.0     # the island is scaled so no land is cut off at any angle
-const SEA := Color("12334a")
+const SEA := Color("17474d")
 
 func setup(world_node: Node) -> void:
 	world = world_node
@@ -31,9 +31,9 @@ func setup(world_node: Node) -> void:
 			var h: float = world.height_at(wx, wz) - sea
 			var c: Color
 			if h < -6.0:
-				c = Color("12334a")
+				c = Color("17474d")
 			elif h < 0.0:
-				c = Color("1f5f73").lerp(Color("12334a"), clampf(-h / 6.0, 0.0, 1.0))
+				c = Color("277378").lerp(Color("17474d"), clampf(-h / 6.0, 0.0, 1.0))
 			elif h < 1.2:
 				c = Color("b7a877")
 			elif h < 9.0:
@@ -143,7 +143,7 @@ func _draw() -> void:
 			continue
 		var p := to_map(b.root.position)
 		var s := 5.0 if b.key in ["hq", "cityCenter", "villageCenter"] else 3.5
-		draw_rect(Rect2(p - Vector2(s, s) * 0.5, Vector2(s, s)).grow(1), Color("09141c"))
+		draw_rect(Rect2(p - Vector2(s, s) * 0.5, Vector2(s, s)).grow(1), Color("0b1b1d"))
 		draw_rect(Rect2(p - Vector2(s, s) * 0.5, Vector2(s, s)), colours[b.owner % colours.size()])
 		if b.key == "hq":
 			draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), Color.WHITE, false, 1.0)
@@ -155,7 +155,7 @@ func _draw() -> void:
 		# (rectangles and bare primitives: a circle is tessellated on every call, and
 		# a hundred units' worth cost 12 ms a redraw)
 		if u.get("selected", false): draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), Color("f4ead4"), false, 1.0)
-		draw_rect(Rect2(p - Vector2(3, 3), Vector2(6, 6)), Color("09141c"))
+		draw_rect(Rect2(p - Vector2(3, 3), Vector2(6, 6)), Color("0b1b1d"))
 		if u.get("fly", false):
 			draw_primitive(PackedVector2Array([p + Vector2(0,-3), p + Vector2(2.5,2), p + Vector2(-2.5,2)]), PackedColorArray([ink, ink, ink]), PackedVector2Array())
 		elif u.get("naval", false):

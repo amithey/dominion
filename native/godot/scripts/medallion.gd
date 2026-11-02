@@ -6,7 +6,7 @@ extends Control
 
 const UI := preload("res://scripts/ui_theme.gd")
 
-var tint := Color("20324d")   # the disc behind the picture; the owner's colour can be set here
+var tint := Color("254850")   # the disc behind the picture; the owner's colour can be set here
 
 class Ring extends Control:
 	func _ready() -> void:

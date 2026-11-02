@@ -172,7 +172,7 @@ static func chart(hud: Node, S: RefCounted, metric: String, ids: Array, size: Ve
 	var left := 52.0
 	var bottom := 22.0
 	control.draw.connect(func():
-		control.draw_style_box(UI.box(Color("0b1b29"), Color("36516b"), 1, 4, 0.0), Rect2(Vector2.ZERO, size))
+		control.draw_style_box(UI.box(Color("0e272b"), Color("3d686f"), 1, 4, 0.0), Rect2(Vector2.ZERO, size))
 		var plot := Rect2(left, 8, size.x - left - 10, size.y - bottom - 12)
 		for tick in range(0, 5):
 			var y: float = plot.position.y + plot.size.y * float(tick) / 4.0

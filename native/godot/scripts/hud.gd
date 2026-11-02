@@ -468,7 +468,7 @@ func _dress_face() -> void:
 	var colour := Color(str(me.get("color", "#cdb584")))
 	for state in ["normal", "hover", "pressed"]:
 		var s := StyleBoxFlat.new()
-		s.bg_color = Color("0a1522")
+		s.bg_color = Color("0c2023")
 		s.border_color = colour.lightened(0.25 if state != "normal" else 0.0)
 		s.set_border_width_all(2 if state == "normal" else 3)
 		s.set_corner_radius_all(20)
@@ -663,7 +663,7 @@ func _bar(key: String, title: String, desc: String, cost: Dictionary, seconds: f
 	_set_portrait(pic, key)
 	var stage := PanelContainer.new()
 	stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	stage.add_theme_stylebox_override("panel", UI.box(Color("0b1b29"), Color("36516b"), 1, 6, 4.0))
+	stage.add_theme_stylebox_override("panel", UI.box(Color("0e272b"), Color("3d686f"), 1, 6, 4.0))
 	stage.add_child(pic)
 	head.add_child(stage)
 	var name := _text(title, 18, UI.CREAM, true)
@@ -801,7 +801,7 @@ func _build_selection() -> void:
 	fuel_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	fuel_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	fuel_label.add_theme_constant_override("outline_size", 4)
-	fuel_label.add_theme_color_override("font_outline_color", Color(0.03, 0.07, 0.12, 0.95))
+	fuel_label.add_theme_color_override("font_outline_color", Color(0.039, 0.107, 0.120, 0.95))
 	_sel_fuel.add_child(fuel_label)
 	_sel_fuel.set_meta("label", fuel_label)
 	col.add_child(_sel_fuel)
@@ -965,7 +965,7 @@ func _build_help() -> void:
 	_help.offset_top = -300
 	_help.offset_bottom = 300
 	_help.visible = false
-	_help.add_theme_stylebox_override("panel", UI.plate(Color("183039"), Color("0a191f"), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 9))
+	_help.add_theme_stylebox_override("panel", UI.plate(Color("1c393b"), Color("0c1f20"), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 9))
 	add_child(_help)
 	var sheet := VBoxContainer.new()
 	sheet.add_theme_constant_override("separation", 0)
@@ -1098,7 +1098,7 @@ func _hover_unit(delta: float) -> void:
 	if _hover_tag == null:
 		_hover_tag = _text("", 13, UI.CREAM)
 		_hover_tag.name = "HoverTag"
-		var bg := UI.box(Color(0.05, 0.09, 0.14, 0.88), Color(0.85, 0.76, 0.54, 0.6), 1, 6, 4.0)
+		var bg := UI.box(Color(0.059, 0.127, 0.140, 0.88), Color(0.85, 0.76, 0.54, 0.6), 1, 6, 4.0)
 		_hover_tag.add_theme_stylebox_override("normal", bg)
 		_hover_tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_hover_tag.z_index = 50
@@ -1679,7 +1679,7 @@ func _city_card(b: Dictionary) -> void:
 		child.queue_free()
 	for t in tiles:
 		var tile := PanelContainer.new()
-		tile.add_theme_stylebox_override("panel", UI.box(Color("0f1c2b"), Color(t[4], 0.45), 1, 5, 6.0))
+		tile.add_theme_stylebox_override("panel", UI.box(Color("12292d"), Color(t[4], 0.45), 1, 5, 6.0))
 		tile.custom_minimum_size = Vector2(128, 0)
 		tile.tooltip_text = "%s: %s (%s)" % [t[2], t[1], t[3]]
 		var row := HBoxContainer.new()
@@ -1885,9 +1885,9 @@ func _show_stats(values: Dictionary) -> void:
 			_stat_values[caption][1].text = values[caption]
 
 func _medal_owner(owner: int) -> void:
-	var colour := Color("20324d")
+	var colour := Color("254850")
 	if owner < world.map.nations.size():
-		colour = Color(world.map.nations[owner].color).darkened(0.35).lerp(Color("20324d"), 0.35)
+		colour = Color(world.map.nations[owner].color).darkened(0.35).lerp(Color("254850"), 0.35)
 	if colour != _sel_medal.tint:
 		_sel_medal.set_tint(colour)
 
@@ -2219,7 +2219,7 @@ func _heading(text: String) -> void:
 ## A card: a raised panel, with a stripe down the left in `stripe` if given.
 func _card(stripe := Color(0, 0, 0, 0)) -> VBoxContainer:
 	var card := PanelContainer.new()
-	var style := UI.box(Color("172c40"), Color("36516b"), 1, 6, 10.0, 3)
+	var style := UI.box(Color("1b3d43"), Color("3d686f"), 1, 6, 10.0, 3)
 	if stripe.a > 0.0:
 		style.border_color = Color(stripe, 0.95)
 		style.border_width_left = 5
@@ -2375,7 +2375,7 @@ func _show_letter() -> void:
 		return
 	var letter: Array = _letters.pop_front()
 	_letter_box = PanelContainer.new()
-	_letter_box.add_theme_stylebox_override("panel", UI.plate(Color("1a2c45"), Color("0a171c"), UI.GOLD, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
+	_letter_box.add_theme_stylebox_override("panel", UI.plate(Color("1f4148"), Color("0c1c1d"), UI.GOLD, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
 	# On the right edge under the Build button, not over the middle of the battlefield.
 	_letter_box.anchor_left = 1.0
 	_letter_box.anchor_right = 1.0
@@ -2501,7 +2501,7 @@ func show_end(title: String, subtitle: String) -> void:
 	box.name = "EndDialog"
 	_end_box = box
 	box.z_index = 101
-	box.add_theme_stylebox_override("panel", UI.plate(Color("1a343d"), Color("0a171b"), UI.GOLD if title == "VICTORY" else UI.BAD, 26.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
+	box.add_theme_stylebox_override("panel", UI.plate(Color("1e3d3f"), Color("0c1b1c"), UI.GOLD if title == "VICTORY" else UI.BAD, 26.0, UI.LIFT, Color(0, 0, 0, 0), 0, 10))
 	box.anchor_left = 0.5
 	box.anchor_right = 0.5
 	box.anchor_top = 0.5
@@ -2773,7 +2773,7 @@ func _build_research() -> void:
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(split)
 	var tree_frame := PanelContainer.new()
-	tree_frame.add_theme_stylebox_override("panel", UI.box(Color("0b1720"), Color("24394c"), 1, 4, 4.0))
+	tree_frame.add_theme_stylebox_override("panel", UI.box(Color("0d1f21"), Color("294a4f"), 1, 4, 4.0))
 	tree_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	split.add_child(tree_frame)
 	_tree_scroll = ScrollContainer.new()
@@ -2842,7 +2842,7 @@ func _rs_stat(value: String, label: String, colour: Color) -> Label:
 ## A rounded panel for the side column.
 func _rs_card(parent: Control, stripe := Color(0, 0, 0, 0)) -> VBoxContainer:
 	var card := PanelContainer.new()
-	var style := UI.box(Color("142337"), Color("2d4460"), 1, 3, 10.0)
+	var style := UI.box(Color("183439"), Color("335c64"), 1, 3, 10.0)
 	if stripe.a > 0.0:
 		style.border_color = stripe
 		style.border_width_left = 4
@@ -2904,8 +2904,8 @@ func _research_eras() -> void:
 		var past: bool = e < r.era
 		var now: bool = e == r.era
 		var chip := PanelContainer.new()
-		var fill := Color("173a2c") if past else (Color("103a4a") if now else Color("0f1c28"))
-		var edge := Color("5fd39a") if past else (UI.ministry("research") if now else Color("23415a"))
+		var fill := Color("173a2c") if past else (Color("15494d") if now else Color("12262a"))
+		var edge := Color("5fd39a") if past else (UI.ministry("research") if now else Color("29575e"))
 		chip.add_theme_stylebox_override("panel", UI.box(fill, edge, 2 if now else 1, 3, 6.0))
 		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var l := _text(("✓ " if past else "") + str(r.eras[e].name), 13, UI.BRIGHT if now else (Color("b9d8b5") if past else UI.MUTED), now)
@@ -2928,7 +2928,7 @@ func _research_eras() -> void:
 		var pct: bool = q[0] == "Share of the land"
 		var met: bool = q[1] >= q[2]
 		var chip := PanelContainer.new()
-		chip.add_theme_stylebox_override("panel", UI.box(Color("0f1c2b"), Color("8fd18a") if met else Color("2d4460"), 1, 3, 5.0))
+		chip.add_theme_stylebox_override("panel", UI.box(Color("12292d"), Color("8fd18a") if met else Color("335c64"), 1, 3, 5.0))
 		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var col := VBoxContainer.new()
 		col.add_theme_constant_override("separation", 2)
@@ -3010,7 +3010,7 @@ func _research_detail() -> void:
 		var current: bool = s == stage and stage < 3
 		var now: bool = current and r.active_item() == key
 		var sc := PanelContainer.new()
-		sc.add_theme_stylebox_override("panel", UI.box(Color("173a2c") if done else (Color("103a4a") if now else Color("0f1c2b")), Color("5fd39a") if done else (UI.ministry("research") if now else Color("23415a")), 1, 5, 7.0))
+		sc.add_theme_stylebox_override("panel", UI.box(Color("173a2c") if done else (Color("15494d") if now else Color("12292d")), Color("5fd39a") if done else (UI.ministry("research") if now else Color("29575e")), 1, 5, 7.0))
 		card.add_child(sc)
 		var col := VBoxContainer.new()
 		col.add_theme_constant_override("separation", 3)
@@ -3083,7 +3083,7 @@ func _research_tracks() -> void:
 		var why: String = r.track_blocker(key)
 		var queued: bool = ("track:" + key) in r.queue
 		var card := PanelContainer.new()
-		card.add_theme_stylebox_override("panel", UI.box(Color("142337"), Color(UI.GOLD, 0.8) if queued else Color("2d4460"), 1, 3, 8.0))
+		card.add_theme_stylebox_override("panel", UI.box(Color("183439"), Color(UI.GOLD, 0.8) if queued else Color("335c64"), 1, 3, 8.0))
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.tooltip_text = t.desc
 		_rs_tracks.add_child(card)

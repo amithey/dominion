@@ -70,9 +70,9 @@ func setup(world_node: Node) -> void:
 	# Preserve contrast for every submenu without flattening the artwork.
 
 	var fade := Gradient.new()
-	fade.set_color(0, Color(0.018, 0.035, 0.065, 0.94))
-	fade.add_point(0.62, Color(0.018, 0.035, 0.065, 0.60))
-	fade.set_color(fade.get_point_count() - 1, Color(0.03, 0.06, 0.08, 0.0))
+	fade.set_color(0, Color(0.023, 0.057, 0.065, 0.94))
+	fade.add_point(0.62, Color(0.023, 0.057, 0.065, 0.60))
+	fade.set_color(fade.get_point_count() - 1, Color(0.035, 0.075, 0.080, 0.0))
 	var tex := GradientTexture2D.new()
 	tex.gradient = fade
 	tex.width = 256
@@ -89,7 +89,7 @@ func setup(world_node: Node) -> void:
 	# Pause menu: the whole game dims behind a card.
 	_dim = ColorRect.new()
 	_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_dim.color = Color(0.02, 0.04, 0.05, 0.62)
+	_dim.color = Color(0.023, 0.048, 0.050, 0.62)
 	_root.add_child(_dim)
 	_brand = VBoxContainer.new()
 	_brand.offset_left = 64
@@ -646,8 +646,8 @@ func _nation_card(i: int) -> Button:
 	b.focus_mode = Control.FOCUS_ALL
 	b.toggle_mode = true
 	b.button_pressed = chosen
-	b.add_theme_stylebox_override("normal", UI.box(Color(0.05, 0.1, 0.12, 0.85), colour.darkened(0.3), 1, 4, 6.0))
-	b.add_theme_stylebox_override("hover", UI.box(Color(0.08, 0.15, 0.17, 0.95), colour, 2, 4, 6.0))
+	b.add_theme_stylebox_override("normal", UI.box(Color(0.057, 0.116, 0.120, 0.85), colour.darkened(0.3), 1, 4, 6.0))
+	b.add_theme_stylebox_override("hover", UI.box(Color(0.089, 0.166, 0.170, 0.95), colour, 2, 4, 6.0))
 	b.add_theme_stylebox_override("pressed", UI.box(UI.KEY_LOW, UI.GOLD, 1, 3, 6.0))
 	b.add_theme_stylebox_override("hover_pressed", UI.box(UI.KEY_LOW, UI.GOLD, 1, 3, 6.0))
 	b.pressed.connect(func():
@@ -883,7 +883,7 @@ func open_settings() -> void:
 ## A setting as a card: its name and what it does on the left, the control on the right.
 func _setting(title: String, detail: String, control: Control) -> void:
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UI.box(UI.BG, Color("304254"), 1, 3, 14.0))
+	card.add_theme_stylebox_override("panel", UI.box(UI.BG, Color("355257"), 1, 3, 14.0))
 	_panel.add_child(card)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 16)
@@ -1019,7 +1019,7 @@ func _settings_controls() -> void:
 		d.add_theme_color_override("font_color", UI.CREAM)
 		keys.add_child(d)
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UI.box(UI.BG, Color("304254"), 1, 3, 14.0))
+	card.add_theme_stylebox_override("panel", UI.box(UI.BG, Color("355257"), 1, 3, 14.0))
 	var col := VBoxContainer.new()
 	card.add_child(col)
 	var t := Label.new()
@@ -1241,8 +1241,8 @@ func _heading(text: String) -> void:
 func _accent(_width: int) -> Array:
 	# Quiet navigation rests on the scenery; its underline becomes a jade
 	# ribbon under pointer or keyboard focus.
-	var normal := UI.plate(Color(0.035, 0.065, 0.10, 0.80), Color(0.025, 0.045, 0.07, 0.72), Color.TRANSPARENT, 14.0, Color.TRANSPARENT, Color(UI.TRIM, 0.45), 1)
-	var hover := UI.plate(Color("29464c"), Color("11262c"), UI.GOLD, 14.0)
+	var normal := UI.plate(Color(0.041, 0.091, 0.100, 0.80), Color(0.029, 0.063, 0.070, 0.72), Color.TRANSPARENT, 14.0, Color.TRANSPARENT, Color(UI.TRIM, 0.45), 1)
+	var hover := UI.plate(Color("2e4e4f"), Color("142d2e"), UI.GOLD, 14.0)
 	return [normal, hover]
 
 # A quiet serif menu entry; the primary action wears the sovereign seal.
@@ -1261,7 +1261,7 @@ func _button(text: String, action: Callable) -> Button:
 	b.add_theme_color_override("font_pressed_color", UI.BRIGHT)
 	b.add_theme_stylebox_override("focus", UI.box(Color.TRANSPARENT, UI.BRIGHT, 1, 8, 0.0))
 	if text in ["New Game", "Begin campaign", "Resume"]:
-		b.add_theme_stylebox_override("normal", UI.plate(Color("375265"), Color("203341"), UI.GOLD, 14.0))
+		b.add_theme_stylebox_override("normal", UI.plate(Color("3d6469"), Color("244044"), UI.GOLD, 14.0))
 		b.icon = UI.icon("sovereign")
 		b.add_theme_constant_override("icon_max_width", 28)
 	b.pressed.connect(action)
@@ -1275,7 +1275,7 @@ func _entry(text: String, detail: String, icon_name: String, action: Callable, p
 	b.focus_mode = Control.FOCUS_ALL
 	b.tooltip_text = detail
 	var styles := _accent(4)
-	b.add_theme_stylebox_override("normal", UI.plate(Color("37576a"), Color("203341"), UI.GOLD, 14.0, UI.LIFT, Color.TRANSPARENT, 0, 5, UI.GOLD, 4) if primary else styles[0])
+	b.add_theme_stylebox_override("normal", UI.plate(Color("3d696e"), Color("244044"), UI.GOLD, 14.0, UI.LIFT, Color.TRANSPARENT, 0, 5, UI.GOLD, 4) if primary else styles[0])
 	b.add_theme_stylebox_override("hover", styles[1])
 	b.add_theme_stylebox_override("pressed", styles[1])
 	b.add_theme_stylebox_override("focus", UI.box(Color.TRANSPARENT, UI.BRIGHT, 1, 8, 0.0))

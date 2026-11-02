@@ -24,7 +24,7 @@ func text_width(font: Font, text: String, size: int) -> float:
 
 func badge_style(selected: bool) -> StyleBoxFlat:
 	if not _badge_styles.has(selected):
-		_badge_styles[selected] = preload("res://scripts/ui_theme.gd").box(Color("142c3d"), Color("f0d690") if selected else Color("526b7c"), 1, 4, 0.0, 2)
+		_badge_styles[selected] = preload("res://scripts/ui_theme.gd").box(Color("183b3f"), Color("f0d690") if selected else Color("597c81"), 1, 4, 0.0, 2)
 	return _badge_styles[selected]
 
 func setup(world_node: Node) -> void:
@@ -150,10 +150,10 @@ func _construction(font: Font) -> void:
 		var width := text_width(font, text, 13) + 16.0
 		var box := Rect2(mark.at - Vector2(width * 0.5, 20), Vector2(width, 24))
 		var accent := Color("e89a78") if mark.status == "NEEDS WORKER" else Color("e8c66a")
-		draw_rect(box.grow(1), Color("0b151e"))
-		draw_rect(box, Color("162833"))
+		draw_rect(box.grow(1), Color("0d1d1f"))
+		draw_rect(box, Color("193235"))
 		draw_string(font, box.position + Vector2(8, 15), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, accent)
-		draw_rect(Rect2(box.position + Vector2(0, 21), Vector2(width, 3)), Color("33414b"))
+		draw_rect(Rect2(box.position + Vector2(0, 21), Vector2(width, 3)), Color("374b4e"))
 		draw_rect(Rect2(box.position + Vector2(0, 21), Vector2(width * mark.progress, 3)), accent)
 
 const RING_FROM := 36.0       # a unit whose weapon reaches this far (metres) shows its range when selected
@@ -246,8 +246,8 @@ func _cargo(u: Dictionary, cam: Camera3D, view: Rect2, font: Font) -> void:
 	var figures := mini(people, 8)
 	var width := text_width(font, text, 14) + 14.0 + figures * 9.0 + (4.0 if figures > 0 else 0.0)
 	var box := Rect2(p - Vector2(width * 0.5, 12), Vector2(width, 24))
-	var green := Color("3f9d5a") if not cargo.is_empty() else Color("5d6d78")
-	draw_rect(box.grow(1), Color("0b151e"))
+	var green := Color("3f9d5a") if not cargo.is_empty() else Color("637a7d")
+	draw_rect(box.grow(1), Color("0d1d1f"))
 	draw_rect(box, Color(green, 0.92))
 	var x := box.position.x + 8.0
 	for i in range(figures):

@@ -156,16 +156,16 @@ func _draw() -> void:
 		var active: bool = active_key == key
 		var queued: bool = key in research.queue
 		var why: String = research.blocker(key)
-		var fill := Color("203348")
+		var fill := Color("25454b")
 		if stage >= 3:
 			fill = Color("27553a")
 		elif active or stage > 0:
 			fill = Color("5f4a1c")
 		elif why == "" or why.contains(" needs a "):
-			fill = Color("1e3349")
+			fill = Color("23464c")
 		else:
-			fill = Color("111e2c")
-		var border := Color("f2dfa9") if key == selected else (Color("7fb7e8") if queued else Color("435a70"))
+			fill = Color("142a2e")
+		var border := Color("f2dfa9") if key == selected else (Color("7fb7e8") if queued else Color("496e74"))
 		draw_style_box(card_surface(fill, border, key == selected or queued), r)
 		# A hairline of light along the top edge, as on every plate.
 		draw_line(r.position + Vector2(1, 1), Vector2(r.end.x - 1, r.position.y + 1), Color(1, 1, 1, 0.10), 1.0)
@@ -192,4 +192,4 @@ func _draw() -> void:
 					draw_rect(Rect2(pip.position, Vector2(pip.size.x * clampf(work / need, 0.0, 1.0), pip.size.y)), Color("e3c15a"))
 		if queued:
 			draw_circle(Vector2(r.end.x - 10, r.position.y + 10), 8.0, Color("7fb7e8"))
-			draw_string(font, Vector2(r.end.x - 18, r.position.y + 14), str(research.queue.find(key) + 1), HORIZONTAL_ALIGNMENT_CENTER, 16, 11, Color("0b1620"))
+			draw_string(font, Vector2(r.end.x - 18, r.position.y + 14), str(research.queue.find(key) + 1), HORIZONTAL_ALIGNMENT_CENTER, 16, 11, Color("0d1f21"))

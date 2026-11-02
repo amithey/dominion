@@ -96,7 +96,7 @@ func diplomacy() -> void:
 
 func _portrait(id: int, size: float) -> Control:
 	var frame := PanelContainer.new()
-	frame.add_theme_stylebox_override("panel", hud.UI.box(Color("0b1620"), hud._nation_colour(id), 2, 2, 6.0))
+	frame.add_theme_stylebox_override("panel", hud.UI.box(Color("0d1f21"), hud._nation_colour(id), 2, 2, 6.0))
 	frame.custom_minimum_size = Vector2(size, size)
 	var leader: String = hud.world.espionage.person(id, "president")
 	var path := Gallery.portrait(leader)
@@ -257,7 +257,7 @@ func _world_chart() -> void:
 				if r == 0:
 					chart.draw_rect(Rect2(label_w + cell * c + 2, 4, cell - 4, 20), hud._nation_colour(b))
 				if a == b:
-					chart.draw_rect(box, Color("0b1620"))
+					chart.draw_rect(box, Color("0d1f21"))
 					continue
 				var fill: Color
 				var mark := ""
@@ -280,7 +280,7 @@ func _world_chart() -> void:
 				chart.draw_rect(box, fill)
 				chart.draw_rect(box, Color(0, 0, 0, 0.5), false, 1.0)
 				if mark != "":
-					chart.draw_string(font, box.position + Vector2(0, cell * 0.64), mark, HORIZONTAL_ALIGNMENT_CENTER, box.size.x, 16, Color(0.05, 0.08, 0.1)))
+					chart.draw_string(font, box.position + Vector2(0, cell * 0.64), mark, HORIZONTAL_ALIGNMENT_CENTER, box.size.x, 16, Color(0.055, 0.095, 0.100)))
 	var legend: HBoxContainer = hud._row(card, 8)
 	hud._pill(legend, "W  war", WAR)
 	hud._pill(legend, "A  alliance", ALLY)
@@ -427,7 +427,7 @@ func _operations(e: Node, d: Node) -> void:
 		b.add_theme_color_override("font_color", hud._nation_colour(id).lightened(0.35))
 		b.add_theme_color_override("font_pressed_color", hud._nation_colour(id).lightened(0.6))
 		for state in ["pressed", "hover_pressed"]:
-			b.add_theme_stylebox_override(state, hud.UI.box(Color("2d4863"), hud._nation_colour(id).lightened(0.2), 2, 2, 9.0))
+			b.add_theme_stylebox_override(state, hud.UI.box(Color("335f67"), hud._nation_colour(id).lightened(0.2), 2, 2, 9.0))
 		var target: int = id
 		b.pressed.connect(func():
 			hud.spy_target = target
@@ -702,7 +702,7 @@ func _chart(points: Array, colour: Color, size: Vector2) -> Control:
 	chart.draw.connect(func():
 		var w := size.x
 		var h := size.y
-		chart.draw_style_box(UI.box(Color("0b1b29"), Color("36516b"), 1, 4, 0.0), Rect2(Vector2.ZERO, size))
+		chart.draw_style_box(UI.box(Color("0e272b"), Color("3d686f"), 1, 4, 0.0), Rect2(Vector2.ZERO, size))
 		for tick in range(1, 4):
 			var y := h * float(tick) / 4.0
 			chart.draw_line(Vector2(1, y), Vector2(w - 1, y), Color(0.7, 0.8, 0.9, 0.1), 1.0)
@@ -726,7 +726,7 @@ func _chart(points: Array, colour: Color, size: Vector2) -> Control:
 		for x in range(0, int(w), 8):
 			chart.draw_line(Vector2(x, start_y), Vector2(x + 4, start_y), Color(1, 1, 1, 0.18), 1.0)
 		chart.draw_polyline(line, colour, 2.0, true)
-		chart.draw_circle(line[line.size() - 1], 4.0, Color("0b1b29"))
+		chart.draw_circle(line[line.size() - 1], 4.0, Color("0e272b"))
 		chart.draw_circle(line[line.size() - 1], 2.5, colour))
 	return chart
 
@@ -832,7 +832,7 @@ func _note(parent: Control, text: String) -> void:
 ## A small figure with its label, such as "2 / 4" over "routes in use".
 func _stat(parent: Control, value: String, label: String, colour: Color) -> void:
 	var box := PanelContainer.new()
-	box.add_theme_stylebox_override("panel", hud.UI.box(Color("0f1c2b"), Color("2d4460"), 1, 3, 6.0))
+	box.add_theme_stylebox_override("panel", hud.UI.box(Color("12292d"), Color("335c64"), 1, 3, 6.0))
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 0)
@@ -915,14 +915,14 @@ func _split_bar(parent: Control, parts: Array, height := 22.0) -> void:
 	bar.draw.connect(func():
 		var w := bar.size.x
 		var x := 0.0
-		bar.draw_rect(Rect2(0, 0, w, height), Color("0b1620"))
+		bar.draw_rect(Rect2(0, 0, w, height), Color("0d1f21"))
 		for p in parts:
 			var span: float = w * float(p[0]) / maxf(total, 0.001)
 			if span <= 0.5:
 				continue
 			bar.draw_rect(Rect2(x, 0, span, height), p[1])
 			if span > 34.0 and str(p[2]) != "":
-				bar.draw_string(font, Vector2(x, height * 0.72), str(p[2]), HORIZONTAL_ALIGNMENT_CENTER, span, 12, Color(0.05, 0.08, 0.1))
+				bar.draw_string(font, Vector2(x, height * 0.72), str(p[2]), HORIZONTAL_ALIGNMENT_CENTER, span, 12, Color(0.055, 0.095, 0.100))
 			x += span
 		bar.draw_rect(Rect2(0, 0, w, height), Color(0, 0, 0, 0.5), false, 1.0))
 	parent.add_child(bar)
@@ -953,7 +953,7 @@ func _territory_nations() -> void:
 		var cells: int = t.yields(id).cells
 		held += cells
 		parts.append([cells, hud._nation_colour(id), "%d%%" % roundi(100.0 * cells / maxf(land, 1))])
-	parts.append([maxi(0, land - held), Color("2a3642"), "free"])
+	parts.append([maxi(0, land - held), Color("2e4145"), "free"])
 	_split_bar(card, parts, 26.0)
 	_note(card, "Each nation's land is painted on the map in its colour; gold stripes mark contested fronts.")
 	for id in range(hud.world.map.nations.size()):
@@ -1004,7 +1004,7 @@ func _territory_yours() -> void:
 	var yields: HBoxContainer = hud._row(hud._side_rows, 6)
 	for item in [["money", y.money, "%.2f"], ["food", y.food, "%.2f"], ["iron", y.iron, "%.3f"], ["oil", y.oil, "%.3f"]]:
 		var box := PanelContainer.new()
-		box.add_theme_stylebox_override("panel", hud.UI.box(Color("0f1c2b"), Color("2d4460"), 1, 3, 6.0))
+		box.add_theme_stylebox_override("panel", hud.UI.box(Color("12292d"), Color("335c64"), 1, 3, 6.0))
 		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var r := HBoxContainer.new()
 		r.add_theme_constant_override("separation", 6)

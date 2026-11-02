@@ -22,7 +22,7 @@ class Sparkline extends Control:
 	func _draw() -> void:
 		var w := size.x
 		var h := size.y
-		draw_rect(Rect2(Vector2.ZERO, size), Color("0a1522"))
+		draw_rect(Rect2(Vector2.ZERO, size), Color("0c2023"))
 		for tick in range(1, 4):
 			var y := h * float(tick) / 4.0
 			draw_line(Vector2(0, y), Vector2(w, y), Color(colour, 0.12), 1.0)
@@ -62,7 +62,7 @@ func setup(hud_node: Node) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var shade := ColorRect.new()
-	shade.color = Color(0.015, 0.035, 0.065, 0.985)
+	shade.color = Color(0.020, 0.057, 0.065, 0.985)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(shade)
 	var margin := MarginContainer.new()
@@ -125,7 +125,7 @@ func _tile(key: String, title: String, icon: String, action_text: String, action
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tile.custom_minimum_size = Vector2(330, 250)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Color("132538"), 0.97)
+	style.bg_color = Color(Color("17353a"), 0.97)
 	style.border_color = accent
 	style.border_width_top = 6
 	style.border_width_left = 1
@@ -215,7 +215,7 @@ func _gauge(parent: Control, caption: String, value: float, most: float, colour:
 	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color("0a1522")
+	bg.bg_color = Color("0c2023")
 	bg.set_corner_radius_all(6)
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = colour
@@ -257,7 +257,7 @@ func _header() -> void:
 	var colour := Color(str(me.get("color", "#cdb584")))
 	var frame := PanelContainer.new()
 	var ring := StyleBoxFlat.new()
-	ring.bg_color = Color("0a1522")
+	ring.bg_color = Color("0c2023")
 	ring.border_color = colour
 	ring.set_border_width_all(3)
 	ring.set_corner_radius_all(12)
@@ -412,7 +412,7 @@ func _foreign() -> void:
 		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var bg := StyleBoxFlat.new()
-		bg.bg_color = Color("0a1522")
+		bg.bg_color = Color("0c2023")
 		bg.set_corner_radius_all(5)
 		var fill := StyleBoxFlat.new()
 		fill.bg_color = tone
