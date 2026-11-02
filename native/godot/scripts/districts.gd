@@ -37,8 +37,8 @@ const MODEL_KIND := {"hq": "town_hall", "cityCenter": "town_hall", "cityHall": "
 ## Buildings modelled in Blender, one glb each (assets/art/blender/KEY.glb), standing on their own hex slab.
 const VERTICAL_SAM := ["uk", "germany", "france", "italy", "israel", "australia", "ukraine", "netherlands"]   # as architecture.gd sam_site
 ## Keys that borrow another key's Blender model.
-const BLEND_ALIAS := {"hq": "cityHall", "cityCenter": "cityHall"}
-const BLENDER_MADE := ["bunker", "aiDataCenter", "missileSilo", "fusionCell", "ammoDepot", "helipad", "port", "shipyard", "strategicComplex", "samSite", "specialLab", "cityHall", "bank", "hospital", "school", "policeStation"]
+const BLEND_ALIAS := {"hq": "cityHall", "cityCenter": "cityHall", "university": "library", "museum": "library"}
+const BLENDER_MADE := ["bunker", "aiDataCenter", "missileSilo", "fusionCell", "ammoDepot", "helipad", "port", "shipyard", "strategicComplex", "samSite", "specialLab", "cityHall", "bank", "hospital", "school", "policeStation", "library"]
 ## Tallest a model-built central building may stand per style (metres): a tower is narrow but not a skyscraper over the town.
 const MODEL_CAP := {0: 15.0, 1: 11.5, 2: 12.0, 3: 8.0, 4: 8.5}
 var model_seed := 0.0
@@ -48,7 +48,7 @@ const RECIPES := {"extractor": "extractor", "mountainMine": "extractor", "oilRef
 	"bunker": "bunker", "samSite": "sam_site", "park": "park", "stadium": "stadium"}
 ## Keys whose kit building is a complete composition (no yard props or landmarks added).
 const COMPLETE := ["extractor", "mountainMine", "oilRefinery", "chipFab", "aiDataCenter", "fusionCell", "strategicComplex", "specialLab", "nuclearReactor", "solarFarm", "shipyard",
-	"port", "fishingWharf", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "foodDepot", "powerPlant", "cityHall", "hq", "cityCenter", "bank", "hospital", "school", "policeStation"]
+	"port", "fishingWharf", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "foodDepot", "powerPlant", "library", "university", "museum", "cityHall", "hq", "cityCenter", "bank", "hospital", "school", "policeStation"]
 var harbour_turn := 0.0   # a harbour faces the water (set in build)
 var world: Node
 var arch: RefCounted       # architecture.gd: the buildings, made from code
