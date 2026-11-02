@@ -31,15 +31,15 @@ const UNITS := {"gdp": "$ bn", "growth": "% over a quarter", "inflation": "% a y
 	"military": "points", "milex": "% of GDP", "fragility": "index, 0 to 120", "displaced": "thousand people", "energy": "GW",
 	"land": "hexes", "tech": "level", "infra": "buildings"}
 const NOTES := {
-	"gdp": "Gross domestic product: the economy that stands and works. It starts below the real figure and grows as you build; war damage, blackouts, inflation and turmoil cut it. Published with a delay.",
+	"gdp": "Gross domestic product. It grows as you build; war damage, blackouts, inflation and turmoil cut it. Published with a delay.",
 	"growth": "The change in GDP over the last quarter (three minutes). Two quarters of decline are a recession.",
-	"inflation": "Consumer prices, year on year. Lost supply, blackouts, hunger, war spending, sanctions and default push them up; past about 30% the currency is in crisis.",
+	"inflation": "Consumer prices, year on year. Lost supply, war spending, sanctions and default push them up; past about 30% the currency is in crisis.",
 	"unemployment": "The share of workers without a job: workplaces destroyed, factories without power, people without homes.",
 	"debt": "General government gross debt. War deficits add to it and a shrinking economy raises it at once; too high and the state defaults.",
 	"rating": "How markets rate the state, 0 to 100 (AAA from 85, D at the bottom): debt, inflation, fragility, losses and war. Published a release late.",
 	"military": "The value of the forces under arms. For other nations an estimate: the better your intelligence, the closer.",
 	"milex": "Military spending as a share of GDP. Higher at war and in a shrinking economy. Others' figures are estimates.",
-	"fragility": "How close the state is to failing (Fragile States scale, higher is worse): its usual level plus its crises. Past what a government can bear, it falls.",
+	"fragility": "How close the state is to failing (higher is worse): its usual level plus its crises. Past what a government can bear, it falls.",
 	"displaced": "People driven from their homes by destroyed houses and towns, as the refugee agency counts them; they find shelter over time.",
 	"energy": "Power and fuel capacity: stations, reactors, solar farms, refineries, rigs and wells. Others' figures are estimated from satellites.",
 	"land": "Hexes of territory held; borders are public.",

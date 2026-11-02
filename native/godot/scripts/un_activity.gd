@@ -17,7 +17,7 @@ static func council(p) -> void:
 			hud._button(row, "Decline", func(): return u.respond(case_id, false), true, "bad")
 	var civil: VBoxContainer = hud._card()
 	civil.add_child(hud._text("Secretary-General and civilian relief", 14, hud.UI.CREAM, true))
-	p._wrap(civil, "The Secretary-General can mediate without a vote. Food relief still reaches you under sanctions ($250, 80 food, every 120 s). Peace observers need both sides to agree.")
+	p._wrap(civil, "The Secretary-General can mediate without a vote. Food relief still reaches you under sanctions ($250, 80 food, every 120 s). Peacekeepers need both sides to agree.")
 	var relief_row: HBoxContainer = hud._row(civil)
 	hud._button(relief_row, "Arrange food relief ($250)", func(): return u.relief(0))
 	for i in u.members():

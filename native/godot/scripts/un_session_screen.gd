@@ -5,16 +5,16 @@ const UI := preload("res://scripts/ui_theme.gd")
 const ACCENT := Color("8ebfdc")
 const EFFECTS := {
 	"statement": "A political statement. Adoption worsens Council members' relations with the subject; it imposes no sanctions.",
-	"condemn": "A condemnation. Supporting delegations worsen relations with the subject, whose public support also falls. No automatic sanctions.",
+	"condemn": "A condemnation. Backers like the subject less, and so does its own public. No sanctions.",
 	"ceasefire": "Requests a ceasefire. Both parties must consent before peace takes effect; adoption alone does not stop the war.",
 	"peacekeeping": "Proposes civilian peace observers. Both parties must consent; observers monitor rather than fight.",
 	"withdraw": "Demands peace within 120 seconds. Failure to comply can lead to sanctions.",
 	"targeted": "Targeted sanctions reduce the subject's treasury income by 10% for 360 seconds.",
 	"embargo": "An arms embargo reduces the subject's military production by 40% for 360 seconds.",
 	"economic": "Comprehensive sanctions reduce income by 30% for 360 seconds and restrict trade. Food relief is exempt.",
-	"nonproliferation": "Combines an arms embargo for 720 seconds with comprehensive economic sanctions for 360 seconds. Food relief is exempt.",
-	"icc": "Refers the situation for independent ICC investigation and affects relations with ICC parties. This is not a conviction or an arrest warrant.",
-	"force": "Authorises a coalition for 600 seconds. Other nations may join a war against the subject; authorisation does not itself order your troops to attack.",
+	"nonproliferation": "An arms embargo for 720 seconds plus full economic sanctions for 360. Food relief is exempt.",
+	"icc": "Refers the case to the court for investigation. Relations with court members shift. This is not a conviction.",
+	"force": "Authorises a coalition for 600 seconds. Other nations may join a war on the subject; your troops are not ordered to attack.",
 	"lift": "Removes Council sanctions from the subject.",
 }
 var hud: Node

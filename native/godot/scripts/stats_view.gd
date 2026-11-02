@@ -12,7 +12,7 @@ static func overview(hud: Node, S: RefCounted) -> void:
 	var w: Node = hud.world
 	var card: VBoxContainer = hud._card(UI.GOLD)
 	card.add_child(hud._text("Nations at a glance", 17, UI.CREAM, true))
-	var note: Label = hud._text("GDP, growth, inflation, unemployment, debt, credit rating and fragility (higher is worse), as the statistics offices publish them. Others' figures arrive a release late.", 12, UI.MUTED)
+	var note: Label = hud._text("GDP, growth, inflation, unemployment, debt, credit rating and fragility (higher is worse). Others' figures arrive a release late.", 12, UI.MUTED)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.custom_minimum_size.x = 440
 	card.add_child(note)

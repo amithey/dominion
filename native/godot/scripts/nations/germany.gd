@@ -19,7 +19,7 @@ const DATA := {
 		"weaknesses": ["Imported energy: oil and gas output -70%", "Low readiness after years of low spending: -4% combat damage", "An ageing population: the population grows a third slower"]},
 	"ai": {"compute": 2, "models": 3, "autonomy": 2, "cyber": 3, "lean": "in", "signs": ["laws"], "ceiling": 4,
 		"why": "Strong research and a new national supercomputer, but few frontier laboratories."},
-	"ai_evidence": ["Deployment and infrastructure", "Public AI infrastructure and defence start-ups supply the armed forces; orders for AI-enabled systems do not prove fielding at scale.", ["assurance", "administration", "industry", "diplomacy"]],
+	"ai_evidence": ["Deployment and infrastructure", "Public AI infrastructure and defence start-ups supply the forces. Orders do not prove large-scale use.", ["assurance", "administration", "industry", "diplomacy"]],
 	"ai_use": {
 		"targeting": ["developing", "NATO bought a commercial targeting decision-support system for allied headquarters."],
 		"counterDrone": ["developing", "National counter-drone programmes after drones overflew bases and ports."],

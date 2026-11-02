@@ -390,7 +390,7 @@ func _space(d: Node) -> void:
 		if s.can_jam(0):
 			var why_j: String = s.jam_blocked(id)
 			var jb: Button = hud._button(row, "Jam ($%d)" % int(s.JAM_COST), func(): return s.jam(0, target), why_j == "")
-			jb.tooltip_text = (why_j + "\n" if why_j != "" else "") + "Ground jammers silence its satellites for 2 minutes: nothing is destroyed and it is no act of war, but it is resented (-8)."
+			jb.tooltip_text = (why_j + "\n" if why_j != "" else "") + "Jam its satellites for 2 minutes. Nothing is destroyed and it is no act of war, but it is resented (-8)."
 		var b: Button = hud._button(row, "Anti-satellite missile ($%d)" % int(s.ASAT_COST), func(): return s.fire_asat(0, target), why == "", "bad")
 		b.tooltip_text = (why + "
 " if why != "" else "") + "85% to destroy one satellite. An act of war; every other nation thinks less of you, and the debris threatens everyone's satellites, yours too."
@@ -1352,7 +1352,7 @@ func _un_draft(u) -> void:
 		var why: String = u.draft_blocked(m, target)
 		var mm: String = m
 		var b: Button = hud._button(row, preload("res://scripts/un_plain.gd").name_of(m), func(): return u.draft(mm, target), why == "", "bad" if u.MEASURES[m].severity >= 3 else "")
-		b.set_meta("action_help", "Submit this Council draft for consultations and a vote. If adopted: " + str(preload("res://scripts/un_session_screen.gd").EFFECTS.get(m, "")))
+		b.set_meta("action_help", "Put this draft to a vote. If adopted: " + str(preload("res://scripts/un_session_screen.gd").EFFECTS.get(m, "")))
 		b.custom_minimum_size.x = 220
 		var guess: Dictionary = u.tally({"kind": "player", "measure": m, "target": target, "other": -1, "by": 0, "cause": cause, "votes": {}, "lobby": {}}, true)
 		var note: Label = hud._text(why if why != "" else "Likely: %d yes · %d no · %d abstain%s" % [guess.yes, guess.no, guess.abstain, "  (vetoed)" if not guess.vetoes.is_empty() else ("  (passes)" if guess.passes else "")], 12, hud.UI.BAD if why != "" else hud.UI.MUTED)

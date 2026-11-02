@@ -186,7 +186,7 @@ static func _doctrine(sp, a) -> void:
 	if dc != null and dc.nuclear(0):
 		var ew: VBoxContainer = hud._card(hud.UI.BAD if a.early_warning.has(0) else Color(0, 0, 0, 0))
 		ew.add_child(hud._text("Automated early warning: %s" % ("on" if a.early_warning.has(0) else "off"), 15, hud.UI.CREAM, true))
-		sp._wrap(ew, "An AI watches for missile launches. Rivals think twice about striking first (a third less likely) and interception is +5%. But it can raise a false alarm.", 12)
+		sp._wrap(ew, "An AI watches for missile launches. Rivals are a third less likely to strike first and interception is +5%. It can raise a false alarm.", 12)
 		if a.early_warning.has(0):
 			sp._wrap(ew, "False alarms: about %d%% a minute while tension is 20 or more." % roundi(a.alarm_rate(0) * 100.0), 12, hud.UI.BAD)
 		var why_e: String = a.warning_blocked()
@@ -232,11 +232,11 @@ static func _operations(sp, a) -> void:
 	var t: int = a.cyber_target
 	var acts := [
 		["AI cyber campaign (%d each)" % int(a.CYBER_COST), a.cyber_blocked(t), func(): return a.launch_cyber(t),
-			"AI agents break in without an officer: factories and construction stop for a minute or more. Reaches %d nation%s. It may be traced back to you." % [a.cyber_reach(0), "" if a.cyber_reach(0) == 1 else "s"]],
+			"AI agents break in unseen: factories and construction stop for a minute or more. Reaches %d nation%s. It may be traced to you." % [a.cyber_reach(0), "" if a.cyber_reach(0) == 1 else "s"]],
 		["Synthetic influence (%d)" % int(a.INFLUENCE_COST), a.influence_blocked(t), func(): return a.influence(0, t),
-			"Deepfake videos and voices turn its people against the war: its war support -8, stability -10. If traced to you: a scandal at home and abroad."],
+			"Deepfakes turn its people against the war: war support -8, stability -10. If traced to you: a scandal."],
 		["Steal model weights ($%d)" % int(a.THEFT_COST.money), a.theft_blocked(t), func(): return a.steal(0, t),
-			"Your agents and AI chase a stronger rival's model: your AI level closes half the gap. If exposed: relations -30, and chip suppliers restrict exports."],
+			"Your agents chase a stronger rival's model: your AI level closes half the gap. If exposed: relations -30 and chip exports restricted."],
 	]
 	if a.can_control(0):
 		acts.append(["Chip export controls", a.control_blocked(t), func(): return a.impose_controls(0, t),
@@ -249,7 +249,7 @@ static func _operations(sp, a) -> void:
 		var why: String = act[1]
 		var b: Button = hud._button(row, act[0], act[2], why == "", "bad")
 		b.custom_minimum_size.x = 230
-		b.tooltip_text = (why + "\n" if why != "" else "") + act[3]
+		b.tooltip_text = act[3]
 		var note: Label = hud._text(why if why != "" else "Ready.", 11, hud.UI.MUTED if why != "" else hud.UI.GOOD)
 		note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -271,7 +271,7 @@ static func _agi(sp, a) -> void:
 	if stage >= 3:
 		sp._wrap(card, "General intelligence achieved.", 13, hud.UI.GOOD)
 	elif not a.researched(0, "agiProject"):
-		sp._wrap(card, "Research The AGI Project first (after Frontier Models). Three stages, paid in compute: %s; %s; %s" % [a.AGI_GAINS[0], a.AGI_GAINS[1].to_lower(), a.AGI_GAINS[2].to_lower()], 12)
+		sp._wrap(card, "Research The AGI Project first. Three stages, paid in compute: %s; %s; %s" % [a.AGI_GAINS[0], a.AGI_GAINS[1].to_lower(), a.AGI_GAINS[2].to_lower()], 12)
 	elif a.level(0) < 4:
 		sp._wrap(card, "Your AI must reach level 4 first.", 12)
 	else:

@@ -69,7 +69,7 @@ const RELOAD := {"samSite": 2.2, "samLauncher": 3.0, "abmLauncher": 6.0, "laserA
 const UNITS := {
 	"fpvTeam": {"name": "FPV Drone Team", "hp": 80, "dmg": 55, "range": 30, "cooldown": 5.0, "aggro": 34, "speed": 8.5,
 		"fly": false, "naval": false, "cost": {"money": 150, "silicon": 6}, "trainTime": 10, "pop": 1,
-		"desc": "Two operators and a crate of first-person-view kamikaze drones: cheap, and deadly to vehicles out to 30 m. Jammers bring most of them down."},
+		"desc": "Two operators with first-person-view kamikaze drones: cheap, deadly to vehicles within 30 m. Jammers stop most."},
 	"atgmTeam": {"name": "ATGM Team", "hp": 90, "dmg": 70, "range": 28, "cooldown": 5.0, "aggro": 30, "speed": 8.0,
 		"fly": false, "naval": false, "cost": {"money": 220, "iron": 15, "silicon": 8}, "trainTime": 12, "pop": 1,
 		"desc": "Javelin-style fire-and-forget missiles that dive onto a tank's thin roof. Active protection can stop them."},

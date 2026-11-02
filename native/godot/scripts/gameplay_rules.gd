@@ -7,7 +7,7 @@ static func apply(w: Node) -> void:
 		w.unit_defs[entry[0]].range = entry[1]
 		w.unit_defs[entry[0]].aggro = entry[1] * 1.15
 	w.damage_profile.samSite = {"air": 2.0}
-	w.building_defs.bunker.desc = "Hardened strongpoint: machine guns engage enemy ground forces within 2 hexes; ground fire does it a third of the damage, and friendly troops beside it take half."
+	w.building_defs.bunker.desc = "Strongpoint: machine guns hit enemy ground forces within 2 hexes. It takes a third of ground fire; friendly troops beside it take half."
 	w.building_defs.samSite.desc = "Automated anti-air battery: shoots down enemy aircraft in flight (not ground forces, not aircraft parked on a base)."
 	# A fishing platform: trawlers work the fish school under it, inside your own waters (no worker needed).
 	var platform: Dictionary = w.building_defs.offshoreRig.duplicate(true)
@@ -16,7 +16,7 @@ static func apply(w: Node) -> void:
 	platform.cost = {"money": 260, "iron": 20}
 	platform.buildTime = 16
 	platform.depositTypes = ["fish"]
-	platform.desc = "Built at sea on a fish school inside your waters: trawlers work it for +4 food a second. Marine crews build it; no worker needed. (A Fishing Wharf on the coast also works shoals within 60 m.)"
+	platform.desc = "Built on a fish school in your waters: trawlers work it for +4 food a second. Marine crews build it. (A coastal Fishing Wharf also works shoals within 60 m.)"
 	platform["water"] = true
 	w.building_defs["fishingPlatform"] = platform
 	w.building_defs.offshoreRig["water"] = true

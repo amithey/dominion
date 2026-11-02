@@ -526,7 +526,7 @@ func _rival_pickers(parent: Control = null) -> void:
 		var level := OptionButton.new()
 		level.name = "RivalLevel%d" % slot
 		level.custom_minimum_size = Vector2(112, 40)
-		level.tooltip_text = "How hard %s plays: its income, how fast it builds and trains, the size of its army and waves, and how readily it goes to war." % factions.NAMES[chosen[slot]]
+		level.tooltip_text = "How hard %s plays: income, build and train speed, army size, and how readily it goes to war." % factions.NAMES[chosen[slot]]
 		var current: String = world.MatchSetup.level_of(setup_options, slot, setup_difficulty)
 		for item in [["Easy", "easy"], ["Normal", "normal"], ["Hard", "hard"]]:
 			level.add_item(item[0])
@@ -1324,7 +1324,7 @@ func _entry(text: String, detail: String, icon_name: String, action: Callable, p
 # A larger choice with a line of explanation: difficulties, saved games.
 func _option_card(title: String, detail: String, action: Callable) -> void:
 	var b := Button.new()
-	b.set_meta("action_help", "Load the saved campaign '%s'. This replaces the current campaign; save your current progress first." % title)
+	b.set_meta("action_help", "Load '%s'. This replaces your current campaign: save first." % title)
 	b.custom_minimum_size = Vector2(380, 72)
 	b.focus_mode = Control.FOCUS_ALL
 	b.tooltip_text = detail

@@ -155,7 +155,7 @@ static func _prefix(prefix: String) -> String:
 		"Consult ":"$250 and 40 intelligence: better relations. It does not force a deal.",
 		"Buy ":"Buy this amount now, if you have storage.",
 		"Sell ":"Sell this amount now for money.",
-		"Jam (":"Pay to disrupt this satellite for a while.",
+		"Jam (":"Pay to jam this satellite.",
 		"Anti-satellite missile":"Pay to destroy this satellite. The world will react.",
 		"Nuclear detonation in orbit":"Blow up a nuclear weapon in orbit. It hits satellites and raises the nuclear alert.",
 		"Start retraining":"Pay to retrain workers who lost jobs to AI.",

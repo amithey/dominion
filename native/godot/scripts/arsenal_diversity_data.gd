@@ -148,7 +148,7 @@ static func names(key: String) -> Dictionary:
 static func evidence(key: String, id: String) -> String:
 	var row: Array = roster(key).get(id, [])
 	# (the game's text names no years: the dates stay in the source links and the research doc)
-	return "" if row.is_empty() else "%s. %s. Public evidence; no stock or readiness count implied." % [row[2], undated(str(source(row[1])[0]))]
+	return "" if row.is_empty() else "%s. %s." % [row[2], undated(str(source(row[1])[0]))]
 
 ## "Rostec: first Malva delivery (2023; supplier statement)" -> "... (supplier statement)".
 static func undated(text: String) -> String:

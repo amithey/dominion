@@ -144,7 +144,7 @@ static func apply(w: Node) -> void:
 			"manpads": w.unit_defs[key].desc = "Infantry air defence: shoulder-launched or tripod-mounted according to the national system."
 			"laserAD": w.unit_defs[key].desc = "Directed-energy air defence. Most national systems are programmes or trials; Iron Beam has initial operational delivery. Interception values are game balance."
 			"abmLauncher": w.unit_defs[key].desc = "National missile defence system. Real systems defend different altitude and threat classes; displayed interception chances are game balance."
-			"submarine": w.unit_defs[key].desc = "Attack submarine; propulsion differs by nation. Nuclear propulsion does not give it nuclear weapons."
+			"submarine": w.unit_defs[key].desc = "Attack submarine. Nuclear propulsion does not mean nuclear weapons."
 			"corvette": w.unit_defs[key].desc = "Surface combatant: corvette or frigate according to the national class."
 			"destroyer": w.unit_defs[key].desc = "Large missile combatant: destroyer, or missile frigate for nations using that class."
 	var id: String = Factions.identity(w, 0)
@@ -181,8 +181,8 @@ static func apply(w: Node) -> void:
 		if w.unit_defs.has(key): w.unit_defs[key].name = str(own.unit_names[key])
 	for key in own.get("missile_names", {}):
 		if w.map.missiles.types.has(key): w.map.missiles.types[key].name = str(own.missile_names[key])
-	w.map.buildingDefs.missileSilo.desc = "Produces national conventional missile families. Ground-launched weapons fire here; aircraft and ship weapons need their proper launch platforms."
-	w.map.buildingDefs.strategicComplex.desc = "Assembles and stores authorised national nuclear payloads. The payload determines whether an aircraft, strategic submarine or ground launcher is required."
+	w.map.buildingDefs.missileSilo.desc = "Builds national conventional missiles. Ground-launched weapons fire from here; aircraft and ships need their own platforms."
+	w.map.buildingDefs.strategicComplex.desc = "Assembles and stores national nuclear payloads. The payload decides the launcher: aircraft, submarine or ground."
 
 static func id_for_player(w: Node) -> String:
 	return Factions.identity(w, 0)

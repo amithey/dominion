@@ -175,7 +175,7 @@ func _signature() -> String:
 	return "%d:%s:%s:%d:%s" % [nation, str(s.get("phase", "")), str(s.get("channel", "")), s.get("results", []).size(), str(s.get("counter", {}).get("key", ""))]
 
 func _channels() -> void:
-	var notes := {"mediator": "A discreet intermediary. Especially useful for peace talks; two agenda items. No arms licensing or defence alliance.", "phone": "Fast, direct contact. Two agenda items; useful for practical agreements and crises.", "visit": "The host must agree. Travel takes longer with distance. Four agenda items, strongest influence; alliances can be negotiated."}
+	var notes := {"mediator": "A discreet intermediary. Especially useful for peace talks; two agenda items. No arms licensing or defence alliance.", "phone": "Fast, direct contact. Two agenda items; useful for practical agreements and crises.", "visit": "The host must agree. Travel takes longer with distance. Four agenda items; alliances can be negotiated."}
 	for key in service.CHANNELS:
 		var c: Dictionary = service.CHANNELS[key]
 		var button := _button(content, "%s  ·  $%d" % [c.name, c.fee], func(): _run(service.begin.bind(nation, key)), service.start_reason(nation, key))

@@ -831,7 +831,7 @@ func _build_selection() -> void:
 		var button := Button.new()
 		button.text = action
 		button.toggle_mode = not action in ["Repair", "Buy land", "Demolish"]
-		button.tooltip_text = {"Attack-move":"Move to a destination and engage suitable targets along the way. Ctrl + right click.","Bombard":"Fire at a ground position or infrastructure. Alt + right click. Requires a suitable weapon.","Repair":"Repair damaged vehicles or completed buildings for $0.25 per HP. Pauses in combat.","Buy land":"Buy unclaimed land next to your own for this settlement: $1000 a hex, up to 4 hexes per settlement.","Demolish":"Take this building down: half of its cost comes back (85% while it is still a building site). Click twice to confirm. Not for the capital or a town."}[action]
+		button.tooltip_text = {"Attack-move":"Move to a destination and engage suitable targets along the way. Ctrl + right click.","Bombard":"Fire at a ground position or infrastructure. Alt + right click. Requires a suitable weapon.","Repair":"Repair damaged vehicles or completed buildings for $0.25 per HP. Pauses in combat.","Buy land":"Buy free land next to this settlement: $1000 a hex, up to 4 hexes.","Demolish":"Take this building down: half of its cost comes back (85% while it is still a building site). Click twice to confirm. Not for the capital or a town."}[action]
 		_commands[action] = button
 		button.add_theme_font_size_override("font_size",12)
 		button.custom_minimum_size = Vector2(0,30)
@@ -1595,7 +1595,7 @@ func _update_selection() -> void:
 		var def: Dictionary = world.unit_defs.get(main, {})
 		var Brief := preload("res://scripts/brief.gd")
 		_sel_info.text = Brief.text(Brief.unit(world, main)) if units.size() == 1 else ""
-		_sel_info.tooltip_text = "%s\nRight-click: move / attack, Ctrl + right-click: attack-move (F1: all controls)" % str(def.get("desc", ""))
+		_sel_info.tooltip_text = "%s\nRight-click: move or attack. Ctrl + right-click: attack-move. F1: controls." % str(def.get("desc", ""))
 		if units.all(func(u): return u.key == "worker"):
 			_sel_info.text = "B opens the build list. Right-click a site to construct it; Shift + right-click queues more."
 		elif not own_units.any(func(u): return u.dmg > 0):

@@ -165,7 +165,7 @@ const DESCS := {
 	"abmLauncher": "Ballistic missile defence interceptors: 86% against a ballistic missile, 30% against a hypersonic one, 55% against an ICBM, out to 230 m.",
 	"loiterer": "A loitering munition: circles over the front, then dives into its target and explodes. One use. Jammers bring most of them down.",
 	"stealthFighter": "Fifth-generation stealth fighter: air defence and enemy fighters only see it at 40% of their range.",
-	"seaDrone": "An unmanned explosive boat: fast and low, it rams a warship or a harbour and blows up. One use. Jammers stop most of them.",
+	"seaDrone": "Unmanned explosive boat: fast and low, it rams a warship or harbour and blows up. One use. Jammers stop most.",
 	"hpmVehicle": "High-power microwave: every 6 s one pulse destroys every enemy drone within 45 m (Shaheds, loitering munitions, sea drones).",
 	"orca": "Extra-large uncrewed submarine: cheap and quiet, it torpedoes ships, and enemies find it only at half their range.",
 	"sixthGen": "The next generation: the stealthiest fighter (seen at a fifth of the range), and it takes off with two loyal wingman drones.",

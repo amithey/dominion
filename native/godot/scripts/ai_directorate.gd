@@ -80,8 +80,8 @@ const DOCTRINES := ["in", "on", "out"]
 const DOCTRINE_NAMES := {"in": "Human in the loop", "on": "Human on the loop", "out": "Human out of the loop"}
 const DOCTRINE_DESC := {
 	"in": "A human approves every strike. No autonomy bonus and no incidents.",
-	"on": "Machines act; a human watches and may stop them. Drones a third harder to jam and stronger with each AI level. Rare incidents.",
-	"out": "No human once a weapon is launched. Drones almost impossible to jam, every unit a little deadlier. Frequent incidents: your own units struck, or civilians.",
+	"on": "Machines act; a human may stop them. Drones a third harder to jam, stronger with each AI level. Rare incidents.",
+	"out": "No human once a weapon is launched. Drones almost unjammable, every unit a little deadlier. Frequent incidents: your own units or civilians hit.",
 }
 ## Incidents a minute at war at full military compute, before the models' quality.
 const INCIDENT_RATE := {"in": 0.0, "on": 0.03, "out": 0.14}
@@ -181,11 +181,11 @@ static func apply(world: Node) -> void:
 	defs.aiDataCenter = {"name": "AI Data Center", "cat": "economy", "size": 7, "hp": 900, "cost": {"money": 1800, "iron": 60, "silicon": 120},
 		"buildTime": 40, "trains": [], "provides": {}, "onDeposit": false, "depositTypes": null, "unique": false, "unbuildable": false,
 		"buildRadius": 0, "settlement": null, "coastal": false, "reqDiscovery": "machineLearning",
-		"desc": "1 compute a second for your AI, a quarter more beside a Power Plant or Reactor. Burns 0.12 silicon and $1.5 a second. Split its compute in Defence, AI tab. Requires Machine Learning."}
+		"desc": "+1 compute a second, a quarter more beside a Power Plant or Reactor. Burns 0.12 silicon and $1.5 a second. Needs Machine Learning."}
 	defs.fusionCell = {"name": "Targeting Fusion Cell", "cat": "military", "size": 6, "hp": 800, "cost": {"money": 1600, "iron": 40, "silicon": 80},
 		"buildTime": 35, "trains": [], "provides": {}, "onDeposit": false, "depositTypes": null, "unique": true, "unbuildable": false,
 		"buildRadius": 0, "settlement": null, "coastal": false, "reqDiscovery": "militaryAI",
-		"desc": "Every target your units see goes to every gun: artillery hits harder and closer, missiles stray less. Out of the loop, it sometimes marks a civilian building. Requires Military AI. One per nation."}
+		"desc": "Every target your units see goes to every gun: artillery hits harder, missiles stray less. Out of the loop, it may mark a civilian building. Needs Military AI. One per nation."}
 	var discoveries: Dictionary = world.map.research.discoveries
 	for key in DISCOVERIES:
 		discoveries[key] = DISCOVERIES[key].duplicate(true)

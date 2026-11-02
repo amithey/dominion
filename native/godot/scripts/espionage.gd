@@ -94,14 +94,14 @@ func ops() -> Dictionary:
 			"counterSweep": {"name":"Counter-intelligence review", "cost":240, "base":0.90, "desc":"Audit domestic security; raise interception for 3 minutes. An assigned agent cannot work abroad."},
 			"withdrawNetwork": {"name":"Stand down network", "cost":100, "base":0.95, "desc":"Reduce foreign exposure by 35, sacrificing 10 network strength. Not an instant reset."},
 			"influence": {"name":"Influence campaign", "cost":400, "base":0.60, "desc":"Reduce institutional stability temporarily. Can provoke a rally around the government and a diplomatic scandal."},
-			"shipping": {"name":"Sabotage shipping lanes", "cost":350, "base":0.55, "desc":"Mine a harbour approach or wreck a freighter: the nation loses a cargo at sea (its money and the goods), and the shortage lifts that commodity's price on the world market."},
+			"shipping": {"name":"Sabotage shipping lanes", "cost":350, "base":0.55, "desc":"Mine a harbour or sink a freighter: the nation loses a cargo at sea and that commodity's world price rises."},
 		})
 		if RegimeChange.us(world):
 			_catalog[RegimeChange.KEY] = RegimeChange.OP.duplicate(true)
 		for key in _catalog:
 			_catalog[key].minNetwork = PROGRAMS[key][2]
 		_catalog.assassinate.cost = 1400
-		_catalog.assassinate.desc = "Rare leadership strike: long preparation, fresh dossier and strong access. Succession limits disruption; exposure risks war and international condemnation."
+		_catalog.assassinate.desc = "Rare leadership strike: long preparation, a fresh dossier and strong access. Exposure risks war and condemnation."
 		_catalog.proxyCell.desc = "Create a local partner for up to 5 minutes. Costs $3/s upkeep, reduces rival income up to 20%; autonomy can cause blowback."
 		_catalog.armRebels.desc = "Requires an existing proxy. Temporary unrest reduces income; increases the partner's autonomy and exposure."
 		_catalog.falseFlag.desc = "A diplomatic provocation damages relations between rivals. It cannot automatically make them declare war."
