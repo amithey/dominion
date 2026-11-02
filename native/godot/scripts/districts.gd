@@ -13,7 +13,7 @@ const STYLE := {
 	"hq": 0, "villageCenter": 0, "cityCenter": 0, "market": 0, "intelAgency": 0,
 	"school": 0, "library": 0, "university": 0, "hospital": 0, "cityHall": 0, "tvStation": 0, "policeStation": 0,
 	"courthouse": 0, "bank": 0, "techPark": 0,
-	"chipFab": 2, "aiDataCenter": 2, "nuclearReactor": 2, "solarFarm": 2,
+	"chipFab": 2, "aiDataCenter": 2, "fusionCell": 4, "nuclearReactor": 2, "solarFarm": 2,
 	"cottage": 1, "housing": 1, "residential": 1, "workerHouse": 1, "apartments": 1, "luxuryVillas": 1,
 	"warehouse": 2, "foodDepot": 2, "tankFactory": 2, "powerPlant": 2, "oilRefinery": 2,
 	"farm": 3,
@@ -39,10 +39,10 @@ const MODEL_CAP := {0: 15.0, 1: 11.5, 2: 12.0, 3: 8.0, 4: 8.5}
 var model_seed := 0.0
 ## Buildings the kit makes as whole-hex compositions: key -> recipe.
 const RECIPES := {"extractor": "extractor", "mountainMine": "extractor", "oilRefinery": "refinery",
-	"chipFab": "chip_fab", "aiDataCenter": "data_centre", "missileSilo": "missile_silo", "nuclearReactor": "nuclear", "solarFarm": "solar", "fishingWharf": "wharf",
+	"chipFab": "chip_fab", "aiDataCenter": "data_centre", "fusionCell": "fusion_cell", "missileSilo": "missile_silo", "nuclearReactor": "nuclear", "solarFarm": "solar", "fishingWharf": "wharf",
 	"bunker": "bunker", "samSite": "sam_site", "park": "park", "stadium": "stadium"}
 ## Keys whose kit building is a complete composition (no yard props or landmarks added).
-const COMPLETE := ["extractor", "mountainMine", "oilRefinery", "chipFab", "aiDataCenter", "nuclearReactor", "solarFarm", "shipyard",
+const COMPLETE := ["extractor", "mountainMine", "oilRefinery", "chipFab", "aiDataCenter", "fusionCell", "nuclearReactor", "solarFarm", "shipyard",
 	"port", "fishingWharf", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "foodDepot", "powerPlant"]
 var harbour_turn := 0.0   # a harbour faces the water (set in build)
 var world: Node
