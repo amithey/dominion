@@ -1656,6 +1656,164 @@ func fusion_cell(rng: RandomNumberGenerator) -> void:
 		dome(PLASTER, t + Vector3(0, 1.3, 0), 1.1, 1.1, Color("3f6e3c"), 10, 4)
 	xf = origin
 
+## A missile lying on its cradle along +x from `a`: a pale body with a dark band, a red nose and three tail fins.
+func missile_lying(a: Vector3, length: float, r: float) -> void:
+	var ink := Color("1d252a")
+	pipe(METAL, a, a + Vector3(length, 0, 0), r, Color(1.5, 1.5, 1.52), 14)
+	pipe(TRIM, a + Vector3(length * 0.55, 0, 0), a + Vector3(length * 0.55 + 0.35, 0, 0), r * 1.02, ink, 14)
+	pipe(TRIM, a + Vector3(length * 0.3, 0, 0), a + Vector3(length * 0.3 + 0.15, 0, 0), r * 1.02, Color("c0392b"), 14)
+	var saved := xf
+	xf = xf * Transform3D(Basis(Vector3.BACK, -PI * 0.5), a + Vector3(length, 0, 0))
+	cylinder(TRIM, Vector3.ZERO, r, r * 3.2, Color("5d6468"), 14, 0.03)
+	xf = saved
+	for k in range(3):
+		var ang := TAU * k / 3.0
+		box(TRIM, a + Vector3(0.05, sin(ang) * r - 0.02, cos(ang) * r - 0.02), a + Vector3(0.7, sin(ang) * (r + 0.28) + 0.02, cos(ang) * (r + 0.28) + 0.02), Color("5d6468"))
+
+## An earth-covered magazine: a concrete barrel vault with a planted earth cover, a concrete headwall with a blast
+## door, a hazard stripe and a number plate, vents and a drain, facing +z. `c` is the middle of its front.
+func magazine(c: Vector3, hw: float, hl: float, number: int) -> void:
+	var haz := Color("e0b020")
+	var ink := Color("1d252a")
+	var bright := Color(2.3, 2.3, 2.4)
+	var h0 := 1.2
+	var rise := hw * 0.85
+	box(CONCRETE, c + Vector3(-hw - 0.1, 0.0, -hl * 2.0), c + Vector3(hw + 0.1, h0, 0.0), Color(1.25, 1.25, 1.25))
+	for s in range(10):
+		var a0 := -PI * 0.5 + PI * s / 10.0
+		var a1 := -PI * 0.5 + PI * (s + 1) / 10.0
+		var x0 := hw * sin(a0)
+		var x1 := hw * sin(a1)
+		var y0 := h0 + rise * cos(a0)
+		var y1 := h0 + rise * cos(a1)
+		var e0 := (hw + 0.45) * sin(a0)
+		var e1 := (hw + 0.45) * sin(a1)
+		var ey0 := h0 + (rise + 0.45) * cos(a0)
+		var ey1 := h0 + (rise + 0.45) * cos(a1)
+		var z1 := c.z
+		var z0 := c.z - hl * 2.0
+		quad(CONCRETE, c + Vector3(x0, y0, 0), c + Vector3(x1, y1, 0), c + Vector3(x1, y1, z0 - c.z), c + Vector3(x0, y0, z0 - c.z), Color(1.25, 1.25, 1.25))
+		quad(PLASTER, c + Vector3(e0, ey0, -0.25), c + Vector3(e1, ey1, -0.25), c + Vector3(e1, ey1, z0 - c.z), c + Vector3(e0, ey0, z0 - c.z), Color("4a7a42") if s % 2 == 0 else Color("42703c"))
+	# the headwall: a concrete face with the arch cut out and a recessed steel door
+	box(CONCRETE, c + Vector3(-hw - 0.45, 0.0, -0.25), c + Vector3(-hw + 0.5, h0 + rise * 0.6, 0.12), Color(1.35, 1.35, 1.35))
+	box(CONCRETE, c + Vector3(hw - 0.5, 0.0, -0.25), c + Vector3(hw + 0.45, h0 + rise * 0.6, 0.12), Color(1.35, 1.35, 1.35))
+	box(CONCRETE, c + Vector3(-hw - 0.45, h0 + rise * 0.6, -0.25), c + Vector3(hw + 0.45, h0 + rise + 0.2, 0.12), Color(1.35, 1.35, 1.35))
+	box(TRIM, c + Vector3(-hw + 0.55, 0.0, 0.0), c + Vector3(hw - 0.55, h0 + rise * 0.6, 0.06), ink)
+	box(PANEL, c + Vector3(-hw + 0.7, 0.0, 0.06), c + Vector3(hw - 0.7, h0 + rise * 0.55, 0.16), Color(1.4, 1.45, 1.4))
+	for k in range(6):
+		box(TRIM, c + Vector3(-hw + 0.8 + k * ((hw - 0.8) * 2.0 / 6.0), 0.1, 0.17), c + Vector3(-hw + 0.8 + k * ((hw - 0.8) * 2.0 / 6.0) + 0.16, h0 + rise * 0.5, 0.18), haz if k % 2 == 0 else ink)
+	box(STEEL, c + Vector3(-0.04, 0.2, 0.18), c + Vector3(0.04, h0 + rise * 0.45, 0.22), bright)
+	box(TRIM, c + Vector3(-0.35, h0 + rise * 0.72, 0.1), c + Vector3(0.35, h0 + rise * 0.72 + 0.4, 0.14), Color(1.6, 1.6, 1.5))
+	for k in range(number):
+		box(TRIM, c + Vector3(-0.25 + k * 0.2, h0 + rise * 0.72 + 0.08, 0.14), c + Vector3(-0.17 + k * 0.2, h0 + rise * 0.72 + 0.32, 0.16), ink)
+	box(GLOWW, c + Vector3(-0.15, h0 + rise * 0.55 + 0.1, 0.0), c + Vector3(0.15, h0 + rise * 0.55 + 0.2, 0.1), Color(1.0, 0.88, 0.65))
+	for k in range(2):   # vents on the crown
+		pipe(METAL, c + Vector3(-0.8 + k * 1.6, h0 + rise + 0.25, -hl * 1.1), c + Vector3(-0.8 + k * 1.6, h0 + rise + 0.8, -hl * 1.1), 0.12, Color("8a949a"), 8)
+		cylinder(TRIM, c + Vector3(-0.8 + k * 1.6, h0 + rise + 0.8, -hl * 1.1), 0.2, 0.06, ink, 8)
+	box(CONCRETE, c + Vector3(-hw + 0.3, 0.0, 0.1), c + Vector3(hw - 0.3, 0.12, 1.3), Color(1.3, 1.3, 1.3))   # the doorstep
+
+## An ammunition depot: three earth-covered magazines in a row, a loading apron with a flatbed and a forklift, a
+## gantry over pallets of crates, an open shed with three missiles on cradles, a guard tower, gate and fenced yard.
+func ammo_depot(rng: RandomNumberGenerator) -> void:
+	var haz := Color("e0b020")
+	var ink := Color("1d252a")
+	var light := Color("dfe4e6")
+	var bright := Color(2.3, 2.3, 2.4)
+	var pale := Color(1.5, 1.5, 1.52)
+	var olive := Color(0.62, 0.7, 0.55)
+	var warm := Color(1.0, 0.88, 0.65)
+	var origin := xf
+	var s0 := xf
+	xf = xf * Transform3D(Basis(Vector3.UP, PI / 6.0), Vector3.ZERO)
+	cylinder(CONCRETE, Vector3(0, -1.6, 0), 12.3, 1.7, Color(1.0, 1.0, 1.0), 6)
+	xf = s0
+	box(GRAVEL, Vector3(-9.2, 0.1, -9.0), Vector3(9.2, 0.14, -2.2), Color(1.1, 1.1, 1.1))
+	box(ASPHALT, Vector3(-9.2, 0.1, -2.2), Vector3(9.2, 0.15, 1.2), Color(0.85, 0.85, 0.88))
+	box(PAVERS, Vector3(-9.0, 0.1, 1.2), Vector3(9.0, 0.13, 7.2), Color(1.2, 1.2, 1.2))
+	box(TRIM, Vector3(-9.2, 0.16, -0.5), Vector3(9.2, 0.17, -0.4), Color(0.95, 0.85, 0.3))
+	# ---- the three magazines, set back at z -2.4 with their doors facing the apron
+	for i in range(3):
+		magazine(Vector3(-6.4 + i * 6.4, 0.1, -2.4), 2.3, 2.8, i + 1)
+	# ---- the loading apron: a flatbed with a missile crate, a forklift with a pallet, crates and drums
+	box(TRIM, Vector3(-8.2, 0.55, -1.6), Vector3(-4.6, 0.7, -0.5), Color("3a464c"))
+	box(TRIM, Vector3(-4.6, 0.4, -1.6), Vector3(-3.5, 1.9, -0.5), Color("4c5a38"))
+	box(GLASS, Vector3(-3.5, 1.2, -1.5), Vector3(-3.46, 1.8, -0.6), Color("1c2d36"))
+	for wx in [-7.4, -6.4, -3.9]:
+		for wz in [-1.7, -0.4]:
+			box(TRIM, Vector3(wx - 0.3, 0.1, wz - 0.1), Vector3(wx + 0.3, 0.7, wz + 0.1), Color("1a1c1e"))
+	box(WOOD, Vector3(-8.0, 0.7, -1.5), Vector3(-5.2, 1.45, -0.6), Color("6a5a3a"))
+	for k in range(5):
+		box(TRIM, Vector3(-7.9 + k * 0.6, 0.7, -0.62), Vector3(-7.84 + k * 0.6, 1.45, -0.58), Color("3a301e"))
+	box(TRIM, Vector3(0.6, 0.35, 0.2), Vector3(2.0, 0.55, 1.1), Color("c9972a"))
+	box(TRIM, Vector3(2.0, 0.15, 0.25), Vector3(2.9, 0.22, 0.2 + 0.85), Color("8a949a"))
+	bar(STEEL, Vector3(2.9, 0.2, 0.25), Vector3(2.9, 1.9, 0.25), 0.04, bright)
+	bar(STEEL, Vector3(2.9, 0.2, 1.05), Vector3(2.9, 1.9, 1.05), 0.04, bright)
+	box(WOOD, Vector3(3.0, 0.2, 0.2), Vector3(3.9, 0.35, 1.1), Color("8a6a3a"))
+	box(PANEL, Vector3(3.1, 0.35, 0.3), Vector3(3.8, 1.0, 1.0), olive * 1.7)
+	pipe(METAL, Vector3(0.9, 0.55, 0.65), Vector3(0.9, 1.7, 0.65), 0.05, Color("3a464c"))
+	for k in range(3):
+		var cx := -2.4 + k * 1.1
+		cylinder(METAL, Vector3(cx, 0.15, 3.0), 0.32, 0.9, Color("5d6a4a") * 1.5, 10)
+		cylinder(TRIM, Vector3(cx, 1.05, 3.0), 0.33, 0.05, ink, 10)
+	for st in range(3):
+		var sx := -8.2 + st * 1.6
+		for layer in range(2 - st % 2):
+			box(WOOD, Vector3(sx, 0.13 + layer * 0.7, 3.0), Vector3(sx + 1.3, 0.13 + layer * 0.7 + 0.65, 4.0), Color("7a6a42") if (st + layer) % 2 == 0 else olive * 1.5)
+			box(TRIM, Vector3(sx + 0.05, 0.13 + layer * 0.7 + 0.3, 4.0), Vector3(sx + 1.25, 0.13 + layer * 0.7 + 0.36, 4.02), haz)
+	# ---- a gantry crane over a pallet row on the left of the yard
+	for gz in [4.6, 6.2]:
+		bar(TRIM, Vector3(-8.8, 0.13, gz), Vector3(-8.8, 4.2, gz), 0.12, Color("c8902a"))
+		bar(TRIM, Vector3(-4.4, 0.13, gz), Vector3(-4.4, 4.2, gz), 0.12, Color("c8902a"))
+		bar(TRIM, Vector3(-8.8, 4.2, gz), Vector3(-4.4, 4.2, gz), 0.12, Color("c8902a"))
+	bar(TRIM, Vector3(-8.8, 4.2, 4.6), Vector3(-8.8, 4.2, 6.2), 0.1, Color("c8902a"))
+	bar(TRIM, Vector3(-4.4, 4.2, 4.6), Vector3(-4.4, 4.2, 6.2), 0.1, Color("c8902a"))
+	box(TRIM, Vector3(-7.0, 3.9, 5.1), Vector3(-6.2, 4.4, 5.7), ink)
+	bar(TRIM, Vector3(-6.6, 3.9, 5.4), Vector3(-6.6, 2.0, 5.4), 0.02, ink)
+	box(TRIM, Vector3(-6.9, 1.8, 5.2), Vector3(-6.3, 2.0, 5.6), ink)
+	for k in range(3):
+		box(WOOD, Vector3(-8.2 + k * 1.4, 0.13, 5.1), Vector3(-7.2 + k * 1.4, 1.0, 5.7), Color("7a6a42") if k != 1 else olive * 1.5)
+	# ---- the open missile shed on the right: a flat roof on posts, three missiles on cradles under it
+	var shed := xf
+	box(PANEL, Vector3(2.8, 3.4, 4.0), Vector3(8.8, 3.6, 7.0), pale)
+	box(TRIM, Vector3(2.7, 3.6, 3.9), Vector3(8.9, 3.7, 7.1), Color("56646a"))
+	for px in [3.0, 5.8, 8.6]:
+		for pz in [4.2, 6.8]:
+			bar(STEEL, Vector3(px, 0.13, pz), Vector3(px, 3.4, pz), 0.07, bright)
+	for k in range(3):
+		var mz := 4.7 + k * 0.9
+		for cx in [3.8, 7.6]:
+			box(TRIM, Vector3(cx - 0.1, 0.13, mz - 0.4), Vector3(cx + 0.1, 0.55, mz + 0.4), Color("5a5d60"))
+		missile_lying(Vector3(3.2, 0.85, mz), 5.2 - (0.4 if k == 1 else 0.0), 0.28)
+	box(GLOWW, Vector3(3.2, 3.35, 5.0), Vector3(8.4, 3.4, 5.1), warm)
+	box(GLOWW, Vector3(3.2, 3.35, 6.5), Vector3(8.4, 3.4, 6.6), warm)
+	# ---- a guard tower with a roofed cab, the gate with a barrier, floodlights, warning plates and the perimeter fence
+	lattice(Vector3(8.4, 0.1, -3.4), 5.0, 1.3, 1.0, Color(1.4, 1.4, 1.45))
+	box(PANEL, Vector3(7.7, 5.0, -4.1), Vector3(9.1, 6.3, -2.7), pale)
+	box(GLASS, Vector3(7.75, 5.3, -2.72), Vector3(9.05, 6.1, -2.68), Color("2f5568"))
+	box(TRIM, Vector3(7.5, 6.3, -4.3), Vector3(9.3, 6.45, -2.5), Color("56646a"))
+	box(GLOWW, Vector3(8.2, 6.15, -2.5), Vector3(8.6, 6.25, -2.4), warm)
+	box(PANEL, Vector3(-0.8, 0.13, 7.6), Vector3(0.8, 2.4, 8.8), pale)
+	box(TRIM, Vector3(-0.9, 2.4, 7.5), Vector3(0.9, 2.52, 8.9), Color("56646a"))
+	box(GLASS, Vector3(-0.7, 1.1, 8.8), Vector3(0.7, 2.2, 8.84), Color("2f5568"))
+	bar(TRIM, Vector3(0.9, 1.0, 8.2), Vector3(2.8, 1.0, 8.2), 0.05, bright)
+	for k in range(4):
+		box(TRIM, Vector3(0.9 + k * 0.48, 0.95, 8.15), Vector3(1.15 + k * 0.48, 1.05, 8.25), Color("c83a2e") if k % 2 == 0 else Color("f0eee4"))
+	for p in [Vector3(-9.0, 0, 6.0), Vector3(9.0, 0, 5.4), Vector3(-9.0, 0, -4.8), Vector3(9.0, 0, -7.0), Vector3(-3.2, 0, -8.6), Vector3(3.2, 0, -8.6)]:
+		bar(STEEL, p + Vector3(0, 0.1, 0), p + Vector3(0, 5.4, 0), 0.05, bright)
+		box(GLOWW, p + Vector3(-0.4, 5.35, -0.15), p + Vector3(0.4, 5.45, 0.15), warm)
+	for i in range(22):
+		var a := TAU * i / 22.0
+		var fp := Vector3(cos(a) * 11.0, 0.1, sin(a) * 11.0)
+		if absf(fp.x) < 10.0 and absf(fp.z) < 11.5 - absf(fp.x) * 0.577:
+			if fp.z > 6.0 and absf(fp.x) < 3.4:
+				continue
+			bar(STEEL, fp, fp + Vector3(0, 1.8, 0), 0.03, bright)
+			bar(STEEL, fp + Vector3(0, 1.8, 0), fp + Vector3(fp.x * 0.03, 2.1, fp.z * 0.03), 0.02, bright)
+			if i % 4 == 0:
+				box(TRIM, fp + Vector3(-0.3, 1.0, -0.02), fp + Vector3(0.3, 1.5, 0.02), haz)
+	banner(-9.0, 4.4, 7.4, 1.8)
+	xf = origin
+
 ## A nuclear power station: a hyperbolic cooling tower, the containment dome
 ## and the turbine hall.
 func nuclear(rng: RandomNumberGenerator) -> void:
