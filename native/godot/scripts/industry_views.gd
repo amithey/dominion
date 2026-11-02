@@ -8,6 +8,7 @@ const KEYS := ["extractor:oil", "extractor:iron", "extractor:gold", "extractor:s
 static func capture(w: Node) -> void:
 	for i in range(30):
 		await w.get_tree().process_frame
+	w.edge_scroll = false   # a mouse resting at the window edge would scroll the picture away
 	var sea = w.water_near(w.start, 320)
 	# --only=aiDataCenter --yaw=0.0 --dist=22 narrow the pictures to one building from one side.
 	var only := ""
@@ -47,7 +48,7 @@ static func capture(w: Node) -> void:
 		w.cam_dist_target = dist
 		w.cam_pitch = pitch if pitch > 0.0 else (0.95 if only == "" else 0.6)
 		w.cam_yaw = yaw
-		for f in range(25):
+		for f in range(40):
 			await w.get_tree().process_frame
 		await RenderingServer.frame_post_draw
 		w.get_viewport().get_texture().get_image().save_png("res://build/industry-%s.png" % entry.replace(":", "-"))

@@ -2522,114 +2522,200 @@ func machine_gun(c: Vector3, yaw: float) -> void:
 	box(TRIM, Vector3(0.16, 0.4, -0.2), Vector3(0.4, 0.58, 0.1), Color("4c5a38"))
 	xf = saved
 
-## A sandbag emplacement: a horseshoe of staggered bags three courses high, open towards +z, with a machine gun inside.
+## A sandbag emplacement: a horseshoe of staggered bags five courses high, open towards +z, with a machine gun inside
+## and a spare ammunition box. `c` is the floor level.
 func sandbag_nest(c: Vector3, yaw: float) -> void:
 	var saved := xf
 	xf = xf * Transform3D(Basis(Vector3.UP, yaw), c)
-	for course in range(3):
-		var y := course * 0.32
-		var off := 0.0 if course % 2 == 0 else 0.3
-		for k in range(7):   # the back
-			box(PLASTER, Vector3(-1.3 + k * 0.4 + off - 0.2, y, -1.0), Vector3(-1.3 + k * 0.4 + off + 0.2, y + 0.3, -0.62), Color("b0a27a") if (k + course) % 2 == 0 else Color("a2946c"))
-		for k in range(3):   # the two sides
+	var tones := [Color("b6a87e"), Color("a89a72"), Color("9c8e68"), Color("b0a078")]
+	for course in range(5):
+		var y := course * 0.2
+		var off := 0.0 if course % 2 == 0 else 0.18
+		for k in range(9):   # the back
+			var x := -1.4 + k * 0.36 + off
+			box(PLASTER, Vector3(x - 0.17, y, -1.05), Vector3(x + 0.17, y + 0.19, -0.7), tones[(k + course) % 4])
+			box(PLASTER, Vector3(x - 0.13, y + 0.19, -1.0), Vector3(x + 0.13, y + 0.22, -0.75), tones[(k + course + 1) % 4] * 1.08)
+		for k in range(4):   # the two sides
 			for sx in [-1.0, 1.0]:
-				box(PLASTER, Vector3(sx * 1.3 - 0.19, y, -0.6 + k * 0.4 + off * 0.6), Vector3(sx * 1.3 + 0.19, y + 0.3, -0.2 + k * 0.4 + off * 0.6), Color("a89a72") if (k + course) % 2 == 0 else Color("9a8c66"))
+				var z := -0.7 + k * 0.36 + off * 0.5
+				box(PLASTER, Vector3(sx * 1.4 - 0.17, y, z), Vector3(sx * 1.4 + 0.17, y + 0.19, z + 0.34), tones[(k + course) % 4])
 	xf = saved
-	machine_gun(c + Vector3(0, 0.0, 0.0), yaw)
+	machine_gun(c, yaw)
+	box(PANEL, c + Vector3(0.5, 0.0, -0.3), c + Vector3(0.9, 0.25, 0.1), Color(0.62, 0.68, 0.55) * 1.6)
 
-## A row of concrete dragon's teeth: pyramids that stop tanks, in a staggered double row from `a` to `b` along x at z.
+## A row of concrete dragon's teeth: truncated pyramids in a staggered double row along x at z, with an apron slab.
 func dragons_teeth(x0: float, x1: float, z: float) -> void:
+	box(CONCRETE, Vector3(x0 - 0.3, 0.1, z - 0.5), Vector3(x1 + 0.3, 0.2, z + 1.4), Color(0.9, 0.9, 0.92))
 	var n := int((x1 - x0) / 0.9)
 	for k in range(n):
 		var x := x0 + k * 0.9
 		for row in range(2):
 			var zz := z + row * 0.8
 			var xx := x + row * 0.45
-			cylinder(CONCRETE, Vector3(xx, 0.1, zz), 0.42, 0.75, Color(1.2, 1.2, 1.2), 4, 0.06)
+			cylinder(CONCRETE, Vector3(xx, 0.2, zz), 0.46, 0.5, Color(1.05, 1.05, 1.08), 4, 0.3)
+			cylinder(CONCRETE, Vector3(xx, 0.7, zz), 0.3, 0.45, Color(1.1, 1.1, 1.12), 4, 0.05)
 
-## Coils of razor wire along x from x0 to x1 at z: a rolled spiral on stakes.
+## Concertina wire along x from x0 to x1 at z: two rows of rings set on edge with a third on top, held by star pickets,
+## and a barbed strand along the pickets.
 func wire_coil(x0: float, x1: float, z: float) -> void:
 	var steel := Color(3.0, 3.0, 3.1)
-	var n := int((x1 - x0) / 0.5)
+	var n := int((x1 - x0) / 0.3)
 	for k in range(n):
-		var x := x0 + k * 0.5
-		cylinder(PANEL, Vector3(x, 0.55 + 0.3 * sin(k * 1.3), z), 0.22, 0.03, steel, 10)
-		cylinder(PANEL, Vector3(x + 0.25, 0.7 + 0.3 * cos(k * 1.3), z), 0.22, 0.03, steel, 10)
-	for k in range(0, n, 4):
-		bar(STEEL, Vector3(x0 + k * 0.5, 0.1, z), Vector3(x0 + k * 0.5, 1.1, z), 0.025, steel)
+		var x := x0 + k * 0.3
+		for tier in range(3):
+			var cy := 0.36 if tier < 2 else 0.8
+			var cz := z + (-0.28 if tier == 0 else (0.28 if tier == 1 else 0.0))
+			for j in range(8):
+				var a0 := TAU * j / 8.0
+				var a1 := TAU * (j + 1) / 8.0
+				bar(PANEL, Vector3(x, cy + sin(a0) * 0.34, cz + cos(a0) * 0.34), Vector3(x + 0.12, cy + sin(a1) * 0.34, cz + cos(a1) * 0.34), 0.012, steel)
+	for k in range(0, n, 5):
+		var x := x0 + k * 0.3
+		bar(STEEL, Vector3(x, 0.1, z - 0.55), Vector3(x, 1.4, z - 0.55), 0.03, Color(2.3, 2.3, 2.4))
+		bar(STEEL, Vector3(x, 0.1, z + 0.55), Vector3(x, 1.4, z + 0.55), 0.03, Color(2.3, 2.3, 2.4))
+	for y in [0.5, 0.95, 1.35]:
+		bar(PANEL, Vector3(x0, y, z - 0.55), Vector3(x1, y, z - 0.55), 0.012, steel)
 
-## A bunker: a low reinforced-concrete pillbox with a stepped roof, three firing ports with gun barrels, an armoured
-## cupola, an ammunition door, a sunken trench with duckboards, sandbag machine-gun nests, dragon's teeth, razor wire,
-## camouflage netting and a floodlit perimeter.
+## A bunker: a hardened pillbox with splayed firing ports behind a stepped glacis, camouflage-painted walls, buttresses,
+## a slab roof with an earth cap, an armoured cupola, a searchlight and a radio mast; in front a revetted trench with
+## sandbag machine-gun nests on the banks, dragon's teeth and concertina wire; behind, camouflage netting over stores.
 func bunker(rng: RandomNumberGenerator) -> void:
 	var haz := Color("e0b020")
 	var ink := Color("1d252a")
 	var bright := Color(2.3, 2.3, 2.4)
 	var warm := Color(1.0, 0.88, 0.65)
+	var olive := Color(0.62, 0.68, 0.55)
 	var origin := xf
 	var s0 := xf
 	xf = xf * Transform3D(Basis(Vector3.UP, PI / 6.0), Vector3.ZERO)
 	cylinder(CONCRETE, Vector3(0, -1.6, 0), 12.3, 1.7, Color(1.0, 1.0, 1.0), 6)
 	xf = s0
-	box(GRAVEL, Vector3(-9.2, 0.1, -9.0), Vector3(9.2, 0.14, 8.0), Color(1.0, 1.0, 1.0))
-	box(ASPHALT, Vector3(-1.0, 0.1, 3.0), Vector3(1.0, 0.15, 9.4), Color(0.8, 0.8, 0.84))
-	# ---- the main pillbox: a stepped block, 8 x 4.8 and 3.2 high, rough-cast with a heavy slab roof and an earth cap
-	var bz := -2.2
-	box(CONCRETE, Vector3(-4.4, 0.1, bz - 2.6), Vector3(4.4, 3.2, bz + 2.6), Color(1.15, 1.15, 1.15))
-	box(CONCRETE, Vector3(-4.7, 3.2, bz - 2.9), Vector3(4.7, 3.7, bz + 2.9), Color(1.3, 1.3, 1.3))
-	box(PLASTER, Vector3(-0.2, 3.7, bz - 2.0), Vector3(3.6, 3.95, bz + 2.0), Color("4a7a42"))
-	dome(PLASTER, Vector3(1.2, 3.7, bz - 0.2), 2.4, 0.8, Color("42703c"), 14, 3)
-	for k in range(5):   # form-work lines on the walls
-		box(TRIM, Vector3(-4.4, 0.7 + k * 0.5, bz + 2.6), Vector3(4.4, 0.74 + k * 0.5, bz + 2.63), Color("a0a8aa"))
-	# three firing ports in the front with gun barrels, and slits on the sides
+	box(GRAVEL, Vector3(-9.2, 0.1, -9.0), Vector3(9.2, 0.14, 8.0), Color(0.95, 0.95, 0.95))
+	box(ASPHALT, Vector3(-1.0, 0.1, 4.4), Vector3(1.0, 0.15, 9.4), Color(0.8, 0.8, 0.84))   # the approach road
+	for k in range(6):
+		box(TRIM, Vector3(-0.04, 0.16, 4.8 + k * 0.8), Vector3(0.04, 0.17, 5.2 + k * 0.8), Color(1.7, 1.7, 1.6))
+	# ---- the pillbox: 8.8 x 5.2, 3.2 high, a stepped slab roof, buttresses at the corners and a splayed front
+	var bz := -2.4
 	var fz := bz + 2.6
+	box(CONCRETE, Vector3(-4.4, 0.1, bz - 2.6), Vector3(4.4, 3.2, fz), Color(1.1, 1.1, 1.12))
+	box(CONCRETE, Vector3(-4.65, 3.2, bz - 2.85), Vector3(4.65, 3.6, fz + 0.25), Color(1.3, 1.3, 1.32))
+	box(CONCRETE, Vector3(-4.4, 3.6, bz - 2.6), Vector3(4.4, 3.8, fz), Color(1.2, 1.2, 1.22))
+	box(PLASTER, Vector3(-0.4, 3.8, bz - 2.4), Vector3(4.0, 4.05, bz + 2.0), Color("4a7a42"))
+	dome(PLASTER, Vector3(1.8, 3.8, bz - 0.2), 2.3, 0.7, Color("42703c"), 14, 3)
+	for sx in [-1.0, 1.0]:   # corner buttresses, stepped
+		for sz in [-1.0, 1.0]:
+			var cx: float = sx * 4.4
+			var cz: float = fz if sz > 0 else bz - 2.6
+			box(CONCRETE, Vector3(cx - 0.45, 0.1, cz - 0.45), Vector3(cx + 0.45, 2.2, cz + 0.45), Color(1.25, 1.25, 1.27))
+			box(CONCRETE, Vector3(cx - 0.3, 2.2, cz - 0.3), Vector3(cx + 0.3, 3.2, cz + 0.3), Color(1.25, 1.25, 1.27))
+	for k in range(6):   # form-work lines and tie-bolt holes
+		box(TRIM, Vector3(-4.4, 0.7 + k * 0.45, fz), Vector3(4.4, 0.74 + k * 0.45, fz + 0.03), Color("9aa2a4"))
+	for ix in range(8):
+		for iy in range(2):
+			box(TRIM, Vector3(-3.7 + ix * 1.05, 0.95 + iy * 1.2, fz), Vector3(-3.6 + ix * 1.05, 1.05 + iy * 1.2, fz + 0.04), ink)
+	# camouflage paint: irregular olive and sand patches on the front, side and roof
+	var paints := [Color("5a6a42"), Color("7a7048"), Color("4a5a38"), Color("8a7e54")]
+	for i in range(22):   # in two bands, below the ports and between the roof and the ports, never over an opening
+		var low := i % 2 == 0
+		var px := rng.randf_range(-4.2, 3.4)
+		var py := rng.randf_range(0.45, 1.0) if low else rng.randf_range(2.75, 3.0)
+		var pw := rng.randf_range(0.5, 1.4)
+		var ph := rng.randf_range(0.25, 0.5)
+		box(PLASTER, Vector3(px, py, fz), Vector3(px + pw, py + ph, fz + 0.03), paints[i % 4])
+	for i in range(12):
+		var pz := rng.randf_range(bz - 2.2, bz + 2.0)
+		var py := rng.randf_range(0.5, 2.9)
+		box(PLASTER, Vector3(-4.4 - 0.03, py, pz), Vector3(-4.4, py + rng.randf_range(0.3, 0.8), pz + rng.randf_range(0.5, 1.4)), paints[i % 4])
+	# the stepped glacis in front of the ports: sloping concrete that deflects fire
+	for st in range(4):
+		box(CONCRETE, Vector3(-4.2, 0.1, fz + 0.2 + st * 0.35), Vector3(4.2, 0.7 - st * 0.15, fz + 0.55 + st * 0.35), Color(1.15, 1.15, 1.17))
+	# three firing ports: a splayed (angled) frame in dark steel with the gun barrel and a mantlet
 	for x in [-2.6, 0.0, 2.6]:
-		box(TRIM, Vector3(x - 0.75, 1.6, fz - 0.05), Vector3(x + 0.75, 2.35, fz + 0.04), ink)
-		box(CONCRETE, Vector3(x - 0.9, 2.35, fz), Vector3(x + 0.9, 2.5, fz + 0.3), Color(1.4, 1.4, 1.4))
-		pipe(METAL, Vector3(x, 1.98, fz - 0.4), Vector3(x, 1.98, fz + 0.9), 0.07, Color("30383c"), 8)
-		cylinder(TRIM, Vector3(x, 1.98, fz + 0.9), 0.1, 0.12, ink, 8)
-	for sx in [-1.0, 1.0]:
-		box(TRIM, Vector3(sx * 4.4 - 0.03, 1.8, bz - 0.6), Vector3(sx * 4.4 + 0.03, 2.2, bz + 0.6), ink)
-	# the armoured cupola on the roof with a viewing slit, a periscope and an antenna
-	cylinder(STEEL, Vector3(-1.6, 4.0, bz - 0.6), 0.9, 0.7, Color(1.5, 1.5, 1.55), 12, 0.7)
-	dome(STEEL, Vector3(-1.6, 4.7, bz - 0.6), 0.7, 0.3, Color(1.5, 1.5, 1.55), 12, 3)
-	box(TRIM, Vector3(-2.1, 4.15, bz - 0.0), Vector3(-1.1, 4.4, bz + 0.3), ink)
-	bar(STEEL, Vector3(-1.0, 4.0, bz - 1.1), Vector3(-1.0, 6.2, bz - 1.1), 0.025, bright)
-	pipe(METAL, Vector3(1.6, 3.7, bz - 1.0), Vector3(1.6, 4.5, bz - 1.0), 0.09, Color("30383c"), 8)   # an exhaust vent
-	cylinder(TRIM, Vector3(1.6, 4.5, bz - 1.0), 0.14, 0.06, ink, 8)
-	# the ammunition door on the left side with a stripe and a lamp
-	box(TRIM, Vector3(-4.45, 0.1, bz + 0.6), Vector3(-4.38, 2.0, bz + 1.8), ink)
-	box(PANEL, Vector3(-4.52, 0.1, bz + 0.7), Vector3(-4.45, 1.9, bz + 1.7), Color(1.45, 1.45, 1.5))
-	box(TRIM, Vector3(-4.55, 1.0, bz + 0.7), Vector3(-4.5, 1.15, bz + 1.7), haz)
-	box(GLOWW, Vector3(-4.6, 2.2, bz + 1.0), Vector3(-4.5, 2.3, bz + 1.4), warm)
-	# ---- the trench: a sunken zig-zag in front of the pillbox with duckboards and a ladder
-	box(CONCRETE, Vector3(-6.4, -0.3, 1.2), Vector3(6.4, 0.12, 2.6), Color(0.9, 0.9, 0.92))
-	box(TRIM, Vector3(-6.2, -0.28, 1.4), Vector3(6.2, -0.24, 2.4), Color("6a5a3a"))
-	for sx in [-1.0, 1.0]:
-		box(CONCRETE, Vector3(sx * 6.4 - 0.1, -0.3, 1.2), Vector3(sx * 6.4 + 0.1, 0.5, 2.6), Color(1.2, 1.2, 1.2))
-	for k in range(9):   # revetment planks along the front lip
-		box(WOOD, Vector3(-6.0 + k * 1.5, 0.12, 2.6), Vector3(-5.2 + k * 1.5, 0.55, 2.7), Color("6a5038"))
-	for k in range(5):
-		bar(STEEL, Vector3(5.6, -0.2 + k * 0.2, 1.3), Vector3(5.6, -0.2 + k * 0.2, 2.5), 0.02, bright)
-	# ---- sandbag machine-gun nests at the trench ends and in the middle, dragon's teeth and wire beyond
-	sandbag_nest(Vector3(-5.4, 0.12, 3.6), 0.2)
-	sandbag_nest(Vector3(5.4, 0.12, 3.6), -0.2)
-	sandbag_nest(Vector3(0.0, 0.12, 4.6), 0.0)
-	dragons_teeth(-8.8, -2.0, 6.0)
-	dragons_teeth(2.0, 8.8, 6.0)
-	wire_coil(-8.8, -1.4, 7.4)
-	wire_coil(1.4, 8.8, 7.4)
-	# ---- camouflage netting over the rear, an ammunition store and a field generator
-	for p in [Vector3(-3.6, 0, -7.4), Vector3(3.6, 0, -7.4), Vector3(-3.6, 0, -5.8), Vector3(3.6, 0, -5.8)]:
-		bar(STEEL, p + Vector3(0, 0.1, 0), p + Vector3(0, 2.6, 0), 0.05, bright)
-	quad(PLASTER, Vector3(-4.2, 2.6, -5.4), Vector3(4.2, 2.6, -5.4), Vector3(4.2, 2.6, -8.0), Vector3(-4.2, 2.6, -8.0), Color("4f5c38"))
-	quad(PLASTER, Vector3(-4.2, 2.4, -5.0), Vector3(4.2, 2.4, -5.0), Vector3(4.2, 2.6, -5.4), Vector3(-4.2, 2.6, -5.4), Color("5c6a42"))
+		box(TRIM, Vector3(x - 0.95, 1.6, fz - 0.05), Vector3(x + 0.95, 2.5, fz + 0.05), ink)
+		for t in range(3):   # splayed jambs: each step wider outwards
+			var w := 0.75 + t * 0.14
+			box(CONCRETE, Vector3(x - w - 0.14, 1.55 - t * 0.0, fz + 0.04 + t * 0.07), Vector3(x - w, 2.5, fz + 0.11 + t * 0.07), Color(1.35, 1.35, 1.37))
+			box(CONCRETE, Vector3(x + w, 1.55, fz + 0.04 + t * 0.07), Vector3(x + w + 0.14, 2.5, fz + 0.11 + t * 0.07), Color(1.35, 1.35, 1.37))
+		box(CONCRETE, Vector3(x - 1.1, 2.5, fz), Vector3(x + 1.1, 2.68, fz + 0.4), Color(1.45, 1.45, 1.47))
+		box(CONCRETE, Vector3(x - 1.1, 1.4, fz), Vector3(x + 1.1, 1.58, fz + 0.3), Color(1.35, 1.35, 1.37))
+		box(PANEL, Vector3(x - 0.4, 1.8, fz - 0.4), Vector3(x + 0.4, 2.2, fz + 0.1), Color(1.0, 1.05, 1.0) * 1.4)   # the mantlet
+		pipe(METAL, Vector3(x, 2.0, fz - 0.4), Vector3(x, 2.0, fz + 1.0), 0.075, Color("30383c"), 8)
+		cylinder(TRIM, Vector3(x, 2.0, fz + 1.0), 0.11, 0.14, ink, 8)
+		cylinder(TRIM, Vector3(x, 2.0, fz + 1.1), 0.05, 0.05, ink, 8)
+	for sx in [-1.0, 1.0]:   # side loopholes
+		box(TRIM, Vector3(sx * 4.4 - 0.04, 1.8, bz - 0.4), Vector3(sx * 4.4 + 0.04, 2.2, bz + 0.5), ink)
+	# the armoured cupola on the roof with viewing slits, a rotating hatch, a periscope, a searchlight and masts
+	var cu := Vector3(-2.8, 3.8, bz - 0.4)
+	cylinder(STEEL, cu, 1.0, 0.7, Color(1.6, 1.6, 1.65), 14, 0.8)
+	dome(STEEL, cu + Vector3(0, 0.7, 0), 0.8, 0.3, Color(1.6, 1.6, 1.65), 14, 3)
 	for k in range(4):
-		box(WOOD, Vector3(-3.0 + k * 1.5, 0.1, -7.5), Vector3(-1.9 + k * 1.5, 0.8 + (k % 2) * 0.5, -6.5), Color("7a6a42") if k % 2 == 0 else Color(0.62, 0.68, 0.55) * 1.5)
-	box(PANEL, Vector3(5.2, 0.1, -6.6), Vector3(7.4, 1.5, -5.4), Color(1.5, 1.5, 1.52))
-	box(TRIM, Vector3(5.1, 1.5, -6.7), Vector3(7.5, 1.6, -5.3), Color("56646a"))
-	box(GLOWG, Vector3(7.4, 1.0, -6.1), Vector3(7.46, 1.2, -5.9), Color(0.6, 1.0, 0.55))
-	# ---- floodlights, a flag, and a ring of posts with warning plates
+		var ang := TAU * k / 4.0 + PI / 4.0
+		box(TRIM, cu + Vector3(cos(ang) * 0.82 - 0.2, 0.3, sin(ang) * 0.82 - 0.2), cu + Vector3(cos(ang) * 0.82 + 0.2, 0.42, sin(ang) * 0.82 + 0.2), ink)
+	pipe(METAL, cu + Vector3(0.3, 0.95, 0.2), cu + Vector3(0.3, 1.5, 0.2), 0.06, Color("30383c"), 8)
+	box(TRIM, cu + Vector3(0.2, 1.5, 0.1), cu + Vector3(0.4, 1.62, 0.3), ink)
+	pipe(METAL, Vector3(0.7, 3.8, bz + 1.6), Vector3(0.7, 4.3, bz + 1.6), 0.07, Color(1.5, 1.5, 1.55), 8)   # a searchlight on a post
+	box(TRIM, Vector3(0.45, 4.3, bz + 1.4), Vector3(0.95, 4.65, bz + 1.95), Color("3a464c"))
+	box(GLOWW, Vector3(0.5, 4.35, bz + 1.95), Vector3(0.9, 4.6, bz + 2.0), warm)
+	bar(STEEL, Vector3(-1.4, 3.8, bz - 1.9), Vector3(-1.4, 7.0, bz - 1.9), 0.03, bright)               # radio mast with guys
+	for y in [5.0, 6.0]:
+		bar(STEEL, Vector3(-1.9, y, bz - 1.9), Vector3(-0.9, y, bz - 1.9), 0.02, bright)
+	box(GLOWR, Vector3(-1.45, 7.0, bz - 1.95), Vector3(-1.35, 7.15, bz - 1.85), Color(1.0, 0.4, 0.35))
+	pipe(METAL, Vector3(1.4, 3.8, bz - 1.4), Vector3(1.4, 4.8, bz - 1.4), 0.1, Color("30383c"), 8)       # vent stacks
+	cylinder(TRIM, Vector3(1.4, 4.8, bz - 1.4), 0.15, 0.06, ink, 8)
+	pipe(METAL, Vector3(2.4, 3.8, bz - 1.4), Vector3(2.4, 4.4, bz - 1.4), 0.1, Color("30383c"), 8)
+	# the rear entrance: a stair down to a steel door with a canopy, a lamp and a stripe
+	box(CONCRETE, Vector3(-1.4, 0.1, bz - 3.5), Vector3(1.4, 2.4, bz - 2.6), Color(1.25, 1.25, 1.27))
+	box(TRIM, Vector3(-0.6, 0.1, bz - 3.55), Vector3(0.6, 2.0, bz - 3.5), ink)
+	box(PANEL, Vector3(-0.5, 0.1, bz - 3.6), Vector3(0.5, 1.95, bz - 3.55), Color(1.45, 1.45, 1.5))
+	box(TRIM, Vector3(-0.5, 1.0, bz - 3.62), Vector3(0.5, 1.12, bz - 3.57), haz)
+	box(CONCRETE, Vector3(-1.5, 2.4, bz - 3.9), Vector3(1.5, 2.55, bz - 2.6), Color(1.4, 1.4, 1.42))
+	box(GLOWW, Vector3(-0.2, 2.35, bz - 3.8), Vector3(0.2, 2.42, bz - 3.5), warm)
+	# the ammunition door on the left side
+	box(TRIM, Vector3(-4.46, 0.1, bz + 0.7), Vector3(-4.4, 2.0, bz + 1.9), ink)
+	box(PANEL, Vector3(-4.53, 0.1, bz + 0.8), Vector3(-4.46, 1.9, bz + 1.8), Color(1.45, 1.45, 1.5))
+	box(TRIM, Vector3(-4.56, 1.0, bz + 0.8), Vector3(-4.5, 1.12, bz + 1.8), haz)
+	box(GLOWW, Vector3(-4.62, 2.2, bz + 1.1), Vector3(-4.5, 2.3, bz + 1.5), warm)
+	# ---- the trench: a revetted channel with a plank floor between two earth banks capped with sandbags, a gap for the road
+	var tz0 := 3.0
+	var tz1 := 4.2
+	box(PLANK, Vector3(-6.8, 0.12, tz0), Vector3(6.8, 0.16, tz1), Color(0.95, 0.85, 0.7))
+	for bank in range(2):
+		var z0 := tz0 - 0.9 if bank == 0 else tz1
+		var z1 := z0 + 0.9
+		for seg in range(2):
+			var xa := -6.9 if seg == 0 else 0.9
+			var xb := -0.9 if seg == 0 else 6.9
+			box(PLASTER, Vector3(xa, 0.1, z0), Vector3(xb, 0.8, z1), Color("6a5a3a"))
+			for k in range(int((xb - xa) / 0.4)):
+				var x := xa + 0.2 + k * 0.4
+				box(PLASTER, Vector3(x - 0.18, 0.8, z0 + 0.12), Vector3(x + 0.18, 1.0, z1 - 0.12), [Color("b6a87e"), Color("a89a72"), Color("9c8e68")][k % 3])
+	for sz in [tz0 - 0.02, tz1 + 0.02]:   # plank revetment along both inner faces
+		for k in range(14):
+			box(WOOD, Vector3(-6.7 + k * 1.0, 0.16, sz - 0.04), Vector3(-5.8 + k * 1.0, 0.8, sz + 0.04), Color("6a5038") if k % 2 == 0 else Color("5a4430"))
+	box(PLANK, Vector3(-0.9, 0.78, tz0 - 0.9), Vector3(0.9, 0.82, tz1 + 0.9), Color(0.95, 0.85, 0.7))    # a plank bridge for the road
+	for k in range(4):   # a ladder up from the trench and a periscope at the left end
+		bar(STEEL, Vector3(5.8, 0.15 + k * 0.2, tz0 + 0.1), Vector3(5.8, 0.15 + k * 0.2, tz0 + 0.5), 0.02, bright)
+	# machine-gun nests on the banks and ammunition on the floor
+	sandbag_nest(Vector3(-5.2, 1.0, tz1 + 0.2), 0.15)
+	sandbag_nest(Vector3(5.2, 1.0, tz1 + 0.2), -0.15)
+	for k in range(3):
+		box(PANEL, Vector3(-3.4 + k * 0.5, 0.16, tz0 + 0.3), Vector3(-3.0 + k * 0.5, 0.45, tz0 + 0.7), olive * 1.6)
+	# ---- dragon's teeth, then concertina wire further out
+	dragons_teeth(-8.8, -2.2, 6.0)
+	dragons_teeth(2.2, 8.8, 6.0)
+	wire_coil(-8.8, -1.6, 8.0)
+	wire_coil(1.6, 8.8, 8.0)
+	# ---- camouflage netting over stores behind the pillbox, and a generator
+	for p in [Vector3(-3.6, 0, -8.4), Vector3(3.6, 0, -8.4), Vector3(-3.6, 0, -6.6), Vector3(3.6, 0, -6.6)]:
+		bar(STEEL, p + Vector3(0, 0.1, 0), p + Vector3(0, 2.6, 0), 0.05, bright)
+	quad(PLASTER, Vector3(-4.2, 2.6, -6.2), Vector3(4.2, 2.6, -6.2), Vector3(4.2, 2.6, -8.8), Vector3(-4.2, 2.6, -8.8), Color("4f5c38"))
+	quad(PLASTER, Vector3(-4.2, 2.3, -5.8), Vector3(4.2, 2.3, -5.8), Vector3(4.2, 2.6, -6.2), Vector3(-4.2, 2.6, -6.2), Color("5c6a42"))
+	for k in range(4):
+		box(WOOD, Vector3(-3.0 + k * 1.5, 0.1, -8.4), Vector3(-1.9 + k * 1.5, 0.8 + (k % 2) * 0.5, -7.3), Color("7a6a42") if k % 2 == 0 else olive * 1.5)
+	box(PANEL, Vector3(5.4, 0.1, -7.4), Vector3(7.6, 1.5, -6.2), Color(1.5, 1.5, 1.52))
+	box(TRIM, Vector3(5.3, 1.5, -7.5), Vector3(7.7, 1.6, -6.1), Color("56646a"))
+	box(GLOWG, Vector3(7.6, 1.0, -6.9), Vector3(7.66, 1.2, -6.7), Color(0.6, 1.0, 0.55))
+	# ---- floodlights, a ring of posts with warning plates
 	for p in [Vector3(-8.0, 0, 5.0), Vector3(8.0, 0, 5.0), Vector3(-8.6, 0, -6.0), Vector3(8.6, 0, -6.0)]:
 		bar(STEEL, p + Vector3(0, 0.1, 0), p + Vector3(0, 5.0, 0), 0.05, bright)
 		box(GLOWW, p + Vector3(-0.4, 4.95, -0.15), p + Vector3(0.4, 5.05, 0.15), warm)
@@ -2642,7 +2728,7 @@ func bunker(rng: RandomNumberGenerator) -> void:
 			bar(STEEL, fp, fp + Vector3(0, 1.7, 0), 0.03, bright)
 			if i % 6 == 0:
 				box(TRIM, fp + Vector3(-0.3, 0.9, -0.02), fp + Vector3(0.3, 1.4, 0.02), haz)
-	banner(-1.0, 6.1, bz - 1.2, 1.6)   # hung from the cupola mast
+	banner(-1.4, 6.6, bz - 2.0, 1.6)   # hung from the mast
 	xf = origin
 
 ## A road-mobile canister launcher at `c` facing +z: a truck on three axles with a cab, a stabiliser frame, and four
