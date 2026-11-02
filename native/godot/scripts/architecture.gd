@@ -1968,6 +1968,152 @@ func strategic_complex(rng: RandomNumberGenerator) -> void:
 	banner(-9.0, 4.4, 7.2, 1.8)
 	xf = origin
 
+## A biohazard sign on a wall facing +z at `c`: a yellow disc with a dark hub and three dark rings round it.
+func biohazard(c: Vector3, r: float) -> void:
+	var haz := Color("e0b020")
+	var ink := Color("1d252a")
+	var saved := xf
+	xf = xf * Transform3D(Basis(Vector3.RIGHT, PI * 0.5), c)
+	cylinder(TRIM, Vector3(0, -0.03, 0), r, 0.03, haz, 24)
+	for k in range(3):
+		var a := TAU * k / 3.0 + PI / 2.0
+		var d := Vector3(cos(a), 0, sin(a)) * r * 0.5
+		cylinder(TRIM, d + Vector3(0, -0.015, 0), r * 0.36, 0.03, ink, 16)
+		cylinder(TRIM, d + Vector3(0, -0.005, 0), r * 0.24, 0.03, haz, 16)
+	cylinder(TRIM, Vector3(0, -0.012, 0), r * 0.14, 0.03, ink, 12)
+	xf = saved
+
+## The special weapons laboratory: a sealed, windowless containment block with a lit observation corridor, an airlock
+## with hazard doors, HEPA filter boxes and exhaust stacks on the roof, effluent decontamination tanks, cold-storage
+## containers, a decontamination trailer, and a double fence with a guarded gate.
+func special_lab(rng: RandomNumberGenerator) -> void:
+	var haz := Color("e0b020")
+	var ink := Color("1d252a")
+	var light := Color("dfe4e6")
+	var bright := Color(2.3, 2.3, 2.4)
+	var pale := Color(1.55, 1.55, 1.58)
+	var warm := Color(1.0, 0.88, 0.65)
+	var cyan := Color(0.75, 0.92, 1.0)
+	var teal := Color("2f6f7e")
+	var origin := xf
+	var s0 := xf
+	xf = xf * Transform3D(Basis(Vector3.UP, PI / 6.0), Vector3.ZERO)
+	cylinder(CONCRETE, Vector3(0, -1.6, 0), 12.3, 1.7, Color(1.0, 1.0, 1.0), 6)
+	xf = s0
+	box(PAVERS, Vector3(-9.2, 0.1, -9.0), Vector3(9.2, 0.13, 7.6), Color(1.25, 1.25, 1.25))
+	box(ASPHALT, Vector3(-1.4, 0.13, 1.5), Vector3(1.4, 0.16, 9.4), Color(0.85, 0.85, 0.88))
+	# ---- the containment block: 10.4 x 5, 4.4 high, pale panels, a teal band, narrow lit slits, a dark parapet
+	var hx := -0.4
+	var hz := -5.6
+	var W := 10.4
+	var D := 5.0
+	var H := 4.4
+	box(CONCRETE, Vector3(hx - W * 0.5 - 0.1, 0.1, hz - D * 0.5 - 0.1), Vector3(hx + W * 0.5 + 0.1, 0.7, hz + D * 0.5 + 0.1), Color(1.25, 1.25, 1.25))
+	box(PANEL, Vector3(hx - W * 0.5, 0.7, hz - D * 0.5), Vector3(hx + W * 0.5, H, hz + D * 0.5), pale)
+	box(TRIM, Vector3(hx - W * 0.5 - 0.04, 2.5, hz - D * 0.5 - 0.04), Vector3(hx + W * 0.5 + 0.04, 2.9, hz + D * 0.5 + 0.04), teal)
+	box(CONCRETE, Vector3(hx - W * 0.5 - 0.15, H, hz - D * 0.5 - 0.15), Vector3(hx + W * 0.5 + 0.15, H + 0.4, hz + D * 0.5 + 0.15), Color(1.4, 1.4, 1.4))
+	box(GRAVEL, Vector3(hx - W * 0.5, H + 0.4, hz - D * 0.5), Vector3(hx + W * 0.5, H + 0.44, hz + D * 0.5), Color(0.9, 0.9, 0.9))
+	var fz := hz + D * 0.5
+	for k in range(8):   # panel joints
+		box(TRIM, Vector3(hx - W * 0.5 + 0.6 + k * 1.3 - 0.03, 0.7, fz), Vector3(hx - W * 0.5 + 0.6 + k * 1.3 + 0.03, H, fz + 0.03), Color("8a949a"))
+	for k in range(6):   # the narrow lit slits high on the front
+		box(GLOW, Vector3(hx - W * 0.5 + 0.7 + k * 1.6, 3.2, fz + 0.02), Vector3(hx - W * 0.5 + 1.8 + k * 1.6, 3.5, fz + 0.07), cyan)
+	# the observation corridor: a glass-walled link along the front-left, lit inside
+	box(CONCRETE, Vector3(-6.4, 0.1, fz), Vector3(-1.2, 0.3, fz + 1.9), Color(1.25, 1.25, 1.25))
+	box(GLASS, Vector3(-6.3, 0.3, fz + 1.8), Vector3(-1.3, 2.4, fz + 1.84), Color("2c4d5c"))
+	box(GLASS, Vector3(-6.3, 0.3, fz), Vector3(-6.26, 2.4, fz + 1.8), Color("2c4d5c"))
+	for k in range(6):
+		bar(STEEL, Vector3(-6.3 + k, 0.3, fz + 1.84), Vector3(-6.3 + k, 2.4, fz + 1.84), 0.04, bright)
+	box(TRIM, Vector3(-6.45, 2.4, fz - 0.05), Vector3(-1.15, 2.55, fz + 2.0), Color("56646a"))
+	box(GLOW, Vector3(-6.0, 2.3, fz + 0.2), Vector3(-1.6, 2.36, fz + 1.7), warm)
+	# the airlock: a small block with a double hazard door, a canopy and signs
+	box(PANEL, Vector3(0.6, 0.1, fz), Vector3(3.8, 3.0, fz + 1.9), pale)
+	box(TRIM, Vector3(0.5, 3.0, fz - 0.05), Vector3(3.9, 3.15, fz + 2.0), teal)
+	box(TRIM, Vector3(1.4, 0.1, fz + 1.9), Vector3(3.0, 2.5, fz + 1.95), ink)
+	box(PANEL, Vector3(1.5, 0.1, fz + 1.95), Vector3(2.15, 2.4, fz + 2.03), Color(1.5, 1.5, 1.55))
+	box(PANEL, Vector3(2.25, 0.1, fz + 1.95), Vector3(2.9, 2.4, fz + 2.03), Color(1.5, 1.5, 1.55))
+	for k in range(4):
+		box(TRIM, Vector3(1.55 + k * 0.33, 0.12, fz + 2.04), Vector3(1.65 + k * 0.33, 2.3, fz + 2.05), haz if k % 2 == 0 else ink)
+	box(GLOWW, Vector3(2.0, 2.6, fz + 1.9), Vector3(2.4, 2.7, fz + 2.1), warm)
+	biohazard(Vector3(2.2, 2.85, fz + 1.92), 0.28)
+	biohazard(Vector3(5.2, 3.3, fz + 0.04), 0.7)
+	# ---- the roof: three HEPA filter boxes with fans, an air handler, two exhaust stacks and a pipe run
+	for k in range(3):
+		box(PANEL, Vector3(-3.6 + k * 2.5, H + 0.44, hz - 1.7), Vector3(-2.0 + k * 2.5, H + 1.7, hz - 0.3), Color(1.5, 1.5, 1.55))
+		box(TRIM, Vector3(-3.65 + k * 2.5, H + 1.7, hz - 1.75), Vector3(-1.95 + k * 2.5, H + 1.8, hz - 0.25), Color("56646a"))
+		fan(Vector3(-2.8 + k * 2.5, H + 1.8, hz - 1.0), 0.5)
+	box(PANEL, Vector3(3.6, H + 0.44, hz - 1.8), Vector3(6.6, H + 2.2, hz + 0.2), Color(1.4, 1.45, 1.5))
+	box(TRIM, Vector3(3.5, H + 2.2, hz - 1.9), Vector3(6.7, H + 2.3, hz + 0.3), Color("56646a"))
+	louvres(3.9, 6.3, H + 0.7, H + 2.0, hz + 0.2, light, ink)
+	for k in range(2):
+		pipe(METAL, Vector3(-4.2 + k * 0.0, H + 0.44, hz + 1.4 - k * 0.4), Vector3(-4.2, H + 2.6, hz + 1.4 - k * 0.4), 0.14, Color("8a949a"), 10)
+		cylinder(TRIM, Vector3(-4.2, H + 2.6, hz + 1.4 - k * 0.4), 0.22, 0.1, ink, 10)
+	pipe(METAL, Vector3(-3.8, H + 0.8, hz + 0.6), Vector3(3.5, H + 0.8, hz + 0.6), 0.12, teal, 10)
+	vent_stack(Vector3(-8.4, 0.1, -7.6), 9.0, 0.55)
+	# ---- effluent decontamination tanks on a bund at the right, piped to the block
+	box(CONCRETE, Vector3(5.2, 0.1, -9.0), Vector3(9.2, 0.55, -3.6), Color(1.3, 1.3, 1.3))
+	box(PAVERS, Vector3(5.4, 0.55, -8.8), Vector3(9.0, 0.58, -3.8), Color(1.1, 1.1, 1.1))
+	for k in range(2):
+		var tz := -7.3 + k * 2.4
+		cylinder(METAL, Vector3(7.2, 0.58, tz), 0.95, 3.0, Color(1.7, 1.7, 1.75), 16)
+		cylinder(TRIM, Vector3(7.2, 3.58, tz), 0.98, 0.06, Color("8a949a"), 16)
+		cylinder(TRIM, Vector3(7.2, 3.64, tz), 0.4, 0.12, ink, 10)
+		bar(STEEL, Vector3(8.2, 0.58, tz), Vector3(8.2, 3.4, tz), 0.03, bright)
+		for y in [1.0, 1.8, 2.6]:
+			bar(STEEL, Vector3(8.2, y, tz), Vector3(7.9, y, tz), 0.02, bright)
+	pipe(METAL, Vector3(5.6, 1.0, -7.3), Vector3(5.6, 1.0, -4.8), 0.1, Color("c83a2e"), 8)
+	pipe(METAL, Vector3(5.6, 1.4, -7.3), Vector3(5.6, 1.4, -4.8), 0.08, teal, 8)
+	box(PANEL, Vector3(5.2, 0.58, -4.5), Vector3(6.4, 1.8, -3.9), Color(1.5, 1.5, 1.55))
+	box(GLOWG, Vector3(6.4, 1.3, -4.3), Vector3(6.46, 1.5, -4.1), Color(0.6, 1.0, 0.55))
+	# ---- cold-storage containers on the left, each with a cooling unit
+	for k in range(2):
+		var cz := -8.4 + k * 1.6 + 0.0
+		box(PANEL, Vector3(-9.0, 0.1, cz), Vector3(-6.2, 2.0, cz + 1.4), Color(1.6, 1.6, 1.62))
+		box(TRIM, Vector3(-9.05, 2.0, cz - 0.05), Vector3(-6.15, 2.1, cz + 1.45), Color("56646a"))
+		box(GLOWG, Vector3(-6.2, 1.4, cz + 0.5), Vector3(-6.14, 1.55, cz + 0.7), Color(0.6, 1.0, 0.55))
+		fan(Vector3(-8.2, 2.1, cz + 0.7), 0.4)
+		fan(Vector3(-7.2, 2.1, cz + 0.7), 0.4)
+		box(TRIM, Vector3(-9.0, 0.1, cz + 0.2), Vector3(-8.96, 1.9, cz + 1.2), ink)
+	# ---- the decontamination trailer near the gate: a white trailer with a shower awning and signs
+	box(TRIM, Vector3(4.4, 0.45, 2.2), Vector3(8.0, 0.65, 3.6), Color("3a464c"))
+	box(PANEL, Vector3(4.5, 0.65, 2.2), Vector3(7.9, 2.5, 3.6), Color(1.6, 1.6, 1.62))
+	box(TRIM, Vector3(4.4, 2.5, 2.1), Vector3(8.0, 2.62, 3.7), Color("56646a"))
+	box(TRIM, Vector3(7.0, 0.65, 3.6), Vector3(7.6, 2.2, 3.66), ink)
+	box(TRIM, Vector3(6.6, 2.2, 3.6), Vector3(8.0, 2.3, 4.7), teal)
+	for px in [6.7, 7.9]:
+		bar(STEEL, Vector3(px, 0.1, 4.6), Vector3(px, 2.2, 4.6), 0.04, bright)
+	biohazard(Vector3(5.5, 1.6, 3.65), 0.3)
+	for wx in [5.0, 7.2]:
+		for wz in [2.1, 3.7]:
+			box(TRIM, Vector3(wx - 0.3, 0.1, wz - 0.1), Vector3(wx + 0.3, 0.55, wz + 0.1), Color("1a1c1e"))
+	# ---- a generator and a fuel tank, the gate house with a barrier, floodlights and the double fence
+	box(PANEL, Vector3(-9.0, 0.1, 3.4), Vector3(-6.4, 1.9, 5.0), Color(1.5, 1.5, 1.52))
+	box(TRIM, Vector3(-9.1, 1.9, 3.3), Vector3(-6.3, 2.02, 5.1), Color("56646a"))
+	for k in range(4):
+		box(TRIM, Vector3(-8.7 + k * 0.6, 0.4, 5.0), Vector3(-8.64 + k * 0.6, 1.7, 5.04), ink)
+	pipe(METAL, Vector3(-8.5, 2.02, 4.0), Vector3(-8.5, 3.4, 4.0), 0.12, Color("30383c"), 8)
+	box(PANEL, Vector3(-4.2, 0.1, 6.6), Vector3(-2.6, 2.4, 7.8), Color(1.5, 1.5, 1.52))
+	box(TRIM, Vector3(-4.3, 2.4, 6.5), Vector3(-2.5, 2.52, 7.9), Color("56646a"))
+	box(GLASS, Vector3(-4.1, 1.1, 7.8), Vector3(-2.7, 2.2, 7.84), Color("2f5568"))
+	bar(TRIM, Vector3(-2.6, 1.0, 7.2), Vector3(-1.4, 1.0, 7.2), 0.05, bright)
+	for k in range(3):
+		box(TRIM, Vector3(-2.6 + k * 0.4, 0.95, 7.15), Vector3(-2.4 + k * 0.4, 1.05, 7.25), Color("c83a2e") if k % 2 == 0 else Color("f0eee4"))
+	for p in [Vector3(-9.0, 0, 1.0), Vector3(9.0, 0, 1.0), Vector3(9.0, 0, -9.0), Vector3(-3.0, 0, 8.4), Vector3(3.0, 0, 8.4)]:
+		bar(STEEL, p + Vector3(0, 0.1, 0), p + Vector3(0, 5.2, 0), 0.05, bright)
+		box(GLOWW, p + Vector3(-0.4, 5.15, -0.15), p + Vector3(0.4, 5.25, 0.15), warm)
+	for ring in [10.2, 11.4]:
+		for i in range(30):
+			var a := TAU * i / 30.0
+			var fp := Vector3(cos(a) * ring, 0.1, sin(a) * ring)
+			if absf(fp.x) < 10.1 and absf(fp.z) < 11.4 - absf(fp.x) * 0.577:
+				if fp.z > 5.0 and absf(fp.x) < 3.4:
+					continue
+				bar(STEEL, fp, fp + Vector3(0, 2.0 if ring > 11.0 else 1.6, 0), 0.03, bright)
+				if i % 5 == 0:
+					box(TRIM, fp + Vector3(-0.3, 1.0, -0.02), fp + Vector3(0.3, 1.5, 0.02), haz)
+	banner(-9.0, 4.4, 6.4, 1.8)
+	xf = origin
+
 ## A nuclear power station: a hyperbolic cooling tower, the containment dome
 ## and the turbine hall.
 func nuclear(rng: RandomNumberGenerator) -> void:
@@ -2632,7 +2778,7 @@ static func has_recipe(key: String) -> bool:
 	return key in ["hq", "cityCenter", "cityHall", "courthouse", "bank", "university", "library", "school", "policeStation",
 		"hospital", "market", "villageCenter", "tankFactory", "warehouse", "barracks", "cottage", "residential", "workerHouse",
 		"luxuryVillas", "housing", "apartments", "tvStation", "intelAgency", "techPark", "farm", "foodDepot", "powerPlant", "airfield", "helipad",
-		"extractor", "mountainMine", "oilRefinery", "chipFab", "aiDataCenter", "fusionCell", "strategicComplex", "nuclearReactor", "solarFarm", "shipyard", "port",
+		"extractor", "mountainMine", "oilRefinery", "chipFab", "aiDataCenter", "fusionCell", "strategicComplex", "specialLab", "nuclearReactor", "solarFarm", "shipyard", "port",
 		"fishingWharf", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "commandCenter",
 		"museum", "waterTreatment"]
 
