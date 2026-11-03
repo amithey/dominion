@@ -118,8 +118,11 @@ static func build_blender(model: String, owner_colour := Color.WHITE) -> Node3D:
 		own += 1
 	return root
 
+## Switched off by the performance probe to compare against the code-built buildings.
+static var blender_enabled := true
+
 static func has_blender(model: String) -> bool:
-	return ResourceLoader.exists(BLEND_DIR + model + ".glb")
+	return blender_enabled and ResourceLoader.exists(BLEND_DIR + model + ".glb")
 
 static func material(role: String) -> Material:
 	if _cache.has(role):

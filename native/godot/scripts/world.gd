@@ -541,6 +541,8 @@ func _ready() -> void:
 		await preload("res://scripts/battle_regression.gd").capture(self)
 	elif "--capture-deposits" in args:
 		await preload("res://scripts/deposit_art.gd").capture(self)
+	elif "--perf-buildings" in args:
+		await preload("res://scripts/building_perf.gd").run(self)
 	elif "--capture-industry" in args:
 		await preload("res://scripts/industry_views.gd").capture(self)
 	elif "--airbase-test" in args:
