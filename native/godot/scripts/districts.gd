@@ -11,7 +11,7 @@ extends RefCounted
 
 const STYLE := {
 	"hq": 0, "villageCenter": 0, "cityCenter": 0, "market": 0, "intelAgency": 0,
-	"school": 0, "library": 0, "university": 0, "hospital": 0, "cityHall": 0, "tvStation": 0, "policeStation": 0, "fireStation": 0,
+	"school": 0, "library": 0, "university": 0, "hospital": 0, "cityHall": 0, "tvStation": 0, "policeStation": 0, "fireStation": 0, "railwayStation": 2,
 	"courthouse": 0, "bank": 0, "techPark": 0,
 	"chipFab": 2, "aiDataCenter": 2, "fusionCell": 4, "strategicComplex": 4, "specialLab": 4, "nuclearReactor": 2, "solarFarm": 2,
 	"cottage": 1, "housing": 1, "residential": 1, "workerHouse": 1, "apartments": 1, "luxuryVillas": 1,
@@ -38,7 +38,7 @@ const MODEL_KIND := {"hq": "town_hall", "cityCenter": "town_hall", "cityHall": "
 const VERTICAL_SAM := ["uk", "germany", "france", "italy", "israel", "australia", "ukraine", "netherlands"]   # as architecture.gd sam_site
 ## Keys that borrow another key's Blender model.
 const BLEND_ALIAS := {"hq": "cityHall", "cityCenter": "cityHall", "university": "library", "museum": "library", "courthouse": "courthouse"}
-const BLENDER_MADE := ["bunker", "aiDataCenter", "missileSilo", "fusionCell", "ammoDepot", "helipad", "port", "shipyard", "strategicComplex", "samSite", "specialLab", "cityHall", "bank", "hospital", "school", "policeStation", "library", "market", "barracks", "tvStation", "techPark", "intelAgency", "tankFactory", "powerPlant", "warehouse", "commandCenter", "foodDepot", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter", "farm", "oilRefinery", "chipFab", "nuclearReactor", "solarFarm", "stadium", "park", "fishingWharf", "airfield", "fireStation"]
+const BLENDER_MADE := ["bunker", "aiDataCenter", "missileSilo", "fusionCell", "ammoDepot", "helipad", "port", "shipyard", "strategicComplex", "samSite", "specialLab", "cityHall", "bank", "hospital", "school", "policeStation", "library", "market", "barracks", "tvStation", "techPark", "intelAgency", "tankFactory", "powerPlant", "warehouse", "commandCenter", "foodDepot", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter", "farm", "oilRefinery", "chipFab", "nuclearReactor", "solarFarm", "stadium", "park", "fishingWharf", "airfield", "fireStation", "railwayStation"]
 ## Tallest a model-built central building may stand per style (metres): a tower is narrow but not a skyscraper over the town.
 const MODEL_CAP := {0: 15.0, 1: 11.5, 2: 12.0, 3: 8.0, 4: 8.5}
 var model_seed := 0.0
@@ -48,7 +48,7 @@ const RECIPES := {"extractor": "extractor", "mountainMine": "extractor", "oilRef
 	"bunker": "bunker", "samSite": "sam_site", "park": "park", "stadium": "stadium"}
 ## Keys whose kit building is a complete composition (no yard props or landmarks added).
 const COMPLETE := ["extractor", "mountainMine", "oilRefinery", "chipFab", "aiDataCenter", "fusionCell", "strategicComplex", "specialLab", "nuclearReactor", "solarFarm", "shipyard",
-	"port", "fishingWharf", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "foodDepot", "powerPlant", "tvStation", "techPark", "intelAgency", "market", "library", "university", "museum", "cityHall", "hq", "cityCenter", "bank", "hospital", "school", "policeStation", "tankFactory", "warehouse", "commandCenter", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter", "fireStation"]
+	"port", "fishingWharf", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "foodDepot", "powerPlant", "tvStation", "techPark", "intelAgency", "market", "library", "university", "museum", "cityHall", "hq", "cityCenter", "bank", "hospital", "school", "policeStation", "tankFactory", "warehouse", "commandCenter", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter", "fireStation", "railwayStation"]
 var harbour_turn := 0.0   # a harbour faces the water (set in build)
 var world: Node
 var arch: RefCounted       # architecture.gd: the buildings, made from code
