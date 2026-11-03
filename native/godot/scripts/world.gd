@@ -1059,6 +1059,11 @@ func building_model(key: String, x: float, z: float) -> Node3D:
 	if key == "extractor":
 		# The mine, rig or quarry for the resource under it (architecture.gd).
 		var dep = deposit_near(Vector3(x, 0, z), 8.0)
+		var blend: String = districts.extractor_model(dep.type if dep != null else "")
+		if blend != "":
+			var made: Node3D = preload("res://scripts/building_models.gd").build_blender(blend)
+			made.scale = Vector3.ONE * 0.62
+			return made
 		districts.arch.begin()
 		districts.arch.extract_type = dep.type if dep != null else ""
 		districts.arch.xf = Transform3D(Basis.from_scale(Vector3.ONE * 0.62), Vector3.ZERO)

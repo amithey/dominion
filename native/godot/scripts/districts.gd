@@ -38,7 +38,7 @@ const MODEL_KIND := {"hq": "town_hall", "cityCenter": "town_hall", "cityHall": "
 const VERTICAL_SAM := ["uk", "germany", "france", "italy", "israel", "australia", "ukraine", "netherlands"]   # as architecture.gd sam_site
 ## Keys that borrow another key's Blender model.
 const BLEND_ALIAS := {"hq": "cityHall", "cityCenter": "cityHall", "university": "library", "museum": "library", "courthouse": "courthouse"}
-const BLENDER_MADE := ["bunker", "aiDataCenter", "missileSilo", "fusionCell", "ammoDepot", "helipad", "port", "shipyard", "strategicComplex", "samSite", "specialLab", "cityHall", "bank", "hospital", "school", "policeStation", "library", "market", "barracks", "tvStation", "techPark", "intelAgency", "tankFactory", "powerPlant", "warehouse", "commandCenter", "foodDepot", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter"]
+const BLENDER_MADE := ["bunker", "aiDataCenter", "missileSilo", "fusionCell", "ammoDepot", "helipad", "port", "shipyard", "strategicComplex", "samSite", "specialLab", "cityHall", "bank", "hospital", "school", "policeStation", "library", "market", "barracks", "tvStation", "techPark", "intelAgency", "tankFactory", "powerPlant", "warehouse", "commandCenter", "foodDepot", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter", "farm", "oilRefinery", "chipFab", "nuclearReactor", "solarFarm"]
 ## Tallest a model-built central building may stand per style (metres): a tower is narrow but not a skyscraper over the town.
 const MODEL_CAP := {0: 15.0, 1: 11.5, 2: 12.0, 3: 8.0, 4: 8.5}
 var model_seed := 0.0
@@ -274,17 +274,28 @@ func fence(st: SurfaceTool, color: Color, height := 1.1) -> void:
 			var yaw := -atan2(p1.y - p0.y, p1.x - p0.x)
 			box(st, Vector3(p0.distance_to(p1), 0.08, 0.06), Vector3(mid.x, height * 0.75, mid.y), yaw, color)
 
+## The Blender model for an extractor on this kind of deposit ("" when there is none).
+static func extractor_model(deposit: String) -> String:
+	var kind := deposit
+	if kind in ["oil", "seaOil", "gas", "seaGas"]:
+		kind = "oil"
+	if kind == "":
+		kind = "iron"
+	return "extractor_" + kind if BModels.has_blender("extractor_" + kind) else ""
+
 func main_building(key: String, container: Node3D, footprint: float, at := Vector3.ZERO) -> void:
-	if key == "farm" and not BModels.variants("farmhouse").is_empty() and not BModels.variants("barn").is_empty():
+	if key == "farm" and not BModels.has_blender("farm") and not BModels.variants("farmhouse").is_empty() and not BModels.variants("barn").is_empty():
 		var frng := RandomNumberGenerator.new()
 		frng.seed = int(model_seed * 1000.0) + 17
 		place_model(container, "farmhouse", at + Vector3(-2.4, 0, 0.2), 0.0, 4.6, 0.0, frng)
 		place_model(container, "barn", at + Vector3(2.8, 0, -0.4), -0.25, 4.8, 0.0, frng)
 		return
 	var blend_name: String = BLEND_ALIAS.get(key, key)
+	if key in ["extractor", "mountainMine"]:
+		blend_name = extractor_model(arch.extract_type)   # the mine, rig or quarry for the deposit under it
 	if key == "samSite" and preload("res://scripts/factions.gd").identity(world, owner) in VERTICAL_SAM:
 		blend_name = "samSiteVls"   # the nations that field a vertical-launch system
-	if (key in BLENDER_MADE or BLEND_ALIAS.has(key)) and BModels.has_blender(blend_name):
+	if (key in BLENDER_MADE or BLEND_ALIAS.has(key) or blend_name.begins_with("extractor_")) and blend_name != "" and BModels.has_blender(blend_name):
 		# Modelled in Blender (native/tools/models/blender): a whole hex, placed at its own size.
 		var tint := Color(world.map.nations[owner].color) if owner < world.map.nations.size() else Color.WHITE
 		var made: Node3D = BModels.build_blender(blend_name, tint)
