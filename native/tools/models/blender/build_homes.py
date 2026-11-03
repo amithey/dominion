@@ -259,8 +259,9 @@ elif VAR == "apartments":
     X0, X1, Z0, Z1, FL = -6.0, 6.0, -8.6, -3.2, 3.0
     NF = 5
     m.box(CONC, (X0 - 0.2, 0.13, Z0 - 0.2), (X1 + 0.2, 0.5, Z1 + 0.2), bevel=0.03, seg=1)
-    m.box("plaster", (X0, 0.5, Z0), (X1, 0.5 + NF * FL, Z1), bevel=0.03, seg=1, tint=hexc("e8e4da"))
-    m.box("paint", (X0 - 0.02, 0.5, Z0 - 0.02), (X0 + 2.0, 0.5 + NF * FL, Z1 + 0.02), tint=hexc("c0aa88"))      # a coloured stair core
+    body = hexc("e8e4da") if STYLE == "euro" else PLASTERS[0]
+    m.box("brick" if STYLE == "us" else "plaster", (X0, 0.5, Z0), (X1, 0.5 + NF * FL, Z1), bevel=0.03, seg=1, tint=(1.0, 0.95, 0.92) if STYLE == "us" else body)
+    m.box("paint", (X0 - 0.02, 0.5, Z0 - 0.02), (X0 + 2.0, 0.5 + NF * FL, Z1 + 0.02), tint=hexc("c0aa88") if STYLE == "euro" else PLASTERS[2])      # a coloured stair core
     for fl in range(NF):
         for i in range(6):
             wx = X0 + 2.6 + i * 1.6
@@ -268,15 +269,41 @@ elif VAR == "apartments":
             m.box("dark", (wx - 0.55, y + 0.7, Z1 - 0.03), (wx + 0.55, y + 2.1, Z1))
             m.box(GLASS, (wx - 0.55, y + 0.7, Z1), (wx + 0.55, y + 2.1, Z1 + 0.03), tint=(1.6, 1.8, 2.0))
             m.box("wall_concrete", (wx - 0.02, y + 0.7, Z1), (wx + 0.02, y + 2.1, Z1 + 0.06), tint=WH)
+            if STYLE in ("arab", "india", "africa"):                                                   # arched heads over the windows
+                m.hull("dark", [(wx + math.cos(math.pi * j / 8) * 0.55, y + 2.1 + math.sin(math.pi * j / 8) * 0.4, Z1 - 0.03) for j in range(9)] + [(wx + math.cos(math.pi * j / 8) * 0.55, y + 2.1 + math.sin(math.pi * j / 8) * 0.4, Z1) for j in range(9)])
+            if STYLE == "med":                                                                           # shutters either side
+                for sx in (-1, 1):
+                    m.box("wood", (wx + sx * 0.8 - 0.2, y + 0.7, Z1), (wx + sx * 0.8 + 0.2, y + 2.1, Z1 + 0.05), tint=SHUTTER)
             if i % 2 == 0:                                                                               # a balcony
-                m.box(CONC, (wx - 0.9, y + 0.05, Z1), (wx + 0.9, y + 0.2, Z1 + 1.1), bevel=0.02, seg=1)
-                m.box("glass", (wx - 0.9, y + 0.2, Z1 + 1.06), (wx + 0.9, y + 1.1, Z1 + 1.1), tint=(1.4, 1.8, 2.0))
-                m.pipe(METAL, (wx - 0.9, y + 1.1, Z1 + 1.08), (wx + 0.9, y + 1.1, Z1 + 1.08), 0.02, 4)
+                m.box(CONC if STYLE != "asia" else "wood", (wx - 0.9, y + 0.05, Z1), (wx + 0.9, y + 0.2, Z1 + 1.1), bevel=0.02, seg=1)
+                if STYLE in ("euro", "us"):
+                    m.box("glass", (wx - 0.9, y + 0.2, Z1 + 1.06), (wx + 0.9, y + 1.1, Z1 + 1.1), tint=(1.4, 1.8, 2.0))
+                elif STYLE in ("arab", "india", "africa"):
+                    m.box("plaster", (wx - 0.9, y + 0.2, Z1 + 1.0), (wx + 0.9, y + 0.95, Z1 + 1.1), tint=body)
+                else:
+                    for q in range(7):
+                        m.pipe("wood" if STYLE == "asia" else METAL, (wx - 0.85 + q * 0.28, y + 0.2, Z1 + 1.06), (wx - 0.85 + q * 0.28, y + 1.0, Z1 + 1.06), 0.02, 4)
+                m.pipe("wood" if STYLE == "asia" else METAL, (wx - 0.9, y + 1.1, Z1 + 1.08), (wx + 0.9, y + 1.1, Z1 + 1.08), 0.03 if STYLE == "asia" else 0.02, 4)
         m.box("glass", (X0 + 0.3, 0.5 + fl * FL + 0.5, Z1 - 0.02), (X0 + 1.7, 0.5 + fl * FL + 2.2, Z1 + 0.02), tint=(1.6, 1.8, 2.0))
     door(X0 + 1.0, Z1, 1.2, 2.2)
     m.box(CONC, (X0 - 0.3, 0.5 + NF * FL, Z0 - 0.3), (X1 + 0.3, 0.5 + NF * FL + 0.3, Z1 + 0.3), bevel=0.03, seg=1)
     m.box("gravel", (X0, 0.8 + NF * FL, Z0), (X1, 0.84 + NF * FL, Z1))
     RT = 0.84 + NF * FL
+    if STYLE == "asia":                                                                                   # a hipped roof with deep eaves over the whole block
+        hip_roof(m, X0, X1, Z0, Z1, RT - 0.04, 1.8, overhang=0.9, role="roof_slate")
+    elif STYLE == "med":
+        hip_roof(m, X0, X1, Z0, Z1, RT - 0.04, 1.4, overhang=0.5, role="roof_tile")
+    elif STYLE in ("arab", "india", "africa"):
+        m.box("plaster", (X0 - 0.1, RT, Z0 - 0.1), (X1 + 0.1, RT + 0.7, Z1 + 0.1), bevel=0.02, seg=1, tint=body)
+        m.box("plaster", (X0 + 0.15, RT + 0.04, Z0 + 0.15), (X1 - 0.15, RT + 0.74, Z1 - 0.15), tint=tuple(c * 0.9 for c in body))
+        for k in range(11):
+            m.box("plaster", (X0 + 0.3 + k * 1.05, RT + 0.7, Z1 - 0.1), (X0 + 0.7 + k * 1.05, RT + 1.1, Z1 + 0.05), tint=body)
+    elif STYLE == "us":                                                                                   # a fire escape zig-zagging up the front
+        for fl in range(NF):
+            y = 0.5 + fl * FL
+            m.box(METAL, (X1 - 2.2, y + 0.05, Z1), (X1 - 0.6, y + 0.1, Z1 + 0.9), tint=(0.8, 0.8, 0.85))
+            m.pipe(METAL, (X1 - 2.2, y + 1.0, Z1 + 0.9), (X1 - 0.6, y + 1.0, Z1 + 0.9), 0.02, 4)
+            m.pipe(METAL, (X1 - 2.2 if fl % 2 else X1 - 0.6, y + 0.1, Z1 + 0.7), (X1 - 0.6 if fl % 2 else X1 - 2.2, y - FL + 0.1, Z1 + 0.7), 0.03, 4)
     m.box("plaster", (X0 + 0.5, RT, Z0 + 0.5), (X0 + 2.4, RT + 2.6, Z0 + 2.4), bevel=0.03, seg=1, tint=hexc("e8e4da"))     # a stair head
     for k in range(5):                                                                                    # a roof terrace with planters and solar panels
         m.box(CONC, (X1 - 4.5 + k * 0.9, RT, Z1 - 1.4), (X1 - 3.8 + k * 0.9, RT + 0.5, Z1 - 0.8), bevel=0.02, seg=1)
