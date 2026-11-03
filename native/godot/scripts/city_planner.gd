@@ -28,7 +28,7 @@ const STYLE := {"usa": "grid", "australia": "grid", "germany": "compact", "franc
 ## zone -> [nearest ring, farthest ring]
 const RINGS := {"civic": [1, 2], "home": [1, 3], "industry": [2, 4], "heavy": [3, 5], "farm": [3, 6], "army": [2, 6], "airbase": [4, 7]}
 const ZONE := {"market": "civic", "bank": "civic", "cityHall": "civic", "school": "civic", "library": "civic", "university": "civic",
-	"hospital": "civic", "policeStation": "civic", "museum": "civic", "courthouse": "civic", "tvStation": "civic", "intelAgency": "civic",
+	"hospital": "civic", "policeStation": "civic", "fireStation": "civic", "museum": "civic", "courthouse": "civic", "tvStation": "civic", "intelAgency": "civic",
 	"park": "home", "stadium": "home", "cottage": "home", "residential": "home", "apartments": "home", "luxuryVillas": "home", "workerHouse": "home",
 	"warehouse": "industry", "foodDepot": "industry", "techPark": "industry", "chipFab": "industry", "waterTreatment": "industry", "mountainMine": "industry",
 	"powerPlant": "heavy", "nuclearReactor": "heavy", "oilRefinery": "heavy", "solarFarm": "farm", "farm": "farm", "fishingWharf": "farm",

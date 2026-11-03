@@ -15,7 +15,7 @@ extends CanvasLayer
 const UI := preload("res://scripts/ui_theme.gd")
 const BUILD_MENU := {
 	"Economy": ["villageCenter", "cityCenter", "farm", "cottage", "housing", "residential", "workerHouse", "warehouse", "foodDepot", "extractor", "offshoreRig", "fishingPlatform", "fishingWharf", "mountainMine", "market", "port", "bank", "oilRefinery", "powerPlant"],
-	"Civic & research": ["school", "library", "university", "techPark", "chipFab", "aiDataCenter", "hospital", "cityHall", "tvStation", "policeStation", "courthouse", "intelAgency", "nuclearReactor"],
+	"Civic & research": ["school", "library", "university", "techPark", "chipFab", "aiDataCenter", "hospital", "cityHall", "tvStation", "policeStation", "fireStation", "courthouse", "intelAgency", "nuclearReactor"],
 	"Military": ["barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo", "fusionCell", "strategicComplex", "specialLab", "samSite", "bunker"],
 }
 ## The build list in groups under each tab, in the order a city grows.
@@ -24,7 +24,7 @@ const BUILD_GROUPS := {
 		["Homes", ["cottage", "housing", "residential", "workerHouse"]], ["Settlements", ["villageCenter", "cityCenter"]],
 		["Trade and industry", ["market", "port", "bank", "oilRefinery", "powerPlant"]]],
 	"Civic & research": [["Education and science", ["school", "library", "university", "techPark", "chipFab", "aiDataCenter"]],
-		["Public services", ["hospital", "cityHall", "tvStation", "policeStation", "courthouse"]], ["State", ["intelAgency", "nuclearReactor"]]],
+		["Public services", ["hospital", "cityHall", "tvStation", "policeStation", "fireStation", "courthouse"]], ["State", ["intelAgency", "nuclearReactor"]]],
 	"Military": [["Training", ["barracks", "tankFactory", "shipyard", "helipad", "airfield"]], ["Defence", ["bunker", "samSite"]],
 		["Strategic", ["ammoDepot", "missileSilo", "fusionCell"]], ["Weapons of mass destruction", ["strategicComplex", "specialLab"]]],
 }

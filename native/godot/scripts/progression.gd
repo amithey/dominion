@@ -30,7 +30,7 @@ const BUILDINGS := {
 	"extractor": 0, "mountainMine": 0, "fishingWharf": 0, "fishingPlatform": 0, "offshoreRig": 0, "market": 0, "bank": 0, "school": 0, "barracks": 0, "bunker": 0,
 	"cityCenter": 1, "residential": 1, "library": 1, "port": 1, "tvStation": 1, "intelAgency": 1,
 	"tankFactory": 1, "shipyard": 1, "airfield": 1, "samSite": 1,
-	"university": 2, "hospital": 2, "cityHall": 2, "policeStation": 2, "courthouse": 2, "oilRefinery": 2, "techPark": 2,
+	"university": 2, "hospital": 2, "cityHall": 2, "policeStation": 2, "fireStation": 2, "courthouse": 2, "oilRefinery": 2, "techPark": 2,
 	"helipad": 2, "ammoDepot": 2, "missileSilo": 2,
 	"powerPlant": 3, "chipFab": 3,
 	"nuclearReactor": 4, "strategicComplex": 4, "specialLab": 4, "aiDataCenter": 4, "fusionCell": 4,
