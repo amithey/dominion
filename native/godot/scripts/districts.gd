@@ -11,7 +11,7 @@ extends RefCounted
 
 const STYLE := {
 	"hq": 0, "villageCenter": 0, "cityCenter": 0, "market": 0, "intelAgency": 0,
-	"school": 0, "library": 0, "university": 0, "hospital": 0, "cityHall": 0, "tvStation": 0, "policeStation": 0, "fireStation": 0, "railwayStation": 2,
+	"school": 0, "library": 0, "university": 0, "hospital": 0, "cityHall": 0, "tvStation": 0, "policeStation": 0, "fireStation": 0, "railwayStation": 2, "lighthouse": 2, "worship": 0, "prison": 0, "embassy": 0, "stockExchange": 0,
 	"courthouse": 0, "bank": 0, "techPark": 0,
 	"chipFab": 2, "aiDataCenter": 2, "fusionCell": 4, "strategicComplex": 4, "specialLab": 4, "nuclearReactor": 2, "solarFarm": 2,
 	"cottage": 1, "housing": 1, "residential": 1, "workerHouse": 1, "apartments": 1, "luxuryVillas": 1,
@@ -38,7 +38,7 @@ const MODEL_KIND := {"hq": "town_hall", "cityCenter": "town_hall", "cityHall": "
 const VERTICAL_SAM := ["uk", "germany", "france", "italy", "israel", "australia", "ukraine", "netherlands"]   # as architecture.gd sam_site
 ## Keys that borrow another key's Blender model.
 const BLEND_ALIAS := {"hq": "cityHall", "cityCenter": "cityHall", "university": "library", "museum": "library", "courthouse": "courthouse"}
-const BLENDER_MADE := ["bunker", "aiDataCenter", "missileSilo", "fusionCell", "ammoDepot", "helipad", "port", "shipyard", "strategicComplex", "samSite", "specialLab", "cityHall", "bank", "hospital", "school", "policeStation", "library", "market", "barracks", "tvStation", "techPark", "intelAgency", "tankFactory", "powerPlant", "warehouse", "commandCenter", "foodDepot", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter", "farm", "oilRefinery", "chipFab", "nuclearReactor", "solarFarm", "stadium", "park", "fishingWharf", "airfield", "fireStation", "railwayStation"]
+const BLENDER_MADE := ["bunker", "aiDataCenter", "missileSilo", "fusionCell", "ammoDepot", "helipad", "port", "shipyard", "strategicComplex", "samSite", "specialLab", "cityHall", "bank", "hospital", "school", "policeStation", "library", "market", "barracks", "tvStation", "techPark", "intelAgency", "tankFactory", "powerPlant", "warehouse", "commandCenter", "foodDepot", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter", "farm", "oilRefinery", "chipFab", "nuclearReactor", "solarFarm", "stadium", "park", "fishingWharf", "airfield", "fireStation", "railwayStation", "lighthouse", "worship", "prison", "embassy", "stockExchange"]
 ## Tallest a model-built central building may stand per style (metres): a tower is narrow but not a skyscraper over the town.
 const MODEL_CAP := {0: 15.0, 1: 11.5, 2: 12.0, 3: 8.0, 4: 8.5}
 var model_seed := 0.0
@@ -48,7 +48,7 @@ const RECIPES := {"extractor": "extractor", "mountainMine": "extractor", "oilRef
 	"bunker": "bunker", "samSite": "sam_site", "park": "park", "stadium": "stadium"}
 ## Keys whose kit building is a complete composition (no yard props or landmarks added).
 const COMPLETE := ["extractor", "mountainMine", "oilRefinery", "chipFab", "aiDataCenter", "fusionCell", "strategicComplex", "specialLab", "nuclearReactor", "solarFarm", "shipyard",
-	"port", "fishingWharf", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "foodDepot", "powerPlant", "tvStation", "techPark", "intelAgency", "market", "library", "university", "museum", "cityHall", "hq", "cityCenter", "bank", "hospital", "school", "policeStation", "tankFactory", "warehouse", "commandCenter", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter", "fireStation", "railwayStation"]
+	"port", "fishingWharf", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "foodDepot", "powerPlant", "tvStation", "techPark", "intelAgency", "market", "library", "university", "museum", "cityHall", "hq", "cityCenter", "bank", "hospital", "school", "policeStation", "tankFactory", "warehouse", "commandCenter", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter", "fireStation", "railwayStation", "lighthouse", "worship", "prison", "embassy", "stockExchange"]
 var harbour_turn := 0.0   # a harbour faces the water (set in build)
 var world: Node
 var arch: RefCounted       # architecture.gd: the buildings, made from code
@@ -274,6 +274,18 @@ func fence(st: SurfaceTool, color: Color, height := 1.1) -> void:
 			var yaw := -atan2(p1.y - p0.y, p1.x - p0.x)
 			box(st, Vector3(p0.distance_to(p1), 0.08, 0.06), Vector3(mid.x, height * 0.75, mid.y), yaw, color)
 
+## The faith a nation's house of worship takes the look of.
+static func worship_variant(nation: String) -> String:
+	if nation in ["iran", "turkiye", "saudi", "indonesia", "egypt", "pakistan", "iraq", "syria", "afghanistan", "yemen", "houthis", "sudan"]:
+		return "mosque"
+	if nation == "israel":
+		return "synagogue"
+	if nation in ["china", "japan", "south_korea", "north_korea"]:
+		return "pagoda"
+	if nation == "india":
+		return "mandir"
+	return "church"
+
 ## The Blender model for an extractor on this kind of deposit ("" when there is none).
 static func extractor_model(deposit: String) -> String:
 	var kind := deposit
@@ -291,6 +303,8 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 		place_model(container, "barn", at + Vector3(2.8, 0, -0.4), -0.25, 4.8, 0.0, frng)
 		return
 	var blend_name: String = BLEND_ALIAS.get(key, key)
+	if key == "worship":
+		blend_name = "worship_" + worship_variant(preload("res://scripts/factions.gd").identity(world, owner))
 	if key in ["extractor", "mountainMine"]:
 		blend_name = extractor_model(arch.extract_type)   # the mine, rig or quarry for the deposit under it
 	if key == "samSite" and preload("res://scripts/factions.gd").identity(world, owner) in VERTICAL_SAM:
@@ -300,7 +314,7 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 		var tint := Color(world.map.nations[owner].color) if owner < world.map.nations.size() else Color.WHITE
 		var made: Node3D = BModels.build_blender(blend_name, tint)
 		made.position = at
-		made.rotation.y = harbour_turn if key in ["port", "shipyard", "fishingWharf"] else 0.0   # a harbour faces the water
+		made.rotation.y = harbour_turn if key in ["port", "shipyard", "fishingWharf", "lighthouse"] else 0.0   # a harbour faces the water
 		container.add_child(made)
 		return
 	if MODEL_KIND.has(key) and not BModels.variants(MODEL_KIND[key]).is_empty():

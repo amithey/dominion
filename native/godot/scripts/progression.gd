@@ -28,7 +28,7 @@ extends RefCounted
 const BUILDINGS := {
 	"hq": 0, "villageCenter": 0, "farm": 0, "cottage": 0, "housing": 0, "workerHouse": 0, "warehouse": 0, "foodDepot": 0,
 	"extractor": 0, "mountainMine": 0, "fishingWharf": 0, "fishingPlatform": 0, "offshoreRig": 0, "market": 0, "bank": 0, "school": 0, "barracks": 0, "bunker": 0,
-	"cityCenter": 1, "railwayStation": 1, "residential": 1, "library": 1, "port": 1, "tvStation": 1, "intelAgency": 1,
+	"cityCenter": 1, "railwayStation": 1, "lighthouse": 1, "worship": 1, "prison": 2, "embassy": 2, "stockExchange": 2, "residential": 1, "library": 1, "port": 1, "tvStation": 1, "intelAgency": 1,
 	"tankFactory": 1, "shipyard": 1, "airfield": 1, "samSite": 1,
 	"university": 2, "hospital": 2, "cityHall": 2, "policeStation": 2, "fireStation": 2, "courthouse": 2, "oilRefinery": 2, "techPark": 2,
 	"helipad": 2, "ammoDepot": 2, "missileSilo": 2,
