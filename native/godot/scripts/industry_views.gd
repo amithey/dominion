@@ -3,7 +3,7 @@
 extends RefCounted
 
 const KEYS := ["extractor:oil", "extractor:iron", "extractor:gold", "extractor:silicon", "extractor:uranium", "extractor:diamond",
-	"oilRefinery", "chipFab", "aiDataCenter", "fusionCell", "nuclearReactor", "solarFarm", "ammoDepot", "strategicComplex", "specialLab", "missileSilo", "helipad", "airfield", "bunker", "samSite", "park", "stadium", "port", "shipyard", "cityHall", "bank", "hospital", "school", "policeStation", "library", "market", "tvStation", "techPark", "intelAgency", "barracks", "tankFactory", "powerPlant", "warehouse", "commandCenter", "foodDepot", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter", "farm", "fishingWharf", "airfield"]
+	"oilRefinery", "chipFab", "aiDataCenter", "fusionCell", "nuclearReactor", "solarFarm", "ammoDepot", "strategicComplex", "specialLab", "missileSilo", "helipad", "airfield", "bunker", "samSite", "park", "stadium", "port", "shipyard", "cityHall", "bank", "hospital", "school", "policeStation", "library", "market", "tvStation", "techPark", "intelAgency", "barracks", "tankFactory", "powerPlant", "warehouse", "commandCenter", "foodDepot", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter", "farm", "fishingWharf", "airfield", "offshoreRig"]
 
 static func capture(w: Node) -> void:
 	for i in range(30):
@@ -42,7 +42,14 @@ static func capture(w: Node) -> void:
 		else:
 			at = w.snap_to_hex(w.land_point(w.start + Vector3(0, 0, -90), 50.0))
 		if as_nation != "": w.map.nations[0].id = as_nation
-		var b: Dictionary = w.place_building(key, at, 0, true)
+		var b: Dictionary
+		if key == "offshoreRig":   # stands in the sea, so show the model on its own, here
+			var rig: Node3D = w.building_model(key, at.x, at.z)
+			w.add_child(rig)
+			rig.position = Vector3(at.x, w.height_at(at.x, at.z) + 4.0, at.z)
+			b = {"root": rig}
+		else:
+			b = w.place_building(key, at, 0, true)
 		w.cam_focus = b.root.position
 		w.cam_dist = dist
 		w.cam_dist_target = dist

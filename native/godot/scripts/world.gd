@@ -1049,6 +1049,8 @@ func building_model(key: String, x: float, z: float) -> Node3D:
 		raft.add_child(mesh_f)
 		return raft
 	if key == "offshoreRig":
+		if preload("res://scripts/building_models.gd").has_blender("offshoreRig"):
+			return preload("res://scripts/building_models.gd").build_blender("offshoreRig")   # modelled in Blender, with its own flare
 		var art := preload("res://scripts/deposit_art.gd").new(self)
 		var platform := Node3D.new()
 		var mesh := MeshInstance3D.new()
