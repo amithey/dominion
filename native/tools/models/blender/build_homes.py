@@ -23,7 +23,7 @@ from bl_civic import *
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 out = args[0] if args else "homes.glb"
 VAR = args[1] if len(args) > 1 else "cottage"
-STYLE = args[2] if len(args) > 2 else "euro"          # euro, med, asia, arab, us
+STYLE = args[2] if len(args) > 2 else "euro"          # euro, med, asia, arab, us, india, africa
 m = Model("homes_" + VAR + "_" + STYLE)
 rng = random.Random(abs(hash(VAR)) % 1000 + 7)
 ground(m, lawns=False, pave=hexc("b8b6a2") if VAR in ("cottage", "villageCenter") else hexc("c8c6bc"))
@@ -35,15 +35,17 @@ PALETTES = {
     "asia": [hexc("f2efe6"), hexc("ece6d6"), hexc("f4f0e8"), hexc("e8e2d0"), hexc("f0ece0"), hexc("eae4d4")],           # pale plaster between dark timber
     "arab": [hexc("e8d4a8"), hexc("dcc494"), hexc("e4cfa0"), hexc("d4b888"), hexc("ecdcb4"), hexc("d8c098")],           # sand and ochre
     "us": [hexc("e8e4d8"), hexc("c8d8e4"), hexc("e8d8c0"), hexc("d4e0cc"), hexc("e4c8c0"), hexc("f0eee4")],             # painted siding
+    "india": [hexc("f0b8c8"), hexc("f4d878"), hexc("90d0d0"), hexc("f0a878"), hexc("c8d890"), hexc("e8c8e8")],           # bright limewash
+    "africa": [hexc("c8845a"), hexc("d49a68"), hexc("b87850"), hexc("dcb078"), hexc("c0906a"), hexc("d8a070")],          # rammed earth
 }
 PLASTERS = PALETTES[STYLE]
-SHUTTER = {"euro": (0.45, 0.62, 0.5), "med": (0.2, 0.42, 0.72), "asia": (0.3, 0.2, 0.15), "arab": (0.35, 0.25, 0.18), "us": (0.25, 0.3, 0.36)}[STYLE]
-FLAT = STYLE == "arab"
+SHUTTER = {"euro": (0.45, 0.62, 0.5), "med": (0.2, 0.42, 0.72), "asia": (0.3, 0.2, 0.15), "arab": (0.35, 0.25, 0.18), "us": (0.25, 0.3, 0.36), "india": (0.1, 0.45, 0.5), "africa": (0.3, 0.2, 0.14)}[STYLE]
+FLAT = STYLE in ("arab", "india")
 LOW = STYLE == "med"
 
 
 def roofrole(r):
-    return {"euro": r, "med": "roof_tile", "asia": "roof_slate", "arab": r, "us": "roof_slate"}[STYLE]
+    return {"euro": r, "med": "roof_tile", "asia": "roof_slate", "arab": r, "us": "roof_slate", "india": r, "africa": "wood"}[STYLE]
 ROOFS = ["roof_tile", "roof_slate", "roof_tile"]
 
 
@@ -106,7 +108,7 @@ def house(x, z, yaw, w=4.4, d=3.6, floors=2, wall=None, roof="roof_tile", chim=T
             gable_roof(m, -w / 2, w / 2, -d / 2, d / 2, H + 0.1, rise, overhang=0.35, role=roofrole(roof))
         if chim and not FLAT:
             chimney(w * 0.28, H + 0.2, -d * 0.1, rise * 0.9)
-        if porch and STYLE != "arab":
+        if porch and not FLAT:
             m.box("wood", (-0.8, 2.5, d / 2), (0.8, 2.6, d / 2 + 0.9), bevel=0.01, seg=1, tint=(0.5, 0.38, 0.28))
             for sx in (-0.75, 0.75):
                 m.pipe("wood", (sx, 0.13, d / 2 + 0.85), (sx, 2.5, d / 2 + 0.85), 0.05, 6)
@@ -297,22 +299,49 @@ elif VAR == "apartments":
         lamp(m, 1.0 + k * 3.0, 3.2)
 else:   # villageCenter
     m.cyl("turf", (0.0, 0.13, 2.0), 5.0, 0.04, 28, tint=hexc("6a9a50"))                                    # the village green
-    # the chapel with a bell tower
-    m.box(STONE, (-3.4, 0.13, -8.4), (1.6, 4.0, -3.4), bevel=0.03, seg=1)
-    gable_roof(m, -3.4, 1.6, -8.4, -3.4, 4.0, 2.2, overhang=0.35, role=roofrole("roof_slate"))
-    for k in range(3):
-        pts = [(math.cos(math.pi * j / 8) * 0.4, 2.1 + math.sin(math.pi * j / 8) * 0.4) for j in range(9)]
-        wx = -2.8 + k * 1.5
-        m.box("dark", (wx - 0.4, 1.0, -3.43), (wx + 0.4, 2.1, -3.4))
-        m.hull("dark", [(wx + a, b, -3.43) for a, b in pts] + [(wx + a, b, -3.4) for a, b in pts])
-        m.box(GLASS, (wx - 0.4, 1.0, -3.4), (wx + 0.4, 2.1, -3.37), tint=(1.8, 1.6, 1.2))
-    door(-0.9, -3.4, 1.2, 2.2)
-    m.box(STONE, (1.6, 0.13, -8.4), (3.6, 7.0, -6.4), bevel=0.03, seg=1)                                 # the tower
-    for f in range(2):
-        m.box("dark", (2.2, 5.0 + f * 0.0, -6.43), (3.0, 6.4, -6.4))
-    m.hull(roofrole("roof_slate"), [(1.4, 7.0, -8.6), (3.8, 7.0, -8.6), (1.4, 7.0, -6.2), (3.8, 7.0, -6.2), (2.6, 9.4, -7.4)])
-    m.pipe("gold", (2.6, 9.4, -7.4), (2.6, 10.2, -7.4), 0.04, 6)
-    m.pipe("gold", (2.3, 10.0, -7.4), (2.9, 10.0, -7.4), 0.03, 5)
+    if STYLE in ("euro", "med", "us"):
+        # the chapel with a bell tower
+        m.box(STONE, (-3.4, 0.13, -8.4), (1.6, 4.0, -3.4), bevel=0.03, seg=1)
+        gable_roof(m, -3.4, 1.6, -8.4, -3.4, 4.0, 2.2, overhang=0.35, role=roofrole("roof_slate"))
+        for k in range(3):
+            pts = [(math.cos(math.pi * j / 8) * 0.4, 2.1 + math.sin(math.pi * j / 8) * 0.4) for j in range(9)]
+            wx = -2.8 + k * 1.5
+            m.box("dark", (wx - 0.4, 1.0, -3.43), (wx + 0.4, 2.1, -3.4))
+            m.hull("dark", [(wx + a, b, -3.43) for a, b in pts] + [(wx + a, b, -3.4) for a, b in pts])
+            m.box(GLASS, (wx - 0.4, 1.0, -3.4), (wx + 0.4, 2.1, -3.37), tint=(1.8, 1.6, 1.2))
+        door(-0.9, -3.4, 1.2, 2.2)
+        m.box(STONE, (1.6, 0.13, -8.4), (3.6, 7.0, -6.4), bevel=0.03, seg=1)                                 # the tower
+        for f in range(2):
+            m.box("dark", (2.2, 5.0 + f * 0.0, -6.43), (3.0, 6.4, -6.4))
+        m.hull(roofrole("roof_slate"), [(1.4, 7.0, -8.6), (3.8, 7.0, -8.6), (1.4, 7.0, -6.2), (3.8, 7.0, -6.2), (2.6, 9.4, -7.4)])
+        m.pipe("gold", (2.6, 9.4, -7.4), (2.6, 10.2, -7.4), 0.04, 6)
+        m.pipe("gold", (2.3, 10.0, -7.4), (2.9, 10.0, -7.4), 0.03, 5)
+    elif STYLE == "asia":                                                                                       # a shrine with a torii gate and a stone lantern
+        m.box(STONE, (-3.2, 0.13, -8.2), (1.2, 0.9, -3.8), bevel=0.03, seg=1)
+        m.box("plaster", (-2.6, 0.9, -7.6), (0.6, 3.6, -4.4), bevel=0.03, seg=1, tint=hexc("f0ece0"))
+        hip_roof(m, -2.6, 0.6, -7.6, -4.4, 3.6, 1.8, overhang=0.9, role="roof_slate")
+        for k in range(4):
+            m.pipe("paint", (-2.5 + k * 1.05, 0.9, -4.45), (-2.5 + k * 1.05, 3.5, -4.45), 0.09, 8, tint=hexc("a8322a"))
+        m.box("dark", (-1.2, 0.9, -4.42), (-0.2, 2.6, -4.38))
+        for sx in (-1, 1):
+            m.pipe("paint", (-1.0 + sx * 1.6, 0.13, -2.4), (-1.0 + sx * 1.6, 3.0, -2.4), 0.14, 10, tint=hexc("a8322a"))
+        m.box("paint", (-3.0, 3.0, -2.55), (1.0, 3.3, -2.25), tint=hexc("a8322a"))
+        m.box("paint", (-3.3, 3.3, -2.6), (1.3, 3.5, -2.2), tint=hexc("1d252a"))
+        m.cyl(STONE, (2.6, 0.13, -3.0), 0.2, 1.0, 8)
+        m.box(STONE, (2.35, 1.13, -3.25), (2.85, 1.55, -2.75), bevel=0.03, seg=1)
+        m.box("glow_warm", (2.45, 1.2, -3.15), (2.75, 1.5, -2.85))
+        hip_roof(m, 2.3, 2.9, -3.3, -2.7, 1.55, 0.35, overhang=0.15, role="roof_slate")
+    else:                                                                                                         # a small mosque: a dome and a minaret
+        m.box("plaster", (-3.4, 0.13, -8.4), (1.2, 3.8, -4.2), bevel=0.03, seg=1, tint=hexc("f0e8d8"))
+        m.lathe("copper", (-1.1, 3.8, -6.3), [(0.0, 0.0), (2.0, 0.0), (1.9, 0.7), (1.3, 1.5), (0.6, 2.0), (0.0, 2.2)], 24)
+        m.pipe("gold", (-1.1, 6.0, -6.3), (-1.1, 6.7, -6.3), 0.04, 6, r2=0.012)
+        m.box("dark", (-1.6, 0.13, -4.22), (-0.6, 2.6, -4.18))
+        for k in range(3):
+            m.box("dark", (-3.0 + k * 1.6 - 0.35, 1.2, -4.22), (-3.0 + k * 1.6 + 0.35, 2.6, -4.18))
+        m.cyl("plaster", (2.4, 0.13, -4.6), 0.55, 6.0, 14, tint=hexc("f0e8d8"), r2=0.45)
+        m.tube(STONE, (2.4, 6.1, -4.6), 0.8, 0.45, 0.2, 14)
+        m.cyl("copper", (2.4, 6.3, -4.6), 0.5, 1.8, 14, r2=0.0)
+        m.pipe("gold", (2.4, 8.1, -4.6), (2.4, 8.7, -4.6), 0.03, 5, r2=0.01)
     # the inn
     house(6.0, -4.6, -0.3, 5.0, 3.8, 2, wall=hexc("d8c4a8"), roof="roof_tile", flh=2.8)
     m.box("paint", (4.4, 2.8, -2.5), (6.6, 3.5, -2.45), tint=hexc("c0392b"))
@@ -323,10 +352,11 @@ else:   # villageCenter
     for sx in (-0.6, 0.6):
         m.pipe("wood", (sx, 0.83, 1.6), (sx, 2.0, 1.6), 0.05, 6)
     m.hull(roofrole("roof_tile"), [(-0.9, 2.0, 1.1), (0.9, 2.0, 1.1), (-0.9, 2.0, 2.1), (0.9, 2.0, 2.1), (0.0, 2.6, 1.1), (0.0, 2.6, 2.1)])
-    m.box(STONE, (-0.5, 0.13, 4.6), (0.5, 0.4, 5.6), bevel=0.02, seg=1)                                  # a market cross
-    m.box(STONE, (-0.35, 0.4, 4.75), (0.35, 0.7, 5.45), bevel=0.02, seg=1)
-    m.pipe(STONE, (0.0, 0.7, 5.1), (0.0, 2.4, 5.1), 0.12, 8)
-    m.box(STONE, (-0.5, 1.7, 5.02), (0.5, 1.9, 5.18), bevel=0.02, seg=1)
+    if STYLE in ("euro", "med", "us"):
+        m.box(STONE, (-0.5, 0.13, 4.6), (0.5, 0.4, 5.6), bevel=0.02, seg=1)                                  # a market cross
+        m.box(STONE, (-0.35, 0.4, 4.75), (0.35, 0.7, 5.45), bevel=0.02, seg=1)
+        m.pipe(STONE, (0.0, 0.7, 5.1), (0.0, 2.4, 5.1), 0.12, 8)
+        m.box(STONE, (-0.5, 1.7, 5.02), (0.5, 1.9, 5.18), bevel=0.02, seg=1)
     for k in range(6):
         a = math.radians(30 + 60 * k)
         lamp(m, math.cos(a) * 9.6, math.sin(a) * 9.6)

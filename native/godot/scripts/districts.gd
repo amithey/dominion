@@ -281,8 +281,12 @@ static func home_style(nation: String) -> String:
 		return "med"
 	if nation in ["china", "japan", "south_korea", "north_korea", "indonesia"]:
 		return "asia"
-	if nation in ["saudi", "iran", "iraq", "syria", "yemen", "houthis", "egypt", "afghanistan", "pakistan", "india", "sudan", "south_sudan", "ethiopia", "nigeria"]:
+	if nation in ["saudi", "iran", "iraq", "syria", "yemen", "houthis", "egypt", "afghanistan", "pakistan"]:
 		return "arab"
+	if nation in ["india"]:
+		return "india"
+	if nation in ["sudan", "south_sudan", "ethiopia", "nigeria"]:
+		return "africa"
 	if nation in ["usa", "australia"]:
 		return "us"
 	return "euro"
