@@ -23,12 +23,27 @@ from bl_civic import *
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 out = args[0] if args else "homes.glb"
 VAR = args[1] if len(args) > 1 else "cottage"
-m = Model("homes_" + VAR)
+STYLE = args[2] if len(args) > 2 else "euro"          # euro, med, asia, arab, us
+m = Model("homes_" + VAR + "_" + STYLE)
 rng = random.Random(abs(hash(VAR)) % 1000 + 7)
 ground(m, lawns=False, pave=hexc("b8b6a2") if VAR in ("cottage", "villageCenter") else hexc("c8c6bc"))
 m.polygon("turf", [(math.cos(math.radians(30 + 60 * k)) * 11.3, math.sin(math.radians(30 + 60 * k)) * 11.3) for k in range(6)], 0.13, 0.03, tint=hexc("6a9a50")) if VAR in ("cottage", "luxuryVillas", "villageCenter") else None
 WH = (1.5, 1.5, 1.45)
-PLASTERS = [hexc("ece0c4"), hexc("e2cfb0"), hexc("d8c4a8"), hexc("e8dcc8"), hexc("c9d8c4"), hexc("d8c8d0")]
+PALETTES = {
+    "euro": [hexc("ece0c4"), hexc("e2cfb0"), hexc("d8c4a8"), hexc("e8dcc8"), hexc("c9d8c4"), hexc("d8c8d0")],
+    "med": [hexc("f6f2ea"), hexc("f2e8d4"), hexc("efe0c0"), hexc("f4ead8"), hexc("f0d9b8"), hexc("f8f4ec")],            # whitewash and warm lime
+    "asia": [hexc("f2efe6"), hexc("ece6d6"), hexc("f4f0e8"), hexc("e8e2d0"), hexc("f0ece0"), hexc("eae4d4")],           # pale plaster between dark timber
+    "arab": [hexc("e8d4a8"), hexc("dcc494"), hexc("e4cfa0"), hexc("d4b888"), hexc("ecdcb4"), hexc("d8c098")],           # sand and ochre
+    "us": [hexc("e8e4d8"), hexc("c8d8e4"), hexc("e8d8c0"), hexc("d4e0cc"), hexc("e4c8c0"), hexc("f0eee4")],             # painted siding
+}
+PLASTERS = PALETTES[STYLE]
+SHUTTER = {"euro": (0.45, 0.62, 0.5), "med": (0.2, 0.42, 0.72), "asia": (0.3, 0.2, 0.15), "arab": (0.35, 0.25, 0.18), "us": (0.25, 0.3, 0.36)}[STYLE]
+FLAT = STYLE == "arab"
+LOW = STYLE == "med"
+
+
+def roofrole(r):
+    return {"euro": r, "med": "roof_tile", "asia": "roof_slate", "arab": r, "us": "roof_slate"}[STYLE]
 ROOFS = ["roof_tile", "roof_slate", "roof_tile"]
 
 
@@ -39,7 +54,7 @@ def win(x, y, z, w=0.7, h=0.9, shutters=True, tint=WH):
     m.box("wall_concrete", (x - w / 2 - 0.06, y - 0.06, z), (x + w / 2 + 0.06, y, z + 0.12), bevel=0.01, seg=1, tint=tint)
     if shutters:
         for sx in (-1, 1):
-            m.box("wood", (x + sx * (w / 2 + 0.2) - 0.14, y, z), (x + sx * (w / 2 + 0.2) + 0.14, y + h, z + 0.05), tint=(0.45, 0.62, 0.5) if sx else (1, 1, 1))
+            m.box("wood", (x + sx * (w / 2 + 0.2) - 0.14, y, z), (x + sx * (w / 2 + 0.2) + 0.14, y + h, z + 0.05), tint=SHUTTER)
 
 
 def door(x, z, w=0.9, h=2.0, tint=(0.45, 0.3, 0.2)):
@@ -61,7 +76,7 @@ def house(x, z, yaw, w=4.4, d=3.6, floors=2, wall=None, roof="roof_tile", chim=T
     with m.frame((x, 0, z), yaw=yaw):
         H = 0.13 + floors * flh
         m.box(STONE, (-w / 2 - 0.08, 0.13, -d / 2 - 0.08), (w / 2 + 0.08, 0.6, d / 2 + 0.08), bevel=0.02, seg=1)
-        m.box("plaster", (-w / 2, 0.6, -d / 2), (w / 2, H, d / 2), bevel=0.02, seg=1, tint=wall)
+        m.box("wood" if STYLE == "us" else "plaster", (-w / 2, 0.6, -d / 2), (w / 2, H, d / 2), bevel=0.02, seg=1, tint=wall if STYLE != "us" else tuple(c * 1.35 for c in wall))
         for fl in range(floors):
             n = max(2, int(w / 1.5))
             for i in range(n):
@@ -74,14 +89,30 @@ def house(x, z, yaw, w=4.4, d=3.6, floors=2, wall=None, roof="roof_tile", chim=T
                 with m.frame((sx * w / 2, 0, 0), yaw=sx * math.pi / 2):
                     win(0.0, 0.13 + fl * flh + 0.9, 0.0, shutters=False)
         m.box("wall_concrete", (-w / 2 - 0.05, H - 0.1, -d / 2 - 0.05), (w / 2 + 0.05, H + 0.1, d / 2 + 0.05), bevel=0.02, seg=1, tint=WH)
-        rise = d * 0.62
-        gable_roof(m, -w / 2, w / 2, -d / 2, d / 2, H + 0.1, rise, overhang=0.35, role=roof)
-        if chim:
+        rise = d * (0.4 if LOW else 0.62)
+        if FLAT:                                                                            # a flat roof behind a parapet, a water tank
+            m.box("plaster", (-w / 2 - 0.05, H, -d / 2 - 0.05), (w / 2 + 0.05, H + 0.45, d / 2 + 0.05), bevel=0.02, seg=1, tint=wall)
+            m.box("plaster", (-w / 2 + 0.2, H + 0.05, -d / 2 + 0.2), (w / 2 - 0.2, H + 0.5, d / 2 - 0.2), tint=tuple(c * 0.9 for c in wall))
+            m.cyl("paint", (w * 0.25, H + 0.4, -d * 0.1), 0.35, 0.6, 12, tint=hexc("2a2f33"))
+            for k in range(3):
+                m.box("plaster", (-w / 2 + 0.3 + k * 0.5, H + 0.45, d / 2 - 0.25), (-w / 2 + 0.55 + k * 0.5, H + 0.9, d / 2 - 0.2), tint=wall)
+        elif STYLE == "asia":                                                               # a hipped roof with deep eaves and dark timber
+            hip_roof(m, -w / 2, w / 2, -d / 2, d / 2, H + 0.1, rise * 0.75, overhang=0.7, role=roofrole(roof))
+            for k in range(int(w / 0.9) + 1):
+                m.box("wood", (-w / 2 + k * w / max(1, int(w / 0.9)) - 0.06, 0.6, d / 2), (-w / 2 + k * w / max(1, int(w / 0.9)) + 0.06, H, d / 2 + 0.05), tint=(0.28, 0.18, 0.12))
+            m.box("wood", (-w / 2, H - 0.15, d / 2), (w / 2, H, d / 2 + 0.06), tint=(0.28, 0.18, 0.12))
+            m.box("wood", (-w / 2, 0.6, d / 2), (w / 2, 0.75, d / 2 + 0.06), tint=(0.28, 0.18, 0.12))
+        else:
+            gable_roof(m, -w / 2, w / 2, -d / 2, d / 2, H + 0.1, rise, overhang=0.35, role=roofrole(roof))
+        if chim and not FLAT:
             chimney(w * 0.28, H + 0.2, -d * 0.1, rise * 0.9)
-        if porch:
+        if porch and STYLE != "arab":
             m.box("wood", (-0.8, 2.5, d / 2), (0.8, 2.6, d / 2 + 0.9), bevel=0.01, seg=1, tint=(0.5, 0.38, 0.28))
             for sx in (-0.75, 0.75):
                 m.pipe("wood", (sx, 0.13, d / 2 + 0.85), (sx, 2.5, d / 2 + 0.85), 0.05, 6)
+            if STYLE == "us":                                                               # a deck with a rail, and a garage door on the side
+                m.box("wood", (-w / 2, 0.13, d / 2), (w / 2, 0.3, d / 2 + 1.0), tint=(0.85, 0.78, 0.66))
+                m.pipe("wood", (-w / 2, 0.9, d / 2 + 0.98), (w / 2, 0.9, d / 2 + 0.98), 0.03, 5)
 
 
 def hedge_fence(x0, x1, z, role="leaf", h=0.6):
@@ -117,7 +148,7 @@ if VAR == "cottage":
     m.cyl(STONE, (6.4, 0.13, -1.8), 0.6, 0.7, 14)                                                         # a well
     for sx in (-0.6, 0.6):
         m.pipe("wood", (6.4 + sx, 0.83, -1.8), (6.4 + sx, 2.0, -1.8), 0.05, 6)
-    m.hull("roof_tile", [(5.6, 2.0, -2.2), (7.2, 2.0, -2.2), (5.6, 2.0, -1.4), (7.2, 2.0, -1.4), (6.4, 2.5, -2.2), (6.4, 2.5, -1.4)])
+    m.hull(roofrole("roof_tile"), [(5.6, 2.0, -2.2), (7.2, 2.0, -2.2), (5.6, 2.0, -1.4), (7.2, 2.0, -1.4), (6.4, 2.5, -2.2), (6.4, 2.5, -1.4)])
     for p in ((-8.2, -8.0), (8.0, -2.2), (8.6, 6.0), (-8.4, 7.0), (0.0, 9.2)):
         tree(m, p[0], p[1], 2.4, 1.1)
     for k in range(6):
@@ -144,7 +175,7 @@ elif VAR == "workerHouse":
         for k in range(4):
             house(-7.2 + k * 4.3, zz, 0.0, 3.9, 3.8, 2, wall=hexc("b86a4a"), roof="roof_slate", flh=2.6, porch=False, chim=True)
     m.box("brick", (4.4, 0.13, 3.4), (8.4, 3.0, 6.4), bevel=0.03, seg=1, tint=(0.9, 0.82, 0.78))               # the shared wash-house
-    gable_roof(m, 4.4, 8.4, 3.4, 6.4, 3.0, 1.3, overhang=0.3, role="roof_slate")
+    gable_roof(m, 4.4, 8.4, 3.4, 6.4, 3.0, 1.3, overhang=0.3, role=roofrole("roof_slate"))
     chimney(7.6, 3.1, 4.0, 2.4)
     door(5.6, 6.4)
     for k in range(5):                                                                                     # washing lines
@@ -169,7 +200,7 @@ elif VAR == "luxuryVillas":
                     else:
                         win(wx, 0.7 + fl * 3.0 + 0.7, d / 2, 0.9, 1.6, shutters=False)
             m.box("wall_concrete", (-w / 2 - 0.2, 6.6, -d / 2 - 0.2), (w / 2 + 0.2, 6.85, d / 2 + 0.2), bevel=0.03, seg=1, tint=WH)
-            hip_roof(m, -w / 2, w / 2, -d / 2, d / 2, 6.85, 2.0, overhang=0.4, role="roof_tile")
+            hip_roof(m, -w / 2, w / 2, -d / 2, d / 2, 6.85, 2.0, overhang=0.4, role=roofrole("roof_tile"))
             chimney(w * 0.3, 7.0, 0.0, 1.8)
             m.box(STONE, (-1.2, 0.13, d / 2), (1.2, 2.9, d / 2 + 0.6), bevel=0.03, seg=1)                        # a portico
             for sx in (-0.9, 0.9):
@@ -177,7 +208,7 @@ elif VAR == "luxuryVillas":
             m.box(STONE, (-1.3, 2.9, d / 2 - 0.1), (1.3, 3.1, d / 2 + 0.7), bevel=0.02, seg=1)
             m.box("cladding", (w / 2, 0.7, -d / 2 + 0.3), (w / 2 + 3.0, 3.0, d / 2 - 0.5), bevel=0.03, seg=1, tint=hexc("e8e0d0"))    # a garage
             m.box("dark", (w / 2 + 0.3, 0.7, d / 2 - 0.52), (w / 2 + 2.7, 2.6, d / 2 - 0.48))
-            m.hull("roof_tile", [(w / 2 - 0.2, 3.0, -d / 2 + 0.1), (w / 2 + 3.2, 3.0, -d / 2 + 0.1), (w / 2 - 0.2, 3.0, d / 2 - 0.3), (w / 2 + 3.2, 3.0, d / 2 - 0.3), (w / 2 - 0.2, 3.6, 0.0), (w / 2 + 3.2, 3.6, 0.0)])
+            m.hull(roofrole("roof_tile"), [(w / 2 - 0.2, 3.0, -d / 2 + 0.1), (w / 2 + 3.2, 3.0, -d / 2 + 0.1), (w / 2 - 0.2, 3.0, d / 2 - 0.3), (w / 2 + 3.2, 3.0, d / 2 - 0.3), (w / 2 - 0.2, 3.6, 0.0), (w / 2 + 3.2, 3.6, 0.0)])
     m.box(STONE, (-4.4, 0.13, 1.2), (0.6, 0.4, 5.2), bevel=0.03, seg=1)                                   # a swimming pool
     m.box("glass", (-4.1, 0.38, 1.5), (0.3, 0.42, 4.9), tint=(0.6, 1.2, 1.6))
     for k in range(3):
@@ -207,7 +238,7 @@ elif VAR == "housing":
                 m.box(METAL, (wx - 0.5, 3.4 + (fl - 1) * 2.9, -2.4), (wx + 0.5, 3.4 + (fl - 1) * 2.9 + 0.08, -1.9), bevel=0.01, seg=1)       # balconies
                 m.pipe(METAL, (wx - 0.5, 3.4 + (fl - 1) * 2.9 + 0.95, -1.9), (wx + 0.5, 3.4 + (fl - 1) * 2.9 + 0.95, -1.9), 0.02, 4)
         m.box("wall_concrete", (x0 - 0.1, 12.5, -8.7), (x0 + 5.3, 12.7, -2.3), bevel=0.02, seg=1, tint=WH)
-        m.hull("roof_slate", [(x0 - 0.2, 12.7, -8.7), (x0 + 5.4, 12.7, -8.7), (x0 - 0.2, 12.7, -2.2), (x0 + 5.4, 12.7, -2.2), (x0 - 0.2, 13.5, -5.4), (x0 + 5.4, 13.5, -5.4)])
+        m.hull(roofrole("roof_slate"), [(x0 - 0.2, 12.7, -8.7), (x0 + 5.4, 12.7, -8.7), (x0 - 0.2, 12.7, -2.2), (x0 + 5.4, 12.7, -2.2), (x0 - 0.2, 13.5, -5.4), (x0 + 5.4, 13.5, -5.4)])
         chimney(x0 + 2.6, 13.0, -5.0, 1.2)
     m.box("asphalt", (-9.0, 0.13, 0.4), (9.0, 0.15, 2.0))
     m.box("sandbag", (4.0, 0.13, 4.0), (6.8, 0.3, 6.6), tint=hexc("e0d0a0"))
@@ -268,7 +299,7 @@ else:   # villageCenter
     m.cyl("turf", (0.0, 0.13, 2.0), 5.0, 0.04, 28, tint=hexc("6a9a50"))                                    # the village green
     # the chapel with a bell tower
     m.box(STONE, (-3.4, 0.13, -8.4), (1.6, 4.0, -3.4), bevel=0.03, seg=1)
-    gable_roof(m, -3.4, 1.6, -8.4, -3.4, 4.0, 2.2, overhang=0.35, role="roof_slate")
+    gable_roof(m, -3.4, 1.6, -8.4, -3.4, 4.0, 2.2, overhang=0.35, role=roofrole("roof_slate"))
     for k in range(3):
         pts = [(math.cos(math.pi * j / 8) * 0.4, 2.1 + math.sin(math.pi * j / 8) * 0.4) for j in range(9)]
         wx = -2.8 + k * 1.5
@@ -279,7 +310,7 @@ else:   # villageCenter
     m.box(STONE, (1.6, 0.13, -8.4), (3.6, 7.0, -6.4), bevel=0.03, seg=1)                                 # the tower
     for f in range(2):
         m.box("dark", (2.2, 5.0 + f * 0.0, -6.43), (3.0, 6.4, -6.4))
-    m.hull("roof_slate", [(1.4, 7.0, -8.6), (3.8, 7.0, -8.6), (1.4, 7.0, -6.2), (3.8, 7.0, -6.2), (2.6, 9.4, -7.4)])
+    m.hull(roofrole("roof_slate"), [(1.4, 7.0, -8.6), (3.8, 7.0, -8.6), (1.4, 7.0, -6.2), (3.8, 7.0, -6.2), (2.6, 9.4, -7.4)])
     m.pipe("gold", (2.6, 9.4, -7.4), (2.6, 10.2, -7.4), 0.04, 6)
     m.pipe("gold", (2.3, 10.0, -7.4), (2.9, 10.0, -7.4), 0.03, 5)
     # the inn
@@ -291,7 +322,7 @@ else:   # villageCenter
     m.cyl(STONE, (0.0, 0.13, 1.6), 0.7, 0.7, 14)                                                          # the well
     for sx in (-0.6, 0.6):
         m.pipe("wood", (sx, 0.83, 1.6), (sx, 2.0, 1.6), 0.05, 6)
-    m.hull("roof_tile", [(-0.9, 2.0, 1.1), (0.9, 2.0, 1.1), (-0.9, 2.0, 2.1), (0.9, 2.0, 2.1), (0.0, 2.6, 1.1), (0.0, 2.6, 2.1)])
+    m.hull(roofrole("roof_tile"), [(-0.9, 2.0, 1.1), (0.9, 2.0, 1.1), (-0.9, 2.0, 2.1), (0.9, 2.0, 2.1), (0.0, 2.6, 1.1), (0.0, 2.6, 2.1)])
     m.box(STONE, (-0.5, 0.13, 4.6), (0.5, 0.4, 5.6), bevel=0.02, seg=1)                                  # a market cross
     m.box(STONE, (-0.35, 0.4, 4.75), (0.35, 0.7, 5.45), bevel=0.02, seg=1)
     m.pipe(STONE, (0.0, 0.7, 5.1), (0.0, 2.4, 5.1), 0.12, 8)

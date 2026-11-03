@@ -274,6 +274,19 @@ func fence(st: SurfaceTool, color: Color, height := 1.1) -> void:
 			var yaw := -atan2(p1.y - p0.y, p1.x - p0.x)
 			box(st, Vector3(p0.distance_to(p1), 0.08, 0.06), Vector3(mid.x, height * 0.75, mid.y), yaw, color)
 
+## How a nation's homes look: the housing models come in a style of their own for each region (euro is the default).
+const HOME_KEYS := ["cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter"]
+static func home_style(nation: String) -> String:
+	if nation in ["italy", "france", "israel", "turkiye", "brazil"]:
+		return "med"
+	if nation in ["china", "japan", "south_korea", "north_korea", "indonesia"]:
+		return "asia"
+	if nation in ["saudi", "iran", "iraq", "syria", "yemen", "houthis", "egypt", "afghanistan", "pakistan", "india", "sudan", "south_sudan", "ethiopia", "nigeria"]:
+		return "arab"
+	if nation in ["usa", "australia"]:
+		return "us"
+	return "euro"
+
 ## The faith a nation's house of worship takes the look of.
 static func worship_variant(nation: String) -> String:
 	if nation in ["iran", "turkiye", "saudi", "indonesia", "egypt", "pakistan", "iraq", "syria", "afghanistan", "yemen", "houthis", "sudan"]:
@@ -303,13 +316,17 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 		place_model(container, "barn", at + Vector3(2.8, 0, -0.4), -0.25, 4.8, 0.0, frng)
 		return
 	var blend_name: String = BLEND_ALIAS.get(key, key)
+	if key in HOME_KEYS:
+		var style := home_style(preload("res://scripts/factions.gd").identity(world, owner))
+		if style != "euro" and BModels.has_blender(key + "_" + style):
+			blend_name = key + "_" + style
 	if key == "worship":
 		blend_name = "worship_" + worship_variant(preload("res://scripts/factions.gd").identity(world, owner))
 	if key in ["extractor", "mountainMine"]:
 		blend_name = extractor_model(arch.extract_type)   # the mine, rig or quarry for the deposit under it
 	if key == "samSite" and preload("res://scripts/factions.gd").identity(world, owner) in VERTICAL_SAM:
 		blend_name = "samSiteVls"   # the nations that field a vertical-launch system
-	if (key in BLENDER_MADE or BLEND_ALIAS.has(key) or blend_name.begins_with("extractor_")) and blend_name != "" and BModels.has_blender(blend_name):
+	if (key in BLENDER_MADE or BLEND_ALIAS.has(key) or blend_name.begins_with("extractor_") or blend_name != key) and blend_name != "" and BModels.has_blender(blend_name):
 		# Modelled in Blender (native/tools/models/blender): a whole hex, placed at its own size.
 		var tint := Color(world.map.nations[owner].color) if owner < world.map.nations.size() else Color.WHITE
 		var made: Node3D = BModels.build_blender(blend_name, tint)
