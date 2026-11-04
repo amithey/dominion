@@ -13,9 +13,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bl_kit import Model, P, hexc
 from bl_parts import truck
 from bl_civic import *
+from bl_style import STYLE, apply_style, crown, forecourt
 
 out = sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "fire_station.glb"
 m = Model("fire_station")
+apply_style(m)
 rng = random.Random(161)
 ground(m, lawns=False, pave=hexc("c4c4c0"))
 RED = hexc("c0392b")
@@ -152,4 +154,7 @@ bench(m, 3.0, 6.4, 0.0)
 for k in range(6):
     a = math.radians(30 + 60 * k)
     lamp(m, math.cos(a) * 9.8, math.sin(a) * 9.8)
+if STYLE != "euro":
+    crown(m, -0.5, 7.34, -6.1, 12.0, 5.8, corners_only=True)
+    forecourt(m, 9.4)
 m.finish(out)

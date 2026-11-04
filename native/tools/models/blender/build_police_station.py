@@ -13,9 +13,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bl_kit import Model, P, hexc
 from bl_parts import truck, fan, dish, slats
 from bl_civic import *
+from bl_style import STYLE, apply_style, crown, forecourt
 
 out = sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "police_station.glb"
 m = Model("police_station")
+apply_style(m)
 rng = random.Random(33)
 ground(m, lawns=False, pave=hexc("cdcdc8"))
 BLUE = hexc("1f3f7a")
@@ -169,4 +171,7 @@ flagpole(m, 2.8, 6.2, 8.0)
 for k in range(6):
     a = math.radians(30 + 60 * k)
     lamp(m, math.cos(a) * 9.8, math.sin(a) * 9.8)
+if STYLE != "euro":
+    crown(m, -1.0, 7.55, -6.75, 12.0, 4.5, corners_only=True)
+    forecourt(m, 9.4)
 m.finish(out)

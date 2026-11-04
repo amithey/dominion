@@ -14,9 +14,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bl_kit import Model, P, hexc
 from bl_parts import truck
 from bl_civic import *
+from bl_style import STYLE, apply_style, crown, forecourt
 
 out = sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "market.glb"
 m = Model("market")
+apply_style(m)
 rng = random.Random(61)
 ground(m, lawns=False, pave=hexc("c9c2b2"))
 WH = (1.5, 1.5, 1.45)
@@ -173,4 +175,7 @@ bunting(posts[4], posts[5])
 for p in ((-9.2, 4.0), (9.2, 1.0), (-9.4, -5.0), (9.5, -7.0), (-3.0, 9.6), (3.0, 9.6)):
     tree(m, p[0], p[1], 2.3, 1.05)
 flagpole(m, 8.8, -4.0, 8.0)
+if STYLE != "euro":
+    crown(m, 0.0, 5.0, -6.5, 13.6, 5.8, corners_only=True)
+    forecourt(m, 9.4)
 m.finish(out)

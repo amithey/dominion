@@ -276,7 +276,7 @@ func fence(st: SurfaceTool, color: Color, height := 1.1) -> void:
 
 ## How a nation's homes look: the housing models come in a style of their own for each region (euro is the default).
 ## Civic buildings that also come in a regional style (stone colour, roof, a crown and a landmark), chosen like the homes.
-const STYLED_CIVIC := ["bank", "cityHall", "courthouse", "stockExchange"]
+const STYLED_CIVIC := ["bank", "cityHall", "courthouse", "stockExchange", "school", "hospital", "library", "policeStation", "fireStation", "market"]
 const HOME_KEYS := ["cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter"]
 static func home_style(nation: String) -> String:
 	if nation in ["italy", "france", "israel", "turkiye", "brazil"]:
