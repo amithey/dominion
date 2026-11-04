@@ -21,6 +21,8 @@ const SOLDIER_HEIGHT := 2.35       # the browser's readable RTS scale
 const SOLDIER_SPEED := 5.2         # metres per second while running
 const RUN_CLIP_SPEED := 4.6        # speed the run clip was authored for (no foot sliding)
 const REAL_RUN_CLIP_SPEED := 6.4   # the same for the realistic soldier's run, at game scale
+const PEOPLE_RUN_CLIP_SPEED := 3.7 # and for the Blender-made people (people.gd)
+const People := preload("res://scripts/people.gd")
 # Weapons carried by the realistic soldier: length in centimetres (skeleton units).
 const WEAPON_LENGTH := {"AK": 88.0, "Sniper_2": 118.0, "RocketLauncher": 92.0, "SMG": 62.0}
 const TANK_SPEED := 4.2
@@ -1230,6 +1232,12 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		return spawn_craft(key, at, owner)
 	var vehicle := key in VEHICLES
 	var realistic := not vehicle and key != "worker" and realistic_scene != null
+	var person: Node3D = null
+	var person_key: String = key if key in INFANTRY else preload("res://scripts/additional_factions.gd").base(key)   # a national variant looks like the unit it is built on
+	if not vehicle and People.has(person_key):
+		var colours: Dictionary = UNIFORMS[owner % UNIFORMS.size()]
+		person = People.build(person_key, Color(colours.main) * 1.0, Color(colours.pants), Color(map.nations[owner].color) if owner < map.nations.size() else Color.WHITE)
+		realistic = false
 	var node := Node3D.new()
 	var built: Dictionary = preload("res://scripts/vehicle_models.gd").build(self, key, owner) if vehicle else {}
 	if built.is_empty() and vehicle and armor != null:
@@ -1237,6 +1245,8 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	var model: Node3D
 	if not built.is_empty():
 		model = built.root  # already in metres, facing +Z, standing on the ground
+	elif person != null:
+		model = person      # Blender-made: faces +Z, dressed, with its own clips
 	else:
 		model = (tank_scene if vehicle else (worker_scene if key == "worker" else (realistic_scene if realistic else soldier_scene))).instantiate()
 	node.add_child(model)
@@ -1260,6 +1270,8 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		turret = dress_vehicle(model, owner)
 		dust = make_dust()
 		node.add_child(dust)
+	elif person != null:
+		pass
 	elif key == "worker":
 		dress_worker(model)
 	elif realistic:
@@ -1288,7 +1300,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		"speed": TANK_SPEED if vehicle else SOLDIER_SPEED, "heading": 0.0, "moving": false,
 		"turret": turret, "turret_yaw": 0.0, "dust": dust, "phase": at.x * 0.37 + at.z * 0.21,
 		"meshes": model.find_children("*", "MeshInstance3D", true, false) if vehicle else [],
-		"model": model, "clip_speed": REAL_RUN_CLIP_SPEED if realistic else RUN_CLIP_SPEED,
+		"model": model, "clip_speed": PEOPLE_RUN_CLIP_SPEED if person != null else (REAL_RUN_CLIP_SPEED if realistic else RUN_CLIP_SPEED),
 		"axles": built.get("axles", []), "radar": built.get("radar"), "muzzle": built.get("muzzle", 4.2),
 		"gun": built.get("gun"), "gun_base": built.gun.position if built.get("gun") != null else Vector3.ZERO, "tracks": built.get("tracks", []), "track_loop": built.get("track_loop", 16.5), "wreck": built.get("wreck"),
 	}
@@ -1344,13 +1356,16 @@ func display_model(key: String) -> Node3D:
 			from_file.wreck.free()   # a portrait shows the living vehicle
 		model = from_file.root if not from_file.is_empty() else (armor.build(look, 0).root if armor != null else tank_scene.instantiate())
 	elif look == "worker" or look in INFANTRY:
-		var realistic := look != "worker" and realistic_scene != null
-		model = (realistic_scene if realistic else (worker_scene if key == "worker" else soldier_scene)).instantiate()
+		var person: Node3D = People.build(look, Color(UNIFORMS[0].main), Color(UNIFORMS[0].pants), Color(map.nations[0].color))
+		var realistic := look != "worker" and realistic_scene != null and person == null
+		model = person if person != null else (realistic_scene if realistic else (worker_scene if key == "worker" else soldier_scene)).instantiate()
 		var bounds := model_bounds(model)
 		model.scale = Vector3.ONE * SOLDIER_HEIGHT / maxf(bounds.size.y, 0.01)
 		if realistic:
 			model.rotation.y = PI
 			dress_realistic(model, 0, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher", "commando": "SMG", "atgmTeam": "RocketLauncher", "manpads": "RocketLauncher", "fpvTeam": "SMG", "medic": "SMG"}.get(look, "AK"))
+		elif person != null:
+			pass
 		elif look == "worker":
 			dress_worker(model)
 		else:
