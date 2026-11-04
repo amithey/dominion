@@ -6,8 +6,6 @@ const ART := "res://assets/art/foliage/"
 const KINDS := {
 	"grass": ["grass_tufts_atlas_2048", Vector2(4, 3), 1.05, 0.9, 3, 0.10, 0.42],
 	"flowers": ["wildflowers_atlas_2048", Vector2(3, 2), 0.7, 0.8, 2, 0.14, 0.45],
-	"bush": ["bush_leaves_atlas_2048", Vector2(2, 2), 2.4, 2.0, 3, 0.05, 0.5],
-	"reeds": ["reeds_atlas_1024", Vector2(2, 2), 1.5, 2.0, 2, 0.12, 0.45],
 }
 static var _meshes := {}
 static var _materials := {}
@@ -47,8 +45,6 @@ static func material(kind: String) -> ShaderMaterial:
 	m.set_shader_parameter("grid", def[1])
 	m.set_shader_parameter("sway", float(def[5]))
 	m.set_shader_parameter("cut", float(def[6]))
-	if kind == "bush" or kind == "reeds":
-		m.set_shader_parameter("far_fade_start", 140.0)
 	_materials[kind] = m
 	return m
 

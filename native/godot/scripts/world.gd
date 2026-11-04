@@ -830,7 +830,7 @@ func build_environment() -> void:
 # The trees (env_trees.gd): Blender-made species chosen by the ground and the grove, with the bushes at the edges of the groves.
 func build_trees() -> void:
 	preload("res://scripts/env_trees.gd").build(self)
-	preload("res://scripts/shrubs.gd").build(self)
+	preload("res://scripts/env_ground.gd").build(self)   # shrubs, ferns, logs, stumps, reeds and shore pebbles
 	preload("res://scripts/env_rocks.gd").build(self)   # boulders, scree and outcrops by the lie of the land
 
 func mesh_transform(root: Node3D, node: Node3D) -> Transform3D:
@@ -844,8 +844,8 @@ func mesh_transform(root: Node3D, node: Node3D) -> Transform3D:
 
 # ---------------------------------------------------------------- grass
 
-## The meadow from atlas cards (foliage_cards.gd): grass tufts of twelve kinds, wildflowers among them, shrubs on open ground and
-## reeds along the shore, in 32 m cells drawn only near the camera.
+## The meadow from atlas cards (foliage_cards.gd): grass tufts of twelve kinds and wildflowers among them, in 32 m cells drawn only
+## near the camera. Shrubs, ferns, logs, reeds and pebbles are Blender models (env_ground.gd).
 func build_grass() -> void:
 	var Cards := preload("res://scripts/foliage_cards.gd")
 	var high: bool = quality == "high"
@@ -862,7 +862,7 @@ func build_grass() -> void:
 	while cx < half:
 		var cz := -half
 		while cz < half:
-			var spots := {"grass": [], "flowers": [], "bush": [], "reeds": []}
+			var spots := {"grass": [], "flowers": []}
 			for i in range(per_cell):
 				var x := cx + rng.randf() * cell
 				var z := cz + rng.randf() * cell
@@ -870,16 +870,12 @@ func build_grass() -> void:
 				var flat: bool = normal_at(x, z).y >= 0.94
 				var yaw := rng.randf() * TAU
 				if y < 1.8 or not flat:
-					if y > sea + 0.15 and y < sea + 1.1 and normal_at(x, z).y >= 0.9 and rng.randf() < 0.35:
-						spots.reeds.append({"pos": Vector3(x, y - 0.05, z), "scale": rng.randf_range(0.7, 1.2), "yaw": yaw, "cell": rng.randi() % Cards.cell_count("reeds"), "tone": rng.randf()})
 					continue
 				var r := rng.randf()
 				var dry: float = clampf(noise_texture.noise.get_noise_2d(x * 0.55, z * 0.55) * 1.6 + 0.2, 0.0, 1.0)
 				var grass_cell: int = green_cells[rng.randi() % green_cells.size()] if (dry < 0.62 or rng.randf() < 0.5) else rng.randi() % 12
 				if r < 0.06:
 					spots.flowers.append({"pos": Vector3(x, y - 0.05, z), "scale": rng.randf_range(1.0, 1.6), "yaw": yaw, "cell": rng.randi() % Cards.cell_count("flowers"), "tone": rng.randf()})
-				elif r < 0.085 and y > 3.0:
-					spots.bush.append({"pos": Vector3(x, y - 0.1, z), "scale": rng.randf_range(0.55, 1.15), "yaw": yaw, "cell": rng.randi() % Cards.cell_count("bush"), "tone": rng.randf()})
 				else:
 					spots.grass.append({"pos": Vector3(x, y - 0.05, z), "scale": rng.randf_range(1.0, 1.8), "yaw": yaw, "cell": grass_cell % Cards.cell_count("grass"), "tone": rng.randf()})
 			for kind in spots:
@@ -888,7 +884,7 @@ func build_grass() -> void:
 					continue
 				var node: MultiMeshInstance3D = Cards.patch(kind, list)
 				node.set_meta("cell_center", Vector2(cx + cell * 0.5, cz + cell * 0.5))
-				node.visibility_range_end = reach * (1.9 if kind == "bush" else (0.8 if kind == "flowers" else 1.0))
+				node.visibility_range_end = reach * (0.8 if kind == "flowers" else 1.0)
 				node.visibility_range_end_margin = 12.0
 				add_child(node)
 				grass_nodes.append(node)
