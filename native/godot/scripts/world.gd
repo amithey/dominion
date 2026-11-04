@@ -1236,7 +1236,8 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	var person_key: String = key if key in INFANTRY else preload("res://scripts/additional_factions.gd").base(key)   # a national variant looks like the unit it is built on
 	if not vehicle and People.has(person_key):
 		var colours: Dictionary = UNIFORMS[owner % UNIFORMS.size()]
-		person = People.build(person_key, Color(colours.main) * 1.0, Color(colours.pants), Color(map.nations[owner].color) if owner < map.nations.size() else Color.WHITE)
+		person = People.build(person_key, Color(colours.main) * 1.0, Color(colours.pants), Color(map.nations[owner].color) if owner < map.nations.size() else Color.WHITE,
+			People.skin_for(districts.home_style(preload("res://scripts/factions.gd").identity(self, owner)), fposmod(sin(at.x * 12.9898 + at.z * 78.233) * 43758.5453, 1.0) * 2.0 - 1.0))
 		realistic = false
 	var node := Node3D.new()
 	var built: Dictionary = preload("res://scripts/vehicle_models.gd").build(self, key, owner) if vehicle else {}
@@ -1333,7 +1334,8 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	if preload("res://scripts/additional_factions.gd").UNITS.has(key):
 		unit.speed *= float(preload("res://scripts/additional_factions.gd").UNITS[key].scale.get("speed", 1.0))
 	load("res://scripts/force_catalog.gd").equip(self, unit)
-	load("res://scripts/force_models.gd").infantry_prop(self, node, key, owner)
+	if person == null:
+		load("res://scripts/force_models.gd").infantry_prop(self, node, key, owner)   # the crews of the old models carry their gear as props; the Blender people carry it in their hands
 	if research:
 		research.equip(unit)  # discoveries and rival tech set health, range and speed
 	units.append(unit)
@@ -1394,7 +1396,8 @@ func display_model(key: String) -> Node3D:
 	if model == null:
 		return null
 	holder.add_child(model)
-	load("res://scripts/force_models.gd").infantry_prop(self, holder, key, 0)
+	if not model.has_meta("people"):
+		load("res://scripts/force_models.gd").infantry_prop(self, holder, key, 0)
 	return holder
 
 # Uniform colours per nation: olive, desert tan, urban grey, woodland brown.

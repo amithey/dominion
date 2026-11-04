@@ -9,10 +9,14 @@ func _initialize() -> void:
 	var clip := "run_gun"
 	var at := 0.3
 	var yaw := 40.0
+	var dist := -1.0
+	var focus := 0.95
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--clip="): clip = a.get_slice("=", 1)
 		elif a.begins_with("--time="): at = float(a.get_slice("=", 1))
 		elif a.begins_with("--yaw="): yaw = float(a.get_slice("=", 1))
+		elif a.begins_with("--dist="): dist = float(a.get_slice("=", 1))
+		elif a.begins_with("--focus="): focus = float(a.get_slice("=", 1))
 		else: kinds.append(a)
 	if kinds.is_empty():
 		kinds = ["soldier", "sniper", "commando", "rocketSoldier", "atgmTeam", "manpads", "medic", "worker", "fpvTeam", "scoutTeam"]
@@ -56,10 +60,10 @@ func _initialize() -> void:
 				(p as AnimationPlayer).seek(at, true)
 				(p as AnimationPlayer).pause()
 	var cam := Camera3D.new()
-	cam.position = Vector3(0, 1.1, 2.0 + n * 1.25)
+	cam.position = Vector3(0, focus + 0.1, dist if dist > 0.0 else 2.0 + n * 1.25)
 	cam.fov = 38.0
 	root.add_child(cam)
-	cam.look_at(Vector3(0, 0.95, 0))
+	cam.look_at(Vector3(0, focus, 0))
 	for i in range(8):
 		await process_frame
 	await RenderingServer.frame_post_draw

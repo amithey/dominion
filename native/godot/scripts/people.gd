@@ -6,8 +6,8 @@ extends RefCounted
 const DIR := "res://assets/art/blender/people/"
 ## unit key -> model kind (national variants are looked up through their base unit by the caller)
 const KIND := {"soldier": "rifleman", "sniper": "sniper", "commando": "commando", "rocketSoldier": "rocket", "atgmTeam": "atgm",
-	"manpads": "manpads", "medic": "medic", "worker": "worker", "fpvTeam": "fpv", "scoutTeam": "scout", "machineGunTeam": "rifleman",
-	"mortarTeam": "rifleman", "recoillessTeam": "rifleman"}
+	"manpads": "manpads", "medic": "medic", "worker": "worker", "fpvTeam": "fpv", "scoutTeam": "scout", "machineGunTeam": "mg",
+	"mortarTeam": "mortar", "recoillessTeam": "rcl"}
 ## The run clip was authored for this ground speed in the model's own metres.
 const RUN_SPEED := 3.2
 static var _cache := {}
@@ -16,7 +16,7 @@ static func has(key: String) -> bool:
 	return KIND.has(key) and ResourceLoader.exists(DIR + "inf_%s.glb" % KIND[key])
 
 ## The model for a unit key, dressed for `owner`'s colours (uniform, nation); null when there is none.
-static func build(key: String, uniform: Color, pants: Color, nation: Color) -> Node3D:
+static func build(key: String, uniform: Color, pants: Color, nation: Color, skin := Color(0.85, 0.66, 0.5)) -> Node3D:
 	if not has(key):
 		return null
 	var scene: PackedScene = load(DIR + "inf_%s.glb" % KIND[key])
@@ -25,13 +25,20 @@ static func build(key: String, uniform: Color, pants: Color, nation: Color) -> N
 		var mesh: Mesh = (mi as MeshInstance3D).mesh
 		for s in range(mesh.get_surface_count()):
 			var src: Material = mesh.surface_get_material(s)
-			(mi as MeshInstance3D).set_surface_override_material(s, material(src.resource_name if src != null else "", uniform, pants, nation))
+			(mi as MeshInstance3D).set_surface_override_material(s, material(src.resource_name if src != null else "", uniform, pants, nation, skin))
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		(mi as MeshInstance3D).extra_cull_margin = 1.0   # skinned: the rest-pose bounds are not where the limbs end up
+	root.set_meta("people", true)
 	return root
 
-static func material(role: String, uniform: Color, pants: Color, nation: Color) -> Material:
-	var key := "%s|%s|%s|%s" % [role, uniform.to_html(), pants.to_html(), nation.to_html() if role == "banner" else ""]
+## The skin tone of a nation's people, by the region it belongs to (districts.home_style).
+static func skin_for(style: String, variation: float) -> Color:
+	var c: Color = {"euro": Color(0.86, 0.68, 0.55), "us": Color(0.84, 0.64, 0.5), "med": Color(0.74, 0.54, 0.4), "asia": Color(0.84, 0.66, 0.48),
+		"arab": Color(0.7, 0.5, 0.36), "india": Color(0.56, 0.38, 0.27), "africa": Color(0.38, 0.25, 0.17)}.get(style, Color(0.85, 0.66, 0.5))
+	return c.lightened(variation * 0.1) if variation > 0.0 else c.darkened(-variation * 0.12)
+
+static func material(role: String, uniform: Color, pants: Color, nation: Color, skin := Color(0.85, 0.66, 0.5)) -> Material:
+	var key := "%s|%s|%s|%s|%s" % [role, uniform.to_html(), pants.to_html(), nation.to_html() if role == "banner" else "", skin.to_html() if role == "skin" else ""]
 	if _cache.has(key):
 		return _cache[key]
 	var m := StandardMaterial3D.new()
@@ -48,7 +55,8 @@ static func material(role: String, uniform: Color, pants: Color, nation: Color) 
 		"gear": c = Color(0.24, 0.25, 0.19)
 		"boot": c = Color(0.09, 0.075, 0.06)
 		"glove": c = Color(0.12, 0.11, 0.1)
-		"skin": c = Color(1, 1, 1)
+		"skin": c = skin
+		"hair": c = Color(0.07, 0.05, 0.035)
 		"metal":
 			c = Color(0.2, 0.2, 0.21)
 			m.metallic = 0.6
