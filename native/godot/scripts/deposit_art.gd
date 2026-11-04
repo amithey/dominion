@@ -44,9 +44,13 @@ func build(type: String, at: Vector3, spin: float) -> Node3D:
 	_site = at
 	_turn = Basis(Vector3.UP, spin)
 	_conform = not water
-	var body := MeshInstance3D.new()
-	body.mesh = _mesh_for(type)
-	root.add_child(body)
+	var blend := _blender_body(type, at)
+	if blend != null:
+		root.add_child(blend)
+	else:
+		var body := MeshInstance3D.new()
+		body.mesh = _mesh_for(type)
+		root.add_child(body)
 	match type:
 		"gas":
 			root.add_child(_flare(Vector3(0, 1.8, 0)))   # a gas wellhead with its flare
@@ -192,6 +196,53 @@ func _begin() -> SurfaceTool:
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	st.set_smooth_group(-1)  # faceted: hard edges read as rock
 	return st
+
+# ---------------------------------------------------------------- the Blender-made rocks
+
+const BLEND_DIR := "res://assets/art/blender/env/"
+const BLEND_VARIANTS := {"iron": 3, "gold": 3, "silicon": 3, "uranium": 3, "diamond": 3, "oil": 2}
+
+## The rocks of a land deposit as modelled in Blender (build_rocks.py): a variant per site, dressed with the ore's own rock texture,
+## the crystals with their glowing material; null when the type has no model.
+func _blender_body(type: String, at: Vector3) -> Node3D:
+	if not BLEND_VARIANTS.has(type):
+		return null
+	var model := "dep_%s_%d" % [type, 1 + int(absf(at.x * 7.0 + at.z * 13.0)) % int(BLEND_VARIANTS[type])]
+	if not ResourceLoader.exists(BLEND_DIR + model + ".glb"):
+		return null
+	var root: Node3D = (load(BLEND_DIR + model + ".glb") as PackedScene).instantiate()
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var mesh: Mesh = (mi as MeshInstance3D).mesh
+		for k in range(mesh.get_surface_count()):
+			var src: Material = mesh.surface_get_material(k)
+			(mi as MeshInstance3D).set_surface_override_material(k, _blender_material(src.resource_name if src != null else "", type))
+	# Stand on the average ground of the site, so a slope does not leave a gap under the uphill rocks.
+	var sum := 0.0
+	for a in range(8):
+		var ang := TAU * a / 8.0
+		var wp := at + Vector3(cos(ang), 0, sin(ang)) * 4.0
+		sum += world.height_at(wp.x, wp.z) - at.y
+	root.position.y = sum / 8.0 + 0.1
+	return root
+
+func _blender_material(role: String, type: String) -> Material:
+	return _mat("blend_" + role, func():
+		match role:
+			"rock":
+				var m := _stone().duplicate() as StandardMaterial3D
+				m.vertex_color_is_srgb = false
+				return m
+			"gold":
+				var m := _painted(0.28, 1.0)
+				m.vertex_color_is_srgb = false
+				return m
+			"crystal_silicon":
+				return _crystal(Color("3f8fd0"), 0.25)
+			"crystal_uranium":
+				return _crystal(Color("55e03a"), 1.6)
+			"crystal_diamond":
+				return _crystal(Color("b8e4ff"), 0.45)
+		return _ore_stone(role.trim_prefix("rock_")))
 
 # ---------------------------------------------------------------- the sites
 

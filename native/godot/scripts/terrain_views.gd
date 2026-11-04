@@ -25,7 +25,17 @@ static func capture(w: Node) -> void:
 		if n > most:
 			most = n
 			dense = Vector3(t.x, w.height_at(t.x, t.z), t.z)
-	var shots := [["forest", dense, 42.0, 0.55, 0.7], ["forest-high", dense, 110.0, 0.9, 0.3], ["top", Vector3(0, 0, 0), 420.0, 1.45, 0.0], ["high", w.start + Vector3(-80, 0, 60), 220.0, 1.2, 0.6],
+	# The steepest dry ground, for the rocks.
+	var rocky := Vector3.ZERO
+	var steepest := -1.0
+	for x in range(-260, 261, 10):
+		for z in range(-260, 261, 10):
+			if w.height_at(x, z) - float(w.map.seaLevel) > 1.0:
+				var st: float = 1.0 - w.normal_at(x, z).y
+				if st > steepest:
+					steepest = st
+					rocky = Vector3(x, w.height_at(x, z), z)
+	var shots := [["rocks", rocky, 38.0, 0.6, 0.5], ["rocks-high", rocky, 120.0, 0.9, 0.2], ["forest", dense, 42.0, 0.55, 0.7], ["forest-high", dense, 110.0, 0.9, 0.3], ["top", Vector3(0, 0, 0), 420.0, 1.45, 0.0], ["high", w.start + Vector3(-80, 0, 60), 220.0, 1.2, 0.6],
 		["field", w.start + Vector3(-70, 0, 50), 60.0, 0.55, 0.8], ["lake", lake, 90.0, 0.7, 0.4], ["lake-close", lake, 40.0, 0.45, 1.2]]
 	for shot in shots:
 		w.cam_focus = shot[1]

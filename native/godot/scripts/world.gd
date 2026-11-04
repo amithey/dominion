@@ -831,6 +831,7 @@ func build_environment() -> void:
 func build_trees() -> void:
 	preload("res://scripts/env_trees.gd").build(self)
 	preload("res://scripts/shrubs.gd").build(self)
+	preload("res://scripts/env_rocks.gd").build(self)   # boulders, scree and outcrops by the lie of the land
 
 func mesh_transform(root: Node3D, node: Node3D) -> Transform3D:
 	var result := Transform3D.IDENTITY
