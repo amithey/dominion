@@ -169,10 +169,25 @@ elif VAR == "residential":
         house(-8.0 + k * 3.9, -6.6, 0.0, 3.7, 4.2, 3, wall=PLASTERS[k % len(PLASTERS)], roof="roof_slate", chim=True, flh=2.6)
     for k in range(3):                                                                                    # and a short row on the left
         house(-7.2, -1.2 + k * 3.4, math.pi / 2, 3.1, 3.4, 2, wall=PLASTERS[(k + 2) % len(PLASTERS)], roof="roof_tile", chim=True)
-    m.cyl(STONE, (3.0, 0.13, 3.6), 2.0, 0.5, 24)                                                          # a square with a fountain
-    m.cyl("glass", (3.0, 0.62, 3.6), 1.8, 0.03, 24, tint=(0.7, 1.1, 1.5))
-    m.cyl(STONE, (3.0, 0.62, 3.6), 0.3, 1.2, 10)
-    m.lathe(STONE, (3.0, 1.8, 3.6), [(0.0, 0.0), (0.6, 0.0), (0.7, 0.12), (0.3, 0.22), (0.0, 0.22)], 14)
+    if STYLE in ("asia", "arab", "india"):                                                                # a pavilion on the square: slate eaves, or a dome
+        m.cyl(STONE, (3.0, 0.13, 3.6), 2.3, 0.3, 16)
+        for qx, qz in ((-1.7, -1.7), (1.7, -1.7), (1.7, 1.7), (-1.7, 1.7)):
+            if STYLE == "asia":
+                m.pipe("paint", (3.0 + qx, 0.43, 3.6 + qz), (3.0 + qx, 3.2, 3.6 + qz), 0.13, 8, tint=hexc("a8322a"))
+            else:
+                m.pipe(STONE, (3.0 + qx, 0.43, 3.6 + qz), (3.0 + qx, 3.2, 3.6 + qz), 0.13, 8)
+        if STYLE == "asia":
+            hip_roof(m, 0.7, 5.3, 1.3, 5.9, 3.2, 1.3, overhang=0.6, role="roof_slate")
+        else:
+            m.lathe("copper" if STYLE == "arab" else "plaster", (3.0, 3.2, 3.6), [(0.0, 0.0), (2.2, 0.0), (2.1, 0.5), (1.4, 1.2), (0.5, 1.7), (0.0, 1.9)], 20)
+    elif STYLE == "africa":                                                                               # a great shade tree with a bench round it
+        m.cyl("wood", (3.0, 0.13, 3.6), 0.9, 3.0, 10, r2=0.6, tint=(0.7, 0.6, 0.5))
+        m.dome("leaf", (3.0, 2.8, 3.6), 2.8, 1.8, 12, 3, tint=hexc("5a8a46"))
+    else:
+        m.cyl(STONE, (3.0, 0.13, 3.6), 2.0, 0.5, 24)                                                      # a square with a fountain
+        m.cyl("glass", (3.0, 0.62, 3.6), 1.8, 0.03, 24, tint=(0.7, 1.1, 1.5))
+        m.cyl(STONE, (3.0, 0.62, 3.6), 0.3, 1.2, 10)
+        m.lathe(STONE, (3.0, 1.8, 3.6), [(0.0, 0.0), (0.6, 0.0), (0.7, 0.12), (0.3, 0.22), (0.0, 0.22)], 14)
     for p in ((-3.0, 7.0), (8.0, 6.4), (8.4, -1.6), (-8.4, 6.8)):
         tree(m, p[0], p[1], 2.3, 1.05)
     for sx in (-1, 1):
@@ -182,7 +197,7 @@ elif VAR == "residential":
 elif VAR == "workerHouse":
     for row, zz in enumerate((-6.6, -1.0)):
         for k in range(4):
-            house(-7.2 + k * 4.3, zz, 0.0, 3.9, 3.8, 2, wall=hexc("b86a4a"), roof="roof_slate", flh=2.6, porch=False, chim=True)
+            house(-7.2 + k * 4.3, zz, 0.0, 3.9, 3.8, 2, wall=hexc("b86a4a") if STYLE == "euro" else PLASTERS[(k + row) % len(PLASTERS)], roof="roof_slate", flh=2.6, porch=False, chim=True)
     m.box("brick", (4.4, 0.13, 3.4), (8.4, 3.0, 6.4), bevel=0.03, seg=1, tint=(0.9, 0.82, 0.78))               # the shared wash-house
     gable_roof(m, 4.4, 8.4, 3.4, 6.4, 3.0, 1.3, overhang=0.3, role=roofrole("roof_slate"))
     chimney(7.6, 3.1, 4.0, 2.4)
