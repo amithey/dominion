@@ -14,7 +14,18 @@ static func capture(w: Node) -> void:
 			if h < float(w.map.seaLevel) and Vector2(x, z).length() < best:
 				best = Vector2(x, z).length()
 				lake = Vector3(x, h, z)
-	var shots := [["top", Vector3(0, 0, 0), 420.0, 1.45, 0.0], ["high", w.start + Vector3(-80, 0, 60), 220.0, 1.2, 0.6],
+	# The densest stand of trees, for a close look at the species.
+	var dense := Vector3.ZERO
+	var most := -1
+	for t in w.map.trees:
+		var n := 0
+		for u in w.map.trees:
+			if absf(u.x - t.x) < 14.0 and absf(u.z - t.z) < 14.0:
+				n += 1
+		if n > most:
+			most = n
+			dense = Vector3(t.x, w.height_at(t.x, t.z), t.z)
+	var shots := [["forest", dense, 42.0, 0.55, 0.7], ["forest-high", dense, 110.0, 0.9, 0.3], ["top", Vector3(0, 0, 0), 420.0, 1.45, 0.0], ["high", w.start + Vector3(-80, 0, 60), 220.0, 1.2, 0.6],
 		["field", w.start + Vector3(-70, 0, 50), 60.0, 0.55, 0.8], ["lake", lake, 90.0, 0.7, 0.4], ["lake-close", lake, 40.0, 0.45, 1.2]]
 	for shot in shots:
 		w.cam_focus = shot[1]

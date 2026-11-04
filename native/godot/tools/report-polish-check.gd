@@ -84,23 +84,6 @@ func run() -> void:
 		for kind in ["albedo", "normal"]:
 			var texture: Texture2D = terrain_material.get_shader_parameter(layer + "_" + kind)
 			check(texture.get_image().has_mipmaps(), layer + " " + kind + " supports distant texture filtering")
-	# Watertight foliage crowns: every triangle edge has exactly two faces.
-	var pine := preload("res://scripts/pines.gd").mesh()
-	var arrays := pine.surface_get_arrays(1)
-	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	var indices := PackedInt32Array()
-	if arrays[Mesh.ARRAY_INDEX] != null: indices = arrays[Mesh.ARRAY_INDEX]
-	else:
-		indices.resize(vertices.size())
-		for i in range(vertices.size()): indices[i] = i
-	var edges := {}
-	for i in range(0, indices.size(), 3):
-		for j in range(3):
-			var a := str(vertices[indices[i + j]])
-			var b := str(vertices[indices[i + (j + 1) % 3]])
-			var edge := a + "|" + b if a < b else b + "|" + a
-			edges[edge] = int(edges.get(edge, 0)) + 1
-	check(not edges.is_empty() and edges.values().all(func(n): return n == 2), "Pine crowns have no cracked triangle seams")
 	# The guide offers real actions, without toggling panels closed on repeats.
 	var guide := preload("res://scripts/beginner_guide.gd").new()
 	h.add_child(guide); guide.setup(w, h)

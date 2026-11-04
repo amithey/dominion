@@ -272,7 +272,6 @@ const FactionPowers := preload("res://scripts/faction_powers.gd")
 const SiteClearing := preload("res://scripts/site_clearing.gd")
 const Picking := preload("res://scripts/picking.gd")
 const Topography := preload("res://scripts/topography.gd")
-const Pines := preload("res://scripts/pines.gd")
 var lake_mask := PackedByteArray()   # 1 where a height-grid cell is lake water (not the open sea)
 const NAV_STEP := 4.0
 var fps_frames := 0
@@ -828,137 +827,10 @@ func build_environment() -> void:
 
 # ---------------------------------------------------------------- trees
 
-# One MultiMesh per mesh of each birch variant: 863 trees in ~10 draws.
+# The trees (env_trees.gd): Blender-made species chosen by the ground and the grove, with the bushes at the edges of the groves.
 func build_trees() -> void:
-	var variants := []
-	for v in range(1, 6):
-		var root: Node3D = load("res://assets/nature/BirchTree_%d.gltf" % v).instantiate()
-		var parts := []
-		var top := 0.0
-		for mesh_instance in root.find_children("*", "MeshInstance3D", true, false):
-			var local := mesh_transform(root, mesh_instance)
-			parts.append({"mesh": mesh_instance.mesh, "local": local})
-			top = maxf(top, (local * mesh_instance.get_aabb()).end.y)
-		root.free()
-		variants.append({"parts": parts, "height": maxf(top, 0.1), "trees": []})
-	var pines: Array = []
-	for t in map.trees:
-		if Pines.is_pine(self, t.x, t.z):
-			pines.append(t)
-			continue
-		var index: int = int(t.grove) % 5 if int(t.grove) >= 0 else int(absf(t.x * 7.0 + t.z * 13.0)) % 5
-		variants[index].trees.append(t)
-	build_pines(pines)
-	preload("res://scripts/shrubs.gd").build(self)   # bushes at the edges of the groves
-	# Split every variant into 96 m cells so trees outside the view are culled,
-	# instead of one map-wide MultiMesh that is always drawn in full.
-	var cells := {}
-	for v in range(variants.size()):
-		for t in variants[v].trees:
-			var key := Vector3i(v, floori(t.x / 96.0), floori(t.z / 96.0))
-			if not cells.has(key):
-				cells[key] = []
-			cells[key].append(t)
-	var leaf_materials := {}
-	for key in cells:
-		var variant: Dictionary = variants[key.x]
-		var trees: Array = cells[key]
-		for part in variant.parts:
-			var mm := MultiMesh.new()
-			mm.transform_format = MultiMesh.TRANSFORM_3D
-			mm.mesh = part.mesh
-			mm.instance_count = trees.size()
-			for i in range(trees.size()):
-				var t: Dictionary = trees[i]
-				var size := 7.5 * float(t.scale) / float(variant.height)
-				var spin := fmod(t.x * 12.9898 + t.z * 78.233, TAU)
-				var basis := Basis(Vector3.UP, spin).scaled(Vector3(size, size * (0.92 + fmod(absf(t.x), 0.16)), size))
-				mm.set_instance_transform(i, Transform3D(basis, Vector3(t.x, height_at(t.x, t.z) - 0.15, t.z)) * part.local)
-				var spot := Vector2(t.x, t.z)
-				if not tree_parts.has(spot):
-					tree_parts[spot] = []
-				tree_parts[spot].append([mm, i])
-			var node := MultiMeshInstance3D.new()
-			node.multimesh = mm
-			if not leaf_materials.has(part.mesh):
-				leaf_materials[part.mesh] = foliage_mesh(part.mesh)
-			mm.mesh = leaf_materials[part.mesh]
-			add_child(node)
-			tree_nodes.append(node)
-
-## Pines (pines.gd): one MultiMesh per 96 m cell. Half of them get a smaller
-## companion a few metres off, so stands of conifers look dense.
-func build_pines(trees: Array) -> void:
-	var near_mesh := Pines.mesh(true)
-	var far_mesh := Pines.mesh(false)
-	var all: Array = []
-	for t in trees:
-		all.append(t)
-		var h := fposmod(sin(t.x * 3.1 + t.z * 7.7) * 43758.5453, 1.0)
-		if h < 0.5:
-			var a := h * TAU * 2.0
-			var extra := {"x": t.x + cos(a) * 4.5, "z": t.z + sin(a) * 4.5, "scale": float(t.scale) * 0.75}
-			if height_at(extra.x, extra.z) > float(map.seaLevel) + 0.6:
-				all.append(extra)
-	var cells := {}
-	for t in all:
-		var key := Vector2i(floori(t.x / 96.0), floori(t.z / 96.0))
-		if not cells.has(key):
-			cells[key] = []
-		cells[key].append(t)
-	# Two copies of every cell: the detailed pines close to the camera and cheap ones from 120 m on (the
-	# switch fades), so a forest costs little at a distance. Both are felled together (tree_parts).
-	for key in cells:
-		var list: Array = cells[key]
-		for far in [false, true]:
-			var mm := MultiMesh.new()
-			mm.transform_format = MultiMesh.TRANSFORM_3D
-			mm.use_custom_data = true
-			mm.mesh = far_mesh if far else near_mesh
-			mm.instance_count = list.size()
-			for i in range(list.size()):
-				var t: Dictionary = list[i]
-				var size := 10.5 * float(t.scale) * (0.85 + fposmod(t.x * 0.37, 0.3))
-				var spin := fmod(t.x * 12.9898 + t.z * 78.233, TAU)
-				var lean := Basis(Vector3(cos(spin), 0, sin(spin)), fposmod(t.z * 0.13, 0.08) - 0.04)
-				mm.set_instance_transform(i, Transform3D(lean * Basis(Vector3.UP, spin).scaled(Vector3(size * 0.9, size, size * 0.9)), Vector3(t.x, height_at(t.x, t.z) - 0.2, t.z)))
-				var shade := fposmod(sin(t.x * 5.3 + t.z * 1.7) * 43758.5453, 1.0)
-				mm.set_instance_custom_data(i, Color(0.45 + shade * 0.1, 0.5 + shade * 0.08, 0.45, 1.0))
-				var spot := Vector2(t.x, t.z)
-				if not tree_parts.has(spot):
-					tree_parts[spot] = []
-				tree_parts[spot].append([mm, i])
-			var node := MultiMeshInstance3D.new()
-			node.multimesh = mm
-			if far:
-				node.visibility_range_begin = 120.0
-				node.visibility_range_begin_margin = 14.0
-				node.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-			else:
-				node.visibility_range_end = 120.0
-				node.visibility_range_end_margin = 14.0
-				node.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-			add_child(node)
-			tree_nodes.append(node)
-
-# Copy of a tree mesh drawn with the wind shader. The birch leaf texture is
-# autumn yellow; the tint turns it into summer yellow-green foliage.
-func foliage_mesh(source: Mesh) -> Mesh:
-	var mesh: Mesh = source.duplicate()
-	var shader: Shader = load("res://shaders/foliage.gdshader")
-	for i in range(mesh.get_surface_count()):
-		var material := mesh.surface_get_material(i) as BaseMaterial3D
-		if material == null:
-			continue
-		var leafy: bool = material.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or "leaf" in material.resource_name.to_lower() or (material.albedo_texture != null and "leaves" in material.albedo_texture.resource_path.to_lower())
-		var foliage := ShaderMaterial.new()
-		foliage.shader = shader
-		foliage.set_shader_parameter("albedo_tex", material.albedo_texture)
-		foliage.set_shader_parameter("leaves", leafy)
-		foliage.set_shader_parameter("tint", Color(0.4, 0.56, 0.3) if leafy else material.albedo_color)
-		foliage.set_shader_parameter("alpha_cut", material.alpha_scissor_threshold if leafy else 0.0)
-		mesh.surface_set_material(i, foliage)
-	return mesh
+	preload("res://scripts/env_trees.gd").build(self)
+	preload("res://scripts/shrubs.gd").build(self)
 
 func mesh_transform(root: Node3D, node: Node3D) -> Transform3D:
 	var result := Transform3D.IDENTITY
