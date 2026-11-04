@@ -47,6 +47,8 @@ class Model:
         self._cache = {}
         self.stack = []
         self.markers = []
+        self.role_map = {}      # a role drawn as another (a regional style swaps slate for tile, say)
+        self.role_tint = {}     # a colour multiplied into every part of a role
 
     # ------------------------------------------------------------ accumulation
     def _acc(self, role):
@@ -58,6 +60,9 @@ class Model:
 
     def add(self, role, src, matrix=None, tint=(1, 1, 1), jitter=0.0):
         """Append a bmesh (in Blender space) to a role, transformed by matrix and tinted."""
+        role = self.role_map.get(role, role)
+        if role in self.role_tint:
+            tint = tuple(a * b for a, b in zip(tint, self.role_tint[role]))
         acc = self._acc(role)
         tmp = src.copy()
         for f in reversed(self.stack):

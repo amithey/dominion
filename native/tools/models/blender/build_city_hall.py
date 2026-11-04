@@ -12,10 +12,12 @@ import random
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bl_kit import Model, P, hexc
 from bl_civic import *
+from bl_style import STYLE, apply_style, crown, forecourt
 
 out = sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "city_hall.glb"
 m = Model("city_hall")
 rng = random.Random(8)
+apply_style(m)
 ground(m)
 
 # ------------------------------------------------------------------ the building: x +-6, z -8 .. -1
@@ -128,4 +130,7 @@ for k in range(6):
 for sx in (-1, 1):
     lamp(m, sx * 3.2, 0.9)
     lamp(m, sx * 2.4, 3.0)
+if STYLE != "euro":
+    crown(m, 0.0, 8.5, -4.5, 11.6, 6.4, corners_only=True)
+    forecourt(m, 9.0)
 m.finish(out)

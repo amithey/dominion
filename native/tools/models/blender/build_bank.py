@@ -13,10 +13,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bl_kit import Model, P, hexc
 from bl_parts import truck
 from bl_civic import *
+from bl_style import STYLE, apply_style, crown, forecourt
 
 out = sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "bank.glb"
 m = Model("bank")
 rng = random.Random(14)
+apply_style(m)
 ground(m)
 GRANITE = (0.82, 0.82, 0.86)
 
@@ -123,4 +125,7 @@ flagpole(m, -6.8, 3.0, 7.5)
 for k in range(6):
     a = math.radians(30 + 60 * k)
     lamp(m, math.cos(a) * 9.8, math.sin(a) * 9.8)
+if STYLE != "euro":
+    crown(m, 0.0, 9.3, -4.6, 9.4, 9.8)
+    forecourt(m, 9.0)
 m.finish(out)

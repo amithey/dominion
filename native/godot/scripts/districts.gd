@@ -275,6 +275,8 @@ func fence(st: SurfaceTool, color: Color, height := 1.1) -> void:
 			box(st, Vector3(p0.distance_to(p1), 0.08, 0.06), Vector3(mid.x, height * 0.75, mid.y), yaw, color)
 
 ## How a nation's homes look: the housing models come in a style of their own for each region (euro is the default).
+## Civic buildings that also come in a regional style (stone colour, roof, a crown and a landmark), chosen like the homes.
+const STYLED_CIVIC := ["bank", "cityHall", "courthouse", "stockExchange"]
 const HOME_KEYS := ["cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter"]
 static func home_style(nation: String) -> String:
 	if nation in ["italy", "france", "israel", "turkiye", "brazil"]:
@@ -320,6 +322,10 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 		place_model(container, "barn", at + Vector3(2.8, 0, -0.4), -0.25, 4.8, 0.0, frng)
 		return
 	var blend_name: String = BLEND_ALIAS.get(key, key)
+	if blend_name in STYLED_CIVIC:
+		var civic_style := home_style(preload("res://scripts/factions.gd").identity(world, owner))
+		if civic_style != "euro" and BModels.has_blender(blend_name + "_" + civic_style):
+			blend_name = blend_name + "_" + civic_style
 	if key in HOME_KEYS:
 		var style := home_style(preload("res://scripts/factions.gd").identity(world, owner))
 		if style != "euro" and BModels.has_blender(key + "_" + style):

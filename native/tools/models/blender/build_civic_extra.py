@@ -11,11 +11,14 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bl_kit import Model, P, hexc
 from bl_parts import truck, fence_poly, watch_tower, fan, hazard_ring
 from bl_civic import *
+from bl_style import STYLE, apply_style, crown, forecourt
 
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 out = args[0] if args else "extra.glb"
 VAR = args[1] if len(args) > 1 else "lighthouse"
 m = Model("extra_" + VAR)
+if VAR == "stockExchange":
+    apply_style(m)
 rng = random.Random(abs(hash(VAR)) % 1000 + 9)
 CLAD, DARK = "cladding", "steel_dark"
 
@@ -264,4 +267,7 @@ else:   # stockExchange
     for k in range(6):
         a = math.radians(30 + 60 * k)
         lamp(m, math.cos(a) * 9.8, math.sin(a) * 9.8)
+if VAR == "stockExchange" and STYLE != "euro":
+    crown(m, 0.0, 8.8, -5.8, 12.0, 5.6, corners_only=True)
+    forecourt(m, 9.0)
 m.finish(out)
