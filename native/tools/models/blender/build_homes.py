@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bl_kit import Model, P, hexc
 from bl_parts import truck
 from bl_civic import *
+from bl_style import crown
 
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 out = args[0] if args else "homes.glb"
@@ -143,6 +144,12 @@ def veg_plot(x, z, w=2.0, d=1.4):
 # ------------------------------------------------------------------ the variants
 if VAR == "cottage":
     for (x, z, yaw, w, d) in ((-5.6, -5.8, 0.3, 4.4, 3.4), (3.2, -6.2, -0.4, 4.6, 3.6), (-4.4, 3.4, math.pi - 0.2, 4.2, 3.4)):
+        if STYLE == "africa" and z > 0:                                                                  # a compound of round thatched huts instead
+            for (hx, hz, hr) in ((-5.2, 3.6, 1.6), (-2.6, 6.2, 1.3), (-7.4, 5.8, 1.2)):
+                m.cyl("plaster", (hx, 0.13, hz), hr, 2.1, 14, tint=hexc("c8845a"))
+                m.box("dark", (hx - 0.4, 0.13, hz + hr - 0.05), (hx + 0.4, 1.7, hz + hr + 0.02))
+                m.cyl("wood", (hx, 2.2, hz), hr + 0.55, 1.7, 14, r2=0.05, tint=hexc("b89a50"))
+            continue
         house(x, z, yaw, w, d, 2 if w > 4.4 else 1, roof="roof_tile", flh=2.8)
     m.box("gravel", (-1.0, 0.13, -9.0), (1.0, 0.14, 9.0), tint=(1.1, 1.0, 0.9))                       # a lane
     veg_plot(-8.6, -0.8)
@@ -189,11 +196,12 @@ elif VAR == "workerHouse":
     for p in ((8.4, -8.0), (-8.8, 7.0), (0.0, 8.8)):
         tree(m, p[0], p[1], 2.0, 0.9)
 elif VAR == "luxuryVillas":
-    for (x, z, yaw) in ((-5.6, -5.4, 0.2), (5.4, -5.0, -0.2)):
+    for vi, (x, z, yaw) in enumerate(((-5.6, -5.4, 0.2), (5.4, -5.0, -0.2))):
         with m.frame((x, 0, z), yaw=yaw):
             w, d = 6.4, 4.8
+            wall = hexc("f0e8d8") if STYLE == "euro" else PLASTERS[vi + 1]
             m.box(STONE, (-w / 2 - 0.1, 0.13, -d / 2 - 0.1), (w / 2 + 0.1, 0.7, d / 2 + 0.1), bevel=0.03, seg=1)
-            m.box("plaster", (-w / 2, 0.7, -d / 2), (w / 2, 6.6, d / 2), bevel=0.03, seg=1, tint=hexc("f0e8d8"))
+            m.box("plaster", (-w / 2, 0.7, -d / 2), (w / 2, 6.6, d / 2), bevel=0.03, seg=1, tint=wall)
             for fl in range(2):
                 for i in range(4):
                     wx = -w / 2 + (i + 0.5) * w / 4
@@ -202,19 +210,50 @@ elif VAR == "luxuryVillas":
                     else:
                         win(wx, 0.7 + fl * 3.0 + 0.7, d / 2, 0.9, 1.6, shutters=False)
             m.box("wall_concrete", (-w / 2 - 0.2, 6.6, -d / 2 - 0.2), (w / 2 + 0.2, 6.85, d / 2 + 0.2), bevel=0.03, seg=1, tint=WH)
-            hip_roof(m, -w / 2, w / 2, -d / 2, d / 2, 6.85, 2.0, overhang=0.4, role=roofrole("roof_tile"))
-            chimney(w * 0.3, 7.0, 0.0, 1.8)
+            if FLAT or STYLE == "africa":                                                                  # a flat roof behind a parapet, crowned in the regional way
+                m.box("plaster", (-w / 2 - 0.05, 6.85, -d / 2 - 0.05), (w / 2 + 0.05, 7.45, d / 2 + 0.05), bevel=0.03, seg=1, tint=wall)
+                m.box("plaster", (-w / 2 + 0.25, 6.9, -d / 2 + 0.25), (w / 2 - 0.25, 7.5, d / 2 - 0.25), tint=tuple(c * 0.9 for c in wall))
+                crown(m, 0.0, 7.5, 0.0, w - 0.4, d - 0.4)
+            elif STYLE == "asia":                                                                          # deep eaves and a dark timber band
+                hip_roof(m, -w / 2, w / 2, -d / 2, d / 2, 6.85, 2.2, overhang=1.1, role=roofrole("roof_tile"))
+                m.box("wood", (-w / 2 - 0.02, 3.55, d / 2), (w / 2 + 0.02, 3.75, d / 2 + 0.06), tint=(0.28, 0.18, 0.12))
+                m.box("wood", (-w / 2 - 0.02, 6.4, d / 2), (w / 2 + 0.02, 6.6, d / 2 + 0.06), tint=(0.28, 0.18, 0.12))
+            elif STYLE == "us":                                                                            # a big gable over the front, a chimney
+                gable_roof(m, -w / 2, w / 2, -d / 2, d / 2, 6.85, 2.4, overhang=0.5, role="roof_slate")
+                chimney(w * 0.3, 7.0, 0.0, 2.4)
+            else:
+                hip_roof(m, -w / 2, w / 2, -d / 2, d / 2, 6.85, 2.0, overhang=0.4, role=roofrole("roof_tile"))
+                chimney(w * 0.3, 7.0, 0.0, 1.8)
             m.box(STONE, (-1.2, 0.13, d / 2), (1.2, 2.9, d / 2 + 0.6), bevel=0.03, seg=1)                        # a portico
             for sx in (-0.9, 0.9):
                 column(m, sx, d / 2 + 0.5, 0.7, 2.9, 0.16, STONE)
             m.box(STONE, (-1.3, 2.9, d / 2 - 0.1), (1.3, 3.1, d / 2 + 0.7), bevel=0.02, seg=1)
             m.box("cladding", (w / 2, 0.7, -d / 2 + 0.3), (w / 2 + 3.0, 3.0, d / 2 - 0.5), bevel=0.03, seg=1, tint=hexc("e8e0d0"))    # a garage
             m.box("dark", (w / 2 + 0.3, 0.7, d / 2 - 0.52), (w / 2 + 2.7, 2.6, d / 2 - 0.48))
-            m.hull(roofrole("roof_tile"), [(w / 2 - 0.2, 3.0, -d / 2 + 0.1), (w / 2 + 3.2, 3.0, -d / 2 + 0.1), (w / 2 - 0.2, 3.0, d / 2 - 0.3), (w / 2 + 3.2, 3.0, d / 2 - 0.3), (w / 2 - 0.2, 3.6, 0.0), (w / 2 + 3.2, 3.6, 0.0)])
-    m.box(STONE, (-4.4, 0.13, 1.2), (0.6, 0.4, 5.2), bevel=0.03, seg=1)                                   # a swimming pool
-    m.box("glass", (-4.1, 0.38, 1.5), (0.3, 0.42, 4.9), tint=(0.6, 1.2, 1.6))
-    for k in range(3):
-        m.box("wood", (-4.8, 0.13, 1.4 + k * 1.2), (-4.5, 0.55, 1.9 + k * 1.2), tint=(0.9, 0.85, 0.7))      # loungers
+            if FLAT or STYLE == "africa":
+                m.box("plaster", (w / 2 - 0.2, 3.0, -d / 2 + 0.1), (w / 2 + 3.2, 3.4, d / 2 - 0.3), bevel=0.02, seg=1, tint=wall)
+            else:
+                m.hull(roofrole("roof_tile"), [(w / 2 - 0.2, 3.0, -d / 2 + 0.1), (w / 2 + 3.2, 3.0, -d / 2 + 0.1), (w / 2 - 0.2, 3.0, d / 2 - 0.3), (w / 2 + 3.2, 3.0, d / 2 - 0.3), (w / 2 - 0.2, 3.6, 0.0), (w / 2 + 3.2, 3.6, 0.0)])
+    if STYLE == "asia":                                                                                   # a koi pond with a red bridge and a stone lantern
+        m.cyl(STONE, (-2.0, 0.13, 3.2), 2.6, 0.3, 20)
+        m.cyl("glass", (-2.0, 0.4, 3.2), 2.35, 0.03, 20, tint=(0.5, 1.0, 1.4))
+        m.box("paint", (-3.8, 0.5, 2.95), (-0.2, 0.62, 3.45), bevel=0.02, seg=1, tint=hexc("a8322a"))
+        for sx in (-3.7, -0.3):
+            m.pipe("paint", (sx, 0.4, 2.95), (sx, 1.1, 2.95), 0.05, 6, tint=hexc("a8322a"))
+            m.pipe("paint", (sx, 0.4, 3.45), (sx, 1.1, 3.45), 0.05, 6, tint=hexc("a8322a"))
+        m.cyl(STONE, (-4.6, 0.13, 5.2), 0.18, 0.8, 8)
+        m.cyl(STONE, (-4.6, 0.93, 5.2), 0.3, 0.32, 8)
+        m.cyl(STONE, (-4.6, 1.25, 5.2), 0.45, 0.12, 8, r2=0.05)
+    elif STYLE == "africa":                                                                               # round huts with thatched cones in the compound
+        for (hx, hz, hr) in ((-3.8, 3.0, 1.5), (-0.4, 5.0, 1.2)):
+            m.cyl("plaster", (hx, 0.13, hz), hr, 2.1, 14, tint=hexc("c8845a"))
+            m.box("dark", (hx - 0.4, 0.13, hz + hr - 0.05), (hx + 0.4, 1.7, hz + hr + 0.02))
+            m.cyl("wood", (hx, 2.2, hz), hr + 0.55, 1.7, 14, r2=0.05, tint=hexc("b89a50"))
+    else:
+        m.box(STONE, (-4.4, 0.13, 1.2), (0.6, 0.4, 5.2), bevel=0.03, seg=1)                               # a swimming pool
+        m.box("glass", (-4.1, 0.38, 1.5), (0.3, 0.42, 4.9), tint=(0.6, 1.2, 1.6))
+        for k in range(3):
+            m.box("wood", (-4.8, 0.13, 1.4 + k * 1.2), (-4.5, 0.55, 1.9 + k * 1.2), tint=(0.9, 0.85, 0.7))  # loungers
     m.box("wood", (1.4, 0.13, 1.8), (4.8, 0.2, 5.4), bevel=0.01, seg=1, tint=(0.9, 0.8, 0.65))              # a timber terrace with a pergola
     for sx in (1.5, 4.7):
         for sz in (1.9, 5.3):
