@@ -21,36 +21,17 @@ const STYLE := {
 	"shipyard": 2, "port": 2, "park": 1, "stadium": 0, "samSite": 4, "museum": 0, "waterTreatment": 2,
 }
 const HOUSES := ["res://assets/House_A.glb", "res://assets/House_B.glb", "res://assets/House_C.glb", "res://assets/House_D.glb"]
-# How many houses stand in a residential district, one per wedge between streets.
-# Civilization-style: a few houses in their gardens, never a packed block.
-const HOUSE_COUNT := {"cottage": 2, "residential": 2, "workerHouse": 2, "luxuryVillas": 2}
 
-const Architecture := preload("res://scripts/architecture.gd")
-const BModels := preload("res://scripts/building_models.gd")   # the code-built glb buildings (assets/art/buildings)
-## Central buildings that are a glb model when one exists: key -> model kind.
-const MODEL_KIND := {"hq": "town_hall", "cityCenter": "town_hall", "cityHall": "town_hall", "courthouse": "town_hall", "villageCenter": "town_hall",
-	"apartments": "apartment_block", "housing": "townhouse",
-	"bank": "bank", "school": "school", "library": "library", "university": "library", "museum": "library", "hospital": "hospital",
-	"policeStation": "police_station", "market": "market_hall", "tvStation": "office_tower", "techPark": "office_tower", "intelAgency": "office_tower",
-	"tankFactory": "factory_brick", "warehouse": "warehouse", "powerPlant": "power_station", "foodDepot": "grain_silo",
-	"waterTreatment": "water_tower", "barracks": "barracks", "commandCenter": "command_bunker"}
+const BModels := preload("res://scripts/building_models.gd")   # the Blender-made buildings (assets/art/blender)
+const VERTICAL_SAM := ["uk", "germany", "france", "italy", "israel", "australia", "ukraine", "netherlands"]   # the nations that field a vertical-launch SAM system
 ## Buildings modelled in Blender, one glb each (assets/art/blender/KEY.glb), standing on their own hex slab.
-const VERTICAL_SAM := ["uk", "germany", "france", "italy", "israel", "australia", "ukraine", "netherlands"]   # as architecture.gd sam_site
-## Keys that borrow another key's Blender model.
 const BLENDER_MADE := ["bunker", "aiDataCenter", "missileSilo", "fusionCell", "ammoDepot", "helipad", "port", "shipyard", "strategicComplex", "samSite", "specialLab", "cityHall", "bank", "hospital", "school", "policeStation", "library", "market", "barracks", "tvStation", "techPark", "intelAgency", "tankFactory", "powerPlant", "warehouse", "commandCenter", "foodDepot", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter", "farm", "oilRefinery", "chipFab", "nuclearReactor", "solarFarm", "stadium", "park", "fishingWharf", "airfield", "fireStation", "railwayStation", "lighthouse", "worship", "prison", "embassy", "stockExchange", "hq", "cityCenter", "university", "museum", "mountainMine"]
-## Tallest a model-built central building may stand per style (metres): a tower is narrow but not a skyscraper over the town.
-const MODEL_CAP := {0: 15.0, 1: 11.5, 2: 12.0, 3: 8.0, 4: 8.5}
-var model_seed := 0.0
-## Buildings the kit makes as whole-hex compositions: key -> recipe.
-const RECIPES := {"extractor": "extractor", "mountainMine": "extractor", "oilRefinery": "refinery",
-	"chipFab": "chip_fab", "aiDataCenter": "data_centre", "fusionCell": "fusion_cell", "strategicComplex": "strategic_complex", "specialLab": "special_lab", "ammoDepot": "ammo_depot", "missileSilo": "missile_silo", "nuclearReactor": "nuclear", "solarFarm": "solar", "fishingWharf": "wharf",
-	"bunker": "bunker", "samSite": "sam_site", "park": "park", "stadium": "stadium"}
-## Keys whose kit building is a complete composition (no yard props or landmarks added).
+## Keys whose building is a complete composition (no yard props or landmarks added).
 const COMPLETE := ["extractor", "mountainMine", "oilRefinery", "chipFab", "aiDataCenter", "fusionCell", "strategicComplex", "specialLab", "nuclearReactor", "solarFarm", "shipyard",
 	"port", "fishingWharf", "ammoDepot", "missileSilo", "bunker", "samSite", "park", "stadium", "foodDepot", "powerPlant", "tvStation", "techPark", "intelAgency", "market", "library", "university", "museum", "cityHall", "hq", "cityCenter", "bank", "hospital", "school", "policeStation", "tankFactory", "warehouse", "commandCenter", "waterTreatment", "courthouse", "cottage", "residential", "workerHouse", "luxuryVillas", "housing", "apartments", "villageCenter", "fireStation", "railwayStation", "lighthouse", "worship", "prison", "embassy", "stockExchange"]
 var harbour_turn := 0.0   # a harbour faces the water (set in build)
 var world: Node
-var arch: RefCounted       # architecture.gd: the buildings, made from code
+var extract_type := ""     # the kind of deposit under the district being built: picks the extractor model
 var radius := 12.0
 var ground: ShaderMaterial
 var props_material: ShaderMaterial   # shaders/props.gdshader
@@ -63,7 +44,6 @@ const MAX_HEIGHT := {0: 13.0, 1: 8.0, 2: 7.5, 3: 7.0, 4: 6.5}
 
 func setup(world_node: Node) -> void:
 	world = world_node
-	arch = Architecture.new(world)
 	radius = world.logistics.radius
 	ground = ShaderMaterial.new()
 	ground.shader = load("res://shaders/district.gdshader")
@@ -85,10 +65,9 @@ func style_of(key: String) -> int:
 func build(key: String, centre: Vector3, seed: float, owner_id := 0, size := 0) -> Dictionary:
 	owner = owner_id
 	city_size = size
-	model_seed = seed
 	var floor_y := floor_height(centre)
 	var dep = world.deposit_near(centre, 10.0)
-	arch.extract_type = dep.type if dep != null else ("iron" if key == "mountainMine" else "")
+	extract_type = dep.type if dep != null else ("iron" if key == "mountainMine" else "")
 	# A harbour turns its quay (+z) toward the nearest open water.
 	var sea = world.water_near(centre) if key in ["shipyard", "port", "fishingWharf"] else null
 	harbour_turn = atan2(sea.x - centre.x, sea.z - centre.z) if sea != null else 0.0
@@ -311,15 +290,11 @@ static func extractor_model(deposit: String) -> String:
 		kind = "oil"
 	if kind == "":
 		kind = "iron"
+	if not BModels.has_blender("extractor_" + kind):
+		kind = "iron"   # a deposit with no model of its own is worked as a mine
 	return "extractor_" + kind if BModels.has_blender("extractor_" + kind) else ""
 
 func main_building(key: String, container: Node3D, footprint: float, at := Vector3.ZERO) -> void:
-	if key == "farm" and not BModels.has_blender("farm") and not BModels.variants("farmhouse").is_empty() and not BModels.variants("barn").is_empty():
-		var frng := RandomNumberGenerator.new()
-		frng.seed = int(model_seed * 1000.0) + 17
-		place_model(container, "farmhouse", at + Vector3(-2.4, 0, 0.2), 0.0, 4.6, 0.0, frng)
-		place_model(container, "barn", at + Vector3(2.8, 0, -0.4), -0.25, 4.8, 0.0, frng)
-		return
 	var blend_name: String = key
 	if blend_name in STYLED_CIVIC:
 		var civic_style := home_style(preload("res://scripts/factions.gd").identity(world, owner))
@@ -332,7 +307,7 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 	if key == "worship":
 		blend_name = "worship_" + worship_variant(preload("res://scripts/factions.gd").identity(world, owner))
 	if key == "extractor":
-		blend_name = extractor_model(arch.extract_type)   # the mine, rig or quarry for the deposit under it
+		blend_name = extractor_model(extract_type)   # the mine, rig or quarry for the deposit under it
 	if key == "samSite" and preload("res://scripts/factions.gd").identity(world, owner) in VERTICAL_SAM:
 		blend_name = "samSiteVls"   # the nations that field a vertical-launch system
 	if (key in BLENDER_MADE or blend_name.begins_with("extractor_") or blend_name != key) and blend_name != "" and BModels.has_blender(blend_name):
@@ -342,49 +317,6 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 		made.position = at
 		made.rotation.y = harbour_turn if key in ["port", "shipyard", "fishingWharf", "lighthouse"] else 0.0   # a harbour faces the water
 		container.add_child(made)
-		return
-	if MODEL_KIND.has(key) and not BModels.variants(MODEL_KIND[key]).is_empty():
-		var mrng := RandomNumberGenerator.new()
-		mrng.seed = int(model_seed * 1000.0) + key.hash()
-		place_model(container, MODEL_KIND[key], at, 0.0, footprint * 0.95, MODEL_CAP.get(style_of(key), 12.0) * (1.0 + 0.03 * mini(city_size, 10)), mrng)
-		return
-	if Architecture.has_recipe(key):
-		# Real architecture from the kit (architecture.gd) instead of a scaled model.
-		var rng := RandomNumberGenerator.new()
-		rng.seed = int(absf(at.x * 131.0 + at.z * 71.0)) + key.hash() + city_size
-		arch.begin()
-		arch.banner_colour = Color(world.map.nations[owner].color) if owner < world.map.nations.size() else Color.WHITE
-		arch.nation = preload("res://scripts/factions.gd").identity(world, owner)
-		arch.xf = Transform3D(Basis(), at)
-		if key in ["tankFactory", "warehouse"]:
-			arch.factory(rng, footprint)
-		elif key == "farm":
-			arch.farm(rng, footprint)
-		elif key == "foodDepot":
-			arch.granary(rng, footprint)
-		elif key == "powerPlant":
-			arch.power_station(rng, footprint)
-		elif key in RECIPES:
-			arch.xf = Transform3D.IDENTITY  # these compositions fill their whole hex
-			arch.call(RECIPES[key], rng)
-		elif key in ["missileSilo", "ammoDepot"]:
-			arch.xf = Transform3D.IDENTITY
-			arch.arsenal(rng, key == "missileSilo")
-		elif key in ["shipyard", "port"]:
-			arch.xf = Transform3D(Basis(Vector3.UP, harbour_turn), Vector3.ZERO)
-			arch.harbour(rng, key == "port")
-		elif key == "airfield":
-			arch.xf = Transform3D.IDENTITY  # the runway and slots are laid out over the whole hex
-			arch.airfield(rng)
-		elif key == "helipad":
-			arch.xf = Transform3D.IDENTITY
-			arch.helipad(rng)
-		elif key in ["housing", "apartments"]:
-			# Low blocks of flats (2-4 floors), not towers over the town.
-			arch.apartments(rng, footprint, 2 + mini(city_size / 6, 1) + (1 if key == "apartments" else 0))
-		else:
-			arch.civic(key, rng, footprint)
-		container.add_child(arch.commit())
 		return
 	var model: Node3D = world.building_model(key, 0.0, 0.0)
 	var bounds: AABB = world.model_bounds(model)
@@ -437,25 +369,6 @@ func house(container: Node3D, at: Vector3, face: float, size: float, rng: Random
 	holder.rotation.y = face
 	container.add_child(holder)
 
-## Puts a glb building model (assets/art/buildings) in the district: scaled so its longer side is `target` metres (and no taller
-## than `cap` when that is set), facing `yaw`.
-func place_model(container: Node3D, kind: String, at: Vector3, yaw: float, target: float, cap: float, rng: RandomNumberGenerator) -> bool:
-	var variants: Array = BModels.variants(kind)
-	if variants.is_empty():
-		return false
-	var model: Node3D = BModels.build(variants[rng.randi() % variants.size()])
-	if model == null:
-		return false
-	var bounds: AABB = world.model_bounds(model)
-	var k := target / maxf(maxf(bounds.size.x, bounds.size.z), 0.01)
-	if cap > 0.0 and bounds.size.y * k > cap:
-		k = cap / bounds.size.y
-	model.scale = Vector3.ONE * k
-	model.position = at
-	model.rotation.y = yaw
-	container.add_child(model)
-	return true
-
 # ---------------------------------------------------------------- layouts
 
 func plaza(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
@@ -488,42 +401,9 @@ func residential(key: String, container: Node3D, st: SurfaceTool, rng: RandomNum
 		for k in range(6):
 			tree(st, slot(k, 7.6) + Vector3(rng.randf_range(-0.8, 0.8), 0, rng.randf_range(-0.8, 0.8)), rng, 0.9)
 		return
-	# A growing city dresses its blocks a little more, but keeps the gardens:
-	# at most three houses, each in its own wedge with lawn and trees round it.
-	var growth := clampf(city_size / 10.0, 0.0, 1.0)
-	var count: int = mini(3, HOUSE_COUNT.get(key, 2) + (1 if growth > 0.7 else 0))
-	var slots := [0, 3, 1, 4, 2, 5].slice(0, count)
-	# Townhouses and cottages built from the kit (architecture.gd), all of the
-	# block in one set of meshes.
-	arch.begin()
-	for k in slots:
-		var p := slot(k, 6.2)
-		var face := deg_to_rad(-(30.0 + 60.0 * k)) - PI * 0.5
-		# Each faces the middle of the block, its front (+z) toward the street square.
-		arch.xf = Transform3D(Basis(Vector3.UP, face + PI * 0.5).scaled(Vector3.ONE * 0.7), p)
-		var kind := "cottage" if key in ["cottage", "workerHouse"] else "townhouse"
-		if place_model(container, kind, p, face + PI * 0.5, 4.6 if kind == "cottage" else 4.2, 7.5, rng):
-			tree(st, slot(k, 8.6) + Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)), rng, 0.8)
-			continue
-		if key in ["cottage", "workerHouse"]:
-			arch.cottage(rng, 4.2 + rng.randf() * 0.6, 3.6)
-		else:
-			arch.townhouse(rng, 3.8 + rng.randf() * 0.6, 4.4, 2 + (1 if key == "luxuryVillas" else 0))
-		tree(st, slot(k, 8.6) + Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)), rng, 0.8)
-	# The empty wedges are gardens: a tree or two and a bench.
-	for k in [0, 3, 1, 4, 2, 5].slice(count):
-		tree(st, slot(k, 6.4) + Vector3(rng.randf_range(-1.2, 1.2), 0, rng.randf_range(-1.2, 1.2)), rng, rng.randf_range(0.9, 1.25))
-		if rng.randf() < 0.6:
-			tree(st, slot(k, 8.4) + Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)), rng, 0.8)
-	container.add_child(arch.commit())
-	if growth < 0.6:
-		tree(st, Vector3.ZERO, rng, 1.2)
-	else:
-		cylinder(st, 1.3, 0.6, Vector3.ZERO, Color("8a877d"), 12)  # a small square with a fountain
-		cylinder(st, 0.3, 1.3, Vector3.ZERO, Color("a8a59b"), 8)
 
 func farmstead(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
-	main_building(key, container, 7.5, slot(0, 1.8))  # barn, farmhouse and silo (architecture.gd)
+	main_building(key, container, 7.5, slot(0, 1.8))  # barn, farmhouse and silo (farm.glb)
 	# Round hay bales lying in the field.
 	for i in range(6):
 		var p := slot(3, 6.4) + Vector3(rng.randf_range(-2.4, 2.4), 0.65, rng.randf_range(-2.4, 2.4))
@@ -592,7 +472,7 @@ func barracks(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumber
 	main_building(key, container, 9.0)
 	if key in ["airfield", "helipad"] or key in COMPLETE:
 		fence(st, Color("5d6264"), 1.8)
-		return  # a complete composition (architecture.gd)
+		return  # a complete composition
 	# Sandbag emplacements.
 	for k in [1, 4]:
 		var centre := slot(k, 7.6)
@@ -697,7 +577,7 @@ func landmarks(key: String, st: SurfaceTool, rng: RandomNumberGenerator) -> void
 			cylinder(st, 0.25, 11.0, slot(2, 7.6), Color("8a3a2a"), 8)
 			cylinder(st, 0.5, 0.6, slot(2, 7.6) + Vector3(0, 11.0, 0), Color("ffb347"), 8)
 		"powerPlant":
-			pass  # its stacks are part of the building (architecture.gd)
+			pass  # its stacks are part of the building
 		"hospital":
 			# A rooftop-style helipad on the ground with a red cross beside it.
 			var pad := slot(3, 7.0)

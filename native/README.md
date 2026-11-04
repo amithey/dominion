@@ -1809,7 +1809,6 @@ The generic, toy-bright models on the city hexes are replaced by buildings made 
 - **Residential quarters:** four to six townhouses and cottages round a small square, in varied
   colours, heights and roofs; they grow taller as the city grows.
 - **Draw calls:** each district's buildings are merged into one mesh per material.
-- `--capture-city` renders the capital overview and close views (`build/city-*.png`).
 
 ## Version 0.9.8: ships sail round the island, land is bought or won, waters are held
 

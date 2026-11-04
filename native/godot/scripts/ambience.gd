@@ -1,7 +1,7 @@
 extends Node3D
 ## A living world (players said it felt empty and cheap):
 ## - smoke from industrial stacks (power stations, factories) while they stand,
-##   and from house chimneys in autumn and winter (architecture.gd marks each
+##   and from house chimneys in autumn and winter (the Blender models mark each
 ##   chimney and stack "SmokeIndustry" or "SmokeHome"); only near the camera,
 ##   and at most MAX_PLUMES at once;
 ## - winter you can see: a global shader value (winter, 0..1) lays snow on

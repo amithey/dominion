@@ -553,8 +553,6 @@ func _ready() -> void:
 		await preload("res://scripts/state_regression.gd").run(self)
 	elif "--capture-terrain" in args:
 		await preload("res://scripts/terrain_views.gd").capture(self)
-	elif "--capture-city" in args:
-		await preload("res://scripts/architecture.gd").capture(self)
 	elif "--land-test" in args:
 		await preload("res://scripts/land_regression.gd").run(self)
 	elif "--sea-test" in args:
@@ -1061,18 +1059,14 @@ func building_model(key: String, x: float, z: float) -> Node3D:
 		platform.add_child(art._flare())
 		return platform
 	if key == "extractor":
-		# The mine, rig or quarry for the resource under it (architecture.gd).
+		# The mine, rig or quarry for the resource under it.
 		var dep = deposit_near(Vector3(x, 0, z), 8.0)
 		var blend: String = districts.extractor_model(dep.type if dep != null else "")
 		if blend != "":
 			var made: Node3D = preload("res://scripts/building_models.gd").build_blender(blend)
 			made.scale = Vector3.ONE * 0.62
 			return made
-		districts.arch.begin()
-		districts.arch.extract_type = dep.type if dep != null else ""
-		districts.arch.xf = Transform3D(Basis.from_scale(Vector3.ONE * 0.62), Vector3.ZERO)
-		districts.arch.extractor(RandomNumberGenerator.new())
-		return districts.arch.commit()
+		return Node3D.new()
 	if key in ["missileSilo", "ammoDepot", "strategicComplex", "specialLab"]:
 		return bunker_model(key)
 	if key in ["aiDataCenter", "fusionCell"]:
@@ -1500,7 +1494,7 @@ func display_model(key: String) -> Node3D:
 	elif building_defs.has(key):
 		if is_district(key):
 			# The building as the city shows it: the district's architecture and
-			# props (architecture.gd), without the hex tile under it.
+			# props, without the hex tile under it.
 			var parts: Dictionary = districts.build(key, Vector3(0, height_at(0, 0), 0), 1.3, 0, 3)
 			parts.pad.free()
 			model = parts.container
