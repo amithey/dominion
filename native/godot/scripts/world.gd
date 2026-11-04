@@ -3606,6 +3606,18 @@ func capture_infantry() -> void:
 		await get_tree().physics_frame
 	cam_yaw = 0.35
 	await capture_view("res://build/infantry-dead.png", spot + Vector3(0, 0, -2), 12.0, 0.45, 5)
+	# The crews and the rest of the people, near and from the strategy camera.
+	var crew_kinds := ["machineGunTeam", "mortarTeam", "recoillessTeam", "medic", "worker", "fpvTeam", "scoutTeam", "manpads", "atgmTeam"]
+	var crew_spot := spot + Vector3(0, 0, 14)
+	for i in range(crew_kinds.size()):
+		for row in range(2):
+			var cu := spawn_unit(crew_kinds[i], crew_spot + Vector3(i * 2.2 - 8.8, 0, row * 3.0), 1 + row)
+			cu.heading = 0.3
+			place_on_ground(cu, cu.node.position)
+	cam_yaw = 0.35
+	await capture_view("res://build/infantry-crews.png", crew_spot + Vector3(0, 0, 1.5), 15.0, 0.3, 20)
+	await capture_view("res://build/infantry-crews-far.png", crew_spot + Vector3(0, 0, 1.5), 55.0, 0.8, 5)
+	await capture_view("res://build/infantry-crews-rts.png", crew_spot + Vector3(0, 0, 1.5), 110.0, 1.0, 5)
 	get_tree().quit()
 
 ## Research in fast time: stages, facilities, half and full effects, eras,

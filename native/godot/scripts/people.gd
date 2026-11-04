@@ -10,6 +10,7 @@ const KIND := {"soldier": "rifleman", "sniper": "sniper", "commando": "commando"
 	"mortarTeam": "mortar", "recoillessTeam": "rcl"}
 ## The run clip was authored for this ground speed in the model's own metres.
 const RUN_SPEED := 3.2
+const HEAD_SCALE := 1.22
 static var _cache := {}
 
 static func has(key: String) -> bool:
@@ -28,6 +29,13 @@ static func build(key: String, uniform: Color, pants: Color, nation: Color, skin
 			(mi as MeshInstance3D).set_surface_override_material(s, material(src.resource_name if src != null else "", uniform, pants, nation, skin))
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		(mi as MeshInstance3D).extra_cull_margin = 1.0   # skinned: the rest-pose bounds are not where the limbs end up
+	# A head a fifth bigger than life, as an RTS character has it: at the strategy camera the helmet, face and the nation's colour
+	# on the shoulders are what tells one man from the next. The bone's own rest scale, so the clips (rotations only) keep it.
+	for sk in root.find_children("*", "Skeleton3D", true, false):
+		var head: int = (sk as Skeleton3D).find_bone("head")
+		if head >= 0:
+			(sk as Skeleton3D).set_bone_rest(head, Transform3D((sk as Skeleton3D).get_bone_rest(head).basis.scaled(Vector3.ONE * HEAD_SCALE), (sk as Skeleton3D).get_bone_rest(head).origin))
+			(sk as Skeleton3D).reset_bone_pose(head)
 	root.set_meta("people", true)
 	return root
 
