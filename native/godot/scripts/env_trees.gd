@@ -20,8 +20,8 @@ const CONIFERS := ["pine", "spruce"]
 static var _parts := {}
 static var _shader: Shader
 
-static func _hash(x: float, z: float) -> float:
-	return fposmod(sin(x * 12.9898 + z * 78.233) * 43758.5453, 1.0)
+static func _hash(x: float, z: float, k := 0.0) -> float:
+	return fposmod(sin(x * 12.9898 + z * 78.233 + k * 37.719) * 43758.5453, 1.0)
 
 static func _choose(pool: Array, r: float) -> String:
 	var total := 0.0
@@ -79,6 +79,55 @@ static func parts(model: String, w: Node) -> Array:
 	_parts[model] = out
 	return out
 
+## More woods than the map file plants: stands on a coarse grid (a third of the cells), thick toward the middle of a stand and thin at
+## its edge, kept off the steep ground, the shore, the start, the deposits and the trees already there.
+const WOOD_CELL := 70.0
+const WOOD_SHARE := 0.34
+static func _woods(w: Node) -> Array:
+	var out: Array = []
+	var sea := float(w.map.seaLevel)
+	var half := float(w.map.mapSize) * 0.5
+	var gx := -half
+	while gx < half:
+		var gz := -half
+		while gz < half:
+			var ci := floori(gx / WOOD_CELL)
+			var cj := floori(gz / WOOD_CELL)
+			gz += WOOD_CELL
+			if _hash(ci * 3.0, cj * 5.0, 21.0) > WOOD_SHARE:
+				continue
+			var cx := (ci + 0.3 + _hash(ci * 3.0, cj * 5.0, 22.0) * 0.4) * WOOD_CELL
+			var cz := (cj + 0.3 + _hash(ci * 3.0, cj * 5.0, 23.0) * 0.4) * WOOD_CELL
+			var radius := 22.0 + _hash(ci * 3.0, cj * 5.0, 24.0) * 22.0
+			var x := cx - radius
+			while x < cx + radius:
+				var z := cz - radius
+				while z < cz + radius:
+					var px := x + (_hash(x, z, 25.0) - 0.5) * 6.0
+					var pz := z + (_hash(x, z, 26.0) - 0.5) * 6.0
+					z += 6.5
+					var d := Vector2(px - cx, pz - cz).length() / radius
+					if d > 1.0 or _hash(px, pz, 27.0) > (1.0 - d * d) * 0.9:
+						continue
+					if absf(px) > half - 10.0 or absf(pz) > half - 10.0:
+						continue
+					var h: float = w.height_at(px, pz) - sea
+					if h < 1.0 or w.normal_at(px, pz).y < 0.9:
+						continue
+					if Vector2(px - w.start.x, pz - w.start.z).length() < 50.0:
+						continue
+					var clear := true
+					for dep in w.map.deposits:
+						if absf(dep.x - px) < 8.0 and absf(dep.z - pz) < 8.0:
+							clear = false
+							break
+					if not clear:
+						continue
+					out.append({"x": px, "z": pz, "scale": 0.95 + _hash(px, pz, 28.0) * 0.65, "species": species_for(w, px, pz, ci * 1000 + cj)})
+				x += 6.5
+		gx += WOOD_CELL
+	return out
+
 static func build(w: Node) -> void:
 	# species -> variant -> cell -> trees
 	var cells := {}
@@ -94,6 +143,7 @@ static func build(w: Node) -> void:
 				var ez: float = t.z + sin(a) * 4.5
 				if w.height_at(ex, ez) > float(w.map.seaLevel) + 0.6:
 					all.append({"x": ex, "z": ez, "scale": float(t.scale) * 0.75, "species": sp})
+	all.append_array(_woods(w))
 	for t in all:
 		var variants: int = SPECIES[t.species]
 		var v := 1 + int(absf(t.x * 7.0 + t.z * 13.0)) % variants

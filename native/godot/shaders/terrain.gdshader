@@ -61,7 +61,7 @@ void vertex() {
 	float slope = 1.0 - world_normal.y;
 	macro = noise(p * 0.0035);
 	float detail = noise(p * 0.021 + 0.31);
-	float sand = 1.0 - smoothstep(0.6, 2.2, h + (detail - 0.5) * 2.2);
+	float sand = 1.0 - smoothstep(0.45, 1.5, h + (detail - 0.5) * 1.6);
 	float rock = smoothstep(0.16, 0.34, slope + (macro - 0.5) * 0.14);
 	float dirt = smoothstep(0.6, 0.76, noise(p * 0.0045 + 0.57) * 0.65 + noise(p * 0.017 + 0.21) * 0.35) * 0.75;
 	dirt = max(dirt, smoothstep(0.08, 0.16, slope) * 0.6);
