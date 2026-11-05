@@ -15,6 +15,8 @@ uniform sampler2D dirt_albedo : source_color, filter_linear_mipmap_anisotropic, 
 uniform sampler2D dirt_normal : hint_normal, filter_linear_mipmap, repeat_enable;
 uniform sampler2D rock_albedo : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D rock_normal : hint_normal, filter_linear_mipmap, repeat_enable;
+uniform sampler2D tracks_tex : filter_linear, repeat_disable;
+uniform vec4 tracks_rect = vec4(-320.0, -320.0, 640.0, 640.0);
 uniform sampler2D sand_albedo : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D sand_normal : hint_normal, filter_linear_mipmap, repeat_enable;
 uniform sampler2D noise_tex : filter_linear_mipmap, repeat_enable;
@@ -138,6 +140,16 @@ void fragment() {
 	albedo = mix(albedo, albedo * vec3(0.86, 0.87, 0.76), w.x);
 	albedo *= mix(0.8, 1.1, macro);
 	albedo = mix(albedo, albedo * vec3(1.06, 1.0, 0.84), smoothstep(0.55, 0.75, noise(p * 0.0017 + 0.13)) * w.x);
+
+	// Dirt tracks (tracks.gd): the grass worn through to pale earth, with two darker ruts and a ragged edge.
+	{
+		vec2 tuv = (p - tracks_rect.xy) / tracks_rect.zw;
+		float tr = (tuv.x >= 0.0 && tuv.y >= 0.0 && tuv.x <= 1.0 && tuv.y <= 1.0) ? texture(tracks_tex, tuv).r : 0.0;
+		float ragged = noise(p * 0.35);
+		tr = smoothstep(0.2 + ragged * 0.16, 0.6, tr) * (1.0 - smoothstep(1.2, 3.5, world_pos.y - sea_level) * 0.0);
+		vec3 earth = mix(vec3(0.46, 0.38, 0.27), vec3(0.58, 0.5, 0.37), noise(p * 0.12));
+		albedo = mix(albedo, earth * (0.8 + 0.3 * macro), tr * 0.78 * step(sea_level + 0.5, world_pos.y));
+	}
 
 	// Shadows of drifting clouds: large soft patches crossing the land slowly.
 	float cloud = noise(p * 0.0016 + vec2(TIME * 0.0009, TIME * 0.0004));

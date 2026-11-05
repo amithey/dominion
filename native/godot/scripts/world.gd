@@ -274,6 +274,7 @@ const FactionPowers := preload("res://scripts/faction_powers.gd")
 const SiteClearing := preload("res://scripts/site_clearing.gd")
 const Picking := preload("res://scripts/picking.gd")
 const Topography := preload("res://scripts/topography.gd")
+var tracks_mask := PackedByteArray()   # tracks.gd: 255 where the ground is worn bare by a dirt track
 var lake_mask := PackedByteArray()   # 1 where a height-grid cell is lake water (not the open sea)
 const NAV_STEP := 4.0
 var fps_frames := 0
@@ -311,6 +312,7 @@ func _ready() -> void:
 	# Smoother land and real lake basins (topography.gd).
 	lake_mask = Topography.refine(heights, grid_size, float(map.seaLevel))
 	heights = Topography.heights()
+	preload("res://scripts/hills.gd").apply(heights, grid_size, grid_step, grid_origin, float(map.seaLevel), map)   # rolling hills on the dry land
 	start = Vector3(map.startPositions[0][0], 0, map.startPositions[0][1])
 	start.y = height_at(start.x, start.z)
 	unit_defs = map.get("unitDefs", {})
@@ -675,6 +677,16 @@ func apply_quality() -> void:
 
 # ---------------------------------------------------------------- terrain
 
+## How worn the ground is at (x, z) by the dirt tracks (0 grass .. 1 bare).
+func track_at(x: float, z: float) -> float:
+	if tracks_mask.is_empty():
+		return 0.0
+	var c := roundi((x - grid_origin.x) / grid_step)
+	var r := roundi((z - grid_origin.y) / grid_step)
+	if c < 0 or r < 0 or c >= grid_size or r >= grid_size:
+		return 0.0
+	return float(tracks_mask[r * grid_size + c]) / 255.0
+
 func height_at(x: float, z: float) -> float:
 	var gx := clampf((x - grid_origin.x) / grid_step, 0, grid_size - 1.001)
 	var gz := clampf((z - grid_origin.y) / grid_step, 0, grid_size - 1.001)
@@ -729,6 +741,9 @@ func build_terrain() -> void:
 		material.set_shader_parameter(layer + "_normal", load("res://assets/terrain/%s_normal.jpg" % layer))
 	material.set_shader_parameter("sea_level", float(map.seaLevel))
 	material.set_shader_parameter("noise_tex", noise_texture)
+	tracks_mask = preload("res://scripts/tracks.gd").build(self)
+	material.set_shader_parameter("tracks_tex", ImageTexture.create_from_image(Image.create_from_data(grid_size, grid_size, false, Image.FORMAT_R8, tracks_mask)))
+	material.set_shader_parameter("tracks_rect", Vector4(grid_origin.x, grid_origin.y, grid_size * grid_step, grid_size * grid_step))
 	terrain_node = MeshInstance3D.new()
 	terrain_node.mesh = mesh
 	terrain_node.material_override = material
@@ -871,7 +886,7 @@ func build_grass() -> void:
 				var y := height_at(x, z)
 				var flat: bool = normal_at(x, z).y >= 0.94
 				var yaw := rng.randf() * TAU
-				if y < 1.8 or not flat:
+				if y < 1.8 or not flat or track_at(x, z) > 0.25:
 					continue
 				var r := rng.randf()
 				var dry: float = clampf(noise_texture.noise.get_noise_2d(x * 0.55, z * 0.55) * 1.6 + 0.2, 0.0, 1.0)
