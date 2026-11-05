@@ -108,7 +108,12 @@ void fragment() {
 	// Lakes are still water: darker and clearer, and no surf at their shores.
 	vec2 luv = (world_pos.xz - lake_rect.xy) / lake_rect.zw;
 	float lake = (luv.x >= 0.0 && luv.y >= 0.0 && luv.x <= 1.0 && luv.y <= 1.0) ? texture(lake_tex, luv).r : 0.0;
-	seen = mix(seen, seen * vec3(0.72, 0.82, 0.8), lake * 0.6);
+	// A lake takes its own colour from its depth: clear turquoise over the sandy shallows, a deep blue-green in the middle, with the
+	// bed still showing through near the shore.
+	float lake_depth = smoothstep(0.0, 3.2, depth);
+	vec3 lake_water = mix(vec3(0.15, 0.48, 0.47), vec3(0.02, 0.14, 0.25), lake_depth);
+	float see_bed = (1.0 - smoothstep(0.0, 1.4, depth)) * 0.4;
+	seen = mix(seen, mix(lake_water, behind * vec3(0.95, 1.08, 1.02), see_bed), lake * 0.8);
 
 	// Shore foam: a thin broken line at the waterline with lacy streaks behind it.
 	float band = 1.0 - smoothstep(0.0, foam_width * mix(1.0, 0.35, lake), depth);
