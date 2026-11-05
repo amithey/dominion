@@ -218,5 +218,18 @@ void fragment() {
 	ALBEDO = albedo * (1.0 - fog_at(world_pos.xz));   // fog of war
 	ROUGHNESS = mix(mix(0.92, 0.82, w.w), 0.35, wet);
 	SPECULAR = mix(0.35, 0.5, wet);
+	// Gentle swells and hollows the height grid is too coarse to carry: the surface normal is tilted by broad noise, so the
+	// ground catches the low sun in long soft bands. Nothing moves (units, buildings and roads stand on the real heights), and
+	// the effect fades on steep ground, which has its own relief, and in the distance, where it would only shimmer.
+	{
+		float e2 = 1.5;
+		vec2 q1 = p * 0.045;
+		vec2 q2 = p * 0.13;
+		float a0 = noise(q1) * 0.82 + noise(q2) * 0.18;
+		float ax = noise(q1 + vec2(e2 * 0.045, 0.0)) * 0.7 + noise(q2 + vec2(e2 * 0.13, 0.0)) * 0.3;
+		float az = noise(q1 + vec2(0.0, e2 * 0.045)) * 0.7 + noise(q2 + vec2(0.0, e2 * 0.13)) * 0.3;
+		float amount = (w.x + w.y * 0.8) * (1.0 - smoothstep(0.15, 0.3, 1.0 - n.y)) * (1.0 - smoothstep(180.0, 420.0, length(VERTEX)));
+		wn = normalize(wn) + vec3((a0 - ax), 0.0, (a0 - az)) * 2.1 * amount;
+	}
 	NORMAL = normalize((VIEW_MATRIX * vec4(normalize(wn), 0.0)).xyz);
 }
