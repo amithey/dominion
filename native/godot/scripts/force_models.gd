@@ -263,37 +263,6 @@ static func craft_model(c: RefCounted, key: String, owner: int) -> Dictionary:
 	g._attach(parts.root, st)
 	return parts
 
-static func infantry_prop(w: Node, holder: Node3D, key: String, owner: int) -> void:
-	if not key in ["mortarTeam", "machineGunTeam", "scoutTeam", "recoillessTeam"]: return
-	var g: RefCounted = w.armor
-	g._mat = g.material_for(owner)
-	var st: SurfaceTool = g._begin()
-	var prop := Node3D.new()
-	prop.name = "Equipment_" + key
-	holder.add_child(prop)
-	if key == "mortarTeam":
-		g.cyl(st, 0.42, 0.08, Vector3(0.8, 0.12, 0.6), "y", g.DARK, 12)
-		var raised := Transform3D(Basis(Vector3.RIGHT, -0.5), Vector3(0.8, 0.16, 0.6))
-		g.cyl(st, 0.085, 1.5, Vector3(0, 0.7, 0), "y", g.METAL, 10, 0.085, raised)
-		for side: float in [-1.0, 1.0]:
-			g.block(st, Vector3(0.06, 0.85, 0.06), Vector3(0.8 + side * 0.24, 0.48, 1.0), g.PAINT)
-	elif key == "recoillessTeam":
-		g.cyl(st, 0.12, 1.55, Vector3(0.65, 1.2, 0.5), "z", g.METAL, 12)
-		g.cyl(st, 0.19, 0.28, Vector3(0.65, 1.2, -0.35), "z", g.DARK, 12)
-		g.block(st, Vector3(0.3, 0.18, 0.25), Vector3(0.65, 1.42, 0.55), g.GLASS)
-		g.block(st, Vector3(0.45, 0.45, 0.6), Vector3(-0.6, 0.25, 0), g.PAINT)
-	elif key == "machineGunTeam":
-		g.block(st, Vector3(0.22, 0.18, 0.75), Vector3(0.65, 0.85, 0.6), g.DARK)
-		g.cyl(st, 0.045, 1.1, Vector3(0.65, 0.9, 1.35), "z", g.METAL, 8)
-		g.block(st, Vector3(0.3, 0.22, 0.3), Vector3(0.4, 0.77, 0.55), g.PAINT)
-		for side: float in [-1.0, 1.0]:
-			g.block(st, Vector3(0.06, 0.78, 0.06), Vector3(0.65 + side * 0.24, 0.4, 0.85), g.METAL)
-	else:
-		g.block(st, Vector3(0.48, 0.7, 0.26), Vector3(0, 1.35, -0.35), g.DARK)
-		g.antenna(st, Vector3(0.14, 1.7, -0.35), 0.7)
-	g._attach(prop, st)
-
-
 ## Aircraft carriers by class (native/WAR-TOOLS-RESEARCH-2026-10-12.md, "Carriers"):
 ##   super  catapult carrier (Ford, Fujian, Charles de Gaulle): an angled landing
 ##          deck to port, the island to starboard, deck-edge lifts, two bow catapults

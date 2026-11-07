@@ -20,11 +20,8 @@ const MAP_PATH := "res://data/map-seed1.json"
 const SOLDIER_HEIGHT := 2.35       # the browser's readable RTS scale
 const SOLDIER_SPEED := 5.2         # metres per second while running
 const RUN_CLIP_SPEED := 4.6        # speed the run clip was authored for (no foot sliding)
-const REAL_RUN_CLIP_SPEED := 6.4   # the same for the realistic soldier's run, at game scale
 const PEOPLE_RUN_CLIP_SPEED := 3.7 # and for the Blender-made people (people.gd)
 const People := preload("res://scripts/people.gd")
-# Weapons carried by the realistic soldier: length in centimetres (skeleton units).
-const WEAPON_LENGTH := {"AK": 88.0, "Sniper_2": 118.0, "RocketLauncher": 92.0, "SMG": 62.0}
 const TANK_SPEED := 4.2
 const BUILDING_MODELS := {
 	"hq": "res://assets/downtown/Building_Medium_2_001.gltf",
@@ -90,9 +87,6 @@ var status: Label
 var selection_box: Panel
 var dragging := false
 var drag_start := Vector2.ZERO
-var soldier_scene: PackedScene
-var realistic_scene: PackedScene   # the textured Mixamo soldier; null falls back to the stylised one
-var gun_meshes := {}               # weapon name -> Mesh taken from the stylised kit
 var tank_scene: PackedScene
 
 # Benchmark state (fields match js/benchmark.js)
@@ -168,7 +162,6 @@ var deposits: Array[Dictionary] = []
 var building_defs := {}
 var economy: Node
 var hud: CanvasLayer
-var worker_scene: PackedScene
 var placing := ""
 var ghost: Node3D
 var ghost_ok := ""
@@ -324,10 +317,6 @@ func _ready() -> void:
 	building_defs = map.get("buildingDefs", {})
 	preload("res://scripts/gameplay_rules.gd").apply(self)
 	Modern.apply(self)  # drones, jamming, lasers, missile defence (modern_warfare.gd)
-	soldier_scene = load("res://assets/CharacterSoldier.glb")
-	if ResourceLoader.exists("res://assets/Soldier.glb") and not "--toon-infantry" in OS.get_cmdline_user_args():
-		realistic_scene = load("res://assets/Soldier.glb")
-	worker_scene = load("res://assets/Worker.glb")
 	tank_scene = load("res://assets/Tank.fbx")
 
 	noise_texture = NoiseTexture2D.new()
@@ -1246,14 +1235,12 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	if key in NAVAL or key in AIR:
 		return spawn_craft(key, at, owner)
 	var vehicle := key in VEHICLES
-	var realistic := not vehicle and key != "worker" and realistic_scene != null
 	var person: Node3D = null
 	var person_key: String = key if key in INFANTRY else preload("res://scripts/additional_factions.gd").base(key)   # a national variant looks like the unit it is built on
-	if not vehicle and People.has(person_key):
+	if not vehicle:
 		var colours: Dictionary = UNIFORMS[owner % UNIFORMS.size()]
-		person = People.build(person_key, Color(colours.main) * 1.0, Color(colours.pants), Color(map.nations[owner].color) if owner < map.nations.size() else Color.WHITE,
+		person = People.build(person_key if People.has(person_key) else "soldier", Color(colours.main) * 1.0, Color(colours.pants), Color(map.nations[owner].color) if owner < map.nations.size() else Color.WHITE,
 			People.skin_for(districts.home_style(preload("res://scripts/factions.gd").identity(self, owner)), fposmod(sin(at.x * 12.9898 + at.z * 78.233) * 43758.5453, 1.0) * 2.0 - 1.0))
-		realistic = false
 	var node := Node3D.new()
 	var built: Dictionary = preload("res://scripts/vehicle_models.gd").build(self, key, owner) if vehicle else {}
 	if built.is_empty() and vehicle and armor != null:
@@ -1264,13 +1251,11 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	elif person != null:
 		model = person      # Blender-made: faces +Z, dressed, with its own clips
 	else:
-		model = (tank_scene if vehicle else (worker_scene if key == "worker" else (realistic_scene if realistic else soldier_scene))).instantiate()
+		model = tank_scene.instantiate()
 	node.add_child(model)
 	if built.is_empty():
 		if vehicle:
 			model.rotation.y = PI * 0.5  # the Quaternius tank's gun points along -X; units face +Z
-		elif realistic:
-			model.rotation.y = PI  # the Mixamo soldier faces -Z
 		var bounds := model_bounds(model)
 		var factor: float = (6.0 / maxf(maxf(bounds.size.x, bounds.size.z), 0.01)) if vehicle else (SOLDIER_HEIGHT / maxf(bounds.size.y, 0.01))
 		model.scale = Vector3.ONE * factor
@@ -1288,12 +1273,6 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		node.add_child(dust)
 	elif person != null:
 		pass
-	elif key == "worker":
-		dress_worker(model)
-	elif realistic:
-		dress_realistic(model, owner, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher", "commando": "SMG", "atgmTeam": "RocketLauncher", "manpads": "RocketLauncher", "fpvTeam": "SMG", "medic": "SMG"}.get(key, "AK"))
-	else:
-		dress_soldier(model, owner, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher", "atgmTeam": "RocketLauncher", "manpads": "RocketLauncher"}.get(key, "AK"))
 	var ring := MeshInstance3D.new()
 	var torus := TorusMesh.new()
 	torus.inner_radius = 1.25 if not vehicle else 3.3
@@ -1316,7 +1295,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		"speed": TANK_SPEED if vehicle else SOLDIER_SPEED, "heading": 0.0, "moving": false,
 		"turret": turret, "turret_yaw": 0.0, "dust": dust, "phase": at.x * 0.37 + at.z * 0.21,
 		"meshes": model.find_children("*", "MeshInstance3D", true, false) if vehicle else [],
-		"model": model, "clip_speed": PEOPLE_RUN_CLIP_SPEED if person != null else (REAL_RUN_CLIP_SPEED if realistic else RUN_CLIP_SPEED),
+		"model": model, "clip_speed": PEOPLE_RUN_CLIP_SPEED if person != null else RUN_CLIP_SPEED,
 		"axles": built.get("axles", []), "radar": built.get("radar"), "muzzle": built.get("muzzle", 4.2),
 		"gun": built.get("gun"), "gun_base": built.gun.position if built.get("gun") != null else Vector3.ZERO, "tracks": built.get("tracks", []), "track_loop": built.get("track_loop", 16.5), "wreck": built.get("wreck"),
 	}
@@ -1349,8 +1328,6 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	if preload("res://scripts/additional_factions.gd").UNITS.has(key):
 		unit.speed *= float(preload("res://scripts/additional_factions.gd").UNITS[key].scale.get("speed", 1.0))
 	load("res://scripts/force_catalog.gd").equip(self, unit)
-	if person == null:
-		load("res://scripts/force_models.gd").infantry_prop(self, node, key, owner)   # the crews of the old models carry their gear as props; the Blender people carry it in their hands
 	if research:
 		research.equip(unit)  # discoveries and rival tech set health, range and speed
 	units.append(unit)
@@ -1376,20 +1353,9 @@ func display_model(key: String) -> Node3D:
 			from_file.wreck.free()   # a portrait shows the living vehicle
 		model = from_file.root if not from_file.is_empty() else (armor.build(look, 0).root if armor != null else tank_scene.instantiate())
 	elif look == "worker" or look in INFANTRY:
-		var person: Node3D = People.build(look, Color(UNIFORMS[0].main), Color(UNIFORMS[0].pants), Color(map.nations[0].color))
-		var realistic := look != "worker" and realistic_scene != null and person == null
-		model = person if person != null else (realistic_scene if realistic else (worker_scene if key == "worker" else soldier_scene)).instantiate()
+		model = People.build(look if People.has(look) else "soldier", Color(UNIFORMS[0].main), Color(UNIFORMS[0].pants), Color(map.nations[0].color))
 		var bounds := model_bounds(model)
 		model.scale = Vector3.ONE * SOLDIER_HEIGHT / maxf(bounds.size.y, 0.01)
-		if realistic:
-			model.rotation.y = PI
-			dress_realistic(model, 0, {"sniper": "Sniper_2", "rocketSoldier": "RocketLauncher", "commando": "SMG", "atgmTeam": "RocketLauncher", "manpads": "RocketLauncher", "fpvTeam": "SMG", "medic": "SMG"}.get(look, "AK"))
-		elif person != null:
-			pass
-		elif look == "worker":
-			dress_worker(model)
-		else:
-			dress_soldier(model, 0)
 		for player in model.find_children("*", "AnimationPlayer", true, false):
 			var idle := find_clip(player, ["idle_gun", "idle"])
 			if idle != "":
@@ -1414,8 +1380,6 @@ func display_model(key: String) -> Node3D:
 	if model == null:
 		return null
 	holder.add_child(model)
-	if not model.has_meta("people"):
-		load("res://scripts/force_models.gd").infantry_prop(self, holder, key, 0)
 	return holder
 
 # Uniform colours per nation: olive, desert tan, urban grey, woodland brown.
@@ -1439,145 +1403,6 @@ func matte(color: Color, roughness := 0.88, metallic := 0.0) -> StandardMaterial
 	m.roughness = roughness
 	m.metallic = metallic
 	return m
-
-# The Quaternius soldier ships holding all 14 weapons at once; keep the rifle.
-# Its saturated toy colours become matte field uniform in the nation's colour.
-# Workers keep their hi-vis colours, just without the plastic shine.
-func dress_worker(model: Node3D) -> void:
-	for mesh_instance in model.find_children("*", "MeshInstance3D", true, false):
-		for i in range(mesh_instance.mesh.get_surface_count()):
-			var source: Material = mesh_instance.mesh.surface_get_material(i)
-			if source is StandardMaterial3D:
-				var key := "worker:%s" % source.resource_name
-				mesh_instance.set_surface_override_material(i, cached_material(key, func():
-					var m: StandardMaterial3D = source.duplicate()
-					m.roughness = 0.85
-					m.metallic = 0.0
-					return m))
-
-func dress_soldier(model: Node3D, owner: int, weapon_name := "AK") -> void:
-	var u: Dictionary = UNIFORMS[owner % UNIFORMS.size()]
-	for mesh_instance in model.find_children("*", "MeshInstance3D", true, false):
-		var weapon: bool = mesh_instance.get_parent().name == "Index1_R"
-		if weapon and mesh_instance.name != weapon_name:
-			mesh_instance.visible = false
-			continue
-		for i in range(mesh_instance.mesh.get_surface_count()):
-			var source: Material = mesh_instance.mesh.surface_get_material(i)
-			var name: String = source.resource_name if source else ""
-			var key := "%d:%s:%s" % [owner, name, weapon]
-			var material: Material = null
-			if weapon:
-				material = cached_material(key, func(): return matte(Color("5a3f2a"), 0.8) if name == "Wood" else matte(Color("2c2e2f"), 0.45, 0.6))
-			else:
-				match name:
-					"Character_Main": material = cached_material(key, func(): return matte(u.main))
-					"Pants": material = cached_material(key, func(): return matte(u.pants))
-					"Grey": material = cached_material(key, func(): return matte(u.gear, 0.8))
-					"Black": material = cached_material(key, func(): return matte(Color("1e201c"), 0.75))
-					"DarkGrey": material = cached_material(key, func(): return matte(Color("2f322d"), 0.8))
-					"Skin":
-						material = cached_material(key, func():
-							var skin: StandardMaterial3D = (source as StandardMaterial3D).duplicate() if source is StandardMaterial3D else matte(Color("b08560"))
-							skin.roughness = 0.65
-							skin.metallic = 0.0
-							return skin)
-			if material:
-				mesh_instance.set_surface_override_material(i, material)
-
-# The realistic soldier: its photo-textured combat suit tinted toward the
-# nation's field colour, and a weapon from the stylised kit in the right hand.
-func dress_realistic(model: Node3D, owner: int, weapon_name: String) -> void:
-	var u: Dictionary = UNIFORMS[owner % UNIFORMS.size()]
-	var nation: Color = Color(map.nations[owner].color) if owner < map.nations.size() else Color.WHITE
-	for mesh_instance in model.find_children("*", "MeshInstance3D", true, false):
-		for i in range(mesh_instance.mesh.get_surface_count()):
-			var source: Material = mesh_instance.mesh.surface_get_material(i)
-			if not (source is StandardMaterial3D):
-				continue
-			var visor: bool = source.resource_name.to_lower().contains("visor")
-			var key := "real:%d:%s" % [owner, source.resource_name]
-			mesh_instance.set_surface_override_material(i, cached_material(key, func():
-				var m: StandardMaterial3D = source.duplicate()
-				if visor:
-					m.albedo_color = Color(0.12, 0.13, 0.12).lerp(nation, 0.25)
-					m.roughness = 0.25
-					m.metallic = 0.4
-				else:
-					# The nation's field colour over the texture's own light and shade.
-					m.albedo_color = u.main * 2.3
-					m.roughness = maxf(m.roughness, 0.78)
-					m.metallic = 0.0
-				return m))
-	var skeleton: Skeleton3D = model.find_children("*", "Skeleton3D", true, false)[0]
-	# A shoulder patch in the flag's colour on each upper arm tells the sides apart.
-	for side in ["Left", "Right"]:
-		var arm := BoneAttachment3D.new()
-		arm.bone_name = "mixamorig_%sArm" % side
-		skeleton.add_child(arm)
-		var patch := MeshInstance3D.new()
-		var patch_mesh := BoxMesh.new()
-		patch_mesh.size = Vector3(10.5, 7.0, 10.5)
-		patch.mesh = patch_mesh
-		patch.material_override = cached_material("patch:%d" % owner, func(): return matte(nation, 0.7))
-		patch.position = Vector3(0, 11.0, 0)
-		arm.add_child(patch)
-	var slung := false
-	var hand := BoneAttachment3D.new()
-	hand.bone_name = "mixamorig_Spine2" if slung else "mixamorig_RightHand"
-	skeleton.add_child(hand)
-	var gun := MeshInstance3D.new()
-	gun.name = "HeldWeapon"
-	gun.mesh = gun_mesh(weapon_name)
-	for i in range(gun.mesh.get_surface_count()):
-		var source: Material = gun.mesh.surface_get_material(i)
-		var name: String = source.resource_name if source else ""
-		gun.set_surface_override_material(i, cached_material("gun:" + name, func(): return matte(Color("4a3526"), 0.8) if name.contains("Wood") else (matte(Color("5a2420"), 0.6) if name == "Red" else matte(Color("262829"), 0.42, 0.65))))
-	# The kit's weapons lie along their longest axis; turn that onto the hand's
-	# grip direction and size it in centimetres.
-	var box := gun.mesh.get_aabb()
-	var long_axis := 0 if box.size.x >= maxf(box.size.y, box.size.z) else (1 if box.size.y >= box.size.z else 2)
-	var k: float = WEAPON_LENGTH.get(weapon_name, 90.0) / maxf(box.size[long_axis], 0.001)
-	var align := Basis()
-	if long_axis == 0:
-		align = Basis(Vector3.UP, -PI * 0.5)
-	elif long_axis == 1:
-		align = Basis(Vector3.RIGHT, PI * 0.5)
-	var grip: Basis = GUN_GRIP
-	var offset: Vector3 = GUN_OFFSET + GUN_GRIP * Vector3(0, 0, WEAPON_LENGTH.get(weapon_name, 90.0) * 0.18)
-	if slung:
-		# Across the back, muzzle up over the right shoulder.
-		grip = Basis(Vector3.BACK, -0.6) * Basis(Vector3.RIGHT, -PI * 0.5)
-		offset = Vector3(0, 8.0, -17.0)
-	var basis := grip * align.scaled(Vector3.ONE * k)
-	if not slung:
-		# Held in both hands (rifle_pose.gd): the clips are unarmed, so the gun
-		# rides on the chest and the modifier poses the arms round it.
-		hand.queue_free()
-		var pose := preload("res://scripts/rifle_pose.gd").new()
-		pose.gun = gun
-		pose.gun_basis = align.scaled(Vector3.ONE * k)
-		pose.gun_centre = box.get_center()
-		pose.gun_length = WEAPON_LENGTH.get(weapon_name, 90.0)
-		skeleton.add_child(pose)
-		skeleton.add_child(gun)
-		model.set_meta("rifle_pose", pose)
-		return
-	gun.transform = Transform3D(basis, offset - basis * box.get_center())
-	hand.add_child(gun)
-
-# The grip in the hand bone's frame (bone Y runs along the fingers).
-const GUN_GRIP := Basis(Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0))
-const GUN_OFFSET := Vector3(0, 9.0, 3.0)
-
-func gun_mesh(weapon_name: String) -> Mesh:
-	if not gun_meshes.has(weapon_name):
-		var kit: Node3D = soldier_scene.instantiate()
-		for mesh_instance in kit.find_children("*", "MeshInstance3D", true, false):
-			if mesh_instance.name == weapon_name:
-				gun_meshes[weapon_name] = mesh_instance.mesh
-		kit.free()
-	return gun_meshes.get(weapon_name)
 
 # Painted, weathered hull; the turret and gun move onto one pivot at the turret
 # centre so the turret can traverse. Returns that pivot.
@@ -1713,6 +1538,7 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 		"owner": owner, "speed": float(def.speed) * 0.45, "heading": 0.0, "moving": false,
 		"turret": parts.turret, "turret_yaw": 0.0, "dust": wake, "phase": at.x * 0.37 + at.z * 0.21, "meshes": [],
 		"naval": naval, "fly": key in AIR, "rotor": parts.rotor, "rotor2": parts.get("rotor2"), "radar": parts.radar,
+		"props": parts.get("props", []), "tail_rotors": parts.get("tail_rotors", []),
 		"altitude": {"attackJet": 22.0, "lightFighter": 26.0, "scoutHelicopter": 14.0}.get(key, ALTITUDE.get(key, preload("res://scripts/war_tools.gd").ALTITUDE.get(key, 0.0))), "bank": 0.0, "length": length,
 		"key": key, "hp": float(def.hp), "max_hp": float(def.hp), "dmg": float(def.dmg),
 		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
@@ -1806,7 +1632,6 @@ func animate(unit: Dictionary, moving: bool) -> void:
 		return
 	player.play(clip, 0.25)
 	unit.clip = clip
-	aim_weapon(unit, clip == unit.get("shoot_clip", "_") or (not moving and unit.get("enemy") != null))
 	player.speed_scale = (maxf(unit.get("cur_speed", unit.speed), 0.8) / unit.get("clip_speed", RUN_CLIP_SPEED)) if moving else 1.0
 
 func order_attack(selected: Array, enemy: Dictionary) -> void:
@@ -2096,6 +1921,13 @@ func _physics_process(delta: float) -> void:
 			unit.rotor2.rotate_y(-delta * 28.0)   # a tandem helicopter's rear rotor turns the other way
 		if unit.get("radar") != null:
 			unit.radar.rotate_y(delta * 1.6)
+		if unit.get("detail", true) or unit.get("fly", false):
+			for pr in unit.get("props", []):
+				if is_instance_valid(pr):
+					pr.rotate_object_local(Vector3.BACK, delta * 42.0)   # a propeller's disc is turned about the nose axis
+			for tr in unit.get("tail_rotors", []):
+				if is_instance_valid(tr):
+					tr.rotate_object_local(Vector3.RIGHT, delta * 46.0)
 		if unit.moving and unit.get("detail", true):
 			var travelled: float = unit.get("cur_speed", unit.speed) * delta
 			for a in unit.get("axles", []):
@@ -5984,17 +5816,10 @@ func update_dead(unit: Dictionary, delta: float, index: int) -> void:
 		unit.node.queue_free()
 		units.remove_at(index)
 
-## A rifleman shoulders his weapon to fire and carries it at the ready otherwise.
-func aim_weapon(unit: Dictionary, aiming: bool) -> void:
-	var model = unit.get("model")
-	if model is Node and model.has_meta("rifle_pose"):
-		model.get_meta("rifle_pose").aiming = aiming
-
 func set_stance(unit: Dictionary) -> void:
 	if unit.vehicle or unit.player == null or unit.moving:
 		return
 	var want: String = unit.shoot_clip if unit.enemy != null and unit.shoot_clip != "" else unit.idle_clip
-	aim_weapon(unit, unit.enemy != null)
 	if want != "" and unit.clip != want:
 		unit.player.play(want, 0.2)
 		unit.player.speed_scale = 1.0
