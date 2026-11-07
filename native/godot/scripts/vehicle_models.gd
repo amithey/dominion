@@ -42,6 +42,8 @@ static func _shader_material(w: Node, owner: int, role: String) -> Material:
 	if role == "glass":
 		var g := StandardMaterial3D.new()
 		g.albedo_color = Color(0.06, 0.13, 0.17)
+		g.vertex_color_use_as_albedo = true
+		g.vertex_color_is_srgb = false
 		g.roughness = 0.08
 		g.metallic = 0.5
 		g.metallic_specular = 0.9
@@ -56,9 +58,21 @@ static func _shader_material(w: Node, owner: int, role: String) -> Material:
 			"metal_dark":
 				s.set_shader_parameter("paint", Color(0.17, 0.17, 0.16))
 				s.set_shader_parameter("metal", 1.0)
+			"metal":
+				s.set_shader_parameter("paint", Color(0.30, 0.31, 0.32))
+				s.set_shader_parameter("metal", 1.0)
 			"rubber":
 				s.set_shader_parameter("paint", Color(0.06, 0.06, 0.06))
 				s.set_shader_parameter("shade", 0.7)
+			"canvas":
+				s.set_shader_parameter("paint", Color(0.38, 0.36, 0.26))
+				s.set_shader_parameter("shade", 0.95)
+			"wood":
+				s.set_shader_parameter("paint", Color(0.36, 0.23, 0.13))
+				s.set_shader_parameter("shade", 0.9)
+			"dark":
+				s.set_shader_parameter("paint", Color(0.025, 0.026, 0.028))
+				s.set_shader_parameter("shade", 0.8)
 			"markings":
 				s.set_shader_parameter("paint", team)
 				s.set_shader_parameter("shade", 0.85)

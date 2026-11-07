@@ -32,6 +32,7 @@ varying vec3 local_pos;
 varying vec3 local_normal;
 varying float above_ground;
 varying vec3 tone;
+varying vec3 vcol;
 
 // A point on the loop (y, z), its normal and tangent (y, z), by U.
 void track_sample(float u, out vec2 p, out vec2 n, out vec2 t) {
@@ -78,6 +79,7 @@ void vertex() {
 	local_normal = NORMAL;
 	above_ground = (MODEL_MATRIX * vec4(VERTEX, 1.0)).y - ground_y;
 	tone = vertex_tone ? COLOR.rgb : vec3(0.5, 0.0, 0.0);
+	vcol = vertex_tone ? vec3(1.0) : COLOR.rgb;
 }
 
 float tri_noise(float scale) {
@@ -98,6 +100,7 @@ void fragment() {
 	vec3 base = mix(paint * s, vec3(0.13, 0.13, 0.12), m);
 	// Broad field-paint patches reuse the weathering sample: no extra reads.
 	base = mix(base, base * vec3(0.65, 0.72, 0.62), smoothstep(0.51, 0.63, grime) * painted * 0.75);
+	base *= vcol;
 	if (vertex_tone && tone.b > 0.75) {
 		base = team * 0.8;
 	} else if (vertex_tone && tone.b > 0.4) {
