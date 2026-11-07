@@ -1366,7 +1366,10 @@ func display_model(key: String) -> Node3D:
 	var model: Node3D = null
 	var look: String = key if (key in NAVAL or key in AIR or key in VEHICLES or key in INFANTRY or key == "worker" or building_defs.has(key)) else preload("res://scripts/additional_factions.gd").base(key)   # (a national variant looks like the unit it is built on)
 	if look in NAVAL or look in AIR:
-		model = craft.build(look, 0).root
+		var built_craft: Dictionary = craft.build(look, 0)
+		if built_craft.get("wreck") != null:
+			built_craft.wreck.free()   # a portrait shows the living aircraft or warship
+		model = built_craft.root
 	elif look in VEHICLES:
 		var from_file: Dictionary = preload("res://scripts/vehicle_models.gd").build(self, look, 0)
 		if not from_file.is_empty() and from_file.get("wreck") != null:
