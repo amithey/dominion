@@ -83,7 +83,8 @@ func run() -> void:
 			if float(d.get("buildTime", 0)) <= 0.0: problems.append("no build time")
 			if d.get("cost", {}).is_empty(): problems.append("free")
 			var help: String = Weapon.summary(w, key)
-			if not (help.contains("Role:") and help.contains("Launch from:")): problems.append("help lacks role or launcher")
+			# The help is a role line, then "Launch from: ...", then the blast (the text was shortened: the role no longer carries a "Role:" label).
+			if not (help.contains("Launch from:") and help.split("\n").size() >= 3 and help.split("\n")[0].strip_edges() != ""): problems.append("help lacks role or launcher")
 			if ms.launchers_text(key) == "": problems.append("no launcher text")
 			if able[key].is_empty():
 				if preload("res://scripts/cbrn_data.gd").CAPABILITY.get(key, {}).get("ids", ["x"]).is_empty():

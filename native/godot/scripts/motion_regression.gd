@@ -110,7 +110,7 @@ static func run(w: Node) -> void:
 	# A destroyed tank may throw its turret; it must come down and rest on the ground. (A glb model swaps to its own burnt-out copy
 	# instead, so the tank here is a kit tank: a nation whose tank has no model file.)
 	var kept_id: String = str(w.map.nations[1].get("id", ""))
-	w.map.nations[1]["id"] = "italy"
+	w.map.nations[1]["id"] = "atlantis"   # (no nation has none now that every nation has a tank model: an unknown one keeps the kit tank)
 	var tossed = null
 	for attempt in range(12):
 		var wreck: Dictionary = w.spawn_unit("tank", field + Vector3(-10 - attempt * 6, 0, 0), 1)
