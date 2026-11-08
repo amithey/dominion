@@ -39,8 +39,10 @@ def unit(d):
 
 
 class Tree:
-    def __init__(self, m, rng, species, far, bark):
-        self.m, self.rng, self.sp, self.far, self.bark = m, rng, species, far, bark
+    def __init__(self, m, rng, species, lod, bark):
+        # lod 0 near, 1 mid (the same trees with cheaper primitives: a third of the triangles), 2 far (fewer limbs and clumps)
+        self.m, self.rng, self.sp, self.far, self.bark = m, rng, species, lod == 2, bark
+        self.low = lod >= 1
 
     def stem(self, pts, radii, bark=None):
         """A limb through the points, thickness tapering from radii[0] to radii[-1]."""
@@ -48,7 +50,7 @@ class Tree:
         for i in range(n):
             r0 = radii[0] + (radii[-1] - radii[0]) * i / n
             r1 = radii[0] + (radii[-1] - radii[0]) * (i + 1) / n
-            self.m.pipe("wood", pts[i], pts[i + 1], r0, 5 if self.far else 8, tint=bark or self.bark, r2=r1)
+            self.m.pipe("wood", pts[i], pts[i + 1], r0, 5 if self.low else 8, tint=bark or self.bark, r2=r1)
 
     def curve(self, a, b, bend, steps=3):
         """Points from a to b bowed sideways by `bend` metres, so a limb is never a straight pole."""
@@ -71,8 +73,8 @@ class Tree:
             tt = self.rng.random() if t is None else min(1.0, max(0.0, t + self.rng.uniform(-0.25, 0.25)))
             col = mix(lo, hi, tt)
             rr = r * self.rng.uniform(0.55, 0.95)
-            self.m.geodome("leaf", p, rr, rr * flat, 1 if self.far else 2, tint=col, jitter=0.1)
-            self.m.cyl("leaf", (p[0], p[1] - rr * 0.2, p[2]), rr * 0.9, rr * 0.25, 6 if self.far else 8, r2=rr * 0.4, tint=tuple(x * 0.5 for x in col))
+            self.m.geodome("leaf", p, rr, rr * flat, 1 if self.low else 2, tint=col, jitter=0.1)
+            self.m.cyl("leaf", (p[0], p[1] - rr * 0.2, p[2]), rr * 0.9, rr * 0.25, 6 if self.low else 8, r2=rr * 0.4, tint=tuple(x * 0.5 for x in col))
 
     def twig(self, a, direction, length, depth, r0, leaf_r, tfrac):
         """A branch with `depth` more forks: it curves, may fork again, and ends in a tuft of leaves."""
@@ -90,8 +92,9 @@ class Tree:
         self.clump(b, leaf_r, tfrac)
 
 
-def birch(m, rng, far):
-    t = Tree(m, rng, "birch", far, hexc("e4dfd2"))
+def birch(m, rng, lod):
+    far = lod == 2
+    t = Tree(m, rng, "birch", lod, hexc("e4dfd2"))
     h = rng.uniform(8.5, 10.5)
     lean = (rng.uniform(-0.5, 0.5), rng.uniform(-0.5, 0.5))
     pts = [(lean[0] * (k / 4) ** 2, h * k / 4, lean[1] * (k / 4) ** 2) for k in range(5)]
@@ -116,8 +119,9 @@ def birch(m, rng, far):
     t.clump((top[0], h + 0.4, top[2]), 1.0, 0.9)
 
 
-def oak(m, rng, far):
-    t = Tree(m, rng, "oak", far, hexc("4a3f35"))
+def oak(m, rng, lod):
+    far = lod == 2
+    t = Tree(m, rng, "oak", lod, hexc("4a3f35"))
     h = rng.uniform(9.0, 11.0)
     lean = (rng.uniform(-0.3, 0.3), rng.uniform(-0.3, 0.3))
     fork = rng.uniform(2.4, 3.2)
@@ -136,8 +140,9 @@ def oak(m, rng, far):
     t.clump((top[0], h - 0.8, top[2]), 1.8, 0.85)
 
 
-def pine(m, rng, far):
-    t = Tree(m, rng, "pine", far, hexc("7a4a32"))
+def pine(m, rng, lod):
+    far = lod == 2
+    t = Tree(m, rng, "pine", lod, hexc("7a4a32"))
     h = rng.uniform(12.0, 15.0)
     lean = (rng.uniform(-0.8, 0.8), rng.uniform(-0.8, 0.8))
     pts = [(lean[0] * (k / 5) ** 2, h * k / 5, lean[1] * (k / 5) ** 2) for k in range(6)]
@@ -160,8 +165,9 @@ def pine(m, rng, far):
     t.clump((pts[-1][0], h + 0.2, pts[-1][2]), 1.3, 0.8, 0.6)
 
 
-def spruce(m, rng, far):
-    t = Tree(m, rng, "spruce", far, hexc("4a3a30"))
+def spruce(m, rng, lod):
+    far = lod == 2
+    t = Tree(m, rng, "spruce", lod, hexc("4a3a30"))
     h = rng.uniform(11.5, 14.5)
     lean = (rng.uniform(-0.2, 0.2), rng.uniform(-0.2, 0.2))
     t.stem([(0, 0, 0), (lean[0] * 0.5, h * 0.5, lean[1] * 0.5), (lean[0], h, lean[1])], (0.26, 0.03))
@@ -173,7 +179,7 @@ def spruce(m, rng, far):
         r = (2.2 - f * 1.9) * rng.uniform(0.85, 1.12)
         col = mix(lo, hi, min(1.0, max(0.0, 0.1 + 0.7 * f + rng.uniform(-0.12, 0.12))))
         ox, oz = lean[0] * f + rng.uniform(-0.2, 0.2), lean[1] * f + rng.uniform(-0.2, 0.2)
-        seg = 6 if far else 9
+        seg = 6 if lod else 9
         m.cyl("leaf", (ox, y, oz), r, 0.9 + (1 - f) * 0.5, seg, r2=0.05, tint=col)
         m.cyl("leaf", (ox, y - 0.3, oz), r * 0.98, 0.35, seg, r2=r * 0.6, tint=tuple(x * 0.55 for x in col))
         if not far:
@@ -183,8 +189,9 @@ def spruce(m, rng, far):
                 m.pipe("leaf", (ox + math.cos(a) * r * 0.7, y - 0.1, oz + math.sin(a) * r * 0.7), tip, 0.1, 4, tint=col, r2=0.02)
 
 
-def poplar(m, rng, far):
-    t = Tree(m, rng, "poplar", far, hexc("6a6252"))
+def poplar(m, rng, lod):
+    far = lod == 2
+    t = Tree(m, rng, "poplar", lod, hexc("6a6252"))
     h = rng.uniform(12.0, 15.0)
     lean = (rng.uniform(-0.3, 0.3), rng.uniform(-0.3, 0.3))
     t.stem([(0, 0, 0), (lean[0] * 0.5, h * 0.5, lean[1] * 0.5), (lean[0], h, lean[1])], (0.26, 0.04))
@@ -198,8 +205,9 @@ def poplar(m, rng, far):
     t.clump((lean[0], h + 0.2, lean[1]), 0.9, 0.9, 1.4)
 
 
-def willow(m, rng, far):
-    t = Tree(m, rng, "willow", far, hexc("574a3a"))
+def willow(m, rng, lod):
+    far = lod == 2
+    t = Tree(m, rng, "willow", lod, hexc("574a3a"))
     h = rng.uniform(8.0, 9.5)
     t.stem([(0, 0, 0), (0.1, 1.5, 0.0), (0.2, 2.4, 0.1)], (0.5, 0.36))
     m.cyl("wood", (0, -0.15, 0), 0.75, 0.6, 8, r2=0.5, tint=hexc("463c30"))
@@ -220,8 +228,9 @@ def willow(m, rng, far):
     t.clump((0.2, h - 1.2, 0.1), 2.0, 0.8, 0.6)
 
 
-def dead(m, rng, far):
-    t = Tree(m, rng, "oak", far, hexc("6a645a"))
+def dead(m, rng, lod):
+    far = lod == 2
+    t = Tree(m, rng, "oak", lod, hexc("6a645a"))
     h = rng.uniform(6.0, 8.0)
     lean = (rng.uniform(-0.6, 0.6), rng.uniform(-0.6, 0.6))
     t.stem([(0, 0, 0), (lean[0] * 0.4, h * 0.5, lean[1] * 0.4), (lean[0], h, lean[1])], (0.34, 0.04))
@@ -241,9 +250,9 @@ def dead(m, rng, far):
 MAKERS = {"birch": (birch, 3), "oak": (oak, 3), "pine": (pine, 3), "spruce": (spruce, 3), "poplar": (poplar, 2), "willow": (willow, 2), "dead": (dead, 2)}
 for species, (fn, count) in MAKERS.items():
     for v in range(1, count + 1):
-        for far in (False, True):
-            name = "tree_%s_%d%s" % (species, v, "_far" if far else "")
+        for lod, suffix in ((0, ""), (1, "_mid"), (2, "_far")):
+            name = "tree_%s_%d%s" % (species, v, suffix)
             m = Model(name)
             rng = random.Random(sum(map(ord, species)) + v * 31)
-            fn(m, rng, far)
+            fn(m, rng, lod)
             m.finish(os.path.join(out_dir, name + ".glb"))

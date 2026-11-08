@@ -28,10 +28,17 @@ static func sight_mult(w: Node, u: Dictionary) -> float:
 static func range_mult(w: Node, u: Dictionary) -> float:
 	if u.get("fly", false) or u.get("naval", false):
 		return 1.0
+	# Asked three times per unit every step: the ground under a unit changes slowly, so it is read twice a second.
+	var now: float = w.game_time
+	if now < float(u.get("_rm_until", -1.0)) and u.has("_rm"):
+		return u._rm
 	var elev := elevation_above_sea(w, u.node.position)
-	if elev <= 5.0:
-		return 1.0
-	return 1.0 + clampf((elev - 5.0) / 34.0, 0.0, 0.15)
+	var m := 1.0
+	if elev > 5.0:
+		m = 1.0 + clampf((elev - 5.0) / 34.0, 0.0, 0.15)
+	u._rm = m
+	u._rm_until = now + 0.5
+	return m
 
 ## Combat damage multiplier from relative ground elevation between attacker and target.
 static func damage_mult(w: Node, attacker: Dictionary, target: Dictionary) -> float:

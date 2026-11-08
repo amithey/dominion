@@ -6,6 +6,8 @@ extends RefCounted
 ## cell, species, variant and part; a detailed copy near the camera and a cheap one from 120 m on. They are felled with the rest
 ## (world.tree_parts, site_clearing.gd).
 const DIR := "res://assets/art/blender/env/"
+const NEAR_END := 58.0
+const FAR_BEGIN := 135.0
 const SPECIES := {"birch": 3, "oak": 3, "pine": 3, "spruce": 3, "poplar": 2, "willow": 2, "dead": 2}
 ## How tall the tree at scale 1 stands (metres); the map's own scale (1.1 to 1.6) comes on top.
 const HEIGHT := {"birch": 7.5, "oak": 8.0, "pine": 10.5, "spruce": 11.0, "poplar": 11.0, "willow": 7.5, "dead": 6.0}
@@ -154,8 +156,8 @@ static func build(w: Node) -> void:
 	for key in cells:
 		var model: String = "tree_" + str(key).get_slice("|", 0)
 		var list: Array = cells[key]
-		for far in [false, true]:
-			var ps := parts(model + ("_far" if far else ""), w)
+		for level in [0, 1, 2]:
+			var ps := parts(model + ["", "_mid", "_far"][level], w)
 			for part in ps:
 				var mm := MultiMesh.new()
 				mm.transform_format = MultiMesh.TRANSFORM_3D
@@ -177,12 +179,19 @@ static func build(w: Node) -> void:
 					w.tree_parts[spot].append([mm, i])
 				var node := MultiMeshInstance3D.new()
 				node.multimesh = mm
-				if far:
-					node.visibility_range_begin = 120.0
-					node.visibility_range_begin_margin = 14.0
-				else:
-					node.visibility_range_end = 120.0
+				# Three levels of detail: the full tree close up, the same tree on cheaper shapes (a third of the triangles, hardly
+				# different at that range) out to 135 m, and the plain one beyond.
+				if level == 0:
+					node.visibility_range_end = NEAR_END
+					node.visibility_range_end_margin = 8.0
+				elif level == 1:
+					node.visibility_range_begin = NEAR_END
+					node.visibility_range_begin_margin = 8.0
+					node.visibility_range_end = FAR_BEGIN
 					node.visibility_range_end_margin = 14.0
+				else:
+					node.visibility_range_begin = FAR_BEGIN
+					node.visibility_range_begin_margin = 14.0
 				node.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 				w.add_child(node)
 				w.tree_nodes.append(node)

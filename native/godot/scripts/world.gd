@@ -746,12 +746,8 @@ func build_terrain() -> void:
 	add_child(terrain_node)
 
 func build_sea() -> void:
-	var plane := PlaneMesh.new()
-	# Large enough to reach the horizon from any RTS camera angle.
-	var extent := 4200.0
-	plane.size = Vector2(extent, extent)
-	plane.subdivide_width = 420
-	plane.subdivide_depth = 420
+	# Large enough to reach the horizon from any RTS camera angle; fine over the map, wide toward the horizon (sea_mesh.gd).
+	var plane: ArrayMesh = preload("res://scripts/sea_mesh.gd").build(float(map.mapSize) * 0.5, 2100.0)
 	var material := ShaderMaterial.new()
 	material.shader = load("res://shaders/water.gdshader")
 	material.set_shader_parameter("noise_tex", noise_texture)

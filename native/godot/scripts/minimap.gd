@@ -241,9 +241,9 @@ func _crisis_points() -> Array:
 		if m.get("node") != null and is_instance_valid(m.node):
 			out.append({"pos": m.node.position, "color": Color(1.0, 0.18, 0.22)})
 	if world.get("logistics") != null:
-		for e in world.logistics.edges:
-			if int(e.owner) == 0 and float(e.hp) <= 0.0 and not e.a.dead and not e.b.dead:
-				out.append({"pos": (e.a.root.position + e.b.root.position) * 0.5, "color": Color(0.96, 0.72, 0.20)})
+		for e in world.logistics.edges.values():   # a cut road or railway: the middle of the link between its two hexes
+			if int(e.owner) == 0 and float(e.hp) <= 0.0:
+				out.append({"pos": (world.logistics.hex_center(e.a) + world.logistics.hex_center(e.b)) * 0.5, "color": Color(0.96, 0.72, 0.20)})
 	return out
 
 func _gui_input(event: InputEvent) -> void:
