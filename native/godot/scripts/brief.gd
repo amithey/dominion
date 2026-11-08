@@ -67,6 +67,7 @@ const BRIEFS := {
 	"mineLayer": ["Lays minefields", ["Stop it for a few seconds: it mines that spot", "Mines hit enemy vehicles only"]],
 	"mineClearer": ["Clears minefields", ["Drive it near enemy mines: it blasts a lane"]],
 	"recoveryVehicle": ["Field repair vehicle", ["Repairs the most damaged vehicle near it", "Keep it behind the armour"]],
+	"supplyTruck": ["Mobile fuel and ammo lorry", ["Units within 28 m spend 60% less fuel and ammo", "Reloads rocket launchers and supplies cut-off troops", "Unarmed: escort it"]],
 	"decoy": ["Fake weapon", ["Draws enemy fire away from the real one"]],
 	"counterBatteryRadar": ["Finds enemy artillery", ["Reveals guns that fire near it; your fire on them +25%", "Unarmed"]],
 	"coastalASM": ["Coastal anti-ship missiles", ["Hits warships far out at sea", "Cannot attack land or air"]],

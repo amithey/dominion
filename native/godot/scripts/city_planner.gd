@@ -56,6 +56,15 @@ static func best(w: Node, owner: int, key: String, options: Array) -> Variant:
 	var zone: String = ZONE.get(key, "home")
 	var span: Array = RINGS[zone]
 	var toward := _enemy_direction(w, owner, towns[0].root.position)
+	var fwd := toward if toward != Vector3.ZERO else Vector3(cos(float(owner) * 1.9 + 0.4), 0.0, sin(float(owner) * 1.9 + 0.4))
+	var side := Vector3(-fwd.z, 0.0, fwd.x)
+	var sector_dir := Vector3.ZERO
+	match zone:
+		"army", "airbase": sector_dir = fwd
+		"farm": sector_dir = (-fwd * 0.82 + side * 0.57).normalized()
+		"heavy", "industry": sector_dir = (-fwd * 0.55 - side * 0.83).normalized()
+		"home": sector_dir = (fwd * 0.18 + side * 0.98).normalized()
+		"civic": sector_dir = (fwd * 0.25 + side * 0.35).normalized()
 	var seen := {}
 	var scored := []
 	for hex in options:
@@ -88,25 +97,30 @@ static func best(w: Node, owner: int, key: String, options: Array) -> Variant:
 				score -= absi(dr) * 0.6
 			_:
 				score += randf_range(-1.2, 1.2)
-		# Towns grow touching what they have: a district beside its own kind is worth more.
+		# Towns grow touching what they have: districts cluster cleanly into readable neighbourhoods.
 		var neighbours := 0
 		for step in w.logistics.DIRECTIONS:
 			var near = w.district_hex.get(hex + step)
 			if near != null and not near.dead and near.owner == owner:
 				neighbours += 1
-				if ZONE.get(near.key, "") == zone: score += 0.35
+				var nz: String = ZONE.get(near.key, "")
+				if near.key == key: score += 0.65
+				if nz == zone: score += 0.80
+				elif (zone == "heavy" and nz in ["home", "civic", "farm"]) or (nz == "heavy" and zone in ["home", "civic", "farm"]):
+					score -= 0.70
 		# A town is a body, not a string: dense, filling its own gaps first, never a tentacle.
-		score += neighbours * 0.8
-		if neighbours >= 4: score += 2.0     # a gap in the middle of the town
-		elif neighbours <= 1 and d > 1: score -= 1.8   # a lone arm reaching out
-		score -= d * 0.45
-		# The army faces the nearest rival.
-		if zone in ["army", "airbase"] and toward != Vector3.ZERO:
+		score += neighbours * 0.85
+		if neighbours >= 4: score += 2.2     # a gap in the middle of the town
+		elif neighbours <= 1 and d > 1: score -= 1.9   # a lone arm reaching out
+		score -= d * 0.48
+		# Sector orientation: group farms, industry, homes, civic and military into distinct town quarters.
+		if sector_dir != Vector3.ZERO:
 			var at: Vector3 = w.logistics.hex_center(hex)
 			var from: Vector3 = w.logistics.hex_center(c)
 			var out := Vector3(at.x - from.x, 0, at.z - from.z)
 			if out.length() > 0.1:
-				score += out.normalized().dot(toward) * 1.2
+				var weight := 1.25 if zone in ["army", "airbase", "farm", "heavy"] else (0.95 if zone in ["industry", "home"] else 0.45)
+				score += out.normalized().dot(sector_dir) * weight
 		score += randf() * 0.25   # (no two towns alike)
 		scored.append([score, hex])
 	scored.sort_custom(func(x, y): return x[0] > y[0])

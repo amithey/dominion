@@ -215,6 +215,9 @@ var missiles: Node3D      # missiles.gd: silo production, launches, impacts
 var research: Node        # research.gd: discoveries in stages, tracks, eras
 var portraits: Node       # portraits.gd: pictures of every unit and building for the interface
 var health_overlay: Control  # hud.gd's health bars, for the feature probe
+var homefront: Node3D = null    # homefront.gd: fire engines, ambulances, the power grid and casualties
+var battle_scars: Node3D = null # battle_scars.gd: craters that fade from the hillsides
+var map_lenses: Control = null  # map_lenses.gd: the strategic overlays (F2 supply, F3 air defence, F4 emergency)
 # Ground units are bucketed into 8 m cells once per frame; keeping clear of
 # each other and looking for targets then reads a handful of buckets instead
 # of the whole army, which is what made large battles crawl.
@@ -256,6 +259,7 @@ var match_config: Dictionary = MatchSetup.DEFAULT.duplicate()
 var engagement: RefCounted
 var naval_navigation: RefCounted
 const Repairs := preload("res://scripts/repairs.gd")
+const BuildingFires := preload("res://scripts/building_fires.gd")
 const Motion := preload("res://scripts/motion.gd")
 const Tactics := preload("res://scripts/tactics.gd")
 const Modern := preload("res://scripts/modern_warfare.gd")
@@ -267,6 +271,8 @@ const FactionPowers := preload("res://scripts/faction_powers.gd")
 const SiteClearing := preload("res://scripts/site_clearing.gd")
 const Picking := preload("res://scripts/picking.gd")
 const Topography := preload("res://scripts/topography.gd")
+const UrbanGarrison := preload("res://scripts/urban_garrison.gd")
+const TacticsTerrain := preload("res://scripts/tactics_terrain.gd")
 var tracks_mask := PackedByteArray()   # tracks.gd: 255 where the ground is worn bare by a dirt track
 var lake_mask := PackedByteArray()   # 1 where a height-grid cell is lake water (not the open sea)
 const NAV_STEP := 4.0
@@ -1179,7 +1185,7 @@ func refresh_streets() -> void:
 		var mask := 0
 		# A building that fills its whole hex (an airfield's runway, a stadium,
 		# a refinery...) has no streets running through it.
-		if b.key in districts.COMPLETE or b.key in ["airfield", "helipad"]:
+		if b.key in ["airfield", "helipad", "stadium", "bunker", "missileSilo", "samSite", "port", "shipyard", "fishingWharf", "mountainMine", "extractor", "solarFarm", "farm", "park"]:
 			districts.set_streets(b.pad, 0)
 			continue
 		for d in logistics.DIRECTIONS:
@@ -1676,6 +1682,7 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 		u.attack_move = attack
 		u.order_goal = point   # where the player clicked (order_marks.gd draws its flag there)
 		u.path = PackedVector3Array()
+		u.erase("garrison_order")   # (urban_garrison.gd sets it again after its own move order)
 		u.build_site = null  # a new order takes a worker off its construction site
 		u.build_queue = []   # and off its list of jobs
 		u.forced = false
@@ -1897,6 +1904,15 @@ func _physics_process(delta: float) -> void:
 		tb = lap("  faction powers", tb)
 		preload("res://scripts/bunker.gd").update(self, delta)
 		tb = lap("  bunkers", tb)
+		BuildingFires.update(self, delta)
+		tb = lap("  fires", tb)
+		if homefront != null:
+			homefront.update(delta)   # fire engines, ambulances, the grid
+			tb = lap("  homefront", tb)
+		if battle_scars != null:
+			battle_scars.update(delta)
+		UrbanGarrison.update(self, delta)   # squads entering and leaving buildings
+		tb = lap("  garrisons", tb)
 	spent("build+train", t0)
 	var t_units := clock()
 	for i in range(units.size() - 1, -1, -1):
@@ -1974,6 +1990,12 @@ func _physics_process(delta: float) -> void:
 		# while a unit elsewhere in the list still points at it): drop the stale target, never read a freed node.
 		if unit.enemy != null and not is_instance_valid(unit.enemy.get("node")):
 			unit.enemy = null
+		# Inside a building (urban_garrison.gd): it fires from the windows and does not move, until a new order takes it out.
+		if unit.get("garrison_building") != null:
+			if unit.target == null:
+				unit.moving = false
+				continue
+			UrbanGarrison.exit_unit(self, unit, unit.garrison_building)
 		if unit.get("fly", false) or unit.get("naval", false):
 			move_craft(unit, delta)
 			continue
@@ -1991,7 +2013,7 @@ func _physics_process(delta: float) -> void:
 			gap.y = 0
 			# Close in to a firing position of its own (tactics.gd), not onto the
 			# enemy itself; once there, hold until the enemy draws clear of range.
-			if gap_to(unit, unit.enemy) > unit.range * (1.03 if unit.get("holding", false) else 0.99):
+			if gap_to(unit, unit.enemy) > unit.range * TacticsTerrain.range_mult(self, unit) * (1.03 if unit.get("holding", false) else 0.99):
 				if thinks(unit) or not unit.has("spot"):
 					unit.spot = Tactics.firing_spot(self, unit, unit.enemy)
 				goal = unit.spot
@@ -2391,6 +2413,12 @@ func start_match(difficulty: String) -> void:
 	if order_marks == null:
 		order_marks = preload("res://scripts/order_marks.gd").new(self)
 		add_child(order_marks)
+	if homefront == null:
+		homefront = preload("res://scripts/homefront.gd").new(self)
+		add_child(homefront)
+	if battle_scars == null:
+		battle_scars = preload("res://scripts/battle_scars.gd").new(self)
+		add_child(battle_scars)
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 	hud.start_guide()
 
@@ -2471,6 +2499,8 @@ func clear_match() -> void:
 		occupation.clear()
 	if passage:
 		passage.restore({})
+	if homefront != null:
+		homefront.restore({})   # emergency vehicles off the roads, casualties cleared
 
 func rebuild_nav_mesh() -> int:
 	var tiles := ceili(float(nav_n - 1) / NAV_TILE)
@@ -3005,6 +3035,8 @@ func update_training(delta: float) -> void:
 		elif b.owner > 0 and directorate != null:
 			var practical: Dictionary = directorate.applications.bonuses(b.owner)
 			rail *= 1.0 + float(practical.get("prodPct", 0.0)) + float(practical.get("trainPct", 0.0))
+		if b.get("blackout", false):
+			rail *= 0.65   # no power: the line runs on generators (homefront.gd)
 		var first: String = b.queue[0]
 		if first.begins_with("missile:"):
 			b.queue_prog += delta * rail / maxf(missiles.build_time(first.substr(8)), 0.5)
@@ -5185,7 +5217,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 	if unit.enemy == null and unit.search <= 0.0:
 		unit.search = 0.35
 		if unit.target == null or unit.attack_move or unit.key in ["aaVehicle", "samLauncher", "manpads", "laserAD", "irisT"]:
-			unit.enemy = Tactics.pick_target(self, unit, maxf(unit.aggro, unit.range))
+			unit.enemy = Tactics.pick_target(self, unit, maxf(unit.aggro, unit.range * TacticsTerrain.range_mult(self, unit)))
 			# An idle unit answers a fight beside it: an enemy fighting its side, out to the
 			# distance it would chase one anyway (Tactics.keep_target's leash). Six tanks used
 			# to watch from 32 m as invaders shot up the capital's army (gameplay-nations-100).
@@ -5202,8 +5234,8 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 		return
 	var enemy: Dictionary = unit.enemy
 	var d := gap_to(unit, enemy)
-	if d > unit.range * 1.03:
-		return  # a unit holding at the edge of range still has its shot
+	if d > unit.range * TacticsTerrain.range_mult(self, unit) * 1.03:
+		return  # a unit holding at the edge of range still has its shot (high ground reaches further: tactics_terrain.gd)
 	if unit.vehicle and unit.turret != null:
 		# The gun only fires once the turret has swung onto the target.
 		var gap: Vector3 = enemy.node.position - unit.node.position
@@ -5499,6 +5531,9 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	if directorate != null:
 		amount *= directorate.damage_mult(source, unit)  # AI: autonomy, the fusion cell, targeting and undersea sensing
 	amount *= preload("res://scripts/war_tools.gd").damage_mult(self, source, unit)  # radars, airborne warning, jamming, submarine hunters
+	if unit.get("garrison_building") != null:
+		amount *= UrbanGarrison.COVER_MULT   # fortified in a building
+	amount *= TacticsTerrain.damage_mult(self, source, unit)   # firing down from the high ground
 	unit.hp -= amount
 	if sitrep != null:
 		sitrep.damaged(unit, amount, source)   # the situation report (sitrep.gd)
@@ -5507,7 +5542,11 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 		unit.last_hit = game_time
 	if unit.get("is_building", false):
 		if amount > 0 and unit.hp > 0:
+			BuildingFires.on_damaged(self, unit, amount, source)
 			show_building_damage(unit)
+			if homefront != null:
+				homefront.on_building_damaged(unit, amount, source)   # casualties, a shaken grid
+			UrbanGarrison.on_building_hit(self, unit, amount, source)
 		if unit.hp <= 0.0:
 			destroy_building(unit)
 		return
@@ -5535,7 +5574,8 @@ func show_building_damage(b: Dictionary) -> void:
 	if b.get("damage_fade") != null and b.damage_fade.is_valid():
 		b.damage_fade.kill()
 	var share: float = maxf(0.0, b.hp) / maxf(1.0, b.max_hp)
-	b.damage_label.text = "%s  %d%%" % [b.def.name, ceili(100.0 * share)]
+	var prefix := "FIRE · " if float(b.get("fire", 0.0)) > 0.001 else ""
+	b.damage_label.text = "%s%s  %d%%" % [prefix, b.def.name, ceili(100.0 * share)]
 	b.damage_label.modulate = Color("9fd89a") if share > 0.6 else (Color("f1c86a") if share > 0.3 else Color("f08a6e"))
 	b.damage_fade = create_tween()
 	b.damage_fade.tween_interval(3.0)
@@ -5650,6 +5690,16 @@ func destroy_building(b: Dictionary) -> void:
 		return   # already a ruin: not crushed, burnt and announced again
 	b.destroyed = true
 	b.dead = true
+	b.fire = 0.0
+	b.fire_crews = 0
+	UrbanGarrison.evacuate(self, b, true)   # the squads inside get out of the ruin
+	if homefront != null:
+		homefront.on_building_destroyed(b)
+	for aux_name in ["FireVisual", "DamageVisual"]:
+		var aux: Node = b.root.get_node_or_null(aux_name)
+		if aux != null:
+			b.root.remove_child(aux)
+			aux.queue_free()
 	if sitrep != null:
 		sitrep.building_lost(b)
 	if b.key == "nuclearReactor" and wmd != null:
@@ -6184,6 +6234,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				var point = ground_point(event.position)
 				if point != null:
 					passage.check_order(selected, point, func(): order_move(selected,point,true))
+			elif target == null and garrison_site_under(selected, event.position) != null:
+				UrbanGarrison.order_garrison(self, selected, garrison_site_under(selected, event.position))   # infantry into a building
 			elif target == null and preload("res://scripts/airlift.gd").transport_under(self, selected, event.position) != null:
 				preload("res://scripts/airlift.gd").order_board(self, selected, preload("res://scripts/airlift.gd").transport_under(self, selected, event.position))   # board a helicopter
 			elif target != null:
@@ -6234,6 +6286,15 @@ func select_same_kind(unit: Dictionary, add := false) -> int:
 	select_building(null)
 	return count
 
+## One of your intact buildings under the cursor that the selected infantry could garrison (urban_garrison.gd), or null.
+func garrison_site_under(selected: Array, screen: Vector2) -> Variant:
+	if not selected.any(func(u): return int(u.owner) == 0 and not u.get("vehicle", false) and u.key in infantry_keys and u.key != "worker"):
+		return null
+	var b = building_under(screen)
+	if b == null or b.dead or int(b.owner) != 0 or UrbanGarrison.room(b) <= 0:
+		return null
+	return b if selected.any(func(u): return UrbanGarrison.can_garrison(self, u, b)) else null
+
 func enemy_under(screen: Vector2) -> Variant:
 	# (an enemy hidden by the fog of war cannot be clicked)
 	var best = Picking.pick(camera, units.filter(func(u): return not u.dead and u.owner != 0 and (fog == null or fog.shows(u))), screen)
@@ -6280,6 +6341,10 @@ func _input(event: InputEvent) -> void:
 		occupation.begin_zone()  # the next click marks an operational zone
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_J:
 		preload("res://scripts/airlift.gd").unload_selected(self)   # helicopters land their troops
+		if selected_building != null and int(selected_building.owner) == 0:
+			UrbanGarrison.evacuate(self, selected_building, false)   # a garrison leaves its building
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode in [KEY_F2, KEY_F3, KEY_F4] and map_lenses != null:
+		map_lenses.toggle_mode({KEY_F2: 1, KEY_F3: 2, KEY_F4: 3}[event.physical_keycode])   # strategic map lenses (map_lenses.gd)
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Y:
 		hud.toggle_research()
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F8 and economy != null and preload("res://scripts/cheats.gd").allowed(self):

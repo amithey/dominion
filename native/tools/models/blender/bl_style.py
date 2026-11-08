@@ -11,8 +11,8 @@ for _a in _argv[1:]:
     if _a in ("euro", "med", "asia", "arab", "us", "india", "africa"):
         STYLE = _a
 
-_STONE_TINT = {"euro": (1, 1, 1), "med": (1.18, 1.14, 1.04), "asia": (0.82, 0.8, 0.78), "arab": (1.02, 0.86, 0.62),
-               "us": (1.25, 1.25, 1.3), "india": (1.0, 0.52, 0.38), "africa": (0.9, 0.62, 0.46)}
+_STONE_TINT = {"euro": (0.96, 0.95, 0.92), "med": (1.02, 0.98, 0.90), "asia": (0.82, 0.80, 0.78), "arab": (0.98, 0.84, 0.62),
+               "us": (0.98, 0.98, 1.02), "india": (0.96, 0.54, 0.40), "africa": (0.88, 0.62, 0.46)}
 _ROOF = {"euro": None, "med": "roof_tile", "asia": None, "arab": "plaster", "us": None, "india": "plaster", "africa": "plaster"}
 
 

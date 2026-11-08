@@ -135,7 +135,8 @@ def container(m, x, z, yaw, tint, length=2.6, width=1.25, height=1.8, y0=0.1):
 
 
 def truck(m, x, z, yaw=0.0, canvas=True, bed=5.1, body=None):
-    """A military support truck: ladder chassis, cab, canvas bed on arches, six wheels."""
+    """Yard support trucks suppressed so real RTS units remain unambiguous on screen."""
+    return
     olive = body or hexc("55633f")
     with m.frame((x, 0, z), yaw=yaw):
         rear = 2.2 - bed
@@ -202,7 +203,9 @@ def vent_stack(m, x, z, h, r):
 
 
 def fence_poly(m, R, gate=None, hazard_every=5, h=1.7, post=1.4):
-    """A security fence round the hex at radius R: leaning posts, three wires and a razor strand on top; gate=(x0, x1) leaves the front open."""
+    """Hex-rim perimeter fences suppressed so industrial districts join streets cleanly without floating on slopes."""
+    if R >= 9.0:
+        return
     pts = [(math.cos(math.radians(30 + 60 * k)) * R, math.sin(math.radians(30 + 60 * k)) * R) for k in range(7)]
     idx = 0
     for (ax, az), (bx, bz) in zip(pts, pts[1:]):

@@ -11,6 +11,8 @@ const FAR := 420.0            # beyond this camera distance no marker is drawn
 
 var world: Node
 var _elapsed := 0.0
+var force_building_labels := false
+var _last_alt := false
 var _badge_styles: Dictionary = {}
 var _widths: Dictionary = {}   # "size:text" -> pixel width (measuring text is slow; the labels repeat)
 const ROLE_INDEX := {"W": 0, "SEA": 1, "AIR": 2, "ART": 3, "AA": 4, "ARM": 5, "INF": 6}
@@ -33,6 +35,10 @@ func setup(world_node: Node) -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func _process(delta: float) -> void:
+	var alt_now: bool = force_building_labels or Input.is_key_pressed(KEY_ALT)
+	if alt_now != _last_alt:
+		_last_alt = alt_now
+		queue_redraw()
 	_elapsed += delta / maxf(Engine.time_scale, 0.001)
 	if _elapsed >= 0.1 and world != null and world.camera != null:
 		_elapsed = 0.0
@@ -87,8 +93,7 @@ func _draw_label(font: Font, text: String, size: int, baseline: Vector2, colour:
 ## Badges that would overlap are stacked upward. Placed boxes are filed by
 ## screen cell, so a badge is tested only against its neighbours (testing every
 ## placed box made eighty badges cost ten times as much).
-func _roles(font: Font) -> void:
-	var grid: Dictionary = {}
+func _roles(font: Font, grid: Dictionary) -> void:
 	var colours: Dictionary = {}
 	for mark in role_markers():
 		var text: String = mark.role + (" ×%d" % mark.count if mark.count > 1 else "")
@@ -197,7 +202,11 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	var fog = world.get("fog")
 	_rings(cam, view)
-	_roles(font)
+	var badge_grid: Dictionary = {}
+	_roles(font, badge_grid)
+	_garrisons(cam, view, font, badge_grid)
+	if force_building_labels or Input.is_key_pressed(KEY_ALT):
+		_building_labels(cam, view, font, fog, badge_grid)
 	_construction(font)
 	for u in world.units:
 		# (cheap tests first: most units have neither rank nor shortage)
@@ -286,3 +295,89 @@ func _insignia(u: Dictionary, cam: Camera3D, view: Rect2, font: Font, fog) -> vo
 			draw_colored_polygon(star, gold)
 			if int(u.owner) == 0:
 				draw_string(font, p + Vector2(-26, -24), g.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, gold)
+
+func _garrisons(cam: Camera3D, view: Rect2, font: Font, grid: Dictionary) -> void:
+	for b in world.buildings:
+		if b.dead or not b.built or int(b.owner) != 0:
+			continue
+		var gar: Array = b.get("garrison", [])
+		if gar.is_empty():
+			continue
+		var top: Vector3 = b.root.position + Vector3.UP * 8.2
+		if cam.is_position_behind(top) or cam.global_position.distance_to(top) > FAR:
+			continue
+		var p := cam.unproject_position(top)
+		if not view.has_point(p):
+			continue
+		var text := "GARRISON ×%d" % gar.size()
+		var width := text_width(font, text, 11) + 12.0
+		var box := Rect2(p - Vector2(width * 0.5, 22.0), Vector2(width, 18.0))
+		for cx in range(floori(box.position.x / 48.0), floori(box.end.x / 48.0) + 1):
+			for cy in range(floori(box.position.y / 24.0), floori(box.end.y / 24.0) + 1):
+				var k: int = (cx + 64) * 4096 + cy + 64
+				if not grid.has(k): grid[k] = []
+				grid[k].append(box)
+		draw_rect(box.grow(1.0), Color("0d1d1f"))
+		draw_rect(box, Color(0.20, 0.45, 0.34, 0.92))
+		_draw_label(font, text, 11, box.position + Vector2(6.0, 13.0), Color("f5ecd8"))
+
+static func _building_accent(key: String, def: Dictionary) -> Color:
+	if key in ["hq", "cityCenter", "villageCenter"] or def.get("settlement") != null:
+		return Color("f0c860")
+	if key in ["fireStation", "hospital", "policeStation"]:
+		return Color("e85242")
+	if key in ["farm", "fishingWharf", "foodDepot", "cottage", "residential", "apartments", "luxuryVillas", "workerHouse", "housing", "park", "stadium"]:
+		return Color("68c466")
+	if key in ["powerPlant", "nuclearReactor", "oilRefinery", "solarFarm", "warehouse", "extractor", "mountainMine", "waterTreatment", "port", "railwayStation", "offshoreRig"]:
+		return Color("e29c45")
+	if def.get("cat", "") == "military" or key in ["barracks", "tankFactory", "airfield", "helipad", "samSite", "bunker", "missileSilo", "ammoDepot", "commandCenter", "shipyard", "fusionCell", "strategicComplex"]:
+		return Color("b8c668")
+	return Color("64b8e8")
+
+## Compact colour-coded district inspection labels shown only while holding Alt.
+func _building_labels(cam: Camera3D, view: Rect2, font: Font, fog, grid: Dictionary) -> void:
+	var items: Array = []
+	for b in world.buildings:
+		if b.dead or not b.built or b.root == null or not b.root.is_visible_in_tree():
+			continue
+		if fog != null and not fog.shows(b):
+			continue
+		var top: Vector3 = b.root.position + Vector3.UP * 8.5
+		var dist := cam.global_position.distance_to(top)
+		if cam.is_position_behind(top) or dist > FAR * 1.15:
+			continue
+		var p := cam.unproject_position(top)
+		if not view.has_point(p):
+			continue
+		items.append({"b": b, "p": p, "dist": dist})
+	items.sort_custom(func(a, b): return a.dist < b.dist)
+	for item in items:
+		var b: Dictionary = item.b
+		var label := str(b.def.get("name", b.key))
+		if float(b.get("fire", 0.0)) > 0.01:
+			label += " [FIRE]"
+		var width := text_width(font, label, 11) + 13.0
+		var box := Rect2((item.p as Vector2) - Vector2(width * 0.5, 9.0), Vector2(width, 18.0))
+		for attempt in range(8):
+			var clash := false
+			var probe := box.grow(2.0)
+			for cx in range(floori(probe.position.x / 48.0), floori(probe.end.x / 48.0) + 1):
+				for cy in range(floori(probe.position.y / 24.0), floori(probe.end.y / 24.0) + 1):
+					for other in grid.get((cx + 64) * 4096 + cy + 64, []):
+						if (other as Rect2).grow(2.0).intersects(box):
+							clash = true
+							break
+					if clash: break
+				if clash: break
+			if not clash: break
+			box.position.y -= 21.0
+		for cx in range(floori(box.position.x / 48.0), floori(box.end.x / 48.0) + 1):
+			for cy in range(floori(box.position.y / 24.0), floori(box.end.y / 24.0) + 1):
+				var k: int = (cx + 64) * 4096 + cy + 64
+				if not grid.has(k): grid[k] = []
+				grid[k].append(box)
+		var accent := _building_accent(str(b.key), b.def)
+		draw_rect(box, Color(accent, 0.72))
+		draw_rect(box.grow(-1.0), Color(0.06, 0.12, 0.14, 0.88))
+		draw_rect(Rect2(box.position, Vector2(3.0, box.size.y)), accent)
+		_draw_label(font, label, 11, box.position + Vector2(7.0, 13.0), Color("f4efe2"))

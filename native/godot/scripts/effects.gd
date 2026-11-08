@@ -420,6 +420,8 @@ func explosion(at: Vector3, size: float, on_ground: bool) -> void:
 		add_child(mark)
 		mark.global_position = at
 		_live.append({"node": mark, "age": 0.0, "life": 45.0, "kind": "scorch"})
+		if world_ref != null and world_ref.get("battle_scars") != null:
+			world_ref.battle_scars.add_crater(at, size)
 	_light(at + Vector3.UP * size, 9.0 * size, 10.0 + 8.0 * size, 0.35 + 0.1 * size)
 	if audio:
 		audio.play("explosion", at, -4.0 + 3.0 * minf(size, 3.0), 1.6 + size)

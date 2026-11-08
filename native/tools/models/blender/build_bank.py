@@ -108,11 +108,6 @@ m.box(CONC, (6.6, 0.13, 3.0), (8.0, 2.4, 4.0), bevel=0.04, seg=1, tint=(1.2, 1.2
 m.box("glow_cyan", (6.8, 1.3, 4.0), (7.8, 1.9, 4.03))
 m.box("dark", (6.9, 0.9, 4.0), (7.7, 1.2, 4.04))
 m.box("glow_warm", (6.6, 2.4, 3.0), (8.0, 2.5, 4.0))
-truck(m, 7.0, 7.4, yaw=math.pi / 2, canvas=False, bed=3.0, body=hexc("e8ecee"))                                  # an armoured van
-m.box("paint", (4.9, 1.1, 6.35), (7.2, 2.5, 8.45), bevel=0.1, seg=2, tint=hexc("c8ced0"))
-for k in range(2):
-    m.box("dark", (5.2 + k * 1.2, 1.9, 8.45), (5.8 + k * 1.2, 2.2, 8.48))
-m.box("paint", (4.95, 1.4, 6.3), (7.15, 1.55, 6.33), tint=hexc("2f6f7e"))
 for p in ((-6.5, 7.0), (-4.0, -10.0), (4.0, -10.0), (-8.5, 0.0), (9.0, -2.0)):
     tree(m, p[0], p[1], 2.2, 1.0)
 for sx in (-5.8, -4.6):

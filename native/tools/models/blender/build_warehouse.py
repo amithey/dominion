@@ -34,6 +34,7 @@ def pallet_stack(x, z, rows=2, cols=2, high=2, yaw=0.0):
 
 
 def forklift(x, z, yaw, load=True):
+    return
     with m.frame((x, 0, z), yaw=yaw):
         m.box("paint", (-0.5, 0.25, -1.1), (0.5, 0.95, 0.6), bevel=0.08, seg=2, tint=hexc("e0b020"))
         m.box("paint", (-0.52, 0.3, -1.3), (0.52, 1.1, -0.6), bevel=0.1, seg=2, tint=hexc("b98a14"))
@@ -121,9 +122,7 @@ m.box("glow_warm", (-6.3, 5.62, Z1 + 0.3), (-1.7, 5.98, Z1 + 0.34), tint=(0.9, 0
 
 # ------------------------------------------------------------------ the apron: a truck at a bay, forklifts, pallets, containers
 truck(m, -3.3, 4.0, yaw=math.pi, canvas=False, bed=5.2, body=hexc("a8322a"))
-with m.frame((-3.3, 0, 4.0), yaw=math.pi):
-    m.box("paint", (-1.15, 1.0, -5.2), (1.15, 3.0, 2.2), bevel=0.06, seg=2, tint=hexc("e8ecee"))
-    m.box("paint", (-1.16, 1.5, -5.2), (1.16, 1.8, 2.2), tint=TEAL)
+# Parked semi-trailer removed for clean dock apron
 forklift(0.0, 2.6, 2.4)
 forklift(4.4, 3.2, -0.9, load=False)
 for p in ((-7.8, 0.2), (-6.8, 0.4), (-7.4, 1.4), (5.2, 0.2), (6.2, 0.4), (7.2, 0.3)):

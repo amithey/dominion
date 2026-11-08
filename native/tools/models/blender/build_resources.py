@@ -98,7 +98,7 @@ m.box("gravel", (-9.4, 0.1, -9.2), (9.4, 0.15, 8.2))
 # ------------------------------------------------------------------ the variants
 if VAR == "farm":
     m.box("turf", (-9.4, 0.1, -9.2), (9.4, 0.14, 8.2), tint=hexc("7aa050"))
-    m.box("asphalt", (-1.0, 0.14, 0.0), (1.0, 0.16, 9.4), tint=(1.4, 1.2, 1.0))
+    # Farm lane handled by district.gdshader
     # the barn: red, gambrel roof, white trim, a loft door and a cupola
     BX0, BX1, BZ0, BZ1 = -3.8, 3.8, -9.0, -3.4
     m.box("stone", (BX0 - 0.2, 0.1, BZ0 - 0.2), (BX1 + 0.2, 0.7, BZ1 + 0.2), bevel=0.03, seg=1)
@@ -148,18 +148,7 @@ if VAR == "farm":
     for k in range(5):
         with m.frame((-7.4 + k * 1.3, 0.1, 3.0 + (k % 2) * 0.4), yaw=rng.uniform(-0.3, 0.3)):
             m.pipe("paint", (-0.6, 0.55, 0), (0.6, 0.55, 0), 0.55, 14, tint=hexc("d8c470"))
-    with m.frame((2.4, 0, 5.2), yaw=0.6):
-        m.box("paint", (-0.6, 0.6, -1.2), (0.6, 1.4, 0.8), bevel=0.1, seg=2, tint=hexc("3a7a3a"))
-        m.box("paint", (-0.55, 1.4, -0.4), (0.55, 2.4, 0.6), bevel=0.06, seg=1, tint=hexc("3a7a3a"))
-        m.box(GLASS, (-0.5, 1.5, 0.58), (0.5, 2.3, 0.64), tint=(1.6, 1.8, 2.0))
-        for sx in (-1, 1):
-            m.pipe("dark", (sx * 0.55, 0.8, -0.8), (sx * 0.85, 0.8, -0.8), 0.8, 16)
-            m.pipe("dark", (sx * 0.55, 0.45, 1.1), (sx * 0.75, 0.45, 1.1), 0.45, 14)
-    m.cyl("glass", (6.4, 0.12, 4.6), 1.9, 0.05, 22, tint=(0.7, 1.1, 1.5))                                      # a pond
-    for r_ in range(5):                                                                                       # crop rows
-        m.box("earth", (-8.8, 0.13, 5.4 + r_ * 0.55), (-1.6, 0.2, 5.7 + r_ * 0.55), tint=(0.8, 0.65, 0.5))
-        for k in range(14):
-            m.dome("leaf", (-8.5 + k * 0.5, 0.2, 5.55 + r_ * 0.55), 0.14, 0.2, 6, 2, tint=hexc("7aa850"))
+    # Toy tractor and micro-strip removed; district.gdshader renders full-hex ploughed soil & crops
     for k in range(18):                                                                                       # a post fence
         m.pipe("wood", (-9.2 + k * 1.1, 0.1, 8.0), (-9.2 + k * 1.1, 1.0, 8.0), 0.04, 5)
     m.box("wood", (-9.2, 0.5, 7.98), (10.0, 0.55, 8.02))

@@ -138,16 +138,6 @@ m.box(CLAD, (4.0, 3.0, 4.6), (9.0, 3.2, 8.4), bevel=0.03, seg=1, tint=OLIVE)    
 for px in (4.2, 8.8):
     for pz in (4.8, 8.2):
         m.pipe(METAL, (px, 0.13, pz), (px, 3.0, pz), 0.07, 8)
-truck(m, 5.4, 6.4, yaw=math.pi / 2, canvas=False, bed=3.0, body=OLIVE)
-with m.frame((5.4, 0, 6.4), yaw=math.pi / 2):
-    m.box("paint", (-1.08, 1.1, -0.9), (1.08, 2.45, 2.15), bevel=0.1, seg=2, tint=hexc("6f7a58"))
-    m.pipe(METAL, (0.0, 2.45, 0.2), (0.0, 3.0, 0.2), 0.03, 4)
-with m.frame((8.2, 0, 6.2), yaw=math.pi / 2 + 0.2):                                          # a staff car
-    m.box("paint", (-0.9, 0.35, -1.9), (0.9, 1.0, 1.9), bevel=0.15, seg=3, tint=hexc("2a2f33"))
-    m.box(GLASS, (-0.78, 1.0, -0.9), (0.78, 1.45, 0.9), bevel=0.1, seg=2)
-    for sx in (-1, 1):
-        for sz in (-1.2, 1.2):
-            m.pipe("dark", (sx * 0.82, 0.34, sz), (sx * 1.0, 0.34, sz), 0.34, 12)
 # ------------------------------------------------------------------ the guard bunker, sandbag posts, gate, razor wire, fence
 m.box(CONC, (2.6, 0.1, 7.0), (4.4, 2.0, 8.6), bevel=0.05, seg=1)
 m.box(CONC, (2.5, 2.0, 6.9), (4.5, 2.25, 8.7), bevel=0.04, seg=1)

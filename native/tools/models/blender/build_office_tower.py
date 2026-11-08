@@ -111,12 +111,6 @@ if VAR == "tv":
         m.cyl("paint", (MX + math.cos(a) * 1.6, y - 0.4, MZ + math.sin(a) * 1.6), 0.4, 0.5, 14, tint=hexc("e8ecee"))
     for gx, gz in ((-3.0, 3.0), (3.0, 3.0), (0.0, -3.5)):
         m.wire(METAL, [(MX, 18.0, MZ), (MX + gx, 0.5, MZ + gz)], 0.01, 4)
-    # a satellite-truck bay and a studio box beside the podium
-    truck(m, 9.4, 1.0, yaw=-math.pi / 2, canvas=False, bed=3.2, body=hexc("e8ecee"))
-    with m.frame((9.4, 0, 1.0), yaw=-math.pi / 2):
-        m.box("paint", (-1.08, 1.1, -1.0), (1.08, 2.45, 2.1), bevel=0.1, seg=2, tint=hexc("f4f4f0"))
-        m.box("paint", (-1.1, 1.5, -0.98), (1.1, 1.7, 2.05), tint=ACC)
-    dish(m, (9.4, 2.4, 0.0), 0.7, 0.4, 0.9)
     m.box(CLAD, (-9.4, 0.1, -5.5), (-6.4, 3.4, -1.5), bevel=0.04, seg=1, tint=hexc("2a2f33"))                   # a black-box studio
     m.box("glow_red", (-9.0, 3.1, -1.45), (-8.4, 3.35, -1.42))
     m.box("paint", (-9.4, 3.4, -5.6), (-6.3, 3.6, -1.4), bevel=0.03, seg=1, tint=ACC)
@@ -142,7 +136,6 @@ elif VAR == "tech":
     for k in range(3):
         m.box("paint", (3.2 + k * 2.2, 0.13, 6.4), (3.7 + k * 2.2, 1.4, 6.8), bevel=0.04, seg=1, tint=hexc("e8ecee"))
         m.box("glow_green", (3.3 + k * 2.2, 1.0, 6.8), (3.6 + k * 2.2, 1.2, 6.83))
-        m.box("paint", (3.0 + k * 2.2, 0.15, 4.2), (4.4 + k * 2.2, 0.55, 6.2), bevel=0.15, seg=3, tint=[hexc("e8ecee"), hexc("2f6f9e"), hexc("5a8a46")][k])
 else:   # intel
     fence_poly(m, 11.0, gate=(-1.6, 1.6), hazard_every=4, h=2.0)
     m.box(CLAD, (4.0, 0.1, 6.0), (6.2, 2.5, 8.0), bevel=0.04, seg=1, tint=hexc("3a4046"))               # a gate house

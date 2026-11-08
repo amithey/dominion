@@ -82,6 +82,7 @@ func capture() -> Dictionary:
 			"disabled_until": b.get("disabled_until", 0.0), "intercept_ready": b.get("intercept_ready", 0.0), "aa_reload": b.get("aa_reload", 0.0),
 			"ai_build": b.get("ai_build", false), "reconstruction_tag": b.get("reconstruction_tag", ""),
 			"repairing":b.get("repairing",false), "last_hit":b.get("last_hit",-100.0),
+			"fire": float(b.get("fire", 0.0)), "fire_by": int(b.get("fire_by", -1)),
 		})
 	var units := []
 	for u in world.units:
@@ -103,6 +104,7 @@ func capture() -> Dictionary:
 			"cargo": u.get("cargo", []).duplicate(true),   # troops aboard a helicopter (airlift.gd)
 			"wing": _wing_of(u),   # an aircraft carrier's air wing (war_tools.gd)
 			"carrier_at": _v(u.carrier.node.position) if u.get("carrier") != null and not u.carrier.dead else null,   # the carrier an aircraft of its wing flies for
+			"garrison_at": _v(u.garrison_building.root.position) if u.get("garrison_building") != null and not u.garrison_building.dead else null,
 		})
 	var edges := []
 	for e in world.logistics.edges.values():
@@ -147,6 +149,7 @@ func capture() -> Dictionary:
 		"tests": world.tests.capture() if world.tests != null else {},
 		"directorate": world.directorate.capture() if world.directorate != null else {},
 		"war_tools": preload("res://scripts/war_tools.gd").capture(world),   # minefields
+		"homefront": world.homefront.capture() if world.get("homefront") != null else {},
 		"power_effects": world.power_effects.duplicate(true),   # sanctions, export controls, a closed strait
 	}
 
@@ -252,8 +255,12 @@ func restore(data: Dictionary) -> void:
 			b[timer] = float(s.get(timer, 0.0))
 		if s.get("ai_build", false):
 			b.ai_build = true
+		b.fire = float(s.get("fire", 0.0))
+		b.fire_by = int(s.get("fire_by", -1))
 		if not b.built and b.has("full_scale_y"):
 			b.model.scale.y = b.full_scale_y * lerpf(0.06, 1.0, b.progress)
+		elif b.built:
+			preload("res://scripts/building_fires.gd").restore_building(world, b)
 	# Roads and railways.
 	for e in data.edges:
 		var a := Vector2i(int(e.a[0]), int(e.a[1]))
@@ -334,6 +341,12 @@ func restore(data: Dictionary) -> void:
 		if cu.has("wing") and cu.wing.get("rearming_relative", false):
 			cu.wing.rearming = (cu.wing.rearming as Array).map(func(t): return world.game_time + float(t))
 			cu.wing.erase("rearming_relative")
+		if su.get("garrison_at") != null:
+			var b_pos: Vector3 = _p(su.garrison_at)
+			for b in world.buildings:
+				if not b.dead and b.root.position.distance_to(b_pos) < 0.5:
+					preload("res://scripts/urban_garrison.gd").enter(world, cu, b)
+					break
 		if su.get("carrier_at") != null:   # an aircraft of a carrier's wing: back to its carrier
 			var home: Vector3 = _p(su.carrier_at)
 			var best: Dictionary = {}
@@ -397,6 +410,8 @@ func restore(data: Dictionary) -> void:
 		world.directorate = preload("res://scripts/ai_directorate.gd").new(world)
 	world.directorate.restore(data.get("directorate", {}))
 	preload("res://scripts/war_tools.gd").restore(world, data.get("war_tools", {}))
+	if world.get("homefront") != null and data.has("homefront"):
+		world.homefront.restore(data.get("homefront", {}))
 	if data.has("power_effects"):
 		world.power_effects = Array(data.power_effects).map(func(e): return _effect(e))
 	if world.passage:

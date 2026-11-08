@@ -91,18 +91,6 @@ m.pipe(DARK, (6.7, H + 1.2, HZ - 1.4), (7.8, 8.6, -8.4), 0.1, 8)
 for i in range(3):
     magazine(m, -6.4 + i * 6.4, i + 1, hw=1.9, hl=1.7, front=0.2)
 
-# ------------------------------------------------------------------ the transporter on the apron
-truck(m, -5.4, 3.8, yaw=math.pi / 2, canvas=False, bed=5.0, body=hexc("4c5a38"))
-m.pipe("paint", (-8.0, 1.65, 3.8), (-3.8, 1.65, 3.8), 0.5, 20, tint=hexc("e8ecee"))
-for ex, yw in ((-8.0, -math.pi / 2), (-3.8, math.pi / 2)):
-    with m.frame((ex, 1.65, 3.8), yaw=yw, pitch=math.pi / 2):
-        m.dome("paint", (0, 0, 0), 0.5, 0.3, 20, 4, tint=hexc("e8ecee"))
-for bx in (-6.4, -4.6):
-    m.pipe("paint", (bx, 1.65, 3.8), (bx + 0.2, 1.65, 3.8), 0.52, 20, tint=hexc("e0b020"))
-for bx in (-7.4, -5.0):
-    m.box("dark", (bx - 0.08, 1.1, 3.1), (bx + 0.08, 2.1, 4.5), bevel=0.01, seg=1)
-m.box("glow_red", (-2.0, 2.2, 3.5), (-1.8, 2.34, 4.1))
-
 # ------------------------------------------------------------------ a gantry crane over a loading bay on the right
 for gz in (3.0, 5.2):
     for gx in (3.2, 7.6):

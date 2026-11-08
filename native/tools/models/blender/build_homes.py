@@ -364,15 +364,7 @@ elif VAR == "apartments":
         m.dome("leaf", (X1 - 4.15 + k * 0.9, RT + 0.5, Z1 - 1.1), 0.3, 0.3, 6, 2, tint=hexc("4f8046"))
     for k in range(4):
         m.hull("solar", [(0.0 + k * 1.5, RT, Z0 + 1.4), (1.3 + k * 1.5, RT, Z0 + 1.4), (0.0 + k * 1.5, RT, Z0 + 2.4), (1.3 + k * 1.5, RT, Z0 + 2.4), (0.0 + k * 1.5, RT + 0.6, Z0 + 1.4), (1.3 + k * 1.5, RT + 0.6, Z0 + 1.4)])
-    for k in range(6):                                                                                    # a car park
-        m.box(CONC, (-8.0 + k * 2.6, 0.13, 3.0), (-7.9 + k * 2.6, 0.135, 6.6), tint=(1.8, 1.8, 1.7))
-    for i, c in enumerate((hexc("e8ecee"), hexc("26384e"), hexc("a8322a"))):
-        with m.frame((-6.7 + i * 2.6, 0, 4.8), yaw=math.pi):
-            m.box("paint", (-0.85, 0.3, -1.9), (0.85, 0.9, 1.9), bevel=0.15, seg=3, tint=c)
-            m.box(GLASS, (-0.74, 0.9, -1.0), (0.74, 1.4, 0.9), bevel=0.12, seg=2)
-            for sx in (-1, 1):
-                for sz in (-1.2, 1.2):
-                    m.pipe("dark", (sx * 0.78, 0.33, sz), (sx * 0.96, 0.33, sz), 0.33, 12)
+    # Clean garden courtyard in front of apartment block (toy cars removed)
     m.box("asphalt", (-9.0, 0.13, 1.4), (9.0, 0.15, 2.8))
     for p in ((7.8, 4.4), (-8.4, 8.0), (3.0, 8.6), (8.6, -2.0)):
         tree(m, p[0], p[1], 2.2, 1.0)

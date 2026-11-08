@@ -99,13 +99,6 @@ m.box("paint", (8.0, TOP, 0.6), (8.5, 1.6, 1.1), bevel=0.04, seg=1, tint=hexc("c
 m.box("glow_green", (8.05, 1.2, 1.1), (8.45, 1.4, 1.14))
 m.wire("dark", [(8.5, 1.1, 0.85), (8.9, 0.8, 0.85), (8.9, 0.35, 1.2), (8.5, 0.3, 1.4)], 0.025, 6)
 
-# ------------------------------------------------------------------ the crash tender
-truck(m, -6.0, -2.1, yaw=math.pi / 2, canvas=False, bed=3.4, body=hexc("c0392b"))
-m.box("paint", (-7.4, 1.05, -3.15), (-4.8, 1.2, -3.12), tint=hexc("f0eee4"))
-m.box("glow_red", (-5.0, 2.05, -2.5), (-4.4, 2.17, -1.7))
-m.pipe(METAL, (-7.3, 1.3, -2.1), (-4.9, 1.3, -2.1), 0.06, 6)                              # a monitor nozzle on the roof
-m.box("paint", (-6.8, 1.1, -3.2), (-5.6, 1.35, -3.12), tint=hexc("1d252a"))
-
 # ------------------------------------------------------------------ a windsock, floodlights, a low fence, a hydrant
 m.pipe(METAL, (-7.4, TOP, 3.6), (-7.4, 5.2, 3.6), 0.05, 8)
 for k in range(4):

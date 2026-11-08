@@ -34,6 +34,7 @@ def cross(c, s, role="glow_red", facing=0.0):
 
 
 def car(x, z, tint, yaw=0.0):
+    return
     with m.frame((x, 0, z), yaw=yaw):
         m.box("paint", (-0.85, 0.25, -1.9), (0.85, 0.85, 1.9), bevel=0.15, seg=3, tint=tint)
         m.box(GLASS, (-0.74, 0.85, -1.0), (0.74, 1.35, 0.9), bevel=0.12, seg=2)
@@ -46,6 +47,7 @@ def car(x, z, tint, yaw=0.0):
 
 
 def ambulance(x, z, yaw):
+    return
     truck(m, x, z, yaw=yaw, canvas=False, bed=2.6, body=hexc("f4f4f0"))
     with m.frame((x, 0, z), yaw=yaw):
         m.box("paint", (-1.08, 1.1, -0.4), (1.08, 2.45, 2.15), bevel=0.1, seg=2, tint=hexc("f4f4f0"))

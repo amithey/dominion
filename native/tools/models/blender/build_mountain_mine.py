@@ -70,8 +70,6 @@ m.hull("metal", [(4.2, 4.8, 1.2), (7.4, 4.8, 1.2), (4.2, 4.8, 3.8), (7.4, 4.8, 3
 m.box("hazard", (4.2, 4.78, 3.78), (7.4, 4.9, 3.84))
 m.pipe("metal", (4.0, 4.9, 2.6), (1.4, 1.5, 0.0), 0.04, 6)                                                       # a ramp for the carts' load
 m.box("metal", (5.5, 3.1, 3.6), (6.1, 3.5, 4.4), bevel=0.02, seg=1)                                              # the chute
-truck(m, 5.8, 6.0, 0.0, canvas=False, bed=4.2)
-m.dome("gravel", (5.8, 1.8, 5.2), 0.8, 0.55, 8, 3, tint=(0.45, 0.38, 0.34))
 
 # ------------------------------------------------------------------ the shed, the stockpiles, the tank, the ventilation shaft
 m.box("wood", (-9.0, 0.13, -3.0), (-5.0, 3.0, 0.4), bevel=0.03, seg=1, tint=(0.75, 0.6, 0.45))

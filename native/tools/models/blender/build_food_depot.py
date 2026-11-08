@@ -113,24 +113,6 @@ for k in range(8):
 m.box(CLAD, (2.2, 0.1, 5.2), (3.6, 2.4, 6.6), bevel=0.04, seg=1, tint=hexc("d8d4c0"))                              # the weighbridge cabin
 m.box(CONC, (2.1, 2.4, 5.1), (3.7, 2.55, 6.7), bevel=0.03, seg=1)
 m.box(GLASS, (2.3, 1.1, 6.58), (3.5, 2.2, 6.64), tint=(1.6, 1.8, 2.0))
-truck(m, 0.0, 4.6, yaw=math.pi, canvas=False, bed=4.6, body=hexc("a8322a"))
-with m.frame((0.0, 0, 4.6), yaw=math.pi):                                                                           # a grain trailer with a hopper body
-    m.box("paint", (-1.1, 0.9, -4.6), (1.1, 2.4, 2.2), bevel=0.06, seg=2, tint=hexc("d8a838"))
-    m.box("paint", (-1.12, 1.9, -4.6), (1.12, 2.0, 2.2), tint=hexc("b08828"))
-    for k in range(3):
-        m.box("dark", (-1.0, 2.4, -4.0 + k * 1.8), (1.0, 2.46, -3.6 + k * 1.8))
-tx0 = -5.0
-with m.frame((tx0, 0, 6.4), yaw=0.5):                                                                               # a tractor with a trailer
-    m.box("paint", (-0.6, 0.6, -1.2), (0.6, 1.4, 0.8), bevel=0.1, seg=2, tint=hexc("3a7a3a"))
-    m.box("paint", (-0.55, 1.4, -0.4), (0.55, 2.4, 0.6), bevel=0.06, seg=1, tint=hexc("3a7a3a"))
-    m.box(GLASS, (-0.5, 1.5, 0.58), (0.5, 2.3, 0.64), tint=(1.6, 1.8, 2.0))
-    m.box(DARK, (-0.3, 0.9, 0.8), (0.3, 1.2, 1.5), bevel=0.04, seg=1)
-    for sx in (-1, 1):
-        m.pipe("dark", (sx * 0.55, 0.8, -0.8), (sx * 0.85, 0.8, -0.8), 0.8, 16)
-        m.pipe("dark", (sx * 0.55, 0.45, 1.1), (sx * 0.75, 0.45, 1.1), 0.45, 14)
-    m.box("paint", (-0.9, 0.5, -3.8), (0.9, 1.1, -1.4), bevel=0.04, seg=1, tint=hexc("d8a838"))
-    for sx in (-1, 1):
-        m.pipe("dark", (sx * 0.8, 0.4, -3.0), (sx * 1.0, 0.4, -3.0), 0.4, 12)
 for k in range(5):
     bale(-7.4 + k * 1.2, 7.0 if k % 2 == 0 else 6.6, rng.uniform(-0.3, 0.3))
 for k in range(3):

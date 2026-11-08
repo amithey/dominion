@@ -138,13 +138,17 @@ func _draw() -> void:
 		var corner := to_map(Vector3(fog.origin.x, 0, fog.origin.y))
 		var far := to_map(Vector3(fog.origin.x + fog.n * fog.CELL, 0, fog.origin.y + fog.n * fog.CELL))
 		draw_texture_rect(fog.texture, Rect2(corner, far - corner), false)
+	var lenses = world.get("map_lenses")
 	for b in world.buildings:
 		if b.dead or (fog != null and not fog.shows(b)):
 			continue
 		var p := to_map(b.root.position)
 		var s := 5.0 if b.key in ["hq", "cityCenter", "villageCenter"] else 3.5
 		draw_rect(Rect2(p - Vector2(s, s) * 0.5, Vector2(s, s)).grow(1), Color("0b1b1d"))
-		draw_rect(Rect2(p - Vector2(s, s) * 0.5, Vector2(s, s)), colours[b.owner % colours.size()])
+		var bcol: Color = colours[b.owner % colours.size()]
+		if lenses != null:
+			bcol = lenses.building_minimap_color(b, bcol)
+		draw_rect(Rect2(p - Vector2(s, s) * 0.5, Vector2(s, s)), bcol)
 		if b.key == "hq":
 			draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), Color.WHITE, false, 1.0)
 	for u in world.units:
@@ -173,6 +177,13 @@ func _draw() -> void:
 			tint.a = (1.0 - age) * 0.95
 			draw_arc(at, 4.0 + age * 15.0, 0.0, TAU, 20, tint, 2.0)
 			draw_arc(at, 2.0 + age * 7.0, 0.0, TAU, 14, tint, 1.5)
+	var pulse := fmod(float(world.game_time) * 0.9, 1.0)
+	for cp in _crisis_points():
+		var cat := to_map(cp.pos)
+		var ctint: Color = cp.color
+		ctint.a = (1.0 - pulse) * 0.9
+		draw_arc(cat, 3.0 + pulse * 10.0, 0.0, TAU, 16, ctint, 1.8)
+		draw_circle(cat, 2.2, Color(cp.color, 0.92))
 	# The camera: the ground it sees as a wedge, an arrow at the far edge for the
 	# direction it is looking, and a dot where the view is centred.
 	var pts := camera_outline()
@@ -219,11 +230,42 @@ func camera_outline() -> PackedVector2Array:
 		result.append(to_map(at))
 	return result
 
+func _crisis_points() -> Array:
+	var out := []
+	if world == null:
+		return out
+	for b in world.buildings:
+		if not b.dead and int(b.owner) == 0 and float(b.get("fire", 0.0)) > 0.02:
+			out.append({"pos": b.root.position, "color": Color(1.0, 0.34, 0.14)})
+	for m in (world.missiles.flying if world.get("missiles") != null and world.missiles.get("flying") != null else []):
+		if m.get("node") != null and is_instance_valid(m.node):
+			out.append({"pos": m.node.position, "color": Color(1.0, 0.18, 0.22)})
+	if world.get("logistics") != null:
+		for e in world.logistics.edges:
+			if int(e.owner) == 0 and float(e.hp) <= 0.0 and not e.a.dead and not e.b.dead:
+				out.append({"pos": (e.a.root.position + e.b.root.position) * 0.5, "color": Color(0.96, 0.72, 0.20)})
+	return out
+
 func _gui_input(event: InputEvent) -> void:
 	var press: bool = event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed
 	var drag: bool = event is InputEventMouseMotion and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0
 	if press or drag:
 		var p := to_world(event.position)
+		if press:
+			var click_pos: Vector2 = event.position as Vector2
+			var best_d := 14.0
+			var report = world.get("sitrep")
+			if report != null:
+				for ping in report.active_pings(5.0):
+					var d: float = click_pos.distance_to(to_map(ping.pos))
+					if d < best_d:
+						best_d = d
+						p = ping.pos
+			for cp in _crisis_points():
+				var d: float = click_pos.distance_to(to_map(cp.pos))
+				if d < best_d:
+					best_d = d
+					p = cp.pos
 		world.cam_focus = Vector3(p.x, world.cam_focus.y, p.z)
 		world.clamp_camera()
 		queue_redraw()

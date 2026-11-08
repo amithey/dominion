@@ -81,6 +81,8 @@ var _missile_view := "production"
 var _launch_row: HFlowContainer   # missile buttons when a missile ship is selected
 var _cargo_row: VBoxContainer     # troop transports: what is aboard, Unload / Land at; or Board for troops near one
 var _cargo_sig := ""
+var _garrison_row: VBoxContainer  # urban garrisons: squads fortified indoors and Evacuate button
+var _garrison_sig := ""
 var _wing_row: VBoxContainer      # an aircraft carrier: its air wing (on deck, flying, rearming), its reach, and the buttons
 var _wing_sig := ""
 var _launch_sig := ""
@@ -113,6 +115,9 @@ func setup(world_node: Node, economy_node: Node) -> void:
 	_overlay = preload("res://scripts/unit_overlay.gd").new()
 	add_child(_overlay)
 	_overlay.setup(world)
+	world.map_lenses = preload("res://scripts/map_lenses.gd").new()
+	add_child(world.map_lenses)
+	world.map_lenses.setup(world, self)
 	_build_top_bar()
 	_build_production()
 	_build_selection()
@@ -484,7 +489,7 @@ func _build_production() -> void:
 	_prod.offset_left = -RIGHT_W - 12
 	_prod.offset_right = -12
 	_prod.offset_top = 56
-	_prod.offset_bottom = -MINI - 34
+	_prod.offset_bottom = -MINI - 58
 	# The panel itself carries no padding: the title band runs edge to edge.
 	_prod.add_theme_stylebox_override("panel", UI.plate(Color(UI.PANEL_TOP, 0.97), Color(UI.PANEL_LOW, 0.97), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 8))
 	add_child(_prod)
@@ -864,6 +869,10 @@ func _build_selection() -> void:
 	_cargo_row.add_theme_constant_override("separation", 4)
 	_cargo_row.visible = false
 	col.add_child(_cargo_row)
+	_garrison_row = VBoxContainer.new()
+	_garrison_row.add_theme_constant_override("separation", 4)
+	_garrison_row.visible = false
+	col.add_child(_garrison_row)
 	_wing_row = VBoxContainer.new()
 	_wing_row.add_theme_constant_override("separation", 4)
 	_wing_row.visible = false
@@ -916,6 +925,7 @@ func _build_minimap() -> void:
 	well.add_theme_stylebox_override("panel", UI.inset(2.0))
 	frame.add_child(well)
 	var map := preload("res://scripts/minimap.gd").new()
+	_minimap = map
 	map.custom_minimum_size = Vector2(MINI, MINI)
 	well.add_child(map)
 	map.setup(world)
@@ -1511,6 +1521,7 @@ func _update_selection() -> void:
 	_sel_fuel.visible = false
 	_launch_row.visible = false
 	_cargo_row.visible = false
+	_garrison_row.visible = false
 	_wing_row.visible = false
 	if transport_text != "":
 		_sel.visible = true
@@ -1548,6 +1559,13 @@ func _update_selection() -> void:
 				lines.append("Rail supplied: +25% production.")
 			if world.disabled(b):
 				lines.append("EMP: systems down.")
+			var fire_info: String = preload("res://scripts/building_fires.gd").hud_status(world, b)
+			if fire_info != "":
+				lines.append(fire_info)
+			if world.get("homefront") != null:
+				var hf_info: String = world.homefront.hud_status(b)
+				if hf_info != "":
+					lines.append(hf_info)
 			if b.owner == 0 and world.territory.RINGS_MAX.has(b.key):
 				_city_card(b)  # the town's accounts as tiles
 				lines = lines.slice(1)
@@ -1557,6 +1575,7 @@ func _update_selection() -> void:
 			_city_tiles.visible = false
 		if b.get("repairing",false):
 			_sel_info.text += "\nRepairing · pauses for 6 s after a hit."
+		_fill_garrison(b)
 		_fill_queue(b.queue, b.queue_prog)
 		return
 	if not units.is_empty():
@@ -1837,6 +1856,36 @@ func _fill_cargo(own: Array) -> void:
 
 ## An aircraft carrier's air wing (war_tools.gd): what is on deck, in the air and being rearmed, how far the wing
 ## flies, how to use it, and two buttons: automatic or orders only, and recall.
+func _fill_garrison(b: Dictionary) -> void:
+	var Garrison := preload("res://scripts/urban_garrison.gd")
+	var cap := Garrison.capacity_of(b)
+	var list := Garrison.occupants(b)
+	var sig := "%d:%d:%d" % [b.get("root", self).get_instance_id() if b.get("root") != null else 0, list.size(), cap]
+	_garrison_row.visible = cap > 0 or not list.is_empty()
+	if sig == _garrison_sig:
+		return
+	_garrison_sig = sig
+	for c in _garrison_row.get_children():
+		_garrison_row.remove_child(c)
+		c.queue_free()
+	if not _garrison_row.visible:
+		return
+	var head := _text("Garrison: %d of %d squads" % [list.size(), cap], 14, UI.GOOD if not list.is_empty() else UI.MUTED, true)
+	_garrison_row.add_child(head)
+	if not list.is_empty():
+		var parts := PackedStringArray()
+		for u in list:
+			parts.append(world.unit_defs.get(str(u.get("key", "")), {}).get("name", u.key))
+		var label := _text("Squads: " + ", ".join(parts), 12, UI.CREAM)
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_garrison_row.add_child(label)
+		var btn := _button(_garrison_row, "Evacuate Garrison (J)", func():
+			Garrison.evacuate(world, b, false)
+			_garrison_sig = ""
+			_update_selection()
+			return "")
+		btn.tooltip_text = "Deploy garrisoned squads outside the building onto the surrounding street."
+
 func _fill_wing(own: Array) -> void:
 	var WT := preload("res://scripts/war_tools.gd")
 	var carriers: Array = own.filter(func(u): return u.key == "carrier" and not u.dead)
@@ -2549,6 +2598,7 @@ func show_end(title: String, subtitle: String) -> void:
 ## Every message of the match, newest last (the feed shows only the latest).
 var notice_log: Array[String] = []
 var _overlay: Control
+var _minimap: Control
 var _log_box: PanelContainer
 var _log_rows: VBoxContainer
 

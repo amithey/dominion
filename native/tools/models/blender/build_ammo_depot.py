@@ -115,6 +115,7 @@ def missile_lying(a, length, r):
 
 
 def forklift(x, z, yaw):
+    return
     with m.frame((x, 0, z), yaw=yaw):
         m.box("paint", (-0.5, 0.25, -1.1), (0.5, 0.95, 0.6), bevel=0.08, seg=2, tint=hexc("c9972a"))          # body
         m.box("paint", (-0.52, 0.3, -1.3), (0.52, 1.1, -0.6), bevel=0.1, seg=2, tint=hexc("a87a1f"))          # counterweight
@@ -151,12 +152,6 @@ for i in range(3):
     magazine(-6.4 + i * 6.4, i + 1)
 
 # ------------------------------------------------------------------ the loading apron
-truck(m, -6.0, -0.1, yaw=math.pi / 2, canvas=False, bed=4.4)                                    # a flatbed with a missile crate
-m.box("wood", (-8.2, 0.85, -0.8), (-5.0, 1.65, 0.6), bevel=0.03, seg=1, tint=hexc("6a5a3a"))
-for k in range(5):
-    m.box("dark", (-8.1 + k * 0.62, 0.85, 0.595), (-8.05 + k * 0.62, 1.65, 0.62))
-m.box("hazard", (-7.0, 1.2, 0.6), (-6.2, 1.4, 0.62))
-forklift(1.6, 0.9, math.pi / 2)
 for k in range(3):                                                                              # stacks of crates and a row of drums
     sx = -8.2 + k * 1.6
     for layer in range(2 - k % 2):

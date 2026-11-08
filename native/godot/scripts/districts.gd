@@ -74,7 +74,7 @@ func build(key: String, centre: Vector3, seed: float, owner_id := 0, size := 0) 
 	var pad := make_pad(centre, floor_y)
 	pad.set_instance_shader_parameter("style", style_of(key))
 	pad.set_instance_shader_parameter("seed", seed)
-	pad.set_instance_shader_parameter("solid", 1.0 if style_of(key) in [2, 4] or key in COMPLETE else 0.0)
+	pad.set_instance_shader_parameter("solid", 1.0 if key in ["port", "shipyard", "airfield", "helipad"] else 0.0)
 	var container := Node3D.new()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(seed * 1000.0) + key.hash()
@@ -137,7 +137,7 @@ func make_pad(centre: Vector3, floor_y: float) -> MeshInstance3D:
 				var c := j / 4
 				p = corner(c).lerp(corner((c + 1) % 6), (j % 4) / 4.0) * f
 			var ground_y: float = world.height_at(centre.x + p.x, centre.z + p.y)
-			var y: float = maxf(lerpf(floor_y, ground_y, smoothstep(0.7, 1.0, f)), ground_y + 0.03) + 0.05
+			var y: float = maxf(lerpf(floor_y, ground_y, smoothstep(0.74, 1.0, f)), ground_y + 0.03) + 0.105
 			ring.append(Vector3(p.x, y - centre.y, p.y))
 		points.append(ring)
 	for j in range(24):

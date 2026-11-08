@@ -338,7 +338,7 @@ func impact(key: String, at: Vector3, owner: int, from := Vector3.INF) -> void:
 		world.effects.explosion(at + Vector3.UP * 3.0, radius * 0.16, false)
 	if not no_blast:
 		world.logistics.damage_at(at, radius if nuclear else radius * 0.4, dmg, nuclear)
-	var source := {"owner": owner, "dead": true, "key": "missile", "pierce": special in ["penetrator", "thermobaric"]}
+	var source := {"owner": owner, "dead": true, "key": "missile", "missile_key": key, "special": special, "nuclear": nuclear, "pierce": special in ["penetrator", "thermobaric"]}
 	var hit := []
 	for ent in (world.units + world.buildings) if not no_blast else []:
 		if ent.dead:

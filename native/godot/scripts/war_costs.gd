@@ -63,13 +63,28 @@ static func blocked(w: Node, u: Dictionary, reason: String) -> void:
 static func travel(w: Node, u: Dictionary, from: Vector3, to: Vector3) -> bool:
 	var oil := Vector2(to.x - from.x, to.z - from.z).length() * fuel_per_metre(u)
 	if oil <= 0.0: return true
+	var upos: Vector3 = u.node.position if (u.has("node") and u.node != null and is_instance_valid(u.node)) else from
+	var supplied_field := preload("res://scripts/war_tools.gd").near_supply_truck(w, int(u.owner), upos)
+	if supplied_field:
+		oil *= 0.40
 	if not pay(w, int(u.owner), 0.0, oil):
+		if supplied_field and preload("res://scripts/war_tools.gd").consume_truck_reserve(w, int(u.owner), upos, oil * 2.0):
+			u.operating_shortage = ""
+			return true
 		blocked(w, u, "fuel")
 		return false
 	u.operating_shortage = ""
 	return true
 static func shot(w: Node, u: Dictionary, weapon: String) -> bool:
-	if not pay(w, int(u.owner), shot_cost(u, weapon), 0.0, "shots"):
+	var cost := shot_cost(u, weapon)
+	var upos: Vector3 = u.node.position if (u.has("node") and u.node != null and is_instance_valid(u.node)) else Vector3.ZERO
+	var supplied_field := preload("res://scripts/war_tools.gd").near_supply_truck(w, int(u.owner), upos)
+	if supplied_field:
+		cost *= 0.40
+	if not pay(w, int(u.owner), cost, 0.0, "shots"):
+		if supplied_field and preload("res://scripts/war_tools.gd").consume_truck_reserve(w, int(u.owner), upos, cost):
+			u.operating_shortage = ""
+			return true
 		blocked(w, u, "ammunition budget")
 		return false
 	u.operating_shortage = ""

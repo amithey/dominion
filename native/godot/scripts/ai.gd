@@ -339,7 +339,7 @@ const CITY_PLAN := [
 	["farm", 1.6], ["cottage", 1.4], ["market", 0.6], ["warehouse", 0.6], ["extractor", 1.0],
 	["school", 0.5], ["foodDepot", 0.4], ["park", 0.5], ["hospital", 0.3], ["library", 0.3],
 	["residential", 0.8], ["powerPlant", 0.4], ["bank", 0.3], ["port", 0.2], ["university", 0.2],
-	["policeStation", 0.3], ["fishingWharf", 0.3], ["oilRefinery", 0.2], ["techPark", 0.15],
+	["fireStation", 0.35], ["policeStation", 0.3], ["fishingWharf", 0.3], ["oilRefinery", 0.2], ["techPark", 0.15],
 ]
 const MILITARY_PLAN := [["barracks", 0.8], ["housing", 1.2], ["tankFactory", 0.4], ["ammoDepot", 0.3],
 	["helipad", 0.2], ["airfield", 0.15], ["shipyard", 0.15], ["bunker", 0.3], ["samSite", 0.2], ["commandCenter", 0.1]]
@@ -373,6 +373,9 @@ func pick_building(n: Dictionary) -> String:
 	# allows, a second in a war, and a Special Weapons Laboratory.
 	var tech: float = float(n.get("tech", 0.0))
 	var NV := preload("res://scripts/national_variants.gd")
+	var burning_now: int = mine.filter(func(b): return float(b.get("fire", 0.0)) > 0.01).size()
+	if burning_now > int(counts.get("fireStation", 0)) * 2 and world.building_defs.has("fireStation") and NV.builds(world, n.id, "fireStation") and preload("res://scripts/progression.gd").building_blocked(world, n.id, "fireStation") == "" and float(n.get("no_room", {}).get("fireStation", 0.0)) <= float(n.get("age", 0.0)):
+		return "fireStation"
 	var wanted_complexes: int = 0 if tech < 5.0 else (2 if tech >= 7.0 and world.diplomacy != null and not world.diplomacy.enemies_of(n.id).is_empty() else 1)
 	# Its AI (ai_directorate.gd): data centres as its technology and national
 	# compute allow, and a Targeting Fusion Cell once it has military AI.

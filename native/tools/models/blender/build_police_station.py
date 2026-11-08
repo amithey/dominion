@@ -37,6 +37,7 @@ def win(x, y, z, w=1.1, h=1.5):
 
 
 def patrol_car(x, z, yaw):
+    return
     with m.frame((x, 0, z), yaw=yaw):
         m.box("paint", (-0.9, 0.3, -2.2), (0.9, 0.95, 2.2), bevel=0.15, seg=3, tint=hexc("eceae6"))
         m.box("paint", (-0.91, 0.3, -2.2), (0.91, 0.62, 2.2), bevel=0.1, seg=2, tint=hexc("1f3f7a"))
@@ -144,21 +145,6 @@ for k in range(2):
 patrol_car(-5.2, 3.0, math.pi)
 patrol_car(-2.6, 3.4, math.pi * 0.95)
 patrol_car(0.6, 2.8, math.pi * 1.04)
-with m.frame((4.6, 0, 3.4), yaw=1.2):                                                                                       # a police motorcycle
-    m.pipe("dark", (0, 0.4, -0.8), (0, 0.4, -0.7), 0.4, 14)
-    m.pipe("dark", (0, 0.4, 0.8), (0, 0.4, 0.9), 0.4, 14)
-    m.box("paint", (-0.17, 0.5, -0.7), (0.17, 0.95, 0.5), bevel=0.06, seg=2, tint=hexc("eceae6"))
-    m.box("paint", (-0.15, 0.95, -0.2), (0.15, 1.05, 0.4), tint=hexc("1d252a"))
-    m.pipe(METAL, (-0.3, 1.05, 0.55), (0.3, 1.05, 0.55), 0.02, 4)
-    m.box("glow_cyan", (-0.1, 1.0, 0.7), (0.1, 1.15, 0.75), tint=(0.3, 0.5, 1.0))
-truck(m, 8.4, 0.5, yaw=-math.pi / 2, canvas=False, bed=3.2, body=hexc("1f3f7a"))                                           # a holding-van
-with m.frame((8.4, 0, 0.5), yaw=-math.pi / 2):
-    m.box("paint", (-1.08, 1.1, -0.9), (1.08, 2.45, 2.15), bevel=0.1, seg=2, tint=hexc("eceae6"))
-    m.box("paint", (-1.1, 1.4, -0.88), (1.1, 1.6, 2.1), tint=hexc("1f3f7a"))
-    for sx in (-1, 1):
-        m.box("dark", (sx * 1.1 - 0.02, 1.7, 0.2), (sx * 1.1 + 0.02, 2.2, 0.9))
-    m.box("glow_red", (-0.6, 2.45, 1.5), (-0.05, 2.58, 1.9))
-    m.box("glow_cyan", (0.05, 2.45, 1.5), (0.6, 2.58, 1.9), tint=(0.3, 0.5, 1.0))
 for k in range(6):
     m.cyl(METAL, (-8.5 + k * 1.0, 0.13, 6.5), 0.1, 0.8, 10)
     m.cyl("glow_cyan", (-8.5 + k * 1.0, 0.93, 6.5), 0.1, 0.03, 8, tint=(0.3, 0.5, 1.0))

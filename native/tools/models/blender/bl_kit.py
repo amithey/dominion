@@ -58,11 +58,19 @@ class Model:
             self.parts[role] = bm
         return self.parts[role]
 
+    _MARINE_NAMES = {"port", "shipyard", "offshore_rig"}
+    _FIXED_PAD_NAMES = {"airfield", "helipad", "port", "shipyard", "offshore_rig", "leisure_wharf"}
+
+    def _is_prop_asset(self):
+        return str(self.name).startswith(("tree", "rock", "ground", "bush", "pine", "oak", "palm"))
+
     def add(self, role, src, matrix=None, tint=(1, 1, 1), jitter=0.0):
         """Append a bmesh (in Blender space) to a role, transformed by matrix and tinted."""
         role = self.role_map.get(role, role)
         if role in self.role_tint:
             tint = tuple(a * b for a, b in zip(tint, self.role_tint[role]))
+        if not str(role).startswith("glow"):
+            tint = tuple(min(1.04, 1.0 + (c - 1.0) * 0.12) if c > 1.0 else c for c in tint)
         acc = self._acc(role)
         tmp = src.copy()
         for f in reversed(self.stack):
@@ -104,6 +112,24 @@ class Model:
     # ------------------------------------------------------------ primitives
     def box(self, role, lo, hi, bevel=0.0, seg=2, yaw=0.0, tint=(1, 1, 1), about=None):
         """An axis-aligned box from lo to hi (game coords), chamfered by `bevel`, turned `yaw` about `about` (default its centre)."""
+        dx, dy, dz = hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]
+        if self.name not in self._MARINE_NAMES and not self._is_prop_asset() and not self.stack:
+            # Suppress bright car-park bay stripes and wide flat yard carpets that hide district.gdshader
+            if role == "wall_concrete" and hi[1] <= 0.25 and dy <= 0.03 and tint[0] >= 1.25:
+                return
+            if hi[1] <= 0.22 and dy <= 0.12 and role in ("gravel", "turf", "pavers", "asphalt", "wall_concrete"):
+                if self.name == "airfield":
+                    if role in ("turf", "gravel") and (dx >= 12.0 or dz >= 14.0):
+                        return
+                elif self.name == "helipad":
+                    if dx >= 14.0 and dz >= 9.0:
+                        return
+                elif (dx >= 11.5 and dz >= 3.5) or dx >= 14.0 or dz >= 14.0:
+                    return
+            # Extend structural ground-floor walls/plinths slightly below grade so sloped hex rims never show air gaps
+            if yaw == 0.0 and 0.04 <= lo[1] <= 0.18 and hi[1] >= 0.55 and dx >= 1.1 and dz >= 1.1 and role in ("stone", "brick", "plaster", "wall_concrete", "cladding", "wood"):
+                lo = (lo[0], -0.55, lo[2])
+                dy = hi[1] - lo[1]
         key = ("box", round(hi[0] - lo[0], 4), round(hi[1] - lo[1], 4), round(hi[2] - lo[2], 4), bevel, seg)
         if key not in self._cache:
             bm = bmesh.new()
@@ -123,6 +149,11 @@ class Model:
 
     def cyl(self, role, base, r, h, seg=12, r2=None, tint=(1, 1, 1), cap=True):
         """A vertical cylinder or cone frustum standing on `base`."""
+        if self.name not in self._MARINE_NAMES and not self._is_prop_asset() and not self.stack:
+            if 0.04 <= base[1] <= 0.18 and h >= 1.6 and r >= 0.45 and r2 is None and role in ("stone", "brick", "plaster", "wall_concrete", "cladding", "paint"):
+                drop = base[1] - (-0.45)
+                base = (base[0], -0.45, base[2])
+                h = h + drop
         bm = bmesh.new()
         bmesh.ops.create_cone(bm, cap_ends=cap, segments=seg, radius1=r, radius2=r if r2 is None else r2, depth=h)
         self.add(role, bm, Matrix.Translation(P(base[0], base[1] + h / 2, base[2])) , tint)
@@ -260,6 +291,10 @@ class Model:
 
     def polygon(self, role, pts, y, thick=0.02, tint=(1, 1, 1)):
         """A flat slab with a polygonal outline (x, z pairs) at height y."""
+        if self.name not in self._MARINE_NAMES and not self._is_prop_asset():
+            max_r = max((math.hypot(x, z) for x, z in pts), default=0.0)
+            if max_r >= 9.0 and y <= 0.25:
+                return
         bm = bmesh.new()
         lo = [bm.verts.new(P(x, y, z)) for x, z in pts]
         f = bm.faces.new(lo)
@@ -328,6 +363,19 @@ class Model:
     # ------------------------------------------------------------ finish
     def finish(self, out_path, smooth_angle=38.0):
         scene = bpy.context.scene
+        # Subtle silhouette boost for compact land buildings while keeping footprints safely inside the hex
+        if self.name not in self._FIXED_PAD_NAMES and not self._is_prop_asset() and not str(self.name).startswith("homes_"):
+            max_h = max((math.hypot(v.co.x, v.co.y) for bm in self.parts.values() for v in bm.verts if v.co.z > 0.25), default=0.0)
+            if 0.5 < max_h < 9.6:
+                sx = min(1.10, 10.2 / max_h)
+                sy = min(1.13, 1.0 + (sx - 1.0) * 1.25)
+                for bm in self.parts.values():
+                    for v in bm.verts:
+                        v.co.x *= sx
+                        v.co.y *= sx
+                        if v.co.z > 0.10:
+                            v.co.z = 0.10 + (v.co.z - 0.10) * sy
+                self.markers = [(n, Vector((p.x * sx, p.y * sx, 0.10 + (p.z - 0.10) * sy if p.z > 0.10 else p.z))) for n, p in self.markers]
         for role, bm in self.parts.items():
             if not bm.faces:
                 continue

@@ -9,32 +9,26 @@ GLASS, METAL, DARK = "glass", "metal", "steel_dark"
 
 
 def ground(m, lawns=True, pave=hexc("d8d4c8")):
-    """The hex slab, a paved plaza and (optionally) four lawns cut by paths."""
-    slab = [(math.cos(math.radians(30 + 60 * k)) * 12.3, math.sin(math.radians(30 + 60 * k)) * 12.3) for k in range(6)]
-    m.polygon(CONC, slab, -1.6, 1.7)
-    inner = [(math.cos(math.radians(30 + 60 * k)) * 11.6, math.sin(math.radians(30 + 60 * k)) * 11.6) for k in range(6)]
-    m.polygon("pavers", inner, 0.1, 0.03, tint=pave)
-    if lawns:
-        for sx in (-1, 1):
-            for z0, z1 in ((-9.0, -3.2), (3.8, 8.6)):
-                pts = [(sx * 3.0, z0), (sx * 8.8, z0), (sx * 8.8, z1), (sx * 3.0, z1)]
-                if z0 > 0:
-                    pts = [(sx * 3.2, z0), (sx * 8.0, z0), (sx * 8.0, z1 - 1.0), (sx * 3.2, z1 - 1.0)]
-                m.box(CONC, (min(p[0] for p in pts) - 0.12, 0.13, min(p[1] for p in pts) - 0.12), (max(p[0] for p in pts) + 0.12, 0.2, max(p[1] for p in pts) + 0.12), bevel=0.02, seg=1)
-                m.box("turf", (min(p[0] for p in pts), 0.2, min(p[1] for p in pts)), (max(p[0] for p in pts), 0.24, max(p[1] for p in pts)), tint=hexc("5a8a46"))
+    """District ground and lawns are rendered seamlessly on the terrain-conforming pad by district.gdshader."""
+    return
 
 
 def tree(m, x, z, h=2.0, s=1.0):
-    m.cyl("wood", (x, 0.2, z), 0.16 * s, h, 7, r2=0.1 * s)
+    r = math.hypot(x, z)
+    if r > 8.3:
+        x, z = x * 8.3 / r, z * 8.3 / r
+    m.cyl("wood", (x, -0.25, z), 0.16 * s, h + 0.45, 7, r2=0.1 * s)
     m.dome("leaf", (x, 0.2 + h - 0.4, z), 1.2 * s, 1.1 * s, 10, 4, tint=hexc("3f6e3c"))
     m.dome("leaf", (x + 0.4 * s, 0.2 + h + 0.4, z + 0.2 * s), 0.8 * s, 0.85 * s, 8, 3, tint=hexc("4f8046"))
 
 
 def lamp(m, x, z, h=3.6):
-    m.pipe(DARK, (x, 0.13, z), (x, h, z), 0.04, 6)
+    if math.hypot(x, z) > 8.8:
+        return
+    m.pipe(DARK, (x, -0.25, z), (x, h, z), 0.04, 6)
     m.pipe(DARK, (x, h, z), (x + 0.4, h + 0.1, z), 0.03, 5)
     m.box("glow_warm", (x + 0.3, h - 0.04, z - 0.12), (x + 0.6, h, z + 0.12))
-    m.cyl(DARK, (x, 0.13, z), 0.1, 0.25, 8)
+    m.cyl(DARK, (x, 0.08, z), 0.1, 0.28, 8)
 
 
 def bench(m, x, z, yaw=0.0):

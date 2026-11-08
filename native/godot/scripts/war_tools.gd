@@ -28,7 +28,7 @@ extends RefCounted
 ##   asFrigate            an escort built to hunt submarines
 ## All figures are game balance.
 
-const VEHICLES := ["mineLayer", "mineClearer", "recoveryVehicle", "decoy", "counterBatteryRadar", "coastalASM", "combatUGV", "logisticsUGV", "robotDog"]
+const VEHICLES := ["mineLayer", "mineClearer", "recoveryVehicle", "supplyTruck", "decoy", "counterBatteryRadar", "coastalASM", "combatUGV", "logisticsUGV", "robotDog"]
 const AIR := ["aewc", "ewJet", "maritimePatrol", "carrierJet", "carrierDrone", "heavyLift", "navalHelicopter", "heavyBomberDrone"]
 const FIXED_WING := ["aewc", "ewJet", "maritimePatrol", "carrierJet", "carrierDrone"]
 const NAVAL := ["carrier", "asFrigate", "landingShip"]
@@ -99,7 +99,7 @@ static func update(w: Node, delta: float) -> void:
 	# The support units of each nation, by key, for the hot damage path.
 	var support := {}
 	for u in w.units:
-		if not _alive(u) or not (u.key in ["counterBatteryRadar", "aewc", "ewJet", "maritimePatrol", "navalHelicopter"]):
+		if not _alive(u) or not (u.key in ["counterBatteryRadar", "aewc", "ewJet", "maritimePatrol", "navalHelicopter", "supplyTruck"]):
 			continue
 		if u.get("fly", false) and str(u.get("air_state", "")) in ["parked", "rearming"]:
 			continue   # on the ground at its airfield
@@ -118,6 +118,7 @@ static func update(w: Node, delta: float) -> void:
 			"mineLayer": _engineer(w, s, u, dt)
 			"mineClearer": _clear(w, s, u, dt)
 			"recoveryVehicle": _repair(w, u, dt)
+			"supplyTruck": _resupply_column(w, u, dt)
 			"logisticsUGV": _evacuate(w, u, dt)
 		if w.profiling and u.key in ["carrier", "mineLayer", "mineClearer", "recoveryVehicle", "logisticsUGV"]:
 			w.spent("      wt " + str(u.key), t_handler)
@@ -269,6 +270,60 @@ static func _evacuate(w: Node, u: Dictionary, dt: float) -> void:
 			worst = other
 	if worst != null:
 		worst.hp = minf(float(worst.max_hp), float(worst.hp) + EVAC_RATE * dt)
+
+const SUPPLY_REACH := 28.0
+const SUPPLY_RESERVE_MAX := 120.0
+
+static func _resupply_column(w: Node, u: Dictionary, dt: float) -> void:
+	if not u.has("supply_reserve"):
+		u.supply_reserve = SUPPLY_RESERVE_MAX
+	var at: Vector3 = u.node.position
+	var o := int(u.owner)
+	# Recharge onboard reserve when near a supplied friendly depot, HQ or city centre.
+	for b in w.buildings:
+		if b.dead or not b.built or int(b.owner) != o:
+			continue
+		if b.key in ["warehouse", "ammoDepot", "hq", "cityCenter"] and b.get("supplied", true):
+			if Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length() <= 34.0:
+				u.supply_reserve = minf(SUPPLY_RESERVE_MAX, float(u.supply_reserve) + 14.0 * dt)
+				break
+	# Clear operating shortages and slowly reload mobile launchers nearby.
+	for other in w.units:
+		if other == u or other.dead or int(other.owner) != o or not _alive(other):
+			continue
+		if Vector2(other.node.position.x - at.x, other.node.position.z - at.z).length() > SUPPLY_REACH:
+			continue
+		if str(other.get("operating_shortage", "")) != "" and float(u.get("supply_reserve", 0.0)) > 1.0:
+			other.operating_shortage = ""
+		if other.has("ammo") and not other.get("fly", false) and float(u.get("supply_reserve", 0.0)) >= 6.0:
+			var max_ammo := int(other.get("max_ammo", 4))
+			if int(other.ammo) < max_ammo:
+				other.rearm_prog = float(other.get("rearm_prog", 0.0)) + dt
+				if float(other.rearm_prog) >= 16.0:
+					other.rearm_prog = 0.0
+					other.ammo = int(other.ammo) + 1
+					u.supply_reserve = maxf(0.0, float(u.supply_reserve) - 6.0)
+
+static func near_supply_truck(w: Node, owner: int, pos: Vector3, reach := SUPPLY_REACH) -> bool:
+	var s := state(w)
+	if _near(s, owner, "supplyTruck", pos, reach):
+		return true
+	for u in w.units:
+		if not u.dead and int(u.owner) == owner and str(u.get("key", "")) == "supplyTruck" and u.get("node") != null and is_instance_valid(u.node):
+			if Vector2(u.node.position.x - pos.x, u.node.position.z - pos.z).length() <= reach:
+				return true
+	return false
+
+static func consume_truck_reserve(w: Node, owner: int, pos: Vector3, amount: float) -> bool:
+	for u in w.units:
+		if u.dead or int(u.owner) != owner or str(u.get("key", "")) != "supplyTruck" or not _alive(u):
+			continue
+		if Vector2(u.node.position.x - pos.x, u.node.position.z - pos.z).length() <= SUPPLY_REACH:
+			var res := float(u.get("supply_reserve", SUPPLY_RESERVE_MAX))
+			if res >= amount:
+				u.supply_reserve = res - amount
+				return true
+	return false
 
 # ---------------------------------------------------------------- sensors and damage
 

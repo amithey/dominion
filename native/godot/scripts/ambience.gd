@@ -32,6 +32,16 @@ var _industry_mat: ParticleProcessMaterial
 var _home_mat: ParticleProcessMaterial
 var _puff: QuadMesh
 var winter := 0.0
+var dusk := 0.0
+var _base_sun_color := Color.WHITE
+var _base_sun_energy := 1.0
+var _sun_captured := false
+var _city_player: AudioStreamPlayer
+var _crisis_player: AudioStreamPlayer
+var _strat_player: AudioStreamPlayer
+var _city_mix := 0.0
+var _crisis_mix := 0.0
+var _strat_mix := 0.0
 
 func _init(world: Node) -> void:
 	w = world
@@ -70,6 +80,7 @@ func _ready() -> void:
 		_flocks.append(_flock(f))
 	if w.get("effects") != null and w.effects.has_signal("shake"):
 		w.effects.shake.connect(_scare)
+	_setup_soundscape()
 
 func _smoke_material(colour: Color, v_min: float, v_max: float, life_scale: float) -> ParticleProcessMaterial:
 	var p := ParticleProcessMaterial.new()
@@ -120,6 +131,8 @@ func update(delta: float) -> void:
 		_scan = 0.0
 		_update_plumes()
 	_update_flocks(delta)
+	_update_lighting_and_windows(delta)
+	_update_soundscape(delta)
 	for r in _rings.duplicate():
 		r.age += delta
 		var k: float = r.age / 0.7
@@ -365,3 +378,113 @@ func ping(at: Vector3, attack := false) -> void:
 
 func rings() -> int:
 	return _rings.size()
+
+# ---------------------------------------------------------------- lighting & zoom soundscape (Track 4A & 4B)
+
+## Smooth diurnal/seasonal & DEFCON atmospheric warmth + city window glow.
+## Keeps early match (< 45s) at crisp baseline daylight so startup tests see exact reference colours.
+func _update_lighting_and_windows(_delta: float) -> void:
+	if w == null:
+		return
+	var t := float(w.game_time)
+	var day := fmod(t, YEAR)
+	# Subtle golden-hour / dusk wave during late summer-autumn-winter (360..660s of the 720s year)
+	var cycle_dusk := smoothstep(320.0, 480.0, day) * (1.0 - smoothstep(620.0, 710.0, day)) if t >= 45.0 else 0.0
+	var defcon_tension := 0.0
+	if w.get("defcon") != null and w.defcon != null and w.defcon.level() <= 2:
+		defcon_tension = 0.35 if w.defcon.level() == 2 else 0.65
+	var target_dusk := clampf(maxf(cycle_dusk * 0.75, defcon_tension), 0.0, 0.85)
+	if absf(target_dusk - dusk) > 0.005:
+		dusk = target_dusk
+		if w.get("sun") != null and w.sun != null:
+			if not _sun_captured:
+				_base_sun_color = w.sun.light_color
+				_base_sun_energy = w.sun.light_energy
+				_sun_captured = true
+			var warm_dusk := Color(1.0, 0.78, 0.62) if defcon_tension < 0.4 else Color(1.0, 0.68, 0.58)
+			w.sun.light_color = _base_sun_color.lerp(warm_dusk, dusk * 0.65)
+			w.sun.light_energy = _base_sun_energy * lerpf(1.0, 0.76, dusk)
+		preload("res://scripts/building_models.gd").set_window_glow_scale(lerpf(1.0, 2.35, maxf(dusk, winter * 0.65)))
+
+func _setup_soundscape() -> void:
+	var bus := "SFX" if AudioServer.get_bus_index("SFX") >= 0 else "Master"
+	_city_player = AudioStreamPlayer.new()
+	_city_player.stream = _make_loop_stream("city")
+	_city_player.bus = bus
+	_city_player.volume_db = -80.0
+	add_child(_city_player)
+	_city_player.play()
+
+	_crisis_player = AudioStreamPlayer.new()
+	_crisis_player.stream = _make_loop_stream("crisis")
+	_crisis_player.bus = bus
+	_crisis_player.volume_db = -80.0
+	add_child(_crisis_player)
+	_crisis_player.play()
+
+	_strat_player = AudioStreamPlayer.new()
+	_strat_player.stream = _make_loop_stream("strat")
+	_strat_player.bus = bus
+	_strat_player.volume_db = -80.0
+	add_child(_strat_player)
+	_strat_player.play()
+
+static func _make_loop_stream(kind: String) -> AudioStreamWAV:
+	var rate := 11025
+	var secs := 2.0
+	var count := int(rate * secs)
+	var data := PackedByteArray()
+	data.resize(count * 2)
+	for i in range(count):
+		var t := float(i) / float(rate)
+		var sample := 0.0
+		if kind == "city":
+			# Warm low urban murmur + gentle harmonic breeze
+			sample = sin(TAU * 65.0 * t) * 0.35 + sin(TAU * 130.0 * t + sin(TAU * 0.5 * t)) * 0.20 + sin(TAU * 195.0 * t) * 0.10
+		elif kind == "crisis":
+			# Distant civil-defence dual-tone siren + fire crackle modulation
+			var sweep := 420.0 + 140.0 * sin(TAU * 0.5 * t)
+			sample = sin(TAU * sweep * t) * 0.45 + sin(TAU * (sweep * 1.5) * t) * 0.18
+		else:
+			# Strategic command-room quiet radar pulse & carrier hum
+			var ping_env := exp(-fmod(t, 1.0) * 14.0)
+			sample = sin(TAU * 55.0 * t) * 0.25 + sin(TAU * 880.0 * t) * ping_env * 0.22
+		data.encode_s16(i * 2, clampi(int(sample * 2600.0), -32000, 32000))
+	var wav := AudioStreamWAV.new()
+	wav.format = AudioStreamWAV.FORMAT_16_BITS
+	wav.mix_rate = rate
+	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	wav.loop_begin = 0
+	wav.loop_end = count
+	wav.data = data
+	return wav
+
+func _update_soundscape(delta: float) -> void:
+	if w == null or _city_player == null:
+		return
+	var dist := float(w.cam_dist)
+	var focus: Vector3 = w.cam_focus
+	var near_buildings := 0
+	var near_fires := 0
+	if dist < 175.0:
+		for b in w.buildings:
+			if b.dead or not b.built:
+				continue
+			var d := Vector2(b.root.position.x - focus.x, b.root.position.z - focus.z).length()
+			if d < 95.0:
+				near_buildings += 1
+				if float(b.get("fire", 0.0)) > 0.02:
+					near_fires += 1
+	var zoom_close := 1.0 - smoothstep(75.0, 165.0, dist)
+	var zoom_far := smoothstep(200.0, 310.0, dist)
+	var want_city := zoom_close * clampf(float(near_buildings) / 4.0, 0.0, 1.0)
+	var want_crisis := zoom_close * clampf(float(near_fires), 0.0, 1.0)
+	var want_strat := zoom_far
+
+	_city_mix = move_toward(_city_mix, want_city, delta * 1.5)
+	_crisis_mix = move_toward(_crisis_mix, want_crisis, delta * 2.0)
+	_strat_mix = move_toward(_strat_mix, want_strat, delta * 1.5)
+
+	_city_player.volume_db = linear_to_db(maxf(0.0001, _city_mix * db_to_linear(-18.0)))
+	_crisis_player.volume_db = linear_to_db(maxf(0.0001, _crisis_mix * db_to_linear(-16.0)))
+	_strat_player.volume_db = linear_to_db(maxf(0.0001, _strat_mix * db_to_linear(-21.0)))

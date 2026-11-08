@@ -45,6 +45,8 @@ var _static_seen := PackedByteArray()     # what the player's side's buildings s
 var _static_key := -1
 var _painted_seen := PackedByteArray()    # what the texture shows now: it is repainted only when seen or explored differ from it
 var _painted_explored := PackedByteArray()
+var _ridge_hidden := {}      # instance id -> true: an enemy ground unit inside watched land but behind a hill crest (tactics_terrain.gd)
+var _observers: Array = []   # [position, sight, airborne] of the player's side, rebuilt on every refresh
 var rival_seen := {}         # rival -> cells its forces see (refreshed each second)
 
 func _init(world: Node) -> void:
@@ -110,15 +112,45 @@ func shows(thing: Dictionary) -> bool:
 		return true
 	if thing.get("is_building", false):
 		return thing.get("seen", false)
-	return watches(thing.node.position) or preload("res://scripts/war_tools.gd").sensed(w, 0, thing)   # radars, airborne warning, submarine hunters
+	if watches(thing.node.position) and not _ridge_hidden.has(thing.node.get_instance_id()):
+		return true
+	return preload("res://scripts/war_tools.gd").sensed(w, 0, thing)   # radars, airborne warning, submarine hunters
+
+## Whether some observer of the player's side has a line of sight to `pos` over the hills (tactics_terrain.gd).
+func _has_ground_los(pos: Vector3) -> bool:
+	var Terrain := preload("res://scripts/tactics_terrain.gd")
+	for o in _observers:
+		var at: Vector3 = o[0]
+		if Vector2(at.x - pos.x, at.z - pos.z).length() > float(o[1]):
+			continue
+		if bool(o[2]) or Terrain.los_clear(w, at, pos, false):
+			return true
+	return false
+
+func _gather_observers() -> void:
+	_observers.clear()
+	for u in w.units:
+		if not u.dead and friendly(int(u.owner)):
+			_observers.append([u.node.position, sight_of(u), u.get("fly", false) or u.get("garrison_building") != null])
+	for b in w.buildings:
+		if not b.dead and friendly(int(b.owner)):
+			_observers.append([b.root.position, float(BUILDING_SIGHT.get(b.key, b.footprint * 0.5 + 28.0)) * (0.70 if b.get("blackout", false) else 1.0), b.key in BUILDING_SIGHT])
+	if w.get("space") != null:
+		for rev in w.space.reveals:
+			_observers.append([rev.at, float(rev.radius), true])
 
 func sight_of(u: Dictionary) -> float:
 	var forces = load("res://scripts/force_catalog.gd")
-	if u.key in forces.INDIRECT: return SPOTTER_SIGHT
-	if forces.SIGHT.has(u.key): return float(forces.SIGHT[u.key])
-	if u.key in SPOTTED:
-		return SPOTTER_SIGHT
-	return maxf(float(SIGHT.get(u.key, 34)), float(u.get("aggro", 0.0)) * (1.0 if u.get("fly", false) else 1.1))
+	var base_s := 34.0
+	if u.key in forces.INDIRECT:
+		base_s = SPOTTER_SIGHT
+	elif forces.SIGHT.has(u.key):
+		base_s = float(forces.SIGHT[u.key])
+	elif u.key in SPOTTED:
+		base_s = SPOTTER_SIGHT
+	else:
+		base_s = maxf(float(SIGHT.get(u.key, 34)), float(u.get("aggro", 0.0)) * (1.0 if u.get("fly", false) else 1.1))
+	return base_s * preload("res://scripts/tactics_terrain.gd").sight_mult(w, u)
 
 func update(delta: float) -> void:
 	if not enabled:
@@ -139,7 +171,8 @@ func refresh() -> void:
 		seen.fill(0)
 		for b in w.buildings:
 			if not b.dead and friendly(int(b.owner)):
-				_stamp(b.root.position, float(BUILDING_SIGHT.get(b.key, b.footprint * 0.5 + 28.0)))
+				var bs := float(BUILDING_SIGHT.get(b.key, b.footprint * 0.5 + 28.0)) * (0.70 if b.get("blackout", false) else 1.0)
+				_stamp(b.root.position, bs)
 		_static_seen = seen.duplicate()
 	else:
 		seen = _static_seen.duplicate()
@@ -162,10 +195,17 @@ func refresh() -> void:
 		var show: bool = b.get("seen", false)
 		if b.root.visible != show:
 			b.root.visible = show
+	_gather_observers()
+	_ridge_hidden.clear()
 	for u in w.units:
 		if u.dead or friendly(int(u.owner)):
 			continue
 		var show := watches(u.node.position)
+		if show and not u.get("fly", false) and not u.get("naval", false) and not _has_ground_los(u.node.position):
+			_ridge_hidden[u.node.get_instance_id()] = true
+			show = false
+		if u.get("garrison_building") != null:
+			show = false   # inside a building: not drawn
 		if u.node.visible != show:
 			u.node.visible = show
 			if not show:
@@ -261,7 +301,8 @@ func _building_key() -> int:
 	for b in w.buildings:
 		if not b.dead and friendly(int(b.owner)):
 			count += 1
-			h = (h + int(b.root.get_instance_id())) & 0xffffffffffff
+			var bo := 131 if b.get("blackout", false) else 0
+			h = (h + int(b.root.get_instance_id()) + bo) & 0xffffffffffff
 	return h * 1024 + count
 
 func _paint() -> void:

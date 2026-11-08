@@ -99,19 +99,7 @@ m.box("dark", (-3.9, 0.55, 6.2), (-3.5, 0.65, 6.4))
 watch_tower(m, 8.0, 5.4, 5.2)
 watch_tower(m, -8.2, 5.4, 5.2)
 
-# ------------------------------------------------------------------ vehicles, tents, the obstacle course, supplies
-truck(m, -7.4, 0.8, yaw=0.0, canvas=True, bed=4.2, body=OLIVE)
-truck(m, -4.6, 1.2, yaw=0.0, canvas=True, bed=4.2, body=OLIVE)
-with m.frame((6.2, 0, 1.8), yaw=2.9):                                                                # a jeep
-    m.box("paint", (-0.9, 0.35, -1.7), (0.9, 1.0, 1.7), bevel=0.1, seg=2, tint=OLIVE)
-    m.box("dark", (-0.85, 1.0, -1.0), (0.85, 1.05, 0.5))
-    for sx in (-0.85, 0.85):
-        m.pipe(METAL, (sx, 1.0, -0.3), (sx, 1.7, -0.3), 0.03, 5)
-    m.pipe(METAL, (-0.85, 1.7, -0.3), (0.85, 1.7, -0.3), 0.03, 5)
-    for sx in (-1, 1):
-        for sz in (-1.1, 1.1):
-            m.pipe("dark", (sx * 0.78, 0.38, sz), (sx * 1.0, 0.38, sz), 0.38, 12)
-    m.box("dark", (-0.5, 0.45, 1.7), (0.5, 0.75, 1.76))
+# ------------------------------------------------------------------ tents, the obstacle course, supplies
 for k, (tx, tz) in enumerate(((-8.6, -7.8), (-8.6, -9.0), (8.6, -9.0))):                              # canvas tents
     m.hull("paint", [(tx - 1.3, 0.13, tz - 0.8), (tx + 1.3, 0.13, tz - 0.8), (tx - 1.3, 0.13, tz + 0.8), (tx + 1.3, 0.13, tz + 0.8), (tx - 1.3, 1.7, tz), (tx + 1.3, 1.7, tz)], tint=hexc("6f7a58"))
     m.hull("dark", [(tx - 0.35, 0.13, tz + 0.79), (tx + 0.35, 0.13, tz + 0.79), (tx - 0.35, 0.13, tz + 0.82), (tx + 0.35, 0.13, tz + 0.82), (tx, 1.2, tz + 0.8)])

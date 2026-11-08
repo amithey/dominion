@@ -68,6 +68,7 @@ def lattice(x, z, h, w=0.9, y0=0.17):
 
 
 def car(x, z, tint):
+    return
     m.box("paint", (x - 0.85, 0.35, z - 1.6), (x + 0.85, 0.85, z + 1.6), bevel=0.15, seg=3, tint=tint)
     m.box(GLASS, (x - 0.74, 0.85, z - 0.95), (x + 0.74, 1.35, z + 0.85), bevel=0.12, seg=2)
     m.box("paint", (x - 0.7, 1.33, z - 0.8), (x + 0.7, 1.38, z + 0.7), bevel=0.02, seg=1, tint=tint)

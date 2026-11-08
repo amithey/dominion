@@ -16,7 +16,7 @@ static func ground(g: RefCounted, key: String, owner: int) -> Dictionary:
 		var copy: Dictionary = g.build("tank", owner)
 		copy.root.name = "Force_decoy"
 		return copy
-	if key in ["mineLayer", "counterBatteryRadar", "coastalASM"]:
+	if key in ["mineLayer", "counterBatteryRadar", "coastalASM", "supplyTruck"]:
 		var bed: float = g.truck(body, parts, 4.2)
 		parts.turret = Node3D.new()
 		parts.turret.position = Vector3(0, bed + 0.1, -1.2)
@@ -35,6 +35,13 @@ static func ground(g: RefCounted, key: String, owner: int) -> Dictionary:
 			g.block(top, Vector3(2.6, 1.8, 0.22), Vector3(0, 1.6, 0.2), g.LIGHT, 0, 0, 0, Transform3D(Basis(Vector3.RIGHT, -0.25), Vector3.ZERO))
 			g.block(top, Vector3(2.3, 1.55, 0.05), Vector3(0, 1.62, 0.33), g.DARK, 0, 0, 0, Transform3D(Basis(Vector3.RIGHT, -0.25), Vector3.ZERO))
 			parts.radar = parts.turret
+			parts.muzzle = 0.5
+		elif key == "supplyTruck":
+			# Ribbed canvas cargo tilt and twin fuel drums behind the cab.
+			g.block(top, Vector3(2.45, 1.45, 3.3), Vector3(0, 0.72, -0.25), g.LIGHT, 0.14, 0.12, 0.06)
+			g.block(top, Vector3(2.50, 0.22, 3.35), Vector3(0, 0.12, -0.25), g.DARK)
+			for side: float in [-0.62, 0.62]:
+				g.cyl(top, 0.34, 0.92, Vector3(side, 0.48, 1.72), "y", g.METAL, 10)
 			parts.muzzle = 0.5
 		else:
 			# Two large anti-ship missile canisters, raised to fire.

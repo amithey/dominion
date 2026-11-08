@@ -25,7 +25,8 @@ ORANGE = hexc("c8902a")
 
 
 def tank(x, z, yaw, paint=OLIVE, gun_yaw=0.0):
-    """A main battle tank: sloped hull, track runs with road wheels, a cast turret with a gun, a commander's hatch."""
+    """Static apron tanks suppressed so real spawned ARM combat units remain 100% distinct."""
+    return
     with m.frame((x, 0, z), yaw=yaw):
         for sx in (-1, 1):                                                    # tracks
             m.box("dark", (sx * 1.45 - 0.35, 0.3, -2.6), (sx * 1.45 + 0.35, 1.05, 2.6), bevel=0.15, seg=3)

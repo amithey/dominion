@@ -77,8 +77,8 @@ for k in range(3):
     m.box("dark", (bx - 1.5, 0.9, Z1 - 0.02), (bx + 1.5, 2.6, Z1 + 0.02))
     m.hull("dark", [(bx + a, b, Z1 - 0.02) for a, b in pts] + [(bx + a, b, Z1 + 0.02) for a, b in pts])
     m.box("glow_warm", (bx - 1.3, 0.95, Z1 - 0.1), (bx + 1.3, 3.8, Z1 - 0.05), tint=(0.8, 0.75, 0.6))        # the bay lit inside
-    for q in range(6):                                                                                          # the door half raised
-        m.box(METAL, (bx - 1.4, 3.0 + q * 0.2, Z1), (bx + 1.4, 3.1 + q * 0.2, Z1 + 0.05))
+    for q in range(8):                                                                                          # bold crimson firehouse bay door
+        m.box("paint", (bx - 1.4, 1.8 + q * 0.28, Z1), (bx + 1.4, 2.02 + q * 0.28, Z1 + 0.06), tint=RED)
     for a0 in range(10):
         ro, ri = 1.75, 1.5
         pp = [(math.cos(math.pi * a0 / 10) * r, 2.6 + math.sin(math.pi * a0 / 10) * r) for r in (ri, ro)] + [(math.cos(math.pi * (a0 + 1) / 10) * r, 2.6 + math.sin(math.pi * (a0 + 1) / 10) * r) for r in (ri, ro)]
@@ -117,24 +117,12 @@ for k in range(24):
 for y in (3.0, 6.5, 10.0):
     m.box("dark", (TX - 0.35, y, TZ + 1.39), (TX + 0.35, y + 1.0, TZ + 1.42))
 m.box(STONE, (TX - 1.6, 12.0, TZ - 1.6), (TX + 1.6, 12.3, TZ + 1.6), bevel=0.03, seg=2)
-m.hull("roof_slate", [(TX - 1.7, 12.3, TZ - 1.7), (TX + 1.7, 12.3, TZ - 1.7), (TX - 1.7, 12.3, TZ + 1.7), (TX + 1.7, 12.3, TZ + 1.7), (TX, 14.0, TZ)])
+m.hull("paint", [(TX - 1.7, 12.3, TZ - 1.7), (TX + 1.7, 12.3, TZ - 1.7), (TX - 1.7, 12.3, TZ + 1.7), (TX + 1.7, 12.3, TZ + 1.7), (TX, 14.0, TZ)], tint=RED)
 m.cyl("paint", (TX, 8.2, TZ + 1.4), 0.55, 0.06, 24, tint=hexc("f4f0e4"))
 m.pipe(METAL, (TX, 14.0, TZ), (TX, 15.0, TZ), 0.03, 5)
 m.cyl("glow_red", (TX, 15.0, TZ), 0.1, 0.2, 8)
 
-# ------------------------------------------------------------------ three engines on the apron, a staff car park, a training yard
-engine(-4.4, 1.2, "pump")
-engine(-0.5, 0.8, "ladder")
-engine(3.4, 1.4, "rescue")
-for k in range(5):
-    m.box(CONC, (-7.0 + k * 3.7, 0.115, 3.8), (-6.9 + k * 3.7, 0.12, 5.6), tint=(1.8, 1.8, 1.7))
-for i, c in enumerate((hexc("e8ecee"), hexc("26384e"))):
-    with m.frame((7.0 + i * 0.0, 0, 3.4 + i * 2.8), yaw=math.pi / 2):
-        m.box("paint", (-0.85, 0.3, -1.9), (0.85, 0.9, 1.9), bevel=0.15, seg=3, tint=c)
-        m.box(GLASS, (-0.74, 0.9, -1.0), (0.74, 1.4, 0.9), bevel=0.1, seg=2)
-        for sx in (-1, 1):
-            for sz in (-1.2, 1.2):
-                m.pipe("dark", (sx * 0.78, 0.33, sz), (sx * 0.96, 0.33, sz), 0.33, 12)
+# ------------------------------------------------------------------ clean open forecourt & training tower (no fake parked vehicles)
 m.box(STONE, (-9.0, 0.1, 1.0), (-6.8, 5.0, 3.0), bevel=0.04, seg=1, tint=(0.95, 0.9, 0.85))                  # a practice tower
 for y in (1.6, 3.0, 4.2):
     m.box("dark", (-8.4, y, 3.0), (-7.4, y + 0.8, 3.04))

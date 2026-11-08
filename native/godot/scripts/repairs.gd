@@ -1,10 +1,17 @@
 extends RefCounted
 static func request(w: Node, entities: Array) -> void:
 	var count := 0
+	var burning := 0
 	for e in entities:
 		if e.owner==0 and not e.dead and e.hp<e.max_hp and (e.get("is_building",false) or e.vehicle):
+			if float(e.get("fire", 0.0)) > 0.001:
+				burning += 1
+				continue
 			e.repairing = true
 			count += 1
+	if burning > 0 and count == 0:
+		w.hud.notice("Cannot repair burning structures until the fire is extinguished (build Fire Stations).")
+		return
 	w.hud.notice("Repair ordered for %d assets. $0.25 per HP; pauses while moving or under attack." % count)
 static func update(w: Node, delta: float) -> void:
 	for e in w.units+w.buildings:
@@ -12,9 +19,13 @@ static func update(w: Node, delta: float) -> void:
 			continue
 		if e.hp>=e.max_hp:
 			e.repairing = false
+			if e.get("is_building", false):
+				preload("res://scripts/building_fires.gd").sync_damage_state(w, e)
 			continue
-		if e.get("moving",false) or e.get("enemy")!=null or w.game_time-e.get("last_hit",-100.0)<6 or not e.get("supplied",true) or w.disabled(e):
+		if float(e.get("fire", 0.0)) > 0.001 or e.get("moving",false) or e.get("enemy")!=null or w.game_time-e.get("last_hit",-100.0)<6 or not e.get("supplied",true) or w.disabled(e):
 			continue
 		var amount := minf(e.max_hp-e.hp,e.max_hp*0.025*delta*preload("res://scripts/additional_factions.gd").construction_mult(w, int(e.owner)))
 		if w.economy.pay({"money":amount*0.25}):
 			e.hp += amount
+			if e.get("is_building", false):
+				preload("res://scripts/building_fires.gd").sync_damage_state(w, e)

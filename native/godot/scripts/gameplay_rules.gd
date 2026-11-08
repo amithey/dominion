@@ -49,6 +49,7 @@ static func apply(w: Node) -> void:
 		["commandCenter", "+10% health for every unit trained while it stands. Coordinates the war effort; holds the land around it."],
 		["tvStation", "The national broadcaster: needed for the Mass Media research (+4 happiness)."],
 		["policeStation", "Needed for the Internal Security Service research (catches enemy agents)."],
+		["fireStation", "Dispatches 2 fire crews to extinguish burning buildings and stop fires from spreading through homes (+4 health). Build more Fire Stations to handle larger barrages at once."],
 		["school", "+0.2 research a second. Needed for the Public Education research (+10% research)."],
 		["library", "+0.5 research a second."],
 		["university", "+1 research a second. Gateway to great discoveries."],
