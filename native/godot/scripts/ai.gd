@@ -164,9 +164,15 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	if n.next_train <= 0.0 and not cyber:
 		var army: Array = world.units.filter(func(u): return u.owner == n.id and not u.dead and not u.get("naval", false))   # (ships have their own count: ai_navy.gd)
 		var fleet_short: bool = preload("res://scripts/ai_navy.gd").fleet_short(world, self, n)
-		if army.size() < int(row(n).maxArmy) or fleet_short:
+		# Troops aboard its landing ships are out of the world's unit list while they sail, but they are still its army: counting
+		# only those on land let a rival raise a whole second army at home while the first was at sea (and field both once landed).
+		var aboard := 0
+		for ship in preload("res://scripts/ai_navy.gd").transports(world, n.id):
+			aboard += (ship.get("cargo", []) as Array).size()
+		var army_size: int = army.size() + aboard
+		if army_size < int(row(n).maxArmy) or fleet_short:
 			var options: Array = train_pool.filter(func(k): return world.unit_allowed(n.id, k) and preload("res://scripts/additional_factions.gd").ai_unlocked(world, n.id, k) and preload("res://scripts/progression.gd").unit_blocked(world, n.id, k) == "" and not production_sites(n.id,k).is_empty())
-			if army.size() >= int(row(n).maxArmy):
+			if army_size >= int(row(n).maxArmy):
 				options = options.filter(func(k): return world.unit_defs[k].get("naval", false))   # only ships, while the land army is full
 			if not options.is_empty():
 				var key: String = preload("res://scripts/war_tools.gd").ai_pick(world, n.id, options)   # its navy keeps a fleet
