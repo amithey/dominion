@@ -450,7 +450,12 @@ func run() -> void:
 	var gunner: Dictionary = mk("drone", near(Vector3(30, 0, 0)), 1)
 	w.order_attack([gunner], jam_hut)
 	var hut_hp: float = jam_hut.hp
-	sim(35.0)
+	# The harm of its guns alone: whether a hit sets the hut alight is a throw of the dice, and a fire would burn on
+	# through either run and hide what the jammer does.
+	var hut_one: Dictionary = jam_hut
+	sim(35.0, func() -> bool:
+		hut_one.fire = 0.0
+		return false)
 	var open_harm: float = hut_hp - jam_hut.hp
 	cleanup()
 	jam_hut = building("barracks", field + Vector3(0, 0, 0), 0)
@@ -458,7 +463,10 @@ func run() -> void:
 	mk("ewVehicle", near(Vector3(-8, 0, 10)), 0)
 	w.order_attack([gunner], jam_hut)
 	hut_hp = jam_hut.hp
-	sim(35.0)
+	var hut_two: Dictionary = jam_hut
+	sim(35.0, func() -> bool:
+		hut_two.fire = 0.0
+		return false)
 	var jammed_harm: float = hut_hp - jam_hut.hp
 	check(open_harm > 0.0 and jammed_harm < open_harm * 0.7, "an EW vehicle blunts a drone's guns (%d harm jammed vs %d)" % [int(jammed_harm), int(open_harm)])
 	cleanup()

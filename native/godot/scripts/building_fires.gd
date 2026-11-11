@@ -373,6 +373,11 @@ static func sync_damage_state(_w: Node, b: Dictionary) -> void:
 static func incendiary_power(_w: Node, source: Dictionary) -> float:
 	if bool(source.get("incendiary", false)):
 		return 1.25
+	# The munition it was hit with says what it sets alight (firepower.gd); a plain gun or small arms leave it to
+	# the unit that fired (the table below).
+	var by_munition: float = preload("res://scripts/firepower.gd").fire_of_source(source)
+	if by_munition >= 0.0:
+		return by_munition
 	var key := str(source.get("key", ""))
 	if key == "" or key in ["soldier", "sniper", "machineGunTeam", "scoutTeam", "medic", "worker", "apc", "ifv", "heavyAPC", "bushmaster", "gunboat", "incident"]:
 		return 0.0

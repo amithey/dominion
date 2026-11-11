@@ -23,6 +23,7 @@ const RUN_CLIP_SPEED := 4.6        # speed the run clip was authored for (no foo
 const PEOPLE_RUN_CLIP_SPEED := 3.7 # and for the Blender-made people (people.gd)
 const People := preload("res://scripts/people.gd")
 const Flight := preload("res://scripts/flight.gd")
+const Firepower := preload("res://scripts/firepower.gd")
 const TANK_SPEED := 4.2
 const BUILDING_MODELS := {
 	"hq": "res://assets/downtown/Building_Medium_2_001.gltf",
@@ -1592,9 +1593,9 @@ func place_on_ground(unit: Dictionary, at: Vector3) -> void:
 		return
 	if unit.get("naval", false):
 		# Ships ride the swell: a gentle heave, pitch and roll.
-		var t := Time.get_ticks_msec() / 1000.0
 		# A small boat is tossed about and quickly; a long hull barely moves, and slowly. Under way the bow lifts,
 		# and in a turn the hull heels outward. A submarine, below the surface, hardly feels the swell.
+		var t := Time.get_ticks_msec() / 1000.0
 		var hull: float = maxf(float(unit.get("length", 12.0)), 4.0)
 		var sub: bool = unit.key.ends_with("ub") or unit.key == "submarine"
 		var sway := clampf(10.0 / hull, 0.35, 1.5) * (0.3 if sub else 1.0)
@@ -1942,13 +1943,13 @@ func _physics_process(delta: float) -> void:
 		elif camera != null:
 			# Fine animation (wheels, track pads, the gun's lift) only where the detailed model shows (LOD0, up to 60 m).
 			unit.detail = camera.global_position.distance_squared_to(unit.node.global_position) < 4900.0
-		if unit.get("rotor") != null:
 		# Engines run down on the apron (parked, being rearmed) and spool up again to taxi out.
 		var spin := 1.0
 		if unit.get("fly", false):
 			var resting: bool = str(unit.get("air_state", "ready")) in ["parked", "rearming"]
 			spin = move_toward(float(unit.get("rotor_spin", 1.0)), 0.0 if resting else 1.0, delta * (0.35 if resting else 0.8))
 			unit.rotor_spin = spin
+		if unit.get("rotor") != null:
 			unit.rotor.rotate_y(delta * 28.0 * spin)
 		if unit.get("rotor2") != null:
 			unit.rotor2.rotate_y(-delta * 28.0 * spin)   # a tandem helicopter's rear rotor turns the other way
@@ -1996,11 +1997,11 @@ func _physics_process(delta: float) -> void:
 				var kick: float = float(unit.get("gun_kick", 0.0))
 				unit.gun_kick = maxf(0.0, kick - delta * 2.2)
 				unit.gun.position = unit.gun_base + Vector3(0, 0, -0.45 * kick * kick)
-	spent("combat", t_units)
 			elif unit.get("gun") != null and float(unit.get("gun_kick", 0.0)) > 0.0:
 				# Out of the detailed view in mid-recoil: the gun is run out again (it used to stay back until looked at).
 				unit.gun_kick = 0.0
 				unit.gun.position = unit.gun_base
+	spent("combat", t_units)
 	var t_move := clock()
 	var slot := 0
 	for unit in units:
@@ -2147,9 +2148,9 @@ func _physics_process(delta: float) -> void:
 		if perf_opts and (sim_tick + slot) % 2 != 0:
 			spent("  keeping clear", t_sep)
 			next += (push if unit.vehicle else Tactics.sidestep(unit, travel, push)).limit_length(maxf(step * 1.5, delta * 1.5))
-			if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
 			if height_at(next.x, next.z) < float(map.seaLevel) + 0.25 and height_at(node.position.x + travel.x, node.position.z + travel.z) >= float(map.seaLevel) + 0.25:
 				next = node.position + travel   # jostled toward the water by its neighbours: it keeps to its own line
+			if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
 				next = shore_step(unit, goal, travel, delta)
 				if next == Vector3.INF:
 					unit.target = null
@@ -2171,9 +2172,9 @@ func _physics_process(delta: float) -> void:
 		unit.push = push
 		spent("  keeping clear", t_sep)
 		next += (push if unit.vehicle else Tactics.sidestep(unit, travel, push)).limit_length(maxf(step * 1.5, delta * 1.5))
-		if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
 		if height_at(next.x, next.z) < float(map.seaLevel) + 0.25 and height_at(node.position.x + travel.x, node.position.z + travel.z) >= float(map.seaLevel) + 0.25:
 			next = node.position + travel   # jostled toward the water by its neighbours: it keeps to its own line (it used to drop its orders there)
+		if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
 			next = shore_step(unit, goal, travel, delta)
 			if next == Vector3.INF:
 				unit.target = null  # land units stop at the waterline
@@ -2706,7 +2707,6 @@ func clear_line(a: Vector3, b: Vector3) -> bool:
 			return false
 	return true
 
-# Next point to head for; plans (and re-plans while chasing) the route.
 ## A land unit whose next step is into the water: where it steps instead, or Vector3.INF when it gives the order up.
 ## The route keeps to walkable cells, but a cell is 4 m wide and the waterline is not: a unit pushed to the edge of its
 ## route (by the crowd, by a lorry swinging wide) can find a wet corner between it and the next turn. With a dry goal it
@@ -2765,6 +2765,7 @@ func shore_step(unit: Dictionary, goal: Vector3, travel: Vector3, delta: float) 
 			return pos + back.limit_length(step)
 	return pos
 
+# Next point to head for; plans (and re-plans while chasing) the route.
 func steer_point(unit: Dictionary, goal: Vector3, chasing: bool, delta: float) -> Vector3:
 	unit.repath -= delta
 	var drift: float = unit.path_goal.distance_to(goal) if unit.path_goal != Vector3.INF else INF
@@ -5053,10 +5054,10 @@ func move_craft(unit: Dictionary, delta: float) -> void:
 		unit.moving = false
 		if unit.dust:
 			unit.dust.emitting = false
-		place_on_ground(unit, pos)
 		if unit.get("fly", false) and not fixed:
 			pos += Flight.coast(unit, delta)   # it slows to a hover; it does not stop dead
 			Flight.attitude(unit, false, delta)
+		place_on_ground(unit, pos)
 		return
 	var to: Vector3 = goal - pos
 	to.y = 0
@@ -5108,9 +5109,9 @@ func move_craft(unit: Dictionary, delta: float) -> void:
 				return
 	var speed: float = unit.speed * (1.0 if fixed or unit.fly else 0.8)
 	var step := Basis(Vector3.UP, unit.heading) * Vector3.BACK * minf(to.length() + (20.0 if fixed else 0.0), speed * delta)
-	var next := pos + step
 	if unit.fly and not fixed:
 		step = Flight.hover_step(unit, to, delta)   # a helicopter carries momentum: it eases away and flares to a stop
+	var next := pos + step
 	if unit.naval and not is_water(next, DEEP * 0.6):
 		unit.target = null
 		unit.moving = false
@@ -5376,7 +5377,7 @@ func fire(unit: Dictionary, enemy: Dictionary) -> bool:
 			var direction: Vector3 = enemy.node.position-unit.node.position
 			if absf(angle_difference(unit.heading,atan2(direction.x,direction.z))) > 0.65:
 				return false
-	var weapon: String = {"recoillessTeam": "rocket", "wheeledHowitzer": "shell_arc", "shortRangeSAM": "sam", "mortarTeam": "mortar", "towedHowitzer": "shell_arc", "attackJet": "missile", "lightFighter": "missile", "missileBoat": "missile"}.get(unit.key, preload("res://scripts/war_tools.gd").WEAPON.get(unit.key, WEAPONS.get(unit.key, "")))
+	var weapon: String = Firepower.weapon_of(self, unit.key)   # (who carries what: firepower.gd)
 	if weapon != "":
 		var fired := fire_weapon(unit, enemy, weapon)
 		if fired and unit.get("fly", false) and not unit.dead:
@@ -5421,14 +5422,14 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			for i in range(4):
 				var spot := target + dir * (i - 1.5) * 3.2 + Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
 				spot.y = maxf(height_at(spot.x, spot.z), float(map.seaLevel))
-				effects.projectile("bomb", unit.node.position + Vector3.DOWN * 1.2 + dir * i * 0.8, spot, func(at): blast(unit, at, dmg * 0.55, 5.0, 1.6), i * 0.18)
+				effects.projectile("bomb", unit.node.position + Vector3.DOWN * 1.2 + dir * i * 0.8, spot, func(at): Firepower.detonate(self, unit, "bomb", at, dmg * 0.55), i * 0.18)
 		"missile":
-			effects.projectile("missile", from, target, func(at): blast(unit, at, dmg, 3.0, 1.2), 0.0, enemy.node if (enemy.get("fly", false) or enemy.vehicle) and not wild else null)
+			effects.projectile("missile", from, target, func(at): Firepower.detonate(self, unit, "missile", at, dmg), 0.0, enemy.node if (enemy.get("fly", false) or enemy.vehicle) and not wild else null)
 		"sam":
-			effects.projectile("missile", unit.node.position + Vector3.UP * (1.7 if unit.key == "manpads" else 3.0), target, func(at): blast(unit, at, dmg, 3.5, 1.0), 0.0, null if wild else enemy.node)
+			effects.projectile("missile", unit.node.position + Vector3.UP * (1.7 if unit.key == "manpads" else 3.0), target, func(at): Firepower.detonate(self, unit, "sam", at, dmg), 0.0, null if wild else enemy.node)
 		"atgm":
 			# Top attack: the missile climbs and dives onto the roof.
-			effects.projectile("missile", unit.node.position + Vector3.UP * 1.7 + dir * 0.6, target, func(at): blast(unit, at, dmg, 2.0, 0.8), 0.0, enemy.node if enemy.vehicle and not wild else null)
+			effects.projectile("missile", unit.node.position + Vector3.UP * 1.7 + dir * 0.6, target, func(at): Firepower.detonate(self, unit, "atgm", at, dmg), 0.0, enemy.node if enemy.vehicle and not wild else null)
 		"fpv":
 			# A small drone flies from the operators to the target; jammers bring most down.
 			var launch: Vector3 = unit.node.position + Vector3.UP * 2.5
@@ -5440,7 +5441,7 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 				effects.projectile("rocket", launch, lost, func(at): effects.explosion(at, 0.4, true))
 				jammed_strikes += 1
 				return true
-			effects.projectile("rocket", launch, target, func(at): blast(unit, at, dmg, 2.4, 0.9), 0.0, enemy.node)
+			effects.projectile("rocket", launch, target, func(at): Firepower.detonate(self, unit, "fpv", at, dmg), 0.0, enemy.node)
 		"detonate":
 			# The squad is the charge: it closes in and blows itself up beside its target.
 			var close: Vector3 = unit.node.position - enemy.node.position
@@ -5449,7 +5450,7 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			at.y = maxf(height_at(at.x, at.z), float(map.seaLevel)) + 0.8
 			kill(unit)
 			unit.node.visible = false
-			blast(unit, at, dmg, 5.0, 1.8)
+			Firepower.detonate(self, unit, "detonate", at, dmg)
 		"kamikaze":
 			# The drone is the warhead: it dives in and is gone.
 			var start: Vector3 = unit.node.position
@@ -5462,23 +5463,23 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 				effects.projectile("missile", start, lost, func(at): effects.explosion(at, 0.8, true))
 				jammed_strikes += 1
 				return true
-			effects.projectile("missile", start, target, func(at): blast(unit, at, dmg, 4.0, 1.6), 0.0, enemy.node)
+			effects.projectile("missile", start, target, func(at): Firepower.detonate(self, unit, "kamikaze", at, dmg), 0.0, enemy.node)
 		"guided":
 			# Two GPS-guided rockets: no scatter, a tall climb and a steep dive.
 			for i in range(2):
-				effects.projectile("rocket", from + Vector3.UP * 1.8 + Vector3((i - 0.5) * 0.6, 0, 0), target, func(at): blast(unit, at, dmg * 0.5, 3.0, 1.1), i * 0.35)
+				effects.projectile("rocket", from + Vector3.UP * 1.8 + Vector3((i - 0.5) * 0.6, 0, 0), target, func(at): Firepower.detonate(self, unit, "guided", at, dmg * 0.5), i * 0.35)
 		"railgun":
 			# A Mach 6.5 slug: a flash, a streak and a hit almost at once.
 			var muzzle: Vector3 = (unit.turret.global_position if unit.turret != null else unit.node.position) + Vector3.UP * 0.6
 			effects.muzzle_flash(muzzle, true)
-			effects.shell(muzzle, target, func(at): blast(unit, at, dmg, 2.5, 1.2))
+			effects.shell(muzzle, target, func(at): Firepower.detonate(self, unit, "railgun", at, dmg))
 		"thermobaric":
 			# A ripple of rockets, each a fuel-air blast over a wide area (they land close together: a salvo
 			# that scattered its rockets six metres either way left most of a squad standing).
 			for i in range(8):
 				var spot := target + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4))
 				spot.y = maxf(height_at(spot.x, spot.z), float(map.seaLevel))
-				effects.projectile("rocket", from + Vector3.UP * 1.8, spot, func(at): blast(unit, at, dmg * 0.45, 5.5, 1.4), i * 0.1)
+				effects.projectile("rocket", from + Vector3.UP * 1.8, spot, func(at): Firepower.detonate(self, unit, "thermobaric", at, dmg * 0.45), i * 0.1)
 		"brahmos":
 			missiles.fly("brahmos", unit.node.position + Vector3.UP * 3.0, enemy.node.position, unit.owner)
 		"hgv":
@@ -5491,50 +5492,39 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 		"laser":
 			# The beam arrives at once and burns for a moment.
 			effects.beam(unit.node.position + Vector3.UP * 3.2, target)
+			unit["munition"] = "laser"
 			damage(enemy, dmg * effectiveness(unit, enemy), unit)
 		"rockets":
 			var n := 4 if unit.key == "gunship" else 2
 			for i in range(n):
 				var spot := target + Vector3(randf_range(-1.6, 1.6), 0, randf_range(-1.6, 1.6)) * spread
-				effects.projectile("rocket", from + Basis(Vector3.UP, unit.heading) * Vector3((i % 2 - 0.5) * 2.0, 0, 0), spot, func(at): blast(unit, at, dmg * 1.1 / n, 2.8, 0.7), i * 0.09)
+				effects.projectile("rocket", from + Basis(Vector3.UP, unit.heading) * Vector3((i % 2 - 0.5) * 2.0, 0, 0), spot, func(at): Firepower.detonate(self, unit, "rockets", at, dmg * 1.1 / n), i * 0.09)
 		"rocket":
-			effects.projectile("rocket", unit.node.position + Vector3.UP * 1.6 + dir * 0.6, target, func(at): blast(unit, at, dmg, 2.2, 0.7))
+			effects.projectile("rocket", unit.node.position + Vector3.UP * 1.6 + dir * 0.6, target, func(at): Firepower.detonate(self, unit, "rocket", at, dmg))
 		"torpedo":
 			if not enemy.get("naval", false):
 				return false
 			var water: Vector3 = Vector3(from.x, float(map.seaLevel) - 0.3, from.z) + dir * unit.length * 0.4
 			var aim := Vector3(target.x, float(map.seaLevel) - 0.3, target.z)
-			effects.projectile("torpedo", water, aim, func(at): blast(unit, at, dmg, 3.5, 1.4))
+			effects.projectile("torpedo", water, aim, func(at): Firepower.detonate(self, unit, "torpedo", at, dmg))
 		"mortar":
 			var landing := target + Vector3(randf_range(-1.5, 1.5), 0, randf_range(-1.5, 1.5)) * spread
-			effects.projectile("shell_arc", unit.node.position + Vector3.UP * 1.1, landing, func(at): blast(unit, at, dmg, 3.0, 0.8))
+			effects.projectile("shell_arc", unit.node.position + Vector3.UP * 1.1, landing, func(at): Firepower.detonate(self, unit, "mortar", at, dmg))
 		"shell_arc":
 			var landing := target + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2)) * spread
 			effects.muzzle_flash(unit.turret.global_position + dir * float(unit.get("muzzle", 4.0)) if unit.turret else from, true)
-			effects.projectile("shell_arc", from + Vector3.UP * 1.5, landing, func(at): blast(unit, at, dmg, 4.5, 1.5))
+			effects.projectile("shell_arc", from + Vector3.UP * 1.5, landing, func(at): Firepower.detonate(self, unit, "shell_arc", at, dmg))
 		"rocket_salvo":
 			for i in range(6):
 				var spot := target + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4)) * spread
 				spot.y = maxf(height_at(spot.x, spot.z), float(map.seaLevel))
-				effects.projectile("rocket", from + Vector3.UP * 1.5, spot, func(at): blast(unit, at, dmg * 0.3, 3.5, 0.9), i * 0.12)
+				effects.projectile("rocket", from + Vector3.UP * 1.5, spot, func(at): Firepower.detonate(self, unit, "rocket_salvo", at, dmg * 0.3), i * 0.12)
 	return true
 
 ## An explosion that hurts every hostile unit and building within `radius`
 ## (full damage near the centre, less toward the edge) and wears down roads.
 func blast(shooter: Dictionary, at: Vector3, dmg: float, radius: float, size: float) -> void:
-	var ground := maxf(height_at(at.x, at.z), float(map.seaLevel))
-	effects.explosion(at, size, at.y - ground < 1.5)
-	logistics.damage_at(at, radius, dmg * 1.5)
-	for b in buildings:
-		if not b.dead and hostile(shooter.owner, b.owner) and Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length() < b.footprint * 0.62 + radius * 0.5:
-			damage(b, dmg * effectiveness(shooter, b), shooter)
-	for other in units:
-		if other.dead or not hostile(shooter.owner, other.owner):
-			continue
-		var d: float = other.node.position.distance_to(at)
-		if d < radius:
-			damage(other, dmg * effectiveness(shooter, other) * (1.0 if d < radius * 0.5 else 0.45), shooter)
-			Motion.shove(other, at, (1.0 - d / radius) * clampf(size, 0.6, 1.6))
+	Firepower.detonate(self, shooter, "", at, dmg, Firepower.plain(radius, size))   # a burst with no munition of its own: plain high explosive
 
 ## How widely a unit's shots scatter from its nation's fire control (unit_quality.gd):
 ## 1 for the shared unit, more for old sights, less for the best.
@@ -5595,22 +5585,12 @@ func _fire_gun(unit: Dictionary, enemy: Dictionary) -> void:
 		effects.tracer(muzzle, end)
 		effects.impact(end)
 		if hit:
+			unit["munition"] = "bullet"
 			damage(enemy, unit.dmg * effectiveness(unit, enemy), unit)
 
 # A shell explodes where it lands and hurts everything close by.
 func shell_hit(shooter: Dictionary, at: Vector3) -> void:
-	effects.explosion(at, 1.0, at.y - height_at(at.x, at.z) < 1.5)
-	logistics.damage_at(at, 3.0, shooter.dmg * 1.5)
-	for b in buildings:
-		if not b.dead and hostile(shooter.owner, b.owner) and Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length() < b.footprint * 0.62:
-			damage(b, shooter.dmg * effectiveness(shooter, b), shooter)
-	for other in units:
-		if other.dead or not hostile(shooter.owner, other.owner):
-			continue  # splash does not hurt friends, or start wars with bystanders
-		var d: float = other.node.position.distance_to(at)
-		if d < 3.5:
-			damage(other, shooter.dmg * effectiveness(shooter, other) * (1.0 if d < 1.8 else 0.45), shooter)
-			Motion.shove(other, at, 1.0 - d / 3.5)
+	Firepower.detonate(self, shooter, "shell", at, float(shooter.dmg))
 
 func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	if unit.dead:

@@ -374,7 +374,7 @@ func shell(from: Vector3, to: Vector3, on_hit: Callable) -> void:
 	_shells.append({"node": projectile, "from": from, "to": to, "t": 0.0, "time": maxf(from.distance_to(to) / 160.0, 0.04), "hit": on_hit})
 
 ## Explosion: size 1 is a tank shell hit, 3-4 a destroyed vehicle.
-func explosion(at: Vector3, size: float, on_ground: bool) -> void:
+func explosion(at: Vector3, size: float, on_ground: bool, crater := true) -> void:
 	var books := books_on()
 	if books:
 		# The filmed blast: a ground burst or an air burst (a splash on the sea), a dark column after it,
@@ -420,7 +420,7 @@ func explosion(at: Vector3, size: float, on_ground: bool) -> void:
 		add_child(mark)
 		mark.global_position = at
 		_live.append({"node": mark, "age": 0.0, "life": 45.0, "kind": "scorch"})
-		if world_ref != null and world_ref.get("battle_scars") != null:
+		if crater and world_ref != null and world_ref.get("battle_scars") != null:
 			world_ref.battle_scars.add_crater(at, size)
 	_light(at + Vector3.UP * size, 9.0 * size, 10.0 + 8.0 * size, 0.35 + 0.1 * size)
 	if audio:
