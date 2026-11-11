@@ -33,11 +33,37 @@ Every field is optional; what is left out takes the default and what is `0` is s
 the explosion shown, the crater, roads and rails, buildings, units (blast, then fragments), the shove,
 and what it leaves burning.
 
+## Strategic warheads
+
+A strategic missile is far larger than a tactical burst and plays by its own rules (it strikes friend and foe,
+its radius comes from the missile, it is aimed at kinds of target), so it has a profile of its own: the missile's
+`special` names a row of `Firepower.WARHEADS`, and `missiles.impact` resolves its burst with
+`Firepower.strategic(world, key, def, at, owner)`. What it leaves behind (a gas cloud, fallout, an outbreak,
+a blackout, the escalation) stays with `wmd.gd` and `defcon.gd`.
+
+| Field | Meaning | Plain | Cluster | Penetrator | Thermobaric | Anti-radiation | Neutron | Pulse |
+|---|---|---|---|---|---|---|---|---|
+| `blast` | it does something on the ground | yes | yes | yes | yes | yes | yes | no |
+| `edge` | effect left at the rim (even fall-off from the centre) | 0.5 | 0.5 | 0.5 | 0.5 | 0.5 | 0.5 | - |
+| `vs` | damage by what is struck: `emitter`, `building`, `naval`, `vehicle`, `unit` | all 1 | building 0.35, unit 1.75 | building 3, unit 0.35 | building 0.7, armour and ships 0.8, men 1.8 | radar 3, the rest 0.3 | building 0.2, vehicle 1.2 | - |
+| `vs_nuclear` | the same for a nuclear warhead of this kind | - | - | building 3, unit 1 | - | - | - | - |
+| `structure_reach` | buildings suffer only within this share of the radius | 1 | 1 | 1 | 1 | 1 | 0.35 | - |
+| `pierce` | it reaches troops under cover | no | no | yes | yes | no | no | - |
+| `fire` | what it sets alight | 0.85 | 0.55 | 0.85 | 1.35 | 0 | 0.12 | 0 |
+| `shock` | how hard its blast wave throws what is near | 2 | 1 | 1 | 2 | 1 | 0.5 | 0 |
+| `road_reach` | how far its damage to roads reaches, as a share of the radius | 0.4 | 0.4 | 0.4 | 0.4 | 0.4 | 0.4 | - |
+| `silence` | seconds it silences the radars it strikes | 0 | 0 | 0 | 0 | 30 | 0 | 0 |
+
+A nuclear warhead of any kind lays `Firepower.NUCLEAR` over its row: a firestorm (1.35, unless the kind names its
+own fire, as a neutron warhead does), a blast wave of 3, roads torn up across the whole radius, and the mushroom cloud.
+A warhead with something of its own registers `on_impact` with `Firepower.register_warhead(special, profile)`.
+
 ## Adding a weapon
 
 1. Give the unit a weapon in `world.WEAPONS` (or `war_tools.WEAPON`), or the missile a definition.
 2. If it behaves like an existing munition, name that one. Otherwise add a row to
    `Firepower.MUNITIONS`, or call `Firepower.register(key, profile)` from the file that owns the weapon.
+   A strategic missile names its warhead with `special`; a new kind of warhead is a row of `Firepower.WARHEADS`.
 3. A weapon that needs something of its own gives its profile an `on_detonate` callable: it runs first
    and may replace the standard burst (return `true`) or add to it (return `false`).
 
@@ -63,8 +89,11 @@ full effect at the centre, fragments reach farther than blast, a nuclear burst i
 
 1. **The template and the tactical weapons** (done): `firepower.gd`, every `blast()` and `shell_hit()`
    through `detonate()`, fire by munition, the check.
-2. **Strategic missiles through the template**: `missiles.impact` resolves its burst with `detonate()`
-   (cluster, penetrator, neutron, anti-ship and thermobaric become profile fields, not a `match`).
+2. **Strategic missiles through the template** (done): `missiles.impact` resolves its burst with
+   `Firepower.strategic()`; cluster, penetrator, neutron, anti-ship, thermobaric and anti-radiation are rows of
+   `WARHEADS`, not a `match`; what a missile sets alight is its warhead's `fire`. New in play: a strategic burst
+   has a blast wave (`shock`) that throws soldiers down and rocks vehicles, hardest near the centre, and a nuclear
+   one hardest of all. The damage numbers are unchanged.
 3. **Flight**: each profile carries how its round flies (muzzle speed, drop, time of flight, arc), so a
    mortar bomb, a tank shot and a bomb each fall the way they should; a bomb keeps the bomber's speed.
 4. **Armour and angle**: where a shot strikes a hull (front, side, rear, roof) for `kinetic` and `heat`.

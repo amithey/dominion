@@ -6,6 +6,8 @@ extends SceneTree
 ##   3. the physics: full effect at the centre, never rising with distance, nothing beyond the radius; fragments reach past the
 ##      blast and find only men in the open; a bigger warhead throws harder; an air burst leaves the roads and the ground alone;
 ##      what burns is the munition's to say; a custom on_detonate can replace the standard burst.
+##   4. strategic warheads: every missile's special has a warhead profile; who each warhead is for; the fall-off; the
+##      blast wave; a pulse and a neutron burst; a nuclear warhead; a custom on_impact.
 ## Run: Godot --headless --path native/godot --script res://tools/firepower-check.gd
 var w: Node
 var errors: Array[String] = []
@@ -45,13 +47,16 @@ func run() -> void:
 			missing.append("%s fires '%s'" % [key, weapon])
 	check(missing.is_empty(), "every unit's weapon has a munition profile (%d units carry %d weapons)%s" % [w.unit_defs.size(), weapons.size(), "" if missing.is_empty() else ": " + ", ".join(missing)])
 	check(F.has("bullet") and F.has("shell"), "small arms and plain guns have their profiles")
-	var no_fire := PackedStringArray()
+	var no_warhead := PackedStringArray()
+	var by_special := {}
 	for key in w.missiles.types():
 		var def: Dictionary = w.missiles.def_of(key)
-		var src := {"key": "missile", "special": def.get("special", ""), "nuclear": key == "nuke" or def.get("nuclear", false)}
-		if F.fire_of_source(src) < 0.0:
-			no_fire.append(key)
-	check(no_fire.is_empty(), "every strategic missile says what it sets alight (%d missiles)%s" % [w.missiles.types().size(), "" if no_fire.is_empty() else ": " + ", ".join(no_fire)])
+		var special := str(def.get("special", ""))
+		if not F.has_warhead(special):
+			no_warhead.append("%s is '%s'" % [key, special])
+		if not by_special.has(special) and not (key == "nuke" or def.get("nuclear", false)):
+			by_special[special] = key
+	check(no_warhead.is_empty(), "every strategic missile's warhead has a profile (%d missiles, %d kinds of warhead)%s" % [w.missiles.types().size(), by_special.size(), "" if no_warhead.is_empty() else ": " + ", ".join(no_warhead)])
 
 	# ------------------------------------------------------------ 2. the profiles are sound
 	var wrong: PackedStringArray = F.problems()
@@ -130,6 +135,64 @@ func run() -> void:
 	check(after_grenade == 1.0e6, "nor does a grenade on it")
 	check(after_ground < after_grenade, "a shell on the ground wears the road (%d)" % int(after_grenade - after_ground))
 	lg.edges.erase("firepower-check")
+
+	# ------------------------------------------------------------ 4. strategic warheads
+	var man := {"key": "soldier"}
+	var house := {"key": "house", "is_building": true}
+	var ship := {"key": "destroyer", "naval": true}
+	var hull_v := {"key": "tank", "vehicle": true}
+	var radar := {"key": "samSite", "is_building": true}
+	check(F.versus(F.warhead("cluster"), man) > 1.0 and F.versus(F.warhead("cluster"), house) < 0.5, "a cluster warhead is for troops, not walls")
+	check(F.versus(F.warhead("penetrator"), house) >= 3.0 and F.versus(F.warhead("penetrator"), man) < 0.5 and F.versus(F.warhead("penetrator", true), man) == 1.0, "a penetrator crushes what is built and spares men in the open, unless it is nuclear")
+	check(F.versus(F.warhead("antiShip"), ship) >= 3.0 and F.versus(F.warhead("antiShip"), hull_v) < 0.5, "an anti-ship warhead is for ships")
+	check(F.versus(F.warhead("thermobaric"), man) > F.versus(F.warhead("thermobaric"), hull_v) and bool(F.warhead("thermobaric").pierce), "a fuel-air warhead kills men, under cover too, more than armour")
+	check(F.versus(F.warhead("antiRadar"), radar) >= 3.0 and F.versus(F.warhead("antiRadar"), house) < 0.5 and float(F.warhead("antiRadar").silence) > 0.0, "an anti-radiation warhead finds the radar and silences it")
+	check(not bool(F.warhead("hemp").blast) and not bool(F.warhead("emp").blast), "a pulse does nothing on the ground")
+	check(float(F.warhead("", true).fire) > float(F.warhead("").fire) and float(F.warhead("", true).shock) > float(F.warhead("").shock) and float(F.warhead("", true).road_reach) > float(F.warhead("").road_reach), "a nuclear warhead burns, throws and tears up roads more than a conventional one")
+	check(float(F.warhead("neutron", true).fire) < 0.2, "a neutron warhead starts few fires, nuclear as it is")
+	var ground: Vector3 = w.land_point(field + Vector3(0, 0, 150), 40.0)
+	ground.y = w.height_at(ground.x, ground.z)
+	var plain_def := {"radius": 30.0, "dmg": 400.0}
+	var ring := {}
+	for spot in [["centre", 1.0], ["mid", 15.0], ["rim", 29.0], ["out", 33.0]]:
+		var u: Dictionary = w.spawn_unit("soldier", ground + Vector3(float(spot[1]), 0, 0), 1)
+		u.max_hp = 1.0e6
+		u.hp = 1.0e6
+		ring[spot[0]] = u
+	var own: Dictionary = w.spawn_unit("soldier", ground + Vector3(0, 0, 8.0), 0)
+	own.max_hp = 1.0e6
+	own.hp = 1.0e6
+	var struck: Array = F.strategic(w, "test", plain_def, ground, 0)
+	var took := {}
+	for name in ring:
+		took[name] = 1.0e6 - float(ring[name].hp)
+	check(took.centre > took.mid and took.mid > took.rim and took.rim > 0.0 and took.out == 0.0, "a strategic burst hurts most at the centre, less at the rim, nothing beyond (%d, %d, %d)" % [int(took.centre), int(took.mid), int(took.rim)])
+	check(absf(took.rim / took.centre - 0.53) < 0.06, "at the rim it still does about half (%.2f)" % (took.rim / took.centre))
+	check(float(own.hp) < 1.0e6 and struck.has(own), "it does not spare the side that launched it")
+	check(Vector3(ring.centre.get("knock", Vector3.ZERO)).length() > Vector3(ring.rim.get("knock", Vector3.ZERO)).length() and Vector3(ring.mid.get("knock", Vector3.ZERO)).length() > 0.5, "its blast wave throws men down, the nearest hardest")
+	for u in ring.values() + [own]:
+		u.hp = 1.0e6
+		u.knock = Vector3.ZERO
+	check(F.strategic(w, "test", {"radius": 30.0, "dmg": 400.0, "special": "hemp"}, ground, 0).is_empty() and float(ring.centre.hp) == 1.0e6, "a high-altitude pulse strikes no one on the ground")
+	var hut: Dictionary = w.place_building("barracks", w.land_point(ground + Vector3(-24, 0, 0), 6.0), 1, true)
+	var hut_d: float = maxf(0.0, Vector2(hut.root.position.x - ground.x, hut.root.position.z - ground.z).length() - hut.footprint * 0.4)
+	var hut_hp: float = hut.hp
+	F.strategic(w, "test", {"radius": 30.0, "dmg": 400.0, "special": "neutron"}, ground, 0)
+	check(hut_d > 30.0 * 0.35 and hut_d < 30.0 and hut.hp == hut_hp and float(ring.mid.hp) < 1.0e6, "a neutron burst kills the men and leaves the building %d m away standing" % int(hut_d))
+	F.strategic(w, "test", plain_def, ground, 0)
+	check(hut.hp < hut_hp, "a plain warhead does not")
+	var went := []
+	F.register_warhead("test_own", {"on_impact": func(_world, key, _def, where, _owner) -> Array:
+		went.append([key, where])
+		return []})
+	ring.centre.hp = 1.0e6
+	F.strategic(w, "test", {"radius": 30.0, "dmg": 400.0, "special": "test_own"}, ground, 0)
+	check(went.size() == 1 and float(ring.centre.hp) == 1.0e6 and F.problems().is_empty(), "a warhead's own on_impact replaces the standard burst")
+	F.unregister_warhead("test_own")
+	if by_special.has(""):
+		ring.centre.hp = 1.0e6
+		w.missiles.impact(by_special[""], ground, 0)
+		check(float(ring.centre.hp) < 1.0e6, "a real missile (%s) lands through the template" % by_special[""])
 
 	# a weapon with something of its own
 	var seen := []

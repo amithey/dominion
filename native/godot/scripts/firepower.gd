@@ -62,11 +62,45 @@ const MUNITIONS := {
 	"swarm": {"kind": "he", "radius": 0.0, "fx": 0.0, "delivered_by": "swarm"},
 }
 
-## What a strategic missile sets alight, by its special effect (it used to be a table in building_fires.gd).
-const STRATEGIC_FIRE := {"hemp": 0.0, "emp": 0.0, "antiRadar": 0.0, "neutron": 0.12, "thermobaric": 1.35, "cluster": 0.55}
-const STRATEGIC_FIRE_DEFAULT := 0.85
-const NUCLEAR_FIRE := 1.35
+## Strategic warheads (missiles.impact -> strategic()): a missile's `special` names its warhead. A warhead is far larger
+## than a tactical burst and plays by its own rules, so it has its own fields; what is left out takes the default.
+const WARHEAD_DEFAULTS := {
+	"blast": true,           # false: nothing happens on the ground (a pulse high above)
+	"edge": 0.5,             # effect left at the rim; it falls away evenly from the centre
+	"vs": {},                # damage by what is struck: emitter, building, naval, vehicle, unit (1 when not named)
+	"vs_nuclear": {},        # the same for a nuclear warhead of this kind (when it differs)
+	"structure_reach": 1.0,  # buildings suffer only within this share of the radius
+	"pierce": false,         # it reaches troops under cover (a bunker, a building)
+	"fire": 0.85,            # what it sets alight (0 nothing .. 1.35 a firestorm)
+	"shock": 2.0,            # how hard it throws what is near
+	"fx": 0.22,              # the explosion shown, as a share of the radius
+	"road_reach": 0.4,       # how far its damage to roads and rails reaches, as a share of the radius
+	"silence": 0.0,          # seconds it silences the radars it strikes
+}
+## What a nuclear warhead changes, whatever its kind (a kind that names its own fire keeps it).
+const NUCLEAR := {"fire": 1.35, "shock": 3.0, "road_reach": 1.0}
+const WARHEADS := {
+	"": {},                                                                       # plain high explosive
+	"cluster": {"vs": {"building": 0.35, "unit": 1.75}, "fire": 0.55, "shock": 1.0},   # bomblets over a wide area: troops and vehicles, not walls
+	"antiShip": {"vs": {"naval": 3.0, "building": 0.25, "unit": 0.25}},
+	"hgv": {"vs": {"naval": 2.5}},
+	"brahmos": {"vs": {"naval": 2.0}},
+	# It bursts underground: what is built is crushed, bunkers too; a conventional one does little to troops in the open.
+	"penetrator": {"vs": {"building": 3.0, "unit": 0.35}, "vs_nuclear": {"building": 3.0}, "pierce": true, "shock": 1.0},
+	"thermobaric": {"vs": {"building": 0.7, "vehicle": 0.8, "naval": 0.8, "unit": 1.8}, "pierce": true, "fire": 1.35, "keeps_fire": true},
+	"antiRadar": {"vs": {"emitter": 3.0, "building": 0.3, "unit": 0.3}, "fire": 0.0, "keeps_fire": true, "silence": 30.0, "shock": 1.0},
+	# Neutrons pass through armour and walls: crews and people die, buildings stand. Its blast is small.
+	"neutron": {"vs": {"building": 0.2, "vehicle": 1.2}, "structure_reach": 0.35, "fire": 0.12, "keeps_fire": true, "shock": 0.5},
+	# A burst high above, a microwave pulse: the ground is left intact (wmd.gd does the rest).
+	"hemp": {"blast": false, "fire": 0.0, "keeps_fire": true, "shock": 0.0},
+	"emp": {"blast": false, "fire": 0.0, "keeps_fire": true, "shock": 0.0},
+	# Their burst is plain; what they leave behind (a cloud, fallout, an outbreak, more warheads) is wmd.gd's.
+	"mirv": {}, "poseidon": {}, "burevestnik": {}, "dirty": {}, "chemical": {}, "chlorine": {}, "bio": {}, "anthrax": {},
+	"riot": {}, "incapacitant": {},
+}
+const Conv := preload("res://scripts/conventional_missiles.gd")   # EMITTERS: the radars an anti-radiation warhead finds
 
+static var _extra_warheads := {}   # warheads registered at run time: special -> profile
 static var _extra := {}     # profiles registered at run time: key -> profile
 static var _full := {}      # key -> profile with the defaults filled in
 
@@ -138,12 +172,7 @@ static func fire_of_source(source: Dictionary) -> float:
 	if source.has("munition") and has(str(source.munition)):
 		return float(profile(str(source.munition)).fire)
 	if str(source.get("key", "")) == "missile":
-		var special := str(source.get("special", ""))
-		if special in ["hemp", "emp", "antiRadar", "neutron"]:
-			return float(STRATEGIC_FIRE[special])
-		if bool(source.get("nuclear", false)):
-			return NUCLEAR_FIRE
-		return float(STRATEGIC_FIRE.get(special, STRATEGIC_FIRE_DEFAULT))
+		return float(warhead(str(source.get("special", "")), bool(source.get("nuclear", false))).fire)
 	return -1.0
 
 ## A burst of `munition` at `at`, fired by `shooter`, of `dmg` at its centre: everything it does.
@@ -187,6 +216,92 @@ static func detonate(w: Node, shooter: Dictionary, munition: String, at: Vector3
 			# Fragments fly past the blast: they find men in the open, not armour and not troops behind walls.
 			w.damage(other, dmg * w.effectiveness(shooter, other) * float(p.frag_share) * (1.0 - (d - radius) / maxf(frag_reach - radius, 0.01) * 0.6), shooter)
 
+static func has_warhead(special: String) -> bool:
+	return WARHEADS.has(special) or _extra_warheads.has(special)
+
+## Adds (or replaces) a strategic warhead from the file that owns the missile. It may carry `on_impact`: a callable
+## (world, key, def, at, owner) -> Array of what it struck, which replaces the standard burst.
+static func register_warhead(special: String, profile: Dictionary) -> void:
+	_extra_warheads[special] = profile
+
+static func unregister_warhead(special: String) -> void:
+	_extra_warheads.erase(special)
+
+## The warhead `special` with every field present; `nuclear` lays the nuclear changes over it. An unknown warhead is an
+## error (and bursts as plain high explosive).
+static func warhead(special: String, nuclear := false) -> Dictionary:
+	var raw: Dictionary = _extra_warheads.get(special, WARHEADS.get(special, {}))
+	if not has_warhead(special):
+		push_error("firepower: no warhead profile for the special '%s' (add it to Firepower.WARHEADS or register it)" % special)
+	var p := WARHEAD_DEFAULTS.duplicate()
+	p.merge(raw, true)
+	if nuclear:
+		for field in NUCLEAR:
+			if field != "fire" or not bool(raw.get("keeps_fire", false)):
+				p[field] = NUCLEAR[field]
+		if raw.has("vs_nuclear"):
+			p.vs = raw.vs_nuclear
+	return p
+
+## The share of a warhead's damage that `ent` takes, by what it is.
+static func versus(p: Dictionary, ent: Dictionary) -> float:
+	var vs: Dictionary = p.vs
+	if vs.is_empty():
+		return 1.0
+	if vs.has("emitter") and str(ent.get("key", "")) in Conv.EMITTERS:
+		return float(vs.emitter)
+	if ent.get("is_building", false):
+		return float(vs.get("building", 1.0))
+	if ent.get("naval", false) and vs.has("naval"):
+		return float(vs.naval)
+	if ent.get("vehicle", false) and vs.has("vehicle"):
+		return float(vs.vehicle)
+	return float(vs.get("unit", 1.0))
+
+## A strategic missile `key` (definition `def`) bursting at `at`, launched by `owner`: the explosion, the roads, and
+## every unit and building within its radius, friend or foe. Returns what it struck (wmd.gd and defcon.gd take it from
+## there: the cloud, the fallout, the escalation).
+static func strategic(w: Node, key: String, def: Dictionary, at: Vector3, owner: int) -> Array:
+	var special: String = def.get("special", "")
+	var nuclear: bool = key == "nuke" or def.get("nuclear", false)
+	var p := warhead(special, nuclear)
+	if p.has("on_impact"):
+		return (p.on_impact as Callable).call(w, key, def, at, owner)
+	if not bool(p.blast):
+		return []
+	var radius := float(def.radius)
+	var dmg := float(def.dmg) * 1.75
+	w.effects.explosion(at + Vector3.UP, minf(radius, 60.0) * float(p.fx), true)
+	if nuclear:
+		w.effects.mushroom(at, minf(radius, 70.0))
+	elif radius > 15.0:
+		w.effects.explosion(at + Vector3.UP * 3.0, radius * 0.16, false)
+	w.logistics.damage_at(at, radius * float(p.road_reach), dmg, nuclear)
+	var source := {"owner": owner, "dead": true, "key": "missile", "missile_key": key, "special": special, "nuclear": nuclear, "pierce": bool(p.pierce)}
+	var hit := []
+	var edge: float = p.edge
+	var shock: float = p.shock
+	for ent in w.units + w.buildings:
+		if ent.dead:
+			continue
+		var at_ent: Vector3 = ent.node.position
+		var d := Vector2(at_ent.x - at.x, at_ent.z - at.z).length()
+		var building: bool = ent.get("is_building", false)
+		if building:
+			d = maxf(0.0, d - ent.footprint * 0.4)
+		if d > radius:
+			continue
+		var mult := versus(p, ent)
+		if building and float(p.structure_reach) < 1.0 and d >= radius * float(p.structure_reach):
+			mult = 0.0
+		if float(p.silence) > 0.0 and str(ent.key) in Conv.EMITTERS:
+			ent.disabled_until = maxf(float(ent.get("disabled_until", 0.0)), w.game_time + float(p.silence))
+		hit.append(ent)
+		w.damage(ent, dmg * mult * (1.0 - (1.0 - edge) * d / radius), source)
+		if shock > 0.0 and not building and ent.get("garrison_building") == null:
+			w.Motion.shove(ent, at, (1.0 - d / radius) * shock)   # the blast wave throws men down and rocks the hulls
+	return hit
+
 ## What is wrong with the profiles ([] when nothing is): unknown fields, values out of range.
 static func problems() -> PackedStringArray:
 	var out := PackedStringArray()
@@ -204,4 +319,18 @@ static func problems() -> PackedStringArray:
 		if float(p.fire) > 1.4 or (float(p.fire) < 0.0 and float(p.fire) != -1.0): out.append("%s: fire %s" % [key, p.fire])
 		if float(p.shock) < 0.0 or float(p.shock) > 4.0: out.append("%s: shock %s" % [key, p.shock])
 		if float(p.radius) == 0.0 and float(p.fx) > 0.0 and not raw.has("delivered_by"): out.append("%s: an explosion with no blast radius" % key)
+	for special in WARHEADS.keys() + _extra_warheads.keys():
+		var raw_w: Dictionary = _extra_warheads.get(special, WARHEADS.get(special, {}))
+		for field in raw_w:
+			if not WARHEAD_DEFAULTS.has(field) and not field in ["on_impact", "keeps_fire"]:
+				out.append("warhead %s: unknown field '%s'" % [special, field])
+		for nuclear in [false, true]:
+			var wp := warhead(special, nuclear)
+			if float(wp.edge) < 0.0 or float(wp.edge) > 1.0: out.append("warhead %s: edge outside 0..1" % special)
+			if float(wp.fire) < 0.0 or float(wp.fire) > 1.4: out.append("warhead %s: fire %s" % [special, wp.fire])
+			if float(wp.shock) < 0.0 or float(wp.shock) > 4.0: out.append("warhead %s: shock %s" % [special, wp.shock])
+			if float(wp.structure_reach) < 0.0 or float(wp.structure_reach) > 1.0: out.append("warhead %s: structure_reach outside 0..1" % special)
+			for cls in wp.vs:
+				if not cls in ["emitter", "building", "naval", "vehicle", "unit"]: out.append("warhead %s: unknown target class '%s'" % [special, cls])
+				elif float(wp.vs[cls]) < 0.0 or float(wp.vs[cls]) > 5.0: out.append("warhead %s: damage against %s is %s" % [special, cls, wp.vs[cls]])
 	return out

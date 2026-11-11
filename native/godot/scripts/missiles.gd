@@ -325,58 +325,12 @@ func _physics_process(delta: float) -> void:
 func impact(key: String, at: Vector3, owner: int, from := Vector3.INF) -> void:
 	var def := def_of(key)
 	var radius := float(def.radius)
-	var dmg := float(def.dmg)*1.75
 	var special: String = def.get("special", "")
 	var nuclear: bool = key == "nuke" or def.get("nuclear", false)
-	# A burst high above (HEMP) or a microwave pulse (HPM) leaves the ground intact (wmd.gd).
-	var no_blast: bool = special in ["hemp", "emp"]
-	var Conv := preload("res://scripts/conventional_missiles.gd")
 	if special == "antiRadar":
-		at = Conv.home(world, at, owner)   # it rides the nearest air-defence radar's beam
-	if not no_blast:
-		world.effects.explosion(at + Vector3.UP, minf(radius, 60.0) * 0.22, true)
-	if nuclear and not no_blast:
-		world.effects.mushroom(at, minf(radius, 70.0))
-	elif radius > 15.0 and not no_blast:
-		world.effects.explosion(at + Vector3.UP * 3.0, radius * 0.16, false)
-	if not no_blast:
-		world.logistics.damage_at(at, radius if nuclear else radius * 0.4, dmg, nuclear)
-	var source := {"owner": owner, "dead": true, "key": "missile", "missile_key": key, "special": special, "nuclear": nuclear, "pierce": special in ["penetrator", "thermobaric"]}
-	var hit := []
-	for ent in (world.units + world.buildings) if not no_blast else []:
-		if ent.dead:
-			continue
-		var p: Vector3 = ent.node.position
-		var d := Vector2(p.x - at.x, p.z - at.z).length()
-		if ent.get("is_building", false):
-			d = maxf(0.0, d - ent.footprint * 0.4)
-		if d > radius:
-			continue
-		var mult := 1.0
-		var building: bool = ent.get("is_building", false)
-		match special:
-			"cluster":
-				mult = 0.35 if building else 1.75
-			"antiShip":
-				mult = 3.0 if ent.get("naval", false) else 0.25
-			"hgv":
-				mult = 2.5 if ent.get("naval", false) else 1.0
-			"brahmos":
-				mult = 2.0 if ent.get("naval", false) else 1.0
-			"penetrator":
-				# It bursts underground: what is built is crushed, bunkers too;
-				# a conventional one does little to troops in the open.
-				mult = 3.0 if building else (1.0 if nuclear else 0.35)
-			"thermobaric", "antiRadar":
-				mult = Conv.mult(special, ent, building)
-				if special == "antiRadar" and ent.key in Conv.EMITTERS:
-					ent.disabled_until = maxf(float(ent.get("disabled_until", 0.0)), world.game_time + Conv.SILENCE)
-			"neutron":
-				# Neutrons pass through armour and walls: crews and people die, buildings stand.
-				# Its blast is small: buildings suffer only near the burst.
-				mult = (0.2 if d < radius * 0.35 else 0.0) if building else (1.2 if ent.get("vehicle", false) else 1.0)
-		hit.append(ent)
-		world.damage(ent, dmg * mult * (1.0 - 0.5 * d / radius), source)
+		at = preload("res://scripts/conventional_missiles.gd").home(world, at, owner)   # it rides the nearest air-defence radar's beam
+	# The burst itself is the warhead's profile (firepower.gd): the explosion, the roads, who is struck and how hard.
+	var hit: Array = preload("res://scripts/firepower.gd").strategic(world, key, def, at, owner)
 	# What lasts: fallout, a gas cloud, an outbreak, a blackout (wmd.gd).
 	var struck_by := []
 	for ent in hit:

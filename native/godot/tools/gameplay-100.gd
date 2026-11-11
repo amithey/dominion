@@ -136,7 +136,7 @@ func run() -> void:
 			b.queue.clear()
 			w.queue_unit(b, unit)
 			var queued: bool = b.queue.size() == 1
-			for s in range(120):
+			for s in range(180):   # (a carrier takes 90 s, and half as long again on generators in a blackout)
 				w.update_training(1.0)
 				if b.queue.is_empty(): break
 			var made: Array = w.units.filter(func(u): return u.key == unit and u.owner == 0)
