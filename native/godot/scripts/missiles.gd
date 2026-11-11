@@ -299,7 +299,10 @@ func _physics_process(delta: float) -> void:
 	for i in range(flying.size() - 1, -1, -1):
 		var m: Dictionary = flying[i]
 		m.t += delta
-		var f: float = minf(m.t / m.dur, 1.0)
+		# A missile is not at one speed all the way: it lifts off slowly on its booster and gathers speed, and a
+		# ballistic one comes down far faster than it went up. `f` stays the share of the path flown.
+		var u: float = minf(m.t / m.dur, 1.0)
+		var f: float = (0.45 * u + 0.55 * u * u) if m.arc else u * (0.8 + 0.2 * u)
 		var node: Node3D = m.node
 		var p := position_at(m, f)
 		if preload("res://scripts/air_defence.gd").intercept(world, m, p, f):

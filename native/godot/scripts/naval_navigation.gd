@@ -67,6 +67,7 @@ func move(u: Dictionary, goal: Vector3, delta: float) -> void:
 	if u.path.is_empty():
 		u.moving = false
 		u.sailing_speed = 0.0
+		u.yaw_rate = 0.0
 		world.place_on_ground(u,u.node.position)
 		return
 	while u.path.size()>1 and Vector2(u.path[0].x-u.node.position.x,u.path[0].z-u.node.position.z).length()<6:
@@ -77,6 +78,7 @@ func move(u: Dictionary, goal: Vector3, delta: float) -> void:
 		u.target = null
 		u.moving = false
 		u.sailing_speed = 0.0
+		u.yaw_rate = 0.0
 		world.place_on_ground(u,u.node.position)
 		return
 	var desired := atan2(to.x,to.z)
@@ -92,14 +94,25 @@ func move(u: Dictionary, goal: Vector3, delta: float) -> void:
 		if cost < score:
 			score = cost
 			best = angle
-	u.heading = rotate_toward(u.heading,best,delta*0.8)
+	# A ship is steered by water flowing past her rudder and she has a great deal of mass: a long hull answers the helm
+	# slowly, and hardly at all without way on; she gathers speed slowly and carries it (a patrol boat is at speed in two
+	# seconds and turns on the spot, a carrier needs seven and a wide sweep).
+	var hull: float = maxf(float(u.get("length",12.0)),4.0)
+	var cruise: float = u.speed*0.8
+	var way: float = clampf(float(u.get("sailing_speed",0.0))/maxf(cruise,0.1),0.0,1.0)
+	var helm: float = clampf(9.0/hull,0.35,0.9)*(0.45+0.55*way)
+	var old_heading: float = u.heading
+	u.heading = rotate_toward(u.heading,best,delta*helm)
+	u.yaw_rate = angle_difference(old_heading,u.heading)/maxf(delta,0.0001)
 	var direction := Vector3(sin(u.heading),0,cos(u.heading))
 	# Ease into motion, slow during a sharp turn and brake before the final waypoint.
-	var alignment := clampf(cos(angle_difference(u.heading,best)),0.15,1.0)
-	var cruise: float = u.speed*0.8
-	var braking: float = minf(1.0,to.length()/16.0) if u.path.size()==1 else 1.0
+	var alignment := clampf(cos(angle_difference(u.heading,best)),0.25,1.0)
+	var gain: float = clampf(4.0/hull,0.14,0.55)
+	var stopping: float = cruise/(3.2*gain)
+	var braking: float = minf(1.0,to.length()/maxf(16.0,stopping*1.6)) if u.path.size()==1 else 1.0
 	var wanted: float = cruise*alignment*braking if score<INF else 0.0
-	u.sailing_speed = move_toward(float(u.get("sailing_speed",0.0)),wanted,cruise*delta*0.6)
+	var now: float = float(u.get("sailing_speed",0.0))
+	u.sailing_speed = move_toward(now,wanted,cruise*gain*(1.0 if wanted>now else 1.6)*delta)
 	var next: Vector3 = u.node.position+direction*u.sailing_speed*delta
 	# Old saves may contain a ship in shallows accepted by the previous mover.
 	# Permit only motion toward deeper water until it reaches safe depth again.

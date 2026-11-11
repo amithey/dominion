@@ -74,6 +74,7 @@ func run() -> void:
 	check(u.gun.position.z < u.gun_base.z - 0.1, "and kicks back when it fires (%.2f m)" % (u.gun_base.z - u.gun.position.z))
 	w.kill(far); w.kill(d)   # (nothing left to shoot at, so it does not fire again)
 	u.enemy = null
+	u.reload = 9999.0   # (and it does not open fire on a rival that wanders by: the test fired again now and then, mid-return)
 	for i in range(150): await physics_frame
 	check(absf(u.gun.position.z - u.gun_base.z) < 0.01, "then returns (%.3f m off)" % absf(u.gun.position.z - u.gun_base.z))
 	check(absf(float(u.get("track_u", 0.0))) > 0.0, "the track pads ran along their loop while it drove (%.3f of the loop)" % float(u.get("track_u", 0.0)))

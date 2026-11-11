@@ -213,13 +213,24 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 		else:
 			return false
 	if u.air_state == "landing":
-		var duration: float = maxf(2.0, u.landing_start.distance_to(touchdown) / maxf(u.speed, 1.0))
+		# An approach is flown slowing down: it comes in a little above its cruising speed and touches down at half of
+		# it; the descent is steep at first and flattens near the ground (the flare), with the nose coming up.
+		var duration: float = maxf(2.0, u.landing_start.distance_to(touchdown) / maxf(u.speed, 1.0)) * 1.25
 		u.landing_progress = minf(1.0, u.landing_progress + delta / duration)
+		var p: float = u.landing_progress
+		var along: float = 1.4 * p - 0.4 * p * p
+		var down: float = 1.0 - pow(1.0 - p, 1.6)
 		var dir: Vector3 = touchdown - u.landing_start
 		u.heading = lerp_angle(u.heading, atan2(dir.x, dir.z), minf(1, delta * 2.5))
-		u.node.position = u.landing_start.lerp(touchdown, u.landing_progress)
+		u.node.position = u.landing_start.lerp(touchdown, along)
+		u.node.position.y = lerpf(u.landing_start.y, touchdown.y, down)
 		u.node.position.y = maxf(u.node.position.y, world.height_at(u.node.position.x, u.node.position.z) + 1.2)
-		u.node.basis = Basis(Vector3.UP, u.heading)
+		var flare: float = smoothstep(0.6, 1.0, p)
+		u.node.basis = Basis(Vector3.UP, u.heading) * Basis(Vector3.RIGHT, (-0.14 if vertical else -0.1) * flare + 0.04 * (1.0 - flare))
+		u.air_vel = Vector3.ZERO
+		u.yaw_rate = 0.0
+		u.bank = 0.0
+		u.pitch = 0.0
 		u.moving = true
 		if u.landing_progress >= 1.0:
 			if vertical:
@@ -271,7 +282,9 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 		var next: Vector3
 		var pitch := 0.0
 		if vertical:
-			next = u.node.position + Vector3.UP * delta * 6.0
+			# It lifts off gently and climbs faster once clear of the pad.
+			var lifted: float = u.node.position.y - maxf(world.height_at(u.node.position.x, u.node.position.z), float(world.map.seaLevel))
+			next = u.node.position + Vector3.UP * delta * lerpf(2.2, 6.0, clampf(lifted / 5.0, 0.0, 1.0))
 		else:
 			u.heading = lerp_angle(u.heading, 0.0, minf(1.0, delta * 5.0))
 			var roll: float = float(u.get("takeoff_roll", 0.0))

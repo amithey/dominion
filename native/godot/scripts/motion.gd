@@ -27,6 +27,24 @@ const DAMPING := 8.5           # below critical, so a hard stop rocks once or tw
 const SQUAT := 0.018           # radians of pitch per m/s² of acceleration
 const LEAN := 0.05             # radians of roll per rad/s·(m/s) of cornering
 const MAX_TILT := 0.16
+const WHEEL_CIRCLE := 4.0      # m: the tightest circle a wheeled vehicle turns (front wheels steer, the hull cannot pivot)
+
+## How this vehicle drives: {accel, brake, wheeled, soft}. A tracked hull pivots on the spot; a wheeled one has to roll to
+## turn, brakes harder and rides softer springs. Faster designs are the lighter ones and pull away quicker. Told from
+## the model itself (track pads, or only axles); a vehicle with neither (a robot, an old kit hull) drives as it did.
+static func profile(unit: Dictionary) -> Dictionary:
+	var p = unit.get("_drive")
+	if p != null:
+		return p
+	var tracked: bool = not (unit.get("tracks", []) as Array).is_empty()
+	var wheeled: bool = not tracked and not (unit.get("axles", []) as Array).is_empty()
+	var speed: float = float(unit.get("speed", 4.2))
+	p = {"wheeled": wheeled,
+		"accel": clampf(0.62 * speed, 2.0, 4.0) if wheeled else clampf(0.6 * speed, VEHICLE_ACCEL, 3.6),
+		"brake": 6.0 if wheeled else VEHICLE_BRAKE,
+		"soft": 1.4 if wheeled else 1.0}
+	unit["_drive"] = p
+	return p
 
 ## Moves `unit` toward `to` (flat vector to its next waypoint), `remaining`
 ## metres from the end of its route, and returns this frame's displacement.
@@ -35,6 +53,12 @@ static func drive(w: Node, unit: Dictionary, to: Vector3, remaining: float, chas
 	var want := atan2(to.x, to.z)
 	var err := angle_difference(unit.heading, want)
 	var turn_rate := VEHICLE_TURN if vehicle else INFANTRY_TURN
+	var prof: Dictionary = profile(unit) if vehicle else {}
+	var wheeled: bool = vehicle and prof.wheeled
+	if wheeled:
+		# Front wheels steer: the turn rate comes from rolling (speed over the turning circle). Standing, it can only
+		# shuffle round slowly.
+		turn_rate = clampf(float(unit.get("cur_speed", 0.0)) / WHEEL_CIRCLE, 0.9, VEHICLE_TURN)
 	var old_heading: float = unit.heading
 	# Proportional steering: a full-rate turn only when well off the line,
 	# easing in as the heading comes round, so a hull settles on its course
@@ -48,7 +72,8 @@ static func drive(w: Node, unit: Dictionary, to: Vector3, remaining: float, chas
 	# Throttle falls with the heading error; a hull facing away turns first.
 	var align := 1.0
 	if vehicle:
-		align = clampf(1.0 - absf(err) / PIVOT_ANGLE, 0.0, 1.0)
+		# A wheeled vehicle keeps rolling through a turn (it sweeps an arc); a tracked one stops and pivots.
+		align = clampf(1.0 - absf(err) / (2.4 if wheeled else PIVOT_ANGLE), 0.0, 1.0)
 		align = align * align * (3.0 - 2.0 * align)
 	else:
 		align = clampf(cos(err) * 0.5 + 0.5, 0.35, 1.0)
@@ -59,13 +84,19 @@ static func drive(w: Node, unit: Dictionary, to: Vector3, remaining: float, chas
 	# A formation marches at the pace of its slowest member until it fights.
 	var pace: float = unit.get("pace", INF) if not chasing else INF
 	var top: float = minf(minf(unit.speed, pace), float(unit.get("traffic_cap", INF))) * slope * align
-	var brake := VEHICLE_BRAKE if vehicle else INFANTRY_BRAKE
+	var brake: float = float(prof.brake) if vehicle else INFANTRY_BRAKE
+	if wheeled and absf(err) > 0.35:
+		# Never faster than the arc that still reaches the waypoint: a circle through it has the radius d / (2 sin err),
+		# and a wider one would orbit it for ever.
+		top = minf(top, turn_rate * to.length() / (2.0 * maxf(sin(minf(absf(err), PI * 0.5)), 0.2)) * 0.8 + 0.3)
+		if absf(err) > 0.9:
+			top = minf(top, 1.3)   # a sharp turn is taken at a crawl, on full lock: a wide sweep at speed pushed the men beside it off the road
 	# Never faster than a stop within the distance left: at the end of a route,
 	# or at a firing position (otherwise a hull circles a moving mark forever).
 	top = minf(top, sqrt(2.0 * brake * maxf(remaining if not chasing else to.length(), 0.0)) + 0.35)
 	var v: float = unit.get("cur_speed", 0.0)
 	var old_v := v
-	v = move_toward(v, top, (VEHICLE_ACCEL if vehicle else INFANTRY_ACCEL) * delta if top > v else brake * delta)
+	v = move_toward(v, top, (float(prof.accel) if vehicle else INFANTRY_ACCEL) * delta if top > v else brake * delta)
 	unit.cur_speed = v
 	unit.accel = (v - old_v) / maxf(delta, 0.0001)
 	if unit.player != null and unit.get("clip", "") == unit.get("run_clip", "#"):
@@ -105,8 +136,9 @@ static func body_basis(unit: Dictionary, ground_up: Vector3, heading: float, del
 	var travel := (Basis(Vector3.UP, heading) * Vector3.BACK).slide(up).normalized()
 	var base := Basis.looking_at(-travel, up)
 	# Accelerating squats the tail (nose up), braking dives; turning leans out.
-	var want_pitch := clampf(-float(unit.get("accel", 0.0)) * SQUAT, -MAX_TILT, MAX_TILT)
-	var want_roll := clampf(float(unit.get("yaw_rate", 0.0)) * float(unit.get("cur_speed", 0.0)) * LEAN, -MAX_TILT, MAX_TILT)
+	var soft: float = float(profile(unit).soft)   # wheeled vehicles ride softer springs: they squat and lean more
+	var want_pitch := clampf(-float(unit.get("accel", 0.0)) * SQUAT * soft, -MAX_TILT, MAX_TILT)
+	var want_roll := clampf(float(unit.get("yaw_rate", 0.0)) * float(unit.get("cur_speed", 0.0)) * LEAN * soft, -MAX_TILT, MAX_TILT)
 	var pitch: float = unit.get("sus_pitch", 0.0)
 	var pitch_v: float = unit.get("sus_pitch_v", 0.0)
 	var roll: float = unit.get("sus_roll", 0.0)

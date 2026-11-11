@@ -22,6 +22,7 @@ const SOLDIER_SPEED := 5.2         # metres per second while running
 const RUN_CLIP_SPEED := 4.6        # speed the run clip was authored for (no foot sliding)
 const PEOPLE_RUN_CLIP_SPEED := 3.7 # and for the Blender-made people (people.gd)
 const People := preload("res://scripts/people.gd")
+const Flight := preload("res://scripts/flight.gd")
 const TANK_SPEED := 4.2
 const BUILDING_MODELS := {
 	"hq": "res://assets/downtown/Building_Medium_2_001.gltf",
@@ -64,7 +65,8 @@ const NAVAL := ["gunboat", "corvette", "destroyer", "submarine", "nuclearSub", "
 const AIR := ["helicopter", "gunship", "jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17", "attackJet", "lightFighter", "scoutHelicopter"] + preload("res://scripts/war_tools.gd").AIR
 const FIXED_WING := ["jet", "bomber", "drone", "loiterer", "stealthFighter", "raptor", "raider", "shahed", "sixthGen", "wingman", "akinci", "harop", "superTucano", "interceptorDrone", "jf17", "attackJet", "lightFighter"] + preload("res://scripts/war_tools.gd").FIXED_WING
 const AirOperations := preload("res://scripts/air_operations.gd")
-const ALTITUDE := {"helicopter": 14.0, "gunship": 13.0, "jet": 26.0, "bomber": 30.0, "drone": 18.0, "loiterer": 16.0, "stealthFighter": 28.0, "raptor": 30.0, "raider": 34.0, "shahed": 12.0, "sixthGen": 31.0, "wingman": 28.0, "akinci": 24.0, "harop": 16.0, "superTucano": 22.0, "interceptorDrone": 18.0, "jf17": 26.0}
+# (The low flyers clear the tallest trees, about 19 m: helicopters used to fly through the crowns of the woods.)
+const ALTITUDE := {"helicopter": 21.0, "gunship": 20.0, "jet": 26.0, "bomber": 30.0, "drone": 21.0, "loiterer": 20.0, "stealthFighter": 28.0, "raptor": 30.0, "raider": 34.0, "shahed": 19.0, "sixthGen": 31.0, "wingman": 28.0, "akinci": 24.0, "harop": 20.0, "superTucano": 22.0, "interceptorDrone": 21.0, "jf17": 26.0}
 const SHIP_LENGTH := {"gunboat": 7.5, "corvette": 10.5, "destroyer": 15.0, "submarine": 11.0, "nuclearSub": 14.0, "seaDrone": 4.5, "railgunShip": 16.5, "orca": 9.0, "aegisCruiser": 17.0, "type45": 15.0, "kcr60": 10.5}
 const DEEP := -1.2   # water at least this deep (below sea level) carries a ship
 
@@ -1541,7 +1543,7 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 		"turret": parts.turret, "turret_yaw": 0.0, "dust": wake, "phase": at.x * 0.37 + at.z * 0.21, "meshes": [],
 		"naval": naval, "fly": key in AIR, "rotor": parts.rotor, "rotor2": parts.get("rotor2"), "radar": parts.radar,
 		"props": parts.get("props", []), "tail_rotors": parts.get("tail_rotors", []),
-		"altitude": {"attackJet": 22.0, "lightFighter": 26.0, "scoutHelicopter": 14.0}.get(key, ALTITUDE.get(key, preload("res://scripts/war_tools.gd").ALTITUDE.get(key, 0.0))), "bank": 0.0, "length": length,
+		"altitude": {"attackJet": 22.0, "lightFighter": 26.0, "scoutHelicopter": 21.0}.get(key, ALTITUDE.get(key, preload("res://scripts/war_tools.gd").ALTITUDE.get(key, 0.0))), "bank": 0.0, "length": length,
 		"key": key, "hp": float(def.hp), "max_hp": float(def.hp), "dmg": float(def.dmg),
 		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
 		"reload": randf() * minf(float(def.cooldown), 3.0), "search": randf() * 0.35, "enemy": null,
@@ -1581,15 +1583,28 @@ func place_on_ground(unit: Dictionary, at: Vector3) -> void:
 	if unit.get("fly", false):
 		# Aircraft hold their altitude over land or sea and bank into turns.
 		var floor_y := maxf(height_at(at.x, at.z), float(map.seaLevel))
-		var bob := sin(Time.get_ticks_msec() / 700.0 + unit.phase) * 0.35 if not (unit.key in FIXED_WING) else 0.0
-		node.position = Vector3(at.x, floor_y + unit.altitude + bob, at.z)
-		node.basis = Basis(Vector3.UP, unit.heading) * Basis(Vector3.BACK, unit.bank)
+		var fixed_wing: bool = unit.key in FIXED_WING
+		var bob := sin(Time.get_ticks_msec() / 700.0 + unit.phase) * 0.35 if not fixed_wing else 0.0
+		# Its height is held with a limited climb and descent, and its nose follows (flight.gd).
+		node.position = Vector3(at.x, Flight.altitude(self, unit, at, floor_y, fixed_wing) + bob, at.z)
+		unit.alt_set = node.position.y
+		node.basis = Basis(Vector3.UP, unit.heading) * Basis(Vector3.RIGHT, float(unit.get("pitch", 0.0))) * Basis(Vector3.BACK, unit.bank)
 		return
 	if unit.get("naval", false):
 		# Ships ride the swell: a gentle heave, pitch and roll.
 		var t := Time.get_ticks_msec() / 1000.0
-		node.position = Vector3(at.x, float(map.seaLevel) + sin(t * 0.9 + unit.phase) * 0.12 - (0.9 if unit.key.ends_with("ub") or unit.key == "submarine" else 0.0), at.z)
-		node.basis = Basis(Vector3.UP, unit.heading) * Basis(Vector3.RIGHT, sin(t * 0.7 + unit.phase) * 0.02) * Basis(Vector3.BACK, sin(t * 0.55 + unit.phase * 2.0) * 0.03)
+		# A small boat is tossed about and quickly; a long hull barely moves, and slowly. Under way the bow lifts,
+		# and in a turn the hull heels outward. A submarine, below the surface, hardly feels the swell.
+		var hull: float = maxf(float(unit.get("length", 12.0)), 4.0)
+		var sub: bool = unit.key.ends_with("ub") or unit.key == "submarine"
+		var sway := clampf(10.0 / hull, 0.35, 1.5) * (0.3 if sub else 1.0)
+		var beat := sqrt(10.0 / hull)
+		var way: float = float(unit.get("sailing_speed", 0.0))
+		var bow := 0.0 if sub else -0.02 * clampf(way / maxf(float(unit.speed) * 0.8, 0.1), 0.0, 1.0) * clampf(12.0 / hull, 0.4, 1.6)
+		var heel_want := 0.0 if sub else clampf(float(unit.get("yaw_rate", 0.0)) * way * 0.035, -0.14, 0.14)
+		unit.heel = lerpf(float(unit.get("heel", 0.0)), heel_want, 0.06)
+		node.position = Vector3(at.x, float(map.seaLevel) + sin(t * 0.9 * beat + unit.phase) * 0.12 * sway - (0.9 if sub else 0.0), at.z)
+		node.basis = Basis(Vector3.UP, unit.heading) * Basis(Vector3.RIGHT, sin(t * 0.7 * beat + unit.phase) * 0.02 * sway + bow) * Basis(Vector3.BACK, sin(t * 0.55 * beat + unit.phase * 2.0) * 0.03 * sway + float(unit.heel))
 		return
 	node.position = Vector3(at.x, height_at(at.x, at.z), at.z)
 	var heading := Basis(Vector3.UP, unit.heading)
@@ -1928,18 +1943,24 @@ func _physics_process(delta: float) -> void:
 			# Fine animation (wheels, track pads, the gun's lift) only where the detailed model shows (LOD0, up to 60 m).
 			unit.detail = camera.global_position.distance_squared_to(unit.node.global_position) < 4900.0
 		if unit.get("rotor") != null:
-			unit.rotor.rotate_y(delta * 28.0)
+		# Engines run down on the apron (parked, being rearmed) and spool up again to taxi out.
+		var spin := 1.0
+		if unit.get("fly", false):
+			var resting: bool = str(unit.get("air_state", "ready")) in ["parked", "rearming"]
+			spin = move_toward(float(unit.get("rotor_spin", 1.0)), 0.0 if resting else 1.0, delta * (0.35 if resting else 0.8))
+			unit.rotor_spin = spin
+			unit.rotor.rotate_y(delta * 28.0 * spin)
 		if unit.get("rotor2") != null:
-			unit.rotor2.rotate_y(-delta * 28.0)   # a tandem helicopter's rear rotor turns the other way
+			unit.rotor2.rotate_y(-delta * 28.0 * spin)   # a tandem helicopter's rear rotor turns the other way
 		if unit.get("radar") != null:
 			unit.radar.rotate_y(delta * 1.6)
 		if unit.get("detail", true) or unit.get("fly", false):
 			for pr in unit.get("props", []):
 				if is_instance_valid(pr):
-					pr.rotate_object_local(Vector3.BACK, delta * 42.0)   # a propeller's disc is turned about the nose axis
+					pr.rotate_object_local(Vector3.BACK, delta * 42.0 * spin)   # a propeller's disc is turned about the nose axis
 			for tr in unit.get("tail_rotors", []):
 				if is_instance_valid(tr):
-					tr.rotate_object_local(Vector3.RIGHT, delta * 46.0)
+					tr.rotate_object_local(Vector3.RIGHT, delta * 46.0 * spin)
 		if unit.moving and unit.get("detail", true):
 			var travelled: float = unit.get("cur_speed", unit.speed) * delta
 			for a in unit.get("axles", []):
@@ -1976,6 +1997,10 @@ func _physics_process(delta: float) -> void:
 				unit.gun_kick = maxf(0.0, kick - delta * 2.2)
 				unit.gun.position = unit.gun_base + Vector3(0, 0, -0.45 * kick * kick)
 	spent("combat", t_units)
+			elif unit.get("gun") != null and float(unit.get("gun_kick", 0.0)) > 0.0:
+				# Out of the detailed view in mid-recoil: the gun is run out again (it used to stay back until looked at).
+				unit.gun_kick = 0.0
+				unit.gun.position = unit.gun_base
 	var t_move := clock()
 	var slot := 0
 	for unit in units:
@@ -2123,10 +2148,14 @@ func _physics_process(delta: float) -> void:
 			spent("  keeping clear", t_sep)
 			next += (push if unit.vehicle else Tactics.sidestep(unit, travel, push)).limit_length(maxf(step * 1.5, delta * 1.5))
 			if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
-				unit.target = null
-				Motion.halt(unit, delta)
-				animate(unit, false)
-				continue
+			if height_at(next.x, next.z) < float(map.seaLevel) + 0.25 and height_at(node.position.x + travel.x, node.position.z + travel.z) >= float(map.seaLevel) + 0.25:
+				next = node.position + travel   # jostled toward the water by its neighbours: it keeps to its own line
+				next = shore_step(unit, goal, travel, delta)
+				if next == Vector3.INF:
+					unit.target = null
+					Motion.halt(unit, delta)
+					animate(unit, false)
+					continue
 			var t_place_now := clock()
 			next = ground_step(unit, next, delta)
 			if next == Vector3.INF: continue
@@ -2143,10 +2172,14 @@ func _physics_process(delta: float) -> void:
 		spent("  keeping clear", t_sep)
 		next += (push if unit.vehicle else Tactics.sidestep(unit, travel, push)).limit_length(maxf(step * 1.5, delta * 1.5))
 		if height_at(next.x, next.z) < float(map.seaLevel) + 0.25:
-			unit.target = null  # land units stop at the waterline
-			Motion.halt(unit, delta)
-			animate(unit, false)
-			continue
+		if height_at(next.x, next.z) < float(map.seaLevel) + 0.25 and height_at(node.position.x + travel.x, node.position.z + travel.z) >= float(map.seaLevel) + 0.25:
+			next = node.position + travel   # jostled toward the water by its neighbours: it keeps to its own line (it used to drop its orders there)
+			next = shore_step(unit, goal, travel, delta)
+			if next == Vector3.INF:
+				unit.target = null  # land units stop at the waterline
+				Motion.halt(unit, delta)
+				animate(unit, false)
+				continue
 		var t_place := clock()
 		next = ground_step(unit, next, delta)
 		if next == Vector3.INF: continue
@@ -2674,6 +2707,64 @@ func clear_line(a: Vector3, b: Vector3) -> bool:
 	return true
 
 # Next point to head for; plans (and re-plans while chasing) the route.
+## A land unit whose next step is into the water: where it steps instead, or Vector3.INF when it gives the order up.
+## The route keeps to walkable cells, but a cell is 4 m wide and the waterline is not: a unit pushed to the edge of its
+## route (by the crowd, by a lorry swinging wide) can find a wet corner between it and the next turn. With a dry goal it
+## goes along the shore (the nearest dry heading to the one it wanted), or eases back to firm ground, and plans again.
+## It gives up when it has made no ground in three seconds at the water, or comes back to the water a twelfth time on
+## the way to the same goal (there is no way round).
+func shore_step(unit: Dictionary, goal: Vector3, travel: Vector3, delta: float) -> Vector3:
+	var dry: float = float(map.seaLevel) + 0.25
+	if height_at(goal.x, goal.z) < dry:
+		return Vector3.INF
+	var pos: Vector3 = unit.node.position
+	var now: float = game_time
+	if Vector3(unit.get("shore_goal", Vector3.INF)).distance_to(goal) > 1.0:
+		unit.shore_goal = goal
+		unit.shore_n = 0
+		unit.shore_t = -99.0
+	if now - float(unit.shore_t) > 0.5:
+		unit.shore_n = int(unit.shore_n) + 1   # it has been away from the water and is back
+		unit.shore_since = now
+		unit.shore_from = pos
+		unit.shore_side = 0.0
+		unit.shore_plan = -99.0
+	unit.shore_t = now
+	if now - float(unit.shore_since) > 3.0:
+		if Vector3(unit.shore_from).distance_to(pos) < 1.5:
+			return Vector3.INF
+		unit.shore_since = now
+		unit.shore_from = pos
+	if int(unit.shore_n) > 12:
+		return Vector3.INF
+	if now - float(unit.shore_plan) > 0.8:
+		unit.shore_plan = now
+		unit.path = PackedVector3Array()
+		unit.repath = 0.0
+	var flat := Vector3(travel.x, 0.0, travel.z)
+	var step: float = maxf(flat.length(), delta * 1.2)
+	var dir: Vector3 = flat.normalized() if flat.length() > 0.0001 else Basis(Vector3.UP, unit.heading) * Vector3.BACK
+	var side: float = unit.get("shore_side", 0.0)
+	if side == 0.0:
+		# The side the goal lies on, and it keeps to it (changing sides at every step would hold it in the corner).
+		side = 1.0 if dir.cross(goal - pos).y >= 0.0 else -1.0
+		unit.shore_side = side
+	for turn in [0.6, 1.1, 1.6, 2.2]:
+		for sgn in [side, -side]:
+			var d: Vector3 = dir.rotated(Vector3.UP, turn * sgn)
+			# Dry where it steps and dry a pace on: not into a spit that ends in the water.
+			var a: Vector3 = pos + d * step
+			var b: Vector3 = pos + d * maxf(step, 1.2)
+			if height_at(a.x, a.z) >= dry and height_at(b.x, b.z) >= dry:
+				unit.shore_side = sgn
+				return a
+	var centre := nearest_open_centre(pos)
+	if centre != Vector3.INF:
+		var back := Vector3(centre.x - pos.x, 0, centre.z - pos.z)
+		if back.length() > 0.05:
+			return pos + back.limit_length(step)
+	return pos
+
 func steer_point(unit: Dictionary, goal: Vector3, chasing: bool, delta: float) -> Vector3:
 	unit.repath -= delta
 	var drift: float = unit.path_goal.distance_to(goal) if unit.path_goal != Vector3.INF else INF
@@ -4963,6 +5054,9 @@ func move_craft(unit: Dictionary, delta: float) -> void:
 		if unit.dust:
 			unit.dust.emitting = false
 		place_on_ground(unit, pos)
+		if unit.get("fly", false) and not fixed:
+			pos += Flight.coast(unit, delta)   # it slows to a hover; it does not stop dead
+			Flight.attitude(unit, false, delta)
 		return
 	var to: Vector3 = goal - pos
 	to.y = 0
@@ -4985,9 +5079,17 @@ func move_craft(unit: Dictionary, delta: float) -> void:
 			place_on_ground(unit, pos)
 			return
 	var want := atan2(to.x, to.z)
-	var turn := minf(1.0, delta * (1.2 if fixed else (2.4 if unit.fly else 0.9)))
-	var old: float = unit.heading
-	unit.heading = lerp_angle(unit.heading, want, turn)
+	if unit.fly:
+		# It banks into the turn and holds the turn rate its class can sustain (flight.gd). A helicopter near its
+		# mark keeps the heading it has: it slides on to the spot rather than spinning to face it.
+		if fixed:
+			unit.heading = Flight.turn(unit, Flight.steer(unit, to, want), true, delta)
+		elif to.length() > 2.5:
+			unit.heading = Flight.turn(unit, want, false, delta)
+		else:
+			unit.yaw_rate = move_toward(float(unit.get("yaw_rate", 0.0)), 0.0, 5.0 * delta)
+	else:
+		unit.heading = lerp_angle(unit.heading, want, minf(1.0, delta * 0.9))
 	if unit.naval:
 		# Look ahead: if the bow would run aground, try turning either way.
 		var ahead: Vector3 = pos + Basis(Vector3.UP, unit.heading) * Vector3.BACK * unit.length
@@ -5007,12 +5109,17 @@ func move_craft(unit: Dictionary, delta: float) -> void:
 	var speed: float = unit.speed * (1.0 if fixed or unit.fly else 0.8)
 	var step := Basis(Vector3.UP, unit.heading) * Vector3.BACK * minf(to.length() + (20.0 if fixed else 0.0), speed * delta)
 	var next := pos + step
+	if unit.fly and not fixed:
+		step = Flight.hover_step(unit, to, delta)   # a helicopter carries momentum: it eases away and flares to a stop
 	if unit.naval and not is_water(next, DEEP * 0.6):
 		unit.target = null
 		unit.moving = false
 		place_on_ground(unit, pos)
 		return
-	unit.bank = lerpf(unit.bank, clampf(angle_difference(old, unit.heading) / maxf(delta, 0.001) * -0.35, -0.7, 0.7), minf(1.0, delta * 3.0)) if unit.fly else 0.0
+	if unit.fly:
+		Flight.attitude(unit, fixed, delta)
+	else:
+		unit.bank = 0.0
 	unit.moving = true
 	if unit.dust:
 		unit.dust.emitting = true
@@ -5786,9 +5893,7 @@ func update_dead(unit: Dictionary, delta: float, index: int) -> void:
 		# Spiral down trailing smoke, then burn where it hits.
 		var node: Node3D = unit.node
 		var floor_y := maxf(height_at(node.position.x, node.position.z), float(map.seaLevel))
-		if node.position.y > floor_y + 0.5:
-			node.position += (Basis(Vector3.UP, unit.heading) * Vector3.BACK) * delta * 8.0 + Vector3.DOWN * delta * 14.0
-			node.rotate_object_local(Vector3.BACK, delta * 3.0)
+		if Flight.fall(self, unit, floor_y, delta):   # it keeps the speed it had and arcs down under gravity (flight.gd)
 			if randf() < delta * 10.0:
 				effects.impact(node.position)
 		elif not unit.get("crashed", false):
@@ -5800,9 +5905,10 @@ func update_dead(unit: Dictionary, delta: float, index: int) -> void:
 			units.remove_at(index)
 		return
 	if unit.get("naval", false):
-		# Settle by the stern and slip under.
-		unit.node.position.y -= delta * 0.6
-		unit.node.rotate_object_local(Vector3.RIGHT, delta * 0.05)
+		# She settles by the stern and lists, slowly at first, then goes down fast.
+		unit.node.position.y -= delta * (0.25 + 0.09 * float(unit.dead_time))
+		unit.node.rotate_object_local(Vector3.RIGHT, -delta * 0.035)
+		unit.node.rotate_object_local(Vector3.BACK, delta * 0.05 * (1.0 if fposmod(float(unit.phase), 2.0) < 1.0 else -1.0))
 		if unit.dead_time > 12.0:
 			unit.node.queue_free()
 			units.remove_at(index)
