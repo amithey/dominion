@@ -245,6 +245,7 @@ var power_uses: Array = []      # every use of a national power
 var power_think := 5.0
 var intercepts: Array = [] # every missile interception attempt: {type, by, hit, owner}
 var sim_tick := 0         # simulation steps taken (staggers per-unit work; tests step by hand)
+var missile_source = null
 var missile_aim := ""     # missile type waiting for a target click
 var landing_aim := false   # the next click on the map is where a selected transport puts its load ashore
 var land_buyer = null     # the settlement whose town hall is buying land (click a highlighted hex)
@@ -1652,13 +1653,25 @@ func animate(unit: Dictionary, moving: bool) -> void:
 	unit.clip = clip
 	player.speed_scale = (maxf(unit.get("cur_speed", unit.speed), 0.8) / unit.get("clip_speed", RUN_CLIP_SPEED)) if moving else 1.0
 
+func _air_order_allowed(u: Dictionary, point: Vector3, action := 8.0, release_range := 0.0) -> bool:
+	var reason := AirOperations.mission_blocked(self, u, point, action, release_range)
+	if reason != "" and u.owner == 0:
+		hud.notice(reason)
+	return reason == ""
+
 func order_attack(selected: Array, enemy: Dictionary) -> void:
 	for u in selected:
 		if u.dead or u.owner == enemy.owner or effectiveness(u, enemy) <= 0.01 or u.dmg <= 0:
 			continue
+		if not _air_order_allowed(u, enemy.node.position, 8.0, AirOperations.attack_release_range(u)):
+			continue
+		u.erase("payload_order")
+		u.erase("patrol")
 		# Establish hostility before splash filters run, including the first shell.
 		if u.owner == 0 and enemy.owner > 0 and not hostile(u.owner, enemy.owner):
 			ai.declare_war(enemy.owner, true)
+		if u.get("air_state") in ["returning", "no base"]:
+			u.air_state = "ready"
 		u.enemy = enemy
 		u.board = null  # a new combat order cancels an unfinished airlift
 		u.forced = true  # an ordered target is not swapped for a nearer one
@@ -1673,16 +1686,22 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 	for u in selected: u.board = null  # explicit orders replace pending boarding
 	# Aircraft sent onto one of their nation's air bases land there and stay.
 	var landed := []
+	var base_orders := []
 	for b in buildings:
-		if AirOperations.is_base(b) and b.built and not b.dead and Vector2(b.root.position.x - point.x, b.root.position.z - point.z).length() < 11.0:
+		if AirOperations.is_base(b) and b.built and not b.dead and AirOperations.distance(b.root.position, point) < 11.0:
 			for u in selected:
-				if u.get("fly", false) and u.owner == b.owner and AirOperations.order_land(self, u, b):
+				if not u.get("fly", false) or u.owner != b.owner or u.key in AirOperations.TUBE_LAUNCHED or u.get("carrier") != null:
+					continue
+				base_orders.append(u)
+				if AirOperations.order_land(self, u, b):
 					landed.append(u)
-	if not landed.is_empty():
-		selected = selected.filter(func(u): return not landed.any(func(l): return is_same(l, u)))
-		if landed[0].owner == 0:
-			hud.notice("%d aircraft landing at the base." % landed.size())
+	if not base_orders.is_empty() and base_orders[0].owner == 0:
+		hud.notice("%d/%d aircraft cleared to land. Check fuel, runway and available slots." % [landed.size(), base_orders.size()])
+	selected = selected.filter(func(u):
+		return not base_orders.any(func(ordered): return is_same(ordered, u)) and _air_order_allowed(u, point))
 	for u in selected:
+		u.erase("payload_order")
+		u.erase("patrol")
 		# A return to base is cancelled by a new order while there is flight time left.
 		if u.get("fly", false) and String(u.get("air_state", "")) in ["returning", "no base"] and float(u.get("sortie_left", 0.0)) > 0.0:
 			u.air_state = "ready"
@@ -1729,6 +1748,27 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 		var spacing := 12.0 if selected[i].get("fly", false) else 14.0
 		selected[i].target = point + Vector3((i % width - (width - 1) / 2.0) * spacing, 0, (floori(float(i) / width) - (rows - 1) / 2.0) * spacing)
 
+func order_patrol(selected: Array, point: Vector3) -> void:
+	var assigned := 0
+	for u in selected:
+		if u.dead or not u.get("fly", false):
+			continue
+		var seconds := AirOperations.patrol_seconds(self, u, point)
+		if seconds < 3.0 or not _air_order_allowed(u, point, 3.0):
+			continue
+		u.erase("payload_order")
+		u.erase("ground_attack")
+		u.patrol = {"point": point, "remaining": seconds, "on_station": false}
+		if u.air_state in ["returning", "no base"]:
+			u.air_state = "ready"
+		u.target = point
+		u.enemy = null
+		u.egress = null
+		u.attack_move = false
+		u.order_goal = point
+		assigned += 1
+	hud.notice("%d aircraft cleared for patrol." % assigned if assigned > 0 else "No aircraft can patrol there and return with fuel in reserve.")
+
 func request_bombard(selected: Array, point: Vector3) -> void:
 	var armed := selected.filter(func(u):return can_bombard(u))
 	if armed.is_empty():
@@ -1738,8 +1778,10 @@ func request_bombard(selected: Array, point: Vector3) -> void:
 
 func order_bombard(selected: Array, point: Vector3) -> void:
 	for u in selected:
-		if not can_bombard(u):
+		if not can_bombard(u) or not _air_order_allowed(u, point, 8.0, AirOperations.attack_release_range(u)):
 			continue
+		u.erase("payload_order")
+		u.erase("patrol")
 		u.board = null
 		if not is_instance_valid(u.get("bombard_marker")):
 			u.bombard_marker = Node3D.new()
@@ -3132,7 +3174,7 @@ func update_training(delta: float) -> void:
 				b.queue_prog = 0.0
 				b.queue.pop_front()
 				take_order_receipt(b, 0)
-				missiles.finished(first.substr(8))
+				missiles.finished(first.substr(8), b)
 			continue
 		var def: Dictionary = unit_defs[first]
 		rail *= preload("res://scripts/additional_factions.gd").train_mult(self, b.owner, first)
@@ -3448,9 +3490,9 @@ func systems_test(capture: bool) -> void:
 	var queued: String = missiles.produce(silo, "tactical") if not silo.is_empty() else "no silo"
 	for i in range(400):
 		update_training(0.1)
-		if missiles.stock.tactical > 0:
+		if missiles.total_for("tactical") > 0:
 			break
-	var produced: bool = missiles.stock.tactical == 1
+	var produced: bool = missiles.total_for("tactical") == 1
 	var target = null
 	for b in buildings:
 		if b.owner == 1 and not b.dead and b.key != "hq":
@@ -3482,7 +3524,7 @@ func systems_test(capture: bool) -> void:
 		d.set_score(0, i, 20.0)
 	var hq3: Dictionary = buildings.filter(func(b): return b.owner == 3 and b.key == "hq")[0]
 	var ground_zero: Vector3 = hq3.root.position + Vector3(30, 0, 0)
-	missiles.stock.nuke = 1
+	missiles.finished("nuke", silo)
 	research.progress["nuclearProgram"] = {"stage": 3, "work": 0, "paid": false}   # nuclear arms need the Nuclear Program
 	print(missiles.launch("nuke", ground_zero))
 	for i in range(300):
@@ -4403,18 +4445,23 @@ func logistics_test(capture: bool) -> void:
 # ---------------------------------------------------------------- placement
 
 ## Arms a missile: the next left click on the map is its target.
-func begin_missile(key: String) -> void:
+func begin_missile(key: String, platform = null) -> void:
+	order_mode = ""
 	cancel_placement()
 	cancel_transport()
 	cancel_landing()
-	if int(missiles.stock.get(key, 0)) <= 0:
-		hud.notice("No %s in storage." % missiles.def_of(key).name)
+	var available: int = missiles.total_for(key) if missiles.local_weapon(key) else missiles.pooled_available(key)
+	if available <= 0:
+		hud.notice("No available %s in storage." % missiles.def_of(key).name)
 		return
 	var blocked: String = missiles.locked(key)
 	if blocked != "":
 		hud.notice(blocked)
 		return
-	if missiles.platforms_for(key).is_empty():
+	if platform != null and not missiles.ready_platforms(key).any(func(p): return is_same(p, platform)):
+		hud.notice("Selected launcher is empty, disabled or incompatible.")
+		return
+	if missiles.ready_platforms(key).is_empty():
 		hud.notice(missiles.launcher_missing(key))
 		return
 	# A nuclear weapon needs the order to release it: one decision, its price stated.
@@ -4425,9 +4472,10 @@ func begin_missile(key: String) -> void:
 		hud.choose("NUCLEAR RELEASE", "Arming the %s needs the order to release nuclear weapons. Giving it means %s. Firing it will then bring the world to DEFCON 1." % [missiles.def_of(key).name, "; ".join(steps)], [
 			["Give the order and arm it", "bad", func():
 				hud.notice(defcon.authorise_release())
-				begin_missile(key)],
+				begin_missile(key, platform)],
 			["Not now", "", func(): pass]])
 		return
+	missile_source = platform
 	missile_aim = key
 	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
 	hud.notice("%s armed: click a target (Shift keeps firing, right click cancels)." % missiles.def_of(key).name)
@@ -4518,6 +4566,7 @@ func landing_click(point: Vector3) -> void:
 		hud.notice("No beach or clear ground within reach of that spot, or nothing aboard.")
 
 func cancel_missile() -> void:
+	missile_source = null
 	missile_aim = ""
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 
@@ -5304,6 +5353,8 @@ func disabled(ent: Dictionary) -> bool:
 	return ent.get("disabled_until", 0.0) > game_time
 
 func update_combat(unit: Dictionary, delta: float) -> void:
+	if unit.has("payload_order") or unit.has("patrol"):
+		return
 	if unit.get("fly", false) and (unit.get("ammo", 0) <= 0 or unit.get("air_state", "ready") != "ready"):
 		return
 	if unit.dmg <= 0.0 or disabled(unit):
@@ -5819,9 +5870,11 @@ func destroy_building(b: Dictionary) -> void:
 		for u in units:
 			if u.dead or not is_same(u.get("air_base"), b):
 				continue
-			if String(u.get("air_state", "")) in ["parked", "rearming", "taxi_in", "taxi_out", "landing", "takeoff"]:
+			if not u.get("ferrying", false) and String(u.get("air_state", "")) in ["parked", "rearming", "taxi_in", "taxi_out"]:
 				kill(u)
 			else:
+				if not u.get("ferrying", false):
+					AirOperations.return_to_base(u)
 				u.air_base = null
 				u.slot = -1
 	if b.deposit != null:
@@ -6192,14 +6245,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				var point = ground_point(event.position)
 				if point != null:
 					var key := missile_aim
-					# A selected missile ship fires it; otherwise the nearest silo or ship.
-					var ship = null
-					for u in units:
-						if u.selected and u in missiles.platforms_for(key):
-							ship = u
-							break
-					engagement.authorize_area(point,float(missiles.def_of(key).radius),func():hud.notice(missiles.launch(key,point,ship)))
-					if int(missiles.stock.get(missile_aim, 0)) <= 0 or not event.shift_pressed:
+					var source = missile_source
+					engagement.authorize_area(point, float(missiles.def_of(key).radius), func(): hud.notice(missiles.launch(key, point, source)))
+					if missiles.total_for(key) <= 0 or not event.shift_pressed:
 						cancel_missile()
 		elif event.button_index == MOUSE_BUTTON_RIGHT and missile_aim != "":
 			if event.pressed:
@@ -6237,6 +6285,8 @@ func _unhandled_input(event: InputEvent) -> void:
 					var selected := units.filter(func(u): return u.selected and not u.dead and u.owner==0)
 					if order_mode == "bombard":
 						request_bombard(selected,point)
+					elif order_mode == "patrol":
+						order_patrol(selected, point)
 					else:
 						passage.check_order(selected, point, func(): order_move(selected,point,true))
 			else:

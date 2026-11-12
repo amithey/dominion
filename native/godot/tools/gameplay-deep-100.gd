@@ -217,7 +217,9 @@ func run() -> void:
 	check(not silo.is_empty(), "a missile silo is built")
 	ms.stock.clear()
 	for b in w.buildings: if b.owner == 0: b.queue = b.queue.filter(func(q): return not str(q).begins_with("missile:"))
-	var cap: int = ms.capacity()
+	# A tactical missile is kept where it is made (missiles.gd local_weapon): the silo's own places, not the shared store.
+	var cap: int = ms.storage_slots(silo) if ms.local_weapon("tactical") else ms.capacity()
+	var shared_cap: int = ms.capacity()
 	var made := 0
 	for i in range(cap + 2):
 		if ms.produce(silo, "tactical") == "":
@@ -228,7 +230,7 @@ func run() -> void:
 	check(made == cap and ms.stored() == cap, "a silo stores up to its capacity (%d)" % cap)
 	check(ms.produce(silo, "tactical").contains("full"), "and refuses more when full")
 	var depot: Dictionary = put("ammoDepot")
-	check(not depot.is_empty() and ms.capacity() == cap + int(ms.cfg.capPerDepot), "an ammunition depot adds %d places" % int(ms.cfg.capPerDepot))
+	check(not depot.is_empty() and ms.capacity() == shared_cap + int(ms.cfg.capPerDepot), "an ammunition depot adds %d places" % int(ms.cfg.capPerDepot))
 	w.research.progress.nuclearProgram.stage = 0
 	w.research._recompute()
 	check(ms.locked("nuke") != "", "the nuclear missile waits for the Nuclear Program")
@@ -278,9 +280,12 @@ func run() -> void:
 	var flight: Dictionary = ms.flying[-1]
 	check(flight.owner == 0 and flight.type == "tactical", "it flies for you")
 	var none_left: Dictionary = ms.stock.duplicate()
+	var held: Dictionary = silo.get("payloads", {}).duplicate()
 	ms.stock.clear()
+	silo.payloads = {}   # (the silo's own store too)
 	check(ms.launch("tactical", hq(1).root.position).begins_with("No "), "an empty store launches nothing")
 	ms.stock = none_left
+	silo.payloads = held
 	for m in ms.flying: m.node.queue_free()
 	ms.flying.clear()
 

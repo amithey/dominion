@@ -36,7 +36,7 @@ static func armed(w: Node, owner: int) -> bool:
 ## The nuclear warheads `owner` (the player) has ready to fire, nearest first.
 static func _ready_warhead(w: Node) -> String:
 	for key in preload("res://scripts/wmd.gd").NUCLEAR:
-		if int(w.missiles.stock.get(key, 0)) > 0 and not w.missiles.platforms_for(key, 0).is_empty() and not w.missiles.def_of(key).get("sub_only", false):
+		if w.missiles.locked(key) == "" and not w.missiles.ready_platforms(key, 0).is_empty() and not w.missiles.def_of(key).get("sub_only", false):
 			return key
 	return ""
 
@@ -54,17 +54,17 @@ static func fire(w: Node, target: int, why: String) -> String:
 	var key := _ready_warhead(w)
 	if key == "" or target <= 0 or w.diplomacy.defeated(target):
 		return ""
-	var platforms: Array = w.missiles.platforms_for(key, 0)
+	var platforms: Array = w.missiles.ready_platforms(key, 0)
 	var from: Vector3 = platforms[0].node.position
 	var town = _town_of(w, target, from)
 	if town == null:
 		return ""
-	w.missiles.stock[key] = int(w.missiles.stock[key]) - 1
-	w.missiles.fly(key, from + Vector3.UP * 3.0, town.root.position, 0)
-	w.missiles.changed.emit()
+	var result: Dictionary = w.missiles.launch_from(key, town.root.position, 0, null, true)
+	if result.has("error"):
+		return ""
 	if not w.diplomacy.at_war(0, target) and w.ai != null:
 		w.ai.declare_war(target, true)
-	var text := "AUTOMATED RETALIATION: %s Your machine fired a %s at %s's %s; no one gave the order." % [why, str(w.missiles.def_of(key).get("name", key)).to_lower(), w.diplomacy.name_of(target), town.def.name]
+	var text := "AUTOMATED RETALIATION: %s Your machine ordered a %s against %s's %s." % [why, str(w.missiles.def_of(key).get("name", key)).to_lower(), w.diplomacy.name_of(target), town.def.name]
 	w.directorate._note(text)
 	w.hud.notice(text)
 	return text
@@ -97,7 +97,8 @@ static func accident(w: Node, owner: int, roll := -1.0) -> String:
 	# A rival's machine fires only at an enemy it is already fighting.
 	if not d.at_war(owner, 0):
 		return ""
-	w.defcon._strike(owner, "an automated launch on a false warning", "nuke")
+	if not w.defcon._strike(owner, "an automated launch on a false warning", "nuke"):
+		return ""
 	var text := "AUTOMATED RETALIATION: %s's machine fired on a false warning." % d.name_of(owner)
 	w.directorate._note(text)
 	return text

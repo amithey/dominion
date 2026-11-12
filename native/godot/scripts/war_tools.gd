@@ -473,7 +473,7 @@ static func recall(w: Node, carrier: Dictionary) -> int:
 	_wing(w, carrier).hold_until = w.game_time + HOLD   # (in automatic mode too: nothing goes up again at once)
 	for u in w.units:
 		if not u.dead and is_same(u.get("carrier"), carrier):
-			u.sortie_left = 0.0
+			u.air_state = "returning"
 			u.enemy = null
 			u.air_state = "returning"
 			n += 1
@@ -491,7 +491,7 @@ static func _strike_target(w: Node, carrier: Dictionary) -> Variant:
 	var ordered = carrier.get("enemy")
 	if ordered != null and not ordered.dead:
 		var op: Vector3 = ordered.root.position if ordered.get("is_building", false) else ordered.node.position
-		return ordered if Vector2(op.x - carrier.node.position.x, op.z - carrier.node.position.z).length() <= STRIKE_REACH * 1.05 else null   # (out of reach: the carrier is closing)
+		return ordered if Vector2(op.x - carrier.node.position.x, op.z - carrier.node.position.z).length() <= STRIKE_REACH else null   # (out of reach: the carrier is closing)
 	if not bool(_wing(w, carrier).get("auto", true)):
 		return null   # orders only: nothing goes up unless you point at something
 	var o := int(carrier.owner)
@@ -596,19 +596,38 @@ static func _show_deck(carrier: Dictionary, aboard: int) -> void:
 ## A carrier's aircraft in flight (air_operations.update hands it here). True
 ## means this owns its movement. A plane whose carrier is gone looks for an
 ## airfield like any other.
+static func recovery_point(carrier: Dictionary, u: Dictionary, from: Vector3) -> Vector3:
+	var deck: Vector3 = carrier.node.position
+	if not carrier.get("moving", false):
+		return deck
+	var travel := minf(30.0, deck.distance_to(from) / maxf(1.0, float(u.speed)))
+	var course := Basis(Vector3.UP, float(carrier.heading)) * Vector3.BACK
+	var advance := travel * float(carrier.get("cur_speed", carrier.speed))
+	if carrier.get("target") != null:
+		advance = minf(advance, deck.distance_to(carrier.target))
+	return deck + course * advance
+
 static func carrier_flight(w: Node, u: Dictionary, delta: float) -> bool:
 	var carrier = u.get("carrier")
-	if carrier == null or carrier.dead:
+	if carrier == null or carrier.dead or carrier.owner != u.owner:
 		u.carrier = null
+		u.air_state = "returning"
+		u.had_base = true
 		return false
-	if str(u.get("air_state", "ready")) == "ready":
-		u.sortie_left = float(u.get("sortie_left", SORTIE)) - delta
+	u.sortie_left = float(u.get("sortie_left", SORTIE)) - delta
+	if u.sortie_left <= 0.0:
+		w.kill(u)
+		return true
+	if u.air_state == "ready":
 		var enemy = u.get("enemy")
+		var point: Vector3 = enemy.node.position if enemy != null and not enemy.dead else u.get("target", null) if u.get("target") != null else u.node.position
+		var Air = load("res://scripts/air_operations.gd")
+		var returning: bool = Air.mission_blocked(w, u, point, 4.0, float(u.range) * 0.75) != ""
 		if (enemy == null or enemy.dead) and u.get("target") == null:
 			u.idle_air = float(u.get("idle_air", 0.0)) + delta
 		else:
 			u.idle_air = 0.0
-		if float(u.sortie_left) <= 0.0 or int(u.get("ammo", 1)) <= 0 or float(u.idle_air) > 4.0:
+		if returning or int(u.get("ammo", 1)) <= 0 or float(u.idle_air) > 4.0:
 			u.air_state = "returning"
 		else:
 			return false

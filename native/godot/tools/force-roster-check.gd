@@ -112,9 +112,8 @@ func run() -> void:
 	check(w.missiles.platforms_for("antiShip").has(made.missileBoat) and not w.missiles.platforms_for("nuke").has(made.missileBoat) and not w.missiles.platforms_for("cruise").has(made.missileBoat), "missile boat only extends conventional anti-ship launch platforms")
 	made.missileBoat.selected = true
 	w.missiles.stock.antiShip = 1
-	w.missiles.stock.nuke = 1
 	w.missiles.stock.cruise = 1
-	w.hud._fill_launch(true)
+	w.hud._fill_launch([made.missileBoat])
 	await process_frame
 	var launches: Array = w.hud._launch_row.find_children("*", "Button", true, false)
 	check(launches.size() == 1 and launches[0].text.contains(w.missiles.def_of("antiShip").name), "selected missile boat displays only its national anti-ship launch button")

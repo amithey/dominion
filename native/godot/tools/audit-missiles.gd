@@ -36,6 +36,21 @@ func clear_field() -> void:
 func land_spot(offset: Vector3) -> Vector3:
 	return w.land_point(home + offset, 40.0)
 
+func fire_payload(ms: Node, key: String, platform: Dictionary, target: Vector3) -> String:
+	if ms.local_weapon(key):
+		ms.finished(key, platform)
+	else:
+		ms.stock[key] = 1
+	if platform.get("fly", false):
+		platform.node.position = target + Vector3(8, float(platform.altitude), 0)
+		platform.air_state = "ready"
+	var result: Dictionary = ms.launch_from(key, target, 0, platform)
+	if result.has("error"):
+		return result.error
+	if result.get("pending", false):
+		ms._update_air_payloads()
+	return "launched"
+
 func run() -> void:
 	K = Kit.new(self, "missiles")
 	w = await K.boot({"map": "island", "players": 3, "nation": 0}, "easy", true)
@@ -162,16 +177,16 @@ func run() -> void:
 		w.rebuild_grid()
 		if cat == "nuclear" and w.get("defcon") != null and w.defcon != null:
 			w.defcon.authorise_release()
-		ms.stock[key] = 1
+		var chosen: Dictionary = launcher if launcher != null and platforms.has(launcher) else platforms[0]
 		var seen: int = w.intercepts.size()
 		var hp0: float = enemy.hp
 		var units0: Array = w.units.filter(func(u): return u.owner == 1 and not u.dead).map(func(u): return float(u.hp))
-		var said: String = ms.launch(key, target_at)
+		var said := fire_payload(ms, key, chosen, target_at)
 		if not (said.contains("launched") or said.contains("LAUNCHED")):
 			K.fail("missile-launch", key, "did not launch: %s" % said)
 			continue
-		if int(ms.stock.get(key, 0)) != 0:
-			K.fail("missile-launch", key, "the stored weapon was not used (stock %d)" % int(ms.stock.get(key, 0)))
+		if ms.total_for(key) != 0:
+			K.fail("missile-launch", key, "the stored weapon was not used (stock %d)" % ms.total_for(key))
 			continue
 		var flew: bool = ms.flying.size() > 0
 		settle(14.0)
@@ -180,8 +195,7 @@ func run() -> void:
 		while shot_down < 5 and w.intercepts.slice(seen).any(func(i): return str(i.type) == key and i.hit):
 			shot_down += 1
 			seen = w.intercepts.size()
-			ms.stock[key] = 1
-			ms.launch(key, target_at)
+			fire_payload(ms, key, chosen, target_at)
 			settle(14.0)
 		var landed: bool = ms.flying.is_empty()
 		var hurt: bool = enemy.dead or enemy.hp < hp0 - 0.5

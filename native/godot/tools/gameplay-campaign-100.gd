@@ -178,7 +178,20 @@ func systems_checks() -> void:
 	var jets: Array = mine("jet").filter(func(u): return is_same(u.get("air_base"), base))
 	check(jets.size() == 2 and jets.all(func(u): return u.air_state == "parked"), "two jets are trained and park on the airfield (%d)" % jets.size())
 	var jet: Dictionary = jets[0] if not jets.is_empty() else w.spawn_unit("jet", base.root.position, 0)
-	var target: Dictionary = w.buildings.filter(func(b): return b.owner == foe and not b.dead and b.key != "hq")[0] if w.buildings.any(func(b): return b.owner == foe and not b.dead and b.key != "hq") else foe_hq
+	# The nearest enemy building within the jet's flight range (air_operations.gd action_radius); a target beyond it is
+	# refused, as it should be, so one is put within reach when the enemy has nothing that close.
+	var reach: float = w.AirOperations.action_radius(jet)
+	var target: Dictionary = foe_hq
+	var nearest := INF
+	for b in w.buildings:
+		if b.owner == foe and not b.dead:
+			var gap: float = Vector2(b.root.position.x - base.root.position.x, b.root.position.z - base.root.position.z).length()
+			if gap < nearest:
+				nearest = gap
+				target = b
+	if nearest > reach * 0.6:
+		var toward: Vector3 = (foe_hq.root.position - base.root.position).normalized()
+		target = w.place_building("barracks", w.land_point(base.root.position + toward * reach * 0.45, 20.0), foe, true)
 	var hp0: float = target.hp
 	w.order_attack([jet], target)
 	var states := {}
@@ -192,12 +205,12 @@ func systems_checks() -> void:
 	var home_again := func(): return jet.dead or jet.air_state in ["landing", "taxi_in", "parked", "rearming"]
 	sim(120.0, false, home_again)
 	check(home_again.call(), "it flies home to its base (%s)" % jet.air_state)
-	# On its slot the crews rearm it; with its strike order still standing it
-	# then takes off again.
+	# On its slot the crews rearm it; with its strike order still standing it then takes off again, and with its
+	# target gone it waits parked, full (air_operations.gd: an aircraft with no mission does not take off).
 	var seen := {"rearmed": false}
 	var cap: int = preload("res://scripts/air_operations.gd").CAPACITY.get("jet", 2)
 	sim(90.0, false, func():
-		if jet.air_state in ["rearming", "taxi_out"] and int(jet.get("ammo", 0)) >= cap: seen.rearmed = true
+		if jet.air_state in ["rearming", "taxi_out", "parked"] and int(jet.get("ammo", 0)) >= cap: seen.rearmed = true
 		return jet.dead or seen.rearmed)
 	check(not jet.dead and seen.rearmed, "and is rearmed on the ground (ammo %d of %d)" % [int(jet.get("ammo", 0)), cap])
 
@@ -256,12 +269,12 @@ func systems_checks() -> void:
 	eco.recalculate()
 	# A missile this nation fields (the European Union has cruise missiles, no tactical ballistic ones).
 	var kind := "tactical" if w.missiles.locked("tactical") == "" else "cruise"
-	var stock0: int = int(w.missiles.stock.get(kind, 0))
+	var stock0: int = w.missiles.total_for(kind)
 	var why_silo: String = w.missiles.produce(silo, kind)
 	w.update_training(1.0)
-	var early: int = int(w.missiles.stock.get(kind, 0))
+	var early: int = w.missiles.total_for(kind)
 	for i in range(int(w.missiles.build_time(kind)) + 3): w.update_training(1.0)
-	check(early == stock0 and int(w.missiles.stock.get(kind, 0)) == stock0 + 1, "a silo builds a %s missile in its time (%d s), not at once%s" % [kind, int(w.missiles.build_time(kind)), (" (" + why_silo + ")") if why_silo != "" else ""])
+	check(early == stock0 and w.missiles.total_for(kind) == stock0 + 1, "a silo builds a %s missile in its time (%d s), not at once%s" % [kind, int(w.missiles.build_time(kind)), (" (" + why_silo + ")") if why_silo != "" else ""])
 
 	# ------------------------------------------------ supply (14-17)
 	var village_at: Vector3 = Vector3.INF

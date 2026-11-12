@@ -29,7 +29,10 @@ func run() -> void:
 	var Air = preload("res://scripts/airlift.gd")
 	var heli = w.units.filter(func(u): return u.owner == 0 and u.key == "helicopter")[0]
 	sim(120.0)
-	check(heli.air_state == "ready" and float(heli.sortie_left) > 80.0, "a helicopter hovering idle keeps its flight time (%s, %.0f s)" % [heli.air_state, float(heli.sortie_left)])
+	# Hovering costs fuel too, but slowly (air_operations.gd: 30% of its flying rate): after two idle minutes it is still
+	# ready for orders with most of its flight time left (it is not stranded, and it flies home to refuel when low).
+	var idle_burn: float = 120.0 * float(w.AirOperations.burn_rate(heli)) * 0.3
+	check(heli.air_state == "ready" and float(heli.sortie_left) > float(w.AirOperations.fuel_capacity(heli)) - idle_burn * 1.25, "a helicopter hovering idle burns only its slow idle rate and stays ready (%s, %.0f s left, idle burn %.0f s)" % [heli.air_state, float(heli.sortie_left), idle_burn])
 	var soldiers = w.units.filter(func(u): return u.owner == 0 and u.key == "soldier").slice(0, 4)
 	for sd in soldiers: sd.node.position = heli.node.position + Vector3(3, 0, 0)
 	check(Air.order_board(w, soldiers, heli) == 4, "four soldiers board it")

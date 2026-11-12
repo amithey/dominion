@@ -277,8 +277,9 @@ func _ai_nuclear() -> void:
 		posture[owner] = want if want < int(posture[owner]) or w.game_time - used_at > USED_LOCK else int(posture[owner])
 		if int(posture[owner]) != 2 or not d.at_war(owner, 0) or not existential(owner) or w.research.ai_tech(owner) < 6.0:
 			continue
-		if w.get("wmd") != null and w.wmd != null and not w.wmd.armed(owner, "nuclear"):
-			continue   # no Strategic Weapons Complex: no warheads to use first
+		var key := "tacticalNuke" if Factions.identity(w, owner) == "russia" else "nuke"
+		if w.missiles.ready_platforms(key, owner).is_empty():
+			continue
 		if w.game_time - float(n.get("nuked_at", -1000.0)) < 240.0:
 			continue
 		var chance := 0.04
@@ -289,28 +290,24 @@ func _ai_nuclear() -> void:
 		if Strategic.armed(w, 0): chance *= 0.5   # automated retaliation
 
 		if randf() < chance:
-			_strike(owner, "facing defeat", "tacticalNuke" if Factions.identity(w, owner) == "russia" else "nuke")
+			_strike(owner, "facing defeat", key)
 
 ## The player can strike back: nuclear missiles stored or a nuclear submarine at sea.
 func deterrent(owner: int) -> bool:
 	if owner != 0 or not nuclear(0):
 		return false
-	var stored := 0
 	for key in preload("res://scripts/wmd.gd").NUCLEAR:
-		stored += int(w.missiles.stock.get(key, 0))
-	return stored > 0 or w.units.any(func(u): return u.owner == 0 and not u.dead and u.key == "nuclearSub")
+		if w.missiles.available_to(owner, key) and not w.missiles.ready_platforms(key, owner).is_empty():
+			return true
+	return false
 
 ## Rival `owner` fires a nuclear missile at the player's town nearest to it.
-func _strike(owner: int, why: String, key := "nuke") -> void:
+func _strike(owner: int, why: String, key := "nuke") -> bool:
 	var d: Node = w.diplomacy
-	# Warheads come from a Strategic Weapons Complex; a second strike may come from a submarine.
-	var wm = w.get("wmd")
-	if wm != null and not wm.armed(owner, "nuclear") and not wm.at_sea(owner):
-		return
-	if not w.missiles.available_to(owner, key): return
-	var platforms: Array = w.missiles.platforms_for(key, owner)
+	if not w.missiles.available_to(owner, key): return false
+	var platforms: Array = w.missiles.ready_platforms(key, owner)
 	if platforms.is_empty() or d.defeated(owner):
-		return
+		return false
 	var from: Vector3 = platforms[0].node.position
 	var target = null
 	for b in w.buildings:
@@ -318,11 +315,16 @@ func _strike(owner: int, why: String, key := "nuke") -> void:
 			if target == null or b.root.position.distance_to(from) < target.root.position.distance_to(from):
 				target = b
 	if target == null:
-		return
+		return false
+	var result: Dictionary = w.missiles.launch_from(key, target.root.position, owner)
+	if result.has("error"):
+		return false
 	for n in w.ai.nations:
 		if int(n.id) == owner: n.nuked_at = w.game_time
-	w.missiles.fly(key, from + Vector3.UP * 3.0, target.root.position, owner)
+	if result.get("pending", false):
+		return true
 	w.hud.notice("NUCLEAR LAUNCH DETECTED: %s has fired a %s at your %s (%s). Air defence may stop it." % [d.name_of(owner), w.missiles.def_of(key).get("name", "nuclear missile").to_lower(), target.def.name, why])
+	return true
 
 func capture() -> Dictionary:
 	var p := {}

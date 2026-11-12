@@ -74,7 +74,7 @@ func run() -> void:
 	w.map.nations[0] = original.duplicate(true)
 	for key in ["nuclearProgram", "ballisticTech", "precisionStrikes", "guidedMunitions"]: w.research.progress[key] = {"stage": 3, "work": 0, "paid": false}
 	w.research._recompute()
-	w.missiles.stock.bunkerBuster = 1
+
 	var fake: Dictionary = {"key": "missileSilo", "owner": 1, "built": true, "dead": false, "queue": []}
 	check(w.missiles.produce(fake, "tactical").contains("another nation"), "enemy facility cannot spend player's stock/resources")
 	var silos: Array = w.missiles.silos()
@@ -82,16 +82,22 @@ func run() -> void:
 		var site = w.test_site("missileSilo", w.start + Vector3(65, 0, 45))
 		silos.append(w.place_building("missileSilo", site, 0, true))
 	var money: float = w.economy.res.money
+	w.missiles.finished("bunkerBuster", silos[0])
 	var shot: String = w.missiles.launch("bunkerBuster", w.start + Vector3(120, 0, 120), silos[0])
-	check(shot.contains("platform") and w.missiles.stock.bunkerBuster == 1 and w.economy.res.money == money, "B61 cannot launch from silo; rejection is atomic")
+	check(shot.contains("platform") and w.missiles.local_count(silos[0], "bunkerBuster") == 1 and w.economy.res.money == money, "B61 cannot launch from silo; rejection is atomic")
 	var aircraft: Dictionary = w.spawn_unit("bomber", w.start + Vector3(25, 0, 25), 0)
 	aircraft.air_state = "ready"
-	var launched: String = w.missiles.launch("bunkerBuster", w.start + Vector3(120, 0, 120), aircraft)
-	check(launched.contains("launched") and w.missiles.stock.bunkerBuster == 0, "gravity bomb launches from an owned strike aircraft and spends one payload")
-	w.missiles.stock.tactical = 1
+	var target: Vector3 = w.start + Vector3(120, 0, 120)
+	aircraft.node.position = target + Vector3(8, aircraft.altitude, 0)
+	aircraft.air_state = "ready"
+	w.missiles.finished("bunkerBuster", aircraft)
+	var mission: Dictionary = w.missiles.launch_from("bunkerBuster", target, 0, aircraft)
+	w.missiles._update_air_payloads()
+	check(mission.get("pending", false) and w.missiles.local_count(aircraft, "bunkerBuster") == 0, "gravity bomb spends one carried payload on release")
+	w.missiles.finished("tactical", silos[0])
 	var enemy_silo: Dictionary = silos[0].duplicate()
 	enemy_silo.owner = 1
-	check(w.missiles.launch("tactical", w.start, enemy_silo).contains("cannot") and w.missiles.stock.tactical == 1, "explicit enemy launch platform rejected without consuming stock")
+	check(w.missiles.launch("tactical", w.start, enemy_silo).contains("cannot") and w.missiles.local_count(silos[0], "tactical") == 1, "explicit enemy launch platform rejected without consuming stock")
 	w.missiles.stock.hypersonic = 1
 	check(w.missiles.launch("hypersonic", w.start).contains("Future") and w.missiles.stock.hypersonic == 1, "old save inventory cannot bypass programme gate")
 	w.research.progress[A.PROGRAM] = {"stage": 3, "work": 0, "paid": false}

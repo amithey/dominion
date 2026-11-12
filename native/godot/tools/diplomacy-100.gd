@@ -577,7 +577,8 @@ func run() -> void:
 	var r_war: float = d.rel(0, 1)
 	c.propose("prisoners")
 	check(d.rel(0, 1) >= r_war + 5.9 and d.at_war(0, 1), "a prisoner exchange warms relations a little; the war goes on")
-	w.missiles.stock["nuke"] = 1
+	var arsenal: Dictionary = w.place_building("missileSilo", w.start + Vector3(40, 0, 45), 0, true)
+	w.missiles.finished("nuke", arsenal)
 	foe.next_attack = 10.0
 	c.propose("escalation")
 	check(float(foe.next_attack) >= 249.0, "an escalation warning backed by a nuclear missile holds their offensive back")

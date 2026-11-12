@@ -193,9 +193,9 @@ func run() -> void:
 
 	# 26: missiles with nothing to launch from.
 	for u in w.missiles.launch_ships(0): w.kill(u)   # the starting destroyer and strategic submarine
-	w.missiles.stock["tactical"] = 1
+	w.missiles.unassigned["tactical"] = 1
 	var launched: String = w.missiles.launch("tactical", hq(1).root.position)
-	check(launched != "" and int(w.missiles.stock.tactical) == 1, "no launch without a silo or a launch ship (%s)" % launched)
+	check(launched != "" and w.missiles.total_for("tactical") == 1, "no launch without a silo or a launch ship (%s)" % launched)
 
 	# 27: a national power twice in a row.
 	var power: Dictionary = Powers.power_of(w, 0)

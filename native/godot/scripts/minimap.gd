@@ -151,6 +151,18 @@ func _draw() -> void:
 		draw_rect(Rect2(p - Vector2(s, s) * 0.5, Vector2(s, s)), bcol)
 		if b.key == "hq":
 			draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), Color.WHITE, false, 1.0)
+	for aircraft in world.units:
+		if aircraft.dead or not aircraft.selected or aircraft.owner != 0 or not aircraft.get("fly", false):
+			continue
+		var radius: float = world.AirOperations.action_radius(aircraft)
+		if radius > 0.0:
+			var outline := PackedVector2Array()
+			var centre: Vector3 = aircraft.node.position
+			for step in range(49):
+				var angle := TAU * float(step) / 48.0
+				outline.append(to_map(centre + Vector3(cos(angle), 0.0, sin(angle)) * radius))
+			draw_polyline(outline, Color(0.45, 0.8, 1.0, 0.5), 1.0, true)
+		break
 	for u in world.units:
 		if u.dead or (fog != null and not fog.shows(u)):
 			continue

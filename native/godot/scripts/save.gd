@@ -95,6 +95,11 @@ func capture() -> Dictionary:
 			"ammo": u.get("ammo", -1), "air_state": u.get("air_state", "ready"),
 			"service_left": u.get("service_left", 0.0),
 			"sortie_left": u.get("sortie_left", 90.0),
+			"patrol": {"point": _v(u.patrol.point), "remaining": u.patrol.remaining, "on_station": u.patrol.on_station} if u.has("patrol") else null,
+			"stay": u.get("stay", false), "ferrying": u.get("ferrying", false), "had_base": u.get("had_base", false),
+			"taxi_from": _v(u.get("taxi_from", u.node.position)), "taxi_progress": u.get("taxi_progress", 0.0),
+			"takeoff_roll": u.get("takeoff_roll", 0.0),
+			"departure": _v(u.departure) if u.has("departure") else null,
 			"air_base": _v(u.air_base.node.position) if u.get("air_base") != null else null,
 			"landing_start": _v(u.get("landing_start", u.node.position)), "landing_progress": u.get("landing_progress", 0.0),
 			"ground_attack": _v(u.ground_attack) if u.has("ground_attack") else null,
@@ -297,17 +302,31 @@ func restore(data: Dictionary) -> void:
 			u.air_state = s.get("air_state", "ready")
 			u.service_left = float(s.get("service_left",0.0))
 			u.sortie_left = maxf(0.0, float(s.get("sortie_left", 90.0)))
+			u.stay = bool(s.get("stay", u.air_state == "parked"))
+			u.had_base = bool(s.get("had_base", s.get("air_base") != null))
+			u.ferrying = bool(s.get("ferrying", false))
+			u.taxi_from = _p(s.get("taxi_from", s.pos))
+			u.taxi_progress = float(s.get("taxi_progress", 0.0))
+			u.takeoff_roll = float(s.get("takeoff_roll", 0.0))
+			if s.get("departure") != null:
+				u.departure = _p(s.departure)
+			if s.get("patrol") != null:
+				u.patrol = {"point": _p(s.patrol.point), "remaining": float(s.patrol.remaining), "on_station": bool(s.patrol.on_station)}
+				u.orbit = u.patrol.point
 			u.landing_start = _p(s.get("landing_start",s.pos))
 			u.landing_progress = float(s.get("landing_progress",0.0))
 			if s.get("air_base") != null:
 				for b in world.buildings:
-					if b.node.position.distance_to(_p(s.air_base)) < 0.5 and world.AirOperations.available(world,u,b):
-						u.air_base = b
+					if b.node.position.distance_to(_p(s.air_base)) < 0.5 and b.owner == u.owner and world.AirOperations.is_base(b):
+						var slot: int = world.AirOperations.free_slot(world, b)
+						if slot >= 0:
+							world.AirOperations.assign(world, u, b, slot)
+						break
 		if s.target != null:
 			u.target = _p(s.target)
 			u.attack_move = bool(s.attack_move)
 		world.place_on_ground(u, _p(s.pos))
-		if u.get("air_state", "ready") in ["landing","rearming","takeoff"]:
+		if u.get("air_state", "ready") in ["ready", "returning", "no base", "parked", "landing", "taxi_in", "rearming", "taxi_out", "takeoff"] and u.get("fly", false):
 			u.node.position = _p(s.pos)
 		if s.get("ground_attack") != null:
 			world.order_bombard([u],_p(s.ground_attack))

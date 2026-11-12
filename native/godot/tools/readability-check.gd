@@ -48,23 +48,25 @@ func run() -> void:
 	for c in cards(): check(c.find_child("ActionLabel", true, false).text.begins_with("Produce"), "Production never arms a weapon")
 	await shot("missiles")
 	check(w.hud._extra.defcon[1].get_global_rect().end.x < w.hud.find_child("TimeControls", true, false).get_child(0).get_global_rect().position.x, "Resource strip stays clear of time controls at 100%")
-	w.missiles.stock.tactical = 2
+	for i in range(w.missiles.storage_slots(silo)):
+		w.missiles.finished("tactical", silo)
 	w.hud._missile_view = "stockpile"
 	w.hud._shown_key = ""
 	w.hud._update_panel()
 	await verify_cards()
-	check(cards().size() == 1, "Stockpile shows owned weapons only")
-	if not cards().is_empty():
-		check(cards()[0].find_child("ActionLabel", true, false).text.contains("Choose target") and cards()[0].find_child("ActionLabel", true, false).text.contains("1 stored weapon"), "Targeting action and inventory use are explicit")
-		cards()[0].pressed.emit()
-		check(w.missiles.stock.tactical == 2, "Selecting a target does not spend inventory")
+	var targets: Array = cards().filter(func(c): return c.find_child("ActionLabel", true, false).text.begins_with("Choose target"))
+	check(cards().size() == 2 and targets.size() == 1, "Stockpile offers transfer and launch for the local weapon")
+	if not targets.is_empty():
+		check(targets[0].find_child("ActionLabel", true, false).text.contains("1 stored weapon"), "Targeting action and inventory use are explicit")
+		targets[0].pressed.emit()
+		check(w.missiles.local_count(silo, "tactical") == w.missiles.storage_slots(silo), "Selecting a target does not spend inventory")
 		w.cancel_placement()
 	await shot("stockpile")
 	w.hud._missile_view = "production"
 	w.hud._shown_key = ""
 	w.hud._update_panel()
 	await verify_cards()
-	check(cards()[0].disabled and cards()[0].tooltip_text.contains("Storage full"), "Full storage explains and disables production")
+	check(cards().any(func(c): return c.disabled and c.tooltip_text.to_lower().contains("storage full")), "Full storage explains and disables production")
 	w.ui_scale = 0.8
 	w.apply_ui_scale()
 	await verify_cards()

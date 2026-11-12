@@ -73,10 +73,10 @@ func run() -> void:
 	# ---- 2: a submarine's card offers only what it can fire
 	var ms: Node = w.missiles
 	for m in ms.types(): ms.stock[m] = 0
-	ms.stock["tactical"] = 2   # a silo-only missile
-	ms.stock["nuke"] = 1       # a silo or a strategic submarine
 	var silo: Dictionary = w.place_building("missileSilo", hq + Vector3(30, 0, 40), 0, true)
 	var sub: Dictionary = w.spawn_unit("nuclearSub", sea + Vector3(-20, 0, -20), 0)
+	ms.finished("tactical", silo)
+	ms.finished("nuke", sub)
 	for u in w.units: u.selected = false
 	sub.selected = true
 	w.hud._selected = null
@@ -101,10 +101,13 @@ func run() -> void:
 	check(ms.platforms_for("antiRadar").has(jet), "a jet parked at its airfield can launch it")
 	jet.air_state = "rearming"
 	check(not ms.platforms_for("antiRadar").has(jet), "but not one being rearmed")
-	jet.air_state = "parked"
+	var airfield: Dictionary = w.place_building("airfield", hq + Vector3(20, 0, 45), 0, true)
+	airfield.supplied = true
+	check(w.AirOperations.park_new(w, jet, airfield), "the jet is parked at an operating airfield")
 	ms.stock["antiRadar"] = 1
-	var said: String = ms.launch("antiRadar", hq + Vector3(120, 0, 0))
-	check(said.contains("launched"), "it launches: %s" % said)
+	var aim := hq + Vector3(120, 0, 0)
+	var said: String = ms.launch("antiRadar", aim, jet)
+	check(said.contains("mission assigned") and ms.pooled_available("antiRadar") == 0 and ms.stock.antiRadar == 1, "the parked jet receives a launch mission and reserves the missile: %s" % said)
 
 	# ---- 4: nuclear weapons launch from the strategic complex too
 	silo.dead = true

@@ -313,7 +313,10 @@ func armed(owner: int, kind: String) -> bool:
 
 ## A nuclear submarine at sea: a second strike survives the loss of the complexes.
 func at_sea(owner: int) -> bool:
-	return w.units.any(func(u): return int(u.owner) == owner and not u.dead and u.key == "nuclearSub")
+	for key in NUCLEAR:
+		if w.missiles.ready_platforms(key, owner).any(func(u): return u.key == "nuclearSub"):
+			return true
+	return false
 
 ## A weapons facility destroyed (world.destroy_building): what it held is lost,
 ## and a little of it spreads.
@@ -327,16 +330,19 @@ func facility_destroyed(b: Dictionary) -> void:
 	var d: Node = w.diplomacy
 	var what := "Strategic Weapons Complex" if nuclear else "Special Weapons Laboratory"
 	if owner == 0:
-		# The weapons it held: the stock beyond what the remaining facilities hold is lost.
 		var ms: Node = w.missiles
-		var cat := "nuclear" if nuclear else "special"
 		var lost := 0
-		while ms.stored(cat) > ms.capacity(cat):
-			for k in ms.stock.keys():
-				if ms.category(k) == cat and int(ms.stock[k]) > 0:
-					ms.stock[k] = int(ms.stock[k]) - 1
-					lost += 1
-					break
+		if nuclear:
+			for key in NUCLEAR:
+				lost += ms.local_count(b, key)
+		else:
+			var excess := maxi(0, ms.stored("special") - ms.capacity("special"))
+			for key in ms.stock:
+				if ms.category(key) == "special":
+					var removed := mini(excess, int(ms.stock[key]))
+					ms.stock[key] -= removed
+					excess -= removed
+					lost += removed
 		w.hud.notice("Your %s has been destroyed%s." % [what, " with %d weapon%s in it" % [lost, "" if lost == 1 else "s"] if lost > 0 else ""])
 	else:
 		var left := armed(owner, "nuclear" if nuclear else "special")
@@ -653,7 +659,8 @@ func _ai_use() -> void:
 		if platforms.is_empty() or target == Vector3.INF:
 			continue
 		n.wmd_at = w.game_time
-		w.missiles.fly(key, platforms[0].node.position + Vector3.UP * 3.0, target, owner)
+		if w.missiles.launch_from(key, target, owner, platforms[0]).has("error"):
+			continue
 		w.hud.notice("%s has fired %s at your %s." % [d.name_of(owner), MISSILES[key].name.to_lower(), "town" if key == "bioweapon" else "troops"])
 	# A threshold state at war may break out (cbrn_data.THRESHOLD).
 	for n in w.ai.nations:

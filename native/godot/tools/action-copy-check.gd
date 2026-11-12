@@ -69,13 +69,14 @@ func run() -> void:
 		cards()[0].pressed.emit()
 		check(silo.queue.size() == queue_size + 1 and w.missiles.stored() == amount, "Production button still queues one weapon without firing it")
 		w.cancel_queued(silo, 0)
-	w.missiles.stock.tactical = 1
+	w.missiles.finished("tactical", silo)
 	w.hud._missile_view = "stockpile"; w.hud._shown_key = ""; w.hud._update_panel()
 	await scan("Stockpile targeting")
-	check(cards().size() == 1 and cards()[0].tooltip_text.contains("launch one"), "Stockpile explains the actual next click")
-	if not cards().is_empty():
-		cards()[0].pressed.emit()
-		check(w.missile_aim == "tactical" and w.missiles.stock.tactical == 1, "Target selection still preserves inventory until launch")
+	var targets: Array = cards().filter(func(c): return c.find_child("ActionLabel", true, false).text.begins_with("Choose target"))
+	check(targets.size() == 1 and cards().size() == 2, "Stockpile offers a transfer and a launch from this silo")
+	if not targets.is_empty():
+		targets[0].pressed.emit()
+		check(w.missile_aim == "tactical" and w.missiles.local_count(silo, "tactical") == 1, "Target selection still preserves inventory until launch")
 		w.cancel_placement()
 	await shot("stockpile")
 	# Cover every payload installed in this campaign, including national families.

@@ -108,6 +108,17 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 	if world.match_config.get("style","standard")=="sandbox":
 		n.next_attack = maxf(n.next_attack,99999.0)
 	var s: float = n.speed
+	n.payload_think = float(n.get("payload_think", 0.0)) - delta
+	if n.payload_think <= 0.0 and world.missiles != null and world.diplomacy.at_war(0, n.id) and world.match_config.get("style", "standard") != "sandbox":
+		n.payload_think = 14.0
+		var tech: float = n.get("tech", 0.0)
+		if tech >= 2.0:
+			world.missiles.deploy_rival_payload(n.id, "tactical")
+			world.missiles.queue_rival_payload(n.id, "tactical")
+		if tech >= 4.0:
+			var nuclear := "tacticalNuke" if preload("res://scripts/national_arsenal.gd").identity(world, n.id) == "russia" else "nuke"
+			world.missiles.deploy_rival_payload(n.id, nuclear)
+			world.missiles.queue_rival_payload(n.id, nuclear)
 	var spies: Node = world.espionage
 	n.money += float(row(n).income) * delta * s * preload("res://scripts/additional_powers.gd").civic_income(world, n, delta) * (spies.income_mult(n.id) if spies else 1.0) * preload("res://scripts/faction_powers.gd").income_mult(world, n.id) * preload("res://scripts/national_profile.gd").ai_income(world, n.id) * (1.0 + 0.05 * floorf(float(n.get("tech", 0.0)))) * (world.support.ai_income_mult(n.id) if world.get("support") != null else 1.0) * (world.events.ai_income_mult(n.id) if world.get("events") != null else 1.0) * (world.wmd.ai_income_mult(n.id) if world.get("wmd") != null else 1.0) * (world.directorate.ai_income_mult(n.id) if world.get("directorate") != null and world.directorate != null else 1.0) * (world.crisis.ai_income_mult(n.id) if world.get("crisis") != null and world.crisis != null else 1.0)   # the home front; world events; sick towns; its AI economy; its crises
 	var cyber: bool = spies != null and spies.production_down(n.id) or preload("res://scripts/faction_powers.gd").production_blocked(world, n.id)
@@ -270,7 +281,7 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 			kinds = row[1]
 	# Only the missiles this nation really has (national_variants.gd: hypersonic ones).
 	var me: String = preload("res://scripts/national_arsenal.gd").identity(world, n.id)
-	kinds = kinds.filter(func(k): return world.missiles.available_to(n.id, k) and not world.missiles.platforms_for(k, n.id).is_empty())
+	kinds = kinds.filter(func(k): return world.missiles.available_to(n.id, k) and not world.missiles.ready_platforms(k, n.id).is_empty())
 	if kinds.is_empty():
 		return {}
 	# Only what it has found of the player's (fog_of_war.gd: its capital is known to all).
@@ -287,10 +298,17 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 			key = "cruise"
 		else:
 			target = sams[randi() % sams.size()]
-	n.money -= 400.0
-	var platforms: Array = world.missiles.platforms_for(key, n.id)
+	var platforms: Array = world.missiles.ready_platforms(key, n.id)
+	if platforms.is_empty():
+		return {}
 	var source: Dictionary = platforms[randi() % platforms.size()]
-	var m: Dictionary = world.missiles.fly(key, source.node.position + Vector3.UP * 3.0, target.root.position, n.id, not source.get("is_building", false))
+	var m: Dictionary = world.missiles.launch_from(key, target.root.position, n.id, source)
+	if m.has("error"):
+		return {}
+	if not world.missiles.local_weapon(key):
+		n.money -= 400.0
+	if m.get("pending", false):
+		return m
 	# Announced only by early warning (sitrep.gd): without intelligence you learn of it when it lands.
 	var def: Dictionary = world.missiles.def_of(key)
 	var eta: float = source.node.position.distance_to(target.root.position) / maxf(float(def.get("speed", 60.0)), 1.0)

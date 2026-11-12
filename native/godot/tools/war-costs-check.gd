@@ -135,9 +135,14 @@ func run() -> void:
 	Air.update(w, bomber, 0.1)
 	check(w.economy.res.oil == 988.0, "Taxi does not pay twice")
 	bomber.air_state = "ready"
-	bomber.sortie_left = 0.01
+	bomber.target = null
+	bomber.enemy = null
+	bomber.node.position = Air.approach_point(w, bomber, base) + Vector3.UP * 15.0
+	bomber.fuel_position = bomber.node.position
+	bomber.erase("fuel_check_in")
+	bomber.sortie_left = Air.landing_fuel(w, bomber, bomber.node.position, base) + Air.RESERVE_SECONDS * Air.burn_rate(bomber) * 0.5
 	Air.update(w, bomber, 0.2)
-	check(bomber.air_state in ["returning", "landing"], "Fuel endurance forces return")
+	check(bomber.air_state in ["returning", "landing"], "Fuel endurance forces return (state %s, fuel %.2f)" % [bomber.air_state, bomber.sortie_left])
 	funds()
 	w.economy.military_flow = {"money": 0.0, "oil": 0.0}
 	w.economy.tick()

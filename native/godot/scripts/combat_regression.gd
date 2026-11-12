@@ -50,14 +50,19 @@ static func run(w: Node) -> void:
 	base.supplied = true
 	var visited := {}
 	var service_time := 0.0
+	var ordered := false
 	for i in range(18000):
 		visited[jet.air_state] = true
 		if jet.air_state == "rearming":
 			service_time += 1.0/60.0
+		# Rearmed with no mission it waits on the apron; given one, it takes off again.
+		if jet.air_state == "parked" and visited.has("rearming") and not ordered:
+			ordered = true
+			jet.target = w.start + Vector3(0, 0, -80)
 		w.move_craft(jet,1.0/60.0)
 		if jet.air_state == "ready":
 			break
-	if jet.air_state != "ready" or jet.ammo != w.AirOperations.CAPACITY.jet or service_time<11.9 or not visited.has("landing") or not visited.has("takeoff"):
+	if jet.air_state != "ready" or jet.ammo != w.AirOperations.CAPACITY.jet or service_time<11.9 or not visited.has("landing") or not visited.has("parked") or not visited.has("takeoff"):
 		failures.append("Return / landing / timed rearm / takeoff cycle failed: %s" % jet.air_state)
 	jet.ammo = 2
 	var save: Dictionary = w.saves.capture()

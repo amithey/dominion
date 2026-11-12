@@ -135,9 +135,10 @@ func run() -> void:
 	if not d.at_war(0, nuke_rival): d.declare_war(0, nuke_rival)
 	for i in range(6): dc.update(2.0)
 	check(dc.level() == 3, "two nuclear powers at war: DEFCON 3 (%s)" % dc.cause())
-	w.missiles.stock["nuke"] = 1
+	var reserve: Dictionary = w.place_building("strategicComplex", home + Vector3(30, 0, 36), 0, true)
+	w.missiles.finished("nuke", reserve)
 	var blocked: String = w.missiles.launch("nuke", home + Vector3(300, 0, 0))
-	check(blocked.contains("DEFCON 2") and int(w.missiles.stock.nuke) == 1, "a nuclear missile cannot be released at posture 5")
+	check(blocked.contains("DEFCON 2") and w.missiles.local_count(reserve, "nuke") == 1, "a nuclear missile cannot be released at posture 5")
 	var bystander := -1
 	for i in range(1, d.n):
 		if i != nuke_rival and not d.at_war(0, i) and bystander < 0: bystander = i
@@ -157,7 +158,8 @@ func run() -> void:
 	var their_hq: Dictionary = w.buildings.filter(func(b): return b.owner == nuke_rival and b.key == "hq")[0]
 	# Its second strike comes from a submarine at sea (wmd.at_sea), whatever happens to its complexes.
 	var boomer_at = w.water_near(their_hq.root.position, 240)
-	w.spawn_unit("nuclearSub", boomer_at if boomer_at != null else their_hq.root.position, nuke_rival)
+	var boomer: Dictionary = w.spawn_unit("nuclearSub", boomer_at if boomer_at != null else their_hq.root.position, nuke_rival)
+	w.missiles.finished("nuke", boomer)
 	w.missiles.impact("nuke", their_hq.root.position, 0)
 	check(dc.level() == 1, "a nuclear weapon used: DEFCON 1")
 	var answered: bool = dc.retaliation.has(nuke_rival)

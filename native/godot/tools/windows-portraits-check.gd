@@ -185,7 +185,7 @@ func run() -> void:
 	root.content_scale_size = Vector2i(1280, 800)
 	root.size = Vector2i(1280, 800)
 	await frames(8)
-	check(hud._prod.position.x >= 12 and hud._prod.get_global_rect().end.x <= 1268.1 and hud._prod.position.y <= 80, "viewport resize brings moved window back into reach")
+	check(hud._prod.position.x >= 12 and hud._prod.get_global_rect().end.x <= 1268.1 and hud._prod.position.y >= 56 and hud._prod.get_global_rect().end.y <= 788.1, "viewport resize brings moved window back into reach, all of it on the smaller screen (at %s, ends at %s)" % [str(hud._prod.position), str(hud._prod.get_global_rect().end)])
 	root.content_scale_factor = 0.8
 	await frames(8)
 	await drag(hud._prod, Vector2(500, 130))

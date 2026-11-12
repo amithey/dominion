@@ -138,15 +138,24 @@ func run() -> void:
 	apps.commission(0, "infoShield")
 
 	# ---- automated retaliation
+	w.research.progress["ballisticTech"].stage = 3
+	w.research.progress["nuclearProgram"].stage = 3
+	w.research._recompute()
+	check(w.missiles.locked("nuke") == "", "retaliation payload unlocked: %s" % w.missiles.locked("nuke"))
 	check(Strategic.armed(w, 0), "the dead hand is armed")
-	for key in preload("res://scripts/wmd.gd").NUCLEAR: w.missiles.stock[key] = 0
-	w.missiles.stock["nuke"] = 3
+	var strategic_sites: Array = w.buildings.filter(func(b): return b.owner == 0 and b.key == "missileSilo" and not b.dead)
+	if strategic_sites.is_empty():
+		check(false, "retaliation fixture needs an operational missile silo")
+		quit(1)
+		return
+	for i in range(3):
+		w.missiles.finished("nuke", strategic_sites[0])
 	var flying: int = w.missiles.flying.size()
 	w.defcon.nuclear_used(1, [0])
-	check(int(w.missiles.stock.nuke) == 2 and w.missiles.flying.size() == flying + 1, "a nuclear attack is answered by the machine, with no order given")
-	check(Strategic.accident(w, 0, 0.99) == "" and int(w.missiles.stock.nuke) == 2, "most false warnings fire nothing")
+	check(w.missiles.total_for("nuke") == 2 and w.missiles.flying.size() == flying + 1, "a nuclear attack is answered by the machine, with no order given")
+	check(Strategic.accident(w, 0, 0.99) == "" and w.missiles.total_for("nuke") == 2, "most false warnings fire nothing")
 	var fired: String = Strategic.accident(w, 0, 0.0)
-	check(fired.contains("false") and int(w.missiles.stock.nuke) == 1, "but an armed machine can fire on a false warning: %s" % fired.left(90))
+	check(fired.contains("false") and w.missiles.total_for("nuke") == 1, "but an armed machine can fire on a false warning: %s" % fired.left(90))
 	var p_plain: float = Strategic.ACCIDENT * (1.0 - 0.6 * apps.factor(0, "strategic"))
 	check(apps.factor(0, "strategic") > 0.0 and p_plain < Strategic.ACCIDENT, "strategic warning verification makes the accident rarer (%.3f)" % p_plain)
 	check(apps.eligible(1, "deadHand") != "" or F.identity(w, 1) == "russia", "a pledged rival (%s) may not automate: %s" % [F.identity(w, 1), apps.eligible(1, "deadHand")])

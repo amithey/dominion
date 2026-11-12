@@ -75,8 +75,8 @@ func run() -> void:
 
 	# ---- the nuclear release decision
 	w.defcon.posture[0] = 5
-	w.missiles.stock["nuke"] = 1
-	w.place_building("missileSilo", w.test_site("missileSilo", w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0].root.position + Vector3(-50, 0, 40)), 0, true)
+	var release_silo: Dictionary = w.place_building("missileSilo", w.test_site("missileSilo", w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0].root.position + Vector3(-50, 0, 40)), 0, true)
+	w.missiles.finished("nuke", release_silo)
 	var letters0: int = w.hud._letters.size() + (1 if w.hud._letter_box != null else 0)
 	w.begin_missile("nuke")
 	var letters1: int = w.hud._letters.size() + (1 if w.hud._letter_box != null else 0)
@@ -125,7 +125,7 @@ func run() -> void:
 	var complex: Dictionary = w.place_building("strategicComplex", w.test_site("strategicComplex", home2 + Vector3(70, 0, -70)), 0, true)
 	var made: String = ms.produce(complex, "nuke")
 	check(ms.capacity("nuclear") == 2 and made == "" and complex.queue.size() == 1, "a complex holds two and assembles one (%d; %s)" % [ms.capacity("nuclear"), made])
-	ms.stock["nuke"] = 2
+	ms.finished("nuke", complex)
 	check(ms.stored("conventional") == ms.stored() and ms.stored("nuclear") == 2, "warheads do not take the conventional missiles' room")
 
 	# ---- rivals need their facilities too
@@ -142,16 +142,20 @@ func run() -> void:
 	var hq1: Vector3 = w.buildings.filter(func(b): return b.owner == 1 and b.key == "hq")[0].root.position
 	var cn_complex: Dictionary = w.place_building("strategicComplex", w.test_site("strategicComplex", hq1 + Vector3(-60, 0, 50)), 1, true)
 	w.defcon._strike(1, "test")
-	check(ms.flying.size() == fly0 + 1, "with one, it can")
+	check(ms.flying.size() == fly0, "an empty complex cannot launch")
+	ms.finished("nuke", cn_complex)
+	w.defcon._strike(1, "test")
+	check(ms.flying.size() == fly0 + 1, "with a loaded complex, it can")
 	cn_complex.last_by = 0
 	w.destroy_building(cn_complex)
 	check(not w.wmd.armed(1, "nuclear") and w.wmd.zones.any(func(z): return z.at.distance_to(cn_complex.root.position) < 1.0), "destroying it disarms the rival (and scatters a little fissile material)")
 	# Your own complex lost: the warheads it held go with it.
 	var mine: Dictionary = w.buildings.filter(func(b): return b.owner == 0 and b.key == "strategicComplex" and not b.dead)[0]
 	for b in w.buildings.filter(func(x): return x.owner == 0 and x.key == "strategicComplex" and not x.dead and x != mine): w.destroy_building(b)
-	ms.stock["nuke"] = 2
+	var held: int = ms.local_count(mine, "nuke")
+	var before_loss: int = ms.stored("nuclear")
 	w.destroy_building(mine)
-	check(ms.stored("nuclear") == 0, "your complex destroyed: the warheads in it are lost")
+	check(ms.stored("nuclear") == before_loss - held, "your complex destroyed: the warheads in it are lost")
 
 	# ---- the new conventional missiles
 	var silo_now: Array = ms.listed_at("missileSilo")

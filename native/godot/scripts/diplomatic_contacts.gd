@@ -336,7 +336,7 @@ func state_position(key: String) -> String:
 				d.changed.emit()
 				changed.emit()
 				return ""
-			var nukes: bool = world.missiles != null and int(world.missiles.stock.get("nuke", 0)) > 0
+			var nukes: bool = world.missiles != null and not world.missiles.ready_platforms("nuke").is_empty()
 			if ai != null and (nukes or randf() < 0.3):
 				ai.next_attack = float(ai.next_attack) + (240.0 if nukes else 90.0)
 				outcome = "Heeded"
