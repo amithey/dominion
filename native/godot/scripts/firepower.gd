@@ -26,6 +26,7 @@ const DEFAULTS := {
 	"roads": 1.5,          # damage to roads and rails, as a multiple of the damage (0: none)
 	"airburst": false,     # it bursts in the air by design: no crater, nothing to the roads below
 	"road_reach": 0.0,     # how far its damage to roads reaches (m); 0: the blast radius
+	"look": "classic",     # how the burst looks (blasts.gd LOOKS); every munition that is seen to burst names its own
 }
 const KINDS := ["kinetic", "he", "heat", "thermobaric", "torpedo", "beam", "nuclear"]
 
@@ -33,29 +34,29 @@ const KINDS := ["kinetic", "he", "heat", "thermobaric", "torpedo", "beam", "nucl
 const MUNITIONS := {
 	# --- direct fire
 	"bullet": {"kind": "kinetic", "radius": 0.0, "fx": 0.0, "shock": 0.0, "crater": false, "fire": -1.0, "roads": 0.0},
-	"shell": {"kind": "he", "radius": 3.5, "fx": 1.0, "shock": 1.0, "fire": -1.0, "structures": 0.0, "road_reach": 3.0},            # a tank or ship's gun, an autocannon burst
-	"railgun": {"kind": "kinetic", "radius": 2.5, "fx": 1.2, "shock": 1.2, "fire": 0.32},
+	"shell": {"kind": "he", "radius": 3.5, "fx": 1.0, "shock": 1.0, "fire": -1.0, "structures": 0.0, "road_reach": 3.0, "look": "shell"},            # a tank or ship's gun, an autocannon burst
+	"railgun": {"kind": "kinetic", "radius": 2.5, "fx": 1.2, "shock": 1.2, "fire": 0.32, "look": "railgun"},
 	"laser": {"kind": "beam", "radius": 0.0, "fx": 0.0, "shock": 0.0, "crater": false, "fire": 0.2, "roads": 0.0},
 	# --- shaped charges: a small burst, the damage is in the hit
-	"rocket": {"kind": "heat", "radius": 2.2, "fx": 0.7, "shock": 0.7, "fire": 0.32},
-	"atgm": {"kind": "heat", "radius": 2.0, "fx": 0.8, "shock": 0.8, "fire": 0.32},
-	"fpv": {"kind": "heat", "radius": 2.4, "fx": 0.9, "shock": 0.9, "fire": 0.82},
+	"rocket": {"kind": "heat", "radius": 2.2, "fx": 0.7, "shock": 0.7, "fire": 0.32, "look": "heat"},
+	"atgm": {"kind": "heat", "radius": 2.0, "fx": 0.8, "shock": 0.8, "fire": 0.32, "look": "heat"},
+	"fpv": {"kind": "heat", "radius": 2.4, "fx": 0.9, "shock": 0.9, "fire": 0.82, "look": "heat"},
 	# --- high explosive: blast and fragments
-	"grenade": {"kind": "he", "radius": 2.5, "frag": 2.0, "frag_share": 0.15, "fx": 0.5, "shock": 0.6, "crater": false, "fire": 0.2, "roads": 0.0},
-	"mortar": {"kind": "he", "radius": 3.0, "frag": 1.6, "frag_share": 0.12, "fx": 0.8, "shock": 0.8, "fire": 0.52},
-	"shell_arc": {"kind": "he", "radius": 4.5, "frag": 1.6, "frag_share": 0.12, "fx": 1.5, "shock": 1.5, "fire": 0.52},
-	"rocket_salvo": {"kind": "he", "radius": 3.5, "frag": 1.5, "frag_share": 0.1, "fx": 0.9, "shock": 0.9, "fire": 0.82},
-	"rockets": {"kind": "he", "radius": 2.8, "fx": 0.7, "shock": 0.7, "fire": 0.45},
-	"guided": {"kind": "he", "radius": 3.0, "fx": 1.1, "shock": 1.1, "fire": 0.82},
-	"bomb": {"kind": "he", "radius": 5.0, "frag": 1.5, "frag_share": 0.1, "fx": 1.6, "shock": 1.6, "fire": 0.82},
-	"missile": {"kind": "he", "radius": 3.0, "fx": 1.2, "shock": 1.2, "fire": 0.52},
-	"kamikaze": {"kind": "he", "radius": 4.0, "fx": 1.6, "shock": 1.6, "fire": 0.82},
-	"detonate": {"kind": "he", "radius": 5.0, "frag": 1.4, "frag_share": 0.1, "fx": 1.8, "shock": 1.6, "fire": 0.82},
+	"grenade": {"kind": "he", "radius": 2.5, "frag": 2.0, "frag_share": 0.15, "fx": 0.5, "shock": 0.6, "crater": false, "fire": 0.2, "roads": 0.0, "look": "grenade"},
+	"mortar": {"kind": "he", "radius": 3.0, "frag": 1.6, "frag_share": 0.12, "fx": 0.8, "shock": 0.8, "fire": 0.52, "look": "mortar"},
+	"shell_arc": {"kind": "he", "radius": 4.5, "frag": 1.6, "frag_share": 0.12, "fx": 1.5, "shock": 1.5, "fire": 0.52, "look": "artillery"},
+	"rocket_salvo": {"kind": "he", "radius": 3.5, "frag": 1.5, "frag_share": 0.1, "fx": 0.9, "shock": 0.9, "fire": 0.82, "look": "rocket"},
+	"rockets": {"kind": "he", "radius": 2.8, "fx": 0.7, "shock": 0.7, "fire": 0.45, "look": "rocket"},
+	"guided": {"kind": "he", "radius": 3.0, "fx": 1.1, "shock": 1.1, "fire": 0.82, "look": "missile"},
+	"bomb": {"kind": "he", "radius": 5.0, "frag": 1.5, "frag_share": 0.1, "fx": 1.6, "shock": 1.6, "fire": 0.82, "look": "bomb"},
+	"missile": {"kind": "he", "radius": 3.0, "fx": 1.2, "shock": 1.2, "fire": 0.52, "look": "missile"},
+	"kamikaze": {"kind": "he", "radius": 4.0, "fx": 1.6, "shock": 1.6, "fire": 0.82, "look": "missile"},
+	"detonate": {"kind": "he", "radius": 5.0, "frag": 1.4, "frag_share": 0.1, "fx": 1.8, "shock": 1.6, "fire": 0.82, "look": "bomb"},
 	# --- fuel-air: the pressure holds across the whole cloud, and everything burns
-	"thermobaric": {"kind": "thermobaric", "radius": 5.5, "core": 0.7, "edge": 0.5, "fx": 1.4, "shock": 1.4, "crater": false, "fire": 1.3},
+	"thermobaric": {"kind": "thermobaric", "radius": 5.5, "core": 0.7, "edge": 0.5, "fx": 1.4, "shock": 1.4, "crater": false, "fire": 1.3, "look": "thermobaric"},
 	# --- in the air and under the sea
-	"sam": {"kind": "he", "radius": 3.5, "fx": 1.0, "shock": 1.0, "crater": false, "fire": 0.0, "airburst": true},
-	"torpedo": {"kind": "torpedo", "radius": 3.5, "fx": 1.4, "shock": 1.4, "crater": false, "fire": 0.2, "roads": 0.0},
+	"sam": {"kind": "he", "radius": 3.5, "fx": 1.0, "shock": 1.0, "crater": false, "fire": 0.0, "airburst": true, "look": "flak"},
+	"torpedo": {"kind": "torpedo", "radius": 3.5, "fx": 1.4, "shock": 1.4, "crater": false, "fire": 0.2, "roads": 0.0, "look": "torpedo"},
 	# --- delivered by a system of their own (their burst is a strategic missile's, or a swarm's drones)
 	"brahmos": {"kind": "he", "radius": 0.0, "fx": 0.0, "delivered_by": "missiles"},
 	"hgv": {"kind": "he", "radius": 0.0, "fx": 0.0, "delivered_by": "missiles"},
@@ -76,28 +77,34 @@ const WARHEAD_DEFAULTS := {
 	"fx": 0.22,              # the explosion shown, as a share of the radius
 	"road_reach": 0.4,       # how far its damage to roads and rails reaches, as a share of the radius
 	"silence": 0.0,          # seconds it silences the radars it strikes
+	"look": "missile",       # how the burst looks (blasts.gd LOOKS)
+	"crater": true,          # it leaves a crater (bomblets and a burster charge do not)
 }
 ## What a nuclear warhead changes, whatever its kind (a kind that names its own fire keeps it).
-const NUCLEAR := {"fire": 1.35, "shock": 3.0, "road_reach": 1.0}
+const NUCLEAR := {"fire": 1.35, "shock": 3.0, "road_reach": 1.0, "look": "nuclear"}
 const WARHEADS := {
 	"": {},                                                                       # plain high explosive
-	"cluster": {"vs": {"building": 0.35, "unit": 1.75}, "fire": 0.55, "shock": 1.0},   # bomblets over a wide area: troops and vehicles, not walls
+	"cluster": {"vs": {"building": 0.35, "unit": 1.75}, "fire": 0.55, "shock": 1.0, "look": "cluster", "crater": false},   # bomblets over a wide area: troops and vehicles, not walls
 	"antiShip": {"vs": {"naval": 3.0, "building": 0.25, "unit": 0.25}},
 	"hgv": {"vs": {"naval": 2.5}},
 	"brahmos": {"vs": {"naval": 2.0}},
 	# It bursts underground: what is built is crushed, bunkers too; a conventional one does little to troops in the open.
-	"penetrator": {"vs": {"building": 3.0, "unit": 0.35}, "vs_nuclear": {"building": 3.0}, "pierce": true, "shock": 1.0},
-	"thermobaric": {"vs": {"building": 0.7, "vehicle": 0.8, "naval": 0.8, "unit": 1.8}, "pierce": true, "fire": 1.35, "keeps_fire": true},
+	"penetrator": {"vs": {"building": 3.0, "unit": 0.35}, "vs_nuclear": {"building": 3.0}, "pierce": true, "shock": 1.0, "look": "penetrator"},
+	"thermobaric": {"vs": {"building": 0.7, "vehicle": 0.8, "naval": 0.8, "unit": 1.8}, "pierce": true, "fire": 1.35, "keeps_fire": true, "look": "thermobaric"},
 	"antiRadar": {"vs": {"emitter": 3.0, "building": 0.3, "unit": 0.3}, "fire": 0.0, "keeps_fire": true, "silence": 30.0, "shock": 1.0},
 	# Neutrons pass through armour and walls: crews and people die, buildings stand. Its blast is small.
 	"neutron": {"vs": {"building": 0.2, "vehicle": 1.2}, "structure_reach": 0.35, "fire": 0.12, "keeps_fire": true, "shock": 0.5},
 	# A burst high above, a microwave pulse: the ground is left intact (wmd.gd does the rest).
-	"hemp": {"blast": false, "fire": 0.0, "keeps_fire": true, "shock": 0.0},
-	"emp": {"blast": false, "fire": 0.0, "keeps_fire": true, "shock": 0.0},
+	"hemp": {"blast": false, "fire": 0.0, "keeps_fire": true, "shock": 0.0, "look": "pulse"},
+	"emp": {"blast": false, "fire": 0.0, "keeps_fire": true, "shock": 0.0, "look": "pulse"},
 	# Their burst is plain; what they leave behind (a cloud, fallout, an outbreak, more warheads) is wmd.gd's.
-	"mirv": {}, "poseidon": {}, "burevestnik": {}, "dirty": {}, "chemical": {}, "chlorine": {}, "bio": {}, "anthrax": {},
-	"riot": {}, "incapacitant": {},
+	"mirv": {}, "poseidon": {}, "burevestnik": {}, "dirty": {},
+	# A burster charge opens them and the agent spreads as a low pale cloud.
+	"chemical": {"look": "aerosol", "crater": false}, "chlorine": {"look": "aerosol", "crater": false},
+	"bio": {"look": "aerosol", "crater": false}, "anthrax": {"look": "aerosol", "crater": false},
+	"riot": {"look": "aerosol", "crater": false}, "incapacitant": {"look": "aerosol", "crater": false},
 }
+const Blasts := preload("res://scripts/blasts.gd")   # LOOKS: how each burst looks
 const Conv := preload("res://scripts/conventional_missiles.gd")   # EMITTERS: the radars an anti-radiation warhead finds
 
 static var _extra_warheads := {}   # warheads registered at run time: special -> profile
@@ -188,7 +195,12 @@ static func detonate(w: Node, shooter: Dictionary, munition: String, at: Vector3
 	var on_ground: bool = height < 1.5
 	var radius: float = p.radius
 	if float(p.fx) > 0.0:
-		w.effects.explosion(at, float(p.fx), on_ground, bool(p.crater) and not bool(p.airburst))
+		# The burst looks like what made it (blasts.gd); spall and fragments are thrown back the way the round came.
+		var dir := Vector3.ZERO
+		var from = shooter.get("node")
+		if from is Node3D and is_instance_valid(from):
+			dir = at - (from as Node3D).global_position
+		w.effects.blast(str(p.look), at, float(p.fx), {"on_ground": on_ground, "crater": bool(p.crater) and not bool(p.airburst), "dir": dir})
 	# Roads and rails: only a burst at or near the ground reaches them.
 	if float(p.roads) > 0.0 and radius > 0.0 and height < 4.0 and not bool(p.airburst):
 		w.logistics.damage_at(at, float(p.road_reach) if float(p.road_reach) > 0.0 else radius, dmg * float(p.roads))
@@ -271,11 +283,8 @@ static func strategic(w: Node, key: String, def: Dictionary, at: Vector3, owner:
 		return []
 	var radius := float(def.radius)
 	var dmg := float(def.dmg) * 1.75
-	w.effects.explosion(at + Vector3.UP, minf(radius, 60.0) * float(p.fx), true)
-	if nuclear:
-		w.effects.mushroom(at, minf(radius, 70.0))
-	elif radius > 15.0:
-		w.effects.explosion(at + Vector3.UP * 3.0, radius * 0.16, false)
+	# How it looks is the warhead's (blasts.gd): the nuclear look brings the mushroom cloud.
+	w.effects.blast(str(p.look), at + Vector3.UP, minf(radius, 60.0) * float(p.fx), {"on_ground": true, "radius": radius, "crater": bool(p.crater)})
 	w.logistics.damage_at(at, radius * float(p.road_reach), dmg, nuclear)
 	var source := {"owner": owner, "dead": true, "key": "missile", "missile_key": key, "special": special, "nuclear": nuclear, "pierce": bool(p.pierce)}
 	var hit := []
@@ -319,6 +328,9 @@ static func problems() -> PackedStringArray:
 		if float(p.fire) > 1.4 or (float(p.fire) < 0.0 and float(p.fire) != -1.0): out.append("%s: fire %s" % [key, p.fire])
 		if float(p.shock) < 0.0 or float(p.shock) > 4.0: out.append("%s: shock %s" % [key, p.shock])
 		if float(p.radius) == 0.0 and float(p.fx) > 0.0 and not raw.has("delivered_by"): out.append("%s: an explosion with no blast radius" % key)
+		# A burst that is seen must say how it looks: a new weapon picks a look (or adds one); it does not get the old blast.
+		if float(p.fx) > 0.0 and not raw.has("look"): out.append("%s: a burst that is seen names no look" % key)
+		if not Blasts.LOOKS.has(str(p.look)): out.append("%s: unknown look '%s'" % [key, p.look])
 	for special in WARHEADS.keys() + _extra_warheads.keys():
 		var raw_w: Dictionary = _extra_warheads.get(special, WARHEADS.get(special, {}))
 		for field in raw_w:
@@ -327,6 +339,7 @@ static func problems() -> PackedStringArray:
 		for nuclear in [false, true]:
 			var wp := warhead(special, nuclear)
 			if float(wp.edge) < 0.0 or float(wp.edge) > 1.0: out.append("warhead %s: edge outside 0..1" % special)
+			if not Blasts.LOOKS.has(str(wp.look)): out.append("warhead %s: unknown look '%s'" % [special, wp.look])
 			if float(wp.fire) < 0.0 or float(wp.fire) > 1.4: out.append("warhead %s: fire %s" % [special, wp.fire])
 			if float(wp.shock) < 0.0 or float(wp.shock) > 4.0: out.append("warhead %s: shock %s" % [special, wp.shock])
 			if float(wp.structure_reach) < 0.0 or float(wp.structure_reach) > 1.0: out.append("warhead %s: structure_reach outside 0..1" % special)

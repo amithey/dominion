@@ -58,12 +58,53 @@ A nuclear warhead of any kind lays `Firepower.NUCLEAR` over its row: a firestorm
 own fire, as a neutron warhead does), a blast wave of 3, roads torn up across the whole radius, and the mushroom cloud.
 A warhead with something of its own registers `on_impact` with `Firepower.register_warhead(special, profile)`.
 
+## How a burst looks
+
+What a burst does and what it looks like are separate. The profile's `look` names a row of `Blasts.LOOKS`
+(`native/godot/scripts/blasts.gd`); `fx` is its size. A look is a short list of **layers** played together,
+some after a delay: the filmed ground burst, air burst, fireball, smoke column, puff, dust and splash
+(photographed sheets, any size, shape and tint), soft smoke in a palette's colour, sparks, fragments drawn as
+streaks, earth thrown up, a dust ring, the shock front, the pressure dome of a big burst, scorch marks, embers,
+patches left burning, a water column, and many small bursts over an area.
+
+| Look | Used by | What you see |
+|---|---|---|
+| `grenade` | grenades | a sharp flash, a puff of dust and grey smoke, fragments; hardly any fire |
+| `shell` | tank and ship guns | the ground burst, a short fireball, earth, dark smoke |
+| `heat` | rockets, anti-tank missiles, FPV drones | a white-hot point, spall thrown back toward the shooter, thin grey smoke |
+| `mortar` | mortars | a tall spout of earth (it comes down steeply), fragments low and wide |
+| `artillery` | howitzers | a big ground burst, a fountain of earth, fragments, a dust ring, a standing column |
+| `rocket` | rocket salvos, helicopter pods | orange fire and black smoke, less earth |
+| `missile` | guided missiles, kamikaze drones, plain strategic warheads | a fireball, burning pieces, black smoke |
+| `bomb` | aircraft bombs, demolition charges | the biggest conventional burst: pressure dome, towering column |
+| `railgun` | rail guns | a blue-white plasma flash, long streaks |
+| `thermobaric` | fuel-air rockets and warheads | a pale cloud spreads low, then all of it burns at once; black smoke, patches left burning |
+| `flak` | missiles bursting at aircraft, interceptions | a flash, fragments every way, a black puff that hangs |
+| `torpedo` | torpedoes | a column of sea water with a dull flash, spray drifting |
+| `cluster` | cluster warheads | a crackle of small bursts (`bomblet`) over the area, a haze of dust |
+| `penetrator` | bunker busters | hardly a mark, then the ground heaves: earth and dust, little fire |
+| `aerosol` | chemical and biological warheads | a small burster charge, a pale low cloud spreading |
+| `nuclear` | every nuclear warhead | a blinding flash, the pressure dome, the mushroom cloud |
+| `pulse` | electromagnetic pulses | no fire: a blue pulse |
+| `classic` | anything that names no look | the explosion as it was before |
+
+Whether a burst leaves a crater is the profile's `crater` (a warhead's too), never the look's. A burst in the air
+leaves the ground layers out; a burst at the sea's surface throws up water whatever its look. On Low the costly
+layers are thinned or left out.
+
+Tools: `tools/explosion-view.gd` (run windowed) films every look at six moments after the burst into
+`build/explosions/<look>.png` and `build/explosions-sheet.png`; `tools/explosion-check.gd` (in `run-tests.ps1`)
+fails on a look built from an unknown layer, palette or film, a munition or warhead with no look, a look no weapon
+uses, and checks that each burst plays its own look, craters, air and sea, spall direction, delays, clean-up and Low.
+
 ## Adding a weapon
 
 1. Give the unit a weapon in `world.WEAPONS` (or `war_tools.WEAPON`), or the missile a definition.
 2. If it behaves like an existing munition, name that one. Otherwise add a row to
    `Firepower.MUNITIONS`, or call `Firepower.register(key, profile)` from the file that owns the weapon.
    A strategic missile names its warhead with `special`; a new kind of warhead is a row of `Firepower.WARHEADS`.
+   Every munition that is seen to burst names a `look`: one from the table above, or a new row of `Blasts.LOOKS`
+   (film it with `tools/explosion-view.gd -- <look>`).
 3. A weapon that needs something of its own gives its profile an `on_detonate` callable: it runs first
    and may replace the standard burst (return `true`) or add to it (return `false`).
 

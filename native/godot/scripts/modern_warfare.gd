@@ -332,7 +332,7 @@ static func intercept(w: Node, m: Dictionary, at: Vector3, f: float) -> bool:
 		if d.kind == "laserAD":
 			w.effects.beam(from, at)
 		else:
-			w.effects.projectile("missile", from, at, func(p): w.effects.explosion(p, 1.2 if hit else 0.4, false))
+			w.effects.projectile("missile", from, at, func(p): w.effects.blast("flak", p, 1.2 if hit else 0.4, {"on_ground": false, "crater": false}))
 		_report(w, m, d, hit)
 		if hit:
 			return true
@@ -360,7 +360,7 @@ static func dome(w: Node, m: Dictionary, at: Vector3, f: float) -> bool:
 		chance *= 0.8   # a rival's manoeuvring warheads
 	var hit := randf() < chance
 	w.intercepts.append({"type": m.type, "by": "goldenDome", "hit": hit, "owner": int(m.owner)})
-	w.effects.projectile("missile", at + Vector3(randf_range(-30, 30), 140.0, randf_range(-30, 30)), at, func(p): w.effects.explosion(p, 1.2 if hit else 0.4, false))
+	w.effects.projectile("missile", at + Vector3(randf_range(-30, 30), 140.0, randf_range(-30, 30)), at, func(p): w.effects.blast("flak", p, 1.2 if hit else 0.4, {"on_ground": false, "crater": false}))
 	_report(w, m, {"kind": "goldenDome", "owner": 0}, hit)
 	return hit
 

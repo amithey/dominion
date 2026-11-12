@@ -84,6 +84,7 @@ $tests = @(
     @('movement physics', @('--', '--motion-test'), 'MOTION_TEST PASS', 180),
     @('how things move: turn rates and bank of aircraft, helicopter momentum, bounded climb, the fall of a shot-down craft, a ship''s mass and helm, tracked pivot against wheeled arc, missile speed', @('--script', 'res://tools/physics-check.gd'), 'PHYSICS_CHECK PASS', 900),
     @('firepower template: every weapon and missile has a munition profile, sound profiles, smooth fall-off, fragments, shove by warhead, air bursts and roads, custom bursts', @('--script', 'res://tools/firepower-check.gd'), 'FIREPOWER_CHECK PASS', 600),
+    @('explosion looks: every look built from known layers and films, every munition and warhead names one and plays it, craters, air and sea, spall direction, delays, clean-up, Low', @('--script', 'res://tools/explosion-check.gd'), 'EXPLOSION_CHECK PASS', 600),
     @('battle dynamics', @('--', '--battle-test'), 'BATTLE_TEST PASS', 300),
     @('armoured column driving', @('--', '--convoy-test'), 'CONVOY_TEST PASS', 240),
     @('armour through city streets, workers finish sites', @('--', '--city-test'), 'CITY_TEST PASS', 400),

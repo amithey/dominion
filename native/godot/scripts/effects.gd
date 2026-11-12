@@ -25,6 +25,7 @@ var _shell_mesh: BoxMesh
 var _scorch: Texture2D
 var _shock_mesh: PlaneMesh
 var debris: MultiMeshInstance3D  # debris.gd: ballistic pieces thrown by blasts
+var blasts: Node3D  # blasts.gd: explosions by kind (a grenade, a shell, a bomb, a fuel-air cloud...), built from layers
 
 # Live effects: {node, age, life, kind, ...}
 var _live: Array[Dictionary] = []
@@ -107,6 +108,9 @@ func _ready() -> void:
 	tex.width = 128
 	tex.height = 128
 	_scorch = tex
+	blasts = preload("res://scripts/blasts.gd").new()
+	add_child(blasts)
+	blasts.setup(self)
 
 # ---------------------------------------------------------------- building blocks
 
@@ -265,6 +269,7 @@ func warm() -> void:
 	if books_on():
 		for kind in BOOKS:
 			_book(kind)
+		blasts.warm()   # every explosion look drawn once, out of sight
 
 func _book(kind: String) -> Dictionary:
 	if _books.has(kind):
@@ -288,13 +293,14 @@ func _book(kind: String) -> Dictionary:
 	_books[kind] = {"mesh": q, "frames": def.frames}
 	return _books[kind]
 
-## Plays a flipbook: `width` metres wide, over `seconds` (looping for that long when `loop`), after `delay`.
-func flipbook(kind: String, at: Vector3, width: float, seconds: float, delay := 0.0, tint := Color.WHITE, loop := false) -> void:
+## Plays a flipbook: `width` metres wide (and `aspect` times that tall), over `seconds` (looping for that long when `loop`),
+## after `delay`.
+func flipbook(kind: String, at: Vector3, width: float, seconds: float, delay := 0.0, tint := Color.WHITE, loop := false, aspect := 1.0) -> void:
 	var book := _book(kind)
 	var node := MeshInstance3D.new()
 	node.mesh = book.mesh
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	node.scale = Vector3(width, width, 1.0)
+	node.scale = Vector3(width, width * aspect, 1.0)
 	node.visible = delay <= 0.0
 	node.set_instance_shader_parameter("frame", 0.0)
 	add_child(node)
@@ -372,6 +378,11 @@ func shell(from: Vector3, to: Vector3, on_hit: Callable) -> void:
 	projectile.global_position = from
 	projectile.look_at_from_position(from, to, Vector3.UP)
 	_shells.append({"node": projectile, "from": from, "to": to, "t": 0.0, "time": maxf(from.distance_to(to) / 160.0, 0.04), "hit": on_hit})
+
+## An explosion that looks like what made it: `look` is a row of blasts.LOOKS (a munition's profile names it,
+## firepower.gd), `size` its fx. opts: on_ground, crater, dir (the way the round flew), radius (a strategic burst).
+func blast(look: String, at: Vector3, size: float, opts := {}) -> void:
+	blasts.play(look, at, size, opts)
 
 ## Explosion: size 1 is a tank shell hit, 3-4 a destroyed vehicle.
 func explosion(at: Vector3, size: float, on_ground: bool, crater := true) -> void:
@@ -651,6 +662,7 @@ func burn(at: Vector3, seconds: float) -> void:
 func _physics_process(delta: float) -> void:
 	var clock: int = world_ref.clock() if world_ref != null else 0
 	_move_projectiles(delta)
+	blasts.step(delta)
 	for i in range(_shells.size() - 1, -1, -1):
 		var s: Dictionary = _shells[i]
 		s.t += delta

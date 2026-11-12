@@ -29,7 +29,7 @@ static func update(w: Node, delta: float) -> void:
 			enemy.aa_claimed_by = int(b.owner)
 		var target: Dictionary = enemy
 		w.effects.projectile("missile", b.root.position + Vector3.UP * 5, target.node.position, func(at):
-			w.effects.explosion(at, 0.7, false)
+			w.effects.blast("flak", at, 0.7, {"on_ground": false, "crater": false})   # a missile bursting beside its target
 			if not target.dead and w.hostile(b.owner, target.owner): w.damage(target, ADS.aircraft_damage(w, int(b.owner)), b), 0.0, target.node)
 
 ## Missile interception: every SAM site, mobile SAM, missile defence battery
