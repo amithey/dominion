@@ -1,9 +1,9 @@
 # DOMINION desktop game
 
 The chosen product target is an installed PC game, with Steam as a future goal.
-The active game is in `native/godot`. The browser implementation in `js/` is a
-reference for rules and exported data. Run `prepare-desktop.ps1` before changing
-or testing the native game; copied art and the engine are local-only.
+The game is in `native/godot` (the browser prototype it grew from is retired and has
+been removed from the repository). Run `prepare-desktop.ps1` before changing or testing
+the game: it copies the CC0 art from the top-level `assets/` library into the project.
 
 > Continuing development? Read [HANDOFF.md](HANDOFF.md) first: where the 0.9.4–0.9.5 code lives and the traps to avoid.
 
@@ -2107,9 +2107,9 @@ Godot is MIT licensed: https://godotengine.org/license/.
 
 ## World scene (main scene)
 
-`world.tscn` loads `godot/data/map-seed1.json`, a map exported from the browser game
-(`index.html?seed=1&export=http://localhost:PORT/name`, see `js/map-export.js`), so both
-engines show the same island: 2.5 m height grid, 863 trees, buildings and units.
+`world.tscn` loads `godot/data/map-seed1.json`, a map first exported from the browser
+prototype (now retired; the file is maintained in the Godot project itself): 2.5 m height
+grid, 863 trees, buildings and units.
 It uses the Forward+ renderer:
 
 - Terrain shader: grass, dirt, sand and rock (CC0, ambientCG) blended by height,
@@ -2120,8 +2120,8 @@ It uses the Forward+ renderer:
 - Birch trees as MultiMeshes in 96 m cells, swaying with per-tree wind; grass tufts
   (real blade triangles) drawn near the camera; drifting cloud shadows.
 - Buildings on concrete plinths sunk into the slope.
-- Soldiers: the realistic, photo-textured Mixamo soldier already in the repository
-  (`assets/models/three/Soldier.glb`, also used by the browser game), its suit tinted to each
+- Soldiers (historical: replaced by the Blender-made people in `scripts/people.gd`): the
+  photo-textured Mixamo soldier then in the repository, its suit tinted to each
   nation's field colour (olive, tan, grey, brown), with a shoulder patch in the flag's
   colour. Rifles, sniper rifles and SMGs from the Quaternius kit are held in the right
   hand; rocket launchers are slung across the back. The body topples when killed (the
@@ -2433,12 +2433,6 @@ portable Godot, in `.local-tools/godot/editor_data/export_templates/4.7.2.stable
 warns on first run; signing is part of the Steam release work. The exported game runs the same
 test flags as the editor: `dist/DOMINION.exe --headless -- --systems-test`.
 
-## Refreshing the map data
-
-`powershell -ExecutionPolicy Bypass -File native/export-map.ps1 [-Seed N]` opens the
-browser game in a hidden Edge window and rewrites `godot/data/map-seedN.json`, so
-changes to config.js (units, buildings, economy, AI, combat, logistics) reach Godot.
-
 ## Validation
 
 Run the Godot executable with:
@@ -2448,14 +2442,13 @@ Run the Godot executable with:
 --path native/godot res://main.tscn -- --capture-preview
 ```
 
-Benchmark matching the browser's `?bench=N` (same three camera phases, orbit
-formula, marching army and JSON fields):
+Benchmark (three camera phases, an orbit, a marching army; JSON results):
 
 ```text
 --path native/godot --resolution 1920x1080 -- --bench=64 --no-vsync --quit-after-bench
 ```
 
-This runs in the world scene, on the same seeded map and drill as the browser.
+This runs in the world scene, on the seeded map and drill.
 The result prints as `DOMINION benchmark {...}` and is saved to
 `godot/build/world-bench-<renderer>-<units>.json`, with GPU time and render CPU
 time per frame from the engine. Add `res://main.tscn` before `--` to benchmark the
