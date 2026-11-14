@@ -1882,16 +1882,24 @@ func _open_payload_picker(asset: Dictionary, key: String, direction: String, job
 			if not other.built or not other.get("supplied", true) or world.disabled(other) or not ms.storage_accepts(other, key) or ms.free_storage(other) < job.count:
 				continue
 		elif direction == "load":
-			reason = ms.transfer_blocked(other, asset, key)
+			if not asset.get("is_building", false):
+				if not other.get("built", true) or world.disabled(other) or ms.local_count(other, key) <= 0 or not ms.storage_accepts(asset, key) or ms.free_storage(asset) <= 0:
+					continue
+			else:
+				reason = ms.transfer_blocked(other, asset, key)
 		else:
-			reason = ms.transfer_blocked(asset, other, key)
+			if asset.get("is_building", false) and not other.get("is_building", false):
+				if world.disabled(other) or not ms.storage_accepts(other, key) or ms.free_storage(other) <= 0:
+					continue
+			else:
+				reason = ms.transfer_blocked(asset, other, key)
 		if reason == "":
 			options.append(other)
 	if options.is_empty():
-		notice("No available destination or source. Check storage, supply and whether the unit is parked or docked.")
+		notice("No available destination or source. Check storage capacity and compatible launchers (Submarine, Destroyer, Cruiser, Bomber, or Silo).")
 		return
 	var dialog := ConfirmationDialog.new()
-	dialog.title = "Redirect shipment" if direction == "redirect" else ("Load payload" if direction == "load" else "Transfer payload")
+	dialog.title = "Redirect shipment" if direction == "redirect" else ("Load payload" if direction == "load" else "Transfer / Load payload")
 	var column := VBoxContainer.new()
 	dialog.add_child(column)
 	var choices := ItemList.new()
@@ -1935,9 +1943,15 @@ func _open_payload_picker(asset: Dictionary, key: String, direction: String, job
 			if direction == "redirect":
 				result = ms.redirect_transfer(job, other)
 			elif direction == "load":
-				result = ms.start_transfer(other, asset, key, int(quantity.value))
+				if not asset.get("is_building", false):
+					result = ms.quick_load_onto(asset, key, int(quantity.value), other)
+				else:
+					result = ms.start_transfer(other, asset, key, int(quantity.value))
 			else:
-				result = ms.start_transfer(asset, other, key, int(quantity.value))
+				if asset.get("is_building", false) and not other.get("is_building", false):
+					result = ms.quick_load_onto(other, key, int(quantity.value), asset)
+				else:
+					result = ms.start_transfer(asset, other, key, int(quantity.value))
 			notice("Payload order accepted." if result == "" else result)
 		dialog.queue_free())
 	dialog.canceled.connect(dialog.queue_free)
@@ -2048,18 +2062,18 @@ func _fill_launch(chosen: Array) -> void:
 	for action in actions:
 		_payload_button(action[0], action[1])
 
-## Troop transports (airlift.gd): what is aboard and the buttons to put it ashore, or, for troops
-## standing near one, a button that boards the nearest.
+## Troop transports (airlift.gd): what is aboard and the buttons to put it ashore, pick up troops, or return to base,
+## or, for troops standing near one, a button that boards the nearest.
 func _fill_cargo(own: Array) -> void:
 	var Air := preload("res://scripts/airlift.gd")
 	var carriers: Array = own.filter(func(u): return Air.is_transport(u))
 	var boarders: Array = own.filter(func(u): return not Air.is_transport(u) and not u.get("fly", false) and not u.get("naval", false))
-	var nearest = Air.nearest_for(world, boarders) if carriers.is_empty() and not boarders.is_empty() else null
+	var nearest = Air.nearest_for(world, boarders) if not boarders.is_empty() else null
 	var sig := ""
 	for c in carriers:
-		sig += "%d:%d:%d:%s;" % [c.node.get_instance_id(), Air.used(c), c.get("cargo", []).size(), str(c.get("unload_go") != null)]
+		sig += "%d:%d:%d:%s:%s;" % [c.node.get_instance_id(), Air.used(c), c.get("cargo", []).size(), str(c.get("unload_go") != null), str(c.get("pickup_go") != null)]
 	if nearest != null:
-		sig += "board:%d:%d" % [nearest.node.get_instance_id(), Air.room(nearest)]
+		sig += "board:%d:%d:%d" % [nearest.node.get_instance_id(), Air.room(nearest), boarders.size()]
 	_cargo_row.visible = sig != ""
 	if sig == _cargo_sig:
 		return
@@ -2070,8 +2084,14 @@ func _fill_cargo(own: Array) -> void:
 	if sig == "":
 		return
 	if not carriers.is_empty():
+		var any_room := false
+		var any_aboard := false
 		for c in carriers:
 			var aboard: int = (c.get("cargo", []) as Array).size()
+			if aboard > 0:
+				any_aboard = true
+			if Air.room(c) > 0:
+				any_room = true
 			var places := "%d of %d places" % [Air.used(c), int(Air.CAPACITY.get(c.key, 0))]
 			var head := _text(("%d aboard - %s" % [aboard, places]) if aboard > 0 else ("Empty - " + places), 16, UI.GOOD if aboard > 0 else UI.MUTED, true)
 			_cargo_row.add_child(head)
@@ -2082,6 +2102,22 @@ func _fill_cargo(own: Array) -> void:
 		var buttons := HFlowContainer.new()
 		buttons.add_theme_constant_override("separation", 4)
 		_cargo_row.add_child(buttons)
+		if not boarders.is_empty() and any_room:
+			var b_sel := _button(buttons, "Board selected (%d)" % boarders.size(), func():
+				Air.order_board(world, boarders, carriers[0])
+				_cargo_sig = ""
+				return "")
+			b_sel.tooltip_text = "Board the selected ground troops onto this transport."
+		if any_room:
+			var load_btn := _button(buttons, "Load nearby", func():
+				Air.load_nearby(world, carriers)
+				_cargo_sig = ""
+				return "")
+			load_btn.tooltip_text = "Embark nearby friendly soldiers onto the transport."
+			var pick_btn := _button(buttons, "Pick up at...", func():
+				world.begin_pickup()
+				return "")
+			pick_btn.tooltip_text = "Click anywhere on the map (e.g. a battlefield) to fly there and extract friendly troops."
 		var unload := _button(buttons, "Unload (J)", func():
 			Air.unload_selected(world)
 			_cargo_sig = ""
@@ -2091,11 +2127,16 @@ func _fill_cargo(own: Array) -> void:
 			world.begin_landing()
 			return "")
 		land.tooltip_text = "Click a place on the map: the transport sails or flies there and puts its load ashore."
+		var rtb := _button(buttons, "Return & Unload at Base" if any_aboard else "Return to Base", func():
+			Air.order_return_home(world, carriers)
+			_cargo_sig = ""
+			return "")
+		rtb.tooltip_text = "Fly back to your home helipad/airfield/HQ, unload any troops aboard, and land."
 	elif nearest != null:
 		var board := _button(_cargo_row, "Board the %s" % world.unit_defs.get(nearest.key, {}).get("name", nearest.key), func():
 			Air.order_board(world, world.units.filter(func(u): return u.selected and not u.dead and u.owner == 0), nearest)
 			return "")
-		board.tooltip_text = "The selected troops walk to the nearest transport and climb aboard. A ship comes alongside the nearest coast first."
+		board.tooltip_text = "The selected troops board the nearest transport (if it is a helicopter away from them, it will fly to pick them up)."
 
 ## An aircraft carrier's air wing (war_tools.gd): what is on deck, in the air and being rearmed, how far the wing
 ## flies, how to use it, and two buttons: automatic or orders only, and recall.

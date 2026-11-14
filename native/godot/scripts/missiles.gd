@@ -111,13 +111,13 @@ func storage_accepts(entity: Dictionary, key: String) -> bool:
 		return true
 	if entity.key == "missileSilo" or (key == "tactical" and entity.key == "ammoDepot"):
 		return true
-	return entity.key == "airfield" and load("res://scripts/arsenal_catalog.gd").platform_kind(world, entity.owner, key) in ["air", "air_or_sea"]
+	return entity.key == "airfield" and ( (category(key) == "nuclear" and key != "poseidon") or load("res://scripts/arsenal_catalog.gd").platform_kind(world, entity.owner, key) in ["air", "air_or_sea"])
 
 func storage_slots(entity: Dictionary) -> int:
 	match entity.key:
 		"strategicComplex", "airfield": return 2
 		"missileSilo", "ammoDepot", "shipyard", "port": return 4
-	return 2 if entity.key == "nuclearSub" else 1
+	return 2 if entity.key in ["nuclearSub", "submarine", "aegisCruiser", "bomber", "raider"] else 1
 
 func free_storage(entity: Dictionary) -> int:
 	var used := 0
@@ -147,18 +147,24 @@ func _dock_near(ship: Dictionary, port: Dictionary) -> bool:
 func _supplied(entity: Dictionary) -> bool:
 	return entity.get("supplied", true)
 
-func _at_service(unit: Dictionary, facility: Dictionary) -> bool:
+func _at_service(unit: Dictionary, facility: Dictionary, direct := false) -> bool:
 	if unit.get("naval", false):
+		if unit.get("moving", false) or unit.target != null:
+			return false
+		if direct:
+			return facility.key in ["strategicComplex", "missileSilo", "ammoDepot", "airfield"] + PORTS
 		if facility.key in PORTS:
-			return _dock_near(unit, facility) and not unit.get("moving", false) and unit.target == null
-		return facility.key in ["strategicComplex", "missileSilo", "ammoDepot"] and not unit.get("moving", false) and unit.target == null
+			return _dock_near(unit, facility)
+		return facility.key in ["strategicComplex", "missileSilo", "ammoDepot"]
 	if unit.get("fly", false):
+		if direct:
+			return unit.air_state in ["parked", "ready"] and facility.key in ["strategicComplex", "missileSilo", "ammoDepot", "airfield"] + PORTS
 		if facility.key == "airfield":
 			return unit.air_state == "parked" and is_same(unit.get("air_base"), facility)
 		return facility.key in ["strategicComplex", "missileSilo", "ammoDepot"] and unit.air_state == "parked"
 	return false
 
-func transfer_blocked(source: Dictionary, destination: Dictionary, key: String, count := 1) -> String:
+func transfer_blocked(source: Dictionary, destination: Dictionary, key: String, count := 1, direct := false) -> String:
 	if not _active(source, int(source.owner)) or not _active(destination, int(source.owner)) or is_same(source, destination):
 		return "Choose two different operational facilities or units of your nation."
 	if count <= 0 or local_count(source, key) < count:
@@ -173,7 +179,7 @@ func transfer_blocked(source: Dictionary, destination: Dictionary, key: String, 
 		return "Unload at a compatible facility first."
 	if not _supplied(source) or not _supplied(destination):
 		return "Supply route unavailable."
-	if (from_unit or to_unit) and not _at_service(source if from_unit else destination, destination if from_unit else source):
+	if (from_unit or to_unit) and not _at_service(source if from_unit else destination, destination if from_unit else source, direct):
 		return "Stop the ship at a friendly port or park the aircraft at its airfield."
 	return ""
 
@@ -195,27 +201,30 @@ func where_is(key: String, owner := 0) -> Array:
 			out.append({"entity": entity, "count": c, "can_launch": can_fire})
 	return out
 
-## One-click load of `key` from any friendly storage facility onto `destination`.
-## If `destination` is a moving ship or an airborne aircraft, automatically stops/lands it so loading can proceed.
-func quick_load_onto(destination: Dictionary, key: String, count := 1) -> String:
+## One-click load of `key` from any friendly storage facility (or `preferred_source`) onto `destination`.
+## If `destination` is a moving ship or an airborne aircraft, automatically stops/readies it so loading can proceed.
+func quick_load_onto(destination: Dictionary, key: String, count := 1, preferred_source = null) -> String:
 	var owner := int(destination.get("owner", 0))
 	if not destination.get("is_building", false):
-		if destination.get("naval", false) and (destination.get("moving", false) or destination.get("target") != null):
+		if destination.get("naval", false):
 			destination.target = null
 			destination.moving = false
 			destination.path = PackedVector3Array()
-		elif destination.get("fly", false) and destination.get("air_state", "") != "parked":
+		elif destination.get("fly", false) and not String(destination.get("air_state", "ready")) in ["parked", "ready"]:
 			var ab = destination.get("air_base")
 			if ab != null and Air.available(world, destination, ab):
 				Air.order_land(world, destination, ab)
 				return "Aircraft returning to airfield to load %s." % def_of(key).get("name", key)
+	if preferred_source != null and typeof(preferred_source) == TYPE_DICTIONARY and not preferred_source.is_empty():
+		if not is_same(preferred_source, destination) and transfer_blocked(preferred_source, destination, key, count, true) == "":
+			return start_transfer(preferred_source, destination, key, count, true)
 	var best_src := {}
 	var best_score := -999999.0
 	var plats := platforms_for(key, owner)
 	for b in world.buildings:
 		if b.dead or int(b.owner) != owner or not b.built or local_count(b, key) < count:
 			continue
-		if transfer_blocked(b, destination, key, count) != "":
+		if transfer_blocked(b, destination, key, count, true) != "":
 			continue
 		var is_launcher := plats.any(func(p): return is_same(p, b))
 		var score := float(local_count(b, key)) * 10.0 - (25.0 if is_launcher else 0.0) - Air.distance(b.node.position, destination.node.position) * 0.01
@@ -224,39 +233,43 @@ func quick_load_onto(destination: Dictionary, key: String, count := 1) -> String
 			best_src = b
 	if best_src.is_empty():
 		return "No stored %s available to load." % def_of(key).get("name", key)
-	return start_transfer(best_src, destination, key, count)
+	return start_transfer(best_src, destination, key, count, true)
 
 ## One-click load of 1 warhead of `key` onto the best available compatible launcher of `owner`.
-func quick_load_any_launcher(key: String, owner := 0, preferred_source = null) -> String:
+func quick_load_any_launcher(key: String, owner := 0, preferred_source = null, filter_kind := "") -> String:
 	var candidates := _other_platforms_for(key, owner, true)
+	if filter_kind == "sub":
+		candidates = candidates.filter(func(c): return not c.get("is_building", false) and c.key in ["nuclearSub", "submarine"])
+	elif filter_kind == "ship":
+		candidates = candidates.filter(func(c): return not c.get("is_building", false) and c.key in ["destroyer", "aegisCruiser", "corvette"])
+	elif filter_kind == "air":
+		candidates = candidates.filter(func(c): return not c.get("is_building", false) and c.get("fly", false))
+	elif filter_kind == "silo":
+		candidates = candidates.filter(func(c): return c.get("is_building", false))
 	candidates.sort_custom(func(a, b):
 		var a_unit := not bool(a.get("is_building", false))
 		var b_unit := not bool(b.get("is_building", false))
 		if a_unit != b_unit:
 			return a_unit
+		var a_sub := str(a.get("key", "")) in ["nuclearSub", "submarine"]
+		var b_sub := str(b.get("key", "")) in ["nuclearSub", "submarine"]
+		if a_sub != b_sub:
+			return a_sub
 		return local_count(a, key) < local_count(b, key))
 	for dst in candidates:
 		if free_storage(dst) <= 0:
 			continue
-		if not dst.get("is_building", false) and dst.get("naval", false) and (dst.get("moving", false) or dst.get("target") != null):
-			dst.target = null
-			dst.moving = false
-			dst.path = PackedVector3Array()
-		if preferred_source != null and typeof(preferred_source) == TYPE_DICTIONARY and not preferred_source.is_empty():
-			if not is_same(preferred_source, dst) and transfer_blocked(preferred_source, dst, key, 1) == "":
-				return start_transfer(preferred_source, dst, key, 1)
-		else:
-			var res := quick_load_onto(dst, key, 1)
-			if res == "":
-				return ""
+		var res := quick_load_onto(dst, key, 1, preferred_source)
+		if res == "" or res.begins_with("Aircraft returning"):
+			return res
 	return "No compatible launcher with free payload slots."
 
 func _changed_logistics() -> void:
 	logistics_revision += 1
 	changed.emit()
 
-func start_transfer(source: Dictionary, destination: Dictionary, key: String, count := 1) -> String:
-	var reason := transfer_blocked(source, destination, key, count)
+func start_transfer(source: Dictionary, destination: Dictionary, key: String, count := 1, direct := false) -> String:
+	var reason := transfer_blocked(source, destination, key, count, direct)
 	if reason != "":
 		return reason
 	var loading: bool = not (source.get("is_building", false) and destination.get("is_building", false))
@@ -265,7 +278,7 @@ func start_transfer(source: Dictionary, destination: Dictionary, key: String, co
 	_manifest(source)[key] = local_count(source, key) - count
 	transfers.append({"id": next_transfer_id, "key": key, "owner": source.owner, "count": count,
 		"source": source, "destination": destination, "start": position, "position": position,
-		"remaining": time, "duration": time, "loading": loading, "status": "Handling"})
+		"remaining": time, "duration": time, "loading": loading, "direct_load": direct, "status": "Handling"})
 	next_transfer_id += 1
 	_changed_logistics()
 	return ""
@@ -336,7 +349,7 @@ func _update_transfers(delta: float) -> void:
 				_end_transfer(job, source)
 				continue
 			var from_site: bool = source.get("is_building", false)
-			if not _at_service(destination if from_site else source, source if from_site else destination):
+			if not _at_service(destination if from_site else source, source if from_site else destination, bool(job.get("direct_load", false))):
 				_end_transfer(job, source)
 				continue
 			if not _active(source, job.owner) or not _supplied(source):
@@ -466,9 +479,23 @@ func pooled_available(key: String) -> int:
 	return maxi(0, count)
 
 func _other_platforms_for(key: String, owner: int, storage := false) -> Array:
+	if category(key) == "nuclear":
+		if key == "poseidon":
+			return world.units.filter(func(u): return u.owner == owner and not u.dead and (storage or not world.disabled(u)) and u.key in ["nuclearSub", "submarine"])
+		var nav_keys := ["nuclearSub", "submarine", "destroyer", "aegisCruiser"] if key in ["nuke", "mirv", "hydrogenBomb", "nuclearEmp", "burevestnik"] else ["nuclearSub", "submarine", "destroyer", "aegisCruiser", "corvette"]
+		var air_keys := ["bomber", "raider"] if key in ["nuke", "mirv", "hydrogenBomb", "nuclearEmp"] else ([] if key == "burevestnik" else AIR_LAUNCHERS)
+		var out: Array = [] if key in ["bunkerBuster", "tsarBomba"] else _sites(owner, key)
+		for u in world.units:
+			if u.dead or int(u.owner) != owner or (not storage and world.disabled(u)):
+				continue
+			if not key in ["bunkerBuster", "tsarBomba"] and u.key in nav_keys:
+				out.append(u)
+			elif u.key in air_keys and (storage or u.get("air_state", "ready") in ["ready", "parked"]):
+				out.append(u)
+		return out
 	var kind: String = load("res://scripts/arsenal_catalog.gd").platform_kind(world, owner, key)
 	if key == "tactical" and kind == "ground":
-		return _sites(owner, key) + world.units.filter(func(u): return u.owner == owner and not u.dead and u.key in TACTICAL_SHIPS and (storage or not world.disabled(u)))
+		return _sites(owner, key) + world.units.filter(func(u): return u.owner == owner and not u.dead and u.key in (TACTICAL_SHIPS + ["corvette", "submarine", "nuclearSub"]) and (storage or not world.disabled(u)))
 	if kind == "air":
 		# In the air or waiting at its airfield (it takes off with the missile); not one being rearmed or landing.
 		return world.units.filter(func(u): return u.owner == owner and not u.dead and u.key in AIR_LAUNCHERS and (storage or (not world.disabled(u) and u.get("air_state", "ready") in ["ready", "parked"])))
@@ -477,9 +504,9 @@ func _other_platforms_for(key: String, owner: int, storage := false) -> Array:
 	if kind == "air_or_sea":
 		return world.units.filter(func(u): return u.owner == owner and not u.dead and (storage or not world.disabled(u)) and (u.key in ["submarine", "nuclearSub", "destroyer", "corvette", "aegisCruiser"] or (u.key in AIR_LAUNCHERS and (storage or u.get("air_state", "ready") in ["ready", "parked"]))))
 	if kind in ["sea", "sub"]:
-		return world.units.filter(func(u): return u.owner == owner and not u.dead and (storage or not world.disabled(u)) and u.key in (["nuclearSub"] if kind == "sub" or category(key) == "nuclear" else ["submarine", "nuclearSub", "destroyer", "corvette", "aegisCruiser"]))
+		return world.units.filter(func(u): return u.owner == owner and not u.dead and (storage or not world.disabled(u)) and u.key in (["nuclearSub", "submarine"] if kind == "sub" else ["submarine", "nuclearSub", "destroyer", "corvette", "aegisCruiser"]))
 	if kind in ["strategic", "ground_or_sea"]:
-		var ships: Array = world.units.filter(func(u): return u.owner == owner and not u.dead and (storage or not world.disabled(u)) and u.key in (["nuclearSub"] if kind == "strategic" else ["submarine", "nuclearSub", "destroyer", "corvette", "aegisCruiser"]))
+		var ships: Array = world.units.filter(func(u): return u.owner == owner and not u.dead and (storage or not world.disabled(u)) and u.key in ["submarine", "nuclearSub", "destroyer", "corvette", "aegisCruiser"])
 		return _sites(owner, key) + ships
 	return _sites(owner, key)
 
@@ -493,8 +520,14 @@ func _sites(owner: int, key: String) -> Array:
 
 ## In plain words, what launches `key` for `owner` ("a Jet, Bomber, Stealth Fighter or Raider").
 func launchers_text(key: String, owner := 0) -> String:
+	if category(key) == "nuclear":
+		if key == "poseidon":
+			return "a Submarine or Nuclear Submarine"
+		if key in ["bunkerBuster", "tsarBomba"]:
+			return "a Bomber, Raider, Stealth Fighter or Jet"
+		return "a Submarine, Missile Ship (Destroyer/Cruiser), Bomber, Missile Silo or Strategic Complex"
 	var kind: String = load("res://scripts/arsenal_catalog.gd").platform_kind(world, owner, key)
-	if key == "tactical" and kind == "ground": return "a missile silo, destroyer or Aegis cruiser"
+	if key == "tactical" and kind == "ground": return "a missile silo, submarine, destroyer or cruiser"
 	var named := func(b: String) -> String: return str(world.building_defs.get(b, {}).get("name", b))
 	var site: String = "a " + named.call("missileSilo") + (" or a " + named.call("strategicComplex") if category(key) == "nuclear" else (" or a " + named.call("specialLab") if category(key) == "special" else ""))
 	match kind:

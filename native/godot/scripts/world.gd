@@ -252,6 +252,7 @@ var sim_tick := 0         # simulation steps taken (staggers per-unit work; test
 var missile_source = null
 var missile_aim := ""     # missile type waiting for a target click
 var landing_aim := false   # the next click on the map is where a selected transport puts its load ashore
+var pickup_aim := false    # the next click on the map sends a selected transport to pick up friendly troops there
 var land_buyer = null     # the settlement whose town hall is buying land (click a highlighted hex)
 var land_marks: MeshInstance3D
 var cam_lift := 0.0       # raises the camera's look-at point above the ground (captures)
@@ -1724,7 +1725,11 @@ func order_attack(selected: Array, enemy: Dictionary) -> void:
 
 func order_move(selected: Array, point: Vector3, attack := false) -> void:
 	selected = selected.filter(func(u): return not u.dead)   # the fallen take no orders
-	for u in selected: u.board = null  # explicit orders replace pending boarding
+	for u in selected:
+		u.board = null  # explicit orders replace pending boarding
+		u.erase("unload_go")
+		u.erase("pickup_go")
+		u.erase("return_base")
 	# Aircraft sent onto one of their nation's air bases land there and stay.
 	var landed := []
 	var base_orders := []
@@ -1734,12 +1739,19 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 				if not u.get("fly", false) or u.owner != b.owner or u.key in AirOperations.TUBE_LAUNCHED or u.get("carrier") != null:
 					continue
 				base_orders.append(u)
-				if AirOperations.order_land(self, u, b):
+				if not (u.get("cargo", []) as Array).is_empty():
+					if preload("res://scripts/airlift.gd").order_return_home(self, [u]) > 0:
+						landed.append(u)
+				elif AirOperations.order_land(self, u, b):
 					landed.append(u)
 	if not base_orders.is_empty() and base_orders[0].owner == 0:
 		hud.notice("%d/%d aircraft cleared to land. Check fuel, runway and available slots." % [landed.size(), base_orders.size()])
 	selected = selected.filter(func(u):
-		return not base_orders.any(func(ordered): return is_same(ordered, u)) and _air_order_allowed(u, point))
+		if base_orders.any(func(ordered): return is_same(ordered, u)):
+			return false
+		if u.get("fly", false) and not (u.get("cargo", []) as Array).is_empty():
+			return true
+		return _air_order_allowed(u, point))
 	for u in selected:
 		u.erase("payload_order")
 		u.erase("patrol")
@@ -2638,6 +2650,7 @@ func clear_match() -> void:
 	cancel_placement()
 	cancel_transport()
 	cancel_landing()
+	cancel_pickup()
 	select_building(null)
 	for b in buildings:
 		b.root.queue_free()
@@ -4650,6 +4663,7 @@ func begin_landing() -> void:
 	cancel_placement()
 	cancel_transport()
 	cancel_missile()
+	cancel_pickup()
 	landing_aim = true
 	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
 	hud.notice("Click where to put them ashore (right click cancels). Ships stand off the nearest beach.")
@@ -4670,6 +4684,33 @@ func landing_click(point: Vector3) -> void:
 		hud.notice("%d transport%s heading there; they unload on arrival." % [sent, "s" if sent > 1 else ""])
 	else:
 		hud.notice("No beach or clear ground within reach of that spot, or nothing aboard.")
+
+## "Pick up at...": the next left click on the map sends the selected transport to extract friendly troops there.
+func begin_pickup() -> void:
+	cancel_placement()
+	cancel_transport()
+	cancel_missile()
+	cancel_landing()
+	pickup_aim = true
+	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
+	hud.notice("Click on or near your troops to send the transport for extraction (right click cancels).")
+
+func cancel_pickup() -> void:
+	if pickup_aim:
+		pickup_aim = false
+		Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+
+func pickup_click(point: Vector3) -> void:
+	var Air := preload("res://scripts/airlift.gd")
+	var sent := 0
+	for t in units:
+		if t.selected and Air.is_transport(t) and int(t.owner) == 0 and Air.order_pickup_at(self, t, point):
+			sent += 1
+	cancel_pickup()
+	if sent > 0:
+		hud.notice("%d transport%s heading to pickup zone." % [sent, "s" if sent > 1 else ""])
+	else:
+		hud.notice("Selected transport is full or cannot reach that pickup point.")
 
 func cancel_missile() -> void:
 	missile_source = null
@@ -5157,6 +5198,9 @@ func ai_test(capture: bool) -> void:
 # hover: when they have nothing to do they circle, and they make strafing
 # passes rather than stopping over a target.
 func move_craft(unit: Dictionary, delta: float) -> void:
+	if unit.get("unload_go") != null or unit.get("pickup_go") != null:
+		unit.enemy = null
+		unit.attack_move = false
 	if unit.get("fly", false) and AirOperations.update(self, unit, delta):
 		return
 	var node: Node3D = unit.node
@@ -5459,7 +5503,7 @@ func disabled(ent: Dictionary) -> bool:
 	return ent.get("disabled_until", 0.0) > game_time
 
 func update_combat(unit: Dictionary, delta: float) -> void:
-	if unit.has("payload_order") or unit.has("patrol"):
+	if unit.has("payload_order") or unit.has("patrol") or unit.get("unload_go") != null or unit.get("pickup_go") != null:
 		return
 	var air_st := String(unit.get("air_state", "ready"))
 	if unit.get("fly", false) and (unit.get("ammo", 0) <= 0 or not air_st in ["ready", "standby"]):
@@ -6396,6 +6440,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_RIGHT and landing_aim:
 			if event.pressed:
 				cancel_landing()
+		elif event.button_index == MOUSE_BUTTON_LEFT and pickup_aim:
+			if event.pressed:
+				var point = ground_point(event.position)
+				if point != null:
+					pickup_click(point)
+		elif event.button_index == MOUSE_BUTTON_RIGHT and pickup_aim:
+			if event.pressed:
+				cancel_pickup()
 		elif event.button_index == MOUSE_BUTTON_LEFT and transport_kind != "":
 			if event.pressed:
 				transport_click(event.position, event.shift_pressed)
@@ -6525,14 +6577,18 @@ func _unhandled_input(event: InputEvent) -> void:
 				var point = ground_point(event.position)
 				if point != null:
 					passage.check_order(selected, point, func(): order_move(selected,point,true))
+			elif target == null and preload("res://scripts/airlift.gd").transport_under(self, selected, event.position) != null:
+				preload("res://scripts/airlift.gd").order_board(self, selected, preload("res://scripts/airlift.gd").transport_under(self, selected, event.position))   # board a helicopter or landing ship
+			elif target == null and not preload("res://scripts/airlift.gd").troops_under(self, selected, event.position).is_empty():
+				var carriers: Array = selected.filter(func(u): return preload("res://scripts/airlift.gd").is_transport(u) and int(u.owner) == 0 and preload("res://scripts/airlift.gd").room(u) > 0)
+				if not carriers.is_empty():
+					preload("res://scripts/airlift.gd").order_board(self, preload("res://scripts/airlift.gd").troops_under(self, selected, event.position), carriers[0])   # helicopter right-clicked onto friendly troops to extract them
 			elif target == null and garrison_site_under(selected, event.position) != null:
 				UrbanGarrison.order_garrison(self, selected, garrison_site_under(selected, event.position))   # infantry into a building
 			elif target == null and fortifications != null and ground_point(event.position) != null and fortifications.order_enter(selected, fortifications.shelter_at(ground_point(event.position), 0)) > 0:
 				pass   # infantry into a friendly trench or forward bunker
 			elif target == null and fortifications != null and ground_point(event.position) != null and fortifications.order_resume_dig(selected, fortifications.unbuilt_at(ground_point(event.position), 0)) > 0:
 				pass   # infantry resume digging an unfinished trench or obstacle
-			elif target == null and preload("res://scripts/airlift.gd").transport_under(self, selected, event.position) != null:
-				preload("res://scripts/airlift.gd").order_board(self, selected, preload("res://scripts/airlift.gd").transport_under(self, selected, event.position))   # board a helicopter
 			elif target != null:
 				var valid_attackers := selected.filter(func(u): return u.dmg > 0 and effectiveness(u, target) > 0.01)
 				if valid_attackers.is_empty() and preload("res://scripts/war_tools.gd").is_submarine(target) and not selected.is_empty() and hud != null:
@@ -6668,13 +6724,14 @@ func _input(event: InputEvent) -> void:
 			return   # the menu closes itself on Esc (menu.gd); opening it again here would undo that
 		# Esc first cancels what is in progress and closes an open window; with
 		# nothing to cancel or close it pauses (it used to pause over an open window).
-		var busy: bool = placing != "" or transport_kind != "" or missile_aim != "" or landing_aim or selected_building != null
+		var busy: bool = placing != "" or transport_kind != "" or missile_aim != "" or landing_aim or pickup_aim or selected_building != null
 		var closed: bool = false if busy else hud.close_windows()
 		if not busy and not closed and menu != null and menu._root != null:
 			menu.open_pause()
 			get_viewport().set_input_as_handled()   # the same press must not reach menu.gd and close it again
 		cancel_missile()
 		cancel_landing()
+		cancel_pickup()
 		cancel_transport()
 		cancel_placement()
 		cancel_land_purchase()

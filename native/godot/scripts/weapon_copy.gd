@@ -45,7 +45,7 @@ static func summary(w: Node, key: String) -> String:
 	var def: Dictionary = w.missiles.def_of(key)
 	if def.is_empty(): return "Unavailable weapon."
 	var kind: String = preload("res://scripts/arsenal_catalog.gd").platform_kind(w, 0, key)
-	var lines: Array[String] = [role(def, key), "Launch from: " + str(PLATFORMS.get(kind, "a compatible platform")) + "."]
+	var lines: Array[String] = [role(def, key), "Launch from: " + w.missiles.launchers_text(key) + "."]
 	var special: String = str(def.get("special", ""))
 	if special in ["emp", "hemp"]:
 		lines.append("Radius %d m. No blast damage." % int(def.get("radius", 0)))

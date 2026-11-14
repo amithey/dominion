@@ -1154,6 +1154,7 @@ func _nuclear() -> void:
 	var dc = hud.world.defcon
 	if dc == null:
 		return
+	var ms: Node = hud.world.missiles
 	var lvl: int = dc.level()
 	var card: VBoxContainer = hud._card(hud.UI.BAD if lvl <= 2 else hud.UI.GOLD)
 	card.add_child(hud._text("DEFCON %d" % lvl, 22, hud.UI.CREAM, true))
@@ -1172,15 +1173,25 @@ func _nuclear() -> void:
 	if p > 2:
 		up.tooltip_text = "DEFCON %d: %s%s" % [p - 1, dc.posture_text(p - 1, armed), (" Every nation will think less of you (%d)." % (-8 if armed else -4)) if p - 1 == 2 else (" Nuclear powers -4 relations." if p - 1 == 3 else "")]
 	hud._button(row, "Stand down", func(): return dc.lower_posture(), p < 5)
+	if p > 2:
+		var auth_btn: Button = hud._button(row, "Authorise Nuclear Release (DEFCON 2)", func(): return dc.authorise_release(), true, "bad")
+		auth_btn.tooltip_text = "Immediately set your forces to DEFCON 2 so nuclear warheads can be armed and launched."
 	var release: String = dc.release_blocked()
 	if armed:
-		mine.add_child(hud._text("Nuclear release: %s" % ("authorised." if release == "" else release), 12, hud.UI.BAD if release == "" else hud.UI.MUTED))
+		mine.add_child(hud._text("Nuclear release: %s" % ("AUTHORISED (weapons free)" if release == "" else release), 12, hud.UI.GOOD if release == "" else hud.UI.BAD))
 	else:
 		# No bomb, no release: a threshold state may still break out (wmd.gd).
 		var threshold: bool = preload("res://scripts/cbrn_data.gd").THRESHOLD.has(preload("res://scripts/cbrn_data.gd").ident(hud.world, 0))
 		_wrap(mine, "Nuclear weapons: none.%s Your alert is a conventional mobilisation and does not raise the world's nuclear tension." % (" A Nuclear Breakout could build them." if threshold else ""), 12, hud.UI.MUTED)
 	if armed:
 		mine.add_child(hud._text("Deterrent: %s" % ("ready (a second strike is possible)" if dc.deterrent(0) else "none: no nuclear missile stored and no nuclear submarine at sea"), 12, hud.UI.MUTED))
+	if ms != null:
+		var arsenal_row: HBoxContainer = hud._row(mine)
+		var nuke_count: int = ms.stored("nuclear", false)
+		arsenal_row.add_child(hud._text("Nuclear warheads in stock / loaded: %d" % nuke_count, 13, hud.UI.CREAM, true))
+		hud._button(arsenal_row, "Open Arsenal & Load Launchers", func():
+			hud.toggle_panel("ordnance", true)
+			return "", true, "good")
 	var nt = hud.world.get("tests")
 	if nt != null and dc.nuclear(0):
 		var test: VBoxContainer = hud._card(hud.UI.BAD)
@@ -1443,10 +1454,26 @@ func ordnance() -> void:
 		return
 	var weapon_copy := preload("res://scripts/weapon_copy.gd")
 	var own_jobs: Array = ms.transfers.filter(func(j): return j.owner == 0)
+	var dc = w.get("defcon")
+	if dc != null:
+		var rel_err: String = dc.release_blocked()
+		var p_lvl: int = int(dc.posture[0])
+		var status_card: VBoxContainer = hud._card(hud.UI.GOOD if rel_err == "" else hud.UI.GOLD)
+		var s_row: HBoxContainer = hud._row(status_card)
+		var s_lbl: Label = hud._text("Nuclear Release: %s  ·  Your Posture: DEFCON %d" % ["AUTHORISED (Weapons Free)" if rel_err == "" else "LOCKED (Requires DEFCON 2)", p_lvl], 13, hud.UI.GOOD if rel_err == "" else hud.UI.CREAM, true)
+		s_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		s_row.add_child(s_lbl)
+		if rel_err != "":
+			var auth_b: Button = hud._button(s_row, "Authorise Nuclear Release (DEFCON 2)", func():
+				var msg: String = dc.authorise_release()
+				hud.refresh_side()
+				return msg, true, "bad")
+			auth_b.tooltip_text = "Set your forces to DEFCON 2 so nuclear missiles and warheads can be launched immediately."
 	_tabs([["Warheads & Stock", "warheads"], ["Platforms & Sites", "platforms"], ["Transfers (%d)" % own_jobs.size(), "transfers"]], ordnance_tab, func(v): ordnance_tab = v)
 	if ordnance_tab == "warheads":
 		var inv_card: VBoxContainer = hud._card(hud.UI.GOLD)
-		inv_card.add_child(hud._text("Arsenal Inventory  ·  Conventional %d/%d  ·  Nuclear %d" % [ms.stored("conventional", true), ms.capacity("conventional"), ms.stored("nuclear", false)], 16, hud.UI.CREAM, true))
+		inv_card.add_child(hud._text("Arsenal Inventory  ·  Nuclear Warheads: %d  ·  Conventional Stock: %d/%d" % [ms.stored("nuclear", false), ms.stored("conventional", true), ms.capacity("conventional")], 16, hud.UI.CREAM, true))
+		_wrap(inv_card, "Nuclear warheads and tactical missiles can be loaded onto Submarines, Missile Ships (Destroyers / Cruisers / Corvettes), Strike Aircraft (Bombers / Jets), or launched from Missile Silos and Strategic Complexes.", 12, hud.UI.MUTED)
 		var any_inv := false
 		for m in ms.types():
 			var total: int = ms.total_for(m, 0)
@@ -1454,6 +1481,7 @@ func ordnance() -> void:
 				continue
 			any_inv = true
 			var is_local: bool = ms.local_weapon(m)
+			var is_nuke: bool = ms.category(m) == "nuclear"
 			var ready: Array = ms.ready_platforms(m, 0)
 			var why: String = ms.locked(m)
 			if why == "" and ready.is_empty():
@@ -1461,32 +1489,82 @@ func ordnance() -> void:
 			var loc_parts := PackedStringArray()
 			if is_local:
 				for loc in ms.where_is(m, 0):
-					loc_parts.append("%s ×%d%s" % [hud._facility_name(loc.entity), int(loc.count), " (Ready)" if loc.can_launch else " (Stored)"])
+					loc_parts.append("%s ×%d%s" % [hud._facility_name(loc.entity), int(loc.count), " (Ready to Fire)" if loc.can_launch else " (Stored)"])
 				for job in own_jobs:
 					if job.key == m:
 						loc_parts.append("Loading/Transit ×%d (%.0fs)" % [int(job.count), maxf(0.0, float(job.remaining))])
 			else:
 				loc_parts.append("Shared pool · %d ready launcher(s)" % ready.size())
-			var r: HBoxContainer = hud._row(inv_card)
-			var label_col: Color = hud.UI.BAD if ms.category(m) == "nuclear" else hud.UI.CREAM
-			var info_lbl: Label = hud._text("%s  ×%d   [%s]" % [weapon_copy.display_name(w, m), total, " · ".join(loc_parts)], 13, label_col)
+			var item_box: VBoxContainer = hud._card(hud.UI.BAD if is_nuke else Color(0, 0, 0, 0))
+			inv_card.add_child(item_box)
+			var r: HBoxContainer = hud._row(item_box)
+			var badge: String = "[NUCLEAR] " if is_nuke else "[MISSILE] "
+			var label_col: Color = hud.UI.BAD if is_nuke else hud.UI.CREAM
+			var info_lbl: Label = hud._text("%s%s  ×%d   —   %s" % [badge, weapon_copy.display_name(w, m), total, " · ".join(loc_parts)], 13, label_col, true)
 			info_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			info_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			r.add_child(info_lbl)
-			if is_local:
-				var m_key: String = m
-				var load_btn: Button = hud._button(r, "Load Launcher", func():
-					var err: String = ms.quick_load_any_launcher(m_key, 0)
-					hud.refresh_side()
-					return "Loading %s onto compatible launcher." % weapon_copy.display_name(w, m_key) if err == "" else err)
-				load_btn.tooltip_text = "Automatically load 1 warhead from storage onto a ready Bomber, Submarine, Ship, or Silo."
 			var fire_key: String = m
 			var b: Button = hud._button(r, "Target & Launch", func():
 				w.begin_missile(fire_key)
 				return "", why == "", "good")
 			b.tooltip_text = why if why != "" else "Select a target on the map (fires 1 ready warhead)"
+			if is_local:
+				var load_row: HBoxContainer = hud._row(item_box, 4)
+				load_row.add_child(hud._text("Load onto:", 12, hud.UI.MUTED))
+				var m_key: String = m
+				var compat: Array = ms._other_platforms_for(m_key, 0, true).filter(func(p): return ms.free_storage(p) > 0)
+				var has_sub: bool = compat.any(func(p): return not p.get("is_building", false) and p.key in ["nuclearSub", "submarine"])
+				var has_ship: bool = compat.any(func(p): return not p.get("is_building", false) and p.key in ["destroyer", "aegisCruiser", "corvette"])
+				var has_air: bool = compat.any(func(p): return not p.get("is_building", false) and p.get("fly", false))
+				var has_silo: bool = compat.any(func(p): return p.get("is_building", false))
+				if has_sub:
+					hud._button(load_row, "Submarine", func():
+						var err: String = ms.quick_load_any_launcher(m_key, 0, null, "sub")
+						hud.refresh_side()
+						return "Loading %s onto Submarine." % weapon_copy.display_name(w, m_key) if err == "" else err)
+				if has_ship:
+					hud._button(load_row, "Missile Ship", func():
+						var err: String = ms.quick_load_any_launcher(m_key, 0, null, "ship")
+						hud.refresh_side()
+						return "Loading %s onto Missile Ship." % weapon_copy.display_name(w, m_key) if err == "" else err)
+				if has_air:
+					hud._button(load_row, "Bomber / Aircraft", func():
+						var err: String = ms.quick_load_any_launcher(m_key, 0, null, "air")
+						hud.refresh_side()
+						return "Loading %s onto Aircraft." % weapon_copy.display_name(w, m_key) if err == "" else err)
+				if has_silo:
+					hud._button(load_row, "Silo / Complex", func():
+						var err: String = ms.quick_load_any_launcher(m_key, 0, null, "silo")
+						hud.refresh_side()
+						return "Transferring %s to Silo." % weapon_copy.display_name(w, m_key) if err == "" else err)
+				var load_any: Button = hud._button(load_row, "Best Launcher", func():
+					var err: String = ms.quick_load_any_launcher(m_key, 0)
+					hud.refresh_side()
+					return "Loading %s onto compatible launcher." % weapon_copy.display_name(w, m_key) if err == "" else err)
+				load_any.tooltip_text = "Automatically load 1 warhead from storage onto a ready Submarine, Missile Ship, Bomber, or Silo."
 		if not any_inv:
-			inv_card.add_child(hud._text("No missiles or nuclear warheads in storage yet. Select a Missile Silo, Strategic Complex, or Special Lab to produce weapons.", 12, hud.UI.MUTED))
+			inv_card.add_child(hud._text("No missiles or nuclear warheads in storage yet. Use the production list below or select a Strategic Complex / Missile Silo to build warheads.", 12, hud.UI.MUTED))
+		var prod_sites: Array = w.buildings.filter(func(b): return not b.dead and b.owner == 0 and b.built and b.key in ["strategicComplex", "missileSilo", "specialLab"])
+		if not prod_sites.is_empty():
+			var prod_card: VBoxContainer = hud._card()
+			prod_card.add_child(hud._text("PRODUCE WARHEADS & MISSILES", 14, hud.UI.GOLD, true))
+			for site in prod_sites:
+				var s_ref: Dictionary = site
+				var q_info: String = "Queue: %d/5" % s_ref.queue.size()
+				prod_card.add_child(hud._text("%s  ·  %d/%d storage free  ·  %s" % [hud._facility_name(s_ref), ms.free_storage(s_ref), ms.storage_slots(s_ref), q_info], 13, hud.UI.CREAM, true))
+				var btn_row := HFlowContainer.new()
+				btn_row.add_theme_constant_override("separation", 4)
+				prod_card.add_child(btn_row)
+				for m_key in ms.listed_at(s_ref.key):
+					var mk: String = m_key
+					var lock_reason: String = ms.locked(mk)
+					var price_txt: String = hud.cost_text(ms.production_cost(mk))
+					var pb: Button = hud._button(btn_row, "Build %s (%s)" % [weapon_copy.display_name(w, mk), price_txt], func():
+						var err: String = ms.produce(s_ref, mk)
+						hud.refresh_side()
+						return ("Queued %s at %s." % [weapon_copy.display_name(w, mk), hud._facility_name(s_ref)]) if err == "" else err, lock_reason == "")
+					pb.tooltip_text = lock_reason if lock_reason != "" else weapon_copy.summary(w, mk)
 		return
 
 	if ordnance_tab == "transfers":

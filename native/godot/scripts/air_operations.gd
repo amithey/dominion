@@ -276,7 +276,7 @@ static func return_to_base(u: Dictionary) -> void:
 
 static func consume(u: Dictionary) -> void:
 	u.ammo = maxi(0, int(u.ammo) - 1)
-	if u.ammo == 0:
+	if u.ammo == 0 and not (str(u.get("key", "")) in ["helicopter", "heavyLift"]):
 		u.air_state = "returning"
 		u.egress = null
 
@@ -413,19 +413,22 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 		else:
 			u.idle_air = 0.0
 	if u.air_state == "ready":
+		var transport_busy: bool = u.get("unload_go") != null or u.get("pickup_go") != null or not (u.get("cargo", []) as Array).is_empty()
+		if transport_busy:
+			u.sortie_left = maxf(float(u.get("sortie_left", 0.0)), bingo_fuel(world, u, u.get("air_base")) + 20.0)
 		var assigned = u.get("air_base")
 		var base_lost: bool = assigned != null and not available(world, u, assigned)
 		var home = assigned if not base_lost else base_for(world, u, u.node.position, INF)
-		var bingo_hit: bool = float(u.get("sortie_left", 0.0)) <= bingo_fuel(world, u, home)
+		var bingo_hit: bool = not transport_busy and float(u.get("sortie_left", 0.0)) <= bingo_fuel(world, u, home)
 		var mission_hit := false
-		if check_due and not bingo_hit and not base_lost:
+		if check_due and not bingo_hit and not base_lost and not transport_busy:
 			var target = u.get("enemy")
 			var point: Vector3 = target.node.position if target != null and not target.dead else u.get("target", null) if u.get("target") != null else u.node.position
 			var release := attack_release_range(u) if target != null else 0.0
 			if u.has("payload_order"):
 				release = world.missiles.release_range(u.payload_order.key, u)
 			mission_hit = mission_blocked(world, u, point, 4.0, release) != ""
-		if (bingo_hit or base_lost or mission_hit) and (u.get("had_base", false) or home != null or int(u.owner) > 0):
+		if (bingo_hit or base_lost or mission_hit) and not transport_busy and (u.get("had_base", false) or home != null or int(u.owner) > 0):
 			return_to_base(u)
 			if not u.get("fuel_warned", false) and u.owner == 0 and world.hud != null:
 				u.fuel_warned = true
@@ -596,7 +599,7 @@ static func _taxi_out(world: Node, u: Dictionary) -> bool:
 	if not preload("res://scripts/war_costs.gd").pay(world, int(u.owner), 0.0, preload("res://scripts/war_costs.gd").sortie_fuel(u)):
 		preload("res://scripts/war_costs.gd").blocked(world, u, "aviation fuel")
 		return false
-	u.sortie_left = Costs.SORTIE_SECONDS
+	u.sortie_left = fuel_capacity(u)
 	u.fuel_position = u.node.position
 	u.fuel_warned = false
 	u.operating_shortage = ""
