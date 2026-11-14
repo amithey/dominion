@@ -480,7 +480,8 @@ func projectile(kind: String, from: Vector3, to: Vector3, on_hit: Callable, dela
 	launched[kind] = int(launched.get(kind, 0)) + 1
 	_projectiles.append({"kind": kind, "node": node, "from": from, "to": to, "t": -delay, "time": time, "arc": arc, "hit": on_hit, "track": track, "puff": 0.0})
 	if delay <= 0.0 and audio and kind != "bomb":
-		audio.play("cannon", from, -8.0, 1.2)
+		var snd := "missile_launch" if kind in ["missile", "rocket"] else ("artillery_fire" if kind == "shell_arc" else "cannon")
+		audio.play(snd, from, -7.0, 1.4 if kind in ["missile", "shell_arc"] else 1.1)
 
 func _projectile_mesh(kind: String) -> Mesh:
 	if not _projectile_meshes.has(kind):
@@ -636,7 +637,7 @@ func mushroom(at: Vector3, size: float) -> void:
 	_live.append({"node": mark, "age": 0.0, "life": 240.0, "kind": "scorch"})
 	burn(at, 60.0)
 	if audio:
-		audio.play("explosion", at, 6.0, 6.0)
+		audio.play("nuke_blast", at, 6.0, 6.0)
 	shake.emit(3.0, at)
 
 ## An EMP: a pale blue pulse and a crackle of sparks, no fireball.

@@ -39,9 +39,11 @@ var _sun_captured := false
 var _city_player: AudioStreamPlayer
 var _crisis_player: AudioStreamPlayer
 var _strat_player: AudioStreamPlayer
+var _nature_player: AudioStreamPlayer
 var _city_mix := 0.0
 var _crisis_mix := 0.0
 var _strat_mix := 0.0
+var _nature_mix := 0.0
 
 func _init(world: Node) -> void:
 	w = world
@@ -406,58 +408,44 @@ func _update_lighting_and_windows(_delta: float) -> void:
 			w.sun.light_energy = _base_sun_energy * lerpf(1.0, 0.76, dusk)
 		preload("res://scripts/building_models.gd").set_window_glow_scale(lerpf(1.0, 2.35, maxf(dusk, winter * 0.65)))
 
+func _load_amb_stream(path: String) -> AudioStream:
+	if ResourceLoader.exists(path):
+		return load(path)
+	return null
+
 func _setup_soundscape() -> void:
 	var bus := "SFX" if AudioServer.get_bus_index("SFX") >= 0 else "Master"
 	_city_player = AudioStreamPlayer.new()
-	_city_player.stream = _make_loop_stream("city")
+	_city_player.stream = _load_amb_stream("res://audio/amb_city.wav")
 	_city_player.bus = bus
 	_city_player.volume_db = -80.0
 	add_child(_city_player)
-	_city_player.play()
+	if _city_player.stream != null:
+		_city_player.play()
 
 	_crisis_player = AudioStreamPlayer.new()
-	_crisis_player.stream = _make_loop_stream("crisis")
+	_crisis_player.stream = _load_amb_stream("res://audio/amb_battle.wav")
 	_crisis_player.bus = bus
 	_crisis_player.volume_db = -80.0
 	add_child(_crisis_player)
-	_crisis_player.play()
+	if _crisis_player.stream != null:
+		_crisis_player.play()
 
 	_strat_player = AudioStreamPlayer.new()
-	_strat_player.stream = _make_loop_stream("strat")
+	_strat_player.stream = _load_amb_stream("res://audio/amb_war_room.wav")
 	_strat_player.bus = bus
 	_strat_player.volume_db = -80.0
 	add_child(_strat_player)
-	_strat_player.play()
+	if _strat_player.stream != null:
+		_strat_player.play()
 
-static func _make_loop_stream(kind: String) -> AudioStreamWAV:
-	var rate := 11025
-	var secs := 2.0
-	var count := int(rate * secs)
-	var data := PackedByteArray()
-	data.resize(count * 2)
-	for i in range(count):
-		var t := float(i) / float(rate)
-		var sample := 0.0
-		if kind == "city":
-			# Warm low urban murmur + gentle harmonic breeze
-			sample = sin(TAU * 65.0 * t) * 0.35 + sin(TAU * 130.0 * t + sin(TAU * 0.5 * t)) * 0.20 + sin(TAU * 195.0 * t) * 0.10
-		elif kind == "crisis":
-			# Distant civil-defence dual-tone siren + fire crackle modulation
-			var sweep := 420.0 + 140.0 * sin(TAU * 0.5 * t)
-			sample = sin(TAU * sweep * t) * 0.45 + sin(TAU * (sweep * 1.5) * t) * 0.18
-		else:
-			# Strategic command-room quiet radar pulse & carrier hum
-			var ping_env := exp(-fmod(t, 1.0) * 14.0)
-			sample = sin(TAU * 55.0 * t) * 0.25 + sin(TAU * 880.0 * t) * ping_env * 0.22
-		data.encode_s16(i * 2, clampi(int(sample * 2600.0), -32000, 32000))
-	var wav := AudioStreamWAV.new()
-	wav.format = AudioStreamWAV.FORMAT_16_BITS
-	wav.mix_rate = rate
-	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	wav.loop_begin = 0
-	wav.loop_end = count
-	wav.data = data
-	return wav
+	_nature_player = AudioStreamPlayer.new()
+	_nature_player.stream = _load_amb_stream("res://audio/amb_nature.wav")
+	_nature_player.bus = bus
+	_nature_player.volume_db = -80.0
+	add_child(_nature_player)
+	if _nature_player.stream != null:
+		_nature_player.play()
 
 func _update_soundscape(delta: float) -> void:
 	if w == null or _city_player == null:
@@ -475,16 +463,23 @@ func _update_soundscape(delta: float) -> void:
 				near_buildings += 1
 				if float(b.get("fire", 0.0)) > 0.02:
 					near_fires += 1
-	var zoom_close := 1.0 - smoothstep(75.0, 165.0, dist)
+	var zoom_close := 1.0 - smoothstep(75.0, 175.0, dist)
 	var zoom_far := smoothstep(200.0, 310.0, dist)
-	var want_city := zoom_close * clampf(float(near_buildings) / 4.0, 0.0, 1.0)
-	var want_crisis := zoom_close * clampf(float(near_fires), 0.0, 1.0)
+	var battle_mix := float(w.audio._battle_mix) if w.get("audio") != null else 0.0
+	var war_tension := float(w.audio._war_tension) if w.get("audio") != null else 0.0
+	var city_density := clampf(float(near_buildings) / 4.0, 0.0, 1.0)
+	var want_city := zoom_close * city_density * (1.0 - clampf(float(near_fires) * 0.5, 0.0, 0.7))
+	var want_nature := zoom_close * (1.0 - city_density * 0.85) * (1.0 - battle_mix * 0.85) * (1.0 - winter * 0.6)
+	var want_crisis := maxf(zoom_close * clampf(float(near_fires), 0.0, 1.0), maxf(battle_mix * 0.85, war_tension * 0.25))
 	var want_strat := zoom_far
 
-	_city_mix = move_toward(_city_mix, want_city, delta * 1.5)
-	_crisis_mix = move_toward(_crisis_mix, want_crisis, delta * 2.0)
-	_strat_mix = move_toward(_strat_mix, want_strat, delta * 1.5)
+	_city_mix = move_toward(_city_mix, want_city, delta * 1.2)
+	_nature_mix = move_toward(_nature_mix, want_nature, delta * 1.0)
+	_crisis_mix = move_toward(_crisis_mix, want_crisis, delta * 1.2)
+	_strat_mix = move_toward(_strat_mix, want_strat, delta * 1.2)
 
-	_city_player.volume_db = linear_to_db(maxf(0.0001, _city_mix * db_to_linear(-18.0)))
-	_crisis_player.volume_db = linear_to_db(maxf(0.0001, _crisis_mix * db_to_linear(-16.0)))
-	_strat_player.volume_db = linear_to_db(maxf(0.0001, _strat_mix * db_to_linear(-21.0)))
+	_city_player.volume_db = linear_to_db(maxf(0.0001, _city_mix * db_to_linear(-16.0)))
+	if _nature_player != null:
+		_nature_player.volume_db = linear_to_db(maxf(0.0001, _nature_mix * db_to_linear(-17.0)))
+	_crisis_player.volume_db = linear_to_db(maxf(0.0001, _crisis_mix * db_to_linear(-15.0)))
+	_strat_player.volume_db = linear_to_db(maxf(0.0001, _strat_mix * db_to_linear(-22.0)))

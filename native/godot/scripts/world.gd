@@ -1342,7 +1342,8 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		"reload": randf() * minf(float(def.cooldown), 3.0), "search": randf() * 0.35, "enemy": null,
 		"attack_move": false, "dead": false, "dead_time": 0.0, "stance": "",
 		"path": PackedVector3Array(), "path_goal": Vector3.INF, "repath": 0.0, "build_site": null,
-		"engine": audio.add_engine(node) if vehicle else null,
+		"engine_kind": _engine_kind(key, false, false, false),
+		"engine": audio.add_engine(node, _engine_kind(key, false, false, false)) if vehicle else null,
 	})
 	if unit.player:
 		# Looked up once: searching the clip list every frame was most of the CPU time.
@@ -1579,7 +1580,8 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 		"reload": randf() * minf(float(def.cooldown), 3.0), "search": randf() * 0.35, "enemy": null,
 		"attack_move": false, "dead": false, "dead_time": 0.0, "stance": "",
 		"path": PackedVector3Array(), "path_goal": Vector3.INF, "repath": 0.0, "build_site": null,
-		"engine": audio.add_engine(node), "orbit": at,
+		"engine_kind": _engine_kind(key, naval, key in AIR, parts.rotor != null or not parts.get("tail_rotors", []).is_empty()),
+		"engine": audio.add_engine(node, _engine_kind(key, naval, key in AIR, parts.rotor != null or not parts.get("tail_rotors", []).is_empty())), "orbit": at,
 	}
 	if key in AIR:
 		AirOperations.initialize(unit)
@@ -1589,6 +1591,15 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 	units.append(unit)
 	node.reset_physics_interpolation()
 	return unit
+
+func _engine_kind(key: String, naval: bool, fly: bool, is_heli := false) -> String:
+	if fly:
+		return "heli" if is_heli else "jet"
+	if naval:
+		return "ship"
+	if key in ["tank", "heavyTank", "ifv", "heavyAPC", "spg", "mlrs", "sam", "mobileRadar", "spaag", "mineLayer", "mineClearer", "recoveryVehicle"]:
+		return "tank"
+	return "vehicle"
 
 func is_water(p: Vector3, depth := DEEP) -> bool:
 	# Past the edge of the map there is only open sea (the terrain stops there;
@@ -1610,16 +1621,6 @@ func water_near(from: Vector3, reach := 90, depth_factor := 1.5):
 
 func place_on_ground(unit: Dictionary, at: Vector3) -> void:
 	var node: Node3D = unit.node
-	if not unit.get("fly", false) and not unit.get("naval", false):
-		var h_ang := float(unit.heading)
-		if unit.has("_pg_x"):
-			var tol := 0.001 if not unit.get("moving", false) else 0.35
-			var htol := 0.001 if not unit.get("moving", false) else 0.025
-			if absf(float(unit._pg_x) - at.x) <= tol and absf(float(unit._pg_z) - at.z) <= tol and absf(float(unit._pg_h) - h_ang) <= htol:
-				return
-		unit._pg_x = at.x
-		unit._pg_z = at.z
-		unit._pg_h = h_ang
 	if unit.get("fly", false):
 		# Aircraft hold their altitude over land or sea and bank into turns.
 		var floor_y := maxf(height_at(at.x, at.z), float(map.seaLevel))
@@ -2054,7 +2055,7 @@ func _physics_process(delta: float) -> void:
 		spent("  wheels and rotors", t_parts)
 		if unit.engine:
 			var t_audio := clock()
-			audio.engine_update(unit.engine, unit.moving, delta)
+			audio.engine_update(unit.engine, unit.moving, delta, unit.get("engine_kind", "vehicle"))
 			spent("  engine sound", t_audio)
 		if unit.turret:
 			var aim: float
@@ -6167,6 +6168,13 @@ func update_camera(delta: float) -> void:
 		coast_focus = focus
 		coast_point = nearest_shore(focus)
 	audio.follow(focus, camera, coast_point)
+	if diplomacy != null and defcon != null and ai != null:
+		var at_war := false
+		for n in ai.nations:
+			if diplomacy.at_war(0, n.id):
+				at_war = true
+				break
+		audio.set_war_state(at_war, defcon.level())
 	if shake_strength > 0.01:
 		camera.global_position += Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * shake_strength
 		shake_strength *= exp(-delta * 7.0)

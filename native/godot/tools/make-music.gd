@@ -16,6 +16,7 @@ func _init() -> void:
 	rng.seed = 1789
 	DirAccess.make_dir_recursive_absolute("res://audio")
 	save("music_loop", music())
+	save("tension_loop", tension_music())
 	save("ui_click", click())
 	quit()
 
@@ -83,6 +84,47 @@ func music() -> PackedFloat32Array:
 	for i in range(n): out[i] = out[i] / maxf(peak, 0.001) * 0.6
 	return out
 
+func tension_music() -> PackedFloat32Array:
+	## 32s brooding war-tension cue in D Phrygian/minor: low cello pad + slow heartbeat pulse.
+	var chords := [[38, 50, 57, 62], [39, 51, 55, 58], [41, 53, 57, 60], [37, 49, 55, 61]]
+	var beat := 8.0
+	var n := int(beat * chords.size() * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for c in range(chords.size()):
+		var start := c * beat
+		var notes: Array = chords[c]
+		for k in range(notes.size()):
+			var f := midi(float(notes[k]))
+			var level := 0.055 if k == 0 else 0.028
+			var from := int((start - 1.0) * RATE)
+			var to := int((start + beat + 2.0) * RATE)
+			for i in range(from, to):
+				var t := float(i) / RATE - start
+				var env := smoothstep(-1.0, 2.0, t) * (1.0 - smoothstep(beat - 0.5, beat + 2.0, t))
+				if env <= 0.0: continue
+				var x := float(i) / RATE
+				var s := sin(TAU * f * x) + 0.35 * sin(TAU * 2.0 * f * x) + 0.12 * sin(TAU * 3.0 * f * x)
+				out[posmod(i, n)] += s * env * level
+	# Slow, restrained tension heartbeat every 2 seconds (never jarring)
+	for i in range(n):
+		var x := float(i) / RATE
+		var p := fmod(x, 2.0)
+		var thump := sin(TAU * 52.0 * p) * exp(-p * 7.0) * smoothstep(0.0, 0.02, p) * 0.045
+		out[i] += thump
+	var y := 0.0
+	var a := 1.0 - exp(-TAU * 1800.0 / RATE)
+	var raw := out.duplicate()
+	for i in range(n - RATE, n):
+		y += a * (raw[i] - y)
+	for i in range(n):
+		y += a * (raw[i] - y)
+		out[i] = y
+	var peak := 0.0
+	for v in out: peak = maxf(peak, absf(v))
+	for i in range(n): out[i] = out[i] / maxf(peak, 0.001) * 0.55
+	return out
+
 func click() -> PackedFloat32Array:
 	var n := int(0.06 * RATE)
 	var out := PackedFloat32Array()
@@ -103,7 +145,7 @@ func save(name: String, data: PackedFloat32Array) -> void:
 	wav.mix_rate = RATE
 	wav.stereo = false
 	wav.data = bytes
-	if name == "music_loop":
+	if name == "music_loop" or name == "tension_loop":
 		wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		wav.loop_begin = 0
 		wav.loop_end = data.size()
