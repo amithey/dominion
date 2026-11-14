@@ -13,6 +13,7 @@ const OFFICES := {
 	"intel": ["Intelligence Directorate", "spymaster"],
 	"territory": ["Ministry of the Interior", "president"],
 	"defence": ["Ministry of Defence · General Staff", "general"],
+	"ordnance": ["Strategic Rocket & Ordnance Command", "general"],
 	"un": ["Permanent Mission to the United Nations", "president"],
 }
 
@@ -39,6 +40,7 @@ static func fill(hud: Node, box: VBoxContainer, mode: String) -> void:
 		"intel": _intel(hud, box, accent)
 		"territory": _territory(hud, box, accent)
 		"defence": _defence(hud, box, accent)
+		"ordnance": _ordnance(hud, box, accent)
 		"un": _un(hud, box, accent)
 
 static func _label(parent: Control, text: String, size := 14, colour := UI.TEXT, serif := false) -> Label:
@@ -148,6 +150,16 @@ static func _defence(hud: Node, box: VBoxContainer, accent: Color) -> void:
 		_figure(box, "%d / %d" % [w.generals.of(0).size(), w.generals.MAX_PLAYER], "generals on your staff", accent)
 	var c: Array = preload("res://scripts/veterancy.gd").census(w)
 	_figure(box, str(c[1] + c[2] + c[3]), "veteran units (%d elite, %d heroic)" % [c[2], c[3]], accent)
+
+static func _ordnance(hud: Node, box: VBoxContainer, accent: Color) -> void:
+	var ms: Node = hud.world.missiles
+	if ms == null:
+		return
+	_figure(box, "%d / %d" % [ms.stored("conventional", true), ms.capacity()], "shared conventional stockpile", accent)
+	_figure(box, str(ms.total_for("tactical")), "tactical missiles in local storage", accent)
+	_figure(box, str(ms.stored("nuclear")), "nuclear warheads stored", accent, UI.BAD if ms.stored("nuclear") > 0 else Color(0, 0, 0, 0))
+	var transit: int = ms.transfers.filter(func(j): return j.owner == 0).size()
+	_figure(box, str(transit), "active payload transfers", accent)
 
 static func _territory(hud: Node, box: VBoxContainer, accent: Color) -> void:
 	var w: Node = hud.world

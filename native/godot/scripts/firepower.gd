@@ -211,6 +211,8 @@ static func detonate(w: Node, shooter: Dictionary, munition: String, at: Vector3
 	for b in w.buildings:
 		if not b.dead and w.hostile(owner, b.owner) and Vector2(b.root.position.x - at.x, b.root.position.z - at.z).length() < b.footprint * 0.62 + reach:
 			w.damage(b, dmg * w.effectiveness(shooter, b), shooter)
+	if w.get("fortifications") != null and w.fortifications != null:
+		w.fortifications.splash(at, radius, dmg)
 	var frag_reach: float = radius * float(p.frag) if float(p.frag_share) > 0.0 else 0.0
 	var far: float = maxf(radius, frag_reach)
 	var shock: float = p.shock

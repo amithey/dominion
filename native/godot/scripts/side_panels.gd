@@ -1434,3 +1434,117 @@ func _un_record(u) -> void:
 			head += " by " + ", ".join(PackedStringArray(r.get("vetoed_by", []).map(func(v): return "you" if int(v) == 0 else d.name_of(int(v)))))
 		card.add_child(hud._text(head, 14, hud.UI.CREAM, true))
 		_wrap(card, "%s%s" % [r.title, "  (%d-%d-%d)" % [int(r.tally.yes), int(r.tally.no), int(r.tally.abstain)] if int(r.number) > 0 else ""], 12, hud.UI.TEXT)
+
+func ordnance() -> void:
+	var w: Node = hud.world
+	var ms: Node = w.missiles
+	if ms == null:
+		return
+	var weapon_copy := preload("res://scripts/weapon_copy.gd")
+	# 1. Shared conventional & special stockpile.
+	var shared_card: VBoxContainer = hud._card(hud.UI.GOLD)
+	shared_card.add_child(hud._text("Shared Stockpile  ·  %d / %d capacity" % [ms.stored("conventional", true), ms.capacity()], 16, hud.UI.CREAM, true))
+	var any_shared := false
+	for m in ms.types():
+		if ms.local_weapon(m) or int(ms.stock.get(m, 0)) <= 0:
+			continue
+		any_shared = true
+		var why: String = ms.locked(m)
+		var ready: Array = ms.ready_platforms(m)
+		if why == "" and ready.is_empty():
+			why = "Requires " + ms.launchers_text(m)
+		var r: HBoxContainer = hud._row(shared_card)
+		r.add_child(hud._text("%s  ×%d  (%s · %d ready)" % [weapon_copy.display_name(w, m), int(ms.stock[m]), ms.category(m), ready.size()], 13, hud.UI.TEXT))
+		var b: Button = hud._button(r, "Target / Launch", func():
+			w.begin_missile(m)
+			return "", why == "", "good")
+		b.tooltip_text = why if why != "" else "Select a target on the map (uses 1 stored weapon)"
+	if not any_shared:
+		shared_card.add_child(hud._text("No shared missiles or special weapons in stockpile.", 12, hud.UI.MUTED))
+
+	# 2. Local storage sites & launch platforms (silos, complexes, depots, airfields, ports, ships, aircraft).
+	var sites_head: Label = hud._text("LOCAL PAYLOADS & LAUNCHERS", 14, hud.UI.GOLD, true)
+	hud._side_rows.add_child(sites_head)
+	var assets: Array = []
+	for b in w.buildings:
+		if not b.dead and b.owner == 0 and b.built and (ms.has_local_storage(b) or ms.storage_slots(b) > 0):
+			assets.append(b)
+	for u in w.units:
+		if not u.dead and u.owner == 0 and (ms.storage_slots(u) > 0 or u.has("payloads")):
+			assets.append(u)
+	if assets.is_empty():
+		hud._side_rows.add_child(hud._text("Build a Missile Silo, Strategic Complex, Ammo Depot, Airfield, Port, or missile-capable ship/aircraft.", 12, hud.UI.MUTED))
+	for asset in assets:
+		var slots: int = ms.storage_slots(asset)
+		var free_s: int = ms.free_storage(asset)
+		var used_s: int = maxi(0, slots - free_s)
+		var has_nuke := false
+		var items: Array = []
+		for key in ms.types():
+			if not ms.local_weapon(key):
+				continue
+			var cnt: int = ms.local_count(asset, key)
+			if cnt > 0:
+				items.append([key, cnt])
+				if ms.category(key) == "nuclear":
+					has_nuke = true
+		var card: VBoxContainer = hud._card(hud.UI.BAD if has_nuke else (hud.UI.GOOD if not items.is_empty() else Color(0, 0, 0, 0)))
+		var status_bits := PackedStringArray()
+		status_bits.append("%d/%d slots" % [used_s, slots])
+		if asset.get("is_building", false):
+			if not asset.get("supplied", true):
+				status_bits.append("unsupplied")
+		elif asset.get("fly", false):
+			status_bits.append(str(asset.get("air_state", "")))
+		elif asset.get("naval", false):
+			status_bits.append("at sea" if asset.get("moving", false) else "stationed")
+		var top: HBoxContainer = hud._row(card)
+		top.add_child(hud._text("%s  ·  %s" % [hud._facility_name(asset), ", ".join(status_bits)], 14, hud.UI.CREAM, true))
+		var target_asset: Dictionary = asset
+		hud._button(top, "Focus", func():
+			w.cam_focus = target_asset.node.position
+			if target_asset.get("is_building", false):
+				hud._selected = target_asset
+				for u in w.units:
+					u.selected = false
+					u.ring.visible = false
+			else:
+				hud._selected = null
+				for u in w.units:
+					u.selected = is_same(u, target_asset)
+					u.ring.visible = u.selected
+			hud._update_panel()
+			return "")
+		if items.is_empty():
+			card.add_child(hud._text("Empty storage (%d free)" % free_s, 12, hud.UI.MUTED))
+		for entry in items:
+			var key: String = entry[0]
+			var cnt: int = entry[1]
+			var row: HBoxContainer = hud._row(card)
+			row.add_child(hud._text("%s  ×%d" % [weapon_copy.display_name(w, key), cnt], 13, hud.UI.BAD if ms.category(key) == "nuclear" else hud.UI.TEXT))
+			hud._button(row, "Transfer", func():
+				hud._open_payload_picker(target_asset, key, "send")
+				return "")
+			var is_ready: bool = ms.ready_platforms(key).any(func(p): return is_same(p, target_asset))
+			var lock_why: String = ms.locked(key)
+			if is_ready:
+				var lb: Button = hud._button(row, "Launch", func():
+					w.begin_missile(key, target_asset)
+					return "", lock_why == "", "good")
+				lb.tooltip_text = lock_why if lock_why != "" else "Select a target on the map"
+
+	# 3. Active payload transfers.
+	var own_jobs: Array = ms.transfers.filter(func(j): return j.owner == 0)
+	if not own_jobs.is_empty():
+		hud._side_rows.add_child(hud._text("ACTIVE TRANSFERS", 14, hud.UI.GOLD, true))
+		for job in own_jobs:
+			var card: VBoxContainer = hud._card(hud.UI.GOLD)
+			var src_name: String = hud._facility_name(job.source) if job.source != null and not job.source.dead else "Lost source"
+			var dst_name: String = hud._facility_name(job.destination) if job.destination != null and not job.destination.dead else "Lost destination"
+			var row: HBoxContainer = hud._row(card)
+			row.add_child(hud._text("%s ×%d  ·  %s -> %s  (%s · %.0fs)" % [ms.def_of(job.key).name, int(job.count), src_name, dst_name, str(job.status), maxf(0.0, float(job.remaining))], 12, hud.UI.TEXT))
+			var jid := int(job.id)
+			var ref_asset: Dictionary = job.destination if job.destination != null and not job.destination.dead else (job.source if job.source != null else {})
+			hud._button(row, "Manage", func():
+				hud._manage_payload_job(ref_asset, jid)
+				return "")

@@ -147,6 +147,7 @@ var order_marks: Node3D = null   # order_marks.gd: routes and flags of the selec
 var stats: RefCounted = null     # world_stats.gd: every nation's figures over time (Diplomacy, Statistics)
 var crisis: RefCounted = null    # crisis.gd: what lost buildings and infrastructure do to a nation (economic, political, humanitarian, diplomatic crises)
 var sitrep: RefCounted = null    # sitrep.gd: what happens to you, grouped (alerts, minimap pings, the report window)
+var fortifications: RefCounted = null   # fortifications.gd: infantry-dug trenches & field dugouts
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
 var grass_cells := {}
@@ -261,6 +262,7 @@ var testing_tools := false   # Settings, Game: the Cheats button, F8 and F10 (ch
 var road_traffic := true     # Settings, Game: cars, lorries and trains on the roads and railways (route_traffic.gd)
 var middle_drag := false  # the middle mouse button turns the view (with Shift: drags the map)
 var order_mode := ""
+var def_line_start = null
 const MatchSetup := preload("res://scripts/match_setup.gd")
 var match_config: Dictionary = MatchSetup.DEFAULT.duplicate()
 var engagement: RefCounted
@@ -1572,7 +1574,7 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 		"node": node, "ring": ring, "vehicle": true, "selected": false, "target": null, "player": null, "clip": "",
 		"owner": owner, "speed": float(def.speed) * 0.45, "heading": 0.0, "moving": false,
 		"turret": parts.turret, "turret_yaw": 0.0, "dust": wake, "phase": at.x * 0.37 + at.z * 0.21, "meshes": [],
-		"naval": naval, "fly": key in AIR, "rotor": parts.rotor, "rotor2": parts.get("rotor2"), "radar": parts.radar,
+		"naval": naval, "fly": key in AIR, "rotor": parts.rotor, "rotor2": parts.get("rotor2"), "y_rotors": parts.get("y_rotors", []), "radar": parts.radar,
 		"props": parts.get("props", []), "tail_rotors": parts.get("tail_rotors", []),
 		"altitude": {"attackJet": 22.0, "lightFighter": 26.0, "scoutHelicopter": 21.0}.get(key, ALTITUDE.get(key, preload("res://scripts/war_tools.gd").ALTITUDE.get(key, 0.0))), "bank": 0.0, "length": length,
 		"key": key, "hp": float(def.hp), "max_hp": float(def.hp), "dmg": float(def.dmg),
@@ -1996,6 +1998,8 @@ func _physics_process(delta: float) -> void:
 		FactionPowers.update(self, delta)  # rivals' national powers; effects run out
 		tb = lap("  faction powers", tb)
 		preload("res://scripts/bunker.gd").update(self, delta)
+		if fortifications != null:
+			fortifications.update(delta)
 		tb = lap("  bunkers", tb)
 		BuildingFires.update(self, delta)
 		tb = lap("  fires", tb)
@@ -2027,13 +2031,19 @@ func _physics_process(delta: float) -> void:
 		# Engines run down on the apron (parked, being rearmed) and spool up again to taxi out.
 		var spin := 1.0
 		if unit.get("fly", false):
-			var resting: bool = str(unit.get("air_state", "ready")) in ["parked", "rearming"]
+			var resting: bool = str(unit.get("air_state", "ready")) in ["parked", "rearming", "standby"]
 			spin = move_toward(float(unit.get("rotor_spin", 1.0)), 0.0 if resting else 1.0, delta * (0.35 if resting else 0.8))
 			unit.rotor_spin = spin
-		if unit.get("rotor") != null:
-			unit.rotor.rotate_y(delta * 28.0 * spin)
-		if unit.get("rotor2") != null:
-			unit.rotor2.rotate_y(-delta * 28.0 * spin)   # a tandem helicopter's rear rotor turns the other way
+		var y_rotors: Array = unit.get("y_rotors", [])
+		if not y_rotors.is_empty():
+			for yr in y_rotors:
+				if is_instance_valid(yr.node):
+					yr.node.rotate_y(delta * 28.0 * spin * float(yr.dir))
+		else:
+			if unit.get("rotor") != null:
+				unit.rotor.rotate_y(delta * 28.0 * spin)
+			if unit.get("rotor2") != null:
+				unit.rotor2.rotate_y(-delta * 28.0 * spin)   # a tandem helicopter's rear rotor turns the other way
 		if unit.get("radar") != null:
 			unit.radar.rotate_y(delta * 1.6)
 		if unit.get("detail", true) or unit.get("fly", false):
@@ -2297,12 +2307,20 @@ func spread_out(unit: Dictionary, slot: int, delta: float) -> void:
 ## unit spawned inside a newly blocked cell may still leave that cell.
 func ground_step(unit: Dictionary, next: Vector3, delta: float) -> Vector3:
 	var pos: Vector3 = unit.node.position
-	if open_near(next) or not open_near(pos):
+	var blocked_by_fort := func(p: Vector3) -> bool:
+		return fortifications != null and fortifications.blocks_vehicle(unit, p)
+	if (open_near(next) or not open_near(pos)) and not blocked_by_fort.call(next):
 		return next
 	# Slide along the wall: keep whichever half of the step stays open.
 	for slide in [Vector3(next.x, next.y, pos.z), Vector3(pos.x, next.y, next.z)]:
-		if Vector2(slide.x - pos.x, slide.z - pos.z).length() > 0.002 and open_near(slide):
+		if Vector2(slide.x - pos.x, slide.z - pos.z).length() > 0.002 and open_near(slide) and not blocked_by_fort.call(slide):
 			return slide
+	if blocked_by_fort.call(next):
+		Motion.halt(unit, delta)
+		unit.path = PackedVector3Array()
+		unit.repath = 0.0
+		place_on_ground(unit, pos)
+		return Vector3.INF
 	# Pressed into the wall: ease back toward the middle of the nearest open cell.
 	var centre := nearest_open_centre(pos)
 	var back := Vector3(centre.x - pos.x, 0, centre.z - pos.z)
@@ -2531,6 +2549,8 @@ func start_match(difficulty: String) -> void:
 	if battle_scars == null:
 		battle_scars = preload("res://scripts/battle_scars.gd").new(self)
 		add_child(battle_scars)
+	fortifications = preload("res://scripts/fortifications.gd").new()
+	fortifications.setup(self)
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 	hud.start_guide()
 
@@ -3243,6 +3263,8 @@ func update_training(delta: float) -> void:
 		unit.heading = atan2(out.x, out.z)
 		if unit.get("fly", false) and not key in AirOperations.TUBE_LAUNCHED and AirOperations.is_base(b) and AirOperations.park_new(self, unit, b):
 			pass  # parked on its slot on the apron, waiting for orders
+		elif unit.get("fly", false) and key in AirOperations.TUBE_LAUNCHED and key != "wingman":
+			AirOperations.standby_new(self, unit, b, door)
 		else:
 			order_move([unit], door + out * 8.0 + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4)))
 		if key == "sixthGen":
@@ -5496,7 +5518,7 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			from = unit.node.position
 			kill(unit)
 			unit.node.visible = false
-		effects.projectile("rocket" if weapon in ["rocket", "fpv"] else "missile", from, short, func(at): effects.explosion(at, 0.5, false))
+		effects.projectile("fpv" if weapon == "fpv" else ("rocket" if weapon == "rocket" else "missile"), from, short, func(at): effects.explosion(at, 0.5, false))
 		aps_intercepts += 1
 		return true
 	# An older missile's seeker loses its target now and then (unit_quality.gd).
@@ -5522,17 +5544,29 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			# Top attack: the missile climbs and dives onto the roof.
 			effects.projectile("missile", unit.node.position + Vector3.UP * 1.7 + dir * 0.6, target, func(at): Firepower.detonate(self, unit, "atgm", at, dmg), 0.0, enemy.node if enemy.vehicle and not wild else null)
 		"fpv":
-			# A small drone flies from the operators to the target; jammers bring most down.
+			# A small quadcopter drone flies from the operators to the target; jammers bring most down.
+			# If its target dies mid-flight, it searches nearby for another hostile ground target.
 			var launch: Vector3 = unit.node.position + Vector3.UP * 2.5
 			var fried: bool = Future.covered(self, unit.node.position, unit.owner) or Future.covered(self, target, unit.owner)
 			# (a fibre-optic drone has no radio link to jam: national_capabilities.gd)
 			if fried or (not unit.get("fibre_optic", false) and (Modern.jammed(self, unit.node.position, unit.owner) or Modern.jammed(self, target, unit.owner)) and randf() < Modern.JAM_FAIL * jam_factor(unit)):
 				var lost: Vector3 = launch.lerp(target, randf_range(0.3, 0.8))
 				lost.y = height_at(lost.x, lost.z)
-				effects.projectile("rocket", launch, lost, func(at): effects.explosion(at, 0.4, true))
+				effects.projectile("fpv", launch, lost, func(at): effects.explosion(at, 0.4, true))
 				jammed_strikes += 1
 				return true
-			effects.projectile("rocket", launch, target, func(at): Firepower.detonate(self, unit, "fpv", at, dmg), 0.0, enemy.node)
+			var attacker_owner: int = int(unit.owner)
+			var search_next := func(last_pos: Vector3):
+				var best_n = null
+				var best_d := 28.0
+				for cand in units:
+					if not cand.dead and not cand.get("fly", false) and hostile(attacker_owner, cand.owner):
+						var d: float = cand.node.position.distance_to(last_pos)
+						if d < best_d:
+							best_d = d
+							best_n = cand.node
+				return best_n
+			effects.projectile("fpv", launch, target, func(at): Firepower.detonate(self, unit, "fpv", at, dmg), 0.0, enemy.node, search_next)
 		"detonate":
 			# The squad is the charge: it closes in and blows itself up beside its target.
 			var close: Vector3 = unit.node.position - enemy.node.position
@@ -5696,6 +5730,8 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 		amount *= research.damage_mult(source) * research.armor_mult(unit)
 	amount *= Modern.jam_mult(self, source)  # a jammed drone flies blind
 	amount *= preload("res://scripts/bunker.gd").cover(self, unit, source)  # bunkers shield from ground fire
+	if fortifications != null:
+		amount *= fortifications.cover(unit, source)  # infantry-dug trenches & dugouts
 	amount *= preload("res://scripts/additional_factions.gd").explosive_armor(unit.key, str(source.get("key", "")))
 	amount *= Vet.damage_mult(source) * Vet.taken_mult(unit)  # veterans (veterancy.gd)
 	if source.has("owner"):
@@ -6334,9 +6370,23 @@ func _unhandled_input(event: InputEvent) -> void:
 						request_bombard(selected,point)
 					elif order_mode == "patrol":
 						order_patrol(selected, point)
+					elif order_mode == "mine" or order_mode == "apMine":
+						preload("res://scripts/war_tools.gd").order_lay_mine(self, selected, point, "ap" if order_mode == "apMine" else "at")
+					elif order_mode.begins_with("line:"):
+						if def_line_start == null:
+							def_line_start = point
+							if hud != null:
+								hud.notice("Defence line start set: click the end point (or right-click to cancel).")
+							return
+						var line_kind := order_mode.substr(5)
+						if line_kind in ["atMine", "apMine"]:
+							preload("res://scripts/war_tools.gd").order_mine_line(self, selected, def_line_start, point, "ap" if line_kind == "apMine" else "at")
+						elif fortifications != null:
+							fortifications.order_line(selected, line_kind, def_line_start, point)
+						def_line_start = null
 					else:
 						passage.check_order(selected, point, func(): order_move(selected,point,true))
-			else:
+			elif not order_mode.begins_with("line:") or def_line_start == null:
 				order_mode = ""
 		elif event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed and event.double_click:
@@ -6389,6 +6439,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 			if order_mode!="":
 				order_mode = ""
+				def_line_start = null
 				return
 			var selected := units.filter(func(u): return u.selected and not u.dead)
 			var target = enemy_under(event.position)
@@ -6415,6 +6466,8 @@ func _unhandled_input(event: InputEvent) -> void:
 					passage.check_order(selected, point, func(): order_move(selected,point,true))
 			elif target == null and garrison_site_under(selected, event.position) != null:
 				UrbanGarrison.order_garrison(self, selected, garrison_site_under(selected, event.position))   # infantry into a building
+			elif target == null and fortifications != null and ground_point(event.position) != null and fortifications.order_enter(selected, fortifications.shelter_at(ground_point(event.position), 0)) > 0:
+				pass   # infantry into a friendly trench or forward bunker
 			elif target == null and preload("res://scripts/airlift.gd").transport_under(self, selected, event.position) != null:
 				preload("res://scripts/airlift.gd").order_board(self, selected, preload("res://scripts/airlift.gd").transport_under(self, selected, event.position))   # board a helicopter
 			elif target != null:

@@ -274,6 +274,10 @@ func _build_top_bar() -> void:
 			chip.gui_input.connect(func(e):
 				if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
 					toggle_panel("defence"))
+		elif extra[0] == "missiles":
+			chip.gui_input.connect(func(e):
+				if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+					toggle_panel("ordnance"))
 	# The era is cut into a small brass cartouche pinned to the right end of the
 	# strip, so a nation with every store full never pushes it off the screen.
 	var cartouche := PanelContainer.new()
@@ -832,11 +836,24 @@ func _build_selection() -> void:
 	var commands := HBoxContainer.new()
 	commands.add_theme_constant_override("separation",4)
 	col.add_child(commands)
-	for action in ["Attack-move","Bombard","Repair","Buy land","Demolish"]:
+	for action in ["Attack-move","Bombard","Repair","Dig Trench","Field Dugout","Hedgehog","AT Ditch","Lay Mines","Defence Line","Exit Trench","Buy land","Demolish"]:
 		var button := Button.new()
 		button.text = action
-		button.toggle_mode = not action in ["Repair", "Buy land", "Demolish"]
-		button.tooltip_text = {"Attack-move":"Move to a destination and engage suitable targets along the way. Ctrl + right click.","Bombard":"Fire at a ground position or infrastructure. Alt + right click. Requires a suitable weapon.","Repair":"Repair damaged vehicles or completed buildings for $0.25 per HP. Pauses in combat.","Buy land":"Buy free land next to this settlement: $1000 a hex, up to 4 hexes.","Demolish":"Take this building down: half of its cost comes back (85% while it is still a building site). Click twice to confirm. Not for the capital or a town."}[action]
+		button.toggle_mode = action in ["Attack-move", "Bombard", "Lay Mines", "Defence Line"]
+		button.tooltip_text = {
+			"Attack-move":"Move to a destination and engage suitable targets along the way. Ctrl + right click.",
+			"Bombard":"Fire at a ground position or infrastructure. Alt + right click. Requires a suitable weapon.",
+			"Repair":"Repair damaged vehicles or completed buildings for $0.25 per HP. Pauses in combat.",
+			"Dig Trench":"Order selected infantry to dig a fighting trench ($20 each). Infantry can enter for heavy cover.",
+			"Field Dugout":"Order selected infantry to build a forward bunker ($45 each). Holds up to 4 infantry.",
+			"Hedgehog":"Place steel anti-tank hedgehogs ($15 each). Blocks hostile tanks and vehicles; engineers must breach them.",
+			"AT Ditch":"Dig an anti-tank ditch ($25 each). Blocks hostile tanks and vehicles until filled by engineers.",
+			"Lay Mines":"Click on the battlefield to lay an anti-tank minefield ($30).",
+			"Defence Line":"Click two points on the map to build a defensive line. Click again to cycle type (Hedgehogs, AT Ditch, Trenches, Bunkers, AT/AP Mines).",
+			"Exit Trench":"Order garrisoned infantry to leave their trench or forward bunker.",
+			"Buy land":"Buy free land next to this settlement: $1000 a hex, up to 4 hexes.",
+			"Demolish":"Take this building down: half of its cost comes back (85% while it is still a building site). Click twice to confirm. Not for the capital or a town."
+		}[action]
 		_commands[action] = button
 		button.add_theme_font_size_override("font_size",12)
 		button.custom_minimum_size = Vector2(0,30)
@@ -846,6 +863,25 @@ func _build_selection() -> void:
 					world.begin_land_purchase(_selected)
 			elif action=="Repair":
 				world.Repairs.request(world,[_selected] if _selected!=null else _selected_units())
+			elif action in ["Dig Trench", "Field Dugout", "Hedgehog", "AT Ditch"]:
+				if world.fortifications != null:
+					var kind: String = str({"Dig Trench": "trench", "Field Dugout": "dugout", "Hedgehog": "hedgehog", "AT Ditch": "atDitch"}[action])
+					world.fortifications.order_dig(_selected_units(), kind)
+			elif action=="Exit Trench":
+				if world.fortifications != null:
+					world.fortifications.order_exit(_selected_units())
+			elif action=="Lay Mines":
+				world.order_mode = "mine"
+				world.def_line_start = null
+				notice("Lay Mines: click on the battlefield to place an anti-tank minefield ($30).")
+			elif action=="Defence Line":
+				var cycle := ["hedgehog", "atDitch", "trench", "dugout", "atMine", "apMine"]
+				var labels := {"hedgehog": "Anti-tank Hedgehogs ($15)", "atDitch": "Anti-tank Ditch ($25)", "trench": "Fighting Trenches ($20)", "dugout": "Forward Bunkers ($45)", "atMine": "Anti-tank Mines ($30)", "apMine": "Anti-personnel Mines ($30)"}
+				var cur := str(world.order_mode).substr(5) if str(world.order_mode).begins_with("line:") else ""
+				var next_kind: String = cycle[(cycle.find(cur) + 1) % cycle.size()] if cur in cycle else "hedgehog"
+				world.order_mode = "line:" + next_kind
+				world.def_line_start = null
+				notice("Defence Line (%s): click start point, then end point. Click button again to switch type." % labels[next_kind])
 			elif action=="Demolish":
 				if _selected != null:
 					var now: float = Time.get_ticks_msec() / 1000.0
@@ -1236,7 +1272,7 @@ Your forces: DEFCON %d (%s). Press K." % [lvl, world.defcon.DESC[lvl], (" Cause:
 	_extra.missiles[1].visible = silos
 	if silos:
 		_extra.missiles[0].text = "%d/%d" % [world.missiles.stored("conventional", true), world.missiles.capacity()]
-		_extra.missiles[1].tooltip_text = "Shared conventional stock %d/%d. Local payloads: %d tactical, %d nuclear. Select a storage site to see its inventory." % [
+		_extra.missiles[1].tooltip_text = "Shared conventional stock %d/%d. Local payloads: %d tactical, %d nuclear. Click to open Strategic Arsenal & Payloads." % [
 			world.missiles.stored("conventional", true), world.missiles.capacity(), world.missiles.total_for("tactical"), world.missiles.stored("nuclear")]
 	# At laptop widths, stack the national figures like the resource yields.
 	# Keep every figure and its normal font size clear of the time controls.
@@ -1423,6 +1459,8 @@ func _action_bars(b: Dictionary) -> void:
 				if aircraft != null and world.AirOperations.order_land(world, aircraft, b):
 					recalled += 1
 			notice("%d assigned aircraft returning to base." % recalled if recalled > 0 else "No aircraft are assigned to this base."))
+	if world.missiles.has_local_storage(b) or b.key in ["missileSilo", "strategicComplex", "specialLab"]:
+		_bar(b.key, "Strategic Arsenal & Payloads", "View all stockpiles, warhead locations, transfers and ready launchers across your nation.", {}, 0.0, "", func(): toggle_panel("ordnance", true), "Open Arsenal")
 	if world.missiles.has_local_storage(b) and (not b.key in ["missileSilo", "strategicComplex"] or _missile_view == "stockpile"):
 		_payload_storage(b)
 	if b.key in ["missileSilo", "strategicComplex", "specialLab"]:
@@ -1511,6 +1549,17 @@ func _update_selection() -> void:
 	_commands["Attack-move"].disabled = own_units.is_empty() or not own_units.any(func(u):return u.dmg>0)
 	_commands["Bombard"].disabled = not own_units.any(func(u):return world.can_bombard(u))
 	_commands["Repair"].disabled = not assets.any(func(e):return e.owner==0 and not e.dead and e.hp<e.max_hp and (e.get("is_building",false) and e.get("built",false) or e.get("vehicle",false)))
+	var can_dig: bool = _selected == null and own_units.any(func(u): return not u.vehicle and not u.get("fly", false) and not u.get("naval", false) and u.key != "worker")
+	var can_obstacle: bool = _selected == null and own_units.any(func(u): return not u.get("fly", false) and not u.get("naval", false) and (not u.vehicle or u.key in ["worker", "mineLayer"]))
+	var can_mine: bool = _selected == null and own_units.any(func(u): return str(u.get("key", "")) in ["mineLayer", "worker"])
+	var has_garrisoned: bool = _selected == null and own_units.any(func(u): return u.get("garrisoned_in") != null)
+	_commands["Dig Trench"].disabled = not can_dig
+	_commands["Field Dugout"].disabled = not can_dig
+	_commands["Hedgehog"].disabled = not can_obstacle
+	_commands["AT Ditch"].disabled = not can_obstacle
+	_commands["Lay Mines"].disabled = not can_mine
+	_commands["Defence Line"].disabled = not can_obstacle
+	_commands["Exit Trench"].disabled = not has_garrisoned
 	# Buying land happens at a settlement's town hall: the capital, a city or a village centre.
 	var hall: bool = _selected != null and _selected.owner == 0 and _selected.built and world.territory.RINGS_MAX.has(_selected.key)
 	_commands["Buy land"].visible = hall
@@ -1520,6 +1569,8 @@ func _update_selection() -> void:
 		_commands["Buy land"].disabled = left <= 0
 	_commands["Attack-move"].set_pressed_no_signal(world.order_mode=="attack")
 	_commands["Bombard"].set_pressed_no_signal(world.order_mode=="bombard")
+	_commands["Lay Mines"].set_pressed_no_signal(world.order_mode in ["mine", "apMine"])
+	_commands["Defence Line"].set_pressed_no_signal(str(world.order_mode).begins_with("line:"))
 	for button in _commands.values():
 		button.visible = transport_text==""
 	_commands["Buy land"].visible = hall and transport_text==""
@@ -1528,6 +1579,13 @@ func _update_selection() -> void:
 	_commands["Attack-move"].visible = _commands["Attack-move"].visible and not _commands["Attack-move"].disabled
 	_commands["Bombard"].visible = _commands["Bombard"].visible and not _commands["Bombard"].disabled
 	_commands["Repair"].visible = _commands["Repair"].visible and not _commands["Repair"].disabled
+	_commands["Dig Trench"].visible = _commands["Dig Trench"].visible and not _commands["Dig Trench"].disabled
+	_commands["Field Dugout"].visible = _commands["Field Dugout"].visible and not _commands["Field Dugout"].disabled
+	_commands["Hedgehog"].visible = _commands["Hedgehog"].visible and not _commands["Hedgehog"].disabled
+	_commands["AT Ditch"].visible = _commands["AT Ditch"].visible and not _commands["AT Ditch"].disabled
+	_commands["Lay Mines"].visible = _commands["Lay Mines"].visible and not _commands["Lay Mines"].disabled
+	_commands["Defence Line"].visible = _commands["Defence Line"].visible and not _commands["Defence Line"].disabled
+	_commands["Exit Trench"].visible = _commands["Exit Trench"].visible and not _commands["Exit Trench"].disabled
 	_commands["Demolish"].visible = _selected != null and _selected.owner == 0 and not _selected.dead and _selected.key != "hq" and _selected.def.get("settlement") == null and transport_text == ""
 	_sel_stats.visible = false
 	_sel_fuel.visible = false
@@ -2177,7 +2235,7 @@ func _fill_queue(queue: Array, progress := 0.0) -> void:
 # icon and a close button, then cards. It is only as tall as its content.
 
 const SCREENS := {"diplomacy": ["diplomacy", "Diplomacy"], "market": ["market", "World market"],
-	"intel": ["intel", "Intelligence"], "territory": ["land", "Territory"], "defence": ["defence", "Defence"], "un": ["un", "United Nations"]}
+	"intel": ["intel", "Intelligence"], "territory": ["land", "Territory"], "defence": ["defence", "Defence"], "ordnance": ["missile", "Strategic Arsenal"], "un": ["un", "United Nations"]}
 
 var _win: PanelContainer
 var _win_icon: TextureRect
@@ -2303,6 +2361,8 @@ func _show_side(mode: String) -> void:
 		world.espionage.changed.connect(func(): if side_mode == "intel": refresh_side())
 		world.territory.changed.connect(func(): if side_mode == "territory": refresh_side())
 		world.diplomacy.changed.connect(func(): if side_mode == "diplomacy": refresh_side())
+		if world.missiles != null:
+			world.missiles.changed.connect(func(): if side_mode == "ordnance": refresh_side())
 	side_mode = mode
 	_win.visible = mode != ""
 	if mode != "" and _rs != null:
@@ -2352,6 +2412,8 @@ func refresh_side() -> void:
 			_panels.territory()  # side_panels.gd: your land and the nations' shares
 		"defence":
 			_panels.defence()  # side_panels.gd: generals, veterans, the nuclear alert
+		"ordnance":
+			_panels.ordnance()  # side_panels.gd: missiles, nuclear warheads, storage sites, transfers
 		"un":
 			_panels.united_nations()  # side_panels.gd: the Council, the Assembly, the record
 	preload("res://scripts/ministry_brief.gd").fill(self, _win_brief, side_mode)

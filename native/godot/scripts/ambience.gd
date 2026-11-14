@@ -448,7 +448,7 @@ func _setup_soundscape() -> void:
 		_nature_player.play()
 
 func _update_soundscape(delta: float) -> void:
-	if w == null or _city_player == null:
+	if w == null or _city_player == null or w.get("cam_dist") == null:
 		return
 	var dist := float(w.cam_dist)
 	var focus: Vector3 = w.cam_focus

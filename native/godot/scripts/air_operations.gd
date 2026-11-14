@@ -146,7 +146,7 @@ static func attack_release_range(u: Dictionary) -> float:
 	return 11.0 if u.key in ["bomber", "raider", "heavyBomberDrone"] else float(u.range) * 0.75
 
 static func on_ground(u: Dictionary) -> bool:
-	return u.get("air_state") in ["parked", "rearming", "taxi_in"]
+	return u.get("air_state") in ["parked", "rearming", "taxi_in", "standby"]
 
 static func approach_point(world: Node, u: Dictionary, b: Dictionary) -> Vector3:
 	if u.key in ROTARY:
@@ -215,7 +215,7 @@ static func mission_blocked(world: Node, u: Dictionary, point: Vector3, action_s
 	var release := from.lerp(point, maxf(0.0, 1.0 - release_range / maxf(leg, 0.001)))
 	var grounded := on_ground(u)
 	var fuel := fuel_capacity(u) if grounded else float(u.get("sortie_left", 0.0))
-	if grounded and not Costs.can_pay(world, int(u.owner), 0.0, Costs.sortie_fuel(u)):
+	if grounded and not u.key in TUBE_LAUNCHED and not Costs.can_pay(world, int(u.owner), 0.0, Costs.sortie_fuel(u)):
 		return "Not enough aviation fuel for takeoff."
 	var outbound := fuel_for(u, from, release) + action_seconds * burn_rate(u) + (departure_fuel(u) if grounded else 0.0)
 	if u.key in TUBE_LAUNCHED:
@@ -335,6 +335,20 @@ static func park_new(world: Node, u: Dictionary, b: Dictionary) -> bool:
 	u.node.basis = Basis(Vector3.UP, u.heading)
 	return true
 
+## A newly built tube-launched drone sits ready on the pad/canister until ordered out,
+## so it does not circle in the air and burn its battery/fuel while idle.
+static func standby_new(world: Node, u: Dictionary, b: Dictionary, door: Vector3) -> void:
+	var n: int = world.units.filter(func(x): return not x.dead and x.get("air_state") == "standby" and x.owner == u.owner and x.node.position.distance_to(door) < 18.0).size()
+	var ang := float(n) * 0.85
+	var pos := door + Vector3(cos(ang), 0, sin(ang)) * (2.5 + float(n % 3) * 1.8)
+	pos.y = maxf(world.height_at(pos.x, pos.z), float(world.map.seaLevel)) + 0.35
+	u.air_state = "standby"
+	u.stay = true
+	u.air_base = b
+	u.node.position = pos
+	u.node.basis = Basis(Vector3.UP, u.heading)
+	u.moving = false
+
 ## True means this update owns movement (landing, service, or takeoff).
 static func update(world: Node, u: Dictionary, delta: float) -> bool:
 	if u.get("carrier") != null:
@@ -351,6 +365,15 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 			world.kill(u)
 			return true
 	if u.key in TUBE_LAUNCHED:
+		if u.get("air_state") == "standby":
+			u.moving = false
+			if u.target != null or u.enemy != null:
+				u.air_state = "ready"
+				u.stay = false
+				u.fuel_position = u.node.position
+				u.node.position.y = maxf(u.node.position.y, world.height_at(u.node.position.x, u.node.position.z) + 2.0)
+				return false
+			return true
 		return false
 	# Fuel and the way home are worked out twice a second of the aircraft's own flying (not by the world clock, so an
 	# aircraft stepped on its own, in a test or a replay, checks as often as one in the game).

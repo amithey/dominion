@@ -25,6 +25,7 @@ extends RefCounted
 
 const MAPS := {
 	"small": {"name": "Small Isle", "size": 440, "desc": "One compact island; the capitals are close and fights come early."},
+	"bastion_isle": {"name": "Bastion Isle", "size": 560, "slots": 4, "ring": 0.54, "desc": "A compact cross-shaped island ringed by open sea and deep coves; fast battles across land, sea and air."},
 	"twin": {"name": "Twin Lands", "size": 720, "desc": "Two large islands joined by a narrow isthmus."},
 	"archipelago": {"name": "Archipelago", "size": 800, "desc": "Four islands linked by land bridges, and rich islets."},
 	"continent": {"name": "Continent", "size": 960, "desc": "A great landmass with a mountain range, passes and lakes."},
@@ -32,8 +33,10 @@ const MAPS := {
 	"inland_sea": {"name": "Inland Sea", "size": 1280, "slots": 7, "desc": "Seven starting regions around a central sea; a continuous land belt links the coasts."},
 	"crown": {"name": "Crown Isles", "size": 1440, "slots": 8, "desc": "Eight large islands around a lagoon, linked by coastal land bridges."},
 	"highlands": {"name": "Highlands", "size": 1040, "slots": 5, "desc": "Five regions on a high plateau; mountain walls funnel armies through the valleys."},
+	"twin_bays": {"name": "Twin Bays", "size": 1080, "slots": 6, "ring": 0.62, "desc": "A central continent carved by deep northern and southern bays, ringed by open ocean; built for every arm of war."},
 	"great_lakes": {"name": "Great Lakes", "size": 1520, "slots": 9, "ring": 0.7, "desc": "Nine regions on a continent dotted with lakes; a land ring links every capital."},
 	"pangaea": {"name": "Pangaea", "size": 1680, "slots": 10, "ring": 0.7, "desc": "Ten regions on one supercontinent, split by a mountain range with passes."},
+	"grand_basin": {"name": "Grand Basin", "size": 1640, "slots": 8, "ring": 0.66, "desc": "A vast continental ring around an inland sea and central isle, surrounded by open ocean on every side."},
 	"ten_isles": {"name": "Ten Isles", "size": 1760, "slots": 10, "desc": "Ten islands round an open ocean, joined by narrow land bridges; a rich isle alone in the middle."},
 	"continents_plus": {"name": "Continents and Distant Lands", "size": 1600, "slots": 8, "desc": "Two homeland continents joined only by a far southern isthmus, and between them the Distant Lands: rich islands no one starts on, waiting for the first navy."},
 	"fractal": {"name": "Fractal", "size": 1280, "slots": 6, "desc": "Wild, ragged land of peninsulas, inlets and lakes, every region different; a land route still links each capital to the next."},
@@ -58,7 +61,7 @@ var _geo := {}
 ## "ring": how far out the capitals stand (a share of the half-width; 0.64 when
 ## unset), so that on the great continents they are near enough the coast for
 ## a harbour.
-const EXPANDED := ["frontier", "inland_sea", "crown", "highlands", "great_lakes", "pangaea", "ten_isles", "fractal", "atolls", "steppe", "rivers"]
+const EXPANDED := ["bastion_isle", "frontier", "inland_sea", "crown", "highlands", "twin_bays", "great_lakes", "pangaea", "grand_basin", "ten_isles", "fractal", "atolls", "steppe", "rivers"]
 ## Maps whose capitals are joined by land routes round them (EXPANDED, and the Strait's own starts).
 const ROUTED := EXPANDED + ["strait"]
 ## How wide the land routes are: narrow causeways on the sea maps.
@@ -347,6 +350,29 @@ func _shape(p: Vector2, route := -1.0) -> float:
 			f = 0.2 - u.length() * 0.45 + _coast.get_noise_2d(p.x * 1.8, p.y * 1.8) * 0.9 + _hills.get_noise_2d(p.x * 0.7, p.y * 0.7) * 0.35
 		"small":
 			f = 1.0 - (u * Vector2(1.0, 1.0)).length() / 0.86
+		"bastion_isle":
+			# Central hub + 4 arms toward the corners, deep coves between them, open sea all around.
+			var best := 1.0 - u.length() / 0.34
+			for s in starts:
+				best = maxf(best, 1.0 - _segment_distance(u, Vector2.ZERO, s / half) / 0.21)
+			best = minf(best, (0.82 - u.length()) * 3.0)
+			for c in [Vector2(0.0, -0.76), Vector2(0.76, 0.0), Vector2(0.0, 0.76), Vector2(-0.76, 0.0)]:
+				best = maxf(best, 1.0 - (u - c).length() / 0.07)
+			f = best
+		"twin_bays":
+			# Broad continent with twin inner seas and outer islets, ringed by open sea.
+			var land := 1.0 - (u * Vector2(1.0, 1.04)).length() / 0.82
+			var north_bay := ((u - Vector2(0.0, -0.30)) / Vector2(0.20, 0.22)).length() - 1.0
+			var south_bay := ((u - Vector2(0.0, 0.30)) / Vector2(0.20, 0.22)).length() - 1.0
+			f = minf(land, minf(north_bay * 1.8, south_bay * 1.8))
+			for c in [Vector2(-0.88, 0.0), Vector2(0.88, 0.0)]:
+				f = maxf(f, 1.0 - (u - c).length() / 0.06)
+		"grand_basin":
+			# Continental ring around an inland sea and central isle, surrounded by open ocean.
+			f = minf((u.length() - 0.30) * 2.8, (0.80 - u.length()) * 2.8)
+			f = maxf(f, 1.0 - u.length() / 0.14)
+			for c in [Vector2(0.0, -0.89), Vector2(0.89, 0.0), Vector2(0.0, 0.89), Vector2(-0.89, 0.0)]:
+				f = maxf(f, 1.0 - (u - c).length() / 0.055)
 		"twin":
 			var west := 1.0 - ((u - Vector2(-0.52, 0.0)) * Vector2(1.9, 1.08)).length()
 			var east := 1.0 - ((u - Vector2(0.52, 0.0)) * Vector2(1.9, 1.08)).length()
@@ -412,8 +438,8 @@ func _heights() -> void:
 	_origin = -(half + MARGIN)
 	_n = int(ceil((size + MARGIN * 2.0) / STEP)) + 1
 	_h.resize(_n * _n)
-	var mountains: float = {"steppe": 0.12, "atolls": 0.3, "strait": 0.5, "rivers": 0.45, "gulf": 0.3, "red_sea": 0.35, "small": 0.35, "twin": 0.8, "archipelago": 0.55, "continent": 1.25, "highlands": 1.9, "great_lakes": 0.6, "pangaea": 1.1, "ten_isles": 0.45, "middle_east": 0.3, "europe": 0.3, "east_asia": 0.3, "continents_plus": 0.9, "fractal": 0.7}.get(style, 0.8)
-	var lakes: float = {"continent": 0.42, "pangaea": 0.42, "great_lakes": 0.28}.get(style, 2.0)   # noise above this is a lake
+	var mountains: float = {"steppe": 0.12, "atolls": 0.3, "strait": 0.5, "rivers": 0.45, "gulf": 0.3, "red_sea": 0.35, "small": 0.35, "bastion_isle": 0.45, "twin": 0.8, "archipelago": 0.55, "continent": 1.25, "highlands": 1.9, "twin_bays": 0.85, "great_lakes": 0.6, "pangaea": 1.1, "grand_basin": 0.9, "ten_isles": 0.45, "middle_east": 0.3, "europe": 0.3, "east_asia": 0.3, "continents_plus": 0.9, "fractal": 0.7}.get(style, 0.8)
+	var lakes: float = {"continent": 0.42, "pangaea": 0.42, "great_lakes": 0.28, "twin_bays": 0.45, "grand_basin": 0.38}.get(style, 2.0)   # noise above this is a lake
 	var expanded := style in ROUTED
 	for r in range(_n):
 		for c in range(_n):

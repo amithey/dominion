@@ -44,9 +44,12 @@ const AIR_DEFENCE := ["samLauncher", "aaVehicle", "shortRangeSAM", "laserAD", "i
 const MINE_RADIUS := 9.0
 const MINE_CHARGES := 4
 const MINE_DAMAGE := 150.0
+const AP_MINE_CHARGES := 6
+const AP_MINE_DAMAGE := 45.0
+const MINE_COST := 30.0
 const LAY_AFTER := 6.0       # seconds halted before an engineer lays a field
 const LAY_COOLDOWN := 45.0
-const FIELDS_PER_NATION := 12
+const FIELDS_PER_NATION := 36
 const CLEAR_REACH := 22.0
 const CLEAR_TIME := 3.0
 const REPAIR_REACH := 18.0
@@ -146,16 +149,80 @@ static func _engineer(w: Node, s: Dictionary, u: Dictionary, dt: float) -> void:
 	lay(w, int(u.owner), at)
 	u.tool_ready = w.game_time + LAY_COOLDOWN
 
-## A field of anti-vehicle mines at `at`, laid by `owner`.
-static func lay(w: Node, owner: int, at: Vector3) -> Dictionary:
+## A field of mines (`"at"` anti-vehicle or `"ap"` anti-personnel) at `at`, laid by `owner`.
+static func lay(w: Node, owner: int, at: Vector3, kind := "at") -> Dictionary:
 	var s := state(w)
-	var f := {"id": int(s.next_id), "owner": owner, "at": at, "charges": MINE_CHARGES, "hits": {}, "clearing": 0.0, "mesh": null}
+	var charges := AP_MINE_CHARGES if kind == "ap" else MINE_CHARGES
+	var f := {"id": int(s.next_id), "owner": owner, "at": at, "kind": kind, "charges": charges, "hits": {}, "clearing": 0.0, "mesh": null}
 	s.next_id = int(s.next_id) + 1
 	s.fields.append(f)
 	_dress(w, f)
 	if owner == 0 and w.hud != null:
-		w.hud.notice("ENGINEERS: a minefield is laid. Enemy vehicles that drive into it will be struck; infantry walks through anti-vehicle mines.")
+		if kind == "ap":
+			w.hud.notice("ENGINEERS: an anti-personnel minefield is laid. Enemy infantry that enters it will be struck.")
+		else:
+			w.hud.notice("ENGINEERS: a minefield is laid. Enemy vehicles that drive into it will be struck; infantry walks through anti-vehicle mines.")
 	return f
+
+## Orders selected engineers (`mineLayer` or `worker`) to lay a minefield at `at` (with cost).
+static func order_lay_mine(w: Node, selected: Array, at: Vector3, kind := "at") -> int:
+	var layers := selected.filter(func(u): return _alive(u) and int(u.owner) == 0 and str(u.get("key", "")) in ["mineLayer", "worker"])
+	if layers.is_empty():
+		return 0
+	var s := state(w)
+	var own: Array = s.fields.filter(func(f): return int(f.owner) == 0)
+	if own.size() >= FIELDS_PER_NATION:
+		if w.hud != null:
+			w.hud.notice("Minefield limit reached (%d fields)." % FIELDS_PER_NATION)
+		return 0
+	if w.economy == null or float(w.economy.res.get("money", 0.0)) < MINE_COST:
+		if w.hud != null:
+			w.hud.notice("Need $%d to lay a minefield." % int(MINE_COST))
+		return 0
+	if w.height_at(at.x, at.z) < float(w.map.seaLevel) + 0.4:
+		return 0
+	w.economy.res.money -= MINE_COST
+	lay(w, 0, at, kind)
+	w.order_move(layers, at)
+	return 1
+
+## Orders a line of minefields from `start_pos` to `end_pos`.
+static func order_mine_line(w: Node, selected: Array, start_pos: Vector3, end_pos: Vector3, kind := "at") -> int:
+	var layers := selected.filter(func(u): return _alive(u) and int(u.owner) == 0 and str(u.get("key", "")) in ["mineLayer", "worker"])
+	if layers.is_empty():
+		if w.hud != null:
+			w.hud.notice("Select an Engineer Minelayer or Worker to lay a minefield line.")
+		return 0
+	var s := state(w)
+	var flat_a := Vector2(start_pos.x, start_pos.z)
+	var flat_b := Vector2(end_pos.x, end_pos.z)
+	var dist := flat_a.distance_to(flat_b)
+	var spacing := MINE_RADIUS * 1.6
+	var count := clampi(int(floorf(dist / spacing)) + 1, 1, 8)
+	var placed := 0
+	for i in range(count):
+		var own_count: int = s.fields.filter(func(f): return int(f.owner) == 0).size()
+		if own_count >= FIELDS_PER_NATION:
+			break
+		if w.economy == null or float(w.economy.res.get("money", 0.0)) < MINE_COST:
+			if placed == 0 and w.hud != null:
+				w.hud.notice("Need $%d per minefield." % int(MINE_COST))
+			break
+		var t := 0.0 if count == 1 else float(i) / float(count - 1)
+		var p2 := flat_a.lerp(flat_b, t)
+		var pos := Vector3(p2.x, w.height_at(p2.x, p2.y), p2.y)
+		if pos.y < float(w.map.seaLevel) + 0.4:
+			continue
+		if s.fields.any(func(f): return int(f.owner) == 0 and Vector2(f.at.x - pos.x, f.at.z - pos.z).length() < MINE_RADIUS * 1.2):
+			continue
+		w.economy.res.money -= MINE_COST
+		lay_quiet(w, 0, pos, kind)
+		placed += 1
+	if placed > 0:
+		w.order_move(layers, end_pos)
+		if w.hud != null:
+			w.hud.notice("ENGINEERS: laid %d %s minefields." % [placed, "anti-personnel" if kind == "ap" else "anti-tank"])
+	return placed
 
 ## The owner sees its own fields as a faint disc; the enemy sees nothing.
 static func _dress(w: Node, f: Dictionary) -> void:
@@ -171,7 +238,7 @@ static func _dress(w: Node, f: Dictionary) -> void:
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = Color(0.85, 0.7, 0.2, 0.22)
+	mat.albedo_color = Color(0.9, 0.35, 0.2, 0.24) if str(f.get("kind", "at")) == "ap" else Color(0.85, 0.7, 0.2, 0.22)
 	mi.material_override = mat
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var y: float = w.height_at(float(f.at.x), float(f.at.z)) if w.has_method("height_at") else float(f.at.y)
@@ -184,15 +251,22 @@ static func _remove(s: Dictionary, f: Dictionary) -> void:
 	if f.mesh != null and is_instance_valid(f.mesh):
 		f.mesh.queue_free()
 
-## Enemy vehicles in a field are struck, once each every three seconds.
+## Enemy units in a matching minefield are struck, once each every three seconds.
 static func _trigger(w: Node, s: Dictionary) -> void:
 	if s.fields.is_empty():
 		return
 	for f in s.fields.duplicate():
 		var o := int(f.owner)
+		var kind := str(f.get("kind", "at"))
 		for u in w.units:
-			if not _alive(u) or not u.get("vehicle", false) or u.get("fly", false) or u.get("naval", false) or int(u.owner) == o:
+			if not _alive(u) or u.get("fly", false) or u.get("naval", false) or int(u.owner) == o:
 				continue
+			if kind == "ap":
+				if u.get("vehicle", false):
+					continue
+			else:
+				if not u.get("vehicle", false):
+					continue
 			if not w.hostile(o, int(u.owner)):
 				continue
 			var p: Vector3 = u.node.position
@@ -202,18 +276,22 @@ static func _trigger(w: Node, s: Dictionary) -> void:
 			if w.game_time < float(f.hits.get(key, -10.0)) + 3.0:
 				continue
 			f.hits[key] = w.game_time
-			w.damage(u, MINE_DAMAGE, {"owner": o, "key": "mine", "dead": true, "covert": true})
+			var dmg := AP_MINE_DAMAGE if kind == "ap" else MINE_DAMAGE
+			w.damage(u, dmg, {"owner": o, "key": "mine", "dead": true, "covert": true})
+			u.cur_speed = 0.0
 			if w.get("effects") != null:
-				w.effects.explosion(p + Vector3.UP * 0.5, 1.4, true)
+				w.effects.explosion(p + Vector3.UP * 0.5, 1.0 if kind == "ap" else 1.4, true)
 			f.charges = int(f.charges) - 1
 			if int(u.owner) == 0 and w.hud != null:
-				w.hud.notice("MINES: your %s drove into a minefield." % str(w.unit_defs.get(u.key, {}).get("name", u.key)), p)
+				w.hud.notice("MINES: your %s ran into a minefield." % str(w.unit_defs.get(u.key, {}).get("name", u.key)), p)
 			if int(f.charges) <= 0:
 				_remove(s, f)
 				break
 
 static func _clear(w: Node, s: Dictionary, u: Dictionary, dt: float) -> void:
 	var at: Vector3 = u.node.position
+	if w.get("fortifications") != null and w.fortifications != null:
+		w.fortifications.breach_near(u, dt)
 	for f in s.fields.duplicate():
 		if int(f.owner) == int(u.owner) or not w.hostile(int(u.owner), int(f.owner)):
 			continue
@@ -390,19 +468,22 @@ static func can_target(attacker: Dictionary, target: Dictionary) -> bool:
 
 static func capture(w: Node) -> Dictionary:
 	var s := state(w)
-	return {"fields": s.fields.map(func(f): return {"owner": int(f.owner), "x": float(f.at.x), "y": float(f.at.y), "z": float(f.at.z), "charges": int(f.charges)})}
+	return {"fields": s.fields.map(func(f): return {"owner": int(f.owner), "x": float(f.at.x), "y": float(f.at.y), "z": float(f.at.z), "kind": str(f.get("kind", "at")), "charges": int(f.charges)})}
 
 static func restore(w: Node, data: Dictionary) -> void:
 	var s := state(w)
 	for f in s.fields.duplicate():
 		_remove(s, f)
 	for d in data.get("fields", []):
-		var f := lay_quiet(w, int(d.get("owner", 0)), Vector3(float(d.get("x", 0.0)), float(d.get("y", 0.0)), float(d.get("z", 0.0))))
-		f.charges = clampi(int(d.get("charges", MINE_CHARGES)), 1, MINE_CHARGES)
+		var kind := str(d.get("kind", "at"))
+		var f := lay_quiet(w, int(d.get("owner", 0)), Vector3(float(d.get("x", 0.0)), float(d.get("y", 0.0)), float(d.get("z", 0.0))), kind)
+		var max_c := AP_MINE_CHARGES if kind == "ap" else MINE_CHARGES
+		f.charges = clampi(int(d.get("charges", max_c)), 1, max_c)
 
-static func lay_quiet(w: Node, owner: int, at: Vector3) -> Dictionary:
+static func lay_quiet(w: Node, owner: int, at: Vector3, kind := "at") -> Dictionary:
 	var s := state(w)
-	var f := {"id": int(s.next_id), "owner": owner, "at": at, "charges": MINE_CHARGES, "hits": {}, "clearing": 0.0, "mesh": null}
+	var charges := AP_MINE_CHARGES if kind == "ap" else MINE_CHARGES
+	var f := {"id": int(s.next_id), "owner": owner, "at": at, "kind": kind, "charges": charges, "hits": {}, "clearing": 0.0, "mesh": null}
 	s.next_id = int(s.next_id) + 1
 	s.fields.append(f)
 	_dress(w, f)

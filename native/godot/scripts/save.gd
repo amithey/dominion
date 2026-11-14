@@ -155,6 +155,7 @@ func capture() -> Dictionary:
 		"directorate": world.directorate.capture() if world.directorate != null else {},
 		"war_tools": preload("res://scripts/war_tools.gd").capture(world),   # minefields
 		"homefront": world.homefront.capture() if world.get("homefront") != null else {},
+		"fortifications": world.fortifications.export_state() if world.get("fortifications") != null else [],
 		"power_effects": world.power_effects.duplicate(true),   # sanctions, export controls, a closed strait
 	}
 
@@ -428,6 +429,10 @@ func restore(data: Dictionary) -> void:
 	if world.directorate == null:
 		world.directorate = preload("res://scripts/ai_directorate.gd").new(world)
 	world.directorate.restore(data.get("directorate", {}))
+	if world.fortifications == null:
+		world.fortifications = preload("res://scripts/fortifications.gd").new()
+		world.fortifications.setup(world)
+	world.fortifications.import_state(data.get("fortifications", []))
 	preload("res://scripts/war_tools.gd").restore(world, data.get("war_tools", {}))
 	if world.get("homefront") != null and data.has("homefront"):
 		world.homefront.restore(data.get("homefront", {}))

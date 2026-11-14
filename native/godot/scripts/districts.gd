@@ -233,9 +233,9 @@ func slot(k: int, r: float) -> Vector3:
 	var a := deg_to_rad(30.0 + 60.0 * k)
 	return Vector3(cos(a) * r, 0, sin(a) * r)
 
-# A low fence along the hex edge, open where streets may enter.
+# A low fence along the district lot edge, leaving a green setback to the street.
 func fence(st: SurfaceTool, color: Color, height := 1.1) -> void:
-	var apothem := radius * 0.866 - 1.0
+	var apothem := radius * 0.68
 	for k in range(6):
 		var a := corner(k) * (apothem / (radius * 0.866))
 		var b := corner((k + 1) % 6) * (apothem / (radius * 0.866))
@@ -314,6 +314,8 @@ func main_building(key: String, container: Node3D, footprint: float, at := Vecto
 		# Modelled in Blender (native/tools/models/blender): a whole hex, placed at its own size.
 		var tint := Color(world.map.nations[owner].color) if owner < world.map.nations.size() else Color.WHITE
 		var made: Node3D = BModels.build_blender(blend_name, tint)
+		if not key in ["port", "shipyard", "airfield", "helipad", "lighthouse", "fishingWharf"]:
+			made.scale = Vector3.ONE * 0.76
 		made.position = at
 		made.rotation.y = harbour_turn if key in ["port", "shipyard", "fishingWharf", "lighthouse"] else 0.0   # a harbour faces the water
 		container.add_child(made)
@@ -394,16 +396,16 @@ func plaza(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGen
 
 func residential(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
 	if key in COMPLETE:
-		main_building(key, container, 9.0)
+		main_building(key, container, 7.2)
 		return
 	if key in ["housing", "apartments"]:
-		main_building(key, container, 7.0)
+		main_building(key, container, 5.8)
 		for k in range(6):
-			tree(st, slot(k, 7.6) + Vector3(rng.randf_range(-0.8, 0.8), 0, rng.randf_range(-0.8, 0.8)), rng, 0.9)
+			tree(st, slot(k, 6.2) + Vector3(rng.randf_range(-0.6, 0.6), 0, rng.randf_range(-0.6, 0.6)), rng, 0.85)
 		return
 
 func farmstead(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGenerator) -> void:
-	main_building(key, container, 7.5, slot(0, 1.8))  # barn, farmhouse and silo (farm.glb)
+	main_building(key, container, 6.2, slot(0, 1.5))  # barn, farmhouse and silo (farm.glb)
 	# Round hay bales lying in the field.
 	for i in range(6):
 		var p := slot(3, 6.4) + Vector3(rng.randf_range(-2.4, 2.4), 0.65, rng.randf_range(-2.4, 2.4))
@@ -421,10 +423,10 @@ func yard(key: String, container: Node3D, st: SurfaceTool, rng: RandomNumberGene
 		main_building(key, container, 6.0)
 		fence(st, Color("5d6264"), 1.6)
 		return
-	main_building(key, container, 9.5)
+	main_building(key, container, 7.6)
 	if key in COMPLETE:
 		for k in [2, 5]:
-			lamp(st, slot(k, 8.8))
+			lamp(st, slot(k, 7.0))
 		fence(st, Color("5d6264"), 1.6)
 		return  # the granary and the power station are complete compositions
 	# Stacked shipping containers in faded paint.

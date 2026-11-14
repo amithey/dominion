@@ -277,10 +277,11 @@ static func build_file(w: Node, path: String, owner: int, key_override := "") ->
 	var turret: Node3D = base.find_child("Turret", true, false) as Node3D
 	if turret != null:
 		turret.set_meta("axis", Vector3.UP)
-	# Parts that turn with no clip: propellers (about the nose axis, +Z) and the tail rotor and fenestron (about the wing axis, +X).
+	# Parts that turn with no clip: propellers (about the nose axis, +Z), vertical rotors (about +Y), and the tail rotor and fenestron (about the wing axis, +X).
 	# Both detail levels have their own. (The landing gear is only on helicopters, whose skids stay down.)
 	var props: Array = []
 	var tail_rotors: Array = []
+	var y_rotors: Array = []
 	for part in raw.find_children("*", "Node3D", true, false):
 		var pn := str(part.name)
 		if pn.ends_with("_Mesh") or pn.ends_with("_Mesh_LOD1"):
@@ -290,10 +291,14 @@ static func build_file(w: Node, path: String, owner: int, key_override := "") ->
 			props.append(part)
 		elif pn == "Rotor_Tail" or pn == "Fenestron":
 			tail_rotors.append(part)
+		elif pn == "Rotor_Main" or (pn.begins_with("Rotor_Main_") and pn.substr(11).is_valid_int()):
+			var idx := 1 if pn == "Rotor_Main" else int(pn.substr(11))
+			y_rotors.append({"node": part, "dir": -1.0 if idx % 2 == 0 else 1.0})
 
 	return {
 		"props": props,
 		"tail_rotors": tail_rotors,
+		"y_rotors": y_rotors,
 		"root": holder,
 		"rotor": rotor,
 		"rotor2": rotor2,

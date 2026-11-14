@@ -27,7 +27,7 @@ const KEY_LOW := Color("153540")
 ## Ministry accents complement icons and names; colour never carries meaning alone.
 const MINISTRY := {
 	"economy": Color("d8bd80"), "market": Color("d8bd80"), "research": Color("91baf0"),
-	"diplomacy": Color("b6a6e3"), "intel": Color("8dc8c9"), "territory": Color("a9c68f"), "defence": Color("e2a28a"), "un": Color("8ebfdc"),
+	"diplomacy": Color("b6a6e3"), "intel": Color("8dc8c9"), "territory": Color("a9c68f"), "defence": Color("e2a28a"), "ordnance": Color("e2a28a"), "un": Color("8ebfdc"),
 	"land": Color("a9c68f"), "military": Color("e2a28a"), "build": Color("d8bd80"),
 	"people": Color("a9c68f"), "cabinet": Color("d8bd80"), "menu": GOLD,
 }

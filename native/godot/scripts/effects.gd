@@ -457,17 +457,18 @@ var _projectile_meshes := {}
 var _beam_mesh: CylinderMesh
 var launched := {}   # projectile kind -> how many were fired (checked by tests)
 
-func projectile(kind: String, from: Vector3, to: Vector3, on_hit: Callable, delay := 0.0, track: Node3D = null) -> void:
-	var speed: float = {"missile": 75.0, "rocket": 65.0, "bomb": 0.0, "shell_arc": 55.0, "torpedo": 26.0}.get(kind, 60.0)
+func projectile(kind: String, from: Vector3, to: Vector3, on_hit: Callable, delay := 0.0, track: Node3D = null, retarget: Callable = Callable()) -> void:
+	var speed: float = {"missile": 75.0, "rocket": 65.0, "fpv": 22.0, "bomb": 0.0, "shell_arc": 55.0, "torpedo": 26.0}.get(kind, 60.0)
 	var dist := from.distance_to(to)
 	var time := sqrt(2.0 * maxf(from.y - to.y, 1.0) / 9.8) if kind == "bomb" else maxf(dist / speed, 0.15)
-	var arc: float = {"missile": 0.12, "rocket": 0.06, "shell_arc": 0.32, "bomb": 0.0, "torpedo": 0.0}.get(kind, 0.0) * dist
-	var node := Node3D.new()
-	var body := MeshInstance3D.new()
-	body.mesh = _projectile_mesh(kind)
-	body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	body.rotation.x = -PI * 0.5  # the cylinder lies along -Z, where look_at points
-	node.add_child(body)
+	var arc: float = {"missile": 0.12, "rocket": 0.06, "fpv": 0.20, "shell_arc": 0.32, "bomb": 0.0, "torpedo": 0.0}.get(kind, 0.0) * dist
+	var node := _fpv_drone_node() if kind == "fpv" else Node3D.new()
+	if kind != "fpv":
+		var body := MeshInstance3D.new()
+		body.mesh = _projectile_mesh(kind)
+		body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		body.rotation.x = -PI * 0.5  # the cylinder lies along -Z, where look_at points
+		node.add_child(body)
 	if kind in ["missile", "rocket"]:
 		var glow := OmniLight3D.new()
 		glow.light_color = Color(1.0, 0.65, 0.3)
@@ -478,10 +479,65 @@ func projectile(kind: String, from: Vector3, to: Vector3, on_hit: Callable, dela
 	add_child(node)
 	node.global_position = from
 	launched[kind] = int(launched.get(kind, 0)) + 1
-	_projectiles.append({"kind": kind, "node": node, "from": from, "to": to, "t": -delay, "time": time, "arc": arc, "hit": on_hit, "track": track, "puff": 0.0})
+	_projectiles.append({"kind": kind, "node": node, "from": from, "to": to, "t": -delay, "time": time, "arc": arc, "hit": on_hit, "track": track, "retarget": retarget, "puff": 0.0})
 	if delay <= 0.0 and audio and kind != "bomb":
-		var snd := "missile_launch" if kind in ["missile", "rocket"] else ("artillery_fire" if kind == "shell_arc" else "cannon")
-		audio.play(snd, from, -7.0, 1.4 if kind in ["missile", "shell_arc"] else 1.1)
+		var snd := "missile_launch" if kind in ["missile", "rocket"] else ("artillery_fire" if kind == "shell_arc" else ("ui_click" if kind == "fpv" else "cannon"))
+		audio.play(snd, from, -7.0, 1.4 if kind in ["missile", "shell_arc"] else (1.8 if kind == "fpv" else 1.1))
+
+func _fpv_drone_node() -> Node3D:
+	var root := Node3D.new()
+	var dark := StandardMaterial3D.new()
+	dark.albedo_color = Color("24282c")
+	dark.roughness = 0.6
+	var warhead_mat := StandardMaterial3D.new()
+	warhead_mat.albedo_color = Color("4a543c")
+	var rotor_mat := StandardMaterial3D.new()
+	rotor_mat.albedo_color = Color("8c949c")
+	rotor_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	rotor_mat.albedo_color.a = 0.72
+	var body := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(0.32, 0.14, 0.44)
+	body.mesh = bm
+	body.material_override = dark
+	body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(body)
+	var charge := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = 0.06
+	cm.bottom_radius = 0.08
+	cm.height = 0.36
+	charge.mesh = cm
+	charge.material_override = warhead_mat
+	charge.rotation.x = PI * 0.5
+	charge.position = Vector3(0, -0.10, -0.08)
+	charge.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(charge)
+	var rotor_holder := Node3D.new()
+	rotor_holder.name = "Rotors"
+	root.add_child(rotor_holder)
+	for sx in [-0.30, 0.30]:
+		for sz in [-0.30, 0.30]:
+			var arm := MeshInstance3D.new()
+			var am := BoxMesh.new()
+			am.size = Vector3(0.06, 0.04, 0.42)
+			arm.mesh = am
+			arm.material_override = dark
+			arm.position = Vector3(sx * 0.5, 0.02, sz * 0.5)
+			arm.rotation.y = atan2(sx, sz)
+			arm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			root.add_child(arm)
+			var disc := MeshInstance3D.new()
+			var dm := CylinderMesh.new()
+			dm.top_radius = 0.22
+			dm.bottom_radius = 0.22
+			dm.height = 0.015
+			disc.mesh = dm
+			disc.material_override = rotor_mat
+			disc.position = Vector3(sx, 0.08, sz)
+			disc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			rotor_holder.add_child(disc)
+	return root
 
 func _projectile_mesh(kind: String) -> Mesh:
 	if not _projectile_meshes.has(kind):
@@ -530,6 +586,12 @@ func _move_projectiles(delta: float) -> void:
 				audio.play("cannon", p.from, -8.0, 1.2)
 		if p.track != null and is_instance_valid(p.track):
 			p.to = p.track.global_position  # guided: the missile follows its target
+		elif p.get("retarget", Callable()).is_valid():
+			var next_track = p.retarget.call(p.to)
+			p.retarget = Callable()
+			if next_track != null and is_instance_valid(next_track):
+				p.track = next_track
+				p.to = next_track.global_position
 		var k: float = minf(p.t / p.time, 1.0)
 		var pos: Vector3 = p.from.lerp(p.to, k)
 		if p.kind == "bomb":

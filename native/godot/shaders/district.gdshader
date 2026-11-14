@@ -149,18 +149,18 @@ void fragment() {
 
 	float open = max(road, walk);
 	if (style == 1) {
-		float hedge = (1.0 - smoothstep(0.45, 0.72, to_rim)) * smoothstep(0.08, 0.25, to_rim) * (1.0 - open);
+		float hedge = (1.0 - smoothstep(0.35, 0.58, abs(to_rim - 2.3))) * (1.0 - open);
 		col = mix(col, srgb(vec3(0.13, 0.24, 0.09)) * mix(0.82, 1.18, grain), hedge * 0.92);
 	}
 	// Grounded ambient contact shadow beneath the central building footprint.
 	float footprint = max(abs(p.x), abs(p.y));
-	col *= mix(1.0, 0.74, (1.0 - smoothstep(core * 0.48, core * 0.48 + 2.2, footprint)) * (1.0 - open));
+	col *= mix(1.0, 0.74, (1.0 - smoothstep(core * 0.42, core * 0.42 + 1.8, footprint)) * (1.0 - open));
 	if (solid > 0.5) {
 		float kerb_band = 1.0 - smoothstep(0.35, 0.46, to_rim);
 		col = mix(col, srgb(vec3(0.36, 0.36, 0.35)) * mix(0.95, 1.05, grain), kerb_band * (1.0 - open) * 0.8);
 	}
-	// Subtle soft feather at the outer rim so adjacent hexes never show bright seams.
-	col = mix(col, meadow * 0.94, (1.0 - smoothstep(0.0, 0.35, to_rim)) * (1.0 - open) * (1.0 - solid) * 0.65);
+	// Green boulevard verge around each district lot so adjacent buildings read clearly apart.
+	col = mix(col, meadow * 0.94, smoothstep(2.6, 0.8, to_rim) * (1.0 - open) * (1.0 - solid));
 	if (winter > 0.0) {
 		float drift = smoothstep(0.25, 0.7, grain + winter * 0.6);
 		col = mix(col, vec3(0.70, 0.74, 0.80), winter * drift * (1.0 - road * 0.8) * 0.9);

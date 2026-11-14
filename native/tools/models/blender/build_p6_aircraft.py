@@ -99,19 +99,14 @@ def _build_multirotor_lod(s, lod=0):
 
     rig.add("Fuselage", rig.root_name, (0, 0, 0), fuse)
 
-    # Combine rotors into Rotor_Main / Rotor_Main_2 so Godot spins them in flight!
-    r_even = bc.CraftPart("Rotor_Main", seed=41)
-    r_odd = bc.CraftPart("Rotor_Main_2", seed=42)
-    p0 = props[0] if props else [0, cy + 0.05, 0]
-    p1 = props[1] if len(props) > 1 else p0
+    # Each rotor spins around its own motor hub (Rotor_Main, Rotor_Main_2, ...).
     for i, pt in enumerate(props):
         px, py, pz = float(pt[0]), float(pt[1]), float(pt[2])
-        tgt = r_even if i % 2 == 0 else r_odd
-        with tgt.frame((px, py, pz)):
-            tgt.rotor_hub_and_blades(prad, pblades, lod=lod, chord=max(0.022, prad * 0.14), yellow_tips=False)
-    rig.add("Rotor_Main", "Fuselage", (float(p0[0]), float(p0[1]), float(p0[2])), r_even)
-    if len(props) > 1:
-        rig.add("Rotor_Main_2", "Fuselage", (float(p1[0]), float(p1[1]), float(p1[2])), r_odd)
+        r_name = "Rotor_Main" if i == 0 else "Rotor_Main_%d" % (i + 1)
+        r_part = bc.CraftPart(r_name, seed=41 + i)
+        with r_part.frame((px, py, pz)):
+            r_part.rotor_hub_and_blades(prad, pblades, lod=lod, chord=max(0.022, prad * 0.14), yellow_tips=False)
+        rig.add(r_name, "Fuselage", (px, py, pz), r_part)
     return rig
 
 
