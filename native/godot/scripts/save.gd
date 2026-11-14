@@ -90,7 +90,7 @@ func capture() -> Dictionary:
 			continue
 		units.append({
 			"key": u.key, "owner": u.owner, "pos": _v(u.node.position), "heading": u.heading, "hp": u.hp,
-			"equipment": {"max_hp": u.max_hp, "range": u.range, "speed": u.speed, "cooldown": u.cooldown},
+			"equipment": {"max_hp": u.max_hp, "range": float(u.get("pre_garrison_range", u.range)), "speed": u.speed, "cooldown": u.cooldown},
 			"target": _v(u.target) if u.target != null else null, "attack_move": u.attack_move,
 			"ammo": u.get("ammo", -1), "air_state": u.get("air_state", "ready"),
 			"service_left": u.get("service_left", 0.0),

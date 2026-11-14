@@ -115,6 +115,8 @@ func shows(thing: Dictionary) -> bool:
 		return true
 	if thing.get("is_building", false):
 		return thing.get("seen", false)
+	if preload("res://scripts/war_tools.gd").is_submarine(thing):
+		return preload("res://scripts/war_tools.gd").submarine_detected(w, 0, thing)
 	if watches(thing.node.position) and not _ridge_hidden.has(thing.node.get_instance_id()):
 		return true
 	return preload("res://scripts/war_tools.gd").sensed(w, 0, thing)   # radars, airborne warning, submarine hunters
@@ -204,7 +206,7 @@ func refresh() -> void:
 	for u in w.units:
 		if u.dead or friendly(int(u.owner)):
 			continue
-		var show := watches(u.node.position)
+		var show := preload("res://scripts/war_tools.gd").submarine_detected(w, 0, u) if preload("res://scripts/war_tools.gd").is_submarine(u) else watches(u.node.position)
 		if show and not u.get("fly", false) and not u.get("naval", false) and not _has_ground_los(u.node.position):
 			_ridge_hidden[u.node.get_instance_id()] = true
 			show = false

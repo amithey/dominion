@@ -869,11 +869,17 @@ func _build_selection() -> void:
 					world.fortifications.order_dig(_selected_units(), kind)
 			elif action=="Exit Trench":
 				if world.fortifications != null:
-					world.fortifications.order_exit(_selected_units())
+					var sel_u := _selected_units()
+					if sel_u.any(func(u): return u.get("garrisoned_in") != null):
+						world.fortifications.order_exit(sel_u)
+					else:
+						var shelter: Dictionary = world.fortifications.nearest_open_shelter_for(sel_u, 28.0)
+						if not shelter.is_empty():
+							world.fortifications.order_enter(sel_u, shelter)
 			elif action=="Lay Mines":
-				world.order_mode = "mine"
+				world.order_mode = "apMine" if world.order_mode == "mine" else "mine"
 				world.def_line_start = null
-				notice("Lay Mines: click on the battlefield to place an anti-tank minefield ($30).")
+				notice("Lay Mines (%s): click on the battlefield to place a minefield ($30). Click button again to switch AT/AP." % ("Anti-Personnel" if world.order_mode == "apMine" else "Anti-Tank"))
 			elif action=="Defence Line":
 				var cycle := ["hedgehog", "atDitch", "trench", "dugout", "atMine", "apMine"]
 				var labels := {"hedgehog": "Anti-tank Hedgehogs ($15)", "atDitch": "Anti-tank Ditch ($25)", "trench": "Fighting Trenches ($20)", "dugout": "Forward Bunkers ($45)", "atMine": "Anti-tank Mines ($30)", "apMine": "Anti-personnel Mines ($30)"}
@@ -893,6 +899,13 @@ func _build_selection() -> void:
 						_demolish_armed = now
 						_demolish_target = _selected
 						notice("Click Demolish again to take down the %s." % _selected.def.name)
+				else:
+					var sel_u := _selected_units()
+					var cleared_forts: int = world.fortifications.demolish_near(sel_u, 16.0) if world.fortifications != null else 0
+					var cleared_mines: int = preload("res://scripts/war_tools.gd").clear_own_mines_near(world, sel_u, 16.0)
+					if cleared_forts == 0 and cleared_mines == 0:
+						world.order_mode = "demolish_fort"
+						notice("Demolish Fortification: click on any friendly trench, obstacle, or minefield to remove it.")
 			else:
 				world.order_mode = "bombard" if action=="Bombard" else "attack"
 				world.hud.notice("%s: click a destination on the battlefield." % action))
@@ -1268,7 +1281,8 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 		var why: String = world.defcon.cause()
 		_extra.defcon[1].tooltip_text = "DEFCON %d · %s%s
 Your forces: DEFCON %d (%s). Press K." % [lvl, world.defcon.DESC[lvl], (" Cause: %s." % why) if why != "" else "", int(world.defcon.posture[0]), world.defcon.posture_text(int(world.defcon.posture[0]), world.defcon.nuclear(0))]
-	var silos: bool = world.missiles != null and (world.missiles.stored() > 0 or world.missiles.stored("nuclear") > 0 or not world.missiles.silos().is_empty())
+	var has_ordnance_assets: bool = world.buildings.any(func(b): return not b.dead and b.owner == 0 and b.key in ["missileSilo", "strategicComplex", "specialLab", "ammoDepot"]) or world.units.any(func(u): return not u.dead and u.owner == 0 and u.key in ["nuclearSub", "aegisCruiser", "destroyer", "bomber", "raider"])
+	var silos: bool = world.missiles != null and (world.missiles.stored() > 0 or world.missiles.stored("nuclear") > 0 or not world.missiles.silos().is_empty() or not world.missiles.transfers.is_empty() or has_ordnance_assets)
 	_extra.missiles[1].visible = silos
 	if silos:
 		_extra.missiles[0].text = "%d/%d" % [world.missiles.stored("conventional", true), world.missiles.capacity()]
@@ -1461,7 +1475,7 @@ func _action_bars(b: Dictionary) -> void:
 			notice("%d assigned aircraft returning to base." % recalled if recalled > 0 else "No aircraft are assigned to this base."))
 	if world.missiles.has_local_storage(b) or b.key in ["missileSilo", "strategicComplex", "specialLab"]:
 		_bar(b.key, "Strategic Arsenal & Payloads", "View all stockpiles, warhead locations, transfers and ready launchers across your nation.", {}, 0.0, "", func(): toggle_panel("ordnance", true), "Open Arsenal")
-	if world.missiles.has_local_storage(b) and (not b.key in ["missileSilo", "strategicComplex"] or _missile_view == "stockpile"):
+	if world.missiles.has_local_storage(b):
 		_payload_storage(b)
 	if b.key in ["missileSilo", "strategicComplex", "specialLab"]:
 		var ms: Node = world.missiles
@@ -1551,15 +1565,19 @@ func _update_selection() -> void:
 	_commands["Repair"].disabled = not assets.any(func(e):return e.owner==0 and not e.dead and e.hp<e.max_hp and (e.get("is_building",false) and e.get("built",false) or e.get("vehicle",false)))
 	var can_dig: bool = _selected == null and own_units.any(func(u): return not u.vehicle and not u.get("fly", false) and not u.get("naval", false) and u.key != "worker")
 	var can_obstacle: bool = _selected == null and own_units.any(func(u): return not u.get("fly", false) and not u.get("naval", false) and (not u.vehicle or u.key in ["worker", "mineLayer"]))
-	var can_mine: bool = _selected == null and own_units.any(func(u): return str(u.get("key", "")) in ["mineLayer", "worker"])
+	var can_mine: bool = can_obstacle
 	var has_garrisoned: bool = _selected == null and own_units.any(func(u): return u.get("garrisoned_in") != null)
+	var can_enter_trench: bool = _selected == null and not has_garrisoned and can_dig and world.fortifications != null and not world.fortifications.nearest_open_shelter_for(own_units, 28.0).is_empty()
+	var can_clear_fort: bool = _selected == null and not own_units.is_empty() and ((world.fortifications != null and world.fortifications.has_near(own_units, 16.0)) or preload("res://scripts/war_tools.gd").has_own_mines_near(world, own_units, 16.0))
 	_commands["Dig Trench"].disabled = not can_dig
 	_commands["Field Dugout"].disabled = not can_dig
 	_commands["Hedgehog"].disabled = not can_obstacle
 	_commands["AT Ditch"].disabled = not can_obstacle
 	_commands["Lay Mines"].disabled = not can_mine
+	_commands["Lay Mines"].text = "Lay AP Mines" if world.order_mode == "apMine" else "Lay Mines"
 	_commands["Defence Line"].disabled = not can_obstacle
-	_commands["Exit Trench"].disabled = not has_garrisoned
+	_commands["Exit Trench"].disabled = not (has_garrisoned or can_enter_trench)
+	_commands["Exit Trench"].text = "Exit Trench" if has_garrisoned else "Enter Trench"
 	# Buying land happens at a settlement's town hall: the capital, a city or a village centre.
 	var hall: bool = _selected != null and _selected.owner == 0 and _selected.built and world.territory.RINGS_MAX.has(_selected.key)
 	_commands["Buy land"].visible = hall
@@ -1586,7 +1604,10 @@ func _update_selection() -> void:
 	_commands["Lay Mines"].visible = _commands["Lay Mines"].visible and not _commands["Lay Mines"].disabled
 	_commands["Defence Line"].visible = _commands["Defence Line"].visible and not _commands["Defence Line"].disabled
 	_commands["Exit Trench"].visible = _commands["Exit Trench"].visible and not _commands["Exit Trench"].disabled
-	_commands["Demolish"].visible = _selected != null and _selected.owner == 0 and not _selected.dead and _selected.key != "hq" and _selected.def.get("settlement") == null and transport_text == ""
+	var building_demolishable: bool = _selected != null and _selected.owner == 0 and not _selected.dead and _selected.key != "hq" and _selected.def.get("settlement") == null
+	_commands["Demolish"].visible = (building_demolishable or can_clear_fort or can_obstacle) and transport_text == ""
+	_commands["Demolish"].disabled = not (building_demolishable or can_clear_fort or can_obstacle)
+	_commands["Demolish"].text = "Clear Fort" if _selected == null else "Demolish"
 	_sel_stats.visible = false
 	_sel_fuel.visible = false
 	_launch_row.visible = false
@@ -1925,19 +1946,22 @@ func _open_payload_picker(asset: Dictionary, key: String, direction: String, job
 
 func _payload_storage(b: Dictionary) -> void:
 	var ms: Node = world.missiles
-	_section("Local payloads · %d slots free" % ms.free_storage(b))
+	_section("Stored Warheads & Payloads · %d/%d slots free" % [ms.free_storage(b), ms.storage_slots(b)])
 	for key in ms.types():
 		if not ms.local_weapon(key):
 			continue
 		var count: int = ms.local_count(b, key)
 		if count > 0:
 			var label: String = ms.def_of(key).name
-			_bar("missile:" + key, "%s · %d stored" % [label, count], "Choose another facility or a unit at this location.", {}, 0.0, "", func(): _open_payload_picker(b, key, "send"), "Transfer")
 			if ms.ready_platforms(key).any(func(p): return is_same(p, b)):
-				_bar("missile:" + key, "Target: " + label, "Launch one stored weapon from this facility.", {}, 0.0, ms.locked(key), func(): world.begin_missile(key, b), "Choose target · uses 1 stored weapon on launch")
+				_bar("missile:" + key, "Target & Launch: %s (×%d)" % [label, count], "Launch one stored warhead directly from this facility.", {}, 0.0, ms.locked(key), func(): world.begin_missile(key, b), "Choose target · fires 1 stored weapon")
+			_bar("missile:" + key, "Load %s (×%d) onto Launcher" % [label, count], "Automatically load 1 warhead onto a ready Bomber, Submarine, Ship, or Silo.", {}, 0.0, "", func():
+				var err: String = ms.quick_load_any_launcher(key, 0, b)
+				notice("Loading %s onto compatible launcher." % label if err == "" else err), "Quick-load onto launcher")
+			_bar("missile:" + key, "%s · %d stored (Transfer...)" % [label, count], "Choose a specific destination facility or launcher.", {}, 0.0, "", func(): _open_payload_picker(b, key, "send"), "Transfer")
 		var awaiting: int = int(ms.unassigned.get(key, 0))
 		if awaiting > 0 and ms.storage_accepts(b, key):
-			_bar("missile:" + key, "Assign %s · %d in reserve" % [ms.def_of(key).name, awaiting], "Place one weapon from an older save in this facility.", {}, 0.0, "", func(): _say(ms.assign_legacy(key, b)), "Assign 1")
+			_bar("missile:" + key, "Assign %s · %d in reserve" % [ms.def_of(key).name, awaiting], "Place one weapon from reserve in this facility.", {}, 0.0, "", func(): _say(ms.assign_legacy(key, b)), "Assign 1")
 	for job in ms.transfers:
 		if job.owner != 0:
 			continue
@@ -2001,23 +2025,14 @@ func _fill_launch(chosen: Array) -> void:
 		if ms.local_count(unit, key) > 0:
 			actions.append(["Unload %s" % ms.def_of(key).name, func(): _open_payload_picker(unit, key, "send")])
 			signature += "unload:" + key
-		elif ms.storage_accepts(unit, key):
-			var can_load_direct := false
-			for source in world.buildings:
-				if source.owner == 0 and not source.dead and source.has("payloads") and ms.transfer_blocked(source, unit, key) == "":
-					actions.append(["Load %s" % ms.def_of(key).name, func(): _open_payload_picker(unit, key, "load")])
-					signature += "load:" + key
-					can_load_direct = true
-					break
-			if not can_load_direct and unit.get("naval", false) and ms.free_storage(unit) > 0:
-				for port in world.buildings:
-					if port.owner == 0 and not port.dead and port.key in ms.PORTS and ms._at_service(unit, port) and ms.free_storage(port) > 0:
-						for depot in world.buildings:
-							if depot.owner == 0 and not depot.dead and depot.has("payloads") and ms.local_count(depot, key) > 0 and ms.transfer_blocked(depot, port, key) == "":
-								actions.append(["Stage %s to Port" % ms.def_of(key).name, func(): notice("Staging started." if ms.start_transfer(depot, port, key, 1) == "" else "Transfer unavailable.")])
-								signature += "stage:" + key
-								break
-						break
+		elif ms.storage_accepts(unit, key) and ms.free_storage(unit) > 0:
+			var has_stored: bool = world.buildings.any(func(b): return b.owner == 0 and not b.dead and b.built and ms.local_count(b, key) > 0)
+			if has_stored:
+				var k_load: String = key
+				actions.append(["Load %s" % ms.def_of(k_load).name, func():
+					var err: String = ms.quick_load_onto(unit, k_load, 1)
+					notice("Loading %s onto %s." % [ms.def_of(k_load).name, _facility_name(unit)] if err == "" else err)])
+				signature += "qload:" + key
 	if actions.is_empty() and chosen.any(func(u): return u.key in ms.LAUNCH_SHIPS + ms.TACTICAL_SHIPS + ["corvette", "submarine"]):
 		actions.append(["Payload handling", func(): notice("Bring a compatible ship to a supplied port or shipyard, then load from its local stock.")])
 		signature += "empty"

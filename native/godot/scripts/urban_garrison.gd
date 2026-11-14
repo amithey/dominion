@@ -55,6 +55,8 @@ static func order_garrison(w: Node, units_list: Array, b: Dictionary) -> int:
 	for u in units_list:
 		if not can_garrison(w, u, b):
 			continue
+		if w.get("fortifications") != null and u.get("garrisoned_in") != null:
+			w.fortifications.exit_unit(u)
 		u.garrison_order = b
 		u.enemy = null
 		u.attack_move = false
@@ -70,14 +72,17 @@ static func enter(w: Node, u: Dictionary, b: Dictionary) -> bool:
 	if not can_garrison(w, u, b) or room(b) <= 0:
 		u.erase("garrison_order")
 		return false
+	if w.get("fortifications") != null and u.get("garrisoned_in") != null:
+		w.fortifications.exit_unit(u)
 	u.erase("garrison_order")
 	var list := occupants(b)
 	var slot := list.size()
 	list.append(u)
 	b.garrison = list
 	u.garrison_building = b
-	u.pre_garrison_range = float(u.range)
-	u.range = float(u.range) * RANGE_BONUS
+	if not u.has("pre_garrison_range"):
+		u.pre_garrison_range = float(u.range)
+	u.range = float(u.pre_garrison_range) * RANGE_BONUS
 	u.target = null
 	u.path = PackedVector3Array()
 	u.moving = false

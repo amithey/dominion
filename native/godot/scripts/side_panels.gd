@@ -43,6 +43,7 @@ var stats_metric := "overview"
 var stats_hidden := {}
 var intel_tab := "operations"
 var defence_tab := "generals"
+var ordnance_tab := "warheads"
 var arsenal_country := ""
 var arsenal_domain := "land"
 var un_tab := "council"
@@ -1441,36 +1442,84 @@ func ordnance() -> void:
 	if ms == null:
 		return
 	var weapon_copy := preload("res://scripts/weapon_copy.gd")
-	# 1. Shared conventional & special stockpile.
-	var shared_card: VBoxContainer = hud._card(hud.UI.GOLD)
-	shared_card.add_child(hud._text("Shared Stockpile  ·  %d / %d capacity" % [ms.stored("conventional", true), ms.capacity()], 16, hud.UI.CREAM, true))
-	var any_shared := false
-	for m in ms.types():
-		if ms.local_weapon(m) or int(ms.stock.get(m, 0)) <= 0:
-			continue
-		any_shared = true
-		var why: String = ms.locked(m)
-		var ready: Array = ms.ready_platforms(m)
-		if why == "" and ready.is_empty():
-			why = "Requires " + ms.launchers_text(m)
-		var r: HBoxContainer = hud._row(shared_card)
-		r.add_child(hud._text("%s  ×%d  (%s · %d ready)" % [weapon_copy.display_name(w, m), int(ms.stock[m]), ms.category(m), ready.size()], 13, hud.UI.TEXT))
-		var b: Button = hud._button(r, "Target / Launch", func():
-			w.begin_missile(m)
-			return "", why == "", "good")
-		b.tooltip_text = why if why != "" else "Select a target on the map (uses 1 stored weapon)"
-	if not any_shared:
-		shared_card.add_child(hud._text("No shared missiles or special weapons in stockpile.", 12, hud.UI.MUTED))
+	var own_jobs: Array = ms.transfers.filter(func(j): return j.owner == 0)
+	_tabs([["Warheads & Stock", "warheads"], ["Platforms & Sites", "platforms"], ["Transfers (%d)" % own_jobs.size(), "transfers"]], ordnance_tab, func(v): ordnance_tab = v)
+	if ordnance_tab == "warheads":
+		var inv_card: VBoxContainer = hud._card(hud.UI.GOLD)
+		inv_card.add_child(hud._text("Arsenal Inventory  ·  Conventional %d/%d  ·  Nuclear %d" % [ms.stored("conventional", true), ms.capacity("conventional"), ms.stored("nuclear", false)], 16, hud.UI.CREAM, true))
+		var any_inv := false
+		for m in ms.types():
+			var total: int = ms.total_for(m, 0)
+			if total <= 0:
+				continue
+			any_inv = true
+			var is_local: bool = ms.local_weapon(m)
+			var ready: Array = ms.ready_platforms(m, 0)
+			var why: String = ms.locked(m)
+			if why == "" and ready.is_empty():
+				why = "Load onto " + ms.launchers_text(m) if is_local else "Requires " + ms.launchers_text(m)
+			var loc_parts := PackedStringArray()
+			if is_local:
+				for loc in ms.where_is(m, 0):
+					loc_parts.append("%s ×%d%s" % [hud._facility_name(loc.entity), int(loc.count), " (Ready)" if loc.can_launch else " (Stored)"])
+				for job in own_jobs:
+					if job.key == m:
+						loc_parts.append("Loading/Transit ×%d (%.0fs)" % [int(job.count), maxf(0.0, float(job.remaining))])
+			else:
+				loc_parts.append("Shared pool · %d ready launcher(s)" % ready.size())
+			var r: HBoxContainer = hud._row(inv_card)
+			var label_col: Color = hud.UI.BAD if ms.category(m) == "nuclear" else hud.UI.CREAM
+			var info_lbl: Label = hud._text("%s  ×%d   [%s]" % [weapon_copy.display_name(w, m), total, " · ".join(loc_parts)], 13, label_col)
+			info_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			info_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			r.add_child(info_lbl)
+			if is_local:
+				var m_key: String = m
+				var load_btn: Button = hud._button(r, "Load Launcher", func():
+					var err: String = ms.quick_load_any_launcher(m_key, 0)
+					hud.refresh_side()
+					return "Loading %s onto compatible launcher." % weapon_copy.display_name(w, m_key) if err == "" else err)
+				load_btn.tooltip_text = "Automatically load 1 warhead from storage onto a ready Bomber, Submarine, Ship, or Silo."
+			var fire_key: String = m
+			var b: Button = hud._button(r, "Target & Launch", func():
+				w.begin_missile(fire_key)
+				return "", why == "", "good")
+			b.tooltip_text = why if why != "" else "Select a target on the map (fires 1 ready warhead)"
+		if not any_inv:
+			inv_card.add_child(hud._text("No missiles or nuclear warheads in storage yet. Select a Missile Silo, Strategic Complex, or Special Lab to produce weapons.", 12, hud.UI.MUTED))
+		return
 
-	# 2. Local storage sites & launch platforms (silos, complexes, depots, airfields, ports, ships, aircraft).
-	var sites_head: Label = hud._text("LOCAL PAYLOADS & LAUNCHERS", 14, hud.UI.GOLD, true)
+	if ordnance_tab == "transfers":
+		if own_jobs.is_empty():
+			hud._side_rows.add_child(hud._text("No active payload transfers or loading operations.", 13, hud.UI.MUTED))
+			return
+		hud._side_rows.add_child(hud._text("ACTIVE TRANSFERS & LOADING", 14, hud.UI.GOLD, true))
+		for job in own_jobs:
+			var card: VBoxContainer = hud._card(hud.UI.GOLD)
+			var src_name: String = hud._facility_name(job.source) if job.source != null and not job.source.dead else "Lost source"
+			var dst_name: String = hud._facility_name(job.destination) if job.destination != null and not job.destination.dead else "Lost destination"
+			var row: HBoxContainer = hud._row(card)
+			row.add_child(hud._text("%s ×%d  ·  %s -> %s  (%s · %.0fs)" % [ms.def_of(job.key).name, int(job.count), src_name, dst_name, str(job.status), maxf(0.0, float(job.remaining))], 12, hud.UI.TEXT))
+			var jid := int(job.id)
+			var ref_asset: Dictionary = job.destination if job.destination != null and not job.destination.dead else (job.source if job.source != null else {})
+			hud._button(row, "Cancel", func():
+				var err: String = ms.cancel_transfer(job)
+				hud.refresh_side()
+				return "Transfer cancelled." if err == "" else err)
+			hud._button(row, "Manage", func():
+				hud._manage_payload_job(ref_asset, jid)
+				return "")
+		return
+
+	# "platforms" tab: Local storage sites & launch platforms.
+	var sites_head: Label = hud._text("LAUNCH PLATFORMS & WARHEAD LOCATIONS", 14, hud.UI.GOLD, true)
 	hud._side_rows.add_child(sites_head)
 	var assets: Array = []
 	for b in w.buildings:
 		if not b.dead and b.owner == 0 and b.built and (ms.has_local_storage(b) or ms.storage_slots(b) > 0):
 			assets.append(b)
 	for u in w.units:
-		if not u.dead and u.owner == 0 and (ms.storage_slots(u) > 0 or u.has("payloads")):
+		if not u.dead and u.owner == 0 and (u.key in ms.AIR_LAUNCHERS + ms.LAUNCH_SHIPS + ms.TACTICAL_SHIPS + ["corvette", "submarine"] or u.has("payloads")):
 			assets.append(u)
 	if assets.is_empty():
 		hud._side_rows.add_child(hud._text("Build a Missile Silo, Strategic Complex, Ammo Depot, Airfield, Port, or missile-capable ship/aircraft.", 12, hud.UI.MUTED))
@@ -1497,9 +1546,11 @@ func ordnance() -> void:
 		elif asset.get("fly", false):
 			status_bits.append(str(asset.get("air_state", "")))
 		elif asset.get("naval", false):
-			status_bits.append("at sea" if asset.get("moving", false) else "stationed")
+			status_bits.append("moving" if asset.get("moving", false) else "stationed")
 		var top: HBoxContainer = hud._row(card)
-		top.add_child(hud._text("%s  ·  %s" % [hud._facility_name(asset), ", ".join(status_bits)], 14, hud.UI.CREAM, true))
+		var title_lbl: Label = hud._text("%s  ·  %s" % [hud._facility_name(asset), ", ".join(status_bits)], 14, hud.UI.CREAM, true)
+		title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		top.add_child(title_lbl)
 		var target_asset: Dictionary = asset
 		hud._button(top, "Focus", func():
 			w.cam_focus = target_asset.node.position
@@ -1516,35 +1567,42 @@ func ordnance() -> void:
 			hud._update_panel()
 			return "")
 		if items.is_empty():
-			card.add_child(hud._text("Empty storage (%d free)" % free_s, 12, hud.UI.MUTED))
+			card.add_child(hud._text("No local warheads loaded (%d slot(s) free)" % free_s, 12, hud.UI.MUTED))
 		for entry in items:
 			var key: String = entry[0]
 			var cnt: int = entry[1]
+			var is_ready: bool = ms.ready_platforms(key).any(func(p): return is_same(p, target_asset))
 			var row: HBoxContainer = hud._row(card)
-			row.add_child(hud._text("%s  ×%d" % [weapon_copy.display_name(w, key), cnt], 13, hud.UI.BAD if ms.category(key) == "nuclear" else hud.UI.TEXT))
+			var w_lbl: Label = hud._text("%s  ×%d  (%s)" % [weapon_copy.display_name(w, key), cnt, "Ready to Fire" if is_ready else "In Storage"], 13, hud.UI.BAD if ms.category(key) == "nuclear" else hud.UI.TEXT)
+			w_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(w_lbl)
+			if target_asset.get("is_building", false):
+				hud._button(row, "Load Launcher", func():
+					var err: String = ms.quick_load_any_launcher(key, 0, target_asset)
+					hud.refresh_side()
+					return "Loading %s onto launcher." % weapon_copy.display_name(w, key) if err == "" else err)
 			hud._button(row, "Transfer", func():
 				hud._open_payload_picker(target_asset, key, "send")
 				return "")
-			var is_ready: bool = ms.ready_platforms(key).any(func(p): return is_same(p, target_asset))
 			var lock_why: String = ms.locked(key)
 			if is_ready:
 				var lb: Button = hud._button(row, "Launch", func():
 					w.begin_missile(key, target_asset)
 					return "", lock_why == "", "good")
 				lb.tooltip_text = lock_why if lock_why != "" else "Select a target on the map"
-
-	# 3. Active payload transfers.
-	var own_jobs: Array = ms.transfers.filter(func(j): return j.owner == 0)
-	if not own_jobs.is_empty():
-		hud._side_rows.add_child(hud._text("ACTIVE TRANSFERS", 14, hud.UI.GOLD, true))
-		for job in own_jobs:
-			var card: VBoxContainer = hud._card(hud.UI.GOLD)
-			var src_name: String = hud._facility_name(job.source) if job.source != null and not job.source.dead else "Lost source"
-			var dst_name: String = hud._facility_name(job.destination) if job.destination != null and not job.destination.dead else "Lost destination"
-			var row: HBoxContainer = hud._row(card)
-			row.add_child(hud._text("%s ×%d  ·  %s -> %s  (%s · %.0fs)" % [ms.def_of(job.key).name, int(job.count), src_name, dst_name, str(job.status), maxf(0.0, float(job.remaining))], 12, hud.UI.TEXT))
-			var jid := int(job.id)
-			var ref_asset: Dictionary = job.destination if job.destination != null and not job.destination.dead else (job.source if job.source != null else {})
-			hud._button(row, "Manage", func():
-				hud._manage_payload_job(ref_asset, jid)
-				return "")
+		# Quick-load buttons when this launcher has free slots and compatible warheads exist in storage
+		if free_s > 0 and not target_asset.get("is_building", false):
+			var load_row: HBoxContainer = null
+			for key in ms.types():
+				if not ms.local_weapon(key) or not ms.storage_accepts(target_asset, key):
+					continue
+				var can_pull: bool = w.buildings.any(func(b): return not b.dead and b.owner == 0 and b.built and ms.local_count(b, key) > 0)
+				if not can_pull:
+					continue
+				if load_row == null:
+					load_row = hud._row(card)
+				var k_load: String = key
+				hud._button(load_row, "Load %s" % weapon_copy.display_name(w, k_load), func():
+					var err: String = ms.quick_load_onto(target_asset, k_load, 1)
+					hud.refresh_side()
+					return "Loading %s onto %s." % [weapon_copy.display_name(w, k_load), hud._facility_name(target_asset)] if err == "" else err, true, "good")

@@ -96,6 +96,8 @@ func recalculate() -> void:
 	for u in world.units:
 		if u.owner == 0 and not u.dead:
 			pop_used += int(world.unit_defs.get(u.key, {}).get("pop", 1))
+			for c in u.get("cargo", []):
+				pop_used += int(world.unit_defs.get(str(c.get("key", "")), {}).get("pop", 1))
 
 ## For testing the game (F8): $100,000 more, every store raised to 99,999 and
 ## filled, and 200 more army capacity. Each press adds again.

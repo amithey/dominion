@@ -78,8 +78,8 @@ const DISCOVERIES := {
 		"desc": "United States only. Special access programs: unlocks the B-21 Raider, a flying-wing bomber that radar sees only at 15% of its range."},
 }
 
-## How close (as a share of an observer's range) a stealth aircraft is seen.
-const STEALTH := {"stealthFighter": 0.4, "raptor": 0.25, "raider": 0.15, "sixthGen": 0.2, "orca": 0.5, "seaDrone": 0.6}
+## How close (as a share of an observer's range) a stealth aircraft or submarine is seen.
+const STEALTH := {"stealthFighter": 0.4, "raptor": 0.25, "raider": 0.15, "sixthGen": 0.2, "orca": 0.35, "submarine": 0.3, "nuclearSub": 0.25, "seaDrone": 0.6}
 
 static func apply(w: Node) -> void:
 	for key in UNITS:

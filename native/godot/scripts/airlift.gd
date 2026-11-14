@@ -211,7 +211,14 @@ static func update(w: Node) -> void:
 ## `u` is aboard `heli`: off the map, kept as what it was.
 static func embark(w: Node, heli: Dictionary, u: Dictionary) -> void:
 	if not heli.has("cargo"): heli.cargo = []
-	heli.cargo.append({"key": u.key, "hp": float(u.hp), "places": places(w, heli, u), "xp": float(u.get("xp", 0.0))})
+	var gen_id := int(u.get("general", -1))
+	heli.cargo.append({"key": u.key, "hp": float(u.hp), "places": places(w, heli, u), "xp": float(u.get("xp", 0.0)), "general": gen_id})
+	if gen_id >= 0 and w.get("generals") != null:
+		for g in w.generals.roster:
+			if g.alive and int(g.id) == gen_id:
+				g.unit = heli
+				break
+		w.generals._rebuild()
 	u.board = null
 	preload("res://scripts/future_weapons.gd").stow(w, u)
 
@@ -284,8 +291,18 @@ static func unload(w: Node, heli: Dictionary) -> Array:
 		u.hp = clampf(float(c.get("hp", u.max_hp)), 1.0, float(u.max_hp))
 		if float(c.get("xp", 0.0)) > 0.0:
 			preload("res://scripts/veterancy.gd").set_xp(u, float(c.xp))
+		var gen_id := int(c.get("general", -1))
+		if gen_id >= 0 and w.get("generals") != null:
+			for g in w.generals.roster:
+				if g.alive and int(g.id) == gen_id:
+					g.unit = u
+					u.general = gen_id
+					break
+			w.generals._rebuild()
 		out.append(u)
 	heli.cargo = remaining
+	if w.get("economy") != null:
+		w.economy.recalculate()
 	return out
 
 # ---------------------------------------------------------------- landing orders

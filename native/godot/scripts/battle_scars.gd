@@ -103,3 +103,11 @@ func update(delta: float) -> void:
 		var fade := 1.0 - smoothstep(0.55, 1.0, ratio)
 		(entry.mat_rim as StandardMaterial3D).albedo_color.a = 0.88 * fade
 		(entry.mat_pit as StandardMaterial3D).albedo_color.a = 0.94 * fade
+
+func clear() -> void:
+	_cursor = 0
+	for entry in _pool:
+		var root: Node3D = entry.node
+		if is_instance_valid(root):
+			root.visible = false
+		entry.age = 0.0

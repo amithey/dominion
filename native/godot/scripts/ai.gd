@@ -325,11 +325,17 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 
 # Money-equivalent price (ai.js weights materials the AI does not stockpile).
 func available(u: Dictionary) -> bool:
-	return not u.dead and (u.dmg>0 or u.key in ForceCatalog.SCOUTS) and not world.disabled(u) and (not u.get("fly",false) or String(u.get("air_state","ready")) in ["ready","standby"] and u.get("ammo",0)>0)
+	return not u.dead and (u.dmg>0 or u.key in ForceCatalog.SCOUTS) and not world.disabled(u) and (not u.get("fly",false) or String(u.get("air_state","ready")) in ["ready","parked","standby"] and u.get("ammo",0)>0)
 
 func production_sites(owner: int, key: String) -> Array:
 	var home: String = ForceCatalog.HOME.get(key, preload("res://scripts/additional_factions.gd").HOME.get(key, TRAINED_AT.get(key, "")))
-	return world.buildings.filter(func(b):return b.owner==owner and b.key==home and b.built and not b.dead and b.get("supplied",true) and not world.disabled(b))
+	var is_air: bool = bool(world.unit_defs.get(key, {}).get("fly", false)) and not key in world.AirOperations.TUBE_LAUNCHED
+	return world.buildings.filter(func(b):
+		if b.owner!=owner or b.key!=home or not b.built or b.dead or not b.get("supplied",true) or world.disabled(b):
+			return false
+		if is_air and world.AirOperations.is_base(b) and world.AirOperations.room(world, b) <= 0:
+			return false
+		return true)
 
 ## The unit rival `n` raises against a threat its army cannot hurt: anti-armour
 ## infantry against vehicles, air defence against aircraft, whichever its nation fields.
@@ -347,13 +353,17 @@ func deploy(owner: int, key: String) -> bool:
 		if door==null:
 			continue
 		var unit: Dictionary = world.spawn_unit(key,door,owner)
+		var out: Vector3 = door-at
+		unit.heading = atan2(out.x,out.z)
+		world.place_on_ground(unit,door)
+		if unit.get("fly", false) and not key in world.AirOperations.TUBE_LAUNCHED and world.AirOperations.is_base(site) and world.AirOperations.park_new(world, unit, site):
+			pass
+		elif unit.get("fly", false) and key in world.AirOperations.TUBE_LAUNCHED and key != "wingman":
+			world.AirOperations.standby_new(world, unit, site, door)
 		if key == "sixthGen":
 			preload("res://scripts/future_weapons.gd").escort(world, unit)
 		elif world.get("directorate") != null and world.directorate != null:
 			world.directorate.escort_fighter(unit)   # a loyal wingman (Collaborative Combat Aircraft)
-		var out: Vector3 = door-at
-		unit.heading = atan2(out.x,out.z)
-		world.place_on_ground(unit,door)
 		return true
 	return false
 

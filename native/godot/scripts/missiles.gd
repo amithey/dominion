@@ -149,8 +149,14 @@ func _supplied(entity: Dictionary) -> bool:
 
 func _at_service(unit: Dictionary, facility: Dictionary) -> bool:
 	if unit.get("naval", false):
-		return facility.key in PORTS and _dock_near(unit, facility) and not unit.get("moving", false) and unit.target == null
-	return unit.get("fly", false) and unit.air_state == "parked" and is_same(unit.get("air_base"), facility)
+		if facility.key in PORTS:
+			return _dock_near(unit, facility) and not unit.get("moving", false) and unit.target == null
+		return facility.key in ["strategicComplex", "missileSilo", "ammoDepot"] and not unit.get("moving", false) and unit.target == null
+	if unit.get("fly", false):
+		if facility.key == "airfield":
+			return unit.air_state == "parked" and is_same(unit.get("air_base"), facility)
+		return facility.key in ["strategicComplex", "missileSilo", "ammoDepot"] and unit.air_state == "parked"
+	return false
 
 func transfer_blocked(source: Dictionary, destination: Dictionary, key: String, count := 1) -> String:
 	if not _active(source, int(source.owner)) or not _active(destination, int(source.owner)) or is_same(source, destination):
@@ -173,8 +179,77 @@ func transfer_blocked(source: Dictionary, destination: Dictionary, key: String, 
 
 func transfer_duration(source: Dictionary, destination: Dictionary, count: int) -> float:
 	if not (source.get("is_building", false) and destination.get("is_building", false)):
-		return 7.0 + count * 2.0
-	return 8.0 + Air.distance(source.node.position, destination.node.position) / 16.0
+		return 5.0 + count * 1.5
+	return 6.0 + Air.distance(source.node.position, destination.node.position) / 22.0
+
+## Returns every building and unit of `owner` currently holding `key`: [{entity, count, can_launch}].
+func where_is(key: String, owner := 0) -> Array:
+	var out: Array = []
+	var r_plats := platforms_for(key, owner)
+	for entity in world.buildings + world.units:
+		if entity.dead or int(entity.owner) != owner or not entity.has("payloads"):
+			continue
+		var c := local_count(entity, key)
+		if c > 0:
+			var can_fire := r_plats.any(func(p): return is_same(p, entity))
+			out.append({"entity": entity, "count": c, "can_launch": can_fire})
+	return out
+
+## One-click load of `key` from any friendly storage facility onto `destination`.
+## If `destination` is a moving ship or an airborne aircraft, automatically stops/lands it so loading can proceed.
+func quick_load_onto(destination: Dictionary, key: String, count := 1) -> String:
+	var owner := int(destination.get("owner", 0))
+	if not destination.get("is_building", false):
+		if destination.get("naval", false) and (destination.get("moving", false) or destination.get("target") != null):
+			destination.target = null
+			destination.moving = false
+			destination.path = PackedVector3Array()
+		elif destination.get("fly", false) and destination.get("air_state", "") != "parked":
+			var ab = destination.get("air_base")
+			if ab != null and Air.available(world, destination, ab):
+				Air.order_land(world, destination, ab)
+				return "Aircraft returning to airfield to load %s." % def_of(key).get("name", key)
+	var best_src := {}
+	var best_score := -999999.0
+	var plats := platforms_for(key, owner)
+	for b in world.buildings:
+		if b.dead or int(b.owner) != owner or not b.built or local_count(b, key) < count:
+			continue
+		if transfer_blocked(b, destination, key, count) != "":
+			continue
+		var is_launcher := plats.any(func(p): return is_same(p, b))
+		var score := float(local_count(b, key)) * 10.0 - (25.0 if is_launcher else 0.0) - Air.distance(b.node.position, destination.node.position) * 0.01
+		if score > best_score:
+			best_score = score
+			best_src = b
+	if best_src.is_empty():
+		return "No stored %s available to load." % def_of(key).get("name", key)
+	return start_transfer(best_src, destination, key, count)
+
+## One-click load of 1 warhead of `key` onto the best available compatible launcher of `owner`.
+func quick_load_any_launcher(key: String, owner := 0, preferred_source = null) -> String:
+	var candidates := _other_platforms_for(key, owner, true)
+	candidates.sort_custom(func(a, b):
+		var a_unit := not bool(a.get("is_building", false))
+		var b_unit := not bool(b.get("is_building", false))
+		if a_unit != b_unit:
+			return a_unit
+		return local_count(a, key) < local_count(b, key))
+	for dst in candidates:
+		if free_storage(dst) <= 0:
+			continue
+		if not dst.get("is_building", false) and dst.get("naval", false) and (dst.get("moving", false) or dst.get("target") != null):
+			dst.target = null
+			dst.moving = false
+			dst.path = PackedVector3Array()
+		if preferred_source != null and typeof(preferred_source) == TYPE_DICTIONARY and not preferred_source.is_empty():
+			if not is_same(preferred_source, dst) and transfer_blocked(preferred_source, dst, key, 1) == "":
+				return start_transfer(preferred_source, dst, key, 1)
+		else:
+			var res := quick_load_onto(dst, key, 1)
+			if res == "":
+				return ""
+	return "No compatible launcher with free payload slots."
 
 func _changed_logistics() -> void:
 	logistics_revision += 1

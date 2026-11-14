@@ -213,8 +213,12 @@ static func jam_mult(w: Node, source: Dictionary) -> float:
 		return JAM_DAMAGE
 	return 1.0
 
-## An aircraft that radar sees only close in.
+## An aircraft that radar sees only close in, or a submerged submarine detected only by ASW sonar / weapon launch.
 static func hidden(w: Node, target: Dictionary, distance: float, reach: float) -> bool:
+	if preload("res://scripts/war_tools.gd").is_submarine(target):
+		var viewer_owner := 0 if int(target.get("owner", 0)) > 0 else 1
+		if not preload("res://scripts/war_tools.gd").submarine_detected(w, viewer_owner, target):
+			return true
 	var seen: float = Arsenal.STEALTH.get(target.get("key", ""), 1.0)
 	if seen >= 1.0 or distance <= reach * seen:
 		return false

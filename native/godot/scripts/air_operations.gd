@@ -17,8 +17,8 @@ extends RefCounted
 const CAPACITY := {"jet": 4, "bomber": 3, "drone": 6, "helicopter": 8, "gunship": 8, "loiterer": 1, "stealthFighter": 4, "raptor": 4, "raider": 2, "shahed": 1, "sixthGen": 4, "wingman": 99, "akinci": 8, "harop": 1, "superTucano": 4, "interceptorDrone": 1, "jf17": 4, "attackJet": 4, "lightFighter": 3, "scoutHelicopter": 1, "aewc": 1, "ewJet": 3, "maritimePatrol": 4, "carrierJet": 2, "carrierDrone": 2, "heavyLift": 6, "navalHelicopter": 2, "heavyBomberDrone": 99}
 const SERVICE_SECONDS := 12.0
 const Costs := preload("res://scripts/war_costs.gd")
-const RESERVE_SECONDS := 12.0
-const APPROACH_SECONDS := 8.0
+const RESERVE_SECONDS := 6.0
+const APPROACH_SECONDS := 4.0
 ## Launched from a canister beside the runway, straight into the air: they hold
 ## no parking slot (and never come back).
 const TUBE_LAUNCHED := ["loiterer", "shahed", "wingman", "harop", "interceptorDrone", "heavyBomberDrone"]
@@ -112,25 +112,25 @@ static func distance(a: Vector3, b: Vector3) -> float:
 
 static func burn_rate(u: Dictionary) -> float:
 	if u.get("carrier") != null:
-		return 1.0
-	if u.key in ROTARY:
 		return 0.35
+	if u.key in ROTARY:
+		return 0.18
 	if u.key in ["bomber", "raider", "maritimePatrol", "aewc"]:
-		return 0.28
-	return 0.4
+		return 0.12
+	return 0.16
 
 ## Fuel per metre uses the compressed map scale; time spent in the air
 ## still costs fuel, including when a helicopter is holding position.
 static func travel_burn(u: Dictionary) -> float:
 	if u.get("carrier") != null:
 		return 0.0
-	var distance_budget := 950.0
+	var distance_budget := 7500.0
 	if u.key in ["bomber", "raider", "maritimePatrol", "aewc"]:
-		distance_budget = 1250.0
+		distance_budget = 10000.0
 	elif u.key == "heavyLift":
-		distance_budget = 1100.0
+		distance_budget = 7000.0
 	elif u.key in ROTARY or u.key in TUBE_LAUNCHED:
-		distance_budget = 750.0
+		distance_budget = 4200.0
 	return Costs.SORTIE_SECONDS / distance_budget
 
 static func fuel_per_metre(u: Dictionary) -> float:
@@ -202,8 +202,8 @@ static func base_for(world: Node, u: Dictionary, from := Vector3.INF, fuel := IN
 
 ## The same prediction is used by issued orders and by pursuit in flight.
 static func departure_fuel(u: Dictionary) -> float:
-	var run := 0.0 if u.key in ROTARY else 22.0 + float(u.altitude) * float(u.speed) / 7.0
-	return 8.0 * burn_rate(u) + run * travel_burn(u)
+	var run := 0.0 if u.key in ROTARY else 10.0 + float(u.altitude) * float(u.speed) / 14.0
+	return 3.0 * burn_rate(u) + run * travel_burn(u)
 
 static func mission_blocked(world: Node, u: Dictionary, point: Vector3, action_seconds := 8.0, release_range := 0.0) -> String:
 	if not u.get("fly", false):
@@ -245,7 +245,7 @@ static func patrol_seconds(world: Node, u: Dictionary, point: Vector3) -> float:
 	if base == null:
 		return 0.0
 	var loiter_burn := burn_rate(u) * 0.3 if u.key in ROTARY else fuel_per_metre(u) * float(u.speed)
-	return clampf((fuel - landing_fuel(world, u, point, base)) / maxf(loiter_burn, 0.01), 0.0, 45.0)
+	return clampf((fuel - landing_fuel(world, u, point, base)) / maxf(loiter_burn, 0.01), 0.0, 90.0)
 
 static func action_radius(u: Dictionary) -> float:
 	var fuel := fuel_capacity(u) if on_ground(u) else float(u.get("sortie_left", 0.0))
@@ -361,9 +361,13 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 		var travel := distance(position, u.get("fuel_position", position))
 		u.fuel_position = position
 		u.sortie_left = maxf(0.0, float(u.sortie_left) - delta * burn - travel * travel_burn(u))
+		var safe_phase: bool = u.air_state in ["landing", "taxi_in", "taxi_out", "takeoff"] or (int(u.owner) > 0 and u.air_state in ["returning", "no base"])
 		if u.sortie_left <= 0.0:
-			world.kill(u)
-			return true
+			if safe_phase:
+				u.sortie_left = 0.5
+			else:
+				world.kill(u)
+				return true
 	if u.key in TUBE_LAUNCHED:
 		if u.get("air_state") == "standby":
 			u.moving = false
@@ -374,6 +378,15 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 				u.node.position.y = maxf(u.node.position.y, world.height_at(u.node.position.x, u.node.position.z) + 2.0)
 				return false
 			return true
+		if int(u.owner) > 0 and (u.enemy == null or u.enemy.dead) and u.target == null:
+			var fb_list: Array = world.buildings.filter(func(b): return not b.dead and b.built and int(b.owner) == int(u.owner) and b.key in ["airfield", "helipad", "hq"])
+			if not fb_list.is_empty():
+				var fb: Dictionary = fb_list[0]
+				if distance(u.node.position, fb.root.position) <= 22.0:
+					u.sortie_left = fuel_capacity(u)
+					standby_new(world, u, fb, fb.root.position + Vector3(8.0, 0.0, 0.0))
+					return true
+				u.target = fb.root.position
 		return false
 	# Fuel and the way home are worked out twice a second of the aircraft's own flying (not by the world clock, so an
 	# aircraft stepped on its own, in a test or a replay, checks as often as one in the game).
@@ -392,6 +405,14 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 			if patrol.remaining <= 0.0:
 				return_to_base(u)
 	if u.air_state == "ready":
+		if int(u.owner) > 0 and u.get("enemy") == null and u.get("target") == null and not u.has("patrol") and not u.has("payload_order"):
+			u.idle_air = float(u.get("idle_air", 0.0)) + delta
+			if float(u.idle_air) >= 5.0:
+				u.idle_air = 0.0
+				return_to_base(u)
+		else:
+			u.idle_air = 0.0
+	if u.air_state == "ready":
 		var assigned = u.get("air_base")
 		var base_lost: bool = assigned != null and not available(world, u, assigned)
 		var home = assigned if not base_lost else base_for(world, u, u.node.position, INF)
@@ -404,7 +425,7 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 			if u.has("payload_order"):
 				release = world.missiles.release_range(u.payload_order.key, u)
 			mission_hit = mission_blocked(world, u, point, 4.0, release) != ""
-		if (bingo_hit or base_lost or mission_hit) and (u.get("had_base", false) or home != null):
+		if (bingo_hit or base_lost or mission_hit) and (u.get("had_base", false) or home != null or int(u.owner) > 0):
 			return_to_base(u)
 			if not u.get("fuel_warned", false) and u.owner == 0 and world.hud != null:
 				u.fuel_warned = true
@@ -427,10 +448,27 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 			return true
 		release(world, u)
 		base = base_for(world, u, u.node.position, float(u.sortie_left))
+		if base == null and int(u.owner) > 0:
+			base = base_for(world, u, u.node.position, INF)
 		u.air_base = base
 		if base != null:
 			assign(world, u, base, free_slot(world, base))
 			return_to_base(u)
+		elif int(u.owner) > 0:
+			# AI aircraft with no free airfield slot flies to friendly base and refuels/stands down instead of exploding
+			var any_friendly: Array = world.buildings.filter(func(b): return not b.dead and b.built and int(b.owner) == int(u.owner) and b.key in ["airfield", "helipad", "hq"])
+			if not any_friendly.is_empty():
+				var fb: Dictionary = any_friendly[0]
+				if distance(u.node.position, fb.root.position) <= 28.0:
+					u.sortie_left = fuel_capacity(u)
+					u.ammo = CAPACITY.get(u.key, 0)
+					standby_new(world, u, fb, fb.root.position + Vector3(8.0, 0.0, 0.0))
+					return true
+				u.air_state = "no base"
+				u.target = fb.root.position
+				u.stay = false
+				u.enemy = null
+				return false
 		elif u.air_state != "no base" and u.owner == 0 and world.hud != null:
 			world.hud.notice("Aircraft emergency: no reachable landing slot.", u.node.position)
 		u.air_state = "returning" if base != null else "no base"

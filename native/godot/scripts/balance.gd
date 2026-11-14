@@ -16,12 +16,17 @@ const UNITS := {
 	"loiterer": {"cost_mult": 1.3},
 	"harop": {"cost_mult": 1.2},
 	"gunship": {"dmg": 30.0, "cost_mult": 1.15},                   # the best damage per second per price in the game
+	"submarine": {"hp": 520.0, "dmg": 110.0, "range": 34.0},       # tactical attack submarine: heavy torpedoes & stealth hull
+	"nuclearSub": {"hp": 720.0, "dmg": 140.0, "range": 38.0},      # nuclear submarine: heavy torpedoes & deep-water durability
 }
 ## key -> {target class: multiplier}
 const PROFILE := {
 	"type45": {"air": 2.4},                                        # an air-defence destroyer should not also be the best value ship
 	"aaVehicle": {"air": 2.8},
 	"interceptorDrone": {"air": 1.5},
+	"submarine": {"naval": 2.2, "building": 1.2, "air": 0.0},
+	"nuclearSub": {"naval": 2.4, "building": 1.5, "air": 0.0},
+	"orca": {"naval": 2.2, "air": 0.0},
 }
 ## missile key -> {field: value}
 const MISSILES := {
@@ -37,6 +42,10 @@ static func apply(w: Node) -> void:
 		var change: Dictionary = UNITS[key]
 		if change.has("dmg"):
 			def.dmg = float(change.dmg)
+		if change.has("hp"):
+			def.hp = float(change.hp)
+		if change.has("range"):
+			def.range = float(change.range)
 		if change.has("cost_mult"):
 			for resource in def.cost:
 				def.cost[resource] = ceilf(float(def.cost[resource]) * float(change.cost_mult))

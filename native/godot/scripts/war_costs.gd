@@ -1,6 +1,6 @@
 extends RefCounted
 ## Operating costs in game units, not real-world dollars or litres.
-const SORTIE_SECONDS := 90.0
+const SORTIE_SECONDS := 240.0
 const GUN := {"tank": 1.2, "heavyTank": 1.6, "apc": 0.25, "aaVehicle": 0.25,
 	"gunboat": 0.6, "corvette": 1.0, "destroyer": 1.6}
 const INTERCEPT := {"samSite": 5.0, "samLauncher": 5.0, "irisT": 6.0,

@@ -37,15 +37,16 @@ const SHIP_LENGTH := {"carrier": 30.0, "asFrigate": 13.0, "landingShip": 16.0}
 const WEAPON := {"coastalASM": "missile", "asFrigate": "missile", "maritimePatrol": "missile", "ewJet": "missile", "mineClearer": "rocket", "carrierJet": "missile", "carrierDrone": "missile", "navalHelicopter": "missile", "heavyBomberDrone": "bomb"}
 const NAVAL_ONLY := ["coastalASM", "maritimePatrol", "navalHelicopter"]
 const SUBMARINES := ["submarine", "nuclearSub", "orca"]
-const SUB_HUNTERS := ["maritimePatrol", "asFrigate", "navalHelicopter"]
+const SUB_HUNTERS := ["maritimePatrol", "asFrigate", "navalHelicopter", "destroyer"]
+const ASW_CAPABLE := ["destroyer", "asFrigate", "maritimePatrol", "navalHelicopter", "submarine", "nuclearSub", "orca"]
 const GUNS := ["artillery", "mlrs", "himars", "k9", "heavyRocket", "tos1a", "towedHowitzer", "wheeledHowitzer", "mortarTeam"]
 const AIR_DEFENCE := ["samLauncher", "aaVehicle", "shortRangeSAM", "laserAD", "irisT", "manpads", "abmLauncher", "saudiThaad", "aegisCruiser", "type45"]
 
-const MINE_RADIUS := 9.0
-const MINE_CHARGES := 4
-const MINE_DAMAGE := 150.0
-const AP_MINE_CHARGES := 6
-const AP_MINE_DAMAGE := 45.0
+const MINE_RADIUS := 11.5
+const MINE_CHARGES := 5
+const MINE_DAMAGE := 260.0
+const AP_MINE_CHARGES := 7
+const AP_MINE_DAMAGE := 68.0
 const MINE_COST := 30.0
 const LAY_AFTER := 6.0       # seconds halted before an engineer lays a field
 const LAY_COOLDOWN := 45.0
@@ -68,11 +69,10 @@ const EVAC_RATE := 6.0
 # The air wing (by class: force_models.CARRIER_STYLE): aircraft aboard, and what flies from the deck.
 const WING := {"usa": 5, "china": 5, "france": 5, "italy": 3, "uk": 4, "india": 4, "turkiye": 4, "japan": 4, "iran": 3, "russia": 4, "brazil": 3, "indonesia": 3}
 const WING_AIRCRAFT := {"usa": "F/A-18E Super Hornet", "china": "J-15T", "france": "Rafale M", "italy": "F-35B Lightning", "uk": "F-35B Lightning", "india": "MiG-29K", "japan": "F-35B Lightning", "turkiye": "Bayraktar TB3", "iran": "Shahed-129", "russia": "Su-33", "brazil": "AF-1 Skyhawk", "indonesia": "Carrier Drone"}
-## How far from the carrier its aircraft will fly to strike (a third of the island's width): far beyond the carrier's own
-## guns (24 m), which only defend it. A sortie is 45 seconds in the air at about 34 m a second.
-const STRIKE_REACH := 240.0
+## How far from the carrier its aircraft will fly to strike: far beyond the carrier's own guns (24 m), which only defend it.
+const STRIKE_REACH := 420.0
 const LAUNCH_EVERY := 3.0
-const SORTIE := 45.0
+const SORTIE := 240.0
 const REARM := 14.0
 const REPLACE_EVERY := 45.0    ## seconds for a replacement aircraft to arrive for one lost
 const HOLD := 30.0             ## seconds an automatic wing stays down after Recall (an order sends it up at once)
@@ -164,10 +164,15 @@ static func lay(w: Node, owner: int, at: Vector3, kind := "at") -> Dictionary:
 			w.hud.notice("ENGINEERS: a minefield is laid. Enemy vehicles that drive into it will be struck; infantry walks through anti-vehicle mines.")
 	return f
 
-## Orders selected engineers (`mineLayer` or `worker`) to lay a minefield at `at` (with cost).
+static func _can_lay_mine(u: Dictionary) -> bool:
+	return _alive(u) and not u.get("fly", false) and not u.get("naval", false) and (not u.get("vehicle", false) or str(u.get("key", "")) in ["mineLayer", "worker"])
+
+## Orders selected engineers, workers or infantry to lay a minefield at `at` (with cost).
 static func order_lay_mine(w: Node, selected: Array, at: Vector3, kind := "at") -> int:
-	var layers := selected.filter(func(u): return _alive(u) and int(u.owner) == 0 and str(u.get("key", "")) in ["mineLayer", "worker"])
+	var layers := selected.filter(func(u): return int(u.owner) == 0 and _can_lay_mine(u))
 	if layers.is_empty():
+		if w.hud != null:
+			w.hud.notice("Select infantry, workers or an Engineer Minelayer to lay a minefield.")
 		return 0
 	var s := state(w)
 	var own: Array = s.fields.filter(func(f): return int(f.owner) == 0)
@@ -180,6 +185,8 @@ static func order_lay_mine(w: Node, selected: Array, at: Vector3, kind := "at") 
 			w.hud.notice("Need $%d to lay a minefield." % int(MINE_COST))
 		return 0
 	if w.height_at(at.x, at.z) < float(w.map.seaLevel) + 0.4:
+		if w.hud != null:
+			w.hud.notice("Minefields must be laid on dry land.")
 		return 0
 	w.economy.res.money -= MINE_COST
 	lay(w, 0, at, kind)
@@ -188,17 +195,17 @@ static func order_lay_mine(w: Node, selected: Array, at: Vector3, kind := "at") 
 
 ## Orders a line of minefields from `start_pos` to `end_pos`.
 static func order_mine_line(w: Node, selected: Array, start_pos: Vector3, end_pos: Vector3, kind := "at") -> int:
-	var layers := selected.filter(func(u): return _alive(u) and int(u.owner) == 0 and str(u.get("key", "")) in ["mineLayer", "worker"])
+	var layers := selected.filter(func(u): return int(u.owner) == 0 and _can_lay_mine(u))
 	if layers.is_empty():
 		if w.hud != null:
-			w.hud.notice("Select an Engineer Minelayer or Worker to lay a minefield line.")
+			w.hud.notice("Select infantry, workers or an Engineer Minelayer to lay a minefield line.")
 		return 0
 	var s := state(w)
 	var flat_a := Vector2(start_pos.x, start_pos.z)
 	var flat_b := Vector2(end_pos.x, end_pos.z)
 	var dist := flat_a.distance_to(flat_b)
-	var spacing := MINE_RADIUS * 1.6
-	var count := clampi(int(floorf(dist / spacing)) + 1, 1, 8)
+	var spacing := MINE_RADIUS * 1.45
+	var count := clampi(int(floorf(dist / spacing)) + 1, 1, 10)
 	var placed := 0
 	for i in range(count):
 		var own_count: int = s.fields.filter(func(f): return int(f.owner) == 0).size()
@@ -213,7 +220,7 @@ static func order_mine_line(w: Node, selected: Array, start_pos: Vector3, end_po
 		var pos := Vector3(p2.x, w.height_at(p2.x, p2.y), p2.y)
 		if pos.y < float(w.map.seaLevel) + 0.4:
 			continue
-		if s.fields.any(func(f): return int(f.owner) == 0 and Vector2(f.at.x - pos.x, f.at.z - pos.z).length() < MINE_RADIUS * 1.2):
+		if s.fields.any(func(f): return int(f.owner) == 0 and Vector2(f.at.x - pos.x, f.at.z - pos.z).length() < MINE_RADIUS * 1.1):
 			continue
 		w.economy.res.money -= MINE_COST
 		lay_quiet(w, 0, pos, kind)
@@ -221,37 +228,114 @@ static func order_mine_line(w: Node, selected: Array, start_pos: Vector3, end_po
 	if placed > 0:
 		w.order_move(layers, end_pos)
 		if w.hud != null:
-			w.hud.notice("ENGINEERS: laid %d %s minefields." % [placed, "anti-personnel" if kind == "ap" else "anti-tank"])
+			w.hud.notice("ENGINEERS: laid %d %s minefields in a line." % [placed, "anti-personnel" if kind == "ap" else "anti-tank"])
 	return placed
 
-## The owner sees its own fields as a faint disc; the enemy sees nothing.
+## True if any unit in `selected` is within `radius` of a friendly minefield.
+static func has_own_mines_near(w: Node, selected: Array, radius := 16.0) -> bool:
+	var s := state(w)
+	for u in selected:
+		if not _alive(u):
+			continue
+		for f in s.fields:
+			if int(f.owner) == int(u.owner) and Vector2(f.at.x - u.node.position.x, f.at.z - u.node.position.z).length() <= radius:
+				return true
+	return false
+
+## Clears friendly minefields near `selected` and refunds 50% of their cost.
+static func clear_own_mines_near(w: Node, selected: Array, radius := 16.0) -> int:
+	var s := state(w)
+	var removed := 0
+	for f in s.fields.duplicate():
+		for u in selected:
+			if _alive(u) and int(u.owner) == int(f.owner) and Vector2(f.at.x - u.node.position.x, f.at.z - u.node.position.z).length() <= radius:
+				_remove(s, f)
+				removed += 1
+				break
+	if removed > 0 and w.economy != null:
+		w.economy.res.money = float(w.economy.res.get("money", 0.0)) + removed * MINE_COST * 0.5
+	if removed > 0 and w.hud != null:
+		w.hud.notice("Cleared %d friendly minefield(s) (+$%d refunded)." % [removed, roundi(removed * MINE_COST * 0.5)])
+	return removed
+
+static func clear_own_mines_at(w: Node, at: Vector3, owner := 0, radius := 8.0) -> int:
+	var s := state(w)
+	var removed := 0
+	for f in s.fields.duplicate():
+		if int(f.owner) == owner and Vector2(f.at.x - at.x, f.at.z - at.z).length() <= radius:
+			_remove(s, f)
+			removed += 1
+	if removed > 0 and w.economy != null:
+		w.economy.res.money = float(w.economy.res.get("money", 0.0)) + removed * MINE_COST * 0.5
+	if removed > 0 and w.hud != null:
+		w.hud.notice("Cleared %d friendly minefield(s) (+$%d refunded)." % [removed, roundi(removed * MINE_COST * 0.5)])
+	return removed
+
+## The owner sees its own fields as a terrain-conforming disc + visible mine markers; the enemy sees nothing.
 static func _dress(w: Node, f: Dictionary) -> void:
-	if int(f.owner) != 0 or w.get("effects") == null:
+	if int(f.owner) != 0:
 		return
+	var root := Node3D.new()
+	var y: float = w.height_at(float(f.at.x), float(f.at.z)) if w.has_method("height_at") else float(f.at.y)
+	root.position = Vector3(f.at.x, y, f.at.z)
+	var is_ap := str(f.get("kind", "at")) == "ap"
 	var mi := MeshInstance3D.new()
 	var disc := CylinderMesh.new()
 	disc.top_radius = MINE_RADIUS
 	disc.bottom_radius = MINE_RADIUS
-	disc.height = 0.06
+	disc.height = 0.08
 	disc.radial_segments = 24
 	mi.mesh = disc
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = Color(0.9, 0.35, 0.2, 0.24) if str(f.get("kind", "at")) == "ap" else Color(0.85, 0.7, 0.2, 0.22)
+	mat.albedo_color = Color(0.92, 0.32, 0.18, 0.28) if is_ap else Color(0.90, 0.72, 0.18, 0.26)
 	mi.material_override = mat
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var y: float = w.height_at(float(f.at.x), float(f.at.z)) if w.has_method("height_at") else float(f.at.y)
-	mi.position = Vector3(f.at.x, y + 0.2, f.at.z)
-	w.add_child(mi)
-	f.mesh = mi
+	mi.position = Vector3(0, 0.28, 0)
+	root.add_child(mi)
+	var casing_mat := StandardMaterial3D.new()
+	casing_mat.albedo_color = Color("5a3828") if is_ap else Color("3b4432")
+	casing_mat.roughness = 0.85
+	var cap_mat := StandardMaterial3D.new()
+	cap_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	cap_mat.albedo_color = Color("e84a27") if is_ap else Color("e6b422")
+	var offsets := [Vector2.ZERO, Vector2(3.6, 0.0), Vector2(-3.6, 0.0), Vector2(1.8, 3.1), Vector2(-1.8, 3.1), Vector2(1.8, -3.1), Vector2(-1.8, -3.1)]
+	for off in offsets:
+		var wx: float = float(f.at.x) + off.x
+		var wz: float = float(f.at.z) + off.y
+		var wy: float = w.height_at(wx, wz) if w.has_method("height_at") else y
+		var puck := MeshInstance3D.new()
+		var cyl := CylinderMesh.new()
+		cyl.top_radius = 0.34 if is_ap else 0.48
+		cyl.bottom_radius = 0.38 if is_ap else 0.54
+		cyl.height = 0.18
+		cyl.radial_segments = 12
+		puck.mesh = cyl
+		puck.material_override = casing_mat
+		puck.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		puck.position = Vector3(off.x, wy - y + 0.12, off.y)
+		root.add_child(puck)
+		var fuse := MeshInstance3D.new()
+		var fmesh := CylinderMesh.new()
+		fmesh.top_radius = 0.14
+		fmesh.bottom_radius = 0.14
+		fmesh.height = 0.08
+		fmesh.radial_segments = 8
+		fuse.mesh = fmesh
+		fuse.material_override = cap_mat
+		fuse.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		fuse.position = Vector3(off.x, wy - y + 0.23, off.y)
+		root.add_child(fuse)
+	w.add_child(root)
+	f.mesh = root
 
 static func _remove(s: Dictionary, f: Dictionary) -> void:
 	s.fields.erase(f)
 	if f.mesh != null and is_instance_valid(f.mesh):
 		f.mesh.queue_free()
 
-## Enemy units in a matching minefield are struck, once each every three seconds.
+## Enemy units in a matching minefield are struck, crippled, and slowed.
 static func _trigger(w: Node, s: Dictionary) -> void:
 	if s.fields.is_empty():
 		return
@@ -273,17 +357,29 @@ static func _trigger(w: Node, s: Dictionary) -> void:
 			if Vector2(p.x - f.at.x, p.z - f.at.z).length() > MINE_RADIUS:
 				continue
 			var key := str(u.node.get_instance_id())
-			if w.game_time < float(f.hits.get(key, -10.0)) + 3.0:
+			if w.game_time < float(f.hits.get(key, -10.0)) + 1.8:
 				continue
 			f.hits[key] = w.game_time
 			var dmg := AP_MINE_DAMAGE if kind == "ap" else MINE_DAMAGE
 			w.damage(u, dmg, {"owner": o, "key": "mine", "dead": true, "covert": true})
 			u.cur_speed = 0.0
+			u.mine_slow_until = w.game_time + (3.5 if kind == "ap" else 4.5)
+			# Blast shrapnel hits nearby comrades in the same squad/column
+			for other in w.units:
+				if other == u or not _alive(other) or other.get("fly", false) or other.get("naval", false) or not w.hostile(o, int(other.owner)):
+					continue
+				if kind == "ap" and other.get("vehicle", false):
+					continue
+				if Vector2(other.node.position.x - p.x, other.node.position.z - p.z).length() <= 4.5:
+					w.damage(other, dmg * 0.45, {"owner": o, "key": "mine", "dead": true, "covert": true})
+					other.mine_slow_until = w.game_time + 2.5
 			if w.get("effects") != null:
-				w.effects.explosion(p + Vector3.UP * 0.5, 1.0 if kind == "ap" else 1.4, true)
+				w.effects.explosion(p + Vector3.UP * 0.5, 1.2 if kind == "ap" else 1.8, true)
 			f.charges = int(f.charges) - 1
 			if int(u.owner) == 0 and w.hud != null:
-				w.hud.notice("MINES: your %s ran into a minefield." % str(w.unit_defs.get(u.key, {}).get("name", u.key)), p)
+				w.hud.notice("MINES: your %s ran into an enemy minefield!" % str(w.unit_defs.get(u.key, {}).get("name", u.key)), p)
+			elif o == 0 and w.hud != null:
+				w.hud.notice("MINES: enemy %s struck your minefield!" % str(w.unit_defs.get(u.key, {}).get("name", u.key)), p)
 			if int(f.charges) <= 0:
 				_remove(s, f)
 				break
@@ -440,8 +536,50 @@ static func damage_mult(w: Node, source: Dictionary, target: Dictionary) -> floa
 			f *= JAM_FACTOR
 	return f
 
+static func is_submarine(thing: Dictionary) -> bool:
+	if thing.get("is_building", false):
+		return false
+	var key := str(thing.get("key", ""))
+	return key in SUBMARINES or _base(key) in SUBMARINES
+
+## True when a submerged submarine `sub` can be detected by `viewer_owner`:
+## only when it recently fired/launched, or an ASW sonar unit is in range, or a ship is at point-blank periscope range.
+static func submarine_detected(w: Node, viewer_owner: int, sub: Dictionary) -> bool:
+	if sub.get("node") == null or not is_instance_valid(sub.node):
+		return false
+	var sub_owner := int(sub.get("owner", -1))
+	if sub_owner == viewer_owner or (w.get("diplomacy") != null and w.diplomacy.allied(viewer_owner, sub_owner)):
+		return true
+	if w.game_time - float(sub.get("last_fire", -99.0)) < 3.0:
+		return true
+	var at: Vector3 = sub.node.position
+	var s := state(w)
+	if _near(s, viewer_owner, "maritimePatrol", at, 90.0) or _near(s, viewer_owner, "navalHelicopter", at, 65.0):
+		return true
+	for u in w.units:
+		if not _alive(u):
+			continue
+		var uo := int(u.owner)
+		if uo != viewer_owner and not (w.get("diplomacy") != null and w.diplomacy.allied(viewer_owner, uo)):
+			continue
+		var ukey := str(u.get("key", ""))
+		var bkey := _base(ukey)
+		var d := Vector2(u.node.position.x - at.x, u.node.position.z - at.z).length()
+		if ukey in ["maritimePatrol", "asFrigate"] or bkey in ["maritimePatrol", "asFrigate"]:
+			if d <= 85.0:
+				return true
+		elif ukey in ASW_CAPABLE:
+			var sonar_r := 62.0
+			if d <= sonar_r:
+				return true
+		elif d <= 8.0:
+			return true
+	return false
+
 ## Whether `thing` (an enemy of `owner`) is found by `owner`'s sensors (fog_of_war.visible).
 static func sensed(w: Node, owner: int, thing: Dictionary) -> bool:
+	if is_submarine(thing):
+		return submarine_detected(w, owner, thing)
 	var s := state(w)
 	if s.support.get(owner, {}).is_empty() or thing.get("node") == null:
 		return false
@@ -449,9 +587,7 @@ static func sensed(w: Node, owner: int, thing: Dictionary) -> bool:
 	var key := str(thing.get("key", ""))
 	if (key in GUNS or _base(key) in GUNS) and _near(s, owner, "counterBatteryRadar", at, RADAR_REACH):
 		return true
-	if (thing.get("fly", false) or thing.get("naval", false)) and not (key in SUBMARINES or _base(key) in SUBMARINES) and _near(s, owner, "aewc", at, AEW_REACH):
-		return true
-	if (key in SUBMARINES or _base(key) in SUBMARINES) and (_near(s, owner, "maritimePatrol", at, 90.0) or _near(s, owner, "navalHelicopter", at, 60.0)):
+	if (thing.get("fly", false) or thing.get("naval", false)) and _near(s, owner, "aewc", at, AEW_REACH):
 		return true
 	return false
 
@@ -460,8 +596,8 @@ static func can_target(attacker: Dictionary, target: Dictionary) -> bool:
 	var key := str(attacker.get("key", ""))
 	if key in NAVAL_ONLY and not target.get("naval", false):
 		return false
-	if key == "carrier" and (str(target.get("key", "")) in SUBMARINES or load("res://scripts/force_catalog.gd").base(str(target.get("key", ""))) in SUBMARINES):
-		return false
+	if is_submarine(target):
+		return key in ASW_CAPABLE
 	return true
 
 # ---------------------------------------------------------------- saves

@@ -20,7 +20,7 @@ const DITCH_BUILD_TIME := 4.5
 
 const TRENCH_REACH := 4.8
 const DUGOUT_REACH := 5.5
-const OBSTACLE_BLOCK_RADIUS := 3.0
+const OBSTACLE_BLOCK_RADIUS := 4.0
 const BREACH_REACH := 14.0
 const BREACH_TIME := 3.5
 
@@ -63,37 +63,70 @@ static func _can_build(u: Dictionary, kind: String) -> bool:
 		return u.key == "worker" or u.key == "mineLayer" or (not u.vehicle and u.key != "worker")
 	return not u.vehicle and u.key != "worker"
 
-## Orders selected units to build a fortification or obstacle where they stand.
+## Orders selected units to build a fortification or obstacle in an aligned row where they stand.
 func order_dig(selected: Array, kind := "trench") -> int:
-	var builders := selected.filter(func(u): return u.owner == 0 and _can_build(u, kind))
+	var builders := selected.filter(func(u): return not u.dead and u.owner == 0 and _can_build(u, kind))
 	if builders.is_empty():
 		return 0
 	var cost := cost_of(kind)
-	var started := 0
+	var center := Vector3.ZERO
+	var sin_sum := 0.0
+	var cos_sum := 0.0
 	for u in builders:
+		center += u.node.position
+		sin_sum += sin(float(u.heading))
+		cos_sum += cos(float(u.heading))
+	center /= float(builders.size())
+	var avg_heading := atan2(sin_sum, cos_sum) if (absf(sin_sum) + absf(cos_sum)) > 0.01 else float(builders[0].heading)
+	var fwd := Vector3(sin(avg_heading), 0.0, cos(avg_heading))
+	var right := Vector3(fwd.z, 0.0, -fwd.x)
+	var spacing := 3.4 if is_obstacle(kind) else 3.5
+	var cap := int(GARRISON_CAP.get(kind, 1)) if is_shelter(kind) else 1
+	var desired_segments := 1 if (is_shelter(kind) and builders.size() == 1) else (maxi(3, ceili(float(builders.size()) / 2.0)) if is_shelter(kind) else maxi(3, builders.size()))
+	var sites: Array[Dictionary] = []
+	for i in range(desired_segments):
 		if world.economy == null or float(world.economy.res.get("money", 0.0)) < cost:
-			if started == 0 and world.hud != null:
+			if sites.is_empty() and world.hud != null:
 				world.hud.notice("Need $%d to build %s." % [int(cost), _label(kind)])
 			break
-		var pos: Vector3 = u.node.position
-		if world.height_at(pos.x, pos.z) < float(world.map.seaLevel) + 0.4:
+		var offset := (float(i) - float(desired_segments - 1) * 0.5) * spacing
+		var pos: Vector3 = center + right * offset
+		pos.y = world.height_at(pos.x, pos.z)
+		if pos.y < float(world.map.seaLevel) + 0.4:
 			continue
-		if _near_existing(pos, 3.2):
-			continue
+		if _near_existing(pos, 2.6):
+			var shifted: Vector3 = pos + fwd * 3.6
+			shifted.y = world.height_at(shifted.x, shifted.z)
+			if shifted.y >= float(world.map.seaLevel) + 0.4 and not _near_existing(shifted, 2.6):
+				pos = shifted
+			else:
+				continue
 		world.economy.res.money -= cost
+		var ent := _spawn(0, pos, avg_heading, kind, false)
+		sites.append(ent)
+	if sites.is_empty():
+		return 0
+	for i in range(builders.size()):
+		var u: Dictionary = builders[i]
 		exit_unit(u)
-		u.target = null
+		if u.get("garrison_building") != null:
+			preload("res://scripts/urban_garrison.gd").exit_unit(world, u, u.garrison_building)
+		var site: Dictionary = sites[mini(i / maxi(cap, 1), sites.size() - 1)] if is_shelter(kind) else sites[i % sites.size()]
 		u.enemy = null
-		var ent := _spawn(u.owner, pos, float(u.heading), kind, false)
-		u.digging = ent
-		started += 1
-	if started > 0 and world.hud != null:
-		world.hud.notice("Constructing %d %s." % [started, _label(kind)])
-	return started
+		if Vector2(u.node.position.x - site.pos.x, u.node.position.z - site.pos.z).length() <= 4.2:
+			u.target = null
+			u.path = PackedVector3Array()
+			u.digging = site
+		else:
+			world.order_move([u], site.pos)
+			u.digging_target = site
+	if world.hud != null:
+		world.hud.notice("Constructing %d %s in line." % [sites.size(), _label(kind)])
+	return sites.size()
 
 ## Places a defensive line of `kind` from `start_pos` to `end_pos` and assigns selected builders.
 func order_line(selected: Array, kind: String, start_pos: Vector3, end_pos: Vector3) -> int:
-	var builders := selected.filter(func(u): return u.owner == 0 and _can_build(u, kind))
+	var builders := selected.filter(func(u): return not u.dead and u.owner == 0 and _can_build(u, kind))
 	if builders.is_empty():
 		if world.hud != null:
 			world.hud.notice("Select infantry or engineers to build a %s line." % _label(kind))
@@ -101,10 +134,11 @@ func order_line(selected: Array, kind: String, start_pos: Vector3, end_pos: Vect
 	var flat_a := Vector2(start_pos.x, start_pos.z)
 	var flat_b := Vector2(end_pos.x, end_pos.z)
 	var dist := flat_a.distance_to(flat_b)
-	var spacing := 4.4 if is_obstacle(kind) else 5.2
-	var count := clampi(int(floorf(dist / spacing)) + 1, 1, 16)
-	var dir := (flat_b - flat_a).normalized() if dist > 0.2 else Vector2(0, 1)
-	var heading := atan2(dir.x, dir.y)
+	var spacing := 4.0 if is_obstacle(kind) else 3.7
+	var count := clampi(int(floorf(dist / spacing)) + 1, 1, 20)
+	var dir := (flat_b - flat_a).normalized() if dist > 0.2 else Vector2(1, 0)
+	# Segment width runs along local X; facing (front parapet) is local +Z, perpendicular to the line A -> B.
+	var heading := atan2(dir.x, dir.y) + PI * 0.5
 	var cost := cost_of(kind)
 	var placed := 0
 	var sites: Array[Dictionary] = []
@@ -114,7 +148,7 @@ func order_line(selected: Array, kind: String, start_pos: Vector3, end_pos: Vect
 		var pos := Vector3(p2.x, world.height_at(p2.x, p2.y), p2.y)
 		if pos.y < float(world.map.seaLevel) + 0.4:
 			continue
-		if _near_existing(pos, 3.0):
+		if _near_existing(pos, 2.5):
 			continue
 		if world.economy == null or float(world.economy.res.get("money", 0.0)) < cost:
 			if placed == 0 and world.hud != null:
@@ -128,9 +162,16 @@ func order_line(selected: Array, kind: String, start_pos: Vector3, end_pos: Vect
 		for i in range(builders.size()):
 			var u: Dictionary = builders[i]
 			exit_unit(u)
+			if u.get("garrison_building") != null:
+				preload("res://scripts/urban_garrison.gd").exit_unit(world, u, u.garrison_building)
 			var site: Dictionary = sites[i % sites.size()]
-			world.order_move([u], site.pos)
-			u.digging_target = site
+			if Vector2(u.node.position.x - site.pos.x, u.node.position.z - site.pos.z).length() <= 4.2:
+				u.target = null
+				u.path = PackedVector3Array()
+				u.digging = site
+			else:
+				world.order_move([u], site.pos)
+				u.digging_target = site
 		if world.hud != null:
 			world.hud.notice("Defence line ordered: %d %s segments." % [placed, _label(kind)])
 	return placed
@@ -149,7 +190,7 @@ static func _label(kind: String) -> String:
 		_: return "fighting trench"
 
 ## Returns a built friendly shelter near `world_pos` (for right-click garrisoning).
-func shelter_at(world_pos: Vector3, owner_id: int, radius := 5.0) -> Dictionary:
+func shelter_at(world_pos: Vector3, owner_id: int, radius := 7.5) -> Dictionary:
 	var best := {}
 	var best_d := radius
 	for e in entries:
@@ -161,38 +202,206 @@ func shelter_at(world_pos: Vector3, owner_id: int, radius := 5.0) -> Dictionary:
 			best = e
 	return best
 
-## Orders selected infantry to enter a friendly trench or forward bunker.
+## Returns an unfinished friendly fortification near `world_pos` so right-clicking resumes digging.
+func unbuilt_at(world_pos: Vector3, owner_id: int, radius := 7.0) -> Dictionary:
+	var best := {}
+	var best_d := radius
+	for e in entries:
+		if e.dead or e.built or int(e.owner) != owner_id:
+			continue
+		var d := Vector2(e.pos.x - world_pos.x, e.pos.z - world_pos.z).length()
+		if d < best_d:
+			best_d = d
+			best = e
+	return best
+
+func order_resume_dig(selected: Array, ent: Dictionary) -> int:
+	if ent.is_empty() or ent.dead or ent.built:
+		return 0
+	var builders := selected.filter(func(u): return not u.dead and int(u.owner) == int(ent.owner) and _can_build(u, str(ent.kind)))
+	for u in builders:
+		exit_unit(u)
+		if u.get("garrison_building") != null:
+			preload("res://scripts/urban_garrison.gd").exit_unit(world, u, u.garrison_building)
+		if Vector2(u.node.position.x - ent.pos.x, u.node.position.z - ent.pos.z).length() <= 4.2:
+			u.target = null
+			u.path = PackedVector3Array()
+			u.digging = ent
+		else:
+			world.order_move([u], ent.pos)
+			u.digging_target = ent
+	return builders.size()
+
+## Returns the nearest friendly built shelter with free room near `selected` infantry.
+func nearest_open_shelter_for(selected: Array, radius := 28.0) -> Dictionary:
+	var troops := selected.filter(func(u): return not u.dead and not u.vehicle and not u.get("fly", false) and not u.get("naval", false) and u.key != "worker")
+	if troops.is_empty():
+		return {}
+	var center := Vector3.ZERO
+	var owner_id := int(troops[0].owner)
+	for u in troops:
+		center += u.node.position
+	center /= float(troops.size())
+	var best := {}
+	var best_d := radius
+	for e in entries:
+		if e.dead or not e.built or int(e.owner) != owner_id or not is_shelter(e.kind):
+			continue
+		var cap := int(GARRISON_CAP.get(e.kind, 3))
+		var g: Array = e.get("garrison", []).filter(func(u): return not u.dead and is_same(u.get("garrisoned_in"), e))
+		e.garrison = g
+		if g.size() >= cap:
+			continue
+		var d := Vector2(e.pos.x - center.x, e.pos.z - center.z).length()
+		if d < best_d:
+			best_d = d
+			best = e
+	return best
+
+## True if any unit in `selected` is inside or within `radius` of a friendly fortification.
+func has_near(selected: Array, radius := 14.0) -> bool:
+	for u in selected:
+		if u.dead:
+			continue
+		if u.get("garrisoned_in") != null or u.get("digging") != null or u.get("digging_target") != null:
+			return true
+		for e in entries:
+			if not e.dead and int(e.owner) == int(u.owner):
+				if Vector2(e.pos.x - u.node.position.x, e.pos.z - u.node.position.z).length() <= radius:
+					return true
+	return false
+
+## Demolishes friendly fortifications near `selected` (or the ones they are inside/digging), refunding 50% of cost.
+func demolish_near(selected: Array, radius := 14.0) -> int:
+	var removed := 0
+	var refund := 0.0
+	for i in range(entries.size() - 1, -1, -1):
+		var e := entries[i]
+		if e.dead:
+			continue
+		var match_found := false
+		for u in selected:
+			if u.dead or int(u.owner) != int(e.owner):
+				continue
+			if is_same(u.get("garrisoned_in"), e) or is_same(u.get("digging"), e) or is_same(u.get("digging_target"), e):
+				match_found = true
+				break
+			if Vector2(e.pos.x - u.node.position.x, e.pos.z - u.node.position.z).length() <= radius:
+				match_found = true
+				break
+		if match_found:
+			refund += cost_of(str(e.kind)) * (0.5 if e.built else 0.85)
+			_destroy(i)
+			removed += 1
+	if removed > 0 and world.economy != null:
+		world.economy.res.money = float(world.economy.res.get("money", 0.0)) + refund
+	if removed > 0 and world.hud != null:
+		world.hud.notice("Cleared %d fortification(s) (+$%d refunded)." % [removed, roundi(refund)])
+	return removed
+
+## Demolishes a single friendly fortification at `world_pos` within `radius`, refunding 50%.
+func demolish_at(world_pos: Vector3, owner_id := 0, radius := 7.5) -> bool:
+	var best_idx := -1
+	var best_d := radius
+	for i in range(entries.size()):
+		var e := entries[i]
+		if e.dead or int(e.owner) != owner_id:
+			continue
+		var d := Vector2(e.pos.x - world_pos.x, e.pos.z - world_pos.z).length()
+		if d < best_d:
+			best_d = d
+			best_idx = i
+	if best_idx < 0:
+		return false
+	var e := entries[best_idx]
+	var refund := cost_of(str(e.kind)) * (0.5 if e.built else 0.85)
+	var lbl := _label(str(e.kind))
+	_destroy(best_idx)
+	if world.economy != null:
+		world.economy.res.money = float(world.economy.res.get("money", 0.0)) + refund
+	if owner_id == 0 and world.hud != null:
+		world.hud.notice("Demolished %s (+$%d refunded)." % [lbl, roundi(refund)])
+	return true
+
+## Orders selected infantry to enter a friendly trench or forward bunker, automatically spilling over into adjacent friendly shelters in the same line.
 func order_enter(selected: Array, ent: Dictionary) -> int:
 	if ent.is_empty() or ent.dead or not ent.built or not is_shelter(ent.kind):
 		return 0
-	var cap := int(GARRISON_CAP.get(ent.kind, 3))
-	var garrison: Array = ent.get("garrison", [])
-	garrison = garrison.filter(func(u): return not u.dead and u.get("garrisoned_in") == ent)
-	ent.garrison = garrison
+	var shelters: Array[Dictionary] = [ent]
+	for e in entries:
+		if not is_same(e, ent) and not e.dead and e.built and int(e.owner) == int(ent.owner) and is_shelter(e.kind):
+			if Vector2(e.pos.x - ent.pos.x, e.pos.z - ent.pos.z).length() <= 28.0:
+				shelters.append(e)
+	shelters.sort_custom(func(a, b): return Vector2(a.pos.x - ent.pos.x, a.pos.z - ent.pos.z).length() < Vector2(b.pos.x - ent.pos.x, b.pos.z - ent.pos.z).length())
+	var pending_counts := PackedInt32Array()
+	pending_counts.resize(shelters.size())
+	for idx in range(shelters.size()):
+		var s := shelters[idx]
+		var g: Array = s.get("garrison", []).filter(func(u): return not u.dead and is_same(u.get("garrisoned_in"), s))
+		s.garrison = g
+		var incoming := 0
+		for other in world.units:
+			if not other.dead and not selected.any(func(sel): return is_same(sel, other)) and is_same(other.get("entering_fort"), s):
+				incoming += 1
+		pending_counts[idx] = g.size() + incoming
 	var ordered := 0
 	for u in selected:
 		if u.dead or u.owner != ent.owner or u.vehicle or u.get("fly", false) or u.get("naval", false) or u.key == "worker":
 			continue
-		if garrison.size() + ordered >= cap:
+		var target_shelter := {}
+		for idx in range(shelters.size()):
+			var s := shelters[idx]
+			var cap := int(GARRISON_CAP.get(s.kind, 3))
+			if pending_counts[idx] < cap:
+				target_shelter = s
+				pending_counts[idx] += 1
+				break
+		if target_shelter.is_empty():
 			break
 		exit_unit(u)
-		world.order_move([u], ent.pos)
-		u.entering_fort = ent
+		if u.get("garrison_building") != null:
+			preload("res://scripts/urban_garrison.gd").exit_unit(world, u, u.garrison_building)
+		if Vector2(u.node.position.x - target_shelter.pos.x, u.node.position.z - target_shelter.pos.z).length() <= 4.8:
+			_seat_unit_immediately(u, target_shelter)
+		else:
+			world.order_move([u], target_shelter.pos)
+			u.entering_fort = target_shelter
 		ordered += 1
 	if ordered > 0 and world.hud != null:
-		world.hud.notice("Infantry moving into %s (%d/%d)." % [_label(ent.kind), garrison.size() + ordered, cap])
+		world.hud.notice("%d infantry entering %s." % [ordered, _label(ent.kind)])
 	return ordered
+
+func _seat_unit_immediately(u: Dictionary, shelter: Dictionary) -> bool:
+	if shelter.is_empty() or shelter.dead or not shelter.built or not is_shelter(shelter.kind):
+		return false
+	var g: Array = shelter.get("garrison", []).filter(func(x): return not x.dead and is_same(x.get("garrisoned_in"), shelter))
+	var cap := int(GARRISON_CAP.get(shelter.kind, 3))
+	var already_in := g.any(func(x): return is_same(x, u))
+	if g.size() >= cap and not already_in:
+		return false
+	if not already_in:
+		g.append(u)
+	shelter.garrison = g
+	u.garrisoned_in = shelter
+	u.erase("entering_fort")
+	u.erase("digging")
+	u.erase("digging_target")
+	u.target = null
+	u.path = PackedVector3Array()
+	_seat_garrison(shelter)
+	_refresh_garrison_badge(shelter)
+	return true
 
 ## Removes `unit` from whichever trench/dugout it is garrisoned in.
 func exit_unit(unit: Dictionary) -> void:
 	unit.erase("entering_fort")
 	unit.erase("digging_target")
 	var ent = unit.get("garrisoned_in")
-	if ent != null and typeof(ent) == TYPE_DICTIONARY:
-		var g: Array = ent.get("garrison", [])
-		g.erase(unit)
-		_refresh_garrison_badge(ent)
 	unit.erase("garrisoned_in")
+	if ent != null and typeof(ent) == TYPE_DICTIONARY:
+		var g: Array = ent.get("garrison", []).filter(func(x): return not is_same(x, unit))
+		ent.garrison = g
+		_refresh_garrison_badge(ent)
 
 ## Ejects all infantry from trenches/dugouts among `selected`.
 func order_exit(selected: Array) -> int:
@@ -297,7 +506,7 @@ func _refresh_garrison_badge(ent: Dictionary) -> void:
 	if ent.dead or not is_instance_valid(ent.get("node")):
 		return
 	var g: Array = ent.get("garrison", [])
-	g = g.filter(func(u): return not u.dead and u.get("garrisoned_in") == ent)
+	g = g.filter(func(u): return not u.dead and is_same(u.get("garrisoned_in"), ent))
 	ent.garrison = g
 	if g.is_empty():
 		if ent.get("badge") != null and is_instance_valid(ent.badge):
@@ -321,14 +530,33 @@ func update(delta: float) -> void:
 			if u.get("garrisoned_in") != null:
 				exit_unit(u)
 			continue
+		# Hostile ground vehicles hitting anti-tank obstacles take track/hull damage and are halted
+		if u.get("vehicle", false) and not u.get("fly", false) and not u.get("naval", false) and str(u.get("key", "")) != "mineClearer":
+			for i in range(entries.size() - 1, -1, -1):
+				var obs := entries[i]
+				if obs.dead or not obs.built or not is_obstacle(obs.kind) or not world.hostile(int(obs.owner), int(u.owner)):
+					continue
+				if _inside_obstacle_zone(obs, u.node.position, 5.2):
+					u.cur_speed = 0.0
+					if float(u.get("target_dist", 0.0)) >= 0.0:
+						var contact_dps := 22.0 if obs.kind == "hedgehog" else 12.0
+						world.damage(u, contact_dps * delta, {"owner": int(obs.owner), "key": obs.kind, "dead": true})
+						obs.hp = float(obs.hp) - 6.0 * delta
+						if obs.hp <= 0.0:
+							_destroy(i)
+					break
 		# Handle unit walking to a defence-line site to start building it
 		var dtarget = u.get("digging_target")
 		if dtarget != null:
 			if dtarget.dead or dtarget.built:
 				var last_pos: Vector3 = dtarget.pos
+				var last_kind: String = str(dtarget.kind)
 				u.erase("digging_target")
-				_assign_next_line_site(u, last_pos)
-			elif u.node.position.distance_to(dtarget.pos) <= 3.2:
+				if not _assign_next_line_site(u, last_pos) and is_shelter(last_kind):
+					var open_s := nearest_open_shelter_for([u], 18.0)
+					if not open_s.is_empty():
+						order_enter([u], open_s)
+			elif Vector2(u.node.position.x - dtarget.pos.x, u.node.position.z - dtarget.pos.z).length() <= 4.2:
 				u.target = null
 				u.path = PackedVector3Array()
 				u.digging = dtarget
@@ -338,35 +566,33 @@ func update(delta: float) -> void:
 		if enter_ent != null:
 			if enter_ent.dead or not enter_ent.built:
 				u.erase("entering_fort")
-			elif Vector2(u.node.position.x - enter_ent.pos.x, u.node.position.z - enter_ent.pos.z).length() <= 3.6:
-				var g: Array = enter_ent.get("garrison", [])
-				var cap := int(GARRISON_CAP.get(enter_ent.kind, 3))
-				if g.size() < cap and not u in g:
-					g.append(u)
-					enter_ent.garrison = g
-					u.garrisoned_in = enter_ent
-					u.target = null
-					u.path = PackedVector3Array()
-					_seat_garrison(enter_ent)
-					_refresh_garrison_badge(enter_ent)
-				u.erase("entering_fort")
+			elif Vector2(u.node.position.x - enter_ent.pos.x, u.node.position.z - enter_ent.pos.z).length() <= 4.6:
+				if not _seat_unit_immediately(u, enter_ent):
+					u.erase("entering_fort")
+					var alt := nearest_open_shelter_for([u], 24.0)
+					if not alt.is_empty():
+						order_enter([u], alt)
 		# Keep garrisoned units seated in their slot
 		var g_ent = u.get("garrisoned_in")
 		if g_ent != null:
 			var dist_from_fort := Vector2(u.node.position.x - g_ent.pos.x, u.node.position.z - g_ent.pos.z).length()
-			if g_ent.dead or u.target != null or dist_from_fort > 4.2:
+			if g_ent.dead or u.target != null or dist_from_fort > 4.6:
 				exit_unit(u)
 		# Progress active construction
 		var ent = u.get("digging")
 		if ent == null:
 			continue
-		if ent.dead or u.target != null or u.node.position.distance_to(ent.pos) > 3.8:
+		if ent.dead or u.target != null or Vector2(u.node.position.x - ent.pos.x, u.node.position.z - ent.pos.z).length() > 4.8:
 			u.erase("digging")
 			continue
 		if ent.built:
 			var done_pos: Vector3 = ent.pos
 			u.erase("digging")
-			_assign_next_line_site(u, done_pos)
+			if not _assign_next_line_site(u, done_pos) and is_shelter(str(ent.kind)):
+				if not _seat_unit_immediately(u, ent):
+					var open_s := nearest_open_shelter_for([u], 18.0)
+					if not open_s.is_empty():
+						order_enter([u], open_s)
 			continue
 		var dur := float(BUILD_TIMES.get(ent.kind, TRENCH_BUILD_TIME))
 		ent.progress = minf(1.0, float(ent.progress) + delta / dur)
@@ -375,10 +601,14 @@ func update(delta: float) -> void:
 			ent.built = true
 			ent.model.scale.y = 1.0
 			u.erase("digging")
-			# Move to the next unfinished segment in the same line if any
-			_assign_next_line_site(u, ent.pos)
+			# Move to the next unfinished segment in the same line if any; otherwise auto-enter completed shelter
+			if not _assign_next_line_site(u, ent.pos) and is_shelter(str(ent.kind)):
+				if not _seat_unit_immediately(u, ent):
+					var open_s := nearest_open_shelter_for([u], 18.0)
+					if not open_s.is_empty():
+						order_enter([u], open_s)
 
-func _assign_next_line_site(u: Dictionary, from_pos: Vector3) -> void:
+func _assign_next_line_site(u: Dictionary, from_pos: Vector3) -> bool:
 	var best := {}
 	var best_score := INF
 	for e in entries:
@@ -389,7 +619,7 @@ func _assign_next_line_site(u: Dictionary, from_pos: Vector3) -> void:
 			continue
 		var claimed := false
 		for other in world.units:
-			if other != u and not other.dead and int(other.owner) == int(u.owner):
+			if not is_same(other, u) and not other.dead and int(other.owner) == int(u.owner):
 				if is_same(other.get("digging"), e) or is_same(other.get("digging_target"), e):
 					claimed = true
 					break
@@ -398,8 +628,15 @@ func _assign_next_line_site(u: Dictionary, from_pos: Vector3) -> void:
 			best_score = score
 			best = e
 	if not best.is_empty():
-		world.order_move([u], best.pos)
-		u.digging_target = best
+		if Vector2(u.node.position.x - best.pos.x, u.node.position.z - best.pos.z).length() <= 4.2:
+			u.target = null
+			u.path = PackedVector3Array()
+			u.digging = best
+		else:
+			world.order_move([u], best.pos)
+			u.digging_target = best
+		return true
+	return false
 
 func _seat_garrison(ent: Dictionary) -> void:
 	var g: Array = ent.get("garrison", [])
@@ -416,6 +653,19 @@ func _seat_garrison(ent: Dictionary) -> void:
 		u.heading = ent.heading
 		u.node.rotation.y = ent.heading
 
+func _inside_obstacle_zone(e: Dictionary, p: Vector3, radius := OBSTACLE_BLOCK_RADIUS) -> bool:
+	var dx := p.x - float(e.pos.x)
+	var dz := p.z - float(e.pos.z)
+	if Vector2(dx, dz).length() < radius:
+		return true
+	var h := float(e.heading)
+	var s := sin(h)
+	var c := cos(h)
+	# Local X is right (c, -s), local Z is forward (s, c)
+	var local_x := absf(dx * c - dz * s)
+	var local_z := absf(dx * s + dz * c)
+	return local_x < 2.75 and local_z < 2.25
+
 ## True if `next` is blocked for `unit` by a built hostile anti-tank obstacle (hedgehog / atDitch).
 ## Infantry, aircraft, ships, and mine-clearing vehicles can approach/pass.
 func blocks_vehicle(unit: Dictionary, next: Vector3) -> bool:
@@ -423,16 +673,16 @@ func blocks_vehicle(unit: Dictionary, next: Vector3) -> bool:
 		return false
 	if str(unit.get("key", "")) == "mineClearer":
 		return false
+	var cur: Vector3 = unit.node.position
 	for e in entries:
 		if e.dead or not e.built or not is_obstacle(e.kind):
 			continue
 		if not world.hostile(int(e.owner), int(unit.owner)):
 			continue
-		var d_next := Vector2(next.x - e.pos.x, next.z - e.pos.z).length()
-		if d_next < OBSTACLE_BLOCK_RADIUS:
-			var cur: Vector3 = unit.node.position
+		if _inside_obstacle_zone(e, next, OBSTACLE_BLOCK_RADIUS):
+			var d_next := Vector2(next.x - e.pos.x, next.z - e.pos.z).length()
 			var d_cur := Vector2(cur.x - e.pos.x, cur.z - e.pos.z).length()
-			if d_next <= d_cur:
+			if not _inside_obstacle_zone(e, cur, OBSTACLE_BLOCK_RADIUS) or d_next <= d_cur + 0.03:
 				return true
 	return false
 

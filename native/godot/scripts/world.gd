@@ -2125,6 +2125,10 @@ func _physics_process(delta: float) -> void:
 				continue
 			if fortifications != null:
 				fortifications.exit_unit(unit)
+		# Actively digging a field fortification: stay on site and finish digging instead of chasing nearby enemies.
+		if unit.get("digging") != null and unit.target == null:
+			unit.moving = false
+			continue
 		if unit.get("fly", false) or unit.get("naval", false):
 			move_craft(unit, delta)
 			continue
@@ -2325,19 +2329,26 @@ func ground_step(unit: Dictionary, next: Vector3, delta: float) -> Vector3:
 	var pos: Vector3 = unit.node.position
 	var blocked_by_fort := func(p: Vector3) -> bool:
 		return fortifications != null and fortifications.blocks_vehicle(unit, p)
-	if (open_near(next) or not open_near(pos)) and not blocked_by_fort.call(next):
+	if blocked_by_fort.call(next):
+		Motion.halt(unit, delta)
+		unit.fort_stall = float(unit.get("fort_stall", 0.0)) + delta
+		if float(unit.get("fort_stall", 0.0)) > 1.2:
+			unit.fort_stall = 0.0
+			unit.target = null
+			unit.attack_move = false
+			unit.path = PackedVector3Array()
+		elif float(unit.get("repath", 0.0)) <= 0.0:
+			unit.path = PackedVector3Array()
+			unit.repath = 0.85
+		place_on_ground(unit, pos)
+		return Vector3.INF
+	unit.fort_stall = 0.0
+	if open_near(next) or not open_near(pos):
 		return next
 	# Slide along the wall: keep whichever half of the step stays open.
 	for slide in [Vector3(next.x, next.y, pos.z), Vector3(pos.x, next.y, next.z)]:
 		if Vector2(slide.x - pos.x, slide.z - pos.z).length() > 0.002 and open_near(slide) and not blocked_by_fort.call(slide):
 			return slide
-	if blocked_by_fort.call(next):
-		Motion.halt(unit, delta)
-		if float(unit.get("repath", 0.0)) <= 0.0:
-			unit.path = PackedVector3Array()
-			unit.repath = 0.85
-		place_on_ground(unit, pos)
-		return Vector3.INF
 	# Pressed into the wall: ease back toward the middle of the nearest open cell.
 	var centre := nearest_open_centre(pos)
 	var back := Vector3(centre.x - pos.x, 0, centre.z - pos.z)
@@ -2656,6 +2667,10 @@ func clear_match() -> void:
 		homefront.restore({})   # emergency vehicles off the roads, casualties cleared
 	if fortifications != null:
 		fortifications.import_state([])
+	if wmd != null:
+		wmd.restore({})
+	if battle_scars != null and battle_scars.has_method("clear"):
+		battle_scars.clear()
 	preload("res://scripts/war_tools.gd").restore(self, {})
 
 func rebuild_nav_mesh() -> int:
@@ -4548,6 +4563,11 @@ func begin_missile(key: String, platform = null) -> void:
 		hud.notice("Selected launcher is empty, disabled or incompatible.")
 		return
 	if missiles.ready_platforms(key).is_empty():
+		if missiles.local_weapon(key):
+			var q_msg: String = missiles.quick_load_any_launcher(key, 0)
+			if q_msg != "" and (q_msg.begins_with("Loading ") or q_msg.begins_with("Moving ")):
+				hud.notice(q_msg + " Click Launch again once loaded.")
+				return
 		hud.notice(missiles.launcher_missing(key))
 		return
 	# A nuclear weapon needs the order to release it: one decision, its price stated.
@@ -5821,6 +5841,10 @@ func kill(unit: Dictionary) -> void:
 	if unit.get("killed", false):
 		return   # already dead: no second explosion, no second turret thrown
 	unit.killed = true
+	if unit.get("garrison_building") != null:
+		UrbanGarrison.exit_unit(self, unit, unit.garrison_building)
+	if fortifications != null and unit.get("garrisoned_in") != null:
+		fortifications.exit_unit(unit)
 	if sitrep != null:
 		sitrep.unit_lost(unit)
 	if support != null:
@@ -6022,6 +6046,10 @@ func trim_wrecks() -> void:
 
 # Fallen soldiers and excess old wrecks sink away after their death animation.
 func update_dead(unit: Dictionary, delta: float, index: int) -> void:
+	if unit.get("stowed", false):
+		unit.node.queue_free()
+		units.remove_at(index)
+		return
 	unit.dead_time += delta
 	if unit.get("fly", false):
 		# Spiral down trailing smoke, then burn where it hits.
@@ -6397,6 +6425,14 @@ func _unhandled_input(event: InputEvent) -> void:
 						order_patrol(selected, point)
 					elif order_mode == "mine" or order_mode == "apMine":
 						preload("res://scripts/war_tools.gd").order_lay_mine(self, selected, point, "ap" if order_mode == "apMine" else "at")
+					elif order_mode == "demolish_fort":
+						var cleared := 0
+						if fortifications != null and fortifications.demolish_at(point, 0, 10.0):
+							cleared += 1
+						cleared += preload("res://scripts/war_tools.gd").clear_own_mines_at(self, point, 0, 10.0)
+						if cleared == 0 and hud != null:
+							hud.notice("No friendly trench, obstacle or minefield at that spot.")
+						order_mode = ""
 					elif order_mode.begins_with("line:"):
 						if def_line_start == null:
 							def_line_start = point
@@ -6493,10 +6529,15 @@ func _unhandled_input(event: InputEvent) -> void:
 				UrbanGarrison.order_garrison(self, selected, garrison_site_under(selected, event.position))   # infantry into a building
 			elif target == null and fortifications != null and ground_point(event.position) != null and fortifications.order_enter(selected, fortifications.shelter_at(ground_point(event.position), 0)) > 0:
 				pass   # infantry into a friendly trench or forward bunker
+			elif target == null and fortifications != null and ground_point(event.position) != null and fortifications.order_resume_dig(selected, fortifications.unbuilt_at(ground_point(event.position), 0)) > 0:
+				pass   # infantry resume digging an unfinished trench or obstacle
 			elif target == null and preload("res://scripts/airlift.gd").transport_under(self, selected, event.position) != null:
 				preload("res://scripts/airlift.gd").order_board(self, selected, preload("res://scripts/airlift.gd").transport_under(self, selected, event.position))   # board a helicopter
 			elif target != null:
-				selected = selected.filter(func(u):return u.dmg>0 and effectiveness(u,target)>0.01)
+				var valid_attackers := selected.filter(func(u): return u.dmg > 0 and effectiveness(u, target) > 0.01)
+				if valid_attackers.is_empty() and preload("res://scripts/war_tools.gd").is_submarine(target) and not selected.is_empty() and hud != null:
+					hud.notice("Only anti-submarine units (ASW Frigate, Destroyer, Maritime Patrol, Naval Helicopter, or Submarines) can attack submerged submarines.")
+				selected = valid_attackers
 				if not selected.is_empty():
 					engagement.authorize(target.owner,func():
 						if not target.dead:

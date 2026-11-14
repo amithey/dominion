@@ -84,6 +84,8 @@ static func drive(w: Node, unit: Dictionary, to: Vector3, remaining: float, chas
 	# A formation marches at the pace of its slowest member until it fights.
 	var pace: float = unit.get("pace", INF) if not chasing else INF
 	var top: float = minf(minf(unit.speed, pace), float(unit.get("traffic_cap", INF))) * slope * align
+	if w.game_time < float(unit.get("mine_slow_until", -1.0)):
+		top *= 0.32   # crippled track / shrapnel wound from a minefield blast
 	var brake: float = float(prof.brake) if vehicle else INFANTRY_BRAKE
 	if wheeled and absf(err) > 0.35:
 		# Never faster than the arc that still reaches the waypoint: a circle through it has the radius d / (2 sin err),
