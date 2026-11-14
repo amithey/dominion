@@ -145,14 +145,27 @@ func _sync_network() -> void:
 		count[e.kind] += 1
 	_graph = graph
 	_edge_count = count
-	# A vehicle whose road was cut stops being drawn; a new one takes its place.
+	# A vehicle whose road was cut, or whose body overlaps a building, or that is stuck, stops being drawn.
 	var kept: Array = []
 	for c in _fleet:
-		if _route_intact(c):
+		if _route_intact(c) and not _body_inside_building(c) and float(c.get("total_stuck", 0.0)) <= 15.0:
 			kept.append(c)
 		else:
 			_layout_dirty = true
 	_fleet = kept
+
+func _body_inside_building(c: Dictionary) -> bool:
+	for body in c.get("bodies", []):
+		var p: Vector3 = body.get("at", Vector3.INF)
+		if p == Vector3.INF:
+			continue
+		var hx: Vector2i = world.logistics.world_hex(p)
+		for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 1)]:
+			for item in _solid.get(hx + d, []):
+				var at: Vector3 = item[0]
+				if Vector2(p.x - at.x, p.z - at.z).length() < float(item[1]):
+					return true
+	return false
 
 func _route_intact(c: Dictionary) -> bool:
 	var g: Dictionary = _graph[c.kind]
@@ -196,18 +209,24 @@ func _is_town(h: Vector2i) -> bool:
 	var d = world.district_hex.get(h)
 	return d != null and not d.dead
 
-## Whether a building that is not a town district stands on the straight link between two hex centres.
+## Whether a building that is not a town district stands on (or overlaps) the straight link between two hex centres.
 func _blocked(a: Vector2i, b: Vector2i) -> bool:
 	var pa: Vector3 = world.logistics.hex_center(a)
 	var pb: Vector3 = world.logistics.hex_center(b)
 	var ab := Vector2(pb.x - pa.x, pb.z - pa.z)
 	var len2 := maxf(ab.length_squared(), 0.0001)
-	for h in [a, b]:
-		for item in _solid.get(h, []):
-			var at: Vector3 = item[0]
-			var t := clampf(((at.x - pa.x) * ab.x + (at.z - pa.z) * ab.y) / len2, 0.0, 1.0)
-			if Vector2(at.x - (pa.x + ab.x * t), at.z - (pa.z + ab.y * t)).length() < float(item[1]) + LANE:
-				return true
+	var seen := {}
+	for base in [a, b]:
+		for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 1)]:
+			var h: Vector2i = base + d
+			if seen.has(h):
+				continue
+			seen[h] = true
+			for item in _solid.get(h, []):
+				var at: Vector3 = item[0]
+				var t := clampf(((at.x - pa.x) * ab.x + (at.z - pa.z) * ab.y) / len2, 0.0, 1.0)
+				if Vector2(at.x - (pa.x + ab.x * t), at.z - (pa.z + ab.y * t)).length() < float(item[1]) + LANE:
+					return true
 	return false
 
 ## How far from a town's centre a trip ends: the street at the edge of its buildings, which for a big
@@ -501,11 +520,14 @@ func _drive(c: Dictionary, delta: float) -> void:
 	# start): a vehicle that has stood still for ten seconds on its way drives through the others for eight.
 	if float(c.v) < 0.05 and remain > 0.35:
 		c.stuck_for = float(c.get("stuck_for", 0.0)) + delta
+		c.total_stuck = float(c.get("total_stuck", 0.0)) + delta
 		if float(c.stuck_for) > 10.0:
 			c.ghost = 8.0
 			c.stuck_for = 0.0
 	else:
 		c.stuck_for = 0.0
+		if float(c.v) >= 0.2:
+			c.total_stuck = 0.0
 	if float(c.get("ghost", 0.0)) > 0.0:
 		c.ghost = float(c.ghost) - delta
 		c.gap = INF

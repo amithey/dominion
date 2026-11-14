@@ -33,17 +33,17 @@ func run() -> void:
 	var apc_dps: float = float(d.apc.dmg) / float(d.apc.cooldown)
 	var tank_dps: float = float(d.tank.dmg) / float(d.tank.cooldown)
 	check(apc_dps <= tank_dps * 1.05, "an APC's fire (%.0f) does not exceed a tank's (%.0f)" % [apc_dps, tank_dps])
-	check(float(d.seaDrone.dmg) == 240.0 and price(d.seaDrone) > 450.0, "the sea drone no longer sinks a destroyer in one hit for a third of its price")
-	check(float(d.seaDrone.dmg) * float(w.damage_profile.seaDrone.naval) < float(d.destroyer.hp), "(one sea drone does not kill a destroyer: %.0f of %.0f hp)" % [float(d.seaDrone.dmg) * float(w.damage_profile.seaDrone.naval), float(d.destroyer.hp)])
+	check(float(d.seaDrone.dmg) == 120.0 and price(d.seaDrone) > 450.0, "the sea drone no longer one-shots warships")
+	check(float(d.seaDrone.dmg) * float(w.damage_profile.seaDrone.naval) < float(d.corvette.hp) and float(d.seaDrone.dmg) * float(w.damage_profile.seaDrone.naval) < float(d.destroyer.hp), "(one sea drone does not kill a corvette or destroyer: %.0f of %.0f/%.0f hp)" % [float(d.seaDrone.dmg) * float(w.damage_profile.seaDrone.naval), float(d.corvette.hp), float(d.destroyer.hp)])
 	check(float(w.damage_profile.interceptorDrone.air) == 1.5 and float(w.damage_profile.type45.air) == 2.4 and float(w.damage_profile.aaVehicle.air) == 2.8, "air-defence multipliers trimmed")
-	check(float(d.gunship.dmg) == 30.0 and price(d.gunship) > 1000.0, "the gunship is no longer the best value in the game")
+	check(float(d.gunship.dmg) == 26.0 and price(d.gunship) > 1000.0, "the gunship is no longer the best value in the game")
 	var m: Dictionary = w.map.missiles.types
 	check(float(m.ballistic.dmg) == 1450.0 and float(m.ballistic.cost.money) == 1100.0 and float(m.tactical.cost.money) == 290.0, "ballistic and tactical missiles retuned")
 	check(float(m.ballistic.dmg) < float(w.building_defs.hq.hp) * 0.5, "one ballistic missile no longer takes half a headquarters")
 	# Applying again changes nothing.
 	var cost_before: float = price(d.seaDrone)
 	B.apply(w)
-	check(is_equal_approx(price(d.seaDrone), cost_before) and float(d.gunship.dmg) == 30.0, "the corrections apply once (a second call changes nothing)")
+	check(is_equal_approx(price(d.seaDrone), cost_before) and float(d.gunship.dmg) == 26.0, "the corrections apply once (a second call changes nothing)")
 	# Bounds on cost-efficiency.
 	var worst := {"key": "", "eff": 0.0}
 	var worst_k := {"key": "", "eff": 0.0}

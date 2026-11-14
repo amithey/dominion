@@ -540,7 +540,7 @@ static func update(w: Node, delta: float) -> void:
 
 	var hex_r: float = float(w.logistics.radius) if w.get("logistics") != null else 12.0
 	var local_reach := hex_r * sqrt(3.0) * 6.0   # ~6 hexes: fast local fire-engine turnout
-	var spread_reach := hex_r * 2.55             # adjacent district hexes (~20.8 m centre-to-centre)
+	var spread_reach := hex_r * 2.05             # immediately adjacent hexes only (~1.73 * hex_r)
 
 	# Group burning buildings by owner so each nation's Fire Stations allocate crews across its fires.
 	var by_owner := {}
@@ -614,10 +614,10 @@ static func update(w: Node, delta: float) -> void:
 				b.fire = maxf(0.0, float(b.fire) - 0.22 * crew_power * dt)
 			else:
 				if flam >= 0.42:
-					b.fire = minf(1.0, float(b.fire) + (0.045 + 0.048 * flam) * dt)
+					b.fire = minf(1.0, float(b.fire) + (0.024 + 0.026 * flam) * dt)
 				else:
 					# Reinforced concrete starves flames on its own when not fed by fuel.
-					b.fire = maxf(0.0, float(b.fire) - 0.06 * dt)
+					b.fire = maxf(0.0, float(b.fire) - 0.08 * dt)
 
 			var cur_fire := float(b.fire)
 			if cur_fire <= 0.001:
@@ -626,10 +626,10 @@ static func update(w: Node, delta: float) -> void:
 				_sync_fire_visual(b)
 				continue
 
-			# Burn damage over time: light structures suffer severe structural loss and collapse if unchecked.
-			var weight_mult := 1.28 if is_light(str(b.key)) else (0.72 if flam >= 0.42 else 0.22)
-			var cooling := 0.28 if assigned > 0 else 1.0
-			var burn_dps := (10.0 + 28.0 * cur_fire) * flam * weight_mult * cooling
+			# Burn damage over time: light structures suffer structural loss if unchecked; heavy buildings burn slowly.
+			var weight_mult := 1.24 if is_light(str(b.key)) else (0.45 if flam >= 0.42 else 0.14)
+			var cooling := 0.25 if assigned > 0 else 1.0
+			var burn_dps := (9.5 + 24.0 * cur_fire) * flam * weight_mult * cooling
 			b.hp -= burn_dps * dt
 			b.last_hit = w.game_time
 			b.repairing = false
@@ -642,26 +642,26 @@ static func update(w: Node, delta: float) -> void:
 				to_destroy.append(b)
 				continue
 
-			# Ember & flame spread to adjacent buildings (especially light houses).
-			if cur_fire >= 0.38 and not b.def.get("water", false):
-				var crew_contain := 0.16 if assigned > 0 else 1.0
+			# Ember & flame spread to adjacent buildings (only once a fire is well established).
+			if cur_fire >= 0.45 and not b.def.get("water", false):
+				var crew_contain := 0.14 if assigned > 0 else 1.0
 				for nb in w.buildings:
 					if nb.dead or not nb.built or is_same(nb, b) or nb.def.get("water", false):
 						continue
-					if nb.key == "hq" or float(nb.get("fire", 0.0)) >= 0.30:
+					if nb.key == "hq" or float(nb.get("fire", 0.0)) >= 0.25:
 						continue
 					var nb_flam := flammability_of(str(nb.key))
-					if nb_flam < 0.32:
+					if nb_flam < 0.35:
 						continue
 					var d := Vector2(nb.root.position.x - b.root.position.x, nb.root.position.z - b.root.position.z).length()
 					if d > spread_reach:
 						continue
-					var prox := clampf(1.25 - 0.55 * (d / maxf(spread_reach, 1.0)), 0.45, 1.25)
-					var light_vuln := 1.35 if is_light(str(nb.key)) else 0.65
+					var prox := clampf(1.20 - 0.55 * (d / maxf(spread_reach, 1.0)), 0.40, 1.20)
+					var light_vuln := 1.25 if is_light(str(nb.key)) else 0.55
 					var nb_contain := national_contain if int(nb.owner) == owner else (1.0 / (1.0 + 0.35 * float(station_count(w, int(nb.owner)))))
-					var p_spread := clampf(0.20 * cur_fire * nb_flam * light_vuln * prox * crew_contain * nb_contain * dt, 0.0, 0.85)
+					var p_spread := clampf(0.095 * cur_fire * nb_flam * light_vuln * prox * crew_contain * nb_contain * dt, 0.0, 0.25)
 					if randf() < p_spread:
-						spread_ignitions.append([nb, 0.40, int(b.get("fire_by", -1)), b.root.position])
+						spread_ignitions.append([nb, 0.28, int(b.get("fire_by", -1)), b.root.position])
 
 	for item in spread_ignitions:
 		var nb: Dictionary = item[0]
