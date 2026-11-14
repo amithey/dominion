@@ -153,9 +153,29 @@ static func approach_point(world: Node, u: Dictionary, b: Dictionary) -> Vector3
 		return b.node.position + Vector3(0, 0, -30)
 	return on_base(world, b, Vector3(RUNWAY_X, 0, TOUCHDOWN - 85.0))
 
+static func turn_fuel(u: Dictionary, from: Vector3, to: Vector3) -> float:
+	if u.key in ROTARY or u.key in TUBE_LAUNCHED:
+		return 0.0
+	var dx := to.x - from.x
+	var dz := to.z - from.z
+	var len_sq := dx * dx + dz * dz
+	if len_sq < 1.0:
+		return 0.0
+	var inv := 1.0 / sqrt(len_sq)
+	var h := float(u.get("heading", 0.0))
+	var dot := clampf(sin(h) * (dx * inv) + cos(h) * (dz * inv), -1.0, 1.0)
+	var turn_frac := (1.0 - dot) * 0.5
+	return turn_frac * (2.5 * burn_rate(u) + 25.0 * travel_burn(u))
+
 static func landing_fuel(world: Node, u: Dictionary, from: Vector3, base: Dictionary) -> float:
 	var approach := approach_point(world, u, base)
-	return fuel_for(u, from, approach) + distance(approach, base.node.position) * travel_burn(u) + APPROACH_SECONDS * burn_rate(u)
+	return turn_fuel(u, from, approach) + fuel_for(u, from, approach) + distance(approach, base.node.position) * travel_burn(u) + APPROACH_SECONDS * burn_rate(u)
+
+static func bingo_fuel(world: Node, u: Dictionary, base = null) -> float:
+	var target_base = base if base != null and available(world, u, base) else base_for(world, u, u.node.position, INF)
+	if target_base == null:
+		return RESERVE_SECONDS * burn_rate(u)
+	return landing_fuel(world, u, u.node.position, target_base) + RESERVE_SECONDS * 0.5 * burn_rate(u)
 
 ## Keep the assigned slot when reachable. Search alternatives only when needed.
 static func base_for(world: Node, u: Dictionary, from := Vector3.INF, fuel := INF) -> Variant:
@@ -348,20 +368,24 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 			patrol.remaining -= delta
 			if patrol.remaining <= 0.0:
 				return_to_base(u)
-	if u.air_state == "ready" and check_due:
-		var target = u.get("enemy")
-		var point: Vector3 = target.node.position if target != null and not target.dead else u.get("target", null) if u.get("target") != null else u.node.position
-		var release := attack_release_range(u) if target != null else 0.0
-		if u.has("payload_order"):
-			release = world.missiles.release_range(u.payload_order.key, u)
+	if u.air_state == "ready":
 		var assigned = u.get("air_base")
 		var base_lost: bool = assigned != null and not available(world, u, assigned)
-		var needs_return := base_lost or mission_blocked(world, u, point, 4.0, release) != ""
-		if needs_return and (u.get("had_base", false) or base_for(world, u, u.node.position, INF) != null):
+		var home = assigned if not base_lost else base_for(world, u, u.node.position, INF)
+		var bingo_hit: bool = float(u.get("sortie_left", 0.0)) <= bingo_fuel(world, u, home)
+		var mission_hit := false
+		if check_due and not bingo_hit and not base_lost:
+			var target = u.get("enemy")
+			var point: Vector3 = target.node.position if target != null and not target.dead else u.get("target", null) if u.get("target") != null else u.node.position
+			var release := attack_release_range(u) if target != null else 0.0
+			if u.has("payload_order"):
+				release = world.missiles.release_range(u.payload_order.key, u)
+			mission_hit = mission_blocked(world, u, point, 4.0, release) != ""
+		if (bingo_hit or base_lost or mission_hit) and (u.get("had_base", false) or home != null):
 			return_to_base(u)
 			if not u.get("fuel_warned", false) and u.owner == 0 and world.hud != null:
 				u.fuel_warned = true
-				world.hud.notice("Aircraft returning: flight reserve reached.", u.node.position)
+				world.hud.notice("Aircraft returning: bingo fuel reserve reached.", u.node.position)
 	if u.air_state == "ready":
 		return false
 	if u.air_state == "parked":

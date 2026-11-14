@@ -75,6 +75,8 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 		lists.append(w.air_sea)
 	else:
 		lists.append(w.units)
+	var fog_on: bool = w.fog != null and w.fog.enabled
+	var my_sight: float = float(w.fog.sight_of(unit)) if fog_on else INF
 	for list in lists:
 		for other in list:
 			if other.owner == own or other.dead or not other.owner in foes:
@@ -97,11 +99,11 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 				continue
 			# Fog of war: the player's units fire on what their side sees, or what
 			# is within their own sight (fog_of_war.gd).
-			if own == 0 and w.fog != null and w.fog.enabled and not w.fog.shows(other) and d > w.fog.sight_of(unit):
-				continue
-			# A rival's artillery needs a spotter too, against the player's units (fog_of_war.gd).
-			if own > 0 and int(other.owner) == 0 and w.fog != null and w.fog.enabled and d > w.fog.sight_of(unit) and not w.fog.rival_spots(own, other):
-				continue
+			if fog_on:
+				if own == 0 and not w.fog.shows(other) and d > my_sight:
+					continue
+				if own > 0 and int(other.owner) == 0 and d > my_sight and not w.fog.rival_spots(own, other):
+					continue
 			if not ignore.is_empty() and float(ignore.get(other.node.get_instance_id(), -1.0)) > w.game_time:
 				continue
 			var score: float = d / maxf(unit.range, 1.0) - eff * 0.5 - (1.0 - other.hp / maxf(other.max_hp, 1.0)) * 0.4
@@ -115,22 +117,41 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 	if best != null or engaged_with >= 0:
 		return best
 	var best_d := radius
-	for b in w.buildings:
-		if b.dead or b.owner == own or not (b.owner in foes):
-			continue
-		var bp: Vector3 = b.root.position
-		if absf(bp.x - at.x) > radius + 20.0 or absf(bp.z - at.z) > radius + 20.0:
-			continue
-		if not w.hostile(own, b.owner) or w.effectiveness(unit, b) <= 0.01:
-			continue
-		if own == 0 and w.fog != null and w.fog.enabled and not w.fog.shows(b):
-			continue   # a building never seen (fog_of_war.gd)
-		if own > 0 and w.fog != null and not w.fog.rival_knows(own, b):
-			continue   # a building of the player's this rival has not found
-		var d: float = w.gap_to(unit, b)
-		if d < best_d:
-			best_d = d
-			best = b
+	var b_lists: Array = []
+	if w.perf_opts:
+		var bspan := ceili((radius + 20.0) / w.GRID)
+		var bcx := floori(at.x / w.GRID)
+		var bcz := floori(at.z / w.GRID)
+		for dz in range(-bspan, bspan + 1):
+			for dx in range(-bspan, bspan + 1):
+				var bucket = w.b_grid.get(Vector2i(bcx + dx, bcz + dz))
+				if bucket != null:
+					b_lists.append(bucket)
+	else:
+		b_lists.append(w.buildings)
+	var seen_b := {}
+	for b_list in b_lists:
+		for b in b_list:
+			if b.dead or b.owner == own or not (b.owner in foes):
+				continue
+			if w.perf_opts:
+				var bid: int = b.root.get_instance_id()
+				if seen_b.has(bid):
+					continue
+				seen_b[bid] = true
+			var bp: Vector3 = b.root.position
+			if absf(bp.x - at.x) > radius + 20.0 or absf(bp.z - at.z) > radius + 20.0:
+				continue
+			if not w.hostile(own, b.owner) or w.effectiveness(unit, b) <= 0.01:
+				continue
+			if own == 0 and fog_on and not w.fog.shows(b):
+				continue
+			if own > 0 and w.fog != null and not w.fog.rival_knows(own, b):
+				continue
+			var d: float = w.gap_to(unit, b)
+			if d < best_d:
+				best_d = d
+				best = b
 	return best
 
 ## Called every combat tick for a unit with an enemy: drops targets that are

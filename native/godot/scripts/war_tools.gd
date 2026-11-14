@@ -63,8 +63,8 @@ const ROBOTS := ["combatUGV", "logisticsUGV", "robotDog", "heavyBomberDrone", "c
 const EVAC_REACH := 14.0
 const EVAC_RATE := 6.0
 # The air wing (by class: force_models.CARRIER_STYLE): aircraft aboard, and what flies from the deck.
-const WING := {"usa": 5, "china": 5, "france": 5, "italy": 3, "uk": 4, "india": 4, "turkiye": 4, "japan": 4, "iran": 3}
-const WING_AIRCRAFT := {"usa": "F/A-18E Super Hornet", "china": "J-15T", "france": "Rafale M", "italy": "F-35B Lightning", "uk": "F-35B Lightning", "india": "MiG-29K", "japan": "F-35B Lightning", "turkiye": "Bayraktar TB3", "iran": "Shahed-129"}
+const WING := {"usa": 5, "china": 5, "france": 5, "italy": 3, "uk": 4, "india": 4, "turkiye": 4, "japan": 4, "iran": 3, "russia": 4, "brazil": 3, "indonesia": 3}
+const WING_AIRCRAFT := {"usa": "F/A-18E Super Hornet", "china": "J-15T", "france": "Rafale M", "italy": "F-35B Lightning", "uk": "F-35B Lightning", "india": "MiG-29K", "japan": "F-35B Lightning", "turkiye": "Bayraktar TB3", "iran": "Shahed-129", "russia": "Su-33", "brazil": "AF-1 Skyhawk", "indonesia": "Carrier Drone"}
 ## How far from the carrier its aircraft will fly to strike (a third of the island's width): far beyond the carrier's own
 ## guns (24 m), which only defend it. A sortie is 45 seconds in the air at about 34 m a second.
 const STRIKE_REACH := 240.0

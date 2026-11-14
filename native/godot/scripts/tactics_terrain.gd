@@ -14,15 +14,17 @@ static func elevation_above_sea(w: Node, pos: Vector3) -> float:
 
 ## Sight multiplier for fog_of_war.gd (1.0 on flat lowlands, up to 1.22 on high ridges; +20% if garrisoned).
 static func sight_mult(w: Node, u: Dictionary) -> float:
-	var mult := 1.0
-	if u.get("garrison_building") != null:
-		mult *= 1.20
+	var mult := 1.20 if u.get("garrison_building") != null else 1.0
 	if u.get("fly", false) or u.get("naval", false):
 		return mult
+	var now: float = w.game_time
+	if now < float(u.get("_sm_until", -1.0)) and u.has("_sm"):
+		return mult * float(u._sm)
 	var elev := elevation_above_sea(w, u.node.position)
-	if elev > 4.5:
-		mult *= 1.0 + clampf((elev - 4.5) / 28.0, 0.0, 0.22)
-	return mult
+	var hill := 1.0 + clampf((elev - 4.5) / 28.0, 0.0, 0.22) if elev > 4.5 else 1.0
+	u._sm = hill
+	u._sm_until = now + 0.5
+	return mult * hill
 
 ## Effective weapon range bonus multiplier for elevated ground units (1.0 .. 1.15).
 static func range_mult(w: Node, u: Dictionary) -> float:

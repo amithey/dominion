@@ -30,7 +30,7 @@ var _logistics_step := 0.0
 const Air := preload("res://scripts/air_operations.gd")
 const Costs := preload("res://scripts/war_costs.gd")
 const PORTS := ["port", "shipyard"]
-const DOCK_REACH := 38.0
+const DOCK_REACH := 68.0
 const TACTICAL_SHIPS := ["destroyer", "aegisCruiser"]
 const AIR_LAUNCHERS := ["jet", "bomber", "stealthFighter", "raider"]
 # Release distances in map units, tuned independently of the damage radius.
@@ -141,14 +141,15 @@ func asset_name(entity: Dictionary) -> String:
 	return str(world.unit_defs.get(entity.key, {}).get("name", entity.key))
 
 func _dock_near(ship: Dictionary, port: Dictionary) -> bool:
-	return Air.distance(ship.node.position, port.node.position) <= DOCK_REACH
+	var reach := DOCK_REACH + float(port.get("def", {}).get("size", 10.0)) * 0.5
+	return Air.distance(ship.node.position, port.node.position) <= reach
 
 func _supplied(entity: Dictionary) -> bool:
 	return entity.get("supplied", true)
 
 func _at_service(unit: Dictionary, facility: Dictionary) -> bool:
 	if unit.get("naval", false):
-		return facility.key in PORTS and _dock_near(unit, facility) and not unit.get("moving", false) and unit.target == null and unit.enemy == null
+		return facility.key in PORTS and _dock_near(unit, facility) and not unit.get("moving", false) and unit.target == null
 	return unit.get("fly", false) and unit.air_state == "parked" and is_same(unit.get("air_base"), facility)
 
 func transfer_blocked(source: Dictionary, destination: Dictionary, key: String, count := 1) -> String:

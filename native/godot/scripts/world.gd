@@ -149,6 +149,7 @@ var crisis: RefCounted = null    # crisis.gd: what lost buildings and infrastruc
 var sitrep: RefCounted = null    # sitrep.gd: what happens to you, grouped (alerts, minimap pings, the report window)
 var tree_nodes: Array[Node3D] = []
 var grass_nodes: Array[Node3D] = []
+var grass_cells := {}
 var noise_texture: NoiseTexture2D
 var quality := "high"
 var fps_time := 0.0
@@ -225,7 +226,9 @@ var map_lenses: Control = null  # map_lenses.gd: the strategic overlays (F2 supp
 # each other and looking for targets then reads a handful of buckets instead
 # of the whole army, which is what made large battles crawl.
 const GRID := 8.0
+const ForceCatalog := preload("res://scripts/force_catalog.gd")
 var grid := {}
+var b_grid := {}
 var air_sea: Array = []   # living ships and aircraft (not in the ground grid)
 var tree_parts := {}       # Vector2(x, z) of a tree -> [[MultiMesh, instance], ...] (site_clearing.gd fells them)
 var site_answers: Array = []  # the answers of the latest site-clearing letter (tests)
@@ -900,6 +903,10 @@ func build_grass() -> void:
 				node.visibility_range_end_margin = 12.0
 				add_child(node)
 				grass_nodes.append(node)
+				var gk := Vector2i(floori((cx + cell * 0.5) / 32.0), floori((cz + cell * 0.5) / 32.0))
+				if not grass_cells.has(gk):
+					grass_cells[gk] = []
+				grass_cells[gk].append(node)
 			cz += cell
 		cx += cell
 
@@ -1156,17 +1163,38 @@ func register_building(key: String, owner: int, built: bool, root: Node3D, model
 	entity.hp *= national_hp
 	entity.max_hp *= national_hp
 	buildings.append(entity)
+	var b_rad := ceili((footprint * 0.5 + 4.0) / GRID)
+	var bcx := floori(at.x / GRID)
+	var bcz := floori(at.z / GRID)
+	for dx in range(-b_rad, b_rad + 1):
+		for dz in range(-b_rad, b_rad + 1):
+			var bk := Vector2i(bcx + dx, bcz + dz)
+			if not b_grid.has(bk):
+				b_grid[bk] = []
+			b_grid[bk].append(entity)
 	return entity
 
 func clear_site_grass(at: Vector3, radius: float) -> void:
-	for patch in grass_nodes:
-		if patch.get_meta("cell_center", Vector2.INF).distance_to(Vector2(at.x, at.z)) > radius + 24.0: continue
-		var mm: MultiMesh = patch.multimesh
-		for i in range(mm.instance_count):
-			var xf := mm.get_instance_transform(i)
-			if Vector2(xf.origin.x - at.x, xf.origin.z - at.z).length() <= radius:
-				xf.basis = Basis.from_scale(Vector3.ZERO)
-				mm.set_instance_transform(i, xf)
+	if grass_cells.is_empty():
+		return
+	var reach := radius + 24.0
+	var gspan := ceili(reach / 32.0)
+	var gcx := floori(at.x / 32.0)
+	var gcz := floori(at.z / 32.0)
+	var at2 := Vector2(at.x, at.z)
+	for dx in range(-gspan, gspan + 1):
+		for dz in range(-gspan, gspan + 1):
+			var bucket = grass_cells.get(Vector2i(gcx + dx, gcz + dz))
+			if bucket == null:
+				continue
+			for patch in bucket:
+				if patch.get_meta("cell_center", Vector2.INF).distance_to(at2) > reach: continue
+				var mm: MultiMesh = patch.multimesh
+				for i in range(mm.instance_count):
+					var xf := mm.get_instance_transform(i)
+					if Vector2(xf.origin.x - at.x, xf.origin.z - at.z).length() <= radius:
+						xf.basis = Basis.from_scale(Vector3.ZERO)
+						mm.set_instance_transform(i, xf)
 
 ## Streets in each district run toward neighbouring districts of the same
 ## owner and toward every road or railway that enters its hex. Roads are not
@@ -1582,6 +1610,16 @@ func water_near(from: Vector3, reach := 90, depth_factor := 1.5):
 
 func place_on_ground(unit: Dictionary, at: Vector3) -> void:
 	var node: Node3D = unit.node
+	if not unit.get("fly", false) and not unit.get("naval", false):
+		var h_ang := float(unit.heading)
+		if unit.has("_pg_x"):
+			var tol := 0.001 if not unit.get("moving", false) else 0.35
+			var htol := 0.001 if not unit.get("moving", false) else 0.025
+			if absf(float(unit._pg_x) - at.x) <= tol and absf(float(unit._pg_z) - at.z) <= tol and absf(float(unit._pg_h) - h_ang) <= htol:
+				return
+		unit._pg_x = at.x
+		unit._pg_z = at.z
+		unit._pg_h = h_ang
 	if unit.get("fly", false):
 		# Aircraft hold their altitude over land or sea and bank into turns.
 		var floor_y := maxf(height_at(at.x, at.z), float(map.seaLevel))
@@ -2102,7 +2140,8 @@ func _physics_process(delta: float) -> void:
 			if unit.target == null and unit.moving:
 				animate(unit, false)
 			settle(unit)
-			spread_out(unit, slot, delta)
+			if not perf_opts or thinks(unit):
+				spread_out(unit, slot, delta)
 			spent("  standing", t_idle)
 			continue
 		# Keep a dry vehicle's order/path intact while waiting for fuel.
@@ -5420,7 +5459,7 @@ const WEAPONS := {"bomber": "bomb", "jet": "missile", "drone": "missile", "helic
 ## Fires at `enemy`; false when the weapon cannot be used yet (a bomber that
 ## is not over its target), so the reload is not spent.
 func fire(unit: Dictionary, enemy: Dictionary) -> bool:
-	if load("res://scripts/force_catalog.gd").ROLES.has(unit.key) and effectiveness(unit, enemy) <= 0.0: return false
+	if ForceCatalog.ROLES.has(unit.key) and effectiveness(unit, enemy) <= 0.0: return false
 	if unit.get("fly", false):
 		if unit.ammo <= 0 or unit.air_state != "ready":
 			return false

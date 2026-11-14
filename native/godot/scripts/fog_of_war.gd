@@ -29,6 +29,8 @@ const SIGHT := {"soldier": 32, "rocketSoldier": 32, "commando": 40, "sniper": 48
 const SPOTTED := ["artillery", "mlrs", "himars", "df17", "tos1a", "brahmos", "k9", "shahedLauncher", "heavyRocket"]
 const SPOTTER_SIGHT := 32.0
 const BUILDING_SIGHT := {"hq": 85, "samSite": 90, "airfield": 60, "cityCenter": 60, "villageCenter": 50, "bunker": 45, "commandCenter": 70, "port": 50}
+const Forces := preload("res://scripts/force_catalog.gd")
+const TacticsTerrain := preload("res://scripts/tactics_terrain.gd")
 
 var w: Node
 var enabled := true
@@ -41,6 +43,7 @@ var texture: ImageTexture
 var _tick := 0.0
 var _masks := {}
 var _scout_tick := 0
+var _scout_cursor := 0
 var _static_seen := PackedByteArray()     # what the player's side's buildings see: they never move, so it is stamped only when they change
 var _static_key := -1
 var _painted_seen := PackedByteArray()    # what the texture shows now: it is repainted only when seen or explored differ from it
@@ -140,17 +143,18 @@ func _gather_observers() -> void:
 			_observers.append([rev.at, float(rev.radius), true])
 
 func sight_of(u: Dictionary) -> float:
-	var forces = load("res://scripts/force_catalog.gd")
-	var base_s := 34.0
-	if u.key in forces.INDIRECT:
-		base_s = SPOTTER_SIGHT
-	elif forces.SIGHT.has(u.key):
-		base_s = float(forces.SIGHT[u.key])
-	elif u.key in SPOTTED:
-		base_s = SPOTTER_SIGHT
-	else:
-		base_s = maxf(float(SIGHT.get(u.key, 34)), float(u.get("aggro", 0.0)) * (1.0 if u.get("fly", false) else 1.1))
-	return base_s * preload("res://scripts/tactics_terrain.gd").sight_mult(w, u)
+	var base_s := float(u.get("_sight_base", -1.0))
+	if base_s < 0.0:
+		if u.key in Forces.INDIRECT:
+			base_s = SPOTTER_SIGHT
+		elif Forces.SIGHT.has(u.key):
+			base_s = float(Forces.SIGHT[u.key])
+		elif u.key in SPOTTED:
+			base_s = SPOTTER_SIGHT
+		else:
+			base_s = maxf(float(SIGHT.get(u.key, 34)), float(u.get("aggro", 0.0)) * (1.0 if u.get("fly", false) else 1.1))
+		u._sight_base = base_s
+	return base_s * TacticsTerrain.sight_mult(w, u)
 
 func update(delta: float) -> void:
 	if not enabled:
@@ -215,42 +219,50 @@ func refresh() -> void:
 		var known := charted(dep.pos)
 		if dep.node.visible != known:
 			dep.node.visible = known
-	# Once a second: what the rivals' forces see of the player's buildings.
-	_scout_tick += 1
-	if _scout_tick >= 4:
-		_scout_tick = 0
-		_scout()
+	# Stagger rival scouting across ticks to avoid 1s frame spikes.
+	_scout()
 	_paint()
 
 ## Once a second: what each rival's forces see, as a map of cells (rival_seen),
 ## and the player's buildings inside it become known to that rival.
 func _scout() -> void:
-	rival_seen.clear()
-	var by_owner := {}
+	var n_count := int(w.map.nations.size())
+	if n_count <= 1:
+		return
+	var batch: Array = []
+	for _step in range(mini(2, n_count - 1)):
+		_scout_cursor = (_scout_cursor % (n_count - 1)) + 1
+		var owner := _scout_cursor
+		if not friendly(owner) and not owner in batch:
+			batch.append(owner)
+			var cells: PackedByteArray = rival_seen.get(owner, PackedByteArray())
+			if cells.size() != n * n:
+				cells.resize(n * n)
+			cells.fill(0)
+			rival_seen[owner] = cells
+	if batch.is_empty():
+		return
 	for u in w.units:
-		if u.dead or int(u.owner) == 0 or friendly(int(u.owner)):
+		if u.dead:
 			continue
-		if not by_owner.has(int(u.owner)): by_owner[int(u.owner)] = []
-		by_owner[int(u.owner)].append(u)
-	for owner in by_owner:
-		var cells := PackedByteArray()
-		cells.resize(n * n)
-		for u in by_owner[owner]:
-			var c := int(floor((u.node.position.x - origin.x) / CELL))
-			var r := int(floor((u.node.position.z - origin.y) / CELL))
-			for off in _mask(int(ceil(sight_of(u) / CELL))):
-				var x: int = c + off.x
-				var z: int = r + off.y
-				if x >= 0 and z >= 0 and x < n and z < n:
-					cells[z * n + x] = 1
-		rival_seen[owner] = cells
+		var owner := int(u.owner)
+		if not (owner in batch):
+			continue
+		var cells: PackedByteArray = rival_seen[owner]
+		var c := int(floor((u.node.position.x - origin.x) / CELL))
+		var r := int(floor((u.node.position.z - origin.y) / CELL))
+		for off in _mask(int(ceil(sight_of(u) / CELL))):
+			var x: int = c + off.x
+			var z: int = r + off.y
+			if x >= 0 and z >= 0 and x < n and z < n:
+				cells[z * n + x] = 1
 	for b in w.buildings:
 		if b.dead or b.owner != 0:
 			continue
 		var i := index(b.root.position)
 		if i < 0:
 			continue
-		for owner in rival_seen:
+		for owner in batch:
 			if rival_seen[owner][i] == 1:
 				if not b.has("known_by"):
 					b.known_by = {}

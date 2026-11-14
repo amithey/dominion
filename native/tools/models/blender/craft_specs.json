@@ -33449,6 +33449,756 @@
         },
         "muzzle_count": 6
       }
+    },
+    "stealthFighter__kaan": {
+      "slug": "stealthFighter__kaan",
+      "name": "KAAN",
+      "family": "stealth",
+      "length": 21.0,
+      "span": 14.0,
+      "height": 6.0,
+      "body_width": 2.7,
+      "body_height": 1.85,
+      "belly": 1.15,
+      "engines": 2,
+      "source": "https://github.com/amithey/dominion/blob/main/native/CODEX-UNIT-ROSTER.md",
+      "seats": 1,
+      "stealth": true,
+      "approximate": true,
+      "representative": "Turkish TAI TF-X KAAN twin-engine fifth-generation stealth air superiority fighter.",
+      "features": [
+        "chined stealth nose",
+        "canted twin tails",
+        "trapezoidal wing",
+        "twin nozzles",
+        "internal bays"
+      ],
+      "details": {
+        "wing": [
+          [
+            0.9,
+            2.0,
+            2.8,
+            -4.8
+          ],
+          [
+            4.2,
+            2.0,
+            0.2,
+            -4.6
+          ],
+          [
+            7.0,
+            2.0,
+            -2.8,
+            -4.4
+          ]
+        ],
+        "fins": [
+          [
+            -1.1,
+            2.5,
+            4.4,
+            -4.6,
+            -8.8,
+            -6.6,
+            -8.2
+          ],
+          [
+            1.1,
+            2.5,
+            4.4,
+            -4.6,
+            -8.8,
+            -6.6,
+            -8.2
+          ]
+        ],
+        "side_intakes": true,
+        "fin_cant": 24,
+        "engine_spacing": 1.7,
+        "engine_radius": 0.62,
+        "intake_x": 1.38,
+        "intake_width": 0.82,
+        "intake_height": 0.92,
+        "intake_z": 0.35,
+        "cross_power": 0.76,
+        "muzzle_positions": {
+          "Muzzle_0": [
+            -1.1,
+            2.0,
+            3.6
+          ],
+          "Muzzle_1": [
+            -0.65,
+            1.3,
+            1.4
+          ],
+          "Muzzle_2": [
+            0.65,
+            1.3,
+            1.4
+          ]
+        },
+        "muzzle_count": 3
+      }
+    },
+    "stealthFighter__amca": {
+      "slug": "stealthFighter__amca",
+      "name": "AMCA",
+      "family": "stealth",
+      "length": 17.6,
+      "span": 11.1,
+      "height": 4.5,
+      "body_width": 2.3,
+      "body_height": 1.65,
+      "belly": 1.05,
+      "engines": 2,
+      "source": "https://github.com/amithey/dominion/blob/main/native/CODEX-UNIT-ROSTER.md",
+      "seats": 1,
+      "stealth": true,
+      "approximate": true,
+      "representative": "Indian HAL AMCA twin-engine fifth-generation stealth multirole fighter with diverterless intakes and canted twin tails.",
+      "features": [
+        "chined stealth forebody",
+        "canted twin fins",
+        "clipped delta wing",
+        "twin nozzles"
+      ],
+      "details": {
+        "wing": [
+          [
+            0.8,
+            1.85,
+            2.2,
+            -3.9
+          ],
+          [
+            3.4,
+            1.85,
+            0.0,
+            -3.7
+          ],
+          [
+            5.55,
+            1.85,
+            -2.3,
+            -3.5
+          ]
+        ],
+        "fins": [
+          [
+            -0.95,
+            2.3,
+            3.8,
+            -3.8,
+            -7.4,
+            -5.6,
+            -6.9
+          ],
+          [
+            0.95,
+            2.3,
+            3.8,
+            -3.8,
+            -7.4,
+            -5.6,
+            -6.9
+          ]
+        ],
+        "side_intakes": true,
+        "fin_cant": 26,
+        "engine_spacing": 1.45,
+        "engine_radius": 0.55,
+        "intake_x": 1.18,
+        "intake_width": 0.72,
+        "intake_height": 0.82,
+        "intake_z": 0.25,
+        "cross_power": 0.75,
+        "muzzle_positions": {
+          "Muzzle_0": [
+            -0.95,
+            1.85,
+            3.1
+          ],
+          "Muzzle_1": [
+            -0.55,
+            1.2,
+            1.2
+          ],
+          "Muzzle_2": [
+            0.55,
+            1.2,
+            1.2
+          ]
+        },
+        "muzzle_count": 3
+      }
+    },
+    "ewJet__su_34ew": {
+      "slug": "ewJet__su_34ew",
+      "name": "Su-34EW",
+      "family": "flanker",
+      "length": 23.3,
+      "span": 14.7,
+      "height": 6.0,
+      "body_width": 2.9,
+      "body_height": 1.9,
+      "belly": 1.15,
+      "engines": 2,
+      "source": "https://github.com/amithey/dominion/blob/main/native/CODEX-UNIT-ROSTER.md",
+      "seats": 2,
+      "stealth": false,
+      "approximate": true,
+      "representative": "Russian Su-34 electronic warfare strike configuration with platypus duckbill radome, canards, twin tails, and wingtip Khibiny EW pods.",
+      "features": [
+        "broad side-by-side cockpit",
+        "canards",
+        "twin vertical tails",
+        "wingtip EW jamming pods"
+      ],
+      "details": {
+        "wing": [
+          [
+            0.9,
+            2.0,
+            2.6,
+            -4.5
+          ],
+          [
+            4.3,
+            2.0,
+            -0.5,
+            -4.6
+          ],
+          [
+            7.35,
+            2.0,
+            -3.2,
+            -4.8
+          ]
+        ],
+        "fins": [
+          [
+            -1.35,
+            2.6,
+            4.9,
+            -5.5,
+            -9.2,
+            -7.2,
+            -8.8
+          ],
+          [
+            1.35,
+            2.6,
+            4.9,
+            -5.5,
+            -9.2,
+            -7.2,
+            -8.8
+          ]
+        ],
+        "side_intakes": true,
+        "fin_cant": 4,
+        "engine_spacing": 1.75,
+        "engine_radius": 0.62,
+        "intake_x": 1.35,
+        "intake_width": 0.85,
+        "intake_height": 0.9,
+        "intake_z": 0.3,
+        "cross_power": 0.82,
+        "canard": [
+          [
+            0.95,
+            2.5,
+            4.8,
+            3.0
+          ],
+          [
+            3.0,
+            2.5,
+            3.6,
+            2.7
+          ]
+        ],
+        "muzzle_positions": {
+          "Muzzle_0": [
+            -1.2,
+            2.0,
+            3.2
+          ],
+          "Muzzle_1": [
+            1.2,
+            2.0,
+            3.2
+          ]
+        },
+        "muzzle_count": 2
+      }
+    },
+    "carrierJet__j_15t": {
+      "slug": "carrierJet__j_15t",
+      "name": "J-15T",
+      "family": "flanker",
+      "length": 22.3,
+      "span": 15.0,
+      "height": 5.9,
+      "body_width": 2.5,
+      "body_height": 1.85,
+      "belly": 1.15,
+      "engines": 2,
+      "source": "https://github.com/amithey/dominion/blob/main/native/CODEX-UNIT-ROSTER.md",
+      "seats": 1,
+      "stealth": false,
+      "approximate": true,
+      "representative": "Chinese PLANAF Shenyang J-15T catapult-capable carrier fighter for Fujian with canards, twin tails, and twin engines.",
+      "features": [
+        "canard-flanker layout",
+        "twin vertical tails",
+        "twin turbofans",
+        "carrier arrestor hook"
+      ],
+      "details": {
+        "wing": [
+          [
+            0.85,
+            2.0,
+            2.4,
+            -4.3
+          ],
+          [
+            4.2,
+            2.0,
+            -0.4,
+            -4.4
+          ],
+          [
+            7.5,
+            2.0,
+            -3.1,
+            -4.6
+          ]
+        ],
+        "fins": [
+          [
+            -1.3,
+            2.55,
+            4.7,
+            -5.2,
+            -8.8,
+            -6.9,
+            -8.4
+          ],
+          [
+            1.3,
+            2.55,
+            4.7,
+            -5.2,
+            -8.8,
+            -6.9,
+            -8.4
+          ]
+        ],
+        "side_intakes": true,
+        "fin_cant": 4,
+        "engine_spacing": 1.65,
+        "engine_radius": 0.6,
+        "intake_x": 1.28,
+        "intake_width": 0.82,
+        "intake_height": 0.88,
+        "intake_z": 0.25,
+        "cross_power": 0.8,
+        "canard": [
+          [
+            0.9,
+            2.45,
+            4.7,
+            2.9
+          ],
+          [
+            2.9,
+            2.45,
+            3.5,
+            2.6
+          ]
+        ],
+        "muzzle_positions": {
+          "Muzzle_0": [
+            -1.15,
+            2.0,
+            3.1
+          ],
+          "Muzzle_1": [
+            1.15,
+            2.0,
+            3.1
+          ]
+        },
+        "muzzle_count": 2
+      }
+    },
+    "ewJet__g550_oron": {
+      "slug": "ewJet__g550_oron",
+      "name": "G550 Oron",
+      "family": "patrol",
+      "length": 29.4,
+      "span": 28.5,
+      "height": 7.9,
+      "body_width": 2.4,
+      "body_height": 2.4,
+      "belly": 1.3,
+      "engines": 2,
+      "source": "native/CODEX-UNIT-ROSTER.md",
+      "seats": 2,
+      "stealth": false,
+      "approximate": true,
+      "representative": "Israeli G550 Oron multi-mission EW/ISR aircraft with conformal fuselage cheek arrays, ventral canoe radome, swept wings and T-tail.",
+      "features": [
+        "business-jet airframe",
+        "conformal EW cheek arrays",
+        "ventral radome",
+        "rear-mounted twin engines",
+        "T-tail"
+      ],
+      "details": {
+        "wing": [
+          [
+            1.1,
+            1.8,
+            2.0,
+            -3.5
+          ],
+          [
+            7.5,
+            2.1,
+            -0.5,
+            -3.8
+          ],
+          [
+            14.2,
+            2.5,
+            -3.2,
+            -4.4
+          ]
+        ],
+        "fins": [
+          [
+            0.0,
+            2.6,
+            5.2,
+            -9.8,
+            -13.5,
+            -11.5,
+            -13.2
+          ]
+        ],
+        "side_intakes": false,
+        "engine_spacing": 3.0,
+        "engine_radius": 0.65,
+        "cross_power": 0.85,
+        "muzzle_positions": {
+          "Muzzle_0": [
+            -1.1,
+            1.5,
+            2.5
+          ],
+          "Muzzle_1": [
+            1.1,
+            1.5,
+            2.5
+          ]
+        },
+        "muzzle_count": 2
+      }
+    },
+    "ewJet__su_30mki_ew": {
+      "slug": "ewJet__su_30mki_ew",
+      "name": "Su-30MKI EW",
+      "family": "flanker",
+      "length": 21.9,
+      "span": 14.7,
+      "height": 6.3,
+      "body_width": 2.5,
+      "body_height": 1.85,
+      "belly": 1.15,
+      "engines": 2,
+      "source": "native/CODEX-UNIT-ROSTER.md",
+      "seats": 2,
+      "stealth": false,
+      "approximate": true,
+      "representative": "Indian Su-30MKI electronic warfare configuration with canards, twin tails, twin engines and wingtip jamming pods.",
+      "features": [
+        "canard-flanker layout",
+        "twin vertical tails",
+        "twin turbofans",
+        "EW pods"
+      ],
+      "details": {
+        "wing": [
+          [
+            0.85,
+            2.0,
+            2.4,
+            -4.3
+          ],
+          [
+            4.2,
+            2.0,
+            -0.4,
+            -4.4
+          ],
+          [
+            7.35,
+            2.0,
+            -3.1,
+            -4.6
+          ]
+        ],
+        "fins": [
+          [
+            -1.3,
+            2.55,
+            4.7,
+            -5.2,
+            -8.8,
+            -6.9,
+            -8.4
+          ],
+          [
+            1.3,
+            2.55,
+            4.7,
+            -5.2,
+            -8.8,
+            -6.9,
+            -8.4
+          ]
+        ],
+        "side_intakes": true,
+        "fin_cant": 4,
+        "engine_spacing": 1.65,
+        "engine_radius": 0.6,
+        "intake_x": 1.28,
+        "intake_width": 0.82,
+        "intake_height": 0.88,
+        "intake_z": 0.25,
+        "cross_power": 0.8,
+        "canard": [
+          [
+            0.9,
+            2.45,
+            4.7,
+            2.9
+          ],
+          [
+            2.9,
+            2.45,
+            3.5,
+            2.6
+          ]
+        ],
+        "muzzle_positions": {
+          "Muzzle_0": [
+            -1.15,
+            2.0,
+            3.1
+          ],
+          "Muzzle_1": [
+            1.15,
+            2.0,
+            3.1
+          ]
+        },
+        "muzzle_count": 2
+      }
+    },
+    "carrierJet__su_33": {
+      "slug": "carrierJet__su_33",
+      "name": "Su-33",
+      "family": "flanker",
+      "length": 21.2,
+      "span": 14.7,
+      "height": 5.9,
+      "body_width": 2.45,
+      "body_height": 1.8,
+      "belly": 1.15,
+      "engines": 2,
+      "source": "native/CODEX-UNIT-ROSTER.md",
+      "seats": 1,
+      "stealth": false,
+      "approximate": true,
+      "representative": "Russian naval Su-33 carrier fighter for Admiral Kuznetsov with canards, twin tails and tailhook.",
+      "features": [
+        "canard-flanker layout",
+        "twin vertical tails",
+        "twin turbofans",
+        "carrier arrestor hook"
+      ],
+      "details": {
+        "wing": [
+          [
+            0.85,
+            2.0,
+            2.3,
+            -4.2
+          ],
+          [
+            4.1,
+            2.0,
+            -0.4,
+            -4.3
+          ],
+          [
+            7.35,
+            2.0,
+            -3.0,
+            -4.5
+          ]
+        ],
+        "fins": [
+          [
+            -1.3,
+            2.55,
+            4.6,
+            -5.1,
+            -8.6,
+            -6.8,
+            -8.2
+          ],
+          [
+            1.3,
+            2.55,
+            4.6,
+            -5.1,
+            -8.6,
+            -6.8,
+            -8.2
+          ]
+        ],
+        "side_intakes": true,
+        "fin_cant": 4,
+        "engine_spacing": 1.62,
+        "engine_radius": 0.58,
+        "intake_x": 1.25,
+        "intake_width": 0.8,
+        "intake_height": 0.85,
+        "intake_z": 0.25,
+        "cross_power": 0.8,
+        "canard": [
+          [
+            0.9,
+            2.45,
+            4.6,
+            2.8
+          ],
+          [
+            2.85,
+            2.45,
+            3.4,
+            2.5
+          ]
+        ],
+        "muzzle_positions": {
+          "Muzzle_0": [
+            -1.15,
+            2.0,
+            3.0
+          ],
+          "Muzzle_1": [
+            1.15,
+            2.0,
+            3.0
+          ]
+        },
+        "muzzle_count": 2
+      }
+    },
+    "carrierJet__mig_29k": {
+      "slug": "carrierJet__mig_29k",
+      "name": "MiG-29K",
+      "family": "jet",
+      "length": 17.3,
+      "span": 12.0,
+      "height": 4.4,
+      "body_width": 2.2,
+      "body_height": 1.65,
+      "belly": 1.05,
+      "engines": 2,
+      "source": "native/CODEX-UNIT-ROSTER.md",
+      "seats": 1,
+      "stealth": false,
+      "approximate": true,
+      "representative": "Indian Navy MiG-29K carrier-based multirole fighter for INS Vikrant with twin vertical tails and twin RD-33MK engines.",
+      "features": [
+        "twin-tail swept wing",
+        "twin turbofans",
+        "carrier arrestor hook",
+        "leading-edge root extensions"
+      ],
+      "details": {
+        "wing": [
+          [
+            0.8,
+            1.85,
+            2.0,
+            -3.7
+          ],
+          [
+            3.4,
+            1.85,
+            -0.3,
+            -3.8
+          ],
+          [
+            6.0,
+            1.85,
+            -2.5,
+            -4.0
+          ]
+        ],
+        "fins": [
+          [
+            -1.1,
+            2.4,
+            4.1,
+            -4.1,
+            -7.2,
+            -5.7,
+            -6.9
+          ],
+          [
+            1.1,
+            2.4,
+            4.1,
+            -4.1,
+            -7.2,
+            -5.7,
+            -6.9
+          ]
+        ],
+        "side_intakes": true,
+        "fin_cant": 6,
+        "engine_spacing": 1.4,
+        "engine_radius": 0.52,
+        "intake_x": 1.1,
+        "intake_width": 0.72,
+        "intake_height": 0.76,
+        "intake_z": 0.2,
+        "cross_power": 0.78,
+        "muzzle_positions": {
+          "Muzzle_0": [
+            -1.0,
+            1.85,
+            2.6
+          ],
+          "Muzzle_1": [
+            1.0,
+            1.85,
+            2.6
+          ]
+        },
+        "muzzle_count": 2
+      }
     }
   },
   "P7": {
@@ -44076,7 +44826,7 @@
       "source": "https://www.defense.gouv.fr/marine/forces-surface/patrouilleurs-service-public-psp",
       "family": "combatant",
       "approximate": true,
-      "representative": "Flamant/Pluvier PSP54 baseline; published54×10m. Draft and private deck components estimated; stern launch ramp is for its RHIB, no amphibious assault well dock. Only two12.7mm guns, no invented20/30mm cannon.",
+      "representative": "Flamant/Pluvier PSP54 baseline; published54\u00d710m. Draft and private deck components estimated; stern launch ramp is for its RHIB, no amphibious assault well dock. Only two12.7mm guns, no invented20/30mm cannon.",
       "features": [
         "54m public-service patrol hull",
         "high forward bridge",
@@ -48551,7 +49301,7 @@
       "beam": 6.8,
       "draft": 6.2,
       "freeboard": 0.5999999999999996,
-      "source": "https://www.idf.il/אתרי-יחידות/זרוע-הים/כל-הכתבות/2025/שמות-הצוללות/",
+      "source": "https://www.idf.il/\u05d0\u05ea\u05e8\u05d9-\u05d9\u05d7\u05d9\u05d3\u05d5\u05ea/\u05d6\u05e8\u05d5\u05e2-\u05d4\u05d9\u05dd/\u05db\u05dc-\u05d4\u05db\u05ea\u05d1\u05d5\u05ea/2025/\u05e9\u05de\u05d5\u05ea-\u05d4\u05e6\u05d5\u05dc\u05dc\u05d5\u05ea/",
       "family": "submarine",
       "approximate": true,
       "representative": "2025operator lists original DolphinI and AIPas distinct current generations. Selected original museum/participant1990slaunch/sea photographs, smaller10m rounded sail/high bow planes/narrow casing, not an AIPrename.57.3x6.8m nominal target and local fitting/draft sizes are adopted estimates here, not primary factory certification; underwater hull, Xcontrol/shaft details and seven decorative screw blades unverified. No reconstructed weapon internals/capacity or concealedVLS.",
@@ -49813,6 +50563,629 @@
           ]
         ],
         "hangar_z": -43.1
+      }
+    },
+    "carrier__admiral_kuznetsov": {
+      "slug": "carrier__admiral_kuznetsov",
+      "name": "Admiral Kuznetsov",
+      "length": 304.5,
+      "beam": 72.0,
+      "draft": 10.5,
+      "freeboard": 15.0,
+      "source": "https://github.com/amithey/dominion/blob/main/native/CODEX-UNIT-ROSTER.md",
+      "family": "combatant",
+      "approximate": true,
+      "representative": "Russian STOBAR heavy aircraft-carrying cruiser: ski-jump bow, angled deck, starboard island with Phased Array radar and funnel.",
+      "features": [
+        "304m STOBAR carrier",
+        "bow ski-jump",
+        "angled flight deck",
+        "starboard island",
+        "two aircraft elevators",
+        "CIWS sponsons"
+      ],
+      "details": {
+        "aviation_deck": true,
+        "aviation_y": 0.1,
+        "bow_sheer": 0,
+        "hangar": false,
+        "landing": false,
+        "guns": [],
+        "vls": [],
+        "canisters": [],
+        "ciws": [
+          [
+            -22,
+            95,
+            0.3
+          ],
+          [
+            22,
+            95,
+            0.3
+          ],
+          [
+            -24,
+            -105,
+            0.3
+          ],
+          [
+            24,
+            -105,
+            0.3
+          ]
+        ],
+        "hull_beam": 38.0,
+        "deck_beam": 68.0,
+        "houses": [
+          [
+            20,
+            -10,
+            12.0,
+            72.0,
+            12.0,
+            0,
+            0.9
+          ],
+          [
+            20,
+            16,
+            10.0,
+            26.0,
+            6.0,
+            12,
+            0.89
+          ]
+        ],
+        "funnels": [
+          [
+            21,
+            -24,
+            6.5,
+            11.0,
+            9.0,
+            10.0
+          ]
+        ],
+        "masts": [
+          [
+            28,
+            18,
+            "sphere",
+            4.5
+          ],
+          [
+            22,
+            -4,
+            "bar",
+            4.0
+          ]
+        ],
+        "mast_offsets": [
+          20,
+          20
+        ],
+        "sponsons": [
+          [
+            -22,
+            95,
+            5,
+            10
+          ],
+          [
+            22,
+            95,
+            5,
+            10
+          ],
+          [
+            -24,
+            -105,
+            5,
+            10
+          ],
+          [
+            24,
+            -105,
+            5,
+            10
+          ]
+        ],
+        "ski_jump": true,
+        "elevators": [
+          [
+            24,
+            48
+          ],
+          [
+            24,
+            -56
+          ]
+        ]
+      }
+    },
+    "carrier__nam_atlantico": {
+      "slug": "carrier__nam_atlantico",
+      "name": "NAM Atlantico",
+      "length": 203.4,
+      "beam": 35.0,
+      "draft": 6.6,
+      "freeboard": 12.5,
+      "source": "https://github.com/amithey/dominion/blob/main/native/CODEX-UNIT-ROSTER.md",
+      "family": "combatant",
+      "approximate": true,
+      "representative": "Brazilian amphibious helicopter/drone carrier flagship with full-length flat flight deck and starboard island.",
+      "features": [
+        "203m flat-top aviation ship",
+        "starboard island",
+        "two deck elevators",
+        "defensive autocannons"
+      ],
+      "details": {
+        "aviation_deck": true,
+        "aviation_y": 0.1,
+        "bow_sheer": 0,
+        "hangar": false,
+        "landing": false,
+        "guns": [
+          [
+            -14,
+            72,
+            30,
+            2.5
+          ],
+          [
+            14,
+            -75,
+            30,
+            2.5,
+            0,
+            true
+          ]
+        ],
+        "vls": [],
+        "canisters": [],
+        "ciws": [
+          [
+            -14,
+            72,
+            0.25
+          ],
+          [
+            14,
+            -75,
+            0.25
+          ]
+        ],
+        "hull_beam": 28.0,
+        "deck_beam": 34.0,
+        "houses": [
+          [
+            11,
+            2,
+            8.5,
+            62.0,
+            9.5,
+            0,
+            0.92
+          ],
+          [
+            11,
+            20,
+            7.0,
+            20.0,
+            4.5,
+            9.5,
+            0.9
+          ]
+        ],
+        "funnels": [
+          [
+            11,
+            -14,
+            4.5,
+            7.5,
+            6.5,
+            7.5
+          ]
+        ],
+        "masts": [
+          [
+            22,
+            18,
+            "bar",
+            3.5
+          ]
+        ],
+        "mast_offsets": [
+          11
+        ],
+        "sponsons": [
+          [
+            -14,
+            72,
+            4,
+            8
+          ],
+          [
+            14,
+            -75,
+            4,
+            8
+          ]
+        ],
+        "ski_jump": false,
+        "elevators": [
+          [
+            10,
+            45
+          ],
+          [
+            10,
+            -48
+          ]
+        ]
+      }
+    },
+    "asFrigate__constellation_class": {
+      "slug": "asFrigate__constellation_class",
+      "name": "Constellation-class",
+      "length": 151.0,
+      "beam": 19.8,
+      "draft": 5.5,
+      "freeboard": 5.2,
+      "source": "https://github.com/amithey/dominion/blob/main/native/CODEX-UNIT-ROSTER.md",
+      "family": "combatant",
+      "approximate": true,
+      "representative": "US Navy Constellation-class guided-missile ASW frigate: 57mm bow gun, 32-cell Mk 41 VLS, enclosed SPY-6 mast, helicopter hangar and flight deck.",
+      "features": [
+        "151m multi-mission frigate",
+        "57mm bow gun",
+        "32-cell Mk41 VLS",
+        "phased-array mast",
+        "Aft helicopter hangar and deck"
+      ],
+      "details": {
+        "rail_count": 30,
+        "houses": [
+          [
+            0,
+            16.0,
+            13.0,
+            32.0,
+            7.5,
+            0,
+            0.88
+          ],
+          [
+            0,
+            -24.0,
+            12.5,
+            24.0,
+            5.8,
+            0,
+            0.92
+          ]
+        ],
+        "funnels": [
+          [
+            0,
+            -6.0,
+            4.2,
+            7.0,
+            6.5,
+            2.2
+          ]
+        ],
+        "masts": [
+          [
+            12.0,
+            24.0,
+            "pyramid",
+            4.2
+          ]
+        ],
+        "guns": [
+          [
+            0,
+            52.0,
+            57,
+            4.0
+          ]
+        ],
+        "vls": [
+          [
+            38.0,
+            4,
+            8,
+            1.15,
+            0.0
+          ]
+        ],
+        "canisters": [
+          [
+            -14.0,
+            4.0,
+            4
+          ],
+          [
+            14.0,
+            4.0,
+            4
+          ]
+        ],
+        "ciws": [
+          [
+            0,
+            -20.0,
+            0.25
+          ]
+        ],
+        "hangar": true,
+        "flight_deck": true
+      }
+    },
+    "asFrigate__hetman_ivan_mazepa": {
+      "slug": "asFrigate__hetman_ivan_mazepa",
+      "name": "Hetman Ivan Mazepa",
+      "length": 99.5,
+      "beam": 14.4,
+      "draft": 3.9,
+      "freeboard": 4.1,
+      "source": "https://github.com/amithey/dominion/blob/main/native/CODEX-UNIT-ROSTER.md",
+      "family": "combatant",
+      "approximate": true,
+      "representative": "Ukrainian Ada-class ASW corvette/frigate: stealthy superstructure, 76mm bow gun, anti-ship canisters, helicopter hangar.",
+      "features": [
+        "99.5m stealth ASW corvette",
+        "76mm bow gun",
+        "anti-ship canisters",
+        "helicopter hangar"
+      ],
+      "details": {
+        "rail_count": 22,
+        "houses": [
+          [
+            0,
+            10.0,
+            9.5,
+            22.0,
+            5.8,
+            0,
+            0.87
+          ],
+          [
+            0,
+            -16.0,
+            9.2,
+            16.0,
+            4.5,
+            0,
+            0.91
+          ]
+        ],
+        "funnels": [
+          [
+            0,
+            -4.0,
+            3.0,
+            5.0,
+            5.2,
+            1.8
+          ]
+        ],
+        "masts": [
+          [
+            8.5,
+            16.0,
+            "pyramid",
+            3.2
+          ]
+        ],
+        "guns": [
+          [
+            0,
+            34.0,
+            76,
+            4.4
+          ]
+        ],
+        "vls": [
+          [
+            24.0,
+            2,
+            4,
+            1.1,
+            0.0
+          ]
+        ],
+        "canisters": [
+          [
+            -10.0,
+            2.5,
+            4
+          ]
+        ],
+        "ciws": [
+          [
+            0,
+            -13.0,
+            0.22
+          ]
+        ],
+        "hangar": true,
+        "flight_deck": true
+      }
+    },
+    "missileBoat__buyan_m": {
+      "slug": "missileBoat__buyan_m",
+      "name": "Buyan-M",
+      "length": 74.1,
+      "beam": 11.0,
+      "draft": 2.6,
+      "freeboard": 3.4,
+      "source": "native/CODEX-UNIT-ROSTER.md",
+      "family": "combatant",
+      "approximate": true,
+      "representative": "Russian Buyan-M stealth missile corvette/boat: 100mm bow gun, 8-cell UKSK VLS, angular stealth superstructure, AK-630M-2 aft.",
+      "features": [
+        "74m stealth missile boat",
+        "100mm bow gun",
+        "8-cell VLS",
+        "angular mast",
+        "no helicopter deck"
+      ],
+      "details": {
+        "houses": [
+          [
+            0,
+            6,
+            8.2,
+            24,
+            5.0,
+            0,
+            0.8
+          ],
+          [
+            0,
+            -14,
+            7.6,
+            12,
+            3.0,
+            0,
+            0.86
+          ]
+        ],
+        "funnels": [
+          [
+            0,
+            -6,
+            3.4,
+            4.5,
+            4.8,
+            2.0
+          ]
+        ],
+        "masts": [
+          [
+            5,
+            16,
+            "pyramid",
+            3.4
+          ]
+        ],
+        "guns": [
+          [
+            0,
+            26,
+            100,
+            4.5
+          ]
+        ],
+        "vls": [
+          [
+            12.0,
+            2,
+            4,
+            1.1,
+            0.0
+          ]
+        ],
+        "canisters": [],
+        "ciws": [
+          [
+            0,
+            -20,
+            3.0
+          ]
+        ],
+        "hangar": false,
+        "flight_deck": false,
+        "bow_sheer": 0.9
+      }
+    },
+    "missileBoat__kilic_class": {
+      "slug": "missileBoat__kilic_class",
+      "name": "Kilic-class",
+      "length": 62.4,
+      "beam": 8.6,
+      "draft": 2.8,
+      "freeboard": 2.9,
+      "source": "native/CODEX-UNIT-ROSTER.md",
+      "family": "combatant",
+      "approximate": true,
+      "representative": "Turkish Kilic-class fast attack missile boat: 76mm bow gun, enclosed mast, eight Harpoon/Atmaca canisters.",
+      "features": [
+        "62m fast attack craft",
+        "76mm bow gun",
+        "8 anti-ship canisters",
+        "enclosed mast"
+      ],
+      "details": {
+        "houses": [
+          [
+            0,
+            4,
+            6.8,
+            18,
+            4.2,
+            0,
+            0.82
+          ],
+          [
+            0,
+            -11,
+            6.2,
+            10,
+            2.4,
+            0,
+            0.88
+          ]
+        ],
+        "funnels": [
+          [
+            0,
+            -5,
+            2.8,
+            3.8,
+            4.2,
+            1.8
+          ]
+        ],
+        "masts": [
+          [
+            4,
+            13,
+            "panel",
+            2.8
+          ]
+        ],
+        "guns": [
+          [
+            0,
+            22,
+            76,
+            4.0
+          ]
+        ],
+        "vls": [],
+        "canisters": [
+          [
+            -6,
+            2.0,
+            4
+          ]
+        ],
+        "ciws": [
+          [
+            0,
+            -16,
+            2.6
+          ]
+        ],
+        "hangar": false,
+        "flight_deck": false,
+        "bow_sheer": 0.85
       }
     }
   }

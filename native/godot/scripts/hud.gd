@@ -1647,14 +1647,17 @@ func _update_selection() -> void:
 				if home != null and not home.dead:
 					_sel_info.text += "\nRecovery: %s - ~%d m action radius" % [world.missiles.asset_name(home), roundi(world.AirOperations.action_radius(u))]
 				_sel_fuel.add_theme_stylebox_override("fill", UI.plate(Color("d85a4a") if fuel < 20.0 else Color("e0a94a"), Color("8a2a22") if fuel < 20.0 else Color("9a6b22"), Color(0, 0, 0, 0), 0.0, Color(1, 1, 1, 0.25)))
-			if u.owner == 0 and get_viewport().gui_get_hovered_control() == null:
-				var point = world.ground_point(get_viewport().get_mouse_position())
-				if point != null:
-					if world.order_mode == "patrol":
-						_sel_info.text += "\nPatrol time: ~%ds" % floori(world.AirOperations.patrol_seconds(world, u, point))
-					else:
-						var why: String = world.AirOperations.mission_blocked(world, u, point)
-						_sel_info.text += "\nMap point: " + ("within flight range" if why == "" else why)
+			if u.owner == 0:
+				var range_line := "Map point: hover battlefield"
+				if get_viewport().gui_get_hovered_control() == null:
+					var point = world.ground_point(get_viewport().get_mouse_position())
+					if point != null:
+						if world.order_mode == "patrol":
+							range_line = "Patrol time: ~%ds" % floori(world.AirOperations.patrol_seconds(world, u, point))
+						else:
+							var why: String = world.AirOperations.mission_blocked(world, u, point)
+							range_line = "Map point: " + ("within flight range" if why == "" else why)
+				_sel_info.text += "\n" + range_line
 			var state: String = "rearming %.0fs" % float(u.service_left) if u.air_state == "rearming" else str(u.air_state)
 			if u.key == "scoutHelicopter":
 				_sel_info.text = "Unarmed scout - %s" % state
@@ -1941,12 +1944,23 @@ func _fill_launch(chosen: Array) -> void:
 			actions.append(["Unload %s" % ms.def_of(key).name, func(): _open_payload_picker(unit, key, "send")])
 			signature += "unload:" + key
 		elif ms.storage_accepts(unit, key):
+			var can_load_direct := false
 			for source in world.buildings:
 				if source.owner == 0 and not source.dead and source.has("payloads") and ms.transfer_blocked(source, unit, key) == "":
 					actions.append(["Load %s" % ms.def_of(key).name, func(): _open_payload_picker(unit, key, "load")])
 					signature += "load:" + key
+					can_load_direct = true
 					break
-	if actions.is_empty() and chosen.any(func(u): return u.key in ms.LAUNCH_SHIPS + ms.TACTICAL_SHIPS):
+			if not can_load_direct and unit.get("naval", false) and ms.free_storage(unit) > 0:
+				for port in world.buildings:
+					if port.owner == 0 and not port.dead and port.key in ms.PORTS and ms._at_service(unit, port) and ms.free_storage(port) > 0:
+						for depot in world.buildings:
+							if depot.owner == 0 and not depot.dead and depot.has("payloads") and ms.local_count(depot, key) > 0 and ms.transfer_blocked(depot, port, key) == "":
+								actions.append(["Stage %s to Port" % ms.def_of(key).name, func(): notice("Staging started." if ms.start_transfer(depot, port, key, 1) == "" else "Transfer unavailable.")])
+								signature += "stage:" + key
+								break
+						break
+	if actions.is_empty() and chosen.any(func(u): return u.key in ms.LAUNCH_SHIPS + ms.TACTICAL_SHIPS + ["corvette", "submarine"]):
 		actions.append(["Payload handling", func(): notice("Bring a compatible ship to a supplied port or shipyard, then load from its local stock.")])
 		signature += "empty"
 	_launch_row.visible = not actions.is_empty()

@@ -10,7 +10,10 @@ extends Node
 ## roll against a player it dislikes), and at once if the player attacks it.
 ## Attack waves go at the nearest building of any nation it is at war with.
 
+const ForceCatalog := preload("res://scripts/force_catalog.gd")
+const ArsenalCatalog := preload("res://scripts/arsenal_catalog.gd")
 var world: Node
+var _hq_cache := {}
 var cfg: Dictionary      # the match's difficulty row
 var levels: Dictionary   # every difficulty row: each rival plays its own (n.level)
 var build_order: Array
@@ -38,7 +41,7 @@ func setup(world_node: Node, ai: Dictionary, difficulty: String, speed := 1.0) -
 	build_order = ai.buildOrder
 	# Only units the native world can draw yet (no aircraft).
 	train_pool = ai.trainPool.filter(func(k): return TRAINED_AT.has(k))
-	for key in MODERN_POOL + preload("res://scripts/additional_factions.gd").BASE.keys() + load("res://scripts/force_catalog.gd").ROLES.keys():
+	for key in MODERN_POOL + preload("res://scripts/additional_factions.gd").BASE.keys() + ForceCatalog.ROLES.keys():
 		if not key in train_pool and world.unit_defs.has(key):
 			train_pool.append(key)
 	for id in range(1, world.map.nations.size()):
@@ -66,9 +69,14 @@ func aggression_of(id: int) -> float:
 	return float(row_of(id).get("aggression", 0.35))
 
 func hq(id: int):
+	var cached = _hq_cache.get(id)
+	if cached != null and not cached.dead and cached.owner == id and cached.key == "hq":
+		return cached
 	for b in world.buildings:
 		if b.owner == id and b.key == "hq" and not b.dead:
+			_hq_cache[id] = b
 			return b
+	_hq_cache.erase(id)
 	return null
 
 func at_war(id: int) -> bool:
@@ -312,15 +320,15 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 	# Announced only by early warning (sitrep.gd): without intelligence you learn of it when it lands.
 	var def: Dictionary = world.missiles.def_of(key)
 	var eta: float = source.node.position.distance_to(target.root.position) / maxf(float(def.get("speed", 60.0)), 1.0)
-	world.sitrep.missile_launched(n.id, load("res://scripts/arsenal_catalog.gd").missile_name(world, n.id, key), target, eta)
+	world.sitrep.missile_launched(n.id, ArsenalCatalog.missile_name(world, n.id, key), target, eta)
 	return m
 
 # Money-equivalent price (ai.js weights materials the AI does not stockpile).
 func available(u: Dictionary) -> bool:
-	return not u.dead and (u.dmg>0 or u.key in load("res://scripts/force_catalog.gd").SCOUTS) and not world.disabled(u) and (not u.get("fly",false) or u.get("air_state","ready")=="ready" and u.get("ammo",0)>0)
+	return not u.dead and (u.dmg>0 or u.key in ForceCatalog.SCOUTS) and not world.disabled(u) and (not u.get("fly",false) or u.get("air_state","ready")=="ready" and u.get("ammo",0)>0)
 
 func production_sites(owner: int, key: String) -> Array:
-	var home: String = load("res://scripts/force_catalog.gd").HOME.get(key, preload("res://scripts/additional_factions.gd").HOME.get(key, TRAINED_AT.get(key, "")))
+	var home: String = ForceCatalog.HOME.get(key, preload("res://scripts/additional_factions.gd").HOME.get(key, TRAINED_AT.get(key, "")))
 	return world.buildings.filter(func(b):return b.owner==owner and b.key==home and b.built and not b.dead and b.get("supplied",true) and not world.disabled(b))
 
 ## The unit rival `n` raises against a threat its army cannot hurt: anti-armour

@@ -42,7 +42,7 @@ func run() -> void:
 	var tools := 0
 	for key in tool_keys:
 		tools += C.operators(key).size()
-	check(entries == 158 + tools + later, "%d operator-role choices across all %d identities (158 + %d tools of war + %d by later nations)" % [entries, F.IDS.size(), tools, later])
+	check(entries == 160 + tools + later, "%d operator-role choices across all %d identities (160 + %d tools of war + %d by later nations)" % [entries, F.IDS.size(), tools, later])
 	w.map.nations[0].id = "future_nation"
 	check(C.ROLES.keys().all(func(key): return not w.unit_allowed(0, key)), "new country ID does not inherit an arsenal")
 	w.map.nations[0].units = ["scoutTeam", "ifv"]
