@@ -457,7 +457,7 @@ var _projectile_meshes := {}
 var _beam_mesh: CylinderMesh
 var launched := {}   # projectile kind -> how many were fired (checked by tests)
 
-func projectile(kind: String, from: Vector3, to: Vector3, on_hit: Callable, delay := 0.0, track: Node3D = null, retarget: Callable = Callable()) -> void:
+func projectile(kind: String, from: Vector3, to: Vector3, on_hit: Callable, delay := 0.0, track = null, retarget: Callable = Callable()) -> void:
 	var speed: float = {"missile": 75.0, "rocket": 65.0, "fpv": 22.0, "bomb": 0.0, "shell_arc": 55.0, "torpedo": 26.0}.get(kind, 60.0)
 	var dist := from.distance_to(to)
 	var time := sqrt(2.0 * maxf(from.y - to.y, 1.0) / 9.8) if kind == "bomb" else maxf(dist / speed, 0.15)
@@ -479,7 +479,14 @@ func projectile(kind: String, from: Vector3, to: Vector3, on_hit: Callable, dela
 	add_child(node)
 	node.global_position = from
 	launched[kind] = int(launched.get(kind, 0)) + 1
-	_projectiles.append({"kind": kind, "node": node, "from": from, "to": to, "t": -delay, "time": time, "arc": arc, "hit": on_hit, "track": track, "retarget": retarget, "puff": 0.0})
+	var track_node: Node3D = null
+	var track_unit = null
+	if typeof(track) == TYPE_DICTIONARY:
+		track_unit = track
+		track_node = track.get("node")
+	elif track is Node3D:
+		track_node = track
+	_projectiles.append({"kind": kind, "node": node, "from": from, "to": to, "t": -delay, "time": time, "arc": arc, "speed": speed, "hit": on_hit, "track": track_node, "track_unit": track_unit, "retarget": retarget, "puff": 0.0})
 	if delay <= 0.0 and audio and kind != "bomb":
 		var snd := "missile_launch" if kind in ["missile", "rocket"] else ("artillery_fire" if kind == "shell_arc" else ("ui_click" if kind == "fpv" else "cannon"))
 		audio.play(snd, from, -7.0, 1.4 if kind in ["missile", "shell_arc"] else (1.8 if kind == "fpv" else 1.1))
@@ -584,14 +591,30 @@ func _move_projectiles(delta: float) -> void:
 			node.visible = true
 			if audio and p.kind != "bomb":
 				audio.play("cannon", p.from, -8.0, 1.2)
-		if p.track != null and is_instance_valid(p.track):
+		var tu = p.get("track_unit")
+		var track_alive: bool = p.track != null and is_instance_valid(p.track) and (tu == null or not tu.get("dead", false))
+		if track_alive:
 			p.to = p.track.global_position  # guided: the missile follows its target
 		elif p.get("retarget", Callable()).is_valid():
-			var next_track = p.retarget.call(p.to)
+			p.track = null
+			p.track_unit = null
+			var next_target = p.retarget.call(p.to)
 			p.retarget = Callable()
-			if next_track != null and is_instance_valid(next_track):
-				p.track = next_track
-				p.to = next_track.global_position
+			var next_node: Node3D = null
+			if typeof(next_target) == TYPE_DICTIONARY:
+				p.track_unit = next_target
+				next_node = next_target.get("node")
+			elif next_target is Node3D:
+				next_node = next_target
+			if next_node != null and is_instance_valid(next_node):
+				p.track = next_node
+				p.from = node.global_position
+				p.to = next_node.global_position
+				var new_dist: float = (p.from as Vector3).distance_to(p.to as Vector3)
+				var spd: float = maxf(float(p.get("speed", 22.0)), 1.0)
+				p.t = 0.0
+				p.time = maxf(new_dist / spd, 0.15)
+				p.arc = 0.12 * new_dist
 		var k: float = minf(p.t / p.time, 1.0)
 		var pos: Vector3 = p.from.lerp(p.to, k)
 		if p.kind == "bomb":

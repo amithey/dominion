@@ -325,7 +325,7 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 
 # Money-equivalent price (ai.js weights materials the AI does not stockpile).
 func available(u: Dictionary) -> bool:
-	return not u.dead and (u.dmg>0 or u.key in ForceCatalog.SCOUTS) and not world.disabled(u) and (not u.get("fly",false) or u.get("air_state","ready")=="ready" and u.get("ammo",0)>0)
+	return not u.dead and (u.dmg>0 or u.key in ForceCatalog.SCOUTS) and not world.disabled(u) and (not u.get("fly",false) or String(u.get("air_state","ready")) in ["ready","standby"] and u.get("ammo",0)>0)
 
 func production_sites(owner: int, key: String) -> Array:
 	var home: String = ForceCatalog.HOME.get(key, preload("res://scripts/additional_factions.gd").HOME.get(key, TRAINED_AT.get(key, "")))

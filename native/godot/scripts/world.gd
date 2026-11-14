@@ -1755,6 +1755,9 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 		u.order_goal = point   # where the player clicked (order_marks.gd draws its flag there)
 		u.path = PackedVector3Array()
 		u.erase("garrison_order")   # (urban_garrison.gd sets it again after its own move order)
+		u.erase("entering_fort")
+		u.erase("digging_target")
+		u.erase("digging")
 		u.build_site = null  # a new order takes a worker off its construction site
 		u.build_queue = []   # and off its list of jobs
 		u.forced = false
@@ -2109,6 +2112,19 @@ func _physics_process(delta: float) -> void:
 				unit.moving = false
 				continue
 			UrbanGarrison.exit_unit(self, unit, unit.garrison_building)
+		# Inside a trench or forward bunker (fortifications.gd): hold position and fire from cover until given a move order.
+		if unit.get("garrisoned_in") != null:
+			if unit.target == null:
+				unit.moving = false
+				if unit.enemy != null and is_instance_valid(unit.enemy.get("node")):
+					var gap_g: Vector3 = unit.enemy.node.position - unit.node.position
+					gap_g.y = 0
+					if gap_g.length_squared() > 0.01:
+						unit.heading = lerp_angle(unit.heading, atan2(gap_g.x, gap_g.z), minf(1.0, delta * 8.0))
+						unit.node.rotation.y = unit.heading
+				continue
+			if fortifications != null:
+				fortifications.exit_unit(unit)
 		if unit.get("fly", false) or unit.get("naval", false):
 			move_craft(unit, delta)
 			continue
@@ -2317,8 +2333,9 @@ func ground_step(unit: Dictionary, next: Vector3, delta: float) -> Vector3:
 			return slide
 	if blocked_by_fort.call(next):
 		Motion.halt(unit, delta)
-		unit.path = PackedVector3Array()
-		unit.repath = 0.0
+		if float(unit.get("repath", 0.0)) <= 0.0:
+			unit.path = PackedVector3Array()
+			unit.repath = 0.85
 		place_on_ground(unit, pos)
 		return Vector3.INF
 	# Pressed into the wall: ease back toward the middle of the nearest open cell.
@@ -2549,8 +2566,12 @@ func start_match(difficulty: String) -> void:
 	if battle_scars == null:
 		battle_scars = preload("res://scripts/battle_scars.gd").new(self)
 		add_child(battle_scars)
-	fortifications = preload("res://scripts/fortifications.gd").new()
-	fortifications.setup(self)
+	if fortifications != null:
+		fortifications.import_state([])
+	else:
+		fortifications = preload("res://scripts/fortifications.gd").new()
+		fortifications.setup(self)
+	preload("res://scripts/war_tools.gd").restore(self, {})
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 	hud.start_guide()
 
@@ -2633,6 +2654,9 @@ func clear_match() -> void:
 		passage.restore({})
 	if homefront != null:
 		homefront.restore({})   # emergency vehicles off the roads, casualties cleared
+	if fortifications != null:
+		fortifications.import_state([])
+	preload("res://scripts/war_tools.gd").restore(self, {})
 
 func rebuild_nav_mesh() -> int:
 	var tiles := ceili(float(nav_n - 1) / NAV_TILE)
@@ -3079,7 +3103,7 @@ func call_worker(site: Dictionary) -> void:
 	var best = null
 	var best_d := INF
 	for u in units:
-		if u.dead or u.owner != site.owner or u.key != "worker" or u.build_site != null or u.target != null:
+		if u.dead or u.owner != site.owner or u.key != "worker" or u.build_site != null or u.target != null or u.get("digging") != null or u.get("digging_target") != null:
 			continue
 		var d: float = u.node.position.distance_to(site.root.position)
 		if d < best_d:
@@ -5334,7 +5358,7 @@ const AIR_DEFENCE := ["samSite", "samLauncher", "aaVehicle", "manpads", "laserAD
 func airborne(u: Dictionary) -> bool:
 	if not u.get("fly", false):
 		return false
-	if String(u.get("air_state", "")) in ["parked", "rearming"]:
+	if String(u.get("air_state", "")) in ["parked", "rearming", "standby"]:
 		return false
 	return u.node.position.y - height_at(u.node.position.x, u.node.position.z) > 1.5
 
@@ -5417,7 +5441,8 @@ func disabled(ent: Dictionary) -> bool:
 func update_combat(unit: Dictionary, delta: float) -> void:
 	if unit.has("payload_order") or unit.has("patrol"):
 		return
-	if unit.get("fly", false) and (unit.get("ammo", 0) <= 0 or unit.get("air_state", "ready") != "ready"):
+	var air_st := String(unit.get("air_state", "ready"))
+	if unit.get("fly", false) and (unit.get("ammo", 0) <= 0 or not air_st in ["ready", "standby"]):
 		return
 	if unit.dmg <= 0.0 or disabled(unit):
 		return  # workers do not fight; EMP-struck machines are dead weight
@@ -5557,16 +5582,16 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 				return true
 			var attacker_owner: int = int(unit.owner)
 			var search_next := func(last_pos: Vector3):
-				var best_n = null
+				var best_u = null
 				var best_d := 28.0
 				for cand in units:
 					if not cand.dead and not cand.get("fly", false) and hostile(attacker_owner, cand.owner):
 						var d: float = cand.node.position.distance_to(last_pos)
 						if d < best_d:
 							best_d = d
-							best_n = cand.node
-				return best_n
-			effects.projectile("fpv", launch, target, func(at): Firepower.detonate(self, unit, "fpv", at, dmg), 0.0, enemy.node, search_next)
+							best_u = cand
+				return best_u
+			effects.projectile("fpv", launch, target, func(at): Firepower.detonate(self, unit, "fpv", at, dmg), 0.0, enemy, search_next)
 		"detonate":
 			# The squad is the charge: it closes in and blows itself up beside its target.
 			var close: Vector3 = unit.node.position - enemy.node.position
@@ -5946,7 +5971,7 @@ func destroy_building(b: Dictionary) -> void:
 		for u in units:
 			if u.dead or not is_same(u.get("air_base"), b):
 				continue
-			if not u.get("ferrying", false) and String(u.get("air_state", "")) in ["parked", "rearming", "taxi_in", "taxi_out"]:
+			if not u.get("ferrying", false) and String(u.get("air_state", "")) in ["parked", "rearming", "taxi_in", "taxi_out", "standby"]:
 				kill(u)
 			else:
 				if not u.get("ferrying", false):

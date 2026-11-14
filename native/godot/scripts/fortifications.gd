@@ -129,8 +129,8 @@ func order_line(selected: Array, kind: String, start_pos: Vector3, end_pos: Vect
 			var u: Dictionary = builders[i]
 			exit_unit(u)
 			var site: Dictionary = sites[i % sites.size()]
-			u.digging_target = site
 			world.order_move([u], site.pos)
+			u.digging_target = site
 		if world.hud != null:
 			world.hud.notice("Defence line ordered: %d %s segments." % [placed, _label(kind)])
 	return placed
@@ -176,8 +176,8 @@ func order_enter(selected: Array, ent: Dictionary) -> int:
 		if garrison.size() + ordered >= cap:
 			break
 		exit_unit(u)
-		u.entering_fort = ent
 		world.order_move([u], ent.pos)
+		u.entering_fort = ent
 		ordered += 1
 	if ordered > 0 and world.hud != null:
 		world.hud.notice("Infantry moving into %s (%d/%d)." % [_label(ent.kind), garrison.size() + ordered, cap])
@@ -325,7 +325,9 @@ func update(delta: float) -> void:
 		var dtarget = u.get("digging_target")
 		if dtarget != null:
 			if dtarget.dead or dtarget.built:
+				var last_pos: Vector3 = dtarget.pos
 				u.erase("digging_target")
+				_assign_next_line_site(u, last_pos)
 			elif u.node.position.distance_to(dtarget.pos) <= 3.2:
 				u.target = null
 				u.path = PackedVector3Array()
@@ -351,7 +353,8 @@ func update(delta: float) -> void:
 		# Keep garrisoned units seated in their slot
 		var g_ent = u.get("garrisoned_in")
 		if g_ent != null:
-			if g_ent.dead or u.target != null:
+			var dist_from_fort := Vector2(u.node.position.x - g_ent.pos.x, u.node.position.z - g_ent.pos.z).length()
+			if g_ent.dead or u.target != null or dist_from_fort > 4.2:
 				exit_unit(u)
 		# Progress active construction
 		var ent = u.get("digging")
@@ -361,7 +364,9 @@ func update(delta: float) -> void:
 			u.erase("digging")
 			continue
 		if ent.built:
+			var done_pos: Vector3 = ent.pos
 			u.erase("digging")
+			_assign_next_line_site(u, done_pos)
 			continue
 		var dur := float(BUILD_TIMES.get(ent.kind, TRENCH_BUILD_TIME))
 		ent.progress = minf(1.0, float(ent.progress) + delta / dur)
@@ -375,17 +380,26 @@ func update(delta: float) -> void:
 
 func _assign_next_line_site(u: Dictionary, from_pos: Vector3) -> void:
 	var best := {}
-	var best_d := 10.0
+	var best_score := INF
 	for e in entries:
-		if e.dead or e.built or int(e.owner) != int(u.owner):
+		if e.dead or e.built or int(e.owner) != int(u.owner) or not _can_build(u, str(e.kind)):
 			continue
 		var d := Vector2(e.pos.x - from_pos.x, e.pos.z - from_pos.z).length()
-		if d < best_d:
-			best_d = d
+		if d > 36.0:
+			continue
+		var claimed := false
+		for other in world.units:
+			if other != u and not other.dead and int(other.owner) == int(u.owner):
+				if is_same(other.get("digging"), e) or is_same(other.get("digging_target"), e):
+					claimed = true
+					break
+		var score := d + (100.0 if claimed else 0.0)
+		if score < best_score:
+			best_score = score
 			best = e
 	if not best.is_empty():
-		u.digging_target = best
 		world.order_move([u], best.pos)
+		u.digging_target = best
 
 func _seat_garrison(ent: Dictionary) -> void:
 	var g: Array = ent.get("garrison", [])
@@ -453,9 +467,11 @@ func cover(target: Dictionary, source: Dictionary) -> float:
 	var is_indirect: bool = source.has("key") and str(source.key) in ["artillery", "mlrs", "himars", "tos1a", "fpvTeam", "coastalDrone", "shaheenDrone", "mortarTeam"]
 	var g_ent = target.get("garrisoned_in")
 	if g_ent != null and typeof(g_ent) == TYPE_DICTIONARY and not g_ent.dead and g_ent.built:
-		if g_ent.kind == "dugout":
-			return 0.32 if is_indirect else 0.25
-		return 0.50 if is_indirect else 0.35
+		var g_reach := (DUGOUT_REACH if g_ent.kind == "dugout" else TRENCH_REACH) + 1.5
+		if Vector2(target.node.position.x - g_ent.pos.x, target.node.position.z - g_ent.pos.z).length() <= g_reach:
+			if g_ent.kind == "dugout":
+				return 0.32 if is_indirect else 0.25
+			return 0.50 if is_indirect else 0.35
 	var best := 1.0
 	var pos: Vector3 = target.node.position
 	for e in entries:
@@ -509,12 +525,40 @@ func export_state() -> Array:
 
 func import_state(data: Array) -> void:
 	for e in entries:
+		for u in e.get("garrison", []).duplicate():
+			if typeof(u) == TYPE_DICTIONARY:
+				u.erase("garrisoned_in")
 		if is_instance_valid(e.get("node")):
 			e.node.queue_free()
 	entries.clear()
+	if world != null:
+		for u in world.units:
+			u.erase("garrisoned_in")
+			u.erase("entering_fort")
+			u.erase("digging")
+			u.erase("digging_target")
 	for row in data:
 		var p: Array = row.get("pos", [0, 0, 0])
 		var ent := _spawn(int(row.get("owner", 0)), Vector3(float(p[0]), float(p[1]), float(p[2])), float(row.get("heading", 0.0)), str(row.get("kind", "trench")), bool(row.get("built", true)))
 		ent.hp = float(row.get("hp", ent.max_hp))
 		ent.progress = float(row.get("progress", 1.0))
 		ent.model.scale.y = 1.0 if ent.built else lerpf(0.15, 1.0, ent.progress)
+		if ent.built and is_shelter(ent.kind) and world != null:
+			var cap := int(GARRISON_CAP.get(ent.kind, 3))
+			var g: Array = []
+			for u in world.units:
+				if g.size() >= cap:
+					break
+				if u.dead or int(u.owner) != int(ent.owner) or u.vehicle or u.get("fly", false) or u.get("naval", false) or u.key == "worker":
+					continue
+				if u.get("garrisoned_in") != null or u.get("garrison_building") != null:
+					continue
+				if Vector2(u.node.position.x - ent.pos.x, u.node.position.z - ent.pos.z).length() <= 3.6:
+					g.append(u)
+					u.garrisoned_in = ent
+					u.target = null
+					u.path = PackedVector3Array()
+			if not g.is_empty():
+				ent.garrison = g
+				_seat_garrison(ent)
+				_refresh_garrison_badge(ent)
