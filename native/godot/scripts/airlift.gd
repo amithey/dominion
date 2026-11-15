@@ -258,6 +258,7 @@ static func order_board(w: Node, selected: Array, heli: Dictionary) -> int:
 					spot = centre
 				heli.pickup_go = spot
 				heli.pickup_since = w.game_time
+				heli.pickup_sweep = false   # it came for these troops only: one whose boarding was cancelled stays put
 				heli.erase("unload_go")
 				_wake_transport(w, heli, spot)
 				meet = spot
@@ -317,6 +318,7 @@ static func order_pickup_at(w: Node, transport: Dictionary, at: Vector3) -> bool
 	var go: Vector3 = plan.get("go", at) if not plan.is_empty() else at
 	transport.pickup_go = go
 	transport.pickup_since = w.game_time
+	transport.pickup_sweep = true   # "Pick up at...": takes any friendly troops it finds there
 	transport.erase("unload_go")
 	_wake_transport(w, transport, go)
 	return true
@@ -432,6 +434,7 @@ static func update(w: Node) -> void:
 			else:
 				if heli.get("pickup_go") == null and heli.get("unload_go") == null and Vector2(a.x - b.x, a.z - b.z).length() > reach:
 					heli.pickup_go = a
+					heli.pickup_sweep = false
 					heli.pickup_since = w.game_time
 					_wake_transport(w, heli, a)
 				meet = heli.get("pickup_go", b)
@@ -452,6 +455,8 @@ static func _pickup_step(w: Node, t: Dictionary) -> void:
 		return
 	t.erase("pickup_go")
 	t.erase("pickup_since")
+	var sweep: bool = bool(t.get("pickup_sweep", true))
+	t.erase("pickup_sweep")
 	var boarded := 0
 	for u in w.units:
 		if u.dead or u.get("stowed", false) or is_same(u, t) or is_transport(u):
@@ -463,7 +468,7 @@ static func _pickup_step(w: Node, t: Dictionary) -> void:
 		if is_same(u.get("board"), t) and dist <= BOARD_REACH + 10.0:
 			embark(w, t, u)
 			boarded += 1
-		elif dist <= BOARD_REACH:
+		elif sweep and dist <= BOARD_REACH:
 			embark(w, t, u)
 			boarded += 1
 	if int(t.owner) == 0 and w.hud != null and boarded > 0:

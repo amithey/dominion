@@ -22,13 +22,18 @@ func run() -> void:
 	w.set_physics_process(false); w.ai.set_physics_process(false)
 	var p: Vector3 = w.land_point(w.start, 70.0)
 	var heli: Dictionary = w.spawn_unit("helicopter", p, 0)
-	var soldier: Dictionary = w.spawn_unit("soldier", p + Vector3(20,0,0), 0)
+	var soldier: Dictionary = w.spawn_unit("soldier", p + Vector3(60,0,0), 0)   # beyond BOARD_REACH (22 m), or he boards at once
 	check(A.order_board(w, [soldier], heli) == 1, "transport accepts a boarding order")
 	w.order_move([soldier], p + Vector3(40,0,0))
 	check(soldier.get("board") == null, "a new move cancels the old boarding order")
 	soldier.node.position = heli.node.position
 	A.update(w)
 	check(not soldier.dead and A.used(heli) == 0, "passing a helicopter after cancellation does not swallow the soldier")
+	# The helicopter flew out for a boarding party that was then cancelled: on arrival it takes only those still boarding.
+	heli.pickup_go = heli.node.position
+	heli.pickup_sweep = false
+	A.update(w)
+	check(not soldier.get("stowed", false) and A.used(heli) == 0, "a pickup for a cancelled boarding does not sweep up the soldier")
 	if soldier.dead: soldier = w.spawn_unit("soldier", p, 0)
 	var enemy: Dictionary = w.spawn_unit("soldier", p + Vector3(30,0,0), 1)
 	A.order_board(w, [soldier], heli)

@@ -1495,8 +1495,7 @@ func ordnance() -> void:
 						loc_parts.append("Loading/Transit ×%d (%.0fs)" % [int(job.count), maxf(0.0, float(job.remaining))])
 			else:
 				loc_parts.append("Shared pool · %d ready launcher(s)" % ready.size())
-			var item_box: VBoxContainer = hud._card(hud.UI.BAD if is_nuke else Color(0, 0, 0, 0))
-			inv_card.add_child(item_box)
+			var item_box: VBoxContainer = hud._card(hud.UI.BAD if is_nuke else Color(0, 0, 0, 0))   # _card already attaches it to the panel
 			var r: HBoxContainer = hud._row(item_box)
 			var badge: String = "[NUCLEAR] " if is_nuke else "[MISSILE] "
 			var label_col: Color = hud.UI.BAD if is_nuke else hud.UI.CREAM
