@@ -25,7 +25,7 @@ extends RefCounted
 ## 2025 once the warheads manoeuvred in the dive; cruise missiles and Shahed
 ## drones: 80-97%.
 
-const DRONES := ["drone", "loiterer", "fpvTeam", "seaDrone", "shahed", "harop", "interceptorDrone"]   # jammable
+const DRONES := ["drone", "loiterer", "fpvTeam", "seaDrone", "shahed", "harop", "interceptorDrone", "heavyBomberDrone", "carrierDrone", "akinci", "wingman"]   # jammable
 const KAMIKAZE := ["loiterer", "seaDrone", "shahed", "harop", "interceptorDrone"]
 const Arsenal := preload("res://scripts/national_arsenal.gd")
 const Future := preload("res://scripts/future_weapons.gd")

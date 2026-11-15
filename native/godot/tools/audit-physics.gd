@@ -135,12 +135,12 @@ func run() -> void:
 	# -- what a transport can carry
 	var helo: Dictionary = {"key": "helicopter", "owner": 0, "dead": false, "cargo": []}
 	for u in ["tank", "apc", "artillery", "samLauncher", "himars"]:
-		var probe: Dictionary = {"key": u, "owner": 0, "dead": false}
+		var probe: Dictionary = {"key": u, "owner": 0, "dead": false, "vehicle": u in w.VEHICLES}
 		if Air.places(w, helo, probe) > 0:
 			K.fail("rule-cargo", "helicopter carries %s" % u, "an ordinary helicopter cannot lift a %s" % u)
 	var chinook: Dictionary = {"key": "heavyLift", "owner": 0, "dead": false, "cargo": []}
 	for u in ["tank", "artillery", "samLauncher", "himars"]:
-		if Air.places(w, chinook, {"key": u, "owner": 0, "dead": false}) > 0:
+		if Air.places(w, chinook, {"key": u, "owner": 0, "dead": false, "vehicle": u in w.VEHICLES}) > 0:
 			K.fail("rule-cargo", "heavy-lift carries %s" % u, "a heavy-lift helicopter cannot carry a main battle tank or a launcher")
 	K.ok("rule-cargo", "helicopters", "no helicopter lifts a tank, an artillery piece or a launcher")
 	for pair in [["helicopter", "soldier", true], ["landingShip", "tank", true], ["landingShip", "soldier", true]]:

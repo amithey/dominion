@@ -1850,7 +1850,13 @@ func order_bombard(selected: Array, point: Vector3) -> void:
 		u.path = PackedVector3Array()
 
 func can_bombard(u: Dictionary) -> bool:
-	return not u.dead and u.dmg > 0 and (u.vehicle or u.key in load("res://scripts/force_catalog.gd").INDIRECT) and not u.key in ["samLauncher", "shortRangeSAM", "aaVehicle", "submarine", "nuclearSub", "missileBoat", "carrier"]   # (a carrier's guns only defend it: its wing strikes what you right-click)
+	if u.dead or u.dmg <= 0:
+		return false
+	if u.key in ["samLauncher", "shortRangeSAM", "aaVehicle", "laserAD", "irisT", "abmLauncher", "saudiThaad", "hpmVehicle", "coastalASM", "submarine", "nuclearSub", "orca", "missileBoat", "carrier", "asFrigate", "landingShip"]:
+		return false
+	if u.vehicle or u.key in load("res://scripts/force_catalog.gd").INDIRECT:
+		return true
+	return u.key in ["attackJet", "bomber", "heavyBomberDrone", "helicopter"]
 
 # ---------------------------------------------------------------- profiler
 # `-- --profile` during a benchmark measures where each frame goes: every
@@ -4807,12 +4813,21 @@ func demolish(b: Dictionary, quiet := false) -> String:
 	b.queue_costs = []
 	b.dead = true
 	b.destroyed = true
+	UrbanGarrison.evacuate(self, b, true)
 	for u in units:
 		if is_same(u.get("build_site"), b):
 			u.build_site = null
 		if not u.dead and is_same(u.get("air_base"), b):
-			u.air_base = null
-			u.slot = -1
+			var was_grounded: bool = str(u.get("air_state", "")) in ["parked", "rearming", "standby", "taxi_out"]
+			AirOperations.release(self, u)
+			if was_grounded and u.get("fly", false):
+				var alt_base = AirOperations.base_for(self, u, b.root.position)
+				if alt_base != null and AirOperations.order_land(self, u, alt_base):
+					u.air_state = "ready"
+				else:
+					u.air_state = "no base"
+					u.stay = false
+				u.node.position.y = maxf(u.node.position.y, height_at(u.node.position.x, u.node.position.z) + 18.0)
 	if b.deposit != null:
 		b.deposit.extractor = null
 		if b.deposit.get("water", false): b.deposit.node.show()
@@ -5416,7 +5431,7 @@ func target_class(t: Dictionary) -> String:
 
 ## Air defence (SAM sites, mobile SAMs, anti-aircraft vehicles) engages only
 ## aircraft in flight: not ground forces, and not aircraft parked on a base.
-const AIR_DEFENCE := ["samSite", "samLauncher", "aaVehicle", "manpads", "laserAD", "irisT"]
+const AIR_DEFENCE := ["samSite", "samLauncher", "aaVehicle", "shortRangeSAM", "manpads", "laserAD", "irisT", "abmLauncher", "saudiThaad"]
 
 ## An aircraft actually in the air (not parked or rearming on its base).
 func airborne(u: Dictionary) -> bool:
@@ -5429,7 +5444,7 @@ func airborne(u: Dictionary) -> bool:
 ## Damage multiplier of `attacker` against `target` (0 = cannot engage).
 func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
 	if not preload("res://scripts/force_catalog.gd").can_target(self, attacker, target): return 0.0
-	if attacker.key == "interceptorDrone" and not (target.get("fly", false) and target.get("key", "") in ["drone", "loiterer", "shahed", "harop", "akinci", "wingman", "interceptorDrone"]): return 0.0
+	if attacker.key == "interceptorDrone" and not (target.get("fly", false) and target.get("key", "") in ["drone", "loiterer", "shahed", "harop", "akinci", "wingman", "interceptorDrone", "heavyBomberDrone", "carrierDrone"]): return 0.0
 	var target_kind: String = target_class(target)
 	if attacker.get("key", "") in AIR_DEFENCE and target_kind != "air":
 		return 0.0

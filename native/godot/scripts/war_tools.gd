@@ -127,6 +127,7 @@ static func update(w: Node, delta: float) -> void:
 			w.spent("      wt " + str(u.key), t_handler)
 	t_lap = w.lap("    wt unit tools", t_lap)
 	_trigger(w, s)
+	_reveal_enemy_mines(w, s)
 	t_lap = w.lap("    wt minefields (%d)" % s.fields.size() if w.profiling else "", t_lap)
 	preload("res://scripts/airlift.gd").update(w)   # troops boarding helicopters
 	t_lap = w.lap("    wt airlift", t_lap)
@@ -273,7 +274,7 @@ static func clear_own_mines_at(w: Node, at: Vector3, owner := 0, radius := 8.0) 
 
 ## The owner sees its own fields as a terrain-conforming disc + visible mine markers; the enemy sees nothing.
 static func _dress(w: Node, f: Dictionary) -> void:
-	if int(f.owner) != 0:
+	if int(f.owner) != 0 and not f.get("revealed", false):
 		return
 	var root := Node3D.new()
 	var y: float = w.height_at(float(f.at.x), float(f.at.z)) if w.has_method("height_at") else float(f.at.y)
@@ -402,6 +403,24 @@ static func _clear(w: Node, s: Dictionary, u: Dictionary, dt: float) -> void:
 				w.hud.notice("ENGINEERS: a line charge cleared an enemy minefield.", f.at)
 			elif int(f.owner) == 0 and w.hud != null:
 				w.hud.notice("MINES: the enemy cleared one of your minefields.", f.at)
+
+## Reveals enemy minefields to the player when mine clearers or scouts approach.
+static func _reveal_enemy_mines(w: Node, s: Dictionary) -> void:
+	if s.fields.is_empty():
+		return
+	var eyes: Array = []
+	for f in s.fields:
+		if int(f.owner) == 0 or f.get("revealed", false):
+			continue
+		if eyes.is_empty():
+			eyes = w.units.filter(func(u): return _alive(u) and int(u.owner) == 0 and u.key in ["mineClearer", "scoutTeam", "reconVehicle"])
+			if eyes.is_empty():
+				return
+		for u in eyes:
+			if Vector2(u.node.position.x - f.at.x, u.node.position.z - f.at.z).length() < CLEAR_REACH * 1.2:
+				f.revealed = true
+				_dress(w, f)
+				break
 
 ## Fields `owner` may see: its own, and enemy fields its clearers or scouts are near.
 static func visible_fields(w: Node, owner: int) -> Array:
@@ -745,9 +764,11 @@ static func _air_wing(w: Node, carrier: Dictionary, dt: float) -> void:
 			wing.aboard = int(wing.aboard) + 1
 	# A lost aircraft is replaced, one at a time, while the carrier lives (the player pays; a rival's navy is not charged).
 	# How many of the wing are flying is a walk over every unit: once a second is often enough for the replacement clock.
-	if w.game_time - float(wing.get("info_time", -9.0)) >= 1.0 or not wing.has("info_cache"):
+	if w.game_time - float(wing.get("info_time", -9.0)) >= 1.0 or not wing.has("info_cache") or int(wing.aboard) != int(wing.get("info_aboard", -1)) or wing.rearming.size() != int(wing.get("info_rearming", -1)):
 		wing.info_cache = wing_info(w, carrier)
 		wing.info_time = w.game_time
+		wing.info_aboard = int(wing.aboard)
+		wing.info_rearming = wing.rearming.size()
 	var info: Dictionary = wing.info_cache
 	if int(info.lost) > 0:
 		wing.replace_in = float(wing.get("replace_in", REPLACE_EVERY)) - dt

@@ -48,6 +48,8 @@ func setup(hud_node: Node) -> void:
 
 ## The width free on the right edge: between the open windows on the left and the Build catalogue on the right.
 func space() -> float:
+	if not is_inside_tree():
+		return 0.0
 	var right := get_viewport_rect().size.x - 12.0
 	if hud._prod != null and hud._prod.visible:
 		right = minf(right, hud._prod.get_global_rect().position.x - 10.0)
@@ -60,6 +62,8 @@ func space() -> float:
 ## Keeps the dock on the right edge, left of the Build catalogue when that is open, and out of the way of any
 ## window on the left: with less than a card's width free only the icons show, with less than an icon's, nothing.
 func _place() -> void:
+	if not is_inside_tree():
+		return
 	var size_now := get_viewport_rect().size
 	var right := size_now.x - 12.0
 	if hud._prod != null and hud._prod.visible:
@@ -206,7 +210,7 @@ func _fill_card(e: Dictionary) -> void:
 	_position_card.call_deferred()
 
 func _position_card() -> void:
-	if _card == null or _card_for.is_empty() or not is_instance_valid(_card_for.chip):
+	if not is_inside_tree() or _card == null or _card_for.is_empty() or not is_instance_valid(_card_for.chip):
 		return
 	_card.reset_size()
 	var chip: Control = _card_for.chip

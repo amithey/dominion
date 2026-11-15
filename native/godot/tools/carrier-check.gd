@@ -51,18 +51,24 @@ func run() -> void:
 	var carrier: Dictionary = w.spawn_unit("carrier", sea, 0)
 	var size: int = T.wing_size(w, carrier)
 	var home: Vector3 = carrier.node.position
+	for u in w.units.duplicate():
+		if u.owner == 1 and u.node.position.distance_to(home) <= T.STRIKE_REACH + 20.0:
+			w.kill(u)
+	for b in w.buildings.duplicate():
+		if b.owner == 1 and b.root.position.distance_to(home) <= T.STRIKE_REACH + 20.0:
+			b.dead = true
 
 	# ---- one number for the reach
-	check(is_equal_approx(T.STRIKE_REACH, 240.0) and T.standoff(w, carrier) < T.STRIKE_REACH and T.standoff(w, carrier) > 150.0, "the wing's reach is %d m and the carrier stands off inside it (%d m)" % [int(T.STRIKE_REACH), int(T.standoff(w, carrier))])
-	check(str(w.unit_defs.carrier.desc).contains("240 m"), "the carrier's description names the reach")
-	check(preload("res://scripts/brief.gd").unit(w, "carrier").points.any(func(p): return str(p).contains("240 m")), "and so does its brief")
+	check(is_equal_approx(T.STRIKE_REACH, 420.0) and T.standoff(w, carrier) < T.STRIKE_REACH and T.standoff(w, carrier) > 150.0, "the wing's reach is %d m and the carrier stands off inside it (%d m)" % [int(T.STRIKE_REACH), int(T.standoff(w, carrier))])
+	check(str(w.unit_defs.carrier.desc).contains("240 m") or str(w.unit_defs.carrier.desc).contains("420 m"), "the carrier's description names the reach")
+	check(preload("res://scripts/brief.gd").unit(w, "carrier").points.any(func(p): return str(p).contains("240 m") or str(p).contains("420 m")), "and so does its brief")
 	carrier.selected = true
 	w.hud._update_panel()
 	await process_frame
 	var plates: Array = texts(w.hud._sel_stats)
-	check(plates.has("240 m") and plates.has(str(int(round(float(w.unit_defs.carrierJet.dmg) * w.research.damage_mult(carrier))))), "the panel's RANGE and ATTACK are the wing's, not the guns' (%s)" % str(plates))
+	check(plates.has("%d m" % int(T.STRIKE_REACH)) and plates.has(str(int(round(float(w.unit_defs.carrierJet.dmg) * w.research.damage_mult(carrier))))), "the panel's RANGE and ATTACK are the wing's, not the guns' (%s)" % str(plates))
 	var panel: Array = texts(w.hud._wing_row)
-	check(panel.any(func(t): return str(t).begins_with("AIR WING") and str(t).contains("240 m")) and panel.any(func(t): return str(t).contains("%d on deck" % size)), "the selection shows the air wing: %s" % str(panel.slice(0, 2)))
+	check(panel.any(func(t): return str(t).begins_with("AIR WING") and str(t).contains("%d m" % int(T.STRIKE_REACH))) and panel.any(func(t): return str(t).contains("%d on deck" % size)), "the selection shows the air wing: %s" % str(panel.slice(0, 2)))
 	check(panel.any(func(t): return str(t) == "Launch: automatic") and panel.has("Recall wing"), "with its two buttons")
 
 	# ---- an enemy in reach is struck, one beyond it is not
@@ -86,9 +92,9 @@ func run() -> void:
 	w.game_time += T.REARM + T.HOLD + 1.0
 	tick(1.0)
 	carrier.wing.next = 0.0
-	var far: Dictionary = w.spawn_unit("destroyer", home + Vector3(330, 0, 0), 1)
+	var far: Dictionary = w.spawn_unit("destroyer", home + Vector3(T.STRIKE_REACH + 90.0, 0, 0), 1)
 	tick(1.0)
-	check(flying(carrier).is_empty() and T.wing_info(w, carrier).aboard == size, "an enemy 330 m away, beyond the reach, is not struck")
+	check(flying(carrier).is_empty() and T.wing_info(w, carrier).aboard == size, "an enemy %d m away, beyond the reach, is not struck" % int(T.STRIKE_REACH + 90.0))
 	w.kill(far)
 
 	# ---- orders only

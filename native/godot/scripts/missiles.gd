@@ -705,6 +705,8 @@ func _launch_ready(key: String, target: Vector3, platform: Dictionary, automated
 		if reason != "":
 			return {"error": reason}
 		platform.erase("patrol")
+		if str(platform.get("air_state", "")) in ["returning", "no base"]:
+			platform.air_state = "ready"
 		platform.payload_order = {"key": key, "target": target, "automatic": automated_release}
 		platform.target = target
 		platform.enemy = null

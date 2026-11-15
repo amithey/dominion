@@ -41,7 +41,7 @@ const EVENTS := {
 		"income": {"saudi": -0.25, "iraq": -0.25, "iran": -0.15, "japan": -0.12, "south_korea": -0.12, "india": -0.1, "china": -0.08, "pakistan": -0.08, "germany": -0.05, "netherlands": -0.05, "italy": -0.05, "france": -0.05,
 			"usa": 0.04, "russia": 0.08, "brazil": 0.04, "australia": 0.03},
 		"happiness": {"japan": -3.0, "south_korea": -3.0, "india": -2.0},
-		"why": "about a fifth of the world's oil and of its LNG passes the strait; 69% of that oil goes to China, India, Japan and South Korea"},
+		"why": "About a fifth of the world's oil and of its LNG passes the strait; 69% of that oil goes to China, India, Japan and South Korea"},
 	"grain": {"name": "Black Sea grain stops",
 		"prices": {"food": 0.5},
 		"income": {"egypt": -0.08, "pakistan": -0.04, "indonesia": -0.03, "iraq": -0.04, "syria": -0.05, "saudi": -0.02,
@@ -61,12 +61,12 @@ const EVENTS := {
 	"recession": {"name": "Global recession",
 		"prices": {"oil": -0.2, "iron": -0.2, "silicon": -0.1},
 		"income": {"*": -0.06},
-		"why": "a war between two of the world's largest economies breaks the trade that binds them"},
+		"why": "A war between two of the world's largest economies breaks the trade that binds them"},
 	"nuclear": {"name": "Nuclear crisis",
 		"prices": {"oil": 0.3, "food": 0.2, "iron": 0.1},
 		"income": {"*": -0.05},
 		"happiness": {"*": -4.0},
-		"why": "the threat of nuclear war shakes the markets, and a nuclear explosion would stop the world's trade"},
+		"why": "The threat of nuclear war shakes the markets, and a nuclear explosion would stop the world's trade"},
 	"chips": {"name": "Global chip shortage",
 		"prices": {"silicon": 0.6},
 		"income": {"south_korea": 0.05, "japan": 0.03, "usa": 0.01, "germany": -0.02, "netherlands": -0.02, "italy": -0.02, "france": -0.02, "india": -0.02},
@@ -75,7 +75,7 @@ const EVENTS := {
 	"arms_boom": {"name": "Arms boom",
 		"prices": {"iron": 0.15},
 		"income": {"usa": 0.04, "russia": 0.03, "germany": 0.03, "netherlands": 0.03, "italy": 0.03, "france": 0.03, "israel": 0.04, "south_korea": 0.04, "turkiye": 0.04, "china": 0.02},
-		"why": "three wars at once: the arms exporters' order books fill"},
+		"why": "Three wars at once: the arms exporters' order books fill"},
 }
 
 var w: Node

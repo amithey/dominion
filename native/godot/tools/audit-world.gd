@@ -240,13 +240,13 @@ func run() -> void:
 	for measure in ["economic", "embargo", "targeted", "nonproliferation", "icc", "force", "peacekeeping", "ceasefire", "withdraw", "lift"]:
 		K.take_errors()
 		w.power_effects.clear()
-		UN.authorised.clear(); UN.indicted.clear(); UN.missions.clear(); UN.demands.clear()
+		UN.authorised.clear(); UN.indicted.clear(); UN.missions.clear(); UN.demands.clear(); UN.compliance.clear()
 		var before := {"income": UN.production_mult(3), "closed": UN.market_closed(3, "oil"), "under": UN.under(3, measure)}
 		var dr := {"kind": "violation", "measure": measure, "target": 3, "other": 2, "by": 1, "cause": "audit", "votes": {}, "lobby": {}, "title": "audit", "player_choice": "", "number": 9000, "result": "adopted"}
 		d.declare_war(2, 3)
 		UN._enforce(dr)
 		var after := {"income": UN.production_mult(3), "closed": UN.market_closed(3, "oil"), "under": UN.under(3, measure)}
-		var seen: bool = before != after or UN.authorised.has(3) or UN.indicted.has(3) or not UN.missions.is_empty() or not UN.demands.is_empty() or not d.at_war(2, 3)
+		var seen: bool = before != after or UN.authorised.has(3) or UN.indicted.has(3) or not UN.missions.is_empty() or not UN.demands.is_empty() or not UN.compliance.is_empty() or not d.at_war(2, 3)
 		if measure in ["lift"]: seen = true
 		if K.clean("un-effect", measure):
 			if seen:

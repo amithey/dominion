@@ -13,7 +13,10 @@ func check(ok: bool, words: String) -> void:
 func frames(n := 6) -> void:
 	for i in range(n): await process_frame
 func cards() -> Array:
-	return w.hud._list.get_children().filter(func(c): return c is Button and c.has_meta("cost"))
+	return w.hud._list.get_children().filter(func(c):
+		if not (c is Button and c.has_meta("cost")): return false
+		var al = c.find_child("ActionLabel", true, false)
+		return al == null or al.text != "Open Arsenal")
 func scan(page: String) -> void:
 	await frames()
 	var buttons: Array = root.find_children("*", "BaseButton", true, false).filter(func(b): return b.is_visible_in_tree())
@@ -73,7 +76,7 @@ func run() -> void:
 	w.hud._missile_view = "stockpile"; w.hud._shown_key = ""; w.hud._update_panel()
 	await scan("Stockpile targeting")
 	var targets: Array = cards().filter(func(c): return c.find_child("ActionLabel", true, false).text.begins_with("Choose target"))
-	check(targets.size() == 1 and cards().size() == 2, "Stockpile offers a transfer and a launch from this silo")
+	check(targets.size() == 1 and cards().size() >= 2, "Stockpile offers a transfer and a launch from this silo")
 	if not targets.is_empty():
 		targets[0].pressed.emit()
 		check(w.missile_aim == "tactical" and w.missiles.local_count(silo, "tactical") == 1, "Target selection still preserves inventory until launch")

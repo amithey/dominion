@@ -321,6 +321,7 @@ func render() -> void:
 	for value in ballots:
 		ballots[value].text = ("✓  " if choice == value else "") + texts[value]
 		ballots[value].disabled = reason != ""
+		ballots[value].tooltip_text = reason   # why the ballot is shut (empty while it is open)
 	result_label.text = ""
 	result_label.visible = done
 	if done:
