@@ -1342,7 +1342,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 		"key": key, "hp": float(def.hp), "max_hp": float(def.hp), "dmg": float(def.dmg),
 		"speed": float(def.speed) if def.has("speed") else unit.speed,
 		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
-		"reload": randf() * minf(float(def.cooldown), 3.0), "search": randf() * 0.35, "enemy": null,
+		"reload": randf() * minf(float(def.cooldown), 0.25), "search": randf() * 0.35, "enemy": null,
 		"attack_move": false, "dead": false, "dead_time": 0.0, "stance": "",
 		"path": PackedVector3Array(), "path_goal": Vector3.INF, "repath": 0.0, "build_site": null,
 		"engine_kind": _engine_kind(key, false, false, false),
@@ -1580,7 +1580,7 @@ func spawn_craft(key: String, at: Vector3, owner: int) -> Dictionary:
 		"altitude": {"attackJet": 22.0, "lightFighter": 26.0, "scoutHelicopter": 21.0}.get(key, ALTITUDE.get(key, preload("res://scripts/war_tools.gd").ALTITUDE.get(key, 0.0))), "bank": 0.0, "length": length,
 		"key": key, "hp": float(def.hp), "max_hp": float(def.hp), "dmg": float(def.dmg),
 		"range": float(def.range), "cooldown": float(def.cooldown), "aggro": float(def.get("aggro", def.range)),
-		"reload": randf() * minf(float(def.cooldown), 3.0), "search": randf() * 0.35, "enemy": null,
+		"reload": randf() * minf(float(def.cooldown), 0.25), "search": randf() * 0.35, "enemy": null,
 		"attack_move": false, "dead": false, "dead_time": 0.0, "stance": "",
 		"path": PackedVector3Array(), "path_goal": Vector3.INF, "repath": 0.0, "build_site": null,
 		"engine_kind": _engine_kind(key, naval, key in AIR, parts.rotor != null or not parts.get("tail_rotors", []).is_empty()),
@@ -2600,6 +2600,8 @@ func start_match(difficulty: String) -> void:
 	else:
 		fortifications = preload("res://scripts/fortifications.gd").new()
 		fortifications.setup(self)
+	if ai != null:
+		ai._hq_cache.clear()
 	preload("res://scripts/war_tools.gd").restore(self, {})
 	hud.notice("%s difficulty. Build your economy, link your towns, and hold your capital." % difficulty.capitalize())
 	hud.start_guide()
@@ -2690,6 +2692,8 @@ func clear_match() -> void:
 		wmd.restore({})
 	if battle_scars != null and battle_scars.has_method("clear"):
 		battle_scars.clear()
+	if ai != null:
+		ai._hq_cache.clear()
 	preload("res://scripts/war_tools.gd").restore(self, {})
 
 func rebuild_nav_mesh() -> int:

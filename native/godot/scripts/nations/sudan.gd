@@ -6,7 +6,7 @@ const DATA := {
 	"arsenal": "sudan",
 	"name": "Sudan",
 	"leader": "Sovereign Council Chairman Abdel Fattah al-Burhan",
-	"colour": "#b39160",
+	"colour": "#9a9168",
 	"portrait": "sudan",
 	"signature": "Reconstruction Engineers",
 	"doctrine": "Reconstruction: farming and engineering help recover from war. Pay to repair damaged buildings near the capital. Not the same nation as South Sudan.",

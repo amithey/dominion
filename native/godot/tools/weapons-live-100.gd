@@ -571,6 +571,8 @@ func run() -> void:
 	check(w.economy.res.money < cash, "and charges the treasury")
 	w.research.progress.goldenDome.stage = 0
 	w.research._recompute()
+	if w.match_stopped():
+		w.continue_after_end()
 
 	# ---------------------------------------------------------------- rival nations field them
 	var red: Dictionary = {}

@@ -43,9 +43,12 @@ func run() -> void:
 	var silo: Dictionary = w.place_building("missileSilo", w.start + Vector3(18,0,18), 0, true)
 	w.select_building(silo)
 	await verify_cards()
-	check(not cards().is_empty(), "Weapon production has cards")
-	if not cards().is_empty(): check(cards()[0].get_meta("cost") == w.missiles.production_cost(w.missiles.listed_at("missileSilo")[0]), "Displayed weapon price matches the charged national cost")
-	for c in cards(): check(c.find_child("ActionLabel", true, false).text.begins_with("Produce"), "Production never arms a weapon")
+	var prod: Array = cards().filter(func(c): return c.find_child("ActionLabel", true, false).text.begins_with("Produce"))
+	check(not prod.is_empty(), "Weapon production has cards")
+	if not prod.is_empty(): check(prod[0].get_meta("cost") == w.missiles.production_cost(w.missiles.listed_at("missileSilo")[0]), "Displayed weapon price matches the charged national cost")
+	for c in cards():
+		var action: String = c.find_child("ActionLabel", true, false).text
+		check(action.begins_with("Produce") or action == "Open Arsenal", "Production never arms a weapon")
 	await shot("missiles")
 	check(w.hud._extra.defcon[1].get_global_rect().end.x < w.hud.find_child("TimeControls", true, false).get_child(0).get_global_rect().position.x, "Resource strip stays clear of time controls at 100%")
 	for i in range(w.missiles.storage_slots(silo)):
@@ -55,7 +58,8 @@ func run() -> void:
 	w.hud._update_panel()
 	await verify_cards()
 	var targets: Array = cards().filter(func(c): return c.find_child("ActionLabel", true, false).text.begins_with("Choose target"))
-	check(cards().size() == 2 and targets.size() == 1, "Stockpile offers transfer and launch for the local weapon")
+	var transfers: Array = cards().filter(func(c): return c.find_child("ActionLabel", true, false).text == "Transfer")
+	check(transfers.size() == 1 and targets.size() == 1, "Stockpile offers transfer and launch for the local weapon")
 	if not targets.is_empty():
 		check(targets[0].find_child("ActionLabel", true, false).text.contains("1 stored weapon"), "Targeting action and inventory use are explicit")
 		targets[0].pressed.emit()

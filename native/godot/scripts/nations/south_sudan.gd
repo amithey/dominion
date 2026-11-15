@@ -6,7 +6,7 @@ const DATA := {
 	"arsenal": "south_sudan",
 	"name": "South Sudan",
 	"leader": "President Salva Kiir Mayardit",
-	"colour": "#6285b3",
+	"colour": "#626fb3",
 	"portrait": "south-sudan",
 	"signature": "Oil Transit Contract",
 	"doctrine": "Oil and transit: sell real oil stocks through a paid deal with Sudan. Both need working extractors; war or lost sites cancel it and refund. Landlocked, small roster.",

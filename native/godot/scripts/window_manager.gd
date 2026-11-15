@@ -73,8 +73,10 @@ func _set_position(panel: Control, at: Vector2) -> void:
 	panel.position = at
 	panel.size = dimensions
 
-func reflow(panel: Control) -> void:
-	if not is_instance_valid(panel) or not panel.visible: return
+func reflow(raw_panel) -> void:
+	if not is_instance_valid(raw_panel) or not (raw_panel is Control): return
+	var panel: Control = raw_panel
+	if not panel.visible: return
 	var view := get_viewport().get_visible_rect().size
 	var at := Vector2(clampf(panel.position.x, EDGE, maxf(EDGE, view.x - panel.size.x - EDGE)),
 		clampf(panel.position.y, TOP, maxf(TOP, view.y - panel.size.y - EDGE)))
@@ -86,8 +88,9 @@ func _resize() -> void:
 	for panel in windows.values():
 		if is_instance_valid(panel): reflow.call_deferred(panel)
 
-func place_alert(panel: Control) -> void:
-	if not is_instance_valid(panel): return
+func place_alert(raw_panel) -> void:
+	if not is_instance_valid(raw_panel) or not (raw_panel is Control): return
+	var panel: Control = raw_panel
 	var id: String = str(panel.get_meta("window_id"))
 	if positions.has(id):
 		_set_position(panel, positions[id])

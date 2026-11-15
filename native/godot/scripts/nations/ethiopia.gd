@@ -6,7 +6,7 @@ const DATA := {
 	"arsenal": "ethiopia",
 	"name": "Ethiopia",
 	"leader": "Prime Minister Abiy Ahmed",
-	"colour": "#66a465",
+	"colour": "#6ebe58",
 	"portrait": "ethiopia",
 	"signature": "Hydropower Grid",
 	"doctrine": "Hydropower and corridors: farms feed a growing population, and a powered plant can sell grid contracts to a partner. Landlocked: no ports or navy.",

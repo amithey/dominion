@@ -15,8 +15,10 @@ func _scan(node: Node) -> void:
 func _added(node: Node) -> void:
 	if node is BaseButton: _register.call_deferred(node)
 
-func _register(button: BaseButton) -> void:
-	if not is_instance_valid(button) or button.has_meta("copy_registered"): return
+func _register(raw_button) -> void:
+	if not is_instance_valid(raw_button) or not (raw_button is BaseButton): return
+	var button: BaseButton = raw_button
+	if button.has_meta("copy_registered"): return
 	button.set_meta("copy_registered", true)
 	registered += 1
 	button.mouse_entered.connect(func(): update(button))

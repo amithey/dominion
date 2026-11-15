@@ -6,7 +6,7 @@ const DATA := {
 	"arsenal": "indonesia",
 	"name": "Indonesia",
 	"leader": "President Prabowo Subianto",
-	"colour": "#ed6550",
+	"colour": "#f55368",
 	"portrait": "prabowo",
 	"signature": "KCR-60",
 	"doctrine": "Commodity power: fishing and cheap ports support villages, and nickel and palm oil exports can be cut. Fast KCR-60 boats strike ships, then retreat.",

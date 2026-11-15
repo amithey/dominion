@@ -6,7 +6,7 @@ const DATA := {
 	"arsenal": "gold",
 	"name": "Iran",
 	"leader": "President Masoud Pezeshkian",
-	"colour": "#e8a83a",
+	"colour": "#f59f3d",
 	"portrait": "pezeshkian",
 	"signature": "Shahed Launcher",
 	"doctrine": "Drone saturation: the Shahed launcher fires five drones a salvo to overwhelm defences, but each drone is fragile and slow.",

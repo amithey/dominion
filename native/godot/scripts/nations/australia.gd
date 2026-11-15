@@ -6,7 +6,7 @@ const DATA := {
 	"arsenal": "australia",
 	"name": "Australia",
 	"leader": "Prime Minister Anthony Albanese",
-	"colour": "#628a9e",
+	"colour": "#3a7a9e",
 	"portrait": "albanese",
 	"signature": "Bushmaster",
 	"doctrine": "Resource frontier: iron and uranium fund a compact army and mineral pacts. Bushmasters resist blasts but lack anti-tank firepower.",

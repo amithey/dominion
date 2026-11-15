@@ -7,7 +7,7 @@ const DATA := {
 	"arsenal": "netherlands",
 	"name": "Netherlands",
 	"leader": "Prime Minister Rob Jetten",
-	"colour": "#d98c5f",
+	"colour": "#f28a6a",
 	"portrait": "jetten",
 	"signature": "Chip Equipment Embargo",
 	"doctrine": "Trading hub: Europe's biggest port, the machines that make advanced chips, and a small, well-equipped army inside its neighbours'. Little land or energy; a minority government.",

@@ -6,7 +6,7 @@ const DATA := {
 	"arsenal": "pakistan",
 	"name": "Pakistan",
 	"leader": "Prime Minister Shehbaz Sharif",
-	"colour": "#6c9560",
+	"colour": "#48ae45",
 	"portrait": "sharif",
 	"signature": "JF-17 Thunder",
 	"doctrine": "Defence pacts: affordable fighters and fast infantry recruitment; a mutual defence pact makes a friend an ally.",

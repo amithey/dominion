@@ -488,7 +488,7 @@ static func ignite(w: Node, b: Dictionary, intensity: float, by_owner := -1, fro
 		var fires := burning_of(w, 0).size()
 		var suffix := " — build a Fire Station or it will spread." if stations == 0 else (" — Fire Station crews overwhelmed (%d fires / %d crews)." % [fires, crews] if fires > crews else " — Fire Station crews responding.")
 		var msg := ("%s caught fire from nearby flames" if from_spread else "%s is on fire") % str(b.def.name) + suffix
-		w.sitrep.record("attack", "crit" if stations == 0 or fires > crews else "warn", "fire:0:%s" % ("spread" if from_spread else str(b.key)), msg, b.root.position)
+		w.sitrep.record("econ", "crit" if stations == 0 or fires > crews else "warn", "fire:0:%s" % ("spread" if from_spread else str(b.key)), msg, b.root.position)
 	return true
 
 ## Called from world.damage() whenever a living building takes damage.

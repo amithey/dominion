@@ -80,9 +80,9 @@ static func best(w: Node, owner: int, key: String, options: Array) -> Variant:
 				d = e
 				c = other
 		var score := 0.0
-		if d < span[0]: score -= (span[0] - d) * 2.5
-		elif d > span[1]: score -= (d - span[1]) * 1.5
-		else: score += 1.0
+		if d < span[0]: score -= (span[0] - d) * 3.8
+		elif d > span[1]: score -= (d - span[1]) * 2.5
+		else: score += 2.2
 		var dq: int = hex.x - c.x
 		var dr: int = hex.y - c.y
 		match style:
@@ -91,8 +91,8 @@ static func best(w: Node, owner: int, key: String, options: Array) -> Variant:
 			"compact":
 				score -= d * 0.6
 			"axial":
-				score -= absi(dr) * 0.3   # drawn out along the avenue (the q axis), without becoming a line
-				if dr == 0: score += 0.6
+				score -= absi(dr) * 0.90   # drawn out along the avenue (the q axis), without becoming a line
+				if dr == 0: score += 0.90
 			"linear":
 				score -= absi(dr) * 0.6
 			_:

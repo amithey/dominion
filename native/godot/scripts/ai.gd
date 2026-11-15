@@ -146,6 +146,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 		elif preload("res://scripts/progression.gd").building_blocked(world, n.id, key) != "":
 			key = pick_building(n)   # not open yet in its era: something that is, and the opening waits
 		var def: Dictionary = world.building_defs.get(key, {})
+		var built_or_skipped := false
 		if not def.is_empty():
 			var cost := weighted_cost(preload("res://scripts/additional_factions.gd").building_cost(world, n.id, key, def.get("base_cost", def.cost)))
 			if n.money >= cost:
@@ -158,15 +159,23 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 					world.refresh_streets()
 					if n.build_idx < build_order.size():
 						n.build_idx += 1
+					built_or_skipped = true
 				elif n.build_idx < build_order.size():
 					n.build_idx += 1  # no room for this one: move on
+					built_or_skipped = true
 				else:
 					# No room for it now: set it aside for 90 s, so one building
 					# that fits nowhere does not stop all the others.
 					if not n.has("no_room"): n.no_room = {}
 					n.no_room[key] = float(n.get("age", 0.0)) + 90.0
-		var total: int = world.buildings.filter(func(b): return b.owner == n.id and not b.dead).size()
-		n.next_build = maxf(6.0, float(row(n).buildEvery) * randf_range(0.7, 1.1) - total * 0.3) / s
+					n.next_build = 1.0 / s
+			else:
+				n.next_build = 4.0 / s
+		else:
+			built_or_skipped = true
+		if built_or_skipped:
+			var total: int = world.buildings.filter(func(b): return b.owner == n.id and not b.dead).size()
+			n.next_build = maxf(6.0, float(row(n).buildEvery) * randf_range(0.7, 1.1) - total * 0.3) / s
 
 	# Land: a nation with money to spare buys some at its town halls (as the player does).
 	if n.money > 3500.0 and world.territory != null and randf() < delta * s * 0.02:
@@ -197,12 +206,13 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 			if not options.is_empty():
 				var key: String = preload("res://scripts/war_tools.gd").ai_pick(world, n.id, options)   # its navy keeps a fleet
 				var cost := weighted_cost(world.unit_defs[key].cost) * preload("res://scripts/national_profile.gd").cost_mult(world, n.id, key)
-				# Money for the next building is kept back, unless the nation is at
-				# war or has hardly an army: a state that only trains never grows.
+				# Money for the next building is kept back once the nation has a basic army
+				# (6 units in wartime, 4 in peace): otherwise wartime training drains every dollar
+				# and deadlocks construction of shipyards, factories, and new towns.
 				var at_war: bool = not world.diplomacy.enemies_of(n.id).is_empty()
 				var next_key: String = build_order[n.build_idx] if n.build_idx < build_order.size() else pick_building(n)
 				var next_def: Dictionary = world.building_defs.get(next_key, {"cost": {}})
-				var reserve: float = 0.0 if at_war or army.size() < 4 else weighted_cost(preload("res://scripts/additional_factions.gd").building_cost(world, n.id, next_key, next_def.get("base_cost", next_def.cost)))
+				var reserve: float = 0.0 if army.size() < (6 if at_war else 4) else weighted_cost(preload("res://scripts/additional_factions.gd").building_cost(world, n.id, next_key, next_def.get("base_cost", next_def.cost)))
 				if n.money - cost >= reserve:
 					if deploy(n.id,key):
 						n.money -= cost
@@ -407,7 +417,7 @@ func pick_building(n: Dictionary) -> String:
 	if n.get("wants_coast", false) and not n.get("coast_town_made", false) and preload("res://scripts/ai_navy.gd").state(n).get("needs_sea", false) and float(n.get("no_room", {}).get("villageCenter", 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, "villageCenter") and preload("res://scripts/progression.gd").building_blocked(world, n.id, "villageCenter") == "":
 		n.coast_town_made = true   # (one attempt: the next one is not founded whether or not it found the shore)
 		return "villageCenter"
-	if villages + cities < total / 11:
+	if villages + cities < total / 7:
 		var town := "cityCenter" if cities * 2 < villages else "villageCenter"
 		if float(n.get("no_room", {}).get(town, 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, town) and preload("res://scripts/progression.gd").building_blocked(world, n.id, town) == "":
 			return town
@@ -423,7 +433,7 @@ func pick_building(n: Dictionary) -> String:
 	# Its AI (ai_directorate.gd): data centres as its technology and national
 	# compute allow, and a Targeting Fusion Cell once it has military AI.
 	var compute_rating: int = preload("res://scripts/ai_data.gd").rating(world, n.id, "compute")
-	var wanted_dc: int = 0 if tech < 4.0 else (2 if tech >= 6.0 and compute_rating >= 3 else 1)
+	var wanted_dc: int = 0 if tech < 5.0 else (2 if tech >= 6.0 and compute_rating >= 3 else 1)
 	if preload("res://scripts/ai_data.gd").ceiling(world, n.id) <= 0:
 		wanted_dc = 0   # no basis for AI at all (ai_data.gd ceiling)
 	var wanted_cell: int = 1 if tech >= 5.0 and world.get("directorate") != null and world.directorate != null and world.directorate.level(n.id) >= 3 else 0
@@ -433,9 +443,9 @@ func pick_building(n: Dictionary) -> String:
 	var yards: int = 0
 	if sea_war:
 		yards = 1
-	elif navy_rating >= 0.25 and tech >= 1.0 and (not world.diplomacy.enemies_of(n.id).is_empty() or total >= 14):
+	elif navy_rating >= 0.25 and tech >= 1.0 and (not world.diplomacy.enemies_of(n.id).is_empty() or total >= 21):
 		yards = 1 if navy_rating < 0.7 or tech < 4.0 else 2
-	for fac in [["missileSilo", 1 if tech >= 2.0 else 0], ["strategicComplex", wanted_complexes], ["specialLab", 1 if tech >= 4.0 else 0], ["aiDataCenter", wanted_dc], ["fusionCell", wanted_cell], ["shipyard", yards]]:
+	for fac in [["missileSilo", 1 if tech >= 5.0 else 0], ["strategicComplex", wanted_complexes], ["specialLab", 1 if tech >= 5.0 else 0], ["aiDataCenter", wanted_dc], ["fusionCell", wanted_cell], ["shipyard", yards]]:
 		var fkey: String = fac[0]
 		if int(counts.get(fkey, 0)) < int(fac[1]) and world.building_defs.has(fkey) and NV.builds(world, n.id, fkey) and preload("res://scripts/progression.gd").building_blocked(world, n.id, fkey) == "" and float(n.get("no_room", {}).get(fkey, 0.0)) <= float(n.get("age", 0.0)):
 			return fkey
@@ -499,7 +509,7 @@ func find_spot(n: Dictionary, home: Dictionary, key: String):
 		towns.shuffle()
 		var coast: bool = n.get("wants_coast", false)
 		for town in towns.slice(0, 4 if not coast else 8):
-			for attempt in range(12 if not coast else 40):
+			for attempt in range(24 if not coast else 40):
 				var a := randf() * TAU
 				var at: Vector3 = world.snap_to_hex(town.root.position + Vector3(cos(a), 0, sin(a)) * randf_range(62.0, 105.0 if not coast else 150.0))
 				if coast and not world.coast_near(at, world.logistics.radius * 2.6):

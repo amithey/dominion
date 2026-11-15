@@ -185,7 +185,7 @@ func run() -> void:
 	e.heat[3] = 0.0
 	e.debuffs[3] = {}
 	var best: float = e.success_chance("openSources", 3)
-	check(worst >= 0.05 and best <= 0.95, "the odds never fall below 5% nor pass 95% (%.0f%%, %.0f%%)" % [worst * 100, best * 100])
+	check(worst >= 0.05 and best <= 0.95, "the odds never fall below 5%% nor pass 95%% (%.0f%%, %.0f%%)" % [worst * 100, best * 100])
 	e.network[3] = fresh.network
 	e.heat[3] = fresh.heat
 	var agency_p: float = e.success_chance("stealFunds", 3)

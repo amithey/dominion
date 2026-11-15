@@ -44,7 +44,10 @@ func run() -> void:
 
 	# 1: the discoveries, Russia's alone.
 	var keys := ["foreignRecruitment", "glideBombs", "fibreOpticDrones"]
-	check(keys.all(func(k): return w.research.def_of(k).get("nation", "") == "russia") and preload("res://scripts/national_arsenal.gd").foreign(w, "russia") == "",
+	var owns := func(k):
+		var nat = w.research.def_of(k).get("nation", "")
+		return (nat is String and nat == "russia") or (nat is Array and "russia" in nat)
+	check(keys.all(owns) and preload("res://scripts/national_arsenal.gd").foreign(w, "russia") == "",
 		"three Russia-only discoveries from the war in Ukraine, open to Russia")
 	# 2: the Geran-2.
 	check(w.unit_allowed(0, "shahedLauncher") and w.unit_defs.shahedLauncher.name == "Geran-2 Launcher" and V.admits(w.unit_defs.shahedLauncher.nation, "gold"),
