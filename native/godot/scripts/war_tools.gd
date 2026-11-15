@@ -378,9 +378,9 @@ static func _trigger(w: Node, s: Dictionary) -> void:
 				w.effects.explosion(p + Vector3.UP * 0.5, 1.2 if kind == "ap" else 1.8, true)
 			f.charges = int(f.charges) - 1
 			if int(u.owner) == 0 and w.hud != null:
-				w.hud.notice("MINES: your %s ran into an enemy minefield!" % str(w.unit_defs.get(u.key, {}).get("name", u.key)), p)
+				w.hud.notice("MINES: your %s ran into an enemy minefield." % str(w.unit_defs.get(u.key, {}).get("name", u.key)), p)
 			elif o == 0 and w.hud != null:
-				w.hud.notice("MINES: enemy %s struck your minefield!" % str(w.unit_defs.get(u.key, {}).get("name", u.key)), p)
+				w.hud.notice("MINES: enemy %s struck your minefield." % str(w.unit_defs.get(u.key, {}).get("name", u.key)), p)
 			if int(f.charges) <= 0:
 				_remove(s, f)
 				break

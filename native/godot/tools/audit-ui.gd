@@ -76,6 +76,9 @@ func walk(name: String, opener: Callable, root_of: Callable, only := [], cap := 
 		var key := "%s [%d] %s" % [name, i, label]
 		if b.disabled:
 			continue
+		if b is LinkButton:
+			K.ok("ui", key, "exists, not pressed (opens a web page)")
+			continue
 		if _skip_re.search(label) != null or (not only.is_empty() and not label in only):
 			K.ok("ui", key, "exists, not pressed (destructive or leaves the surface)")
 			continue

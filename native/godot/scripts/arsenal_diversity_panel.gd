@@ -110,7 +110,8 @@ static func draw(panel: RefCounted) -> void:
 		link.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		var url: String = Data.source(source)[1]
 		link.tooltip_text = url
-		link.pressed.connect(func(): OS.shell_open(url))
+		link.pressed.connect(func():
+			if DisplayServer.get_name() != "headless" and not Array(OS.get_cmdline_user_args()).any(func(a): return str(a).begins_with("--")): OS.shell_open(url))   # automated checks never open a browser
 		sources.add_child(link)
 
 ## The game's text names no years (the source's date is in its link and the research doc):

@@ -3994,7 +3994,7 @@ func ui_test() -> void:
 	if not silo.is_empty():
 		select_building(silo[0])
 		hud._update_panel()
-		var bars: Array = hud._list.get_children().filter(func(b): return b is Button)
+		var bars: Array = hud._list.get_children().filter(func(b): return b is Button and not b.find_children("*", "Label", true, false).any(func(l): return l.text == "Strategic Arsenal & Payloads"))
 		checks["the silo lists its %d missiles" % missiles.listed_at("missileSilo").size()] = bars.size() >= missiles.listed_at("missileSilo").size()
 		bars[0].pressed.emit()
 		checks["a missile bar queues a missile"] = silo[0].queue.size() == 1

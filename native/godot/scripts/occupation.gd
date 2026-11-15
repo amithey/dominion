@@ -92,14 +92,16 @@ func deploy(zone: Dictionary, army: Array) -> void:
 	if army.is_empty():
 		return
 	var t: Node = world.territory
-	var targets: Array = zone.cells.filter(func(i): return t.owner_of[i] != zone.owner and world.open_ground(t.center(i)))
+	var targets: Array = zone.cells.filter(func(i): return t.owner_of[i] >= 0 and t.owner_of[i] != zone.owner and world.open_ground(t.center(i)))
+	if targets.is_empty():
+		targets = zone.cells.filter(func(i): return t.owner_of[i] != zone.owner and world.open_ground(t.center(i)))
 	# Nearest cells first, so the advance rolls forward from where the army is.
 	var from: Vector3 = army[0].node.position
 	targets.sort_custom(func(a, b): return t.center(a).distance_to(from) < t.center(b).distance_to(from))
 	if targets.is_empty():
 		world.order_move(army, zone.centre, true)
 		return
-	var parties := mini(targets.size(), maxi(1, army.size() / 2))
+	var parties := mini(targets.size(), maxi(1, army.size() / 4))
 	for p in range(parties):
 		var party: Array = []
 		for k in range(p, army.size(), parties):

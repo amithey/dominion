@@ -535,7 +535,7 @@ func tick() -> void:
 		elif fight:
 			control[i] = clampf(control[i] - maxf(0.5, (best_w - second_w * 0.45) * 0.18), 0.0, 100.0)
 		else:
-			control[i] = clampf(control[i] - maxf(1.2, best_w * 0.5), 0.0, 100.0)
+			control[i] = clampf(control[i] - maxf(1.8, best_w * 0.65), 0.0, 100.0)
 			if control[i] <= 1.0:
 				var lost_by := owner_of[i]
 				owner_of[i] = best

@@ -170,7 +170,7 @@ func run() -> void:
 			continue
 		w.select_building(building)
 		await frames(8)
-		var portraits := pics(hud._list)
+		var portraits := pics(hud._list).filter(func(c): return str(c.get_meta("portrait_key")) != facility)
 		check(not portraits.is_empty() and portraits.all(func(c): return str(c.get_meta("portrait_key")).begins_with("missile:")), "%s production uses payload portraits" % facility)
 		var keys: Array = w.missiles.listed_at(facility)
 		if not keys.is_empty():
