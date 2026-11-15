@@ -522,7 +522,7 @@ func _sites(owner: int, key: String) -> Array:
 func launchers_text(key: String, owner := 0) -> String:
 	if category(key) == "nuclear":
 		if key == "poseidon":
-			return "a Submarine or Nuclear Submarine"
+			return "a submarine or nuclear submarine"
 		if key in ["bunkerBuster", "tsarBomba"]:
 			return "a Bomber, Raider, Stealth Fighter or Jet"
 		return "a Submarine, Missile Ship (Destroyer/Cruiser), Bomber, Missile Silo or Strategic Complex"

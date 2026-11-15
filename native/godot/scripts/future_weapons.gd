@@ -358,10 +358,10 @@ static func follow(w: Node, u: Dictionary) -> void:
 		var turn := Basis(Vector3.UP, leader.heading)
 		var forward: Vector3 = turn * Vector3.BACK
 		var place: Vector3 = at + turn * slot
-		var carrot: Vector3 = place + forward * 40.0
+		var carrot: Vector3 = place + forward * 18.0
 		u.slot_goal = Vector3(carrot.x, 0, carrot.z)
 		var behind: float = Vector2(place.x - u.node.position.x, place.z - u.node.position.z).dot(Vector2(forward.x, forward.z))
-		u.speed = float(leader.speed) * clampf(1.0 + behind / 20.0, 0.7, 1.6)
+		u.speed = float(leader.speed) * clampf(1.0 + behind / 14.0, 0.7, 1.85)
 	else:
 		# Circling (or over the airfield while the fighter is serviced): the
 		# fighter's own circle, a little ahead or behind it.

@@ -25,7 +25,7 @@ extends RefCounted
 ## 2025 once the warheads manoeuvred in the dive; cruise missiles and Shahed
 ## drones: 80-97%.
 
-const DRONES := ["drone", "loiterer", "fpvTeam", "seaDrone", "shahed", "harop", "interceptorDrone", "heavyBomberDrone", "carrierDrone", "akinci", "wingman"]   # jammable
+const DRONES := ["drone", "loiterer", "fpvTeam", "seaDrone", "shahed", "harop", "interceptorDrone", "heavyBomberDrone", "carrierDrone", "wingman"]   # jammable
 const KAMIKAZE := ["loiterer", "seaDrone", "shahed", "harop", "interceptorDrone"]
 const Arsenal := preload("res://scripts/national_arsenal.gd")
 const Future := preload("res://scripts/future_weapons.gd")
@@ -215,7 +215,7 @@ static func jam_mult(w: Node, source: Dictionary) -> float:
 
 ## An aircraft that radar sees only close in, or a submerged submarine detected only by ASW sonar / weapon launch.
 static func hidden(w: Node, target: Dictionary, distance: float, reach: float) -> bool:
-	if preload("res://scripts/war_tools.gd").is_submarine(target):
+	if preload("res://scripts/war_tools.gd").is_submarine(target) and str(target.get("key", "")) != "orca":
 		var viewer_owner := 0 if int(target.get("owner", 0)) > 0 else 1
 		if not preload("res://scripts/war_tools.gd").submarine_detected(w, viewer_owner, target):
 			return true

@@ -2040,7 +2040,12 @@ func _fill_launch(chosen: Array) -> void:
 			actions.append(["Unload %s" % ms.def_of(key).name, func(): _open_payload_picker(unit, key, "send")])
 			signature += "unload:" + key
 		elif ms.storage_accepts(unit, key) and ms.free_storage(unit) > 0:
-			var has_stored: bool = world.buildings.any(func(b): return b.owner == 0 and not b.dead and b.built and ms.local_count(b, key) > 0)
+			var has_stored: bool = world.buildings.any(func(b):
+				if b.owner != 0 or b.dead or not b.built or ms.local_count(b, key) <= 0:
+					return false
+				if unit.get("naval", false) and b.key == "missileSilo":
+					return false
+				return true)
 			if has_stored:
 				var k_load: String = key
 				actions.append(["Load %s" % ms.def_of(k_load).name, func():

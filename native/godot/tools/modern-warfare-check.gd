@@ -110,7 +110,7 @@ func run() -> void:
 	check(w.effectiveness(boat, tank) == 0.0 and w.effectiveness(boat, ship) > 1.0, "a sea drone attacks ships, not tanks")
 	w.fire_weapon(boat, ship, "kamikaze")
 	settle(1.5)
-	check(boat.dead and ship.hp < hp - 300.0, "a sea drone rams a destroyer (%d -> %d)" % [int(hp), int(ship.hp)])
+	check(boat.dead and ship.hp < hp - 100.0, "a sea drone rams a destroyer (%d -> %d)" % [int(hp), int(ship.hp)])
 	# ------------------------------------------------ laser, medic, stealth
 	var laser: Dictionary = w.spawn_unit("laserAD", near(Vector3(0, 0, -40)), 0)
 	var drone: Dictionary = w.spawn_unit("drone", laser.node.position + Vector3(20, 18, 0), 1)

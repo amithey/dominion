@@ -145,7 +145,8 @@ func update(delta: float) -> void:
 	for owner in retaliation.keys():
 		if w.game_time >= float(retaliation[owner]):
 			retaliation.erase(owner)
-			_strike(owner, "a second strike", "mirv" if preload("res://scripts/cbrn_data.gd").has(w, owner, "mirv") else "nuke")
+			var strike_key := "mirv" if preload("res://scripts/cbrn_data.gd").has(w, owner, "mirv") and not w.missiles.ready_platforms("mirv", owner).is_empty() else "nuke"
+			_strike(owner, "a second strike", strike_key)
 	if _ai_tick >= 10.0:
 		_ai_tick = 0.0
 		_ai_nuclear()
@@ -304,6 +305,8 @@ func deterrent(owner: int) -> bool:
 ## Rival `owner` fires a nuclear missile at the player's town nearest to it.
 func _strike(owner: int, why: String, key := "nuke") -> bool:
 	var d: Node = w.diplomacy
+	if key == "mirv" and (not w.missiles.available_to(owner, key) or w.missiles.ready_platforms(key, owner).is_empty()):
+		key = "nuke"
 	if not w.missiles.available_to(owner, key): return false
 	var platforms: Array = w.missiles.ready_platforms(key, owner)
 	if platforms.is_empty() or d.defeated(owner):

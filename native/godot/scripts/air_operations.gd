@@ -451,6 +451,8 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 			return true
 		release(world, u)
 		base = base_for(world, u, u.node.position, float(u.sortie_left))
+		if base == null and float(u.sortie_left) > 0.0:
+			base = base_for(world, u, u.node.position, float(u.sortie_left) + maxf(2.0, RESERVE_SECONDS * burn_rate(u)))
 		if base == null and int(u.owner) > 0:
 			base = base_for(world, u, u.node.position, INF)
 		u.air_base = base

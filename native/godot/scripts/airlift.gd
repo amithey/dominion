@@ -22,7 +22,7 @@ const SHIPS := ["landingShip"]
 const LIGHT_LOADS := ["reconVehicle", "towedHowitzer", "mortarTeam", "recoillessTeam", "decoy", "counterBatteryRadar"]
 const HEAVY_LOADS := ["apc", "ifv", "bushmaster"]   # only for the 20-tonne class
 const TWENTY_TONNE := ["russia"]                      # the Mi-26
-const BOARD_REACH := 22.0         # a helicopter: troops outside a helipad or under a hover can board
+const BOARD_REACH := 11.5         # a helicopter: troops close under a hover board immediately; farther troops walk to it
 const SHIP_REACH := 28.0          # a ship: they stand on the shore beside it
 const SHORE_REACH := 42.0         # how far from the hull the party can be set ashore
 const ARRIVE := 18.0              # close enough to a landing/pickup point to unload or embark
@@ -500,7 +500,7 @@ static func unload_blocked(w: Node, heli: Dictionary) -> String:
 		if landing_spot(w, p, [], null, SHORE_REACH) == Vector3.INF:
 			return "No shore within reach: sail closer to land, or use Land at to pick the beach."
 		return ""
-	if w.height_at(p.x, p.z) <= float(w.map.seaLevel) + 0.2 and landing_spot(w, p, [], null, 28.0) == Vector3.INF:
+	if w.height_at(p.x, p.z) <= float(w.map.seaLevel) + 0.2:
 		return "Over water: fly over dry ground to land them."
 	if landing_spot(w, p, [], null, 36.0) == Vector3.INF:
 		return "No clear landing ground nearby: move away from buildings or cliffs."

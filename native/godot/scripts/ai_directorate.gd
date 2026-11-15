@@ -1403,8 +1403,9 @@ func has_cca(owner: int) -> bool:
 
 ## A fighter just trained takes a loyal wingman with it (world.gd, ai.gd).
 func escort_fighter(unit: Dictionary) -> void:
-	if str(unit.key) in CCA_FIGHTERS and has_cca(int(unit.owner)):
-		unit.cca = true
+	if str(unit.key) == "sixthGen" or (str(unit.key) in CCA_FIGHTERS and has_cca(int(unit.owner))):
+		if str(unit.key) in CCA_FIGHTERS and has_cca(int(unit.owner)):
+			unit.cca = true
 		preload("res://scripts/future_weapons.gd").escort(w, unit)
 
 # ---------------------------------------------------------------- the buildings' models
