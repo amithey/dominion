@@ -36,6 +36,7 @@ const STRIKE_TARGETS := ["hq", "cityCenter", "villageCenter", "airfield", "tankF
 
 func setup(world_node: Node, ai: Dictionary, difficulty: String, speed := 1.0) -> void:
 	world = world_node
+	_hq_cache.clear()
 	cfg = ai.difficulty.get(difficulty, ai.difficulty.easy)
 	levels = ai.difficulty
 	build_order = ai.buildOrder
@@ -70,7 +71,7 @@ func aggression_of(id: int) -> float:
 
 func hq(id: int):
 	var cached = _hq_cache.get(id)
-	if cached != null and not cached.dead and cached.owner == id and cached.key == "hq":
+	if cached != null and not cached.dead and cached.owner == id and cached.key == "hq" and is_instance_valid(cached.get("root")) and not cached.root.is_queued_for_deletion():
 		return cached
 	for b in world.buildings:
 		if b.owner == id and b.key == "hq" and not b.dead:

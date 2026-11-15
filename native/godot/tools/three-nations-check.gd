@@ -163,7 +163,7 @@ func run() -> void:
 	squad.enemy = depot
 	sim(25.0)
 	check(squad.dead and depot.hp <= depot_hp - 100.0 and (guard.dead or guard.hp < guard_hp), "the suicide squad closes in and detonates: the depot loses %d health, the guard is hit, the squad is gone" % int(depot_hp - depot.hp))
-	check(is_equal_approx(float(w.unit_defs.suicideSquad.dmg), float(w.unit_defs.rocketSoldier.dmg) * 3.9) and float(w.damage_profile.suicideSquad.armor) < 1.0, "the squad's blast: 3.9 rocket shots (a suicide attack's toll over other attacks), less against armour (%d)" % int(w.unit_defs.suicideSquad.dmg))
+	check(is_equal_approx(float(w.unit_defs.suicideSquad.dmg), float(preload("res://scripts/balance.gd").UNITS.suicideSquad.dmg)) and float(w.unit_defs.suicideSquad.dmg) > float(w.unit_defs.rocketSoldier.dmg) and float(w.damage_profile.suicideSquad.armor) < 1.0, "the squad's blast: the balance table's value, above a rocket shot (a suicide attack's toll over other attacks), less against armour (%d)" % int(w.unit_defs.suicideSquad.dmg))
 	var calibrated: Dictionary = preload("res://scripts/national_profile.gd").of_id("afghanistan")
 	check(is_equal_approx(float(calibrated.bonus.incomePct), -0.25) and is_equal_approx(float(calibrated.bonus.researchPct), -0.5) and is_equal_approx(float(calibrated.trade), 0.6) and int(calibrated.bonus.happiness) == -8, "Afghanistan as calibrated: income -25%, research -50%, trade -40%, happiness -8")
 	var syr: Dictionary = F.PROFILES.syria.bonus

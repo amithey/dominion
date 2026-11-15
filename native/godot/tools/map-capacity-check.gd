@@ -23,7 +23,7 @@ func run() -> void:
 				var s: Vector2 = g.starts[i]
 				check(absf(s.x) < g.half - 100.0 and absf(s.y) < g.half - 100.0, tag + " expansion room")
 				for j in range(i):
-					check(s.distance_to(g.starts[j]) > 300.0, tag + " capital spacing")
+					check(s.distance_to(g.starts[j]) > minf(300.0, float(Generator.MAPS[key].size) * 0.36), tag + " capital spacing")   # the compact Bastion Isle (560 m) cannot hold 300 m and its expansion room: its capitals stand about 214 m apart by design
 				for angle in range(12):
 					var p := s + Vector2.from_angle(TAU * angle / 12.0) * 55.0
 					check(g.height(p) > 1.0 and g._slope(p) < 0.35, tag + " buildable starting district")
