@@ -580,6 +580,7 @@ func run() -> void:
 		var red_home: Dictionary = w.ai.hq(red.id)
 		var factory: Dictionary = building("tankFactory", red_home.root.position + Vector3(30, 0, 30), red.id)
 		var fields: Dictionary = building("airfield", red_home.root.position + Vector3(-30, 0, 30), red.id)
+		fields.supplied = true
 		var before: int = w.units.filter(func(u): return u.owner == red.id and u.key == "df17").size()
 		check(w.ai.deploy(red.id, "df17"), "the Crimson Empire's factory turns out a DF-17")
 		check(w.units.filter(func(u): return u.owner == red.id and u.key == "df17").size() == before + 1, "and it stands by the factory")
@@ -587,8 +588,9 @@ func run() -> void:
 		var deployed: bool = w.ai.deploy(red.id, "sixthGen")
 		var j36s: Array = w.units.filter(func(u): return u.owner == red.id and u.key == "sixthGen" and not u.dead)
 		if not j36s.is_empty():
-			w.order_move([j36s[-1]], red_home.root.position + Vector3(80, j36s[-1].altitude, 80))
-			sim(8.0)
+			var j36: Dictionary = j36s[-1]
+			w.order_move([j36], red_home.root.position + Vector3(80, j36.altitude, 80))
+			sim(20.0, func(): return w.units.filter(func(u): return u.owner == red.id and u.key == "wingman" and not u.dead).size() >= wing0 + 2)
 		check(deployed and w.units.filter(func(u): return u.owner == red.id and u.key == "wingman" and not u.dead).size() == wing0 + 2, "its J-36 takes off with two wingmen")
 		check(not w.ai.train_pool.filter(func(k): return w.unit_allowed(red.id, k) and str(w.unit_defs[k].get("nation", "")) == "blue").size() > 0, "it never fields the Atlantic Federation's F-22")
 	cleanup()
