@@ -28,8 +28,7 @@ const PER_EDGE := 0.7       # road vehicles per stretch of road
 const MAX_ROAD := 40
 const MAX_TRAINS := 6
 const STRIDE := 16          # floats per MultiMesh instance: 3x4 transform + custom data
-const STUCK_GHOST := 4.5    # seconds blocked before passing through other vehicles
-const STUCK_DESPAWN := 9.0  # seconds stuck on a road before clearing the vehicle
+const STUCK_DESPAWN := 10.5 # seconds stalled on a road before clearing the vehicle
 
 var world: Node
 var vehicles := {}          # cargo ships: id -> {node, path, kind, route}
@@ -407,26 +406,31 @@ func _new_vehicle(kind: String) -> Dictionary:
 		return {}
 	var nodes: Array = g.keys()
 	var towns: Array = nodes.filter(func(h): return _is_town(h))
-	var from: Vector2i = (towns if not towns.is_empty() else nodes)[_rng.randi() % (towns.size() if not towns.is_empty() else nodes.size())]
-	var hexes := _trip(kind, from, null)
-	if hexes.size() < 2:
-		return {}
-	var c := {"kind": kind, "s": 0.0, "v": 0.0, "wait": _rng.randf_range(0.0, 5.0), "yaw": 0.0, "brake": false, "tick": _rng.randi() % 6}
-	if kind == "rail":
-		var line: float = _lengths(_track("rail", hexes, null))[-1]
-		_make_train(c, line - 3.0)  # no longer than the line it runs on
-	else:
-		_make_road_vehicle(c)
-	_set_trip(c, hexes, null, 0.0)
-	c.yaw = _yaw_at(c, c.s)
-	# Never on top of a vehicle already standing there, or inside a building: try again shortly.
-	var at := _point_at(c, 0.0)
-	if _point_inside_building(at, kind):
-		return {}
-	for o in _fleet:
-		if o.kind == kind and o.bodies[0].has("at") and Vector2(o.bodies[0].at.x - at.x, o.bodies[0].at.z - at.z).length() < 6.0:
-			return {}
-	return c
+	for attempt in range(4):
+		var pool: Array = towns if (attempt == 0 and not towns.is_empty()) else nodes
+		var from: Vector2i = pool[_rng.randi() % pool.size()]
+		var hexes := _trip(kind, from, null)
+		if hexes.size() < 2:
+			continue
+		var c := {"kind": kind, "s": 0.0, "v": 0.0, "wait": _rng.randf_range(0.0, 1.5), "yaw": 0.0, "brake": false, "tick": _rng.randi() % 6}
+		if kind == "rail":
+			var line: float = _lengths(_track("rail", hexes, null))[-1]
+			_make_train(c, line - 3.0)  # no longer than the line it runs on
+		else:
+			_make_road_vehicle(c)
+		_set_trip(c, hexes, null, 0.0)
+		c.yaw = _yaw_at(c, c.s)
+		var at := _point_at(c, 0.0)
+		if _point_inside_building(at, kind):
+			continue
+		var crowded := false
+		for o in _fleet:
+			if o.kind == kind and o.bodies[0].has("at") and Vector2(o.bodies[0].at.x - at.x, o.bodies[0].at.z - at.z).length() < 6.0:
+				crowded = true
+				break
+		if not crowded:
+			return c
+	return {}
 
 func _set_trip(c: Dictionary, hexes: Array, came: Variant, lead_in: float) -> void:
 	c.hexes = hexes
@@ -558,34 +562,25 @@ func _drive(c: Dictionary, delta: float) -> void:
 	if c.tick % 6 == 0 and c.kind == "road" and _point_inside_building(c.bodies[0].get("at", _point_at(c, c.s)), "road"):
 		c.stranded = true
 		return
-	if c.tick % 3 == 0 or not c.has("gap"):
+	if c.tick % 2 == 0 or not c.has("gap") or remain < 24.0 or float(c.get("gap", INF)) < 14.0:
 		c.gap = _gap_ahead(c, c.bodies[0].get("at", _point_at(c, c.s)))
-	# Two vehicles can each wait for the other (head to head at a town's street, or one on top of another where trips
-	# start): a vehicle that stalls passes through after STUCK_GHOST s, or despawns after STUCK_DESPAWN s so jams never pile up.
+	# A vehicle that stalls mid-road longer than STUCK_DESPAWN seconds despawns cleanly instead of piling up or driving through others.
 	if float(c.v) < 0.35 and remain > 0.35:
-		c.stuck_for = float(c.get("stuck_for", 0.0)) + delta
 		c.total_stuck = float(c.get("total_stuck", 0.0)) + delta
 		if float(c.total_stuck) >= STUCK_DESPAWN:
 			c.stranded = true
 			return
-		if float(c.stuck_for) > STUCK_GHOST:
-			c.ghost = 5.0
-			c.stuck_for = 0.0
-	else:
-		c.stuck_for = 0.0
-		if float(c.v) >= 1.5:
-			c.total_stuck = 0.0
-	if float(c.get("ghost", 0.0)) > 0.0:
-		c.ghost = float(c.ghost) - delta
-		c.gap = INF
+	elif float(c.v) >= 1.5:
+		c.total_stuck = 0.0
 	var target: float = c.limit
 	# Brake to a stop at the end of the trip.
 	target = minf(target, sqrt(2.0 * c.decel * 0.6 * maxf(remain - 0.2, 0.0)))
-	# Keep a distance behind whatever is in front in the same lane.
+	# Keep a distance behind whatever is in front in the same lane or merging ahead.
 	if c.gap < INF:
-		target = minf(target, maxf(0.0, (c.gap - c.keep) * 0.8))
+		target = minf(target, sqrt(2.0 * c.decel * 0.5 * maxf(c.gap - c.keep, 0.0)))
+	var rate: float = c.accel if target > c.v else (c.decel * 2.2 if c.gap < c.keep * 0.6 else c.decel)
 	var before: float = c.v
-	c.v = move_toward(c.v, target, (c.accel if target > c.v else c.decel) * delta)
+	c.v = move_toward(c.v, target, rate * delta)
 	c.brake = c.v < before - 0.01 * delta or c.v < 0.2
 	c.s += c.v * delta
 	if remain < 0.35 and c.v < 0.25:
@@ -615,7 +610,8 @@ func _gap_ahead(c: Dictionary, at: Vector3) -> float:
 				along = 0.01   # dead level with another: the older one goes first
 			if along <= 0.0 or along > 28.0:
 				continue
-			if absf(rel.x * right.x + rel.z * right.z) > 1.3:
+			var lateral_reach := 2.4 if along < 12.0 and ofwd.dot(fwd) > 0.35 else 1.3
+			if absf(rel.x * right.x + rel.z * right.z) > lateral_reach:
 				continue
 			best = minf(best, along - b.length * 0.5 - c.bodies[0].length * 0.5)
 	return best

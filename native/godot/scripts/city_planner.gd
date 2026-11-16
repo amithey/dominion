@@ -129,10 +129,34 @@ static func best(w: Node, owner: int, key: String, options: Array) -> Variant:
 		tries += 1
 		if tries > CHECKS:
 			break
+		if not _keeps_town_exit(w, owner, pair[1]):
+			continue
 		var spot: Vector3 = w.logistics.hex_center(pair[1])
 		if w.site_problem(key, spot, owner) == "":
 			return spot
 	return null
+
+## Leaves at least one passable road corridor next to each friendly town hall so
+## compact towns never wall themselves off from the supply network.
+static func _keeps_town_exit(w: Node, owner: int, candidate: Vector2i) -> bool:
+	for step in w.logistics.DIRECTIONS:
+		var t_hex: Vector2i = candidate + step
+		var tb = w.district_hex.get(t_hex)
+		if tb == null or tb.dead or tb.owner != owner or tb.def.get("settlement") == null:
+			continue
+		if w.logistics.road_through(t_hex):
+			continue
+		var exits := 0
+		for d in w.logistics.DIRECTIONS:
+			var n: Vector2i = t_hex + d
+			if n == candidate or not w.logistics.terrain_ok(t_hex, n, "road"):
+				continue
+			var nb = w.district_hex.get(n)
+			if nb == null or nb.dead or nb.def.get("settlement") != null:
+				exits += 1
+		if exits < 1:
+			return false
+	return true
 
 ## The flat direction from `from` toward the nearest rival capital.
 static func _enemy_direction(w: Node, owner: int, from: Vector3) -> Vector3:

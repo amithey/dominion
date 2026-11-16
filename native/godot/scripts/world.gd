@@ -3393,7 +3393,7 @@ func update_transport() -> void:
 	transport_route = logistics.plan(transport_start, hex, 0, transport_kind)
 	logistics.show_preview(transport_route)
 	if transport_route.size() < 2:
-		hud.show_transport("No land route there: roads cannot cross the sea, steep cliffs or a rival's land.")
+		hud.show_transport("No route there: roads and rails cannot cross water, steep cliffs, rival land, or existing buildings.")
 		return
 	var cost: Dictionary = logistics.quote(transport_route, transport_kind, 0)
 	var target = logistics.town_hall_at(hex)

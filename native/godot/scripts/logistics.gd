@@ -109,18 +109,25 @@ func road_through(h: Vector2i) -> bool:
 			return true
 	return false
 
-func passable(a: Vector2i, b: Vector2i, kind: String, rivals: Array) -> bool:
+func _hits_circles(a: Vector3, b: Vector3, circles: Array) -> bool:
+	if circles.is_empty():
+		return false
+	for i in range(0, 7, 2):
+		var x := lerpf(a.x, b.x, i / 6.0)
+		var z := lerpf(a.z, b.z, i / 6.0)
+		for r in circles:
+			if Vector2(r.x - x, r.z - z).length() < r.y:
+				return true
+	return false
+
+func passable(a: Vector2i, b: Vector2i, kind: String, rivals: Array, blocked := {}, solids := []) -> bool:
+	if blocked.has(b):
+		return false
 	if not terrain_ok(a, b, kind):
 		return false
 	var p := hex_center(a)
 	var t := hex_center(b)
-	for i in range(0, 7, 2):
-		var x := lerpf(p.x, t.x, i / 6.0)
-		var z := lerpf(p.z, t.z, i / 6.0)
-		for r in rivals:
-			if Vector2(r.x - x, r.z - z).length() < r.y:
-				return false
-	return true
+	return not _hits_circles(p, t, rivals) and not _hits_circles(p, t, solids)
 
 # Terrain never changes, so each link's slope and water check is cached.
 var _terrain_cache := {}
@@ -160,6 +167,19 @@ func plan(start: Vector2i, goal: Vector2i, owner: int, kind: String) -> Array:
 	# through its other towns.
 	var goal_at := hex_center(goal)
 	var rivals := rival_districts(owner).filter(func(r): return Vector2(r.x - goal_at.x, r.z - goal_at.z).length() > radius)
+	var blocked := {}
+	for h in world.district_hex:
+		var db = world.district_hex[h]
+		if db == null or db.dead or db.def.get("settlement") != null or h == start:
+			continue
+		if h == goal:
+			return []
+		blocked[h] = true
+	var solids := []
+	for b in world.buildings:
+		if b.dead or world.is_district(b.key) or b.def.get("water", false):
+			continue
+		solids.append(Vector3(b.root.position.x, float(b.footprint) * 0.5 + 2.8, b.root.position.z))
 	var open := [{"h": start, "g": 0, "f": hex_distance(start, goal)}]
 	var best := {start: 0}
 	var parent := {}
@@ -177,7 +197,7 @@ func plan(start: Vector2i, goal: Vector2i, owner: int, kind: String) -> Array:
 			return route
 		for d in DIRECTIONS:
 			var next: Vector2i = cur.h + d
-			if not passable(cur.h, next, kind, rivals):
+			if not passable(cur.h, next, kind, rivals, blocked, solids):
 				continue
 			var g: int = cur.g + 1
 			if g >= best.get(next, 1 << 30):
@@ -225,6 +245,7 @@ func build(route: Array, kind: String, owner: int) -> bool:
 		var hp := float(transport[kind].hp)
 		edges[key] = {"a": route[i - 1], "b": route[i], "owner": owner, "kind": kind, "hp": hp, "max_hp": hp, "half": [hp, hp]}
 	dirty = true
+	world._notify_traffic()
 	world.refresh_streets()
 	update_supply()
 	return true
@@ -361,6 +382,7 @@ func damage_at(at: Vector3, reach: float, amount: float, area := false) -> int:
 		e.hp = minf(e.half[0], e.half[1])
 	if hit > 0:
 		dirty = true
+		world._notify_traffic()
 		rebuild_mesh()
 	return hit
 
