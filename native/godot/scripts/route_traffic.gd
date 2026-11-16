@@ -811,7 +811,7 @@ func _pose() -> void:
 			var half: float = b.length * 0.42
 			var right := _right(fwd) * 0.7
 			if c.tick % (10 if far else 3) == 0 or not b.has("g"):
-				# The ground under the wheels (every other frame; rarely out of sight).
+				# The ground under the wheels (every third frame; rarely out of sight).
 				if far:
 					var g0 := _ground(at)
 					b.g = [g0, g0, g0, g0]

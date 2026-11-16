@@ -53,6 +53,8 @@ func run() -> void:
 	af2.supplied = true
 	var port: Dictionary = w.place_building("port", cx + Vector3(75, 0, 20), 0, true)
 	port.supplied = true
+	var shipyard: Dictionary = w.place_building("shipyard", cx + Vector3(95, 0, 20), 0, true)
+	shipyard.supplied = true
 	var sc: Dictionary = w.place_building("strategicComplex", cx + Vector3(30, 0, 20), 0, true)
 	sc.supplied = true
 
@@ -98,18 +100,19 @@ func run() -> void:
 	# --- 3. 250 Missile Supply Cutoff & Transfer Validation Trials ---
 	print("==== Round 2 Phase 3: 250 Supply Cutoff & Transfer Trials ====")
 	var ms: Node = w.missiles
-	var sub: Dictionary = w.spawn_unit("nuclearSub", port.node.position + Vector3(48, 0, 0), 0)
+	var sub: Dictionary = w.spawn_unit("nuclearSub", shipyard.node.position + Vector3(48, 0, 0), 0)
 	sub.moving = false
 	sub.target = null
+	trial(ms.transfer_blocked(sc, port, "nuke", 1) != "", "commercial port rejects nuclear transfers")
 	for i in range(250):
 		ms.transfers.clear()
 		ms._manifest(sc).clear()
-		ms._manifest(port).clear()
+		ms._manifest(shipyard).clear()
 		ms._manifest(sub).clear()
 		sc.supplied = (i % 3 != 0)
-		port.supplied = true
+		shipyard.supplied = true
 		ms._manifest(sc)["nuke"] = 1
-		var why: String = ms.transfer_blocked(sc, port, "nuke", 1)
+		var why: String = ms.transfer_blocked(sc, shipyard, "nuke", 1)
 		if sc.supplied:
 			trial(why == "", "supplied transfer allowed #%d" % i)
 		else:

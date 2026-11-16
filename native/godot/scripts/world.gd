@@ -2257,7 +2257,20 @@ func _physics_process(delta: float) -> void:
 					remaining = 0.0
 				elif not _keep_route(unit, waypoint, goal):
 					unit.path = PackedVector3Array()
-		if remaining < 0.35:
+		var arrive_r := 0.35
+		if not chasing and unit.vehicle and remaining < 1.35 and remaining >= 0.35:
+			if int(unit.get("stuck", 0)) >= 1 or (unit.get("push", Vector3.ZERO) as Vector3).length_squared() > 0.01:
+				arrive_r = 1.35
+			elif perf_opts:
+				var ebx := floori(end.x / GRID)
+				var ebz := floori(end.z / GRID)
+				var bkt = grid.get(Vector2i(ebx, ebz))
+				if bkt != null:
+					for other in bkt:
+						if not is_same(other, unit) and not other.dead and not other.get("moving", false) and Vector2(other.node.position.x - end.x, other.node.position.z - end.z).length_squared() < 9.0:
+							arrive_r = 1.35
+							break
+		if remaining < arrive_r:
 			if not chasing:
 				unit.target = null
 				unit.attack_move = false
@@ -5513,18 +5526,26 @@ func gap_to(unit: Dictionary, target: Dictionary) -> float:
 	return d - (target.footprint * 0.45 if target.get("is_building", false) else 0.0)
 
 ## What kind of target this is, for the damage table (entities.js targetClass).
+var _eff_simple := {}
+const _SPECIAL_EFF_KEYS := ["interceptorDrone", "raptor", "harop", "laserAD", "seaDrone", "missileBoat"]
+
 func target_class(t: Dictionary) -> String:
-	if t.get("is_building", false):
-		return "building"
 	if t.get("fly", false):
 		return "air" if airborne(t) else "light"  # an aircraft on the ground is a vehicle
-	if t.get("naval", false):
-		return "naval"
-	if t.key in infantry_keys:
-		return "infantry"
-	if t.key in armor_keys or preload("res://scripts/additional_factions.gd").base(t.key) in armor_keys:
-		return "armor"
-	return "light"
+	var cached = t.get("_tclass")
+	if cached != null:
+		return cached
+	var tc := "light"
+	if t.get("is_building", false):
+		tc = "building"
+	elif t.get("naval", false):
+		tc = "naval"
+	elif t.key in infantry_keys:
+		tc = "infantry"
+	elif t.key in armor_keys or preload("res://scripts/additional_factions.gd").base(t.key) in armor_keys:
+		tc = "armor"
+	t["_tclass"] = tc
+	return tc
 
 ## Air defence (SAM sites, mobile SAMs, anti-aircraft vehicles) engages only
 ## aircraft in flight: not ground forces, and not aircraft parked on a base.
@@ -5540,30 +5561,39 @@ func airborne(u: Dictionary) -> bool:
 
 ## Damage multiplier of `attacker` against `target` (0 = cannot engage).
 func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
-	if not preload("res://scripts/force_catalog.gd").can_target(self, attacker, target): return 0.0
-	if attacker.key == "interceptorDrone" and not (target.get("fly", false) and target.get("key", "") in ["drone", "loiterer", "shahed", "harop", "akinci", "wingman", "interceptorDrone", "heavyBomberDrone", "carrierDrone"]): return 0.0
+	var akey: String = str(attacker.get("key", ""))
 	var target_kind: String = target_class(target)
-	if attacker.get("key", "") in AIR_DEFENCE and target_kind != "air":
+	if not (akey in _SPECIAL_EFF_KEYS) and not attacker.get("_fc_restricted", false):
+		var ckey := akey + "|" + target_kind
+		if _eff_simple.has(ckey):
+			return float(_eff_simple[ckey])
+	if not preload("res://scripts/force_catalog.gd").can_target(self, attacker, target):
+		if preload("res://scripts/force_catalog.gd").ROLES.has(akey):
+			attacker["_fc_restricted"] = true
+		return 0.0
+	if akey == "interceptorDrone" and not (target.get("fly", false) and target.get("key", "") in ["drone", "loiterer", "shahed", "harop", "akinci", "wingman", "interceptorDrone", "heavyBomberDrone", "carrierDrone"]): return 0.0
+	if akey in AIR_DEFENCE and target_kind != "air":
 		return 0.0
 	# Small arms cannot penetrate heavy armour; dedicated anti-tank infantry can.
-	if attacker.key in ["soldier","sniper","commando","worker","medic"] and target_kind in ["armor","air","naval"]:
+	if akey in ["soldier","sniper","commando","worker","medic"] and target_kind in ["armor","air","naval"]:
 		return 0.0
 	# Sea drones ram ships and harbours; nothing else.
-	if attacker.key == "seaDrone" and not (target.get("naval", false) or target.get("is_building", false)):
+	if akey == "seaDrone" and not (target.get("naval", false) or target.get("is_building", false)):
 		return 0.0
 	# The Raptor's special mission: suppressing air defences.
-	if attacker.key == "raptor" and (target.get("key", "") in AIR_DEFENCE or target.get("key", "") == "abmLauncher"):
+	if akey == "raptor" and (target.get("key", "") in AIR_DEFENCE or target.get("key", "") == "abmLauncher"):
 		return float(damage_profile.raptor.get(target_kind, 1.0)) * Arsenal.SEAD
 	# The Harop hunts radars: air defence takes triple damage.
-	if attacker.key == "harop":
+	if akey == "harop":
 		return float(damage_profile.harop.get(target_kind, 0.0)) * FactionArsenal.harop_factor(target)
 	# A laser burns small drones out of the sky in a second or two.
-	if attacker.key == "laserAD" and target.get("key", "") in Modern.DRONES and target_kind == "air":
+	if akey == "laserAD" and target.get("key", "") in Modern.DRONES and target_kind == "air":
 		return 6.0
-	var profile: Dictionary = damage_profile.get(attacker.key, {})
-	if profile.is_empty():
-		return 0.0 if target.get("fly", false) else 1.0
-	return float(profile.get(target_kind, 0.0))
+	var profile: Dictionary = damage_profile.get(akey, {})
+	var res: float = (0.0 if target.get("fly", false) else 1.0) if profile.is_empty() else float(profile.get(target_kind, 0.0))
+	if not (akey in _SPECIAL_EFF_KEYS) and akey != "laserAD" and target_kind != "air":
+		_eff_simple[akey + "|" + target_kind] = res
+	return res
 
 ## Nearest hostile unit in range; buildings only when no unit is near.
 func nearest_enemy(unit: Dictionary, radius: float) -> Variant:

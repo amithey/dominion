@@ -559,7 +559,7 @@ func on_entity_destroyed(entity: Dictionary, announce := true) -> void:
 				lost_total += int(job.count)
 				transfers.erase(job)
 	if announce and lost_total > 0 and int(entity.get("owner", -1)) == 0 and world.hud != null:
-		world.hud.notice("%s destroyed — %d carried weapon%s lost with it!" % [asset_name(entity), lost_total, "" if lost_total == 1 else "s"])
+		world.hud.notice("%s destroyed — %d carried weapon%s lost with it." % [asset_name(entity), lost_total, "" if lost_total == 1 else "s"])
 	_changed_logistics()
 
 func assign_legacy(key: String, destination: Dictionary) -> String:

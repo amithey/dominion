@@ -89,12 +89,9 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 				var fighting = other.get("enemy")
 				if not (fighting is Dictionary) or int(fighting.get("owner", -1)) != engaged_with:
 					continue
-			var eff: float = w.effectiveness(unit, other)
-			if eff <= 0.01:
+			if not ignore.is_empty() and float(ignore.get(other.node.get_instance_id(), -1.0)) > w.game_time:
 				continue
 			var d := sqrt(d2)
-			if preload("res://scripts/modern_warfare.gd").hidden(w, other, d, radius):
-				continue  # a stealth aircraft is seen only close in
 			if d > unit.range and not reachable(unit, other):
 				continue
 			# Fog of war: the player's units fire on what their side sees, or what
@@ -104,8 +101,11 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 					continue
 				if own > 0 and int(other.owner) == 0 and d > my_sight and not w.fog.rival_spots(own, other):
 					continue
-			if not ignore.is_empty() and float(ignore.get(other.node.get_instance_id(), -1.0)) > w.game_time:
+			var eff: float = w.effectiveness(unit, other)
+			if eff <= 0.01:
 				continue
+			if (other.get("fly", false) or other.get("naval", false)) and preload("res://scripts/modern_warfare.gd").hidden(w, other, d, radius):
+				continue  # a stealth aircraft or submarine is seen only close in
 			var score: float = d / maxf(unit.range, 1.0) - eff * 0.5 - (1.0 - other.hp / maxf(other.max_hp, 1.0)) * 0.4
 			if d <= unit.range:
 				score -= 1.0
@@ -363,10 +363,10 @@ static func traffic(w: Node, unit: Dictionary, to: Vector3, remaining := INF) ->
 				rel.y = 0.0
 				var ahead := rel.dot(fwd)
 				var lateral := rel.dot(right)
-				var lane: float = (3.6 if other.vehicle else 2.2) * widen
+				var lane: float = (2.8 if other.vehicle else 1.9) * widen
 				# Something standing past the end of this unit's own route is no
 				# obstacle (the front rank at rest, just ahead of a rear-rank slot).
-				if ahead <= 0.0 or ahead > 13.0 or absf(lateral) > lane or ahead > remaining + 1.0:
+				if ahead <= 0.0 or ahead > 11.0 or absf(lateral) > lane or ahead > remaining + 1.0:
 					continue
 				var other_fwd := Vector3(sin(other.heading), 0, cos(other.heading))
 				var other_speed: float = other.get("cur_speed", 0.0) if other.get("moving", false) else 0.0
@@ -374,8 +374,9 @@ static func traffic(w: Node, unit: Dictionary, to: Vector3, remaining := INF) ->
 				# two hulls converging on one gap each saw the other "ahead" and
 				# both waited behind the other for good.
 				if other_speed > 0.3 and other_fwd.dot(fwd) > 0.5 and rel.dot(other_fwd) > 0.0 and not impatient:
-					# Same way: fall in behind at its pace, about two lengths back.
-					cap = minf(cap, maxf(other_speed + (ahead - 9.0) * 0.8, 0.0))
+					# Same way: keep moving smoothly in column without coming to dead stops in streets.
+					var follow := other_speed + (ahead - 5.5) * 0.9
+					cap = minf(cap, maxf(follow, float(unit.speed) * 0.28 if ahead > 3.6 else 0.0))
 				else:
 					# Stopped, crossing or oncoming: steer round it, slowing a little.
 					var urgency := clampf((13.0 - ahead) / 8.0, 0.0, 1.0) * clampf((lane - absf(lateral)) / lane + 0.3, 0.0, 1.0)
