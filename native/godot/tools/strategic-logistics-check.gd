@@ -241,6 +241,36 @@ func run() -> void:
 	check(bomber.selected and cam_xz < 5.0, "Show button centers camera and selects carrier unit (xz=%.1f)" % cam_xz)
 	world.cancel_payload_transfer()
 
+	# Speed 4x UI stability: active transfer must not thrash right-panel button keys every game second
+	world.set_speed(4.0)
+	ms.finished("nuke", complex)
+	ms.start_transfer(complex, depot2, "nuke", 1)
+	world.hud.show_building(complex)
+	var key_t0: String = world.hud._shown_key
+	world.game_time += 2.5
+	world.hud._update_panel()
+	check(world.hud._shown_key == key_t0, "4x speed active transfer keeps building panel stable without destroying buttons")
+	world.set_speed(1.0)
+
+	# Loyal wingmen keep sortie endurance with their sixth-gen leader over long flights
+	var wing_leader: Dictionary = world.spawn_unit("sixthGen", field.node.position, 0)
+	Air.park_new(world, wing_leader, field)
+	wing_leader.air_state = "ready"
+	wing_leader.sortie_left = Air.fuel_capacity(wing_leader)
+	var mates: Array = world.Future.escort(world, wing_leader)
+	check(mates.size() > 0, "sixthGen spawns loyal wingmen")
+	for step_i in range(40):
+		world.game_time += 2.0
+		wing_leader.node.position += Vector3(45.0, 0.0, 0.0)
+		Air.update(world, wing_leader, 2.0)
+		world.Future.update(world, 2.0)
+		for m in mates:
+			Air.update(world, m, 2.0)
+	check(mates.all(func(m): return not m.dead), "loyal wingmen do not explode from fuel loss during long escort sortie")
+	for m in mates:
+		if not m.dead: world.kill(m)
+	if not wing_leader.dead: world.kill(wing_leader)
+
 	bomber.air_state = "ready"
 	bomber.sortie_left = 0.001
 	Air.update(world, bomber, 1.0)

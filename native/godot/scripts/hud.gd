@@ -46,6 +46,9 @@ var economy: Node
 var _selected = null      # building entity shown, or null
 var _shown_key := ""
 var _refresh := 0.0
+var _side_dirty := false
+var _last_side_auto_ms := 0
+var _sel_fit_sig := ""
 var build_tab := "Economy"
 var transport_text := ""
 var prod_open := false   ## the player opened the build list (the Build button or B)
@@ -833,8 +836,9 @@ func _build_selection() -> void:
 		stack.add_child(value)
 		_sel_stats.add_child(plate)
 		_stat_values[caption] = [plate, value]
-	var commands := HBoxContainer.new()
-	commands.add_theme_constant_override("separation",4)
+	var commands := HFlowContainer.new()
+	commands.add_theme_constant_override("h_separation", 4)
+	commands.add_theme_constant_override("v_separation", 4)
 	col.add_child(commands)
 	for action in ["Attack-move","Bombard","Repair","Dig Trench","Field Dugout","Hedgehog","AT Ditch","Lay Mines","Defence Line","Exit Trench","Buy land","Demolish"]:
 		var button := Button.new()
@@ -1181,13 +1185,19 @@ func _hover_unit(delta: float) -> void:
 func _process(delta: float) -> void:
 	if economy == null:
 		return
+	var real_delta: float = delta / maxf(Engine.time_scale, 0.001)
+	var holding_click: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	_fit_commands()
-	_hover_unit(delta)
-	if _idle_button != null and _refresh + delta >= 0.25:
+	_hover_unit(real_delta)
+	if _idle_button != null and _refresh + real_delta >= 0.25:
 		var idle := idle_workers().size()
 		_idle_button.visible = idle > 0
 		_idle_button.text = "Idle workers: %d" % idle
-	_refresh += delta
+	if _side_dirty and side_mode != "" and not holding_click and Time.get_ticks_msec() - _last_side_auto_ms >= 450:
+		_side_dirty = false
+		_last_side_auto_ms = Time.get_ticks_msec()
+		refresh_side()
+	_refresh += real_delta
 	if _refresh < 0.25:
 		return
 	_refresh = 0.0
@@ -1201,7 +1211,7 @@ func _process(delta: float) -> void:
 	# the window leaves the notices a lane (and opens again when there is room).
 	if _win != null and _win.visible and _win_brief_panel != null:
 		var room_w: float = viewport_width - (_prod.size.x + 40.0 if _prod.visible else 0.0) - 12.0
-		var want_brief: bool = room_w - (_win_scroll.size.x + 260.0) >= 240.0
+		var want_brief: bool = room_w >= 980.0
 		if _win_brief_panel.visible != want_brief:
 			var keep_scroll: int = _side_scroll_pending if _side_scroll_pending >= 0 else _win_scroll.scroll_vertical
 			_win_brief_panel.visible = want_brief
@@ -1356,6 +1366,10 @@ func _selected_units() -> Array:
 	return world.units.filter(func(u): return u.selected and not u.dead and u.owner == 0)
 
 func _update_panel() -> void:
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		_update_health_color()
+		_update_enabled()
+		return
 	_update_selection()
 	_update_health_color()
 	var mode := _panel_mode()
@@ -1365,7 +1379,7 @@ func _update_panel() -> void:
 		return
 	var key: String = ("menu:" + build_tab) if mode == "build" else "%s:%s:%d:%d" % [_selected.key, _selected.built, _selected.queue.size(), _selected.root.get_instance_id()]
 	if _selected != null and world.missiles != null and (world.missiles.has_local_storage(_selected) or _selected.key == "specialLab"):
-		key += ":%s:%d:%d" % [str(world.missiles.stock), world.missiles.logistics_revision, floori(world.game_time) if _missile_view == "stockpile" and not world.missiles.transfers.is_empty() else 0]
+		key += ":%s:%d" % [str(world.missiles.stock), world.missiles.logistics_revision]
 		for category in ["conventional", "nuclear", "special"]:
 			key += ":%d:%d" % [world.missiles.capacity(category), world.missiles.queued(category)]
 	if world.research:
@@ -1477,8 +1491,8 @@ func _action_bars(b: Dictionary) -> void:
 					recalled += 1
 			notice("%d assigned aircraft returning to base." % recalled if recalled > 0 else "No aircraft are assigned to this base."))
 	if world.missiles.has_local_storage(b) or b.key in ["missileSilo", "strategicComplex", "specialLab"]:
-		_bar(b.key, "Strategic Arsenal & Payloads", "View all stockpiles, warhead locations, transfers and ready launchers across your nation.", {}, 0.0, "", func(): toggle_panel("ordnance", true), "Open Arsenal")
-	if world.missiles.has_local_storage(b):
+		_bar(b.key, "Strategic Arsenal & Payloads", "Open the Strategic Arsenal screen to locate warheads, highlight green destinations on the map, and load or move payloads.", {}, 0.0, "", func(): toggle_panel("ordnance", true), "Open Arsenal")
+	if world.missiles.has_local_storage(b) and not b.key in ["missileSilo", "strategicComplex", "specialLab"]:
 		_payload_storage(b)
 	if b.key in ["missileSilo", "strategicComplex", "specialLab"]:
 		var ms: Node = world.missiles
@@ -1511,8 +1525,8 @@ func _action_bars(b: Dictionary) -> void:
 					var can_fire_here: bool = ms.ready_platforms(m).any(func(p): return is_same(p, b))
 					if can_fire_here:
 						_bar("missile:" + m, "%s · ×%d here" % [preload("res://scripts/weapon_copy.gd").display_name(world, m), local_here], preload("res://scripts/weapon_copy.gd").summary(world, m), {}, 0.0, why_local, func(): world.begin_missile(m, b), "Choose target · fires 1 stored weapon")
-					else:
-						_bar("missile:" + m, "%s · ×%d stored here" % [preload("res://scripts/weapon_copy.gd").display_name(world, m), local_here], "Transfer onto a green-highlighted launcher or storage site.", {}, 0.0, "", func(): world.begin_payload_transfer(b, m), "Place / Move on green map")
+						_list.get_child(_list.get_child_count() - 1).tooltip_text = preload("res://scripts/weapon_copy.gd").tooltip(world, m, false)
+					_bar("missile:" + m, "Transfer %s · %d stored" % [preload("res://scripts/weapon_copy.gd").display_name(world, m), local_here], "Highlight valid green launch platforms & storage sites on the 3D map.", {}, 0.0, "", func(): world.begin_payload_transfer(b, m), "Transfer")
 					_list.get_child(_list.get_child_count() - 1).tooltip_text = preload("res://scripts/weapon_copy.gd").tooltip(world, m, false)
 					continue
 				if int(ms.stock.get(m, 0)) <= 0:
@@ -1641,6 +1655,7 @@ func _update_selection() -> void:
 		_sel_info.text = transport_text
 		_show_pic("villageCenter")
 		_fill_queue([])
+		_fit_selection("transport:" + world.transport_kind)
 		return
 	if _selected != null:
 		var b: Dictionary = _selected
@@ -1687,6 +1702,7 @@ func _update_selection() -> void:
 			_sel_info.text += "\nRepairing · pauses for 6 s after a hit."
 		_fill_garrison(b)
 		_fill_queue(b.queue, b.queue_prog)
+		_fit_selection("b:%s:%s:%s:%s" % [str(b.key), str(b.built), str(_city_tiles.visible), str(_garrison_row.visible)])
 		return
 	if not units.is_empty():
 		_city_tiles.visible = false
@@ -1791,8 +1807,23 @@ General aboard: %s (level %d): %s." % [gen.name, int(gen.level), world.generals.
 			var wing: int = world.Future.mates(world, fighter).size()
 			_sel_info.text += "\nBattle group: %d of %d loyal wingmen in formation; they strike its target and meet whatever attacks the group." % [wing, world.Future.WINGMEN]
 			break
+		_fit_selection("u:%s:%d:%s:%s:%s:%s:%s" % [main, units.size(), str(_roster_scroll.visible), str(_launch_row.visible), str(_cargo_row.visible), str(_wing_row.visible), str(_sel_fuel.visible)])
 		return
 	_sel.visible = false
+	_sel_fit_sig = ""
+
+func _fit_selection(sig: String) -> void:
+	if sig == _sel_fit_sig or _sel == null:
+		return
+	_sel_fit_sig = sig
+	_sel.custom_minimum_size = Vector2(540.0, 0.0)
+	_sel.size = Vector2(540.0, 0.0)
+	_sel.reset_size()
+	if _windows != null:
+		if not _windows.positions.has("selection"):
+			_sel.offset_bottom = -12
+			_sel.offset_top = -_sel.size.y - 12
+		_windows.reflow.call_deferred(_sel)
 
 ## A town hall's accounts as tiles, as a 4X city screen shows them: residents
 ## with a housing bar, happiness with a mood word, the food balance, taxes,
@@ -2420,6 +2451,7 @@ func _build_diplomacy_panel() -> void:
 	body.add_child(split)
 	_win_brief_panel = PanelContainer.new()
 	_win_brief_panel.custom_minimum_size = Vector2(212, 0)
+	_win_brief_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	split.add_child(_win_brief_panel)
 	_win_brief = VBoxContainer.new()
 	_win_brief.add_theme_constant_override("separation", 8)
@@ -2452,16 +2484,21 @@ func toggle_panel(mode: String, force_open := false) -> void:
 		return
 	_show_side("" if side_mode == mode and not force_open else mode)
 
+func _mark_side_dirty() -> void:
+	if side_mode != "":
+		_side_dirty = true
+
 func _show_side(mode: String) -> void:
 	if mode != "" and _resource_site != null: _resource_site.hide()
 	if not _hooked and world.market != null:
 		_hooked = true
-		world.market.changed.connect(func(): if side_mode == "market": refresh_side())
-		world.espionage.changed.connect(func(): if side_mode == "intel": refresh_side())
-		world.territory.changed.connect(func(): if side_mode == "territory": refresh_side())
-		world.diplomacy.changed.connect(func(): if side_mode == "diplomacy": refresh_side())
+		world.market.changed.connect(func(): if side_mode == "market": _mark_side_dirty())
+		world.espionage.changed.connect(func(): if side_mode == "intel": _mark_side_dirty())
+		world.territory.changed.connect(func(): if side_mode == "territory": _mark_side_dirty())
+		world.diplomacy.changed.connect(func(): if side_mode == "diplomacy": _mark_side_dirty())
 		if world.missiles != null:
-			world.missiles.changed.connect(func(): if side_mode == "ordnance": refresh_side())
+			world.missiles.changed.connect(func(): if side_mode == "ordnance": _mark_side_dirty())
+	_side_dirty = false
 	side_mode = mode
 	_win.visible = mode != ""
 	if mode != "" and _rs != null:
@@ -2544,11 +2581,16 @@ func _fit_window(keep_scroll: int, revision := -1) -> void:
 		revision = _side_revision
 		_side_scroll_pending = keep_scroll
 	if revision != _side_revision: return
-	var room := get_viewport().get_visible_rect().size.y - 104.0 - 250.0
-	_win_scroll.custom_minimum_size = Vector2(560, minf(maxf(_side_rows.get_combined_minimum_size().y, _win_brief.get_combined_minimum_size().y), maxf(room, 160.0)))
+	var view := get_viewport().get_visible_rect().size
+	var room := view.y - 104.0 - 250.0
+	var max_scroll_w := minf(540.0, maxf(320.0, view.x - (270.0 if _win_brief_panel.visible else 56.0)))
+	var content_h := maxf(_side_rows.get_combined_minimum_size().y, 120.0)
+	_win.custom_minimum_size = Vector2.ZERO
+	_win_scroll.custom_minimum_size = Vector2(max_scroll_w, minf(content_h, maxf(room, 160.0)))
+	_win.size = Vector2.ZERO
 	_win.reset_size()
 	# Never wider than the screen, whatever the contents ask for.
-	var most: float = get_viewport().get_visible_rect().size.x - 24.0
+	var most: float = view.x - 24.0
 	if _win.size.x > most:
 		_win.size.x = most
 	_win_scroll.scroll_vertical = keep_scroll

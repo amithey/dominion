@@ -339,6 +339,10 @@ static func follow(w: Node, u: Dictionary) -> void:
 		if leader == null:
 			return
 	var base_speed := float(w.unit_defs.wingman.speed)
+	# Loyal wingmen share their fighter's sortie endurance so weaving in formation
+	# never causes them to run dry and detonate before the fighter lands.
+	var sync_fuel: float = minf(w.AirOperations.fuel_capacity(u), maxf(float(leader.get("sortie_left", 0.0)) + 25.0, 35.0))
+	u.sortie_left = maxf(float(u.get("sortie_left", 0.0)), sync_fuel)
 	if (u.enemy == null or u.enemy.dead) and leader.get("air_state", "ready") == "ready" and leader.enemy != null and not leader.enemy.dead and w.effectiveness(u, leader.enemy) > 0.01:
 		u.enemy = leader.enemy   # the fighter's target (command() may give it a nearer threat)
 		u.target = null

@@ -113,6 +113,8 @@ static func distance(a: Vector3, b: Vector3) -> float:
 static func burn_rate(u: Dictionary) -> float:
 	if u.get("carrier") != null:
 		return 0.35
+	if u.key == "wingman":
+		return 0.08
 	if u.key in ROTARY:
 		return 0.18
 	if u.key in ["bomber", "raider", "maritimePatrol", "aewc"]:
@@ -125,7 +127,9 @@ static func travel_burn(u: Dictionary) -> float:
 	if u.get("carrier") != null:
 		return 0.0
 	var distance_budget := 7500.0
-	if u.key in ["bomber", "raider", "maritimePatrol", "aewc"]:
+	if u.key == "wingman":
+		distance_budget = 11000.0
+	elif u.key in ["bomber", "raider", "maritimePatrol", "aewc"]:
 		distance_budget = 10000.0
 	elif u.key == "heavyLift":
 		distance_budget = 7000.0

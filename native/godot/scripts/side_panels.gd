@@ -1154,7 +1154,6 @@ func _nuclear() -> void:
 	var dc = hud.world.defcon
 	if dc == null:
 		return
-	var ms: Node = hud.world.missiles
 	var lvl: int = dc.level()
 	var card: VBoxContainer = hud._card(hud.UI.BAD if lvl <= 2 else hud.UI.GOLD)
 	card.add_child(hud._text("DEFCON %d" % lvl, 22, hud.UI.CREAM, true))
@@ -1185,13 +1184,6 @@ func _nuclear() -> void:
 		_wrap(mine, "Nuclear weapons: none.%s Your alert is a conventional mobilisation and does not raise the world's nuclear tension." % (" A Nuclear Breakout could build them." if threshold else ""), 12, hud.UI.MUTED)
 	if armed:
 		mine.add_child(hud._text("Deterrent: %s" % ("ready (a second strike is possible)" if dc.deterrent(0) else "none: no nuclear missile stored and no nuclear submarine at sea"), 12, hud.UI.MUTED))
-	if ms != null:
-		var arsenal_row: HBoxContainer = hud._row(mine)
-		var nuke_count: int = ms.stored("nuclear", false)
-		arsenal_row.add_child(hud._text("Nuclear warheads in stock / loaded: %d" % nuke_count, 13, hud.UI.CREAM, true))
-		hud._button(arsenal_row, "Open Arsenal & Load Launchers", func():
-			hud.toggle_panel("ordnance", true)
-			return "", true, "good")
 	var nt = hud.world.get("tests")
 	if nt != null and dc.nuclear(0):
 		var test: VBoxContainer = hud._card(hud.UI.BAD)
