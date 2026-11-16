@@ -228,6 +228,9 @@ var map_lenses: Control = null  # map_lenses.gd: the strategic overlays (F2 supp
 # of the whole army, which is what made large battles crawl.
 const GRID := 8.0
 const ForceCatalog := preload("res://scripts/force_catalog.gd")
+const WarCosts := preload("res://scripts/war_costs.gd")
+const AdditionalPowers := preload("res://scripts/additional_powers.gd")
+const AdditionalFactions := preload("res://scripts/additional_factions.gd")
 var grid := {}
 var b_grid := {}
 var air_sea: Array = []   # living ships and aircraft (not in the ground grid)
@@ -2304,7 +2307,7 @@ func _physics_process(delta: float) -> void:
 			var t_place_now := clock()
 			next = ground_step(unit, next, delta)
 			if next == Vector3.INF: continue
-			if not preload("res://scripts/war_costs.gd").travel(self, unit, node.position, next):
+			if not WarCosts.travel(self, unit, node.position, next):
 				Motion.halt(unit, delta)
 				animate(unit, false)
 				continue
@@ -2328,7 +2331,7 @@ func _physics_process(delta: float) -> void:
 		var t_place := clock()
 		next = ground_step(unit, next, delta)
 		if next == Vector3.INF: continue
-		if not preload("res://scripts/war_costs.gd").travel(self, unit, node.position, next):
+		if not WarCosts.travel(self, unit, node.position, next):
 			Motion.halt(unit, delta)
 			animate(unit, false)
 			continue
@@ -2359,9 +2362,8 @@ func spread_out(unit: Dictionary, slot: int, delta: float) -> void:
 ## unit spawned inside a newly blocked cell may still leave that cell.
 func ground_step(unit: Dictionary, next: Vector3, delta: float) -> Vector3:
 	var pos: Vector3 = unit.node.position
-	var blocked_by_fort := func(p: Vector3) -> bool:
-		return fortifications != null and fortifications.blocks_vehicle(unit, p)
-	if blocked_by_fort.call(next):
+	var has_forts: bool = fortifications != null and not fortifications.entries.is_empty()
+	if has_forts and fortifications.blocks_vehicle(unit, next):
 		Motion.halt(unit, delta)
 		unit.fort_stall = float(unit.get("fort_stall", 0.0)) + delta
 		if float(unit.get("fort_stall", 0.0)) > 1.2:
@@ -2379,7 +2381,7 @@ func ground_step(unit: Dictionary, next: Vector3, delta: float) -> Vector3:
 		return next
 	# Slide along the wall: keep whichever half of the step stays open.
 	for slide in [Vector3(next.x, next.y, pos.z), Vector3(pos.x, next.y, next.z)]:
-		if Vector2(slide.x - pos.x, slide.z - pos.z).length() > 0.002 and open_near(slide) and not blocked_by_fort.call(slide):
+		if Vector2(slide.x - pos.x, slide.z - pos.z).length() > 0.002 and open_near(slide) and not (has_forts and fortifications.blocks_vehicle(unit, slide)):
 			return slide
 	# Pressed into the wall: ease back toward the middle of the nearest open cell.
 	var centre := nearest_open_centre(pos)
@@ -5695,7 +5697,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 	var fired := fire(unit, enemy)
 	spent("    shots", t_shot)
 	if fired:
-		unit.reload = unit.cooldown * (1.0 - preload("res://scripts/additional_powers.gd").bonus(self, unit.owner, "reload") if preload("res://scripts/additional_factions.gd").base(unit.key) in ["artillery", "mlrs", "himars"] else 1.0) * randf_range(0.85, 1.15) * (1.0 - economy.depot_reload() if unit.owner == 0 and economy != null else 1.0)   # ammo depots
+		unit.reload = unit.cooldown * (1.0 - AdditionalPowers.bonus(self, unit.owner, "reload") if AdditionalFactions.base(unit.key) in ["artillery", "mlrs", "himars"] else 1.0) * randf_range(0.85, 1.15) * (1.0 - economy.depot_reload() if unit.owner == 0 and economy != null else 1.0)   # ammo depots
 		unit.last_fire = game_time
 		shots_fired += 1
 	else:

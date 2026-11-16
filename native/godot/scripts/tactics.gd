@@ -20,6 +20,9 @@ const RETARGET := 1.2        # seconds between looks for a better target
 const CHASE_LIMIT := 12.0    # seconds of chasing without closing in before giving up
 const IGNORE_FOR := 10.0     # how long an abandoned target is ignored
 const SUPPORT := ["artillery", "mlrs", "samLauncher", "aaVehicle", "himars", "ewVehicle", "laserAD", "abmLauncher", "df17", "shahedLauncher", "irisT", "hpmVehicle", "tos1a", "brahmos"]
+const _Modern := preload("res://scripts/modern_warfare.gd")
+const _WarTools := preload("res://scripts/war_tools.gd")
+const _AddFactions := preload("res://scripts/additional_factions.gd")
 
 ## Where `unit` should stand to shoot at `enemy`.
 static func firing_spot(w: Node, unit: Dictionary, enemy: Dictionary) -> Vector3:
@@ -65,14 +68,18 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 	var lists: Array = []
 	if w.perf_opts and not (unit.get("fly", false) or unit.get("naval", false)):
 		var span := ceili(radius / w.GRID)
-		var cx := floori(at.x / w.GRID)
-		var cz := floori(at.z / w.GRID)
-		for dz in range(-span, span + 1):
-			for dx in range(-span, span + 1):
-				var bucket = w.grid.get(Vector2i(cx + dx, cz + dz))
-				if bucket != null:
-					lists.append(bucket)
-		lists.append(w.air_sea)
+		var grid_cells := (2 * span + 1) * (2 * span + 1)
+		if grid_cells <= 49 and grid_cells < w.units.size():
+			var cx := floori(at.x / w.GRID)
+			var cz := floori(at.z / w.GRID)
+			for dz in range(-span, span + 1):
+				for dx in range(-span, span + 1):
+					var bucket = w.grid.get(Vector2i(cx + dx, cz + dz))
+					if bucket != null:
+						lists.append(bucket)
+			lists.append(w.air_sea)
+		else:
+			lists.append(w.units)
 	else:
 		lists.append(w.units)
 	var fog_on: bool = w.fog != null and w.fog.enabled
@@ -104,7 +111,7 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 			var eff: float = w.effectiveness(unit, other)
 			if eff <= 0.01:
 				continue
-			if (other.get("fly", false) or other.get("naval", false)) and preload("res://scripts/modern_warfare.gd").hidden(w, other, d, radius):
+			if (other.get("fly", false) or other.get("naval", false)) and _Modern.hidden(w, other, d, radius):
 				continue  # a stealth aircraft or submarine is seen only close in
 			var score: float = d / maxf(unit.range, 1.0) - eff * 0.5 - (1.0 - other.hp / maxf(other.max_hp, 1.0)) * 0.4
 			if d <= unit.range:
@@ -118,15 +125,21 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 		return best
 	var best_d := radius
 	var b_lists: Array = []
+	var use_b_grid := false
 	if w.perf_opts:
 		var bspan := ceili((radius + 20.0) / w.GRID)
-		var bcx := floori(at.x / w.GRID)
-		var bcz := floori(at.z / w.GRID)
-		for dz in range(-bspan, bspan + 1):
-			for dx in range(-bspan, bspan + 1):
-				var bucket = w.b_grid.get(Vector2i(bcx + dx, bcz + dz))
-				if bucket != null:
-					b_lists.append(bucket)
+		var bcells := (2 * bspan + 1) * (2 * bspan + 1)
+		if bcells <= 49 and bcells < w.buildings.size():
+			use_b_grid = true
+			var bcx := floori(at.x / w.GRID)
+			var bcz := floori(at.z / w.GRID)
+			for dz in range(-bspan, bspan + 1):
+				for dx in range(-bspan, bspan + 1):
+					var bucket = w.b_grid.get(Vector2i(bcx + dx, bcz + dz))
+					if bucket != null:
+						b_lists.append(bucket)
+		else:
+			b_lists.append(w.buildings)
 	else:
 		b_lists.append(w.buildings)
 	var seen_b := {}
@@ -134,7 +147,7 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 		for b in b_list:
 			if b.dead or b.owner == own or not (b.owner in foes):
 				continue
-			if w.perf_opts:
+			if use_b_grid:
 				var bid: int = b.root.get_instance_id()
 				if seen_b.has(bid):
 					continue
@@ -172,13 +185,13 @@ static func keep_target(w: Node, unit: Dictionary, delta: float) -> bool:
 	# keeps its target through the turn instead of forgetting it half way.
 	var leash: float = maxf(unit.aggro, unit.range) * 1.6 + (100.0 if unit.key in w.FIXED_WING else 0.0)
 	if unit.key == "carrier":
-		leash = maxf(leash, preload("res://scripts/war_tools.gd").STRIKE_REACH * 1.2)   # its aircraft reach far
+		leash = maxf(leash, _WarTools.STRIKE_REACH * 1.2)   # its aircraft reach far
 	if not unit.get("forced", false) and gap > leash:
 		drop(unit)
 		return false
 	# A chase that does not close the distance is given up for a while.
 	# Aircraft are exempt: they fly through, turn and come back by design.
-	if gap > unit.range and not unit.get("fly", false) and not (unit.key == "carrier" and gap <= preload("res://scripts/war_tools.gd").STRIKE_REACH):   # (a carrier stands off on purpose)
+	if gap > unit.range and not unit.get("fly", false) and not (unit.key == "carrier" and gap <= _WarTools.STRIKE_REACH):   # (a carrier stands off on purpose)
 		if not is_same(unit.get("chase_of"), enemy) or gap < float(unit.get("chase_best", INF)) - 1.5:
 			unit.chase_of = enemy
 			unit.chase_best = gap

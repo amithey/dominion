@@ -471,6 +471,8 @@ func run() -> void:
 	check(open_harm > 0.0 and jammed_harm < open_harm * 0.7, "an EW vehicle blunts a drone's guns (%d harm jammed vs %d)" % [int(jammed_harm), int(open_harm)])
 	cleanup()
 	var lm_target: Dictionary = mk("tank", near(Vector3.ZERO), 0)
+	lm_target.max_hp = 3000.0
+	lm_target.hp = 3000.0
 	mk("ewVehicle", near(Vector3(-6, 0, 6)), 0)
 	var lost_before: int = w.jammed_strikes
 	for i in range(6):

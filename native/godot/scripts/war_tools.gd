@@ -501,10 +501,25 @@ static func near_supply_truck(w: Node, owner: int, pos: Vector3, reach := SUPPLY
 	var s := state(w)
 	if _near(s, owner, "supplyTruck", pos, reach):
 		return true
-	for u in w.units:
-		if not u.dead and int(u.owner) == owner and str(u.get("key", "")) == "supplyTruck" and u.get("node") != null and is_instance_valid(u.node):
-			if Vector2(u.node.position.x - pos.x, u.node.position.z - pos.z).length() <= reach:
-				return true
+	var raw_tick = w.get("sim_tick")
+	var tick: int = int(raw_tick) if raw_tick != null else -1
+	var ucount: int = w.units.size()
+	if int(s.get("truck_tick", -2)) != tick or int(s.get("truck_ucount", -1)) != ucount:
+		s["truck_tick"] = tick
+		s["truck_ucount"] = ucount
+		var by_owner := {}
+		for u in w.units:
+			if not u.dead and str(u.get("key", "")) == "supplyTruck" and u.get("node") != null and is_instance_valid(u.node):
+				var o := int(u.owner)
+				if not by_owner.has(o): by_owner[o] = []
+				by_owner[o].append(u.node.position)
+		s["truck_cache"] = by_owner
+	var cache: Dictionary = s.get("truck_cache", {})
+	if cache.is_empty() or not cache.has(owner):
+		return false
+	for p in cache[owner]:
+		if Vector2(p.x - pos.x, p.z - pos.z).length() <= reach:
+			return true
 	return false
 
 static func consume_truck_reserve(w: Node, owner: int, pos: Vector3, amount: float) -> bool:

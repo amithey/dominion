@@ -1,6 +1,8 @@
 extends RefCounted
 ## Operating costs in game units, not real-world dollars or litres.
 const SORTIE_SECONDS := 240.0
+const _AddFactions := preload("res://scripts/additional_factions.gd")
+const _WarTools := preload("res://scripts/war_tools.gd")
 const GUN := {"tank": 1.2, "heavyTank": 1.6, "apc": 0.25, "aaVehicle": 0.25,
 	"gunboat": 0.6, "corvette": 1.0, "destroyer": 1.6}
 const INTERCEPT := {"samSite": 5.0, "samLauncher": 5.0, "irisT": 6.0,
@@ -16,11 +18,11 @@ static func fuel_per_metre(u: Dictionary) -> float:
 	if u.get("key", "") in ["nuclearSub", "orca", "seaDrone"]: return 0.0
 	if u.get("naval", false): return 0.045
 	if not u.get("vehicle", false): return 0.0
-	var base: String = preload("res://scripts/additional_factions.gd").base(str(u.key))
+	var base: String = _AddFactions.base(str(u.key))
 	return 0.035 if base in ["tank", "heavyTank"] else (0.018 if base in ["apc", "aaVehicle"] else 0.025)
 static func shot_cost(u: Dictionary, weapon: String) -> float:
 	if weapon != "": return float(SALVO.get(weapon, 1.0))
-	var base: String = preload("res://scripts/additional_factions.gd").base(str(u.key))
+	var base: String = _AddFactions.base(str(u.key))
 	return float(GUN.get(base, 1.2 if u.get("vehicle", false) or u.get("naval", false) else 0.08))
 static func sortie_fuel(u: Dictionary) -> float:
 	return 12.0 if u.key in ["bomber", "raider"] else (4.0 if u.key in ["drone", "akinci"] else 7.0)
@@ -64,11 +66,11 @@ static func travel(w: Node, u: Dictionary, from: Vector3, to: Vector3) -> bool:
 	var oil := Vector2(to.x - from.x, to.z - from.z).length() * fuel_per_metre(u)
 	if oil <= 0.0: return true
 	var upos: Vector3 = u.node.position if (u.has("node") and u.node != null and is_instance_valid(u.node)) else from
-	var supplied_field := preload("res://scripts/war_tools.gd").near_supply_truck(w, int(u.owner), upos)
+	var supplied_field := _WarTools.near_supply_truck(w, int(u.owner), upos)
 	if supplied_field:
 		oil *= 0.40
 	if not pay(w, int(u.owner), 0.0, oil):
-		if supplied_field and preload("res://scripts/war_tools.gd").consume_truck_reserve(w, int(u.owner), upos, oil * 2.0):
+		if supplied_field and _WarTools.consume_truck_reserve(w, int(u.owner), upos, oil * 2.0):
 			u.operating_shortage = ""
 			return true
 		blocked(w, u, "fuel")
@@ -78,11 +80,11 @@ static func travel(w: Node, u: Dictionary, from: Vector3, to: Vector3) -> bool:
 static func shot(w: Node, u: Dictionary, weapon: String) -> bool:
 	var cost := shot_cost(u, weapon)
 	var upos: Vector3 = u.node.position if (u.has("node") and u.node != null and is_instance_valid(u.node)) else Vector3.ZERO
-	var supplied_field := preload("res://scripts/war_tools.gd").near_supply_truck(w, int(u.owner), upos)
+	var supplied_field := _WarTools.near_supply_truck(w, int(u.owner), upos)
 	if supplied_field:
 		cost *= 0.40
 	if not pay(w, int(u.owner), cost, 0.0, "shots"):
-		if supplied_field and preload("res://scripts/war_tools.gd").consume_truck_reserve(w, int(u.owner), upos, cost):
+		if supplied_field and _WarTools.consume_truck_reserve(w, int(u.owner), upos, cost):
 			u.operating_shortage = ""
 			return true
 		blocked(w, u, "ammunition budget")
