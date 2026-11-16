@@ -422,6 +422,8 @@ func run() -> void:
 		check(planes.all(func(p): return p.dead or p.air_state not in ["parked", "rearming"]), "jets caught on the ground go up with their airfield")
 		check(planes.all(func(p): return p.dead or p.air_base == null), "and none is left tied to the ruin")
 		w.kill(target)
+	w.diplomacy.make_peace(0, 1)
+	w.power_effects.clear()   # war-phase export controls must not freeze the standalone training checks below
 	var pad: Dictionary = put("helipad")
 	if not pad.is_empty():
 		pad.queue.clear()

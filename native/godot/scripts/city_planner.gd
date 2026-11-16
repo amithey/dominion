@@ -91,8 +91,8 @@ static func best(w: Node, owner: int, key: String, options: Array) -> Variant:
 			"compact":
 				score -= d * 0.6
 			"axial":
-				score -= absi(dr) * 0.90   # drawn out along the avenue (the q axis), without becoming a line
-				if dr == 0: score += 0.90
+				score -= absi(dr) * 1.12   # drawn out along the avenue (the q axis), without becoming a line
+				if dr == 0: score += 1.12
 			"linear":
 				score -= absi(dr) * 0.6
 			_:
@@ -111,7 +111,7 @@ static func best(w: Node, owner: int, key: String, options: Array) -> Variant:
 		# A town is a body, not a string: dense, filling its own gaps first, never a tentacle.
 		score += neighbours * 0.85
 		if neighbours >= 4: score += 2.2     # a gap in the middle of the town
-		elif neighbours <= 1 and d > 1: score -= 1.9   # a lone arm reaching out
+		elif neighbours <= 1 and d > 1: score -= 2.3   # a lone arm reaching out
 		score -= d * 0.48
 		# Sector orientation: group farms, industry, homes, civic and military into distinct town quarters.
 		if sector_dir != Vector3.ZERO:

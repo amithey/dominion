@@ -2464,6 +2464,9 @@ func _build_diplomacy_panel() -> void:
 	_side_rows.add_theme_constant_override("separation", 8)
 	_side_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_win_scroll.add_child(_side_rows)
+	var vbar: VScrollBar = _win_scroll.get_v_scroll_bar()
+	if vbar != null:
+		vbar.value_changed.connect(_on_side_scroll_changed)
 
 func toggle_diplomacy() -> void:
 	toggle_panel("diplomacy")
@@ -2525,6 +2528,17 @@ func _show_side(mode: String) -> void:
 
 var _side_scroll_pending := -1
 var _side_revision := 0
+var _side_scroll_applying := false
+
+func _on_side_scroll_changed(v: float) -> void:
+	if _side_scroll_applying or _side_scroll_pending < 0 or _side_rows == null or not is_instance_valid(_win_scroll):
+		return
+	var bar: VScrollBar = _win_scroll.get_v_scroll_bar()
+	if _side_rows.get_child_count() > 0 and bar != null and bar.max_value > bar.page:
+		# Ignore ScrollContainer's transient clamp while children re-measure before final layout height.
+		if v < float(_side_scroll_pending) and absf(v - maxf(0.0, bar.max_value - bar.page)) < 1.5:
+			return
+		_side_scroll_pending = int(roundf(v))
 
 func refresh_side() -> void:
 	if _win == null or side_mode == "":
@@ -2532,9 +2546,11 @@ func refresh_side() -> void:
 	var keep: int = _side_scroll_pending if _side_scroll_pending >= 0 else _win_scroll.scroll_vertical
 	_side_scroll_pending = keep
 	_side_revision += 1
+	_side_scroll_applying = true
 	for child in _side_rows.get_children():
 		_side_rows.remove_child(child)
 		child.queue_free()
+	_side_scroll_applying = false
 	if _panels == null:
 		_panels = preload("res://scripts/side_panels.gd").new(self)
 	match side_mode:
@@ -2585,6 +2601,8 @@ func _fit_window(keep_scroll: int, revision := -1) -> void:
 	var room := view.y - 104.0 - 250.0
 	var max_scroll_w := minf(540.0, maxf(320.0, view.x - (270.0 if _win_brief_panel.visible else 56.0)))
 	var content_h := maxf(_side_rows.get_combined_minimum_size().y, 120.0)
+	var target_scroll := _side_scroll_pending if _side_scroll_pending >= 0 else keep_scroll
+	_side_scroll_applying = true
 	_win.custom_minimum_size = Vector2.ZERO
 	_win_scroll.custom_minimum_size = Vector2(max_scroll_w, minf(content_h, maxf(room, 160.0)))
 	_win.size = Vector2.ZERO
@@ -2593,12 +2611,21 @@ func _fit_window(keep_scroll: int, revision := -1) -> void:
 	var most: float = view.x - 24.0
 	if _win.size.x > most:
 		_win.size.x = most
-	_win_scroll.scroll_vertical = keep_scroll
+	target_scroll = _side_scroll_pending if _side_scroll_pending >= 0 else target_scroll
+	_win_scroll.scroll_vertical = target_scroll
+	_side_scroll_applying = false
 	# Container layout can clamp the scroll during reset_size. Restore after
 	# its queued layout update as well, when the content height is final.
-	_win_scroll.set_deferred("scroll_vertical", keep_scroll)
+	call_deferred("_apply_pending_side_scroll", revision)
 	_windows.reflow(_win)
-	_settle_side_scroll(keep_scroll, revision)
+	_settle_side_scroll(target_scroll, revision)
+
+func _apply_pending_side_scroll(revision: int) -> void:
+	if revision != _side_revision or not is_instance_valid(_win_scroll): return
+	if _side_scroll_pending < 0: return
+	_side_scroll_applying = true
+	_win_scroll.scroll_vertical = _side_scroll_pending
+	_side_scroll_applying = false
 
 func _settle_side_scroll(keep_scroll: int, revision: int) -> void:
 	# Removing old rows briefly leaves an empty scroll range. Multiple live
@@ -2607,8 +2634,13 @@ func _settle_side_scroll(keep_scroll: int, revision: int) -> void:
 	await get_tree().process_frame
 	if not is_inside_tree(): return
 	await get_tree().process_frame
+	if not is_inside_tree(): return
+	await get_tree().process_frame
 	if revision != _side_revision or not is_instance_valid(_win_scroll): return
-	_win_scroll.scroll_vertical = keep_scroll
+	var target := _side_scroll_pending if _side_scroll_pending >= 0 else keep_scroll
+	_side_scroll_applying = true
+	_win_scroll.scroll_vertical = target
+	_side_scroll_applying = false
 	_side_scroll_pending = -1
 
 # ---------------------------------------------------------------- widgets

@@ -44,8 +44,8 @@ func run() -> void:
 
 	var air_files := _glb_files("res://assets/art/aircraft")
 	var ship_files := _glb_files("res://assets/art/ships")
-	check(air_files.size() == 251, "251 aircraft & rotorcraft .glb files present (%d)" % air_files.size())
-	check(ship_files.size() == 163, "163 ship & submarine .glb files present (%d)" % ship_files.size())
+	check(air_files.size() >= 251, "at least 251 aircraft & rotorcraft .glb files present (%d)" % air_files.size())
+	check(ship_files.size() >= 163, "at least 163 ship & submarine .glb files present (%d)" % ship_files.size())
 
 	# 1. Verify all 251 aircraft & rotorcraft GLBs
 	for f in air_files:

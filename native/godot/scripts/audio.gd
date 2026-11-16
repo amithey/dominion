@@ -122,7 +122,7 @@ func _on_node_added(node: Node) -> void:
 		node.pressed.connect(_play_click)
 
 func _play_click() -> void:
-	if _click != null and is_instance_valid(_click):
+	if _click != null and is_instance_valid(_click) and _click.is_inside_tree():
 		_click.play()
 
 func _setup_buses() -> void:
@@ -161,6 +161,8 @@ func set_war_state(at_war: bool, defcon_level := 5) -> void:
 
 ## Plays a one-shot at a world position. `size` scales how far it carries.
 func play(name: String, at: Vector3, volume_db := 0.0, size := 1.0) -> void:
+	if not is_inside_tree():
+		return
 	if name in ["rifle", "mg_burst", "cannon", "artillery_fire", "missile_launch", "explosion", "nuke_blast"] and at.distance_to(_focus) < 240.0:
 		_battle_hold = 18.0
 	var count: int = _recent.get(name, 0)
@@ -177,6 +179,8 @@ func play(name: String, at: Vector3, volume_db := 0.0, size := 1.0) -> void:
 		return
 	var p := _pool[_next]
 	_next = (_next + 1) % POOL_SIZE
+	if not is_instance_valid(p) or not p.is_inside_tree():
+		return
 	p.stream = stream
 	p.unit_size = 14.0 * size
 	p.volume_db = volume_db
@@ -260,7 +264,7 @@ func _process(delta: float) -> void:
 		_battle_music.volume_db = linear_to_db(maxf(0.0001, _battle_mix * db_to_linear(-12.0)))
 
 func diplomatic_feedback(kind: String) -> void:
-	if _feedback != null and _cues.has(kind):
+	if _feedback != null and is_instance_valid(_feedback) and _feedback.is_inside_tree() and _cues.has(kind):
 		_feedback.stream = _cues[kind]
 		_feedback.play()
 

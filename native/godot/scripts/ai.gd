@@ -175,7 +175,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 			built_or_skipped = true
 		if built_or_skipped:
 			var total: int = world.buildings.filter(func(b): return b.owner == n.id and not b.dead).size()
-			n.next_build = maxf(6.0, float(row(n).buildEvery) * randf_range(0.7, 1.1) - total * 0.3) / s
+			n.next_build = maxf(6.0, float(row(n).buildEvery) * randf_range(0.68, 1.03) - total * 0.3) / s
 
 	# Land: a nation with money to spare buys some at its town halls (as the player does).
 	if n.money > 3500.0 and world.territory != null and randf() < delta * s * 0.02:
@@ -417,7 +417,7 @@ func pick_building(n: Dictionary) -> String:
 	if n.get("wants_coast", false) and not n.get("coast_town_made", false) and preload("res://scripts/ai_navy.gd").state(n).get("needs_sea", false) and float(n.get("no_room", {}).get("villageCenter", 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, "villageCenter") and preload("res://scripts/progression.gd").building_blocked(world, n.id, "villageCenter") == "":
 		n.coast_town_made = true   # (one attempt: the next one is not founded whether or not it found the shore)
 		return "villageCenter"
-	if villages + cities < total / 7:
+	if villages + cities < (total + 2) / 7:
 		var town := "cityCenter" if cities * 2 < villages else "villageCenter"
 		if float(n.get("no_room", {}).get(town, 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, town) and preload("res://scripts/progression.gd").building_blocked(world, n.id, town) == "":
 			return town

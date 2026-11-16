@@ -285,10 +285,15 @@ func run() -> void:
 	await play(40, 8.0)
 	await shot("battle-later")
 	# Missiles.
-	w.place_building("missileSilo", w.test_site("missileSilo", home + Vector3(-60, 0, 60)), 0, true)
+	var silo_at = w.test_site("missileSilo", home + Vector3(-60, 0, 60))
+	if silo_at == null:
+		silo_at = w.test_site("missileSilo", home)
+	if silo_at != null:
+		w.place_building("missileSilo", silo_at, 0, true)
 	w.missiles.stock["cruise"] = 2
 	await look_at(home, 115.0)
-	await click_at(world_point(home + Vector3(-60, 0, 60)))
+	if silo_at != null:
+		await click_at(world_point(silo_at))
 	await shot("silo-selected")
 	w.begin_missile("cruise")
 	await mouse_move(world_point(their.root.position))

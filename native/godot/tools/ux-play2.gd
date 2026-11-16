@@ -78,6 +78,11 @@ func run() -> void:
 	await boot()
 	w.menu.start("easy")
 	for i in range(60): await process_frame
+	for i in range(40000):
+		if current_scene != null and is_instance_valid(current_scene) and current_scene.get("nav_ready") == true and current_scene.get("menu") != null and (current_scene.menu.get("_root") == null or not current_scene.menu._root.visible):
+			w = current_scene
+			break
+		await process_frame
 	var f0 := await fps_now(3.0)
 	print("UX fps idle at start: %.1f" % f0)
 	if f0 < 30: note("perf", "start", "only %.0f fps standing still in the first minute" % f0)

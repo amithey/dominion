@@ -648,6 +648,7 @@ func _model(name: String, build: Callable) -> String:
 	mm.use_custom_data = true
 	mm.mesh = mesh
 	var inst := MultiMeshInstance3D.new()
+	inst.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	inst.multimesh = mm
 	add_child(inst)
 	_models[name] = {"mm": mm, "count": 0, "mesh": mesh}
