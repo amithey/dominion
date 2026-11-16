@@ -223,6 +223,7 @@ var health_overlay: Control  # hud.gd's health bars, for the feature probe
 var homefront: Node3D = null    # homefront.gd: fire engines, ambulances, the power grid and casualties
 var battle_scars: Node3D = null # battle_scars.gd: craters that fade from the hillsides
 var map_lenses: Control = null  # map_lenses.gd: the strategic overlays (F2 supply, F3 air defence, F4 emergency)
+var traffic_ctrl: Node = null   # route_traffic.gd: ambient road, rail and shipping traffic
 # Ground units are bucketed into 8 m cells once per frame; keeping clear of
 # each other and looking for targets then reads a handful of buckets instead
 # of the whole army, which is what made large battles crawl.
@@ -442,6 +443,7 @@ func _ready() -> void:
 	var traffic := preload("res://scripts/route_traffic.gd").new()
 	traffic.world = self
 	add_child(traffic)
+	traffic_ctrl = traffic
 	espionage = preload("res://scripts/espionage.gd").new()
 	add_child(espionage)
 	espionage.setup(self, map.espionage)
@@ -1179,7 +1181,12 @@ func register_building(key: String, owner: int, built: bool, root: Node3D, model
 			if not b_grid.has(bk):
 				b_grid[bk] = []
 			b_grid[bk].append(entity)
+	_notify_traffic()
 	return entity
+
+func _notify_traffic() -> void:
+	if is_instance_valid(traffic_ctrl) and traffic_ctrl.has_method("invalidate"):
+		traffic_ctrl.invalidate()
 
 func clear_site_grass(at: Vector3, radius: float) -> void:
 	if grass_cells.is_empty():
@@ -4951,6 +4958,7 @@ func demolish(b: Dictionary, quiet := false) -> String:
 	clear_ruins(b.key, at)
 	open_navigation(at, footprint)
 	logistics.dirty = true
+	_notify_traffic()
 	refresh_streets()
 	economy.recalculate()
 	if not quiet:
@@ -6139,6 +6147,7 @@ func destroy_building(b: Dictionary) -> void:
 		return   # already a ruin: not crushed, burnt and announced again
 	b.destroyed = true
 	b.dead = true
+	_notify_traffic()
 	b.fire = 0.0
 	b.fire_crews = 0
 	UrbanGarrison.evacuate(self, b, true)   # the squads inside get out of the ruin

@@ -28,6 +28,8 @@ const PER_EDGE := 0.7       # road vehicles per stretch of road
 const MAX_ROAD := 40
 const MAX_TRAINS := 6
 const STRIDE := 16          # floats per MultiMesh instance: 3x4 transform + custom data
+const STUCK_GHOST := 4.5    # seconds blocked before passing through other vehicles
+const STUCK_DESPAWN := 9.0  # seconds stuck on a road before clearing the vehicle
 
 var world: Node
 var vehicles := {}          # cargo ships: id -> {node, path, kind, route}
@@ -83,12 +85,16 @@ void fragment() {
 }
 "
 
+## Force a network refresh on the next frame (called when buildings or roads change).
+func invalidate() -> void:
+	refresh = 0.0
+
 func _process(delta: float) -> void:
 	if world == null or world.logistics == null:
 		return
 	elapsed += delta
 	refresh -= delta
-	if refresh <= 0:
+	if refresh <= 0 or world.logistics.dirty:
 		refresh = 2.0
 		_sync_network()
 		_sync_ships()
@@ -102,8 +108,14 @@ func _process(delta: float) -> void:
 		_move_ships(delta)
 		return
 	_populate(delta)
+	var pruned := false
 	for c in _fleet:
 		_drive(c, delta)
+		if c.get("stranded", false):
+			pruned = true
+	if pruned:
+		_fleet = _fleet.filter(func(c): return not c.get("stranded", false))
+		_layout_dirty = true
 	if _layout_dirty:
 		_layout()
 	_pose()
@@ -148,23 +160,36 @@ func _sync_network() -> void:
 	# A vehicle whose road was cut, or whose body overlaps a building, or that is stuck, stops being drawn.
 	var kept: Array = []
 	for c in _fleet:
-		if _route_intact(c) and not _body_inside_building(c) and float(c.get("total_stuck", 0.0)) <= 15.0:
+		if _route_intact(c) and not _body_inside_building(c) and float(c.get("total_stuck", 0.0)) < STUCK_DESPAWN and not c.get("stranded", false):
 			kept.append(c)
 		else:
 			_layout_dirty = true
 	_fleet = kept
 
+func _point_inside_building(p: Vector3, kind: String) -> bool:
+	var hx: Vector2i = world.logistics.world_hex(p)
+	for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 1)]:
+		var cell: Vector2i = hx + d
+		for item in _solid.get(cell, []):
+			var at: Vector3 = item[0]
+			if Vector2(p.x - at.x, p.z - at.z).length() < float(item[1]):
+				return true
+		if kind == "road":
+			var dist_b = world.district_hex.get(cell)
+			if dist_b != null and not dist_b.dead:
+				var rad: float = maxf(float(dist_b.footprint) * 0.5 + 1.5, 5.5)
+				if Vector2(p.x - dist_b.root.position.x, p.z - dist_b.root.position.z).length() < rad:
+					return true
+	return false
+
 func _body_inside_building(c: Dictionary) -> bool:
+	var kind: String = str(c.get("kind", "road"))
 	for body in c.get("bodies", []):
 		var p: Vector3 = body.get("at", Vector3.INF)
 		if p == Vector3.INF:
 			continue
-		var hx: Vector2i = world.logistics.world_hex(p)
-		for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 1)]:
-			for item in _solid.get(hx + d, []):
-				var at: Vector3 = item[0]
-				if Vector2(p.x - at.x, p.z - at.z).length() < float(item[1]):
-					return true
+		if _point_inside_building(p, kind):
+			return true
 	return false
 
 func _route_intact(c: Dictionary) -> bool:
@@ -178,6 +203,20 @@ func _route_intact(c: Dictionary) -> bool:
 	for i in range(1, hexes.size() - 1):
 		if _is_town(hexes[i]):
 			return false
+	# If a district was placed on either endpoint after the trip started, retire
+	# old tracks that ran straight to the hex centre instead of stopping at _stop_at.
+	if c.kind == "road" and c.path.size() >= 2:
+		var start_h: Vector2i = hexes[0]
+		if _is_town(start_h):
+			var sc := _centre(start_h)
+			if Vector2(c.path[0].x - sc.x, c.path[0].z - sc.z).length() < _stop_at(start_h) - 0.5:
+				return false
+		var end_h: Vector2i = hexes[hexes.size() - 1]
+		if _is_town(end_h):
+			var ec := _centre(end_h)
+			var last_pt: Vector3 = c.path[c.path.size() - 1]
+			if Vector2(last_pt.x - ec.x, last_pt.z - ec.z).length() < _stop_at(end_h) - 0.5:
+				return false
 	return true
 
 func _populate(delta: float) -> void:
@@ -380,8 +419,10 @@ func _new_vehicle(kind: String) -> Dictionary:
 		_make_road_vehicle(c)
 	_set_trip(c, hexes, null, 0.0)
 	c.yaw = _yaw_at(c, c.s)
-	# Never on top of a vehicle already standing there: try again shortly.
+	# Never on top of a vehicle already standing there, or inside a building: try again shortly.
 	var at := _point_at(c, 0.0)
+	if _point_inside_building(at, kind):
+		return {}
 	for o in _fleet:
 		if o.kind == kind and o.bodies[0].has("at") and Vector2(o.bodies[0].at.x - at.x, o.bodies[0].at.z - at.z).length() < 6.0:
 			return {}
@@ -402,7 +443,7 @@ func _next_trip(c: Dictionary) -> void:
 	var came: Vector2i = c.hexes[c.hexes.size() - 2]
 	var hexes := _trip(c.kind, here, came)
 	if hexes.size() < 2:
-		c.wait = 4.0
+		c.stranded = true
 		return
 	var stand: Vector3 = _point_at(c, c.s)
 	var heading := Vector3(sin(c.yaw), 0, cos(c.yaw))
@@ -514,19 +555,25 @@ func _drive(c: Dictionary, delta: float) -> void:
 		var now := _point_at(c, c.s)
 		var climb: float = (world.height_at(ahead.x, ahead.z) - world.height_at(now.x, now.z)) / 6.0
 		c.limit = limit * clampf(1.0 - maxf(climb, 0.0) * c.heavy * 3.0, 0.45, 1.0)
+	if c.tick % 6 == 0 and c.kind == "road" and _point_inside_building(c.bodies[0].get("at", _point_at(c, c.s)), "road"):
+		c.stranded = true
+		return
 	if c.tick % 3 == 0 or not c.has("gap"):
 		c.gap = _gap_ahead(c, c.bodies[0].get("at", _point_at(c, c.s)))
 	# Two vehicles can each wait for the other (head to head at a town's street, or one on top of another where trips
-	# start): a vehicle that has stood still for ten seconds on its way drives through the others for eight.
-	if float(c.v) < 0.05 and remain > 0.35:
+	# start): a vehicle that stalls passes through after STUCK_GHOST s, or despawns after STUCK_DESPAWN s so jams never pile up.
+	if float(c.v) < 0.35 and remain > 0.35:
 		c.stuck_for = float(c.get("stuck_for", 0.0)) + delta
 		c.total_stuck = float(c.get("total_stuck", 0.0)) + delta
-		if float(c.stuck_for) > 10.0:
-			c.ghost = 8.0
+		if float(c.total_stuck) >= STUCK_DESPAWN:
+			c.stranded = true
+			return
+		if float(c.stuck_for) > STUCK_GHOST:
+			c.ghost = 5.0
 			c.stuck_for = 0.0
 	else:
 		c.stuck_for = 0.0
-		if float(c.v) >= 0.2:
+		if float(c.v) >= 1.5:
 			c.total_stuck = 0.0
 	if float(c.get("ghost", 0.0)) > 0.0:
 		c.ghost = float(c.ghost) - delta
