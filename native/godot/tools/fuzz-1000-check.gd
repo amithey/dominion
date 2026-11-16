@@ -116,27 +116,30 @@ func run() -> void:
 	sub.target = null
 	dd.moving = false
 	dd.target = null
+	var depot: Dictionary = w.place_building("ammoDepot", cx + Vector3(120, 0, 20), 0, true)
+	depot.supplied = true
+	trial(ms.storage_slots(house) == 0 and not ms.storage_accepts(house, "nuke"), "civilian house cannot store warheads")
 	for i in range(250):
 		ms.transfers.clear()
 		ms._manifest(complex).clear()
 		ms._manifest(silo).clear()
-		ms._manifest(port).clear()
+		ms._manifest(depot).clear()
 		ms._manifest(shipyard).clear()
 		ms._manifest(sub).clear()
 		ms._manifest(dd).clear()
 		var mode := i % 5
 		if mode == 0:
 			ms._manifest(complex)["nuke"] = 1
-			var err: String = ms.start_transfer(complex, port, "nuke", 1)
+			var err: String = ms.start_transfer(complex, depot, "nuke", 1)
 			var redir: String = ms.redirect_transfer(ms.transfers[0], shipyard) if err == "" and not ms.transfers.is_empty() else "skip"
 			trial(err == "" and redir == "", "nuke transfer+redirect #%d (%s / %s)" % [i, err, redir])
 		elif mode == 1:
 			var r := rng.randf_range(25.0, 64.0)
 			var th := rng.randf_range(0.0, TAU)
-			sub.node.position = port.node.position + Vector3(cos(th) * r, 0, sin(th) * r)
-			ms._manifest(port)["nuke"] = 1
-			var err: String = ms.start_transfer(port, sub, "nuke", 1)
-			trial(err == "", "port->sub nuke load at %.1fm (%s)" % [r, err])
+			sub.node.position = shipyard.node.position + Vector3(cos(th) * r, 0, sin(th) * r)
+			ms._manifest(shipyard)["nuke"] = 1
+			var err: String = ms.start_transfer(shipyard, sub, "nuke", 1)
+			trial(err == "", "shipyard->sub nuke load at %.1fm (%s)" % [r, err])
 		elif mode == 2:
 			var r := rng.randf_range(25.0, 64.0)
 			var th := rng.randf_range(0.0, TAU)
@@ -146,9 +149,9 @@ func run() -> void:
 			trial(err == "", "shipyard->dd tactical load at %.1fm (%s)" % [r, err])
 		elif mode == 3:
 			ms._manifest(silo)["tactical"] = 1
-			var err: String = ms.start_transfer(silo, port, "tactical", 1)
+			var err: String = ms.start_transfer(silo, depot, "tactical", 1)
 			var canc: String = ms.cancel_transfer(ms.transfers[0]) if err == "" and not ms.transfers.is_empty() else "skip"
-			trial(err == "" and canc == "", "silo->port transfer+cancel #%d (%s / %s)" % [i, err, canc])
+			trial(err == "" and canc == "", "silo->depot transfer+cancel #%d (%s / %s)" % [i, err, canc])
 		else:
 			ms._manifest(sub)["nuke"] = 1
 			var ready: Array = ms.ready_platforms("nuke", 0)

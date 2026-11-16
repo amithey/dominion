@@ -332,17 +332,9 @@ func facility_destroyed(b: Dictionary) -> void:
 	if owner == 0:
 		var ms: Node = w.missiles
 		var lost := 0
-		if nuclear:
-			for key in NUCLEAR:
+		for key in ms.types():
+			if ms.local_weapon(key):
 				lost += ms.local_count(b, key)
-		else:
-			var excess := maxi(0, ms.stored("special") - ms.capacity("special"))
-			for key in ms.stock:
-				if ms.category(key) == "special":
-					var removed := mini(excess, int(ms.stock[key]))
-					ms.stock[key] -= removed
-					excess -= removed
-					lost += removed
 		w.hud.notice("Your %s has been destroyed%s." % [what, " with %d weapon%s in it" % [lost, "" if lost == 1 else "s"] if lost > 0 else ""])
 	else:
 		var left := armed(owner, "nuclear" if nuclear else "special")
@@ -655,8 +647,12 @@ func _ai_use() -> void:
 		if key == "":
 			continue
 		var target := _ai_target(owner, key == "bioweapon")
-		var platforms: Array = w.missiles.platforms_for(key, owner)
-		if platforms.is_empty() or target == Vector3.INF:
+		w.missiles.deploy_rival_payload(owner, key)
+		var platforms: Array = w.missiles.ready_platforms(key, owner)
+		if platforms.is_empty():
+			w.missiles.queue_rival_payload(owner, key)
+			continue
+		if target == Vector3.INF:
 			continue
 		n.wmd_at = w.game_time
 		if w.missiles.launch_from(key, target, owner, platforms[0]).has("error"):

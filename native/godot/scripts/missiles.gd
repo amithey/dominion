@@ -29,10 +29,18 @@ var logistics_revision := 0
 var _logistics_step := 0.0
 const Air := preload("res://scripts/air_operations.gd")
 const Costs := preload("res://scripts/war_costs.gd")
-const PORTS := ["port", "shipyard"]
+const SHIPYARD := "shipyard"
+const PORTS := ["shipyard"]
+const STORAGE_FACILITIES := ["strategicComplex", "specialLab", "ammoDepot", "missileSilo", "airfield", "shipyard"]
 const DOCK_REACH := 68.0
 const TACTICAL_SHIPS := ["destroyer", "aegisCruiser"]
 const AIR_LAUNCHERS := ["jet", "bomber", "stealthFighter", "raider"]
+const LAUNCH_UNITS := ["nuclearSub", "submarine", "destroyer", "aegisCruiser", "corvette", "bomber", "raider", "jet", "stealthFighter", "drone", "fpvTeam"]
+const AIR_ONLY_NUKES := ["bunkerBuster", "tsarBomba"]
+var _overlay_mesh := ImmediateMesh.new()
+var _overlay_instance: MeshInstance3D
+var _overlay_labels: Array[Label3D] = []
+var _overlay_clock := 0.0
 # Release distances in map units, tuned independently of the damage radius.
 const AIR_RELEASE_RANGE := {
 	"bunkerBuster": 11.0, "tsarBomba": 11.0, "tacticalNuke": 36.0,
@@ -70,8 +78,11 @@ func category(key: String) -> String:
 func facility_of(key: String) -> String:
 	return FACILITY[category(key)]
 
+func is_unconventional(key: String) -> bool:
+	return category(key) in ["nuclear", "special"]
+
 func local_weapon(key: String) -> bool:
-	return key == "tactical" or category(key) == "nuclear"
+	return key == "tactical" or category(key) in ["nuclear", "special"]
 
 func _alive(entity) -> bool:
 	return entity != null and not entity.dead and is_instance_valid(entity.node)
@@ -102,24 +113,68 @@ func total_for(key: String, owner := 0) -> int:
 			total += int(job.count)
 	return total
 
+func _can_air_carry(key: String, owner: int) -> bool:
+	var cat := category(key)
+	if cat == "nuclear":
+		return not key in ["poseidon", "burevestnik"]
+	if cat == "special":
+		return key != "riotAgent"
+	return load("res://scripts/arsenal_catalog.gd").platform_kind(world, owner, key) in ["air", "air_or_sea"]
+
+func _can_sea_carry(key: String, owner: int) -> bool:
+	if key == "tactical":
+		return true
+	var cat := category(key)
+	if cat == "nuclear":
+		return not key in AIR_ONLY_NUKES
+	if cat == "special":
+		return key != "riotAgent" and key != "bioweapon"
+	return load("res://scripts/arsenal_catalog.gd").platform_kind(world, owner, key) in ["sea", "sub", "air_or_sea", "ground_or_sea", "strategic"]
+
+func is_storage_only(entity: Dictionary) -> bool:
+	return bool(entity.get("is_building", false)) and entity.key in ["ammoDepot", "airfield", SHIPYARD]
+
 func storage_accepts(entity: Dictionary, key: String) -> bool:
-	if not local_weapon(key):
+	if not local_weapon(key) or storage_slots(entity) <= 0:
 		return false
 	if not entity.get("is_building", false):
+		if entity.key in ["drone", "fpvTeam"]:
+			return key == "riotAgent"
 		return _other_platforms_for(key, int(entity.owner), true).any(func(p): return is_same(p, entity))
-	if entity.key in PORTS or entity.key == facility_of(key):
-		return true
-	if entity.key == "missileSilo" or (key == "tactical" and entity.key == "ammoDepot"):
-		return true
-	return entity.key == "airfield" and ( (category(key) == "nuclear" and key != "poseidon") or load("res://scripts/arsenal_catalog.gd").platform_kind(world, entity.owner, key) in ["air", "air_or_sea"])
+	var k := String(entity.get("key", ""))
+	if not k in STORAGE_FACILITIES:
+		return false
+	match k:
+		"ammoDepot":
+			return true
+		"strategicComplex":
+			return category(key) == "nuclear"
+		"specialLab":
+			return category(key) == "special"
+		"missileSilo":
+			return not key in AIR_ONLY_NUKES and key != "poseidon"
+		"airfield":
+			return _can_air_carry(key, int(entity.owner))
+		"shipyard":
+			return _can_sea_carry(key, int(entity.owner))
+	return false
 
 func storage_slots(entity: Dictionary) -> int:
-	match entity.key:
-		"strategicComplex", "airfield": return 2
-		"missileSilo", "ammoDepot", "shipyard", "port": return 4
-	return 2 if entity.key in ["nuclearSub", "submarine", "aegisCruiser", "bomber", "raider"] else 1
+	if entity.get("is_building", false):
+		match entity.key:
+			"strategicComplex", "specialLab", "airfield": return 2
+			"missileSilo", "ammoDepot", "shipyard": return 4
+		return 0
+	if entity.key in ["nuclearSub", "submarine", "aegisCruiser", "bomber", "raider"]:
+		return 2
+	if entity.key in ["destroyer", "corvette", "jet", "stealthFighter", "drone", "fpvTeam"]:
+		return 1
+	return 0
 
 func free_storage(entity: Dictionary) -> int:
+	var slots := storage_slots(entity)
+	if slots <= 0:
+		return 0
 	var used := 0
 	for count in _manifest(entity).values():
 		used += int(count)
@@ -130,41 +185,66 @@ func free_storage(entity: Dictionary) -> int:
 	for job in transfers:
 		if job.owner == entity.owner and (is_same(job.destination, entity) or (job.loading and is_same(job.source, entity))):
 			used += int(job.count)
-	return maxi(0, storage_slots(entity) - used)
+	return maxi(0, slots - used)
 
 func has_local_storage(entity: Dictionary) -> bool:
-	return entity.key in ["strategicComplex", "missileSilo", "ammoDepot", "airfield"] + PORTS
+	if entity.get("is_building", false):
+		return entity.key in STORAGE_FACILITIES
+	return entity.key in LAUNCH_UNITS
 
 func asset_name(entity: Dictionary) -> String:
 	if entity.get("is_building", false):
 		return str(entity.def.name)
 	return str(world.unit_defs.get(entity.key, {}).get("name", entity.key))
 
-func _dock_near(ship: Dictionary, port: Dictionary) -> bool:
-	var reach := DOCK_REACH + float(port.get("def", {}).get("size", 10.0)) * 0.5
-	return Air.distance(ship.node.position, port.node.position) <= reach
+func _dock_near(ship: Dictionary, dock: Dictionary) -> bool:
+	var reach := DOCK_REACH + float(dock.get("def", {}).get("size", 10.0)) * 0.5
+	return Air.distance(ship.node.position, dock.node.position) <= reach
 
 func _supplied(entity: Dictionary) -> bool:
 	return entity.get("supplied", true)
 
-func _at_service(unit: Dictionary, facility: Dictionary, direct := false) -> bool:
+## Returns the friendly operational shipyard or airfield servicing `unit`, or {} when out of service proximity.
+func service_hub_for(unit: Dictionary) -> Dictionary:
+	if unit.is_empty() or unit.get("is_building", false) or unit.dead:
+		return {}
+	var owner := int(unit.owner)
 	if unit.get("naval", false):
 		if unit.get("moving", false) or unit.target != null:
-			return false
-		if direct:
-			return facility.key in ["strategicComplex", "missileSilo", "ammoDepot", "airfield"] + PORTS
-		if facility.key in PORTS:
-			return _dock_near(unit, facility)
-		return facility.key in ["strategicComplex", "missileSilo", "ammoDepot"]
+			return {}
+		var best := {}
+		var best_dist := INF
+		for b in world.buildings:
+			if b.key == SHIPYARD and _active(b, owner) and _supplied(b) and _dock_near(unit, b):
+				var d := Air.distance(unit.node.position, b.node.position)
+				if d < best_dist:
+					best_dist = d
+					best = b
+		return best
 	if unit.get("fly", false):
-		if direct:
-			return unit.air_state in ["parked", "ready"] and facility.key in ["strategicComplex", "missileSilo", "ammoDepot", "airfield"] + PORTS
-		if facility.key == "airfield":
-			return unit.air_state == "parked" and is_same(unit.get("air_base"), facility)
-		return facility.key in ["strategicComplex", "missileSilo", "ammoDepot"] and unit.air_state == "parked"
-	return false
+		if str(unit.get("air_state", "")) != "parked":
+			return {}
+		var ab = unit.get("air_base")
+		if ab != null and typeof(ab) == TYPE_DICTIONARY and ab.get("key", "") == "airfield" and _active(ab, owner) and _supplied(ab):
+			return ab
+		return {}
+	if unit.key in ["drone", "fpvTeam"]:
+		var best_site := {}
+		var best_d := 40.0
+		for b in world.buildings:
+			if b.key in ["specialLab", "ammoDepot", "missileSilo"] and _active(b, owner) and _supplied(b):
+				var d := Air.distance(unit.node.position, b.node.position)
+				if d <= best_d:
+					best_d = d
+					best_site = b
+		return best_site
+	return {}
 
-func transfer_blocked(source: Dictionary, destination: Dictionary, key: String, count := 1, direct := false) -> String:
+func _at_service(unit: Dictionary, facility: Dictionary, _direct := false) -> bool:
+	var hub := service_hub_for(unit)
+	return not hub.is_empty() and is_same(hub, facility)
+
+func transfer_blocked(source: Dictionary, destination: Dictionary, key: String, count := 1, _direct := false) -> String:
 	if not _active(source, int(source.owner)) or not _active(destination, int(source.owner)) or is_same(source, destination):
 		return "Choose two different operational facilities or units of your nation."
 	if count <= 0 or local_count(source, key) < count:
@@ -176,17 +256,81 @@ func transfer_blocked(source: Dictionary, destination: Dictionary, key: String, 
 	var from_unit := not bool(source.get("is_building", false))
 	var to_unit := not bool(destination.get("is_building", false))
 	if from_unit and to_unit:
-		return "Unload at a compatible facility first."
+		return "Unload at a Shipyard or Airfield first."
 	if not _supplied(source) or not _supplied(destination):
 		return "Supply route unavailable."
-	if (from_unit or to_unit) and not _at_service(source if from_unit else destination, destination if from_unit else source, direct):
-		return "Stop the ship at a friendly port or park the aircraft at its airfield."
+	if to_unit:
+		var hub := service_hub_for(destination)
+		if hub.is_empty():
+			if destination.get("naval", false):
+				return "Ship or submarine must be stopped near a friendly Shipyard."
+			if destination.get("fly", false):
+				return "Aircraft must be parked at a friendly Airfield."
+			return "Unit must be stationed near a compatible support facility."
+		if not _supplied(hub):
+			return "Service facility supply route unavailable."
+	if from_unit:
+		var src_hub := service_hub_for(source)
+		if src_hub.is_empty():
+			if source.get("naval", false):
+				return "Ship or submarine must be stopped near a friendly Shipyard to unload."
+			if source.get("fly", false):
+				return "Aircraft must be parked at a friendly Airfield to unload."
+			return "Unit must be stationed near a compatible support facility to unload."
+		if not _supplied(src_hub):
+			return "Service facility supply route unavailable."
 	return ""
 
+func _hub_for_pair(source: Dictionary, destination: Dictionary) -> Dictionary:
+	if not destination.get("is_building", false):
+		return service_hub_for(destination)
+	if not source.get("is_building", false):
+		return service_hub_for(source)
+	return {}
+
 func transfer_duration(source: Dictionary, destination: Dictionary, count: int) -> float:
-	if not (source.get("is_building", false) and destination.get("is_building", false)):
-		return 5.0 + count * 1.5
-	return 6.0 + Air.distance(source.node.position, destination.node.position) / 22.0
+	var from_b := bool(source.get("is_building", false))
+	var to_b := bool(destination.get("is_building", false))
+	if from_b and to_b:
+		return 6.0 + Air.distance(source.node.position, destination.node.position) / 22.0
+	var dock_time := 5.0 + float(count) * 1.5
+	var hub := _hub_for_pair(source, destination)
+	if hub.is_empty():
+		return dock_time
+	var other: Dictionary = source if not to_b else destination
+	if is_same(other, hub):
+		return dock_time
+	return dock_time + 6.0 + Air.distance(other.node.position, hub.node.position) / 22.0
+
+## All friendly entities where `key` can currently be placed/loaded from `source`.
+func valid_destinations(source: Dictionary, key: String, count := 1) -> Array:
+	var out: Array = []
+	if source.is_empty() or not local_weapon(key):
+		return out
+	var owner := int(source.get("owner", 0))
+	for entity in world.buildings + world.units:
+		if entity.dead or int(entity.owner) != owner or is_same(entity, source):
+			continue
+		if transfer_blocked(source, entity, key, count) == "":
+			out.append(entity)
+	return out
+
+## Compatible friendly combat units of `owner` that currently need docking at a Shipyard or Airfield before loading `key`.
+func blocked_candidate_hints(source: Dictionary, key: String, count := 1) -> Array:
+	var out: Array = []
+	if not local_weapon(key) or not source.get("is_building", false):
+		return out
+	var owner := int(source.get("owner", 0))
+	for u in world.units:
+		if u.dead or int(u.owner) != owner or world.disabled(u):
+			continue
+		if not storage_accepts(u, key) or free_storage(u) < count:
+			continue
+		if not service_hub_for(u).is_empty():
+			continue
+		var hint := "Sail near Shipyard" if u.get("naval", false) else ("Park at Airfield" if u.get("fly", false) else "Move near facility")
+		out.append({"entity": u, "reason": hint})
+	return out
 
 ## Returns every building and unit of `owner` currently holding `key`: [{entity, count, can_launch}].
 func where_is(key: String, owner := 0) -> Array:
@@ -202,40 +346,42 @@ func where_is(key: String, owner := 0) -> Array:
 	return out
 
 ## One-click load of `key` from any friendly storage facility (or `preferred_source`) onto `destination`.
-## If `destination` is a moving ship or an airborne aircraft, automatically stops/readies it so loading can proceed.
+## Enforces Shipyard proximity for naval units and Airfield parking for aircraft.
 func quick_load_onto(destination: Dictionary, key: String, count := 1, preferred_source = null) -> String:
 	var owner := int(destination.get("owner", 0))
 	if not destination.get("is_building", false):
-		if destination.get("naval", false):
-			destination.target = null
-			destination.moving = false
-			destination.path = PackedVector3Array()
-		elif destination.get("fly", false) and not String(destination.get("air_state", "ready")) in ["parked", "ready"]:
-			var ab = destination.get("air_base")
-			if ab != null and Air.available(world, destination, ab):
-				Air.order_land(world, destination, ab)
-				return "Aircraft returning to airfield to load %s." % def_of(key).get("name", key)
+		var hub := service_hub_for(destination)
+		if hub.is_empty():
+			if destination.get("naval", false):
+				if destination.get("moving", false) or destination.target != null:
+					return "Stop the ship or submarine near a friendly Shipyard to load %s." % def_of(key).get("name", key)
+				return "Move the ship or submarine near a friendly Shipyard to load %s." % def_of(key).get("name", key)
+			if destination.get("fly", false):
+				return "Land and park the aircraft at a friendly Airfield to load %s." % def_of(key).get("name", key)
+			return "Move unit near a compatible storage facility first."
 	if preferred_source != null and typeof(preferred_source) == TYPE_DICTIONARY and not preferred_source.is_empty():
-		if not is_same(preferred_source, destination) and transfer_blocked(preferred_source, destination, key, count, true) == "":
-			return start_transfer(preferred_source, destination, key, count, true)
+		if not is_same(preferred_source, destination) and transfer_blocked(preferred_source, destination, key, count) == "":
+			return start_transfer(preferred_source, destination, key, count)
 	var best_src := {}
 	var best_score := -999999.0
 	var plats := platforms_for(key, owner)
+	var hub_for_dst := service_hub_for(destination)
 	for b in world.buildings:
 		if b.dead or int(b.owner) != owner or not b.built or local_count(b, key) < count:
 			continue
-		if transfer_blocked(b, destination, key, count, true) != "":
+		if transfer_blocked(b, destination, key, count) != "":
 			continue
 		var is_launcher := plats.any(func(p): return is_same(p, b))
-		var score := float(local_count(b, key)) * 10.0 - (25.0 if is_launcher else 0.0) - Air.distance(b.node.position, destination.node.position) * 0.01
+		var at_hub_bonus := 50.0 if (not hub_for_dst.is_empty() and is_same(b, hub_for_dst)) else 0.0
+		var score := at_hub_bonus + float(local_count(b, key)) * 10.0 - (25.0 if is_launcher else 0.0) - Air.distance(b.node.position, destination.node.position) * 0.01
 		if score > best_score:
 			best_score = score
 			best_src = b
 	if best_src.is_empty():
 		return "No stored %s available to load." % def_of(key).get("name", key)
-	return start_transfer(best_src, destination, key, count, true)
+	return start_transfer(best_src, destination, key, count)
 
-## One-click load of 1 warhead of `key` onto the best available compatible launcher of `owner`.
+## One-click load of 1 warhead of `key` onto the best available docked/parked/silo launcher of `owner`.
 func quick_load_any_launcher(key: String, owner := 0, preferred_source = null, filter_kind := "") -> String:
 	var candidates := _other_platforms_for(key, owner, true)
 	if filter_kind == "sub":
@@ -247,6 +393,10 @@ func quick_load_any_launcher(key: String, owner := 0, preferred_source = null, f
 	elif filter_kind == "silo":
 		candidates = candidates.filter(func(c): return c.get("is_building", false))
 	candidates.sort_custom(func(a, b):
+		var a_ready: bool = not bool(a.get("is_building", false)) and not service_hub_for(a).is_empty()
+		var b_ready: bool = not bool(b.get("is_building", false)) and not service_hub_for(b).is_empty()
+		if a_ready != b_ready:
+			return a_ready
 		var a_unit := not bool(a.get("is_building", false))
 		var b_unit := not bool(b.get("is_building", false))
 		if a_unit != b_unit:
@@ -256,29 +406,68 @@ func quick_load_any_launcher(key: String, owner := 0, preferred_source = null, f
 		if a_sub != b_sub:
 			return a_sub
 		return local_count(a, key) < local_count(b, key))
+	var blocked_msg := ""
 	for dst in candidates:
 		if free_storage(dst) <= 0:
 			continue
 		var res := quick_load_onto(dst, key, 1, preferred_source)
-		if res == "" or res.begins_with("Aircraft returning"):
-			return res
-	return "No compatible launcher with free payload slots."
+		if res == "":
+			return ""
+		if blocked_msg == "":
+			blocked_msg = res
+	return blocked_msg if blocked_msg != "" else "No compatible launcher at a Shipyard or Airfield with free slots."
 
 func _changed_logistics() -> void:
 	logistics_revision += 1
 	changed.emit()
 
-func start_transfer(source: Dictionary, destination: Dictionary, key: String, count := 1, direct := false) -> String:
-	var reason := transfer_blocked(source, destination, key, count, direct)
+func transfer_or_load(source: Dictionary, destination: Dictionary, key: String, count := 1) -> String:
+	return start_transfer(source, destination, key, count)
+
+func start_transfer(source: Dictionary, destination: Dictionary, key: String, count := 1, _direct := false) -> String:
+	var reason := transfer_blocked(source, destination, key, count)
 	if reason != "":
 		return reason
-	var loading: bool = not (source.get("is_building", false) and destination.get("is_building", false))
-	var position: Vector3 = source.node.position
-	var time := transfer_duration(source, destination, count)
+	var from_b := bool(source.get("is_building", false))
+	var to_b := bool(destination.get("is_building", false))
+	var loading: bool = not (from_b and to_b)
+	var hub := _hub_for_pair(source, destination)
+	var stage := "transit"
+	var dock_time := 5.0 + float(count) * 1.5
+	var transit_time := 0.0
+	var leg_from: Vector3 = source.node.position
+	var leg_to: Vector3 = destination.node.position
+	var stage_dur := 0.0
+	if from_b and to_b:
+		stage = "transit"
+		stage_dur = 6.0 + Air.distance(source.node.position, destination.node.position) / 22.0
+		transit_time = stage_dur
+	elif loading and not hub.is_empty():
+		var other_b: Dictionary = source if from_b else destination
+		if is_same(other_b, hub):
+			stage = "loading"
+			stage_dur = dock_time
+		elif from_b:
+			stage = "transit"
+			transit_time = 6.0 + Air.distance(source.node.position, hub.node.position) / 22.0
+			stage_dur = transit_time
+			leg_to = hub.node.position
+		else:
+			stage = "loading"
+			transit_time = 6.0 + Air.distance(hub.node.position, destination.node.position) / 22.0
+			stage_dur = dock_time
+			leg_to = hub.node.position
+	else:
+		stage = "loading"
+		stage_dur = dock_time
+	var total_time := transit_time + (dock_time if loading else 0.0)
 	_manifest(source)[key] = local_count(source, key) - count
 	transfers.append({"id": next_transfer_id, "key": key, "owner": source.owner, "count": count,
-		"source": source, "destination": destination, "start": position, "position": position,
-		"remaining": time, "duration": time, "loading": loading, "direct_load": direct, "status": "Handling"})
+		"source": source, "destination": destination, "via_hub": null if hub.is_empty() else hub,
+		"stage": stage, "start": leg_from, "leg_end": leg_to, "position": leg_from,
+		"remaining": total_time, "duration": total_time, "stage_remaining": stage_dur, "stage_duration": stage_dur,
+		"transit_duration": transit_time, "dock_duration": dock_time,
+		"loading": loading, "status": "In transit" if stage == "transit" else "Loading"})
 	next_transfer_id += 1
 	_changed_logistics()
 	return ""
@@ -290,42 +479,88 @@ func transfer_job(id: int) -> Variant:
 	return null
 
 func redirect_transfer(job: Dictionary, destination: Dictionary) -> String:
-	if job.loading or not transfers.has(job) or not _active(destination, int(job.owner)) or not destination.get("is_building", false):
+	if not transfers.has(job) or not _active(destination, int(job.owner)) or not destination.get("is_building", false):
 		return "Choose an operational storage facility."
+	if job.loading and job.stage == "loading" and job.source != null and not job.source.get("is_building", false):
+		return "Finish unloading at the dock first."
 	if is_same(job.destination, destination):
 		return "Shipment already assigned to this facility."
 	if not storage_accepts(destination, job.key) or free_storage(destination) < job.count or not _supplied(destination):
 		return "Destination cannot accept the shipment."
 	job.destination = destination
+	job.via_hub = null
+	job.loading = false
+	job.stage = "transit"
 	job.start = job.position
+	job.leg_end = destination.node.position
 	job.duration = 8.0 + Air.distance(job.position, destination.node.position) / 16.0
 	job.remaining = job.duration
+	job.stage_duration = job.duration
+	job.stage_remaining = job.duration
+	job.status = "In transit"
 	_changed_logistics()
 	return ""
 
 func _end_transfer(job: Dictionary, receiver) -> void:
 	transfers.erase(job)
-	var delivered: bool = _alive(receiver) and receiver.owner == job.owner
+	var delivered: bool = _alive(receiver) and receiver.owner == job.owner and storage_accepts(receiver, job.key)
 	if delivered:
 		_manifest(receiver)[job.key] = local_count(receiver, job.key) + int(job.count)
 	if job.owner == 0 and world.hud != null:
-		var status := "at " + asset_name(receiver) if delivered else "shipment lost"
+		var status := ("delivered to " + asset_name(receiver)) if delivered else "weapon lost"
 		world.hud.notice("%s x%d: %s." % [def_of(job.key).name, job.count, status])
 	_changed_logistics()
 
 func cancel_transfer(job: Dictionary) -> String:
 	if not transfers.has(job):
 		return "Shipment already finished."
-	if job.loading or (job.remaining >= job.duration and _alive(job.source) and free_storage(job.source) >= job.count):
+	if (job.stage == "loading" and job.source != null and job.source.get("is_building", false)) or (job.remaining >= job.duration and _alive(job.source) and free_storage(job.source) >= job.count):
 		_end_transfer(job, job.source)
 		return ""
-	if _alive(job.source):
+	if _alive(job.source) and job.source.get("is_building", false):
 		return redirect_transfer(job, job.source)
+	var hub = job.get("via_hub")
+	if hub != null and _active(hub, int(job.owner)) and free_storage(hub) >= job.count:
+		return redirect_transfer(job, hub)
 	return "Source unavailable. Redirect the shipment to another facility."
 
 func abandon_transfer(job: Dictionary) -> void:
 	if transfers.has(job):
 		_end_transfer(job, null)
+
+func on_entity_destroyed(entity: Dictionary, announce := true) -> void:
+	if world == null:
+		return
+	var lost_total := 0
+	var manifest := _manifest(entity)
+	for k in manifest.keys():
+		lost_total += int(manifest[k])
+	manifest.clear()
+	entity.erase("payloads")
+	entity.erase("payload_order")
+	if world.get("payload_pick") != null and typeof(world.payload_pick) == TYPE_DICTIONARY and not world.payload_pick.is_empty():
+		var src = world.payload_pick.get("source")
+		if src != null and is_same(src, entity):
+			world.cancel_payload_transfer()
+	for job in transfers.duplicate():
+		var from_ent := is_same(job.source, entity)
+		var to_ent := is_same(job.destination, entity)
+		var hub_ent := job.get("via_hub") != null and is_same(job.via_hub, entity)
+		if not (from_ent or to_ent or hub_ent):
+			continue
+		if job.loading:
+			if to_ent and job.stage == "transit" and job.source != null and _alive(job.source) and job.source.get("is_building", false):
+				redirect_transfer(job, job.source)
+			elif to_ent or from_ent or hub_ent:
+				lost_total += int(job.count)
+				transfers.erase(job)
+		else:
+			if from_ent and job.remaining >= job.duration * 0.9:
+				lost_total += int(job.count)
+				transfers.erase(job)
+	if announce and lost_total > 0 and int(entity.get("owner", -1)) == 0 and world.hud != null:
+		world.hud.notice("%s destroyed — %d carried weapon%s lost with it!" % [asset_name(entity), lost_total, "" if lost_total == 1 else "s"])
+	_changed_logistics()
 
 func assign_legacy(key: String, destination: Dictionary) -> String:
 	if int(unassigned.get(key, 0)) <= 0 or not _active(destination, 0) or not destination.get("is_building", false):
@@ -341,31 +576,71 @@ func _update_transfers(delta: float) -> void:
 	for job in transfers.duplicate():
 		var source = job.source
 		var destination = job.destination
-		if job.loading:
-			if not _alive(source) or source.owner != job.owner:
-				_end_transfer(job, null)
-				continue
-			if not _alive(destination) or destination.owner != job.owner:
-				_end_transfer(job, source)
-				continue
-			var from_site: bool = source.get("is_building", false)
-			if not _at_service(destination if from_site else source, source if from_site else destination, bool(job.get("direct_load", false))):
-				_end_transfer(job, source)
-				continue
-			if not _active(source, job.owner) or not _supplied(source):
-				job.status = "Service paused"
-				continue
+		var hub = job.get("via_hub")
 		if not _active(destination, job.owner) or not _supplied(destination):
 			job.status = "Destination unavailable"
 			continue
-		if not job.loading and _alive(source) and source.owner == job.owner and not _supplied(source):
-			job.status = "Supply route cut"
-			continue
-		job.status = "Loading" if job.loading else "In transit"
-		job.remaining -= delta
-		job.position = job.start.lerp(destination.node.position, clampf(1.0 - job.remaining / job.duration, 0.0, 1.0))
-		if job.remaining <= 0.0:
-			_end_transfer(job, destination)
+		if job.loading:
+			var unit_ent: Dictionary = destination if (source != null and source.get("is_building", false)) else source
+			var fac_ent: Dictionary = hub if hub != null else (source if source.get("is_building", false) else destination)
+			if not _alive(fac_ent) or fac_ent.owner != job.owner:
+				_end_transfer(job, source if (source != null and _alive(source) and source.get("is_building", false)) else null)
+				continue
+			if not _at_service(unit_ent, fac_ent):
+				if str(job.get("stage", "loading")) == "transit" and source != null and _alive(source) and source.get("is_building", false):
+					# Unit departed before convoy reached the hub: deposit at the hub if possible, else return to source.
+					if free_storage(fac_ent) >= job.count and storage_accepts(fac_ent, job.key):
+						redirect_transfer(job, fac_ent)
+					else:
+						redirect_transfer(job, source)
+				else:
+					_end_transfer(job, fac_ent if (free_storage(fac_ent) >= job.count and storage_accepts(fac_ent, job.key)) else source)
+				continue
+			if not _active(fac_ent, job.owner) or not _supplied(fac_ent):
+				job.status = "Service paused"
+				continue
+		else:
+			if _alive(source) and source.owner == job.owner and not _supplied(source):
+				job.status = "Supply route cut"
+				continue
+		var step := delta
+		for _hop in range(4):
+			if step <= 0.0 or not transfers.has(job):
+				break
+			if str(job.get("stage", "transit")) == "transit":
+				job.status = "In transit (via %s)" % asset_name(hub) if (job.loading and hub != null and not is_same(source, hub)) else "In transit"
+			else:
+				job.status = "Unloading at dock" if (source != null and not source.get("is_building", false)) else "Loading onto launcher"
+			var prev_stage := float(job.get("stage_remaining", job.remaining))
+			var spent := minf(step, prev_stage)
+			var next_stage := maxf(0.0, prev_stage - spent)
+			step -= spent
+			job.stage_remaining = next_stage
+			job.remaining = maxf(0.0, float(job.remaining) - spent)
+			var leg_dur := maxf(0.01, float(job.get("stage_duration", job.duration)))
+			var leg_start: Vector3 = job.get("start", source.node.position)
+			var leg_end: Vector3 = job.get("leg_end", destination.node.position)
+			job.position = leg_start.lerp(leg_end, clampf(1.0 - next_stage / leg_dur, 0.0, 1.0))
+			if next_stage > 0.0:
+				break
+			if job.loading and hub != null and str(job.get("stage", "")) == "transit":
+				job.stage = "loading"
+				job.stage_duration = float(job.get("dock_duration", 6.5))
+				job.stage_remaining = job.stage_duration
+				job.start = hub.node.position
+				job.leg_end = destination.node.position
+				job.position = hub.node.position
+			elif job.loading and hub != null and str(job.get("stage", "")) == "loading" and destination.get("is_building", false) and not is_same(hub, destination):
+				job.stage = "transit"
+				job.loading = false
+				job.stage_duration = float(job.get("transit_duration", 6.0))
+				job.stage_remaining = job.stage_duration
+				job.start = hub.node.position
+				job.leg_end = destination.node.position
+				job.position = hub.node.position
+			else:
+				_end_transfer(job, destination)
+				break
 
 func capacity(cat := "conventional") -> int:
 	if cat == "conventional":
@@ -493,6 +768,20 @@ func _other_platforms_for(key: String, owner: int, storage := false) -> Array:
 			elif u.key in air_keys and (storage or u.get("air_state", "ready") in ["ready", "parked"]):
 				out.append(u)
 		return out
+	var cat := category(key)
+	if cat == "special":
+		if key == "riotAgent":
+			var drones: Array = world.units.filter(func(u): return u.owner == owner and not u.dead and u.key in ["drone", "fpvTeam"] and (storage or (not world.disabled(u) and u.get("air_state", "ready") == "ready")))
+			return drones + _sites(owner, key)
+		var out: Array = _sites(owner, key)
+		for u in world.units:
+			if u.dead or int(u.owner) != owner or (not storage and world.disabled(u)):
+				continue
+			if key != "bioweapon" and u.key in ["nuclearSub", "submarine", "destroyer", "aegisCruiser", "corvette"]:
+				out.append(u)
+			elif u.key in AIR_LAUNCHERS and (storage or u.get("air_state", "ready") in ["ready", "parked"]):
+				out.append(u)
+		return out
 	var kind: String = load("res://scripts/arsenal_catalog.gd").platform_kind(world, owner, key)
 	if key == "tactical" and kind == "ground":
 		return _sites(owner, key) + world.units.filter(func(u): return u.owner == owner and not u.dead and u.key in (TACTICAL_SHIPS + ["corvette", "submarine", "nuclearSub"]) and (storage or not world.disabled(u)))
@@ -526,6 +815,13 @@ func launchers_text(key: String, owner := 0) -> String:
 		if key in ["bunkerBuster", "tsarBomba"]:
 			return "a Bomber, Raider, Stealth Fighter or Jet"
 		return "a Submarine, Missile Ship (Destroyer/Cruiser), Bomber, Missile Silo or Strategic Complex"
+	var cat := category(key)
+	if cat == "special":
+		if key == "riotAgent":
+			return "a Drone, FPV team, Special Lab or Missile Silo"
+		if key == "bioweapon":
+			return "an aircraft (Bomber, Raider, Stealth Fighter, Jet), Special Lab or Missile Silo"
+		return "a Special Lab, Missile Silo, Submarine, Missile Ship or Strike Aircraft"
 	var kind: String = load("res://scripts/arsenal_catalog.gd").platform_kind(world, owner, key)
 	if key == "tactical" and kind == "ground": return "a missile silo, submarine, destroyer or cruiser"
 	var named := func(b: String) -> String: return str(world.building_defs.get(b, {}).get("name", b))
@@ -786,12 +1082,127 @@ func position_at(m: Dictionary, f: float) -> Vector3:
 		flat.y = lerpf(lerpf(from.y, cruise, climb), to.y, dive)
 	return flat
 
+func _ready() -> void:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.vertex_color_use_as_albedo = true
+	mat.no_depth_test = true
+	mat.render_priority = 12
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_overlay_instance = MeshInstance3D.new()
+	_overlay_instance.mesh = _overlay_mesh
+	_overlay_instance.material_override = mat
+	_overlay_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_overlay_instance.top_level = true
+	add_child(_overlay_instance)
+
+func _label_at(idx: int, text: String, at: Vector3, colour: Color) -> void:
+	while _overlay_labels.size() <= idx:
+		var l := Label3D.new()
+		l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		l.no_depth_test = true
+		l.fixed_size = false
+		l.pixel_size = 0.08
+		l.font_size = 24
+		l.outline_size = 7
+		l.outline_modulate = Color(0.05, 0.07, 0.06, 0.92)
+		l.render_priority = 13
+		l.visible = false
+		add_child(l)
+		_overlay_labels.append(l)
+	var lbl := _overlay_labels[idx]
+	lbl.text = text
+	lbl.modulate = colour
+	lbl.global_position = at
+	lbl.visible = true
+
+func _ring_verts(centre: Vector3, inner_r: float, outer_r: float, colour: Color, y_lift := 0.55) -> void:
+	var segs := 28
+	var sea := float(world.map.seaLevel) if world != null and world.get("map") != null else 0.0
+	for i in range(segs):
+		var a0 := TAU * float(i) / float(segs)
+		var a1 := TAU * float(i + 1) / float(segs)
+		var p0 := Vector3(centre.x + cos(a0) * inner_r, 0.0, centre.z + sin(a0) * inner_r)
+		var p1 := Vector3(centre.x + cos(a0) * outer_r, 0.0, centre.z + sin(a0) * outer_r)
+		var p2 := Vector3(centre.x + cos(a1) * outer_r, 0.0, centre.z + sin(a1) * outer_r)
+		var p3 := Vector3(centre.x + cos(a1) * inner_r, 0.0, centre.z + sin(a1) * inner_r)
+		for pt in [p0, p1, p2, p0, p2, p3]:
+			var h: float = maxf(float(world.height_at(pt.x, pt.z)), sea) + y_lift if world != null else centre.y + y_lift
+			_overlay_mesh.surface_set_color(colour)
+			_overlay_mesh.surface_add_vertex(Vector3(pt.x, h, pt.z))
+
+func _draw_segment(a: Vector3, b: Vector3, width: float, colour: Color, y_lift := 0.9) -> void:
+	var dir := Vector3(b.x - a.x, 0.0, b.z - a.z)
+	if dir.length_squared() < 0.001:
+		return
+	var perp := Vector3(-dir.z, 0.0, dir.x).normalized() * (width * 0.5)
+	var sea := float(world.map.seaLevel) if world != null and world.get("map") != null else 0.0
+	for pt in [a - perp, a + perp, b + perp, a - perp, b + perp, b - perp]:
+		var h: float = maxf(float(world.height_at(pt.x, pt.z)), sea) + y_lift if world != null else pt.y + y_lift
+		_overlay_mesh.surface_set_color(colour)
+		_overlay_mesh.surface_add_vertex(Vector3(pt.x, h, pt.z))
+
+func _update_overlay(delta: float) -> void:
+	_overlay_clock += delta
+	_overlay_mesh.clear_surfaces()
+	for l in _overlay_labels:
+		l.visible = false
+	if world == null or DisplayServer.get_name() == "headless":
+		return
+	var pick: Dictionary = world.get("payload_pick") if world.get("payload_pick") is Dictionary else {}
+	var own_jobs: Array = transfers.filter(func(j): return int(j.owner) == 0)
+	if pick.is_empty() and own_jobs.is_empty():
+		return
+	_overlay_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+	var pulse := 0.72 + 0.28 * sin(_overlay_clock * 5.0)
+	var l_idx := 0
+	if not pick.is_empty():
+		var src = pick.get("source")
+		var key := str(pick.get("key", ""))
+		var count := maxi(1, int(pick.get("count", 1)))
+		if _alive(src):
+			var sp: Vector3 = src.node.position
+			var sr: float = float(src.get("footprint", 8.0)) * 0.65 if src.get("is_building", false) else 6.0
+			_ring_verts(sp, sr, sr + 1.1, Color(0.95, 0.78, 0.28, 0.95))
+			_label_at(l_idx, "FROM: %s" % def_of(key).get("name", key), sp + Vector3(0, 7.5, 0), Color("f5d26b"))
+			l_idx += 1
+			for dst in valid_destinations(src, key, count):
+				var dp: Vector3 = dst.node.position
+				var r: float = float(dst.get("footprint", 8.0)) * 0.68 if dst.get("is_building", false) else 6.5
+				_ring_verts(dp, 0.3, r, Color(0.18, 0.92, 0.42, 0.22 * pulse), 0.48)
+				_ring_verts(dp, r, r + 1.4, Color(0.24, 1.0, 0.48, 0.95), 0.6)
+				var tag := "LOAD" if not dst.get("is_building", false) else ("UNLOAD" if not src.get("is_building", false) else ("SILO" if dst.key == "missileSilo" else ("DEPOT" if dst.key == "ammoDepot" else ("SHIPYARD" if dst.key == "shipyard" else ("AIRFIELD" if dst.key == "airfield" else "STORE")))))
+				_label_at(l_idx, "%s (%d free · %.0fs)" % [tag, free_storage(dst), transfer_duration(src, dst, count)], dp + Vector3(0, 8.0, 0), Color(0.45, 1.0, 0.62))
+				l_idx += 1
+			for hint in blocked_candidate_hints(src, key):
+				var u: Dictionary = hint.entity
+				var up: Vector3 = u.node.position
+				_ring_verts(up, 5.2, 6.2, Color(0.95, 0.65, 0.22, 0.72), 0.52)
+				_label_at(l_idx, hint.reason, up + Vector3(0, 7.0, 0), Color(0.98, 0.78, 0.36))
+				l_idx += 1
+	for job in own_jobs:
+		if not _alive(job.destination):
+			continue
+		var a: Vector3 = job.position
+		var b: Vector3 = job.get("leg_end", job.destination.node.position)
+		var hub = job.get("via_hub")
+		_draw_segment(a, b, 0.55, Color(0.35, 0.92, 0.96, 0.75))
+		if hub != null and _alive(hub) and str(job.get("stage", "")) == "transit" and not is_same(hub, job.destination):
+			_draw_segment(hub.node.position, job.destination.node.position, 0.45, Color(0.3, 0.95, 0.55, 0.65))
+		_ring_verts(a, 1.4, 2.5, Color(0.96, 0.84, 0.32, 0.95), 1.2)
+		var tag_txt := "%s · %.0fs" % [def_of(job.key).get("icon", job.key), maxf(0.0, float(job.remaining))]
+		_label_at(l_idx, tag_txt, a + Vector3(0, 5.0, 0), Color(0.45, 0.96, 1.0))
+		l_idx += 1
+	_overlay_mesh.surface_end()
+
 func _physics_process(delta: float) -> void:
 	_logistics_step += delta
 	if _logistics_step >= 0.25:
 		_update_transfers(_logistics_step)
 		_update_air_payloads()
 		_logistics_step = 0.0
+	_update_overlay(delta)
 	if world == null:
 		return
 	clock += delta
@@ -960,8 +1371,15 @@ func _capture_logistics(buildings: Array, units: Array) -> Dictionary:
 	for job in transfers:
 		shipments.append({"id": job.id, "key": job.key, "owner": job.owner, "count": job.count,
 			"source": _save_entity(job.source, buildings, units), "destination": _save_entity(job.destination, buildings, units),
-			"start": _save_point(job.start), "position": _save_point(job.position), "remaining": job.remaining,
-			"duration": job.duration, "loading": job.loading, "status": job.status})
+			"via_hub": _save_entity(job.get("via_hub"), buildings, units),
+			"stage": str(job.get("stage", "transit")),
+			"start": _save_point(job.start), "leg_end": _save_point(job.get("leg_end", job.destination.node.position if _alive(job.destination) else job.position)),
+			"position": _save_point(job.position), "remaining": job.remaining,
+			"duration": job.duration, "stage_remaining": float(job.get("stage_remaining", job.remaining)),
+			"stage_duration": float(job.get("stage_duration", job.duration)),
+			"transit_duration": float(job.get("transit_duration", job.duration)),
+			"dock_duration": float(job.get("dock_duration", 6.5)),
+			"loading": job.loading, "status": job.status})
 	return {"payloads": payloads, "shipments": shipments, "unassigned": unassigned.duplicate(), "next_id": next_transfer_id}
 
 func _restore_logistics(data: Dictionary, buildings: Array, units: Array) -> void:
@@ -1001,8 +1419,13 @@ func _restore_logistics(data: Dictionary, buildings: Array, units: Array) -> voi
 		var job: Dictionary = row.duplicate()
 		job.source = _load_entity(row.source, buildings, units)
 		job.destination = _load_entity(row.destination, buildings, units)
+		job.via_hub = _load_entity(row.get("via_hub"), buildings, units)
 		job.start = _load_point(row.start)
+		job.leg_end = _load_point(row.leg_end) if row.has("leg_end") else (job.destination.node.position if _alive(job.destination) else _load_point(row.position))
 		job.position = _load_point(row.position)
+		if not job.has("stage"): job.stage = "loading" if job.loading else "transit"
+		if not job.has("stage_remaining"): job.stage_remaining = job.remaining
+		if not job.has("stage_duration"): job.stage_duration = job.duration
 		transfers.append(job)
 	_changed_logistics()
 

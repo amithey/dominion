@@ -47,11 +47,21 @@ func run() -> void:
 	var ms: Node = world.missiles
 	var silo: Dictionary = world.place_building("missileSilo", home + Vector3(28, 0, 16), 0, true)
 	var complex: Dictionary = world.place_building("strategicComplex", home + Vector3(-32, 0, 12), 0, true)
-	var port: Dictionary = world.place_building("port", sea, 0, true)
+	var shipyard: Dictionary = world.place_building("shipyard", sea, 0, true)
+	var comm_port: Dictionary = world.place_building("port", sea + Vector3(95, 0, 0), 0, true)
+	var depot: Dictionary = world.place_building("ammoDepot", home + Vector3(12, 0, -24), 0, true)
+	var farm: Dictionary = world.place_building("farm", home + Vector3(48, 0, 24), 0, true)
+	var house: Dictionary = world.place_building("residential", home + Vector3(56, 0, 24), 0, true)
 	var sub: Dictionary = world.spawn_unit("nuclearSub", sea + Vector3(5, 0, 0), 0)
 	var ship: Dictionary = world.spawn_unit("destroyer", sea + Vector3(9, 0, 0), 0)
-	for site in [silo, complex, port]:
+	var sea_far_sub: Dictionary = world.spawn_unit("nuclearSub", sea + Vector3(220, 0, 0), 0)
+	for site in [silo, complex, shipyard, comm_port, depot, farm, house]:
 		site.supplied = true
+	check(ms.storage_slots(farm) == 0 and not ms.storage_accepts(farm, "nuke"), "farm cannot store nuclear/tactical weapons")
+	check(ms.storage_slots(house) == 0 and not ms.storage_accepts(house, "tactical"), "residential building cannot store weapons")
+	check(ms.storage_slots(comm_port) == 0 and not ms.storage_accepts(comm_port, "nuke"), "commercial port cannot store warheads")
+	check(ms.storage_slots(depot) > 0 and ms.storage_accepts(depot, "nuke") and ms.storage_accepts(depot, "chemical"), "ammoDepot accepts unconventional warheads for storage")
+	check(ms.quick_load_onto(sea_far_sub, "nuke", 1, complex) != "", "open-ocean submarine away from Shipyard cannot load nuclear weapons")
 	var production: String = ms.produce(silo, "tactical")
 	check(production == "", "production queues a tactical missile (%s)" % production)
 	check(ms.local_count(silo, "tactical") == 0, "queued weapon unavailable before completion")
@@ -59,20 +69,20 @@ func run() -> void:
 	world.update_training(10.0)
 	check(ms.local_count(silo, "tactical") == 1 and ms.total_for("tactical") == 1, "training credits only the producing silo")
 	check(ms.launch_from("tactical", home, 0, ship).has("error"), "empty surface launcher cannot borrow from silo")
-	var transfer: String = ms.start_transfer(silo, port, "tactical")
-	check(transfer == "", "silo to port transfer starts (%s)" % transfer)
+	var transfer: String = ms.start_transfer(silo, shipyard, "tactical")
+	check(transfer == "", "silo to shipyard transfer starts (%s)" % transfer)
 	if transfer != "":
 		quit(1)
 		return
 	var job: Dictionary = ms.transfers[0]
 	var shipment_id := int(job.id)
 	var remaining := float(job.remaining)
-	port.supplied = false
+	shipyard.supplied = false
 	ms._update_transfers(5.0)
 	check(is_equal_approx(job.remaining, remaining), "cut supply pauses the shipment")
-	port.supplied = true
+	shipyard.supplied = true
 	ms._update_transfers(1.0)
-	check(ms.local_count(silo, "tactical") == 0 and ms.local_count(port, "tactical") == 0 and ms.total_for("tactical") == 1, "in-transit weapon counted once")
+	check(ms.local_count(silo, "tactical") == 0 and ms.local_count(shipyard, "tactical") == 0 and ms.total_for("tactical") == 1, "in-transit weapon counted once")
 	remaining = float(job.remaining)
 	var snapshot: Dictionary = JSON.parse_string(JSON.stringify(world.saves.capture()))
 	world.saves.restore(snapshot)
@@ -80,21 +90,21 @@ func run() -> void:
 	job = ms.transfer_job(shipment_id)
 	check(is_equal_approx(float(job.remaining), remaining) and ms.total_for("tactical") == 1, "shipment ID, progress and quantity restored")
 	silo = job.source
-	port = job.destination
-	port.supplied = true
+	shipyard = job.destination
+	shipyard.supplied = true
 	silo.supplied = true
 	ms._update_transfers(120.0)
-	check(ms.local_count(port, "tactical") == 1 and ms.transfers.is_empty(), "shipment delivered to its reserved destination")
+	check(ms.local_count(shipyard, "tactical") == 1 and ms.transfers.is_empty(), "shipment delivered to its reserved destination")
 	ship = world.units.filter(func(u): return not u.dead and u.owner == 0 and u.key == "destroyer")[-1]
-	sub = world.units.filter(func(u): return not u.dead and u.owner == 0 and u.key == "nuclearSub")[-1]
-	check(ms.start_transfer(port, ship, "tactical") == "", "a stopped compatible ship can load at the port")
+	sub = world.units.filter(func(u): return not u.dead and u.owner == 0 and u.key == "nuclearSub" and u.node.position.distance_to(shipyard.node.position) < 60.0)[0]
+	check(ms.start_transfer(shipyard, ship, "tactical") == "", "a stopped compatible ship can load at the shipyard")
 	ship.target = ship.node.position + Vector3(100, 0, 0)
 	ms._update_transfers(2.0)
-	check(ms.transfers.is_empty() and ms.local_count(port, "tactical") == 1 and ms.local_count(ship, "tactical") == 0, "departure during loading returns the weapon to port")
+	check(ms.transfers.is_empty() and ms.local_count(shipyard, "tactical") == 1 and ms.local_count(ship, "tactical") == 0, "departure during loading returns the weapon to shipyard")
 	ship.target = null
-	check(ms.start_transfer(port, ship, "tactical") == "", "loading can be reissued")
+	check(ms.start_transfer(shipyard, ship, "tactical") == "", "loading can be reissued")
 	ms._update_transfers(20.0)
-	check(ms.local_count(ship, "tactical") == 1 and ms.local_count(port, "tactical") == 0, "completed loading moves the weapon onto the ship")
+	check(ms.local_count(ship, "tactical") == 1 and ms.local_count(shipyard, "tactical") == 0, "completed loading moves the weapon onto the ship")
 	var launched: Dictionary = ms.launch_from("tactical", home, 0, ship)
 	check(not launched.has("error") and ms.local_count(ship, "tactical") == 0 and ms.total_for("tactical") == 0, "ship launches exactly one carried missile")
 	check(ms.launch_from("tactical", home, 0, ship).has("error"), "second launch cannot consume the same missile again")
@@ -105,9 +115,16 @@ func run() -> void:
 	check(ms.local_count(complex, "nuke") == 2 and int(ms.unassigned.get("nuke", 0)) == 1, "legacy inventory fills the complex and preserves the excess")
 	check(ms.ready_platforms("nuke").has(complex) and not ms.ready_platforms("nuke").has(sub), "empty submarine has no launch-ready weapon")
 	complex.supplied = true
-	check(ms.start_transfer(complex, port, "nuke", 2) == "", "complex sends a nuclear payload to the port")
+	depot = world.buildings.filter(func(b): return b.owner == 0 and b.key == "ammoDepot")[-1]
+	depot.supplied = true
+	var green_dests: Array = ms.valid_destinations(complex, "nuke", 1)
+	check(green_dests.any(func(d): return is_same(d, depot)), "green placement highlights ammoDepot as valid storage")
+	check(green_dests.any(func(d): return is_same(d, sub)), "green placement highlights shipyard-docked submarine as valid launcher")
+	check(not green_dests.any(func(d): return d.key in ["farm", "residential", "port"]), "green placement never includes farms, houses, or commercial ports")
+	check(ms.start_transfer(complex, shipyard, "nuke", 2) == "", "complex sends a nuclear payload to the shipyard")
 	ms._update_transfers(120.0)
-	check(ms.start_transfer(port, sub, "nuke", 2) == "", "submarine can load a compatible payload")
+	var sub_load_err: String = ms.start_transfer(shipyard, sub, "nuke", 2)
+	check(sub_load_err == "", "submarine can load a compatible payload (%s)" % sub_load_err)
 	ms._update_transfers(20.0)
 	check(ms.ready_platforms("nuke").has(sub), "submarine carries a launch-ready payload")
 	world.defcon.authorise_release()
@@ -115,6 +132,13 @@ func run() -> void:
 	check(not sub_shot.has("error") and ms.local_count(sub, "nuke") == 1, "submarine launches a weapon from its own loaded inventory")
 	world.kill(sub)
 	check(ms.total_for("nuke") == 1, "sinking the loaded submarine removes its remaining payload only")
+	ms.finished("nuke", complex)
+	check(ms.start_transfer(complex, depot, "nuke", 1) == "", "nuclear warhead transfers from complex to ammoDepot")
+	ms._update_transfers(120.0)
+	check(ms.local_count(depot, "nuke") == 1, "ammoDepot stores transferred nuclear warhead")
+	var nuke_before_destroy: int = ms.total_for("nuke")
+	world.destroy_building(depot)
+	check(ms.local_count(depot, "nuke") == 0 and ms.total_for("nuke") == nuke_before_destroy - 1, "destroying ammoDepot destroys all warheads stored inside")
 
 	var field: Dictionary = world.place_building("airfield", home + Vector3(25, 0, -40), 0, true)
 	var forward: Dictionary = world.place_building("airfield", home + Vector3(245, 0, -40), 0, true)
@@ -185,10 +209,43 @@ func run() -> void:
 	else:
 		check(false, "fixture needs a rival that fields tactical missiles")
 
+	# Routed two-stage air transfer, special CBRN local storage/destruction, and Strategic Arsenal UI
+	var depot2: Dictionary = world.place_building("ammoDepot", home + Vector3(-18, 0, -28), 0, true)
+	depot2.supplied = true
+	var lab: Dictionary = world.place_building("specialLab", home + Vector3(-42, 0, -20), 0, true)
+	lab.supplied = true
+	ms.finished("chemical", lab)
+	check(ms.local_count(lab, "chemical") == 1, "specialLab stores finished chemical warhead locally")
+	check(ms.transfer_or_load(lab, depot2, "chemical", 1) == "", "specialLab can transfer chemical warhead to ammoDepot")
+	ms._update_transfers(120.0)
+	check(ms.local_count(depot2, "chemical") == 1, "chemical warhead arrived in ammoDepot storage")
+
+	# Airborne bomber cannot load while flying; parked bomber receives routed two-stage transfer via airfield
+	bomber.air_state = "ready"
+	ms.finished("tacticalNuke", complex)
+	check(ms.transfer_or_load(complex, bomber, "tacticalNuke", 1) != "", "flying bomber cannot load warheads")
+	bomber.air_state = "parked"
+	bomber.air_base = forward
+	check(ms.transfer_or_load(complex, bomber, "tacticalNuke", 1) == "", "parked bomber accepts routed two-stage warhead transfer")
+	ms._update_transfers(200.0)
+	check(ms.local_count(bomber, "tacticalNuke") == 1, "parked bomber receives warhead after transit + runway load")
+
+	# Strategic Arsenal panel opens with green map pick, Show focus, and portrait cards; carrier destruction purges payload
+	world.begin_payload_transfer(depot2, "chemical")
+	check(not world.payload_pick.is_empty() and ms.valid_destinations(depot2, "chemical", 1).size() > 0, "green placement mode highlights valid destinations")
+	world.hud.toggle_panel("ordnance", true)
+	await process_frame
+	check(world.hud._win.visible and world.hud._side_rows.get_child_count() > 2, "Strategic Arsenal panel renders owned weapons and green banner")
+	world.hud.focus_asset(bomber)
+	var cam_xz := Vector2(world.cam_focus.x - bomber.node.position.x, world.cam_focus.z - bomber.node.position.z).length()
+	check(bomber.selected and cam_xz < 5.0, "Show button centers camera and selects carrier unit (xz=%.1f)" % cam_xz)
+	world.cancel_payload_transfer()
+
 	bomber.air_state = "ready"
 	bomber.sortie_left = 0.001
 	Air.update(world, bomber, 1.0)
 	check(bomber.dead, "out of fuel in flight loses the aircraft")
+	check(ms.local_count(bomber, "tacticalNuke") == 0 and ms.total_for("tacticalNuke") == 0, "destroying loaded bomber destroys its carried tacticalNuke")
 	print("STRATEGIC_LOGISTICS %s (%d checks)" % ["PASS" if failures == 0 else "FAIL", checks])
 	quit(0 if failures == 0 else 1)
 

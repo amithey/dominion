@@ -101,24 +101,26 @@ func run() -> void:
 	var home_soldiers: Array = world.units.filter(func(u): return not u.dead and u.owner == 0 and u.key == "soldier" and not u.get("stowed", false) and u.node.position.distance_to(pad.root.position) < 65.0)
 	check(home_soldiers.size() >= 3, "extracted soldiers are safely back at home base (%d)" % home_soldiers.size())
 
-	# 6. Nuclear warheads loading onto Submarine, Nuclear Submarine, and Destroyer / Cruiser!
+	# 6. Nuclear warheads loading onto Submarine, Nuclear Submarine, and Destroyer / Cruiser (must be stopped near a Shipyard!)
 	var ms: Node = world.missiles
 	var sea = world.water_near(home, 300)
 	check(sea != null, "open sea found for naval nuclear loading")
 	var complex_at = world.test_site("strategicComplex", home)
 	var complex: Dictionary = world.place_building("strategicComplex", complex_at, 0, true)
 	complex.supplied = true
-	var sub_tac: Dictionary = world.spawn_unit("submarine", sea, 0)
-	var sub_nuc: Dictionary = world.spawn_unit("nuclearSub", sea + Vector3(8, 0, 0), 0)
-	var ship_dd: Dictionary = world.spawn_unit("destroyer", sea + Vector3(16, 0, 0), 0)
+	var shipyard: Dictionary = world.place_building("shipyard", sea, 0, true)
+	shipyard.supplied = true
+	var sub_tac: Dictionary = world.spawn_unit("submarine", sea + Vector3(6, 0, 0), 0)
+	var sub_nuc: Dictionary = world.spawn_unit("nuclearSub", sea + Vector3(12, 0, 0), 0)
+	var ship_dd: Dictionary = world.spawn_unit("destroyer", sea + Vector3(18, 0, 0), 0)
 	var nuke_key := "tacticalNuke" if ms.available_to(0, "tacticalNuke") else "nuke"
 	ms.finished(nuke_key, complex)
 	ms.finished(nuke_key, complex)
 	ms.finished("nuke", complex)
-	check(ms.quick_load_onto(sub_tac, nuke_key, 1) == "", "quick_load_onto loads %s onto Submarine" % nuke_key)
-	check(ms.quick_load_onto(ship_dd, nuke_key, 1) == "", "quick_load_onto loads %s onto Destroyer" % nuke_key)
-	check(ms.quick_load_onto(sub_nuc, "nuke", 1) == "", "quick_load_onto loads nuke onto Nuclear Submarine")
-	ms._update_transfers(30.0)
+	check(ms.quick_load_onto(sub_tac, nuke_key, 1) == "", "quick_load_onto routes %s via shipyard onto Submarine" % nuke_key)
+	check(ms.quick_load_onto(ship_dd, nuke_key, 1) == "", "quick_load_onto routes %s via shipyard onto Destroyer" % nuke_key)
+	check(ms.quick_load_onto(sub_nuc, "nuke", 1) == "", "quick_load_onto routes nuke via shipyard onto Nuclear Submarine")
+	ms._update_transfers(120.0)
 	check(ms.local_count(sub_tac, nuke_key) == 1, "Submarine holds loaded %s" % nuke_key)
 	check(ms.local_count(ship_dd, nuke_key) == 1, "Destroyer holds loaded %s" % nuke_key)
 	check(ms.local_count(sub_nuc, "nuke") == 1, "Nuclear Submarine holds loaded nuke")

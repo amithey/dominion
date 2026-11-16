@@ -1281,13 +1281,16 @@ Stock %d%s, %s%.1f per second." % [RESOURCES.filter(func(x): return x[0] == key)
 		var why: String = world.defcon.cause()
 		_extra.defcon[1].tooltip_text = "DEFCON %d · %s%s
 Your forces: DEFCON %d (%s). Press K." % [lvl, world.defcon.DESC[lvl], (" Cause: %s." % why) if why != "" else "", int(world.defcon.posture[0]), world.defcon.posture_text(int(world.defcon.posture[0]), world.defcon.nuclear(0))]
-	var has_ordnance_assets: bool = world.buildings.any(func(b): return not b.dead and b.owner == 0 and b.key in ["missileSilo", "strategicComplex", "specialLab", "ammoDepot"]) or world.units.any(func(u): return not u.dead and u.owner == 0 and u.key in ["nuclearSub", "aegisCruiser", "destroyer", "bomber", "raider"])
-	var silos: bool = world.missiles != null and (world.missiles.stored() > 0 or world.missiles.stored("nuclear") > 0 or not world.missiles.silos().is_empty() or not world.missiles.transfers.is_empty() or has_ordnance_assets)
+	var ms_top = world.missiles
+	var has_ordnance_assets: bool = ms_top != null and (
+		world.buildings.any(func(b): return not b.dead and b.owner == 0 and b.key in ms_top.STORAGE_FACILITIES)
+		or world.units.any(func(u): return not u.dead and u.owner == 0 and u.key in ms_top.LAUNCH_UNITS))
+	var silos: bool = ms_top != null and (ms_top.stored() > 0 or ms_top.stored("nuclear") > 0 or ms_top.stored("special") > 0 or not ms_top.silos().is_empty() or not ms_top.transfers.is_empty() or has_ordnance_assets)
 	_extra.missiles[1].visible = silos
 	if silos:
-		_extra.missiles[0].text = "%d/%d" % [world.missiles.stored("conventional", true), world.missiles.capacity()]
-		_extra.missiles[1].tooltip_text = "Shared conventional stock %d/%d. Local payloads: %d tactical, %d nuclear. Click to open Strategic Arsenal & Payloads." % [
-			world.missiles.stored("conventional", true), world.missiles.capacity(), world.missiles.total_for("tactical"), world.missiles.stored("nuclear")]
+		_extra.missiles[0].text = "%d/%d" % [ms_top.stored("conventional", true), ms_top.capacity()]
+		_extra.missiles[1].tooltip_text = "Conventional stock %d/%d · Local payloads: %d nuclear, %d special, %d tactical. Click to open Strategic Arsenal." % [
+			ms_top.stored("conventional", true), ms_top.capacity(), ms_top.stored("nuclear"), ms_top.stored("special"), ms_top.total_for("tactical")]
 	# At laptop widths, stack the national figures like the resource yields.
 	# Keep every figure and its normal font size clear of the time controls.
 	if get_viewport().get_visible_rect().size.x < 1500.0:
@@ -1497,19 +1500,35 @@ func _action_bars(b: Dictionary) -> void:
 			_section("Stockpile · select a target")
 			var count := 0
 			for m in ms.types():
-				if ms.local_weapon(m) or int(ms.stock.get(m, 0)) <= 0 or (b.key != "missileSilo" and ms.category(m) != cat): continue
+				if b.key != "missileSilo" and ms.category(m) != cat:
+					continue
+				if ms.local_weapon(m):
+					var local_here: int = ms.local_count(b, m)
+					if local_here <= 0:
+						continue
+					count += 1
+					var why_local: String = ms.locked(m)
+					var can_fire_here: bool = ms.ready_platforms(m).any(func(p): return is_same(p, b))
+					if can_fire_here:
+						_bar("missile:" + m, "%s · ×%d here" % [preload("res://scripts/weapon_copy.gd").display_name(world, m), local_here], preload("res://scripts/weapon_copy.gd").summary(world, m), {}, 0.0, why_local, func(): world.begin_missile(m, b), "Choose target · fires 1 stored weapon")
+					else:
+						_bar("missile:" + m, "%s · ×%d stored here" % [preload("res://scripts/weapon_copy.gd").display_name(world, m), local_here], "Transfer onto a green-highlighted launcher or storage site.", {}, 0.0, "", func(): world.begin_payload_transfer(b, m), "Place / Move on green map")
+					_list.get_child(_list.get_child_count() - 1).tooltip_text = preload("res://scripts/weapon_copy.gd").tooltip(world, m, false)
+					continue
+				if int(ms.stock.get(m, 0)) <= 0:
+					continue
 				count += 1
 				var why: String = ms.locked(m)
 				if why == "" and ms.platforms_for(m).is_empty(): why = "Fired from " + ms.launchers_text(m)
 				_bar("missile:" + m, "%s · %d available" % [preload("res://scripts/weapon_copy.gd").display_name(world, m), ms.stock[m]], preload("res://scripts/weapon_copy.gd").summary(world, m), {}, 0.0, why, func(): world.begin_missile(m), "Choose target · uses 1 stored weapon on launch")
 				_list.get_child(_list.get_child_count() - 1).tooltip_text = preload("res://scripts/weapon_copy.gd").tooltip(world, m, false) + ("\nUnavailable: " + why if why != "" else "")
-			if count == 0 and b.key == "specialLab":
+			if count == 0 and b.key in ["specialLab", "strategicComplex"]:
 				var empty := _text("No weapons in storage. Open Produce weapons to add an item to the production queue.", 14, UI.MUTED)
 				empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 				_list.add_child(empty)
 			return
 		var title: String = {"conventional": "Conventional weapons", "nuclear": "Nuclear weapons", "special": "Special weapons"}[cat]
-		if cat == "nuclear":
+		if cat in ["nuclear", "special"]:
 			_section("%s\nLocal slots free: %d / %d" % [title, ms.free_storage(b), ms.storage_slots(b)])
 		else:
 			_section("%s\nShared storage: %d / %d · Queued: %d" % [title, ms.stored(cat, true), ms.capacity(cat), ms.queued(cat, true)])
@@ -1870,36 +1889,62 @@ func _facility_name(entity: Dictionary) -> String:
 	var position: Vector3 = entity.node.position
 	return "%s (%d, %d)" % [world.missiles.asset_name(entity), roundi(position.x), roundi(position.z)]
 
+func focus_position(pos: Vector3) -> void:
+	world.cam_focus = Vector3(pos.x, 0.0, pos.z)
+	world.cam_dist_target = minf(world.cam_dist_target, 95.0)
+
+func focus_asset(asset) -> void:
+	if asset == null or not (asset is Dictionary) or asset.get("dead", true) or asset.get("node") == null:
+		return
+	var pos: Vector3 = asset.node.position
+	focus_position(pos)
+	if asset.get("is_building", false):
+		for u in world.units:
+			u.selected = false
+			if u.get("ring") != null:
+				u.ring.visible = false
+		world.select_building(asset)
+		show_building(asset)
+	else:
+		world.select_building(null)
+		show_building(null)
+		for u in world.units:
+			u.selected = is_same(u, asset)
+			if u.get("ring") != null:
+				u.ring.visible = u.selected
+		_update_panel()
+
 func _open_payload_picker(asset: Dictionary, key: String, direction: String, job = null) -> void:
 	var ms: Node = world.missiles
+	if direction == "send" and ms.local_count(asset, key) > 0:
+		world.begin_payload_transfer(asset, key)
+		return
 	var options: Array = []
-	var candidates: Array = world.buildings if direction != "send" or not asset.get("is_building", false) else world.buildings + world.units
-	for other in candidates:
-		if other.dead or other.owner != 0 or is_same(other, asset):
-			continue
-		var reason := ""
-		if direction == "redirect":
-			if not other.built or not other.get("supplied", true) or world.disabled(other) or not ms.storage_accepts(other, key) or ms.free_storage(other) < job.count:
+	if direction == "redirect":
+		for other in world.buildings + world.units:
+			if other.dead or other.owner != 0 or is_same(other, asset):
 				continue
-		elif direction == "load":
-			if not asset.get("is_building", false):
-				if not other.get("built", true) or world.disabled(other) or ms.local_count(other, key) <= 0 or not ms.storage_accepts(asset, key) or ms.free_storage(asset) <= 0:
-					continue
-			else:
-				reason = ms.transfer_blocked(other, asset, key)
-		else:
-			if asset.get("is_building", false) and not other.get("is_building", false):
-				if world.disabled(other) or not ms.storage_accepts(other, key) or ms.free_storage(other) <= 0:
-					continue
-			else:
-				reason = ms.transfer_blocked(asset, other, key)
-		if reason == "":
+			if not other.get("built", true) or not other.get("supplied", true) or world.disabled(other):
+				continue
+			if not ms.storage_accepts(other, key) or ms.free_storage(other) < job.count:
+				continue
+			if not other.get("is_building", false) and ms.service_hub_for(other).is_empty():
+				continue
 			options.append(other)
+	elif direction == "load":
+		for other in world.buildings:
+			if other.dead or other.owner != 0 or is_same(other, asset):
+				continue
+			if ms.transfer_blocked(other, asset, key) == "":
+				options.append(other)
 	if options.is_empty():
-		notice("No available destination or source. Check storage capacity and compatible launchers (Submarine, Destroyer, Cruiser, Bomber, or Silo).")
+		var hint := ""
+		if direction == "load" and not asset.get("is_building", false):
+			hint = " Warships & submarines must stop near a friendly supplied Shipyard; aircraft must park at an Airfield."
+		notice("No eligible destination or source.%s" % hint)
 		return
 	var dialog := ConfirmationDialog.new()
-	dialog.title = "Redirect shipment" if direction == "redirect" else ("Load payload" if direction == "load" else "Transfer / Load payload")
+	dialog.title = "Redirect shipment" if direction == "redirect" else "Load payload"
 	var column := VBoxContainer.new()
 	dialog.add_child(column)
 	var choices := ItemList.new()
@@ -1942,17 +1987,11 @@ func _open_payload_picker(asset: Dictionary, key: String, direction: String, job
 			var result: String
 			if direction == "redirect":
 				result = ms.redirect_transfer(job, other)
-			elif direction == "load":
-				if not asset.get("is_building", false):
-					result = ms.quick_load_onto(asset, key, int(quantity.value), other)
-				else:
-					result = ms.start_transfer(other, asset, key, int(quantity.value))
+			elif not asset.get("is_building", false):
+				result = ms.quick_load_onto(asset, key, int(quantity.value), other)
 			else:
-				if asset.get("is_building", false) and not other.get("is_building", false):
-					result = ms.quick_load_onto(other, key, int(quantity.value), asset)
-				else:
-					result = ms.start_transfer(asset, other, key, int(quantity.value))
-			notice("Payload order accepted." if result == "" else result)
+				result = ms.start_transfer(other, asset, key, int(quantity.value))
+			notice("Payload transfer started." if result == "" else result)
 		dialog.queue_free())
 	dialog.canceled.connect(dialog.queue_free)
 	add_child(dialog)
@@ -1969,10 +2008,7 @@ func _payload_storage(b: Dictionary) -> void:
 			var label: String = ms.def_of(key).name
 			if ms.ready_platforms(key).any(func(p): return is_same(p, b)):
 				_bar("missile:" + key, "Target & Launch: %s (×%d)" % [label, count], "Launch one stored warhead directly from this facility.", {}, 0.0, ms.locked(key), func(): world.begin_missile(key, b), "Choose target · fires 1 stored weapon")
-			_bar("missile:" + key, "Load %s (×%d) onto Launcher" % [label, count], "Automatically load 1 warhead onto a ready Bomber, Submarine, Ship, or Silo.", {}, 0.0, "", func():
-				var err: String = ms.quick_load_any_launcher(key, 0, b)
-				notice("Loading %s onto compatible launcher." % label if err == "" else err), "Quick-load onto launcher")
-			_bar("missile:" + key, "%s · %d stored (Transfer...)" % [label, count], "Choose a specific destination facility or launcher.", {}, 0.0, "", func(): _open_payload_picker(b, key, "send"), "Transfer")
+			_bar("missile:" + key, "Place / Move: %s (×%d)" % [label, count], "Highlight valid green launch platforms & storage sites on the 3D map.", {}, 0.0, "", func(): world.begin_payload_transfer(b, key), "Select green target on map")
 		var awaiting: int = int(ms.unassigned.get(key, 0))
 		if awaiting > 0 and ms.storage_accepts(b, key):
 			_bar("missile:" + key, "Assign %s · %d in reserve" % [ms.def_of(key).name, awaiting], "Place one weapon from reserve in this facility.", {}, 0.0, "", func(): _say(ms.assign_legacy(key, b)), "Assign 1")
@@ -2037,24 +2073,26 @@ func _fill_launch(chosen: Array) -> void:
 			continue
 		var unit: Dictionary = chosen[0]
 		if ms.local_count(unit, key) > 0:
-			actions.append(["Unload %s" % ms.def_of(key).name, func(): _open_payload_picker(unit, key, "send")])
-			signature += "unload:" + key
-		elif ms.storage_accepts(unit, key) and ms.free_storage(unit) > 0:
+			var k_unload: String = key
+			actions.append(["Move / Unload %s" % ms.def_of(k_unload).name, func(): world.begin_payload_transfer(unit, k_unload)])
+			signature += "unload:" + k_unload + ":" + str(ms.local_count(unit, k_unload)) + ";"
+		elif ms.storage_accepts(unit, key) and ms.free_storage(unit) > 0 and ms.service_hub_for(unit).size() > 0:
 			var has_stored: bool = world.buildings.any(func(b):
-				if b.owner != 0 or b.dead or not b.built or ms.local_count(b, key) <= 0:
-					return false
-				if unit.get("naval", false) and b.key == "missileSilo":
-					return false
-				return true)
+				return b.owner == 0 and not b.dead and b.built and ms.local_count(b, key) > 0 and ms.transfer_blocked(b, unit, key) == "")
 			if has_stored:
 				var k_load: String = key
 				actions.append(["Load %s" % ms.def_of(k_load).name, func():
 					var err: String = ms.quick_load_onto(unit, k_load, 1)
 					notice("Loading %s onto %s." % [ms.def_of(k_load).name, _facility_name(unit)] if err == "" else err)])
-				signature += "qload:" + key
-	if actions.is_empty() and chosen.any(func(u): return u.key in ms.LAUNCH_SHIPS + ms.TACTICAL_SHIPS + ["corvette", "submarine"]):
-		actions.append(["Payload handling", func(): notice("Bring a compatible ship to a supplied port or shipyard, then load from its local stock.")])
-		signature += "empty"
+				signature += "qload:" + k_load + ";"
+	if chosen.size() == 1 and chosen[0].key in ms.LAUNCH_UNITS and ms.free_storage(chosen[0]) > 0:
+		var u_one: Dictionary = chosen[0]
+		if ms.service_hub_for(u_one).is_empty():
+			var dock_msg: String = "Park at a supplied Airfield to load or unload warheads." if u_one.get("fly", false) else "Stop near a friendly supplied Shipyard to load or unload warheads."
+			var hint_lbl: String = "Needs Airfield" if u_one.get("fly", false) else "Needs Shipyard"
+			if not actions.any(func(a): return a[0] == hint_lbl):
+				actions.append([hint_lbl, func(): notice(dock_msg)])
+				signature += "needhub;"
 	_launch_row.visible = not actions.is_empty()
 	if not chosen.is_empty():
 		signature += "@%s" % chosen[0].node.get_instance_id()

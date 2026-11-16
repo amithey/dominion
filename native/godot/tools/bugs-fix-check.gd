@@ -36,46 +36,49 @@ func run() -> void:
 	w.economy.res.money = 50000.0
 	w.economy.res.oil = 50000.0
 
-	# --- Bug 1: Missile / Nuclear transfer to docked ships ---
+	# --- Bug 1: Missile / Nuclear transfer to docked ships (requires Shipyard proximity) ---
 	print("==== Bug 1: Missile & Nuke Transfers to Ships ====")
 	var ms: Node = w.missiles
 	var cx: Vector3 = w.buildings[0].node.position
 	var complex: Dictionary = w.place_building("strategicComplex", cx + Vector3(30, 0, 0), 0, true)
 	complex.supplied = true
-	var port: Dictionary = w.place_building("port", cx + Vector3(60, 0, 0), 0, true)
-	port.supplied = true
-	# Place nuclearSub 52m away from port (beyond old 38m DOCK_REACH, within new 68m+)
-	var sub: Dictionary = w.spawn_unit("nuclearSub", port.node.position + Vector3(52, 0, 0), 0)
+	var shipyard: Dictionary = w.place_building("shipyard", cx + Vector3(60, 0, 0), 0, true)
+	shipyard.supplied = true
+	var comm_port: Dictionary = w.place_building("port", cx + Vector3(90, 0, 0), 0, true)
+	comm_port.supplied = true
+	check(ms.storage_slots(comm_port) == 0 and not ms.storage_accepts(comm_port, "nuke"), "commercial port has zero warhead storage")
+	# Place nuclearSub 52m away from shipyard (within DOCK_REACH 72m)
+	var sub: Dictionary = w.spawn_unit("nuclearSub", shipyard.node.position + Vector3(52, 0, 0), 0)
 	sub.moving = false
 	sub.target = null
 	# Simulate an enemy in radar/attack range so enemy != null (before move)
-	var foe: Dictionary = w.spawn_unit("corvette", port.node.position + Vector3(140, 0, 0), 1)
+	var foe: Dictionary = w.spawn_unit("corvette", shipyard.node.position + Vector3(140, 0, 0), 1)
 	sub.enemy = foe
 	ms._manifest(complex)["nuke"] = 1
-	check(ms.transfer_blocked(complex, port, "nuke", 1) == "", "strategicComplex -> port transfer allowed")
-	check(ms.start_transfer(complex, port, "nuke", 1) == "", "strategicComplex -> port transfer started")
+	check(ms.transfer_blocked(complex, shipyard, "nuke", 1) == "", "strategicComplex -> shipyard transfer allowed")
+	check(ms.start_transfer(complex, shipyard, "nuke", 1) == "", "strategicComplex -> shipyard transfer started")
 	sub.enemy = null
 	foe.dead = true
 	sim(25.0)
-	check(ms.local_count(port, "nuke") == 1, "nuke arrived at port")
+	check(ms.local_count(shipyard, "nuke") == 1, "nuke arrived at shipyard")
 	sub.enemy = foe
-	check(ms.transfer_blocked(port, sub, "nuke", 1) == "", "port -> nuclearSub at 52m (with enemy != null) allowed")
+	check(ms.transfer_blocked(shipyard, sub, "nuke", 1) == "", "shipyard -> nuclearSub at 52m (with enemy != null) allowed")
 	sub.enemy = null
-	check(ms.start_transfer(port, sub, "nuke", 1) == "", "port -> nuclearSub transfer started")
+	check(ms.start_transfer(shipyard, sub, "nuke", 1) == "", "shipyard -> nuclearSub transfer started")
 	sim(12.0)
 	check(ms.local_count(sub, "nuke") == 1, "nuke loaded onto nuclearSub")
 	var ready: Array = ms.ready_platforms("nuke", 0)
 	check(ready.any(func(p): return is_same(p, sub)), "nuclearSub is ready platform for nuke launch")
 
-	# Also test tactical missile -> destroyer
+	# Also test tactical missile -> destroyer at shipyard
 	var silo: Dictionary = w.place_building("missileSilo", cx + Vector3(-30, 0, 0), 0, true)
 	silo.supplied = true
-	var dd: Dictionary = w.spawn_unit("destroyer", port.node.position + Vector3(0, 0, 50), 0)
+	var dd: Dictionary = w.spawn_unit("destroyer", shipyard.node.position + Vector3(0, 0, 50), 0)
 	dd.moving = false
 	dd.target = null
-	ms._manifest(port)["tactical"] = 1
-	check(ms.transfer_blocked(port, dd, "tactical", 1) == "", "port -> destroyer tactical transfer allowed at 50m")
-	check(ms.start_transfer(port, dd, "tactical", 1) == "", "port -> destroyer tactical transfer started")
+	ms._manifest(shipyard)["tactical"] = 1
+	check(ms.transfer_blocked(shipyard, dd, "tactical", 1) == "", "shipyard -> destroyer tactical transfer allowed at 50m")
+	check(ms.start_transfer(shipyard, dd, "tactical", 1) == "", "shipyard -> destroyer tactical transfer started")
 	sim(12.0)
 	check(ms.local_count(dd, "tactical") == 1, "tactical missile loaded onto destroyer")
 

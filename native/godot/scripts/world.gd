@@ -251,6 +251,7 @@ var intercepts: Array = [] # every missile interception attempt: {type, by, hit,
 var sim_tick := 0         # simulation steps taken (staggers per-unit work; tests step by hand)
 var missile_source = null
 var missile_aim := ""     # missile type waiting for a target click
+var payload_pick := {}    # {source, key, count} active green-highlight placement/transfer mode
 var landing_aim := false   # the next click on the map is where a selected transport puts its load ashore
 var pickup_aim := false    # the next click on the map sends a selected transport to pick up friendly troops there
 var land_buyer = null     # the settlement whose town hall is buying land (click a highlighted hex)
@@ -4571,6 +4572,7 @@ func logistics_test(capture: bool) -> void:
 ## Arms a missile: the next left click on the map is its target.
 func begin_missile(key: String, platform = null) -> void:
 	order_mode = ""
+	cancel_payload_transfer()
 	cancel_placement()
 	cancel_transport()
 	cancel_landing()
@@ -4727,8 +4729,99 @@ func cancel_missile() -> void:
 	missile_aim = ""
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 
+## Starts map placement mode for a stored/loaded weapon: highlights every valid storage
+## facility and docked/parked launch platform in GREEN on the map.
+func begin_payload_transfer(source: Dictionary, key: String, count := 1) -> void:
+	if missiles == null or source.is_empty() or missiles.local_count(source, key) < count:
+		if hud != null:
+			hud.notice("Weapon is no longer stored here.")
+		return
+	order_mode = ""
+	cancel_missile()
+	cancel_placement()
+	cancel_transport()
+	cancel_landing()
+	cancel_pickup()
+	cancel_land_purchase()
+	payload_pick = {"source": source, "key": key, "count": count}
+	var valid: Array = missiles.valid_destinations(source, key, count)
+	var hints: Array = missiles.blocked_candidate_hints(source, key)
+	Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND)
+	if hud != null:
+		if not valid.is_empty():
+			hud.notice("Select a GREEN highlighted facility or docked launcher for %s (right click to cancel)." % missiles.def_of(key).get("name", key))
+		elif not hints.is_empty():
+			hud.notice("No green targets ready yet — bring a compatible ship to a Shipyard or park aircraft at an Airfield.")
+		else:
+			hud.notice("No compatible facility or docked launcher has free space for %s." % missiles.def_of(key).get("name", key))
+		if hud.side_mode == "ordnance":
+			hud.refresh_side()
+
+func cancel_payload_transfer() -> void:
+	if payload_pick.is_empty():
+		return
+	payload_pick = {}
+	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	if hud != null and hud.side_mode == "ordnance":
+		hud.refresh_side()
+
+func _pick_payload_target(screen: Vector2, candidates: Array) -> Variant:
+	var units_cand := candidates.filter(func(c): return not c.get("is_building", false))
+	if not units_cand.is_empty():
+		var uhit = Picking.pick(camera, units_cand, screen)
+		if uhit != null:
+			return uhit
+	var blds_cand := candidates.filter(func(c): return c.get("is_building", false))
+	var bhit = building_under(screen)
+	if bhit != null and blds_cand.any(func(b): return is_same(b, bhit)):
+		return bhit
+	var pt = ground_point(screen)
+	if pt != null:
+		var best = null
+		var best_d := INF
+		for c in candidates:
+			var r := float(c.get("footprint", 8.0)) * 0.85 if c.get("is_building", false) else 8.0
+			var d := Vector2(pt.x - c.node.position.x, pt.z - c.node.position.z).length()
+			if d <= r and d < best_d:
+				best_d = d
+				best = c
+		return best
+	return null
+
+func payload_pick_click(screen: Vector2) -> void:
+	if payload_pick.is_empty() or missiles == null:
+		return
+	var src: Dictionary = payload_pick.get("source", {})
+	var key := str(payload_pick.get("key", ""))
+	var count := maxi(1, int(payload_pick.get("count", 1)))
+	if src.is_empty() or src.get("dead", false) or missiles.local_count(src, key) < count:
+		cancel_payload_transfer()
+		return
+	var valid: Array = missiles.valid_destinations(src, key, count)
+	var target = _pick_payload_target(screen, valid)
+	if target != null:
+		var err: String = missiles.start_transfer(src, target, key, count)
+		if hud != null:
+			if err == "":
+				var dur := ceili(missiles.transfer_duration(src, target, count))
+				hud.notice("Transferring %s -> %s (~%ds)." % [missiles.def_of(key).get("name", key), missiles.asset_name(target), dur])
+			else:
+				hud.notice(err)
+		if err == "":
+			cancel_payload_transfer()
+		return
+	var hints: Array = missiles.blocked_candidate_hints(src, key)
+	var hinted := hints.map(func(h): return h.entity)
+	var blocked_u = _pick_payload_target(screen, hinted)
+	if blocked_u != null and hud != null:
+		var msg := "Aircraft must be parked at a friendly Airfield." if blocked_u.get("fly", false) else "Ship or submarine must be stopped near a friendly Shipyard."
+		hud.notice(msg)
+	elif hud != null:
+		hud.notice("Click a GREEN highlighted facility or docked launcher (right click to cancel).")
+
 func begin_placement(key: String) -> void:
 	cancel_missile()
+	cancel_payload_transfer()
 	cancel_transport()
 	cancel_landing()
 	cancel_placement()
@@ -5917,6 +6010,8 @@ func kill(unit: Dictionary) -> void:
 	if is_instance_valid(unit.get("bombard_marker")):
 		unit.bombard_marker.queue_free()
 	unit.dead = true
+	if missiles != null:
+		missiles.on_entity_destroyed(unit, true)
 	unit.selected = false
 	unit.ring.visible = false
 	unit.target = null
@@ -6028,6 +6123,8 @@ func destroy_building(b: Dictionary) -> void:
 		wmd.reactor_destroyed(b)   # its core spreads downwind
 	if b.key in ["strategicComplex", "specialLab"] and wmd != null:
 		wmd.facility_destroyed(b)   # what it held is lost; a rival may be disarmed
+	if missiles != null:
+		missiles.on_entity_destroyed(b, not (b.key in ["strategicComplex", "specialLab"] and wmd != null))
 	if support != null:
 		support.building_lost(b)
 	if crisis != null:
@@ -6439,6 +6536,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_RIGHT and land_buyer != null:
 			if event.pressed:
 				cancel_land_purchase()
+		elif event.button_index == MOUSE_BUTTON_LEFT and not payload_pick.is_empty():
+			if event.pressed:
+				payload_pick_click(event.position)
+		elif event.button_index == MOUSE_BUTTON_RIGHT and not payload_pick.is_empty():
+			if event.pressed:
+				cancel_payload_transfer()
 		elif event.button_index == MOUSE_BUTTON_LEFT and missile_aim != "":
 			if event.pressed:
 				var point = ground_point(event.position)
@@ -6743,12 +6846,13 @@ func _input(event: InputEvent) -> void:
 			return   # the menu closes itself on Esc (menu.gd); opening it again here would undo that
 		# Esc first cancels what is in progress and closes an open window; with
 		# nothing to cancel or close it pauses (it used to pause over an open window).
-		var busy: bool = placing != "" or transport_kind != "" or missile_aim != "" or landing_aim or pickup_aim or selected_building != null
+		var busy: bool = placing != "" or transport_kind != "" or missile_aim != "" or not payload_pick.is_empty() or landing_aim or pickup_aim or selected_building != null
 		var closed: bool = false if busy else hud.close_windows()
 		if not busy and not closed and menu != null and menu._root != null:
 			menu.open_pause()
 			get_viewport().set_input_as_handled()   # the same press must not reach menu.gd and close it again
 		cancel_missile()
+		cancel_payload_transfer()
 		cancel_landing()
 		cancel_pickup()
 		cancel_transport()
