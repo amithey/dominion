@@ -418,8 +418,6 @@ static func update(world: Node, u: Dictionary, delta: float) -> bool:
 			u.idle_air = 0.0
 	if u.air_state == "ready":
 		var transport_busy: bool = u.get("unload_go") != null or u.get("pickup_go") != null or not (u.get("cargo", []) as Array).is_empty()
-		if transport_busy:
-			u.sortie_left = maxf(float(u.get("sortie_left", 0.0)), bingo_fuel(world, u, u.get("air_base")) + 20.0)
 		var assigned = u.get("air_base")
 		var base_lost: bool = assigned != null and not available(world, u, assigned)
 		var home = assigned if not base_lost else base_for(world, u, u.node.position, INF)

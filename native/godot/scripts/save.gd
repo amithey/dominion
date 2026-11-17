@@ -72,9 +72,11 @@ func _wing_of(u: Dictionary) -> Variant:
 
 func capture() -> Dictionary:
 	var buildings := []
+	var building_ids := {}
 	for b in world.buildings:
 		if b.dead:
 			continue
+		building_ids[b.node] = buildings.size()
 		buildings.append({
 			"key": b.key, "owner": b.owner, "pos": _v(b.root.position), "built": b.built,
 			"progress": b.progress, "hp": b.hp, "queue": b.queue, "queue_prog": b.queue_prog,
@@ -84,11 +86,27 @@ func capture() -> Dictionary:
 			"repairing":b.get("repairing",false), "last_hit":b.get("last_hit",-100.0),
 			"fire": float(b.get("fire", 0.0)), "fire_by": int(b.get("fire_by", -1)),
 		})
+	var unit_ids := {}
+	for u in world.units:
+		if not u.dead:
+			unit_ids[u.node] = unit_ids.size()
 	var units := []
 	for u in world.units:
 		if u.dead:
 			continue
+		var orders := {}
+		if u.get("forced", false) and u.get("enemy") != null and not u.enemy.dead:
+			if building_ids.has(u.enemy.node):
+				orders.enemy_building = building_ids[u.enemy.node]
+			elif unit_ids.has(u.enemy.node):
+				orders.enemy_unit = unit_ids[u.enemy.node]
+		if u.get("build_site") != null and not u.build_site.dead:
+			orders.site = building_ids.get(u.build_site.node, -1)
+		for job in u.get("build_queue", []):
+			if not job.dead and building_ids.has(job.node):
+				orders.get_or_add("jobs", []).append(building_ids[job.node])
 		units.append({
+			"orders": orders,
 			"key": u.key, "owner": u.owner, "pos": _v(u.node.position), "heading": u.heading, "hp": u.hp,
 			"equipment": {"max_hp": u.max_hp, "range": float(u.get("pre_garrison_range", u.range)), "speed": u.speed, "cooldown": u.cooldown},
 			"target": _v(u.target) if u.target != null else null, "attack_move": u.attack_move,
@@ -358,6 +376,23 @@ func restore(data: Dictionary) -> void:
 	for pair in restored_units:
 		var su: Dictionary = pair[0]
 		var cu: Dictionary = pair[1]
+		var orders: Dictionary = su.get("orders", {})
+		var site := int(orders.get("site", -1))
+		if site >= 0 and site < world.buildings.size():
+			cu.build_site = world.buildings[site]
+		cu.build_queue = []
+		for job in orders.get("jobs", []):
+			if int(job) >= 0 and int(job) < world.buildings.size():
+				cu.build_queue.append(world.buildings[int(job)])
+		var target_building := int(orders.get("enemy_building", -1))
+		var target_unit := int(orders.get("enemy_unit", -1))
+		if target_building >= 0 and target_building < world.buildings.size():
+			cu.enemy = world.buildings[target_building]
+		elif target_unit >= 0 and target_unit < restored_units.size():
+			cu.enemy = restored_units[target_unit][1]
+		if cu.get("enemy") != null:
+			cu.forced = true
+			cu.attack_move = true
 		if cu.has("wing") and cu.wing.get("rearming_relative", false):
 			cu.wing.rearming = (cu.wing.rearming as Array).map(func(t): return world.game_time + float(t))
 			cu.wing.erase("rearming_relative")

@@ -68,11 +68,7 @@ static func owned(w: Node, owner: int, key: String) -> bool:
 static func escorts(w: Node, owner: int) -> int:
 	return w.units.filter(func(u): return u.owner == owner and not u.dead and u.get("naval", false) and u.dmg > 0 and not w.disabled(u)).size()
 static func repairs(w: Node, owner: int) -> Array:
-	var centre = w.selected_building if owner == 0 else null
-	if centre == null or centre.dead or centre.owner != owner or centre.key not in ["hq", "cityCenter", "villageCenter"]:
-		centre = null
-		for b in w.buildings:
-			if b.owner == owner and b.key == "hq" and not b.dead: centre = b
+	var centre = capital(w, owner)
 	if centre == null: return []
 	var list: Array = w.buildings.filter(func(b): return b.owner == owner and b.built and not b.dead and b.hp < b.max_hp and b.root.position.distance_to(centre.root.position) <= 100.0)
 	list.sort_custom(func(a, b): return a.hp / a.max_hp < b.hp / b.max_hp)
@@ -204,8 +200,8 @@ static func use_export_ban(w: Node, owner: int, target: int) -> void:
 ## Ukraine: what long-range drones go for first: refineries, power, factories.
 static func strike_targets(w: Node, target: int) -> Array:
 	var order := ["oilRefinery", "powerPlant", "nuclearReactor", "extractor", "tankFactory", "airfield", "ammoDepot"]
-	var list: Array = w.buildings.filter(func(b): return b.owner == target and b.built and not b.dead and b.key != "hq")
-	list.sort_custom(func(a, b): return (order.find(a.key) if a.key in order else 99) < (order.find(b.key) if b.key in order else 99))
+	var list: Array = w.buildings.filter(func(b): return b.owner == target and b.built and not b.dead and b.key in order)
+	list.sort_custom(func(a, b): return order.find(a.key) < order.find(b.key))
 	return list.slice(0, 2)
 
 static func use_drone_strikes(w: Node, owner: int, target: int) -> void:
@@ -349,6 +345,10 @@ static func use(w: Node, owner: int, target: int) -> String:
 ## A closed strait, an insurance ban or a closed canal (on this nation).
 static func sea_closed(w: Node, owner: int) -> bool:
 	return w.power_effects.any(func(e): return float(e.until) > w.game_time and ((e.kind == "hormuz" and int(e.by) != owner) or (e.kind == "sea_ban" and int(e.nation) == owner)))
+## A targeted ban closes either end. A strait closure exempts its own operator's voyages.
+static func route_closed(w: Node, operator: int, partner: int) -> bool:
+	return sea_closed(w, operator) or w.power_effects.any(func(e): return e.kind == "sea_ban" and int(e.nation) == partner and float(e.until) > w.game_time)
+
 static func step(w: Node, delta: float) -> void:
 	Regional.step(w)
 	for e in w.power_effects:
@@ -386,7 +386,7 @@ static func step(w: Node, delta: float) -> void:
 			e.until = 0.0
 			_notice(w, source, target, "Food aid lost: the trade route collapsed.")
 			continue
-		if sea_closed(w, source): continue
+		if route_closed(w, source, target): continue
 		e.eta = float(e.eta) - delta
 		if e.eta > 0.0: continue
 		e.until = 0.0

@@ -1751,7 +1751,7 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 					continue
 				base_orders.append(u)
 				if not (u.get("cargo", []) as Array).is_empty():
-					if preload("res://scripts/airlift.gd").order_return_home(self, [u]) > 0:
+					if preload("res://scripts/airlift.gd").order_return_home(self, [u], b) > 0:
 						landed.append(u)
 				elif AirOperations.order_land(self, u, b):
 					landed.append(u)
@@ -3327,8 +3327,7 @@ func update_training(delta: float) -> void:
 		if b.queue_prog < 1.0:
 			continue
 		b.queue_prog = 0.0
-		var key: String = b.queue.pop_front()
-		take_order_receipt(b, 0)
+		var key: String = b.queue[0]
 		var at: Vector3 = b.root.position
 		var out := (Vector3(0, 0, 0) - at)
 		out.y = 0
@@ -3337,13 +3336,14 @@ func update_training(delta: float) -> void:
 		if key in NAVAL:
 			var launch = water_near(at, 160)
 			if launch == null:
-				b.queue.push_front(key)
 				if b.owner == 0 and not b.get("launch_told", false):
 					b.launch_told = true
 					hud.notice("The %s has no open water deep enough to launch ships." % b.def.name)
 				continue
 			door = launch
 			out = (door - at).normalized()
+		b.queue.pop_front()
+		take_order_receipt(b, 0)
 		var unit := spawn_unit(key, door, b.owner)
 		unit.heading = atan2(out.x, out.z)
 		if unit.get("fly", false) and not key in AirOperations.TUBE_LAUNCHED and AirOperations.is_base(b) and AirOperations.park_new(self, unit, b):
@@ -5019,6 +5019,8 @@ func site_problem(key: String, at: Vector3, owner: int) -> String:
 		return "Too close to the water"
 	if not offshore and not is_district(key) and highest - lowest > 3.5:
 		return "Ground too steep"
+	if key == "extractor" and logistics.overlaps_intact_link(at, footprint):
+		return "A road or railway crosses this site"
 	if is_district(key):
 		# One district per hex, on land that is not too steep across the hex.
 		var hex: Vector2i = logistics.world_hex(at)

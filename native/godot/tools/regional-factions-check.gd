@@ -238,9 +238,18 @@ func run() -> void:
 	w.market.tick()
 	check(float(route.shipment.eta) > 100.0 - w.market.TICK, "coastal pressure slows an actual cargo already at sea")
 	route.overland = true
+	var partner_hq = preload("res://scripts/additional_powers.gd").capital(w, 2)
+	var town_hex: Vector2i = w.logistics.world_hex(partner_hq.root.position)
+	var original_reach: Dictionary = w.logistics.reachable[0].duplicate()
+	w.logistics.reachable[0][town_hex] = true
 	var eta: float = route.shipment.eta
 	w.market.tick()
 	check(is_equal_approx(float(route.shipment.eta), eta - w.market.TICK), "land freight is unaffected by coastal pressure")
+	w.logistics.reachable[0].erase(town_hex)
+	eta = route.shipment.eta
+	w.market.tick()
+	check(is_equal_approx(float(route.shipment.eta), eta), "land freight waits when the connection is cut")
+	w.logistics.reachable[0] = original_reach
 	w.market.routes.clear()
 	# Full campaign save, including the two Yemeni sides and two Sudans.
 	identity(0, "yemen")

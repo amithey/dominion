@@ -87,7 +87,7 @@ static func blocked(w: Node, owner: int, target := -1) -> String:
 		"japan":
 			if d.at_war(owner, target):
 				return "Not while at war with it"
-			if owner == 0 and w.economy.res.money < float(p.cost):
+			if preload("res://scripts/additional_powers.gd").funds(w, owner, "money") < float(p.cost):
 				return "Needs $%d" % int(p.cost)
 		"gold":
 			if d.enemies_of(owner).is_empty():
@@ -146,8 +146,8 @@ static func use(w: Node, owner: int, target := -1) -> String:
 					d.change(owner, other, 12.0)
 			text = "%s dealt with every camp at once: relations with every nation rise." % me
 		"japan":
-			if owner == 0:
-				w.economy.res.money -= float(p.cost)
+			if not preload("res://scripts/additional_powers.gd").pay(w, owner, {"money": p.cost}):
+				return "Insufficient resources"
 			d.change(owner, target, 25.0)
 			d.set_flag(d.nap, owner, target, true)
 			text = "%s sent development aid to %s: relations rise and a non-aggression pact is signed." % [me, who]
@@ -230,7 +230,7 @@ static func effects_on(w: Node, nation: int) -> Array:
 		var by: int = int(e.get("by", -1))
 		var source: String = str(power_of(w, by).get("name", "Sanctions")) if by >= 0 else "Sanctions"
 		if e.kind == "income" and int(e.nation) == nation:
-			out.append(["%s: income -%d%%, %s" % [source, int(roundf((1.0 - float(e.value)) * 100.0)), clock], by])
+			out.append(["%s: income %+d%%, %s" % [source, roundi((float(e.value) - 1.0) * 100.0), clock], by])
 		elif e.kind == "production" and int(e.nation) == nation:
 			out.append(["%s: military production stopped, %s" % [source, clock], by])
 		elif e.kind == "hormuz" and int(e.by) != nation:

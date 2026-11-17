@@ -22,7 +22,8 @@ extends Node3D
 ## Cargo ships exist only while an actual market shipment is at sea, and use
 ## the sea navigation grid.
 
-const LANE := 1.05          # a road vehicle keeps this far right of the centre line
+const Logistics := preload("res://scripts/logistics.gd")
+const LANE := Logistics.TRAFFIC_LANE          # a road vehicle keeps this far right of the centre line
 const STOP := 9.0           # a trip ends on the street this far from a town's centre (its edge)
 const PER_EDGE := 0.7       # road vehicles per stretch of road
 const MAX_ROAD := 40
@@ -138,7 +139,7 @@ func _sync_network() -> void:
 			continue
 		var hx: Vector2i = world.logistics.world_hex(b.root.position)
 		if not _solid.has(hx): _solid[hx] = []
-		_solid[hx].append([b.root.position, float(b.footprint) * 0.5 + 2.5])
+		_solid[hx].append([b.root.position, float(b.footprint) * 0.5 + Logistics.BUILDING_CLEARANCE])
 	for key in world.logistics.edges:
 		var e: Dictionary = world.logistics.edges[key]
 		var halves: Array = e.get("half", [e.hp, e.hp])
@@ -251,8 +252,6 @@ func _is_town(h: Vector2i) -> bool:
 func _blocked(a: Vector2i, b: Vector2i) -> bool:
 	var pa: Vector3 = world.logistics.hex_center(a)
 	var pb: Vector3 = world.logistics.hex_center(b)
-	var ab := Vector2(pb.x - pa.x, pb.z - pa.z)
-	var len2 := maxf(ab.length_squared(), 0.0001)
 	var seen := {}
 	for base in [a, b]:
 		for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 1)]:
@@ -262,8 +261,7 @@ func _blocked(a: Vector2i, b: Vector2i) -> bool:
 			seen[h] = true
 			for item in _solid.get(h, []):
 				var at: Vector3 = item[0]
-				var t := clampf(((at.x - pa.x) * ab.x + (at.z - pa.z) * ab.y) / len2, 0.0, 1.0)
-				if Vector2(at.x - (pa.x + ab.x * t), at.z - (pa.z + ab.y * t)).length() < float(item[1]) + LANE:
+				if Logistics.link_hits(pa, pb, at, float(item[1]) + LANE):
 					return true
 	return false
 

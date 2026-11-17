@@ -13,7 +13,7 @@ static func tick(w: Node, delta: float) -> void:
 			if w.diplomacy.defeated(owner) or w.diplomacy.defeated(target) or w.diplomacy.at_war(owner, target) or not w.diplomacy.pact[owner][target] or not P.owned(w, owner, "port") or not P.owned(w, target, "port"):
 				seller.erase("national_cargo")
 				continue
-			if P.sea_closed(w, owner): continue
+			if P.route_closed(w, owner, target) or (w.un != null and w.un.trade_blocked(owner, target, cargo.resource)): continue
 			cargo.eta = float(cargo.eta) - delta / (1.0 + preload("res://scripts/regional_powers.gd").bonus(w, owner, "shippingPressure"))
 			if cargo.eta > 0.0: continue
 			seller.erase("national_cargo")
@@ -28,6 +28,7 @@ static func tick(w: Node, delta: float) -> void:
 			var target := int(buyer.id)
 			if target == owner or w.diplomacy.defeated(target) or w.diplomacy.at_war(owner, target) or not w.diplomacy.pact[owner][target] or not P.owned(w, target, "port"): continue
 			for resource in w.market.cfg.price:
+				if P.route_closed(w, owner, target) or (w.un != null and w.un.trade_blocked(owner, target, resource)): continue
 				var value: float = ceilf(30.0 * w.market.price(resource) * preload("res://scripts/national_profile.gd").trade_mult(w, owner))
 				if P.funds(w, owner, resource) < 130.0 or P.funds(w, target, resource) > 470.0 or buyer.money < value + 150.0: continue
 				P.stock(w, owner)[resource] -= 30.0

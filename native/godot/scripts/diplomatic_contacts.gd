@@ -178,9 +178,8 @@ func _eligibility(key: String, terms: Dictionary) -> String:
 	if key == "passage" and world.passage.has_passage(0, n): return "You already have military access."
 	if key == "aid" and world.economy.res.money < 300: return "Assistance requires $300."
 	if key == "route":
-		if not d.pact[0][n]: return "Sign a trade agreement first."
-		if world.market.ports() == 0: return "Build a Commercial Port first."
-		if world.market.routes.size() >= world.market.route_cap(): return "No free shipping route capacity."
+		var problem: String = world.market.route_problem(n, terms.get("res", "iron"))
+		if problem != "": return problem
 		if terms.get("res", "iron") not in world.market.resources() or terms.get("dir", "export") not in ["export", "import"] or int(terms.get("qty", 25)) not in [10, 25, 50]: return "Invalid shipping terms."
 	if key == "arms":
 		if session.channel == "mediator": return "Arms licensing requires direct contact."

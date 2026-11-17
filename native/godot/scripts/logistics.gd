@@ -109,15 +109,24 @@ func road_through(h: Vector2i) -> bool:
 			return true
 	return false
 
+const TRAFFIC_LANE := 1.05
+const BUILDING_CLEARANCE := 2.5
+
+static func link_hits(a: Vector3, b: Vector3, centre: Vector3, clearance: float) -> bool:
+	var point := Vector2(centre.x, centre.z)
+	var nearest := Geometry2D.get_closest_point_to_segment(point, Vector2(a.x, a.z), Vector2(b.x, b.z))
+	return nearest.distance_squared_to(point) < clearance * clearance
+
+func overlaps_intact_link(at: Vector3, footprint: float) -> bool:
+	for e in edges.values():
+		if e.hp > 0 and link_hits(hex_center(e.a), hex_center(e.b), at, footprint * 0.5 + BUILDING_CLEARANCE + TRAFFIC_LANE):
+			return true
+	return false
+
 func _hits_circles(a: Vector3, b: Vector3, circles: Array) -> bool:
-	if circles.is_empty():
-		return false
-	for i in range(0, 7, 2):
-		var x := lerpf(a.x, b.x, i / 6.0)
-		var z := lerpf(a.z, b.z, i / 6.0)
-		for r in circles:
-			if Vector2(r.x - x, r.z - z).length() < r.y:
-				return true
+	for r in circles:
+		if link_hits(a, b, r, r.y):
+			return true
 	return false
 
 func passable(a: Vector2i, b: Vector2i, kind: String, rivals: Array, blocked := {}, solids := []) -> bool:
@@ -177,9 +186,9 @@ func plan(start: Vector2i, goal: Vector2i, owner: int, kind: String) -> Array:
 		blocked[h] = true
 	var solids := []
 	for b in world.buildings:
-		if b.dead or world.is_district(b.key) or b.def.get("water", false):
+		if b.dead or world.is_district(b.key):
 			continue
-		solids.append(Vector3(b.root.position.x, float(b.footprint) * 0.5 + 2.8, b.root.position.z))
+		solids.append(Vector3(b.root.position.x, float(b.footprint) * 0.5 + BUILDING_CLEARANCE + TRAFFIC_LANE, b.root.position.z))
 	var open := [{"h": start, "g": 0, "f": hex_distance(start, goal)}]
 	var best := {start: 0}
 	var parent := {}
@@ -357,9 +366,8 @@ func connect_isolated(owner: int) -> void:
 	for b in world.buildings:
 		if b.owner == owner and not b.dead and b.built and b.def.get("settlement") != null and b != capital and not b.get("supplied", true):
 			var route := plan(world_hex(capital.root.position), world_hex(b.root.position), owner, "road")
-			if not route.is_empty():
-				build(route, "road", owner)
-			return
+			if build(route, "road", owner):
+				return
 
 ## Explosions wear down every half-link within `reach` of the blast.
 func damage_at(at: Vector3, reach: float, amount: float, area := false) -> int:

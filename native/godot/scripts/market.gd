@@ -217,7 +217,7 @@ func buy(res: String, qty: int) -> String:
 
 # ---------------------------------------------------------------- routes
 
-func open_route(nation: int, res: String, dir: String, qty: int) -> String:
+func route_problem(nation: int, res: String) -> String:
 	var d: Node = world.diplomacy
 	if world.get("un") != null and world.un != null and world.un.trade_blocked(0, nation, res):
 		return "UN restrictions block this trade; humanitarian food is exempt."
@@ -232,6 +232,14 @@ func open_route(nation: int, res: String, dir: String, qty: int) -> String:
 		return "Trade routes need a trade pact with %s." % d.name_of(nation)
 	if routes.size() >= route_cap():
 		return "Route limit reached (%d). Each port has %d berths; trade pacts and markets give contracts." % [route_cap(), int(cfg.routesPerPort)]
+	return ""
+
+func open_route(nation: int, res: String, dir: String, qty: int) -> String:
+	var problem := route_problem(nation, res)
+	if problem != "":
+		return problem
+	var overland := land_link(nation)
+	var d: Node = world.diplomacy
 	routes.append({"id": _next_id, "nation": nation, "res": res, "dir": dir, "qty": qty, "shipment": null, "status": "Awaiting cargo", "total": 0.0, "overland": overland != ""})
 	_next_id += 1
 	changed.emit()
@@ -289,7 +297,10 @@ func tick() -> void:
 		if world.get("un") != null and world.un != null and world.un.trade_blocked(0, int(r.nation), str(r.res)):
 			r.status = "UN restrictions: cargo held pending review"
 			continue
-		if r.shipment != null and not r.get("overland", false) and preload("res://scripts/faction_powers.gd").sea_closed(world, 0):
+		if r.get("overland", false) and land_link(r.nation) == "":
+			r.status = "Land route cut: reconnect the road or railway"
+			continue
+		if not r.get("overland", false) and preload("res://scripts/additional_powers.gd").route_closed(world, 0, r.nation):
 			r.status = "Strait closed: the cargo waits"
 			continue
 		if r.shipment != null:
@@ -394,7 +405,7 @@ func trade_ai() -> void:
 			var use: float = 12.0 + army * 0.3 if resource == "food" else (3.0 + army * 0.12 if resource in ["oil", "iron", "gas"] else 2.0)
 			if resource == "food": use *= float(nation.get("civilians", 120.0)) / 120.0 * float(preload("res://scripts/additional_factions.gd").profile(world, nation.id).get("civilian_food", 1.0))
 			stock[resource] = maxf(0.0, float(stock.get(resource, 100.0)) - use)
-			if desks == 0: continue
+			if desks == 0 or (world.un != null and world.un.market_closed(nation.id, resource)): continue
 			if stock[resource] < 70.0:
 				var bill := ceili(quote(resource, 30, true))
 				if nation.money >= bill + 150:

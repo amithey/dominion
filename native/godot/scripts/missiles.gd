@@ -82,7 +82,7 @@ func is_unconventional(key: String) -> bool:
 	return category(key) in ["nuclear", "special"]
 
 func local_weapon(key: String) -> bool:
-	return key == "tactical" or category(key) in ["nuclear", "special"]
+	return key == "tactical" or is_unconventional(key)
 
 func _alive(entity) -> bool:
 	return entity != null and not entity.dead and is_instance_valid(entity.node)

@@ -156,13 +156,6 @@ static func weapon_of(w: Node, unit_key: String) -> String:
 		return own
 	return preload("res://scripts/war_tools.gd").WEAPON.get(unit_key, w.WEAPONS.get(unit_key, ""))
 
-## The munition a unit's fire is resolved with: its weapon, or the gun or small arms it has by its class.
-static func munition_of(w: Node, unit: Dictionary) -> String:
-	var weapon := weapon_of(w, str(unit.key))
-	if weapon != "":
-		return weapon
-	return "shell" if unit.get("vehicle", false) or unit.get("fly", false) or unit.get("naval", false) else "bullet"
-
 ## How much of the damage reaches a point `d` metres from a burst of profile `p` (1 at the centre, 0 beyond the radius).
 static func falloff(p: Dictionary, d: float) -> float:
 	var radius: float = p.radius

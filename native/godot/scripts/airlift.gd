@@ -78,7 +78,6 @@ static func _wake_transport(w: Node, t: Dictionary, go: Vector3) -> void:
 	t.forced = false
 	if t.get("fly", false):
 		var AirOps = w.AirOperations
-		t.sortie_left = maxf(float(t.get("sortie_left", 0.0)), AirOps.fuel_capacity(t) * 0.75)
 		var st := String(t.get("air_state", "ready"))
 		if st in ["parked", "rearming"]:
 			var base = t.get("air_base")
@@ -215,7 +214,7 @@ static func order_board(w: Node, selected: Array, heli: Dictionary) -> int:
 		var a: Vector3 = u.node.position
 		var b: Vector3 = heli.node.position
 		var near_base := false
-		if not is_ship(heli) and heli.get("air_base") != null and not heli.air_base.dead:
+		if not is_ship(heli) and heli.get("air_base") != null and not heli.air_base.dead and heli.get("air_state") in ["parked", "rearming"]:
 			near_base = Vector2(a.x - heli.air_base.root.position.x, a.z - heli.air_base.root.position.z).length() <= 30.0
 		if Vector2(a.x - b.x, a.z - b.z).length() <= reach_now or near_base:
 			embark(w, heli, u)
@@ -324,13 +323,15 @@ static func order_pickup_at(w: Node, transport: Dictionary, at: Vector3) -> bool
 	return true
 
 ## Sends `transports` back to their home base (or nearest friendly helipad/airfield/HQ), unloading any carried troops there.
-static func order_return_home(w: Node, transports: Array) -> int:
+static func order_return_home(w: Node, transports: Array, destination = null) -> int:
 	var count := 0
 	for t in transports:
 		if not is_transport(t):
 			continue
 		var owner := int(t.owner)
-		var best_base = t.get("air_base")
+		if destination != null and not w.AirOperations.available(w, t, destination):
+			continue
+		var best_base = destination if destination != null else t.get("air_base")
 		if best_base == null or best_base.dead or int(best_base.owner) != owner:
 			best_base = null
 			var best_d := INF
@@ -636,7 +637,14 @@ static func _landing_step(w: Node, t: Dictionary) -> void:
 	var d: float = Vector2(t.node.position.x - go.x, t.node.position.z - go.z).length()
 	var late: bool = w.game_time - float(t.get("unload_since", w.game_time)) > LANDING_TIMEOUT
 	var ship_arrived: bool = is_ship(t) and t.get("target") == null and d <= 48.0 and unload_blocked(w, t) == ""
-	if (d > ARRIVE and not late and not ship_arrived) or (is_ship(t) and t.get("target") != null and not late and unload_blocked(w, t) != ""):
+	if (d > ARRIVE and not ship_arrived) or (is_ship(t) and t.get("target") != null and unload_blocked(w, t) != ""):
+		if late:
+			t.erase("unload_go")
+			t.erase("unload_target")
+			t.erase("return_base")
+			if int(t.owner) == 0 and w.hud != null:
+				w.hud.notice("Landing timed out before arrival. Passengers remain aboard.")
+			return
 		if t.get("fly", false) and t.get("target") == null:
 			_wake_transport(w, t, go)
 		return
