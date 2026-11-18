@@ -28,9 +28,11 @@ func land_share(owner: int) -> float:
 		return 0.0
 	var mine := 0
 	var land := 0
-	for o in t.owner_of:
+	for i in range(t.owner_of.size()):
+		if t.terrain[i] == t.Terrain.WATER:
+			continue
 		land += 1
-		if o == owner:
+		if t.owner_of[i] == owner:
 			mine += 1
 	return float(mine) / maxf(land, 1)
 

@@ -1726,6 +1726,7 @@ func order_attack(selected: Array, enemy: Dictionary) -> void:
 		if u.get("air_state") in ["returning", "no base"]:
 			u.air_state = "ready"
 		u.enemy = enemy
+		u.erase("garrison_order")
 		u.board = null  # a new combat order cancels an unfinished airlift
 		u.forced = true  # an ordered target is not swapped for a nearer one
 		u.ignore = {}
@@ -6047,7 +6048,7 @@ func kill(unit: Dictionary) -> void:
 		sitrep.unit_lost(unit)
 	if support != null:
 		support.lost(unit)   # the home front mourns (war_support.gd)
-	if generals != null and unit.has("general"):
+	if generals != null and (unit.has("general") or not unit.get("cargo", []).is_empty()):
 		generals.unit_lost(unit)   # the general aboard is killed or escapes wounded
 	if is_instance_valid(unit.get("bombard_marker")):
 		unit.bombard_marker.queue_free()

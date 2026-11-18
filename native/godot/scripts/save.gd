@@ -247,6 +247,8 @@ func restore(data: Dictionary) -> void:
 	# Spawned units derive stats from research and rival technology. Restore
 	# these first; otherwise a fresh load equips veterans with starting stats.
 	world.research.restore(data.get("research", {}))
+	for nation in world.ai.nations:
+		nation.erase("national_cargo")  # absent in saves made before dispatch
 	for saved in data.ai:
 		for n in world.ai.nations:
 			if n.id == int(saved.id):

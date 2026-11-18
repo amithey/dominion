@@ -83,12 +83,15 @@ func run() -> void:
 	var t = w.territory
 	var cells: int = t.owner_of.size()
 	var mine := 0
+	var land := 0
 	for i in range(cells):
+		if t.terrain[i] == t.Terrain.WATER: continue
+		land += 1
 		if t.owner_of[i] == 0: mine += 1
-	var need := int(ceil(cells * v.LAND_SHARE)) - mine
+	var need := int(ceil(land * v.LAND_SHARE)) - mine
 	for i in range(cells):
 		if need <= 0: break
-		if t.owner_of[i] < 0:
+		if t.terrain[i] != t.Terrain.WATER and t.owner_of[i] < 0:
 			t.owner_of[i] = 0
 			need -= 1
 	v.update(5.0)

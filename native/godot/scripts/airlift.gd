@@ -450,7 +450,14 @@ static func _pickup_step(w: Node, t: Dictionary) -> void:
 	var go: Vector3 = t.pickup_go
 	var d: float = Vector2(t.node.position.x - go.x, t.node.position.z - go.z).length()
 	var late: bool = w.game_time - float(t.get("pickup_since", w.game_time)) > LANDING_TIMEOUT
-	if d > ARRIVE and not late:
+	if d > ARRIVE:
+		if late:
+			t.erase("pickup_go")
+			t.erase("pickup_since")
+			t.erase("pickup_sweep")
+			if int(t.owner) == 0 and w.hud != null:
+				w.hud.notice("Pickup timed out before arrival.")
+			return
 		if t.get("fly", false) and t.get("target") == null:
 			_wake_transport(w, t, go)
 		return
@@ -574,7 +581,7 @@ static func unload(w: Node, heli: Dictionary) -> Array:
 		var gen_id := int(c.get("general", -1))
 		if gen_id >= 0 and w.get("generals") != null:
 			for g in w.generals.roster:
-				if g.alive and int(g.id) == gen_id:
+				if g.alive and int(g.id) == gen_id and is_same(g.unit, heli):
 					g.unit = u
 					u.general = gen_id
 					break

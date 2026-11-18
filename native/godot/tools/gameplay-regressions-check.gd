@@ -40,6 +40,8 @@ func run() -> void:
 	check_transport()
 	check_trade_and_powers()
 	check_saved_orders()
+	check_campaign_rewind()
+	check_transport_command()
 	print("GAMEPLAY_REGRESSIONS ", "PASS" if failures == 0 else "FAIL")
 	quit(0 if failures == 0 else 1)
 
@@ -158,3 +160,64 @@ func check_saved_orders() -> void:
 	w.saves.restore(JSON.parse_string(JSON.stringify(w.saves.capture())))
 	check(w.units.any(func(u): return u.key == "worker" and u.get("build_site") != null and u.build_site.root.position.distance_to(site.root.position) < 0.1 and u.build_queue.size() == 1 and u.build_queue[0].root.position.distance_to(next.root.position) < 0.1), "worker retains its site and next job after a JSON round trip")
 	check(w.units.any(func(u): return u.key == "tank" and u.get("forced", false) and u.enemy != null and u.enemy.node.position.distance_to(saved_target) < 0.1), "tank resumes attacking the same unit after load")
+
+func check_campaign_rewind() -> void:
+	var territory = w.territory
+	var ownership: PackedInt32Array = territory.owner_of.duplicate()
+	for i in range(ownership.size()):
+		territory.owner_of[i] = -1 if territory.terrain[i] == territory.Terrain.WATER else 0
+	check(is_equal_approx(w.victory.land_share(0), 1.0), "all dry land counts as full control even without territorial waters")
+	territory.owner_of = ownership
+	var spot: Vector3 = Lift.landing_spot(w, w.start, [], null, 80)
+	var fort = w.fortifications
+	var position := spot + Vector3(18, 0, 0)
+	var trench = fort._spawn(0, position, 0.0, "trench", true)
+	var seated = w.spawn_unit("soldier", position, 0)
+	fort._seat_unit_immediately(seated, trench)
+	var passer = w.spawn_unit("soldier", position, 0)
+	w.order_move([passer], spot + Vector3(60, 0, 0))
+	var digger = w.spawn_unit("soldier", spot, 0)
+	fort.order_dig([digger], "trench")
+	fort.update(0.2)
+	var checkpoint = JSON.parse_string(JSON.stringify(w.saves.capture()))
+	w.market.ai_nation(1).national_cargo = {"target": 0, "qty": 30}
+	w.generals._enlist(0)
+	checkpoint.erase("generals")
+	w.saves.restore(checkpoint)
+	check(not w.market.ai_nation(1).has("national_cargo"), "rewinding before a shipment removes its cargo")
+	check(w.generals.of(0).is_empty() and not w.generals.of(1).is_empty(), "legacy saves start with a fresh general staff")
+	check(fort.entries[0].garrison.size() == 1 and w.units.any(func(u): return u.key == "soldier" and u.get("garrisoned_in") == null and u.target != null and u.node.position.distance_to(position) < 4), "the occupant stays seated and a passing soldier keeps walking")
+	var unfinished = fort.entries.filter(func(e): return not e.built)[0]
+	var progress: float = unfinished.progress
+	fort.update(0.5)
+	check(unfinished.progress > progress, "the assigned digger continues construction after loading")
+
+func check_transport_command() -> void:
+	var spot: Vector3 = Lift.landing_spot(w, w.start, [], null, 80)
+	var heli = w.spawn_unit("helicopter", spot, 0)
+	var squad = w.spawn_unit("soldier", spot, 0)
+	heli.pickup_go = spot + Vector3(200, 0, 0)
+	heli.pickup_since = w.game_time - Lift.LANDING_TIMEOUT - 1
+	heli.pickup_sweep = true
+	Lift._pickup_step(w, heli)
+	check(not heli.has("pickup_go") and Lift.used(heli) == 0 and not squad.dead, "a timed-out pickup cannot board unrelated passengers")
+	var general = w.generals._enlist(0)
+	w.generals.assign(general, squad)
+	Lift.order_board(w, [squad], heli)
+	var tank = w.spawn_unit("tank", spot, 0)
+	w.generals.assign(general, tank)
+	var landed: Array = Lift.unload(w, heli)
+	check(landed.size() == 1 and not landed[0].has("general") and is_same(general.unit, tank), "unloading respects a general's reassignment")
+	var hq = Additional.capital(w, 0)
+	var unit = landed[0]
+	unit.node.position = hq.root.position
+	w.UrbanGarrison.order_garrison(w, [unit], hq)
+	var enemy = w.spawn_unit("soldier", spot, 1)
+	w.order_attack([unit], enemy)
+	w.UrbanGarrison.update(w, 0.2)
+	check(not unit.has("garrison_order") and unit.get("garrison_building") == null and is_same(unit.enemy, enemy), "an attack supersedes a pending garrison order")
+	w.generals.assign(general, unit)
+	heli.node.position = unit.node.position
+	Lift.order_board(w, [unit], heli)
+	w.kill(heli)
+	check(general.unit == null and (not general.alive or general.wounded_until > w.game_time), "losing a transport resolves the fate of its passenger commander")
