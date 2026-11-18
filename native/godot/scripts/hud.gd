@@ -75,7 +75,9 @@ var _sel_fuel: ProgressBar
 var _sel_info: Label
 var _city_tiles: GridContainer   # a town hall's accounts as tiles (Civilization style)
 var _city_sig := ""
-var _sel_queue: HBoxContainer
+var _sel_queue: HFlowContainer
+var _sel_scroll: ScrollContainer
+var _sel_body: MarginContainer
 var _sel_medal: Control
 var _sel_stats: HBoxContainer
 var _stat_values := {}    # caption -> [plate, value Label]
@@ -746,13 +748,6 @@ func _on_portrait(key: String, tex: Texture2D) -> void:
 
 func _build_selection() -> void:
 	_sel = PanelContainer.new()
-	_sel.anchor_top = 1.0
-	_sel.anchor_bottom = 1.0
-	_sel.offset_left = 12
-	_sel.offset_right = 560
-	_sel.offset_top = -272
-	_sel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_sel.offset_bottom = -12
 	_sel.add_theme_stylebox_override("panel", UI.plate(Color(UI.PANEL_TOP, 0.97), Color(UI.PANEL_LOW, 0.97), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 8))
 	add_child(_sel)
 	var column := VBoxContainer.new()
@@ -764,13 +759,18 @@ func _build_selection() -> void:
 	column.add_child(head_band)
 	_sel_title = _text("", 19, UI.BRIGHT, true)
 	_sel_title.add_theme_font_size_override("font_size", 19)
+	_sel_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	head_band.add_child(_sel_title)
 	_windows.register_window(_sel, head_band, "selection")
+	_sel_scroll = ScrollContainer.new()
+	_sel_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(_sel_scroll)
 	var body := MarginContainer.new()
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_sel_body = body
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for side in ["left", "right", "top", "bottom"]:
 		body.add_theme_constant_override("margin_" + side, 10)
-	column.add_child(body)
+	_sel_scroll.add_child(body)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	body.add_child(row)
@@ -963,8 +963,9 @@ func _build_selection() -> void:
 	_city_tiles.add_theme_constant_override("v_separation", 6)
 	_city_tiles.visible = false
 	col.add_child(_city_tiles)
-	_sel_queue = HBoxContainer.new()
-	_sel_queue.add_theme_constant_override("separation", 4)
+	_sel_queue = HFlowContainer.new()
+	_sel_queue.add_theme_constant_override("h_separation", 4)
+	_sel_queue.add_theme_constant_override("v_separation", 4)
 	col.add_child(_sel_queue)
 	_roster_scroll = ScrollContainer.new()
 	_roster_scroll.custom_minimum_size.y = 76
@@ -974,6 +975,8 @@ func _build_selection() -> void:
 	_unit_roster.add_theme_constant_override("separation", 5)
 	_roster_scroll.add_child(_unit_roster)
 	_roster_scroll.hide()
+	body.minimum_size_changed.connect(_layout_selection, CONNECT_DEFERRED)
+	get_viewport().size_changed.connect(_layout_selection, CONNECT_DEFERRED)
 	_sel.visible = false
 
 func _build_minimap() -> void:
@@ -1831,14 +1834,22 @@ func _fit_selection(sig: String) -> void:
 	if sig == _sel_fit_sig or _sel == null:
 		return
 	_sel_fit_sig = sig
-	_sel.custom_minimum_size = Vector2(540.0, 0.0)
-	_sel.size = Vector2(540.0, 0.0)
-	_sel.reset_size()
-	if _windows != null:
-		if not _windows.positions.has("selection"):
-			_sel.offset_bottom = -12
-			_sel.offset_top = -_sel.size.y - 12
-		_windows.reflow.call_deferred(_sel)
+	_sel_scroll.scroll_vertical = 0
+	_sel_scroll.scroll_horizontal = 0
+	_layout_selection()
+
+func _layout_selection() -> void:
+	if not is_instance_valid(_sel) or not _sel.visible: return
+	var view := get_viewport().get_visible_rect().size
+	var edge: float = _windows.EDGE
+	var width := minf(540.0, view.x - 2.0 * edge)
+	var height_limit := minf(view.y * 0.48, view.y - _windows.TOP - edge)
+	var chrome := _sel.get_combined_minimum_size()
+	var height := minf(height_limit, chrome.y + _sel_body.get_combined_minimum_size().y)
+	_sel.size = Vector2(width, height)
+	if _windows.dragging != _sel and not _windows.positions.has("selection"):
+		_sel.position = Vector2(edge, view.y - _sel.size.y - edge)
+	_windows.reflow(_sel)
 
 ## A town hall's accounts as tiles, as a 4X city screen shows them: residents
 ## with a housing bar, happiness with a mood word, the food balance, taxes,
