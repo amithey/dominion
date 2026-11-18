@@ -56,7 +56,18 @@ static func apply(w: Node) -> void:
 		["museum", "+4 happiness. A nation with a story fights for it."],
 		["park", "+6 happiness. Everyone loves a picnic."],
 		["stadium", "+8 happiness, +3% income. Bread and games."],
-		["courthouse", "+5% income. Needed for the Constitutional Framework research."]]:
+		["courthouse", "+5% income. Needed for the Constitutional Framework research."],
+		# Cards that promised what the game did not do (audit of 18 November): each now says what it does.
+		["oilRefinery", "Refines 0.06 oil a second into +$7 a second while there is oil in store. Needed for the Industrialization research."],
+		["mountainMine", "Digs +0.8 iron a second out of the high rock (more with Advanced Mining). Must be built on mountainous ground."],
+		["nuclearReactor", "+280 MW for the grid. While fuelled (0.04 uranium a second): +$5 a second and +20% production. MELTDOWN if destroyed. Needed for the Nuclear Program research."],
+		["solarFarm", "+65 MW of clean power for the grid, and backup power for buildings near it."],
+		["embassy", "A diplomatic mission: relations with every nation at peace warm by 0.5 every 10 seconds, up to +50 (two embassies count)."],
+		["prison", "Somewhere to hold captured agents: enemy spies are 8% likelier to be caught (two prisons count)."],
+		["worship", "+5 happiness. It takes the look of your nation's faith."],
+		["hospital", "+10 health: productive citizens. Treats your wounded infantry within 40 m (2% of their health a second, out of combat)."],
+		["chipFab", "With Microchip Fabrication: turns 0.2 silicon a second into +$2 a second and +0.6 research a second."],
+		["bank", "+15% national income; banks add up to +60% together."]]:
 		if w.building_defs.has(entry[0]):
 			w.building_defs[entry[0]].desc = entry[1]
 	w.map.economy.startResources["gas"] = 100.0

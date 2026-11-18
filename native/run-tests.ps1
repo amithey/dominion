@@ -12,6 +12,7 @@ $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.e
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
+    @('building cards: refinery, mountain mine, reactor, railway storage, bank ceiling, embassies, hospitals', @('--script', 'res://tools/building-cards-check.gd'), 'BUILDING_CARDS PASS', 180),
     @('queued orders, supply links, trade and national powers', @('--script', 'res://tools/gameplay-regressions-check.gd'), 'GAMEPLAY_REGRESSIONS PASS', 240),
     @('road and rail traffic: the Settings switch, Defaults and the world flag', @('--script', 'res://tools/road-traffic-setting-check.gd'), 'ROAD_TRAFFIC_SETTING PASS', 120),
     @('flag colours: no two nations of one match share a colour (every pair, 200 rosters, the set-up itself)', @('--script', 'res://tools/colour-separation-check.gd'), 'COLOUR_SEPARATION PASS', 120),
