@@ -463,6 +463,9 @@ func pick_building(n: Dictionary) -> String:
 		var fkey: String = fac[0]
 		if int(counts.get(fkey, 0)) < int(fac[1]) and world.building_defs.has(fkey) and NV.builds(world, n.id, fkey) and preload("res://scripts/progression.gd").building_blocked(world, n.id, fkey) == "" and float(n.get("no_room", {}).get(fkey, 0.0)) <= float(n.get("age", 0.0)):
 			return fkey
+	if villages + cities >= 2 and total >= 24 and not counts.has("embassy") and world.diplomacy.pact[n.id].has(true):
+		if float(n.get("no_room", {}).get("embassy", 0.0)) <= float(n.get("age", 0.0)) and NV.builds(world, n.id, "embassy") and preload("res://scripts/progression.gd").building_blocked(world, n.id, "embassy") == "":
+			return "embassy"
 	var plans := [MILITARY_PLAN, CITY_PLAN] if share < want_military else [CITY_PLAN, MILITARY_PLAN]
 	for plan in plans:
 		var short := []

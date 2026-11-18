@@ -147,6 +147,7 @@ func propose_pact(other: int) -> String:
 		return "%s has fallen: there is no government to sign with." % name_of(other)
 	if at_war(0, other):
 		return "No trade during war."
+	if pact[0][other]: return "A trade pact is already active."
 	if rel(0, other) < 20.0:
 		return "Relations too cold for a trade pact (+20 needed)."
 	set_flag(pact, 0, other, true)
@@ -176,6 +177,7 @@ func propose_alliance(other: int) -> String:
 		return "%s has fallen: there is no government to ally with." % name_of(other)
 	if at_war(0, other):
 		return "Make peace first."
+	if allied(0, other): return "Already allied."
 	if rel(0, other) < 55.0:
 		return "They need a relation of at least +55 to consider an alliance."
 	if randf() < 0.75:
@@ -245,6 +247,13 @@ func tick() -> void:
 			if defeated(b):
 				continue
 			change(a, b, (randf() - 0.5) * 4.0)
+			if not war[a][b] and rel(a, b) >= 55.0:
+				if not pact[a][b]: set_flag(pact, a, b, true)
+				elif not nap[a][b]: set_flag(nap, a, b, true)
+			if pact[a][b] and not war[a][b]:
+				for owner in [a, b]:
+					var partner = world.market.ai_nation(owner)
+					if partner != null: partner.money += 40.0
 			if not war[a][b] and rel(a, b) < -75.0 and not nap[a][b] and randf() < 0.05 and not RegimeChange.restrains(world, a, b) and not RegimeChange.restrains(world, b, a):
 				declare_war(a, b)
 			elif war[a][b] and randf() < 0.04 + (maxf(0.0, 40.0 - minf(world.support.value(a), world.support.value(b))) / 200.0 if world.get("support") != null else 0.0):   # weary peoples make peace sooner
