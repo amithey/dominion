@@ -180,6 +180,8 @@ func run() -> void:
 
 	# ---- rival navies
 	var naval_picks := 0
+	check(T.ai_pick(w, -1, ["landingShip"]) == "", "an unwanted landing ship can be the only training option")
+	check(T.ai_pick(w, 1, []) == "", "no eligible training skips recruitment")
 	var options := ["tank", "soldier", "apc", "destroyer", "corvette", "artillery", "jet", "mlrs"]
 	for i in range(400):
 		if w.unit_defs.get(T.ai_pick(w, 1, options), {}).get("naval", false): naval_picks += 1

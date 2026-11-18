@@ -925,6 +925,8 @@ static func ai_pick(w: Node, owner: int, options: Array) -> String:
 	if "landingShip" in options and preload("res://scripts/ai_navy.gd").wants_transport(w, owner) and randf() < 0.6:
 		return "landingShip"
 	options = options.filter(func(k): return k != "landingShip")
+	if options.is_empty():
+		return ""
 	var ships: Array = options.filter(func(k): return w.unit_defs.get(k, {}).get("naval", false))
 	if not ships.is_empty():
 		var fleet := 0

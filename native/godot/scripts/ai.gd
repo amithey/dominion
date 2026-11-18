@@ -203,8 +203,8 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 			var options: Array = train_pool.filter(func(k): return world.unit_allowed(n.id, k) and preload("res://scripts/additional_factions.gd").ai_unlocked(world, n.id, k) and preload("res://scripts/progression.gd").unit_blocked(world, n.id, k) == "" and not production_sites(n.id,k).is_empty())
 			if army_size >= int(row(n).maxArmy):
 				options = options.filter(func(k): return world.unit_defs[k].get("naval", false))   # only ships, while the land army is full
-			if not options.is_empty():
-				var key: String = preload("res://scripts/war_tools.gd").ai_pick(world, n.id, options)   # its navy keeps a fleet
+			var key: String = preload("res://scripts/war_tools.gd").ai_pick(world, n.id, options)
+			if key != "":
 				var cost := weighted_cost(world.unit_defs[key].cost) * preload("res://scripts/national_profile.gd").cost_mult(world, n.id, key)
 				# Money for the next building is kept back once the nation has a basic army
 				# (6 units in wartime, 4 in peace): otherwise wartime training drains every dollar
