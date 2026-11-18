@@ -233,8 +233,8 @@ func open_main() -> void:
 	var invitation := _description(UI.caps("The war council"))
 	invitation.add_theme_color_override("font_color", UI.GOLD)
 	_entry("New Game", "Chart a campaign: your nation, its rivals and the rules.", "sovereign", open_new_game, true)
-	var newest := newest_save()
 	var slots := list_saves()
+	var newest := str(slots[0].name) if not slots.is_empty() else ""
 	var last := "No campaign saved yet."
 	if newest != "":
 		last = ("%s  ·  %s" % [slots[0].short, slots[0].date]) if str(slots[0].short) != "" else ("Resume \"%s\", saved %s." % [newest.capitalize(), slots[0].date])
@@ -793,7 +793,44 @@ func open_load() -> void:
 		_panel.add_child(none)
 	for s in slots:
 		_option_card(s.name.capitalize(), ("%s  ·  saved %s" % [s.about, s.date]) if str(s.about) != "" else "Saved %s" % s.date, func(): load_game(s.name))
+		var manage := _button("Rename or delete " + str(s.name), func(): _manage_save(s.name))
+		manage.custom_minimum_size.y = 28
 	_button("Back", open_pause if in_match else open_main)
+
+func _manage_save(slot: String) -> void:
+	_clear()
+	_heading("Manage saved game")
+	_description(slot)
+	var name_field := LineEdit.new()
+	name_field.text = slot
+	_panel.add_child(name_field)
+	var feedback := _description("")
+	_button("Rename", func():
+		var name := name_field.text.strip_edges()
+		if name == slot:
+			open_load()
+			return
+		if not name.is_valid_filename() or name.ends_with(".bad") or name.to_lower() == "test":
+			feedback.text = "Choose a valid save name."
+			return
+		var dest: String = world.saves.path_of(name)
+		if FileAccess.file_exists(dest):
+			feedback.text = "A save with that name already exists."
+			return
+		var err := DirAccess.rename_absolute(world.saves.path_of(slot), dest)
+		if err == OK: open_load()
+		else: feedback.text = error_string(err))
+	_button("Delete…", func():
+		_clear()
+		_heading("Delete saved game?")
+		_description(slot)
+		var error_label := _description("")
+		_button("Delete saved game", func():
+			var err := DirAccess.remove_absolute(world.saves.path_of(slot))
+			if err == OK: open_load()
+			else: error_label.text = error_string(err))
+		_button("Cancel", open_load))
+	_button("Back", open_load)
 
 var settings_tab := "graphics"
 
@@ -1114,7 +1151,8 @@ func list_saves() -> Array:
 		if file.ends_with(".json") and file != "test.json" and not file.ends_with(".bad.json"):
 			var name := file.get_basename()
 			var modified := FileAccess.get_modified_time("user://saves/" + file)
-			out.append({"name": name, "time": modified, "date": when(modified), "about": _about("user://saves/" + file), "short": _about("user://saves/" + file, true)})
+			var summary := _save_summary("user://saves/" + file)
+			out.append({"name": name, "time": modified, "date": when(modified), "about": _summary_text(summary, false), "short": _summary_text(summary, true)})
 	out.sort_custom(func(a, b): return a.time > b.time)
 	return out
 
@@ -1134,13 +1172,17 @@ static func when(unix: int) -> String:
 
 ## Whose campaign a save holds: "United States · Industrial Era · year 3 · Easy".
 static func _about(path: String, short := false) -> String:
+	return _summary_text(_save_summary(path), short)
+
+static func _save_summary(path: String) -> Dictionary:
 	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null or f.get_length() > 8_000_000:
-		return ""
+		return {}
 	var data = JSON.parse_string(f.get_as_text())
-	if not (data is Dictionary) or not data.has("summary"):
-		return ""
-	var s: Dictionary = data.summary
+	return data.summary if data is Dictionary and data.get("summary") is Dictionary else {}
+
+static func _summary_text(s: Dictionary, short: bool) -> String:
+	if s.is_empty(): return ""
 	var parts := PackedStringArray()
 	for k in (["nation"] if short else ["nation", "era"]):
 		if str(s.get(k, "")) != "": parts.append(str(s[k]))

@@ -71,14 +71,19 @@ func standing(key: String) -> int:
 
 func provided(stat: String) -> float:
 	var total := 0.0
+	var capped := {}
 	for b in world.buildings:
 		if b.owner == 0 and b.built and not b.dead and b.get("supplied", true):
-			total += float(b.def.provides.get(stat, 0.0))
+			var amount := float(b.def.provides.get(stat, 0.0))
+			if stat == "incomePct" and b.key in ["bank", "luxuryVillas"]:
+				capped[b.key] = int(capped.get(b.key, 0)) + 1
+				if capped[b.key] > 4: continue
+			total += amount
 	return total
 
 func recalculate() -> void:
 	civ_cap = (float(cfg.baseCivCap) + provided("civCap")) * (1.0 + (world.research.bonus("civCapPct") if world.research else 0.0))
-	var mat_cap := owned("warehouse") * float(cfg.warehouseBonus)
+	var mat_cap := provided("matCap")
 	for key in cfg.baseCap:
 		caps[key] = float(cfg.baseCap[key]) + mat_cap
 	caps.food = float(cfg.foodCapBase) + owned("foodDepot") * float(cfg.foodDepotBonus)
@@ -86,7 +91,7 @@ func recalculate() -> void:
 		for key in caps:
 			caps[key] = maxf(caps[key], TEST_CAP)
 	# Taxes need administration; residential districts extend it (config.js admin).
-	admin = clampf(float(cfg.baseAdmin) + mini(owned("residential"), 3) * 0.05 + mini(owned("villageCenter"), 3) * 0.05 + owned("cityCenter") * 0.10, float(cfg.baseAdmin), 1.0)
+	admin = clampf(float(cfg.baseAdmin) + provided("admin") + mini(owned("residential"), 3) * 0.05 + mini(owned("villageCenter"), 3) * 0.05 + owned("cityCenter") * 0.10, float(cfg.baseAdmin), 1.0)
 	pop_cap = int(provided("pop")) + garrison
 	_plant = minf(provided("prodPct"), 0.30)
 	_depot_damage = minf(provided("dmgPct"), 0.25)
@@ -158,7 +163,14 @@ func tick() -> void:
 	rates.oil = float(land.get("oil", 0.0)) * preload("res://scripts/national_profile.gd").resource_mult(world, 0, "oil")
 	var mining: float = 1.0 + (r.bonus("extractPct") if r else 0.0)
 	for b in world.buildings:
-		if b.owner != 0 or not b.built or b.dead or b.deposit == null or not b.get("supplied", true):
+		if b.owner != 0 or not b.built or b.dead or not b.get("supplied", true):
+			continue
+		if b.key == "mountainMine":
+			rates.iron += 0.8 * mining
+		elif b.key == "oilRefinery" and res.oil + rates.oil >= 0.06:
+			rates.oil -= 0.06
+			rates.money += 7.0
+		if b.deposit == null:
 			continue
 		var dep: Dictionary = b.deposit.def
 		rates[dep.res] = rates.get(dep.res, 0.0) + float(dep.rate) * mining * (1.0 + preload("res://scripts/additional_powers.gd").bonus(world, 0, "mining")) * preload("res://scripts/national_profile.gd").resource_mult(world, 0, dep.res)
@@ -236,7 +248,7 @@ func city_report(s: Dictionary) -> Dictionary:
 	var capacity := 0.0
 	var amenities := 0.0
 	var farms := 0.0
-	var income_pct := 0.0
+	var taxable_weight := 0.0
 	var homes := 0
 	for b in own:
 		var p: Dictionary = b.def.provides
@@ -244,7 +256,8 @@ func city_report(s: Dictionary) -> Dictionary:
 		if float(p.get("civCap", 0.0)) > 0.0 and not is_same(b, s):
 			homes += 1
 		amenities += float(p.get("happiness", 0.0))
-		income_pct += float(p.get("incomePct", 0.0))
+		if b.get("supplied", true):
+			taxable_weight += float(POPULATION_WEIGHTS.get(b.key, 0.0))
 		if b.key == "farm":
 			farms += float(cfg.farmFood)
 		elif b.key == "fishingWharf":
@@ -252,17 +265,20 @@ func city_report(s: Dictionary) -> Dictionary:
 	if s.key == "hq":
 		capacity += float(cfg.baseCivCap)  # the capital's own streets
 	# The nation's citizens live where the homes are.
+	var total_weight := 0.0
 	var all_capacity := float(cfg.baseCivCap)
 	for b in world.buildings:
 		if b.owner == s.owner and b.built and not b.dead:
 			all_capacity += float(b.def.provides.get("civCap", 0.0))
+			total_weight += float(POPULATION_WEIGHTS.get(b.key, 0.0))
 	var people := 0.0
 	if s.owner == 0:
 		people = civilians * capacity / maxf(all_capacity, 1.0)
 	var supplied: bool = s.get("supplied", true)
 	var eats := people * float(cfg.foodPerCivilian) * (1.0 + civilians / 2000.0)
 	var r: Node = world.research
-	var tax: float = people * float(cfg.taxPerCivilian) * admin * (1.0 if supplied else 0.0) * (1.0 + provided("incomePct") + (r.bonus("incomePct") if r else 0.0))
+	var taxable_people := civilians * taxable_weight / maxf(total_weight, 1.0) if s.owner == 0 else 0.0
+	var tax: float = preload("res://scripts/faction_powers.gd").income_mult(world, 0) * taxable_people * float(cfg.taxPerCivilian) * admin * (1.0 + provided("incomePct") + (r.bonus("incomePct") if r else 0.0))
 	return {"residents": people, "capacity": capacity, "homes": homes, "buildings": own.size(), "amenities": amenities,
 		"happiness": happiness, "food_in": farms, "food_out": eats, "tax": tax, "supplied": supplied}
 

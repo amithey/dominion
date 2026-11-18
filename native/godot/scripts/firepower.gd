@@ -191,7 +191,7 @@ static func detonate(w: Node, shooter: Dictionary, munition: String, at: Vector3
 		# The burst looks like what made it (blasts.gd); spall and fragments are thrown back the way the round came.
 		var dir := Vector3.ZERO
 		var from = shooter.get("node")
-		if from is Node3D and is_instance_valid(from):
+		if is_instance_valid(from) and from is Node3D:
 			dir = at - (from as Node3D).global_position
 		w.effects.blast(str(p.look), at, float(p.fx), {"on_ground": on_ground, "crater": bool(p.crater) and not bool(p.airburst), "dir": dir})
 	# Roads and rails: only a burst at or near the ground reaches them.

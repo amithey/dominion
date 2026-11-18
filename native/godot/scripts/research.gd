@@ -497,9 +497,8 @@ func era_requirements(index: int) -> Array:
 				label = "Discoveries"
 				have = completed_count()
 			"power":
-				label = "Research buildings"   # the native game has no power grid: education drives industry
-				need = ceilf(need / 15.0)
-				have = labs()
+				label = "Power generation (MW)"
+				have = world.homefront.power_supply.get(0, 0.0) if world.homefront != null else 0.0
 			"routes":
 				label = "Trade routes"
 				have = world.market.routes.size() if world.market else 0
@@ -611,7 +610,7 @@ func unit_cost(key: String, cost: Dictionary) -> Dictionary:
 	var m := 1.0
 	if key in world.VEHICLES or key in world.NAVAL:
 		m += bonus("costVehiclePct")
-	if key == "drone":
+	if key in preload("res://scripts/modern_warfare.gd").DRONES:
 		m += bonus("costDronePct")
 	m *= preload("res://scripts/national_profile.gd").cost_mult(world, 0, key)   # the nation's industry: cheaper here, dearer there
 	if absf(m - 1.0) < 0.001:

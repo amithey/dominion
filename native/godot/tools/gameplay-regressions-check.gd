@@ -42,6 +42,7 @@ func run() -> void:
 	w.start_match("easy")
 	w.saves.autosave_every = 0
 	w.economy.grant_test_resources()
+	check_audit_actions()
 	check_roads()
 	check_shipyard()
 	check_transport()
@@ -51,6 +52,40 @@ func run() -> void:
 	check_transport_command()
 	print("GAMEPLAY_REGRESSIONS ", "PASS" if failures == 0 else "FAIL")
 	quit(0 if failures == 0 else 1)
+
+func check_audit_actions() -> void:
+	var nation: Dictionary = w.ai.nations[0]
+	var capital: Dictionary = w.ai.hq(nation.id)
+	var farm: Dictionary = w.place_building("farm", w.start + Vector3(70, 0, 0), nation.id, true)
+	capital.hp -= 100
+	farm.hp -= 50
+	farm.supplied = true
+	var funds: float = w.economy.res.money
+	w.ai.think(nation, capital, 0.01)
+	var before: float = nation.money
+	w.Repairs.update(w, 1.0)
+	check(capital.hp > capital.max_hp - 100 and farm.hp > farm.max_hp - 50, "a rival repairs both its damaged capital and its district")
+	check(nation.money < before and w.economy.res.money == funds, "rival repairs charge its own treasury")
+	for key in ["apartments", "luxuryVillas", "solarFarm", "waterTreatment", "museum", "park", "stadium", "commandCenter"]:
+		var listed := false
+		for tab in w.hud.BUILD_MENU:
+			for group in w.hud.BUILD_GROUPS[tab]:
+				if key in w.hud.BUILD_MENU[tab] and key in group[1]: listed = true
+		check(listed, key + " is offered in a build group")
+	for action in ["Attack-move", "Bombard", "Lay Mines"]:
+		w.hud._commands[action].pressed.emit()
+		check(w.order_mode != "", action + " starts")
+		w.hud._commands[action].pressed.emit()
+		check(w.order_mode == "", action + " cancels on a second click")
+	var screen: Rect2 = w.hud._screen_buttons.menu.get_global_rect()
+	check(w.hud._prod.get_global_rect().position.y >= screen.end.y, "the build panel clears the command strip")
+	w.hud.start_guide(true)
+	check(not w.hud._guide.get_global_rect().intersects(w.hud._sel.get_global_rect()), "the guide clears the selection panel")
+	var removed := Node3D.new()
+	removed.free()
+	preload("res://scripts/firepower.gd").detonate(w, {"owner": 0, "key": "tank", "node": removed}, "shell", w.start + Vector3(50, 0, 0), 1.0)
+	var log_entry: Dictionary = w.sitrep.from_notice("Rival Farm destroyed")
+	check(log_entry.cat != "loss", "foreign building losses do not enter the player's loss report")
 
 func check_roads() -> void:
 	var town := FlatTown.new()

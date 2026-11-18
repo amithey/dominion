@@ -25,7 +25,13 @@ static func update(w: Node, delta: float) -> void:
 		if float(e.get("fire", 0.0)) > 0.001 or e.get("moving",false) or e.get("enemy")!=null or w.game_time-e.get("last_hit",-100.0)<6 or not e.get("supplied",true) or w.disabled(e):
 			continue
 		var amount := minf(e.max_hp-e.hp,e.max_hp*0.025*delta*preload("res://scripts/additional_factions.gd").construction_mult(w, int(e.owner)))
-		if w.economy.pay({"money":amount*0.25}):
-			e.hp += amount
-			if e.get("is_building", false):
-				preload("res://scripts/building_fires.gd").sync_damage_state(w, e)
+		var cost := amount * 0.25
+		if e.owner == 0:
+			if not w.economy.pay({"money": cost}): continue
+		else:
+			var nation = w.market.ai_nation(int(e.owner))
+			if nation == null or nation.defeated or nation.money < cost: continue
+			nation.money -= cost
+		e.hp += amount
+		if e.get("is_building", false):
+			preload("res://scripts/building_fires.gd").sync_damage_state(w, e)

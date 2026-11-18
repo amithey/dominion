@@ -5,7 +5,7 @@
 # Usage:  powershell -ExecutionPolicy Bypass -File native\run-tests.ps1 [-Exported] [-Quick]
 #   -Exported  runs the same tests against dist\DOMINION.exe (the built game)
 #   -Quick     skips the long ones (the 12-minute match and the AI war)
-param([switch]$Exported, [switch]$Quick)
+param([switch]$Exported, [switch]$Quick, [switch]$WindowedChecks, [string]$TrafficSave)
 $ErrorActionPreference = 'Continue'
 $repo = Split-Path -Parent $PSScriptRoot
 $godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.exe'
@@ -174,6 +174,24 @@ if (-not $Quick) {
     $tests += ,@('12 minutes played as a player: nothing stuck', @('--script', 'res://tools/playthrough-check.gd'), 'PLAYTHROUGH PASS', 2400)
 }
 
+# Discover additional regression scripts. Graphics probes require a display;
+# the traffic replay accepts a caller-selected save. Neither reads a random slot.
+$registered = @($tests | ForEach-Object { $_[1] } | Where-Object { $_ -like 'res://tools/*' })
+$graphics = @('fullscreen-check', 'ambience-regression-check', 'audit-layout', 'customer5-layout')
+$additional = Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'godot/tools') -Filter '*.gd' |
+    Where-Object { $_.BaseName -like '*-check' -or $_.BaseName -in @('customer5-monkey','customer5-static','customer5-play','audit-layout','customer5-layout','audit-portraits') }
+foreach ($script in $additional) {
+    $resource = "res://tools/$($script.Name)"
+    if ($registered -contains $resource) { continue }
+    if ($script.BaseName -in $graphics -and -not $WindowedChecks) { continue }
+    $arguments = @('--script', $resource)
+    if ($script.BaseName -eq 'traffic-stuck-check') {
+        if (-not $TrafficSave) { continue }
+        $arguments += @('--', ('"--path={0}"' -f (Resolve-Path -LiteralPath $TrafficSave).Path))
+    }
+    $tests += ,@($script.BaseName, $arguments, $null, 1800)
+}
+
 $results = @()
 $runId = [guid]::NewGuid().ToString('N')
 foreach ($t in $tests) {
@@ -181,6 +199,7 @@ foreach ($t in $tests) {
     if ($Exported -and ($testArgs[0] -like 'res://*' -or $testArgs[0] -eq '--script')) { continue }  # alternate scenes and tools are not part of the release
     if ($Exported) { $runner = $exe; $argsList = @('--headless') }
     else { $runner = $godot; $argsList = @('--headless', '--path', ('"{0}"' -f (Join-Path $PSScriptRoot 'godot'))) }
+    if ($WindowedChecks -and $name -in $graphics) { $argsList = @($argsList | Where-Object { $_ -ne '--headless' }) }
     $argsList += $testArgs
     $out = Join-Path $env:TEMP "dominion-test-$runId.log"
     $start = Get-Date
@@ -190,7 +209,8 @@ foreach ($t in $tests) {
     else {
         $log = (Get-Content $out -Raw) + (Get-Content "$out.err" -Raw)
         $errors = ([regex]::Matches($log, 'SCRIPT ERROR')).Count
-        if ($p.ExitCode -ne 0 -or $log -match '\bFAIL\b' -or $log -notmatch [regex]::Escape($pass)) { $status = 'FAIL' }
+        $completed = if ($pass) { $log -match [regex]::Escape($pass) } else { $log -match '\bPASS\b|\b0 (failed|failures)\b' }
+        if ($p.ExitCode -ne 0 -or $log -match '\bFAIL\b' -or -not $completed) { $status = 'FAIL' }
         elseif ($errors -gt 0) { $status = "FAIL ($errors script errors)" }
         else { $status = 'PASS' }
     }

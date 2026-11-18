@@ -35,7 +35,6 @@ const ZONE := {"market": "civic", "railwayStation": "civic", "lighthouse": "civi
 	"barracks": "army", "housing": "army", "tankFactory": "army", "ammoDepot": "army", "commandCenter": "civic", "samSite": "army", "bunker": "army",
 	"helipad": "army", "airfield": "airbase", "missileSilo": "airbase", "strategicComplex": "airbase", "specialLab": "heavy", "aiDataCenter": "industry", "fusionCell": "army", "shipyard": "army", "port": "industry"}
 const TOWNS := ["hq", "cityCenter", "villageCenter"]
-const CHECKS := 30
 
 static func style_of(w: Node, owner: int) -> String:
 	return STYLE.get(preload("res://scripts/factions.gd").identity(w, owner), "organic")
@@ -52,6 +51,14 @@ static func best(w: Node, owner: int, key: String, options: Array) -> Variant:
 	if towns.is_empty() or options.is_empty():
 		return null
 	var centres: Array = towns.map(func(b): return w.logistics.world_hex(b.root.position))
+	var neighbours_per_town := {}
+	for centre in centres:
+		var count := 0
+		for step in w.logistics.DIRECTIONS:
+			var existing = w.district_hex.get(centre + step)
+			if existing != null and not existing.dead and existing.owner == owner:
+				count += 1
+		neighbours_per_town[centre] = count
 	var style := style_of(w, owner)
 	var zone: String = ZONE.get(key, "home")
 	var span: Array = RINGS[zone]
@@ -71,6 +78,8 @@ static func best(w: Node, owner: int, key: String, options: Array) -> Variant:
 		if seen.has(hex):
 			continue
 		seen[hex] = true
+		var occupant = w.district_hex.get(hex)
+		if occupant != null and not occupant.dead: continue
 		# The nearest town centre, and where the hex lies from it.
 		var c: Vector2i = centres[0]
 		var d := ring(hex, c)
@@ -80,6 +89,8 @@ static func best(w: Node, owner: int, key: String, options: Array) -> Variant:
 				d = e
 				c = other
 		var score := 0.0
+		if zone in ["home", "civic", "farm"]:
+			score += 0.6 * (6 - int(neighbours_per_town[c]))
 		if d < span[0]: score -= (span[0] - d) * 3.8
 		elif d > span[1]: score -= (d - span[1]) * 2.5
 		else: score += 2.2
@@ -124,11 +135,7 @@ static func best(w: Node, owner: int, key: String, options: Array) -> Variant:
 		score += randf() * 0.25   # (no two towns alike)
 		scored.append([score, hex])
 	scored.sort_custom(func(x, y): return x[0] > y[0])
-	var tries := 0
 	for pair in scored:
-		tries += 1
-		if tries > CHECKS:
-			break
 		if not _keeps_town_exit(w, owner, pair[1]):
 			continue
 		var spot: Vector3 = w.logistics.hex_center(pair[1])
@@ -152,7 +159,7 @@ static func _keeps_town_exit(w: Node, owner: int, candidate: Vector2i) -> bool:
 			if n == candidate or not w.logistics.terrain_ok(t_hex, n, "road"):
 				continue
 			var nb = w.district_hex.get(n)
-			if nb == null or nb.dead or nb.def.get("settlement") != null:
+			if nb == null or nb.dead or nb.def.get("settlement") != null or (nb.owner == owner and w.logistics.has_district_streets(nb.key)):
 				exits += 1
 		if exits < 1:
 			return false

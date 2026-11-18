@@ -100,6 +100,7 @@ func capture() -> Dictionary:
 		building_ids[b.node] = buildings.size()
 		buildings.append({
 			"key": b.key, "owner": b.owner, "pos": _v(b.root.position), "built": b.built,
+			"rally_point": _v(b.rally_point) if b.has("rally_point") else null,
 			"progress": b.progress, "hp": b.hp, "queue": b.queue, "queue_prog": b.queue_prog,
 			"queue_costs": b.get("queue_costs", []).duplicate(true),
 			"disabled_until": b.get("disabled_until", 0.0), "intercept_ready": b.get("intercept_ready", 0.0), "aa_reload": b.get("aa_reload", 0.0),
@@ -347,6 +348,8 @@ func restore(data: Dictionary) -> void:
 		b.queue = s.queue.duplicate()
 		b.queue_costs = s.get("queue_costs", []).duplicate(true)
 		b.queue_prog = float(s.queue_prog)
+		if s.get("rally_point") is Array and s.rally_point.size() == 3:
+			b.rally_point = _p(s.rally_point)
 		for timer in ["disabled_until", "intercept_ready", "aa_reload"]:
 			b[timer] = float(s.get(timer, 0.0))
 		if s.get("ai_build", false):
@@ -378,6 +381,8 @@ func restore(data: Dictionary) -> void:
 		# retain their actual equipment instead of upgrading them on every load.
 		for stat in ["max_hp", "range", "speed", "cooldown"]:
 			if s.get("equipment", {}).has(stat):
+				if stat == "cooldown" and u.key == "heavyBomberDrone" and is_equal_approx(float(s.equipment[stat]), 2.6):
+					continue  # Older balance saved the obsolete base cooldown on the unit.
 				u[stat] = float(s.equipment[stat])
 		u.heading = float(s.heading)
 		u.hp = float(s.hp)

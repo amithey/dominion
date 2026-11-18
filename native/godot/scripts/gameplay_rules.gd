@@ -44,6 +44,13 @@ static func apply(w: Node) -> void:
 	# texts promised approval, public order, culture and education, which the
 	# native game does not have; the military and industrial ones now work).
 	for entry in [
+		["hospital", "+10 health. Ambulances treat civilian casualties."],
+		["solarFarm", "Generates up to 65 MW of electricity."],
+		["nuclearReactor", "Generates up to 280 MW of electricity. Required for the Nuclear Program."],
+		["chipFab", "With Microchip Fabrication, uses 0.2 silicon per second to produce money and research. Output scales with chip technology."],
+		["worship", "+5 happiness."],
+		["embassy", "+3 happiness from diplomatic and cultural exchanges."],
+		["prison", "+3 national administration percentage points."],
 		["powerPlant", "+15% production and construction speed (stacks up to +30%)."],
 		["ammoDepot", "+5% damage (up to +25%) and 6% faster reloading (up to 18%) for all your units; stores 4 more missiles."],
 		["commandCenter", "+10% health for every unit trained while it stands. Coordinates the war effort; holds the land around it."],
@@ -59,6 +66,8 @@ static func apply(w: Node) -> void:
 		["courthouse", "+5% income. Needed for the Constitutional Framework research."]]:
 		if w.building_defs.has(entry[0]):
 			w.building_defs[entry[0]].desc = entry[1]
+	w.building_defs.embassy.provides = {"happiness": 3}
+	w.building_defs.prison.provides = {"admin": 0.03}
 	w.map.economy.startResources["gas"] = 100.0
 	w.map.economy.baseCap["gas"] = 400.0
 	w.map.trade.price["gas"] = 3.0

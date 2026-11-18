@@ -43,7 +43,10 @@ func setup(w: Node, h: Node) -> void:
 	]
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	add_theme_stylebox_override("panel", UI.plate(Color(UI.PANEL_TOP, 0.95), Color(UI.PANEL_LOW, 0.95), UI.GOLD, 10.0, UI.LIFT, Color(0, 0, 0, 0), 0, 8))
-	offset_left = 12
+	anchor_left = 0.5
+	anchor_right = 0.5
+	offset_left = -165
+	offset_right = 165
 	offset_top = 112
 	custom_minimum_size = Vector2(330, 0)
 	var col := VBoxContainer.new()
@@ -83,6 +86,12 @@ func setup(w: Node, h: Node) -> void:
 	skip.pressed.connect(close)
 	col.add_child(skip)
 	_show()
+	_position_guide()
+
+func _position_guide() -> void:
+	var viewport_width := get_viewport_rect().size.x
+	var left := clampf(maxf((viewport_width - size.x) * 0.5, hud._sel.get_rect().end.x + 8.0), 0.0, maxf(viewport_width - size.x, 0.0))
+	position.x = left
 
 func _count_of(key: String, built_only: bool) -> int:
 	var n := 0
@@ -92,7 +101,7 @@ func _count_of(key: String, built_only: bool) -> int:
 	return n
 
 func _homes() -> int:
-	return _count_of("cottage", false) + _count_of("housing", false) + _count_of("residential", false) + _count_of("villageCenter", false) + _count_of("cityCenter", false)
+	return world.buildings.filter(func(b): return b.owner == 0 and not b.dead and float(b.def.provides.get("civCap", 0)) > 0).size()
 
 func _show() -> void:
 	_action.visible = step < steps.size()
@@ -130,6 +139,7 @@ func _process(delta: float) -> void:
 	if _clock < 0.4 or world == null:
 		return
 	_clock = 0.0
+	_position_guide()
 	if step < steps.size():
 		if steps[step][2].call():
 			step += 1

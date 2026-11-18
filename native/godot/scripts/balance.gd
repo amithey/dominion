@@ -37,7 +37,7 @@ const UNITS := {
 	"attackJet": {"dmg": 95.0, "cooldown": 2.5},                   # close air support strike jet
 	"akinci": {"dmg": 78.0, "cooldown": 2.1},                      # heavy MALE strike drone
 	"drone": {"dmg": 26.0, "cooldown": 0.70},                      # armed tactical UCAV
-	"heavyBomberDrone": {"dmg": 115.0, "cooldown": 2.6},           # heavy drone bomber
+	"heavyBomberDrone": {"dmg": 45.0, "cooldown": 6.0},           # heavy drone bomber
 	"soldier": {"dmg": 12.0},                                      # core line infantry
 	"sniper": {"dmg": 62.0, "cooldown": 2.8},
 	"atgmTeam": {"dmg": 85.0, "cooldown": 4.5},

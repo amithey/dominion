@@ -111,4 +111,6 @@ func run() -> void:
 		if n <= 20: print("TRAFFIC   inside: ", inside_cases[k])
 	print("TRAFFIC with no next trip: %d" % notrip_cases.size())
 	for k in notrip_cases: print("TRAFFIC   no trip: ", notrip_cases[k])
-	quit(0)
+	var passed := not vehicles_seen.is_empty() and inside_cases.is_empty() and stuck_cases.is_empty() and notrip_cases.is_empty()
+	print("TRAFFIC_STUCK PASS" if passed else "TRAFFIC_STUCK FAIL")
+	quit(0 if passed else 1)

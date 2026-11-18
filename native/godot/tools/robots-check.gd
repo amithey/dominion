@@ -67,6 +67,21 @@ func run() -> void:
 	check("heavyBomberDrone" in w.AirOperations.TUBE_LAUNCHED and int(w.AirOperations.CAPACITY.heavyBomberDrone) >= 99, "the heavy bomber drone needs no parking slot and stays aloft")
 	check(w.unit_defs.heavyBomberDrone.get("fly", false) and bomber.get("fly", false), "and flies")
 
+	var guard_unit: Dictionary = w.spawn_unit("soldier", bomber.node.position + Vector3(3, 0, 0), 1)
+	w.diplomacy.declare_war(0, 1)
+	bomber.air_state = "ready"
+	bomber.node.position.y = w.height_at(bomber.node.position.x, bomber.node.position.z) + 19.0
+	w.rebuild_grid()
+	var jet: Dictionary = w.spawn_unit("jet", bomber.node.position, 0)
+	jet.air_state = "ready"
+	jet.node.position.y = bomber.node.position.y
+	check(w.effectiveness(guard_unit, bomber) > 0 and w.effectiveness(guard_unit, jet) == 0, "riflemen can engage the bomber drone while jets retain their air profile")
+	seed(1208)
+	for i in range(100):
+		if bomber.dead: break
+		w.fire(guard_unit, bomber)
+	check(bomber.dead, "infantry fire can destroy an airborne Vampire")
+	check(w.unit_defs.heavyBomberDrone.cooldown >= 6.0 and w.unit_defs.heavyBomberDrone.dmg <= 45, "bomber uses the slower drop interval and reduced damage")
 	await begin("china")
 	var dog: Dictionary = w.spawn_unit("robotDog", w.start + Vector3(30, 0, 30), 0)
 	check(w.unit_allowed(0, "robotDog") and not dog.is_empty() and dog.node != null, "China's armed robot dog, with its own model")

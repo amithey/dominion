@@ -212,7 +212,7 @@ func run() -> void:
 	for i in range(8):
 		var k: String = w.ai.pick_building(n1)
 		built.append(k)
-		if k in ["missileSilo", "strategicComplex", "specialLab", "aiDataCenter", "fusionCell"]:
+		if k in ["villageCenter", "cityCenter", "missileSilo", "strategicComplex", "specialLab", "aiDataCenter", "fusionCell"]:
 			w.place_building(k, w.test_site(k, hq1 + Vector3(60 - i * 20, 0, -60)), foe, true)
 		if k == "fusionCell":
 			break

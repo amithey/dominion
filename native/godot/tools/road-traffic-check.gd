@@ -36,12 +36,16 @@ func off_road(p: Vector3, segs: Array) -> float:
 	for s in segs: best = minf(best, seg_distance(p, s[0], s[1]))
 	return best
 
-func step(seconds: float, each := Callable()) -> void:
+func step(seconds: float, each := Callable()) -> float:
+	var elapsed_us := 0
 	var t := 0.0
 	while t < seconds:
+		var began := Time.get_ticks_usec()
 		traffic._process(DT)
+		elapsed_us += Time.get_ticks_usec() - began
 		if each.is_valid(): each.call()
 		t += DT
+	return elapsed_us / 1000.0
 
 func run() -> void:
 	change_scene_to_file("res://world.tscn")
@@ -157,9 +161,7 @@ func run() -> void:
 				if across < 1.0 and along < (a.bodies[0].length + b.bodies[0].length) * 0.5 - 0.3 and a.v + b.v > 0.5:
 					S.crashes += 1
 					if S.crashes < 4: print("  CRASH along %.1f across %.1f v %.1f/%.1f wait %.1f/%.1f s %.1f/%.1f of %.1f/%.1f same trip %s at %s" % [along, across, a.v, b.v, a.wait, b.wait, a.s, b.s, a.total, b.total, str(a.hexes == b.hexes), str(a.bodies[0].at.snapped(Vector3.ONE))])
-	var t0 := Time.get_ticks_usec()
-	step(60.0, watch)
-	var frame_ms: float = float(Time.get_ticks_usec() - t0) / 1000.0 / (60.0 / DT)
+	var frame_ms := step(60.0, watch) / (60.0 / DT)  # exclude the observer that checks every vehicle pair
 	var movers: int = traffic._fleet.filter(func(c): return c.kind == "road" and float(c.get("_far", 0.0)) > 5.0).size()
 	check(movers >= cars.size() * 0.7, "the cars drive (%d of %d covered ground)" % [movers, cars.size()])
 	check(S.too_fast == 0, "no vehicle goes over its top speed")

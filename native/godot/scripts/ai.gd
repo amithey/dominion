@@ -157,10 +157,10 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 					site.ai_build = true
 					world.close_navigation(site.root.position, world.DISTRICT_NAV_SIZE if world.is_district(key) else site.footprint)
 					world.refresh_streets()
-					if n.build_idx < build_order.size():
+					if n.build_idx < build_order.size() and key == build_order[n.build_idx]:
 						n.build_idx += 1
 					built_or_skipped = true
-				elif n.build_idx < build_order.size():
+				elif n.build_idx < build_order.size() and key == build_order[n.build_idx]:
 					n.build_idx += 1  # no room for this one: move on
 					built_or_skipped = true
 				else:
@@ -183,7 +183,11 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 
 	# Self-building: AI sites rise on their own.
 	for b in world.buildings:
-		if b.owner == n.id and not b.built and not b.dead and b.get("ai_build", false) and not cyber:
+		if b.owner != n.id or b.dead:
+			continue
+		if b.built and b.hp < b.max_hp:
+			b.repairing = true
+		if not b.built and b.get("ai_build", false) and not cyber:
 			b.progress = minf(1.0, b.progress + delta * s * preload("res://scripts/additional_factions.gd").construction_mult(world, n.id) * (1.0 + preload("res://scripts/additional_powers.gd").bonus(world, n.id, "buildPct")) / maxf(float(b.def.buildTime), 8.0))
 			b.model.scale.y = b.full_scale_y * lerpf(0.06, 1.0, b.progress)
 			if b.progress >= 1.0:
@@ -277,8 +281,6 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 			var target = nearest_enemy_asset(home.root.position, enemies, n.id)
 			if squad.size() >= maxi(3, int(row(n).squad) - 2) and target != null:
 				world.order_move(squad, target.root.position, true)
-				if target.owner == 0:
-					world.hud.notice("%s forces are advancing on you." % n.name)
 			n.next_attack = minf(n.next_attack, float(row(n).firstAttack) * 0.35 / s)
 
 	# Missile strikes: a nation at full war with the player, with the
@@ -408,19 +410,18 @@ func pick_building(n: Dictionary) -> String:
 	var total := maxi(mine.size(), 1)
 	var share := float(military) / total
 	var want_military: float = 0.45 if world.diplomacy != null and not world.diplomacy.enemies_of(n.id).is_empty() else 0.3
-	# A state spreads: a new town for every 11 buildings it owns, a city for every
+	# A state spreads: a new town for roughly every seven buildings it owns, a city for every
 	# two villages, before anything else (unless there was no room for it lately).
 	var villages := int(counts.get("villageCenter", 0))
 	var cities := int(counts.get("cityCenter", 0))
 	# A nation that wants a shipyard but holds no coast founds a town on the shore first.
 	# Only when its army must cross water (ai_navy.needs_sea), and one such town, not a string of them.
 	if n.get("wants_coast", false) and not n.get("coast_town_made", false) and preload("res://scripts/ai_navy.gd").state(n).get("needs_sea", false) and float(n.get("no_room", {}).get("villageCenter", 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, "villageCenter") and preload("res://scripts/progression.gd").building_blocked(world, n.id, "villageCenter") == "":
-		n.coast_town_made = true   # (one attempt: the next one is not founded whether or not it found the shore)
 		return "villageCenter"
 	if villages + cities < (total + 2) / 7:
-		var town := "cityCenter" if cities * 2 < villages else "villageCenter"
-		if float(n.get("no_room", {}).get(town, 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, town) and preload("res://scripts/progression.gd").building_blocked(world, n.id, town) == "":
-			return town
+		for town in (["cityCenter", "villageCenter"] if cities * 2 < villages else ["villageCenter", "cityCenter"]):
+			if float(n.get("no_room", {}).get(town, 0.0)) <= float(n.get("age", 0.0)) and preload("res://scripts/national_variants.gd").builds(world, n.id, town) and preload("res://scripts/progression.gd").building_blocked(world, n.id, town) == "":
+				return town
 	# Its weapons of mass destruction need their facilities (wmd.armed): a nation
 	# that has them builds a Strategic Weapons Complex once its technology
 	# allows, a second in a war, and a Special Weapons Laboratory.
@@ -478,7 +479,7 @@ func find_spot(n: Dictionary, home: Dictionary, key: String):
 		var best = null
 		var best_d := 300.0
 		for d in world.deposits:
-			if d.extractor == null and not d.get("water", false) and d.pos.distance_to(centre) < best_d:
+			if d.extractor == null and bool(d.get("water", false)) == bool(def.get("water", false)) and d.pos.distance_to(centre) < best_d and world.site_problem(key, d.pos, n.id) == "":
 				best_d = d.pos.distance_to(centre)
 				best = d
 		return Vector3(best.pos.x, best.pos.y, best.pos.z) if best != null else null
@@ -508,16 +509,23 @@ func find_spot(n: Dictionary, home: Dictionary, key: String):
 		var towns: Array = world.buildings.filter(func(b): return b.owner == n.id and not b.dead and b.key in ["hq", "cityCenter", "villageCenter"])
 		towns.shuffle()
 		var coast: bool = n.get("wants_coast", false)
-		for town in towns.slice(0, 4 if not coast else 8):
-			for attempt in range(24 if not coast else 40):
-				var a := randf() * TAU
-				var at: Vector3 = world.snap_to_hex(town.root.position + Vector3(cos(a), 0, sin(a)) * randf_range(62.0, 105.0 if not coast else 150.0))
-				if coast and not world.coast_near(at, world.logistics.radius * 2.6):
-					continue
-				if world.site_problem(key, at, n.id) == "":
-					if coast:
-						n.wants_coast = false   # it has its coastal town
-					return at
+		for town in towns:
+			var origin: Vector2i = world.logistics.world_hex(town.root.position)
+			for ring in range(4, 9 if coast else 7):
+				var sides: Array = world.logistics.DIRECTIONS.duplicate()
+				sides.shuffle()
+				for step in sides:
+					var corner: Vector2i = origin + step * ring
+					var side: Vector2i = world.logistics.DIRECTIONS[(world.logistics.DIRECTIONS.find(step) + 2) % 6]
+					for distance in range(ring):
+						var at: Vector3 = world.logistics.hex_center(corner + side * distance)
+						if coast and not world.coast_near(at, world.logistics.radius * 2.6):
+							continue
+						if world.site_problem(key, at, n.id) == "":
+							if coast:
+								n.wants_coast = false
+								n.coast_town_made = true
+							return at
 		if coast:
 			n.wants_coast = false   # no shore to be found: give up (the yard waits for land to be bought)
 		return null
