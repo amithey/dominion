@@ -11,6 +11,13 @@ class IsolatedTowns extends "res://scripts/logistics.gd":
 	func build(route: Array, _kind: String, _owner: int) -> bool:
 		return route.size() > 1
 
+class FlatTown extends Node:
+	var map := {"mapSize": 300}
+	var buildings := []
+	var district_hex := {}
+	func height_at(_x: float, _z: float) -> float:
+		return 2.0
+
 class DryWorld extends "res://scripts/world.gd":
 	func water_near(_from: Vector3, _reach := 90, _depth_factor := 1.5):
 		return null
@@ -46,6 +53,20 @@ func run() -> void:
 	quit(0 if failures == 0 else 1)
 
 func check_roads() -> void:
+	var town := FlatTown.new()
+	var planner := preload("res://scripts/logistics.gd").new()
+	planner.world = town
+	for hex in planner.DIRECTIONS:
+		town.district_hex[hex] = {"dead": false, "owner": 0, "key": "farm", "def": {}}
+	var street := Vector2i(1, 0)
+	town.district_hex[street].key = "residential"
+	for kind in ["road", "rail"]:
+		var route := planner.plan(Vector2i.ZERO, street * 2, 0, kind)
+		check(route == [Vector2i.ZERO, street, street * 2], "%s exits a surrounded capital along its district street" % kind)
+		check(planner.plan(Vector2i.ZERO, Vector2i(0, 1), 0, kind).is_empty(), "%s cannot cross a farm without streets" % kind)
+	planner.free()
+	town.free()
+
 	var isolated := IsolatedTowns.new()
 	isolated.world = w
 	var hq = Additional.capital(w, 1)

@@ -1227,7 +1227,7 @@ func refresh_streets() -> void:
 		var mask := 0
 		# A building that fills its whole hex (an airfield's runway, a stadium,
 		# a refinery...) has no streets running through it.
-		if b.key in ["airfield", "helipad", "stadium", "bunker", "missileSilo", "samSite", "port", "shipyard", "fishingWharf", "mountainMine", "extractor", "solarFarm", "farm", "park"]:
+		if not logistics.has_district_streets(b.key):
 			districts.set_streets(b.pad, 0)
 			continue
 		for d in logistics.DIRECTIONS:

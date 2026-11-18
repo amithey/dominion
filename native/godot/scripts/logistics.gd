@@ -129,6 +129,9 @@ func _hits_circles(a: Vector3, b: Vector3, circles: Array) -> bool:
 			return true
 	return false
 
+static func has_district_streets(key: String) -> bool:
+	return key not in ["airfield", "helipad", "stadium", "bunker", "missileSilo", "samSite", "port", "shipyard", "fishingWharf", "mountainMine", "extractor", "solarFarm", "farm", "park"]
+
 func passable(a: Vector2i, b: Vector2i, kind: String, rivals: Array, blocked := {}, solids := []) -> bool:
 	if blocked.has(b):
 		return false
@@ -180,6 +183,8 @@ func plan(start: Vector2i, goal: Vector2i, owner: int, kind: String) -> Array:
 	for h in world.district_hex:
 		var db = world.district_hex[h]
 		if db == null or db.dead or db.def.get("settlement") != null or h == start:
+			continue
+		if db.owner == owner and has_district_streets(db.key):
 			continue
 		if h == goal:
 			return []
