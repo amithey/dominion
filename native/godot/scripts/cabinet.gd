@@ -243,6 +243,7 @@ func refresh() -> void:
 	_header()
 	_treasury()
 	_people()
+	_civil_policy()
 	_world()   # world news: the crises that reach your economy
 	_victory()   # paths to victory
 	_forces()
@@ -320,6 +321,36 @@ func _treasury() -> void:
 		var cap: float = float(eco.caps.get(r[0], 0.0))
 		if cap > 0.0:
 			_gauge(col, r[1], float(eco.res.get(r[0], 0.0)), cap, r[2], "%s  %s" % [hud.compact_number(eco.res.get(r[0], 0.0)), _rate(eco.rates.get(r[0], 0.0))])
+
+func _civil_policy() -> void:
+	var eco: Node = world.economy
+	var col := _tile("civil_policy", "Domestic policy", "citizens", "", Callable())
+	_label(col, "Household taxes", 16, UI.CREAM, true)
+	var row := HFlowContainer.new()
+	col.add_child(row)
+	for policy: String in eco.TAX_POLICIES:
+		var button := Button.new()
+		button.text = policy
+		button.disabled = eco.tax_policy == policy
+		button.pressed.connect(func():
+			eco.tax_policy = policy
+			refresh())
+		row.add_child(button)
+	_label(col, "Relief reduces tax revenue by 20% and adds 8 approval. A levy raises tax revenue by 25% and costs 10 approval.", 13, UI.TEXT)
+	_label(col, "Civil budget", 16, UI.CREAM, true)
+	if eco.programme_left > 0:
+		_label(col, "%s · %ds remaining. %s" % [eco.civil_programme, eco.programme_left, eco.CIVIL_PROGRAMMES[eco.civil_programme].effect], 14, UI.TEXT)
+		return
+	_label(col, "Fund one programme for 3 game minutes. The treasury pays once, when it starts.", 13, UI.TEXT)
+	for programme: String in eco.CIVIL_PROGRAMMES:
+		var plan: Dictionary = eco.CIVIL_PROGRAMMES[programme]
+		var button := Button.new()
+		button.text = "%s · $%d" % [programme, plan.cost]
+		button.disabled = eco.res.money < plan.cost
+		button.pressed.connect(func():
+			if eco.fund_programme(programme): refresh())
+		col.add_child(button)
+		_label(col, plan.effect, 13, UI.MUTED)
 
 func _people() -> void:
 	var eco: Node = world.economy

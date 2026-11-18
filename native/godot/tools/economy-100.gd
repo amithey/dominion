@@ -644,7 +644,55 @@ func run() -> void:
 		if str(c.tooltip_text).contains("gas") or str(c.tooltip_text).contains("Natural gas"): tips.append(c.tooltip_text)
 	check(not tips.is_empty() and tips[0].contains("inter"), "and gas explains winter heating")
 
+	await check_domestic_policy()
 	print("\nECONOMY_100: %d passed, %d failed" % [passed, errors.size()])
 	for f in errors: print("  FAILED: " + f)
 	print("ECONOMY_100 PASS" if errors.is_empty() else "ECONOMY_100 FAIL")
 	quit(0 if errors.is_empty() else 1)
+
+func check_domestic_policy() -> void:
+	await load_match({"map": "island", "players": 2, "nation": 0})
+	w.hud.toggle_cabinet()
+	var cabinet = w.hud._cabinet
+	var tile = cabinet.find_child("Tile_civil_policy", true, false)
+	check(tile != null, "the Cabinet offers domestic policy during a match")
+	if tile == null: return
+	var regular_tax: float = eco.city_report(hq()).tax
+	for button in tile.find_children("*", "Button", true, false):
+		if button.text == "Relief": button.pressed.emit()
+	check(regular_tax > 0 and is_equal_approx(eco.city_report(hq()).tax, regular_tax * 0.8), "tax relief selected in the Cabinet reduces town taxes")
+	eco.tick()
+	var relief_approval: float = eco.happiness
+	eco.tax_policy = "Levy"
+	eco.tick()
+	check(is_equal_approx(relief_approval - eco.happiness, 18.0), "raising taxes trades approval for revenue")
+	eco.res.money = 0.0
+	check(not eco.fund_programme("Public clinics"), "the treasury cannot fund a programme on credit")
+	eco.res.money = 500.0
+	var health_before: float = eco.health
+	check(eco.fund_programme("Public clinics") and eco.res.money == 200.0 and not eco.fund_programme("Home insulation"), "one programme is funded and charged once")
+	eco.tick()
+	check(is_equal_approx(eco.health, health_before + 12.0), "clinic funding improves national health")
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
+	w.saves.restore(saved)
+	check(eco.civil_programme == "Public clinics" and eco.programme_left == 179 and eco.tax_policy == "Levy", "loading resumes the funded term and tax policy")
+	for i in range(179): eco.tick()
+	check(eco.civil_programme == "" and eco.programme_left == 0, "the term ends after 180 economic ticks")
+	var food: float = eco.farm_output()
+	eco.res.money = 600.0
+	eco.fund_programme("Farm grants")
+	check(is_equal_approx(eco.farm_output(), food * 1.25), "farm grants raise food output per supplied farm")
+	for key in ["tax_policy", "civil_programme", "programme_left"]: saved.economy.erase(key)
+	w.saves.restore(saved)
+	check(eco.tax_policy == "Standard" and eco.programme_left == 0, "older saves start with standard taxes and no programme")
+	w.game_time = 600.0
+	eco.civilians = eco.civ_cap
+	eco.res.food = eco.caps.food
+	eco.res.gas = 100.0
+	eco.tick()
+	var gas_before: float = eco.rates.gas
+	var population: float = eco.civilians
+	eco.res.money = 500.0
+	eco.fund_programme("Home insulation")
+	eco.tick()
+	check(is_equal_approx(eco.rates.gas - gas_before, population * 0.006 * 0.4), "insulated homes consume less winter gas")

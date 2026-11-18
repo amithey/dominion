@@ -165,7 +165,8 @@ func capture() -> Dictionary:
 		"engagement":{"operations":world.engagement.operations.duplicate(),"incidents":world.engagement.incidents.duplicate(),"policy":world.engagement.policy},
 		"date": Time.get_datetime_string_from_system(), "quality": world.quality,
 		"summary": {"nation": world.diplomacy.name_of(0), "era": world.research.eras[world.research.era].name if world.research else "", "year": 1 + int(world.game_time / 720.0), "difficulty": str(world.match_difficulty).capitalize()},
-		"economy": {"res": world.economy.res, "civilians": world.economy.civilians, "garrison": world.economy.garrison,
+		"economy": {"tax_policy": world.economy.tax_policy, "civil_programme": world.economy.civil_programme, "programme_left": world.economy.programme_left,
+			"res": world.economy.res, "civilians": world.economy.civilians, "garrison": world.economy.garrison,
 			"military_spending": world.economy.military_spending.duplicate()},
 		"buildings": buildings, "units": units, "edges": edges,
 		"diplomacy": {"score": d.score, "war": d.war, "alliance": d.alliance, "pact": d.pact, "nap": d.nap},
@@ -329,6 +330,7 @@ func restore(data: Dictionary) -> void:
 				n.id = int(saved.id)
 				n.build_idx = int(saved.build_idx)
 	# Economy.
+	world.economy.restore_civil_policy(data.economy)
 	for key in data.economy.res:
 		world.economy.res[key] = float(data.economy.res[key])
 	world.economy.civilians = float(data.economy.civilians)

@@ -31,11 +31,44 @@ var military_flow := {"money": 0.0, "oil": 0.0}
 var military_rates := {"money": 0.0, "oil": 0.0}
 var operating_notices := {}
 const TEST_CAP := 99999.0
+const TAX_POLICIES := {
+	"Relief": {"factor": 0.80, "approval": 8},
+	"Standard": {"factor": 1.0, "approval": 0},
+	"Levy": {"factor": 1.25, "approval": -10}}
+const CIVIL_PROGRAMMES := {
+	"Farm grants": {"cost": 240, "effect": "Supplied farms produce 25% more food."},
+	"Public clinics": {"cost": 300, "effect": "National health rises by 12 points."},
+	"Home insulation": {"cost": 200, "effect": "Homes use 40% less heating gas in winter."}}
+const PROGRAMME_TERM := 180
+var tax_policy := "Standard"
+var civil_programme := ""
+var programme_left := 0
+
+func fund_programme(programme: String) -> bool:
+	if programme_left > 0 or not CIVIL_PROGRAMMES.has(programme): return false
+	if not pay({"money": CIVIL_PROGRAMMES[programme].cost}): return false
+	civil_programme = programme
+	programme_left = PROGRAMME_TERM
+	return true
+
+func restore_civil_policy(data: Dictionary) -> void:
+	tax_policy = str(data.get("tax_policy", "Standard"))
+	if not TAX_POLICIES.has(tax_policy): tax_policy = "Standard"
+	civil_programme = str(data.get("civil_programme", ""))
+	programme_left = clampi(int(data.get("programme_left", 0)), 0, PROGRAMME_TERM) if CIVIL_PROGRAMMES.has(civil_programme) else 0
+	if programme_left == 0: civil_programme = ""
+
+func farm_output() -> float:
+	var r: Node = world.research
+	var output := float(cfg.farmFood) * (1.0 + float(r.bonus("foodPct") if r else 0.0))
+	return output * (1.25 if civil_programme == "Farm grants" else 1.0)
+
 var _tick := 0.0
 
 func setup(world_node: Node, economy: Dictionary) -> void:
 	world = world_node
 	cfg = economy
+	restore_civil_policy({})
 	for key in RESOURCES:
 		res[key] = float(cfg.startResources.get(key, 0))
 		rates[key] = 0.0
@@ -181,7 +214,7 @@ func tick() -> void:
 	var land: Dictionary = world.territory.yields(0) if world.territory != null else {"money": 0.0, "food": 0.0, "iron": 0.0}
 	# Food: farms and farmland against mouths to feed.
 	var r: Node = world.research
-	var food_in: float = owned("farm") * float(cfg.farmFood) * (1.0 + (r.bonus("foodPct") if r else 0.0)) + float(land.food)
+	var food_in: float = owned("farm") * farm_output() + float(land.food)
 	# A bigger city eats more per head (it no longer grows its own food).
 	var food_out := civilians * float(cfg.foodPerCivilian) * (1.0 + civilians / 2000.0) * float(preload("res://scripts/additional_factions.gd").profile(world, 0).get("civilian_food", 1.0)) + army * float(cfg.foodPerSoldier)
 	for b in world.buildings:
@@ -195,8 +228,8 @@ func tick() -> void:
 	var starving: bool = res.food <= 0.5
 	# Citizens grow with happiness and health (the browser's 60 and 55 to start),
 	# which civic buildings and discoveries raise.
-	happiness = clampf(60.0 + provided("happiness") + (r.bonus("happiness") if r else 0.0) - SHORTAGE_UNREST * shortages.size() - (COLD_UNREST if cold else 0.0), 0.0, 100.0)
-	health = clampf(55.0 + provided("health") + (r.bonus("health") if r else 0.0), 0.0, 100.0)
+	happiness = clampf(60.0 + float(TAX_POLICIES[tax_policy].approval) + provided("happiness") + (r.bonus("happiness") if r else 0.0) - SHORTAGE_UNREST * shortages.size() - (COLD_UNREST if cold else 0.0), 0.0, 100.0)
+	health = clampf(55.0 + (12.0 if civil_programme == "Public clinics" else 0.0) + provided("health") + (r.bonus("health") if r else 0.0), 0.0, 100.0)
 	var growth := civilians * ((happiness - 45.0) / 50.0) * (health / 100.0) * 0.0025
 	if growth > 0.0:
 		growth *= preload("res://scripts/national_profile.gd").growth(world, 0)   # a young or an ageing population
@@ -208,7 +241,7 @@ func tick() -> void:
 	# Taxes reach only settlements the supply network connects (config.js
 	# supplyCoverage, weighted by how many people each settlement houses).
 	# Markets and ports add a share of income (config.js incomePct).
-	rates.money = civilians * float(cfg.taxPerCivilian) * admin * supply_coverage() * (1.0 + income_pct() + (r.bonus("incomePct") if r else 0.0))
+	rates.money = civilians * float(cfg.taxPerCivilian) * float(TAX_POLICIES[tax_policy].factor) * admin * supply_coverage() * (1.0 + income_pct() + (r.bonus("incomePct") if r else 0.0))
 	rates.money += float(land.money)
 	rates.money *= preload("res://scripts/faction_powers.gd").income_mult(world, 0)   # sanctions, sabotage, a closed strait
 	# Extractors on deposits, and iron from held mountains.
@@ -253,6 +286,7 @@ func tick() -> void:
 	shortages.clear()
 	# Four 180-second seasons; the final quarter needs household heating.
 	var heating := civilians * 0.006 if fmod(world.game_time, 720.0) >= 540.0 else 0.0
+	if civil_programme == "Home insulation": heating *= 0.6
 	rates.gas -= heating
 	var was_cold := cold
 	cold = heating > 0.0 and res.gas <= 0.5
@@ -277,6 +311,11 @@ func tick() -> void:
 		military_rates[key] = military_flow[key]
 		rates[key] -= military_flow[key]
 		military_flow[key] = 0.0
+	if programme_left > 0:
+		programme_left -= 1
+		if programme_left == 0:
+			world.hud.notice("%s programme completed." % civil_programme)
+			civil_programme = ""
 	changed.emit()
 
 const OIL_PER_PERSON := 0.0012     ## oil a second for each person past 150
@@ -324,7 +363,7 @@ func city_report(s: Dictionary) -> Dictionary:
 		if b.get("supplied", true):
 			taxable_weight += float(POPULATION_WEIGHTS.get(b.key, 0.0))
 		if b.key == "farm":
-			farms += float(cfg.farmFood)
+			farms += farm_output() if b.owner == 0 and b.get("supplied", true) else (float(cfg.farmFood) if b.owner != 0 else 0.0)
 		elif b.key == "fishingWharf":
 			farms += 2.0
 	if s.key == "hq":
@@ -343,7 +382,7 @@ func city_report(s: Dictionary) -> Dictionary:
 	var eats := people * float(cfg.foodPerCivilian) * (1.0 + civilians / 2000.0)
 	var r: Node = world.research
 	var taxable_people := civilians * taxable_weight / maxf(total_weight, 1.0) if s.owner == 0 else 0.0
-	var tax: float = preload("res://scripts/faction_powers.gd").income_mult(world, 0) * taxable_people * float(cfg.taxPerCivilian) * admin * (1.0 + income_pct() + (r.bonus("incomePct") if r else 0.0))
+	var tax: float = preload("res://scripts/faction_powers.gd").income_mult(world, 0) * taxable_people * float(cfg.taxPerCivilian) * float(TAX_POLICIES[tax_policy].factor) * admin * (1.0 + income_pct() + (r.bonus("incomePct") if r else 0.0))
 	return {"residents": people, "capacity": capacity, "homes": homes, "buildings": own.size(), "amenities": amenities,
 		"happiness": happiness, "food_in": farms, "food_out": eats, "tax": tax, "supplied": supplied}
 
