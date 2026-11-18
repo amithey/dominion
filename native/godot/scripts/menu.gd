@@ -233,11 +233,12 @@ func open_main() -> void:
 	var invitation := _description(UI.caps("The war council"))
 	invitation.add_theme_color_override("font_color", UI.GOLD)
 	_entry("New Game", "Chart a campaign: your nation, its rivals and the rules.", "sovereign", open_new_game, true)
-	var slots := list_saves()
+	var slots := list_saves(false)
 	var newest := str(slots[0].name) if not slots.is_empty() else ""
 	var last := "No campaign saved yet."
 	if newest != "":
-		last = ("%s  ·  %s" % [slots[0].short, slots[0].date]) if str(slots[0].short) != "" else ("Resume \"%s\", saved %s." % [newest.capitalize(), slots[0].date])
+		var summary := _about(world.saves.path_of(newest), true)
+		last = ("%s  ·  %s" % [summary, slots[0].date]) if summary != "" else ("Resume \"%s\", saved %s." % [newest.capitalize(), slots[0].date])
 	var continue_button := _entry("Continue", last, "land", func(): load_game(newest))
 	continue_button.disabled = newest == ""
 	_entry("Load Game", ("%d saved campaign%s." % [slots.size(), "" if slots.size() == 1 else "s"]) if not slots.is_empty() else "Nothing saved yet: F5 saves during a match.", "research", open_load)
@@ -797,6 +798,10 @@ func open_load() -> void:
 		manage.custom_minimum_size.y = 28
 	_button("Back", open_pause if in_match else open_main)
 
+func _discard_slot_backup(slot: String) -> Error:
+	var backup: String = world.saves.path_of(slot) + ".previous"
+	return DirAccess.remove_absolute(backup) if FileAccess.file_exists(backup) else OK
+
 func _manage_save(slot: String) -> void:
 	_clear()
 	_heading("Manage saved game")
@@ -814,10 +819,11 @@ func _manage_save(slot: String) -> void:
 			feedback.text = "Choose a valid save name."
 			return
 		var dest: String = world.saves.path_of(name)
-		if FileAccess.file_exists(dest):
+		if FileAccess.file_exists(dest) or FileAccess.file_exists(dest + ".previous"):
 			feedback.text = "A save with that name already exists."
 			return
-		var err := DirAccess.rename_absolute(world.saves.path_of(slot), dest)
+		var err := _discard_slot_backup(slot)
+		if err == OK: err = DirAccess.rename_absolute(world.saves.path_of(slot), dest)
 		if err == OK: open_load()
 		else: feedback.text = error_string(err))
 	_button("Delete…", func():
@@ -826,7 +832,8 @@ func _manage_save(slot: String) -> void:
 		_description(slot)
 		var error_label := _description("")
 		_button("Delete saved game", func():
-			var err := DirAccess.remove_absolute(world.saves.path_of(slot))
+			var err := _discard_slot_backup(slot)
+			if err == OK: err = DirAccess.remove_absolute(world.saves.path_of(slot))
 			if err == OK: open_load()
 			else: error_label.text = error_string(err))
 		_button("Cancel", open_load))
@@ -1142,7 +1149,7 @@ func load_game(slot: String) -> void:
 	if world.saves.load_slot(slot):
 		close()
 
-func list_saves() -> Array:
+func list_saves(include_summaries := true) -> Array:
 	var out := []
 	var dir := DirAccess.open("user://saves")
 	if dir == null:
@@ -1151,7 +1158,7 @@ func list_saves() -> Array:
 		if file.ends_with(".json") and file != "test.json" and not file.ends_with(".bad.json"):
 			var name := file.get_basename()
 			var modified := FileAccess.get_modified_time("user://saves/" + file)
-			var summary := _save_summary("user://saves/" + file)
+			var summary := _save_summary("user://saves/" + file) if include_summaries else {}
 			out.append({"name": name, "time": modified, "date": when(modified), "about": _summary_text(summary, false), "short": _summary_text(summary, true)})
 	out.sort_custom(func(a, b): return a.time > b.time)
 	return out
@@ -1191,7 +1198,7 @@ static func _summary_text(s: Dictionary, short: bool) -> String:
 	return "  ·  ".join(parts)
 
 func newest_save() -> String:
-	var slots := list_saves()
+	var slots := list_saves(false)
 	return slots[0].name if not slots.is_empty() else ""
 
 # ---------------------------------------------------------------- settings file

@@ -320,6 +320,7 @@ func restore(data: Dictionary) -> void:
 	world.research.restore(data.get("research", {}))
 	for nation in world.ai.nations:
 		nation.erase("national_cargo")  # absent in saves made before dispatch
+		nation.erase("planned_building")
 	for saved in data.ai:
 		for n in world.ai.nations:
 			if n.id == int(saved.id):

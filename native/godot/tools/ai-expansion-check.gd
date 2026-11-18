@@ -56,6 +56,14 @@ func run() -> void:
 		var towns: int = s.cityCenter + s.villageCenter
 		var total: int = w.buildings.filter(func(b): return b.owner == n.id and not b.dead).size()
 		check(towns >= 3 and s.cityCenter >= 1, "%s founds new towns in %d minutes: %d cities and %d villages besides its capital" % [n.name, minutes, s.cityCenter, s.villageCenter])
+		var developed := false
+		for district in w.buildings:
+			if district.owner != n.id or district.dead or not district.built or district.def.get("settlement") != null: continue
+			var town = w.logistics.settlement_of(district)
+			if town != null and town.key != "hq":
+				developed = true
+				break
+		check(developed, "%s completes districts belonging to a town beyond the capital" % n.name)
 		check(total >= int(start[n.id]) + 20, "%s keeps building (%d -> %d buildings)" % [n.name, int(start[n.id]), total])
 	# Their towns are laid out in order, each nation in its own style (city_planner.gd).
 	var Planner = load("res://scripts/city_planner.gd")

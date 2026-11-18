@@ -61,6 +61,7 @@ func run() -> void:
 	var notrip_cases := {}
 	var samples := 0
 	var vehicles_seen := {}
+	var next_id := 0
 	var next_sample: float = start + 1.0
 	var deadline := Time.get_ticks_msec() + int(1000 * (seconds * 3 + 60))
 	while w.game_time < start + seconds:
@@ -69,11 +70,16 @@ func run() -> void:
 			quit(1)
 			return
 		await process_frame
+		if w.match_stopped(): w.continue_after_end()
+		if paused: paused = false
 		if w.game_time < next_sample: continue
 		next_sample = w.game_time + 1.0
 		samples += 1
 		for c in traffic._fleet:
-			var id: int = c.get_instance_id() if c is Object else hash(str(c.get("hexes", [])) + str(c.kind))
+			if not c.has("_probe_id"):
+				next_id += 1
+				c._probe_id = next_id
+			var id: int = c._probe_id
 			vehicles_seen[id] = true
 			var waiting: bool = float(c.wait) > 0.0
 			if not waiting and float(c.v) < 0.05:

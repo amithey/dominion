@@ -4,6 +4,8 @@
 # through). This runner tests the native Godot game.
 # Usage:  powershell -ExecutionPolicy Bypass -File native\run-tests.ps1 [-Exported] [-Quick]
 #   -Exported  runs the same tests against dist\DOMINION.exe (the built game)
+#   -WindowedChecks  includes checks that need a graphics window
+#   -TrafficSave     replays a specific saved match to verify civilian traffic
 #   -Quick     skips the long ones (the 12-minute match and the AI war)
 param([switch]$Exported, [switch]$Quick, [switch]$WindowedChecks, [string]$TrafficSave)
 $ErrorActionPreference = 'Continue'
@@ -178,7 +180,7 @@ if (-not $Quick) {
 # Discover additional regression scripts. Graphics probes require a display;
 # the traffic replay accepts a caller-selected save. Neither reads a random slot.
 $registered = @($tests | ForEach-Object { $_[1] } | Where-Object { $_ -like 'res://tools/*' })
-$graphics = @('fullscreen-check', 'ambience-regression-check', 'audit-layout', 'customer5-layout')
+$graphics = @('fullscreen-check', 'ambience-regression-check', 'audit-layout', 'customer5-layout', 'audit-portraits')
 $additional = Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'godot/tools') -Filter '*.gd' |
     Where-Object { $_.BaseName -like '*-check' -or $_.BaseName -in @('customer5-monkey','customer5-static','customer5-play','audit-layout','customer5-layout','audit-portraits') }
 foreach ($script in $additional) {
@@ -195,6 +197,8 @@ foreach ($script in $additional) {
 
 $results = @()
 $runId = [guid]::NewGuid().ToString('N')
+$testProfile = Join-Path $env:TEMP "dominion-profile-$runId"
+New-Item -ItemType Directory -Path $testProfile -ErrorAction Stop | Out-Null
 foreach ($t in $tests) {
     $name, $testArgs, $pass, $limit = $t
     if ($Exported -and ($testArgs[0] -like 'res://*' -or $testArgs[0] -eq '--script')) { continue }  # alternate scenes and tools are not part of the release
@@ -204,13 +208,19 @@ foreach ($t in $tests) {
     $argsList += $testArgs
     $out = Join-Path $env:TEMP "dominion-test-$runId.log"
     $start = Get-Date
-    $p = Start-Process -FilePath $runner -ArgumentList $argsList -RedirectStandardOutput $out -RedirectStandardError "$out.err" -PassThru -NoNewWindow
+    $previousAppData = $env:APPDATA
+    try {
+        $env:APPDATA = $testProfile
+        $p = Start-Process -FilePath $runner -ArgumentList $argsList -RedirectStandardOutput $out -RedirectStandardError "$out.err" -PassThru -NoNewWindow -ErrorAction Stop
+    } finally {
+        $env:APPDATA = $previousAppData
+    }
     $null = $p.Handle  # without this PowerShell leaves ExitCode empty after a timed wait
     if (-not $p.WaitForExit($limit * 1000)) { $p.Kill(); $status = 'TIMEOUT' }
     else {
         $log = (Get-Content $out -Raw) + (Get-Content "$out.err" -Raw)
         $errors = ([regex]::Matches($log, 'SCRIPT ERROR')).Count
-        $completed = if ($pass) { $log -match [regex]::Escape($pass) } else { $log -match '\bPASS\b|\b0 (failed|failures)\b' }
+        $completed = ($log -match '(?m)\b0 (failed|failures)\s*$') -or $(if ($pass) { $log -match [regex]::Escape($pass) } else { $log -match '\bPASS\b' })
         if ($p.ExitCode -ne 0 -or $log -match '\bFAIL\b' -or -not $completed) { $status = 'FAIL' }
         elseif ($errors -gt 0) { $status = "FAIL ($errors script errors)" }
         else { $status = 'PASS' }

@@ -22,19 +22,26 @@ var _tick := 0.0
 func _init(world: Node) -> void:
 	w = world
 
-func land_share(owner: int) -> float:
+func _land_shares() -> PackedFloat64Array:
+	var shares := PackedFloat64Array()
+	shares.resize(w.map.nations.size())
 	var t = w.territory
-	if t == null or t.owner_of.is_empty():
-		return 0.0
-	var mine := 0
+	if t == null: return shares
+	var terrain: PackedByteArray = t.terrain
+	var owners: PackedInt32Array = t.owner_of
 	var land := 0
-	for i in range(t.owner_of.size()):
-		if t.terrain[i] == t.Terrain.WATER:
-			continue
+	for i in range(owners.size()):
+		if terrain[i] == preload("res://scripts/territory.gd").Terrain.WATER: continue
 		land += 1
-		if t.owner_of[i] == owner:
-			mine += 1
-	return float(mine) / maxf(land, 1)
+		var owner := owners[i]
+		if owner >= 0 and owner < shares.size(): shares[owner] += 1.0
+	for i in range(shares.size()):
+		shares[i] /= maxf(land, 1)
+	return shares
+
+func land_share(owner: int) -> float:
+	var shares := _land_shares()
+	return shares[owner] if owner >= 0 and owner < shares.size() else 0.0
 
 ## The player's Future-era discoveries completed.
 func future_done() -> int:
@@ -63,10 +70,11 @@ func update(delta: float) -> void:
 	if w.game_over != "":
 		return
 	var d: Node = w.diplomacy
+	var shares := _land_shares()
 	for owner in range(w.map.nations.size()):
 		if owner > 0 and d.defeated(owner):
 			continue
-		_track(owner, land_share(owner) >= LAND_SHARE, land_since, LAND_HOLD, "dominance")
+		_track(owner, shares[owner] >= LAND_SHARE, land_since, LAND_HOLD, "dominance")
 		_track(owner, tech_ready(owner), tech_since, TECH_HOLD, "technology")
 
 func _track(owner: int, holds: bool, since: Dictionary, hold: float, path: String) -> void:
@@ -101,19 +109,20 @@ func _win(owner: int, path: String) -> void:
 ## Where everyone stands (the Cabinet).
 func standings() -> Array:
 	var d: Node = w.diplomacy
+	var shares := _land_shares()
 	var leader_land := -1
 	var leader_tech := -1
 	for owner in range(1, w.map.nations.size()):
 		if d.defeated(owner):
 			continue
-		if leader_land < 0 or land_share(owner) > land_share(leader_land):
+		if leader_land < 0 or shares[owner] > shares[leader_land]:
 			leader_land = owner
 		if leader_tech < 0 or w.research.ai_tech(owner) > w.research.ai_tech(leader_tech):
 			leader_tech = owner
 	var capitals: int = w.buildings.filter(func(b): return b.owner > 0 and b.key == "hq" and not b.dead).size()
 	var out := [{"path": "Conquest", "you": "%d rival capital%s left" % [capitals, "" if capitals == 1 else "s"], "rival": ""}]
-	out.append({"path": "Dominance", "you": "%d%% of the land (%d%% needed, 3 min)%s" % [roundi(land_share(0) * 100), roundi(LAND_SHARE * 100), _left(0, land_since, LAND_HOLD)],
-		"rival": "" if leader_land < 0 else "%s %d%%%s" % [d.name_of(leader_land), roundi(land_share(leader_land) * 100), _left(leader_land, land_since, LAND_HOLD)]})
+	out.append({"path": "Dominance", "you": "%d%% of the land (%d%% needed, 3 min)%s" % [roundi(shares[0] * 100), roundi(LAND_SHARE * 100), _left(0, land_since, LAND_HOLD)],
+		"rival": "" if leader_land < 0 else "%s %d%%%s" % [d.name_of(leader_land), roundi(shares[leader_land] * 100), _left(leader_land, land_since, LAND_HOLD)]})
 	out.append({"path": "Technology", "you": "%s, %d of %d Future discoveries%s" % [w.research.eras[w.research.era].name, future_done(), FUTURE_DISCOVERIES, _left(0, tech_since, TECH_HOLD)],
 		"rival": "" if leader_tech < 0 else "%s technology %d/10%s" % [d.name_of(leader_tech), int(w.research.ai_tech(leader_tech)), _left(leader_tech, tech_since, TECH_HOLD)]})
 	if w.get("directorate") != null and w.directorate != null:

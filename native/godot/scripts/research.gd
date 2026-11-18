@@ -610,7 +610,8 @@ func unit_cost(key: String, cost: Dictionary) -> Dictionary:
 	var m := 1.0
 	if key in world.VEHICLES or key in world.NAVAL:
 		m += bonus("costVehiclePct")
-	if key in preload("res://scripts/modern_warfare.gd").DRONES:
+	var role := preload("res://scripts/additional_factions.gd").base(key)
+	if role == "akinci" or role in preload("res://scripts/modern_warfare.gd").DRONES:
 		m += bonus("costDronePct")
 	m *= preload("res://scripts/national_profile.gd").cost_mult(world, 0, key)   # the nation's industry: cheaper here, dearer there
 	if absf(m - 1.0) < 0.001:

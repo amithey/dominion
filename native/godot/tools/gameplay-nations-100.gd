@@ -122,8 +122,8 @@ func put(key: String, owner: int) -> Dictionary:
 ## The newer nations' powers ask for something first (additional_powers.gd): give it to them.
 func meet_needs(id: String) -> void:
 	var extra := preload("res://scripts/additional_powers.gd")
-	if id in ["iran", "ukraine"]:
-		w.diplomacy.set_flag(w.diplomacy.war, 0, 1, true)   # Both powers require an enemy at war.
+	if id == "iran":
+		w.diplomacy.set_flag(w.diplomacy.war, 0, 1, true)   # Hormuz is closed only at war.
 	if not extra.has_power(id):
 		return
 	for need in extra.def(id).needs:
@@ -150,7 +150,7 @@ func meet_needs(id: String) -> void:
 			put("farm", 1)
 		"ukraine":
 			d.set_flag(d.war, 0, 1, true)   # drone strikes only at war
-			put("farm", 1)   # something besides its capital to strike
+			if extra.strike_targets(w, 1).is_empty(): put("powerPlant", 1)
 		# The regional additions (regional_powers.gd).
 		"yemen", "ethiopia":
 			d.set_flag(d.war, 0, 1, false)

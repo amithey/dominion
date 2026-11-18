@@ -139,7 +139,10 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 
 	# Construction: fixed opening, then whatever the economy lacks.
 	if n.next_build <= 0.0 and not cyber:
-		var key: String = build_order[n.build_idx] if n.build_idx < build_order.size() else pick_building(n)
+		var key := str(n.get("planned_building", ""))
+		if key.is_empty():
+			key = build_order[n.build_idx] if n.build_idx < build_order.size() else pick_building(n)
+		n.erase("planned_building")
 		if not preload("res://scripts/national_variants.gd").builds(world, n.id, key):
 			key = ""   # (no reactor for Afghanistan): the next in the order
 			if n.build_idx < build_order.size(): n.build_idx += 1
@@ -170,6 +173,7 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 					n.no_room[key] = float(n.get("age", 0.0)) + 90.0
 					n.next_build = 1.0 / s
 			else:
+				n.planned_building = key
 				n.next_build = 4.0 / s
 		else:
 			built_or_skipped = true
@@ -204,7 +208,8 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 			aboard += (ship.get("cargo", []) as Array).size()
 		var army_size: int = army.size() + aboard
 		if army_size < int(row(n).maxArmy) or fleet_short:
-			var options: Array = train_pool.filter(func(k): return world.unit_allowed(n.id, k) and preload("res://scripts/additional_factions.gd").ai_unlocked(world, n.id, k) and preload("res://scripts/progression.gd").unit_blocked(world, n.id, k) == "" and not production_sites(n.id,k).is_empty())
+			var sites_by_type := {}
+			var options: Array = train_pool.filter(func(k): return not production_sites(n.id, k, sites_by_type).is_empty() and world.unit_allowed(n.id, k) and preload("res://scripts/additional_factions.gd").ai_unlocked(world, n.id, k) and preload("res://scripts/progression.gd").unit_blocked(world, n.id, k) == "")
 			if army_size >= int(row(n).maxArmy):
 				options = options.filter(func(k): return world.unit_defs[k].get("naval", false))   # only ships, while the land army is full
 			var key: String = preload("res://scripts/war_tools.gd").ai_pick(world, n.id, options)
@@ -214,7 +219,9 @@ func think(n: Dictionary, home: Dictionary, delta: float) -> void:
 				# (6 units in wartime, 4 in peace): otherwise wartime training drains every dollar
 				# and deadlocks construction of shipyards, factories, and new towns.
 				var at_war: bool = not world.diplomacy.enemies_of(n.id).is_empty()
-				var next_key: String = build_order[n.build_idx] if n.build_idx < build_order.size() else pick_building(n)
+				var next_key := str(n.get("planned_building", ""))
+				if next_key.is_empty():
+					next_key = build_order[n.build_idx] if n.build_idx < build_order.size() else pick_building(n)
 				var next_def: Dictionary = world.building_defs.get(next_key, {"cost": {}})
 				var reserve: float = 0.0 if army.size() < (6 if at_war else 4) else weighted_cost(preload("res://scripts/additional_factions.gd").building_cost(world, n.id, next_key, next_def.get("base_cost", next_def.cost)))
 				if n.money - cost >= reserve:
@@ -340,15 +347,21 @@ func missile_strike(n: Dictionary, home: Dictionary, tech: float) -> Dictionary:
 func available(u: Dictionary) -> bool:
 	return not u.dead and (u.dmg>0 or u.key in ForceCatalog.SCOUTS) and not world.disabled(u) and (not u.get("fly",false) or String(u.get("air_state","ready")) in ["ready","parked","standby"] and u.get("ammo",0)>0)
 
-func production_sites(owner: int, key: String) -> Array:
+func production_sites(owner: int, key: String, sites_by_type: Variant = null) -> Array:
 	var home: String = ForceCatalog.HOME.get(key, preload("res://scripts/additional_factions.gd").HOME.get(key, TRAINED_AT.get(key, "")))
 	var is_air: bool = bool(world.unit_defs.get(key, {}).get("fly", false)) and not key in world.AirOperations.TUBE_LAUNCHED
-	return world.buildings.filter(func(b):
+	# Units sharing a factory and parking requirements have identical sites.
+	# This cache lasts only for the current nation's single training decision.
+	var group := home + "/air" if is_air else home
+	if sites_by_type != null and sites_by_type.has(group): return sites_by_type[group]
+	var sites: Array = world.buildings.filter(func(b):
 		if b.owner!=owner or b.key!=home or not b.built or b.dead or not b.get("supplied",true) or world.disabled(b):
 			return false
 		if is_air and world.AirOperations.is_base(b) and world.AirOperations.room(world, b) <= 0:
 			return false
 		return true)
+	if sites_by_type != null: sites_by_type[group] = sites
+	return sites
 
 ## The unit rival `n` raises against a threat its army cannot hurt: anti-armour
 ## infantry against vehicles, air defence against aircraft, whichever its nation fields.
@@ -470,7 +483,8 @@ func pick_building(n: Dictionary) -> String:
 		if not short.is_empty():
 			# The first two unmet goals, in order of the plan, with a little variety.
 			return short[0] if short.size() == 1 or randf() < 0.7 else short[1]
-	return ["farm", "cottage", "market", "barracks"][randi() % 4]
+	var fallback := ["farm", "cottage", "market", "barracks"].filter(func(key): return float(n.get("no_room", {}).get(key, 0.0)) <= float(n.get("age", 0.0)) and NV.builds(world, n.id, key) and preload("res://scripts/progression.gd").building_blocked(world, n.id, key) == "")
+	return "" if fallback.is_empty() else str(fallback.pick_random())
 
 func find_spot(n: Dictionary, home: Dictionary, key: String):
 	var def: Dictionary = world.building_defs[key]

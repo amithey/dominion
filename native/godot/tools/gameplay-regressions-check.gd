@@ -43,6 +43,7 @@ func run() -> void:
 	w.saves.autosave_every = 0
 	w.economy.grant_test_resources()
 	check_audit_actions()
+	check_save_management()
 	check_roads()
 	check_shipyard()
 	check_transport()
@@ -52,6 +53,34 @@ func run() -> void:
 	check_transport_command()
 	print("GAMEPLAY_REGRESSIONS ", "PASS" if failures == 0 else "FAIL")
 	quit(0 if failures == 0 else 1)
+
+func press_menu_button(label: String) -> void:
+	for button in w.menu._panel.find_children("*", "Button", true, false):
+		if button.text.strip_edges() == label:
+			button.pressed.emit()
+			return
+	check(false, "menu contains " + label)
+
+func check_save_management() -> void:
+	var slot := "audit-%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
+	var renamed := slot + "-renamed"
+	var path: String = w.saves.path_of(slot)
+	var dest: String = w.saves.path_of(renamed)
+	check(w.saves.save(slot), "created a unique save for the menu check")
+	w.menu._manage_save(slot)
+	var name_field: LineEdit = w.menu._panel.find_children("*", "LineEdit", true, false)[0]
+	name_field.text = renamed
+	press_menu_button("Rename")
+	check(not FileAccess.file_exists(path) and FileAccess.file_exists(dest), "renaming a slot moves the saved game")
+	w.menu._manage_save(renamed)
+	press_menu_button("Delete…")
+	press_menu_button("Cancel")
+	check(FileAccess.file_exists(dest), "cancelling deletion preserves the save")
+	w.menu._manage_save(renamed)
+	press_menu_button("Delete…")
+	press_menu_button("Delete saved game")
+	check(not FileAccess.file_exists(dest), "confirming deletes the selected save")
+	w.menu.close()
 
 func check_audit_actions() -> void:
 	var nation: Dictionary = w.ai.nations[0]
@@ -213,7 +242,12 @@ func check_saved_orders() -> void:
 	var enemy = w.spawn_unit("soldier", w.start + Vector3(80, 0, 0), 1)
 	w.order_attack([tank], enemy)
 	var saved_target: Vector3 = enemy.node.position
+	var hit := [false]
+	var callback := func(): hit[0] = true
+	w.effects.shell(w.start, saved_target, callback)
+	w.effects.projectile("rocket", w.start, saved_target, callback)
 	w.saves.restore(JSON.parse_string(JSON.stringify(w.saves.capture())))
+	check(w.effects._shells.is_empty() and w.effects._projectiles.is_empty() and not hit[0], "restoring a battle discards in-flight rounds and their impact callbacks")
 	check(w.units.any(func(u): return u.key == "worker" and u.get("build_site") != null and u.build_site.root.position.distance_to(site.root.position) < 0.1 and u.build_queue.size() == 1 and u.build_queue[0].root.position.distance_to(next.root.position) < 0.1), "worker retains its site and next job after a JSON round trip")
 	check(w.units.any(func(u): return u.key == "tank" and u.get("forced", false) and u.enemy != null and u.enemy.node.position.distance_to(saved_target) < 0.1), "tank resumes attacking the same unit after load")
 

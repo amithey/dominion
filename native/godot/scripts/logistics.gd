@@ -266,13 +266,21 @@ func build(route: Array, kind: String, owner: int) -> bool:
 
 # ---------------------------------------------------------------- supply
 
-func settlement_of(b: Dictionary):
+func towns_by_owner() -> Dictionary:
+	var towns := {}
+	for s in world.buildings:
+		if not s.dead and s.built and s.def.get("settlement") != null:
+			towns.get_or_add(s.owner, []).append(s)
+	return towns
+
+func settlement_of(b: Dictionary, towns: Variant = null):
 	if b.def.get("settlement") != null:
 		return b
 	var best = null
 	var best_d := INF
-	for s in world.buildings:
-		if s.dead or not s.built or s.owner != b.owner or s.def.get("settlement") == null:
+	var bh := world_hex(b.root.position)
+	for s in (world.buildings if towns == null else towns.get(b.owner, [])):
+		if towns == null and (s.dead or not s.built or s.owner != b.owner or s.def.get("settlement") == null):
 			continue
 		# The nearest of the owner's settlements. Buildings may stand anywhere in
 		# the nation's land (not only inside a settlement's radius); one beyond
@@ -282,7 +290,7 @@ func settlement_of(b: Dictionary):
 		# harbour inside a linked town's land is supplied even if another,
 		# unlinked town happens to stand nearer.
 		var d: float = s.root.position.distance_to(b.root.position)
-		if hex_distance(world_hex(s.root.position), world_hex(b.root.position)) <= int(s.get("rings_now", 2)):  # set by territory.tick
+		if hex_distance(world_hex(s.root.position), bh) <= int(s.get("rings_now", 2)):  # set by territory.tick
 			d -= 10000.0
 		elif world.territory != null:
 			# Land bought at this town hall is this town's too.
@@ -329,10 +337,11 @@ func update_supply() -> void:
 		reachable[owner] = reach_from(owner, false)
 		rail_reachable[owner] = reach_from(owner, true)
 	dirty = false
+	var towns := towns_by_owner()
 	for b in world.buildings:
 		if b.dead:
 			continue
-		var s = settlement_of(b)
+		var s = settlement_of(b, towns)
 		var hex := world_hex(s.root.position) if s != null else Vector2i(99999, 99999)
 		var supplied: bool = s != null and reachable.get(b.owner, {}).has(hex)
 		# A platform at sea ships what it draws by tanker, not by a town's road:
