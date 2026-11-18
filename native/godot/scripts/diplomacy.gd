@@ -14,6 +14,8 @@ signal changed
 
 const TICK := 10.0
 const GIFT := 250.0
+const EMBASSY_WARMTH := 0.5     ## relations a tick (10 s) per embassy with each nation at peace
+const EMBASSY_CEILING := 50.0   ## embassies do not warm relations past this
 
 var world: Node
 var n := 0
@@ -255,6 +257,9 @@ func tick() -> void:
 			var drift := -0.3 if rel(0, a) > 0.0 else (1.2 if world.research and world.research.bonus("warmRelations") >= 1.0 else 0.5)
 			if not (pact[0][a] or nap[0][a] or alliance[0][a]):
 				drift -= aggression_of(a) * 0.9
+			# Embassies keep up relations with every nation at peace (two count), up to +50.
+			if world.economy != null and rel(0, a) < EMBASSY_CEILING:
+				drift += EMBASSY_WARMTH * mini(world.economy.owned("embassy"), 2)
 			change(0, a, drift)
 		if pact[0][a]:
 			world.economy.res.money += 40.0

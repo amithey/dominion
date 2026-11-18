@@ -42,6 +42,7 @@ func run() -> void:
 	w.menu.close()
 	w.saves.autosave_every = 0
 	w.saves.restore(data)
+	if w.match_stopped(): w.continue_after_end()
 	for c in w.get_children():
 		if c.get_script() != null and str(c.get_script().resource_path).ends_with("route_traffic.gd"): traffic = c
 	if traffic == null:
@@ -61,7 +62,12 @@ func run() -> void:
 	var samples := 0
 	var vehicles_seen := {}
 	var next_sample: float = start + 1.0
+	var deadline := Time.get_ticks_msec() + int(1000 * (seconds * 3 + 60))
 	while w.game_time < start + seconds:
+		if Time.get_ticks_msec() >= deadline:
+			print("TRAFFIC_STUCK FAIL: simulation timed out")
+			quit(1)
+			return
 		await process_frame
 		if w.game_time < next_sample: continue
 		next_sample = w.game_time + 1.0

@@ -8,6 +8,7 @@ signal changed
 const RegimeChange := preload("res://scripts/regime_change.gd")
 
 const TICK := 10.0
+const PRISON_DEFENCE := 0.08   ## chance to catch an enemy agent, per prison (two count)
 const INTEL_TIERS := [[10, "Treasury and buildings"], [25, "Army strength"], [40, "Wars, allies and pacts"], [60, "Warning of attacks on you"]]
 const INTEL_GAIN := {"buildNetwork": 6, "reconDossier": 18, "cyberAttack": 8, "stealFunds": 5, "stealTech": 10, "sabotage": 6, "shipping": 6, "proxyCell": 8, "armRebels": 8, "falseFlag": 6, "assassinate": 12}
 
@@ -511,6 +512,7 @@ func enemy_attempt(force_outcome := "") -> String:
 	var nat = world.market.ai_nation(attacker)
 	var defence: float = 0.25 + (0.18 if has_agency() else 0.0) + ready_agents().size() * 0.05 + (world.research.bonus("counterSpy") if world.research else 0.0)
 	defence += 0.25 if clock < security_until else 0.0
+	defence += PRISON_DEFENCE * mini(world.economy.owned("prison"), 2)   # somewhere to hold and question them
 	if world.get("directorate") != null and world.directorate != null:
 		defence += 0.12 * minf(1.0, world.directorate.applications.factor(0, "surveillance"))   # cameras and data (ai_applications_data.gd)
 	# A stronger service's officers are harder to catch (a CIA officer more than most).

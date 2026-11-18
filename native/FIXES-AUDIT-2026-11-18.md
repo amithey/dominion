@@ -8,17 +8,17 @@
 
 ## 🟠 בינוני
 
-### F3. מבנים שלא עושים מה שהכרטיס מבטיח
-(נמדד: מבנה אחד נוסף, כל המחקר גמור — `tools/_probe_buildings.gd` בתיקיית הביקורת)
-- **Oil Refinery** — "Consumes 0.06 oil/s → +$7/s": אין קוד. רק צורך 22MW.
-- **Mountain Mine** — "+0.8 iron/s": לא מייצר כלום (`economy.gd` סופר רק מחלצים על מרבצים).
-- **Nuclear Reactor** — "+20% production, +$5/s, 0.04 uranium/s": בפועל רק 280MW חשמל.
-- **Embassy** (approval/culture) ו־**Prison** (public order): הסטטים לא קיימים → אפס השפעה.
-- **Railway Station** — "+300 storage" לא מוחל (`economy.gd:81` סופר רק Warehouse).
-- **Bank** "עד +60%" ו־**Luxury Villas** "עד +16%": אין תקרה בכלל.
-- **Hospital** "heals nearby units": אין קוד כזה.
-- טקסטים שגויים: Solar Farm 8MW (בפועל 65), Reactor 40MW (280), Chip Fab (צריכה/רווח), Worship "public order".
-- **כיוון:** לממש את ההשפעות, או לתקן את הכרטיס (`gameplay_rules.gd`) כך שיגיד את האמת.
+### ✅ F3. מבנים שלא עושים מה שהכרטיס מבטיח — תוקן
+- **Oil Refinery:** הופך 0.06 נפט/ש' ל־+$7/ש' כשיש נפט במלאי (`economy.gd`).
+- **Mountain Mine:** +0.8 ברזל/ש' (עם Advanced Mining יותר).
+- **Nuclear Reactor:** כשיש אורניום — צורך 0.04/ש', נותן +$5/ש' ו־+20% ייצור; בלי אורניום רק חשמל. הכרטיס אומר 280MW.
+- **Embassy:** יחסים עם כל מדינה בשלום עולים ב־0.5 כל 10 ש' עד +50 (שתי שגרירויות נספרות) — `diplomacy.gd`.
+- **Prison:** סוכני אויב 8% יותר נתפסים (שני בתי כלא נספרים) — `espionage.gd`.
+- **Railway Station:** +300 אחסון מוחל.
+- **Bank / Luxury Villas:** התקרות +60% ו־+16% נאכפות (`economy.income_pct`).
+- **Hospital:** מטפל ברגלים פצועים עד 40 מ' (2% חיים/ש', לא תחת אש); כלי רכב — בתיקון רגיל.
+- **כרטיסים:** Solar 65MW, Reactor 280MW, Chip Fab, Worship ובנק — עודכנו לאמת (`gameplay_rules.gd`).
+- **בדיקה:** `tools/building-cards-check.gd` (9/9, נרשמה ב־`run-tests.ps1`). עוברים גם: economy-100, economy-test, audit-buildings, audit-text, diplomacy-100, intel-100, city-upgrade, gameplay-regressions.
 
 ### F4. שמונה מבנים שאי אפשר לבנות
 - **איפה:** `native/godot/scripts/hud.gd:16` (`BUILD_MENU`), `:22` (`BUILD_GROUPS`).
@@ -73,7 +73,8 @@
 - **T2.** `tools/ai-check.gd` — "rivals build their data centres and a fusion cell": מיושן, ה־AI בונה כפר קודם והבדיקה לא מציבה כפרים.
 - **T3.** `tools/test_kit.gd` (`quiet`) מכבה ערפל, או"ם, WMD, DEFCON, משברים, עלויות ועוד — צריך לפחות סוויטה אחת שמריצה הכל דולק.
 - **T4.** 40 כלים ב־`tools/` לא רשומים ב־`run-tests.ps1`; חלקם מדפיסים "N passed, 0 failed" בלי "PASS".
-- **T6.** performance-check ו־road-traffic-check — להריץ שוב לבד (נכשלו תחת עומס).
+- **T6.** performance-check, road-traffic-check ותקציבי הזמן של gameplay-nations-100 — להריץ שוב לבד (נכשלו תחת עומס).
+- **T7.** `tools/gameplay-nations-100.gd` (`meet_needs`): הכוח של אוקראינה (Long-Range Drone Strikes) עובד רק על מדינה במלחמה, והבדיקה לא פותחת לה מלחמה (כמו שהיא עושה לאיראן) — עוברת או נכשלת לפי מזל.
 
 ---
 

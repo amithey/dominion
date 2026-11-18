@@ -71,19 +71,54 @@ func standing(key: String) -> int:
 
 func provided(stat: String) -> float:
 	var total := 0.0
-	var capped := {}
 	for b in world.buildings:
 		if b.owner == 0 and b.built and not b.dead and b.get("supplied", true):
-			var amount := float(b.def.provides.get(stat, 0.0))
-			if stat == "incomePct" and b.key in ["bank", "luxuryVillas"]:
-				capped[b.key] = int(capped.get(b.key, 0)) + 1
-				if capped[b.key] > 4: continue
-			total += amount
+			total += float(b.def.provides.get(stat, 0.0))
 	return total
+
+## Income share from buildings, with the ceilings their cards state: banks
+## add up to +60% together, luxury villas up to +16%.
+const INCOME_CEILING := {"bank": 0.60, "luxuryVillas": 0.16}
+func income_pct() -> float:
+	var total := 0.0
+	var capped := {}
+	for b in world.buildings:
+		if b.owner != 0 or not b.built or b.dead or not b.get("supplied", true):
+			continue
+		var pct := float(b.def.provides.get("incomePct", 0.0))
+		if INCOME_CEILING.has(b.key):
+			capped[b.key] = float(capped.get(b.key, 0.0)) + pct
+		else:
+			total += pct
+	for key in capped:
+		total += minf(float(capped[key]), float(INCOME_CEILING[key]))
+	return total
+
+## Storage beyond the base: warehouses, and any other building whose card
+## promises storage (a railway station's goods yard).
+func storage_bonus() -> float:
+	var extra := owned("warehouse") * float(cfg.warehouseBonus)
+	for b in world.buildings:
+		if b.owner == 0 and b.built and not b.dead and b.get("supplied", true) and b.key != "warehouse":
+			extra += float(b.def.provides.get("matCap", 0.0))
+	return extra
+
+## Industry that turns one resource into another (the building cards):
+## an oil refinery burns 0.06 oil/s for $7/s; a nuclear reactor burns 0.04
+## uranium/s for $5/s and +20% production (one reactor's worth) while fuelled.
+const REFINERY_OIL := 0.06
+const REFINERY_MONEY := 7.0
+const REACTOR_URANIUM := 0.04
+const REACTOR_MONEY := 5.0
+const REACTOR_PRODUCTION := 0.20
+const MOUNTAIN_IRON := 0.8
+const HOSPITAL_REACH := 40.0
+const HOSPITAL_HEAL := 0.02   ## share of maximum health a second
+var reactor_fuelled := false
 
 func recalculate() -> void:
 	civ_cap = (float(cfg.baseCivCap) + provided("civCap")) * (1.0 + (world.research.bonus("civCapPct") if world.research else 0.0))
-	var mat_cap := provided("matCap")
+	var mat_cap := storage_bonus()
 	for key in cfg.baseCap:
 		caps[key] = float(cfg.baseCap[key]) + mat_cap
 	caps.food = float(cfg.foodCapBase) + owned("foodDepot") * float(cfg.foodDepotBonus)
@@ -91,9 +126,9 @@ func recalculate() -> void:
 		for key in caps:
 			caps[key] = maxf(caps[key], TEST_CAP)
 	# Taxes need administration; residential districts extend it (config.js admin).
-	admin = clampf(float(cfg.baseAdmin) + provided("admin") + mini(owned("residential"), 3) * 0.05 + mini(owned("villageCenter"), 3) * 0.05 + owned("cityCenter") * 0.10, float(cfg.baseAdmin), 1.0)
+	admin = clampf(float(cfg.baseAdmin) + mini(owned("residential"), 3) * 0.05 + mini(owned("villageCenter"), 3) * 0.05 + owned("cityCenter") * 0.10, float(cfg.baseAdmin), 1.0)
 	pop_cap = int(provided("pop")) + garrison
-	_plant = minf(provided("prodPct"), 0.30)
+	_plant = minf(provided("prodPct"), 0.30) + (REACTOR_PRODUCTION if reactor_fuelled and owned("nuclearReactor") > 0 else 0.0)
 	_depot_damage = minf(provided("dmgPct"), 0.25)
 	_depot_reload = minf(owned("ammoDepot") * 0.06, 0.18)
 	_command_health = minf(provided("hpPct"), 0.10)
@@ -103,6 +138,26 @@ func recalculate() -> void:
 			pop_used += int(world.unit_defs.get(u.key, {}).get("pop", 1))
 			for c in u.get("cargo", []):
 				pop_used += int(world.unit_defs.get(str(c.get("key", "")), {}).get("pop", 1))
+
+## Once a second: hospitals treat your wounded infantry near them (2% of their
+## health a second, not under fire: 6 s after the last hit). Vehicles are repaired.
+func _heal_near_hospitals() -> void:
+	var hospitals: Array = []
+	for b in world.buildings:
+		if b.owner == 0 and b.key == "hospital" and b.built and not b.dead and b.get("supplied", true) and not b.get("blackout", false):
+			hospitals.append(b.root.position)
+	if hospitals.is_empty():
+		return
+	for u in world.units:
+		if u.dead or u.owner != 0 or u.get("fly", false) or u.get("naval", false) or u.get("vehicle", false) or float(u.hp) >= float(u.max_hp):
+			continue
+		if float(world.game_time) - float(u.get("last_hit", -100.0)) < 6.0:
+			continue
+		var p: Vector3 = u.node.position
+		for h in hospitals:
+			if Vector2(p.x - h.x, p.z - h.z).length() <= HOSPITAL_REACH:
+				u.hp = minf(float(u.max_hp), float(u.hp) + float(u.max_hp) * HOSPITAL_HEAL)
+				break
 
 ## For testing the game (F8): $100,000 more, every store raised to 99,999 and
 ## filled, and 200 more army capacity. Each press adds again.
@@ -153,7 +208,7 @@ func tick() -> void:
 	# Taxes reach only settlements the supply network connects (config.js
 	# supplyCoverage, weighted by how many people each settlement houses).
 	# Markets and ports add a share of income (config.js incomePct).
-	rates.money = civilians * float(cfg.taxPerCivilian) * admin * supply_coverage() * (1.0 + provided("incomePct") + (r.bonus("incomePct") if r else 0.0))
+	rates.money = civilians * float(cfg.taxPerCivilian) * admin * supply_coverage() * (1.0 + income_pct() + (r.bonus("incomePct") if r else 0.0))
 	rates.money += float(land.money)
 	rates.money *= preload("res://scripts/faction_powers.gd").income_mult(world, 0)   # sanctions, sabotage, a closed strait
 	# Extractors on deposits, and iron from held mountains.
@@ -163,17 +218,27 @@ func tick() -> void:
 	rates.oil = float(land.get("oil", 0.0)) * preload("res://scripts/national_profile.gd").resource_mult(world, 0, "oil")
 	var mining: float = 1.0 + (r.bonus("extractPct") if r else 0.0)
 	for b in world.buildings:
-		if b.owner != 0 or not b.built or b.dead or not b.get("supplied", true):
-			continue
-		if b.key == "mountainMine":
-			rates.iron += 0.8 * mining
-		elif b.key == "oilRefinery" and res.oil + rates.oil >= 0.06:
-			rates.oil -= 0.06
-			rates.money += 7.0
-		if b.deposit == null:
+		if b.owner != 0 or not b.built or b.dead or b.deposit == null or not b.get("supplied", true):
 			continue
 		var dep: Dictionary = b.deposit.def
 		rates[dep.res] = rates.get(dep.res, 0.0) + float(dep.rate) * mining * (1.0 + preload("res://scripts/additional_powers.gd").bonus(world, 0, "mining")) * preload("res://scripts/national_profile.gd").resource_mult(world, 0, dep.res)
+	# Mountain mines dig iron out of the high rock (no deposit needed).
+	rates.iron += owned("mountainMine") * MOUNTAIN_IRON * mining * preload("res://scripts/national_profile.gd").resource_mult(world, 0, "iron")
+	# Refineries turn crude into money while there is crude to refine.
+	var refineries := owned("oilRefinery")
+	if refineries > 0 and float(res.get("oil", 0.0)) >= refineries * REFINERY_OIL:
+		rates.oil -= refineries * REFINERY_OIL
+		rates.money += refineries * REFINERY_MONEY
+	# Reactors pay and speed industry while they have uranium to burn.
+	var reactors := owned("nuclearReactor")
+	var was_fuelled := reactor_fuelled
+	reactor_fuelled = reactors > 0 and float(res.get("uranium", 0.0)) >= reactors * REACTOR_URANIUM
+	if reactor_fuelled:
+		rates.uranium -= reactors * REACTOR_URANIUM
+		rates.money += reactors * REACTOR_MONEY
+	if was_fuelled != reactor_fuelled:
+		recalculate()
+	_heal_near_hospitals()
 	# A growing population burns fuel and uses electronics: oil from about 150
 	# people up, chips (silicon) once a city passes 400. Running short makes
 	# people unhappy (see happiness above, applied on the next tick).
@@ -278,7 +343,7 @@ func city_report(s: Dictionary) -> Dictionary:
 	var eats := people * float(cfg.foodPerCivilian) * (1.0 + civilians / 2000.0)
 	var r: Node = world.research
 	var taxable_people := civilians * taxable_weight / maxf(total_weight, 1.0) if s.owner == 0 else 0.0
-	var tax: float = preload("res://scripts/faction_powers.gd").income_mult(world, 0) * taxable_people * float(cfg.taxPerCivilian) * admin * (1.0 + provided("incomePct") + (r.bonus("incomePct") if r else 0.0))
+	var tax: float = preload("res://scripts/faction_powers.gd").income_mult(world, 0) * taxable_people * float(cfg.taxPerCivilian) * admin * (1.0 + income_pct() + (r.bonus("incomePct") if r else 0.0))
 	return {"residents": people, "capacity": capacity, "homes": homes, "buildings": own.size(), "amenities": amenities,
 		"happiness": happiness, "food_in": farms, "food_out": eats, "tax": tax, "supplied": supplied}
 
