@@ -73,7 +73,8 @@
 - **T2.** `tools/ai-check.gd` — "rivals build their data centres and a fusion cell": מיושן, ה־AI בונה כפר קודם והבדיקה לא מציבה כפרים.
 - **T3.** `tools/test_kit.gd` (`quiet`) מכבה ערפל, או"ם, WMD, DEFCON, משברים, עלויות ועוד — צריך לפחות סוויטה אחת שמריצה הכל דולק.
 - **T4.** 40 כלים ב־`tools/` לא רשומים ב־`run-tests.ps1`; חלקם מדפיסים "N passed, 0 failed" בלי "PASS".
-- **T6.** performance-check ו־road-traffic-check — להריץ שוב לבד (נכשלו תחת עומס).
+- **T6.** performance-check, road-traffic-check ותקציבי הזמן של gameplay-nations-100 — להריץ שוב לבד (נכשלו תחת עומס).
+- **T7.** `tools/gameplay-nations-100.gd` (`meet_needs`): הכוח של אוקראינה (Long-Range Drone Strikes) עובד רק על מדינה במלחמה, והבדיקה לא פותחת לה מלחמה (כמו שהיא עושה לאיראן) — עוברת או נכשלת לפי מזל.
 
 ---
 
