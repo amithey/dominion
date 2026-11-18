@@ -19,26 +19,47 @@ var autosave_every := AUTOSAVE_EVERY   # seconds; 0 turns autosave off (Settings
 func setup(world_node: Node) -> void:
 	world = world_node
 	DirAccess.make_dir_recursive_absolute("user://saves")
+	recover_interrupted_saves("user://saves")
 	migrate_prototype_saves()
 
 ## Saves and settings from before the game had its own folder (the prototype
 ## kept them under Godot's app_userdata) are copied over once.
 func migrate_prototype_saves() -> void:
 	var old := OS.get_data_dir().path_join("Godot/app_userdata/DOMINION — Desktop Prototype")
-	if not DirAccess.dir_exists_absolute(old) or FileAccess.file_exists("user://.migrated"):
+	migrate_from(old, "user://")
+
+static func migrate_from(old: String, destination: String) -> void:
+	var marker := destination.path_join(".migrated")
+	if not DirAccess.dir_exists_absolute(old) or FileAccess.file_exists(marker):
 		return
-	var moved := 0
-	var dir := DirAccess.open(old.path_join("saves"))
-	if dir != null:
-		for file in dir.get_files():
-			if file.ends_with(".json") and not FileAccess.file_exists("user://saves/" + file):
-				DirAccess.copy_absolute(old.path_join("saves").path_join(file), ProjectSettings.globalize_path("user://saves/" + file))
-				moved += 1
-	if FileAccess.file_exists(old.path_join("settings.cfg")) and not FileAccess.file_exists("user://settings.cfg"):
-		DirAccess.copy_absolute(old.path_join("settings.cfg"), ProjectSettings.globalize_path("user://settings.cfg"))
-	var mark := FileAccess.open("user://.migrated", FileAccess.WRITE)
-	if mark:
-		mark.store_string("%d saves copied from %s" % [moved, old])
+	var sources := []
+	var saves := old.path_join("saves")
+	if DirAccess.dir_exists_absolute(saves):
+		var dir := DirAccess.open(saves)
+		if dir == null:
+			return
+		for name in dir.get_files():
+			if name.ends_with(".json") and not name.ends_with(".bad.json"):
+				sources.append("saves/" + name)
+	if FileAccess.file_exists(old.path_join("settings.cfg")):
+		sources.append("settings.cfg")
+	for relative in sources:
+		var target := destination.path_join(relative)
+		if FileAccess.file_exists(target):
+			continue
+		var file := FileAccess.open(old.path_join(relative), FileAccess.READ)
+		if file == null:
+			return
+		var size := file.get_length()
+		var bytes := file.get_buffer(size)
+		file.close()
+		if bytes.size() != size:
+			return
+		if relative.ends_with(".json") and problem_with(JSON.parse_string(bytes.get_string_from_utf8())) != "":
+			continue  # The original stays in the prototype folder.
+		if write_slot(target, bytes) != OK:
+			return  # Retry the remaining files on the next launch.
+	write_slot(marker, "Migration complete".to_utf8_buffer())
 
 func path_of(slot: String) -> String:
 	return "user://saves/%s.json" % slot
@@ -178,15 +199,54 @@ func capture() -> Dictionary:
 	}
 
 func save(slot: String) -> bool:
-	var file := FileAccess.open(path_of(slot), FileAccess.WRITE)
-	if file == null:
-		world.hud.notice("Could not save: %s" % error_string(FileAccess.get_open_error()))
+	var snapshot := capture()
+	var problem := problem_with(snapshot)
+	if problem != "":
+		world.hud.notice("Could not save: %s" % problem)
 		return false
-	file.store_string(JSON.stringify(capture()))
-	file.close()
+	var err := write_slot(path_of(slot), JSON.stringify(snapshot).to_utf8_buffer())
+	if err != OK:
+		world.hud.notice("Could not save: %s" % error_string(err))
+		return false
 	if slot != "autosave":
 		world.hud.notice("Game saved")
 	return true
+
+## Stage the complete save beside the slot. On Windows replacing an existing
+## destination can remove it first, so retain the old file until publication.
+static func write_slot(path: String, contents: PackedByteArray) -> Error:
+	var staged := "%s.%d.tmp" % [path, OS.get_process_id()]
+	var backup := path + ".previous"
+	var file := FileAccess.open(staged, FileAccess.WRITE)
+	if file == null:
+		return FileAccess.get_open_error()
+	var stored := file.store_buffer(contents)
+	file.flush()
+	file.close()
+	if not stored or FileAccess.get_file_as_bytes(staged) != contents:
+		DirAccess.remove_absolute(staged)
+		return ERR_FILE_CANT_WRITE
+	var err := OK
+	if FileAccess.file_exists(path):
+		err = DirAccess.rename_absolute(path, backup)
+	if err == OK:
+		err = DirAccess.rename_absolute(staged, path)
+	if err != OK:
+		if not FileAccess.file_exists(path) and FileAccess.file_exists(backup):
+			DirAccess.rename_absolute(backup, path)
+		DirAccess.remove_absolute(staged)
+		return err
+	if FileAccess.file_exists(backup):
+		DirAccess.remove_absolute(backup)
+	return OK
+
+static func recover_interrupted_saves(folder: String) -> void:
+	for name in DirAccess.get_files_at(folder):
+		if name.ends_with(".json.previous"):
+			var backup := folder.path_join(name)
+			var slot := backup.trim_suffix(".previous")
+			if not FileAccess.file_exists(slot):
+				DirAccess.rename_absolute(backup, slot)
 
 # ---------------------------------------------------------------- load
 
@@ -231,6 +291,16 @@ static func problem_with(data) -> String:
 		return "its lists are damaged"
 	if not (data.economy is Dictionary) or not (data.economy.get("res") is Dictionary) or not data.economy.has("civilians"):
 		return "its economy is damaged"
+	if not (data.camera is Dictionary):
+		return "its camera is damaged"
+	var focus = data.camera.get("focus")
+	if not (focus is Array) or focus.size() != 3:
+		return "its camera position is damaged"
+	for value in focus + [data.camera.get("yaw"), data.camera.get("pitch"), data.camera.get("dist")]:
+		if not (value is int or value is float) or not is_finite(float(value)):
+			return "its camera is damaged"
+	if not (data.diplomacy is Dictionary):
+		return "its diplomacy is damaged"
 	for key in ["score", "war", "alliance", "pact", "nap"]:
 		if not data.diplomacy.has(key):
 			return "its diplomacy is damaged"
