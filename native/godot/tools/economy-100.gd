@@ -645,6 +645,7 @@ func run() -> void:
 	check(not tips.is_empty() and tips[0].contains("inter"), "and gas explains winter heating")
 
 	await check_domestic_policy()
+	await check_civil_affairs()
 	print("\nECONOMY_100: %d passed, %d failed" % [passed, errors.size()])
 	for f in errors: print("  FAILED: " + f)
 	print("ECONOMY_100 PASS" if errors.is_empty() else "ECONOMY_100 FAIL")
@@ -696,3 +697,108 @@ func check_domestic_policy() -> void:
 	eco.fund_programme("Home insulation")
 	eco.tick()
 	check(is_equal_approx(eco.rates.gas - gas_before, population * 0.006 * 0.4), "insulated homes consume less winter gas")
+
+func check_civil_affairs() -> void:
+	await load_match({"map": "pangaea", "players": 2, "nation": 0})
+	var civil = eco.civil
+	if not m.has_market(): put("market")
+	var buyer = m.ai_nation(1)
+	buyer.money = 10000
+	eco.res.food = 80
+	eco.res.money = 2000
+	eco.res.iron = 1000
+	d.set_flag(d.war, 0, 1, false)
+	d.set_flag(d.pact, 0, 1, true)
+	d.set_score(0, 1, 40)
+	check("Households" not in civil.votes(1, 40, false) and "Households" in civil.votes(1, 20, true), "domestic food guarantee wins household votes")
+	d.set_flag(d.pact, 0, 1, false)
+	var treasury: float = eco.res.money
+	civil.sign(1, 40, false)
+	check(civil.contract.is_empty() and eco.res.money == treasury and eco.res.food == 80, "a rejected parliamentary vote cannot bind or charge either side")
+	d.set_flag(d.pact, 0, 1, true)
+	var money: float = eco.res.money
+	var price: int = civil.price_per_lot(1, 20)
+	var stock := preload("res://scripts/additional_powers.gd").stock(w, 1)
+	var food_before := float(stock.get("food", 0))
+	civil.sign(1, 20, true)
+	check(civil.contract.get("sent") == 1 and eco.res.money == money + price and buyer.money == 10000 - 3 * price and stock.food == food_before + 20, "signature escrows the price and delivers the prepaid lot exactly once")
+	check(m.sell("food", 1).contains("floor"), "protected stocks cannot be sold")
+	w.game_time += 40
+	civil.tick()
+	check(civil.contract.sent == 1, "the promised domestic floor delays a scheduled shipment")
+	civil.extend_deadline()
+	var deadline: float = civil.contract.deadline
+	civil.extend_deadline()
+	check(civil.contract.extended and civil.contract.deadline == deadline, "the buyer grants at most one extension")
+	var snapshot: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
+	w.saves.restore(snapshot)
+	check(civil.contract.sent == 1 and civil.contract.extended, "loading an active agreement preserves deliveries and its revised deadline")
+	eco.res.food = 120
+	civil.tick()
+	w.game_time += 40
+	civil.tick()
+	check(civil.contract.is_empty() and civil.honoured.get("1") == 1 and eco.res.money == money + 3 * price, "completion pays exactly the escrowed price and builds a trade reputation")
+	eco.res.food = 150
+	buyer = m.ai_nation(1)
+	var before: float = buyer.money
+	price = civil.price_per_lot(1, 20)
+	civil.sign(1, 20, true)
+	w.game_time = civil.contract.deadline + 1
+	civil.tick()
+	check(buyer.money == before - price and civil.contract.is_empty(), "a missed deadline refunds only undelivered lots")
+	eco.res.food = 40
+	civil.store_food()
+	check(civil.reserve == 20 and eco.res.food == 20, "reserve storage moves actual grain")
+	eco.res.food = 0
+	check(civil.release_food(10) == 10 and eco.res.food == 10 and civil.reserve == 10, "releasing grain preserves total stock")
+	eco.res.food = 0
+	eco.civilians = 2000
+	eco.cfg = eco.cfg.duplicate(true)
+	var consumption: float = eco.cfg.foodPerCivilian
+	eco.cfg.foodPerCivilian = 2.0
+	eco.tick()
+	check(civil.reserve < 10, "a food shortage automatically draws down the national reserve")
+	eco.cfg.foodPerCivilian = consumption
+	var stored: float = civil.reserve
+	var home := hq()
+	var cap: float = eco.city_report(home).capacity
+	eco.res.iron = 5000
+	eco.res.money = 100000
+	civil.improve(home, "Housing")
+	civil.improve(home, "Housing")
+	check(eco.city_report(home).capacity == cap + 80 and w.building_defs.hq.provides != home.def.provides, "housing is a permanent one-time improvement of a single town")
+	d.set_score(0, 1, 60)
+	d.set_flag(d.pact, 0, 1, true)
+	buyer.money = 100000
+	civil.commission(1, "University")
+	civil.commission(1, "Power grid")
+	check(buyer.money == 99050 and civil.partnerships(0, "University") == 1 and civil.partnerships(1, "Power grid") == 1, "both treasuries finance functioning joint institutions")
+	d.set_flag(d.war, 0, 1, true)
+	check(civil.partnerships(0, "University") == 0, "war suspends joint research")
+	d.set_flag(d.war, 0, 1, false)
+	var quote: Dictionary = civil.rail_quote(1)
+	if not quote.is_empty() and quote.money > 0:
+		civil.commission(1, "Railway", quote)
+		check(m.land_link(1) == "rail", "the jointly financed railway connects real capitals")
+	snapshot = JSON.parse_string(JSON.stringify(w.saves.capture()))
+	w.saves.restore(snapshot)
+	check(civil.reserve == stored and civil.partnerships(1, "Power grid") == 1 and eco.city_report(hq()).capacity == cap + 80, "reserves, local housing and joint projects survive loading")
+	var coastal = null
+	for i in range(w.territory.terrain.size()):
+		if w.territory.terrain[i] == w.territory.Terrain.COAST:
+			var at: Vector3 = w.territory.center(i)
+			if not w.district_hex.has(w.logistics.world_hex(at)) and w.coast_near(at, w.logistics.radius * 2.6):
+				coastal = w.place_building("villageCenter", at, 0, true)
+				break
+	check(coastal != null, "the test map has a coastal town site")
+	if coastal != null:
+		coastal.supplied = true
+		var ports: int = m.ports()
+		civil.improve(coastal, "Harbour")
+		check(m.ports() == ports + 1, "coastal investment supplies additional trade berths")
+	w.hud.toggle_cabinet()
+	var cabinet = w.hud._cabinet
+	for page in ["Towns", "Reserves", "Cooperation", "Trade"]:
+		cabinet.civil_page = page
+		cabinet.refresh()
+		check(cabinet.find_child("Tile_civil_affairs", true, false) != null, "Cabinet opens civic page " + page)

@@ -1712,6 +1712,7 @@ func _update_selection() -> void:
 			if b.owner == 0 and world.territory.RINGS_MAX.has(b.key):
 				_city_card(b)  # the town's accounts as tiles
 				lines = lines.slice(1)
+				if b.has("local_improvement"): lines.append("Local investment: %s" % b.local_improvement)
 		_sel_info.text = "\n".join(PackedStringArray(lines))
 		_sel_info.visible = _sel_info.text != ""
 		if not (b.owner == 0 and b.built and world.territory.RINGS_MAX.has(b.key)):

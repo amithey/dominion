@@ -100,6 +100,7 @@ func capture() -> Dictionary:
 		building_ids[b.node] = buildings.size()
 		buildings.append({
 			"key": b.key, "owner": b.owner, "pos": _v(b.root.position), "built": b.built,
+			"local_improvement": b.get("local_improvement", ""),
 			"rally_point": _v(b.rally_point) if b.has("rally_point") else null,
 			"progress": b.progress, "hp": b.hp, "queue": b.queue, "queue_prog": b.queue_prog,
 			"queue_costs": b.get("queue_costs", []).duplicate(true),
@@ -165,7 +166,7 @@ func capture() -> Dictionary:
 		"engagement":{"operations":world.engagement.operations.duplicate(),"incidents":world.engagement.incidents.duplicate(),"policy":world.engagement.policy},
 		"date": Time.get_datetime_string_from_system(), "quality": world.quality,
 		"summary": {"nation": world.diplomacy.name_of(0), "era": world.research.eras[world.research.era].name if world.research else "", "year": 1 + int(world.game_time / 720.0), "difficulty": str(world.match_difficulty).capitalize()},
-		"economy": {"tax_policy": world.economy.tax_policy, "civil_programme": world.economy.civil_programme, "programme_left": world.economy.programme_left,
+		"economy": {"civil_affairs": world.economy.civil.capture(), "tax_policy": world.economy.tax_policy, "civil_programme": world.economy.civil_programme, "programme_left": world.economy.programme_left,
 			"res": world.economy.res, "civilians": world.economy.civilians, "garrison": world.economy.garrison,
 			"military_spending": world.economy.military_spending.duplicate()},
 		"buildings": buildings, "units": units, "edges": edges,
@@ -330,6 +331,7 @@ func restore(data: Dictionary) -> void:
 				n.id = int(saved.id)
 				n.build_idx = int(saved.build_idx)
 	# Economy.
+	world.economy.civil.restore(data.economy.get("civil_affairs", {}))
 	world.economy.restore_civil_policy(data.economy)
 	for key in data.economy.res:
 		world.economy.res[key] = float(data.economy.res[key])
@@ -343,6 +345,7 @@ func restore(data: Dictionary) -> void:
 	# Buildings, then their districts' streets and the walk grid.
 	for s in data.buildings:
 		var b: Dictionary = world.place_building(s.key, _p(s.pos), int(s.owner), bool(s.built))
+		world.economy.civil.apply_improvement(b, str(s.get("local_improvement", "")))
 		b.hp = float(s.hp)
 		if str(s.get("reconstruction_tag", "")) != "": b.reconstruction_tag = s.reconstruction_tag
 		b.repairing = s.get("repairing",false)

@@ -387,6 +387,7 @@ func tick(dt: float) -> void:
 				eco.res.money += 2.0 * dt * bonus("chips")
 				chip_rp += 0.6 * bonus("chips")
 	rate = (BASE_RATE + eco.provided("researchRate") + chip_rp) * (1.0 + bonus("researchPct"))
+	rate += eco.civil.partnerships(0, "University")
 	points += rate * dt
 	_work(dt)
 	_check_era()
@@ -547,6 +548,7 @@ func ai_tick() -> void:
 			continue
 		var aggression := float(world.ai.row(n).get("aggression", 0.35))   # its own difficulty
 		n.tech = float(n.get("tech", 0.0)) + 10.0 / lerpf(260.0, 150.0, aggression) * preload("res://scripts/national_profile.gd").ai_research(world, n.id)
+		n.tech += 0.01 * world.economy.civil.partnerships(n.id, "University")
 		n.tech = minf(n.tech, 10.0)
 
 func ai_tech(owner: int) -> float:

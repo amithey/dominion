@@ -134,7 +134,7 @@ func has_market() -> bool:
 	return world.economy.owned("market") > 0
 
 func ports() -> int:
-	return world.economy.owned("port")
+	return world.economy.owned("port") + int(world.economy.provided("harbour"))
 
 ## "rail", "road" or "": whether your roads or railways reach one of
 ## `nation`'s town halls from your capital (overland trade, no port needed).
@@ -188,6 +188,7 @@ func sell(res: String, qty: int) -> String:
 	if not has_market():
 		return "Instant market deals require a Market."
 	var eco: Node = world.economy
+	if res == "food" and eco.civil.export_floor() > 0 and eco.res.food - qty < eco.civil.export_floor(): return "Not enough food above the domestic stock floor."
 	if eco.res.get(res, 0.0) < qty:
 		return "Not enough %s to sell." % res
 	var earned := floori(quote(res, qty, false) * preload("res://scripts/national_profile.gd").trade_mult(world, 0))
@@ -340,7 +341,8 @@ func tick() -> void:
 		var voyage := float(cfg.voyage) * (1.0 - preload("res://scripts/additional_powers.gd").bonus(world, 0, "voyage"))
 		if r.get("overland", false):
 			voyage *= 0.4 if land_link(r.nation) == "rail" else 0.65  # trains are quickest
-		if r.dir == "export" and eco.res.get(r.res, 0.0) >= r.qty:
+		var floor_stock: float = eco.civil.export_floor() if r.res == "food" else 0.0
+		if r.dir == "export" and eco.res.get(r.res, 0.0) >= r.qty + floor_stock:
 			eco.res[r.res] -= r.qty
 			pressure(r.res, r.qty, false)
 			r.shipment = {"qty": r.qty, "value": value, "eta": voyage}

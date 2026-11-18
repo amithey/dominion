@@ -10,6 +10,7 @@ signal changed
 
 const RESOURCES := ["money", "food", "oil", "iron", "silicon", "uranium", "gas"]
 
+var civil: RefCounted
 var world: Node  # world.gd: buildings, units, deposits
 var cfg: Dictionary
 var res := {}
@@ -67,6 +68,7 @@ var _tick := 0.0
 
 func setup(world_node: Node, economy: Dictionary) -> void:
 	world = world_node
+	civil = preload("res://scripts/civil_affairs.gd").new(world)
 	cfg = economy
 	restore_civil_policy({})
 	for key in RESOURCES:
@@ -224,6 +226,8 @@ func tick() -> void:
 			if d.type == "fish" and d.pos.distance_to(b.root.position) <= 60: shoals += 1
 		food_in += (2.0 + mini(shoals, 2) * 2.0) * float(preload("res://scripts/additional_factions.gd").profile(world, 0).get("fishing", 1.0))
 	rates.food = food_in - food_out
+	if res.food + rates.food < 1 and civil.reserve > 0:
+		civil.release_food(1 - res.food - rates.food)
 	res.food = clampf(res.food + rates.food, 0.0, caps.food)
 	var starving: bool = res.food <= 0.5
 	# Citizens grow with happiness and health (the browser's 60 and 55 to start),
@@ -311,6 +315,7 @@ func tick() -> void:
 		military_rates[key] = military_flow[key]
 		rates[key] -= military_flow[key]
 		military_flow[key] = 0.0
+	civil.tick()
 	if programme_left > 0:
 		programme_left -= 1
 		if programme_left == 0:

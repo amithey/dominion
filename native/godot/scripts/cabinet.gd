@@ -244,6 +244,7 @@ func refresh() -> void:
 	_treasury()
 	_people()
 	_civil_policy()
+	_civil_affairs()
 	_world()   # world news: the crises that reach your economy
 	_victory()   # paths to victory
 	_forces()
@@ -351,6 +352,91 @@ func _civil_policy() -> void:
 			if eco.fund_programme(programme): refresh())
 		col.add_child(button)
 		_label(col, plan.effect, 13, UI.MUTED)
+
+var civil_page := "Trade"
+var civil_partner := 1
+var civil_town := 0
+var civil_lot := 20
+var civil_guarantee := false
+var civil_feedback := ""
+
+func _choice(parent: Control, title: String, action: Callable) -> void:
+	var button := Button.new()
+	button.text = title
+	button.pressed.connect(func():
+		var result = action.call()
+		civil_feedback = result if result is String else ""
+		refresh())
+	parent.add_child(button)
+
+func _civil_affairs() -> void:
+	var civil = world.economy.civil
+	var col := _tile("civil_affairs", "Civic affairs", "citizens", "", Callable())
+	var tabs := HFlowContainer.new()
+	col.add_child(tabs)
+	for page in ["Trade", "Towns", "Cooperation", "Reserves"]:
+		_choice(tabs, page, func(): civil_page = page)
+	if civil_page in ["Trade", "Cooperation"]:
+		var partners := range(1, world.diplomacy.n).filter(func(i): return not world.diplomacy.defeated(i))
+		if partners.is_empty():
+			_label(col, "No foreign partners remain.")
+			return
+		if civil_partner not in partners: civil_partner = partners[0]
+		_choice(col, "Partner: %s  ›" % world.diplomacy.name_of(civil_partner), func(): civil_partner = partners[(partners.find(civil_partner) + 1) % partners.size()])
+	match civil_page:
+		"Trade":
+			if civil.contract.is_empty():
+				_choice(col, "Shipment size: %d food  ›" % civil_lot, func(): civil_lot = 40 if civil_lot == 20 else 20)
+				_choice(col, "Protect 60 food at home: %s" % ("Yes" if civil_guarantee else "No"), func(): civil_guarantee = not civil_guarantee)
+				var votes: Array = civil.votes(civil_partner, civil_lot, civil_guarantee)
+				_label(col, "Parliament: %d/3 in favour (%s). Two votes pass. Growers want a supplied farm, merchants a trade pact, households surplus stocks or a domestic guarantee." % [votes.size(), ", ".join(votes) if not votes.is_empty() else "none"], 13)
+				_label(col, "Three lots at $%d each. First delivery paid on signing, then one every 40s. Final deadline 140s." % civil.price_per_lot(civil_partner, civil_lot), 13)
+				_choice(col, "Submit supply agreement", func(): return civil.sign(civil_partner, civil_lot, civil_guarantee))
+			else:
+				var c: Dictionary = civil.contract
+				_label(col, "%s: %d/3 lots delivered. Each lot %d food for $%d. Deadline in %ds. Domestic floor %d." % [world.diplomacy.name_of(int(c.partner)), c.sent, c.lot, c.payment, maxi(0, ceili(c.deadline - world.game_time)), civil.export_floor()], 14)
+				if not c.extended: _choice(col, "Request 60s extension (−3 relations)", func(): return civil.extend_deadline())
+		"Towns":
+			var towns: Array = world.buildings.filter(func(b): return b.owner == 0 and b.built and not b.dead and b.def.get("settlement") != null)
+			if not towns.is_empty():
+				civil_town = posmod(civil_town, towns.size())
+				var town: Dictionary = towns[civil_town]
+				var hex: Vector2i = world.logistics.world_hex(town.root.position)
+				_choice(col, "%s · hex %d, %d  ›" % [town.def.name, hex.x, hex.y], func(): civil_town = (civil_town + 1) % towns.size())
+				_label(col, "One permanent investment per town. Housing adds room for 80 residents. A coastal harbour adds the trade berths of one port.", 13)
+				if town.has("local_improvement"): _label(col, "Completed: " + str(town.local_improvement))
+				else:
+					for kind: String in civil.LOCAL_COST:
+						var cost: Dictionary = civil.LOCAL_COST[kind]
+						_choice(col, "%s · $%d + %d iron" % [kind, cost.money, cost.iron], func(): return civil.improve(town, kind))
+		"Cooperation":
+			_label(col, "Requires peace, a trade pact and +20 relations. Both treasuries contribute equally; you supply the iron.", 13)
+			_label(col, "University: +1 research/s for you and faster research for your partner. Power grid: +30 MW each. Both operate while the pact holds.", 13)
+			for kind: String in civil.JOINT_COST:
+				var cost: Dictionary = civil.JOINT_COST[kind]
+				if kind in civil.projects.get(str(civil_partner), []): _label(col, "%s · commissioned" % kind)
+				else: _choice(col, "%s · $%d + %d iron" % [kind, cost.money, cost.iron], func(): return civil.commission(civil_partner, kind))
+			_choice(col, "Survey capital-to-capital railway", func(): return _survey_rail(civil_partner))
+		"Reserves":
+			_label(col, "Emergency granary: %d / 120 food. Stored grain is kept out of trade and released automatically when ordinary stocks run out." % civil.reserve, 14)
+			_choice(col, "Store 20 food", func(): return civil.store_food())
+			_choice(col, "Release up to 20", func(): return "Released %.1f food." % civil.release_food(20))
+			var food_rate := float(world.economy.rates.get("food", 0))
+			if food_rate < 0:
+				_label(col, "At current consumption, stocks and reserves cover about %d seconds." % floori((world.economy.res.food + civil.reserve) / -food_rate), 13)
+	var note: String = civil_feedback if civil_feedback != "" else civil.last_report
+	if note != "": _label(col, note, 13, UI.MUTED)
+
+func _survey_rail(id: int) -> String:
+	var civil = world.economy.civil
+	var quote: Dictionary = civil.rail_quote(id)
+	if quote.is_empty(): return "No land corridor between these capitals."
+	if quote.money <= 0: return "These capitals already have a complete rail corridor."
+	close()
+	var share := floori(quote.money * 0.5)
+	hud.ask("Your share is $%d and %d iron. %s pays $%d. Build the railway?" % [quote.money - share, quote.iron, world.diplomacy.name_of(id), share],
+		func(): hud.notice(civil.commission(id, "Railway", quote)), func(): pass, "JOINT RAILWAY")
+	return ""
 
 func _people() -> void:
 	var eco: Node = world.economy
