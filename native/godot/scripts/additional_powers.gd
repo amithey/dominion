@@ -423,21 +423,19 @@ static func ai_target(w: Node, owner: int) -> int:
 			score = s
 			best = target
 	return best
-## New rival factions have a small saved civilian model, driven by their real stocks.
+## Rival factions have a small saved civilian model, driven by their real stocks.
 static func civic_income(w: Node, n: Dictionary, delta: float) -> float:
-	if not F.IDS.has(F.id_of(w, int(n.id))): return 1.0
 	var p := F.profile(w, int(n.id))
 	var stats: Dictionary = p.get("bonus", {})
-	var happy := clampf(60.0 + float(stats.get("happiness", 0.0)) + bonus(w, n.id, "happiness"), 0, 100)
-	var health := clampf(55.0 + float(stats.get("health", 0.0)) + bonus(w, n.id, "health"), 0, 100)
+	var tax: Dictionary = w.economy.TAX_POLICIES.get(n.get("tax_policy", "Standard"), w.economy.TAX_POLICIES.Standard)
+	var happy := clampf(60.0 + float(tax.approval) + float(stats.get("happiness", 0.0)) + bonus(w, n.id, "happiness"), 0, 100)
+	var health := clampf(55.0 + (12.0 if n.get("civil_programme") == "Public clinics" and w.game_time < float(n.get("programme_until", 0)) else 0.0) + float(stats.get("health", 0.0)) + bonus(w, n.id, "health"), 0, 100)
 	var citizens := float(n.get("civilians", 120.0))
-	var cap := 200.0
-	for b in w.buildings:
-		if b.owner == n.id and b.built and not b.dead: cap += float(b.def.get("provides", {}).get("civCap", 0.0))
+	var cap := float(n.get("civil_capacity", 200.0))
 	cap *= 1.0 + float(stats.get("civCapPct", 0.0))
 	var growth := citizens * (happy - 45.0) / 50.0 * health / 100.0 * 0.0025 * float(p.get("growth", 1.0))
 	if funds(w, n.id, "food") < 0.5: growth -= citizens * 0.005
 	n.civilians = clampf(citizens + growth * delta, 20.0, cap)
 	n.happiness = happy
 	n.health = health
-	return clampf(float(n.civilians) / 120.0, 0.5, 1.5)
+	return float(tax.factor) * clampf(float(n.civilians) / 120.0, 0.5, 1.5)

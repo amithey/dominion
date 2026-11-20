@@ -43,7 +43,7 @@ func run() -> void:
 		while t < 60.0:
 			w.game_time += DT
 			w.ai._physics_process(DT)
-			for node in [w.economy, w.research, w.territory, w.diplomacy]:
+			for node in [w.economy, w.research, w.territory, w.diplomacy, w.market]:
 				node._process(DT)
 			t += DT
 		var line := PackedStringArray()

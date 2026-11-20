@@ -386,6 +386,8 @@ func _civil_affairs() -> void:
 	match civil_page:
 		"Trade":
 			if civil.contract.is_empty():
+				if civil.has_offer(civil_partner, "Food"):
+					_choice(col, "Import 3 x 20 food for $%d total" % (3 * civil.price_per_lot(civil_partner, 20, civil_partner)), func(): return civil.sign(civil_partner, 20, true, true))
 				_choice(col, "Shipment size: %d food  ›" % civil_lot, func(): civil_lot = 40 if civil_lot == 20 else 20)
 				_choice(col, "Protect 60 food at home: %s" % ("Yes" if civil_guarantee else "No"), func(): civil_guarantee = not civil_guarantee)
 				var votes: Array = civil.votes(civil_partner, civil_lot, civil_guarantee)
@@ -394,8 +396,9 @@ func _civil_affairs() -> void:
 				_choice(col, "Submit supply agreement", func(): return civil.sign(civil_partner, civil_lot, civil_guarantee))
 			else:
 				var c: Dictionary = civil.contract
-				_label(col, "%s: %d/3 lots delivered. Each lot %d food for $%d. Deadline in %ds. Domestic floor %d." % [world.diplomacy.name_of(int(c.partner)), c.sent, c.lot, c.payment, maxi(0, ceili(c.deadline - world.game_time)), civil.export_floor()], 14)
-				if not c.extended: _choice(col, "Request 60s extension (−3 relations)", func(): return civil.extend_deadline())
+				_label(col, "%s with %s: %d/3 lots delivered. Each lot %d food for $%d. Deadline in %ds. Domestic floor %d." % ["Import" if c.get("seller", 0) != 0 else "Export", world.diplomacy.name_of(int(c.partner)), c.sent, c.lot, c.payment, maxi(0, ceili(c.deadline - world.game_time)), civil.export_floor(int(c.get("seller", 0)))], 14)
+				if not c.extended and c.get("seller", 0) == 0: _choice(col, "Request 60s extension (−3 relations)", func(): return civil.extend_deadline())
+				elif not c.extended and c.get("extension_requested", false): _choice(col, "Grant partner a 60s extension (-3 relations)", func(): return civil.extend_deadline())
 		"Towns":
 			var towns: Array = world.buildings.filter(func(b): return b.owner == 0 and b.built and not b.dead and b.def.get("settlement") != null)
 			if not towns.is_empty():
@@ -415,7 +418,7 @@ func _civil_affairs() -> void:
 			for kind: String in civil.JOINT_COST:
 				var cost: Dictionary = civil.JOINT_COST[kind]
 				if kind in civil.projects.get(str(civil_partner), []): _label(col, "%s · commissioned" % kind)
-				else: _choice(col, "%s · $%d + %d iron" % [kind, cost.money, cost.iron], func(): return civil.commission(civil_partner, kind))
+				else: _choice(col, "%s · $%d + %d iron" % [("Partner proposes " if civil.has_offer(civil_partner, kind) else "") + kind, cost.money, cost.iron], func(): return civil.commission(civil_partner, kind))
 			_choice(col, "Survey capital-to-capital railway", func(): return _survey_rail(civil_partner))
 		"Reserves":
 			_label(col, "Emergency granary: %d / 120 food. Stored grain is kept out of trade and released automatically when ordinary stocks run out." % civil.reserve, 14)

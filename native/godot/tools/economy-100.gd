@@ -436,6 +436,16 @@ func run() -> void:
 	m.routes.clear()
 	eco.res.iron = 0.0
 	m.open_route(2, "iron", "import", 25)
+	var inventory: Dictionary = m.ai_stock["2"]
+	var available: float = inventory.iron
+	inventory.iron = 0
+	var balance: float = eco.res.money
+	var previous_money: float = partner.money
+	partner.money = 0
+	m.tick()
+	check(m.routes[0].shipment == null and eco.res.money == balance, "an import cannot draw missing stock from the rival")
+	partner.money = previous_money
+	inventory.iron = maxf(available, 100)
 	var cash_i: float = eco.res.money
 	m.tick()
 	var paid_i: float = cash_i - eco.res.money
@@ -646,6 +656,7 @@ func run() -> void:
 
 	await check_domestic_policy()
 	await check_civil_affairs()
+	await check_rival_civic_rules()
 	print("\nECONOMY_100: %d passed, %d failed" % [passed, errors.size()])
 	for f in errors: print("  FAILED: " + f)
 	print("ECONOMY_100 PASS" if errors.is_empty() else "ECONOMY_100 FAIL")
@@ -802,3 +813,51 @@ func check_civil_affairs() -> void:
 		cabinet.civil_page = page
 		cabinet.refresh()
 		check(cabinet.find_child("Tile_civil_affairs", true, false) != null, "Cabinet opens civic page " + page)
+
+func check_rival_civic_rules() -> void:
+	await load_match({"map": "pangaea", "players": 2, "nation": 0})
+	var civil = eco.civil
+	var rival = m.ai_nation(1)
+	var stock := preload("res://scripts/additional_powers.gd").stock(w, 1)
+	w.game_time = 150
+	d.set_flag(d.war, 0, 1, false)
+	d.set_flag(d.pact, 0, 1, true)
+	d.set_score(0, 1, 40)
+	rival.money = 1900
+	rival.health = 45
+	stock.food = 180
+	eco.res.food = 0
+	civil.rival_budget(rival, stock)
+	check(rival.get("civil_programme") == "Public clinics" and rival.money == 1600, "rival pays the published clinic cost from its treasury")
+	check(rival.get("grain_reserve") == 20 and stock.food == 160, "rival granary transfers real stock")
+	check(civil.has_offer(1, "Food") and civil.contract.is_empty(), "rival offers food without binding the player")
+	civil.rival_budget(rival, stock)
+	check(rival.money == 1600, "rival pays for its programme once per term")
+	var town := hq(1)
+	town.supplied = true
+	stock.iron = 19
+	civil.improve(town, "Housing", 1)
+	check(not town.has("local_improvement") and rival.money == 1600 and stock.iron == 19, "rival cannot improve a town without all materials")
+	stock.iron = 20
+	civil.improve(town, "Housing", 1)
+	check(town.get("local_improvement") == "Housing" and rival.money == 1200 and stock.iron == 0, "rival pays both housing costs")
+	eco.res.money = 0
+	civil.sign(1, 20, true, true)
+	check(civil.contract.is_empty() and stock.food == 160, "unfunded import leaves both inventories intact")
+	eco.res.money = 2000
+	var price: int = civil.price_per_lot(1, 20, 1)
+	civil.sign(1, 20, true, true)
+	check(civil.contract.get("sent") == 1 and eco.res.money == 2000 - 3 * price and rival.money == 1200 + price and stock.food == 140 and eco.res.food == 20, "rival export exchanges grain for the first escrow instalment")
+	if civil.contract.is_empty(): return
+	stock.food = 79
+	w.game_time = civil.contract.deadline - 10
+	civil.tick()
+	check(civil.contract.sent == 1 and civil.contract.get("extension_requested", false), "rival protects domestic supplies and requests more time")
+	civil.extend_deadline()
+	var snapshot: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
+	w.saves.restore(snapshot)
+	rival = m.ai_nation(1)
+	check(civil.contract.get("seller") == 1 and civil.contract.extended and rival.get("grain_reserve") == 20 and rival.get("civil_programme") == "Public clinics", "loading preserves the exporter, its reserve, programme and extension")
+	w.game_time = civil.contract.deadline + 1
+	civil.tick()
+	check(civil.contract.is_empty() and eco.res.money == 2000 - price and rival.money == 1200 + price, "expired rival export refunds only undelivered lots to the player")
