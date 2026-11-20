@@ -54,8 +54,27 @@ func run() -> void:
 	w.economy.recalculate()
 	w.diplomacy.pact[0][1] = true
 	w.economy.res.oil = 0.0
+	w.market.open_route(1, "oil", "export", -25)
+	w.market.open_route(99, "oil", "export", 25)
+	w.market.open_route(1, "unknown", "import", 25)
+	w.market.open_route(1, "oil", "unknown", 25)
+	check(w.market.routes.is_empty(), "invalid quantities, partners, goods and directions cannot open a route")
+	w.market.routes.clear()
 	var opened: String = w.market.open_route(1, "oil", "export", 25)
 	print("  ", opened)
+	var snapshot: Dictionary = w.market.capture()
+	w.market.routes.clear()
+	w.market.restore(snapshot)
+	check(w.market.routes.size() == 1, "an in-memory market snapshot restores the route after live changes")
+	if w.market.routes.is_empty(): w.market.open_route(1, "oil", "export", 25)
+	var legacy: Dictionary = w.market.capture()
+	legacy.erase("next_id")
+	legacy.routes[0].id = 2
+	var invalid: Dictionary = legacy.routes[0].duplicate(true)
+	invalid.qty = -25
+	legacy.routes.append(invalid)
+	w.market.restore(legacy)
+	check(w.market.routes.size() == 1 and w.market._next_id == 3, "legacy routes retain unique IDs and invalid loads are discarded")
 	var traffic: Node = w.get_children().filter(func(n): return n.get_script() == preload("res://scripts/route_traffic.gd"))[0]
 	w.market.tick()
 	traffic._sync()

@@ -17,13 +17,19 @@ static func tick(w: Node, delta: float) -> void:
 				seller.erase("national_cargo")
 				continue
 			if P.route_closed(w, owner, target) or (w.un != null and w.un.trade_blocked(owner, target, cargo.resource)): continue
-			cargo.eta = float(cargo.eta) - delta / (1.0 + preload("res://scripts/regional_powers.gd").bonus(w, owner, "shippingPressure"))
-			if cargo.eta > 0.0: continue
+			if not cargo.get("arrived", false):
+				cargo.eta = float(cargo.eta) - delta / (1.0 + preload("res://scripts/regional_powers.gd").bonus(w, owner, "shippingPressure"))
+				if cargo.eta > 0.0: continue
+				var risk := clampf(0.08 - P.escorts(w, owner) * 0.015, 0.015, 0.08) * (1.0 - P.bonus(w, owner, "shipping"))
+				if randf() < risk:
+					seller.erase("national_cargo")
+					continue
+				cargo.arrived = true
+			var received := P.funds(w, target, cargo.resource) + float(cargo.qty)
+			if received > 500.0: continue
 			seller.erase("national_cargo")
-			var risk := clampf(0.08 - P.escorts(w, owner) * 0.015, 0.015, 0.08) * (1.0 - P.bonus(w, owner, "shipping"))
-			if randf() < risk: continue
 			seller.money += float(cargo.value)
-			P.stock(w, target)[cargo.resource] = minf(500.0, P.funds(w, target, cargo.resource) + float(cargo.qty))
+			P.stock(w, target)[cargo.resource] = received
 			w.diplomacy.change(owner, target, 0.8)
 			continue
 		if F.id_of(w, owner) not in ["uk", "egypt"] or w.diplomacy.defeated(owner) or not has_port(w, owner): continue

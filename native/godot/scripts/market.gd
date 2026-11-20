@@ -220,6 +220,8 @@ func buy(res: String, qty: int) -> String:
 
 func route_problem(nation: int, res: String) -> String:
 	var d: Node = world.diplomacy
+	if nation <= 0 or nation >= d.n: return "Choose a foreign trade partner."
+	if not cfg.price.has(res): return "Choose a traded commodity."
 	if world.get("un") != null and world.un != null and world.un.trade_blocked(0, nation, res):
 		return "UN restrictions block this trade; humanitarian food is exempt."
 	var overland := land_link(nation)
@@ -236,6 +238,7 @@ func route_problem(nation: int, res: String) -> String:
 	return ""
 
 func open_route(nation: int, res: String, dir: String, qty: int) -> String:
+	if qty <= 0 or dir not in ["export", "import"]: return "Choose a positive shipment size and a trade direction."
 	var problem := route_problem(nation, res)
 	if problem != "":
 		return problem
@@ -377,7 +380,7 @@ func tick() -> void:
 	changed.emit()
 
 func capture() -> Dictionary:
-	return {"mult": mult, "routes": routes, "delivered": delivered, "lost": lost, "next_id": _next_id, "ai_stock": ai_stock, "volume": volume, "flow": flow, "fair": fair, "history": history, "sabotaged": sabotaged}
+	return {"mult": mult, "routes": routes, "delivered": delivered, "lost": lost, "next_id": _next_id, "ai_stock": ai_stock, "volume": volume, "flow": flow, "fair": fair, "history": history, "sabotaged": sabotaged}.duplicate(true)
 
 func restore(data: Dictionary) -> void:
 	ai_stock = data.get("ai_stock", {}).duplicate(true)
@@ -391,16 +394,19 @@ func restore(data: Dictionary) -> void:
 	for key in data.get("history", {}):
 		history[key] = Array(data.history[key]).map(func(v): return float(v))
 	routes.clear()
+	var highest_id := 0
 	for r in data.get("routes", []):
+		if int(r.qty) <= 0 or r.dir not in ["export", "import"] or not cfg.price.has(r.res) or int(r.nation) <= 0 or int(r.nation) >= world.diplomacy.n: continue
 		var copy: Dictionary = r.duplicate(true)
 		copy.id = int(copy.id)
 		copy.nation = int(copy.nation)
 		copy.qty = int(copy.qty)
 		routes.append(copy)
+		highest_id = maxi(highest_id, copy.id)
 	sabotaged = int(data.get("sabotaged", 0))
 	delivered = int(data.get("delivered", 0))
 	lost = int(data.get("lost", 0))
-	_next_id = int(data.get("next_id", routes.size() + 1))
+	_next_id = maxi(highest_id + 1, int(data.get("next_id", 1)))
 
 func trade_ai() -> void:
 	if world.ai == null: return
