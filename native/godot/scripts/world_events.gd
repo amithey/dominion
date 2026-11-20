@@ -308,5 +308,6 @@ func restore(data: Dictionary) -> void:
 	for r in refugees:
 		r.to = int(r.to)
 		r.from = int(r.from)
+	_version += 1
 	if w.research != null:
 		w.research._recompute()

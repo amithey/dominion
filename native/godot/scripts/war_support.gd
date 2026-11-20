@@ -196,6 +196,7 @@ func capture() -> Dictionary:
 	return {"support": out, "defending": defending.keys()}
 
 func restore(data: Dictionary) -> void:
+	support.clear()
 	for k in data.get("support", {}):
 		support[int(k)] = float(data.support[k])
 	defending.clear()

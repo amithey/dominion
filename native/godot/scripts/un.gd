@@ -877,6 +877,16 @@ func capture() -> Dictionary:
 
 func restore(data: Dictionary) -> void:
 	if data.is_empty():
+		elected.clear(); just_left.clear(); queue.clear(); current = null; record.clear()
+		demands.clear(); missions.clear(); authorised.clear(); indicted.clear()
+		player_vote = ""; next_draft = 0.0; arrears = 0.0; withhold = false; assessment = 0.0
+		_number = FIRST_NUMBER; _seen.clear(); _war_since.clear(); _campaign.clear()
+		assembly_queue.clear(); assembly_current = null; assembly_record.clear(); compliance.clear()
+		aid_next = 0.0; _case_id = 1; _dues_history.clear()
+		if agencies == null: agencies = preload("res://scripts/un_agencies.gd").new(w)
+		agencies.restore({})
+		_elect(true); _rotate(); _choose_sg(); _standing()
+		next_dues = w.game_time + DUES_PERIOD
 		return
 	var fix := func(dr):
 		var c: Dictionary = dr.duplicate(true)

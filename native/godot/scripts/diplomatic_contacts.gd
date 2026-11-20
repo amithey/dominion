@@ -445,7 +445,7 @@ func finish(reason := "Contact concluded.") -> void:
 		session.counter = {}
 	session.phase = "concluded"
 	session.message = reason + " Accepted items have taken effect; all other items remain unsigned."
-	cooldowns[str(session.nation)] = clock + 120
+	cooldowns[str(int(session.nation))] = clock + 120
 	history.push_front(session.duplicate(true))
 	if history.size() > 12: history.resize(12)
 	changed.emit()
@@ -456,7 +456,10 @@ func capture() -> Dictionary:
 func restore(data: Dictionary) -> void:
 	clock = float(data.get("clock", 0))
 	session = data.get("session", {}).duplicate(true)
+	if session.has("nation"): session.nation = int(session.nation)
 	cooldowns = data.get("cooldowns", {}).duplicate()
 	history = data.get("history", []).duplicate(true)
 	exports = data.get("exports", []).duplicate(true)
+	for job in exports:
+		if job.has("nation"): job.nation = int(job.nation)
 	changed.emit()

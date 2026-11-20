@@ -256,6 +256,15 @@ func capture() -> Dictionary:
 
 func restore(data: Dictionary) -> void:
 	if data.is_empty():
+		news.clear()
+		appeals.clear()
+		iaea_flagged.clear()
+		next_briefing = w.game_time + 150.0
+		next_iaea = w.game_time + 120.0
+		next_appeal = w.game_time + 90.0
+		last_year = int(w.game_time / YEAR)
+		_id = 1
+		_war_clock.clear()
 		return
 	news = Array(data.get("news", [])).duplicate(true)
 	appeals = []

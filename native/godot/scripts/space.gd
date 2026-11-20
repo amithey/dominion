@@ -371,6 +371,7 @@ func capture() -> Dictionary:
 	return {"sats": s, "watch": wt, "debris": debris, "jammed": jm}
 
 func restore(data: Dictionary) -> void:
+	sats.clear()
 	for k in data.get("sats", {}):
 		var row: Dictionary = data.sats[k]
 		sats[int(k)] = {}

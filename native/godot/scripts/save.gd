@@ -555,7 +555,7 @@ func restore(data: Dictionary) -> void:
 		world.fortifications.setup(world)
 	world.fortifications.import_state(data.get("fortifications", []))
 	preload("res://scripts/war_tools.gd").restore(world, data.get("war_tools", {}))
-	if world.get("homefront") != null and data.has("homefront"):
+	if world.get("homefront") != null:
 		world.homefront.restore(data.get("homefront", {}))
 	if data.has("power_effects"):
 		world.power_effects = Array(data.power_effects).map(func(e): return _effect(e))

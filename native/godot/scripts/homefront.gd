@@ -643,6 +643,7 @@ func capture() -> Dictionary:
 	return {"casualties": cas}
 
 func restore(data: Dictionary) -> void:
+	grid_damaged.clear()
 	casualties.clear()
 	for k in data.get("casualties", {}):
 		casualties[int(k)] = float(data.casualties[k])

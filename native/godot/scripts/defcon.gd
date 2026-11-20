@@ -340,11 +340,13 @@ func capture() -> Dictionary:
 
 func restore(data: Dictionary) -> void:
 	tension = float(data.get("tension", 0.0))
+	posture.clear()
 	for k in data.get("posture", {}): posture[int(k)] = int(data.posture[k])
 	used_at = float(data.get("used_at", -1000.0))
 	used_by = int(data.get("used_by", -1))
 	retaliation.clear()
 	for k in data.get("retaliation", {}): retaliation[int(k)] = float(data.retaliation[k])
+	_peak_towns.clear()
 	for k in data.get("peak", {}): _peak_towns[int(k)] = int(data.peak[k])
 	_level = level()
 	if w.research != null:

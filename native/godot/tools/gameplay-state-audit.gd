@@ -191,6 +191,32 @@ func run() -> void:
 	w.saves.restore(legacy)
 	check(w.power_ready.is_empty() and w.power_effects.is_empty() and w.missiles.flying.is_empty(), "legacy saves load with safe empty state")
 	check(w.units.all(func(u): return u.disabled_until == 0 and u.intercept_ready == 0), "legacy unit timers default to ready")
+	# Diplomatic contact loaded from JSON keeps integer nation id and enforces post-contact cooldown.
+	w.diplomacy.contacts.session = {"nation": 1, "channel": "phone", "phase": "active", "counter": {}, "results": [], "message": ""}
+	var contact_save := json_save()
+	w.saves.restore(contact_save)
+	check(typeof(w.diplomacy.contacts.session.nation) == TYPE_INT, "loaded diplomatic contact normalises nation id to int")
+	w.diplomacy.contacts.finish()
+	check(float(w.diplomacy.contacts.cooldowns.get("1", 0.0)) > w.diplomacy.contacts.clock, "finishing a loaded diplomatic contact sets cooldown under integer key")
+	# Loading an older save clears live satellites, nuclear postures, war support, UN state and grid shocks.
+	if w.space != null: w.space.sats[0] = {"recon": 2, "gps": 1, "comms": 0, "warning": 0}
+	if w.defcon != null: w.defcon.posture[0] = 2
+	if w.support != null: w.support.support[0] = 15.0
+	if w.un != null:
+		w.un.indicted[1] = true
+		w.un.arrears = 500.0
+		if w.un.agencies != null: w.un.agencies.iaea_flagged[1] = true
+	if w.homefront != null: w.homefront.grid_damaged[0] = [Vector3.ZERO]
+	var prev_ev_ver: int = w.events._version if w.events != null else 0
+	var older := json_save()
+	for section in ["space", "defcon", "support", "un", "homefront"]: older.erase(section)
+	w.saves.restore(older)
+	check(w.space == null or w.space.sats.is_empty(), "loading an older save clears live satellites")
+	check(w.defcon == null or w.defcon.posture.is_empty(), "loading an older save clears live nuclear postures")
+	check(w.support == null or w.support.support.is_empty(), "loading an older save clears live war support")
+	check(w.un == null or (w.un.indicted.is_empty() and w.un.arrears == 0.0 and w.un.agencies.iaea_flagged.is_empty()), "loading an older save clears live UN and agency state")
+	check(w.homefront == null or w.homefront.grid_damaged.is_empty(), "loading clears homefront grid shocks")
+	check(w.events == null or w.events._version > prev_ev_ver, "loading bumps world events version")
 	for i in range(3):
 		await process_frame
 	print("GAMEPLAY_STATE_AUDIT %d checks, %d failures" % [checks, failures.size()])
