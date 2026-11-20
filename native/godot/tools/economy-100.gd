@@ -657,6 +657,7 @@ func run() -> void:
 	await check_domestic_policy()
 	await check_civil_affairs()
 	await check_rival_civic_rules()
+	await check_bilateral_food_contract()
 	print("\nECONOMY_100: %d passed, %d failed" % [passed, errors.size()])
 	for f in errors: print("  FAILED: " + f)
 	print("ECONOMY_100 PASS" if errors.is_empty() else "ECONOMY_100 FAIL")
@@ -861,3 +862,77 @@ func check_rival_civic_rules() -> void:
 	w.game_time = civil.contract.deadline + 1
 	civil.tick()
 	check(civil.contract.is_empty() and eco.res.money == 2000 - price and rival.money == 1200 + price, "expired rival export refunds only undelivered lots to the player")
+
+func check_bilateral_food_contract() -> void:
+	await load_match({"map": "pangaea", "players": 4, "nation": 0})
+	var civil = eco.civil
+	var seller = m.ai_nation(1)
+	var buyer = m.ai_nation(2)
+	var goods = preload("res://scripts/additional_powers.gd").stock(w, 1)
+	var stores = preload("res://scripts/additional_powers.gd").stock(w, 2)
+	d.set_flag(d.war, 1, 2, false)
+	d.set_flag(d.pact, 1, 2, true)
+	d.set_score(1, 2, 40)
+	d.set_flag(d.war, 0, 1, true)
+	seller.money = 300
+	buyer.money = 0
+	goods.food = 140
+	stores.food = 0
+	w.game_time = 150
+	civil.rival_budget(seller, goods)
+	check(civil.rival_contracts.is_empty() and goods.food == 140, "a rival cannot accept an unfunded food contract")
+	buyer.money = 2000
+	seller.next_civic_decision = 0
+	civil.rival_budget(seller, goods)
+	check(civil.rival_contracts.size() == 1 and civil.contract.is_empty(), "rivals conclude their own agreement even when the seller is at war with the player")
+	if civil.rival_contracts.is_empty(): return
+	var deal: Dictionary = civil.rival_contracts[0]
+	var payment := int(deal.payment)
+	check(deal.seller == 1 and deal.buyer == 2 and deal.sent == 1 and goods.food == 120 and stores.food == 20 and buyer.money == 2000 - 3 * payment and seller.money == 300 + payment, "rivals escrow three lots and exchange exactly the first")
+	check(civil.export_floor(1) == 60 and civil.export_floor(2) == 0, "only the rival exporter is bound by the domestic floor")
+	check(not civil._ratify(1, 3, 20, true).is_empty(), "an exporter cannot double-commit its food contract")
+	d.set_flag(d.war, 0, 3, false)
+	d.set_flag(d.pact, 0, 3, true)
+	m.ai_nation(3).money = 5000
+	eco.res.food = 120
+	civil.sign(3, 20, true)
+	check(not civil.contract.is_empty() and civil.rival_contracts.size() == 1, "a separate player agreement can run concurrently")
+	goods.food = 79
+	w.game_time = deal.deadline - 10
+	civil.tick()
+	check(deal.extended and deal.sent == 1 and d.rel(1, 2) == 37, "rival exporter keeps its floor and receives one paid diplomatic extension")
+	var snapshot: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
+	w.saves.restore(snapshot)
+	deal = civil.rival_contracts[0]
+	seller = m.ai_nation(1)
+	buyer = m.ai_nation(2)
+	goods = preload("res://scripts/additional_powers.gd").stock(w, 1)
+	stores = preload("res://scripts/additional_powers.gd").stock(w, 2)
+	check(deal.sent == 1 and deal.extended and stores.food == 20, "loading preserves rival escrow progress without repeating a delivery")
+	goods.food = 140
+	stores.food = 490
+	civil.tick()
+	check(deal.sent == 1 and goods.food == 140, "a full rival warehouse delays the delivery")
+	stores.food = 20
+	civil.tick()
+	w.game_time += 40
+	civil.tick()
+	check(civil.rival_contracts.is_empty() and seller.money == 300 + 3 * payment and buyer.money == 2000 - 3 * payment and stores.food == 60 and civil.honoured.get("1>2") == 1, "completion pays both outstanding lots and credits the actual rival pair")
+	goods.food = 150
+	var balance: float = buyer.money
+	civil._ratify(1, 2, 20, true)
+	if civil.rival_contracts.is_empty():
+		check(false, "rivals can enter another agreement after completion")
+		return
+	payment = int(civil.rival_contracts[0].payment)
+	d.set_flag(d.war, 1, 2, true)
+	civil.tick()
+	civil.tick()
+	check(civil.rival_contracts.is_empty() and buyer.money == balance - payment and civil.export_floor(1) == 0, "war refunds only outstanding instalments once and releases the seller")
+
+	var legacy: Dictionary = snapshot.economy.civil_affairs.duplicate(true)
+	legacy.erase("rival_contracts")
+	legacy.contract.erase("seller")
+	legacy.contract.erase("buyer")
+	civil.restore(legacy)
+	check(civil.rival_contracts.is_empty() and civil.contract.seller == 0 and civil.contract.buyer == 3, "older saves restore their player export and discard unrelated active contracts")

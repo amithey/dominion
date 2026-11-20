@@ -386,6 +386,10 @@ func _civil_affairs() -> void:
 	match civil_page:
 		"Trade":
 			if civil.contract.is_empty():
+				var foreign: Dictionary = civil.active_contract(civil_partner)
+				if not foreign.is_empty():
+					_label(col, "%s is shipping food to %s. Delivered %d of 3 lots." % [world.diplomacy.name_of(int(foreign.seller)), world.diplomacy.name_of(int(foreign.buyer)), int(foreign.sent)])
+					return
 				if civil.has_offer(civil_partner, "Food"):
 					_choice(col, "Import 3 x 20 food for $%d total" % (3 * civil.price_per_lot(civil_partner, 20, civil_partner)), func(): return civil.sign(civil_partner, 20, true, true))
 				_choice(col, "Shipment size: %d food  ›" % civil_lot, func(): civil_lot = 40 if civil_lot == 20 else 20)
