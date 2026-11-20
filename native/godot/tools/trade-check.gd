@@ -62,18 +62,29 @@ func run() -> void:
 	w.market.routes.clear()
 	var opened: String = w.market.open_route(1, "oil", "export", 25)
 	print("  ", opened)
+	w.market._tick = 7.5
+	w.market._step = 1.25
 	var snapshot: Dictionary = w.market.capture()
+	w.market._tick = 0.0
+	w.market._step = 0.0
 	w.market.routes.clear()
-	w.market.restore(snapshot)
+	w.market.restore(JSON.parse_string(JSON.stringify(snapshot)))
+	check(w.market._tick == 7.5 and w.market._step == 1.25, "market and shipping clocks resume mid-cycle after loading")
 	check(w.market.routes.size() == 1, "an in-memory market snapshot restores the route after live changes")
 	if w.market.routes.is_empty(): w.market.open_route(1, "oil", "export", 25)
 	var legacy: Dictionary = w.market.capture()
 	legacy.erase("next_id")
+	for key in ["flow", "fair", "history", "tick_elapsed", "step_elapsed"]: legacy.erase(key)
+	w.market.flow.oil = 100
+	w.market.fair.oil = 2
+	w.market.history.oil = [2.0]
 	legacy.routes[0].id = 2
 	var invalid: Dictionary = legacy.routes[0].duplicate(true)
 	invalid.qty = -25
 	legacy.routes.append(invalid)
 	w.market.restore(legacy)
+	check(w.market.flow.oil == 0 and w.market.fair.oil == 1 and w.market.history.oil == [legacy.mult.oil], "older saves initialise missing price data independently of the live market")
+	check(w.market._tick == 0 and w.market._step == 0, "older saves start fresh market cycles")
 	check(w.market.routes.size() == 1 and w.market._next_id == 3, "legacy routes retain unique IDs and invalid loads are discarded")
 	var traffic: Node = w.get_children().filter(func(n): return n.get_script() == preload("res://scripts/route_traffic.gd"))[0]
 	w.market.tick()

@@ -380,19 +380,20 @@ func tick() -> void:
 	changed.emit()
 
 func capture() -> Dictionary:
-	return {"mult": mult, "routes": routes, "delivered": delivered, "lost": lost, "next_id": _next_id, "ai_stock": ai_stock, "volume": volume, "flow": flow, "fair": fair, "history": history, "sabotaged": sabotaged}.duplicate(true)
+	return {"mult": mult, "routes": routes, "delivered": delivered, "lost": lost, "next_id": _next_id, "ai_stock": ai_stock, "volume": volume, "flow": flow, "fair": fair, "history": history, "sabotaged": sabotaged,
+		"tick_elapsed": _tick, "step_elapsed": _step}.duplicate(true)
 
 func restore(data: Dictionary) -> void:
 	ai_stock = data.get("ai_stock", {}).duplicate(true)
 	volume = data.get("volume", {}).duplicate(true)
-	for key in data.get("mult", {}):
-		mult[key] = float(data.mult[key])
-	for key in data.get("flow", {}):
-		flow[key] = float(data.flow[key])
-	for key in data.get("fair", {}):
-		fair[key] = float(data.fair[key])
-	for key in data.get("history", {}):
-		history[key] = Array(data.history[key]).map(func(v): return float(v))
+	_tick = maxf(0.0, float(data.get("tick_elapsed", 0)))
+	_step = maxf(0.0, float(data.get("step_elapsed", 0)))
+	for key in cfg.price:
+		mult[key] = float(data.get("mult", {}).get(key, 1.0))
+		flow[key] = float(data.get("flow", {}).get(key, 0.0))
+		fair[key] = float(data.get("fair", {}).get(key, 1.0))
+		var samples: Array = data.get("history", {}).get(key, [])
+		history[key] = [mult[key]] if samples.is_empty() else samples.map(func(v): return float(v))
 	routes.clear()
 	var highest_id := 0
 	for r in data.get("routes", []):
