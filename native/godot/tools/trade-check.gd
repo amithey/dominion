@@ -116,6 +116,27 @@ func run() -> void:
 	for i in range(6):
 		w.market.tick()
 	check(w.market.lost > lost and w.market.sabotaged == 0, "a saboteur's work sinks your next cargo")
+	# A coastal town with a Harbour investment also launches freighters without a separate Commercial Port.
+	for b in w.buildings:
+		if b.owner == 0 and b.key == "port" and not b.dead:
+			b.dead = true
+	w.economy.recalculate()
+	var coastal_town = null
+	for i in range(w.territory.terrain.size()):
+		if w.territory.terrain[i] == w.territory.Terrain.COAST:
+			var pt: Vector3 = w.territory.center(i)
+			if not w.district_hex.has(w.logistics.world_hex(pt)) and w.coast_near(pt, w.logistics.radius * 2.6):
+				coastal_town = w.place_building("villageCenter", pt, 0, true)
+				break
+	if coastal_town != null:
+		coastal_town.supplied = true
+		w.economy.grant_test_resources()
+		w.economy.civil.improve(coastal_town, "Harbour")
+		w.market.routes.clear()
+		traffic._sync_ships()
+		w.market.open_route(1, "iron", "export", 25)
+		traffic._sync_ships()
+		check(not w.market.routes.is_empty() and traffic.vehicles.has("ship:%d" % w.market.routes[-1].id), "a Harbour town improvement spawns a freighter for sea routes")
 	if "--capture" in OS.get_cmdline_user_args():
 		for n in w.find_children("*", "Label3D", true, false) + w.find_children("*", "Sprite3D", true, false):
 			n.visible = false

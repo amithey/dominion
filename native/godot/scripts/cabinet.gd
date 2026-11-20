@@ -389,15 +389,15 @@ func _civil_affairs() -> void:
 				var foreign: Dictionary = civil.active_contract(civil_partner)
 				if not foreign.is_empty():
 					_label(col, "%s is shipping food to %s. Delivered %d of 3 lots." % [world.diplomacy.name_of(int(foreign.seller)), world.diplomacy.name_of(int(foreign.buyer)), int(foreign.sent)])
-					return
-				if civil.has_offer(civil_partner, "Food"):
-					_choice(col, "Import 3 x 20 food for $%d total" % (3 * civil.price_per_lot(civil_partner, 20, civil_partner)), func(): return civil.sign(civil_partner, 20, true, true))
-				_choice(col, "Shipment size: %d food  ›" % civil_lot, func(): civil_lot = 40 if civil_lot == 20 else 20)
-				_choice(col, "Protect 60 food at home: %s" % ("Yes" if civil_guarantee else "No"), func(): civil_guarantee = not civil_guarantee)
-				var votes: Array = civil.votes(civil_partner, civil_lot, civil_guarantee)
-				_label(col, "Parliament: %d/3 in favour (%s). Two votes pass. Growers want a supplied farm, merchants a trade pact, households surplus stocks or a domestic guarantee." % [votes.size(), ", ".join(votes) if not votes.is_empty() else "none"], 13)
-				_label(col, "Three lots at $%d each. First delivery paid on signing, then one every 40s. Final deadline 140s." % civil.price_per_lot(civil_partner, civil_lot), 13)
-				_choice(col, "Submit supply agreement", func(): return civil.sign(civil_partner, civil_lot, civil_guarantee))
+				else:
+					if civil.has_offer(civil_partner, "Food"):
+						_choice(col, "Import 3 x 20 food for $%d total" % (3 * civil.price_per_lot(civil_partner, 20, civil_partner)), func(): return civil.sign(civil_partner, 20, true, true))
+					_choice(col, "Shipment size: %d food  ›" % civil_lot, func(): civil_lot = 40 if civil_lot == 20 else 20)
+					_choice(col, "Protect 60 food at home: %s" % ("Yes" if civil_guarantee else "No"), func(): civil_guarantee = not civil_guarantee)
+					var votes: Array = civil.votes(civil_partner, civil_lot, civil_guarantee)
+					_label(col, "Parliament: %d/3 in favour (%s). Two votes pass. Growers want a supplied farm, merchants a trade pact, households surplus stocks or a domestic guarantee." % [votes.size(), ", ".join(votes) if not votes.is_empty() else "none"], 13)
+					_label(col, "Three lots at $%d each. First delivery paid on signing, then one every 40s. Final deadline 140s." % civil.price_per_lot(civil_partner, civil_lot), 13)
+					_choice(col, "Submit supply agreement", func(): return civil.sign(civil_partner, civil_lot, civil_guarantee))
 			else:
 				var c: Dictionary = civil.contract
 				_label(col, "%s with %s: %d/3 lots delivered. Each lot %d food for $%d. Deadline in %ds. Domestic floor %d." % ["Import" if c.get("seller", 0) != 0 else "Export", world.diplomacy.name_of(int(c.partner)), c.sent, c.lot, c.payment, maxi(0, ceili(c.deadline - world.game_time)), civil.export_floor(int(c.get("seller", 0)))], 14)

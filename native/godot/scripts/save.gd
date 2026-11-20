@@ -334,6 +334,7 @@ func restore(data: Dictionary) -> void:
 				n.build_idx = int(saved.build_idx)
 	# Economy.
 	world.economy.civil.restore(data.economy.get("civil_affairs", {}))
+	if world.hud != null and world.hud.get("_cabinet") != null: world.hud._cabinet.civil_feedback = ""
 	world.economy.restore_civil_policy(data.economy)
 	for key in data.economy.res:
 		world.economy.res[key] = float(data.economy.res[key])

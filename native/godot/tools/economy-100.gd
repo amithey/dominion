@@ -808,12 +808,21 @@ func check_civil_affairs() -> void:
 		var ports: int = m.ports()
 		civil.improve(coastal, "Harbour")
 		check(m.ports() == ports + 1, "coastal investment supplies additional trade berths")
+		d.set_flag(d.war, 0, 1, false)
+		d.set_flag(d.pact, 0, 1, true)
+		var route_msg: String = m.open_route(1, "iron", "export", 25)
+		if not m.routes.is_empty() and not m.routes[-1].get("overland", false) and w.traffic != null:
+			w.traffic._sync_ships()
+			check(w.traffic.vehicles.has("ship:%d" % m.routes[-1].id), "a coastal town harbour launches freighters for its sea routes (%s)" % route_msg)
 	w.hud.toggle_cabinet()
 	var cabinet = w.hud._cabinet
 	for page in ["Towns", "Reserves", "Cooperation", "Trade"]:
 		cabinet.civil_page = page
 		cabinet.refresh()
 		check(cabinet.find_child("Tile_civil_affairs", true, false) != null, "Cabinet opens civic page " + page)
+	cabinet.civil_feedback = "stale notice"
+	w.saves.restore(snapshot)
+	check(cabinet.civil_feedback == "", "loading a save clears stale civic cabinet feedback")
 
 func check_rival_civic_rules() -> void:
 	await load_match({"map": "pangaea", "players": 2, "nation": 0})
@@ -908,7 +917,7 @@ func check_bilateral_food_contract() -> void:
 	buyer = m.ai_nation(2)
 	goods = preload("res://scripts/additional_powers.gd").stock(w, 1)
 	stores = preload("res://scripts/additional_powers.gd").stock(w, 2)
-	check(deal.sent == 1 and deal.extended and stores.food == 20, "loading preserves rival escrow progress without repeating a delivery")
+	check(deal.sent == 1 and deal.extended and stores.food == 20 and typeof(deal.seller) == TYPE_INT and typeof(deal.buyer) == TYPE_INT and typeof(deal.sent) == TYPE_INT, "loading preserves rival escrow progress as integers without repeating a delivery")
 	goods.food = 140
 	stores.food = 490
 	civil.tick()
@@ -936,3 +945,25 @@ func check_bilateral_food_contract() -> void:
 	legacy.contract.erase("buyer")
 	civil.restore(legacy)
 	check(civil.rival_contracts.is_empty() and civil.contract.seller == 0 and civil.contract.buyer == 3, "older saves restore their player export and discard unrelated active contracts")
+
+	# Landlocked nations (e.g. Ethiopia) must not bypass their port restriction via a coastal Harbour investment.
+	var ethiopia_idx := -1
+	var reg := preload("res://scripts/nation_registry.gd")
+	for idx in range(reg.ORDER.size()):
+		if str(reg.ORDER[idx].DATA.get("id", "")) == "ethiopia":
+			ethiopia_idx = idx
+			break
+	if ethiopia_idx >= 0:
+		await load_match({"map": "island", "players": 2, "nation": ethiopia_idx})
+		eco.grant_test_resources()
+		var coastal_eth = null
+		for i in range(w.territory.terrain.size()):
+			if w.territory.terrain[i] == w.territory.Terrain.COAST:
+				var at: Vector3 = w.territory.center(i)
+				if not w.district_hex.has(w.logistics.world_hex(at)) and w.coast_near(at, w.logistics.radius * 2.6):
+					coastal_eth = w.place_building("villageCenter", at, 0, true)
+					break
+		if coastal_eth != null:
+			coastal_eth.supplied = true
+			var refused: String = eco.civil.improve(coastal_eth, "Harbour")
+			check(not coastal_eth.has("local_improvement") and m.ports() == 0 and "port" in refused.to_lower(), "landlocked Ethiopia cannot build a coastal Harbour improvement (%s)" % refused)

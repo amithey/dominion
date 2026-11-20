@@ -1000,7 +1000,7 @@ func _sync_ships() -> void:
 		if vehicles.has(id): continue
 		var port = null
 		for b in world.buildings:
-			if b.owner == 0 and b.key == "port" and b.built and not b.dead: port = b
+			if b.owner == 0 and (b.key == "port" or b.get("local_improvement") == "Harbour") and b.built and not b.dead: port = b
 		if port == null: continue
 		if world.naval_navigation == null:
 			world.naval_navigation = preload("res://scripts/naval_navigation.gd").new()

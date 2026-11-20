@@ -105,11 +105,13 @@ func extend_deadline() -> String:
 func _extend(deal: Dictionary) -> String:
 	if deal.is_empty() or deal.extended: return "Only one extension is available."
 	if w.game_time > float(deal.deadline): return "The deadline has passed."
-	if int(deal.seller) != 0 and not deal.get("extension_requested", false): return "The seller has not requested an extension."
-	if not _peaceful(deal.seller, deal.buyer) or w.diplomacy.rel(deal.seller, deal.buyer) < 20: return "An extension requires relations of +20."
+	var seller := int(deal.seller)
+	var buyer := int(deal.buyer)
+	if seller != 0 and not deal.get("extension_requested", false): return "The seller has not requested an extension."
+	if not _peaceful(seller, buyer) or w.diplomacy.rel(seller, buyer) < 20: return "An extension requires relations of +20."
 	deal.deadline += 60
 	deal.extended = true
-	w.diplomacy.change(deal.seller, deal.buyer, -3)
+	w.diplomacy.change(seller, buyer, -3)
 	return report("Deadline extended by 60 seconds. Relations fell by 3.") if deal.has("partner") else ""
 
 func tick() -> void:
@@ -160,6 +162,7 @@ func release_food(maximum: float) -> float:
 func improve(town: Dictionary, kind: String, owner := 0) -> String:
 	if not LOCAL_COST.has(kind) or town.dead or not town.built or town.owner != owner or town.def.get("settlement") == null or not town.get("supplied", true): return "Choose a supplied town hall."
 	if town.has("local_improvement"): return "This town has already spent its development budget."
+	if kind == "Harbour" and not preload("res://scripts/national_variants.gd").builds(w, owner, "port"): return "This nation does not operate sea ports."
 	if kind == "Harbour" and not w.coast_near(town.root.position, w.logistics.radius * 2.6): return "The harbour needs a coastal town."
 	var paid: bool = w.economy.pay(LOCAL_COST[kind]) if owner == 0 else Powers.pay(w, owner, LOCAL_COST[kind])
 	if not paid: return "Insufficient money or iron."
@@ -256,9 +259,10 @@ func rival_budget(n: Dictionary, stock: Dictionary) -> void:
 	if w.game_time < float(n.get("next_civic_decision", 120)): return
 	n.next_civic_decision = w.game_time + 90 + id
 	if available > 2000:
+		var can_harbour: bool = preload("res://scripts/national_variants.gd").builds(w, id, "port")
 		for town in w.buildings:
 			if town.owner != id or town.dead or not town.built or town.def.get("settlement") == null or town.has("local_improvement") or not town.get("supplied", true): continue
-			var coastal: bool = w.coast_near(town.root.position, w.logistics.radius * 2.6)
+			var coastal: bool = can_harbour and w.coast_near(town.root.position, w.logistics.radius * 2.6)
 			improve(town, "Harbour" if coastal else "Housing", id)
 			break
 	n.erase("civic_offer")
@@ -280,12 +284,22 @@ func rival_budget(n: Dictionary, stock: Dictionary) -> void:
 func capture() -> Dictionary:
 	return {"contract": contract.duplicate(true), "rival_contracts": rival_contracts.duplicate(true), "projects": projects.duplicate(true), "reserve": reserve, "honoured": honoured.duplicate(), "report": last_report}
 
+func _normalise_deal(deal: Dictionary) -> void:
+	deal.seller = int(deal.get("seller", 0))
+	if deal.has("partner"):
+		deal.partner = int(deal.partner)
+		deal.buyer = int(deal.partner) if deal.seller == 0 else 0
+	else:
+		deal.buyer = int(deal.get("buyer", 0))
+	deal.lot = int(deal.get("lot", 20))
+	deal.payment = int(deal.get("payment", 0))
+	deal.sent = int(deal.get("sent", 0))
+
 func restore(data: Dictionary) -> void:
 	contract = data.get("contract", {}).duplicate(true)
 	rival_contracts = data.get("rival_contracts", []).duplicate(true)
-	if not contract.is_empty():
-		contract.seller = int(contract.get("seller", 0))
-		contract.buyer = int(contract.partner) if contract.seller == 0 else 0
+	if not contract.is_empty(): _normalise_deal(contract)
+	for deal in rival_contracts: _normalise_deal(deal)
 	projects = data.get("projects", {}).duplicate(true)
 	honoured = data.get("honoured", {}).duplicate()
 	reserve = clampf(float(data.get("reserve", 0)), 0, 120)
