@@ -61,8 +61,8 @@ static func assembly(p) -> void:
 			if int(dr.target) != 0:
 				var target: int = int(dr.target)
 				var row: HBoxContainer = hud._row(card)
-				hud._button(row, "Join restrictions", func(): return u.join_voluntary(target, true), not 0 in dr.participants)
-				hud._button(row, "Leave restrictions", func(): return u.join_voluntary(target, false), 0 in dr.participants)
+				hud._button(row, "Join restrictions", func(): return u.join_voluntary(target, true, i), not 0 in dr.participants)
+				hud._button(row, "Leave restrictions", func(): return u.join_voluntary(target, false, i), 0 in dr.participants)
 
 ## The Agencies tab: the Secretary-General's calendar, the IAEA's findings and the humanitarian appeals.
 static func agencies(p) -> void:

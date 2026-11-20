@@ -76,6 +76,7 @@ var _campaign := {}
 var assembly_queue: Array = []
 var assembly_current = null
 var assembly_record: Array = []
+var _voluntary_expiry := INF
 var compliance: Array = []       # demands await compliance, never magically end wars
 var aid_next := 0.0
 var _case_id := 1
@@ -219,6 +220,9 @@ func _standing() -> void:
 # ---------------------------------------------------------------- the clock
 
 func update(_delta: float) -> void:
+	if w.game_time >= _voluntary_expiry:
+		rebuild_voluntary()
+		w.economy.recalculate()
 	if w.game_time >= term_ends:
 		_elect()
 	if w.game_time >= presidency_ends:
@@ -698,26 +702,39 @@ func _finish_assembly() -> void:
 			original.assembly = {"result": dr.result, "yes": yes.size(), "no": no, "abstain": abstain}
 	if w.economy != null: w.economy.recalculate()
 
+func rebuild_voluntary() -> void:
+	_voluntary_expiry = INF
+	var targets := {}
+	for effect in w.power_effects:
+		if effect.get("un") == "voluntary": targets[int(effect.nation)] = true
+	for dr in assembly_record:
+		if dr.result == "adopted" and float(dr.until) > w.game_time and not dr.participants.is_empty():
+			targets[int(dr.target)] = true
+	for target in targets: _refresh_voluntary(target)
+
 func _refresh_voluntary(target: int) -> void:
 	var participants := []
-	var until: float = w.game_time
+	var until := INF
 	for dr in assembly_record:
 		if int(dr.target) != target or dr.result != "adopted" or float(dr.until) <= w.game_time: continue
-		until = maxf(until, float(dr.until))
+		if dr.participants.is_empty(): continue
+		until = minf(until, float(dr.until))
 		for i in dr.get("participants", []):
 			if not int(i) in participants: participants.append(int(i))
 	w.power_effects = w.power_effects.filter(func(e): return not (int(e.nation) == target and int(e.get("by", 0)) == -3 and e.get("un", "") == "voluntary"))
 	if not participants.is_empty():
+		_voluntary_expiry = minf(_voluntary_expiry, until)
 		w.power_effects.append({"kind": "income", "nation": target, "value": 1.0 - minf(0.25, 0.015 * participants.size()), "until": until, "by": -3, "un": "voluntary", "participants": participants})
 
-func join_voluntary(target: int, join: bool) -> String:
+func join_voluntary(target: int, join: bool, record_index := -1) -> String:
 	for k in range(assembly_record.size() - 1, -1, -1):
+		if record_index != -1 and k != record_index: continue
 		var dr: Dictionary = assembly_record[k]
 		if int(dr.target) != target or dr.result != "adopted" or float(dr.until) <= w.game_time: continue
 		if target == 0 or not 0 in members(): return "You cannot join restrictions against yourself."
-		for proposal in assembly_record:
-			if int(proposal.target) == target: proposal.participants.erase(0)
-		if join: dr.participants.append(0)
+		if join:
+			if 0 not in dr.participants: dr.participants.append(0)
+		else: dr.participants.erase(0)
 		_refresh_voluntary(target)
 		w.economy.recalculate()
 		return "You %s the voluntary restrictions on %s." % ["join" if join else "leave", _name(target)]
@@ -792,10 +809,12 @@ func relief(target: int) -> String:
 		if not w.economy.pay({"money": 250.0}): return "Relief logistics cost $250."
 		w.economy.res.food += minf(80.0, room)
 	else:
-		if not w.economy.pay({"money": 250.0, "food": 80.0}): return "Sending relief costs $250 and 80 food."
-		if w.market != null:
-			if not w.market.ai_stock.has(target): w.market.ai_stock[target] = {}
-			w.market.ai_stock[target].food = float(w.market.ai_stock[target].get("food", 0.0)) + 80.0
+		var stock := preload("res://scripts/additional_powers.gd").stock(w, target)
+		var food := float(stock.get("food", 0.0))
+		var shipment := minf(80.0, 500.0 - food)
+		if shipment <= 0: return "The recipient's food stores are full."
+		if not w.economy.pay({"money": 250.0, "food": shipment}): return "Sending relief costs $250 and %d food." % ceili(shipment)
+		stock.food = food + shipment
 		w.diplomacy.change(0, target, 5.0)
 	if w.get("support") != null: w.support.change(target, 2.0)
 	aid_next = w.game_time + 120.0
@@ -876,6 +895,7 @@ func capture() -> Dictionary:
 		"seen": _seen.duplicate(), "war_since": _war_since.duplicate(), "campaign": _campaign.duplicate(), "dues_history": _dues_history.duplicate(), "agencies": agencies.capture()}
 
 func restore(data: Dictionary) -> void:
+	_voluntary_expiry = 0.0
 	if data.is_empty():
 		elected.clear(); just_left.clear(); queue.clear(); current = null; record.clear()
 		demands.clear(); missions.clear(); authorised.clear(); indicted.clear()

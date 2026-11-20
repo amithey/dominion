@@ -559,6 +559,7 @@ func restore(data: Dictionary) -> void:
 		world.homefront.restore(data.get("homefront", {}))
 	if data.has("power_effects"):
 		world.power_effects = Array(data.power_effects).map(func(e): return _effect(e))
+	world.un.rebuild_voluntary()
 	if world.passage:
 		world.passage.restore(data.get("passage", {}))
 	if world.occupation:
