@@ -164,6 +164,34 @@ func run() -> void:
 	var paid_once: float = before - eco.res.money
 	r.tick(1.0)
 	check(paid_once > 0.0 and absf(before - paid_once - eco.res.money) < 0.01, "and pays for them once ($%d)" % int(paid_once))
+	var paid_snapshot: Dictionary = r.capture()
+	var saved_work := float(r.progress.eliteTraining.work)
+	r.dequeue("eliteTraining")
+	r.progress.eliteTraining.work = 0.0
+	r.restore(paid_snapshot)
+	check(r.queue == ["eliteTraining"] and r.progress.eliteTraining.paid and r.progress.eliteTraining.work == saved_work, "an in-memory save preserves queued prepaid work independently of later changes")
+	r.queue = ["eliteTraining"]
+	r.points = 1000
+	r.rate = 1000
+	var stage_need: float = r.stage_points("eliteTraining", 1)
+	r.progress.eliteTraining.work = 0.0
+	r._work(1)
+	check(r.stage_of("eliteTraining") == 1 and is_equal_approx(r.progress.eliteTraining.work, stage_need / r.MIN_STAGE_SECONDS), "high research output respects the minimum prototype duration")
+	set_stage("eliteTraining", 1)
+	r.progress.eliteTraining.paid = true
+	r.progress.eliteTraining.work = stage_need - 0.25
+	r.points = 1000
+	var cash_before_finish: float = eco.res.money
+	r._work(1)
+	check(r.stage_of("eliteTraining") == 2 and r.points == 999.75 and eco.res.money == cash_before_finish, "finishing a prepaid prototype consumes exactly its remaining points")
+	r.tracks.economy = 0
+	r.queue = ["track:economy"]
+	r.progress["track:economy"] = {"work": r.track_cost("economy") - 0.5}
+	r.points = 1000
+	r._work(1)
+	check(r.tracks.economy == 1 and r.points == 999.5, "a track level also leaves unused points for the next project")
+	r.tracks.economy = 0
+	r._recompute()
 	set_stage("eliteTraining", 0)
 	set_stage("taxAdministration", 2)
 	var half: float = r.bonus("incomePct")
@@ -509,6 +537,11 @@ func run() -> void:
 	r.progress.erase("track:military")
 	r._recompute()
 	r.restore(data)
+	var outdated: Dictionary = data.duplicate(true)
+	outdated.queue = ["track:obsolete", "removedDiscovery", "fertilizers", "fertilizers", "track:military"]
+	outdated.progress["track:obsolete"] = {"work": 15}
+	r.restore(outdated)
+	check(r.queue == ["fertilizers", "track:military"] and not r.progress.has("track:obsolete") and r.enqueue("track:obsolete") != "", "removed projects cannot block valid research after a load")
 	check(r.stage_of("fertilizers") == 1 and absf(float(r.progress.fertilizers.work) - 12.5) < 0.01 and r.queue == ["fertilizers", "track:military"], "a save keeps each discovery's stage, its progress and the queue")
 	check(r.tracks.economy == 3 and absf(r.points - 777.0) < 0.01 and r.era == era_saved, "and the tracks, the points and the era")
 	check(absf(float(r.progress.get("track:military", {}).get("work", 0.0)) - 33.0) < 0.01, "and a track's progress")

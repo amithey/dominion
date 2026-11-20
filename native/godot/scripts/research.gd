@@ -309,6 +309,7 @@ func track_blocker(key: String) -> String:
 	return ""
 
 func enqueue(item: String) -> String:
+	if not _known_project(item): return "Unknown research project."
 	if item in queue:
 		return ""
 	if queue.size() >= QUEUE_MAX:
@@ -324,6 +325,9 @@ func enqueue(item: String) -> String:
 	queue.append(item)
 	changed.emit()
 	return ""
+
+func _known_project(item: String) -> bool:
+	return tracks_cfg.has(item.substr(6)) if item.begins_with("track:") else discoveries.has(item)
 
 func dequeue(item: String) -> void:
 	queue.erase(item)
@@ -413,7 +417,7 @@ func _work(dt: float) -> void:
 			if not progress.has(item):
 				progress[item] = {"work": 0.0}
 			var need := track_cost(key)
-			var draw := minf(points, maxf(rate, need / MIN_STAGE_SECONDS) * dt)
+			var draw := _work_points(need, float(progress[item].work), dt)
 			points -= draw
 			progress[item].work += draw
 			if progress[item].work >= need:
@@ -438,7 +442,7 @@ func _work(dt: float) -> void:
 				continue  # waiting for materials
 			p.paid = true
 		var need := stage_points(item, stage)
-		var draw := minf(points, maxf(rate, need / MIN_STAGE_SECONDS) * dt)
+		var draw := _work_points(need, float(p.work), dt)
 		points -= draw
 		p.work += draw
 		if p.work >= need:
@@ -456,6 +460,9 @@ func _work(dt: float) -> void:
 			else:
 				world.hud.notice("%s: %s done. Next: %s." % [name, stage_names(item)[0], stage_names(item)[1]])
 		return
+
+func _work_points(required: float, completed: float, dt: float) -> float:
+	return minf(points, minf(maxf(0.0, required - completed), required * dt / MIN_STAGE_SECONDS))
 
 ## Research handed over by agents or rewards; negative when stolen.
 func add_points(amount: float) -> void:
@@ -626,7 +633,7 @@ func unit_cost(key: String, cost: Dictionary) -> Dictionary:
 # ---------------------------------------------------------------- saving
 
 func capture() -> Dictionary:
-	return {"points": points, "progress": progress, "tracks": tracks, "queue": queue, "era": era}
+	return {"points": points, "progress": progress, "tracks": tracks, "queue": queue, "era": era}.duplicate(true)
 
 func restore(data: Dictionary) -> void:
 	points = float(data.get("points", 0.0))
@@ -638,10 +645,13 @@ func restore(data: Dictionary) -> void:
 		var saved: Dictionary = data.get("progress", {}).get(key, {})
 		progress[key] = {"stage": int(saved.get("stage", 0)), "work": float(saved.get("work", 0.0)), "paid": bool(saved.get("paid", false))}
 	for key in data.get("progress", {}):
-		if String(key).begins_with("track:"):
+		if String(key).begins_with("track:") and _known_project(key):
 			progress[key] = {"work": float(data.progress[key].get("work", 0.0))}
 	for key in tracks:
 		tracks[key] = int(data.get("tracks", {}).get(key, 0))
-	queue = Array(data.get("queue", [])).map(func(q): return String(q))
+	queue = []
+	for item in data.get("queue", []):
+		if item is String and _known_project(item) and item not in queue:
+			queue.append(item)
 	_recompute()
 	changed.emit()
