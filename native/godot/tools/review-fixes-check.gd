@@ -63,6 +63,11 @@ func run() -> void:
 	w.diplomacy.declare_war(1, 0)
 	var found = w.ai.nearest_enemy_asset(w.buildings.filter(func(b): return b.owner == 1 and b.key == "hq")[0].root.position, [0], 1)
 	check(found != null and found.key == "hq", "so its attack goes for what it knows (your %s)" % ("nothing" if found == null else found.def.name))
+	var raider: Dictionary = w.spawn_unit("tank", ground(outpost.root.position + Vector3(80, 0, 0)), 1)
+	w.engagement.punish(1)
+	var hq_pos: Vector3 = w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq")[0].root.position
+	check(raider.target != null and raider.target.distance_to(hq_pos) < raider.target.distance_to(outpost.root.position), "a punitive border column also obeys fog of war and heads for the known capital")
+	w.kill(raider)
 	var scout: Dictionary = w.spawn_unit("soldier", ground(outpost.root.position + Vector3(20, 0, 0)), 1)
 	for i in range(4): fog.refresh()
 	check(fog.rival_knows(1, outpost), "a rival soldier near it finds it")

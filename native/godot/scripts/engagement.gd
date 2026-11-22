@@ -114,7 +114,7 @@ func punish(id: int) -> void:
 	if column.is_empty():
 		return
 	column = column.slice(0,maxi(3,column.size()/2))
-	var target = world.ai.nearest_enemy_asset(column[0].node.position,[0])
+	var target = world.ai.nearest_enemy_asset(column[0].node.position,[0],id)
 	if target!=null:
 		world.order_move(column,target.root.position,true)
 

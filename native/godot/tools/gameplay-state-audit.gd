@@ -211,9 +211,10 @@ func run() -> void:
 		w.directorate.st[0].level = 4
 		w.directorate.st[0].doctrine = "out"
 		w.directorate.signed.nuclear.erase(0)
+	if w.fog != null: w.fog.explored.fill(1)
 	var prev_ev_ver: int = w.events._version if w.events != null else 0
 	var older := json_save()
-	for section in ["space", "defcon", "support", "un", "homefront", "directorate"]: older.erase(section)
+	for section in ["space", "defcon", "support", "un", "homefront", "directorate", "fog"]: older.erase(section)
 	w.saves.restore(older)
 	check(w.space == null or w.space.total(0) == 0, "loading an older save resets live satellites to zero")
 	check(w.defcon == null or w.defcon.posture.get(0, -1) == 5, "loading an older save resets live nuclear postures to default")
@@ -221,6 +222,7 @@ func run() -> void:
 	check(w.un == null or (w.un.indicted.is_empty() and w.un.arrears == 0.0 and w.un.agencies.iaea_flagged.is_empty()), "loading an older save clears live UN and agency state")
 	check(w.homefront == null or w.homefront.grid_damaged.is_empty(), "loading clears homefront grid shocks")
 	check(w.get("directorate") == null or w.directorate == null or (w.directorate.level(0) == 0 and w.directorate.doctrine(0) == "in"), "loading an older save resets live AI directorate level and doctrine")
+	check(w.fog == null or w.fog.explored.count(0) > 0, "loading an older save clears live explored fog of war")
 	check(w.events == null or w.events._version > prev_ev_ver, "loading bumps world events version")
 	for i in range(3):
 		await process_frame
