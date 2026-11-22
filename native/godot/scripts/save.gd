@@ -9,6 +9,7 @@ extends Node
 ## F5 quick-saves, F9 quick-loads, and the game autosaves every three minutes.
 
 const BuildInfo := preload("res://scripts/build_info.gd")
+const Airlift := preload("res://scripts/airlift.gd")
 const VERSION := 1
 const AUTOSAVE_EVERY := 180.0
 
@@ -91,6 +92,19 @@ func _wing_of(u: Dictionary) -> Variant:
 		rearm.append(maxf(0.0, float(t) - world.game_time))
 	return {"aboard": int(u.wing.aboard), "rearming": rearm, "auto": bool(u.wing.get("auto", true)), "replace_in": float(u.wing.get("replace_in", 45.0))}
 
+func _landing_operation(ship: Dictionary, unit_ids: Dictionary, building_ids: Dictionary) -> Dictionary:
+	var op: Dictionary = ship.get("op", {})
+	if not op.get("phase") in ["load", "sail"]:
+		return {}
+	var saved := {"phase": op.phase, "since": op.since, "target": _v(op.target), "escorts": []}
+	var building = op.get("target_building")
+	if building != null and not building.dead and building_ids.has(building.node):
+		saved.target_building = building_ids[building.node]
+	for escort in op.get("escorts", []):
+		if not escort.dead and unit_ids.has(escort.node):
+			saved.escorts.append(unit_ids[escort.node])
+	return saved
+
 func capture() -> Dictionary:
 	var buildings := []
 	var building_ids := {}
@@ -128,6 +142,27 @@ func capture() -> Dictionary:
 		for job in u.get("build_queue", []):
 			if not job.dead and building_ids.has(job.node):
 				orders.get_or_add("jobs", []).append(building_ids[job.node])
+		var carrier = u.get("board")
+		if carrier != null and not carrier.dead and unit_ids.has(carrier.node):
+			orders.board = unit_ids[carrier.node]
+			orders.board_since = u.get("board_since", world.game_time)
+		for key in ["garrison_order", "return_base"]:
+			var building = u.get(key)
+			if building != null and not building.dead and building_ids.has(building.node):
+				orders[key] = building_ids[building.node]
+		if Airlift.is_transport(u):
+			for key in ["pickup_go", "unload_go", "unload_target", "assault_target"]:
+				if u.get(key) is Vector3:
+					orders[key] = _v(u[key])
+			if orders.has("pickup_go"):
+				orders.pickup_since = u.get("pickup_since", world.game_time)
+				orders.pickup_sweep = u.get("pickup_sweep", true)
+			if orders.has("unload_go"):
+				orders.unload_since = u.get("unload_since", world.game_time)
+			if Airlift.is_ship(u):
+				var operation := _landing_operation(u, unit_ids, building_ids)
+				if not operation.is_empty():
+					orders.landing_operation = operation
 		units.append({
 			"orders": orders,
 			"key": u.key, "owner": u.owner, "pos": _v(u.node.position), "heading": u.heading, "hp": u.hp,
@@ -315,6 +350,51 @@ func _keep_bad(slot: String) -> void:
 	if FileAccess.file_exists(from) and not slot.ends_with(".bad"):
 		DirAccess.copy_absolute(from, "user://saves/%s.bad.json" % slot)
 
+func _restore_secondary_orders(u: Dictionary, orders: Dictionary, restored_units: Array) -> void:
+	var passenger_target := int(orders.get("board", -1))
+	if passenger_target >= 0 and passenger_target < restored_units.size():
+		var transport: Dictionary = restored_units[passenger_target][1]
+		if Airlift.is_transport(transport) and Airlift.places(world, transport, u) > 0:
+			u.board = transport
+			u.board_since = float(orders.get("board_since", world.game_time))
+	var garrison := int(orders.get("garrison_order", -1))
+	if garrison >= 0 and garrison < world.buildings.size():
+		var b: Dictionary = world.buildings[garrison]
+		if preload("res://scripts/urban_garrison.gd").can_garrison(world, u, b):
+			u.garrison_order = b
+	if not Airlift.is_transport(u):
+		return
+	if orders.has("pickup_go"):
+		u.pickup_go = _p(orders.pickup_go)
+		u.pickup_since = float(orders.get("pickup_since", world.game_time))
+		u.pickup_sweep = bool(orders.get("pickup_sweep", true))
+	if orders.has("unload_go") and Airlift.used(u) > 0:
+		u.unload_go = _p(orders.unload_go)
+		u.unload_target = _p(orders.get("unload_target", orders.unload_go))
+		u.unload_since = float(orders.get("unload_since", world.game_time))
+		if orders.has("assault_target"):
+			u.assault_target = _p(orders.assault_target)
+		var base := int(orders.get("return_base", -1))
+		if base >= 0 and base < world.buildings.size() and int(world.buildings[base].owner) == int(u.owner):
+			u.return_base = world.buildings[base]
+	if Airlift.is_ship(u) and orders.has("landing_operation"):
+		_restore_landing_operation(u, orders.landing_operation, restored_units)
+
+func _restore_landing_operation(ship: Dictionary, saved: Dictionary, restored_units: Array) -> void:
+	var op := {"phase": str(saved.phase), "since": float(saved.since), "target": _p(saved.target),
+		"target_building": null, "escorts": []}
+	var building := int(saved.get("target_building", -1))
+	if building >= 0 and building < world.buildings.size():
+		op.target_building = world.buildings[building]
+	for index in saved.get("escorts", []):
+		if int(index) < 0 or int(index) >= restored_units.size():
+			continue
+		var escort: Dictionary = restored_units[int(index)][1]
+		if escort.owner == ship.owner and escort.get("naval", false) and not is_same(escort, ship):
+			escort.escorting = true
+			op.escorts.append(escort)
+	ship.op = op
+
 func restore(data: Dictionary) -> void:
 	world.clear_match()
 	# Spawned units derive stats from research and rival technology. Restore
@@ -479,6 +559,7 @@ func restore(data: Dictionary) -> void:
 		if cu.get("enemy") != null:
 			cu.forced = true
 			cu.attack_move = true
+		_restore_secondary_orders(cu, orders, restored_units)
 		if cu.has("wing") and cu.wing.get("rearming_relative", false):
 			cu.wing.rearming = (cu.wing.rearming as Array).map(func(t): return world.game_time + float(t))
 			cu.wing.erase("rearming_relative")

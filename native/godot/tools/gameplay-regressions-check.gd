@@ -1,6 +1,7 @@
 extends SceneTree
 ## Regression checks for orders, supply links, national powers and trade agreements.
 const Lift := preload("res://scripts/airlift.gd")
+const Garrison := preload("res://scripts/urban_garrison.gd")
 const Powers := preload("res://scripts/faction_powers.gd")
 const Additional := preload("res://scripts/additional_powers.gd")
 class IsolatedTowns extends "res://scripts/logistics.gd":
@@ -49,6 +50,7 @@ func run() -> void:
 	check_transport()
 	check_trade_and_powers()
 	check_saved_orders()
+	check_saved_secondary_orders()
 	check_campaign_rewind()
 	check_transport_command()
 	print("GAMEPLAY_REGRESSIONS ", "PASS" if failures == 0 else "FAIL")
@@ -251,6 +253,73 @@ func check_saved_orders() -> void:
 	check(w.effects._shells.is_empty() and w.effects._projectiles.is_empty() and not hit[0], "restoring a battle discards in-flight rounds and their impact callbacks")
 	check(w.units.any(func(u): return u.key == "worker" and u.get("build_site") != null and u.build_site.root.position.distance_to(site.root.position) < 0.1 and u.build_queue.size() == 1 and u.build_queue[0].root.position.distance_to(next.root.position) < 0.1), "worker retains its site and next job after a JSON round trip")
 	check(w.units.any(func(u): return u.key == "tank" and u.get("forced", false) and u.enemy != null and u.enemy.node.position.distance_to(saved_target) < 0.1), "tank resumes attacking the same unit after load")
+
+func check_saved_secondary_orders() -> void:
+	var spot: Vector3 = w.land_point(w.start, 130.0)
+	var pad: Dictionary = w.place_building("helipad", spot, 0, true)
+	var pad_position: Vector3 = pad.root.position
+	var pickup: Dictionary = w.spawn_unit("helicopter", spot + Vector3(48, 0, 0), 0)
+	var passenger: Dictionary = w.spawn_unit("soldier", spot + Vector3(82, 0, 0), 0)
+	var loaded: Dictionary = w.spawn_unit("helicopter", spot + Vector3(-60, 0, 0), 0)
+	var squad: Dictionary = w.spawn_unit("soldier", spot, 0)
+	var hq: Dictionary = Additional.capital(w, 0)
+	var sea: Vector3 = w.water_near(spot, 300)
+	var ai_ship: Dictionary = w.spawn_unit("landingShip", sea, 1)
+	var escort: Dictionary = w.spawn_unit("destroyer", sea, 1)
+	var scout: Dictionary = w.spawn_unit("scoutHelicopter", spot + Vector3(0, 0, 38), 0)
+	pickup.node.position = spot + Vector3(48, 16, 0)
+	passenger.node.position = spot + Vector3(82, 0, 0)
+	loaded.node.position = spot + Vector3(-60, 16, 0)
+	pickup.air_state = "ready"
+	loaded.air_state = "ready"
+	check(Lift.order_board(w, [passenger], pickup) == 1 and pickup.has("pickup_go"), "pickup is in progress before saving")
+	loaded.cargo = [{"key": "soldier", "hp": 60.0, "places": 1, "xp": 0.0}]
+	check(Lift.order_return_home(w, [loaded], pad) == 1 and loaded.has("unload_go"), "return and unload is already in progress before saving")
+	check(Garrison.order_garrison(w, [squad], hq) == 1, "a squad is on its way to garrison before saving")
+	scout.air_state = "ready"
+	var patrol_point := spot + Vector3(0, 0, 64)
+	w.order_patrol([scout], patrol_point)
+	check(scout.has("patrol"), "a scout has an accepted patrol order before saving")
+	ai_ship.op = {"phase": "sail", "since": w.game_time, "target": hq.root.position, "target_building": hq, "escorts": [escort]}
+	escort.escorting = true
+	w.game_time += 6.0
+	var alive: Array = w.units.filter(func(u): return not u.dead)
+	var tracked := [pickup, passenger, loaded, squad, ai_ship, escort, scout]
+	var slots := tracked.map(func(original): return alive.find_custom(func(u): return is_same(u, original)))
+	w.saves.restore(JSON.parse_string(JSON.stringify(w.saves.capture())))
+	pickup = w.units[slots[0]]
+	passenger = w.units[slots[1]]
+	loaded = w.units[slots[2]]
+	squad = w.units[slots[3]]
+	ai_ship = w.units[slots[4]]
+	escort = w.units[slots[5]]
+	scout = w.units[slots[6]]
+	check(is_same(passenger.get("board"), pickup) and pickup.has("pickup_go") and not pickup.get("pickup_sweep", true)
+		and is_equal_approx(w.game_time - float(pickup.get("pickup_since", 0.0)), 6.0), "pickup restores the assigned transport, waiting time and passenger-only mode")
+	var destination = loaded.get("return_base")
+	check(loaded.has("unload_go") and Lift.used(loaded) == 1 and destination != null
+		and destination.key == "helipad" and destination.root.position.distance_to(pad_position) < 0.05, "airlift returns to the same pad with its manifest after load")
+	var shelter = squad.get("garrison_order")
+	check(shelter != null and shelter.key == "hq", "a walking squad retains its garrison destination")
+	var operation: Dictionary = ai_ship.get("op", {})
+	var landing_target = operation.get("target_building")
+	check(operation.get("phase") == "sail" and landing_target != null and landing_target.key == "hq"
+		and operation.get("escorts", []).any(func(u): return is_same(u, escort)) and escort.get("escorting", false)
+		and is_equal_approx(w.game_time - float(operation.get("since", 0.0)), 6.0), "AI landing operation restores its phase, destination, escort and elapsed time")
+	check(scout.has("patrol") and scout.patrol.point.distance_to(patrol_point) < 0.02 and scout.patrol.remaining > 0.0,
+		"the scout retains its original patrol destination and remaining time")
+	if pickup.has("pickup_go"):
+		pickup.node.position = pickup.pickup_go
+		passenger.node.position = pickup.node.position
+	if loaded.has("unload_go"):
+		loaded.node.position = loaded.unload_go
+	if shelter != null:
+		squad.node.position = shelter.root.position
+	Lift.update(w)
+	Garrison.update(w, 0.25)
+	check(Lift.used(pickup) == 1 and passenger.get("stowed", false), "resumed pickup actually boards the intended passenger")
+	check(Lift.used(loaded) == 0 and not loaded.has("unload_go"), "resumed airlift actually deploys its cargo at the destination")
+	check(shelter != null and is_same(squad.get("garrison_building"), shelter), "resumed garrison order actually seats the squad")
 
 func check_campaign_rewind() -> void:
 	var territory = w.territory
