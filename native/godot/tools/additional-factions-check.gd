@@ -313,6 +313,7 @@ func run() -> void:
 		var balance := float(trader.money)
 		P.stock(w, 2)[resource] = 495.0
 		w.power_effects.append({"kind": "extra_shipping", "nation": 1, "value": 1.0, "until": w.game_time + 1000})
+		check(is_equal_approx(P.bonus(w, 1, "shipping"), 1.0), "a saved shipping effect without a separate sponsor uses the beneficiary")
 		var shipping = preload("res://scripts/additional_trade.gd")
 		shipping.tick(w, 100)
 		check(trader.has("national_cargo") and trader.money == balance and P.funds(w, 2, resource) == 495, "a freighter waits with its full cargo when the buyer's store fills en route")

@@ -117,8 +117,9 @@ static func bonus(w: Node, owner: int, kind: String) -> float:
 	var value: float = Regional.bonus(w, owner, kind)
 	for e in w.power_effects:
 		if e.kind == "extra_" + kind and int(e.nation) == owner and float(e.until) > w.game_time:
-			if w.diplomacy.defeated(int(e.by)) or (e.kind in ["extra_deterred", "extra_voyage"] and w.diplomacy.at_war(int(e.by), owner)): continue
-			if e.has("ally") and (w.diplomacy.defeated(int(e.ally)) or not w.diplomacy.allied(int(e.by), int(e.ally))): continue
+			var source := int(e.get("by", owner))
+			if w.diplomacy.defeated(source) or (e.kind in ["extra_deterred", "extra_voyage"] and w.diplomacy.at_war(source, owner)): continue
+			if e.has("ally") and (w.diplomacy.defeated(int(e.ally)) or not w.diplomacy.allied(source, int(e.ally))): continue
 			value = maxf(value, float(e.value))
 	return value
 static func use_food_diplomacy(w: Node, owner: int, target: int) -> void:
@@ -355,13 +356,14 @@ static func step(w: Node, delta: float) -> void:
 	Regional.step(w)
 	for e in w.power_effects:
 		if not str(e.kind).begins_with("extra_"): continue
-		if w.diplomacy.defeated(int(e.nation)) or w.diplomacy.defeated(int(e.by)):
+		var source := int(e.get("by", e.nation))
+		if w.diplomacy.defeated(int(e.nation)) or w.diplomacy.defeated(source):
 			e.until = 0.0
 			continue
-		if e.kind in ["extra_deterred", "extra_voyage"] and w.diplomacy.at_war(int(e.by), int(e.nation)):
+		if e.kind in ["extra_deterred", "extra_voyage"] and w.diplomacy.at_war(source, int(e.nation)):
 			e.until = 0.0
 			continue
-		if e.has("ally") and not w.diplomacy.allied(int(e.by), int(e.ally)):
+		if e.has("ally") and not w.diplomacy.allied(source, int(e.ally)):
 			e.until = 0.0
 			continue
 		if e.kind == "extra_repair":
@@ -385,7 +387,6 @@ static func step(w: Node, delta: float) -> void:
 				_notice(w, int(e.nation), -1, "Reconstruction aid arrived: $%d." % int(e.value))
 			continue
 		if e.kind != "extra_food_aid" or float(e.until) <= w.game_time: continue
-		var source := int(e.by)
 		var target := int(e.nation)
 		if w.diplomacy.at_war(source, target) or not w.diplomacy.pact[source][target] or not owned(w, source, "port") or not owned(w, target, "port"):
 			e.until = 0.0
