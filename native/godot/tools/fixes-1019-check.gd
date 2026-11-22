@@ -185,10 +185,36 @@ func run() -> void:
 	var rel_before: float = w.diplomacy.rel(0, 1)
 	var funds: float = w.economy.res.money
 	check(ag.donate(77, 150.0) == "" and w.economy.res.money == funds - 150.0 and w.diplomacy.rel(0, 1) > rel_before, "a gift to an appeal costs money and earns goodwill")
-	check(ag.donate(77, 400.0) == "" and ag.appeals[0].closed == false or ag.appeals[0].closed, "(and a second)")
-	ag.appeals[0].raised = 999.0
+	check(ag.donate(77, 400.0) == "" and ag.appeals[0].raised == 550 and not ag.appeals[0].closed, "two gifts leave exactly $50 to fund")
+	var stocks := preload("res://scripts/additional_powers.gd").stock(w, 1)
+	stocks.food = 480.0
+	var saved_appeal: Dictionary = JSON.parse_string(JSON.stringify(ag.capture()))
+	ag.restore(saved_appeal)
+	funds = w.economy.res.money
+	check(ag.donate(77, -150.0) != "" and w.economy.res.money == funds and ag.appeals[0].raised == 550, "invalid gifts cannot mint money or subtract pledged funds")
+	ag.donate(77, 150.0)
+	check(ag.appeals[0].closed and ag.appeals[0].raised == 600 and w.economy.res.money == funds - 50 and ag.appeals[0].donors[0] == 600, "the final donor pays exactly the shortfall after loading")
+	check(stocks.food == 500, "a funded appeal delivers to the rival's real warehouse within capacity")
+	ag.restore(saved_appeal)
+	stocks.food = 0
+	ag.appeals[0].until = w.game_time
+	funds = w.economy.res.money
+	check(ag.donate(77, 150) != "" and w.economy.res.money == funds, "the deadline blocks donations before the next agency update")
 	ag._appeals(w.game_time)
-	check(ag.appeals[0].closed and ag.appeals[0].result == "funded", "an appeal that reaches its sum is funded")
+	ag._appeals(w.game_time)
+	check(ag.appeals[0].raised == 550 and is_equal_approx(stocks.food, 82.5), "partial funding delivers proportional relief exactly once")
+	ag.restore(saved_appeal)
+	ag.appeals[0].nation = 0
+	ag.appeals[0].need = 20000
+	var total_before := 0.0
+	for n in w.ai.nations:
+		n.money = 300
+		w.diplomacy.set_score(0, n.id, 10)
+		total_before += n.money
+	for step in range(400): ag._appeals(w.game_time)
+	var total_after := 0.0
+	for n in w.ai.nations: total_after += n.money
+	check(ag.appeals[0].raised > 550 and is_equal_approx(total_before - total_after, ag.appeals[0].raised - 550), "every rival pledge is backed by an equal treasury debit")
 	# the IAEA finds undeclared weapons work in a country that is not a weapon state
 	var complex_owner := -1
 	for i in range(1, w.map.nations.size()):
