@@ -201,12 +201,15 @@ static func order_board(w: Node, selected: Array, heli: Dictionary) -> int:
 	var left := _unreserved_room(w, heli)
 	var going := []
 	for u in selected:
-		if is_same(u, heli) or is_same(u.get("board"), heli):
+		if is_same(u, heli):
 			continue
 		var p := places(w, heli, u)
-		if p <= 0 or p > left:
+		if p <= 0:
 			continue
-		left -= p
+		if not is_same(u.get("board"), heli):
+			if p > left:
+				continue
+			left -= p
 		going.append(u)
 	var name := str(w.unit_defs[heli.key].name)
 	if going.is_empty():
