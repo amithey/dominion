@@ -32,9 +32,13 @@ func run() -> void:
 	check(L.on(w) and r.era == 0, "a campaign under the Standard rules climbs the ladder from the Founding era")
 	var open := []
 	var shut := []
+	var unlisted := []
 	for tab in w.hud.BUILD_MENU:
 		for k in w.hud.BUILD_MENU[tab]:
-			if w.building_defs.has(k): (open if L.building_blocked(w, 0, k) == "" else shut).append(k)
+			if w.building_defs.has(k):
+				(open if L.building_blocked(w, 0, k) == "" else shut).append(k)
+				if not L.BUILDINGS.has(k): unlisted.append(k)
+	check(unlisted.is_empty(), "every build-menu building has an explicit era in progression.gd %s" % str(unlisted))
 	check(open.size() <= 18 and shut.size() >= 20, "the Founding era opens a town's worth of buildings (%d open, %d to come)" % [open.size(), shut.size()])
 	check("farm" in open and "barracks" in open and "school" in open and "villageCenter" in open and "offshoreRig" in open, "farms, barracks, a school, villages and offshore rigs from the start")
 	check(not "nuclearReactor" in open and not "missileSilo" in open and not "airfield" in open and not "tankFactory" in open, "no reactor, silo, airfield or tank factory at minute one")
