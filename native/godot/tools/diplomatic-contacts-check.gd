@@ -196,6 +196,18 @@ func run() -> void:
 	c.advance(301)
 	check(c.session.phase == "concluded", "unattended contact times out")
 	c.restore({})
+	c.begin(1, "phone")
+	c.advance(5)
+	var before_stance: float = d.rel(0, 1)
+	c.session.leader = "Former leader"
+	check(c.propose("condemn") != "" and d.rel(0, 1) == before_stance, "a leadership change blocks statements before the next simulation tick")
+	c.restore({})
+	c.begin(1, "phone")
+	c.back_to_channels()
+	c.session.visitor = "Former visitor"
+	funds = w.economy.res.money
+	check(c.begin(1, "mediator") != "" and w.economy.res.money == funds, "switching channels cannot renew an obsolete government's session")
+	c.restore({})
 	check(c.session.is_empty() and c.exports.is_empty(), "old saves reset new subsystem")
 	print("DIPLOMATIC_CONTACTS_TEST ", "PASS" if errors.is_empty() else "FAIL")
 	quit(0 if errors.is_empty() else 1)

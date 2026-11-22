@@ -50,7 +50,27 @@ func run() -> void:
 	check(d.rel(0, 2) > before, "a de-escalation hotline eases tension")
 	var enemy_next: float = w.espionage.enemy_next
 	c.propose("expel")
-	check(w.espionage.enemy_next > enemy_next, "expelling their diplomats stalls their spying")
+	check(w.espionage.enemy_next == enemy_next, "expulsion cannot postpone a third country's scheduled espionage")
+	var spies: Node = w.espionage
+	spies.restore(JSON.parse_string(JSON.stringify(spies.capture())))
+	for i in range(1, d.n):
+		d.set_flag(d.war, 0, i, false)
+		d.set_score(0, i, -60 if i == 2 else 0)
+	check(spies.enemy_attempt("caught") == "", "the expelled service is still suspended after loading")
+	d.set_score(0, 1, -60)
+	check(spies.enemy_attempt("caught").contains(d.name_of(1)), "another hostile service remains eligible")
+	d.set_score(0, 1, 0)
+	spies.clock += 240
+	check(spies.enemy_attempt("caught").contains(d.name_of(2)), "expelled officers become eligible when the four minutes expire")
+	talk(c, 1)
+	c.propose("recall")
+	check(c.session.phase == "concluded", "recalling an ambassador closes the negotiation immediately")
+	c.finish()
+	c.restore(JSON.parse_string(JSON.stringify(c.capture())))
+	c.advance(121)
+	check(c.start_reason(1, "phone") != "", "closing and loading cannot shorten the four-minute recall")
+	c.advance(119)
+	check(c.start_reason(1, "phone") == "", "contact reopens at the recall deadline")
 	# War.
 	d.declare_war(0, 3)
 	check(c.relation_state(3) == "war", "war reads as war")

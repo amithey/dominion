@@ -44,6 +44,7 @@ var proxies := {}
 var stability := {}
 var security_until := 0.0
 var scandal_until := 0.0
+var expelled_until := {} # nation ID -> time its officers may operate here again
 var enemy_next := 240.0
 var puppets := {}             # nation -> {since, leader, deposed, tribute, patron}: US client states (regime_change.gd)
 var fears := {}               # patron -> until: the world fears that United States until then
@@ -504,7 +505,7 @@ func enemy_attempt(force_outcome := "") -> String:
 		return ""
 	enemy_next = clock + 150.0
 	var d: Node = world.diplomacy
-	var hostiles := range(1, d.n).filter(func(i): return not d.defeated(i) and (d.at_war(0, i) or d.rel(0, i) < -25.0))
+	var hostiles := range(1, d.n).filter(func(i): return not d.defeated(i) and clock >= float(expelled_until.get(i, 0)) and (d.at_war(0, i) or d.rel(0, i) < -25.0))
 	if hostiles.is_empty():
 		return ""
 	var attacker: int = hostiles[randi() % hostiles.size()]
@@ -568,7 +569,7 @@ func capture() -> Dictionary:
 	return {"agents": agents, "network": network, "heat": heat, "intel": intel, "types": types, "reports": reports,
 		"dossiers": dossiers, "debuffs": debuffs, "clock": clock, "boost_until": boost_until, "next_id": _next_id, "missions":missions, "cooldowns":cooldowns,
 		"succession":succession, "proxies":proxies, "stability":stability,
-		"security_until":security_until, "scandal_until":scandal_until, "enemy_next":enemy_next,
+		"security_until":security_until, "scandal_until":scandal_until, "enemy_next":enemy_next, "expelled_until":expelled_until,
 		"puppets":puppets, "fears":fears, "ai_raids":ai_raids, "ai_raid_next":ai_raid_next,
 		"standing":standing.keys(), "first_agent_given":first_agent_given}.duplicate(true)
 
@@ -616,6 +617,9 @@ func restore(data: Dictionary) -> void:
 	security_until = float(data.get("security_until", 0.0))
 	scandal_until = float(data.get("scandal_until", 0.0))
 	enemy_next = float(data.get("enemy_next", clock + 150.0))
+	expelled_until.clear()
+	for nation in data.get("expelled_until", {}):
+		expelled_until[int(nation)] = float(data.expelled_until[nation])
 	puppets.clear()
 	for key in data.get("puppets", {}):
 		puppets[int(key)] = data.puppets[key].duplicate(true)
