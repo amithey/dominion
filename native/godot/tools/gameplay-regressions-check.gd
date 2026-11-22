@@ -49,6 +49,7 @@ func run() -> void:
 	check_shipyard()
 	check_transport()
 	check_trade_and_powers()
+	check_ceasefire()
 	check_saved_orders()
 	check_saved_secondary_orders()
 	check_campaign_rewind()
@@ -234,6 +235,29 @@ func check_trade_and_powers() -> void:
 	rival.money = 5000
 	w.market.trade_ai()
 	check(w.market.ai_stock["1"].iron <= 5.0, "a sanctioned AI cannot buy iron at the spot market")
+
+func check_ceasefire() -> void:
+	var spot: Vector3 = w.land_point(w.start, 80.0)
+	var attacker: Dictionary = w.spawn_unit("soldier", spot, 0)
+	var defender: Dictionary = w.spawn_unit("soldier", spot + Vector3(5, 0, 0), 1)
+	var artillery: Dictionary = w.spawn_unit("artillery", spot - Vector3(5, 0, 0), 0)
+	w.diplomacy.declare_war(0, 1)
+	w.engagement.open(1)
+	w.order_attack([attacker], defender)
+	w.order_attack([defender], attacker)
+	w.order_bombard([artillery], defender.node.position)
+	w.diplomacy.make_peace(0, 1)
+	var shots: int = w.shots_fired
+	w.update_combat(attacker, 1.0 / 30.0)
+	w.update_combat(defender, 1.0 / 30.0)
+	check(not w.hostile(0, 1) and not w.engagement.active(0, 1), "peace closes the underlying limited operation")
+	check(attacker.enemy == null and defender.enemy == null and w.shots_fired == shots, "both sides drop old targets before firing after peace")
+	check(artillery.enemy == null and not artillery.has("ground_attack"), "peace cancels bombardment aimed at the former opponent")
+	var health: float = defender.hp
+	var last_attacker = defender.get("last_by")
+	w.damage(defender, 0.0, attacker)
+	check(defender.hp == health and defender.get("last_by") == last_attacker and defender.enemy == null and not w.hostile(0, 1),
+		"a zero-damage impact does not change attribution, orders or diplomatic state")
 
 func check_saved_orders() -> void:
 	var site = w.place_building("farm", w.start + Vector3(50, 0, 40), 0, false)

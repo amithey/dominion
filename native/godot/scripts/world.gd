@@ -5744,8 +5744,9 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 		return
 	if unit.dmg <= 0.0 or disabled(unit):
 		return  # workers do not fight; EMP-struck machines are dead weight
-	if unit.enemy != null and not is_instance_valid(unit.enemy.get("node")):
-		unit.enemy = null   # its target was cleared away since the last tick (the node is freed)
+	if unit.enemy != null and (not is_instance_valid(unit.enemy.get("node")) or unit.enemy.dead
+		or (not unit.has("ground_attack") and not hostile(unit.owner, unit.enemy.owner))):
+		Tactics.drop(unit)
 	unit.reload -= delta
 	unit.search -= delta
 	# Decisions run every six physics ticks (five times a second at 30 Hz);
@@ -6041,7 +6042,7 @@ func shell_hit(shooter: Dictionary, at: Vector3) -> void:
 	Firepower.detonate(self, shooter, "shell", at, float(shooter.dmg))
 
 func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
-	if unit.dead:
+	if unit.dead or amount <= 0.0:
 		return
 	# Striking a nation at peace starts a war with it (not a deniable covert act:
 	# Mossad, sabotage, insurgents: faction_powers.gd, additional_powers.gd).

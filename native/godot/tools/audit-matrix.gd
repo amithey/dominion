@@ -1,10 +1,8 @@
 extends SceneTree
-## Audit of nations and maps together (native/ALPHA-1.0-REPORT.md): every one of the 28 nations is played on a map, and
-## every one of the 24 maps is played by some nation (28 matches: nation i on map i mod 24, then the maps 24 to 27 get the
-## nations that sit last in the roster). For each match: it starts with no error; the capital stands on dry land and is
-## linked; the rivals have capitals too; two game minutes at eight times speed run with no script error; the rivals
-## build and the player's economy ticks; the match can be saved, passes the save check and loads again. A different
-## difficulty is used for each. Table: res://build/audit/matrix.txt
+## Runs one campaign for each registered nation and each playable map, pairing them in roster order.
+## Confirms capital placement, economy and rival activity, then checks and reloads a JSON save.
+## The default plays two game minutes per campaign. Shorter runs still exercise save and load.
+## Report: res://build/audit/matrix.txt
 const Kit := preload("res://tools/audit_kit.gd")
 const Factions := preload("res://scripts/factions.gd")
 const Maps := preload("res://scripts/map_generator.gd")
@@ -13,7 +11,12 @@ var w: Node
 func _initialize() -> void: call_deferred("run")
 
 func run() -> void:
-	K = Kit.new(self, "matrix")
+	var report := "matrix"
+	var seconds_to_play := 120.0
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--report="): report = a.split("=")[1].validate_filename()
+		if a.begins_with("--seconds="): seconds_to_play = clampf(float(a.split("=")[1]), 1.0, 120.0)
+	K = Kit.new(self, report)
 	var maps: Array = ["island", "mirrored"] + Maps.MAPS.keys()
 	K.ok("matrix", "maps", "%d maps: %s" % [maps.size(), ",".join(PackedStringArray(maps))])
 	var ids: Array = Factions.IDS
@@ -42,17 +45,16 @@ func run() -> void:
 			continue
 		var home: Vector3 = home_list[0].root.position
 		var problems := PackedStringArray()
+		if Factions.identity(w, 0) != ids[nation]: problems.append("selected nation did not become the player")
 		if w.height_at(home.x, home.z) < float(w.map.seaLevel) + 0.3: problems.append("the capital is not on dry land")
 		if w.map.nations.size() != players: problems.append("%d nations instead of %d" % [w.map.nations.size(), players])
 		for n in range(1, w.map.nations.size()):
 			if w.buildings.filter(func(b): return b.owner == n and b.key == "hq").is_empty(): problems.append("nation %d has no capital" % n)
 		if str(w.diplomacy.name_of(0)).strip_edges() == "": problems.append("the player's nation has no name")
-		var units0: int = w.units.size()
-		var buildings0: int = w.buildings.size()
 		var money0: float = w.economy.res.money
 		var rival_buildings0: int = w.buildings.filter(func(b): return b.owner > 0).size()
 		Engine.time_scale = 8.0
-		var until: float = w.game_time + 120.0
+		var until: float = w.game_time + seconds_to_play
 		var guard := 0
 		while w.game_time < until and guard < 40000:
 			await process_frame
@@ -60,11 +62,18 @@ func run() -> void:
 		Engine.time_scale = 1.0
 		if w.game_time < until: problems.append("the game clock stopped at %d s" % int(w.game_time))
 		var rival_buildings1: int = w.buildings.filter(func(b): return b.owner > 0 and not b.dead).size()
-		if rival_buildings1 <= rival_buildings0: problems.append("the rivals built nothing in two minutes (%d -> %d)" % [rival_buildings0, rival_buildings1])
+		if seconds_to_play >= 120.0 and rival_buildings1 <= rival_buildings0: problems.append("the rivals built nothing in two minutes (%d -> %d)" % [rival_buildings0, rival_buildings1])
 		if absf(w.economy.res.money - money0) < 0.01 and w.economy.rates.money == 0.0: problems.append("the economy did not tick")
 		var data: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
 		var why: String = w.saves.problem_with(data)
-		if why != "": problems.append("its own save fails the check: " + why)
+		if why != "":
+			problems.append("its own save fails the check: " + why)
+		else:
+			w.saves.restore(data)
+			if Factions.identity(w, 0) != ids[nation] or not is_equal_approx(w.game_time, float(data.game_time)):
+				problems.append("reload did not preserve the nation and match clock")
+			if w.buildings.filter(func(b): return b.owner == 0 and b.key == "hq" and not b.dead).size() != home_list.size():
+				problems.append("reload changed the number of player capitals")
 		var errs: Array = K.take_errors()
 		if not errs.is_empty(): problems.append("errors: " + " || ".join(PackedStringArray(errs.slice(0, 2))))
 		var seconds: int = (Time.get_ticks_msec() - t0) / 1000

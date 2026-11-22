@@ -113,6 +113,8 @@ func declare_war(a: int, b: int, reason := "") -> void:
 
 func make_peace(a: int, b: int) -> void:
 	set_flag(war, a, b, false)
+	if world != null and world.get("engagement") != null:
+		world.engagement.end_between(a, b)
 	set_score(a, b, -30.0 if a == 0 or b == 0 else -40.0)
 	changed.emit()
 

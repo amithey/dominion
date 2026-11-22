@@ -81,6 +81,12 @@ func begin(id: int, mode: String) -> void:
 func open(id: int) -> void:
 	operations[str(id)] = world.game_time+WINDOW
 
+func end_between(a: int, b: int) -> void:
+	if a == 0 or b == 0:
+		var id := maxi(a, b)
+		operations.erase(str(id))
+		_stand_down(id)
+
 # ---------------------------------------------------------------- their answer
 
 ## The struck government decides for itself what your operation was: an
@@ -169,13 +175,20 @@ func update() -> void:
 		var id := int(key)
 		if world.diplomacy.at_war(0,id):
 			continue
-		for u in world.units:
-			if u.owner==0 and u.has("ground_attack") and id in affected(u.ground_attack,6.0):
-				u.enemy = null
-				u.erase("ground_attack")
-			if u.enemy!=null and ((u.owner==0 and u.enemy.owner==id) or (u.owner==id and u.enemy.owner==0)):
-				u.enemy = null
+		_stand_down(id)
 		world.hud.notice("The operation against %s is over. Neither state declared war." % world.diplomacy.name_of(id))
+
+func _stand_down(id: int) -> void:
+	for u in world.units:
+		if u.dead:
+			continue
+		if u.owner == 0 and u.has("ground_attack"):
+			var targets := affected(u.ground_attack, 6.0)
+			if id in targets and not targets.any(func(other): return world.hostile(0, other)):
+				u.erase("ground_attack")
+				preload("res://scripts/tactics.gd").drop(u)
+		if u.enemy != null and ((u.owner == 0 and u.enemy.owner == id) or (u.owner == id and u.enemy.owner == 0)):
+			preload("res://scripts/tactics.gd").drop(u)
 
 func affected(at: Vector3, radius: float) -> Array[int]:
 	var result: Array[int] = []
