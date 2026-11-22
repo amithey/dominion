@@ -372,6 +372,7 @@ func capture() -> Dictionary:
 
 func restore(data: Dictionary) -> void:
 	sats.clear()
+	for owner in range(w.map.nations.size()): sats[owner] = {"recon": 0, "nav": 0, "comms": 0, "warning": 0}
 	for k in data.get("sats", {}):
 		var row: Dictionary = data.sats[k]
 		sats[int(k)] = {}

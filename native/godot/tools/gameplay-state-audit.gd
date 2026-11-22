@@ -207,15 +207,20 @@ func run() -> void:
 		w.un.arrears = 500.0
 		if w.un.agencies != null: w.un.agencies.iaea_flagged[1] = true
 	if w.homefront != null: w.homefront.grid_damaged[0] = [Vector3.ZERO]
+	if w.get("directorate") != null and w.directorate != null:
+		w.directorate.st[0].level = 4
+		w.directorate.st[0].doctrine = "out"
+		w.directorate.signed.nuclear.erase(0)
 	var prev_ev_ver: int = w.events._version if w.events != null else 0
 	var older := json_save()
-	for section in ["space", "defcon", "support", "un", "homefront"]: older.erase(section)
+	for section in ["space", "defcon", "support", "un", "homefront", "directorate"]: older.erase(section)
 	w.saves.restore(older)
-	check(w.space == null or w.space.sats.is_empty(), "loading an older save clears live satellites")
-	check(w.defcon == null or w.defcon.posture.is_empty(), "loading an older save clears live nuclear postures")
-	check(w.support == null or w.support.support.is_empty(), "loading an older save clears live war support")
+	check(w.space == null or w.space.total(0) == 0, "loading an older save resets live satellites to zero")
+	check(w.defcon == null or w.defcon.posture.get(0, -1) == 5, "loading an older save resets live nuclear postures to default")
+	check(w.support == null or is_equal_approx(w.support.value(0), w.support.baseline(0)), "loading an older save resets live war support to baseline")
 	check(w.un == null or (w.un.indicted.is_empty() and w.un.arrears == 0.0 and w.un.agencies.iaea_flagged.is_empty()), "loading an older save clears live UN and agency state")
 	check(w.homefront == null or w.homefront.grid_damaged.is_empty(), "loading clears homefront grid shocks")
+	check(w.get("directorate") == null or w.directorate == null or (w.directorate.level(0) == 0 and w.directorate.doctrine(0) == "in"), "loading an older save resets live AI directorate level and doctrine")
 	check(w.events == null or w.events._version > prev_ev_ver, "loading bumps world events version")
 	for i in range(3):
 		await process_frame

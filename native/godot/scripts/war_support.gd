@@ -197,6 +197,8 @@ func capture() -> Dictionary:
 
 func restore(data: Dictionary) -> void:
 	support.clear()
+	low_since.clear()
+	for owner in range(w.map.nations.size()): support[owner] = baseline(owner)
 	for k in data.get("support", {}):
 		support[int(k)] = float(data.support[k])
 	defending.clear()

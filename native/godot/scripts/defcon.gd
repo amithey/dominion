@@ -341,6 +341,7 @@ func capture() -> Dictionary:
 func restore(data: Dictionary) -> void:
 	tension = float(data.get("tension", 0.0))
 	posture.clear()
+	for i in range(w.map.nations.size()): posture[i] = 5
 	for k in data.get("posture", {}): posture[int(k)] = int(data.posture[k])
 	used_at = float(data.get("used_at", -1000.0))
 	used_by = int(data.get("used_by", -1))
