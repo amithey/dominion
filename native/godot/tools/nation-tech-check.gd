@@ -71,7 +71,12 @@ func words(list_name: String) -> Array:
 	return []
 
 func run() -> void:
-	for index in range(Factions.IDS.size()):
+	var first := 0
+	var last := Factions.IDS.size()
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--from="): first = clampi(int(arg.get_slice("=", 1)), 0, Factions.IDS.size())
+		if arg.begins_with("--to="): last = clampi(int(arg.get_slice("=", 1)), 0, Factions.IDS.size())
+	for index in range(first, last):
 		var id: String = Factions.IDS[index]
 		set_meta("match_config", {"map": "island", "players": 4, "nation": index, "style": "standard"})
 		change_scene_to_file("res://world.tscn")
@@ -128,14 +133,20 @@ func run() -> void:
 		var foreign: Array = w.units.filter(func(u): return u.owner == 0 and not w.unit_allowed(0, u.key)).map(func(u): return u.key)
 		check(foreign.is_empty(), "%s: its starting army holds only what it fields%s" % [id, "" if foreign.is_empty() else " " + str(foreign)])
 		# 6: rivals build and fire only their own.
+		var starting_units := {}
+		for u in w.units:
+			if u.owner > 0 and not u.dead:
+				starting_units[u.node] = true
 		for n in w.ai.nations:
 			n.money = 60000.0
 			n.tech = 9.0
 		for i in range(900): w.ai._physics_process(0.2)
 		w.economy.tick()
-		var rogue: Array = w.units.filter(func(u): return u.owner > 0 and not u.dead and not w.unit_allowed(u.owner, u.key)).map(func(u): return "%d:%s" % [u.owner, u.key])
-		var trained: int = w.units.filter(func(u): return u.owner > 0 and not u.dead).size()
-		check(rogue.is_empty() and trained > 12, "%s match: rivals field only their own weapons (%d units%s)" % [id, trained, "" if rogue.is_empty() else ", " + str(rogue)])
+		var rivals: Array = w.units.filter(func(u): return u.owner > 0 and not u.dead)
+		var rogue: Array = rivals.filter(func(u): return not w.unit_allowed(u.owner, u.key)).map(func(u): return "%d:%s" % [u.owner, u.key])
+		var trained := rivals.filter(func(u): return not starting_units.has(u.node)).size()
+		check(rogue.is_empty(), "%s match: rivals field only their own weapons (%d units%s)" % [id, rivals.size(), "" if rogue.is_empty() else ", " + str(rogue)])
+		check(trained > 0, "%s match: rivals deploy new units (%d new from %d starting)" % [id, trained, starting_units.size()])
 		var bad_shots := []
 		for n in w.ai.nations:
 			w.diplomacy.declare_war(n.id, 0)
