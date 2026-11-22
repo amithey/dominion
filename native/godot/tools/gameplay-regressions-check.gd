@@ -219,11 +219,12 @@ func check_trade_and_powers() -> void:
 	check(w.market.routes.size() == 1 and w.market.routes[0].shipment == null, "a partner's shipping ban prevents loading sea freight")
 	w.market.routes.clear()
 	var c = w.diplomacy.contacts
-	c.session = {"nation": 1, "leader": c.leader(1), "visitor": c.leader(0), "phase": "talking", "channel": "phone",
-		"results": [], "used": [], "counter": {"key": "route", "terms": {"res": "iron", "qty": 10, "dir": "import"}, "fee": 200}}
+	c.begin(1, "phone")
+	c.advance(float(c.CHANNELS.phone.delay))
+	c.session.counter = {"key": "route", "terms": {"res": "iron", "qty": 10, "dir": "import"}, "fee": 200}
 	w.un._apply_measure("economic", 1, 300)
 	var money: float = w.economy.res.money
-	check(c.answer_counter(true) != "" and money == w.economy.res.money and w.market.routes.is_empty(), "a prohibited deal cannot collect a concession")
+	check(c.answer_counter(true).contains("UN restrictions") and money == w.economy.res.money and w.market.routes.is_empty(), "a prohibited deal cannot collect a concession")
 	c.session.clear()
 	var store = w.place_building("market", Additional.capital(w, 1).root.position + Vector3(45, 0, 0), 1, true)
 	store.supplied = true

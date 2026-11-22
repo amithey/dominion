@@ -103,22 +103,29 @@ func update(delta: float) -> void:
 	_tick += delta
 	if _tick < TICK:
 		return
-	_tick = 0.0
+	_tick = fmod(_tick, TICK)
 	if w.game_over != "":
 		return
 	var d: Node = w.diplomacy
 	var shares := _land_shares()
 	var accounts := _civil_accounts()
+	var winner := {}
 	for owner in range(w.map.nations.size()):
 		if owner > 0 and d.defeated(owner):
+			land_since.erase(owner)
+			tech_since.erase(owner)
+			economic_since.erase(owner)
+			diplomatic_since.erase(owner)
 			continue
-		_track(owner, shares[owner] >= LAND_SHARE, land_since, LAND_HOLD, "dominance")
-		_track(owner, tech_ready(owner), tech_since, TECH_HOLD, "technology")
+		_track(owner, shares[owner] >= LAND_SHARE, land_since, LAND_HOLD, "dominance", winner)
+		_track(owner, tech_ready(owner), tech_since, TECH_HOLD, "technology", winner)
 		var a: Dictionary = accounts[owner]
-		_track(owner, a.towns >= TOWNS and a.services.size() == SERVICES.size() and a.money >= RESERVE, economic_since, CIVIL_HOLD, "economic")
-		_track(owner, a.embassy and a.peace and a.partners >= _partners_needed(), diplomatic_since, CIVIL_HOLD, "diplomatic")
+		_track(owner, a.towns >= TOWNS and a.services.size() == SERVICES.size() and a.money >= RESERVE, economic_since, CIVIL_HOLD, "economic", winner)
+		_track(owner, a.embassy and a.peace and a.partners >= _partners_needed(), diplomatic_since, CIVIL_HOLD, "diplomatic", winner)
 
-func _track(owner: int, holds: bool, since: Dictionary, hold: float, path: String) -> void:
+	if not winner.is_empty(): _win(winner.owner, winner.path)
+
+func _track(owner: int, holds: bool, since: Dictionary, hold: float, path: String, winner: Dictionary) -> void:
 	if w.game_over != "":
 		return
 	var d: Node = w.diplomacy
@@ -132,8 +139,9 @@ func _track(owner: int, holds: bool, since: Dictionary, hold: float, path: Strin
 		since[owner] = w.game_time
 		w.hud.notice("%s started the %s victory countdown (%d minutes)." % [who, path, int(hold / 60.0)])
 		return
-	if w.game_time - float(since[owner]) >= hold:
-		_win(owner, path)
+	var deadline := float(since[owner]) + hold
+	if w.game_time >= deadline and deadline < float(winner.get("deadline", INF)):
+		winner.merge({"owner": owner, "path": path, "deadline": deadline}, true)
 
 func _win(owner: int, path: String) -> void:
 	if w.game_over != "":
@@ -186,18 +194,19 @@ func _civil_rival(since: Dictionary) -> String:
 	return "" if first < 0 else w.diplomacy.name_of(first) + _left(first, since, CIVIL_HOLD)
 
 func _left(owner: int, since: Dictionary, hold: float) -> String:
-	if not since.has(owner):
+	if w.game_over != "" or not since.has(owner):
 		return ""
-	return " — wins in %ds" % ceili(hold - (w.game_time - float(since[owner])))
+	return " — wins in %ds" % maxi(0, ceili(hold - (w.game_time - float(since[owner]))))
 
 func capture() -> Dictionary:
 	var a := {}
 	var b := {}
 	for k in land_since: a[str(k)] = land_since[k]
 	for k in tech_since: b[str(k)] = tech_since[k]
-	return {"land": a, "tech": b, "economic": economic_since.duplicate(), "diplomatic": diplomatic_since.duplicate()}
+	return {"tick_elapsed": _tick, "land": a, "tech": b, "economic": economic_since.duplicate(), "diplomatic": diplomatic_since.duplicate()}
 
 func restore(data: Dictionary) -> void:
+	_tick = fmod(maxf(0, float(data.get("tick_elapsed", 0))), TICK)
 	land_since.clear()
 	tech_since.clear()
 	for k in data.get("land", {}): land_since[int(k)] = float(data.land[k])
