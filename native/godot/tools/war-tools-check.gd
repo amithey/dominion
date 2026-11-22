@@ -158,6 +158,23 @@ func run() -> void:
 	check(not C.can_target(w, {"key": "coastalASM"}, {"key": "tank"}) and C.can_target(w, {"key": "coastalASM"}, destroyer), "the coastal battery strikes ships only")
 	check(not C.can_target(w, {"key": "maritimePatrol"}, {"key": "tank"}) and C.can_target(w, {"key": "maritimePatrol"}, sub), "the patrol aircraft hunts at sea only")
 	check(not C.can_target(w, {"key": "carrier"}, sub) and C.can_target(w, {"key": "carrier"}, {"key": "tank"}), "the carrier's air wing does not hunt submarines")
+	var hidden: Dictionary = w.spawn_unit("submarine", w.water_near(hq, 240), 1)
+	var patrol: Dictionary = made.maritimePatrol
+	patrol.node.position = hidden.node.position + Vector3(48, 26, 0)
+	hidden.node.position += Vector3(5000, 0, 0)
+	patrol.node.position += Vector3(5000, 0, 0)
+	patrol.air_state = "parked"
+	check(not T.submarine_detected(w, 0, hidden), "a parked maritime patrol aircraft cannot spot a submerged ship")
+	patrol.air_state = "ready"
+	check(T.submarine_detected(w, 0, hidden), "the airborne patrol aircraft can spot the submerged ship")
+	patrol.disabled_until = w.game_time + 30.0
+	check(not T.submarine_detected(w, 0, hidden), "a disabled airborne aircraft stops detecting submarines immediately")
+	var naval_heli: Dictionary = w.spawn_unit("navalHelicopter", hq, 0)
+	naval_heli.node.position = hidden.node.position + Vector3(64, 20, 0)
+	naval_heli.air_state = "ready"
+	check(T.submarine_detected(w, 0, hidden), "an airborne naval helicopter retains its own sonar range")
+	w.kill(naval_heli)
+	w.kill(hidden)
 
 	# ---- the carrier's air wing
 	if made.has("carrier"):

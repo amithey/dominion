@@ -51,9 +51,17 @@ static func can_garrison(w: Node, u: Dictionary, b: Dictionary) -> bool:
 	return capacity_of(b) > 0
 
 static func order_garrison(w: Node, units_list: Array, b: Dictionary) -> int:
+	if b == null:
+		return 0
+	var available := room(b)
+	for u in w.units:
+		if not u.dead and is_same(u.get("garrison_order"), b):
+			available -= 1
 	var count := 0
 	for u in units_list:
-		if not can_garrison(w, u, b):
+		if available <= 0:
+			break
+		if is_same(u.get("garrison_order"), b) or not can_garrison(w, u, b):
 			continue
 		if w.get("fortifications") != null and u.get("garrisoned_in") != null:
 			w.fortifications.exit_unit(u)
@@ -63,6 +71,7 @@ static func order_garrison(w: Node, units_list: Array, b: Dictionary) -> int:
 		var stand: Vector3 = w._approach_candidate(b, u.node.position, count) if w.has_method("_approach_candidate") else b.root.position
 		w.order_move([u], stand)
 		u.garrison_order = b   # (after the move order, which clears it)
+		available -= 1
 		count += 1
 	if count > 0 and int(b.owner) == 0 and w.get("hud") != null and w.hud != null:
 		w.hud.notice("%d squad%s ordered to garrison %s." % [count, "" if count == 1 else "s", str(b.def.name)])

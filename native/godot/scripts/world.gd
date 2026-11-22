@@ -1714,6 +1714,8 @@ func _air_order_allowed(u: Dictionary, point: Vector3, action := 8.0, release_ra
 	return reason == ""
 
 func order_attack(selected: Array, enemy: Dictionary) -> void:
+	if enemy.get("dead", false) or not is_instance_valid(enemy.get("node")):
+		return
 	for u in selected:
 		if u.dead or u.owner == enemy.owner or effectiveness(u, enemy) <= 0.01 or u.dmg <= 0:
 			continue
@@ -1728,7 +1730,10 @@ func order_attack(selected: Array, enemy: Dictionary) -> void:
 			u.air_state = "ready"
 		u.enemy = enemy
 		u.erase("garrison_order")
-		u.board = null  # a new combat order cancels an unfinished airlift
+		u.erase("entering_fort")
+		u.erase("digging_target")
+		u.erase("digging")
+		_cancel_airlift_order(u)
 		u.forced = true  # an ordered target is not swapped for a nearer one
 		u.ignore = {}
 		u.erase("ground_attack")
@@ -1736,13 +1741,25 @@ func order_attack(selected: Array, enemy: Dictionary) -> void:
 		u.attack_move = true
 		u.path = PackedVector3Array()
 
+func _cancel_airlift_order(u: Dictionary) -> void:
+	if preload("res://scripts/airlift.gd").is_transport(u):
+		for passenger in units:
+			if is_same(passenger.get("board"), u):
+				passenger.board = null
+				passenger.target = null
+				passenger.order_goal = null
+				passenger.path = PackedVector3Array()
+	u.board = null
+	u.erase("unload_go")
+	u.erase("unload_target")
+	u.erase("unload_since")
+	u.erase("pickup_go")
+	u.erase("pickup_since")
+	u.erase("pickup_sweep")
+	u.erase("return_base")
+
 func order_move(selected: Array, point: Vector3, attack := false) -> void:
 	selected = selected.filter(func(u): return not u.dead)   # the fallen take no orders
-	for u in selected:
-		u.board = null  # explicit orders replace pending boarding
-		u.erase("unload_go")
-		u.erase("pickup_go")
-		u.erase("return_base")
 	# Aircraft sent onto one of their nation's air bases land there and stay.
 	var landed := []
 	var base_orders := []
@@ -1756,6 +1773,7 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 					if preload("res://scripts/airlift.gd").order_return_home(self, [u], b) > 0:
 						landed.append(u)
 				elif AirOperations.order_land(self, u, b):
+					_cancel_airlift_order(u)
 					landed.append(u)
 	if not base_orders.is_empty() and base_orders[0].owner == 0:
 		hud.notice("%d/%d aircraft cleared to land. Check fuel, runway and available slots." % [landed.size(), base_orders.size()])
@@ -1766,6 +1784,7 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 			return true
 		return _air_order_allowed(u, point))
 	for u in selected:
+		_cancel_airlift_order(u)
 		u.erase("payload_order")
 		u.erase("patrol")
 		# A return to base is cancelled by a new order while there is flight time left.
@@ -1825,6 +1844,7 @@ func order_patrol(selected: Array, point: Vector3) -> void:
 		var seconds := AirOperations.patrol_seconds(self, u, point)
 		if seconds < 3.0 or not _air_order_allowed(u, point, 3.0):
 			continue
+		_cancel_airlift_order(u)
 		u.erase("payload_order")
 		u.erase("ground_attack")
 		u.patrol = {"point": point, "remaining": seconds, "on_station": false}
@@ -1851,7 +1871,11 @@ func order_bombard(selected: Array, point: Vector3) -> void:
 			continue
 		u.erase("payload_order")
 		u.erase("patrol")
-		u.board = null
+		_cancel_airlift_order(u)
+		u.erase("garrison_order")
+		u.erase("entering_fort")
+		u.erase("digging_target")
+		u.erase("digging")
 		if not is_instance_valid(u.get("bombard_marker")):
 			u.bombard_marker = Node3D.new()
 			add_child(u.bombard_marker)
@@ -1864,6 +1888,8 @@ func order_bombard(selected: Array, point: Vector3) -> void:
 
 func can_bombard(u: Dictionary) -> bool:
 	if u.dead or u.dmg <= 0:
+		return false
+	if u.key == "interceptorDrone" or not ForceCatalog.can_target(self, u, {"is_building": true}):
 		return false
 	if u.key in ["samLauncher", "shortRangeSAM", "aaVehicle", "laserAD", "irisT", "abmLauncher", "saudiThaad", "hpmVehicle", "coastalASM", "submarine", "nuclearSub", "orca", "missileBoat", "carrier", "asFrigate", "landingShip"]:
 		return false

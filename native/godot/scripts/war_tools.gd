@@ -102,7 +102,7 @@ static func update(w: Node, delta: float) -> void:
 	# The support units of each nation, by key, for the hot damage path.
 	var support := {}
 	for u in w.units:
-		if not _alive(u) or not (u.key in ["counterBatteryRadar", "aewc", "ewJet", "maritimePatrol", "navalHelicopter"]) or w.disabled(u):
+		if not _alive(u) or not (u.key in ["counterBatteryRadar", "aewc", "ewJet"]) or w.disabled(u):
 			continue
 		if u.get("fly", false) and str(u.get("air_state", "")) in ["parked", "rearming"]:
 			continue   # on the ground at its airfield
@@ -588,11 +588,10 @@ static func submarine_detected(w: Node, viewer_owner: int, sub: Dictionary) -> b
 	if w.game_time - float(sub.get("last_fire", -99.0)) < 3.0:
 		return true
 	var at: Vector3 = sub.node.position
-	var s := state(w)
-	if _near(s, viewer_owner, "maritimePatrol", at, 90.0) or _near(s, viewer_owner, "navalHelicopter", at, 65.0):
-		return true
 	for u in w.units:
-		if not _alive(u):
+		if not _alive(u) or w.disabled(u):
+			continue
+		if u.get("fly", false) and w.AirOperations.on_ground(u):
 			continue
 		var uo := int(u.owner)
 		if uo != viewer_owner and not (w.get("diplomacy") != null and w.diplomacy.allied(viewer_owner, uo)):
@@ -600,14 +599,17 @@ static func submarine_detected(w: Node, viewer_owner: int, sub: Dictionary) -> b
 		var ukey := str(u.get("key", ""))
 		var bkey := _base(ukey)
 		var d := Vector2(u.node.position.x - at.x, u.node.position.z - at.z).length()
-		if ukey in ["maritimePatrol", "asFrigate"] or bkey in ["maritimePatrol", "asFrigate"]:
+		if ukey == "maritimePatrol":
+			if d <= 90.0:
+				return true
+		elif ukey == "asFrigate" or bkey == "asFrigate":
 			if d <= 85.0:
 				return true
-		elif ukey in ASW_CAPABLE:
-			var sonar_r := 62.0
+		elif ukey in ASW_CAPABLE or bkey in ASW_CAPABLE:
+			var sonar_r := 65.0 if ukey == "navalHelicopter" else 62.0
 			if d <= sonar_r:
 				return true
-		elif d <= 8.0:
+		elif u.get("naval", false) and d <= 8.0:
 			return true
 	return false
 
