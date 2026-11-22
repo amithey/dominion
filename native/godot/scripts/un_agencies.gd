@@ -21,6 +21,7 @@ const BRIEFING_EVERY := 300.0
 const IAEA_EVERY := 210.0
 const APPEAL_EVERY := 120.0
 const APPEAL_LENGTH := 220.0
+const APPEAL_COOLDOWN := 600.0
 const YEAR := 720.0
 const NUCLEAR_STATES := ["usa", "china", "russia", "uk", "france", "india", "pakistan", "israel", "north_korea"]
 const WAR_FOR := 200.0       # seconds at war before an appeal is made for it
@@ -78,10 +79,10 @@ func update(delta: float) -> void:
 	if now >= next_iaea:
 		next_iaea = now + IAEA_EVERY
 		_iaea()
+	_appeals(now)
 	if now >= next_appeal:
 		next_appeal = now + APPEAL_EVERY
 		_open_appeal()
-	_appeals(now)
 
 # ---------------------------------------------------------------- the Secretary-General and the Assembly
 
@@ -156,22 +157,26 @@ func _open_appeal() -> void:
 	var now: float = w.game_time
 	var candidates := []
 	var eco: Node = w.economy
-	if eco.res.food <= 0.5:
-		candidates.append([0, "food", "the hunger of its people"])
-	if eco.get("cold") == true:
-		candidates.append([0, "cold", "a winter without heating"])
+	var recently_helped := {}
+	for a in appeals:
+		if now < float(a.get("closed_at", a.until)) + APPEAL_COOLDOWN:
+			recently_helped[int(a.nation)] = true
+	var displaced := {}
 	for key in _war_clock:
 		if now - float(_war_clock[key]) >= WAR_FOR:
-			var parts: PackedStringArray = key.split("-")
-			var pick := int(parts[0]) if randf() < 0.5 else int(parts[1])
-			if appeals.any(func(a): return int(a.nation) == pick and now - float(a.until) < 600.0):
-				continue
-			candidates.append([pick, "refugees", "the people displaced by its war"])
-	# A nation whose homes are in ruins (crisis.gd): its people need shelter.
-	if w.get("crisis") != null and w.crisis != null:
-		for i in _alive_nations():
-			if w.crisis.active(i, "humanitarian") and not appeals.any(func(a): return int(a.nation) == i and now - float(a.until) < 600.0):
-				candidates.append([i, "refugees", "the people driven from their homes"])
+			for side in key.split("-"): displaced[int(side)] = true
+	for owner: int in _alive_nations():
+		if recently_helped.has(owner): continue
+		var stock := Powers.stock(w, owner)
+		var reserve: float = eco.civil.reserve if owner == 0 else float(w.market.ai_nation(owner).get("grain_reserve", 0))
+		if float(stock.get("food", 100)) + reserve <= 0.5:
+			candidates.append([owner, "food", "the hunger of its people"])
+		var cold: bool = eco.cold if owner == 0 else eco.is_winter() and float(stock.get("gas", 100)) <= 0.5
+		if cold: candidates.append([owner, "cold", "a winter without heating"])
+		if displaced.has(owner):
+			candidates.append([owner, "refugees", "the people displaced by its war"])
+		elif w.get("crisis") != null and w.crisis.active(owner, "humanitarian"):
+			candidates.append([owner, "refugees", "the people driven from their homes"])
 	if candidates.is_empty():
 		return
 	var c: Array = candidates[randi() % candidates.size()]
@@ -198,6 +203,7 @@ func _appeals(now: float) -> void:
 
 func _close(a: Dictionary) -> void:
 	a.closed = true
+	a.closed_at = minf(w.game_time, float(a.until))
 	var funded: bool = float(a.raised) >= float(a.need)
 	var agency := "UNHCR" if a.kind == "refugees" else "WFP"
 	var share := clampf(float(a.raised) / maxf(float(a.need), 1.0), 0.0, 1.0)

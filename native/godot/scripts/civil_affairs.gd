@@ -242,7 +242,7 @@ func rival_budget(n: Dictionary, stock: Dictionary) -> void:
 		programme = ""
 		n.civil_programme = ""
 	if programme == "" and available > 1500:
-		var winter := fmod(w.game_time, 720) >= 540
+		var winter: bool = w.economy.is_winter()
 		if winter and float(stock.get("gas", 100)) < 80: programme = "Home insulation"
 		elif hunger and Powers.owned(w, id, "farm"): programme = "Farm grants"
 		elif n.get("health", 55) < 65: programme = "Public clinics"

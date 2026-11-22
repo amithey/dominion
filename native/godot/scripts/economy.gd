@@ -206,6 +206,9 @@ func grant_test_resources() -> void:
 	civilians = civ_cap
 	changed.emit()
 
+func is_winter() -> bool:
+	return fmod(world.game_time, 720.0) >= 540.0
+
 func tick() -> void:
 	recalculate()
 	var army := 0
@@ -289,7 +292,7 @@ func tick() -> void:
 	rates.money -= float(dc_use.get("money", 0.0))
 	shortages.clear()
 	# Four 180-second seasons; the final quarter needs household heating.
-	var heating := civilians * 0.006 if fmod(world.game_time, 720.0) >= 540.0 else 0.0
+	var heating := civilians * 0.006 if is_winter() else 0.0
 	if civil_programme == "Home insulation": heating *= 0.6
 	rates.gas -= heating
 	var was_cold := cold

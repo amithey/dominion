@@ -435,7 +435,7 @@ func trade_ai() -> void:
 		for resource in cfg.price:
 			var use: float = 12.0 + army * 0.3 if resource == "food" else (3.0 + army * 0.12 if resource in ["oil", "iron", "gas"] else 2.0)
 			if resource == "food": use *= float(nation.get("civilians", 120.0)) / 120.0 * float(preload("res://scripts/additional_factions.gd").profile(world, nation.id).get("civilian_food", 1.0))
-			if resource == "gas" and fmod(world.game_time, 720.0) >= 540:
+			if resource == "gas" and world.economy.is_winter():
 				use += float(nation.get("civilians", 120)) * 0.006 * TICK * (0.6 if programme == "Home insulation" else 1.0)
 			if resource == "food":
 				var released := clampf(use + 1.0 - float(stock.get("food", 100)), 0, float(nation.get("grain_reserve", 0)))
