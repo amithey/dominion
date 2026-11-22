@@ -117,7 +117,8 @@ static func bonus(w: Node, owner: int, kind: String) -> float:
 	var value: float = Regional.bonus(w, owner, kind)
 	for e in w.power_effects:
 		if e.kind == "extra_" + kind and int(e.nation) == owner and float(e.until) > w.game_time:
-			if e.has("ally") and (w.diplomacy.defeated(int(e.by)) or w.diplomacy.defeated(int(e.ally)) or not w.diplomacy.allied(int(e.by), int(e.ally))): continue
+			if w.diplomacy.defeated(int(e.by)) or (e.kind in ["extra_deterred", "extra_voyage"] and w.diplomacy.at_war(int(e.by), owner)): continue
+			if e.has("ally") and (w.diplomacy.defeated(int(e.ally)) or not w.diplomacy.allied(int(e.by), int(e.ally))): continue
 			value = maxf(value, float(e.value))
 	return value
 static func use_food_diplomacy(w: Node, owner: int, target: int) -> void:
@@ -180,7 +181,7 @@ static func use_output_cut(w: Node, owner: int) -> void:
 	effect(w, "oil_shock", owner, 0.35, 180)
 	effect(w, "income", owner, 1.15, 180)
 	for other in range(w.diplomacy.n):
-		if other != owner and preload("res://scripts/national_arsenal.gd").identity(w, other) == "blue":
+		if other != owner and not w.diplomacy.defeated(other) and preload("res://scripts/national_arsenal.gd").identity(w, other) == "blue":
 			w.diplomacy.change(owner, other, -8.0)
 
 ## How far an output cut lifts the price of `res` now (market.gd).
@@ -253,6 +254,7 @@ static func use_popular_mobilization(w: Node, owner: int) -> void:
 		var u: Dictionary = w.spawn_unit("rocketSoldier" if i % 3 == 2 else "soldier", at, owner)
 		u.militia = true
 	for other in range(w.diplomacy.n):
+		if other == owner or w.diplomacy.defeated(other): continue
 		match preload("res://scripts/national_arsenal.gd").identity(w, other):
 			"blue": w.diplomacy.change(owner, other, -6.0)
 			"gold": w.diplomacy.change(owner, other, 4.0)
@@ -354,6 +356,9 @@ static func step(w: Node, delta: float) -> void:
 	for e in w.power_effects:
 		if not str(e.kind).begins_with("extra_"): continue
 		if w.diplomacy.defeated(int(e.nation)) or w.diplomacy.defeated(int(e.by)):
+			e.until = 0.0
+			continue
+		if e.kind in ["extra_deterred", "extra_voyage"] and w.diplomacy.at_war(int(e.by), int(e.nation)):
 			e.until = 0.0
 			continue
 		if e.has("ally") and not w.diplomacy.allied(int(e.by), int(e.ally)):
