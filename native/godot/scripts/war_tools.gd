@@ -102,7 +102,7 @@ static func update(w: Node, delta: float) -> void:
 	# The support units of each nation, by key, for the hot damage path.
 	var support := {}
 	for u in w.units:
-		if not _alive(u) or not (u.key in ["counterBatteryRadar", "aewc", "ewJet", "maritimePatrol", "navalHelicopter", "supplyTruck"]):
+		if not _alive(u) or not (u.key in ["counterBatteryRadar", "aewc", "ewJet", "maritimePatrol", "navalHelicopter"]) or w.disabled(u):
 			continue
 		if u.get("fly", false) and str(u.get("air_state", "")) in ["parked", "rearming"]:
 			continue   # on the ground at its airfield
@@ -499,8 +499,6 @@ static func _resupply_column(w: Node, u: Dictionary, dt: float) -> void:
 
 static func near_supply_truck(w: Node, owner: int, pos: Vector3, reach := SUPPLY_REACH) -> bool:
 	var s := state(w)
-	if _near(s, owner, "supplyTruck", pos, reach):
-		return true
 	var raw_tick = w.get("sim_tick")
 	var tick: int = int(raw_tick) if raw_tick != null else -1
 	var ucount: int = w.units.size()
@@ -509,22 +507,25 @@ static func near_supply_truck(w: Node, owner: int, pos: Vector3, reach := SUPPLY
 		s["truck_ucount"] = ucount
 		var by_owner := {}
 		for u in w.units:
-			if not u.dead and str(u.get("key", "")) == "supplyTruck" and u.get("node") != null and is_instance_valid(u.node):
+			if u.key == "supplyTruck":
 				var o := int(u.owner)
 				if not by_owner.has(o): by_owner[o] = []
-				by_owner[o].append(u.node.position)
+				by_owner[o].append(u)
 		s["truck_cache"] = by_owner
 	var cache: Dictionary = s.get("truck_cache", {})
 	if cache.is_empty() or not cache.has(owner):
 		return false
-	for p in cache[owner]:
+	for truck in cache[owner]:
+		if not _alive(truck) or w.disabled(truck):
+			continue
+		var p: Vector3 = truck.node.position
 		if Vector2(p.x - pos.x, p.z - pos.z).length() <= reach:
 			return true
 	return false
 
 static func consume_truck_reserve(w: Node, owner: int, pos: Vector3, amount: float) -> bool:
 	for u in w.units:
-		if u.dead or int(u.owner) != owner or str(u.get("key", "")) != "supplyTruck" or not _alive(u):
+		if int(u.owner) != owner or u.key != "supplyTruck" or not _alive(u) or w.disabled(u):
 			continue
 		if Vector2(u.node.position.x - pos.x, u.node.position.z - pos.z).length() <= SUPPLY_REACH:
 			var res := float(u.get("supply_reserve", SUPPLY_RESERVE_MAX))

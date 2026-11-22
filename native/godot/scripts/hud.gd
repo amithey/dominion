@@ -2173,6 +2173,8 @@ func _fill_cargo(own: Array) -> void:
 		sig += "%d:%d:%d:%s:%s;" % [c.node.get_instance_id(), Air.used(c), c.get("cargo", []).size(), str(c.get("unload_go") != null), str(c.get("pickup_go") != null)]
 	if nearest != null:
 		sig += "board:%d:%d:%d" % [nearest.node.get_instance_id(), Air.room(nearest), boarders.size()]
+	if not carriers.is_empty() or nearest != null:
+		for u in boarders: sig += "/%d" % u.node.get_instance_id()
 	_cargo_row.visible = sig != ""
 	if sig == _cargo_sig:
 		return
@@ -2201,12 +2203,16 @@ func _fill_cargo(own: Array) -> void:
 		var buttons := HFlowContainer.new()
 		buttons.add_theme_constant_override("separation", 4)
 		_cargo_row.add_child(buttons)
-		if not boarders.is_empty() and any_room:
+		if boarders.any(func(u): return carriers.any(func(t): return Air.can_board(world, t, u))):
 			var b_sel := _button(buttons, "Board selected (%d)" % boarders.size(), func():
-				Air.order_board(world, boarders, carriers[0])
+				var waiting := boarders.duplicate()
+				for t in carriers:
+					if not waiting.any(func(u): return Air.can_board(world, t, u)): continue
+					Air.order_board(world, waiting, t)
+					waiting = waiting.filter(func(u): return not u.get("stowed", false) and not is_same(u.get("board"), t))
 				_cargo_sig = ""
 				return "")
-			b_sel.tooltip_text = "Board the selected ground troops onto this transport."
+			b_sel.tooltip_text = "Board the selected ground troops onto the selected transports with room."
 		if any_room:
 			var load_btn := _button(buttons, "Load nearby", func():
 				Air.load_nearby(world, carriers)

@@ -66,6 +66,17 @@ static func used(heli: Dictionary) -> int:
 static func room(heli: Dictionary) -> int:
 	return int(CAPACITY.get(heli.key, 0)) - used(heli)
 
+static func can_board(w: Node, transport: Dictionary, passenger: Dictionary) -> bool:
+	var required := places(w, transport, passenger)
+	return required > 0 and required <= room(transport)
+
+static func _unreserved_room(w: Node, transport: Dictionary) -> int:
+	var left := room(transport)
+	for u in w.units:
+		if is_same(u.get("board"), transport):
+			left -= places(w, transport, u)
+	return left
+
 ## Wakes a helicopter from parked/rearming/returning state and directs it straight to `go`.
 static func _wake_transport(w: Node, t: Dictionary, go: Vector3) -> void:
 	t.board = null
@@ -152,7 +163,7 @@ static func nearest_for(w: Node, selected: Array) -> Variant:
 	for t in w.units:
 		if not is_transport(t) or int(t.owner) != 0 or t.get("stowed", false):
 			continue
-		if not selected.any(func(u): return not is_same(u, t) and places(w, t, u) > 0 and room(t) >= places(w, t, u)):
+		if not selected.any(func(u): return not is_same(u, t) and can_board(w, t, u)):
 			continue
 		var d: float = Vector2(t.node.position.x - selected[0].node.position.x, t.node.position.z - selected[0].node.position.z).length()
 		if d < best_d:
@@ -187,10 +198,10 @@ static func dock_for(w: Node, ship: Dictionary) -> Vector3:
 ## Those of `selected` that fit go to `heli` and board it.
 ## If `heli` is a helicopter and the troops are in the field away from it, `heli` also flies to meet them!
 static func order_board(w: Node, selected: Array, heli: Dictionary) -> int:
-	var left := room(heli)
+	var left := _unreserved_room(w, heli)
 	var going := []
 	for u in selected:
-		if is_same(u, heli):
+		if is_same(u, heli) or is_same(u.get("board"), heli):
 			continue
 		var p := places(w, heli, u)
 		if p <= 0 or p > left:
@@ -281,12 +292,13 @@ static func order_board(w: Node, selected: Array, heli: Dictionary) -> int:
 static func load_nearby(w: Node, transports: Array, radius := 48.0) -> int:
 	var total := 0
 	for heli in transports:
-		if not is_transport(heli) or room(heli) <= 0:
+		if not is_transport(heli) or _unreserved_room(w, heli) <= 0:
 			continue
 		var candidates: Array = w.units.filter(func(u):
 			if u.dead or u.get("stowed", false) or is_same(u, heli) or is_transport(u):
 				return false
-			if places(w, heli, u) <= 0:
+			var assigned = u.get("board")
+			if (assigned != null and not assigned.dead) or places(w, heli, u) <= 0:
 				return false
 			var d := Vector2(u.node.position.x - heli.node.position.x, u.node.position.z - heli.node.position.z).length()
 			return d <= radius)
@@ -302,7 +314,7 @@ static func load_nearby(w: Node, transports: Array, radius := 48.0) -> int:
 
 ## Sends `transport` to `at` to pick up friendly troops waiting in that area.
 static func order_pickup_at(w: Node, transport: Dictionary, at: Vector3) -> bool:
-	if not is_transport(transport) or room(transport) <= 0:
+	if not is_transport(transport) or _unreserved_room(w, transport) <= 0:
 		return false
 	var candidates: Array = w.units.filter(func(u):
 		if u.dead or u.get("stowed", false) or is_same(u, transport) or is_transport(u):
@@ -465,6 +477,7 @@ static func _pickup_step(w: Node, t: Dictionary) -> void:
 	t.erase("pickup_since")
 	var sweep: bool = bool(t.get("pickup_sweep", true))
 	t.erase("pickup_sweep")
+	var sweep_room := _unreserved_room(w, t) if sweep else 0
 	var boarded := 0
 	for u in w.units:
 		if u.dead or u.get("stowed", false) or is_same(u, t) or is_transport(u):
@@ -476,8 +489,9 @@ static func _pickup_step(w: Node, t: Dictionary) -> void:
 		if is_same(u.get("board"), t) and dist <= BOARD_REACH + 10.0:
 			embark(w, t, u)
 			boarded += 1
-		elif sweep and dist <= BOARD_REACH:
+		elif p <= sweep_room and u.get("board") == null and dist <= BOARD_REACH:
 			embark(w, t, u)
+			sweep_room -= p
 			boarded += 1
 	if int(t.owner) == 0 and w.hud != null and boarded > 0:
 		w.hud.notice("%d boarded the %s. Press J or 'Land at...' to deploy them." % [boarded, str(w.unit_defs.get(t.key, {}).get("name", t.key))], t.node.position)

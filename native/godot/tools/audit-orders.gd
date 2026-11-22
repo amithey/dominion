@@ -107,6 +107,13 @@ func run() -> void:
 		if not naval or best != "naval":
 			var dry := dry_at(u.node.position, minf(reach * 0.6, 60.0)) if not naval else Vector3.INF
 			spot = dry if dry != Vector3.INF else w.land_point(spot, 60.0)
+		if naval and best in ["infantry", "light", "armor"]:
+			var shore := preload("res://scripts/airlift.gd").shore_point(w, sea, 180)
+			if shore != Vector3.INF:
+				var water = w.water_near(shore, int(reach), 1.0)
+				if water != null:
+					w.place_on_ground(u, water)
+					spot = shore
 		var foe_sea: Vector3 = sea + Vector3(minf(reach * 0.6, 60.0), 0, 0)
 		var enemy: Dictionary = target_for(best, spot, foe_sea if (naval or best == "naval") else sea)
 		if enemy.is_empty():

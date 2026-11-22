@@ -123,6 +123,18 @@ func run() -> void:
 	var without: float = hp2 - g2.hp
 	T.state(w).support[0].counterBatteryRadar = radars
 	check(without > 0.0 and absf(with_radar / without - (1.0 + T.RADAR_BONUS)) < 0.02, "the radar's bonus reaches the guns' real damage (%.1f vs %.1f)" % [with_radar, without])
+	made.counterBatteryRadar.disabled_until = w.game_time + 30.0
+	tick(0.5)
+	check(not T.sensed(w, 0, guns) and is_equal_approx(T.damage_mult(w, mine, guns), 1.0), "a disabled radar stops revealing and enhancing damage against guns")
+	made.counterBatteryRadar.disabled_until = 0.0
+
+	var truck: Dictionary = w.spawn_unit("supplyTruck", spot, 0)
+	var supply_position: Vector3 = truck.node.position
+	check(T.near_supply_truck(w, 0, supply_position), "an active supply truck serves nearby units")
+	truck.disabled_until = w.game_time + 30.0
+	check(not T.near_supply_truck(w, 0, supply_position) and not T.consume_truck_reserve(w, 0, supply_position, 1.0), "a disabled truck stops supplying even within the same tick")
+	truck.disabled_until = 0.0
+	check(T.consume_truck_reserve(w, 0, supply_position, 1.0), "a restored truck can spend its reserve")
 
 	# ---- airborne early warning and electronic attack
 	for key in ["aewc", "ewJet"]:
