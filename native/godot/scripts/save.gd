@@ -638,6 +638,8 @@ func restore(data: Dictionary) -> void:
 	preload("res://scripts/war_tools.gd").restore(world, data.get("war_tools", {}))
 	if world.get("homefront") != null:
 		world.homefront.restore(data.get("homefront", {}))
+	if world.get("sitrep") != null and world.sitrep != null:
+		world.sitrep.reset()
 	if data.has("power_effects"):
 		world.power_effects = Array(data.power_effects).map(func(e): return _effect(e))
 	world.un.rebuild_voluntary()

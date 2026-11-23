@@ -558,8 +558,17 @@ static func of_unit(w: Node, owner: int, id: String, key: String) -> Dictionary:
 ## The player's unit card and build list name the system in service (research._recompute).
 static func rename(w: Node) -> void:
 	var id: String = load("res://scripts/factions.gd").identity(w, 0)   # (load: factions.gd preloads this file)
+	var variants = load("res://scripts/national_variants.gd")
 	for cls in UPGRADES:
-		if UPGRADES[cls].has(id) and w.unit_defs.has(cls):
-			var up := upgrade(w, 0, id, cls)
-			if not up.is_empty() and w.unit_defs[cls].name != up.name:
+		if not w.unit_defs.has(cls):
+			continue
+		var up := upgrade(w, 0, id, cls)
+		if not up.is_empty():
+			if not w.unit_defs[cls].has("generic"):
+				w.unit_defs[cls].generic = w.unit_defs[cls].name
+			if w.unit_defs[cls].name != up.name:
 				w.unit_defs[cls].name = up.name
+		else:
+			var base_name: String = variants.name_for(w, 0, cls)
+			if base_name != "" and w.unit_defs[cls].name != base_name:
+				w.unit_defs[cls].name = base_name

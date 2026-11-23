@@ -840,6 +840,13 @@ func restore(data: Dictionary) -> void:
 	sabotage_ready = float(data.get("sabotage_ready", 0.0))
 	runaways.clear()
 	for k in data.get("runaways", {}): runaways[int(k)] = int(data.runaways[k])
+	_alarm_at.clear()
+	_agi_risk_at.clear()
+	_incident_at.clear()
+	_econ_shown = -1.0
+	_t = 0.0
+	_reputation_t = 0.0
+	_doctrine_t = 0.0
 	applications.restore(data.get("applications", {}))
 	for owner in st.keys():
 		_refresh(owner)

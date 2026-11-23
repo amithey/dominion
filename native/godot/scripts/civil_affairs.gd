@@ -50,7 +50,9 @@ func export_floor(owner := 0) -> float:
 
 func _credit(owner: int, amount: int) -> void:
 	if owner == 0: w.economy.res.money += amount
-	else: w.market.ai_nation(owner).money += amount
+	else:
+		var n = w.market.ai_nation(owner)
+		if n != null: n.money += amount
 
 func _food_fits(owner: int, lot: int) -> bool:
 	var capacity := float(w.economy.caps.food) if owner == 0 else 500.0
@@ -88,7 +90,8 @@ func _ratify(seller: int, buyer: int, lot: int, guarantee: bool) -> String:
 		contract = deal
 	else:
 		rival_contracts.append(deal)
-	if seller != 0 and w.market.ai_nation(seller).get("civic_offer") == "Food": w.market.ai_nation(seller).erase("civic_offer")
+	var seller_ai = w.market.ai_nation(seller) if seller != 0 else null
+	if seller_ai != null and seller_ai.get("civic_offer") == "Food": seller_ai.erase("civic_offer")
 	_ship(deal)
 	return report("Food contract ratified. First shipment delivered against the advance.") if deal.has("partner") else ""
 
@@ -225,7 +228,8 @@ func partnerships(owner: int, kind: String) -> int:
 
 func has_offer(id: int, kind: String) -> bool:
 	if not partner_open(id) or (kind == "Food" and not active_contract(id).is_empty()): return false
-	return w.market.ai_nation(id).get("civic_offer", "") == kind
+	var n = w.market.ai_nation(id)
+	return n != null and n.get("civic_offer", "") == kind
 
 func rival_budget(n: Dictionary, stock: Dictionary) -> void:
 	var id := int(n.id)

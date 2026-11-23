@@ -546,6 +546,8 @@ func _enforce(dr: Dictionary) -> void:
 	var t: int = int(dr.target)
 	var o: int = int(dr.other)
 	var d: Node = w.diplomacy
+	if not _alive(t):
+		return
 	match str(dr.measure):
 		"statement":
 			for i in council():
@@ -680,15 +682,16 @@ func _finish_assembly() -> void:
 	dr.participants = []
 	if yes.size() > 0 and yes.size() >= ceili((yes.size() + no) * GA_SHARE):
 		dr.result = "adopted"
-		for i in yes:
-			if i != t: d.change(i, t, -8.0)
-		if w.get("support") != null and w.support != null:
-			w.support.change(t, -6.0)
-		if dr.kind in ["wmd", "breakout", "aggression", "violation"]:
-			# An affirmative vote does not compel national implementation.
+		if _alive(t):
 			for i in yes:
-				if i != 0 and i != t and d.rel(i, t) < -25.0 and not d.allied(i, t):
-					dr.participants.append(i)
+				if i != t: d.change(i, t, -8.0)
+			if w.get("support") != null and w.support != null:
+				w.support.change(t, -6.0)
+			if dr.kind in ["wmd", "breakout", "aggression", "violation"]:
+				# An affirmative vote does not compel national implementation.
+				for i in yes:
+					if i != 0 and i != t and d.rel(i, t) < -25.0 and not d.allied(i, t):
+						dr.participants.append(i)
 		w.hud.notice("UN GENERAL ASSEMBLY: recommendation adopted %d-%d-%d. It is non-binding; %d nations voluntarily join economic restrictions." % [yes.size(), no, abstain, dr.participants.size()])
 		d.changed.emit()
 	else:

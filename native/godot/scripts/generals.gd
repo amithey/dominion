@@ -408,6 +408,8 @@ func capture() -> Dictionary:
 
 func restore(data: Dictionary) -> void:
 	for u in w.units: u.erase("general")
+	_tick = 0.0
+	_ai_next = 0.0
 	if data.is_empty():
 		_start_staff()
 		return

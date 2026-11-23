@@ -227,3 +227,6 @@ func restore(data: Dictionary) -> void:
 	incidents = data.get("incidents", {}).duplicate()
 	trespass.clear()
 	answered.clear()
+	asked.clear()
+	last_answers.clear()
+	_tick = 0.0

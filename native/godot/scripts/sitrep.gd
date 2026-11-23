@@ -49,6 +49,15 @@ var _scan := 0.0
 func _init(world: Node) -> void:
 	w = world
 
+func reset() -> void:
+	events.clear()
+	_by_key.clear()
+	pings.clear()
+	unread = 0
+	unread_critical = 0
+	_battle.clear()
+	_scan = 0.0
+
 func _now() -> float:
 	return float(w.game_time)
 

@@ -289,6 +289,8 @@ func restore(data: Dictionary) -> void:
 	projects.clear()
 	consultation_ready.clear()
 	export_ready.clear()
+	_rival_at = 0.0
+	_strategic_at = 0.0
 	for k in data.get("rows", {}):
 		var owner := int(k)
 		if owner < 0 or owner >= w.map.nations.size(): continue

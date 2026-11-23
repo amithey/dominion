@@ -390,7 +390,7 @@ func _fall(id: int, s: Dictionary, now: float) -> void:
 			_say("World news: %s's regime cracks down on mass protests." % w.diplomacy.name_of(id))
 		if w.diplomacy != null and w.support != null:
 			for other in range(w.map.nations.size()):
-				if other != id and w.support.regime(other) == "democracy":
+				if other != id and not w.diplomacy.defeated(other) and w.support.regime(other) == "democracy":
 					w.diplomacy.change(id, other, -6.0)
 		return
 	s.crises["collapse"] = now
@@ -456,10 +456,10 @@ func _condemn(by: int, victim: int) -> void:
 	if d == null:
 		return
 	for other in range(w.map.nations.size()):
-		if other == by or d.at_war(by, other) or d.allied(by, other):
+		if other == by or d.defeated(other) or d.at_war(by, other) or d.allied(by, other):
 			continue
 		d.change(by, other, -8.0)
-		if other != victim:
+		if other != victim and not d.defeated(victim):
 			d.change(victim, other, 3.0)   # sympathy for the victim
 	var target: String = "you" if victim == 0 else d.name_of(victim)
 	if by == 0:
@@ -526,4 +526,6 @@ func restore(data: Dictionary) -> void:
 				s.crises[k] = float(saved.crises[k])
 		state[int(key)] = s
 	_player_kinds = ""
+	_clock = 0.0
+	_last_news = -999.0
 	_follow_player()

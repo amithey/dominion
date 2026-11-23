@@ -380,7 +380,12 @@ func restore(data: Dictionary) -> void:
 	watch.clear()
 	for k in data.get("watch", {}): watch[int(k)] = int(data.watch[k])
 	debris = float(data.get("debris", 0.0))
+	reveals.clear()
+	_pass.clear()
+	_tick = 0.0
+	_ai_tick = 0.0
 	jammed.clear()
+	_jam_ready.clear()
 	for k in data.get("jammed", {}): jammed[int(k)] = float(data.jammed[k])
 	if w.research != null:
 		w.research._recompute()

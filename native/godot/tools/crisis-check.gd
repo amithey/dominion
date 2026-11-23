@@ -167,8 +167,19 @@ func run() -> void:
 	# ---- saves
 	var snap: Dictionary = JSON.parse_string(JSON.stringify(C.capture()))
 	var fresh: RefCounted = preload("res://scripts/crisis.gd").new(w)
+	fresh._last_news = 9999.0
 	fresh.restore(snap)
-	check(fresh.list(rival) == C.list(rival) and is_equal_approx(float(fresh.of(rival).debt), float(C.of(rival).debt)), "crises and indicators survive a save")
+	check(fresh.list(rival) == C.list(rival) and is_equal_approx(float(fresh.of(rival).debt), float(C.of(rival).debt)) and fresh._last_news < 0.0, "crises, indicators and news timer survive a save restore")
+	# ---- condemnation and crackdown ignore defeated nations
+	if w.ai.nations.size() >= 2:
+		var dead_n: Dictionary = w.ai.nations[1]
+		var dead_id: int = int(dead_n.id)
+		var was_def: bool = bool(dead_n.defeated)
+		dead_n.defeated = true
+		var rel_dead_before: float = w.diplomacy.rel(0, dead_id)
+		C._condemn(0, rival)
+		check(is_equal_approx(w.diplomacy.rel(0, dead_id), rel_dead_before), "condemnation does not change relations with defeated nations")
+		dead_n.defeated = was_def
 
 	# ---- the statistics: new indicators and the overview
 	w.stats.release()

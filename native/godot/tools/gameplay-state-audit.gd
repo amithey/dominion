@@ -212,18 +212,59 @@ func run() -> void:
 		w.directorate.st[0].doctrine = "out"
 		w.directorate.signed.nuclear.erase(0)
 	if w.fog != null: w.fog.explored.fill(1)
+	if w.get("sitrep") != null and w.sitrep != null:
+		w.sitrep.record("warning", "crit", "test-warning", "Phantom future alert", Vector3.ZERO)
+	if w.space != null:
+		w.space.reveals.append({"at": Vector3.ZERO, "radius": 30.0, "until": 9999.0})
+		w.space._pass[0] = 9999.0
+		w.space._jam_ready[0] = 9999.0
+	if w.passage != null:
+		w.passage.asked[1] = 9999.0
+	if w.get("generals") != null and w.generals != null:
+		w.generals._ai_next = 9999.0
+	if w.get("directorate") != null and w.directorate != null:
+		w.directorate._alarm_at[0] = 9999.0
+		w.directorate._agi_risk_at[0] = 9999.0
+		w.directorate._incident_at[0] = 9999.0
+		w.directorate.applications._rival_at = 9999.0
+		w.directorate.applications._strategic_at = 9999.0
+	if w.get("crisis") != null and w.crisis != null:
+		w.crisis._last_news = 9999.0
+	# Upgraded unit names must revert when loading an earlier save where the upgrade is not yet researched.
+	w.map.nations[0] = Factions.nation(0, true)
+	w.research.progress["nextGenAbrams"] = {"stage": 0, "work": 0.0, "paid": false}
+	w.research._recompute()
+	var base_tank_name: String = str(w.unit_defs["tank"].name)
 	var prev_ev_ver: int = w.events._version if w.events != null else 0
 	var older := json_save()
+	w.research.progress["nextGenAbrams"] = {"stage": 3, "work": 0.0, "paid": true}
+	w.research._recompute()
+	check(str(w.unit_defs["tank"].name) == "M1E3 Abrams", "researching nextGenAbrams renames player tank to M1E3 Abrams")
 	for section in ["space", "defcon", "support", "un", "homefront", "directorate", "fog"]: older.erase(section)
 	w.saves.restore(older)
-	check(w.space == null or w.space.total(0) == 0, "loading an older save resets live satellites to zero")
+	check(str(w.unit_defs["tank"].name) == base_tank_name, "loading earlier save reverts upgraded unit_defs name back to base national name")
+	check(w.space == null or (w.space.total(0) == 0 and w.space.reveals.is_empty() and w.space._pass.is_empty() and w.space._jam_ready.is_empty()), "loading an older save resets live satellites, recon reveals and space timers")
+	check(w.passage == null or w.passage.asked.is_empty(), "loading clears live border-trespass prompt cooldowns")
+	check(w.get("generals") == null or w.generals == null or w.generals._ai_next == 0.0, "loading resets AI general enlistment schedule")
 	check(w.defcon == null or w.defcon.posture.get(0, -1) == 5, "loading an older save resets live nuclear postures to default")
 	check(w.support == null or is_equal_approx(w.support.value(0), w.support.baseline(0)), "loading an older save resets live war support to baseline")
 	check(w.un == null or (w.un.indicted.is_empty() and w.un.arrears == 0.0 and w.un.agencies.iaea_flagged.is_empty()), "loading an older save clears live UN and agency state")
 	check(w.homefront == null or w.homefront.grid_damaged.is_empty(), "loading clears homefront grid shocks")
-	check(w.get("directorate") == null or w.directorate == null or (w.directorate.level(0) == 0 and w.directorate.doctrine(0) == "in"), "loading an older save resets live AI directorate level and doctrine")
+	check(w.get("directorate") == null or w.directorate == null or (w.directorate.level(0) == 0 and w.directorate.doctrine(0) == "in" and w.directorate._alarm_at.is_empty() and w.directorate.applications._rival_at == 0.0 and w.directorate.applications._strategic_at == 0.0), "loading an older save resets live AI directorate level, doctrine and schedule timers")
+	check(w.get("crisis") == null or w.crisis == null or w.crisis._last_news < 0.0, "loading resets crisis world-news cooldown timer")
 	check(w.fog == null or w.fog.explored.count(0) > 0, "loading an older save clears live explored fog of war")
+	check(w.get("sitrep") == null or w.sitrep == null or (w.sitrep.events.is_empty() and w.sitrep.pings.is_empty() and w.sitrep.unread == 0), "loading clears live sitrep alerts, pings and unread counts")
 	check(w.events == null or w.events._version > prev_ev_ver, "loading bumps world events version")
+	# UN enforcement must not act on a target defeated while voting was open.
+	if w.un != null and w.ai.nations.size() >= 1:
+		var defeated_id: int = int(w.ai.nations[0].id)
+		var was_defeated: bool = bool(w.ai.nations[0].defeated)
+		var rel_before: float = w.diplomacy.rel(0, defeated_id)
+		w.ai.nations[0].defeated = true
+		w.un._enforce({"measure": "statement", "target": defeated_id, "other": -1, "votes": {}})
+		w.un._enforce({"measure": "force", "target": defeated_id, "other": -1, "votes": {}})
+		check(is_equal_approx(w.diplomacy.rel(0, defeated_id), rel_before) and not w.un.authorised.has(defeated_id), "UN enforcement skips a target defeated before voting closed")
+		w.ai.nations[0].defeated = was_defeated
 	for i in range(3):
 		await process_frame
 	print("GAMEPLAY_STATE_AUDIT %d checks, %d failures" % [checks, failures.size()])
