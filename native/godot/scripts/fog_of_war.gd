@@ -48,6 +48,9 @@ var _static_seen := PackedByteArray()     # what the player's side's buildings s
 var _static_key := -1
 var _painted_seen := PackedByteArray()    # what the texture shows now: it is repainted only when seen or explored differ from it
 var _painted_explored := PackedByteArray()
+var _deposits_explored := PackedByteArray()   # the explored map the deposits were last shown against
+var _deposits_count := -1
+var _refreshes := 0   # counts refresh(): a cached shows_now answer is only good until the next one
 var _ridge_hidden := {}      # instance id -> true: an enemy ground unit inside watched land but behind a hill crest (tactics_terrain.gd)
 var _observers: Array = []   # [position, sight, airborne] of the player's side, rebuilt on every refresh
 var rival_seen := {}         # rival -> cells its forces see (refreshed each second)
@@ -108,6 +111,18 @@ func friendly(owner: int) -> bool:
 		return true
 	var e = w.get("espionage")
 	return e != null and e.get("puppets") != null and e.puppets.has(owner) and int(e.puppets[owner].get("patron", 0)) == 0
+
+## `shows`, worked out once per simulation tick for each thing: in a crowded battle
+## dozens of the player's units ask about the same enemy in the same tick, and the
+## answer cannot change until the fog and the units move again.
+func shows_now(thing: Dictionary) -> bool:
+	var tick: int = w.sim_tick * 4096 + _refreshes   # a new tick, or a new look at the map, asks again
+	if int(thing.get("_shows_tick", -1)) == tick:
+		return thing._shows
+	var seen_now := shows(thing)
+	thing._shows_tick = tick
+	thing._shows = seen_now
+	return seen_now
 
 ## Whether the player may see (and so target or click) `thing`, a unit or building.
 func shows(thing: Dictionary) -> bool:
@@ -170,6 +185,7 @@ func update(delta: float) -> void:
 ## Recomputes what the player's side sees, shows and hides the enemy, and
 ## repaints the fog.
 func refresh() -> void:
+	_refreshes = (_refreshes + 1) % 4096
 	# Buildings do not move: their sight is stamped again only when the set of friendly buildings changes.
 	var key := _building_key()
 	if key != _static_key or _static_seen.size() != seen.size():
@@ -182,9 +198,18 @@ func refresh() -> void:
 		_static_seen = seen.duplicate()
 	else:
 		seen = _static_seen.duplicate()
+	# Units standing in the same cell with the same reach stamp the same disc: a
+	# crowded battle stamps each disc once (the result is the same).
+	var stamped := {}
 	for u in w.units:
 		if not u.dead and friendly(int(u.owner)):
-			_stamp(u.node.position, sight_of(u))
+			var p: Vector3 = u.node.position
+			var reach := sight_of(u)
+			var disc := Vector3i(int(floor((p.x - origin.x) / CELL)), int(floor((p.z - origin.y) / CELL)), int(ceil(reach / CELL)))
+			if stamped.has(disc):
+				continue
+			stamped[disc] = true
+			_stamp(p, reach)
 	# A reconnaissance satellite's pass (space.gd).
 	if w.get("space") != null:
 		for r in w.space.reveals:
@@ -216,11 +241,14 @@ func refresh() -> void:
 			u.node.visible = show
 			if not show:
 				u.selected = false
-	# Deposits on land never seen are not shown.
-	for dep in w.deposits:
-		var known := charted(dep.pos)
-		if dep.node.visible != known:
-			dep.node.visible = known
+	# Deposits on land never seen are not shown. That changes only with the explored map.
+	if explored != _deposits_explored or w.deposits.size() != _deposits_count:
+		_deposits_explored = explored.duplicate()
+		_deposits_count = w.deposits.size()
+		for dep in w.deposits:
+			var known := charted(dep.pos)
+			if dep.node.visible != known:
+				dep.node.visible = known
 	# Stagger rival scouting across ticks to avoid 1s frame spikes.
 	_scout()
 	_paint()
@@ -244,6 +272,7 @@ func _scout() -> void:
 			rival_seen[owner] = cells
 	if batch.is_empty():
 		return
+	var stamped := {}   # (owner, cell, reach) already stamped: a crowd stamps each disc once
 	for u in w.units:
 		if u.dead:
 			continue
@@ -253,7 +282,12 @@ func _scout() -> void:
 		var cells: PackedByteArray = rival_seen[owner]
 		var c := int(floor((u.node.position.x - origin.x) / CELL))
 		var r := int(floor((u.node.position.z - origin.y) / CELL))
-		for off in _mask(int(ceil(sight_of(u) / CELL))):
+		var reach := int(ceil(sight_of(u) / CELL))
+		var disc := Vector4i(owner, c, r, reach)
+		if stamped.has(disc):
+			continue
+		stamped[disc] = true
+		for off in _mask(reach):
 			var x: int = c + off.x
 			var z: int = r + off.y
 			if x >= 0 and z >= 0 and x < n and z < n:

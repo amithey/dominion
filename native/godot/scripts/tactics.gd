@@ -72,11 +72,16 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 		if grid_cells <= 49 and grid_cells < w.units.size():
 			var cx := floori(at.x / w.GRID)
 			var cz := floori(at.z / w.GRID)
-			for dz in range(-span, span + 1):
-				for dx in range(-span, span + 1):
-					var bucket = w.grid.get(Vector2i(cx + dx, cz + dz))
-					if bucket != null:
-						lists.append(bucket)
+			# Only the buckets of the sides it is at war with (world.side_grid).
+			for foe in foes:
+				var side = w.side_grid.get(foe)
+				if side == null:
+					continue
+				for dz in range(-span, span + 1):
+					for dx in range(-span, span + 1):
+						var bucket = side.get(Vector2i(cx + dx, cz + dz))
+						if bucket != null:
+							lists.append(bucket)
 			lists.append(w.air_sea)
 		else:
 			lists.append(w.units)
@@ -103,10 +108,12 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 				continue
 			# Fog of war: the player's units fire on what their side sees, or what
 			# is within their own sight (fog_of_war.gd).
-			if fog_on:
-				if own == 0 and not w.fog.shows(other) and d > my_sight:
+			# (Its own sight first: the side's view is the costlier test, and is worked out
+			# once a tick per target however many units are looking: fog_of_war.shows_now.)
+			if fog_on and d > my_sight:
+				if own == 0 and not w.fog.shows_now(other):
 					continue
-				if own > 0 and int(other.owner) == 0 and d > my_sight and not w.fog.rival_spots(own, other):
+				if own > 0 and int(other.owner) == 0 and not w.fog.rival_spots(own, other):
 					continue
 			var eff: float = w.effectiveness(unit, other)
 			if eff <= 0.01:
@@ -303,16 +310,17 @@ static func crowd_push(w: Node, unit: Dictionary, at: Vector3, still := false) -
 			if bucket == null:
 				continue
 			for other in bucket:
-				if is_same(other, unit) or other.dead or other.get("fly", false) or other.get("naval", false) or other.get("garrison_building") != null:
+				# Distance first: most of the nine buckets lie beyond the widest clearance (6.5 m).
+				var gap: Vector3 = at - other.node.position
+				gap.y = 0
+				var d2 := gap.length_squared()
+				if d2 >= 42.25 or is_same(other, unit) or other.dead or other.get("fly", false) or other.get("naval", false) or other.get("garrison_building") != null:
 					continue
 				var yield_share := 1.0
 				if still and other.owner == unit.owner and other.get("moving", false) and other.get("target") != null and other.node.position.distance_to(other.target) > 5.0:
 					yield_share = 0.2   # a friend on its way hardly shoves one that stands: it steers round it
-				var gap: Vector3 = at - other.node.position
-				gap.y = 0
 				# Hulls are about seven metres long: two vehicles keep 6.5 m apart.
 				var clearance: float = (1.1 if not (unit.vehicle or other.vehicle) else 3.4) + (3.1 if unit.vehicle and other.vehicle else 0.0)
-				var d2 := gap.length_squared()
 				if d2 < clearance * clearance:
 					if d2 < 0.000001:
 						# Exactly on top of each other: split along a fixed per-unit direction.
@@ -428,13 +436,13 @@ static func hard_push(w: Node, unit: Dictionary, at: Vector3) -> Vector3:
 			if bucket == null:
 				continue
 			for other in bucket:
-				if is_same(other, unit) or other.dead or other.get("garrison_building") != null:
-					continue
 				var gap: Vector3 = at - other.node.position
 				gap.y = 0.0
-				var hard: float = 5.2 if other.vehicle else 2.4
 				var d2 := gap.length_squared()
-				if d2 < hard * hard and d2 > 0.000001:
+				if d2 >= 27.04 or d2 <= 0.000001 or is_same(other, unit) or other.dead or other.get("garrison_building") != null:   # distance first: beyond the widest overlap (5.2 m)
+					continue
+				var hard: float = 5.2 if other.vehicle else 2.4
+				if d2 < hard * hard:
 					var d := sqrt(d2)
 					push += gap / d * (hard - d)
 	return push

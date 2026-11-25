@@ -235,6 +235,9 @@ const AdditionalFactions := preload("res://scripts/additional_factions.gd")
 var grid := {}
 var b_grid := {}
 var air_sea: Array = []   # living ships and aircraft (not in the ground grid)
+# The same ground buckets split by side (owner -> cell -> units): a target search
+# reads only its enemies' buckets, not the half of a crowded battle that is its own.
+var side_grid := {}
 var tree_parts := {}       # Vector2(x, z) of a tree -> [[MultiMesh, instance], ...] (site_clearing.gd fells them)
 var site_answers: Array = []  # the answers of the latest site-clearing letter (tests)
 var lod_turn := 0
@@ -1935,6 +1938,7 @@ func profile_report() -> String:
 func rebuild_grid() -> void:
 	grid.clear()
 	air_sea.clear()
+	side_grid.clear()
 	for u in units:
 		if u.dead:
 			continue
@@ -1943,10 +1947,20 @@ func rebuild_grid() -> void:
 			continue
 		var p: Vector3 = u.node.position
 		var key := Vector2i(floori(p.x / GRID), floori(p.z / GRID))
-		if grid.has(key):
-			grid[key].append(u)
-		else:
+		var bucket = grid.get(key)
+		if bucket == null:
 			grid[key] = [u]
+		else:
+			bucket.append(u)
+		var side = side_grid.get(u.owner)
+		if side == null:
+			side = {}
+			side_grid[u.owner] = side
+		var sb = side.get(key)
+		if sb == null:
+			side[key] = [u]
+		else:
+			sb.append(u)
 
 ## Distance work that does not have to happen every frame: a unit far from
 ## the camera stops animating and stops casting a shadow, and picks both up
@@ -5655,10 +5669,13 @@ func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
 	if target_kind == "air" and target.key == "heavyBomberDrone" and akey in ["soldier", "commando", "machineGunTeam", "scoutTeam"]:
 		return 1.0
 	var cache_kind := "sub" if target_kind == "naval" and preload("res://scripts/war_tools.gd").is_submarine(target) else target_kind
-	if not (akey in _SPECIAL_EFF_KEYS) and not attacker.get("_fc_restricted", false):
-		var ckey := akey + "|" + cache_kind
-		if _eff_simple.has(ckey):
-			return float(_eff_simple[ckey])
+	# Plain weapon-against-class answers are remembered (attacker key -> target class -> multiplier);
+	# special keys never enter the table, and units restricted by the force catalogue skip it.
+	var by_kind = _eff_simple.get(akey)
+	if by_kind != null and not attacker.get("_fc_restricted", false):
+		var known = by_kind.get(cache_kind)
+		if known != null:
+			return known
 	if not preload("res://scripts/force_catalog.gd").can_target(self, attacker, target):
 		if preload("res://scripts/force_catalog.gd").ROLES.has(akey):
 			attacker["_fc_restricted"] = true
@@ -5683,8 +5700,10 @@ func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
 		return 6.0
 	var profile: Dictionary = damage_profile.get(akey, {})
 	var res: float = (0.0 if target.get("fly", false) else 1.0) if profile.is_empty() else float(profile.get(target_kind, 0.0))
-	if not (akey in _SPECIAL_EFF_KEYS) and akey != "laserAD" and target_kind != "air":
-		_eff_simple[akey + "|" + cache_kind] = res
+	if not (akey in _SPECIAL_EFF_KEYS) and akey != "laserAD" and target_kind != "air" and not attacker.get("_fc_restricted", false):
+		if not _eff_simple.has(akey):
+			_eff_simple[akey] = {}
+		_eff_simple[akey][cache_kind] = res
 	return res
 
 ## Nearest hostile unit in range; buildings only when no unit is near.
