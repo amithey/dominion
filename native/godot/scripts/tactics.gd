@@ -317,10 +317,22 @@ static func crowd_push(w: Node, unit: Dictionary, at: Vector3, still := false) -
 				if d2 >= 42.25 or is_same(other, unit) or other.dead or other.get("fly", false) or other.get("naval", false) or other.get("garrison_building") != null:
 					continue
 				var yield_share := 1.0
-				if still and other.owner == unit.owner and other.get("moving", false) and other.get("target") != null and other.node.position.distance_to(other.target) > 5.0:
+				var passing: bool = still and other.owner == unit.owner and other.get("moving", false) and other.get("target") != null
+				if passing and other.node.position.distance_to(other.target) > 5.0:
 					yield_share = 0.2   # a friend on its way hardly shoves one that stands: it steers round it
 				# Hulls are about seven metres long: two vehicles keep 6.5 m apart.
 				var clearance: float = (1.1 if not (unit.vehicle or other.vehicle) else 3.4) + (3.1 if unit.vehicle and other.vehicle else 0.0)
+				if d2 < clearance * clearance and passing and other.vehicle:
+					# A hull driving past is held off by hard_push at a shorter distance than this clearance, so pushed
+					# along the line between them the one standing was bulldozed ahead of it, at walking pace, all the
+					# way to (and past) the mover's mark. It steps aside out of the mover's lane instead.
+					var ofwd := Vector3(sin(other.heading), 0, cos(other.heading))
+					var oside := Vector3(ofwd.z, 0, -ofwd.x)
+					var lat := gap.dot(oside)
+					if absf(lat) < 0.3:
+						lat = 1.0 if fposmod(float(unit.phase), 2.0) < 1.0 else -1.0
+					push += oside * signf(lat) * (clearance - sqrt(d2)) * yield_share
+					continue
 				if d2 < clearance * clearance:
 					if d2 < 0.000001:
 						# Exactly on top of each other: split along a fixed per-unit direction.

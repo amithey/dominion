@@ -2242,8 +2242,7 @@ func _physics_process(delta: float) -> void:
 			if unit.target == null and unit.moving:
 				animate(unit, false)
 			settle(unit)
-			if not perf_opts or thinks(unit):
-				spread_out(unit, slot, delta)
+			spread_out(unit, slot, delta)
 			spent("  standing", t_idle)
 			continue
 		# Keep a dry vehicle's order/path intact while waiting for fuel.
@@ -2391,14 +2390,20 @@ func _physics_process(delta: float) -> void:
 	prof_frames += 1 if profiling else 0
 
 # Standing units that overlap step apart a little at a time (a pile would
-# block fire and feed every splash). Checked every fourth frame per unit.
+# block fire and feed every splash). Checked every fourth frame per unit, or
+# on its thinking frame (every sixth) with the battle optimisations on. The
+# two gates used to be stacked, and a unit whose think slot and list slot
+# differed in parity passed both on no frame at all: half of all standing
+# units never stepped aside, and a hull parked in a gap held every comrade
+# behind it until they gave up short of their marks.
 func spread_out(unit: Dictionary, slot: int, delta: float) -> void:
-	if (sim_tick + slot) % 4 != 0:
+	var every := THINK_EVERY if perf_opts else 4
+	if not (thinks(unit) if perf_opts else (sim_tick + slot) % 4 == 0):
 		return
 	var push := Tactics.crowd_push(self, unit, unit.node.position, true)   # (a unit passing by does not shove it)
 	if push.length_squared() < 0.0025:
 		return
-	var next: Vector3 = unit.node.position + push.limit_length(delta * 4.0 * 1.6)
+	var next: Vector3 = unit.node.position + push.limit_length(delta * every * 1.6)
 	if open_ground(next):
 		place_on_ground(unit, next)
 
