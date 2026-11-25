@@ -77,6 +77,11 @@ static func convoy(w: Node) -> void:
 	var axis: Vector3 = (far - w.start).normalized()
 	var side := Vector3(-axis.z, 0, axis.x)
 	var from: Vector3 = w.start + axis * 40.0
+	# One fixed untidy start, so a run is a verdict on the code and not on the dice (--convoy-seed=N tries others).
+	var convoy_seed := 7
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--convoy-seed="): convoy_seed = int(a.split("=")[1])
+	seed(convoy_seed)
 	var group: Array = []
 	var roster := ["tank", "tank", "tank", "apc", "tank", "tank", "apc", "tank"]
 	for i in range(roster.size()):
