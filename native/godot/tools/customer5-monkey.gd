@@ -14,6 +14,10 @@ const MatchSetup := preload("res://scripts/match_setup.gd")
 class QuietMenu extends "res://scripts/menu.gd":
 	func load_settings() -> void: world.apply_ui_scale()
 	func save_settings() -> void: pass
+	# A random double click on Quit to Desktop ended the whole process mid-run (silently, on CI): the
+	# customer may find every exit but that one, which would end the test rather than the match.
+	func _confirmed(b: Button, label: String) -> bool:
+		return false if label == "Quit to Desktop" else super(b, label)
 var K
 var w: Node
 var recent: Array = []
@@ -195,6 +199,7 @@ func run() -> void:
 		if a.begins_with("--events="): per_session = int(a.split("=")[1])
 		if a.begins_with("--seed="): seed_base = int(a.split("=")[1])
 	K = Kit.new(self, "customer5-monkey")
+	var ci := OS.has_environment("GITHUB_ACTIONS")
 	var ids: Array = Registry.column("id")
 	var maps: Array = ["island", "mirrored"] + Maps.MAPS.keys()
 	var diffs := ["easy", "normal", "hard"]
@@ -215,6 +220,7 @@ func run() -> void:
 			var before: String = signature() if is_instance_valid(w) and w.is_inside_tree() else ""
 			var what: String = await do_event()
 			event_log.append(what)
+			if ci: print("monkey %s #%d %s" % [tag, n, what])   # on CI the log is all there is when a run ends early
 			if event_log.size() > 8: event_log.pop_front()
 			await frames(1)
 			total += 1
