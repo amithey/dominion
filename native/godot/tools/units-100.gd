@@ -125,7 +125,7 @@ func run() -> void:
 		var friend: Dictionary = w.spawn_unit("soldier", w.land_point(enemy.node.position + Vector3(0, 0, 18), 8.0), 0) if not enemy.get("naval", false) else {}
 		var hp0: float = enemy.hp
 		var weapon: String = w.WEAPONS.get(key, "")
-		for shot in range(8):
+		for shot in range(16):   # (a sidearm can miss eight times running: the medic did once on CI)
 			if enemy.dead or enemy.hp < hp0: break
 			if weapon == "swarm":
 				break
