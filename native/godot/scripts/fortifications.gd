@@ -714,7 +714,11 @@ func breach_near(clearer: Dictionary, dt: float) -> void:
 func cover(target: Dictionary, source: Dictionary) -> float:
 	if target.get("is_building", false) or target.get("vehicle", false) or target.get("fly", false) or target.get("naval", false):
 		return 1.0
-	var is_indirect: bool = source.has("key") and str(source.key) in ["artillery", "mlrs", "himars", "tos1a", "fpvTeam", "coastalDrone", "shaheenDrone", "mortarTeam"]
+	if source.get("pierce", false) or source.get("nuclear", false) or str(source.get("key", "")) == "missile":
+		return 1.0
+	if world != null and world.get("wmd") != null and world.wmd != null and world.wmd.flushed(target):
+		return 1.0   # riot agents drive troops out of trenches and dugouts
+	var is_indirect: bool = source.get("fly", false) or (source.has("key") and str(source.key) in ["artillery", "mlrs", "himars", "tos1a", "fpvTeam", "coastalDrone", "shaheenDrone", "mortarTeam", "towedHowitzer", "wheeledHowitzer", "k9", "heavyRocket", "railgunShip"])
 	var g_ent = target.get("garrisoned_in")
 	if g_ent != null and typeof(g_ent) == TYPE_DICTIONARY and not g_ent.dead and g_ent.built:
 		var g_reach := (DUGOUT_REACH if g_ent.kind == "dugout" else TRENCH_REACH) + 1.5
@@ -728,7 +732,7 @@ func cover(target: Dictionary, source: Dictionary) -> float:
 		if e.dead or not e.built or not is_shelter(e.kind) or int(e.owner) != int(target.owner):
 			continue
 		var reach := DUGOUT_REACH if e.kind == "dugout" else TRENCH_REACH
-		if pos.distance_to(e.pos) <= reach:
+		if Vector2(pos.x - e.pos.x, pos.z - e.pos.z).length() <= reach:
 			var mult := (0.45 if is_indirect else 0.38) if e.kind == "dugout" else (0.65 if is_indirect else 0.50)
 			best = minf(best, mult)
 	return best
@@ -760,8 +764,10 @@ func _destroy(idx: int) -> void:
 
 func export_state() -> Array:
 	var out := []
+	var by_node := {}
 	for e in entries:
 		if not e.dead:
+			by_node[e.node] = out.size()
 			out.append({
 				"owner": e.owner,
 				"pos": [e.pos.x, e.pos.y, e.pos.z],
@@ -770,7 +776,17 @@ func export_state() -> Array:
 				"hp": e.hp,
 				"built": e.built,
 				"progress": e.progress,
+				"assignments": [],
 			})
+	var index := 0
+	for u in world.units:
+		if u.dead:
+			continue
+		for role in ["garrisoned_in", "digging", "digging_target", "entering_fort"]:
+			var fort = u.get(role)
+			if fort != null and not fort.dead and by_node.has(fort.node):
+				out[by_node[fort.node]].assignments.append({"unit": index, "role": role})
+		index += 1
 	return out
 
 func import_state(data: Array) -> void:
@@ -787,19 +803,36 @@ func import_state(data: Array) -> void:
 			u.erase("entering_fort")
 			u.erase("digging")
 			u.erase("digging_target")
+	var units: Array = world.units.filter(func(u): return not u.dead) if world != null else []
 	for row in data:
 		var p: Array = row.get("pos", [0, 0, 0])
 		var ent := _spawn(int(row.get("owner", 0)), Vector3(float(p[0]), float(p[1]), float(p[2])), float(row.get("heading", 0.0)), str(row.get("kind", "trench")), bool(row.get("built", true)))
 		ent.hp = float(row.get("hp", ent.max_hp))
 		ent.progress = float(row.get("progress", 1.0))
 		ent.model.scale.y = 1.0 if ent.built else lerpf(0.15, 1.0, ent.progress)
+		if row.has("assignments"):
+			for assignment in row.assignments:
+				var index := int(assignment.unit)
+				if index < 0 or index >= units.size():
+					continue
+				var u: Dictionary = units[index]
+				if int(u.owner) != int(ent.owner):
+					continue
+				match str(assignment.role):
+					"garrisoned_in":
+						_seat_unit_immediately(u, ent)
+					"digging", "digging_target", "entering_fort":
+						u[str(assignment.role)] = ent
+			continue
+		# Older saves only recorded the soldiers' positions. A marching unit
+		# near a trench must keep its destination.
 		if ent.built and is_shelter(ent.kind) and world != null:
 			var cap := int(GARRISON_CAP.get(ent.kind, 3))
 			var g: Array = []
 			for u in world.units:
 				if g.size() >= cap:
 					break
-				if u.dead or int(u.owner) != int(ent.owner) or u.vehicle or u.get("fly", false) or u.get("naval", false) or u.key == "worker":
+				if u.get("target") != null or u.dead or int(u.owner) != int(ent.owner) or u.vehicle or u.get("fly", false) or u.get("naval", false) or u.key == "worker":
 					continue
 				if u.get("garrisoned_in") != null or u.get("garrison_building") != null:
 					continue

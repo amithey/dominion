@@ -61,8 +61,8 @@ static func assembly(p) -> void:
 			if int(dr.target) != 0:
 				var target: int = int(dr.target)
 				var row: HBoxContainer = hud._row(card)
-				hud._button(row, "Join restrictions", func(): return u.join_voluntary(target, true), not 0 in dr.participants)
-				hud._button(row, "Leave restrictions", func(): return u.join_voluntary(target, false), 0 in dr.participants)
+				hud._button(row, "Join restrictions", func(): return u.join_voluntary(target, true, i), not 0 in dr.participants)
+				hud._button(row, "Leave restrictions", func(): return u.join_voluntary(target, false, i), 0 in dr.participants)
 
 ## The Agencies tab: the Secretary-General's calendar, the IAEA's findings and the humanitarian appeals.
 static func agencies(p) -> void:
@@ -86,9 +86,10 @@ static func agencies(p) -> void:
 			var row: HBoxContainer = hud._row(aid)
 			var appeal_id: int = int(a.id)
 			for gift in ag.GIFTS:
-				var amount: float = gift
+				var amount := minf(gift, float(a.need) - float(a.raised))
 				var give := func(): return ag.donate(appeal_id, amount)
-				hud._button(row, "Give $%d" % int(amount), give, hud.world.economy.res.money >= amount)
+				hud._button(row, "Give $%d" % int(amount), give, hud.world.game_time < float(a.until) and hud.world.economy.res.money >= amount)
+				if amount >= float(a.need) - float(a.raised): break
 	var iaea: VBoxContainer = hud._card()
 	iaea.add_child(hud._text("IAEA and the Secretary-General", 16, hud.UI.CREAM, true))
 	var shown := 0

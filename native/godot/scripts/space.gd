@@ -371,6 +371,8 @@ func capture() -> Dictionary:
 	return {"sats": s, "watch": wt, "debris": debris, "jammed": jm}
 
 func restore(data: Dictionary) -> void:
+	sats.clear()
+	for owner in range(w.map.nations.size()): sats[owner] = {"recon": 0, "nav": 0, "comms": 0, "warning": 0}
 	for k in data.get("sats", {}):
 		var row: Dictionary = data.sats[k]
 		sats[int(k)] = {}
@@ -378,7 +380,12 @@ func restore(data: Dictionary) -> void:
 	watch.clear()
 	for k in data.get("watch", {}): watch[int(k)] = int(data.watch[k])
 	debris = float(data.get("debris", 0.0))
+	reveals.clear()
+	_pass.clear()
+	_tick = 0.0
+	_ai_tick = 0.0
 	jammed.clear()
+	_jam_ready.clear()
 	for k in data.get("jammed", {}): jammed[int(k)] = float(data.jammed[k])
 	if w.research != null:
 		w.research._recompute()

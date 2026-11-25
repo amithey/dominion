@@ -436,6 +436,16 @@ func run() -> void:
 	m.routes.clear()
 	eco.res.iron = 0.0
 	m.open_route(2, "iron", "import", 25)
+	var inventory: Dictionary = m.ai_stock["2"]
+	var available: float = inventory.iron
+	inventory.iron = 0
+	var balance: float = eco.res.money
+	var previous_money: float = partner.money
+	partner.money = 0
+	m.tick()
+	check(m.routes[0].shipment == null and eco.res.money == balance, "an import cannot draw missing stock from the rival")
+	partner.money = previous_money
+	inventory.iron = maxf(available, 100)
 	var cash_i: float = eco.res.money
 	m.tick()
 	var paid_i: float = cash_i - eco.res.money
@@ -644,7 +654,316 @@ func run() -> void:
 		if str(c.tooltip_text).contains("gas") or str(c.tooltip_text).contains("Natural gas"): tips.append(c.tooltip_text)
 	check(not tips.is_empty() and tips[0].contains("inter"), "and gas explains winter heating")
 
+	await check_domestic_policy()
+	await check_civil_affairs()
+	await check_rival_civic_rules()
+	await check_bilateral_food_contract()
 	print("\nECONOMY_100: %d passed, %d failed" % [passed, errors.size()])
 	for f in errors: print("  FAILED: " + f)
 	print("ECONOMY_100 PASS" if errors.is_empty() else "ECONOMY_100 FAIL")
 	quit(0 if errors.is_empty() else 1)
+
+func check_domestic_policy() -> void:
+	await load_match({"map": "island", "players": 2, "nation": 0})
+	w.hud.toggle_cabinet()
+	var cabinet = w.hud._cabinet
+	var tile = cabinet.find_child("Tile_civil_policy", true, false)
+	check(tile != null, "the Cabinet offers domestic policy during a match")
+	if tile == null: return
+	var regular_tax: float = eco.city_report(hq()).tax
+	for button in tile.find_children("*", "Button", true, false):
+		if button.text == "Relief": button.pressed.emit()
+	check(regular_tax > 0 and is_equal_approx(eco.city_report(hq()).tax, regular_tax * 0.8), "tax relief selected in the Cabinet reduces town taxes")
+	eco.tick()
+	var relief_approval: float = eco.happiness
+	eco.tax_policy = "Levy"
+	eco.tick()
+	check(is_equal_approx(relief_approval - eco.happiness, 18.0), "raising taxes trades approval for revenue")
+	eco.res.money = 0.0
+	check(not eco.fund_programme("Public clinics"), "the treasury cannot fund a programme on credit")
+	eco.res.money = 500.0
+	var health_before: float = eco.health
+	check(eco.fund_programme("Public clinics") and eco.res.money == 200.0 and not eco.fund_programme("Home insulation"), "one programme is funded and charged once")
+	eco.tick()
+	check(is_equal_approx(eco.health, health_before + 12.0), "clinic funding improves national health")
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
+	w.saves.restore(saved)
+	check(eco.civil_programme == "Public clinics" and eco.programme_left == 179 and eco.tax_policy == "Levy", "loading resumes the funded term and tax policy")
+	for i in range(179): eco.tick()
+	check(eco.civil_programme == "" and eco.programme_left == 0, "the term ends after 180 economic ticks")
+	var food: float = eco.farm_output()
+	eco.res.money = 600.0
+	eco.fund_programme("Farm grants")
+	check(is_equal_approx(eco.farm_output(), food * 1.25), "farm grants raise food output per supplied farm")
+	for key in ["tax_policy", "civil_programme", "programme_left"]: saved.economy.erase(key)
+	w.saves.restore(saved)
+	check(eco.tax_policy == "Standard" and eco.programme_left == 0, "older saves start with standard taxes and no programme")
+	w.game_time = 600.0
+	eco.civilians = eco.civ_cap
+	eco.res.food = eco.caps.food
+	eco.res.gas = 100.0
+	eco.tick()
+	var gas_before: float = eco.rates.gas
+	var population: float = eco.civilians
+	eco.res.money = 500.0
+	eco.fund_programme("Home insulation")
+	eco.tick()
+	check(is_equal_approx(eco.rates.gas - gas_before, population * 0.006 * 0.4), "insulated homes consume less winter gas")
+
+func check_civil_affairs() -> void:
+	await load_match({"map": "pangaea", "players": 2, "nation": 0})
+	var civil = eco.civil
+	if not m.has_market(): put("market")
+	var buyer = m.ai_nation(1)
+	buyer.money = 10000
+	eco.res.food = 80
+	eco.res.money = 2000
+	eco.res.iron = 1000
+	d.set_flag(d.war, 0, 1, false)
+	d.set_flag(d.pact, 0, 1, true)
+	d.set_score(0, 1, 40)
+	check("Households" not in civil.votes(1, 40, false) and "Households" in civil.votes(1, 20, true), "domestic food guarantee wins household votes")
+	d.set_flag(d.pact, 0, 1, false)
+	var treasury: float = eco.res.money
+	civil.sign(1, 40, false)
+	check(civil.contract.is_empty() and eco.res.money == treasury and eco.res.food == 80, "a rejected parliamentary vote cannot bind or charge either side")
+	d.set_flag(d.pact, 0, 1, true)
+	var money: float = eco.res.money
+	var price: int = civil.price_per_lot(1, 20)
+	var stock := preload("res://scripts/additional_powers.gd").stock(w, 1)
+	var food_before := float(stock.get("food", 0))
+	civil.sign(1, 20, true)
+	check(civil.contract.get("sent") == 1 and eco.res.money == money + price and buyer.money == 10000 - 3 * price and stock.food == food_before + 20, "signature escrows the price and delivers the prepaid lot exactly once")
+	check(m.sell("food", 1).contains("floor"), "protected stocks cannot be sold")
+	w.game_time += 40
+	civil.tick()
+	check(civil.contract.sent == 1, "the promised domestic floor delays a scheduled shipment")
+	civil.extend_deadline()
+	var deadline: float = civil.contract.deadline
+	civil.extend_deadline()
+	check(civil.contract.extended and civil.contract.deadline == deadline, "the buyer grants at most one extension")
+	var snapshot: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
+	w.saves.restore(snapshot)
+	check(civil.contract.sent == 1 and civil.contract.extended, "loading an active agreement preserves deliveries and its revised deadline")
+	eco.res.food = 120
+	civil.tick()
+	w.game_time += 40
+	civil.tick()
+	check(civil.contract.is_empty() and civil.honoured.get("1") == 1 and eco.res.money == money + 3 * price, "completion pays exactly the escrowed price and builds a trade reputation")
+	eco.res.food = 150
+	buyer = m.ai_nation(1)
+	var before: float = buyer.money
+	price = civil.price_per_lot(1, 20)
+	civil.sign(1, 20, true)
+	w.game_time = civil.contract.deadline + 1
+	civil.tick()
+	check(buyer.money == before - price and civil.contract.is_empty(), "a missed deadline refunds only undelivered lots")
+	eco.res.food = 40
+	civil.store_food()
+	check(civil.reserve == 20 and eco.res.food == 20, "reserve storage moves actual grain")
+	eco.res.food = 0
+	check(civil.release_food(10) == 10 and eco.res.food == 10 and civil.reserve == 10, "releasing grain preserves total stock")
+	eco.res.food = 0
+	eco.civilians = 2000
+	eco.cfg = eco.cfg.duplicate(true)
+	var consumption: float = eco.cfg.foodPerCivilian
+	eco.cfg.foodPerCivilian = 2.0
+	eco.tick()
+	check(civil.reserve < 10, "a food shortage automatically draws down the national reserve")
+	eco.cfg.foodPerCivilian = consumption
+	var stored: float = civil.reserve
+	var home := hq()
+	var cap: float = eco.city_report(home).capacity
+	eco.res.iron = 5000
+	eco.res.money = 100000
+	civil.improve(home, "Housing")
+	civil.improve(home, "Housing")
+	check(eco.city_report(home).capacity == cap + 80 and w.building_defs.hq.provides != home.def.provides, "housing is a permanent one-time improvement of a single town")
+	d.set_score(0, 1, 60)
+	d.set_flag(d.pact, 0, 1, true)
+	buyer.money = 100000
+	civil.commission(1, "University")
+	civil.commission(1, "Power grid")
+	check(buyer.money == 99050 and civil.partnerships(0, "University") == 1 and civil.partnerships(1, "Power grid") == 1, "both treasuries finance functioning joint institutions")
+	d.set_flag(d.war, 0, 1, true)
+	check(civil.partnerships(0, "University") == 0, "war suspends joint research")
+	d.set_flag(d.war, 0, 1, false)
+	var quote: Dictionary = civil.rail_quote(1)
+	if not quote.is_empty() and quote.money > 0:
+		civil.commission(1, "Railway", quote)
+		check(m.land_link(1) == "rail", "the jointly financed railway connects real capitals")
+	snapshot = JSON.parse_string(JSON.stringify(w.saves.capture()))
+	w.saves.restore(snapshot)
+	check(civil.reserve == stored and civil.partnerships(1, "Power grid") == 1 and eco.city_report(hq()).capacity == cap + 80, "reserves, local housing and joint projects survive loading")
+	var coastal = null
+	for i in range(w.territory.terrain.size()):
+		if w.territory.terrain[i] == w.territory.Terrain.COAST:
+			var at: Vector3 = w.territory.center(i)
+			if not w.district_hex.has(w.logistics.world_hex(at)) and w.coast_near(at, w.logistics.radius * 2.6):
+				coastal = w.place_building("villageCenter", at, 0, true)
+				break
+	check(coastal != null, "the test map has a coastal town site")
+	if coastal != null:
+		coastal.supplied = true
+		var ports: int = m.ports()
+		civil.improve(coastal, "Harbour")
+		check(m.ports() == ports + 1, "coastal investment supplies additional trade berths")
+		d.set_flag(d.war, 0, 1, false)
+		d.set_flag(d.pact, 0, 1, true)
+		var route_msg: String = m.open_route(1, "iron", "export", 25)
+		if not m.routes.is_empty() and not m.routes[-1].get("overland", false) and w.traffic != null:
+			w.traffic._sync_ships()
+			check(w.traffic.vehicles.has("ship:%d" % m.routes[-1].id), "a coastal town harbour launches freighters for its sea routes (%s)" % route_msg)
+	w.hud.toggle_cabinet()
+	var cabinet = w.hud._cabinet
+	for page in ["Towns", "Reserves", "Cooperation", "Trade"]:
+		cabinet.civil_page = page
+		cabinet.refresh()
+		check(cabinet.find_child("Tile_civil_affairs", true, false) != null, "Cabinet opens civic page " + page)
+	cabinet.civil_feedback = "stale notice"
+	w.saves.restore(snapshot)
+	check(cabinet.civil_feedback == "", "loading a save clears stale civic cabinet feedback")
+
+func check_rival_civic_rules() -> void:
+	await load_match({"map": "pangaea", "players": 2, "nation": 0})
+	var civil = eco.civil
+	var rival = m.ai_nation(1)
+	var stock := preload("res://scripts/additional_powers.gd").stock(w, 1)
+	w.game_time = 150
+	d.set_flag(d.war, 0, 1, false)
+	d.set_flag(d.pact, 0, 1, true)
+	d.set_score(0, 1, 40)
+	rival.money = 1900
+	rival.health = 45
+	stock.food = 180
+	eco.res.food = 0
+	civil.rival_budget(rival, stock)
+	check(rival.get("civil_programme") == "Public clinics" and rival.money == 1600, "rival pays the published clinic cost from its treasury")
+	check(rival.get("grain_reserve") == 20 and stock.food == 160, "rival granary transfers real stock")
+	check(civil.has_offer(1, "Food") and civil.contract.is_empty(), "rival offers food without binding the player")
+	civil.rival_budget(rival, stock)
+	check(rival.money == 1600, "rival pays for its programme once per term")
+	var town := hq(1)
+	town.supplied = true
+	stock.iron = 19
+	civil.improve(town, "Housing", 1)
+	check(not town.has("local_improvement") and rival.money == 1600 and stock.iron == 19, "rival cannot improve a town without all materials")
+	stock.iron = 20
+	civil.improve(town, "Housing", 1)
+	check(town.get("local_improvement") == "Housing" and rival.money == 1200 and stock.iron == 0, "rival pays both housing costs")
+	eco.res.money = 0
+	civil.sign(1, 20, true, true)
+	check(civil.contract.is_empty() and stock.food == 160, "unfunded import leaves both inventories intact")
+	eco.res.money = 2000
+	var price: int = civil.price_per_lot(1, 20, 1)
+	civil.sign(1, 20, true, true)
+	check(civil.contract.get("sent") == 1 and eco.res.money == 2000 - 3 * price and rival.money == 1200 + price and stock.food == 140 and eco.res.food == 20, "rival export exchanges grain for the first escrow instalment")
+	if civil.contract.is_empty(): return
+	stock.food = 79
+	w.game_time = civil.contract.deadline - 10
+	civil.tick()
+	check(civil.contract.sent == 1 and civil.contract.get("extension_requested", false), "rival protects domestic supplies and requests more time")
+	civil.extend_deadline()
+	var snapshot: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
+	w.saves.restore(snapshot)
+	rival = m.ai_nation(1)
+	check(civil.contract.get("seller") == 1 and civil.contract.extended and rival.get("grain_reserve") == 20 and rival.get("civil_programme") == "Public clinics", "loading preserves the exporter, its reserve, programme and extension")
+	w.game_time = civil.contract.deadline + 1
+	civil.tick()
+	check(civil.contract.is_empty() and eco.res.money == 2000 - price and rival.money == 1200 + price, "expired rival export refunds only undelivered lots to the player")
+
+func check_bilateral_food_contract() -> void:
+	await load_match({"map": "pangaea", "players": 4, "nation": 0})
+	var civil = eco.civil
+	var seller = m.ai_nation(1)
+	var buyer = m.ai_nation(2)
+	var goods = preload("res://scripts/additional_powers.gd").stock(w, 1)
+	var stores = preload("res://scripts/additional_powers.gd").stock(w, 2)
+	d.set_flag(d.war, 1, 2, false)
+	d.set_flag(d.pact, 1, 2, true)
+	d.set_score(1, 2, 40)
+	d.set_flag(d.war, 0, 1, true)
+	seller.money = 300
+	buyer.money = 0
+	goods.food = 140
+	stores.food = 0
+	w.game_time = 150
+	civil.rival_budget(seller, goods)
+	check(civil.rival_contracts.is_empty() and goods.food == 140, "a rival cannot accept an unfunded food contract")
+	buyer.money = 2000
+	seller.next_civic_decision = 0
+	civil.rival_budget(seller, goods)
+	check(civil.rival_contracts.size() == 1 and civil.contract.is_empty(), "rivals conclude their own agreement even when the seller is at war with the player")
+	if civil.rival_contracts.is_empty(): return
+	var deal: Dictionary = civil.rival_contracts[0]
+	var payment := int(deal.payment)
+	check(deal.seller == 1 and deal.buyer == 2 and deal.sent == 1 and goods.food == 120 and stores.food == 20 and buyer.money == 2000 - 3 * payment and seller.money == 300 + payment, "rivals escrow three lots and exchange exactly the first")
+	check(civil.export_floor(1) == 60 and civil.export_floor(2) == 0, "only the rival exporter is bound by the domestic floor")
+	check(not civil._ratify(1, 3, 20, true).is_empty(), "an exporter cannot double-commit its food contract")
+	d.set_flag(d.war, 0, 3, false)
+	d.set_flag(d.pact, 0, 3, true)
+	m.ai_nation(3).money = 5000
+	eco.res.food = 120
+	civil.sign(3, 20, true)
+	check(not civil.contract.is_empty() and civil.rival_contracts.size() == 1, "a separate player agreement can run concurrently")
+	goods.food = 79
+	w.game_time = deal.deadline - 10
+	civil.tick()
+	check(deal.extended and deal.sent == 1 and d.rel(1, 2) == 37, "rival exporter keeps its floor and receives one paid diplomatic extension")
+	var snapshot: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
+	w.saves.restore(snapshot)
+	deal = civil.rival_contracts[0]
+	seller = m.ai_nation(1)
+	buyer = m.ai_nation(2)
+	goods = preload("res://scripts/additional_powers.gd").stock(w, 1)
+	stores = preload("res://scripts/additional_powers.gd").stock(w, 2)
+	check(deal.sent == 1 and deal.extended and stores.food == 20 and typeof(deal.seller) == TYPE_INT and typeof(deal.buyer) == TYPE_INT and typeof(deal.sent) == TYPE_INT, "loading preserves rival escrow progress as integers without repeating a delivery")
+	goods.food = 140
+	stores.food = 490
+	civil.tick()
+	check(deal.sent == 1 and goods.food == 140, "a full rival warehouse delays the delivery")
+	stores.food = 20
+	civil.tick()
+	w.game_time += 40
+	civil.tick()
+	check(civil.rival_contracts.is_empty() and seller.money == 300 + 3 * payment and buyer.money == 2000 - 3 * payment and stores.food == 60 and civil.honoured.get("1>2") == 1, "completion pays both outstanding lots and credits the actual rival pair")
+	goods.food = 150
+	var balance: float = buyer.money
+	civil._ratify(1, 2, 20, true)
+	if civil.rival_contracts.is_empty():
+		check(false, "rivals can enter another agreement after completion")
+		return
+	payment = int(civil.rival_contracts[0].payment)
+	d.set_flag(d.war, 1, 2, true)
+	civil.tick()
+	civil.tick()
+	check(civil.rival_contracts.is_empty() and buyer.money == balance - payment and civil.export_floor(1) == 0, "war refunds only outstanding instalments once and releases the seller")
+
+	var legacy: Dictionary = snapshot.economy.civil_affairs.duplicate(true)
+	legacy.erase("rival_contracts")
+	legacy.contract.erase("seller")
+	legacy.contract.erase("buyer")
+	civil.restore(legacy)
+	check(civil.rival_contracts.is_empty() and civil.contract.seller == 0 and civil.contract.buyer == 3, "older saves restore their player export and discard unrelated active contracts")
+
+	# Landlocked nations (e.g. Ethiopia) must not bypass their port restriction via a coastal Harbour investment.
+	var ethiopia_idx := -1
+	var reg := preload("res://scripts/nation_registry.gd")
+	for idx in range(reg.ORDER.size()):
+		if str(reg.ORDER[idx].DATA.get("id", "")) == "ethiopia":
+			ethiopia_idx = idx
+			break
+	if ethiopia_idx >= 0:
+		await load_match({"map": "island", "players": 2, "nation": ethiopia_idx})
+		eco.grant_test_resources()
+		var coastal_eth = null
+		for i in range(w.territory.terrain.size()):
+			if w.territory.terrain[i] == w.territory.Terrain.COAST:
+				var at: Vector3 = w.territory.center(i)
+				if not w.district_hex.has(w.logistics.world_hex(at)) and w.coast_near(at, w.logistics.radius * 2.6):
+					coastal_eth = w.place_building("villageCenter", at, 0, true)
+					break
+		if coastal_eth != null:
+			coastal_eth.supplied = true
+			var refused: String = eco.civil.improve(coastal_eth, "Harbour")
+			check(not coastal_eth.has("local_improvement") and m.ports() == 0 and "port" in refused.to_lower(), "landlocked Ethiopia cannot build a coastal Harbour improvement (%s)" % refused)

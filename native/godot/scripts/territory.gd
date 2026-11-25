@@ -45,6 +45,7 @@ var show_borders := false
 var _dirty := true
 var _tick := 0.0
 var hex := 12.0          ## hex radius, centre to corner (the district grid's)
+var _neighbours := {}  # immutable grid topology, reused by border and water updates
 var rows := 0            ## cells are stored row by row: row = r + r0, column = offset q + c0
 var r0 := 0
 var c0 := 0
@@ -53,6 +54,7 @@ const DIRS := [Vector2i(1, 0), Vector2i(1, -1), Vector2i(0, -1), Vector2i(-1, 0)
 
 func setup(world_node: Node, cfg: Dictionary) -> void:
 	world = world_node
+	_neighbours.clear()
 	half_map = float(cfg.get("halfMap", float(world.map.mapSize) * 0.5))
 	hex = float(world.logistics.radius) if world.logistics != null else 12.0
 	cell = hex * sqrt(3.0)  # the width of a hex, where callers want a cell size
@@ -153,12 +155,15 @@ func cell_polygon(i: int) -> PackedVector2Array:
 	return out
 
 func neighbours(i: int) -> Array[int]:
+	if _neighbours.has(i): return _neighbours[i]
 	var h := axial(i)
 	var out: Array[int] = []
 	for d in DIRS:
 		var j := index_of(h + d)
 		if j >= 0:
 			out.append(j)
+	out.make_read_only()
+	_neighbours[i] = out
 	return out
 
 ## Who may work the sea at `at` (an offshore rig on a field there): the nation
@@ -441,6 +446,35 @@ func _process(delta: float) -> void:
 var _ticks := 0
 var _touched := PackedByteArray()   # hexes someone has presence in this tick
 
+## Compute each home's town once per border update. Player residents share
+## national housing capacity, while rival settlements use their population weights.
+func _town_population() -> Dictionary:
+	var counts := {}
+	if world.logistics == null: return counts
+	var towns: Dictionary = world.logistics.towns_by_owner()
+	var weights: Dictionary = world.economy.POPULATION_WEIGHTS if world.economy != null else {}
+	var base_cap := float(world.economy.cfg.baseCivCap) if world.economy != null else 0.0
+	var capacity := base_cap
+	for b in world.buildings:
+		if b.dead or not b.built: continue
+		var population: float
+		if b.owner == 0 and world.economy != null:
+			population = float(b.def.provides.get("civCap", 0.0))
+			capacity += population
+			if b.key == "hq": population += base_cap
+		else:
+			population = 0.8 * float(weights.get(b.key, 60.0 if b.def.get("settlement") != null else 0.0))
+		if population <= 0.0: continue
+		var town = world.logistics.settlement_of(b, towns)
+		if town == null: continue
+		var id: int = town.root.get_instance_id()
+		counts[id] = float(counts.get(id, 0.0)) + population
+	if world.economy != null:
+		for town in towns.get(0, []):
+			var id: int = town.root.get_instance_id()
+			counts[id] = float(counts.get(id, 0.0)) * world.economy.civilians / maxf(capacity, 1.0)
+	return counts
+
 func tick() -> void:
 	var nations: int = world.map.nations.size()
 	_ticks += 1
@@ -457,6 +491,7 @@ func tick() -> void:
 	built.resize(cols * rows * nations)
 	_touched.resize(cols * rows)
 	_touched.fill(0)
+	var population := _town_population()
 	for b in world.buildings:
 		if b.dead or not b.built:
 			continue
@@ -464,13 +499,14 @@ func tick() -> void:
 		var w := 30.0 if b.key == "hq" else 26.0 if b.key == "cityCenter" else 18.0 if b.key == "villageCenter" else 22.0 if b.key == "commandCenter" else 14.0
 		# A settlement's land grows with its people (rings_of); any other
 		# building holds the hex it stands on.
-		var reach := rings_of(b) if RINGS_MAX.has(b.key) else 0
+		var reach := 0
 		if RINGS_MAX.has(b.key):
+			reach = clampi(1 + int(float(population.get(b.root.get_instance_id(), 0.0)) / PEOPLE_PER_RING), 1, int(RINGS_MAX[b.key]))
 			b.rings_now = reach
 		if b.owner == 0 and RINGS_MAX.has(b.key):
 			var was: int = int(b.get("rings_told", reach))
 			if reach > was:
-				world.hud.notice("%s has grown to %d residents: its land spreads one ring further." % [b.def.name, int(residents(b))])
+				world.hud.notice("%s has grown to %d residents: its land spreads one ring further." % [b.def.name, int(population.get(b.root.get_instance_id(), 0.0))])
 			b.rings_told = reach
 		_presence(presence, b.root.position, b.owner, w, reach, nations)
 		_presence(built, b.root.position, b.owner, w, reach, nations)

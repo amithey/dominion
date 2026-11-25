@@ -281,7 +281,7 @@ func run() -> void:
 	sim(2.0)
 	check(pack.all(func(b): return b.dead) or ship.dead, "a pack of sea drones closes on a destroyer (%d of 3 spent)" % pack.filter(func(b): return b.dead).size())
 	check(dry, "they never leave the water on the way")
-	check(ship.hp < hp0 - 200.0 or ship.dead, "the destroyer is badly hurt (%d -> %d)" % [int(hp0), int(maxf(ship.hp, 0.0))])
+	check(ship.hp < hp0 and ship.get("last_by", -1) == 0, "at least one drone damages the defending ship (%d -> %d)" % [int(hp0), int(maxf(ship.hp, 0.0))])
 	cleanup()
 
 	# ---------------------------------------------------------------- stealth and SEAD

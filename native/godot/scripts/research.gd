@@ -309,6 +309,7 @@ func track_blocker(key: String) -> String:
 	return ""
 
 func enqueue(item: String) -> String:
+	if not _known_project(item): return "Unknown research project."
 	if item in queue:
 		return ""
 	if queue.size() >= QUEUE_MAX:
@@ -324,6 +325,9 @@ func enqueue(item: String) -> String:
 	queue.append(item)
 	changed.emit()
 	return ""
+
+func _known_project(item: String) -> bool:
+	return tracks_cfg.has(item.substr(6)) if item.begins_with("track:") else discoveries.has(item)
 
 func dequeue(item: String) -> void:
 	queue.erase(item)
@@ -387,6 +391,7 @@ func tick(dt: float) -> void:
 				eco.res.money += 2.0 * dt * bonus("chips")
 				chip_rp += 0.6 * bonus("chips")
 	rate = (BASE_RATE + eco.provided("researchRate") + chip_rp) * (1.0 + bonus("researchPct"))
+	rate += eco.civil.partnerships(0, "University")
 	points += rate * dt
 	_work(dt)
 	_check_era()
@@ -412,7 +417,7 @@ func _work(dt: float) -> void:
 			if not progress.has(item):
 				progress[item] = {"work": 0.0}
 			var need := track_cost(key)
-			var draw := minf(points, maxf(rate, need / MIN_STAGE_SECONDS) * dt)
+			var draw := _work_points(need, float(progress[item].work), dt)
 			points -= draw
 			progress[item].work += draw
 			if progress[item].work >= need:
@@ -437,7 +442,7 @@ func _work(dt: float) -> void:
 				continue  # waiting for materials
 			p.paid = true
 		var need := stage_points(item, stage)
-		var draw := minf(points, maxf(rate, need / MIN_STAGE_SECONDS) * dt)
+		var draw := _work_points(need, float(p.work), dt)
 		points -= draw
 		p.work += draw
 		if p.work >= need:
@@ -455,6 +460,9 @@ func _work(dt: float) -> void:
 			else:
 				world.hud.notice("%s: %s done. Next: %s." % [name, stage_names(item)[0], stage_names(item)[1]])
 		return
+
+func _work_points(required: float, completed: float, dt: float) -> float:
+	return minf(points, minf(maxf(0.0, required - completed), required * dt / MIN_STAGE_SECONDS))
 
 ## Research handed over by agents or rewards; negative when stolen.
 func add_points(amount: float) -> void:
@@ -497,9 +505,8 @@ func era_requirements(index: int) -> Array:
 				label = "Discoveries"
 				have = completed_count()
 			"power":
-				label = "Research buildings"   # the native game has no power grid: education drives industry
-				need = ceilf(need / 15.0)
-				have = labs()
+				label = "Power generation (MW)"
+				have = world.homefront.power_supply.get(0, 0.0) if world.homefront != null else 0.0
 			"routes":
 				label = "Trade routes"
 				have = world.market.routes.size() if world.market else 0
@@ -548,6 +555,7 @@ func ai_tick() -> void:
 			continue
 		var aggression := float(world.ai.row(n).get("aggression", 0.35))   # its own difficulty
 		n.tech = float(n.get("tech", 0.0)) + 10.0 / lerpf(260.0, 150.0, aggression) * preload("res://scripts/national_profile.gd").ai_research(world, n.id)
+		n.tech += 0.01 * world.economy.civil.partnerships(n.id, "University")
 		n.tech = minf(n.tech, 10.0)
 
 func ai_tech(owner: int) -> float:
@@ -611,7 +619,8 @@ func unit_cost(key: String, cost: Dictionary) -> Dictionary:
 	var m := 1.0
 	if key in world.VEHICLES or key in world.NAVAL:
 		m += bonus("costVehiclePct")
-	if key == "drone":
+	var role := preload("res://scripts/additional_factions.gd").base(key)
+	if role == "akinci" or role in preload("res://scripts/modern_warfare.gd").DRONES:
 		m += bonus("costDronePct")
 	m *= preload("res://scripts/national_profile.gd").cost_mult(world, 0, key)   # the nation's industry: cheaper here, dearer there
 	if absf(m - 1.0) < 0.001:
@@ -624,7 +633,7 @@ func unit_cost(key: String, cost: Dictionary) -> Dictionary:
 # ---------------------------------------------------------------- saving
 
 func capture() -> Dictionary:
-	return {"points": points, "progress": progress, "tracks": tracks, "queue": queue, "era": era}
+	return {"points": points, "progress": progress, "tracks": tracks, "queue": queue, "era": era}.duplicate(true)
 
 func restore(data: Dictionary) -> void:
 	points = float(data.get("points", 0.0))
@@ -636,10 +645,13 @@ func restore(data: Dictionary) -> void:
 		var saved: Dictionary = data.get("progress", {}).get(key, {})
 		progress[key] = {"stage": int(saved.get("stage", 0)), "work": float(saved.get("work", 0.0)), "paid": bool(saved.get("paid", false))}
 	for key in data.get("progress", {}):
-		if String(key).begins_with("track:"):
+		if String(key).begins_with("track:") and _known_project(key):
 			progress[key] = {"work": float(data.progress[key].get("work", 0.0))}
 	for key in tracks:
 		tracks[key] = int(data.get("tracks", {}).get(key, 0))
-	queue = Array(data.get("queue", [])).map(func(q): return String(q))
+	queue = []
+	for item in data.get("queue", []):
+		if item is String and _known_project(item) and item not in queue:
+			queue.append(item)
 	_recompute()
 	changed.emit()

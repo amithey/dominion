@@ -330,6 +330,6 @@ func restore(data: Dictionary) -> void:
 	crisis_shown = {}
 	_crisis_truth = {}
 	for key in data.get("crises", {}).get("shown", {}):
-		crisis_shown[int(key)] = data.crises.shown[key]
+		crisis_shown[int(key)] = data.crises.shown[key].duplicate(true) if data.crises.shown[key] is Array or data.crises.shown[key] is Dictionary else data.crises.shown[key]
 	for key in data.get("crises", {}).get("truth", {}):
-		_crisis_truth[int(key)] = data.crises.truth[key]
+		_crisis_truth[int(key)] = data.crises.truth[key].duplicate(true) if data.crises.truth[key] is Array or data.crises.truth[key] is Dictionary else data.crises.truth[key]

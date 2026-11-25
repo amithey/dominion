@@ -134,7 +134,7 @@ func has_market() -> bool:
 	return world.economy.owned("market") > 0
 
 func ports() -> int:
-	return world.economy.owned("port")
+	return world.economy.owned("port") + int(world.economy.provided("harbour"))
 
 ## "rail", "road" or "": whether your roads or railways reach one of
 ## `nation`'s town halls from your capital (overland trade, no port needed).
@@ -188,6 +188,7 @@ func sell(res: String, qty: int) -> String:
 	if not has_market():
 		return "Instant market deals require a Market."
 	var eco: Node = world.economy
+	if res == "food" and eco.civil.export_floor() > 0 and eco.res.food - qty < eco.civil.export_floor(): return "Not enough food above the domestic stock floor."
 	if eco.res.get(res, 0.0) < qty:
 		return "Not enough %s to sell." % res
 	var earned := floori(quote(res, qty, false) * preload("res://scripts/national_profile.gd").trade_mult(world, 0))
@@ -219,6 +220,8 @@ func buy(res: String, qty: int) -> String:
 
 func route_problem(nation: int, res: String) -> String:
 	var d: Node = world.diplomacy
+	if nation <= 0 or nation >= d.n: return "Choose a foreign trade partner."
+	if not cfg.price.has(res): return "Choose a traded commodity."
 	if world.get("un") != null and world.un != null and world.un.trade_blocked(0, nation, res):
 		return "UN restrictions block this trade; humanitarian food is exempt."
 	var overland := land_link(nation)
@@ -235,6 +238,7 @@ func route_problem(nation: int, res: String) -> String:
 	return ""
 
 func open_route(nation: int, res: String, dir: String, qty: int) -> String:
+	if qty <= 0 or dir not in ["export", "import"]: return "Choose a positive shipment size and a trade direction."
 	var problem := route_problem(nation, res)
 	if problem != "":
 		return problem
@@ -294,6 +298,7 @@ func tick() -> void:
 			world.hud.notice("Trade route with %s collapsed%s." % [d.name_of(r.nation), " — the cargo at sea was lost" if r.shipment != null else ""])
 			continue
 		var partner = ai_nation(r.nation)
+		var partner_stock := preload("res://scripts/additional_powers.gd").stock(world, r.nation)
 		if world.get("un") != null and world.un != null and world.un.trade_blocked(0, int(r.nation), str(r.res)):
 			r.status = "UN restrictions: cargo held pending review"
 			continue
@@ -310,28 +315,39 @@ func tick() -> void:
 			if r.shipment.eta > 0.0:
 				continue
 			var cargo: Dictionary = r.shipment
-			r.shipment = null
-			if sabotaged > 0 and not r.get("overland", false):
-				sabotaged -= 1
-				lost += 1
-				r.status = "Sunk by saboteurs — reloading"
-				world.hud.notice("SABOTAGE: the %s cargo on the %s route was sunk. It never arrived." % [r.res, d.name_of(r.nation)])
-				continue
-			if randf() < (0.02 if r.get("overland", false) else risk()):  # bandits on the road; storms and raiders at sea
-				lost += 1
-				r.status = "Shipment lost — reloading"
-				world.hud.notice("A %s shipment on the %s route was lost at sea. Warships reduce this risk." % [r.res, d.name_of(r.nation)])
-				continue
+			if not cargo.get("arrived", false):
+				if sabotaged > 0 and not r.get("overland", false):
+					sabotaged -= 1
+					r.shipment = null
+					lost += 1
+					r.status = "Sunk by saboteurs — reloading"
+					world.hud.notice("SABOTAGE: the %s cargo on the %s route was sunk. It never arrived." % [r.res, d.name_of(r.nation)])
+					continue
+				if randf() < (0.02 if r.get("overland", false) else risk()):  # bandits on the road; storms and raiders at sea
+					r.shipment = null
+					lost += 1
+					r.status = "Shipment lost — reloading"
+					world.hud.notice("A %s shipment on the %s route was lost at sea. Warships reduce this risk." % [r.res, d.name_of(r.nation)])
+					continue
+				cargo.arrived = true
+			var payment: float = cargo.value
 			if r.dir == "export":
-				cargo.value *= preload("res://scripts/national_profile.gd").trade_mult(world, 0)   # exporters and sanctioned nations
-				eco.res.money += cargo.value
-				if partner != null:
-					partner.money = maxf(0.0, partner.money - cargo.value * 0.5)
+				payment *= preload("res://scripts/national_profile.gd").trade_mult(world, 0)
+				if partner.money < payment or float(partner_stock.get(r.res, 0)) + cargo.qty > 500:
+					r.status = "Awaiting partner funds or storage"
+					continue
+			elif eco.res.get(r.res, 0.0) + cargo.qty > cap_of(r.res):
+				r.status = "Awaiting storage"
+				continue
+			r.shipment = null
+			if r.dir == "export":
+				eco.res.money += payment
+				partner.money -= payment
+				partner_stock[r.res] = float(partner_stock.get(r.res, 0)) + cargo.qty
 			else:
-				eco.res[r.res] = minf(cap_of(r.res), eco.res.get(r.res, 0.0) + cargo.qty)
-				if partner != null:
-					partner.money += cargo.value * 0.5
-			r.total += cargo.value
+				eco.res[r.res] = eco.res.get(r.res, 0.0) + cargo.qty
+				partner.money += payment
+			r.total += payment
 			delivered += 1
 			r.status = "Delivered — reloading"
 			d.change(0, r.nation, 0.8)
@@ -340,13 +356,19 @@ func tick() -> void:
 		var voyage := float(cfg.voyage) * (1.0 - preload("res://scripts/additional_powers.gd").bonus(world, 0, "voyage"))
 		if r.get("overland", false):
 			voyage *= 0.4 if land_link(r.nation) == "rail" else 0.65  # trains are quickest
-		if r.dir == "export" and eco.res.get(r.res, 0.0) >= r.qty:
+		var floor_stock: float = eco.civil.export_floor() if r.res == "food" else 0.0
+		if r.dir == "export" and eco.res.get(r.res, 0.0) >= r.qty + floor_stock:
 			eco.res[r.res] -= r.qty
 			pressure(r.res, r.qty, false)
 			r.shipment = {"qty": r.qty, "value": value, "eta": voyage}
 			r.status = "Outbound — %ds" % int(voyage)
 		elif r.dir == "import" and eco.res.money >= value:
 			if eco.res.get(r.res, 0.0) + r.qty <= cap_of(r.res):
+				var protected: float = eco.civil.export_floor(int(r.nation)) if r.res == "food" else 0.0
+				if float(partner_stock.get(r.res, 0)) < r.qty + protected:
+					r.status = "Stalled - partner lacks available stock"
+					continue
+				partner_stock[r.res] -= r.qty
 				eco.res.money -= value
 				pressure(r.res, r.qty, true)
 				r.shipment = {"qty": r.qty, "value": value, "eta": voyage}
@@ -358,30 +380,34 @@ func tick() -> void:
 	changed.emit()
 
 func capture() -> Dictionary:
-	return {"mult": mult, "routes": routes, "delivered": delivered, "lost": lost, "next_id": _next_id, "ai_stock": ai_stock, "volume": volume, "flow": flow, "fair": fair, "history": history, "sabotaged": sabotaged}
+	return {"mult": mult, "routes": routes, "delivered": delivered, "lost": lost, "next_id": _next_id, "ai_stock": ai_stock, "volume": volume, "flow": flow, "fair": fair, "history": history, "sabotaged": sabotaged,
+		"tick_elapsed": _tick, "step_elapsed": _step}.duplicate(true)
 
 func restore(data: Dictionary) -> void:
 	ai_stock = data.get("ai_stock", {}).duplicate(true)
 	volume = data.get("volume", {}).duplicate(true)
-	for key in data.get("mult", {}):
-		mult[key] = float(data.mult[key])
-	for key in data.get("flow", {}):
-		flow[key] = float(data.flow[key])
-	for key in data.get("fair", {}):
-		fair[key] = float(data.fair[key])
-	for key in data.get("history", {}):
-		history[key] = Array(data.history[key]).map(func(v): return float(v))
+	_tick = maxf(0.0, float(data.get("tick_elapsed", 0)))
+	_step = maxf(0.0, float(data.get("step_elapsed", 0)))
+	for key in cfg.price:
+		mult[key] = float(data.get("mult", {}).get(key, 1.0))
+		flow[key] = float(data.get("flow", {}).get(key, 0.0))
+		fair[key] = float(data.get("fair", {}).get(key, 1.0))
+		var samples: Array = data.get("history", {}).get(key, [])
+		history[key] = [mult[key]] if samples.is_empty() else samples.map(func(v): return float(v))
 	routes.clear()
+	var highest_id := 0
 	for r in data.get("routes", []):
+		if int(r.qty) <= 0 or r.dir not in ["export", "import"] or not cfg.price.has(r.res) or int(r.nation) <= 0 or int(r.nation) >= world.diplomacy.n: continue
 		var copy: Dictionary = r.duplicate(true)
 		copy.id = int(copy.id)
 		copy.nation = int(copy.nation)
 		copy.qty = int(copy.qty)
 		routes.append(copy)
+		highest_id = maxi(highest_id, copy.id)
 	sabotaged = int(data.get("sabotaged", 0))
 	delivered = int(data.get("delivered", 0))
 	lost = int(data.get("lost", 0))
-	_next_id = int(data.get("next_id", routes.size() + 1))
+	_next_id = maxi(highest_id + 1, int(data.get("next_id", 1)))
 
 func trade_ai() -> void:
 	if world.ai == null: return
@@ -390,20 +416,31 @@ func trade_ai() -> void:
 		var id := str(nation.id)
 		if not ai_stock.has(id): ai_stock[id] = {}
 		var stock: Dictionary = ai_stock[id]
+		world.economy.civil.rival_budget(nation, stock)
+		var programme := str(nation.get("civil_programme", ""))
 		var desks := 0
+		var capacity := 200.0
 		for b in world.buildings:
 			if b.owner != nation.id or b.dead or not b.built or not b.get("supplied", true): continue
 			if b.key == "market": desks += 1
+			capacity += float(b.def.get("provides", {}).get("civCap", 0.0))
 			if b.deposit != null:
 				var resource: String = b.deposit.def.res
 				stock[resource] = minf(500.0, float(stock.get(resource, 100.0)) + float(b.deposit.def.rate) * TICK * preload("res://scripts/national_profile.gd").resource_mult(world, nation.id, resource) * (1.0 + preload("res://scripts/additional_powers.gd").bonus(world, nation.id, "mining")))
-			if b.key in ["farm", "fishingWharf"]: stock["food"] = minf(500.0, float(stock.get("food", 100.0)) + 30.0 * ((1.0 + float(preload("res://scripts/additional_factions.gd").profile(world, nation.id).get("bonus", {}).get("foodPct", 0.0))) if b.key == "farm" else float(preload("res://scripts/additional_factions.gd").profile(world, nation.id).get("fishing", 1.0))))
+			if b.key in ["farm", "fishingWharf"]: stock["food"] = minf(500.0, float(stock.get("food", 100.0)) + 30.0 * (1.25 if b.key == "farm" and programme == "Farm grants" else 1.0) * ((1.0 + float(preload("res://scripts/additional_factions.gd").profile(world, nation.id).get("bonus", {}).get("foodPct", 0.0))) if b.key == "farm" else float(preload("res://scripts/additional_factions.gd").profile(world, nation.id).get("fishing", 1.0))))
+		nation.civil_capacity = capacity
 		var army := 0
 		for u in world.units:
 			if u.owner == nation.id and not u.dead: army += 1
 		for resource in cfg.price:
 			var use: float = 12.0 + army * 0.3 if resource == "food" else (3.0 + army * 0.12 if resource in ["oil", "iron", "gas"] else 2.0)
 			if resource == "food": use *= float(nation.get("civilians", 120.0)) / 120.0 * float(preload("res://scripts/additional_factions.gd").profile(world, nation.id).get("civilian_food", 1.0))
+			if resource == "gas" and world.economy.is_winter():
+				use += float(nation.get("civilians", 120)) * 0.006 * TICK * (0.6 if programme == "Home insulation" else 1.0)
+			if resource == "food":
+				var released := clampf(use + 1.0 - float(stock.get("food", 100)), 0, float(nation.get("grain_reserve", 0)))
+				stock.food = float(stock.get("food", 100)) + released
+				nation.grain_reserve = float(nation.get("grain_reserve", 0)) - released
 			stock[resource] = maxf(0.0, float(stock.get(resource, 100.0)) - use)
 			if desks == 0 or (world.un != null and world.un.market_closed(nation.id, resource)): continue
 			if stock[resource] < 70.0:

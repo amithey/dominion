@@ -340,7 +340,9 @@ func capture() -> Dictionary:
 		"known_by_rivals": w.buildings.filter(func(b): return not b.dead and not b.get("known_by", {}).is_empty()).map(func(b): return [b.root.position.x, b.root.position.z, b.known_by.keys()])}
 
 func restore(data: Dictionary) -> void:
+	explored.fill(0)
 	if data.is_empty():
+		refresh()
 		return
 	var raw: PackedByteArray = Marshalls.base64_to_raw(str(data.get("explored", "")))
 	var size := int(data.get("size", 0))

@@ -14,6 +14,8 @@ signal changed
 
 const TICK := 10.0
 const GIFT := 250.0
+const EMBASSY_WARMTH := 0.5     ## relations a tick (10 s) per embassy with each nation at peace
+const EMBASSY_CEILING := 50.0   ## embassies do not warm relations past this
 
 var world: Node
 var n := 0
@@ -111,6 +113,8 @@ func declare_war(a: int, b: int, reason := "") -> void:
 
 func make_peace(a: int, b: int) -> void:
 	set_flag(war, a, b, false)
+	if world != null and world.get("engagement") != null:
+		world.engagement.end_between(a, b)
 	set_score(a, b, -30.0 if a == 0 or b == 0 else -40.0)
 	changed.emit()
 
@@ -145,6 +149,7 @@ func propose_pact(other: int) -> String:
 		return "%s has fallen: there is no government to sign with." % name_of(other)
 	if at_war(0, other):
 		return "No trade during war."
+	if pact[0][other]: return "A trade pact is already active."
 	if rel(0, other) < 20.0:
 		return "Relations too cold for a trade pact (+20 needed)."
 	set_flag(pact, 0, other, true)
@@ -174,6 +179,7 @@ func propose_alliance(other: int) -> String:
 		return "%s has fallen: there is no government to ally with." % name_of(other)
 	if at_war(0, other):
 		return "Make peace first."
+	if allied(0, other): return "Already allied."
 	if rel(0, other) < 55.0:
 		return "They need a relation of at least +55 to consider an alliance."
 	if randf() < 0.75:
@@ -185,7 +191,7 @@ func propose_alliance(other: int) -> String:
 
 ## Asks an ally to join the player's war against `target`.
 func request_joint_war(ally: int, target: int) -> String:
-	if not allied(0, ally) or not at_war(0, target) or at_war(ally, target):
+	if ally == target or defeated(ally) or defeated(target) or not allied(0, ally) or not at_war(0, target) or at_war(ally, target):
 		return ""
 	if randf() < clampf(0.4 + rel(0, ally) / 200.0, 0.3, 0.85):
 		declare_war(ally, target, "%s joins your war against %s!" % [name_of(ally), name_of(target)])
@@ -243,6 +249,13 @@ func tick() -> void:
 			if defeated(b):
 				continue
 			change(a, b, (randf() - 0.5) * 4.0)
+			if not war[a][b] and rel(a, b) >= 55.0:
+				if not pact[a][b]: set_flag(pact, a, b, true)
+				elif not nap[a][b]: set_flag(nap, a, b, true)
+			if pact[a][b] and not war[a][b]:
+				for owner in [a, b]:
+					var partner = world.market.ai_nation(owner)
+					if partner != null: partner.money += 40.0
 			if not war[a][b] and rel(a, b) < -75.0 and not nap[a][b] and randf() < 0.05 and not RegimeChange.restrains(world, a, b) and not RegimeChange.restrains(world, b, a):
 				declare_war(a, b)
 			elif war[a][b] and randf() < 0.04 + (maxf(0.0, 40.0 - minf(world.support.value(a), world.support.value(b))) / 200.0 if world.get("support") != null else 0.0):   # weary peoples make peace sooner
@@ -255,8 +268,11 @@ func tick() -> void:
 			var drift := -0.3 if rel(0, a) > 0.0 else (1.2 if world.research and world.research.bonus("warmRelations") >= 1.0 else 0.5)
 			if not (pact[0][a] or nap[0][a] or alliance[0][a]):
 				drift -= aggression_of(a) * 0.9
+			# Embassies keep up relations with every nation at peace (two count), up to +50.
+			if world.economy != null and rel(0, a) < EMBASSY_CEILING:
+				drift += EMBASSY_WARMTH * mini(world.economy.owned("embassy"), 2)
 			change(0, a, drift)
-		if pact[0][a]:
+		if pact[0][a] and not war[0][a]:
 			world.economy.res.money += 40.0
 			for nation in world.ai.nations:
 				if nation.id == a:
@@ -290,7 +306,7 @@ func _accept(kind: String, id: int) -> void:
 	if defeated(id):
 		world.hud.notice("%s has fallen: its offer lapsed." % name_of(id))
 		return
-	if kind in ["alliance", "pact", "nap"] and at_war(0, id):
+	if kind in ["alliance", "pact", "nap", "tribute"] and at_war(0, id):
 		world.hud.notice("The offer from %s lapsed: you are now at war." % name_of(id))
 		return
 	if kind == "peace" and not at_war(0, id):
@@ -310,6 +326,9 @@ func _accept(kind: String, id: int) -> void:
 			change(0, id, 8.0)
 		"tribute":
 			if world.economy.pay({"money": 200.0}):
+				var recipient = world.market.ai_nation(id) if world.get("market") != null else null
+				if recipient != null:
+					recipient.money += 200.0
 				change(0, id, 12.0)
 			else:
 				change(0, id, -15.0)
@@ -317,6 +336,8 @@ func _accept(kind: String, id: int) -> void:
 	changed.emit()
 
 func _decline(id: int, cost: float) -> void:
+	if defeated(id):
+		return
 	change(0, id, -cost)
 	changed.emit()
 

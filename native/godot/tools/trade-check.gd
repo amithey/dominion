@@ -54,8 +54,38 @@ func run() -> void:
 	w.economy.recalculate()
 	w.diplomacy.pact[0][1] = true
 	w.economy.res.oil = 0.0
+	w.market.open_route(1, "oil", "export", -25)
+	w.market.open_route(99, "oil", "export", 25)
+	w.market.open_route(1, "unknown", "import", 25)
+	w.market.open_route(1, "oil", "unknown", 25)
+	check(w.market.routes.is_empty(), "invalid quantities, partners, goods and directions cannot open a route")
+	w.market.routes.clear()
 	var opened: String = w.market.open_route(1, "oil", "export", 25)
 	print("  ", opened)
+	w.market._tick = 7.5
+	w.market._step = 1.25
+	var snapshot: Dictionary = w.market.capture()
+	w.market._tick = 0.0
+	w.market._step = 0.0
+	w.market.routes.clear()
+	w.market.restore(JSON.parse_string(JSON.stringify(snapshot)))
+	check(w.market._tick == 7.5 and w.market._step == 1.25, "market and shipping clocks resume mid-cycle after loading")
+	check(w.market.routes.size() == 1, "an in-memory market snapshot restores the route after live changes")
+	if w.market.routes.is_empty(): w.market.open_route(1, "oil", "export", 25)
+	var legacy: Dictionary = w.market.capture()
+	legacy.erase("next_id")
+	for key in ["flow", "fair", "history", "tick_elapsed", "step_elapsed"]: legacy.erase(key)
+	w.market.flow.oil = 100
+	w.market.fair.oil = 2
+	w.market.history.oil = [2.0]
+	legacy.routes[0].id = 2
+	var invalid: Dictionary = legacy.routes[0].duplicate(true)
+	invalid.qty = -25
+	legacy.routes.append(invalid)
+	w.market.restore(legacy)
+	check(w.market.flow.oil == 0 and w.market.fair.oil == 1 and w.market.history.oil == [legacy.mult.oil], "older saves initialise missing price data independently of the live market")
+	check(w.market._tick == 0 and w.market._step == 0, "older saves start fresh market cycles")
+	check(w.market.routes.size() == 1 and w.market._next_id == 3, "legacy routes retain unique IDs and invalid loads are discarded")
 	var traffic: Node = w.get_children().filter(func(n): return n.get_script() == preload("res://scripts/route_traffic.gd"))[0]
 	w.market.tick()
 	traffic._sync()
@@ -86,6 +116,27 @@ func run() -> void:
 	for i in range(6):
 		w.market.tick()
 	check(w.market.lost > lost and w.market.sabotaged == 0, "a saboteur's work sinks your next cargo")
+	# A coastal town with a Harbour investment also launches freighters without a separate Commercial Port.
+	for b in w.buildings:
+		if b.owner == 0 and b.key == "port" and not b.dead:
+			b.dead = true
+	w.economy.recalculate()
+	var coastal_town = null
+	for i in range(w.territory.terrain.size()):
+		if w.territory.terrain[i] == w.territory.Terrain.COAST:
+			var pt: Vector3 = w.territory.center(i)
+			if not w.district_hex.has(w.logistics.world_hex(pt)) and w.coast_near(pt, w.logistics.radius * 2.6):
+				coastal_town = w.place_building("villageCenter", pt, 0, true)
+				break
+	if coastal_town != null:
+		coastal_town.supplied = true
+		w.economy.grant_test_resources()
+		w.economy.civil.improve(coastal_town, "Harbour")
+		w.market.routes.clear()
+		traffic._sync_ships()
+		w.market.open_route(1, "iron", "export", 25)
+		traffic._sync_ships()
+		check(not w.market.routes.is_empty() and traffic.vehicles.has("ship:%d" % w.market.routes[-1].id), "a Harbour town improvement spawns a freighter for sea routes")
 	if "--capture" in OS.get_cmdline_user_args():
 		for n in w.find_children("*", "Label3D", true, false) + w.find_children("*", "Sprite3D", true, false):
 			n.visible = false

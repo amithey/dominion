@@ -163,7 +163,7 @@ func _ceasefire(owner: int) -> void:
 ## A unit lost (world.kill): its nation mourns, its enemies take heart.
 func lost(unit: Dictionary) -> void:
 	var owner: int = int(unit.owner)
-	if unit.get("stowed", false) or unit.key in ["worker", "shahed", "loiterer", "wingman", "interceptorDrone", "harop"] + preload("res://scripts/war_tools.gd").ROBOTS or unit.get("foreign_recruit", false):
+	if unit.get("stowed", false) or unit.key in ["worker", "drone", "seaDrone", "orca", "decoy", "shahed", "loiterer", "wingman", "interceptorDrone", "harop"] + preload("res://scripts/war_tools.gd").ROBOTS or unit.get("foreign_recruit", false):
 		return   # a drone or a hired foreigner is not a son or daughter of the nation
 	var amount := 0.9 if unit.get("fly", false) or unit.get("naval", false) else (0.5 if unit.get("vehicle", false) else 0.25)
 	change(owner, -amount * sensitivity(owner))
@@ -196,6 +196,9 @@ func capture() -> Dictionary:
 	return {"support": out, "defending": defending.keys()}
 
 func restore(data: Dictionary) -> void:
+	support.clear()
+	low_since.clear()
+	for owner in range(w.map.nations.size()): support[owner] = baseline(owner)
 	for k in data.get("support", {}):
 		support[int(k)] = float(data.support[k])
 	defending.clear()

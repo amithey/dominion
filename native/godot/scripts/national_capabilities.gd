@@ -57,7 +57,7 @@ static func update(w: Node, delta: float) -> void:
 		if not has(w, owner, "foreignRecruitment") or not at_war(w, owner):
 			due.erase(owner)
 			continue
-		if not due.has(owner):
+		if not due.has(owner) or float(due[owner]) > w.game_time + RECRUIT_SECONDS:
 			due[owner] = w.game_time + RECRUIT_SECONDS
 		elif w.game_time >= float(due[owner]):
 			due[owner] = w.game_time + RECRUIT_SECONDS
@@ -85,6 +85,7 @@ static func recruit(w: Node, owner: int) -> int:
 	var reach: float = float(hq.get("footprint", 8.0)) * 0.7 + 4.0
 	for i in range(RECRUITS):
 		var at: Vector3 = centre + Vector3.FORWARD.rotated(Vector3.UP, TAU * (i + 0.5) / RECRUITS + 0.4) * reach
+		at = w.land_point(at, 12.0)
 		at.y = w.height_at(at.x, at.z)
 		var u: Dictionary = w.spawn_unit("soldier", at, owner)
 		u.foreign_recruit = true

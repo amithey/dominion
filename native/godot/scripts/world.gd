@@ -548,6 +548,7 @@ func _ready() -> void:
 	elif "--ui-test" in args:
 		await ui_test()
 	elif "--soak-test" in args:
+		start_match(difficulty)
 		await soak_test(12.0)
 	elif "--capture-screens" in args:
 		await capture_screens()
@@ -1227,7 +1228,7 @@ func refresh_streets() -> void:
 		var mask := 0
 		# A building that fills its whole hex (an airfield's runway, a stadium,
 		# a refinery...) has no streets running through it.
-		if b.key in ["airfield", "helipad", "stadium", "bunker", "missileSilo", "samSite", "port", "shipyard", "fishingWharf", "mountainMine", "extractor", "solarFarm", "farm", "park"]:
+		if not logistics.has_district_streets(b.key):
 			districts.set_streets(b.pad, 0)
 			continue
 		for d in logistics.DIRECTIONS:
@@ -1376,7 +1377,7 @@ func spawn_unit(key: String, at: Vector3, owner: int) -> Dictionary:
 	place_on_ground(unit, at)
 	if preload("res://scripts/additional_factions.gd").UNITS.has(key):
 		unit.speed *= float(preload("res://scripts/additional_factions.gd").UNITS[key].scale.get("speed", 1.0))
-	load("res://scripts/force_catalog.gd").equip(self, unit)
+	ForceCatalog.equip(self, unit)
 	if research:
 		research.equip(unit)  # discoveries and rival tech set health, range and speed
 	units.append(unit)
@@ -1713,6 +1714,8 @@ func _air_order_allowed(u: Dictionary, point: Vector3, action := 8.0, release_ra
 	return reason == ""
 
 func order_attack(selected: Array, enemy: Dictionary) -> void:
+	if enemy.get("dead", false) or not is_instance_valid(enemy.get("node")):
+		return
 	for u in selected:
 		if u.dead or u.owner == enemy.owner or effectiveness(u, enemy) <= 0.01 or u.dmg <= 0:
 			continue
@@ -1726,7 +1729,11 @@ func order_attack(selected: Array, enemy: Dictionary) -> void:
 		if u.get("air_state") in ["returning", "no base"]:
 			u.air_state = "ready"
 		u.enemy = enemy
-		u.board = null  # a new combat order cancels an unfinished airlift
+		u.erase("garrison_order")
+		u.erase("entering_fort")
+		u.erase("digging_target")
+		u.erase("digging")
+		_cancel_airlift_order(u)
 		u.forced = true  # an ordered target is not swapped for a nearer one
 		u.ignore = {}
 		u.erase("ground_attack")
@@ -1734,13 +1741,25 @@ func order_attack(selected: Array, enemy: Dictionary) -> void:
 		u.attack_move = true
 		u.path = PackedVector3Array()
 
+func _cancel_airlift_order(u: Dictionary) -> void:
+	if preload("res://scripts/airlift.gd").is_transport(u):
+		for passenger in units:
+			if is_same(passenger.get("board"), u):
+				passenger.board = null
+				passenger.target = null
+				passenger.order_goal = null
+				passenger.path = PackedVector3Array()
+	u.board = null
+	u.erase("unload_go")
+	u.erase("unload_target")
+	u.erase("unload_since")
+	u.erase("pickup_go")
+	u.erase("pickup_since")
+	u.erase("pickup_sweep")
+	u.erase("return_base")
+
 func order_move(selected: Array, point: Vector3, attack := false) -> void:
 	selected = selected.filter(func(u): return not u.dead)   # the fallen take no orders
-	for u in selected:
-		u.board = null  # explicit orders replace pending boarding
-		u.erase("unload_go")
-		u.erase("pickup_go")
-		u.erase("return_base")
 	# Aircraft sent onto one of their nation's air bases land there and stay.
 	var landed := []
 	var base_orders := []
@@ -1754,6 +1773,7 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 					if preload("res://scripts/airlift.gd").order_return_home(self, [u], b) > 0:
 						landed.append(u)
 				elif AirOperations.order_land(self, u, b):
+					_cancel_airlift_order(u)
 					landed.append(u)
 	if not base_orders.is_empty() and base_orders[0].owner == 0:
 		hud.notice("%d/%d aircraft cleared to land. Check fuel, runway and available slots." % [landed.size(), base_orders.size()])
@@ -1764,6 +1784,7 @@ func order_move(selected: Array, point: Vector3, attack := false) -> void:
 			return true
 		return _air_order_allowed(u, point))
 	for u in selected:
+		_cancel_airlift_order(u)
 		u.erase("payload_order")
 		u.erase("patrol")
 		# A return to base is cancelled by a new order while there is flight time left.
@@ -1823,6 +1844,7 @@ func order_patrol(selected: Array, point: Vector3) -> void:
 		var seconds := AirOperations.patrol_seconds(self, u, point)
 		if seconds < 3.0 or not _air_order_allowed(u, point, 3.0):
 			continue
+		_cancel_airlift_order(u)
 		u.erase("payload_order")
 		u.erase("ground_attack")
 		u.patrol = {"point": point, "remaining": seconds, "on_station": false}
@@ -1849,7 +1871,11 @@ func order_bombard(selected: Array, point: Vector3) -> void:
 			continue
 		u.erase("payload_order")
 		u.erase("patrol")
-		u.board = null
+		_cancel_airlift_order(u)
+		u.erase("garrison_order")
+		u.erase("entering_fort")
+		u.erase("digging_target")
+		u.erase("digging")
 		if not is_instance_valid(u.get("bombard_marker")):
 			u.bombard_marker = Node3D.new()
 			add_child(u.bombard_marker)
@@ -1863,9 +1889,11 @@ func order_bombard(selected: Array, point: Vector3) -> void:
 func can_bombard(u: Dictionary) -> bool:
 	if u.dead or u.dmg <= 0:
 		return false
+	if u.key == "interceptorDrone" or not ForceCatalog.can_target(self, u, {"is_building": true}):
+		return false
 	if u.key in ["samLauncher", "shortRangeSAM", "aaVehicle", "laserAD", "irisT", "abmLauncher", "saudiThaad", "hpmVehicle", "coastalASM", "submarine", "nuclearSub", "orca", "missileBoat", "carrier", "asFrigate", "landingShip"]:
 		return false
-	if u.vehicle or u.key in load("res://scripts/force_catalog.gd").INDIRECT:
+	if u.vehicle or u.key in ForceCatalog.INDIRECT:
 		return true
 	return u.key in ["attackJet", "bomber", "heavyBomberDrone", "helicopter"]
 
@@ -2473,6 +2501,8 @@ func walkable(x: float, z: float) -> bool:
 			return false
 	return true
 
+var terrain_walkable := PackedByteArray()
+
 func build_navigation() -> void:
 	var half := float(map.mapSize) * 0.5
 	var n := int(half * 2.0 / NAV_STEP) + 1
@@ -2483,10 +2513,17 @@ func build_navigation() -> void:
 			var x := -half + c * NAV_STEP
 			var z := -half + r * NAV_STEP
 			nav_heights[r * n + c] = Vector3(x, height_at(x, z), z)
-	nav_open.resize((n - 1) * (n - 1))
-	for r in range(n - 1):
-		for c in range(n - 1):
-			nav_open[r * (n - 1) + c] = 1 if walkable(-half + (c + 0.5) * NAV_STEP, -half + (r + 0.5) * NAV_STEP) else 0
+	var width := n - 1
+	terrain_walkable.resize(width * width)
+	var shore := float(map.seaLevel) + 0.4
+	for row in range(width):
+		for col in range(width):
+			var i := row * n + col
+			if minf(minf(nav_heights[i].y, nav_heights[i + 1].y), minf(nav_heights[i + n].y, nav_heights[i + n + 1].y)) < shore:
+				terrain_walkable[row * width + col] = 0
+			else:
+				terrain_walkable[row * width + col] = int(normal_at(-half + (col + 0.5) * NAV_STEP, -half + (row + 0.5) * NAV_STEP).y >= 0.8)
+	_apply_building_footprints()
 	var cells := rebuild_nav_mesh()
 	var nav_map := get_world_3d().navigation_map
 	NavigationServer3D.map_set_active(nav_map, true)
@@ -2528,11 +2565,31 @@ func nav_tiles_joined() -> bool:
 func rebuild_walk_grid() -> void:
 	if nav_n == 0:
 		return
+	var previous := nav_open
+	_apply_building_footprints()
+	var width := nav_n - 1
+	var changed := {}
+	for i in range(nav_open.size()):
+		if nav_open[i] != previous[i]:
+			changed[Vector2i((i % width) / NAV_TILE, (i / width) / NAV_TILE)] = true
+	for tile in changed:
+		_build_nav_tile(tile.y, tile.x)
+
+func _apply_building_footprints() -> void:
+	nav_open = terrain_walkable.duplicate()
 	var half := float(map.mapSize) * 0.5
-	for r in range(nav_n - 1):
-		for c in range(nav_n - 1):
-			nav_open[r * (nav_n - 1) + c] = 1 if walkable(-half + (c + 0.5) * NAV_STEP, -half + (r + 0.5) * NAV_STEP) else 0
-	rebuild_nav_mesh()
+	var width := nav_n - 1
+	for spot in building_spots:
+		var radius: float = spot.y * 0.62 + 3.0
+		var left := maxi(0, floori((spot.x - radius + half) / NAV_STEP))
+		var right := mini(width - 1, floori((spot.x + radius + half) / NAV_STEP))
+		var top := maxi(0, floori((spot.z - radius + half) / NAV_STEP))
+		var bottom := mini(width - 1, floori((spot.z + radius + half) / NAV_STEP))
+		for row in range(top, bottom + 1):
+			for col in range(left, right + 1):
+				var offset := Vector2((col + 0.5) * NAV_STEP - half - spot.x, (row + 0.5) * NAV_STEP - half - spot.z)
+				if offset.length_squared() < radius * radius:
+					nav_open[row * width + col] = 0
 
 ## Begins a match from the main menu: the AI nations wake up.
 ## The match's pace (match_setup.gd): the whole simulation slows together.
@@ -2676,6 +2733,7 @@ func capture_menu() -> void:
 
 ## Removes every building, unit and road, before a saved game is restored.
 func clear_match() -> void:
+	effects.clear_projectiles()
 	if hud != null:
 		hud.close_end()
 	cancel_placement()
@@ -2690,6 +2748,7 @@ func clear_match() -> void:
 			u.bombard_marker.queue_free()
 		u.node.queue_free()
 	buildings.clear()
+	b_grid.clear()
 	units.clear()
 	district_hex.clear()
 	building_spots.clear()
@@ -3008,7 +3067,7 @@ func update_construction(delta: float) -> void:
 		var reach: float = site_reach(b)
 		var at: Vector3 = b.root.position
 		var count := 0
-		if b.def.get("water", false): count = 1 # marine construction contractors
+		if b.def.get("water", false) and not b.get("ai_build", false): count = 1 # marine construction contractors
 		for u in units:
 			if u.dead or not is_same(u.build_site, b):
 				continue
@@ -3207,6 +3266,8 @@ func queue_unit(b: Dictionary, key: String) -> void:
 		return
 	var queued_pop := 0
 	for other in buildings:
+		if other.owner != b.owner or other.dead:
+			continue
 		for q in other.queue:
 			queued_pop += int(unit_defs.get(q, {}).get("pop", 0))
 	if economy.pop_used + queued_pop + int(def.get("pop", 1)) > economy.pop_cap:
@@ -3329,10 +3390,25 @@ func update_training(delta: float) -> void:
 		b.queue_prog = 0.0
 		var key: String = b.queue[0]
 		var at: Vector3 = b.root.position
-		var out := (Vector3(0, 0, 0) - at)
+		var out: Vector3 = b.get("rally_point", at + Vector3.BACK) - at
 		out.y = 0
 		out = out.normalized() if out.length() > 1.0 else Vector3.BACK
 		var door: Vector3 = at + out * (b.footprint * 0.62 + 3.5)
+		if key not in NAVAL and key not in AIR:
+			var found := false
+			for ring in [1.0, 1.6, 2.3]:
+				for i in range(12):
+					var direction := out.rotated(Vector3.UP, i * TAU / 12.0)
+					var candidate: Vector3 = at + direction * (b.footprint * 0.62 + 3.5) * ring
+					if open_ground(candidate):
+						door = candidate
+						out = direction
+						found = true
+						break
+				if found: break
+			if not found:
+				b.queue_prog = 1.0
+				continue
 		if key in NAVAL:
 			var launch = water_near(at, 160)
 			if launch == null:
@@ -3351,7 +3427,7 @@ func update_training(delta: float) -> void:
 		elif unit.get("fly", false) and key in AirOperations.TUBE_LAUNCHED and key != "wingman":
 			AirOperations.standby_new(self, unit, b, door)
 		else:
-			order_move([unit], door + out * 8.0 + Vector3(randf_range(-4, 4), 0, randf_range(-4, 4)))
+			order_move([unit], b.get("rally_point", door + out * 8.0))
 		if key == "sixthGen":
 			Future.escort(self, unit)   # two loyal wingmen: aboard while it is parked, launched as it takes off
 		elif directorate != null:
@@ -4086,13 +4162,19 @@ func soak_test(minutes: float) -> void:
 		n.next_attack = 60.0
 	Engine.time_scale = 4.0
 	var problems := {}
+	for system in ["fog", "events", "support", "victory", "un", "wmd", "generals", "defcon", "crisis", "directorate", "tests"]:
+		if get(system) == null:
+			problems["Missing live system: " + system] = true
+	if fog != null and not fog.enabled:
+		problems["Fog was disabled"] = true
+	var began := game_time
 	var seconds := 0.0
 	var checks := 0
 	var peak := 0
 	var half := float(map.mapSize) * 0.6
 	while seconds < minutes * 60.0 and game_over == "":
 		await get_tree().create_timer(2.0).timeout
-		seconds += 2.0 * Engine.time_scale
+		seconds = game_time - began
 		checks += 1
 		peak = maxi(peak, units.size())
 		for key in economy.res:
@@ -4284,12 +4366,7 @@ func combat_test(capture := false) -> void:
 	for c in cases:
 		# Each weapon case owns its damage. A delayed bomb from the previous
 		# case must not kill the next target before its attacker can fire.
-		for projectile in effects._projectiles:
-			projectile.node.queue_free()
-		effects._projectiles.clear()
-		for shell in effects._shells:
-			shell.node.queue_free()
-		effects._shells.clear()
+		effects.clear_projectiles()
 		var attacker := spawn_unit(c[0], c[2], 0)
 		var target := spawn_unit(c[1], c[3], 1)
 		target.target = target.node.position  # the target holds still
@@ -5575,8 +5652,11 @@ func airborne(u: Dictionary) -> bool:
 func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
 	var akey: String = str(attacker.get("key", ""))
 	var target_kind: String = target_class(target)
+	if target_kind == "air" and target.key == "heavyBomberDrone" and akey in ["soldier", "commando", "machineGunTeam", "scoutTeam"]:
+		return 1.0
+	var cache_kind := "sub" if target_kind == "naval" and preload("res://scripts/war_tools.gd").is_submarine(target) else target_kind
 	if not (akey in _SPECIAL_EFF_KEYS) and not attacker.get("_fc_restricted", false):
-		var ckey := akey + "|" + target_kind
+		var ckey := akey + "|" + cache_kind
 		if _eff_simple.has(ckey):
 			return float(_eff_simple[ckey])
 	if not preload("res://scripts/force_catalog.gd").can_target(self, attacker, target):
@@ -5604,7 +5684,7 @@ func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
 	var profile: Dictionary = damage_profile.get(akey, {})
 	var res: float = (0.0 if target.get("fly", false) else 1.0) if profile.is_empty() else float(profile.get(target_kind, 0.0))
 	if not (akey in _SPECIAL_EFF_KEYS) and akey != "laserAD" and target_kind != "air":
-		_eff_simple[akey + "|" + target_kind] = res
+		_eff_simple[akey + "|" + cache_kind] = res
 	return res
 
 ## Nearest hostile unit in range; buildings only when no unit is near.
@@ -5626,6 +5706,7 @@ func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
 				var bucket = grid.get(Vector2i(cx + dx, cz + dz))
 				if bucket != null:
 					candidates.append_array(bucket)
+		candidates.append_array(air_sea)
 	for other in candidates:
 		if other.dead or other.owner == unit.owner:
 			continue
@@ -5633,7 +5714,7 @@ func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
 		# Range is cheap; most nearby buckets still contain targets outside it.
 		if d >= radius or not hostile(unit.owner, other.owner) or effectiveness(unit, other) <= 0.01:
 			continue
-		if Modern.hidden(self, other, d, radius):
+		if Modern.hidden(self, other, d, radius, unit.owner):
 			continue
 		var score: float = d / directorate.value_of(other) if seek else d
 		if d < radius and score < best_d:
@@ -5664,8 +5745,9 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 		return
 	if unit.dmg <= 0.0 or disabled(unit):
 		return  # workers do not fight; EMP-struck machines are dead weight
-	if unit.enemy != null and not is_instance_valid(unit.enemy.get("node")):
-		unit.enemy = null   # its target was cleared away since the last tick (the node is freed)
+	if unit.enemy != null and (not is_instance_valid(unit.enemy.get("node")) or unit.enemy.dead
+		or (not unit.has("ground_attack") and not hostile(unit.owner, unit.enemy.owner))):
+		Tactics.drop(unit)
 	unit.reload -= delta
 	unit.search -= delta
 	# Decisions run every six physics ticks (five times a second at 30 Hz);
@@ -5676,7 +5758,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 	# They look as far as their weapon reaches (artillery outranges its own eyes otherwise).
 	if unit.enemy == null and unit.search <= 0.0:
 		unit.search = 0.35
-		if unit.target == null or unit.attack_move or unit.key in ["aaVehicle", "samLauncher", "manpads", "laserAD", "irisT"]:
+		if unit.target == null or unit.attack_move or unit.key in ["aaVehicle", "samLauncher", "shortRangeSAM", "manpads", "laserAD", "irisT"]:
 			unit.enemy = Tactics.pick_target(self, unit, maxf(unit.aggro, unit.range * TacticsTerrain.range_mult(self, unit)))
 			# An idle unit answers a fight beside it: an enemy fighting its side, out to the
 			# distance it would chase one anyway (Tactics.keep_target's leash). Six tanks used
@@ -5748,6 +5830,7 @@ func fire(unit: Dictionary, enemy: Dictionary) -> bool:
 func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 	if weapon == "bomb" and flat_distance(unit, enemy) > 11.0: return false
 	if weapon == "torpedo" and not enemy.get("naval", false): return false
+	if weapon == "swarm" and units.filter(func(u): return not u.dead and u.key == "shahed" and u.owner == unit.owner).size() >= Arsenal.SWARM_MAX: return false
 	if not preload("res://scripts/war_costs.gd").shot(self, unit, weapon): return false
 	var target: Vector3 = enemy.node.position + Vector3.UP * (2.0 if enemy.get("is_building", false) else (0.0 if enemy.get("fly", false) else 0.8))
 	var dir := Basis(Vector3.UP, unit.heading) * Vector3.BACK
@@ -5759,7 +5842,7 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 		var short: Vector3 = target.lerp(from, 0.12)
 		if weapon == "kamikaze":
 			from = unit.node.position
-			kill(unit)
+			kill(unit, true)
 			unit.node.visible = false
 		effects.projectile("fpv" if weapon == "fpv" else ("rocket" if weapon == "rocket" else "missile"), from, short, func(at): effects.explosion(at, 0.5, false))
 		aps_intercepts += 1
@@ -5803,7 +5886,7 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 				var best_u = null
 				var best_d := 28.0
 				for cand in units:
-					if not cand.dead and not cand.get("fly", false) and hostile(attacker_owner, cand.owner):
+					if not cand.dead and not cand.get("fly", false) and not preload("res://scripts/war_tools.gd").is_submarine(cand) and hostile(attacker_owner, cand.owner):
 						var d: float = cand.node.position.distance_to(last_pos)
 						if d < best_d:
 							best_d = d
@@ -5816,14 +5899,14 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			close.y = 0.0
 			var at: Vector3 = enemy.node.position + close.limit_length(1.5)
 			at.y = maxf(height_at(at.x, at.z), float(map.seaLevel)) + 0.8
-			kill(unit)
+			kill(unit, true)
 			unit.node.visible = false
 			Firepower.detonate(self, unit, "detonate", at, dmg)
 		"kamikaze":
 			# The drone is the warhead: it dives in and is gone.
 			var start: Vector3 = unit.node.position
 			var jammed := Modern.jammed(self, start, unit.owner) or Modern.jammed(self, target, unit.owner)
-			kill(unit)
+			kill(unit, true)
 			unit.node.visible = false
 			if jammed and randf() < Modern.JAM_FAIL * jam_factor(unit):
 				var lost: Vector3 = start.lerp(target, randf_range(0.2, 0.7))
@@ -5961,7 +6044,7 @@ func shell_hit(shooter: Dictionary, at: Vector3) -> void:
 	Firepower.detonate(self, shooter, "shell", at, float(shooter.dmg))
 
 func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
-	if unit.dead:
+	if unit.dead or amount <= 0.0:
 		return
 	# Striking a nation at peace starts a war with it (not a deniable covert act:
 	# Mossad, sabotage, insurgents: faction_powers.gd, additional_powers.gd).
@@ -5984,7 +6067,7 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	if directorate != null:
 		amount *= directorate.damage_mult(source, unit)  # AI: autonomy, the fusion cell, targeting and undersea sensing
 	amount *= preload("res://scripts/war_tools.gd").damage_mult(self, source, unit)  # radars, airborne warning, jamming, submarine hunters
-	if unit.get("garrison_building") != null:
+	if unit.get("garrison_building") != null and not source.get("pierce", false):
 		amount *= UrbanGarrison.COVER_MULT   # fortified in a building
 	amount *= TacticsTerrain.damage_mult(self, source, unit)   # firing down from the high ground
 	unit.hp -= amount
@@ -6035,7 +6118,7 @@ func show_building_damage(b: Dictionary) -> void:
 	b.damage_fade.tween_property(b.damage_label,"modulate:a",0.0,1.0)
 
 var charred: StandardMaterial3D
-func kill(unit: Dictionary) -> void:
+func kill(unit: Dictionary, expended := false) -> void:
 	if unit.get("killed", false):
 		return   # already dead: no second explosion, no second turret thrown
 	unit.killed = true
@@ -6043,11 +6126,11 @@ func kill(unit: Dictionary) -> void:
 		UrbanGarrison.exit_unit(self, unit, unit.garrison_building)
 	if fortifications != null and unit.get("garrisoned_in") != null:
 		fortifications.exit_unit(unit)
-	if sitrep != null:
+	if sitrep != null and not expended:
 		sitrep.unit_lost(unit)
 	if support != null:
 		support.lost(unit)   # the home front mourns (war_support.gd)
-	if generals != null and unit.has("general"):
+	if generals != null and (unit.has("general") or not unit.get("cargo", []).is_empty()):
 		generals.unit_lost(unit)   # the general aboard is killed or escapes wounded
 	if is_instance_valid(unit.get("bombard_marker")):
 		unit.bombard_marker.queue_free()
@@ -6060,7 +6143,8 @@ func kill(unit: Dictionary) -> void:
 	unit.enemy = null
 	unit.dead_time = 0.0
 	if unit.get("fly", false) or unit.get("naval", false):
-		effects.explosion(unit.node.position + Vector3.UP, 2.4, false)
+		if not expended:
+			effects.explosion(unit.node.position + Vector3.UP, 2.4, false)
 		if unit.engine:
 			unit.engine.stop()
 		if unit.dust:
@@ -6216,7 +6300,8 @@ func destroy_building(b: Dictionary) -> void:
 			u.build_site = null
 	economy.recalculate()
 	var name: String = map.nations[b.owner].name if b.owner < map.nations.size() else "Enemy"
-	hud.notice("%s %s destroyed" % ["Your" if b.owner == 0 else name, b.def.name])
+	if b.owner == 0 or int(b.get("last_by", -1)) == 0 or fog == null or not fog.enabled or fog.watches(b.root.position):
+		hud.notice("%s %s destroyed" % ["Your" if b.owner == 0 else name, b.def.name])
 	if b.key == "hq":
 		check_game_over()
 
@@ -6720,6 +6805,12 @@ func _unhandled_input(event: InputEvent) -> void:
 				def_line_start = null
 				return
 			var selected := units.filter(func(u): return u.selected and not u.dead)
+			if selected.is_empty() and selected_building != null and selected_building.owner == 0 and not selected_building.def.get("trains", []).is_empty():
+				var rally = ground_point(event.position)
+				if rally != null:
+					selected_building.rally_point = rally
+					hud.notice("Rally point set.", rally)
+				return
 			var target = enemy_under(event.position)
 			# Where they were sent: a ring on the ground and a radio click (ambience.gd).
 			if ambience != null and selected.any(func(u): return u.owner == 0):

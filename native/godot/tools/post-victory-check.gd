@@ -102,6 +102,34 @@ func run() -> void:
 		w.saves.restore(original)
 		check(w.game_over == "" and not w.continuing_after_end, "unfinished save clears continuation state")
 		await process_frame
+	# Both nations finish during the same two-second evaluation interval.
+	var v = w.victory
+	v.restore({})
+	w.territory.owner_of.fill(0)
+	w.market.ai_nation(1).tech = 10
+	w.game_time = 1000.0
+	v.land_since[0] = w.game_time - v.LAND_HOLD - 0.25
+	v.tech_since[1] = w.game_time - v.TECH_HOLD - 1.25
+	v.update(0.75)
+	var race: Dictionary = JSON.parse_string(JSON.stringify(v.capture()))
+	v.update(0.75)
+	v.restore(race)
+	v.update(1.20)
+	check(w.game_over == "", "loading restores the fraction of the victory evaluation interval")
+	v.update(0.05)
+	check(w.game_over == "defeat", "the rival whose deadline elapsed first wins even when the player qualifies in the same check")
+	check(v._left(0, v.land_since, v.LAND_HOLD) == "", "finished matches never advertise another impending victory")
+	w.game_over = ""
+	v.restore(race)
+	w.market.ai_nation(1).tech = 0
+	v.update(v.TICK)
+	check(w.game_over == "victory" and not v.tech_since.has(1), "an earlier deadline cannot win once the rival has lost its qualification")
+	w.game_over = ""
+	v.restore({})
+	w.market.ai_nation(1).defeated = true
+	v.tech_since[1] = w.game_time - v.TECH_HOLD
+	v.update(v.TICK)
+	check(not v.tech_since.has(1), "a defeated nation's old countdown is removed before saving")
 	print("POST_VICTORY: %d checks, %d failures" % [checks, failures.size()])
 	print("POST_VICTORY PASS" if failures.is_empty() else "POST_VICTORY FAIL")
 	quit(0 if failures.is_empty() else 1)

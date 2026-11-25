@@ -131,7 +131,7 @@ func update(delta: float) -> void:
 func _update_power_and_casualties(dt: float) -> void:
 	var n_nations: int = w.map.nations.size() if w.get("map") != null and w.map.has("nations") else 1
 	for o in range(n_nations):
-		power_supply[o] = BASE_MUNICIPAL_MW
+		power_supply[o] = BASE_MUNICIPAL_MW + (30.0 * w.economy.civil.partnerships(o, "Power grid") if w.economy != null else 0.0)
 		power_demand[o] = 0.0
 		hospital_cap[o] = 0.0
 		if grid_damaged.has(o):
@@ -643,6 +643,7 @@ func capture() -> Dictionary:
 	return {"casualties": cas}
 
 func restore(data: Dictionary) -> void:
+	grid_damaged.clear()
 	casualties.clear()
 	for k in data.get("casualties", {}):
 		casualties[int(k)] = float(data.casualties[k])

@@ -794,18 +794,22 @@ static func _keyed(src: Dictionary) -> Dictionary:
 	return out
 
 func restore(data: Dictionary) -> void:
+	st.clear()
+	for owner in range(w.map.nations.size()):
+		st[owner] = {"level": 0, "train": 0.0, "reserve": 0.0, "doctrine": "in", "rate": 0.0}
 	for k in data.get("st", {}):
 		var row: Dictionary = data.st[k]
 		st[int(k)] = {"level": int(row.get("level", 0)), "train": float(row.get("train", 0.0)), "reserve": float(row.get("reserve", 0.0)), "doctrine": str(row.get("doctrine", "in")), "rate": float(row.get("rate", 0.0))}
+	alloc = {"military": 30.0, "economy": 30.0, "intel": 20.0, "frontier": 20.0}
 	for p in data.get("alloc", {}):
 		if alloc.has(p): alloc[p] = float(data.alloc[p])
-	campaign = data.get("campaign", {})
+	campaign = data.get("campaign", {}).duplicate(true)
 	if campaign.has("targets"):
 		campaign.targets = campaign.targets.map(func(t): return int(t))
 	cyber_ready = float(data.get("cyber_ready", 0.0))
 	incidents.clear()
 	for k in data.get("incidents", {}): incidents[int(k)] = int(data.incidents[k])
-	log = data.get("log", [])
+	log = data.get("log", []).duplicate(true)
 	_rival_cyber.clear()
 	for k in data.get("rival_cyber", {}): _rival_cyber[int(k)] = float(data.rival_cyber[k])
 	retraining = bool(data.get("retraining", false))
@@ -814,10 +818,14 @@ func restore(data: Dictionary) -> void:
 		controls[int(k)] = {"by": int(data.controls[k].get("by", -1)), "until": float(data.controls[k].get("until", 0.0))}
 	smuggling.clear()
 	for k in data.get("smuggling", {}): smuggling[int(k)] = true
+	for t in signed: signed[t] = {}
 	if data.has("signed"):
 		for t in signed:
-			signed[t] = {}
 			for o in data.signed.get(t, []): signed[t][int(o)] = true
+	else:
+		for owner in range(w.map.nations.size()):
+			for t in AIData.profile(w, owner).get("signs", []):
+				if signed.has(t): signed[t][owner] = true
 	influence_ready = float(data.get("influence_ready", 0.0))
 	theft_ready = float(data.get("theft_ready", 0.0))
 	_rival_ops.clear()
@@ -832,6 +840,13 @@ func restore(data: Dictionary) -> void:
 	sabotage_ready = float(data.get("sabotage_ready", 0.0))
 	runaways.clear()
 	for k in data.get("runaways", {}): runaways[int(k)] = int(data.runaways[k])
+	_alarm_at.clear()
+	_agi_risk_at.clear()
+	_incident_at.clear()
+	_econ_shown = -1.0
+	_t = 0.0
+	_reputation_t = 0.0
+	_doctrine_t = 0.0
 	applications.restore(data.get("applications", {}))
 	for owner in st.keys():
 		_refresh(owner)

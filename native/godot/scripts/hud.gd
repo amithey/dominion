@@ -14,18 +14,18 @@ extends CanvasLayer
 
 const UI := preload("res://scripts/ui_theme.gd")
 const BUILD_MENU := {
-	"Economy": ["villageCenter", "cityCenter", "farm", "cottage", "housing", "residential", "workerHouse", "warehouse", "foodDepot", "extractor", "offshoreRig", "fishingPlatform", "fishingWharf", "mountainMine", "market", "railwayStation", "stockExchange", "lighthouse", "port", "bank", "oilRefinery", "powerPlant"],
-	"Civic & research": ["school", "library", "university", "techPark", "chipFab", "aiDataCenter", "hospital", "cityHall", "tvStation", "policeStation", "fireStation", "worship", "prison", "embassy", "courthouse", "intelAgency", "nuclearReactor"],
-	"Military": ["barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo", "fusionCell", "strategicComplex", "specialLab", "samSite", "bunker"],
+	"Economy": ["villageCenter", "cityCenter", "farm", "cottage", "apartments", "luxuryVillas", "housing", "residential", "workerHouse", "warehouse", "foodDepot", "extractor", "offshoreRig", "fishingPlatform", "fishingWharf", "mountainMine", "market", "railwayStation", "stockExchange", "lighthouse", "port", "bank", "oilRefinery", "powerPlant", "solarFarm"],
+	"Civic & research": ["school", "library", "university", "techPark", "chipFab", "aiDataCenter", "hospital", "waterTreatment", "museum", "park", "stadium", "cityHall", "tvStation", "policeStation", "fireStation", "worship", "prison", "embassy", "courthouse", "intelAgency", "nuclearReactor"],
+	"Military": ["barracks", "tankFactory", "shipyard", "helipad", "airfield", "ammoDepot", "missileSilo", "fusionCell", "strategicComplex", "specialLab", "samSite", "bunker", "commandCenter"],
 }
 ## The build list in groups under each tab, in the order a city grows.
 const BUILD_GROUPS := {
 	"Economy": [["Food and resources", ["farm", "extractor", "mountainMine", "offshoreRig", "fishingPlatform", "fishingWharf", "foodDepot", "warehouse"]],
-		["Homes", ["cottage", "housing", "residential", "workerHouse"]], ["Settlements", ["villageCenter", "cityCenter"]],
-		["Trade and industry", ["market", "port", "railwayStation", "stockExchange", "lighthouse", "bank", "oilRefinery", "powerPlant"]]],
+		["Homes", ["cottage", "apartments", "luxuryVillas", "housing", "residential", "workerHouse"]], ["Settlements", ["villageCenter", "cityCenter"]],
+		["Trade and industry", ["market", "port", "railwayStation", "stockExchange", "lighthouse", "bank", "oilRefinery", "powerPlant", "solarFarm"]]],
 	"Civic & research": [["Education and science", ["school", "library", "university", "techPark", "chipFab", "aiDataCenter"]],
-		["Public services", ["hospital", "cityHall", "tvStation", "policeStation", "fireStation", "courthouse", "worship", "prison", "embassy"]], ["State", ["intelAgency", "nuclearReactor"]]],
-	"Military": [["Training", ["barracks", "tankFactory", "shipyard", "helipad", "airfield"]], ["Defence", ["bunker", "samSite"]],
+		["Public services", ["hospital", "waterTreatment", "museum", "park", "stadium", "cityHall", "tvStation", "policeStation", "fireStation", "courthouse", "worship", "prison", "embassy"]], ["State", ["intelAgency", "nuclearReactor"]]],
+	"Military": [["Training", ["barracks", "tankFactory", "shipyard", "helipad", "airfield"]], ["Defence", ["bunker", "commandCenter", "samSite"]],
 		["Strategic", ["ammoDepot", "missileSilo", "fusionCell"]], ["Weapons of mass destruction", ["strategicComplex", "specialLab"]]],
 }
 const RESOURCES := [
@@ -75,7 +75,9 @@ var _sel_fuel: ProgressBar
 var _sel_info: Label
 var _city_tiles: GridContainer   # a town hall's accounts as tiles (Civilization style)
 var _city_sig := ""
-var _sel_queue: HBoxContainer
+var _sel_queue: HFlowContainer
+var _sel_scroll: ScrollContainer
+var _sel_body: MarginContainer
 var _sel_medal: Control
 var _sel_stats: HBoxContainer
 var _stat_values := {}    # caption -> [plate, value Label]
@@ -495,7 +497,7 @@ func _build_production() -> void:
 	_prod.anchor_bottom = 1.0
 	_prod.offset_left = -RIGHT_W - 12
 	_prod.offset_right = -12
-	_prod.offset_top = 56
+	_prod.offset_top = 108
 	_prod.offset_bottom = -MINI - 58
 	# The panel itself carries no padding: the title band runs edge to edge.
 	_prod.add_theme_stylebox_override("panel", UI.plate(Color(UI.PANEL_TOP, 0.97), Color(UI.PANEL_LOW, 0.97), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 8))
@@ -746,13 +748,6 @@ func _on_portrait(key: String, tex: Texture2D) -> void:
 
 func _build_selection() -> void:
 	_sel = PanelContainer.new()
-	_sel.anchor_top = 1.0
-	_sel.anchor_bottom = 1.0
-	_sel.offset_left = 12
-	_sel.offset_right = 560
-	_sel.offset_top = -272
-	_sel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_sel.offset_bottom = -12
 	_sel.add_theme_stylebox_override("panel", UI.plate(Color(UI.PANEL_TOP, 0.97), Color(UI.PANEL_LOW, 0.97), UI.TRIM, 0.0, UI.LIFT, Color(0, 0, 0, 0), 0, 8))
 	add_child(_sel)
 	var column := VBoxContainer.new()
@@ -764,13 +759,18 @@ func _build_selection() -> void:
 	column.add_child(head_band)
 	_sel_title = _text("", 19, UI.BRIGHT, true)
 	_sel_title.add_theme_font_size_override("font_size", 19)
+	_sel_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	head_band.add_child(_sel_title)
 	_windows.register_window(_sel, head_band, "selection")
+	_sel_scroll = ScrollContainer.new()
+	_sel_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(_sel_scroll)
 	var body := MarginContainer.new()
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_sel_body = body
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for side in ["left", "right", "top", "bottom"]:
 		body.add_theme_constant_override("margin_" + side, 10)
-	column.add_child(body)
+	_sel_scroll.add_child(body)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	body.add_child(row)
@@ -881,9 +881,12 @@ func _build_selection() -> void:
 						if not shelter.is_empty():
 							world.fortifications.order_enter(sel_u, shelter)
 			elif action=="Lay Mines":
-				world.order_mode = "apMine" if world.order_mode == "mine" else "mine"
+				if world.order_mode in ["mine", "apMine"]:
+					world.order_mode = ""
+					return
+				world.order_mode = "apMine" if Input.is_key_pressed(KEY_SHIFT) else "mine"
 				world.def_line_start = null
-				notice("Lay Mines (%s): click on the battlefield to place a minefield ($30). Click button again to switch AT/AP." % ("Anti-Personnel" if world.order_mode == "apMine" else "Anti-Tank"))
+				notice("Lay Mines (%s): click on the battlefield to place a minefield ($30). Shift-click selects anti-personnel mines. Click again to cancel." % ("Anti-Personnel" if world.order_mode == "apMine" else "Anti-Tank"))
 			elif action=="Defence Line":
 				var cycle := ["hedgehog", "atDitch", "trench", "dugout", "atMine", "apMine"]
 				var labels := {"hedgehog": "Anti-tank Hedgehogs ($15)", "atDitch": "Anti-tank Ditch ($25)", "trench": "Fighting Trenches ($20)", "dugout": "Forward Bunkers ($45)", "atMine": "Anti-tank Mines ($30)", "apMine": "Anti-personnel Mines ($30)"}
@@ -905,13 +908,25 @@ func _build_selection() -> void:
 						notice("Click Demolish again to take down the %s." % _selected.def.name)
 				else:
 					var sel_u := _selected_units()
+					var ids := sel_u.map(func(u): return u.node.get_instance_id())
+					var now := Time.get_ticks_msec() / 1000.0
+					if _demolish_target != ids or now - _demolish_armed >= 4.0:
+						_demolish_target = ids
+						_demolish_armed = now
+						notice("Click Demolish again to clear nearby friendly defences.")
+						return
+					_demolish_armed = -99.0
 					var cleared_forts: int = world.fortifications.demolish_near(sel_u, 16.0) if world.fortifications != null else 0
 					var cleared_mines: int = preload("res://scripts/war_tools.gd").clear_own_mines_near(world, sel_u, 16.0)
 					if cleared_forts == 0 and cleared_mines == 0:
 						world.order_mode = "demolish_fort"
 						notice("Demolish Fortification: click on any friendly trench, obstacle, or minefield to remove it.")
 			else:
-				world.order_mode = "bombard" if action=="Bombard" else "attack"
+				var mode := "bombard" if action=="Bombard" else "attack"
+				if world.order_mode == mode:
+					world.order_mode = ""
+					return
+				world.order_mode = mode
 				world.hud.notice("%s: click a destination on the battlefield." % action))
 		commands.add_child(button)
 	_launch_row = HFlowContainer.new()
@@ -948,8 +963,9 @@ func _build_selection() -> void:
 	_city_tiles.add_theme_constant_override("v_separation", 6)
 	_city_tiles.visible = false
 	col.add_child(_city_tiles)
-	_sel_queue = HBoxContainer.new()
-	_sel_queue.add_theme_constant_override("separation", 4)
+	_sel_queue = HFlowContainer.new()
+	_sel_queue.add_theme_constant_override("h_separation", 4)
+	_sel_queue.add_theme_constant_override("v_separation", 4)
 	col.add_child(_sel_queue)
 	_roster_scroll = ScrollContainer.new()
 	_roster_scroll.custom_minimum_size.y = 76
@@ -959,6 +975,8 @@ func _build_selection() -> void:
 	_unit_roster.add_theme_constant_override("separation", 5)
 	_roster_scroll.add_child(_unit_roster)
 	_roster_scroll.hide()
+	body.minimum_size_changed.connect(_layout_selection, CONNECT_DEFERRED)
+	get_viewport().size_changed.connect(_layout_selection, CONNECT_DEFERRED)
 	_sel.visible = false
 
 func _build_minimap() -> void:
@@ -1566,7 +1584,7 @@ func _action_bars(b: Dictionary) -> void:
 		var which: String = "intel" if b.key == "intelAgency" else "market"
 		_bar(b.key, "Open %s" % ("the intelligence service" if which == "intel" else "the world market"), "", {}, 0.0, "", func(): toggle_panel(which, true))
 		return
-	_section("Train")
+	_section("Train · Right-click the map to set a rally point")
 	for u in b.def.trains:
 		var def: Dictionary = world.unit_defs.get(u, {})
 		if def.is_empty() or not world.unit_allowed(0, u):
@@ -1694,6 +1712,7 @@ func _update_selection() -> void:
 			if b.owner == 0 and world.territory.RINGS_MAX.has(b.key):
 				_city_card(b)  # the town's accounts as tiles
 				lines = lines.slice(1)
+				if b.has("local_improvement"): lines.append("Local investment: %s" % b.local_improvement)
 		_sel_info.text = "\n".join(PackedStringArray(lines))
 		_sel_info.visible = _sel_info.text != ""
 		if not (b.owner == 0 and b.built and world.territory.RINGS_MAX.has(b.key)):
@@ -1816,14 +1835,22 @@ func _fit_selection(sig: String) -> void:
 	if sig == _sel_fit_sig or _sel == null:
 		return
 	_sel_fit_sig = sig
-	_sel.custom_minimum_size = Vector2(540.0, 0.0)
-	_sel.size = Vector2(540.0, 0.0)
-	_sel.reset_size()
-	if _windows != null:
-		if not _windows.positions.has("selection"):
-			_sel.offset_bottom = -12
-			_sel.offset_top = -_sel.size.y - 12
-		_windows.reflow.call_deferred(_sel)
+	_sel_scroll.scroll_vertical = 0
+	_sel_scroll.scroll_horizontal = 0
+	_layout_selection()
+
+func _layout_selection() -> void:
+	if not is_instance_valid(_sel) or not _sel.visible: return
+	var view := get_viewport().get_visible_rect().size
+	var edge: float = _windows.EDGE
+	var width := minf(540.0, view.x - 2.0 * edge)
+	var height_limit := minf(view.y * 0.48, view.y - _windows.TOP - edge)
+	var chrome := _sel.get_combined_minimum_size()
+	var height := minf(height_limit, chrome.y + _sel_body.get_combined_minimum_size().y)
+	_sel.size = Vector2(width, height)
+	if _windows.dragging != _sel and not _windows.positions.has("selection"):
+		_sel.position = Vector2(edge, view.y - _sel.size.y - edge)
+	_windows.reflow(_sel)
 
 ## A town hall's accounts as tiles, as a 4X city screen shows them: residents
 ## with a housing bar, happiness with a mood word, the food balance, taxes,
@@ -1952,14 +1979,12 @@ func _open_payload_picker(asset: Dictionary, key: String, direction: String, job
 		return
 	var options: Array = []
 	if direction == "redirect":
-		for other in world.buildings + world.units:
+		for other in world.buildings:
 			if other.dead or other.owner != 0 or is_same(other, asset):
 				continue
 			if not other.get("built", true) or not other.get("supplied", true) or world.disabled(other):
 				continue
 			if not ms.storage_accepts(other, key) or ms.free_storage(other) < job.count:
-				continue
-			if not other.get("is_building", false) and ms.service_hub_for(other).is_empty():
 				continue
 			options.append(other)
 	elif direction == "load":
@@ -2148,6 +2173,8 @@ func _fill_cargo(own: Array) -> void:
 		sig += "%d:%d:%d:%s:%s;" % [c.node.get_instance_id(), Air.used(c), c.get("cargo", []).size(), str(c.get("unload_go") != null), str(c.get("pickup_go") != null)]
 	if nearest != null:
 		sig += "board:%d:%d:%d" % [nearest.node.get_instance_id(), Air.room(nearest), boarders.size()]
+	if not carriers.is_empty() or nearest != null:
+		for u in boarders: sig += "/%d" % u.node.get_instance_id()
 	_cargo_row.visible = sig != ""
 	if sig == _cargo_sig:
 		return
@@ -2176,12 +2203,16 @@ func _fill_cargo(own: Array) -> void:
 		var buttons := HFlowContainer.new()
 		buttons.add_theme_constant_override("separation", 4)
 		_cargo_row.add_child(buttons)
-		if not boarders.is_empty() and any_room:
+		if boarders.any(func(u): return carriers.any(func(t): return Air.can_board(world, t, u))):
 			var b_sel := _button(buttons, "Board selected (%d)" % boarders.size(), func():
-				Air.order_board(world, boarders, carriers[0])
+				var waiting := boarders.duplicate()
+				for t in carriers:
+					if not waiting.any(func(u): return Air.can_board(world, t, u)): continue
+					Air.order_board(world, waiting, t)
+					waiting = waiting.filter(func(u): return not u.get("stowed", false) and not is_same(u.get("board"), t))
 				_cargo_sig = ""
 				return "")
-			b_sel.tooltip_text = "Board the selected ground troops onto this transport."
+			b_sel.tooltip_text = "Board the selected ground troops onto the selected transports with room."
 		if any_room:
 			var load_btn := _button(buttons, "Load nearby", func():
 				Air.load_nearby(world, carriers)

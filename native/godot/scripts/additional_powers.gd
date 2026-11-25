@@ -117,7 +117,9 @@ static func bonus(w: Node, owner: int, kind: String) -> float:
 	var value: float = Regional.bonus(w, owner, kind)
 	for e in w.power_effects:
 		if e.kind == "extra_" + kind and int(e.nation) == owner and float(e.until) > w.game_time:
-			if e.has("ally") and (w.diplomacy.defeated(int(e.by)) or w.diplomacy.defeated(int(e.ally)) or not w.diplomacy.allied(int(e.by), int(e.ally))): continue
+			var source := int(e.get("by", owner))
+			if w.diplomacy.defeated(source) or (e.kind in ["extra_deterred", "extra_voyage"] and w.diplomacy.at_war(source, owner)): continue
+			if e.has("ally") and (w.diplomacy.defeated(int(e.ally)) or not w.diplomacy.allied(source, int(e.ally))): continue
 			value = maxf(value, float(e.value))
 	return value
 static func use_food_diplomacy(w: Node, owner: int, target: int) -> void:
@@ -180,7 +182,7 @@ static func use_output_cut(w: Node, owner: int) -> void:
 	effect(w, "oil_shock", owner, 0.35, 180)
 	effect(w, "income", owner, 1.15, 180)
 	for other in range(w.diplomacy.n):
-		if other != owner and preload("res://scripts/national_arsenal.gd").identity(w, other) == "blue":
+		if other != owner and not w.diplomacy.defeated(other) and preload("res://scripts/national_arsenal.gd").identity(w, other) == "blue":
 			w.diplomacy.change(owner, other, -8.0)
 
 ## How far an output cut lifts the price of `res` now (market.gd).
@@ -253,6 +255,7 @@ static func use_popular_mobilization(w: Node, owner: int) -> void:
 		var u: Dictionary = w.spawn_unit("rocketSoldier" if i % 3 == 2 else "soldier", at, owner)
 		u.militia = true
 	for other in range(w.diplomacy.n):
+		if other == owner or w.diplomacy.defeated(other): continue
 		match preload("res://scripts/national_arsenal.gd").identity(w, other):
 			"blue": w.diplomacy.change(owner, other, -6.0)
 			"gold": w.diplomacy.change(owner, other, 4.0)
@@ -353,10 +356,14 @@ static func step(w: Node, delta: float) -> void:
 	Regional.step(w)
 	for e in w.power_effects:
 		if not str(e.kind).begins_with("extra_"): continue
-		if w.diplomacy.defeated(int(e.nation)) or w.diplomacy.defeated(int(e.by)):
+		var source := int(e.get("by", e.nation))
+		if w.diplomacy.defeated(int(e.nation)) or w.diplomacy.defeated(source):
 			e.until = 0.0
 			continue
-		if e.has("ally") and not w.diplomacy.allied(int(e.by), int(e.ally)):
+		if e.kind in ["extra_deterred", "extra_voyage"] and w.diplomacy.at_war(source, int(e.nation)):
+			e.until = 0.0
+			continue
+		if e.has("ally") and not w.diplomacy.allied(source, int(e.ally)):
 			e.until = 0.0
 			continue
 		if e.kind == "extra_repair":
@@ -380,7 +387,6 @@ static func step(w: Node, delta: float) -> void:
 				_notice(w, int(e.nation), -1, "Reconstruction aid arrived: $%d." % int(e.value))
 			continue
 		if e.kind != "extra_food_aid" or float(e.until) <= w.game_time: continue
-		var source := int(e.by)
 		var target := int(e.nation)
 		if w.diplomacy.at_war(source, target) or not w.diplomacy.pact[source][target] or not owned(w, source, "port") or not owned(w, target, "port"):
 			e.until = 0.0
@@ -423,21 +429,19 @@ static func ai_target(w: Node, owner: int) -> int:
 			score = s
 			best = target
 	return best
-## New rival factions have a small saved civilian model, driven by their real stocks.
+## Rival factions have a small saved civilian model, driven by their real stocks.
 static func civic_income(w: Node, n: Dictionary, delta: float) -> float:
-	if not F.IDS.has(F.id_of(w, int(n.id))): return 1.0
 	var p := F.profile(w, int(n.id))
 	var stats: Dictionary = p.get("bonus", {})
-	var happy := clampf(60.0 + float(stats.get("happiness", 0.0)) + bonus(w, n.id, "happiness"), 0, 100)
-	var health := clampf(55.0 + float(stats.get("health", 0.0)) + bonus(w, n.id, "health"), 0, 100)
+	var tax: Dictionary = w.economy.TAX_POLICIES.get(n.get("tax_policy", "Standard"), w.economy.TAX_POLICIES.Standard)
+	var happy := clampf(60.0 + float(tax.approval) + float(stats.get("happiness", 0.0)) + bonus(w, n.id, "happiness"), 0, 100)
+	var health := clampf(55.0 + (12.0 if n.get("civil_programme") == "Public clinics" and w.game_time < float(n.get("programme_until", 0)) else 0.0) + float(stats.get("health", 0.0)) + bonus(w, n.id, "health"), 0, 100)
 	var citizens := float(n.get("civilians", 120.0))
-	var cap := 200.0
-	for b in w.buildings:
-		if b.owner == n.id and b.built and not b.dead: cap += float(b.def.get("provides", {}).get("civCap", 0.0))
+	var cap := float(n.get("civil_capacity", 200.0))
 	cap *= 1.0 + float(stats.get("civCapPct", 0.0))
 	var growth := citizens * (happy - 45.0) / 50.0 * health / 100.0 * 0.0025 * float(p.get("growth", 1.0))
 	if funds(w, n.id, "food") < 0.5: growth -= citizens * 0.005
 	n.civilians = clampf(citizens + growth * delta, 20.0, cap)
 	n.happiness = happy
 	n.health = health
-	return clampf(float(n.civilians) / 120.0, 0.5, 1.5)
+	return float(tax.factor) * clampf(float(n.civilians) / 120.0, 0.5, 1.5)

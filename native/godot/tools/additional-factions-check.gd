@@ -303,6 +303,26 @@ func run() -> void:
 	check(not cargo.is_empty() and is_equal_approx(cargo.eta, float(w.market.cfg.voyage) * 0.7), "a nation granted Suez priority ships real cargo on a shorter journey")
 	var json_save: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
 	check(json_save.ai[0].has("national_cargo"), "AI cargo is included in disk-save data")
+	if not cargo.is_empty():
+		# Isolate one voyage and remove storm randomness to test unloading.
+		var trader = P.nation(w, 1)
+		set_nation(2, "usa")
+		P.nation(w, 2).erase("national_cargo")
+		var resource := str(cargo.resource)
+		var payment := float(cargo.value)
+		var balance := float(trader.money)
+		P.stock(w, 2)[resource] = 495.0
+		w.power_effects.append({"kind": "extra_shipping", "nation": 1, "value": 1.0, "until": w.game_time + 1000})
+		check(is_equal_approx(P.bonus(w, 1, "shipping"), 1.0), "a saved shipping effect without a separate sponsor uses the beneficiary")
+		var shipping = preload("res://scripts/additional_trade.gd")
+		shipping.tick(w, 100)
+		check(trader.has("national_cargo") and trader.money == balance and P.funds(w, 2, resource) == 495, "a freighter waits with its full cargo when the buyer's store fills en route")
+		var waiting: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
+		w.saves.restore(waiting)
+		trader = P.nation(w, 1)
+		P.stock(w, 2)[resource] = 470
+		shipping.tick(w, 1)
+		check(not trader.has("national_cargo") and trader.money == balance + payment and P.funds(w, 2, resource) == 500, "loading a waiting freighter delivers exactly one whole cargo and one payment")
 	var generator = preload("res://scripts/map_generator.gd").new()
 	for map_key in ["middle_east", "europe", "east_asia"]:
 		generator.style = map_key

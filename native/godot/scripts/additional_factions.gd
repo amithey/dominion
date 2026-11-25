@@ -59,10 +59,18 @@ const UNITS := {
 }
 static func id_of(w: Node, owner: int) -> String:
 	return str(w.map.nations[owner].get("id", "")) if owner >= 0 and owner < w.map.nations.size() else ""
+static var _profiles := {}
 static func profile(w: Node, owner: int) -> Dictionary:
-	return load("res://scripts/national_profile.gd").of_id(id_of(w, owner))
+	var id := id_of(w, owner)
+	if not _profiles.has(id):
+		_profiles[id] = load("res://scripts/national_profile.gd").of_id(id)
+	return _profiles[id]
+static var _role_bases := {}
 static func base(key: String) -> String:
-	return str(BASE.get(key, load("res://scripts/force_catalog.gd").base(key)))
+	if _role_bases.is_empty():
+		_role_bases = load("res://scripts/force_catalog.gd").BASE.duplicate()
+		_role_bases.merge(BASE, true)
+	return str(_role_bases.get(key, key))
 static func apply(w: Node) -> void:
 	for key in UNITS:
 		var entry: Dictionary = UNITS[key]

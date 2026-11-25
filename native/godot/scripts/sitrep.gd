@@ -49,6 +49,15 @@ var _scan := 0.0
 func _init(world: Node) -> void:
 	w = world
 
+func reset() -> void:
+	events.clear()
+	_by_key.clear()
+	pings.clear()
+	unread = 0
+	unread_critical = 0
+	_battle.clear()
+	_scan = 0.0
+
 func _now() -> float:
 	return float(w.game_time)
 
@@ -187,7 +196,7 @@ func from_notice(text: String, pos := Vector3.INF) -> Dictionary:
 	elif low.contains("incoming") or low.contains("missile") and (low.contains("launched") or low.contains("strike")) or low.contains("nuclear") and (low.contains("detected") or low.contains("launched")):
 		cat = "attack"
 		sev = "crit"
-	elif low.contains("went down") or low.contains("destroyed") or low.contains("lost ") or low.contains("shot down"):
+	elif low.contains("went down") or (low.begins_with("your ") and low.contains("destroyed")) or low.contains("lost ") or low.contains("shot down"):
 		cat = "loss"
 		sev = "warn"
 	elif low.contains("not enough") or low.contains("shortage") or low.contains("halted") or low.contains("no room") or low.contains("cannot afford") or low.contains("blocked") or low.contains("deficit") or low.contains("running out"):

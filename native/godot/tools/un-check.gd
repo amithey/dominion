@@ -189,6 +189,36 @@ func run() -> void:
 		w.hud.refresh_side()
 		check(w.hud._side_rows.get_child_count() >= 2, "UN interface tab: " + tab)
 	test_scale()
+	# Foreign relief must reach the same stock the rival spends on its next turn.
+	var stocks := preload("res://scripts/additional_powers.gd").stock(w, 1)
+	stocks.food = 450.0
+	w.economy.res.food = 100.0
+	cash = w.economy.res.money
+	u.aid_next = 0.0
+	u.relief(1)
+	check(stocks.food == 500 and w.economy.res.food == 50 and w.economy.res.money == cash - 250, "foreign relief transfers only the food the rival warehouse can receive")
+	cash = w.economy.res.money
+	u.aid_next = 0
+	u.relief(1)
+	check(w.economy.res.money == cash and w.economy.res.food == 50 and u.aid_next == 0, "full rival warehouses cannot consume relief funds or cooldown")
+	var first: Dictionary = u.assembly_record[-1].duplicate(true)
+	first.until = w.game_time + 5
+	first.participants = [0, 1]
+	var second := first.duplicate(true)
+	second.until += 30
+	second.participants = [1, 2]
+	u.assembly_record = [first, second]
+	u.join_voluntary(3, true, 1)
+	u.join_voluntary(3, false, 1)
+	check(0 in first.participants and 0 not in second.participants and u.trade_blocked(0, 3, "iron"), "leaving one resolution preserves membership in the other")
+	u._refresh_voluntary(3)
+	snapshot = JSON.parse_string(JSON.stringify(w.saves.capture()))
+	w.saves.restore(snapshot)
+	u = w.un
+	w.game_time += 5
+	u.update(0)
+	var restrictions: Array = w.power_effects.filter(func(e): return e.get("un") == "voluntary" and int(e.nation) == 3)
+	check(restrictions.size() == 1 and is_equal_approx(restrictions[0].value, 0.97) and not u.trade_blocked(0, 3, "iron") and u.trade_blocked(2, 3, "iron"), "overlapping recommendations lift the expired participants' income and trade restrictions together after load")
 	print("UN: %d passed, %d failed" % [passed, errors.size()])
 	print("UN_CHECK PASS" if errors.is_empty() else "UN_CHECK FAIL")
 	quit(0 if errors.is_empty() else 1)

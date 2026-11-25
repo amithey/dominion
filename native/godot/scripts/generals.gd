@@ -95,6 +95,15 @@ var _by_owner := {}           # owner -> generals in command (rebuilt each secon
 
 func _init(world: Node) -> void:
 	w = world
+	_start_staff()
+
+func _start_staff() -> void:
+	roster.clear()
+	candidates.clear()
+	_by_owner.clear()
+	_serial = 0
+	_tick = 0.0
+	_ai_next = 0.0
 	_offer()
 	for n in w.ai.nations:
 		for i in range(AI_GENERALS):
@@ -189,7 +198,11 @@ func assign_blocked(g: Dictionary, u) -> String:
 
 func _release(g: Dictionary) -> void:
 	if g.unit != null:
-		g.unit.erase("general")
+		if int(g.unit.get("general", -1)) == int(g.id):
+			g.unit.erase("general")
+		for passenger in g.unit.get("cargo", []):
+			if int(passenger.get("general", -1)) == int(g.id):
+				passenger.general = -1
 	g.unit = null
 	_rebuild()
 
@@ -286,18 +299,20 @@ func credit_kill(source: Dictionary) -> void:
 
 ## The unit carrying a general is gone (world.kill).
 func unit_lost(u: Dictionary) -> void:
-	var g = general_of(u)
-	if g == null:
-		return
-	g.unit = null
+	for g in roster:
+		if g.alive and is_same(g.unit, u):
+			_lose_command(g)
 	u.erase("general")
+	_rebuild()
+
+func _lose_command(g: Dictionary) -> void:
+	g.unit = null
 	if randf() < 0.5:
 		_fall(g, "killed in action")
 	else:
 		g.wounded_until = w.game_time + WOUNDED
 		if int(g.owner) == 0:
 			w.hud.notice("%s escaped the wreck of their command, wounded: out of action for 2 minutes." % g.name)
-	_rebuild()
 
 func _fall(g: Dictionary, how: String) -> void:
 	g.alive = false
@@ -322,7 +337,7 @@ func assassinated(owner: int) -> String:
 	mine.sort_custom(func(a, b): return int(a.kills) > int(b.kills))
 	var g: Dictionary = mine[0]
 	var name: String = g.name
-	if g.unit != null: g.unit.erase("general")
+	_release(g)
 	_fall(g, "assassinated")
 	return name
 
@@ -392,9 +407,12 @@ func capture() -> Dictionary:
 	return {"roster": out, "candidates": candidates, "serial": _serial, "next_offer": _next_offer}
 
 func restore(data: Dictionary) -> void:
-	if data.is_empty():
-		return
 	for u in w.units: u.erase("general")
+	_tick = 0.0
+	_ai_next = 0.0
+	if data.is_empty():
+		_start_staff()
+		return
 	roster.clear()
 	var alive: Array = w.units.filter(func(u): return not u.dead)
 	for s in data.get("roster", []):
@@ -403,7 +421,8 @@ func restore(data: Dictionary) -> void:
 		var i := int(s.get("unit", -1))
 		if i >= 0 and i < alive.size():
 			g.unit = alive[i]
-			alive[i].general = g.id
+			if not alive[i].get("cargo", []).any(func(c): return int(c.get("general", -1)) == int(g.id)):
+				alive[i].general = g.id
 		roster.append(g)
 	candidates = Array(data.get("candidates", candidates))
 	_serial = int(data.get("serial", roster.size()))

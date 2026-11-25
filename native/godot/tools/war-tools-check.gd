@@ -123,6 +123,18 @@ func run() -> void:
 	var without: float = hp2 - g2.hp
 	T.state(w).support[0].counterBatteryRadar = radars
 	check(without > 0.0 and absf(with_radar / without - (1.0 + T.RADAR_BONUS)) < 0.02, "the radar's bonus reaches the guns' real damage (%.1f vs %.1f)" % [with_radar, without])
+	made.counterBatteryRadar.disabled_until = w.game_time + 30.0
+	tick(0.5)
+	check(not T.sensed(w, 0, guns) and is_equal_approx(T.damage_mult(w, mine, guns), 1.0), "a disabled radar stops revealing and enhancing damage against guns")
+	made.counterBatteryRadar.disabled_until = 0.0
+
+	var truck: Dictionary = w.spawn_unit("supplyTruck", spot, 0)
+	var supply_position: Vector3 = truck.node.position
+	check(T.near_supply_truck(w, 0, supply_position), "an active supply truck serves nearby units")
+	truck.disabled_until = w.game_time + 30.0
+	check(not T.near_supply_truck(w, 0, supply_position) and not T.consume_truck_reserve(w, 0, supply_position, 1.0), "a disabled truck stops supplying even within the same tick")
+	truck.disabled_until = 0.0
+	check(T.consume_truck_reserve(w, 0, supply_position, 1.0), "a restored truck can spend its reserve")
 
 	# ---- airborne early warning and electronic attack
 	for key in ["aewc", "ewJet"]:
@@ -146,6 +158,23 @@ func run() -> void:
 	check(not C.can_target(w, {"key": "coastalASM"}, {"key": "tank"}) and C.can_target(w, {"key": "coastalASM"}, destroyer), "the coastal battery strikes ships only")
 	check(not C.can_target(w, {"key": "maritimePatrol"}, {"key": "tank"}) and C.can_target(w, {"key": "maritimePatrol"}, sub), "the patrol aircraft hunts at sea only")
 	check(not C.can_target(w, {"key": "carrier"}, sub) and C.can_target(w, {"key": "carrier"}, {"key": "tank"}), "the carrier's air wing does not hunt submarines")
+	var hidden: Dictionary = w.spawn_unit("submarine", w.water_near(hq, 240), 1)
+	var patrol: Dictionary = made.maritimePatrol
+	patrol.node.position = hidden.node.position + Vector3(48, 26, 0)
+	hidden.node.position += Vector3(5000, 0, 0)
+	patrol.node.position += Vector3(5000, 0, 0)
+	patrol.air_state = "parked"
+	check(not T.submarine_detected(w, 0, hidden), "a parked maritime patrol aircraft cannot spot a submerged ship")
+	patrol.air_state = "ready"
+	check(T.submarine_detected(w, 0, hidden), "the airborne patrol aircraft can spot the submerged ship")
+	patrol.disabled_until = w.game_time + 30.0
+	check(not T.submarine_detected(w, 0, hidden), "a disabled airborne aircraft stops detecting submarines immediately")
+	var naval_heli: Dictionary = w.spawn_unit("navalHelicopter", hq, 0)
+	naval_heli.node.position = hidden.node.position + Vector3(64, 20, 0)
+	naval_heli.air_state = "ready"
+	check(T.submarine_detected(w, 0, hidden), "an airborne naval helicopter retains its own sonar range")
+	w.kill(naval_heli)
+	w.kill(hidden)
 
 	# ---- the carrier's air wing
 	if made.has("carrier"):
@@ -180,6 +209,8 @@ func run() -> void:
 
 	# ---- rival navies
 	var naval_picks := 0
+	check(T.ai_pick(w, -1, ["landingShip"]) == "", "an unwanted landing ship can be the only training option")
+	check(T.ai_pick(w, 1, []) == "", "no eligible training skips recruitment")
 	var options := ["tank", "soldier", "apc", "destroyer", "corvette", "artillery", "jet", "mlrs"]
 	for i in range(400):
 		if w.unit_defs.get(T.ai_pick(w, 1, options), {}).get("naval", false): naval_picks += 1

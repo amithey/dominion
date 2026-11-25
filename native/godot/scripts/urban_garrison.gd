@@ -51,9 +51,17 @@ static func can_garrison(w: Node, u: Dictionary, b: Dictionary) -> bool:
 	return capacity_of(b) > 0
 
 static func order_garrison(w: Node, units_list: Array, b: Dictionary) -> int:
+	if b == null:
+		return 0
+	var available := room(b)
+	for u in w.units:
+		if not u.dead and is_same(u.get("garrison_order"), b):
+			available -= 1
 	var count := 0
 	for u in units_list:
-		if not can_garrison(w, u, b):
+		if available <= 0:
+			break
+		if is_same(u.get("garrison_order"), b) or not can_garrison(w, u, b):
 			continue
 		if w.get("fortifications") != null and u.get("garrisoned_in") != null:
 			w.fortifications.exit_unit(u)
@@ -63,6 +71,7 @@ static func order_garrison(w: Node, units_list: Array, b: Dictionary) -> int:
 		var stand: Vector3 = w._approach_candidate(b, u.node.position, count) if w.has_method("_approach_candidate") else b.root.position
 		w.order_move([u], stand)
 		u.garrison_order = b   # (after the move order, which clears it)
+		available -= 1
 		count += 1
 	if count > 0 and int(b.owner) == 0 and w.get("hud") != null and w.hud != null:
 		w.hud.notice("%d squad%s ordered to garrison %s." % [count, "" if count == 1 else "s", str(b.def.name)])
@@ -145,7 +154,7 @@ static func update(w: Node, _delta: float) -> void:
 			continue
 		if u.has("garrison_order"):
 			var gb: Dictionary = u.garrison_order
-			if gb == null or gb.get("dead", false) or not gb.get("built", false) or room(gb) <= 0:
+			if gb == null or gb.get("dead", false) or not gb.get("built", false) or int(gb.owner) != int(u.owner) or room(gb) <= 0:
 				u.erase("garrison_order")
 				u.target = null
 				continue
@@ -157,22 +166,33 @@ static func update(w: Node, _delta: float) -> void:
 			var b: Dictionary = u.garrison_building
 			if b.get("dead", false) or float(b.get("fire", 0.0)) >= FIRE_EVAC_AT:
 				evacuate(w, b, true)
+			elif int(b.owner) != int(u.owner):
+				evacuate(w, b, false)
 
 	# 2. Check burning or collapsed buildings that still hold garrisoned squads
 	for b in w.buildings:
 		if b.has("garrison") and not (b.garrison as Array).is_empty():
 			if b.get("dead", false) or float(b.get("fire", 0.0)) >= FIRE_EVAC_AT:
 				evacuate(w, b, true)
+			elif (b.garrison as Array).any(func(u): return u != null and not u.get("dead", false) and int(u.owner) != int(b.owner)):
+				evacuate(w, b, false)
 
 ## Splash bleed-through when an occupied building is struck by heavy weapons.
 static func on_building_hit(w: Node, b: Dictionary, raw_amount: float, source: Dictionary) -> void:
 	var list := occupants(b)
 	if list.is_empty() or raw_amount <= 2.0:
 		return
-	var each := (raw_amount * COVER_MULT * 0.30) / maxf(float(list.size()), 1.0)
+	var cover := 1.0 if source.get("pierce", false) else COVER_MULT
+	var each := (raw_amount * cover * 0.30) / maxf(float(list.size()), 1.0)
 	for u in list.duplicate():
 		if not u.dead:
-			u.hp -= each
-			if u.hp <= 0.0:
+			if float(u.hp) <= each:
+				var left := maxf(float(u.hp), 0.0)
 				exit_unit(w, u, b, 0, false)
-				w.damage(u, 9999.0, source)
+				if source.has("owner"):
+					u.last_by = int(source.owner)
+				u.hp = 0.0
+				w.Vet.credit(w, source, u, left)
+				w.kill(u)
+			else:
+				u.hp -= each

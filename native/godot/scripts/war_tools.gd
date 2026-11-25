@@ -40,7 +40,7 @@ const SUBMARINES := ["submarine", "nuclearSub", "orca"]
 const SUB_HUNTERS := ["maritimePatrol", "asFrigate", "navalHelicopter", "destroyer"]
 const ASW_CAPABLE := ["destroyer", "asFrigate", "maritimePatrol", "navalHelicopter", "submarine", "nuclearSub", "orca"]
 const GUNS := ["artillery", "mlrs", "himars", "k9", "heavyRocket", "tos1a", "towedHowitzer", "wheeledHowitzer", "mortarTeam"]
-const AIR_DEFENCE := ["samLauncher", "aaVehicle", "shortRangeSAM", "laserAD", "irisT", "manpads", "abmLauncher", "saudiThaad", "aegisCruiser", "type45"]
+const AIR_DEFENCE := ["samSite", "samLauncher", "aaVehicle", "shortRangeSAM", "laserAD", "irisT", "manpads", "abmLauncher", "saudiThaad", "aegisCruiser", "type45"]
 
 const MINE_RADIUS := 11.5
 const MINE_CHARGES := 5
@@ -102,7 +102,7 @@ static func update(w: Node, delta: float) -> void:
 	# The support units of each nation, by key, for the hot damage path.
 	var support := {}
 	for u in w.units:
-		if not _alive(u) or not (u.key in ["counterBatteryRadar", "aewc", "ewJet", "maritimePatrol", "navalHelicopter", "supplyTruck"]):
+		if not _alive(u) or not (u.key in ["counterBatteryRadar", "aewc", "ewJet"]) or w.disabled(u):
 			continue
 		if u.get("fly", false) and str(u.get("air_state", "")) in ["parked", "rearming"]:
 			continue   # on the ground at its airfield
@@ -499,8 +499,6 @@ static func _resupply_column(w: Node, u: Dictionary, dt: float) -> void:
 
 static func near_supply_truck(w: Node, owner: int, pos: Vector3, reach := SUPPLY_REACH) -> bool:
 	var s := state(w)
-	if _near(s, owner, "supplyTruck", pos, reach):
-		return true
 	var raw_tick = w.get("sim_tick")
 	var tick: int = int(raw_tick) if raw_tick != null else -1
 	var ucount: int = w.units.size()
@@ -509,22 +507,25 @@ static func near_supply_truck(w: Node, owner: int, pos: Vector3, reach := SUPPLY
 		s["truck_ucount"] = ucount
 		var by_owner := {}
 		for u in w.units:
-			if not u.dead and str(u.get("key", "")) == "supplyTruck" and u.get("node") != null and is_instance_valid(u.node):
+			if u.key == "supplyTruck":
 				var o := int(u.owner)
 				if not by_owner.has(o): by_owner[o] = []
-				by_owner[o].append(u.node.position)
+				by_owner[o].append(u)
 		s["truck_cache"] = by_owner
 	var cache: Dictionary = s.get("truck_cache", {})
 	if cache.is_empty() or not cache.has(owner):
 		return false
-	for p in cache[owner]:
+	for truck in cache[owner]:
+		if not _alive(truck) or w.disabled(truck):
+			continue
+		var p: Vector3 = truck.node.position
 		if Vector2(p.x - pos.x, p.z - pos.z).length() <= reach:
 			return true
 	return false
 
 static func consume_truck_reserve(w: Node, owner: int, pos: Vector3, amount: float) -> bool:
 	for u in w.units:
-		if u.dead or int(u.owner) != owner or str(u.get("key", "")) != "supplyTruck" or not _alive(u):
+		if int(u.owner) != owner or u.key != "supplyTruck" or not _alive(u) or w.disabled(u):
 			continue
 		if Vector2(u.node.position.x - pos.x, u.node.position.z - pos.z).length() <= SUPPLY_REACH:
 			var res := float(u.get("supply_reserve", SUPPLY_RESERVE_MAX))
@@ -559,7 +560,7 @@ static func damage_mult(w: Node, source: Dictionary, target: Dictionary) -> floa
 	# Counter-battery radar: guns it has found are hit harder.
 	if (tkey in GUNS or _base(tkey) in GUNS) and _near(s, o, "counterBatteryRadar", at, RADAR_REACH):
 		f *= 1.0 + RADAR_BONUS
-	var shooter = source.get("node")
+	var shooter = source.get("node", source.get("root"))
 	if shooter != null and is_instance_valid(shooter):
 		var from: Vector3 = shooter.position
 		# Airborne early warning: your aircraft under its picture hit harder.
@@ -587,11 +588,10 @@ static func submarine_detected(w: Node, viewer_owner: int, sub: Dictionary) -> b
 	if w.game_time - float(sub.get("last_fire", -99.0)) < 3.0:
 		return true
 	var at: Vector3 = sub.node.position
-	var s := state(w)
-	if _near(s, viewer_owner, "maritimePatrol", at, 90.0) or _near(s, viewer_owner, "navalHelicopter", at, 65.0):
-		return true
 	for u in w.units:
-		if not _alive(u):
+		if not _alive(u) or w.disabled(u):
+			continue
+		if u.get("fly", false) and w.AirOperations.on_ground(u):
 			continue
 		var uo := int(u.owner)
 		if uo != viewer_owner and not (w.get("diplomacy") != null and w.diplomacy.allied(viewer_owner, uo)):
@@ -599,14 +599,17 @@ static func submarine_detected(w: Node, viewer_owner: int, sub: Dictionary) -> b
 		var ukey := str(u.get("key", ""))
 		var bkey := _base(ukey)
 		var d := Vector2(u.node.position.x - at.x, u.node.position.z - at.z).length()
-		if ukey in ["maritimePatrol", "asFrigate"] or bkey in ["maritimePatrol", "asFrigate"]:
+		if ukey == "maritimePatrol":
+			if d <= 90.0:
+				return true
+		elif ukey == "asFrigate" or bkey == "asFrigate":
 			if d <= 85.0:
 				return true
-		elif ukey in ASW_CAPABLE:
-			var sonar_r := 62.0
+		elif ukey in ASW_CAPABLE or bkey in ASW_CAPABLE:
+			var sonar_r := 65.0 if ukey == "navalHelicopter" else 62.0
 			if d <= sonar_r:
 				return true
-		elif d <= 8.0:
+		elif u.get("naval", false) and d <= 8.0:
 			return true
 	return false
 
@@ -762,8 +765,15 @@ static func _strike_target(w: Node, carrier: Dictionary) -> Variant:
 				continue
 			if str(e.get("key", "")) in SUBMARINES or _base(str(e.get("key", ""))) in SUBMARINES:
 				continue
-			if o == 0 and w.get("fog") != null and w.fog.enabled and not w.fog.shows(e):
-				continue
+			if w.get("fog") != null and w.fog.enabled:
+				if o == 0 and not w.fog.shows(e):
+					continue
+				if o > 0:
+					if e.get("is_building", false):
+						if not w.fog.rival_knows(o, e):
+							continue
+					elif int(e.owner) == 0 and not w.fog.rival_spots(o, e):
+						continue
 			var weight := d * (0.6 if e.get("naval", false) else 1.0)
 			if weight < score:
 				score = weight
@@ -855,7 +865,7 @@ static func recovery_point(carrier: Dictionary, u: Dictionary, from: Vector3) ->
 		return deck
 	var travel := minf(30.0, deck.distance_to(from) / maxf(1.0, float(u.speed)))
 	var course := Basis(Vector3.UP, float(carrier.heading)) * Vector3.BACK
-	var advance := travel * float(carrier.get("cur_speed", carrier.speed))
+	var advance := travel * float(carrier.get("sailing_speed", carrier.speed))
 	if carrier.get("target") != null:
 		advance = minf(advance, deck.distance_to(carrier.target))
 	return deck + course * advance
@@ -895,7 +905,14 @@ static func carrier_flight(w: Node, u: Dictionary, delta: float) -> bool:
 		return true
 	var step := minf(flat.length(), float(u.get("speed", 30.0)) * delta)
 	var dir := flat.normalized()
-	u.node.position += Vector3(dir.x, 0, dir.y) * step
+	var next_pos: Vector3 = at + Vector3(dir.x, 0, dir.y) * step
+	var floor_y: float = maxf(w.height_at(next_pos.x, next_pos.z), float(w.map.seaLevel))
+	var cruise_y: float = floor_y + float(u.get("altitude", 22.0))
+	var deck_y: float = deck.y + 3.0
+	var rem_d := flat.length()
+	var want_y: float = lerpf(deck_y, cruise_y, clampf((rem_d - 6.0) / 34.0, 0.0, 1.0)) if rem_d < 40.0 else cruise_y
+	next_pos.y = maxf(move_toward(at.y, want_y, 12.0 * delta), floor_y + 1.5)
+	u.node.position = next_pos
 	u.heading = atan2(dir.x, dir.y)
 	u.node.rotation.y = u.heading
 	u.moving = true
@@ -925,6 +942,8 @@ static func ai_pick(w: Node, owner: int, options: Array) -> String:
 	if "landingShip" in options and preload("res://scripts/ai_navy.gd").wants_transport(w, owner) and randf() < 0.6:
 		return "landingShip"
 	options = options.filter(func(k): return k != "landingShip")
+	if options.is_empty():
+		return ""
 	var ships: Array = options.filter(func(k): return w.unit_defs.get(k, {}).get("naval", false))
 	if not ships.is_empty():
 		var fleet := 0

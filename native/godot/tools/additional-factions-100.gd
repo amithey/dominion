@@ -239,6 +239,37 @@ func run() -> void:
 	var saved_world: Dictionary = JSON.parse_string(JSON.stringify(w.saves.capture()))
 	w.saves.restore(saved_world)
 	check(is_equal_approx(float(P.nation(w, 1).national_cargo.eta), remaining), "full world restore keeps partial AI voyage time")
+	# War between guarantor/operator and recipient ends Forward Deterrence and Suez priority immediately.
+	reset("france", 0)
+	w.place_building("strategicComplex", Vector3(20, 0, 20), 0, true).supplied = true
+	w.economy.res.money = 1000
+	w.diplomacy.set_score(0, 1, 30)
+	FP.use(w, 0, 1)
+	check(P.bonus(w, 1, "deterred") > 0.0, "France forward deterrence activates over a peaceful partner")
+	w.diplomacy.declare_war(0, 1)
+	check(P.bonus(w, 1, "deterred") == 0.0, "war with France ends forward deterrence immediately")
+	P.step(w, 1.0)
+	w.diplomacy.make_peace(0, 1)
+	check(P.bonus(w, 1, "deterred") == 0.0, "cancelled forward deterrence does not resume after peace")
+	reset("egypt", 0)
+	w.economy.res.money = 1000
+	w.diplomacy.set_flag(w.diplomacy.war, 0, 1, false)
+	FP.use(w, 0, 1)
+	check(P.bonus(w, 1, "voyage") > 0.0, "Egypt Suez priority activates for a peaceful partner")
+	w.diplomacy.declare_war(0, 1)
+	check(P.bonus(w, 1, "voyage") == 0.0, "war with Egypt ends Suez priority immediately")
+	P.step(w, 1.0)
+	w.diplomacy.make_peace(0, 1)
+	check(P.bonus(w, 1, "voyage") == 0.0, "cancelled Suez priority does not resume after peace")
+	# Defeated nations' relations are untouched by Saudi Arabia's OPEC+ cut and Iraq's Popular Mobilization.
+	reset("saudi", 1)
+	nation(2, "usa")
+	P.nation(w, 2).defeated = true
+	var usa_rel_before: float = w.diplomacy.rel(1, 2)
+	P.nation(w, 1).money = 1000
+	FP.use(w, 1)
+	check(w.diplomacy.rel(1, 2) == usa_rel_before, "Saudi OPEC+ cut does not alter relations with a defeated US")
+	P.nation(w, 2).defeated = false
 	print("ADDITIONAL_FACTIONS_100: %d checks, %d failures" % [checks, failures.size()])
 	for failure in failures: print("FAILED: " + failure)
 	print("ADDITIONAL_FACTIONS_100 PASS" if failures.is_empty() else "ADDITIONAL_FACTIONS_100 FAIL")

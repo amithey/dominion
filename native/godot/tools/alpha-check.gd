@@ -101,6 +101,11 @@ func run() -> void:
 	broken = good.duplicate(true)
 	broken.economy.erase("res")
 	check(S.problem_with(broken) != "", "a damaged economy is refused")
+	for camera in [{}, {"focus": [0, 0], "yaw": 0, "pitch": 0, "dist": 10}, {"focus": [0, 0, "x"], "yaw": 0, "pitch": 0, "dist": 10}]:
+		broken = good.duplicate()
+		broken.camera = camera
+		check(S.problem_with(broken) != "", "incomplete or invalid camera data is refused")
+	check_disk_writes(good)
 	# A damaged file on disk: refused, kept, not listed, no script error.
 	DirAccess.make_dir_recursive_absolute("user://saves")
 	var f := FileAccess.open("user://saves/alpha-broken.json", FileAccess.WRITE)
@@ -110,6 +115,10 @@ func run() -> void:
 	var ok: bool = w.saves.load_slot("alpha-broken")
 	check(not ok and str(w.hud.notice_log[-1]).contains("cannot be loaded") and FileAccess.file_exists("user://saves/alpha-broken.bad.json"), "a damaged file is refused with a message and kept as .bad.json")
 	check(not w.menu.list_saves().any(func(s): return str(s.name).ends_with(".bad")), "the kept copy is not offered in the Load list")
+	broken.camera = {}
+	var original_hq = w.buildings[0].root
+	S.write_slot(w.saves.path_of("alpha-broken"), JSON.stringify(broken).to_utf8_buffer())
+	check(not w.saves.load_slot("alpha-broken") and is_same(w.buildings[0].root, original_hq), "invalid camera leaves the running match intact")
 	DirAccess.remove_absolute("user://saves/alpha-broken.json")
 	DirAccess.remove_absolute("user://saves/alpha-broken.bad.json")
 
@@ -138,3 +147,33 @@ func run() -> void:
 	for e in errors: print("  FAILED: " + e)
 	print("ALPHA %s" % ("PASS" if errors.is_empty() else "FAIL"))
 	quit(0 if errors.is_empty() else 1)
+
+func check_disk_writes(good: Dictionary) -> void:
+	var folder := OS.get_temp_dir().path_join("dominion-save-test-%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()])
+	var source := folder.path_join("prototype")
+	var dest := folder.path_join("current")
+	DirAccess.make_dir_recursive_absolute(source.path_join("saves"))
+	DirAccess.make_dir_recursive_absolute(dest)
+	var old_slot := source.path_join("saves/campaign.json")
+	var slot := dest.path_join("saves/campaign.json")
+	var invalid := source.path_join("saves/autosave.json")
+	var marker := dest.path_join(".migrated")
+	var bytes := JSON.stringify(good).to_utf8_buffer()
+	SaveScript.write_slot(old_slot, bytes)
+	SaveScript.write_slot(invalid, "{}".to_utf8_buffer())
+	SaveScript.migrate_from(source, dest)
+	check(not FileAccess.file_exists(marker), "migration remains retryable when the destination cannot be written")
+	DirAccess.make_dir_recursive_absolute(slot.get_base_dir())
+	SaveScript.migrate_from(source, dest)
+	check(FileAccess.file_exists(marker) and FileAccess.get_file_as_bytes(slot) == bytes, "retry imports the complete campaign")
+	check(not FileAccess.file_exists(dest.path_join("saves/autosave.json")) and FileAccess.file_exists(invalid), "invalid prototype autosave is skipped and the original retained")
+	var temporary := "%s.%d.tmp" % [slot, OS.get_process_id()]
+	DirAccess.make_dir_absolute(temporary)
+	check(SaveScript.write_slot(slot, "new".to_utf8_buffer()) != OK and FileAccess.get_file_as_bytes(slot) == bytes, "a staging failure preserves the existing slot")
+	DirAccess.remove_absolute(temporary)
+	DirAccess.rename_absolute(slot, slot + ".previous")
+	SaveScript.recover_interrupted_saves(slot.get_base_dir())
+	check(FileAccess.get_file_as_bytes(slot) == bytes, "startup recovers an interrupted replacement")
+	check(SaveScript.write_slot(slot, "new".to_utf8_buffer()) == OK and FileAccess.get_file_as_string(slot) == "new", "a complete replacement becomes visible")
+	for path in [slot, marker, old_slot, invalid, slot.get_base_dir(), dest, old_slot.get_base_dir(), source, folder]:
+		DirAccess.remove_absolute(path)

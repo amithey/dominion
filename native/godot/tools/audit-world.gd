@@ -370,8 +370,9 @@ func run() -> void:
 	var all: int = t.owner_of.size()
 	var kept: Array = t.owner_of.duplicate()
 	var cells := 0
+	var land: int = all - t.terrain.count(t.Terrain.WATER)
 	for i in range(all):
-		if t.owner_of[i] < 0 and cells < int(all * 0.5):
+		if t.terrain[i] != t.Terrain.WATER and t.owner_of[i] < 0 and cells < ceili(land * 0.5):
 			t.owner_of[i] = 0
 			cells += 1
 	var share: float = V.land_share(0)

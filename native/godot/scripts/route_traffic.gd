@@ -37,6 +37,7 @@ var elapsed := 0.0
 var refresh := 0.0
 
 var _graph := {"road": {}, "rail": {}}   # kind -> hex -> Array of neighbour hexes
+var _road_obstacles := {} # road-body clearance circles indexed by every overlapping grid cell
 var _solid := {}            # hex -> Array of [centre, clearance radius] of the buildings that stand in it and are not a town district (a mine, a rig, a bunker...)
 var _edge_count := {"road": 0, "rail": 0}
 var _fleet: Array = []      # road vehicles and trains
@@ -111,6 +112,11 @@ func _process(delta: float) -> void:
 	var pruned := false
 	for c in _fleet:
 		_drive(c, delta)
+		if c.kind == "road" and not c.get("stranded", false):
+			for body in c.bodies:
+				if _point_inside_building(_point_at(c, c.s - float(body.offset)), "road"):
+					c.stranded = true
+					break
 		if c.get("stranded", false):
 			pruned = true
 	if pruned:
@@ -134,7 +140,14 @@ func _sync_network() -> void:
 	# Buildings that are not part of a town but stand in a hex a road crosses (a mine on a deposit, a bunker): a vehicle
 	# would drive through them, so a link that passes one carries no traffic.
 	_solid = {}
+	_road_obstacles.clear()
 	for b in world.buildings:
+		if b.dead: continue
+		var p: Vector3 = b.root.position
+		var clearance := maxf(float(b.footprint) * 0.5 + 1.5, 5.5) if world.is_district(b.key) else float(b.footprint) * 0.5 + Logistics.BUILDING_CLEARANCE
+		for x in range(floori((p.x - clearance) / 16.0), floori((p.x + clearance) / 16.0) + 1):
+			for z in range(floori((p.z - clearance) / 16.0), floori((p.z + clearance) / 16.0) + 1):
+				_road_obstacles.get_or_add(Vector2i(x, z), []).append(Vector3(p.x, clearance * clearance, p.z))
 		if b.dead or world.is_district(b.key):
 			continue
 		var hx: Vector2i = world.logistics.world_hex(b.root.position)
@@ -167,6 +180,12 @@ func _sync_network() -> void:
 	_fleet = kept
 
 func _point_inside_building(p: Vector3, kind: String) -> bool:
+	if kind == "road":
+		var bucket = _road_obstacles.get(Vector2i(floori(p.x / 16.0), floori(p.z / 16.0)))
+		if bucket != null:
+			for circle: Vector3 in bucket:
+				if Vector2(p.x - circle.x, p.z - circle.z).length_squared() < circle.y: return true
+		return false
 	var hx: Vector2i = world.logistics.world_hex(p)
 	for d in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 1)]:
 		var cell: Vector2i = hx + d
@@ -174,12 +193,7 @@ func _point_inside_building(p: Vector3, kind: String) -> bool:
 			var at: Vector3 = item[0]
 			if Vector2(p.x - at.x, p.z - at.z).length() < float(item[1]):
 				return true
-		if kind == "road":
-			var dist_b = world.district_hex.get(cell)
-			if dist_b != null and not dist_b.dead:
-				var rad: float = maxf(float(dist_b.footprint) * 0.5 + 1.5, 5.5)
-				if Vector2(p.x - dist_b.root.position.x, p.z - dist_b.root.position.z).length() < rad:
-					return true
+
 	return false
 
 func _body_inside_building(c: Dictionary) -> bool:
@@ -557,9 +571,6 @@ func _drive(c: Dictionary, delta: float) -> void:
 		var now := _point_at(c, c.s)
 		var climb: float = (world.height_at(ahead.x, ahead.z) - world.height_at(now.x, now.z)) / 6.0
 		c.limit = limit * clampf(1.0 - maxf(climb, 0.0) * c.heavy * 3.0, 0.45, 1.0)
-	if c.tick % 6 == 0 and c.kind == "road" and _point_inside_building(c.bodies[0].get("at", _point_at(c, c.s)), "road"):
-		c.stranded = true
-		return
 	if c.tick % 2 == 0 or not c.has("gap") or remain < 24.0 or float(c.get("gap", INF)) < 14.0:
 		c.gap = _gap_ahead(c, c.bodies[0].get("at", _point_at(c, c.s)))
 	# A vehicle that stalls mid-road longer than STUCK_DESPAWN seconds despawns cleanly instead of piling up or driving through others.
@@ -989,7 +1000,7 @@ func _sync_ships() -> void:
 		if vehicles.has(id): continue
 		var port = null
 		for b in world.buildings:
-			if b.owner == 0 and b.key == "port" and b.built and not b.dead: port = b
+			if b.owner == 0 and (b.key == "port" or b.get("local_improvement") == "Harbour") and b.built and not b.dead: port = b
 		if port == null: continue
 		if world.naval_navigation == null:
 			world.naval_navigation = preload("res://scripts/naval_navigation.gd").new()

@@ -67,6 +67,9 @@ func start_reason(nation: int, channel: String) -> String:
 	if d.defeated(nation): return "This government no longer controls a nation."
 	var switching: bool = not session.is_empty() and session.phase == "choosing" and int(session.nation) == nation
 	if not session.is_empty() and session.phase != "concluded" and not switching: return "Conclude the current contact first."
+	if switching:
+		var interrupted := _interruption()
+		if interrupted != "": return interrupted
 	var remaining: float = float(cooldowns.get(str(nation), 0.0)) - clock
 	if remaining > 0 and not switching: return "Their diplomatic office is busy for %ds." % ceili(remaining)
 	if channel == "visit" and (d.at_war(0, nation) or d.rel(0, nation) < -25): return "Visit invitation declined. Establish peace and improve relations first."
@@ -90,6 +93,10 @@ func begin(nation: int, channel: String) -> String:
 
 func back_to_channels() -> String:
 	if session.is_empty() or session.phase in ["concluded", "choosing"]: return ""
+	var interrupted := _interruption()
+	if interrupted != "":
+		finish(interrupted)
+		return interrupted
 	# Correcting an unused choice costs nothing. Once negotiation has begun,
 	# keep its decisions and agenda usage so switching cannot replay a deal.
 	if session.used.is_empty():
@@ -120,19 +127,23 @@ func advance(delta: float) -> void:
 			changed.emit()
 	if session.is_empty() or session.phase == "concluded": return
 	var n: int = int(session.nation)
-	if world.diplomacy.defeated(n) or leader(n) != session.leader or leader(0) != session.visitor:
-		finish("Talks suspended: the government or its leadership has changed.")
-		return
-	if session.phase != "choosing" and session.channel == "visit" and world.diplomacy.at_war(0, n):
-		finish("Visit cancelled following the outbreak of war.")
-		return
-	if clock >= float(session.expires):
-		finish("The diplomatic window has closed.")
+	var interrupted := _interruption()
+	if interrupted != "":
+		finish(interrupted)
 	elif session.phase in ["travelling", "connecting"] and clock >= float(session.ready):
 		session.phase = "talking"
 		session.message = "The leaders are ready. Present your agenda."
 		world.hud.notice("%s: diplomatic contact ready. Open Diplomacy or click their civic building." % world.diplomacy.name_of(n))
 		changed.emit()
+
+func _interruption() -> String:
+	var n := int(session.nation)
+	if world.diplomacy.defeated(n) or leader(n) != session.leader or leader(0) != session.visitor:
+		return "Talks suspended: the government or its leadership has changed."
+	if session.phase != "choosing" and session.channel == "visit" and world.diplomacy.at_war(0, n):
+		return "Visit cancelled following the outbreak of war."
+	if clock >= float(session.expires): return "The diplomatic window has closed."
+	return ""
 
 ## Where relations with nation `n` stand: at war, a cold war (deep hostility,
 ## an open operation or border incidents), or peace.
@@ -151,6 +162,8 @@ func title(key: String) -> String:
 
 func topic_reason(key: String, terms: Dictionary = {}) -> String:
 	if session.is_empty() or session.phase != "talking": return "Wait until contact is established."
+	var interrupted := _interruption()
+	if interrupted != "": return interrupted
 	if STANCES.has(key):
 		if not session.counter.is_empty(): return "Answer the pending counteroffer first."
 		if key in session.used: return "Already said in this contact."
@@ -271,7 +284,6 @@ func state_position(key: String) -> String:
 				detail = "They refused; the trade agreement is suspended."
 		"recall":
 			d.change(0, n, -15)
-			cooldowns[str(n)] = clock + 240
 			detail = "Ambassador recalled. Relations -15; no contact for four minutes."
 		"redline":
 			if ai != null and mine >= theirs:
@@ -284,7 +296,7 @@ func state_position(key: String) -> String:
 				detail = "They doubt you can back it up. Relations -5."
 		"expel":
 			if world.espionage != null:
-				world.espionage.enemy_next += 240.0
+				world.espionage.expelled_until[n] = world.espionage.clock + 240.0
 				world.espionage.network[n] = clampf(float(world.espionage.network.get(n, 0.0)) - 10.0, 0.0, 100.0)
 			d.change(0, n, -12)
 			detail = "Their officers are gone: their spying on you stalls. They expelled some of yours in turn (network -10). Relations -12."
@@ -346,8 +358,9 @@ func state_position(key: String) -> String:
 				detail = "Without the means to back it, the warning rings hollow. Relations -6."
 	session.results.append({"key": key, "outcome": outcome, "detail": detail})
 	session.message = "%s — %s. %s" % [STANCES[key][0], outcome, detail]
+	if key == "recall": finish(detail, 240.0)
+	else: changed.emit()
 	d.changed.emit()
-	changed.emit()
 	return ""
 
 func propose(key: String, terms: Dictionary = {}) -> String:
@@ -380,6 +393,10 @@ func propose(key: String, terms: Dictionary = {}) -> String:
 
 func answer_counter(accept: bool) -> String:
 	if session.is_empty() or session.phase != "talking" or session.counter.is_empty(): return "No pending counteroffer."
+	var interrupted := _interruption()
+	if interrupted != "":
+		finish(interrupted)
+		return interrupted
 	var offer: Dictionary = session.counter.duplicate(true)
 	if accept:
 		var reason := _eligibility(offer.key, offer.terms)
@@ -438,14 +455,14 @@ func _record(key: String, outcome: String, detail: String) -> void:
 	session.results.append({"key": key, "outcome": outcome, "detail": detail})
 	session.message = "%s — %s. %s" % [TOPICS[key][0], outcome, detail]
 
-func finish(reason := "Contact concluded.") -> void:
+func finish(reason := "Contact concluded.", cooldown := 120.0) -> void:
 	if session.is_empty() or session.phase == "concluded": return
 	if not session.counter.is_empty():
 		_record(session.counter.key, "No agreement", "The counteroffer was left unsigned.")
 		session.counter = {}
 	session.phase = "concluded"
 	session.message = reason + " Accepted items have taken effect; all other items remain unsigned."
-	cooldowns[str(session.nation)] = clock + 120
+	cooldowns[str(int(session.nation))] = clock + cooldown
 	history.push_front(session.duplicate(true))
 	if history.size() > 12: history.resize(12)
 	changed.emit()
@@ -456,7 +473,10 @@ func capture() -> Dictionary:
 func restore(data: Dictionary) -> void:
 	clock = float(data.get("clock", 0))
 	session = data.get("session", {}).duplicate(true)
+	if session.has("nation"): session.nation = int(session.nation)
 	cooldowns = data.get("cooldowns", {}).duplicate()
 	history = data.get("history", []).duplicate(true)
 	exports = data.get("exports", []).duplicate(true)
+	for job in exports:
+		if job.has("nation"): job.nation = int(job.nation)
 	changed.emit()

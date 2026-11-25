@@ -15,11 +15,13 @@ extends RefCounted
 ##                       goodwill); an appeal for you, if met, brings food. Whatever is raised goes to the cause.
 ## Times, sums and thresholds are game balance.
 
+const Powers := preload("res://scripts/additional_powers.gd")
 const TICK := 5.0
 const BRIEFING_EVERY := 300.0
 const IAEA_EVERY := 210.0
 const APPEAL_EVERY := 120.0
 const APPEAL_LENGTH := 220.0
+const APPEAL_COOLDOWN := 600.0
 const YEAR := 720.0
 const NUCLEAR_STATES := ["usa", "china", "russia", "uk", "france", "india", "pakistan", "israel", "north_korea"]
 const WAR_FOR := 200.0       # seconds at war before an appeal is made for it
@@ -77,10 +79,10 @@ func update(delta: float) -> void:
 	if now >= next_iaea:
 		next_iaea = now + IAEA_EVERY
 		_iaea()
+	_appeals(now)
 	if now >= next_appeal:
 		next_appeal = now + APPEAL_EVERY
 		_open_appeal()
-	_appeals(now)
 
 # ---------------------------------------------------------------- the Secretary-General and the Assembly
 
@@ -155,22 +157,26 @@ func _open_appeal() -> void:
 	var now: float = w.game_time
 	var candidates := []
 	var eco: Node = w.economy
-	if eco.res.food <= 0.5:
-		candidates.append([0, "food", "the hunger of its people"])
-	if eco.get("cold") == true:
-		candidates.append([0, "cold", "a winter without heating"])
+	var recently_helped := {}
+	for a in appeals:
+		if now < float(a.get("closed_at", a.until)) + APPEAL_COOLDOWN:
+			recently_helped[int(a.nation)] = true
+	var displaced := {}
 	for key in _war_clock:
 		if now - float(_war_clock[key]) >= WAR_FOR:
-			var parts: PackedStringArray = key.split("-")
-			var pick := int(parts[0]) if randf() < 0.5 else int(parts[1])
-			if appeals.any(func(a): return int(a.nation) == pick and now - float(a.until) < 600.0):
-				continue
-			candidates.append([pick, "refugees", "the people displaced by its war"])
-	# A nation whose homes are in ruins (crisis.gd): its people need shelter.
-	if w.get("crisis") != null and w.crisis != null:
-		for i in _alive_nations():
-			if w.crisis.active(i, "humanitarian") and not appeals.any(func(a): return int(a.nation) == i and now - float(a.until) < 600.0):
-				candidates.append([i, "refugees", "the people driven from their homes"])
+			for side in key.split("-"): displaced[int(side)] = true
+	for owner: int in _alive_nations():
+		if recently_helped.has(owner): continue
+		var stock := Powers.stock(w, owner)
+		var reserve: float = eco.civil.reserve if owner == 0 else float(w.market.ai_nation(owner).get("grain_reserve", 0))
+		if float(stock.get("food", 100)) + reserve <= 0.5:
+			candidates.append([owner, "food", "the hunger of its people"])
+		var cold: bool = eco.cold if owner == 0 else eco.is_winter() and float(stock.get("gas", 100)) <= 0.5
+		if cold: candidates.append([owner, "cold", "a winter without heating"])
+		if displaced.has(owner):
+			candidates.append([owner, "refugees", "the people displaced by its war"])
+		elif w.get("crisis") != null and w.crisis.active(owner, "humanitarian"):
+			candidates.append([owner, "refugees", "the people driven from their homes"])
 	if candidates.is_empty():
 		return
 	var c: Array = candidates[randi() % candidates.size()]
@@ -184,19 +190,20 @@ func _appeals(now: float) -> void:
 	for a in appeals:
 		if a.closed:
 			continue
+		if now >= float(a.until) or float(a.raised) >= float(a.need):
+			_close(a)
+			continue
 		# Other nations give now and then.
 		if randf() < 0.18:
 			var donors := _alive_nations().filter(func(i): return i != 0 and i != int(a.nation) and w.diplomacy.rel(i, int(a.nation)) > -30.0)
 			if not donors.is_empty():
 				var who: int = donors[randi() % donors.size()]
 				var gift := float(20 + randi() % 50)
-				a.raised = float(a.raised) + gift
-				a.donors[who] = float(a.donors.get(who, 0.0)) + gift
-		if float(a.raised) >= float(a.need) or now >= float(a.until):
-			_close(a)
+				_pledge(a, who, minf(gift, Powers.funds(w, who, "money")))
 
 func _close(a: Dictionary) -> void:
 	a.closed = true
+	a.closed_at = minf(w.game_time, float(a.until))
 	var funded: bool = float(a.raised) >= float(a.need)
 	var agency := "UNHCR" if a.kind == "refugees" else "WFP"
 	var share := clampf(float(a.raised) / maxf(float(a.need), 1.0), 0.0, 1.0)
@@ -206,28 +213,41 @@ func _close(a: Dictionary) -> void:
 	else:
 		a.result = "short"
 		_say(agency, "the appeal for %s closes at %d%% ($%d of $%d)." % [_name(int(a.nation)).to_lower() if int(a.nation) != 0 else "your nation", int(share * 100.0), int(a.raised), int(a.need)])
-	if int(a.nation) == 0 and share > 0.0:
-		var food := RELIEF_FOOD * share
-		w.economy.res.food = minf(float(w.economy.res.food) + food, float(w.economy.caps.get("food", 9999.0)))
-		_say("WFP", "%d food delivered to your people." % int(food))
+	if share > 0.0:
+		var owner := int(a.nation)
+		var stock := Powers.stock(w, owner)
+		var capacity := float(w.economy.caps.food) if owner == 0 else 500.0
+		var stored := float(stock.get("food", 0.0))
+		var food := minf(RELIEF_FOOD * share, maxf(0.0, capacity - stored))
+		stock.food = stored + food
+		_say("WFP", "%d food delivered to %s." % [int(food), "your people" if owner == 0 else _name(owner)])
+
+func _pledge(a: Dictionary, donor: int, offered: float) -> float:
+	var gift := minf(offered, float(a.need) - float(a.raised))
+	if gift <= 0.0: return 0.0
+	var cost := {"money": gift}
+	var paid: bool = w.economy.pay(cost) if donor == 0 else Powers.pay(w, donor, cost)
+	if not paid: return 0.0
+	a.raised += gift
+	a.donors[donor] = float(a.donors.get(donor, 0.0)) + gift
+	if float(a.raised) >= float(a.need): _close(a)
+	return gift
 
 ## You give to an appeal. Returns "" or why not.
 func donate(appeal_id: int, amount: float) -> String:
 	for a in appeals:
 		if int(a.id) != appeal_id:
 			continue
-		if a.closed:
+		if a.closed or w.game_time >= float(a.until):
 			return "That appeal is closed."
 		if int(a.nation) == 0:
 			return "That appeal is for your own nation."
-		if not w.economy.pay({"money": amount}):
+		if not is_finite(amount) or amount <= 0: return "Choose a positive donation."
+		var gift := _pledge(a, 0, amount)
+		if gift <= 0:
 			return "Not enough money."
-		a.raised = float(a.raised) + amount
-		a.donors[0] = float(a.donors.get(0, 0.0)) + amount
-		w.diplomacy.change(0, int(a.nation), GOODWILL * amount / GIFTS[0] * 0.5)
-		_say("UN", "you give $%d to the appeal for %s: goodwill earned." % [int(amount), _name(int(a.nation)).to_lower()])
-		if float(a.raised) >= float(a.need):
-			_close(a)
+		w.diplomacy.change(0, int(a.nation), GOODWILL * gift / GIFTS[0] * 0.5)
+		_say("UN", "you give $%d to the appeal for %s: goodwill earned." % [int(gift), _name(int(a.nation))])
 		return ""
 	return "No such appeal."
 
@@ -256,6 +276,15 @@ func capture() -> Dictionary:
 
 func restore(data: Dictionary) -> void:
 	if data.is_empty():
+		news.clear()
+		appeals.clear()
+		iaea_flagged.clear()
+		next_briefing = w.game_time + 150.0
+		next_iaea = w.game_time + 120.0
+		next_appeal = w.game_time + 90.0
+		last_year = int(w.game_time / YEAR)
+		_id = 1
+		_war_clock.clear()
 		return
 	news = Array(data.get("news", [])).duplicate(true)
 	appeals = []

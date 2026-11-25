@@ -580,6 +580,14 @@ func _projectile_mesh(kind: String) -> Mesh:
 		_projectile_meshes[kind] = c
 	return _projectile_meshes[kind]
 
+func clear_projectiles() -> void:
+	for projectile in _projectiles:
+		projectile.node.queue_free()
+	_projectiles.clear()
+	for shell in _shells:
+		shell.node.queue_free()
+	_shells.clear()
+
 func _move_projectiles(delta: float) -> void:
 	for i in range(_projectiles.size() - 1, -1, -1):
 		var p: Dictionary = _projectiles[i]

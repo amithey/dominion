@@ -154,8 +154,8 @@ func run() -> void:
 	if apps.projects.has(1):
 		var key: String = apps.projects[1]
 		apps.row(1, key).work = float(Data.PROGRAMS[key].work) - 0.001
-		apps.update()
 		var before: float = rival.money
+		apps.update()
 		apps._rivals()
 		check(bool(apps.row(1, key).enabled) and rival.money < before, "rival pays for validated deployment")
 	a.ui_tab = "applications"

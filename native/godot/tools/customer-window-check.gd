@@ -21,6 +21,51 @@ func key(code: Key) -> void:
 		Input.parse_input_event(e)
 		await process_frame
 	await frames()
+func check_selection_bounds(label: String) -> void:
+	await frames()
+	var rect: Rect2 = w.hud._sel.get_global_rect()
+	var view := root.get_visible_rect()
+	check(w.hud._sel.visible and view.encloses(rect) and rect.size.x <= 541 and rect.size.y <= view.size.y * 0.48 + 1, label + " fits its bounded panel")
+	check(absf(rect.position.x - 12) < 1 and absf(view.end.y - rect.end.y - 12) < 1, label + " stays at the lower left")
+
+func selection_layout() -> void:
+	var hud = w.hud
+	var barracks: Dictionary = w.buildings.filter(func(b): return b.owner == 0 and b.key == "barracks")[0]
+	w.select_building(barracks)
+	var saved_queue: Array = barracks.queue.duplicate()
+	for i in range(36): barracks.queue.append("soldier")
+	hud._update_panel()
+	await check_selection_bounds("full barracks training queue")
+	check(hud._sel_scroll.get_v_scroll_bar().visible, "long selection content can scroll")
+	hud._sel_scroll.scroll_vertical = 10000
+	await frames()
+	check(hud._sel_queue.get_child_count() == barracks.queue.size() and hud._sel_scroll.scroll_vertical > 0, "queued orders remain accessible")
+	root.size = Vector2i(1024,720)
+	w.ui_scale = 1.25
+	w.apply_ui_scale()
+	await check_selection_bounds("resized window with larger interface")
+	barracks.queue.assign(saved_queue)
+	w.select_building(null)
+	for unit in w.units: unit.selected = unit.owner == 0
+	hud._update_panel()
+	await check_selection_bounds("group of different units")
+	for unit in w.units: unit.selected = false
+	var soldier: Dictionary = w.units.filter(func(u): return u.owner == 0 and u.key == "soldier")[0]
+	soldier.selected = true
+	hud._update_panel()
+	await check_selection_bounds("single soldier")
+	var moved := Vector2(32, 100)
+	hud._windows._set_position(hud._sel, moved)
+	hud._windows.positions["selection"] = moved
+	w.select_building(barracks)
+	hud._update_panel()
+	await frames()
+	check(hud._sel.position.is_equal_approx(moved), "switching selections preserves a dragged position")
+	hud._windows.positions.erase("selection")
+	w.select_building(null)
+	w.ui_scale = 1.0
+	w.apply_ui_scale()
+
 func run() -> void:
 	set_meta("match_config", {"map":"island", "players":4, "nation":0})
 	change_scene_to_file("res://world.tscn")
@@ -59,6 +104,7 @@ func run() -> void:
 		check(session.screen.visible, "real UN shortcut reaches pending conference")
 		await key(KEY_ESCAPE)
 		check(not session.screen.visible, "Escape returns from conference without voting")
+	await selection_layout()
 	# Animation and motion over actual physics frames, with only rival AI paused.
 	root.size = Vector2i(1280,800)
 	var p: Vector3 = w.land_point(w.start,70.0)

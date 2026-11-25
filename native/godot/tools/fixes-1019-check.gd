@@ -185,10 +185,89 @@ func run() -> void:
 	var rel_before: float = w.diplomacy.rel(0, 1)
 	var funds: float = w.economy.res.money
 	check(ag.donate(77, 150.0) == "" and w.economy.res.money == funds - 150.0 and w.diplomacy.rel(0, 1) > rel_before, "a gift to an appeal costs money and earns goodwill")
-	check(ag.donate(77, 400.0) == "" and ag.appeals[0].closed == false or ag.appeals[0].closed, "(and a second)")
-	ag.appeals[0].raised = 999.0
+	check(ag.donate(77, 400.0) == "" and ag.appeals[0].raised == 550 and not ag.appeals[0].closed, "two gifts leave exactly $50 to fund")
+	var stocks := preload("res://scripts/additional_powers.gd").stock(w, 1)
+	stocks.food = 480.0
+	var saved_appeal: Dictionary = JSON.parse_string(JSON.stringify(ag.capture()))
+	ag.restore(saved_appeal)
+	funds = w.economy.res.money
+	check(ag.donate(77, -150.0) != "" and w.economy.res.money == funds and ag.appeals[0].raised == 550, "invalid gifts cannot mint money or subtract pledged funds")
+	ag.donate(77, 150.0)
+	check(ag.appeals[0].closed and ag.appeals[0].raised == 600 and w.economy.res.money == funds - 50 and ag.appeals[0].donors[0] == 600, "the final donor pays exactly the shortfall after loading")
+	check(stocks.food == 500, "a funded appeal delivers to the rival's real warehouse within capacity")
+	ag.restore(saved_appeal)
+	stocks.food = 0
+	ag.appeals[0].until = w.game_time
+	funds = w.economy.res.money
+	check(ag.donate(77, 150) != "" and w.economy.res.money == funds, "the deadline blocks donations before the next agency update")
 	ag._appeals(w.game_time)
-	check(ag.appeals[0].closed and ag.appeals[0].result == "funded", "an appeal that reaches its sum is funded")
+	ag._appeals(w.game_time)
+	check(ag.appeals[0].raised == 550 and is_equal_approx(stocks.food, 82.5), "partial funding delivers proportional relief exactly once")
+	ag.restore(saved_appeal)
+	ag.appeals[0].nation = 0
+	ag.appeals[0].need = 20000
+	var total_before := 0.0
+	for n in w.ai.nations:
+		n.money = 300
+		w.diplomacy.set_score(0, n.id, 10)
+		total_before += n.money
+	for step in range(400): ag._appeals(w.game_time)
+	var total_after := 0.0
+	for n in w.ai.nations: total_after += n.money
+	check(ag.appeals[0].raised > 550 and is_equal_approx(total_before - total_after, ag.appeals[0].raised - 550), "every rival pledge is backed by an equal treasury debit")
+	var previous_time: float = w.game_time
+	ag.appeals.clear()
+	ag._war_clock.clear()
+	w.economy.res.food = 50
+	w.economy.cold = false
+	w.game_time = 500
+	for n in w.ai.nations:
+		var stock := preload("res://scripts/additional_powers.gd").stock(w, n.id)
+		stock.food = 100
+		stock.gas = 100
+		n.grain_reserve = 0
+	stocks.food = 0
+	ag._open_appeal()
+	check(ag.appeals.size() == 1 and ag.appeals[0].nation == 1 and ag.appeals[0].kind == "food", "a hungry rival qualifies for food relief in peacetime")
+	ag.appeals.clear()
+	w.market.ai_nation(1).grain_reserve = 30
+	ag._open_appeal()
+	check(ag.appeals.is_empty(), "available grain reserves prevent a false hunger appeal")
+	stocks.food = 100
+	stocks.gas = 0
+	ag._open_appeal()
+	check(ag.appeals.is_empty(), "a gas shortage outside winter does not trigger heating relief")
+	w.game_time = 550
+	ag._open_appeal()
+	check(ag.appeals.size() == 1 and ag.appeals[0].nation == 1 and ag.appeals[0].kind == "cold", "a rival without heating gas qualifies in winter")
+	ag.appeals.clear()
+	stocks.gas = 100
+	w.economy.res.food = 0
+	w.economy.civil.reserve = 0
+	ag._open_appeal()
+	var appeal: Dictionary = ag.appeals[0]
+	appeal.raised = appeal.need
+	ag._appeals(w.game_time)
+	ag.restore(JSON.parse_string(JSON.stringify(ag.capture())))
+	w.economy.res.food = 0
+	w.game_time += 599
+	ag._open_appeal()
+	check(ag.appeals.size() == 1, "reloading cannot reopen a hunger appeal during the repeat cooldown")
+	w.game_time += 1
+	ag._open_appeal()
+	check(ag.appeals.size() == 2, "repeat eligibility returns 600 seconds after actual early closure")
+	var legacy: Dictionary = ag.capture()
+	legacy.appeals.resize(1)
+	legacy.appeals[0].erase("closed_at")
+	ag.restore(legacy)
+	w.game_time = float(legacy.appeals[0].until) + 599
+	ag._open_appeal()
+	check(ag.appeals.size() == 1, "old appeal records use the original deadline when closure time was not saved")
+	w.economy.res.food = 100
+	ag._war_clock["0-1"] = w.game_time - ag.WAR_FOR
+	ag._open_appeal()
+	check(ag.appeals.size() == 2 and ag.appeals[1].nation == 1 and ag.appeals[1].kind == "refugees", "a long war can aid its eligible side while the other is on cooldown")
+	w.game_time = previous_time
 	# the IAEA finds undeclared weapons work in a country that is not a weapon state
 	var complex_owner := -1
 	for i in range(1, w.map.nations.size()):

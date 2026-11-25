@@ -8,6 +8,7 @@ signal changed
 const RegimeChange := preload("res://scripts/regime_change.gd")
 
 const TICK := 10.0
+const PRISON_DEFENCE := 0.08   ## chance to catch an enemy agent, per prison (two count)
 const INTEL_TIERS := [[10, "Treasury and buildings"], [25, "Army strength"], [40, "Wars, allies and pacts"], [60, "Warning of attacks on you"]]
 const INTEL_GAIN := {"buildNetwork": 6, "reconDossier": 18, "cyberAttack": 8, "stealFunds": 5, "stealTech": 10, "sabotage": 6, "shipping": 6, "proxyCell": 8, "armRebels": 8, "falseFlag": 6, "assassinate": 12}
 
@@ -43,6 +44,7 @@ var proxies := {}
 var stability := {}
 var security_until := 0.0
 var scandal_until := 0.0
+var expelled_until := {} # nation ID -> time its officers may operate here again
 var enemy_next := 240.0
 var puppets := {}             # nation -> {since, leader, deposed, tribute, patron}: US client states (regime_change.gd)
 var fears := {}               # patron -> until: the world fears that United States until then
@@ -503,7 +505,7 @@ func enemy_attempt(force_outcome := "") -> String:
 		return ""
 	enemy_next = clock + 150.0
 	var d: Node = world.diplomacy
-	var hostiles := range(1, d.n).filter(func(i): return not d.defeated(i) and (d.at_war(0, i) or d.rel(0, i) < -25.0))
+	var hostiles := range(1, d.n).filter(func(i): return not d.defeated(i) and clock >= float(expelled_until.get(i, 0)) and (d.at_war(0, i) or d.rel(0, i) < -25.0))
 	if hostiles.is_empty():
 		return ""
 	var attacker: int = hostiles[randi() % hostiles.size()]
@@ -511,6 +513,7 @@ func enemy_attempt(force_outcome := "") -> String:
 	var nat = world.market.ai_nation(attacker)
 	var defence: float = 0.25 + (0.18 if has_agency() else 0.0) + ready_agents().size() * 0.05 + (world.research.bonus("counterSpy") if world.research else 0.0)
 	defence += 0.25 if clock < security_until else 0.0
+	defence += PRISON_DEFENCE * mini(world.economy.owned("prison"), 2)   # somewhere to hold and question them
 	if world.get("directorate") != null and world.directorate != null:
 		defence += 0.12 * minf(1.0, world.directorate.applications.factor(0, "surveillance"))   # cameras and data (ai_applications_data.gd)
 	# A stronger service's officers are harder to catch (a CIA officer more than most).
@@ -566,7 +569,7 @@ func capture() -> Dictionary:
 	return {"agents": agents, "network": network, "heat": heat, "intel": intel, "types": types, "reports": reports,
 		"dossiers": dossiers, "debuffs": debuffs, "clock": clock, "boost_until": boost_until, "next_id": _next_id, "missions":missions, "cooldowns":cooldowns,
 		"succession":succession, "proxies":proxies, "stability":stability,
-		"security_until":security_until, "scandal_until":scandal_until, "enemy_next":enemy_next,
+		"security_until":security_until, "scandal_until":scandal_until, "enemy_next":enemy_next, "expelled_until":expelled_until,
 		"puppets":puppets, "fears":fears, "ai_raids":ai_raids, "ai_raid_next":ai_raid_next,
 		"standing":standing.keys(), "first_agent_given":first_agent_given}.duplicate(true)
 
@@ -614,6 +617,9 @@ func restore(data: Dictionary) -> void:
 	security_until = float(data.get("security_until", 0.0))
 	scandal_until = float(data.get("scandal_until", 0.0))
 	enemy_next = float(data.get("enemy_next", clock + 150.0))
+	expelled_until.clear()
+	for nation in data.get("expelled_until", {}):
+		expelled_until[int(nation)] = float(data.expelled_until[nation])
 	puppets.clear()
 	for key in data.get("puppets", {}):
 		puppets[int(key)] = data.puppets[key].duplicate(true)
