@@ -183,6 +183,7 @@ if (-not $Quick) {
 # Discover additional regression scripts. Graphics probes require a display;
 # the traffic replay accepts a caller-selected save. Neither reads a random slot.
 $registered = @($tests | ForEach-Object { $_[1] } | Where-Object { $_ -like 'res://tools/*' })
+$long = @('customer5-play')   # 66 scenarios played for real: about 25 minutes, so not part of -Quick
 $graphics = @('fullscreen-check', 'ambience-regression-check', 'audit-layout', 'customer5-layout', 'audit-portraits')
 $additional = Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'godot/tools') -Filter '*.gd' |
     Where-Object { $_.BaseName -like '*-check' -or $_.BaseName -in @('customer5-monkey','customer5-static','customer5-play','audit-layout','customer5-layout','audit-portraits') }
@@ -191,11 +192,16 @@ foreach ($script in $additional) {
     if ($registered -contains $resource) { continue }
     if ($script.BaseName -in $graphics -and -not $WindowedChecks) { continue }
     $arguments = @('--script', $resource)
+    $limit = 1800
+    if ($script.BaseName -in $long) {
+        if ($Quick) { continue }
+        $arguments += @('--', '--budget=3000'); $limit = 3300
+    }
     if ($script.BaseName -eq 'traffic-stuck-check') {
         if (-not $TrafficSave) { continue }
         $arguments += @('--', ('"--path={0}"' -f (Resolve-Path -LiteralPath $TrafficSave).Path))
     }
-    $tests += ,@($script.BaseName, $arguments, $null, 1800)
+    $tests += ,@($script.BaseName, $arguments, $null, $limit)
 }
 
 if ($Shards -gt 1) { $tests = @(for ($i = $Shard; $i -lt $tests.Count; $i += $Shards) { ,$tests[$i] }) }
@@ -225,7 +231,7 @@ foreach ($t in $tests) {
         $log = (Get-Content $out -Raw) + (Get-Content "$out.err" -Raw)
         $errors = ([regex]::Matches($log, 'SCRIPT ERROR')).Count
         $completed = ($log -match '(?m)\b0 (failed|failures)\s*$') -or $(if ($pass) { $log -match [regex]::Escape($pass) } else { $log -match '\bPASS\b' })
-        if ($p.ExitCode -ne 0 -or $log -match '\bFAIL\b' -or -not $completed) { $status = 'FAIL' }
+        if ($p.ExitCode -ne 0 -or $log -cmatch '\bFAIL\b' -or -not $completed) { $status = 'FAIL' }
         elseif ($errors -gt 0) { $status = "FAIL ($errors script errors)" }
         else { $status = 'PASS' }
     }
