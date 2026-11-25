@@ -5654,8 +5654,9 @@ func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
 	var target_kind: String = target_class(target)
 	if target_kind == "air" and target.key == "heavyBomberDrone" and akey in ["soldier", "commando", "machineGunTeam", "scoutTeam"]:
 		return 1.0
+	var cache_kind := "sub" if target_kind == "naval" and preload("res://scripts/war_tools.gd").is_submarine(target) else target_kind
 	if not (akey in _SPECIAL_EFF_KEYS) and not attacker.get("_fc_restricted", false):
-		var ckey := akey + "|" + target_kind
+		var ckey := akey + "|" + cache_kind
 		if _eff_simple.has(ckey):
 			return float(_eff_simple[ckey])
 	if not preload("res://scripts/force_catalog.gd").can_target(self, attacker, target):
@@ -5683,7 +5684,7 @@ func effectiveness(attacker: Dictionary, target: Dictionary) -> float:
 	var profile: Dictionary = damage_profile.get(akey, {})
 	var res: float = (0.0 if target.get("fly", false) else 1.0) if profile.is_empty() else float(profile.get(target_kind, 0.0))
 	if not (akey in _SPECIAL_EFF_KEYS) and akey != "laserAD" and target_kind != "air":
-		_eff_simple[akey + "|" + target_kind] = res
+		_eff_simple[akey + "|" + cache_kind] = res
 	return res
 
 ## Nearest hostile unit in range; buildings only when no unit is near.
@@ -5713,7 +5714,7 @@ func nearest_enemy(unit: Dictionary, radius: float) -> Variant:
 		# Range is cheap; most nearby buckets still contain targets outside it.
 		if d >= radius or not hostile(unit.owner, other.owner) or effectiveness(unit, other) <= 0.01:
 			continue
-		if Modern.hidden(self, other, d, radius):
+		if Modern.hidden(self, other, d, radius, unit.owner):
 			continue
 		var score: float = d / directorate.value_of(other) if seek else d
 		if d < radius and score < best_d:
@@ -5757,7 +5758,7 @@ func update_combat(unit: Dictionary, delta: float) -> void:
 	# They look as far as their weapon reaches (artillery outranges its own eyes otherwise).
 	if unit.enemy == null and unit.search <= 0.0:
 		unit.search = 0.35
-		if unit.target == null or unit.attack_move or unit.key in ["aaVehicle", "samLauncher", "manpads", "laserAD", "irisT"]:
+		if unit.target == null or unit.attack_move or unit.key in ["aaVehicle", "samLauncher", "shortRangeSAM", "manpads", "laserAD", "irisT"]:
 			unit.enemy = Tactics.pick_target(self, unit, maxf(unit.aggro, unit.range * TacticsTerrain.range_mult(self, unit)))
 			# An idle unit answers a fight beside it: an enemy fighting its side, out to the
 			# distance it would chase one anyway (Tactics.keep_target's leash). Six tanks used
@@ -5829,6 +5830,7 @@ func fire(unit: Dictionary, enemy: Dictionary) -> bool:
 func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 	if weapon == "bomb" and flat_distance(unit, enemy) > 11.0: return false
 	if weapon == "torpedo" and not enemy.get("naval", false): return false
+	if weapon == "swarm" and units.filter(func(u): return not u.dead and u.key == "shahed" and u.owner == unit.owner).size() >= Arsenal.SWARM_MAX: return false
 	if not preload("res://scripts/war_costs.gd").shot(self, unit, weapon): return false
 	var target: Vector3 = enemy.node.position + Vector3.UP * (2.0 if enemy.get("is_building", false) else (0.0 if enemy.get("fly", false) else 0.8))
 	var dir := Basis(Vector3.UP, unit.heading) * Vector3.BACK
@@ -5884,7 +5886,7 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 				var best_u = null
 				var best_d := 28.0
 				for cand in units:
-					if not cand.dead and not cand.get("fly", false) and hostile(attacker_owner, cand.owner):
+					if not cand.dead and not cand.get("fly", false) and not preload("res://scripts/war_tools.gd").is_submarine(cand) and hostile(attacker_owner, cand.owner):
 						var d: float = cand.node.position.distance_to(last_pos)
 						if d < best_d:
 							best_d = d
@@ -5904,7 +5906,7 @@ func fire_weapon(unit: Dictionary, enemy: Dictionary, weapon: String) -> bool:
 			# The drone is the warhead: it dives in and is gone.
 			var start: Vector3 = unit.node.position
 			var jammed := Modern.jammed(self, start, unit.owner) or Modern.jammed(self, target, unit.owner)
-			kill(unit)
+			kill(unit, true)
 			unit.node.visible = false
 			if jammed and randf() < Modern.JAM_FAIL * jam_factor(unit):
 				var lost: Vector3 = start.lerp(target, randf_range(0.2, 0.7))
@@ -6065,7 +6067,7 @@ func damage(unit: Dictionary, amount: float, source: Dictionary) -> void:
 	if directorate != null:
 		amount *= directorate.damage_mult(source, unit)  # AI: autonomy, the fusion cell, targeting and undersea sensing
 	amount *= preload("res://scripts/war_tools.gd").damage_mult(self, source, unit)  # radars, airborne warning, jamming, submarine hunters
-	if unit.get("garrison_building") != null:
+	if unit.get("garrison_building") != null and not source.get("pierce", false):
 		amount *= UrbanGarrison.COVER_MULT   # fortified in a building
 	amount *= TacticsTerrain.damage_mult(self, source, unit)   # firing down from the high ground
 	unit.hp -= amount

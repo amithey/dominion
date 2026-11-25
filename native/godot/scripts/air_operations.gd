@@ -112,7 +112,7 @@ static func distance(a: Vector3, b: Vector3) -> float:
 
 static func burn_rate(u: Dictionary) -> float:
 	if u.get("carrier") != null:
-		return 0.35
+		return 1.0
 	if u.key == "wingman":
 		return 0.08
 	if u.key in ROTARY:

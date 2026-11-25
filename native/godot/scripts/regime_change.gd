@@ -284,7 +284,7 @@ static func tick(e: Node) -> void:
 		d.set_flag(d.alliance, patron, nation, true)
 		var nat = w.market.ai_nation(nation)
 		if nat != null:
-			var tribute: float = minf(float(nat.money), 25.0 + float(nat.money) * 0.04)
+			var tribute: float = maxf(0.0, minf(float(nat.money), 25.0 + float(nat.money) * 0.04))
 			nat.money -= tribute
 			if patron == 0:
 				w.economy.res.money += tribute

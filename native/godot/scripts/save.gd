@@ -425,6 +425,7 @@ func restore(data: Dictionary) -> void:
 		world.economy.military_spending[key] = maxf(0.0, float(data.economy.get("military_spending", {}).get(key, 0.0)))
 	world.economy.military_flow = {"money": 0.0, "oil": 0.0}
 	world.economy.military_rates = {"money": 0.0, "oil": 0.0}
+	world.economy.operating_notices.clear()
 	# Buildings, then their districts' streets and the walk grid.
 	for s in data.buildings:
 		var b: Dictionary = world.place_building(s.key, _p(s.pos), int(s.owner), bool(s.built))

@@ -191,7 +191,7 @@ func propose_alliance(other: int) -> String:
 
 ## Asks an ally to join the player's war against `target`.
 func request_joint_war(ally: int, target: int) -> String:
-	if not allied(0, ally) or not at_war(0, target) or at_war(ally, target):
+	if ally == target or defeated(ally) or defeated(target) or not allied(0, ally) or not at_war(0, target) or at_war(ally, target):
 		return ""
 	if randf() < clampf(0.4 + rel(0, ally) / 200.0, 0.3, 0.85):
 		declare_war(ally, target, "%s joins your war against %s!" % [name_of(ally), name_of(target)])
@@ -272,7 +272,7 @@ func tick() -> void:
 			if world.economy != null and rel(0, a) < EMBASSY_CEILING:
 				drift += EMBASSY_WARMTH * mini(world.economy.owned("embassy"), 2)
 			change(0, a, drift)
-		if pact[0][a]:
+		if pact[0][a] and not war[0][a]:
 			world.economy.res.money += 40.0
 			for nation in world.ai.nations:
 				if nation.id == a:
@@ -306,7 +306,7 @@ func _accept(kind: String, id: int) -> void:
 	if defeated(id):
 		world.hud.notice("%s has fallen: its offer lapsed." % name_of(id))
 		return
-	if kind in ["alliance", "pact", "nap"] and at_war(0, id):
+	if kind in ["alliance", "pact", "nap", "tribute"] and at_war(0, id):
 		world.hud.notice("The offer from %s lapsed: you are now at war." % name_of(id))
 		return
 	if kind == "peace" and not at_war(0, id):
@@ -326,6 +326,9 @@ func _accept(kind: String, id: int) -> void:
 			change(0, id, 8.0)
 		"tribute":
 			if world.economy.pay({"money": 200.0}):
+				var recipient = world.market.ai_nation(id) if world.get("market") != null else null
+				if recipient != null:
+					recipient.money += 200.0
 				change(0, id, 12.0)
 			else:
 				change(0, id, -15.0)
@@ -333,6 +336,8 @@ func _accept(kind: String, id: int) -> void:
 	changed.emit()
 
 func _decline(id: int, cost: float) -> void:
+	if defeated(id):
+		return
 	change(0, id, -cost)
 	changed.emit()
 

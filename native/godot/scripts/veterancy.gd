@@ -50,7 +50,7 @@ static func credit(w: Node, source: Dictionary, target: Dictionary, amount: floa
 		return
 	if int(source.owner) == int(target.owner):
 		return
-	var gain: float = minf(amount, float(target.hp) + amount)   # no credit past the victim's last point
+	var gain: float = maxf(0.0, minf(amount, float(target.hp) + amount))   # no credit past the victim's last point
 	if float(target.hp) <= 0.0 and not target.get("is_building", false):
 		gain += float(target.max_hp) * KILL_SHARE
 	elif float(target.hp) <= 0.0:

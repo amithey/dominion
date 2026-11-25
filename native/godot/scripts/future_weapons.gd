@@ -31,7 +31,7 @@ const WINGMEN := 2
 const DOME_COST := 150.0
 ## Golden Dome's chance per missile, by class: built against ballistic missiles
 ## in their boost and mid-course, weaker against low cruise missiles.
-const DOME := {"cruise": 0.2, "seaSkimmer": 0.1, "shortBallistic": 0.4, "ballistic": 0.6, "hypersonic": 0.35, "icbm": 0.6}
+const DOME := {"cruise": 0.2, "seaSkimmer": 0.1, "shortBallistic": 0.4, "ballistic": 0.6, "hypersonic": 0.35, "supersonic": 0.25, "glide": 0.15, "underwater": 0.0, "icbm": 0.6}
 ## Names of the sixth-generation fighter for each nation.
 const SIXTH_GEN_NAMES := {"blue": "F-47", "red": "J-36"}
 
@@ -187,7 +187,7 @@ static func pulse(w: Node, hpm: Dictionary) -> int:
 			if not paid:
 				if not preload("res://scripts/war_costs.gd").pay(w, int(hpm.owner), 0.35, 0.0, "intercepts"): return 0
 				paid = true
-			w.damage(other, other.hp + 1.0, hpm)
+			w.damage(other, maxf(float(other.hp), float(other.max_hp)) * 4.0, hpm)
 			fried += 1
 	if fried > 0:
 		w.effects.emp_flash(hpm.node.position + Vector3.UP * 2.0, HPM_RADIUS * 0.5)

@@ -714,7 +714,11 @@ func breach_near(clearer: Dictionary, dt: float) -> void:
 func cover(target: Dictionary, source: Dictionary) -> float:
 	if target.get("is_building", false) or target.get("vehicle", false) or target.get("fly", false) or target.get("naval", false):
 		return 1.0
-	var is_indirect: bool = source.has("key") and str(source.key) in ["artillery", "mlrs", "himars", "tos1a", "fpvTeam", "coastalDrone", "shaheenDrone", "mortarTeam"]
+	if source.get("pierce", false) or source.get("nuclear", false) or str(source.get("key", "")) == "missile":
+		return 1.0
+	if world != null and world.get("wmd") != null and world.wmd != null and world.wmd.flushed(target):
+		return 1.0   # riot agents drive troops out of trenches and dugouts
+	var is_indirect: bool = source.get("fly", false) or (source.has("key") and str(source.key) in ["artillery", "mlrs", "himars", "tos1a", "fpvTeam", "coastalDrone", "shaheenDrone", "mortarTeam", "towedHowitzer", "wheeledHowitzer", "k9", "heavyRocket", "railgunShip"])
 	var g_ent = target.get("garrisoned_in")
 	if g_ent != null and typeof(g_ent) == TYPE_DICTIONARY and not g_ent.dead and g_ent.built:
 		var g_reach := (DUGOUT_REACH if g_ent.kind == "dugout" else TRENCH_REACH) + 1.5
@@ -728,7 +732,7 @@ func cover(target: Dictionary, source: Dictionary) -> float:
 		if e.dead or not e.built or not is_shelter(e.kind) or int(e.owner) != int(target.owner):
 			continue
 		var reach := DUGOUT_REACH if e.kind == "dugout" else TRENCH_REACH
-		if pos.distance_to(e.pos) <= reach:
+		if Vector2(pos.x - e.pos.x, pos.z - e.pos.z).length() <= reach:
 			var mult := (0.45 if is_indirect else 0.38) if e.kind == "dugout" else (0.65 if is_indirect else 0.50)
 			best = minf(best, mult)
 	return best

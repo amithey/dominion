@@ -214,9 +214,9 @@ static func jam_mult(w: Node, source: Dictionary) -> float:
 	return 1.0
 
 ## An aircraft that radar sees only close in, or a submerged submarine detected only by ASW sonar / weapon launch.
-static func hidden(w: Node, target: Dictionary, distance: float, reach: float) -> bool:
+static func hidden(w: Node, target: Dictionary, distance: float, reach: float, viewer := -1) -> bool:
 	if preload("res://scripts/war_tools.gd").is_submarine(target) and str(target.get("key", "")) != "orca":
-		var viewer_owner := 0 if int(target.get("owner", 0)) > 0 else 1
+		var viewer_owner := viewer if viewer >= 0 else (0 if int(target.get("owner", 0)) > 0 else 1)
 		if not preload("res://scripts/war_tools.gd").submarine_detected(w, viewer_owner, target):
 			return true
 	var seen: float = Arsenal.STEALTH.get(target.get("key", ""), 1.0)
@@ -355,12 +355,14 @@ static func dome(w: Node, m: Dictionary, at: Vector3, f: float) -> bool:
 		return false
 	if not w.hostile(0, int(m.owner)) or (m.arc and f < 0.3):
 		return false
+	var cls: String = CLASS_OF.get(m.type, "cruise")
+	var chance: float = float(Future.DOME.get(cls, 0.0))
+	if chance <= 0.0:
+		return false
 	if not preload("res://scripts/war_costs.gd").pay(w, 0, Future.DOME_COST, 0.0, "intercepts"):
 		return false
 	m.engaged.dome = true
-	var cls: String = CLASS_OF.get(m.type, "cruise")
-	var chance: float = Future.DOME[cls]
-	if cls in ["shortBallistic", "ballistic", "hypersonic", "icbm"] and w.research.ai_tech(int(m.owner)) >= 6.0:
+	if cls in ["shortBallistic", "ballistic", "hypersonic", "icbm", "glide"] and w.research.ai_tech(int(m.owner)) >= 6.0:
 		chance *= 0.8   # a rival's manoeuvring warheads
 	var hit := randf() < chance
 	w.intercepts.append({"type": m.type, "by": "goldenDome", "hit": hit, "owner": int(m.owner)})

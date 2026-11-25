@@ -40,7 +40,7 @@ const SUBMARINES := ["submarine", "nuclearSub", "orca"]
 const SUB_HUNTERS := ["maritimePatrol", "asFrigate", "navalHelicopter", "destroyer"]
 const ASW_CAPABLE := ["destroyer", "asFrigate", "maritimePatrol", "navalHelicopter", "submarine", "nuclearSub", "orca"]
 const GUNS := ["artillery", "mlrs", "himars", "k9", "heavyRocket", "tos1a", "towedHowitzer", "wheeledHowitzer", "mortarTeam"]
-const AIR_DEFENCE := ["samLauncher", "aaVehicle", "shortRangeSAM", "laserAD", "irisT", "manpads", "abmLauncher", "saudiThaad", "aegisCruiser", "type45"]
+const AIR_DEFENCE := ["samSite", "samLauncher", "aaVehicle", "shortRangeSAM", "laserAD", "irisT", "manpads", "abmLauncher", "saudiThaad", "aegisCruiser", "type45"]
 
 const MINE_RADIUS := 11.5
 const MINE_CHARGES := 5
@@ -560,7 +560,7 @@ static func damage_mult(w: Node, source: Dictionary, target: Dictionary) -> floa
 	# Counter-battery radar: guns it has found are hit harder.
 	if (tkey in GUNS or _base(tkey) in GUNS) and _near(s, o, "counterBatteryRadar", at, RADAR_REACH):
 		f *= 1.0 + RADAR_BONUS
-	var shooter = source.get("node")
+	var shooter = source.get("node", source.get("root"))
 	if shooter != null and is_instance_valid(shooter):
 		var from: Vector3 = shooter.position
 		# Airborne early warning: your aircraft under its picture hit harder.
@@ -765,8 +765,15 @@ static func _strike_target(w: Node, carrier: Dictionary) -> Variant:
 				continue
 			if str(e.get("key", "")) in SUBMARINES or _base(str(e.get("key", ""))) in SUBMARINES:
 				continue
-			if o == 0 and w.get("fog") != null and w.fog.enabled and not w.fog.shows(e):
-				continue
+			if w.get("fog") != null and w.fog.enabled:
+				if o == 0 and not w.fog.shows(e):
+					continue
+				if o > 0:
+					if e.get("is_building", false):
+						if not w.fog.rival_knows(o, e):
+							continue
+					elif int(e.owner) == 0 and not w.fog.rival_spots(o, e):
+						continue
 			var weight := d * (0.6 if e.get("naval", false) else 1.0)
 			if weight < score:
 				score = weight
@@ -858,7 +865,7 @@ static func recovery_point(carrier: Dictionary, u: Dictionary, from: Vector3) ->
 		return deck
 	var travel := minf(30.0, deck.distance_to(from) / maxf(1.0, float(u.speed)))
 	var course := Basis(Vector3.UP, float(carrier.heading)) * Vector3.BACK
-	var advance := travel * float(carrier.get("cur_speed", carrier.speed))
+	var advance := travel * float(carrier.get("sailing_speed", carrier.speed))
 	if carrier.get("target") != null:
 		advance = minf(advance, deck.distance_to(carrier.target))
 	return deck + course * advance
@@ -898,7 +905,14 @@ static func carrier_flight(w: Node, u: Dictionary, delta: float) -> bool:
 		return true
 	var step := minf(flat.length(), float(u.get("speed", 30.0)) * delta)
 	var dir := flat.normalized()
-	u.node.position += Vector3(dir.x, 0, dir.y) * step
+	var next_pos: Vector3 = at + Vector3(dir.x, 0, dir.y) * step
+	var floor_y: float = maxf(w.height_at(next_pos.x, next_pos.z), float(w.map.seaLevel))
+	var cruise_y: float = floor_y + float(u.get("altitude", 22.0))
+	var deck_y: float = deck.y + 3.0
+	var rem_d := flat.length()
+	var want_y: float = lerpf(deck_y, cruise_y, clampf((rem_d - 6.0) / 34.0, 0.0, 1.0)) if rem_d < 40.0 else cruise_y
+	next_pos.y = maxf(move_toward(at.y, want_y, 12.0 * delta), floor_y + 1.5)
+	u.node.position = next_pos
 	u.heading = atan2(dir.x, dir.y)
 	u.node.rotation.y = u.heading
 	u.moving = true

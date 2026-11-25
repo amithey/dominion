@@ -111,7 +111,7 @@ static func pick_target(w: Node, unit: Dictionary, radius: float, engaged_with :
 			var eff: float = w.effectiveness(unit, other)
 			if eff <= 0.01:
 				continue
-			if (other.get("fly", false) or other.get("naval", false)) and _Modern.hidden(w, other, d, radius):
+			if (other.get("fly", false) or other.get("naval", false)) and _Modern.hidden(w, other, d, radius, own):
 				continue  # a stealth aircraft or submarine is seen only close in
 			var score: float = d / maxf(unit.range, 1.0) - eff * 0.5 - (1.0 - other.hp / maxf(other.max_hp, 1.0)) * 0.4
 			if d <= unit.range:
@@ -303,7 +303,7 @@ static func crowd_push(w: Node, unit: Dictionary, at: Vector3, still := false) -
 			if bucket == null:
 				continue
 			for other in bucket:
-				if is_same(other, unit) or other.dead or other.get("fly", false) or other.get("naval", false):
+				if is_same(other, unit) or other.dead or other.get("fly", false) or other.get("naval", false) or other.get("garrison_building") != null:
 					continue
 				var yield_share := 1.0
 				if still and other.owner == unit.owner and other.get("moving", false) and other.get("target") != null and other.node.position.distance_to(other.target) > 5.0:
@@ -370,7 +370,7 @@ static func traffic(w: Node, unit: Dictionary, to: Vector3, remaining := INF) ->
 			if bucket == null:
 				continue
 			for other in bucket:
-				if is_same(other, unit) or other.dead:
+				if is_same(other, unit) or other.dead or other.get("garrison_building") != null:
 					continue
 				var rel: Vector3 = other.node.position - at
 				rel.y = 0.0
@@ -428,7 +428,7 @@ static func hard_push(w: Node, unit: Dictionary, at: Vector3) -> Vector3:
 			if bucket == null:
 				continue
 			for other in bucket:
-				if is_same(other, unit) or other.dead:
+				if is_same(other, unit) or other.dead or other.get("garrison_building") != null:
 					continue
 				var gap: Vector3 = at - other.node.position
 				gap.y = 0.0

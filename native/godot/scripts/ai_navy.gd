@@ -94,12 +94,15 @@ static func _defend(w: Node, n: Dictionary, home: Dictionary, ships: Array, enem
 	var mine: Array = w.buildings.filter(func(b): return b.owner == n.id and not b.dead and b.key in COASTAL)
 	if mine.is_empty():
 		return
+	var WT := preload("res://scripts/war_tools.gd")
 	for foe in w.units:
 		if foe.dead or not foe.get("naval", false) or not (foe.owner in enemies) or float(foe.dmg) <= 0.0:
 			continue
+		if WT.is_submarine(foe) and not WT.submarine_detected(w, n.id, foe):
+			continue
 		for b in mine:
 			if Vector2(foe.node.position.x - b.root.position.x, foe.node.position.z - b.root.position.z).length() <= DEFEND_REACH:
-				var free: Array = ships.filter(func(s): return s.get("target") == null and s.get("enemy") == null or w.flat_distance(s, foe) < 200.0)
+				var free: Array = ships.filter(func(s): return (s.get("target") == null and s.get("enemy") == null or w.flat_distance(s, foe) < 200.0) and w.effectiveness(s, foe) > 0.01)
 				if not free.is_empty():
 					w.order_attack(free.slice(0, 6), foe)
 				return
@@ -126,7 +129,7 @@ static func _sortie(w: Node, ai: Node, n: Dictionary, home: Dictionary, ships: A
 	if idle.size() < 2:
 		st.next_sortie = w.game_time + 40.0
 		return
-	var target: Variant = _sortie_target(w, home, enemies)
+	var target: Variant = _sortie_target(w, home, enemies, n.id)
 	if target == null:
 		st.next_sortie = w.game_time + 60.0
 		return
@@ -142,12 +145,16 @@ static func _sortie(w: Node, ai: Node, n: Dictionary, home: Dictionary, ships: A
 		pass   # (an unseen fleet is not announced: you learn of it from your own radars and agents; sitrep.gd)
 
 ## The nearest enemy ship, or the nearest enemy coastal work, to sail against.
-static func _sortie_target(w: Node, home: Dictionary, enemies: Array) -> Variant:
+static func _sortie_target(w: Node, home: Dictionary, enemies: Array, owner := -1) -> Variant:
+	var WT := preload("res://scripts/war_tools.gd")
+	var seeker := owner if owner >= 0 else int(home.get("owner", -1))
 	var best = null
 	var best_d := INF
 	var from: Vector3 = home.root.position
 	for u in w.units:
 		if u.dead or not u.get("naval", false) or not (u.owner in enemies):
+			continue
+		if WT.is_submarine(u) and seeker >= 0 and not WT.submarine_detected(w, seeker, u):
 			continue
 		var d: float = from.distance_to(u.node.position)
 		if d < best_d:

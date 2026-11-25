@@ -265,6 +265,87 @@ func run() -> void:
 		w.un._enforce({"measure": "force", "target": defeated_id, "other": -1, "votes": {}})
 		check(is_equal_approx(w.diplomacy.rel(0, defeated_id), rel_before) and not w.un.authorised.has(defeated_id), "UN enforcement skips a target defeated before voting closed")
 		w.ai.nations[0].defeated = was_defeated
+	# Physics & combat logic regressions (cover, submarine targeting cache, Golden Dome, EW, airlift fuel, garrison).
+	var Modern := preload("res://scripts/modern_warfare.gd")
+	var Bunker := preload("res://scripts/bunker.gd")
+	var WarTools := preload("res://scripts/war_tools.gd")
+	var UrbanGarrison := preload("res://scripts/urban_garrison.gd")
+	var Airlift := preload("res://scripts/airlift.gd")
+	w.economy.operating_notices["fuel"] = 9999.0
+	w.saves.restore(older)
+	check(w.economy.operating_notices.is_empty(), "loading clears operating shortage notice cooldowns")
+	# 1. Golden Dome handles supersonic/glide/underwater missiles without crashing or charging for underwater torpedoes.
+	w.economy.grant_test_resources()
+	w.research.progress["goldenDome"] = {"stage": 3, "work": 0.0, "paid": true}
+	w.research._recompute()
+	w.diplomacy.declare_war(0, 1)
+	var m_before: float = float(w.economy.res.money)
+	var dome_poseidon := Modern.dome(w, {"type": "poseidon", "owner": 1, "arc": false, "engaged": {}}, w.start, 0.5)
+	check(not dome_poseidon and is_equal_approx(float(w.economy.res.money), m_before), "Golden Dome ignores underwater Poseidon without crashing or charging $150")
+	Modern.dome(w, {"type": "nuclearGlide", "owner": 1, "arc": true, "engaged": {}}, w.start, 0.6)
+	Modern.dome(w, {"type": "brahmos", "owner": 1, "arc": false, "engaged": {}}, w.start, 0.6)
+	check(true, "Golden Dome evaluates nuclearGlide and brahmos without key errors")
+	# 2. effectiveness() cache must NOT let non-ASW units target submarines after fighting a surface ship.
+	var sea_pt = w.water_near(w.start, 320)
+	if sea_pt != null:
+		var tnk_c: Dictionary = w.spawn_unit("tank", w.start + Vector3(12, 0, 0), 0)
+		var corv_c: Dictionary = w.spawn_unit("corvette", sea_pt, 0)
+		var dest_e: Dictionary = w.spawn_unit("destroyer", sea_pt + Vector3(8, 0, 0), 1)
+		var sub_e: Dictionary = w.spawn_unit("submarine", sea_pt + Vector3(16, 0, 0), 1)
+		check(w.effectiveness(tnk_c, dest_e) > 0.0 and w.effectiveness(tnk_c, sub_e) == 0.0, "effectiveness cache keeps tanks unable to target submarines after engaging surface ships")
+		check(w.effectiveness(corv_c, dest_e) > 0.0 and w.effectiveness(corv_c, sub_e) == 0.0, "effectiveness cache keeps corvettes unable to target submarines after engaging surface ships")
+		if w.map.nations.size() >= 3:
+			var sub_p: Dictionary = w.spawn_unit("submarine", sea_pt + Vector3(24, 0, 0), 0)
+			sub_p.last_fire = -999.0
+			var frig2: Dictionary = w.spawn_unit("asFrigate", sea_pt + Vector3(30, 0, 0), 2)
+			check(not Modern.hidden(w, sub_p, 6.0, 80.0, 2), "Modern.hidden checks the actual viewer nation for submarine sonar detection")
+			w.kill(sub_p); w.kill(frig2)
+		w.kill(tnk_c); w.kill(corv_c); w.kill(dest_e); w.kill(sub_e)
+	# 3. Bunker & fortification cover allow missiles, pierce warheads, indirect artillery, and flushed troops.
+	var bkr: Dictionary = w.place_building("bunker", site("bunker"), 0, true)
+	var towed: Dictionary = w.spawn_unit("towedHowitzer", bkr.root.position + Vector3(20, 0, 0), 1)
+	var nuke_src := {"owner": 1, "dead": true, "key": "missile", "missile_key": "nuke", "special": "", "nuclear": true, "pierce": false}
+	var thermo_src := {"owner": 1, "dead": true, "key": "missile", "missile_key": "thermobaricMissile", "special": "thermobaric", "nuclear": false, "pierce": true}
+	check(is_equal_approx(Bunker.cover(w, bkr, towed), 1.0) and is_equal_approx(Bunker.cover(w, bkr, nuke_src), 1.0), "bunker cover does not reduce towedHowitzer or strategic missile damage")
+	w.kill(towed); w.destroy_building(bkr)
+	# 4. EW jet jams fixed SAM site buildings.
+	var sam_b: Dictionary = w.place_building("samSite", site("samSite"), 1, true)
+	var ew_u: Dictionary = w.spawn_unit("ewJet", sam_b.root.position + Vector3(15, 0, 0), 0)
+	ew_u.air_state = "ready"
+	var jet_u: Dictionary = w.spawn_unit("jet", sam_b.root.position + Vector3(20, 0, 0), 0)
+	jet_u.air_state = "ready"
+	WarTools.update(w, 0.3)
+	check(WarTools.damage_mult(w, sam_b, jet_u) < 0.9, "ewJet jams fixed samSite buildings")
+	w.kill(ew_u); w.kill(jet_u); w.destroy_building(sam_b)
+	# 5. Urban garrison evacuates on ownership flip and indoor troops do not physically push outdoor vehicles.
+	var apt: Dictionary = w.place_building("apartments", site("apartments"), 0, true)
+	var g_sol: Dictionary = w.spawn_unit("soldier", apt.root.position + Vector3(4, 0, 0), 0)
+	UrbanGarrison.enter(w, g_sol, apt)
+	var out_tnk: Dictionary = w.spawn_unit("tank", g_sol.node.position + Vector3(1.5, 0, 0), 0)
+	w.rebuild_grid()
+	check(w.Tactics.hard_push(w, out_tnk, out_tnk.node.position).length() < 0.01, "garrisoned indoor soldiers do not physically push outdoor tanks")
+	apt.owner = 1
+	UrbanGarrison.update(w, 0.1)
+	check(g_sol.get("garrison_building") == null, "flipping building ownership evacuates the old owner's garrison")
+	w.kill(out_tnk); w.kill(g_sol); w.destroy_building(apt)
+	# 6. Parked transport helicopter respects aviation fuel shortage.
+	var hpad: Dictionary = w.place_building("helipad", site("helipad"), 0, true)
+	hpad.supplied = true
+	var th: Dictionary = w.spawn_unit("helicopter", hpad.root.position, 0)
+	w.AirOperations.park_new(w, th, hpad)
+	var far_s: Dictionary = w.spawn_unit("soldier", w.land_point(hpad.root.position + Vector3(45, 0, 0), 10.0), 0)
+	w.economy.res.oil = 0.0
+	Airlift.order_board(w, [far_s], th)
+	check(th.air_state == "parked", "parked helicopter stays grounded when player has zero aviation fuel")
+	w.economy.grant_test_resources()
+	w.kill(far_s); w.kill(th); w.destroy_building(hpad)
+	# 7. Unmanned seaDrone/drone/decoy losses do not drain war support.
+	if w.support != null:
+		var sup0: float = w.support.value(0)
+		var dec_u: Dictionary = w.spawn_unit("decoy", w.start + Vector3(14, 0, 0), 0)
+		w.kill(dec_u)
+		check(is_equal_approx(w.support.value(0), sup0), "losing an unmanned decoy does not lower home-front war support")
+	w.diplomacy.make_peace(0, 1)
 	for i in range(3):
 		await process_frame
 	print("GAMEPLAY_STATE_AUDIT %d checks, %d failures" % [checks, failures.size()])

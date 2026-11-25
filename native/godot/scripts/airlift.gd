@@ -78,7 +78,7 @@ static func _unreserved_room(w: Node, transport: Dictionary) -> int:
 	return left
 
 ## Wakes a helicopter from parked/rearming/returning state and directs it straight to `go`.
-static func _wake_transport(w: Node, t: Dictionary, go: Vector3) -> void:
+static func _wake_transport(w: Node, t: Dictionary, go: Vector3) -> bool:
 	t.board = null
 	t.erase("payload_order")
 	t.erase("patrol")
@@ -95,8 +95,12 @@ static func _wake_transport(w: Node, t: Dictionary, go: Vector3) -> void:
 			if base != null and AirOps.available(w, t, base):
 				t.stay = false
 				if not AirOps._taxi_out(w, t):
-					t.air_state = "ready"
+					t.stay = true
+					return false
 			else:
+				if not preload("res://scripts/war_costs.gd").pay(w, int(t.owner), 0.0, preload("res://scripts/war_costs.gd").sortie_fuel(t)):
+					preload("res://scripts/war_costs.gd").blocked(w, t, "aviation fuel")
+					return false
 				t.air_state = "ready"
 		elif st in ["returning", "no base", "standby"]:
 			t.stay = false
@@ -106,6 +110,7 @@ static func _wake_transport(w: Node, t: Dictionary, go: Vector3) -> void:
 		t.path = PackedVector3Array()
 	else:
 		w.order_move([t], go)
+	return true
 
 ## The player's transport under the mouse, when the selection could board it.
 static func transport_under(w: Node, selected: Array, screen: Vector2) -> Variant:
@@ -273,8 +278,12 @@ static func order_board(w: Node, selected: Array, heli: Dictionary) -> int:
 				heli.pickup_since = w.game_time
 				heli.pickup_sweep = false   # it came for these troops only: one whose boarding was cancelled stays put
 				heli.erase("unload_go")
-				_wake_transport(w, heli, spot)
-				meet = spot
+				if _wake_transport(w, heli, spot):
+					meet = spot
+				else:
+					heli.erase("pickup_go")
+					heli.erase("pickup_since")
+					heli.erase("pickup_sweep")
 			else:
 				var spot2 := landing_spot(w, heli.node.position, [], centre, 20.0)
 				if spot2 != Vector3.INF:
@@ -334,7 +343,11 @@ static func order_pickup_at(w: Node, transport: Dictionary, at: Vector3) -> bool
 	transport.pickup_since = w.game_time
 	transport.pickup_sweep = true   # "Pick up at...": takes any friendly troops it finds there
 	transport.erase("unload_go")
-	_wake_transport(w, transport, go)
+	if not _wake_transport(w, transport, go):
+		transport.erase("pickup_go")
+		transport.erase("pickup_since")
+		transport.erase("pickup_sweep")
+		return false
 	return true
 
 ## Sends `transports` back to their home base (or nearest friendly helipad/airfield/HQ), unloading any carried troops there.
@@ -651,7 +664,8 @@ static func order_unload_at(w: Node, transport: Dictionary, at: Vector3) -> bool
 static func _head_for(w: Node, t: Dictionary, plan: Dictionary) -> void:
 	t.erase("pickup_go")
 	t.erase("pickup_since")
-	_wake_transport(w, t, plan.go)
+	if not _wake_transport(w, t, plan.go):
+		return
 	t.unload_go = plan.go
 	t.unload_target = plan.beach
 	t.unload_since = w.game_time
