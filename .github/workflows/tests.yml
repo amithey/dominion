@@ -1,0 +1,64 @@
+# Runs the quick test suite (native/run-tests.ps1 -Quick) with Godot headless on
+# every push and pull request. The list is split across parallel Windows
+# machines; each prints the same PASS/FAIL table as a local run.
+name: Tests
+
+on:
+  push:
+    branches: [main]  # other branches are tested through their pull request
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: 4.7.2-stable
+
+jobs:
+  quick:
+    name: Quick suite (${{ matrix.shard }} of 6)
+    runs-on: windows-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: .local-tools/godot
+          key: godot-${{ env.GODOT_VERSION }}-win64
+
+      - name: Download Godot ${{ env.GODOT_VERSION }}
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $zip = "$env:RUNNER_TEMP\godot.zip"
+          Invoke-WebRequest "https://github.com/godotengine/godot/releases/download/$env:GODOT_VERSION/Godot_v$($env:GODOT_VERSION)_win64.exe.zip" -OutFile $zip
+          Expand-Archive $zip -DestinationPath .local-tools/godot -Force
+          Get-ChildItem .local-tools/godot
+
+      # The imported-assets cache (.godot) is not in git. Restoring the last one
+      # means Godot only re-imports what changed since.
+      - name: Cache imported assets
+        uses: actions/cache@v4
+        with:
+          path: native/godot/.godot
+          key: godot-import-${{ env.GODOT_VERSION }}-${{ github.sha }}
+          restore-keys: godot-import-${{ env.GODOT_VERSION }}-
+
+      - name: Import assets
+        shell: pwsh
+        run: |
+          & ".local-tools/godot/Godot_v$($env:GODOT_VERSION)_win64_console.exe" --headless --path native/godot --import 2>&1 | Select-Object -Last 20
+          exit 0  # a few glTF warnings are normal; the tests are the judge
+
+      - name: Run quick tests (shard ${{ matrix.shard }} of 6)
+        shell: pwsh
+        run: ./native/run-tests.ps1 -Quick -Shard ${{ matrix.shard }} -Shards 6

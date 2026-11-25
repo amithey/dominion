@@ -7,10 +7,13 @@
 #   -WindowedChecks  includes checks that need a graphics window
 #   -TrafficSave     replays a specific saved match to verify civilian traffic
 #   -Quick     skips the long ones (the 12-minute match and the AI war)
-param([switch]$Exported, [switch]$Quick, [switch]$WindowedChecks, [string]$TrafficSave)
+#   -Shard N -Shards M  runs only every M-th test starting at N (0-based), so M
+#              machines can split the list (the GitHub Actions workflow does this)
+#   -Godot     path to the Godot console executable (default: .local-tools)
+param([switch]$Exported, [switch]$Quick, [switch]$WindowedChecks, [string]$TrafficSave, [int]$Shard = 0, [int]$Shards = 1, [string]$Godot = '')
 $ErrorActionPreference = 'Continue'
 $repo = Split-Path -Parent $PSScriptRoot
-$godot = Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.exe'
+$godot = if ($Godot) { $Godot } else { Join-Path $repo '.local-tools\godot\Godot_v4.7.2-stable_win64_console.exe' }
 $exe = Join-Path $repo 'dist\DOMINION.exe'
 
 $tests = @(
@@ -195,6 +198,7 @@ foreach ($script in $additional) {
     $tests += ,@($script.BaseName, $arguments, $null, 1800)
 }
 
+if ($Shards -gt 1) { $tests = @(for ($i = $Shard; $i -lt $tests.Count; $i += $Shards) { ,$tests[$i] }) }
 $results = @()
 $runId = [guid]::NewGuid().ToString('N')
 $testProfile = Join-Path $env:TEMP "dominion-profile-$runId"
@@ -226,6 +230,12 @@ foreach ($t in $tests) {
         else { $status = 'PASS' }
     }
     $seconds = [int]((Get-Date) - $start).TotalSeconds
+    if ($status -ne 'PASS' -and $env:GITHUB_ACTIONS) {  # on CI nobody can open the log afterwards: show its end
+        "::group::log of $name"
+        if (Test-Path $out) { Get-Content $out -Tail 60 }
+        if (Test-Path "$out.err") { Get-Content "$out.err" -Tail 60 }
+        '::endgroup::'
+    }
     $results += [pscustomobject]@{ Test = $name; Result = $status; Seconds = $seconds }
     '{0,-40} {1,-22} {2,4}s' -f $name, $status, $seconds
 }
