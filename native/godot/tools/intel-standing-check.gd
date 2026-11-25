@@ -37,6 +37,7 @@ func run() -> void:
 	check(e.agents.size() == 1, "only one is given")
 	# Standing orders on nation 1: no click after this one.
 	e.standing[1] = true
+	seed(7)   # one agent: a failed job can see it captured, and then nothing grows. The odds are the espionage tests' business; here only that standing orders work
 	var spent0: float = w.economy.res.money
 	var minutes := 0.0
 	while (e.network[1] < 60.0 or e.intel[1] < 40.0) and minutes < 15.0:
@@ -50,7 +51,8 @@ func run() -> void:
 	for i in range(30):
 		e.advance(10.0)
 		e.tick()
-	check(e.dossiers.has(1) and e.clock - float(e.dossiers[1].t) <= 180.0, "and the dossier is kept fresh (%ds old)" % int(e.clock - float(e.dossiers[1].t)))
+	var age: float = e.clock - float(e.dossiers[1].t) if e.dossiers.has(1) else INF
+	check(age <= 180.0, "and the dossier is kept fresh (%s old)" % ("%ds" % int(age) if age < INF else "no dossier"))
 	# Withdrawn: nothing more.
 	e.standing.erase(1)
 	e.missions.clear()

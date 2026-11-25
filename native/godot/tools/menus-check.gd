@@ -246,7 +246,7 @@ func run() -> void:
 	var charts: Array = cab.find_children("Chart_*", "", true, false)
 	check(charts.size() >= 4 and hud.history.money.size() >= 1, "the Cabinet charts the treasury, the citizens, the army and research over time (%d charts)" % charts.size())
 	var tiles: Array = cab._grid.get_children().filter(func(t): return not t.is_queued_for_deletion())
-	check(cab != null and cab.visible and on_screen(cab) and tiles.size() == 10, "Tab opens the Cabinet, full screen, with its 8 ministries, the world news and the paths to victory (%d)" % tiles.size())
+	check(cab != null and cab.visible and on_screen(cab) and tiles.size() == 12, "Tab opens the Cabinet, full screen, with its 10 ministries (domestic policy and civic affairs among them), the world news and the paths to victory (%d)" % tiles.size())
 	check(hud._screen_buttons.cabinet.button_pressed or (func(): hud._process(0.3); return hud._screen_buttons.cabinet.button_pressed).call(), "its screen button is lit while it is open")
 	var money_shown: bool = cab.find_children("*", "Label", true, false).any(func(l): return l.text == "$" + hud.compact_number(w.economy.res.money))
 	check(money_shown, "it shows the treasury as it stands ($%s)" % hud.compact_number(w.economy.res.money))

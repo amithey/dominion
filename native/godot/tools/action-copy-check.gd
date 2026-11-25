@@ -142,6 +142,7 @@ func run() -> void:
 	w.economy.res.money = old_money; hints.update(purchase)
 	check(not purchase.tooltip_text.contains("Unavailable: need"), "Resource explanation clears when the action becomes affordable")
 	purchase.queue_free()
+	DirAccess.make_dir_recursive_absolute("res://build")   # build/ is not in git: a fresh checkout has none
 	var file := FileAccess.open("res://build/action-copy-audit.txt", FileAccess.WRITE)
 	file.store_string("\n".join(PackedStringArray(audit)))
 	print("ACTION_COPY PASS %d" % checks if errors.is_empty() else "ACTION_COPY FAIL: " + str(errors))

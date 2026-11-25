@@ -395,6 +395,7 @@ func run() -> void:
 	if not field.is_empty():
 		for u in w.units.filter(func(x): return x.owner == 0 and x.get("fly", false)): w.kill(u)
 		field.queue.clear()
+		w.economy.grant_test_resources()   # (the raids above can leave the treasury short of a jet: on CI none was trained once)
 		var planes := []
 		for i in range(AO.SLOTS.airfield):
 			w.queue_unit(field, "jet")
@@ -407,6 +408,8 @@ func run() -> void:
 		var q0: int = field.queue.size()
 		w.queue_unit(field, "jet")
 		check(field.queue.size() == q0, "a full airfield trains no more jets")
+		if planes.is_empty():
+			planes = [w.spawn_unit("jet", field.root.position, 0)]   # carry on with the rest of the checks rather than crash
 		var target: Dictionary = w.spawn_unit("tank", dry(field.root.position + Vector3(90, 0, 0)), 1)
 		target.dmg = 0.0
 		w.order_attack([planes[0]], target)
