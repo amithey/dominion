@@ -1,29 +1,27 @@
-# External 3D assets
+# External 3D assets and textures
 
-The following game-ready assets are distributed under Creative Commons Zero
-(CC0 / Public Domain) by their respective creators:
+Everything in `assets/` is distributed under Creative Commons Zero (CC0 1.0 /
+public domain) by its creators. `native/prepare-desktop.ps1` copies the files
+the game uses into the Godot project.
 
-- Quaternius, **Ultimate Modular Men Pack** — `quaternius-characters/Worker.glb`
-  - https://quaternius.com/packs/ultimatemodularcharacters.html
-  - https://poly.pizza/bundle/Ultimate-Modular-Men-Pack-ZiH8muWqwQ
 - Quaternius, **Toon Shooter Game Kit** — `quaternius-characters/CharacterSoldier.glb`
   - https://poly.pizza/bundle/Toon-Shooter-Game-Kit-qraiSXoAru
 - Quaternius, **Downtown City MegaKit (Standard)** — `quaternius-downtown/`
   - https://quaternius.com/packs/downtowncitymegakit.html
-- Kenney, **Suburban Houses Pack** — `kenney-suburban/`
-  - https://poly.pizza/bundle/Suburban-Houses-Pack-dZQwy8vcDv
 - Quaternius, **Farm Buildings Bundle** — `quaternius-farm/`
   - https://poly.pizza/bundle/Farm-Buildings-Bundle-ppbnhEfNEt
+- Quaternius, **Animated Tanks Pack** — `quaternius-tanks/` (see its `LICENSE.txt`)
+  - https://quaternius.com/packs/animatedtanks.html
+- Kenney, **City Kit (Commercial)** — `kenney-city/` (see its `LICENSE.txt`)
+  - https://kenney.nl/assets/city-kit-commercial
+- Kenney, **Suburban Houses Pack** — `kenney-suburban/`
+  - https://poly.pizza/bundle/Suburban-Houses-Pack-dZQwy8vcDv
+- ambientCG, terrain textures — `../textures/terrain/` (see its `LICENSE.txt`)
+  - https://ambientcg.com
+- Poly Haven, architecture textures — `../textures/architecture/` (see its `LICENSE.txt`)
+  - https://polyhaven.com
 
 The downloaded materials were integrated and, where appropriate, optimized or
 restyled for the game's RTS camera and physically based rendering pipeline.
-
-`infantry/` is an unpacked copy of the existing `three/Soldier.glb` character
-already distributed with this project (Three.js Soldier example / Mixamo
-Vanguard). `scripts/unpack-infantry.cjs` extracts its embedded JPEGs without
-changing pixels, geometry or animation. Weapons reuse the existing Quaternius
-Toon Shooter kit above.
-
-The missing city and watercraft palettes were restored from Kenney's official
-CC0 releases: https://kenney.nl/assets/city-kit-commercial and
-https://kenney.nl/assets/watercraft-kit (`Textures/colormap.png` in each pack).
+The city kit's `Textures/colormap.png` palette was restored from Kenney's
+official CC0 release.

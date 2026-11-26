@@ -52,6 +52,7 @@ Source: "ALPHA-README.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Root}\dist\{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Root}\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 Source: "THIRD-PARTY-NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#Root}\native\godot\ui\fonts\*-OFL.txt"; DestDir: "{app}\licenses"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
