@@ -33,4 +33,4 @@ KNOWN ISSUES
 UNINSTALL
 Use "Apps" in Windows Settings. Your saved games are kept in %APPDATA%\DOMINION; delete that folder to remove them.
 
-DOMINION is released under the MIT licence (LICENSE.txt); third-party notices are in THIRD-PARTY-NOTICES.txt.
+DOMINION is copyright (c) 2026 Amit Heymans, all rights reserved (LICENSE.txt); third-party notices are in THIRD-PARTY-NOTICES.txt.
