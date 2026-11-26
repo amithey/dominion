@@ -862,7 +862,7 @@ func open_about() -> void:
 	report.custom_minimum_size = Vector2(240, 46)
 	_description("Writes a report (version, machine, match, last messages), copies it and opens the log folder.")
 	_section("Credits")
-	_description("Godot Engine (MIT). Art: Kenney, Quaternius, ambientCG (public domain); soldier: Mixamo. The rest is made in code. See THIRD-PARTY-NOTICES.txt.")
+	_description("Godot Engine (MIT). Art: Kenney, Quaternius, ambientCG, Poly Haven (public domain). Fonts: Cinzel, Fira Sans (SIL OFL). The rest is made for DOMINION. See THIRD-PARTY-NOTICES.txt.")
 	var foot := HBoxContainer.new()
 	_footer.show()
 	_footer.add_child(foot)
