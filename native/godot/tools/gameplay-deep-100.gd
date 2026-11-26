@@ -396,6 +396,10 @@ func run() -> void:
 		for u in w.units.filter(func(x): return x.owner == 0 and x.get("fly", false)): w.kill(u)
 		field.queue.clear()
 		w.economy.grant_test_resources()   # (the raids above can leave the treasury short of a jet: on CI none was trained once)
+		# A rival left on its own above can stop your military factories with its power (rare-earth export
+		# controls, an export ban). Training is run here without the clock moving, so such a block never lapses
+		# and no jet comes: about one run in three. Those powers have their own checks; lift them here.
+		w.power_effects = w.power_effects.filter(func(e): return not (e.kind == "production" and int(e.nation) == 0))
 		var planes := []
 		for i in range(AO.SLOTS.airfield):
 			w.queue_unit(field, "jet")
