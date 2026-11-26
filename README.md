@@ -59,8 +59,7 @@ history up to the commit that removed it).
 
 DOMINION is proprietary: copyright (c) 2026 Amit Heymans, all rights reserved (see [LICENSE](LICENSE)). The source is
 public for reference; copying, modifying or redistributing it needs written permission. Official builds may be
-installed and played for personal use. Versions released before 26 November 2026 (up to 1.0.8 ALPHA) were under
-the MIT License, which still applies to those versions.
+installed and played for personal use.
 
 Third-party work keeps its own licence. The Godot Engine is MIT-licensed. The art in `assets/` (Kenney, Quaternius,
 ambientCG, Poly Haven) is CC0 / public domain, with the details in [assets/models/EXTERNAL_ASSETS.md](assets/models/EXTERNAL_ASSETS.md)
